@@ -1,3 +1,5 @@
+import { Model } from "@orchestra/schema/model"
+import { Schema } from "effect"
 import { array, check, locationData, object } from "./assertions"
 import { http } from "./dsl"
 import { type Scenario } from "./types"
@@ -31,6 +33,49 @@ export const catalogScenarios: Scenario[] = [
     .json(400, noPullRequestRemote, "status"),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
   http.protected.get("/api/reference", "v2.reference.list").json(200, object),
+  http.protected
+    .get("/api/model/default", "v2.model.default")
+    .inProject({
+      git: true,
+      config: {
+        formatter: false,
+        lsp: false,
+        model: "opencode/httpapi-free",
+        enabled_providers: ["opencode"],
+        provider: {
+          opencode: {
+            env: [],
+            npm: "@ai-sdk/openai-compatible",
+            api: "http://127.0.0.1:1/v1",
+            models: {
+              "httpapi-free": {
+                name: "HTTP API Free",
+                cost: { input: 0, output: 0 },
+                limit: { context: 1000, output: 100 },
+              },
+            },
+          },
+        },
+      },
+    })
+    .json(
+      200,
+      locationData((value: unknown) => {
+        check(Schema.is(Model.Info)(value), "default model should match the public Model.Info shape")
+        check(
+          value.providerID === "opencode" && value.id === "httpapi-free",
+          "default should select the configured available model",
+        )
+        check(value.enabled, "default model should be enabled")
+      }),
+    ),
+  http.protected
+    .get("/api/model/default", "v2.model.default.empty")
+    .inProject({ git: true, config: { formatter: false, lsp: false, enabled_providers: [] } })
+    .json(
+      200,
+      locationData((value: unknown) => check(value === null, "empty provider allowlist should return a null default")),
+    ),
   http.protected
     .put("/api/behavior", "v2.behavior.set")
     .mutating()

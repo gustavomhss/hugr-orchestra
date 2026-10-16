@@ -21,7 +21,7 @@ import { layer, LocationMiddleware } from "@orchestra/server/location"
 import { authorizationLayer } from "@orchestra/server/middleware/authorization"
 import { schemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { Agent } from "../../src/agent/agent"
-import { AppNodeBuilderV1 } from "../../src/effect/app-node-builder-v1"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { InstanceStore } from "../../src/project/instance-store"
 import { HostAgentExecution } from "../../src/server/routes/instance/httpapi/handlers/agent-execution"
 import { tmpdirScoped } from "../fixture/fixture"
@@ -30,7 +30,7 @@ import { testEffect } from "../lib/effect"
 // Exercise the production handler and middleware with real registries and persisted Instance placement.
 // The lead owns application assembly; this narrow API composes the new adapter without editing server.ts.
 const api = HttpApi.make("server").add(AgentGroup.middleware(LocationMiddleware))
-const services = AppNodeBuilderV1.build(
+const services = NativeSessionFixture.legacy(
   LayerNode.group([Agent.node, InstanceStore.node, FSUtil.node, LocationServiceMap.node]),
 )
 const it = testEffect(Layer.mergeAll(services, NodeHttpServer.layerTest, NodeServices.layer))
@@ -61,7 +61,7 @@ function list(directory: string) {
 }
 
 describe("V2 agent execution annotation", () => {
-  it.live("standalone Server keeps the identity default and omits engine on the wire", () =>
+  it.live("standalone Server preserves native metadata without adding host engine annotations", () =>
     Effect.gen(function* () {
       const directory = yield* tmpdirScoped({ git: true, config: { agent: { maestro: { engine: "claude-code" } } } })
       const locations = yield* LocationServiceMap.Service
@@ -69,20 +69,25 @@ describe("V2 agent execution annotation", () => {
         directory: AbsolutePath.make(directory),
         workspaceID: undefined,
       }))
-      yield* Effect.gen(function* () {
+      const input = yield* Effect.gen(function* () {
         const plugins = yield* PluginV2.Service
         yield* plugins.wait(PluginV2.ID.make("config-agent"))
         const agents = yield* AgentV2.Service
         const input = yield* agents.all()
         const annotate = yield* AgentExecution.Annotate
-        expect(yield* annotate(input)).toBe(input)
+        const annotated = yield* annotate(input)
+        expect(annotated).toEqual(input)
+        expect(annotated).not.toBe(input)
+        annotated.forEach((agent, index) => expect(agent).toBe(input[index]))
         expect(Schema.encodeSync(AgentV2.Info)(AgentV2.Info.empty(AgentV2.defaultID))).not.toHaveProperty("engine")
         expect(() => Schema.decodeUnknownSync(AgentV2.Info)({ ...input[0], engine: "other" })).toThrow()
+        return input
       }).pipe(Effect.provide(context))
       yield* serve(false)
       const result = yield* list(directory)
-      expect(result.data.find((agent) => agent.id === "maestro")).toBeDefined()
-      expect(result.data.every((agent) => agent.engine === undefined)).toBe(true)
+      expect(result.data).toEqual(input)
+      expect(result.data.find((agent) => agent.id === "maestro")?.engine).toBe("claude-code")
+      expect(result.data.find((agent) => agent.id === "general")?.engine).toBeUndefined()
     }),
   )
 

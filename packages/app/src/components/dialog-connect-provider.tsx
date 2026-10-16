@@ -1,4 +1,3 @@
-import type { IntegrationMethod, IntegrationOauthConnectOutput } from "@opencode-ai/client/promise"
 import { Button } from "@orchestra/ui/button"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { Dialog } from "@orchestra/ui/dialog"
@@ -19,7 +18,6 @@ import {
   type Component,
   createEffect,
   createMemo,
-  createResource,
   createUniqueId,
   For,
   Match,
@@ -28,20 +26,20 @@ import {
   Show,
   Switch,
 } from "solid-js"
-import { createStore, produce } from "solid-js/store"
-import { useParams } from "@solidjs/router"
+import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
-import { useServerSync } from "@/context/server-sync"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
-import { popularProviders, useProviders } from "@/hooks/use-providers"
+import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
+import { createProviderResource } from "@/hooks/provider-catalog"
+import { formatServerError } from "@/utils/server-errors"
+import { connectableIntegration } from "@/orchestra/chapters/providers-data"
 import { CustomProviderForm } from "./dialog-custom-provider"
-import { decode64 } from "@/utils/base64"
+import { createProviderConnectionState, formatError, type ConnectMethod } from "./provider-connection"
 
 const CUSTOM_ID = "_custom"
-type ConnectMethod = Extract<IntegrationMethod, { type: "key" | "oauth" }>
 
 export function useProviderConnectController(options: { onBack?: () => void } = {}) {
   const [store, setStore] = createStore({ selected: undefined as string | undefined })
@@ -55,13 +53,14 @@ export function useProviderConnectController(options: { onBack?: () => void } = 
 }
 
 export const DialogConnectProvider: Component<{
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   controller?: ReturnType<typeof useProviderConnectController>
 }> = (props) => {
   const fallback = useProviderConnectController()
   const controller = props.controller ?? fallback
   const language = useLanguage()
   const settings = useSettings()
+  const sdk = useServerSDK()
   const newLayout = settings.general.newLayoutDesigns
   const reset = controller.back
   const back = { current: reset }
@@ -118,7 +117,9 @@ export const DialogConnectProvider: Component<{
             </Show>
           }
         >
-          <Content />
+          <Show when={sdk()} keyed>
+            {(_client) => <Content />}
+          </Show>
         </Dialog>
       }
     >
@@ -143,7 +144,9 @@ export const DialogConnectProvider: Component<{
         </DialogHeader>
         <DialogBody class="min-h-0 flex-1 overflow-hidden px-2 pb-2">
           <div ref={focusHost} tabIndex={-1} class="flex min-h-0 flex-1 flex-col outline-none">
-            <Content />
+            <Show when={sdk()} keyed>
+              {(_client) => <Content />}
+            </Show>
           </div>
         </DialogBody>
       </DialogV2>
@@ -152,14 +155,14 @@ export const DialogConnectProvider: Component<{
 }
 
 function ProviderPicker(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
   const settings = useSettings()
   if (settings.general.newLayoutDesigns())
     return <ProviderPickerV2 directory={props.directory} onSelect={props.onSelect} onPrepare={props.onPrepare} />
-  const providers = useProviders(() => props.directory?.())
+  const providers = useProviderDiscovery(props.directory)
   const language = useLanguage()
   const popularGroup = () => language.t("dialog.provider.group.popular")
   const otherGroup = () => language.t("dialog.provider.group.other")
@@ -172,56 +175,61 @@ function ProviderPicker(props: {
   }
 
   return (
-    <List
-      class="px-3"
-      search={{ placeholder: language.t("dialog.provider.search.placeholder"), autofocus: true }}
-      emptyMessage={language.t("dialog.provider.empty")}
-      activeIcon="plus-small"
-      key={(x) => x?.id}
-      items={() => {
-        language.locale()
-        return [{ id: CUSTOM_ID, name: customLabel() }, ...providers.all().values()]
-      }}
-      filterKeys={["id", "name"]}
-      groupBy={(x) => (popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
-      sortBy={(a, b) => {
-        if (a.id === CUSTOM_ID) return -1
-        if (b.id === CUSTOM_ID) return 1
-        if (popularProviders.includes(a.id) && popularProviders.includes(b.id))
-          return popularProviders.indexOf(a.id) - popularProviders.indexOf(b.id)
-        return a.name.localeCompare(b.name)
-      }}
-      sortGroupsBy={(a, b) => {
-        const popular = popularGroup()
-        if (a.category === popular && b.category !== popular) return -1
-        if (b.category === popular && a.category !== popular) return 1
-        return 0
-      }}
-      onSelect={(x) => {
-        if (!x) return
-        props.onSelect(x.id)
-      }}
+    <Show
+      when={!providers.error()}
+      fallback={<ProviderLoadError error={providers.error()?.cause} retry={providers.retry} />}
     >
-      {(i) => (
-        <div class="px-1.25 w-full flex items-center gap-x-3">
-          <ProviderIcon data-slot="list-item-extra-icon" id={i.id} />
-          <span>{i.name}</span>
-          <Show when={i.id === CUSTOM_ID}>
-            <Tag>{language.t("settings.providers.tag.custom")}</Tag>
-          </Show>
-          <Show when={note(i.id)}>{(value) => <div class="text-14-regular text-text-weak">{value()}</div>}</Show>
-        </div>
-      )}
-    </List>
+      <List
+        class="px-3"
+        search={{ placeholder: language.t("dialog.provider.search.placeholder"), autofocus: true }}
+        emptyMessage={language.t("dialog.provider.empty")}
+        activeIcon="plus-small"
+        key={(x) => x?.id}
+        items={() => {
+          language.locale()
+          return [{ id: CUSTOM_ID, name: customLabel() }, ...providers.all()]
+        }}
+        filterKeys={["id", "name"]}
+        groupBy={(x) => (popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
+        sortBy={(a, b) => {
+          if (a.id === CUSTOM_ID) return -1
+          if (b.id === CUSTOM_ID) return 1
+          if (popularProviders.includes(a.id) && popularProviders.includes(b.id))
+            return popularProviders.indexOf(a.id) - popularProviders.indexOf(b.id)
+          return a.name.localeCompare(b.name)
+        }}
+        sortGroupsBy={(a, b) => {
+          const popular = popularGroup()
+          if (a.category === popular && b.category !== popular) return -1
+          if (b.category === popular && a.category !== popular) return 1
+          return 0
+        }}
+        onSelect={(x) => {
+          if (!x) return
+          props.onSelect(x.id)
+        }}
+      >
+        {(i) => (
+          <div class="px-1.25 w-full flex items-center gap-x-3">
+            <ProviderIcon data-slot="list-item-extra-icon" id={i.id} />
+            <span>{i.name}</span>
+            <Show when={i.id === CUSTOM_ID}>
+              <Tag>{language.t("settings.providers.tag.custom")}</Tag>
+            </Show>
+            <Show when={note(i.id)}>{(value) => <div class="text-14-regular text-text-weak">{value()}</div>}</Show>
+          </div>
+        )}
+      </List>
+    </Show>
   )
 }
 
 function ProviderPickerV2(props: {
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onSelect: (provider: string) => void
   onPrepare?: () => void
 }) {
-  const providers = useProviders(() => props.directory?.())
+  const providers = useProviderDiscovery(props.directory)
   const language = useLanguage()
   const [store, setStore] = createStore({
     filter: "",
@@ -233,7 +241,7 @@ function ProviderPickerV2(props: {
   const all = createMemo(() => {
     language.locale()
     const query = store.filter.trim().toLowerCase()
-    const values = [custom(), ...providers.all().values()]
+    const values = [custom(), ...providers.all()]
     if (!query) return values
     return values.filter((provider) => `${provider.id} ${provider.name}`.toLowerCase().includes(query))
   })
@@ -297,6 +305,9 @@ function ProviderPickerV2(props: {
           }}
         />
       </div>
+      <Show when={providers.error()}>
+        {(error) => <ProviderLoadError error={error().cause} retry={providers.retry} v2 />}
+      </Show>
       <div class="relative min-h-0 flex-1">
         <div class="flex size-full min-h-0 flex-col gap-4 overflow-y-auto pb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           <For
@@ -357,20 +368,18 @@ function ProviderPickerV2(props: {
 
 function ProviderConnection(props: {
   provider: string
-  directory?: Accessor<string | undefined>
+  directory?: Accessor<string | null | undefined>
   onBack: () => void
   setBack: (handler: () => void) => void
 }) {
   const dialog = useDialog()
-  const serverSync = useServerSync()
   const serverSDK = useServerSDK()
-  const params = useParams()
   const language = useLanguage()
   const platform = usePlatform()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
-  const providers = useProviders(() => props.directory?.())
-  const directory = () => props.directory?.() ?? decode64(params.dir)
+  const providers = useProviders(props.directory)
+  const directory = providers.directory
   const location = () => {
     const value = directory()
     return value ? { directory: value } : undefined
@@ -386,136 +395,39 @@ function ProviderConnection(props: {
     timer.current = undefined
   })
 
-  const provider = createMemo(
-    () => providers.all().get(props.provider) ?? serverSync().data.provider.all.get(props.provider)!,
-  )
+  const provider = () => providers.all().get(props.provider) ?? { name: integration.data()?.name ?? props.provider }
   const fallback = createMemo<ConnectMethod[]>(() => [
     {
       type: "key" as const,
       label: language.t("provider.connect.method.apiKey"),
     },
   ])
-  const [integration] = createResource(
-    () => ({ provider: props.provider, directory: directory() }),
+  const integration = createProviderResource(
+    () => {
+      const client = serverSDK()
+      return directory() === undefined
+        ? undefined
+        : { provider: props.provider, directory: directory(), client, server: client.scope }
+    },
     (input) =>
-      serverSDK()
-        .api.integration.get({
+      input.client.api.integration
+        .get({
           integrationID: input.provider,
           location: input.directory ? { directory: input.directory } : undefined,
         })
-        .then((result) => result.data),
+        .then((result) => connectableIntegration(result.data)),
   )
-  const loading = createMemo(() => integration.loading)
+  const loading = createMemo(() => integration.loading() || directory() === undefined)
   const methods = createMemo<ConnectMethod[]>(() => {
-    const values = integration.latest?.methods.filter(
-      (method): method is ConnectMethod => method.type === "key" || method.type === "oauth",
-    )
+    const values = integration
+      .data()
+      ?.methods.filter((method): method is ConnectMethod => method.type === "key" || method.type === "oauth")
     return values?.length ? values : fallback()
   })
-  const [store, setStore] = createStore({
-    methodIndex: undefined as undefined | number,
-    authorization: undefined as undefined | IntegrationOauthConnectOutput["data"],
-    promptInputs: undefined as undefined | Record<string, string>,
-    state: "pending" as undefined | "pending" | "complete" | "error" | "prompt",
-    error: undefined as string | undefined,
-  })
-
-  type Action =
-    | { type: "method.select"; index: number }
-    | { type: "method.reset" }
-    | { type: "auth.prompt" }
-    | { type: "auth.inputs"; inputs: Record<string, string> }
-    | { type: "auth.pending" }
-    | { type: "auth.complete"; authorization: IntegrationOauthConnectOutput["data"] }
-    | { type: "auth.error"; error: string }
-
-  function dispatch(action: Action) {
-    setStore(
-      produce((draft) => {
-        if (action.type === "method.select") {
-          draft.methodIndex = action.index
-          draft.authorization = undefined
-          draft.promptInputs = undefined
-          draft.state = undefined
-          draft.error = undefined
-          return
-        }
-        if (action.type === "method.reset") {
-          draft.methodIndex = undefined
-          draft.authorization = undefined
-          draft.promptInputs = undefined
-          draft.state = undefined
-          draft.error = undefined
-          return
-        }
-        if (action.type === "auth.prompt") {
-          draft.state = "prompt"
-          draft.error = undefined
-          return
-        }
-        if (action.type === "auth.inputs") {
-          draft.promptInputs = action.inputs
-          draft.state = undefined
-          draft.error = undefined
-          return
-        }
-        if (action.type === "auth.pending") {
-          draft.state = "pending"
-          draft.error = undefined
-          return
-        }
-        if (action.type === "auth.complete") {
-          draft.state = "complete"
-          draft.authorization = action.authorization
-          draft.error = undefined
-          return
-        }
-        draft.state = "error"
-        draft.error = action.error
-      }),
-    )
-  }
-
-  const method = createMemo(() => (store.methodIndex !== undefined ? methods().at(store.methodIndex!) : undefined))
-
-  const methodLabel = (value?: { type?: string; label?: string }) => {
-    if (!value) return ""
-    if (value.type === "key") return language.t("provider.connect.method.apiKey")
-    return value.label ?? ""
-  }
-
-  const methodDetails = (value?: { type?: string; label?: string }) => {
-    const label = methodLabel(value)
-    const suffix = value?.label?.match(/\s+\((browser|headless)\)$/i)
-    const hint = suffix?.[1]
-    return {
-      label: suffix ? label.slice(0, -suffix[0].length) : label,
-      hint:
-        hint?.toLowerCase() === "headless"
-          ? language.t("provider.connect.method.headless")
-          : hint?.toLowerCase() === "browser" || (!hint && value?.type === "key")
-            ? language.t("provider.connect.method.browser")
-            : undefined,
-    }
-  }
-
-  function formatError(value: unknown, fallback: string): string {
-    if (value && typeof value === "object" && "data" in value) {
-      const data = (value as { data?: { message?: unknown } }).data
-      if (typeof data?.message === "string" && data.message) return data.message
-    }
-    if (value && typeof value === "object" && "error" in value) {
-      const nested = formatError((value as { error?: unknown }).error, "")
-      if (nested) return nested
-    }
-    if (value && typeof value === "object" && "message" in value) {
-      const message = (value as { message?: unknown }).message
-      if (typeof message === "string" && message) return message
-    }
-    if (value instanceof Error && value.message) return value.message
-    if (typeof value === "string" && value) return value
-    return fallback
-  }
+  const [store, setStore, dispatch, method, methodLabel, methodDetails] = createProviderConnectionState(
+    methods,
+    language.t,
+  )
 
   async function selectMethod(index: number, inputs?: Record<string, string>) {
     if (timer.current !== undefined) {
@@ -687,7 +599,7 @@ function ProviderConnection(props: {
   let auto = false
   createEffect(() => {
     if (auto) return
-    if (loading()) return
+    if (loading() || integration.error()) return
     if (methods().length === 1) {
       auto = true
       void selectMethod(0)
@@ -695,9 +607,17 @@ function ProviderConnection(props: {
   })
 
   async function complete() {
-    await serverSync()
-      .refreshProviders()
-      .catch(() => undefined)
+    if (!alive.value) return
+    setStore("connected", true)
+    dispatch({ type: "auth.pending" })
+    const refreshed = await providers.refresh().then(
+      () => true,
+      (error) => {
+        dispatch({ type: "auth.error", error: formatError(error, language.t("common.requestFailed")) })
+        return false
+      },
+    )
+    if (!refreshed || !alive.value) return
     dialog.close()
     showToast({
       variant: "success",
@@ -789,6 +709,7 @@ function ProviderConnection(props: {
       value: "",
       label: "",
       error: undefined as string | undefined,
+      pending: false,
     })
 
     onMount(() => {
@@ -798,6 +719,7 @@ function ProviderConnection(props: {
 
     async function handleSubmit(e: SubmitEvent) {
       e.preventDefault()
+      if (formStore.pending) return
 
       const form = e.currentTarget as HTMLFormElement
       const formData = new FormData(form)
@@ -809,14 +731,17 @@ function ProviderConnection(props: {
         return
       }
 
-      setFormStore("error", undefined)
-      await serverSDK().api.integration.connect.key({
-        integrationID: props.provider,
-        location: location(),
-        key: apiKey,
-        label: label || undefined,
-      })
-      await complete()
+      setFormStore({ error: undefined, pending: true })
+      await serverSDK()
+        .api.integration.connect.key({
+          integrationID: props.provider,
+          location: location(),
+          key: apiKey,
+          label: label || undefined,
+        })
+        .then(complete)
+        .catch((error) => setFormStore("error", formatError(error, language.t("common.requestFailed"))))
+        .finally(() => setFormStore("pending", false))
     }
 
     if (newLayout())
@@ -855,7 +780,12 @@ function ProviderConnection(props: {
                 </div>
               )}
             </Show>
-            <ButtonV2 type="submit" variant="contrast" data-action="provider-connect-submit">
+            <ButtonV2
+              type="submit"
+              variant="contrast"
+              data-action="provider-connect-submit"
+              disabled={formStore.pending}
+            >
               {language.t("common.continue")}
             </ButtonV2>
           </form>
@@ -889,7 +819,7 @@ function ProviderConnection(props: {
             value={formStore.label}
             onChange={(v) => setFormStore("label", v)}
           />
-          <Button class="w-auto" type="submit" size="large" variant="primary">
+          <Button class="w-auto" type="submit" size="large" variant="primary" disabled={formStore.pending}>
             {language.t("common.continue")}
           </Button>
         </form>
@@ -1113,6 +1043,9 @@ function ProviderConnection(props: {
                 </div>
               </div>
             </Match>
+            <Match when={integration.error()}>
+              {(error) => <ProviderLoadError error={error().cause} retry={integration.retry} v2={newLayout()} />}
+            </Match>
             <Match when={store.methodIndex === undefined}>
               <MethodSelection />
             </Match>
@@ -1133,6 +1066,16 @@ function ProviderConnection(props: {
                   <Icon name="circle-ban-sign" class="text-icon-critical-base" />
                   <span>{language.t("provider.connect.status.failed", { error: store.error ?? "" })}</span>
                 </div>
+                <Show when={store.connected}>
+                  <Show
+                    when={newLayout()}
+                    fallback={
+                      <Button onClick={() => void complete()}>{language.t("orchestra.providers.retry")}</Button>
+                    }
+                  >
+                    <ButtonV2 onClick={() => void complete()}>{language.t("orchestra.providers.retry")}</ButtonV2>
+                  </Show>
+                </Show>
               </div>
             </Match>
             <Match when={method()?.type === "key"}>
@@ -1151,6 +1094,43 @@ function ProviderConnection(props: {
           </Switch>
         </div>
       </div>
+    </div>
+  )
+}
+
+export function ProviderDiscoveryStatus(props: {
+  source: Pick<ReturnType<typeof useProviderDiscovery>, "loading" | "error" | "retry">
+  v2?: boolean
+}) {
+  const language = useLanguage()
+  return (
+    <Show
+      when={!props.source.loading()}
+      fallback={
+        <p role="status" class="flex items-center gap-2 px-3 py-2">
+          <Spinner />
+          {language.t("orchestra.providers.loading")}
+        </p>
+      }
+    >
+      <Show when={props.source.error()}>
+        {(error) => <ProviderLoadError error={error().cause} retry={props.source.retry} v2={props.v2} />}
+      </Show>
+    </Show>
+  )
+}
+
+function ProviderLoadError(props: { error: unknown; retry: () => unknown; v2?: boolean }) {
+  const language = useLanguage()
+  return (
+    <div class="flex flex-col gap-3 px-3 py-2">
+      <p role="alert">{formatServerError(props.error, language.t, language.t("common.requestFailed"))}</p>
+      <Show
+        when={props.v2}
+        fallback={<Button onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</Button>}
+      >
+        <ButtonV2 onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</ButtonV2>
+      </Show>
     </div>
   )
 }

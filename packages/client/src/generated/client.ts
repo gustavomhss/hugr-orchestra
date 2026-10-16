@@ -16,6 +16,8 @@ import type {
   SessionsActiveOutput,
   SessionsGetInput,
   SessionsGetOutput,
+  SessionsArchiveInput,
+  SessionsArchiveOutput,
   SessionsGetSubagentModelsInput,
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
@@ -64,6 +66,12 @@ import type {
   IntegrationsConnectKeyOutput,
   IntegrationsConnectOauthInput,
   IntegrationsConnectOauthOutput,
+  IntegrationsOauthStatusInput,
+  IntegrationsOauthStatusOutput,
+  IntegrationsOauthCompleteInput,
+  IntegrationsOauthCompleteOutput,
+  IntegrationsOauthCancelInput,
+  IntegrationsOauthCancelOutput,
   IntegrationsAttemptStatusInput,
   IntegrationsAttemptStatusOutput,
   IntegrationsAttemptCompleteInput,
@@ -400,6 +408,7 @@ export function make(options: ClientOptions) {
               limit: input?.["limit"],
               order: input?.["order"],
               search: input?.["search"],
+              includeArchived: input?.["includeArchived"],
               directory: input?.["directory"],
               project: input?.["project"],
               subpath: input?.["subpath"],
@@ -423,7 +432,7 @@ export function make(options: ClientOptions) {
               location: input?.["location"],
             },
             successStatus: 200,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [404, 401, 400],
             empty: false,
           },
           requestOptions,
@@ -450,6 +459,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ).then((value) => value.data),
+      archive: (input: SessionsArchiveInput, requestOptions?: RequestOptions) =>
+        request<SessionsArchiveOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/archive`,
+            body: { archived: input["archived"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
       getSubagentModels: (input: SessionsGetSubagentModelsInput, requestOptions?: RequestOptions) =>
         request<{ readonly data: SessionsGetSubagentModelsOutput }>(
           {
@@ -741,6 +762,43 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      oauthStatus: (input: IntegrationsOauthStatusInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      oauthComplete: (input: IntegrationsOauthCompleteInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthCompleteOutput>(
+          {
+            method: "POST",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}/complete`,
+            query: { location: input["location"] },
+            body: { code: input["code"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      oauthCancel: (input: IntegrationsOauthCancelInput, requestOptions?: RequestOptions) =>
+        request<IntegrationsOauthCancelOutput>(
+          {
+            method: "DELETE",
+            path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/oauth/${encodeURIComponent(input.attemptID)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
       attemptStatus: (input: IntegrationsAttemptStatusInput, requestOptions?: RequestOptions) =>
         request<IntegrationsAttemptStatusOutput>(
           {
@@ -748,7 +806,7 @@ export function make(options: ClientOptions) {
             path: `/api/integration/attempt/${encodeURIComponent(input.attemptID)}`,
             query: { location: input["location"] },
             successStatus: 200,
-            declaredStatuses: [401, 400],
+            declaredStatuses: [400, 401],
             empty: false,
           },
           requestOptions,

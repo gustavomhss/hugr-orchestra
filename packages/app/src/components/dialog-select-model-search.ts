@@ -16,3 +16,22 @@ export const matchesModelSearch = (query: string, values: string[]) => {
     (value) => normalizeModelSearch(value).includes(search) || compactModelSearch(value).includes(compactSearch),
   )
 }
+
+export function createModelSelectorNavigation<T>(
+  groups: () => ReadonlyArray<{ items: readonly T[] }>,
+  key: (item: T) => string,
+  manage: string,
+) {
+  const items = () => groups().flatMap((group) => group.items)
+  const keys = () => [...items().map(key), manage]
+  return {
+    keys,
+    find: (active: string) => items().find((item) => key(item) === active),
+    next: (active: string, delta: number) => {
+      const options = keys()
+      const index = options.indexOf(active)
+      if (index === -1) return delta > 0 ? options[0] : options[options.length - 1]
+      return options[(index + delta + options.length) % options.length]
+    },
+  }
+}

@@ -19,14 +19,12 @@ import { safeWindowURL } from "./window-state"
 import { resolveExternalURL, resolveLocalFilePath } from "./external-url"
 import { registerAppDockWindow } from "./app-dock-rpc"
 import { requireTitlebarFrame, titlebarFramePosition } from "./titlebar-frame"
+import { registerRendererPermissions } from "./window-permissions"
 
 const root = dirname(fileURLToPath(import.meta.url))
 const rendererRoot = join(root, "../renderer")
 const rendererProtocol = "oc"
 const rendererHost = "renderer"
-const clipboardWritePermission = "clipboard-sanitized-write"
-const notificationPermission = "notifications"
-const rendererPermissions = new Set([clipboardWritePermission, notificationPermission])
 const oc2Theme = oc2ThemeJson as DesktopTheme
 const oc2Background = {
   light: resolveThemeVariant(oc2Theme.light, false)["background-base"],
@@ -222,7 +220,7 @@ export function createMainWindow(id: string = randomUUID()) {
     },
   })
 
-  allowRendererPermissions(win)
+  registerRendererPermissions(win.webContents.session, win.webContents, isRendererUrl)
   wireWindowRecovery(win, id)
   wireNavigationPolicy(win)
 
@@ -497,27 +495,6 @@ function addDocumentPolicy(response: Response, file: string) {
   const headers = new Headers(response.headers)
   headers.set(documentPolicyHeader, jsCallStacksDocumentPolicy)
   return new Response(response.body, { status: response.status, statusText: response.statusText, headers })
-}
-
-function allowRendererPermissions(win: BrowserWindow) {
-  const webContentsId = win.webContents.id
-
-  win.webContents.session.setPermissionRequestHandler((webContents, permission, callback, details) => {
-    callback(
-      rendererPermissions.has(permission) &&
-        isTrustedRendererUrl(details.requestingUrl) &&
-        webContents.id === webContentsId,
-    )
-  })
-  win.webContents.session.setPermissionCheckHandler((webContents, permission, requestingOrigin, details) => {
-    if (!rendererPermissions.has(permission)) return false
-    if (webContents && webContents.id !== webContentsId) return false
-    return isTrustedRendererUrl(details.requestingUrl) || isTrustedRendererUrl(requestingOrigin)
-  })
-}
-
-function isTrustedRendererUrl(value?: string) {
-  return isRendererUrl(value)
 }
 
 function addRendererHeaders(value: string, headers: Record<string, any>) {

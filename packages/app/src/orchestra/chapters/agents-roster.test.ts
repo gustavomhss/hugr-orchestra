@@ -3,6 +3,7 @@ import type { Agent } from "@orchestra/sdk/v2/client"
 import {
   agentDraft,
   agentFileInput,
+  agentFileTarget,
   agentRoster,
   agentUnavailable,
   draftError,
@@ -88,7 +89,7 @@ describe("Agent editor", () => {
       name: "plan",
       mode: "primary",
       description: "Plans work",
-      model: "example/reasoner",
+      model: "",
       steps: "7",
       system: "File prompt",
     })
@@ -174,9 +175,13 @@ describe("Agent editor", () => {
     expect(draft.mode).toBe("primary")
     // `disable` is left out, so the save drops it from the file too.
     expect(agentFileInput(draft, handEdited, maestro)).toEqual({ mode: "primary", permission: {}, revision: "m1" })
-    // Without a mode in the file, none is written.
+    // An explicit primary override also repairs malformed lower-priority configuration.
     const missing = { path: handEdited.path, exists: false, revision: "" }
-    expect(agentFileInput(agentDraft(maestro, missing), missing, maestro)).toEqual({ permission: {}, revision: "" })
+    expect(agentFileInput(agentDraft(maestro, missing), missing, maestro)).toEqual({
+      mode: "primary",
+      permission: {},
+      revision: "",
+    })
     // Other agents still take the file's mode first.
     expect(agentDraft(plan, { ...file, mode: "subagent" }).mode).toBe("subagent")
   })
@@ -204,6 +209,37 @@ describe("Agent editor", () => {
     for (const steps of ["0", "-1", "1.5", "2e3", "x"])
       expect(draftError({ ...draft, name: "a", steps }, [], true)).toBe("steps")
     expect(draftError({ ...draft, name: "a", steps: "20" }, [], true)).toBeUndefined()
+  })
+
+  test("display names never become file targets or filename validation inputs", () => {
+    const renamed = { ...plan, id: "backend", name: "Equipe de serviços / 后端" }
+    const draft = agentDraft(renamed, file)
+    expect(agentFileTarget(draft, renamed)).toBe("backend")
+    expect(draftError(draft, ["backend"], false)).toBeUndefined()
+    draft.name = "A new display label"
+    expect(agentFileTarget(draft, renamed)).toBe("backend")
+    expect(agentFileTarget({ ...draft, name: " new-seat " }, undefined)).toBe("new-seat")
+  })
+
+  test("inherits without a file model and retains an explicit choice equal to the resolved model", () => {
+    const draft = agentDraft(plan, file)
+    expect(draft.model).toBe("")
+    draft.model = "example/reasoner"
+    expect(agentFileInput(draft, file, plan).model).toBe("example/reasoner")
+    const explicit = { ...file, model: "openrouter/team/reasoner" }
+    expect(agentDraft(plan, explicit).model).toBe("openrouter/team/reasoner")
+    expect(agentFileInput(agentDraft(plan, explicit), explicit, plan).model).toBe("openrouter/team/reasoner")
+    draft.model = ""
+    expect(agentFileInput(draft, explicit, plan).model).toBeUndefined()
+  })
+
+  test("Maestro identity and primary mode are fixed even if a draft is tampered with", () => {
+    const maestro = { ...plan, id: "maestro", name: "Renamed conductor" }
+    const draft = agentDraft(maestro, file)
+    expect(draft.name).toBe("maestro")
+    draft.mode = "subagent"
+    expect(agentFileInput(draft, file, maestro).mode).toBe("primary")
+    expect(agentFileTarget(draft, maestro)).toBe("maestro")
   })
 
   test("the inherited action ignores only this agent's own override", () => {

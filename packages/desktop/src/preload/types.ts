@@ -52,6 +52,7 @@ export type JanitorAPI = {
 }
 
 export type AppDockEvent =
+  | { type: "shortcut"; payload: { identity: { tabID: string; generation: number }; command: "address" | "new-tab" | "close-tab" } }
   | {
       type: "state"
       payload: {
@@ -130,7 +131,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
     tab: { tabID: string; generation: number },
     bounds: { x: number; y: number; width: number; height: number },
   ) => Promise<void>
-  appDockNavigate: (tabID: string, url: string) => Promise<void>
+  appDockNavigate: (tabID: string, url: string) => Promise<{ ok: boolean; url: string }>
   appDockCommand: (tabID: string, command: "back" | "forward" | "reload") => Promise<void>
   appDockEvent: (callback: (event: AppDockEvent) => void) => () => void
   appDockFind: (tabID: string, text: string, forward: boolean) => Promise<number>
@@ -200,7 +201,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   saveFilePicker: (opts?: { title?: string; defaultPath?: string }) => Promise<string | null>
   openExternal: (url: string) => void
   openLocalFile: (url: string) => void
-  openPath: (path: string, app?: string) => Promise<void>
+  openPath: (path: string, app?: string) => Promise<import("../main/apps").OpenPathResult>
   revealPath: (path: string) => Promise<boolean>
   readClipboardImage: () => Promise<{ buffer: ArrayBuffer; width: number; height: number } | null>
   getWindowFocused: () => Promise<boolean>

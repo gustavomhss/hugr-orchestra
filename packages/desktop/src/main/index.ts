@@ -56,6 +56,7 @@ import { initializeCandidateProfile } from "./candidate-profile"
 import { getStore } from "./store"
 import { FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, OLD_LAYOUT_ELIGIBLE_KEY } from "./store-keys"
 import { OmniBoot } from "./omni-boot"
+import { createDeepLinkDelivery } from "./deep-links"
 
 const candidateProfile = (() => {
   try {
@@ -87,7 +88,10 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 let logger: ReturnType<typeof initLogging>
 let server: SidecarListener | null = null
 
-const pendingDeepLinks: string[] = []
+const deepLinks = createDeepLinkDelivery(process.argv, (target, urls) => {
+  const win = BrowserWindow.getAllWindows().find((window) => window.webContents.id === target)
+  if (win && !win.isDestroyed()) sendDeepLinks(win, urls)
+})
 
 function useEnvProxy() {
   try {
@@ -100,9 +104,8 @@ function useEnvProxy() {
 
 function emitDeepLinks(urls: string[]) {
   if (urls.length === 0) return
-  pendingDeepLinks.push(...urls)
   const win = getLastFocusedWindow()
-  if (win) sendDeepLinks(win, urls)
+  deepLinks.enqueue(urls, win?.webContents.id)
 }
 
 async function killSidecar() {
@@ -259,6 +262,13 @@ const main = Effect.gen(function* () {
     logger.log("deep link received via open-url", { url })
     emitDeepLinks([url])
   })
+  app.on("browser-window-created", (_event, win) => {
+    const id = win.webContents.id
+    win.webContents.on("did-start-navigation", (_event, _url, _inPlace, mainFrame) => {
+      if (mainFrame) deepLinks.pause(id)
+    })
+    win.on("closed", () => deepLinks.pause(id))
+  })
 
   app.on("before-quit", (event) => {
     setAppQuitting()
@@ -344,14 +354,14 @@ const main = Effect.gen(function* () {
       },
       (e) => Effect.runPromise(e),
     ),
-    consumeInitialDeepLinks: () => pendingDeepLinks.splice(0),
+    consumeInitialDeepLinks: (target) => deepLinks.consume(target),
     getDefaultServerUrl: () => getDefaultServerUrl(),
     setDefaultServerUrl: (url) => setDefaultServerUrl(url),
     isFirstLaunchOnboardingPending,
     finishFirstLaunchOnboarding,
     isOldLayoutEligible,
     getDisplayBackend: async () => null,
-    setDisplayBackend: async () => undefined,
+    setDisplayBackend: async () => { throw new Error("Unsupported display backend setting") },
     checkAppExists: (appName) => checkAppExists(appName),
     resolveAppPath: async (appName) => resolveAppPath(appName),
     updater,

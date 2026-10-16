@@ -14,6 +14,7 @@ import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 
 const licenses = path.join(WorkspacePaths.make(import.meta.dirname).module("orchestra"), "dist/node/licenses")
 
+
 test("candidate identity disables production protocols, feeds and signing", () => {
   expect(builder.appId).toBe("ai.hugr.orchestra.lean.candidate")
   expect(builder.productName).toBe("HuGR Lean Candidate")
@@ -162,15 +163,34 @@ test("real pinned notice archive passes; missing, changed, extra and stale mater
 
 test("candidate configuration and CLI compile with real dependency types", () => {
   const options: ts.CompilerOptions = {
-    noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true,
+    noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true, allowImportingTsExtensions: true,
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
-    allowImportingTsExtensions: true, types: ["bun", "node"],
+    types: ["bun", "node"],
   }
   const files = ["electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "scripts/lean-candidate.ts", "electron-builder.candidate.config.test.ts", "electron-builder.candidate.runner.test.ts"]
   const program = ts.createProgram(files.map((file) => path.join(import.meta.dirname, file)), options)
   const errors = ts.getPreEmitDiagnostics(program)
   expect(ts.formatDiagnosticsWithColorAndContext(errors, { getCanonicalFileName: (file) => file, getCurrentDirectory: () => import.meta.dirname, getNewLine: () => "\n" })).toBe("")
 }, 120_000)
+
+test("Node config loader bundles registry bootstrap helpers for normal and candidate builds", async () => {
+  const child = Bun.spawn(["node", "--input-type=module", "--eval", `
+    import assert from "node:assert/strict"
+    import { realpathSync } from "node:fs"
+    import path from "node:path"
+    import { loadConfigFromFile } from "electron-vite"
+    for (const file of ["electron.vite.config.ts", "electron.vite.candidate.config.ts"]) {
+      const loaded = await loadConfigFromFile({ command: "build", mode: "production" }, file, process.cwd())
+      assert(loaded.dependencies.some((file) => file.endsWith("/script/src/workspace-paths.ts")))
+      assert.equal(loaded.config.renderer.publicDir, realpathSync(path.resolve("../app/public")))
+    }
+    console.log("REGISTRY_CONFIG_LOAD_OK")
+  `], { cwd: import.meta.dirname, env: { PATH: process.env.PATH, ORCHESTRA_CHANNEL: "dev" }, stdout: "pipe", stderr: "pipe" })
+  const output = await new Response(child.stdout).text()
+  const error = await new Response(child.stderr).text()
+  expect({ status: await child.exited, error }).toEqual({ status: 0, error: "" })
+  expect(output.trim()).toBe("REGISTRY_CONFIG_LOAD_OK")
+}, 15_000)
 
 test("full desktop package typecheck on CI", async () => {
   const child = Bun.spawn(["bun", "typecheck"], { cwd: import.meta.dirname, stdout: "inherit", stderr: "inherit" })

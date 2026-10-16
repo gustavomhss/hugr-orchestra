@@ -19,6 +19,7 @@ import { extractPromptFromParts } from "@/utils/prompt"
 import { Message, Part, UserMessage } from "@orchestra/sdk/v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { createSessionOwnership } from "./session-ownership"
 import { useLocal } from "@/context/local"
 import { cockpitView, updateCockpitView } from "./orchestra-cockpit-state"
@@ -42,7 +43,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
   const command = useCommand()
   const dialog = useDialog()
   const file = useFile()
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const permission = usePermission()
   const prompt = usePrompt()
   const sdk = useSDK()
@@ -424,11 +425,32 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     sessionCommand({
       id: "session.archive",
       title: language.t("command.session.archive"),
+      description: sessionArchive.available() ? undefined : language.t("session.archive.unavailable"),
       keybind: "mod+shift+backspace",
-      disabled: !params.id,
+      disabled: !params.id || info()?.time.archived !== undefined || !sessionArchive.available() || sessionArchive.busy(params.id),
       onSelect: () => {
         const id = params.id
         if (id) void sessionArchive.archive(id)
+      },
+    }),
+    sessionCommand({
+      id: "session.restore",
+      title: language.t("session.restore.title"),
+      disabled: !params.id || info()?.time.archived === undefined || !sessionArchive.restorable() || sessionArchive.busy(params.id),
+      onSelect: () => {
+        const id = params.id
+        if (id) void sessionArchive.restore(id)
+      },
+    }),
+    sessionCommand({
+      id: "session.archived",
+      title: language.t("session.archived.title"),
+      disabled: !sessionArchive.restorable(),
+      onSelect: () => {
+        const directory = sdk().directory
+        void openDialog(() => import("@/components/dialog-archived-sessions"), (module) => {
+          dialog.show(() => <module.DialogArchivedSessions directory={directory} />)
+        })
       },
     }),
   ]

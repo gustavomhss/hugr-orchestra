@@ -122,7 +122,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
         }}
         onSubmit={(event) => {
           event.preventDefault()
-          if (!props.disabled) props.controller.submit()
+          if (!props.disabled && !props.readOnly && props.controller.canSubmit()) props.controller.submit()
         }}
         onDragEnter={props.controller.onDragEnter}
         onDragOver={props.controller.onDragOver}
@@ -188,7 +188,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
               }
               if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault()
-                if (event.repeat) return
+                if (event.repeat || props.disabled || props.readOnly || !props.controller.canSubmit()) return
                 props.controller.submit()
               }
             }}

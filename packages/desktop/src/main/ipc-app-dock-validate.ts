@@ -87,6 +87,12 @@ export const toCloneableAppDockEvent = (event: unknown): CloneableAppDockEvent =
   const source = appDockEventRecord(event)
   const payload = appDockEventRecord(source.payload)
   if (!hasExactKeys(source, ["type", "payload"])) throw new Error("Invalid App Dock event")
+  if (source.type === "shortcut") {
+    if (!hasExactKeys(payload, ["identity", "command"])) throw new Error("Invalid App Dock event")
+    const command = payload.command
+    if (command !== "address" && command !== "new-tab" && command !== "close-tab") throw new Error("Invalid App Dock event")
+    return { type: "shortcut", payload: { identity: appDockTab(payload.identity), command } }
+  }
   if (source.type === "state") {
     if (
       !(

@@ -19,7 +19,7 @@ export function OrchestraHome(props: { home: HomeController }) {
       const selection = props.home.selection.value()
       const conn = props.home.server.focused()
       const ctx = props.home.server.focusedContext()
-      if (!selection.directory || !conn || !ctx) return
+      if (!selection.directory || !conn || !ctx || ServerConnection.key(conn) !== selection.server) return
       return { key: `${selection.server}\0${selection.directory}`, directory: selection.directory, conn, ctx }
     },
     undefined,

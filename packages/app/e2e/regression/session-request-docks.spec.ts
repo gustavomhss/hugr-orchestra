@@ -9,6 +9,56 @@ const projectID = "proj_request_docks"
 const sessionID = "ses_request_docks"
 const title = "Request dock regression"
 
+test("custom:false removes custom answers from rendering and keyboard navigation", async ({ page }) => {
+  await mockServer(page, {
+    questions: [
+      {
+        id: "question-restricted",
+        sessionID,
+        questions: [
+          {
+            header: "Restricted",
+            question: "Choose a listed answer",
+            custom: false,
+            options: [
+              { label: "First", description: "" },
+              { label: "Last", description: "" },
+            ],
+          },
+          {
+            header: "Open",
+            question: "Add your own answer",
+            options: [{ label: "Listed", description: "" }],
+          },
+        ],
+      },
+    ],
+  })
+  await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
+  await expectSessionTitle(page, title)
+  const dock = page.locator('[data-component="session-question-dock"]')
+  await expect(dock.getByRole("radio")).toHaveCount(2)
+  await dock.getByRole("radio", { name: "First", exact: true }).focus()
+  await page.keyboard.press("End")
+  await expect(dock.getByRole("radio", { name: "Last", exact: true })).toBeFocused()
+  await page.keyboard.press("ArrowDown")
+  await expect(dock.getByRole("radio", { name: "Last", exact: true })).toBeFocused()
+  await page.keyboard.press("Space")
+  await expect(dock.getByRole("radio", { name: "Last", exact: true })).toBeChecked()
+  await dock.getByRole("button", { name: "Next", exact: true }).click()
+  await expect(dock.getByText("Add your own answer", { exact: true })).toBeVisible()
+  await expect(dock.getByRole("radio")).toHaveCount(2)
+  await dock.locator('[data-custom="true"]').click()
+  await dock.locator("textarea").fill("Custom answer")
+  const reply = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" &&
+      new URL(request.url()).pathname === `/api/session/${sessionID}/question/question-restricted/reply`,
+  )
+  await dock.getByRole("button", { name: "Submit", exact: true }).click()
+  expect((await reply).postDataJSON()).toEqual({ answers: [["Last"], ["Custom answer"]] })
+})
+
 test("shows a pending question dock", async ({ page }) => {
   await mockServer(page, {
     questions: [

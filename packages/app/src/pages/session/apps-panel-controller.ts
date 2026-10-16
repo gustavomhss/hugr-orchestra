@@ -22,7 +22,7 @@ export type AppDockAPI = {
   appDockRecoverTab: (tabID: string) => Promise<{ tabID: string; generation: number; url: string }>
   appDockCloseTabs: (tabID: string, scope: "others" | "right", order?: string[]) => Promise<void>
   appDockSelect: (tab: TabIdentity, bounds: Bounds) => Promise<void>
-  appDockNavigate: (tabID: string, url: string) => Promise<void>
+  appDockNavigate: (tabID: string, url: string) => Promise<{ ok: boolean; url: string }>
   appDockCommand: (tabID: string, command: "back" | "forward" | "reload") => Promise<void>
   appDockEvent: (callback: (event: AppDockEvent) => void) => () => void
   appDockFind: (tabID: string, text: string, forward: boolean) => Promise<number>
@@ -45,6 +45,7 @@ export type AppDockAPI = {
   appDockUpdateManifest: (expectedRevision: number, manifest: AppDockManifest) => Promise<AppDockManifestUpdate>
 } & Partial<AppDockLinuxAPI>
 type AppDockEvent =
+  | { type: "shortcut"; payload: { identity: TabIdentity; command: "address" | "new-tab" | "close-tab" } }
   | {
       type: "state"
       payload: {
@@ -118,7 +119,7 @@ const required = [
   "appDockUpdateManifest",
 ] as const
 
-export const tabLabel = (tab: Tab) => tab.title || new URL(tab.url).hostname
+export const tabLabel = (tab: Tab) => tab.title || (URL.canParse(tab.url) ? new URL(tab.url).hostname : tab.url)
 export const sameTab = (left: TabIdentity | undefined, right: TabIdentity | undefined) =>
   !!left && !!right && left.tabID === right.tabID && left.generation === right.generation
 const identity = (tab: TabIdentity): TabIdentity => ({ tabID: tab.tabID, generation: tab.generation })
@@ -180,6 +181,8 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   let overlays: ReturnType<typeof createAppDockOverlayWatch> | undefined
   let manifest: AppDockManifest | undefined
   let manifestWrite = Promise.resolve()
+  const navigations = new Map<string, object>()
+  const shortcuts = new Set<(command: "address" | "new-tab" | "close-tab") => void>()
 
   const activeTab = () => state.tabs.find((tab) => sameTab(tab, state.active))
   const frame = () => (host ? bounds(host) : { x: 0, y: 0, width: 1, height: 1 })
@@ -234,6 +237,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   const load = async (owner: string) => {
     if (!dock) return
     const current = ++generation
+    navigations.clear()
     setState({
       owner,
       profile: owner || undefined,
@@ -300,6 +304,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     const known = state.tabs.find((tab) => sameTab(tab, next))
     if (!known) return
     if (isLinux(known.url) && !isLinux(next.url)) return
+    if (known.url !== next.url) navigations.delete(next.tabID)
     const tabs = state.tabs.map((tab) => (sameTab(tab, next) ? { ...tab, ...next } : tab))
     const ready = state.status === "ready"
     setState("tabs", tabs)
@@ -319,6 +324,11 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     listening = true
     // Native tabs keep running while no view is attached, so this subscription lives with the window.
     dock.appDockEvent((event) => {
+      if (event.type === "shortcut") {
+        if (!host || !sameTab(event.payload.identity, state.active) || !isHTTPS(activeTab()?.url ?? "")) return
+        shortcuts.forEach((listener) => listener(event.payload.command))
+        return
+      }
       if (event.type === "state") return applyTabState(event.payload)
       if (event.type === "tab-selected") {
         const tab = state.tabs.find((item) => sameTab(item, event.payload))
@@ -496,6 +506,10 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       }
     },
     owns: (element: HTMLElement | undefined) => !!element && element === host,
+    onShortcut(listener: (command: "address" | "new-tab" | "close-tab") => void) {
+      shortcuts.add(listener)
+      return () => shortcuts.delete(listener)
+    },
     // A popover drawn inside the Dock's own tree over the page area hides the native browser while open.
     registerOverlay: (element: Element) => watch()?.register(element) ?? (() => undefined),
     // Bounds measured for one tab; the desktop drops them once another tab or generation is attached.
@@ -533,10 +547,19 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       if (!current) return open(state.url)
       if (!dock || !host) return
       const url = state.url
-      const navigated = await dock.appDockNavigate(current.tabID, url).then(() => true, fail(generation))
-      if (!navigated || !state.tabs.some((tab) => sameTab(tab, current))) return
-      const tabs = state.tabs.map((tab) => (sameTab(tab, current) ? { ...tab, url } : tab))
+      const owner = generation
+      const request = {}
+      navigations.set(current.tabID, request)
+      const valid = () => owner === generation && navigations.get(current.tabID) === request
+      const navigated = await dock.appDockNavigate(current.tabID, url).catch((cause: unknown) => {
+        if (valid()) fail(owner)(cause)
+      })
+      if (!valid() || !navigated?.ok || !isHTTPS(navigated.url) || !state.tabs.some((tab) => sameTab(tab, current)))
+        return
+      navigations.delete(current.tabID)
+      const tabs = state.tabs.map((tab) => (sameTab(tab, current) ? { ...tab, url: navigated.url } : tab))
       setState("tabs", tabs)
+      if (sameTab(state.active, current) && state.url === url) setState("url", navigated.url)
       void saveTabs(tabs)
     },
     openNewTab: () => open(home),
@@ -558,6 +581,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       const wasActive = sameTab(requested, state.active)
       const closed = await dock.appDockCloseTab(requested.tabID).then(() => true, fail(current))
       if (!closed || current !== generation) return
+      navigations.delete(requested.tabID)
       const remaining = state.tabs.filter((tab) => !sameTab(tab, requested))
       setState("tabs", remaining)
       void saveTabs(remaining)
@@ -588,6 +612,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
         .then(() => true, fail(current))
       if (!done || current !== generation) return
       const closed = scope === "others" ? items.filter((item) => !sameTab(item, tab)) : visual.slice(index + 1)
+      closed.forEach((item) => navigations.delete(item.tabID))
       const remaining = state.tabs.filter((item) => !closed.some((other) => sameTab(other, item)))
       setState("tabs", remaining)
       void saveTabs(remaining)

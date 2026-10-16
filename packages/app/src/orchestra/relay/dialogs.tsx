@@ -1,5 +1,8 @@
-import { createSignal, For, type JSX, Show } from "solid-js"
+import { createEffect, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js"
+import type { Location } from "@solidjs/router"
 import type { RelayDocument } from "./client"
+import { deleteDocument } from "./drafts"
+import { rememberDocument } from "./cache"
 import { checkCount, type Flow, retryBudget, steps } from "./graph"
 import { phaseNames } from "./parts"
 import type { RelaySource } from "./source"
@@ -7,20 +10,38 @@ import { RelayDialog, useRelayCopy } from "./ui"
 
 export const failure = (error: unknown) => (error instanceof Error && error.message ? error.message : String(error))
 
-// Runs one async action at a time and keeps its error on screen.
-export function createAction() {
+// Runs one local action per navigation generation; backend results can outlive navigation.
+export function createAction(location?: Pick<Location, "pathname" | "search" | "hash">) {
+  let active = true
+  let generation = 0
+  onCleanup(() => { active = false })
   const [busy, setBusy] = createSignal(false)
   const [error, setError] = createSignal<string>()
-  const run = async (action: () => Promise<unknown>) => {
-    if (busy()) return
+  if (location) createEffect(on(
+    [() => location.pathname, () => location.search, () => location.hash],
+    () => {
+      generation++
+      setBusy(false)
+      setError(undefined)
+    },
+    { defer: true },
+  ))
+  const run = async (action: (current: () => boolean) => Promise<unknown>) => {
+    if (!active || busy()) return
+    const started = generation
+    const origin = location && { pathname: location.pathname }
+    const current = () => active && generation === started
     setBusy(true)
     setError(undefined)
-    const result = await action().then(
+    const result = await action(current).then(
       () => undefined,
       (cause: unknown) => failure(cause),
     )
-    setBusy(false)
-    setError(result)
+    if (current()) {
+      setBusy(false)
+      setError(result)
+    }
+    if (origin) window.dispatchEvent(new CustomEvent("relay-navigation-action-settled", { detail: origin }))
   }
   return { busy, error, run, setError }
 }
@@ -35,7 +56,7 @@ function Foot(props: {
 }) {
   return (
     <>
-      <button type="button" class="mx-btn" onClick={props.onCancel}>
+      <button type="button" class="mx-btn" disabled={props.busy} onClick={props.onCancel}>
         {props.cancel}
       </button>
       <button
@@ -53,24 +74,25 @@ export function PublishDialog(props: {
   document: RelayDocument
   flow: Flow
   source: RelaySource
+  active?: () => boolean
+  retain?: () => () => void
   onClose: () => void
 }) {
   const copy = useRelayCopy()
   const action = createAction()
   const workflow = props.flow.kind === "workflow"
   const publish = () =>
-    action.run(async () => {
-      const published = await props.source.client.publish(props.document)
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) =>
-          list?.map((item) => (item.id === published.id ? published : item)),
-        )
-      props.onClose()
+    action.run(() => {
+      const release = props.retain?.()
+      return props.source.client.publish(props.document).then(async (published) => {
+        await rememberDocument(props.source.queryClient(), props.source.key("documents"), published, props.active)
+        props.onClose()
+      }).finally(() => release?.())
     })
   return (
     <RelayDialog
       title={copy.t("orchestra.workflows.publish.title", { version: props.document.versionCounter })}
+      busy={action.busy()}
       description={copy.t(workflow ? "orchestra.workflows.publish.workflow" : "orchestra.hooks.publish.description")}
       onClose={props.onClose}
       onSubmit={publish}
@@ -138,19 +160,15 @@ export function DeleteDialog(props: {
   const action = createAction()
   const remove = () =>
     action.run(async () => {
-      await props.source.client.remove(props.document.id)
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) =>
-          list?.filter((item) => item.id !== props.document.id),
-        )
+      await deleteDocument(props.source, props.document.id)
       props.onDeleted()
     })
   return (
     <RelayDialog
       title={copy.t("orchestra.workflows.delete.title", { name: props.document.name })}
+      busy={action.busy()}
       description={copy.t(
-        props.kind === "workflow" ? "orchestra.workflows.delete.workflow" : "orchestra.hooks.delete.description",
+        props.kind === "workflow" ? "orchestra.workflows.delete.retained" : "orchestra.workflows.delete.hookRetained",
       )}
       onClose={props.onClose}
       onSubmit={remove}

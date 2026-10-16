@@ -7,6 +7,7 @@ import type { ContextSnapshotDecodeError, MessageDecodeError } from "../error"
 import { SessionRunnerModel } from "./model"
 import type { SystemContext } from "../../system-context/index"
 import type { ToolOutputStore } from "../../tool-output-store"
+import type { SessionSubagentModels } from "../subagent-models"
 
 export type RunError =
   | LLMError
@@ -15,6 +16,7 @@ export type RunError =
   | ContextSnapshotDecodeError
   | SystemContext.InitializationBlocked
   | ToolOutputStore.Error
+  | SessionSubagentModels.Error
 
 /** Error message recorded on an assistant turn the runner stopped because its drain was interrupted. */
 export const INTERRUPTED_TURN = "Provider turn interrupted"

@@ -2,7 +2,7 @@ export * as McpProjectConfig from "./project-config"
 
 import path from "path"
 import { Effect, Schema, Semaphore } from "effect"
-import { applyEdits, modify, parse, type ParseError, printParseErrorCode } from "jsonc-parser"
+import { applyEdits, modify, parse, parseTree, type ParseError, printParseErrorCode } from "jsonc-parser"
 import { FSUtil } from "@orchestra/core/fs-util"
 import type { ConfigMCPV1 } from "@orchestra/core/v1/config/mcp"
 import { isRecord } from "@/util/record"
@@ -69,6 +69,8 @@ export const write = Effect.fn("McpProjectConfig.write")(function* (
     directory,
     Effect.gen(function* () {
       const documents = yield* read(directory)
+      const ambiguity = documents.map((document) => duplicateError(document, name)).find((error) => error !== undefined)
+      if (ambiguity) return yield* ambiguity
       const target =
         documents.findLast((document) => Object.hasOwn(servers(document), name)) ??
         documents.find((document) => document.text !== undefined) ??
@@ -97,7 +99,10 @@ export const remove = Effect.fn("McpProjectConfig.remove")(function* (directory:
   return yield* exclusiveTo(
     directory,
     Effect.gen(function* () {
-      const defining = (yield* read(directory)).filter((document) => Object.hasOwn(servers(document), name))
+      const documents = yield* read(directory)
+      const ambiguity = documents.map((document) => duplicateError(document, name)).find((error) => error !== undefined)
+      if (ambiguity) return yield* ambiguity
+      const defining = documents.filter((document) => Object.hasOwn(servers(document), name))
       yield* Effect.forEach(defining, (document) => editable(document, name))
       yield* Effect.forEach(defining, (document) =>
         save(
@@ -155,6 +160,29 @@ const save = Effect.fnUntraced(function* (file: string, text: string) {
     ),
   )
 })
+
+// modify() chooses the first matching property, while parse() loads the last. Refuse ambiguous
+// mutation paths before any file changes; parsed key values also catch JSON-escaped duplicates.
+function duplicateError(document: Document, name: string) {
+  let node = document.text === undefined ? undefined : parseTree(document.text, [], { allowTrailingComma: true })
+  for (const key of ["mcp", name]) {
+    const properties =
+      node?.type === "object" ? (node.children?.filter((property) => property.children?.[0]?.value === key) ?? []) : []
+    if (properties.length > 1)
+      return new FileError({
+        file: document.file,
+        message: `Cannot edit duplicate property ${JSON.stringify(key)} in ${document.file}`,
+      })
+    node = properties[0]?.children?.[1]
+  }
+  const keys = node?.type === "object" ? (node.children?.map((property) => property.children?.[0]?.value) ?? []) : []
+  const duplicate = keys.find((key, index) => keys.indexOf(key) !== index)
+  if (duplicate !== undefined)
+    return new FileError({
+      file: document.file,
+      message: `Cannot edit duplicate property ${JSON.stringify(duplicate)} in mcp.${name} in ${document.file}`,
+    })
+}
 
 function editable(document: Document, name: string) {
   const reason = (() => {

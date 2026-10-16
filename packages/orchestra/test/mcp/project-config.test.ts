@@ -17,6 +17,48 @@ const scratch = Effect.acquireRelease(
 const text = (file: string) => Effect.promise(() => Bun.file(file).text())
 
 describe("McpProjectConfig", () => {
+  it.live("cold review: duplicate-like text and unrelated keys do not block an unambiguous MCP path", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      const file = path.join(dir.path, "orchestra.jsonc")
+      yield* Effect.promise(() => Bun.write(file, `{
+        // "mcp", "mcp", "docs", "docs" are not properties here.
+        "other": {"url":"first","url":"last"},
+        "mcp": {"docs":{"type":"remote","url":"https://old.test"}}
+      }`))
+      yield* McpProjectConfig.write(dir.path, "docs", { type: "remote", url: "https://new.test" })
+      expect((yield* McpProjectConfig.entries(dir.path)).docs).toEqual({ type: "remote", url: "https://new.test" })
+      expect(yield* McpProjectConfig.remove(dir.path, "docs")).toEqual([file])
+      expect((yield* McpProjectConfig.entries(dir.path)).docs).toBeUndefined()
+      expect(yield* text(file)).toContain('"other": {"url":"first","url":"last"}')
+    }),
+  )
+  for (const [label, content] of [
+    ["root key", `{"mcp":{"docs":{"type":"remote","url":"https://first.test"}},"mcp":{"docs":{"type":"remote","url":"https://last.test"}}}`],
+    ["escaped server key", String.raw`{"mcp":{"docs":{"type":"remote","url":"https://first.test"},"do\u0063s":{"type":"remote","url":"https://last.test"}}}`],
+    ["edited leaf", `{"mcp":{"docs":{"type":"remote","url":"https://first.test","url":"https://last.test"}}}`],
+    ["hidden root entry", `{"mcp":{"docs":{"type":"local","command":["first"]}},"mcp":{}}`],
+  ]) {
+    for (const action of ["write", "remove"] as const) {
+      it.live(`cold review: ${action} refuses duplicate ${label} before changing any profile file`, () =>
+        Effect.gen(function* () {
+          const dir = yield* scratch
+          const first = path.join(dir.path, "orchestra.json")
+          const ambiguous = path.join(dir.path, ".orchestra", "orchestra.jsonc")
+          const valid = JSON.stringify({ mcp: { docs: { type: "remote", url: "https://valid.test" } } })
+          yield* Effect.promise(() => Bun.write(first, valid))
+          yield* Effect.promise(() => Bun.write(ambiguous, content))
+          const error = yield* Effect.flip(action === "write"
+            ? McpProjectConfig.write(dir.path, "docs", { type: "remote", url: "https://new.test" }).pipe(Effect.asVoid)
+            : McpProjectConfig.remove(dir.path, "docs").pipe(Effect.asVoid))
+          expect(error).toBeInstanceOf(McpProjectConfig.FileError)
+          expect(error.message).toContain("duplicate")
+          expect(yield* text(first)).toBe(valid)
+          expect(yield* text(ambiguous)).toBe(content)
+        }),
+      )
+    }
+  }
   it.live("creates the profile orchestra.json when no project config exists", () =>
     Effect.gen(function* () {
       const dir = yield* scratch

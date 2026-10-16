@@ -3,7 +3,7 @@ export * from "./session/schema"
 
 import { DateTime, Effect, Layer, Schema, Context, Stream } from "effect"
 import { ListAnchor } from "@orchestra/schema/session"
-import { and, asc, desc, eq, gt, like, lt, or, type SQL } from "drizzle-orm"
+import { and, asc, desc, eq, gt, lt } from "drizzle-orm"
 import { ProjectV2 } from "./project"
 import { WorkspaceV2 } from "./workspace"
 import { ModelV2 } from "./model"
@@ -24,7 +24,6 @@ import { Slug } from "./util/slug"
 import { ProjectTable } from "./project/sql"
 import path from "path"
 import { existsSync } from "fs"
-import { fromRow } from "./session/info"
 import { SessionRunner } from "./session/runner/index"
 import { SessionStore } from "./session/store"
 import { SessionExecution } from "./session/execution"
@@ -40,6 +39,8 @@ import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
 import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
+import { SessionArchive } from "./session/archive"
+import { SessionSubagentModels } from "./session/subagent-models"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -61,6 +62,7 @@ const ListInputBase = {
   limit: PositiveInt.pipe(Schema.optional),
   order: Schema.Literals(["asc", "desc"]).pipe(Schema.optional),
   anchor: ListAnchor.pipe(Schema.optional),
+  includeArchived: Schema.Boolean.pipe(Schema.optional),
 }
 
 const ListDirectoryInput = Schema.Struct({
@@ -81,6 +83,7 @@ export type ListInput = typeof ListInput.Type
 
 type CreateInput = {
   id?: SessionSchema.ID
+  parentID?: SessionSchema.ID
   agent?: AgentV2.ID
   model?: ModelV2.Ref
   location: Location.Ref
@@ -126,8 +129,9 @@ export type Error =
 
 export interface Interface {
   readonly list: (input?: ListInput) => Effect.Effect<SessionSchema.Info[]>
-  readonly create: (input: CreateInput) => Effect.Effect<SessionSchema.Info>
+  readonly create: (input: CreateInput) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
+  readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
   readonly messages: (input: {
     sessionID: SessionSchema.ID
     limit?: number
@@ -261,6 +265,7 @@ const layer = Layer.effect(
         const sessionID = input.id ?? SessionSchema.ID.create()
         const recorded = yield* store.get(sessionID)
         if (recorded) return recorded
+        if (input.parentID) yield* result.get(input.parentID)
         const project = yield* projects.resolve(input.location.directory)
         yield* db
           .insert(ProjectTable)
@@ -274,6 +279,7 @@ const layer = Layer.effect(
           slug: Slug.create(),
           version: InstallationVersion,
           projectID: project.id,
+          parentID: input.parentID,
           directory: input.location.directory,
           path: path.relative(project.directory, input.location.directory).replaceAll("\\", "/"),
           workspaceID: input.location.workspaceID ? WorkspaceV2.ID.make(input.location.workspaceID) : undefined,
@@ -320,42 +326,11 @@ const layer = Layer.effect(
         if (!session) return yield* new NotFoundError({ sessionID })
         return session
       }),
-      list: Effect.fn("V2Session.list")(function* (input = {}) {
-        const direction = input.anchor?.direction ?? "next"
-        const requestedOrder = input.order ?? "desc"
-        const order = direction === "previous" ? (requestedOrder === "asc" ? "desc" : "asc") : requestedOrder
-        const sortColumn = SessionTable.time_created
-        const conditions: SQL[] = []
-        if ("directory" in input) conditions.push(eq(SessionTable.directory, input.directory))
-        if (input.workspaceID) conditions.push(eq(SessionTable.workspace_id, input.workspaceID))
-        if ("project" in input) conditions.push(eq(SessionTable.project_id, input.project))
-        if (input.search) conditions.push(like(SessionTable.title, `%${input.search}%`))
-        if (input.anchor) {
-          conditions.push(
-            order === "asc"
-              ? or(
-                  gt(sortColumn, input.anchor.time),
-                  and(eq(sortColumn, input.anchor.time), gt(SessionTable.id, input.anchor.id)),
-                )!
-              : or(
-                  lt(sortColumn, input.anchor.time),
-                  and(eq(sortColumn, input.anchor.time), lt(SessionTable.id, input.anchor.id)),
-                )!,
-          )
-        }
-        const query = db
-          .select()
-          .from(SessionTable)
-          .where(conditions.length > 0 ? and(...conditions) : undefined)
-          .orderBy(
-            order === "asc" ? asc(sortColumn) : desc(sortColumn),
-            order === "asc" ? asc(SessionTable.id) : desc(SessionTable.id),
-          )
-        const rows = yield* (input.limit === undefined ? query.all() : query.limit(input.limit).all()).pipe(
-          Effect.orDie,
-        )
-        return (direction === "previous" ? rows.toReversed() : rows).map((row) => fromRow(row))
+      archive: Effect.fn("V2Session.archive")(function* (input) {
+        if (!(yield* SessionArchive.set(db, events, input)))
+          return yield* new NotFoundError({ sessionID: input.sessionID })
       }),
+      list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {
         yield* result.get(input.sessionID)
         const direction = input.cursor?.direction ?? "next"
@@ -538,6 +513,8 @@ export const node = makeGlobalNode({
     SessionStore.node,
     LocationServiceMap.node,
     SessionProjector.node,
+    SessionArchive.node,
+    SessionSubagentModels.node,
     Global.node,
   ],
 })

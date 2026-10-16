@@ -1,4 +1,5 @@
 import { DESKTOP_NATIVE_KEYS } from "./desktop-native"
+import { FrontendRecovery } from "./frontend-recovery"
 
 const desktop = [
   "HuGR Orchestra",
@@ -91,6 +92,8 @@ const desktop = [
 ]
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.hu,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Javasolt",
   "command.category.view": "Nézet",
@@ -693,21 +696,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "Nem sikerült betölteni az alügynökök modelljeit.",
-  "session.subagentModels.unsupported": "Az alügynökök modelljei nem érhetők el ezen a szerveren",
-  "session.subagentModels.denyAll": "Egyetlen modell sem engedélyezett. Az alügynököknek történő delegálás ki van kapcsolva.",
-  "dialog.subagentModels.unsupported": "Az alügynökök modellengedélyei ezen a szerveren nem módosíthatók.",
-  "dialog.subagentModels.saveFailed": "A modellengedélyeket nem sikerült megerősíteni. Próbáld újra.",
-  "dialog.subagentModels.inherited": "A munkamenethez nincs modellkorlátozás beállítva. Az alügynökök a beállított modelljüket vagy a szülő munkamenet modelljét öröklik.",
-  "dialog.subagentModels.noneAllowed": "Ebben a munkamenetben egyetlen csatlakoztatott modell sem engedélyezett az alügynökök számára.",
-  "orchestra.agents.model.unavailable": "{{model}} nem érhető el ebben a profilban.",
-  "orchestra.agents.model.incompatible": "{{model}} nem támogatja az ügynökök által igényelt szöveges bemenetet, szöveges kimenetet és eszközhívásokat.",
-  "orchestra.agents.models.loading": "Csatlakoztatott modellek betöltése…",
-  "orchestra.agents.models.error": "Nem sikerült betölteni a csatlakoztatott modelleket. Próbáld újra.",
-  "orchestra.agents.models.empty": "Ebben a profilban nincs elérhető csatlakoztatott modell.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -852,7 +840,6 @@ export const dict = {
   "common.rename": "Átnevezés",
   "common.export": "Exportálás",
   "common.reset": "Alaphelyzet",
-  "common.retry": "Újrapróbálás",
   "common.archive": "Archívum",
   "common.delete": "Törlés",
   "common.close": "Bezárás",

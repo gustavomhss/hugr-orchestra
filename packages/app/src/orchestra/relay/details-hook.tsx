@@ -1,6 +1,6 @@
-import { createEffect, createSignal, For, type JSX, on, Show } from "solid-js"
+import { For, type JSX, Show } from "solid-js"
 import { decisionTime, type RelayDecision, type RelayNodeType } from "./client"
-import { Empty, NodeDetails, Rows, Switchable } from "./details"
+import { Empty, NodeDetails, NodeNameField, Rows, Switchable } from "./details"
 import {
   CONDITION,
   type Flow,
@@ -14,6 +14,7 @@ import {
 } from "./graph"
 import { hookKey, isFileOperation, operationTimings } from "./catalog"
 import { Ic, useRelayCopy } from "./ui"
+import { HookQueryStatus, type HookQueryState } from "./hook-status"
 
 type Copy = ReturnType<typeof useRelayCopy>
 
@@ -62,6 +63,9 @@ type Props = {
   outputs: Outputs
   types: RelayNodeType[] | undefined
   decision: RelayDecision | undefined
+  decisionStatus?: HookQueryState
+  installed?: boolean
+  testResult?: string
   issues: string[]
   save: JSX.Element
   onChange: (flow: Flow) => void
@@ -85,9 +89,12 @@ export function HookDetails(props: Props) {
       kind={kind()}
       previous={props.flow.nodes[index() - 1]}
       next={props.flow.nodes[index() + 1]}
-      input={<Input {...props} />}
-      params={<Params {...props} />}
-      output={<Output {...props} />}
+      input={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Input {...props} /></Show>}
+      params={<>
+        <Show when={props.testResult}>{(result) => <p class="mx-note" role="status">{result()}</p>}</Show>
+        <Params {...props} />
+      </>}
+      output={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Output {...props} /></Show>}
       save={props.save}
       actions={
         <button type="button" class="mx-btn" onClick={props.onTest}>
@@ -98,6 +105,15 @@ export function HookDetails(props: Props) {
       onNav={props.onNav}
       onClose={props.onClose}
     />
+  )
+}
+
+function DecisionStatus(props: Props) {
+  const copy = useRelayCopy()
+  return (
+    <Show when={props.decisionStatus} fallback={<Empty>{copy.t("orchestra.workflows.hookState.uninstalled")}</Empty>}>
+      {(status) => <HookQueryStatus {...status()} />}
+    </Show>
   )
 }
 
@@ -208,23 +224,8 @@ function Output(props: Props) {
 
 function Params(props: Props) {
   const copy = useRelayCopy()
-  const [nameError, setNameError] = createSignal(false)
-  // Walking to another node starts its name field clean.
-  createEffect(
-    on(
-      () => props.node.id,
-      () => setNameError(false),
-      { defer: true },
-    ),
-  )
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
-  const rename = (value: string) => {
-    const name = value.trim()
-    const taken = props.flow.nodes.some((node) => node.id !== props.node.id && node.name === name)
-    setNameError(!name || taken)
-    if (name && !taken) props.onChange(updateNode(props.flow, props.node.id, { name }))
-  }
   const message = () => {
     if (props.node.type === "relay.hookAllow") return copy.t("orchestra.hooks.details.note")
     if (props.node.type === "relay.hookRecord") return copy.t("orchestra.hooks.details.logLine")
@@ -243,15 +244,7 @@ function Params(props: Props) {
           </div>
         )}
       </For>
-      <label class="mx-field" classList={{ invalid: nameError() }}>
-        <span>{copy.t("orchestra.workflows.details.name")}</span>
-        <input value={props.node.name} data-autofocus="" onInput={(event) => rename(event.currentTarget.value)} />
-        <Show when={nameError()}>
-          <span class="mx-hint" style={{ color: "var(--mx-bad)" }}>
-            {copy.t("orchestra.workflows.details.nameTaken")}
-          </span>
-        </Show>
-      </label>
+      <NodeNameField flow={props.flow} node={props.node} onChange={props.onChange} />
       <Show when={props.node.type === TRIGGER}>
         <label class="mx-field">
           <span>{copy.t("orchestra.hooks.details.event")}</span>

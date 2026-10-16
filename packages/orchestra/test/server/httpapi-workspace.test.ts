@@ -2,7 +2,7 @@ import { afterEach, describe, expect, mock } from "bun:test"
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
 import { Effect, Layer, Stream } from "effect"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Flag } from "@orchestra/core/flag/flag"
 import { registerAdapter } from "../../src/control-plane/adapters"
@@ -25,7 +25,7 @@ import { testEffect } from "../lib/effect"
 import { httpApiLayer, requestInDirectory } from "./httpapi-layer"
 
 const originalWorkspaces = Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES
-const appLayer = AppNodeBuilder.build(
+const appLayer = NativeSessionFixture.build(
   LayerNode.group([Project.node, Session.node, Workspace.node, InstanceStore.node, Database.node, Ripgrep.node]),
   [[InstanceStore.bootstrapNode, InstanceBootstrap.node]],
 )

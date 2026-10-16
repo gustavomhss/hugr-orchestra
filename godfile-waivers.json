@@ -391,20 +391,20 @@
       "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 1146,
-      "reason": "Generated Effect V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Extended only for Session process routes; owner answered 'Autorizar tetos gerados'.",
-      "authorizedBy": "owner (gustavomhss), explicit four-output ceiling extension",
-      "authorizedAt": "2026-10-09"
+      "maximumLines": 1218,
+      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy and archive contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
+      "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1644,
-      "reason": "Generated V2 HttpApi client (packages/client bun run generate); splitting requires generator redesign. Includes the public default-model route for Claude host availability. Generated-only ceiling extension under the owner's standing waiver.",
-      "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
-      "authorizedAt": "2026-10-11"
+      "maximumLines": 1729,
+      "reason": "Generated Promise V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy and archive contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged.",
+      "authorizedBy": "Gustavo, explicit three-generated-output ceiling extension",
+      "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 6799,
-      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Combines the approved promptContext/RelayForbiddenError outputs (6646) with dev's Session process routes (6661). Extended for the Atlas knowledge Relay schemas (Sprint/WorkPackage knowledge, WorkflowDefinition anchors); official generator output is 6799 LOC.",
+      "maximumLines": 6892,
+      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Union of the frontend stack's model-default, owned OAuth, agent engine, session model-policy and archive contracts (6822) with dev's Atlas knowledge Relay schemas (6799); official generator output after merging both is 6892 LOC. Handwritten source limits unchanged.",
       "authorizedBy": "owner (gustavomhss), ruling 2026-10-10: generated files get a waiver",
       "authorizedAt": "2026-10-16"
     },

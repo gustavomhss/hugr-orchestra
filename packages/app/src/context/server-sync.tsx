@@ -13,18 +13,7 @@ import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
 import { ServerSDK } from "./server-sdk"
-import {
-  bootstrapDirectory,
-  bootstrapGlobal,
-  clearProviderRev,
-  loadAgentsQuery,
-  loadCommands,
-  loadGlobalConfigQuery,
-  loadPathQuery,
-  loadProjectsQuery,
-  loadProvidersQuery,
-  loadReferencesQuery,
-} from "./global-sync/bootstrap"
+import { bootstrapDirectory, bootstrapGlobal, clearProviderRev, loadCommands } from "./global-sync/bootstrap"
 import { createChildStoreManager } from "./global-sync/child-store"
 import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
 import { estimateRootSessionTotal, loadRootSessions, loadRootSessionsV1 } from "./global-sync/session-load"
@@ -36,7 +25,6 @@ import { queryOptions, useMutation, useQueries, useQuery, useQueryClient } from 
 import type { SolidQueryOptions } from "@tanstack/solid-query"
 import { createRefreshQueue } from "./global-sync/queue"
 import { directoryKey } from "./global-sync/utils"
-import { PathKey } from "@/utils/path-key"
 import { createDirSyncContext } from "./directory-sync"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
@@ -47,19 +35,17 @@ import { retry } from "@orchestra/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { ServerApi } from "@/utils/server"
-import type {
-  McpListInput,
-  McpListOutput,
-  McpResource,
-  McpResourceCatalogInput,
-  McpResourceCatalogOutput,
-  McpServer,
-  SessionActiveOutput,
-} from "@opencode-ai/client/promise"
+import type { SessionActiveOutput } from "@opencode-ai/client/promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
-import type { AppSession, SessionManagementEvent } from "@/utils/session"
+import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
+import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
+import { applySessionPolicyEvent, sessionManagementFences } from "./session-management-state"
+import { decodeSessionManagementEvent } from "@/utils/session"
+
+export { createProviderRefresher, loadLspQuery, loadMcpQuery, loadMcpResourcesQuery } from "./server-queries"
+export type { QueryOptionsApi } from "./server-queries"
+export { applySessionPolicyEvent } from "./session-management-state"
 
 type GlobalStore = {
   ready: boolean
@@ -85,16 +71,6 @@ export function onJanitorReport(listener: (event: JanitorReportEvent) => void) {
   return () => janitorReportListeners.delete(listener)
 }
 
-type McpListApi = {
-  readonly list: (input?: McpListInput) => Promise<McpListOutput>
-}
-
-type McpResourceApi = {
-  readonly resource: {
-    readonly catalog: (input?: McpResourceCatalogInput) => Promise<McpResourceCatalogOutput>
-  }
-}
-
 type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Error, T, K> & {
   initialData?: undefined
   queryKey: K
@@ -103,66 +79,6 @@ type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Err
 type SessionActiveApi = {
   readonly active: () => Promise<SessionActiveOutput>
 }
-
-export const loadMcpQuery = (
-  scope: ServerScope,
-  directory: string,
-  api: McpListApi,
-  legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpServer["status"]>, readonly [ServerScope, string, "mcp"]> =>
-  queryOptions<
-    Record<string, McpServer["status"]>,
-    Error,
-    Record<string, McpServer["status"]>,
-    readonly [ServerScope, string, "mcp"]
-  >({
-    queryKey: [scope, directory, "mcp"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return (await legacy.mcp.status()).data ?? {}
-      return api
-        .list({ location: { directory } })
-        .then((result) => Object.fromEntries(result.data.map((server) => [server.name, server.status])))
-    },
-  })
-
-export const loadMcpResourcesQuery = (
-  scope: ServerScope,
-  directory: string,
-  api: McpResourceApi,
-  legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
-): ApiQueryOptions<Record<string, McpResource>, readonly [ServerScope, string, "mcpResources"]> =>
-  queryOptions<
-    Record<string, McpResource>,
-    Error,
-    Record<string, McpResource>,
-    readonly [ServerScope, string, "mcpResources"]
-  >({
-    queryKey: [scope, directory, "mcpResources"] as const,
-    queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) {
-        return Object.fromEntries(
-          Object.entries((await legacy.experimental.resource.list()).data ?? {}).map(([key, resource]) => [
-            key,
-            { ...resource, server: resource.client },
-          ]),
-        )
-      }
-      return api.resource
-        .catalog({ location: { directory } })
-        .then((result) =>
-          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])),
-        )
-    },
-    placeholderData: {},
-  })
-
-export const loadLspQuery = (scope: ServerScope, directory: string, sdk: OrchestraClient) =>
-  queryOptions({
-    queryKey: [scope, directory, "lsp"] as const,
-    queryFn: () => sdk.lsp.status().then((r) => r.data ?? []),
-  })
 
 export const loadActiveSessionsQuery = (
   scope: ServerScope,
@@ -179,30 +95,6 @@ export const loadActiveSessionsQuery = (
     refetchOnWindowFocus: false,
   })
 
-export function applySessionPolicyEvent(input: {
-  event: SessionManagementEvent
-  session: Pick<ServerSession, "apply" | "get">
-  children: Readonly<Record<string, object | undefined>>
-  disposed: () => boolean
-  indexSession: (row: AppSession) => void
-}) {
-  // One event can recover an evicted fence belonging to another directory.
-  const owners = { ...input.children }
-  const recovery = input.session.apply(input.event)
-  if (!recovery) return
-  return recovery.then((rows) => {
-    if (input.disposed()) return
-    rows.forEach((row) => {
-      const key = directoryKey(row.directory)
-      const owner = owners[key]
-      if (!owner || input.children[key] !== owner) return
-      // Read the current row so later events/deletion cannot be overwritten by this completion.
-      const current = input.session.get(row.id)
-      if (current && directoryKey(current.directory) === key) input.indexSession(current)
-    })
-  })
-}
-
 export function seedActiveSessionStatuses(
   session: Pick<ServerSession, "data" | "set">,
   active: SessionActiveOutput | Record<string, SessionStatus>,
@@ -214,32 +106,6 @@ export function seedActiveSessionStatuses(
   }
 }
 
-function makeQueryOptionsApi(
-  scope: ServerScope,
-  serverSDK: () => OrchestraClient,
-  serverAPI: ServerApi,
-  sdkFor: (dir: PathKey) => OrchestraClient,
-  protocol: Promise<"v1" | "v2">,
-) {
-  return {
-    globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol),
-    projects: () => loadProjectsQuery(scope, serverAPI.project),
-    providers: (directory: PathKey | null) =>
-      loadProvidersQuery(scope, directory, serverAPI, directory ? sdkFor(directory) : serverSDK(), protocol),
-    path: (directory: PathKey | null) =>
-      loadPathQuery(scope, directory, directory ? sdkFor(directory) : serverSDK(), protocol),
-    agents: (directory: PathKey) => loadAgentsQuery(scope, directory, serverAPI.agent, sdkFor(directory), protocol),
-    references: (directory: PathKey) =>
-      loadReferencesQuery(scope, directory, serverAPI.reference, sdkFor(directory), protocol),
-    mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    mcpResources: (directory: PathKey) =>
-      loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory)),
-    sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
-  }
-}
-export type QueryOptionsApi = ReturnType<typeof makeQueryOptionsApi>
-
 export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const language = useLanguage()
   const owner = getOwner()
@@ -249,10 +115,8 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()
-  let disposed = false
-  onCleanup(() => {
-    disposed = true
-  })
+  const lifetime = { disposed: false }
+  onCleanup(() => { lifetime.disposed = true })
 
   const sdkFor = (directory: string) => {
     const key = directoryKey(directory)
@@ -332,10 +196,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
   const queryClient = useQueryClient()
   const homeSessions = createHomeSessionIndexCache(queryClient, ServerConnection.key(serverSDK.server))
-  const refreshProviders = () =>
-    queryClient.refetchQueries({
-      predicate: (query) => query.queryKey[0] === serverSDK.scope && query.queryKey[2] === "providers",
-    })
+  const refreshProviders = createProviderRefresher(queryClient, serverSDK.scope, queryOptionsApi)
 
   let bootedAt = 0
   let bootingRoot = false
@@ -439,16 +300,15 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
     children.pin(key)
     const [store, setStore] = children.child(directory, { bootstrap: false })
+    const fences = sessionManagementFences(session, key)
     const meta = sessionMeta.get(key)
     const retainedLimit = Math.max(store.limit, options?.limit ?? 0, meta?.limit ?? 0)
     if (meta && meta.limit >= retainedLimit) {
-      const next = trimSessions(store.session, {
+      const next = trimSessions(fences.visible(store.session, session.get), {
         limit: retainedLimit,
         permission: session.data.permission,
       })
-      if (next.length !== store.session.length) {
-        setStore("session", reconcile(next, { key: "id" }))
-      }
+      setStore("session", reconcile(next, { key: "id" }))
       children.unpin(key)
       return
     }
@@ -465,18 +325,16 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
                 : loadRootSessions({ api: serverSDK.api.session, directory, limit }),
             )
             .then((x) => {
-              const nonArchived = (x.data ?? [])
-                .filter((s) => !!s?.id)
-                .filter((s) => !s.time?.archived)
+              const nonArchived = fences.visible((x.data ?? []).filter((s) => !!s?.id), session.get)
                 .sort((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
               const limit = Math.max(store.limit, options?.limit ?? 0, sessionMeta.get(key)?.limit ?? 0)
-              const childSessions = store.session.filter((s) => !!s.parentID)
+              const childSessions = fences.visible(store.session.filter((s) => !!s.parentID), session.get)
               const next = trimSessions([...nonArchived, ...childSessions], {
                 limit,
                 permission: session.data.permission,
               })
               batch(() => {
-                const remembered = next.map(session.remember)
+                const remembered = fences.visible(next.map(session.remember), session.get)
                 setStore(
                   "sessionTotal",
                   estimateRootSessionTotal({
@@ -562,6 +420,8 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       event: { type: "session.created", properties: { info } },
       directory: key,
       store: existing[0],
+      fenceOwner: session,
+      readSession: session.get,
       setStore: existing[1],
       push: queue.push,
       retainedLimit: sessionMeta.get(key)?.limit,
@@ -569,6 +429,14 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       permission: session.data.permission,
       loadLsp() {},
     })
+  }
+
+  const publishSession = (info: Parameters<typeof session.remember>[0]) => {
+    homeSessions.apply({ type: "session.updated", properties: { sessionID: info.id, info } })
+    indexSession(info)
+    if (info.time.archived === undefined) return
+    homeSessions.remove(info.id)
+    notifySessionTabsRemoved({ server: ServerConnection.key(serverSDK.server), directory: info.directory, sessionIDs: [info.id] })
   }
 
   const unsub = serverSDK.event.listen((e) => {
@@ -580,14 +448,24 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     const recent = bootingRoot || Date.now() - bootedAt < 1500
 
     if (event.current) session.applyV2(event.current)
-    const policyRecovery = eventType === "session.next.subagent.models.changed"
-      ? applySessionPolicyEvent({ event, session, children: children.children, disposed: () => disposed, indexSession })
+    const recovery = eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed"
+      ? applySessionPolicyEvent({
+          event, session, children: children.children, disposed: () => lifetime.disposed,
+          indexSession: publishSession,
+        })
       : session.apply(event)
-    void policyRecovery?.catch(() => {})
+    void recovery?.catch(() => {})
     if (event.type === "session.created" || event.type === "session.updated" || event.type === "session.deleted") {
       homeSessions.apply(event)
     }
-    if (event.type !== "session.next.subagent.models.changed") homeSessions.refresh(event.type)
+    if (eventType === "session.next.subagent.models.changed" || eventType === "session.next.archive.changed") {
+      const properties = event.properties
+      if (properties && typeof properties === "object" && "sessionID" in properties && typeof properties.sessionID === "string") {
+        const info = session.get(properties.sessionID)
+        if (info) publishSession(info)
+      }
+    }
+    if (eventType !== "session.next.subagent.models.changed") homeSessions.refresh(event.type)
     if (eventType === "integration.connection.updated") void refreshProviders()
 
     if (directory === "global") {
@@ -630,7 +508,16 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         .catch(() => {})
 
     const existing = children.children[key]
-    if (!existing) return
+    if (!existing) {
+      const decoded = decodeSessionManagementEvent(event)
+      if (decoded) sessionManagementFences(session, key).apply(decoded)
+      if (event.type === "session.deleted") {
+        const properties = event.properties as { sessionID?: string; info?: { id: string } }
+        const sessionID = properties.sessionID ?? properties.info?.id
+        if (sessionID) sessionManagementFences(session, key).delete(sessionID)
+      }
+      return
+    }
     children.mark(key)
     if (
       event.current?.type === "session.moved" ||
@@ -647,8 +534,9 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     applyDirectoryEvent({
       event,
       directory,
-      readSession: session.get,
       store,
+      fenceOwner: session,
+      readSession: session.get,
       setStore,
       push: (directory) => {
         if (children.active(directory)) queue.push(directory)
@@ -789,7 +677,9 @@ export const { use: useServerSync, provider: ServerSyncProvider } = createSimple
   name: "ServerSync",
   // Returns an accessor so the resolved server can change reactively without
   // re-instantiating the subtree (mirrors useServerSDK).
-  init: (props: { server?: Accessor<ServerConnection.Any | undefined> }) => {
+  init: (props: { server?: Accessor<ServerConnection.Any | undefined>; value?: ServerSync }) => {
+    const captured = props.value
+    if (captured) return () => captured
     const global = useGlobal()
     const language = useLanguage()
     const server = useServer()

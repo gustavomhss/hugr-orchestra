@@ -47,7 +47,8 @@ export type ScheduleSource = {
   // Resolves with a message for the dialog when the save was refused.
   save: (id: string | undefined, fields: ScheduleFields, resume: boolean) => Promise<string | undefined>
   setEnabled: (id: string, enabled: boolean) => Promise<void>
-  remove: (id: string) => Promise<void>
+  // Like save, a refused deletion returns a message and keeps the confirmation open.
+  remove: (id: string) => Promise<string | undefined>
   // Resolves with the run's Session, or nothing when it did not start (`error` says why).
   run: (id: string) => Promise<string | undefined>
 }
@@ -221,13 +222,14 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
     remove: async (id) => {
       store.setSaved("tasks", (tasks) => tasks.filter((task) => task.id !== id))
       claims.forget(id)
+      return undefined
     },
     run: (id) => dispatch(id, true),
   }
 }
 
 // V2 rejects with the parsed error body, V1 with its legacy body; both may carry only `message`.
-export function runError(language: ReturnType<typeof useLanguage>, name: string, error: unknown) {
+export function runError(language: Pick<ReturnType<typeof useLanguage>, "t">, name: string, error: unknown) {
   const message =
     error && typeof error === "object" && "message" in error && typeof error.message === "string"
       ? error.message

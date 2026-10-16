@@ -20,6 +20,8 @@ export const MCP_COPY = {
     "Current configuration unavailable from this server. You can remove this server here.",
   "orchestra.mcp.configOutside":
     "This server is configured outside this profile. Saving adds this profile's own entry for it.",
+  "orchestra.mcp.configLoading": "Loading MCP configuration…",
+  "orchestra.mcp.configLoadFailed": "Could not load MCP configuration. Retry before editing.",
   "orchestra.mcp.invalidName": "Enter a name. Names cannot be . or .. or contain / or \\.",
   "orchestra.mcp.note":
     "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
@@ -38,6 +40,8 @@ export const MCP_COPY = {
   "orchestra.mcp.toolsTitle": "{{name}} tools",
   "orchestra.mcp.toolAvailable": "Available when this server is connected",
   "orchestra.mcp.toolsUnknown": "Connect this server to list its tools.",
+  "orchestra.mcp.toolsLoading": "Loading MCP tools…",
+  "orchestra.mcp.toolsLoadFailed": "Could not load MCP tools.",
   "orchestra.mcp.toolsNone": "This server reports no tools.",
   "orchestra.mcp.toolsUnsupported": "This server does not report MCP tools.",
   "orchestra.mcp.removeTitle": "Remove this item?",

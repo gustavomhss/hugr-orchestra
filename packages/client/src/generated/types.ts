@@ -220,6 +220,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -230,6 +231,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -240,6 +242,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -250,16 +253,29 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
     readonly cursor?: string | undefined
   }["search"]
+  readonly includeArchived?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["includeArchived"]
   readonly directory?: {
     readonly workspace?: string | undefined
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -270,6 +286,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -280,6 +297,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -290,6 +308,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -460,6 +479,13 @@ export type SessionsGetOutput = {
     }
   }
 }["data"]
+
+export type SessionsArchiveInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly archived: { readonly archived: boolean }["archived"]
+}
+
+export type SessionsArchiveOutput = void
 
 export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
@@ -864,6 +890,14 @@ export type SessionsHistoryOutput = {
                 }>
               }
         }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.archive.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: { readonly timestamp: number; readonly sessionID: string; readonly archived: number | null }
       }
     | {
         readonly id: string
@@ -1975,6 +2009,73 @@ export type IntegrationsConnectOauthOutput = {
     }
   }
 }
+
+export type IntegrationsOauthStatusInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsOauthStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | {
+        readonly status: "pending"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "complete"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "failed"
+        readonly message: string
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "expired"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+}
+
+export type IntegrationsOauthCompleteInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly code?: { readonly code?: string | undefined }["code"]
+}
+
+export type IntegrationsOauthCompleteOutput = void
+
+export type IntegrationsOauthCancelInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsOauthCancelOutput = void
 
 export type IntegrationsAttemptStatusInput = {
   readonly attemptID: { readonly attemptID: string }["attemptID"]

@@ -73,6 +73,36 @@ beforeAll(async () => {
 })
 
 describe("createChildStoreManager", () => {
+  test("a ready empty project catalog never inherits global providers", () => {
+    const global = {
+      all: new Map([
+        ["other-project", { id: "other-project", name: "Other", source: "api", models: {}, env: [], options: {} }],
+      ]),
+      connected: ["other-project"],
+      default: {},
+    } satisfies NormalizedProviderListResponse
+    const dispose = createOwner((owner) => {
+      const manager = createChildStoreManager({
+        owner,
+        scope: ServerScope.local,
+        persist,
+        isBooting: () => false,
+        isLoadingSessions: () => false,
+        onBootstrap() {},
+        onMcp() {},
+        onDispose() {},
+        translate: (key) => key,
+        queryOptions: queryOptionsApi,
+        global: { provider: global },
+      })
+      expect(global.all.has("other-project")).toBe(true)
+      const store = manager.child("/empty-project")[0]
+      expect(store.provider_ready).toBe(true)
+      expect([...store.provider.all]).toEqual([])
+      expect(store.provider.connected).toEqual([])
+    })
+    dispose()
+  })
   test("does not evict the active directory during mark", () => {
     const owner = createRoot((dispose) => {
       const current = getOwner()

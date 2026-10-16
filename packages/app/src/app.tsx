@@ -46,8 +46,9 @@ import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider, useServerSync } from "@/context/server-sync"
 import { GlobalProvider, useGlobal } from "@/context/global"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
-import { LayoutProvider } from "@/context/layout"
-import { ModelsProvider } from "@/context/models"
+import { LayoutProvider, useLayout } from "@/context/layout"
+import { ModelPreferencesProvider, ModelsProvider } from "@/context/models"
+import { ConnectionRecovery } from "@/orchestra/shell/connection-recovery"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
 import { usePlatform } from "@/context/platform"
@@ -178,9 +179,15 @@ function SelectedServerProviders(props: ParentProps) {
 }
 
 function LegacyServerLayout(props: ParentProps<{ serverScoped?: JSX.Element }>) {
+  const settings = useSettings()
   return (
     <SelectedServerProviders>
-      <LegacyServerScopedShell serverScoped={props.serverScoped}>{props.children}</LegacyServerScopedShell>
+      <Show
+        when={settings.general.newLayoutDesigns()}
+        fallback={<LegacyServerScopedShell serverScoped={props.serverScoped}>{props.children}</LegacyServerScopedShell>}
+      >
+        {props.children}
+      </Show>
     </SelectedServerProviders>
   )
 }
@@ -293,7 +300,7 @@ declare global {
         tab: { tabID: string; generation: number },
         bounds: { x: number; y: number; width: number; height: number },
       ) => Promise<void>
-      appDockNavigate?: (id: string, url: string) => Promise<void>
+      appDockNavigate?: (id: string, url: string) => Promise<{ ok: boolean; url?: string }>
       appDockCommand?: (id: string, command: "back" | "forward" | "reload") => Promise<void>
       appDockEvent?: (
         callback: (
@@ -459,6 +466,37 @@ function NewAppLayout(props: ParentProps<{ serverScoped?: JSX.Element }>) {
   )
 }
 
+function HomeServerProviders() {
+  const layout = useLayout()
+  const global = useGlobal()
+  const server = useServer()
+  const owner = createMemo(
+    () => {
+      const selection = layout.home.selection()
+      const conn =
+        global.servers.list().find((item) => ServerConnection.key(item) === selection.server) ?? server.current
+      if (!conn) return
+      const directory = ServerConnection.key(conn) === selection.server ? selection.directory : undefined
+      return { key: `${ServerConnection.key(conn)}\0${directory ?? ""}`, conn, directory }
+    },
+    undefined,
+    { equals: (a, b) => a?.key === b?.key },
+  )
+  return (
+    <Show when={owner()} keyed>
+      {(owner) => (
+        <ServerSDKProvider server={() => owner.conn}>
+          <ServerSyncProvider server={() => owner.conn}>
+            <ModelsProvider directory={() => owner.directory}>
+              <NewHome />
+            </ModelsProvider>
+          </ServerSyncProvider>
+        </ServerSDKProvider>
+      )}
+    </Show>
+  )
+}
+
 // The draft page only renders the prompt composer, so it drops TerminalProvider.
 // FileProvider and CommentsProvider stay because PromptInput uses file search and comment context.
 function DraftProviders(props: ParentProps) {
@@ -496,9 +534,11 @@ export function AppBaseProviders(
               >
                 <QueryProvider>
                   <WslServersProvider>
-                    <DialogProvider>
-                      <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
-                    </DialogProvider>
+                    <ModelPreferencesProvider>
+                      <DialogProvider>
+                        <FileComponentProvider component={File}>{props.children}</FileComponentProvider>
+                      </DialogProvider>
+                    </ModelPreferencesProvider>
                   </WslServersProvider>
                 </QueryProvider>
               </ErrorBoundary>
@@ -593,8 +633,8 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
   onCleanup(() => clearInterval(timer))
 
   return (
-    <div class="h-dvh w-screen flex flex-col items-center justify-center bg-background-base gap-6 p-6">
-      <div class="flex flex-col items-center max-w-md text-center">
+    <div class="h-dvh w-screen overflow-y-auto flex flex-col items-center justify-center-safe bg-background-base gap-6 p-6">
+      <div class="shrink-0 flex flex-col items-center max-w-md text-center">
         <HugrSplash class="mb-4" />
         <p class="text-14-regular text-text-base">
           {unreachable()[0]}
@@ -604,7 +644,7 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
         <p class="mt-1 text-12-regular text-text-weak">{language.t("app.server.retrying")}</p>
       </div>
       <Show when={others().length > 0}>
-        <div class="flex flex-col gap-2 w-full max-w-sm">
+        <div class="shrink-0 flex flex-col gap-2 w-full max-w-sm">
           <span class="text-12-regular text-text-base text-center">{language.t("app.server.otherServers")}</span>
           <div class="flex flex-col gap-1 bg-surface-base rounded-lg p-2">
             <For each={others()}>
@@ -624,6 +664,7 @@ function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key:
           </div>
         </div>
       </Show>
+      <ConnectionRecovery onServerSelected={props.onServerSelected} />
     </div>
   )
 }
@@ -650,17 +691,18 @@ export function AppInterface(props: {
   // The visual new layout lives in the router root so it remains mounted across
   // route changes. Draft and session routes override only their server-bound data
   // providers beneath it.
-  const ServerShell = (shellProps: ParentProps) => (
-    <QueryProvider>
+  const ServerShell = (shellProps: ParentProps) => {
+    const settings = useSettings()
+    return (
       <SharedProviders>
-        <JanitorProvider>
+        <JanitorProvider enabled={settings.general.janitorEnabled}>
           {props.children}
           {shellProps.children}
           <JanitorWidget />
         </JanitorProvider>
       </SharedProviders>
-    </QueryProvider>
-  )
+    )
+  }
 
   return (
     <ServerProvider
@@ -722,7 +764,7 @@ function Routes(props: { serverScoped?: JSX.Element }) {
         </Route>
       </Route>
       <Show when={settings.general.newLayoutDesigns()}>
-        <Route path="/" component={NewHome} />
+        <Route path="/" component={HomeServerProviders} />
         <Route path="/:dir/session/:id" component={NewLayoutLegacySessionRedirect} />
         <Route path="/server/:serverKey/session/:id" component={TargetSessionRoute} />
         <Route path="/orchestra/:chapter/*rest" component={OrchestraChapterRoute} />

@@ -4,10 +4,10 @@ import { appDockAttached, appDockShown, appDockURL, appDockZoom, panelBoundsToCo
 describe("App Dock input", () => {
   test("converts CSS bounds to content bounds", () => {
     expect(panelBoundsToContent({ x: 300, y: 80, width: 600, height: 900 }, 2)).toEqual({
-      x: 150,
-      y: 40,
-      width: 300,
-      height: 450,
+      x: 600,
+      y: 160,
+      width: 1200,
+      height: 1800,
     })
   })
 

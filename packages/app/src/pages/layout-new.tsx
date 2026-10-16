@@ -9,6 +9,9 @@ import { usePlatform } from "@/context/platform"
 import { OrchestraSidebar } from "@/orchestra/sidebar"
 import { createOrchestraNavigation } from "@/orchestra/compact-navigation"
 import { OrchestraNavigationToggle } from "@/orchestra/navigation-toggle"
+import { ShellNavigationCommands } from "@/orchestra/shell/navigation-commands"
+import { MobileNavigation } from "@/orchestra/shell/mobile-navigation"
+import { NewShellIngress } from "@/orchestra/shell/ingress"
 import { setV2Toast, ToastRegion } from "@/utils/toast"
 
 export default function NewLayout(props: ParentProps) {
@@ -37,101 +40,110 @@ export default function NewLayout(props: ParentProps) {
   }
 
   return (
-    // Desktop windows load the navigation preference over IPC. Wait for it so a collapsed
-    // window never paints the expanded width first; browser storage is ready at once.
-    <Show when={navigation.ready()}>
-      <div
-        class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
-        classList={{ "orchestra-shell": desktop() }}
-        style={{
-          "padding-top": "env(safe-area-inset-top, 0px)",
-          "padding-bottom": "env(safe-area-inset-bottom, 0px)",
-        }}
-      >
-        <Show when={desktop()}>
-          {/* The toolbar's drop shadow; see the glass plates in orchestra/theme.css. */}
-          <div class="orchestra-toolbar-shadow" aria-hidden="true">
-            <div />
-          </div>
-        </Show>
-        <Titlebar
-          navigation={
-            <Show when={desktop() && narrow()}>
-              <OrchestraNavigationToggle
-                compact={!state.railRequested}
-                constrained={false}
-                iconOnly
-                onToggle={() => setState("railRequested", (value) => !value)}
-              />
-            </Show>
-          }
-          update={update}
-          tabsMount={desktop() ? state.tabsMount : undefined}
-          debugTools={
-            import.meta.env.DEV
-              ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
-              : undefined
-          }
-        />
+    <>
+      <ShellNavigationCommands />
+      <NewShellIngress />
+      {/* Desktop preferences load over IPC; wait so a collapsed window never paints expanded first. */}
+      <Show when={navigation.ready()}>
         <div
-          class="flex-1 min-h-0 min-w-0 flex flex-col"
-          classList={{ "orchestra-workspace": desktop() }}
-          data-navigation={
-            desktop()
-              ? narrow() && !state.railRequested
-                ? "hidden"
-                : navigation.compact()
-                  ? "compact"
-                  : "expanded"
-              : undefined
-          }
+          class="relative bg-v2-background-bg-deep flex-1 min-h-0 min-w-0 flex flex-col select-none [&_input]:select-text [&_textarea]:select-text [&_[contenteditable]]:select-text"
+          classList={{ "orchestra-shell": desktop() }}
+          style={{
+            "padding-top": "env(safe-area-inset-top, 0px)",
+            "padding-bottom": "env(safe-area-inset-bottom, 0px)",
+          }}
         >
           <Show when={desktop()}>
-            {/* The session panels' blur; see the glass layer in orchestra/session.css. */}
-            <div class="orchestra-glass-layer" aria-hidden="true">
-              <div data-orchestra-glass="session-body">
-                <div>
-                  <div />
-                </div>
-              </div>
-              <div data-orchestra-glass="session-side-panel">
-                <div>
-                  <div />
-                </div>
-              </div>
-              <div data-orchestra-glass="session-new-design">
-                <div>
-                  <div />
-                </div>
-              </div>
+            {/* The toolbar's drop shadow; see the glass plates in orchestra/theme.css. */}
+            <div class="orchestra-toolbar-shadow" aria-hidden="true">
+              <div />
             </div>
-            {/* The sidebar's blur; see the glass plates in orchestra/theme.css. */}
-            <div data-glass-plate="sidebar" aria-hidden="true" />
-            <OrchestraSidebar compact={navigation.compact()} constrained={constrained()} onToggle={navigation.toggle} />
           </Show>
-          <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
+          <Titlebar
+            navigation={
+              <Show when={desktop()} fallback={<MobileNavigation />}>
+                <Show when={narrow()}>
+                  <OrchestraNavigationToggle
+                    compact={!state.railRequested}
+                    constrained={false}
+                    iconOnly
+                    onToggle={() => setState("railRequested", (value) => !value)}
+                  />
+                </Show>
+              </Show>
+            }
+            update={update}
+            tabsMount={desktop() ? state.tabsMount : undefined}
+            debugTools={
+              import.meta.env.DEV
+                ? { visible: state.debugTools, toggle: () => setState("debugTools", (value) => !value) }
+                : undefined
+            }
+          />
+          <div
+            class="flex-1 min-h-0 min-w-0 flex flex-col"
+            classList={{ "orchestra-workspace": desktop() }}
+            data-navigation={
+              desktop()
+                ? narrow() && !state.railRequested
+                  ? "hidden"
+                  : navigation.compact()
+                    ? "compact"
+                    : "expanded"
+                : undefined
+            }
+          >
             <Show when={desktop()}>
-              <div
-                class="orchestra-session-tabs-frame"
-                hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
-              >
-                <div data-glass-plate="session-tabs" aria-hidden="true" />
-                <div
-                  id="orchestra-session-tabs"
-                  class="orchestra-session-tabs"
-                  ref={(element) => setState("tabsMount", element)}
-                />
+              {/* The session panels' blur; see the glass layer in orchestra/session.css. */}
+              <div class="orchestra-glass-layer" aria-hidden="true">
+                <div data-orchestra-glass="session-body">
+                  <div>
+                    <div />
+                  </div>
+                </div>
+                <div data-orchestra-glass="session-side-panel">
+                  <div>
+                    <div />
+                  </div>
+                </div>
+                <div data-orchestra-glass="session-new-design">
+                  <div>
+                    <div />
+                  </div>
+                </div>
               </div>
+              {/* The sidebar's blur; see the glass plates in orchestra/theme.css. */}
+              <div data-glass-plate="sidebar" aria-hidden="true" />
+              <OrchestraSidebar
+                compact={navigation.compact()}
+                constrained={constrained()}
+                onToggle={navigation.toggle}
+              />
             </Show>
-            <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
-              <Suspense>{props.children}</Suspense>
-            </main>
+            <div class="flex-1 min-h-0 min-w-0 flex flex-col" classList={{ "orchestra-content": desktop() }}>
+              <Show when={desktop()}>
+                <div
+                  class="orchestra-session-tabs-frame"
+                  hidden={layout.route().type !== "session" && layout.route().type !== "draft"}
+                >
+                  <div data-glass-plate="session-tabs" aria-hidden="true" />
+                  <div
+                    id="orchestra-session-tabs"
+                    class="orchestra-session-tabs"
+                    ref={(element) => setState("tabsMount", element)}
+                  />
+                </div>
+              </Show>
+              <main class="flex-1 min-h-0 min-w-0 overflow-x-hidden flex flex-col items-start contain-strict">
+                <Suspense>{props.children}</Suspense>
+              </main>
+            </div>
           </div>
+          {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
+          <TabsInfoPopup />
+          <ToastRegion v2 />
         </div>
-        {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
-        <TabsInfoPopup />
-        <ToastRegion v2 />
-      </div>
-    </Show>
+      </Show>
+    </>
   )
 }

@@ -1,5 +1,6 @@
 import { afterEach, expect } from "bun:test"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { Cause, Effect, Exit, Layer } from "effect"
 import { realpathSync } from "fs"
 import path from "path"
@@ -22,7 +23,7 @@ import { Truncate } from "../../src/tool/truncate"
 // Config starts a detached npm install into every .orchestra directory it loads. A real one outlives its test and, on
 // Windows, starves file I/O for later test files in the same process.
 const agentLayer = (flags: Partial<RuntimeFlags.Info> = {}) =>
-  LayerNode.compile(
+  NativeSessionFixture.build(
     LayerNode.group([Agent.node, Plugin.node, Provider.node, Auth.node, Config.node, Skill.node, RuntimeFlags.node]),
     [
       [RuntimeFlags.node, RuntimeFlags.layer(flags)],
@@ -52,9 +53,7 @@ const expectDefaultAgentError = Effect.fn("AgentTest.expectDefaultAgentError")(f
   if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain(message)
 })
 
-afterEach(async () => {
-  await disposeAllInstances()
-})
+afterEach(disposeAllInstances)
 
 it.instance("returns default native agents when no config", () =>
   Effect.gen(function* () {

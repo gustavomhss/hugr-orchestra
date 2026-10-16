@@ -21,6 +21,7 @@ for (const scheme of ["light", "dark"] as const) {
               onMenuCommand: () => undefined,
               consumeInitialDeepLinks: async () => [],
               onDeepLink: () => undefined,
+              getZoomFactor: async () => 1,
               onZoomFactorChanged: () => undefined,
               getPinchZoomEnabled: async () => false,
               onPinchZoomEnabledChanged: () => undefined,

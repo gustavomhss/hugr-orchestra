@@ -39,7 +39,7 @@ const catalogLayer = AppNodeBuilder.build(LayerNode.group([Catalog.node, Locatio
         update: unexpectedIntegration,
         remove: unexpectedIntegration,
       },
-      attempt: { status: unexpectedIntegration, complete: unexpectedIntegration, cancel: unexpectedIntegration },
+      attempt: { ownedBy: unexpectedIntegration, status: unexpectedIntegration, complete: unexpectedIntegration, cancel: unexpectedIntegration },
     }),
   ],
   [EventV2.node, Layer.mock(EventV2.Service)({})],

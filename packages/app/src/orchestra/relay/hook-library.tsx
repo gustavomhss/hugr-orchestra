@@ -1,11 +1,15 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
+import { useLocation } from "@solidjs/router"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import { decisionTime, type RelayDocument } from "./client"
 import { createAction, DeleteDialog, failure } from "./dialogs"
+import { profileDrafts } from "./drafts"
+import { rememberDocument } from "./cache"
 import { type Flow, flowFromDocument, nodeOf, TRIGGER } from "./graph"
 import { ActivityRows } from "./hook-activity"
+import { HookQueryStatus } from "./hook-status"
 import { Chain, VersionBadges } from "./parts"
 import { hookDocument, type HookPresetID, hookPresets, presetChain, type PresetKey } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
@@ -39,7 +43,7 @@ export function HookLibrary(props: Props) {
   const [busy, setBusy] = createSignal<string>()
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
   const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
-  const installs = () => props.source.installs.data ?? []
+  const installs = () => props.source.installs.isSuccess ? props.source.installs.data ?? [] : []
   const installOf = (id: string) => installs().find((item) => item.document === id)
   const decisions = useQuery(
     () => ({
@@ -70,7 +74,7 @@ export function HookLibrary(props: Props) {
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "hook")])),
   )
   const toggle = async (document: RelayDocument, next: boolean) => {
-    if (busy()) return
+    if (busy() || !props.source.installs.isSuccess) return
     setBusy(document.id)
     const current = installOf(document.id)
     const result = await (
@@ -139,9 +143,25 @@ export function HookLibrary(props: Props) {
           onClick={() => props.go(relayPath.runs("hook"))}
         >
           {copy.t("orchestra.hooks.tab.activity")}
-          <span class="wf-count">{decisions.data?.length ?? 0}</span>
+          <Show when={props.source.installs.isSuccess && (!installs().length || decisions.isSuccess)}>
+            <span class="wf-count">{decisions.data?.length ?? 0}</span>
+          </Show>
         </button>
       </div>
+      <For each={profileDrafts(props.source).filter((draft) => draft.state.flow.kind === "hook" && (draft.state.save.dirty || draft.state.save.state === "saving"))}>
+        {(draft) => <p class="mx-note" role="status">
+          {copy.t("orchestra.workflows.drafts.retained", { name: draft.state.name })}
+          <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor("hook", draft.state.base.id))}>
+            {copy.t("orchestra.workflows.menu.open")}
+          </button>
+        </p>}
+      </For>
+      <Show when={props.source.documents.isSuccess && !props.source.installs.isSuccess}>
+        <HookQueryStatus kind="installs" query={props.source.installs} />
+      </Show>
+      <Show when={props.source.installs.isSuccess && installs().length && !decisions.isSuccess}>
+        <HookQueryStatus kind="activity" query={decisions} />
+      </Show>
       <Switch>
         <Match when={props.source.documents.isPending}>
           <p class="mx-empty" role="status">
@@ -155,6 +175,9 @@ export function HookLibrary(props: Props) {
           <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
             {copy.t("orchestra.workflows.retry")}
           </button>
+        </Match>
+        <Match when={props.route.tab === "runs" && (!props.source.installs.isSuccess || (installs().length && !decisions.isSuccess))}>
+          <></>
         </Match>
         <Match when={props.route.tab === "runs"}>
           <Show
@@ -240,6 +263,7 @@ export function HookLibrary(props: Props) {
                         <VersionBadges document={document} />
                       </div>
                       <div class="wf-state" style={{ gap: "10px" }} onClick={(event) => event.stopPropagation()}>
+                        <Show when={props.source.installs.isSuccess} fallback={<span>{copy.t("orchestra.workflows.hookState.unknown")}</span>}>
                         <button
                           type="button"
                           class="mx-toggle"
@@ -258,13 +282,14 @@ export function HookLibrary(props: Props) {
                         <span>
                           {copy.t(on() ? "orchestra.hooks.installed" : "orchestra.hooks.off")}
                           <small style={{ display: "block", "margin-top": "2px" }}>
-                            {fired()
+                            {decisions.isSuccess && fired()
                               ? `${copy.t(`orchestra.hooks.outcome.${fired()!.outcome}`)} · ${copy.when(decisionTime(fired()!))}`
                               : decisions.isSuccess || !install()
                                 ? copy.t("orchestra.hooks.row.notFired")
                                 : ""}
                           </small>
                         </span>
+                        </Show>
                       </div>
                       <div class="wf-actions" onClick={(event) => event.stopPropagation()}>
                         <button
@@ -350,7 +375,7 @@ function CreateHookDialog(props: {
   onCreated: (id: string) => void
 }) {
   const copy = useRelayCopy()
-  const action = createAction()
+  const action = createAction(useLocation())
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
   const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
   const [pick, setPick] = createSignal<HookPresetID | "blank">(props.initial)
@@ -360,14 +385,13 @@ function CreateHookDialog(props: {
       : copy.t(`orchestra.hooks.preset.${props.initial}`),
   )
   const create = () =>
-    action.run(async () => {
+    action.run(async (current) => {
       const preset = presets().find((item) => item.id === pick())
       const created = await props.source.client.create(
         hookDocument(name().trim() || copy.t("orchestra.hooks.create.defaultName"), preset, text),
       )
-      props.source
-        .queryClient()
-        .setQueryData(props.source.key("documents"), (list: RelayDocument[] | undefined) => [created, ...(list ?? [])])
+      await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
+      if (!current()) return
       props.onCreated(created.id)
     })
   return (
@@ -375,11 +399,12 @@ function CreateHookDialog(props: {
       title={copy.t("orchestra.hooks.create.title")}
       description={copy.t("orchestra.hooks.create.description")}
       wide
+      busy={action.busy()}
       onClose={props.onClose}
       onSubmit={create}
       foot={
         <>
-          <button type="button" class="mx-btn" onClick={props.onClose}>
+          <button type="button" class="mx-btn" disabled={action.busy()} onClick={props.onClose}>
             {copy.t("orchestra.workflows.dialog.cancel")}
           </button>
           <button type="submit" class="mx-btn primary" disabled={action.busy()}>
@@ -393,6 +418,7 @@ function CreateHookDialog(props: {
         <input
           ref={(element) => queueMicrotask(() => element.select())}
           name="name"
+          disabled={action.busy()}
           value={name()}
           onInput={(event) => setName(event.currentTarget.value)}
         />
@@ -406,6 +432,7 @@ function CreateHookDialog(props: {
                 type="button"
                 class="mx-card wf-tpl"
                 role="radio"
+                disabled={action.busy()}
                 aria-checked={pick() === id}
                 data-template={id}
                 onClick={() => {

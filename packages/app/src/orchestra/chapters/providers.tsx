@@ -6,7 +6,8 @@ import { useLanguage } from "@/context/language"
 import { ModelsProvider } from "@/context/models"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
-import { resolveDefaultModel } from "@/hooks/provider-catalog"
+import { loadDefaultModel } from "@/context/global-sync/bootstrap"
+import { refetchProviderResource, resolveDefaultModel } from "@/hooks/provider-catalog"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { displayName } from "@/pages/layout/helpers"
@@ -55,17 +56,15 @@ function ProvidersScreen(props: ChapterPageProps) {
   const location = { directory: props.directory }
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
-    () => (protocol() === "v2" ? props.directory : undefined),
-    async () => {
-      const api = sdk().api
+    () => (protocol() === "v2" ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
+    async (input) => {
+      const api = input.client.api
+      const location = { directory: input.directory }
       const [providerList, integrations, models, preferred] = await Promise.all([
         api.provider.list({ location }),
         api.integration.list({ location }),
         api.model.list({ location }),
-        api.model
-          .default({ location })
-          .then((result) => result.data ?? undefined)
-          .catch(() => undefined),
+        loadDefaultModel(api.model, { location }),
       ])
       // A malformed reply becomes this page's load error with Retry instead of crashing the whole app.
       if (![providerList.data, integrations.data, models.data].every(Array.isArray))
@@ -147,8 +146,8 @@ function ProvidersScreen(props: ChapterPageProps) {
   const baseName = (card: ProviderCard) => data()?.catalog.find((entry) => entry.id === card.base)?.name ?? card.name
 
   const refresh = async () => {
-    await sync().refreshProviders()
-    if (protocol() === "v2") await v2Actions.refetch()
+    await providers.refresh()
+    if (protocol() === "v2") await refetchProviderResource(v2, v2Actions, () => language.t("common.requestFailed"))
   }
   const requestFailed = (error: unknown) =>
     showToast({
@@ -227,34 +226,14 @@ function ProvidersScreen(props: ChapterPageProps) {
       />
     ))
   }
-  // Mirrors the Settings providers panel: V2 removes stored credentials; V1 removes auth or disables a config provider.
-  const disconnect = async (card: ProviderCard) => {
-    const action = card.disconnect
-    const disabled = sync().data.config.disabled_providers ?? []
-    if (action.type === "credentials" && protocol() === "v2") {
-      await Promise.all(action.ids.map((credentialID) => sdk().api.credential.remove({ credentialID, location })))
-      return
-    }
-    if (action.type === "credentials") {
-      const client = sdk().createClient({ directory: props.directory, throwOnError: true })
-      await Promise.all(action.ids.map((credentialID) => client.v2.credential.remove({ credentialID, location })))
-      return
-    }
-    if (action.type === "enable") {
-      await sync().updateConfig({ disabled_providers: disabled.filter((id) => id !== card.id) })
-      return
-    }
-    if (action.type !== "auth") return
-    if (action.custom) {
-      await sdk()
-        .client.auth.remove({ providerID: card.id })
-        .catch(() => undefined)
-      await sync().updateConfig({ disabled_providers: disabled.includes(card.id) ? disabled : [...disabled, card.id] })
-      return
-    }
-    await sdk().client.auth.remove({ providerID: card.id }, { throwOnError: true })
-    await sdk().client.global.dispose()
-  }
+  const disconnect = (card: ProviderCard) =>
+    disconnectProvider(card, {
+      protocol: protocol(),
+      sdk: sdk(),
+      sync: sync(),
+      directory: props.directory,
+      failed: language.t("common.requestFailed"),
+    })
 
   const chooseRoute = async (id: string) => {
     const card = routes().find((item) => item.id === id)
@@ -426,4 +405,50 @@ function ProvidersScreen(props: ChapterPageProps) {
       </Show>
     </MxPage>
   )
+}
+
+// Capture the profile's services before either write. Credential removal and config disable are separate
+// writes; neither a failed write nor a hidden credential source may be presented as success.
+export function disconnectProvider(
+  card: ProviderCard,
+  input: {
+    protocol: "v1" | "v2" | undefined
+    sdk: ReturnType<ReturnType<typeof useServerSDK>>
+    sync: ReturnType<ReturnType<typeof useServerSync>>
+    directory: string
+    failed: string
+  },
+) {
+  const run = async () => {
+    const action = card.disconnect
+    const disabled = input.sync.data.config.disabled_providers ?? []
+    const location = { directory: input.directory }
+    if (action.type === "credentials" && input.protocol === "v2") {
+      await Promise.all(action.ids.map((credentialID) => input.sdk.api.credential.remove({ credentialID, location })))
+      return
+    }
+    if (action.type === "credentials") {
+      const client = input.sdk.createClient({ directory: input.directory, throwOnError: true })
+      await Promise.all(action.ids.map((credentialID) => client.v2.credential.remove({ credentialID, location })))
+      return
+    }
+    if (action.type === "enable") {
+      await input.sync.updateConfig({ disabled_providers: disabled.filter((id) => id !== card.id) })
+      return
+    }
+    if (action.type !== "auth") return
+    if (action.custom) {
+      const client = input.sdk.createClient({ directory: input.directory, throwOnError: true })
+      await client.auth.remove({ providerID: card.id }, { throwOnError: true })
+      await input.sync.updateConfig({
+        disabled_providers: disabled.includes(card.id) ? disabled : [...disabled, card.id],
+      })
+      return
+    }
+    await input.sdk.client.auth.remove({ providerID: card.id }, { throwOnError: true })
+    await input.sdk.client.global.dispose()
+  }
+  return run().catch(() => {
+    throw new Error(input.failed)
+  })
 }

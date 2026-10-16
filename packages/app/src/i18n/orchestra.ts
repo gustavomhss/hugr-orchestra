@@ -15,6 +15,9 @@ import { WORKSPACES_COPY } from "./orchestra-chapters/workspaces"
 import { DOCK_COPY } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY } from "./orchestra-chapters/settings"
 import { CHAT_COPY } from "./orchestra-chapters/chat"
+import { SESSION_RECOVERY_COPY } from "./session-recovery"
+import { DESKTOP_RECOVERY_COPY } from "./desktop-recovery"
+import { FRONTEND_RECOVERY_COPY } from "./frontend-recovery"
 
 // Preserve approved identity copy across locales; inherited product labels retain their translations.
 export const ORCHESTRA_COPY = {
@@ -378,4 +381,7 @@ export const ORCHESTRA_COPY = {
   ...DOCK_COPY,
   ...SETTINGS_COPY,
   ...CHAT_COPY,
+  ...SESSION_RECOVERY_COPY,
+  ...DESKTOP_RECOVERY_COPY,
+  ...FRONTEND_RECOVERY_COPY,
 }

@@ -1,8 +1,11 @@
 import { dict as en } from "./en"
+import { FrontendRecovery } from "./frontend-recovery"
 
 type Keys = keyof typeof en
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.tr,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "HuGR Orchestra Hakkında",
   "desktop.menu.hide": "HuGR Orchestra'yı Gizle",
@@ -736,21 +739,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "Alt ajan modelleri yüklenemedi.",
-  "session.subagentModels.unsupported": "Alt ajan modelleri bu sunucuda kullanılamıyor",
-  "session.subagentModels.denyAll": "İzin verilen model yok. Alt ajanlara görev devri devre dışı.",
-  "dialog.subagentModels.unsupported": "Alt ajan model izinleri bu sunucuda değiştirilemez.",
-  "dialog.subagentModels.saveFailed": "Model izinleri doğrulanamadı. Tekrar deneyin.",
-  "dialog.subagentModels.inherited": "Oturum için model kısıtlaması ayarlanmamış. Alt ajanlar yapılandırılmış modellerini veya üst oturumun modelini devralır.",
-  "dialog.subagentModels.noneAllowed": "Bu oturumda alt ajanlar için izin verilen bağlı model yok.",
-  "orchestra.agents.model.unavailable": "{{model}} bu profilde kullanılamıyor.",
-  "orchestra.agents.model.incompatible": "{{model}}, ajanların gerektirdiği metin girişi, metin çıkışı ve araç çağrılarını desteklemiyor.",
-  "orchestra.agents.models.loading": "Bağlı modeller yükleniyor…",
-  "orchestra.agents.models.error": "Bağlı modeller yüklenemedi. Tekrar deneyin.",
-  "orchestra.agents.models.empty": "Bu profilde kullanılabilir bağlı model yok.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -880,7 +868,6 @@ export const dict = {
   "common.rename": "Yeniden adlandır",
   "common.export": "Dışa aktar",
   "common.reset": "Sıfırla",
-  "common.retry": "Yeniden dene",
   "common.archive": "Arşivle",
   "common.delete": "Sil",
   "common.close": "Kapat",

@@ -10,6 +10,7 @@ import {
 import { UPDATER_ENABLED } from "./constants"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { nativeT } from "./native-translations"
+import { macZoomItem } from "./menu-zoom"
 
 type Deps = {
   trigger: (id: string) => void
@@ -35,6 +36,8 @@ export function createMenu(deps: Deps) {
 
 function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOptions {
   if (entry.type === "separator") return { type: "separator" }
+  const zoom = macZoomItem(entry, (action) => runDesktopMenuAction(BrowserWindow.getFocusedWindow(), action))
+  if (zoom) return { ...zoom, label: entry.labelKey ? nativeT(entry.labelKey) : undefined }
   if (entry.role) return { role: nativeRole(entry.role), label: entry.labelKey ? nativeT(entry.labelKey) : undefined }
 
   const item: MenuItemConstructorOptions = {

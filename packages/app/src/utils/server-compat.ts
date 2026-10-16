@@ -18,13 +18,14 @@ import type {
 
 type LegacyClient = OrchestraClient
 type LegacyFor = (directory?: string) => LegacyClient
+type RequestOptions = NonNullable<Parameters<SessionApi["prompt"]>[1]>
 type CompatibleSessionApi = Omit<
   SessionApi,
   "prompt" | "command" | "shell" | "compact" | "rename" | "archive" | "remove"
 > & {
-  prompt: (input: SessionPromptInput & LegacyPrompt) => Promise<SessionPromptOutput>
-  command: (input: SessionCommandInput) => Promise<SessionCommandOutput>
-  shell: (input: SessionShellInput & LegacyPrompt) => Promise<SessionShellOutput>
+  prompt: (input: SessionPromptInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionPromptOutput>
+  command: (input: SessionCommandInput, options?: RequestOptions) => Promise<SessionCommandOutput>
+  shell: (input: SessionShellInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionShellOutput>
   compact: (input: SessionCompactInput & { model?: LegacyPrompt["model"] }) => Promise<SessionCompactOutput>
   rename: (input: Parameters<SessionApi["rename"]>[0] & LegacyLocation) => ReturnType<SessionApi["rename"]>
   // archive: (input: Parameters<SessionApi["archive"]>[0] & LegacyLocation) => ReturnType<SessionApi["archive"]>
@@ -103,6 +104,10 @@ function lazyApi<T extends object>(implementation: Promise<T>, shape: T): T {
       if (typeof sample === "function") {
         return (...args: unknown[]) =>
           implementation.then((value) => {
+            // Session dispatch may already be queued when Stop cancels its preflight.
+            // Check again after protocol selection, before invoking either adapter.
+            const options = args[1] as RequestOptions | undefined
+            options?.signal?.throwIfAborted()
             const method = Reflect.get(value, property)
             if (typeof method !== "function") throw new Error(`API method unavailable: ${String(property)}`)
             return Reflect.apply(method, value, args)
@@ -201,38 +206,41 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
       async interrupt(value: Parameters<ServerApi["session"]["interrupt"]>[0]) {
         await legacy().session.abort(value)
       },
-      async prompt(value: SessionPromptInput & LegacyPrompt) {
-        await legacy().session.promptAsync({
-          sessionID: value.sessionID,
-          messageID: value.id ?? undefined,
-          agent: value.agent,
-          model: value.model,
-          variant: value.variant,
-          system: value.system,
-          parts: value.legacyParts ?? [
-            { type: "text", text: value.text },
-            ...(value.files ?? []).map((file) => ({
-              type: "file" as const,
-              mime: file.mention ? "text/plain" : mime(file.uri),
-              url: file.uri,
-              filename: file.name,
-              source: file.mention
-                ? {
-                    type: "file" as const,
-                    text: { value: file.mention.text, start: file.mention.start, end: file.mention.end },
-                    path: file.uri,
-                  }
-                : undefined,
-            })),
-            ...(value.agents ?? []).map((agent) => ({
-              type: "agent" as const,
-              name: agent.name,
-              source: agent.mention
-                ? { value: agent.mention.text, start: agent.mention.start, end: agent.mention.end }
-                : undefined,
-            })),
-          ],
-        })
+      async prompt(value: SessionPromptInput & LegacyPrompt, options?: RequestOptions) {
+        await legacy().session.promptAsync(
+          {
+            sessionID: value.sessionID,
+            messageID: value.id ?? undefined,
+            agent: value.agent,
+            model: value.model,
+            variant: value.variant,
+            system: value.system,
+            parts: value.legacyParts ?? [
+              { type: "text", text: value.text },
+              ...(value.files ?? []).map((file) => ({
+                type: "file" as const,
+                mime: file.mention ? "text/plain" : mime(file.uri),
+                url: file.uri,
+                filename: file.name,
+                source: file.mention
+                  ? {
+                      type: "file" as const,
+                      text: { value: file.mention.text, start: file.mention.start, end: file.mention.end },
+                      path: file.uri,
+                    }
+                  : undefined,
+              })),
+              ...(value.agents ?? []).map((agent) => ({
+                type: "agent" as const,
+                name: agent.name,
+                source: agent.mention
+                  ? { value: agent.mention.text, start: agent.mention.start, end: agent.mention.end }
+                  : undefined,
+              })),
+            ],
+          },
+          options,
+        )
         return {
           admittedSeq: 0,
           id: value.id ?? "",
@@ -243,22 +251,25 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
           delivery: value.delivery ?? "steer",
         }
       },
-      async command(value: SessionCommandInput) {
-        await legacy().session.command({
-          sessionID: value.sessionID,
-          messageID: value.id ?? undefined,
-          command: value.command,
-          arguments: value.arguments ?? "",
-          agent: value.agent ?? undefined,
-          model: value.model ? `${value.model.providerID}/${value.model.id}` : undefined,
-          variant: value.model?.variant,
-          parts: value.files?.map((file) => ({
-            type: "file" as const,
-            mime: mime(file.uri),
-            url: file.uri,
-            filename: file.name,
-          })),
-        })
+      async command(value: SessionCommandInput, options?: RequestOptions) {
+        await legacy().session.command(
+          {
+            sessionID: value.sessionID,
+            messageID: value.id ?? undefined,
+            command: value.command,
+            arguments: value.arguments ?? "",
+            agent: value.agent ?? undefined,
+            model: value.model ? `${value.model.providerID}/${value.model.id}` : undefined,
+            variant: value.model?.variant,
+            parts: value.files?.map((file) => ({
+              type: "file" as const,
+              mime: mime(file.uri),
+              url: file.uri,
+              filename: file.name,
+            })),
+          },
+          options,
+        )
         return {
           admittedSeq: 0,
           id: value.id ?? "",
@@ -269,13 +280,16 @@ function createV1Api(input: CompatibleInput): CompatibleApi {
           delivery: value.delivery ?? "steer",
         }
       },
-      async shell(value: SessionShellInput & LegacyPrompt) {
-        await legacy().session.shell({
-          sessionID: value.sessionID,
-          command: value.command,
-          agent: value.agent,
-          model: value.model,
-        })
+      async shell(value: SessionShellInput & LegacyPrompt, options?: RequestOptions) {
+        await legacy().session.shell(
+          {
+            sessionID: value.sessionID,
+            command: value.command,
+            agent: value.agent,
+            model: value.model,
+          },
+          options,
+        )
       },
       compact: async (value: SessionCompactInput & { model?: LegacyPrompt["model"] }) => {
         if (!value.model) throw new Error("A model is required to compact a V1 session")

@@ -1,18 +1,17 @@
-import { createMemo, createResource, onCleanup, type Component } from "solid-js"
-import { createStore } from "solid-js/store"
+import { createEffect, createMemo, createResource, onCleanup, type Component } from "solid-js"
 import { useQuery } from "@tanstack/solid-query"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
 import { directoryKey } from "@/context/global-sync/utils"
-import { sessionManagementUnsupported } from "@/utils/session-management-errors"
-import type { ServerProtocol } from "@/utils/server-protocol"
 import { SubagentModelPicker } from "./subagent-model-picker"
+import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import { createStore } from "solid-js/store"
 import { createSessionModelPolicy } from "./session-model-policy"
 
-type DialogSnapshot = { protocol?: ServerProtocol; error?: unknown }
-
-export const DialogSubagentModels: Component<{ sessionID?: string; directory: string; pendingKey?: string }> = (props) => {
+export const DialogSubagentModels: Component<{ sessionID?: string; directory: string; pendingKey?: string }> = (
+  props,
+) => {
   const serverSDK = useServerSDK()
   const serverSync = useServerSync()
   const sync = useSync()
@@ -22,30 +21,50 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
   const directory = props.directory
   const sessionID = props.sessionID
   const pendingKey = props.pendingKey ?? directory
-  const life = { active: true }
-  onCleanup(() => { life.active = false })
-  const owns = () => life.active && serverSDK().scope === origin.scope && sync().directory === directory
   const catalog = useQuery(() => serverState.queryOptions.providers(directoryKey(directory)))
-  const [state, setState] = createStore({ unsupported: false })
-  const policy = sessionID ? createSessionModelPolicy({
-    sessionID,
-    management: origin.sessionManagement,
-    readEvent: () => {
-      const current = directoryState.session.get(sessionID)
-      return current && {
-        policy: current.subagentModels ?? { mode: "inherit" },
-        timestamp: current.subagentModelsChangedAt ?? current.time.updated,
-        revision: current.subagentModelsRevision,
-      }
-    },
-  }) : undefined
-  const [snapshot, actions] = createResource(async (): Promise<DialogSnapshot> => {
-    setState("unsupported", false)
-    return origin.protocol.then(async (protocol) => {
-      if (protocol === "v2" && policy) await policy.load()
-      return { protocol }
-    }).catch((error: unknown) => ({ protocol: origin.protocolKind(), error }))
+  const [state, setState] = createStore({ unsupported: false, active: true })
+  const owns = () => state.active && serverSDK() === origin && sync() === directoryState &&
+    sync().directory === directory && props.directory === directory && props.sessionID === sessionID &&
+    (props.pendingKey ?? props.directory) === pendingKey
+  onCleanup(() => setState("active", false))
+  createEffect(() => {
+    if (!owns()) setState("active", false)
   })
+  const policy = sessionID
+    ? createSessionModelPolicy({
+        sessionID,
+        management: origin.sessionManagement,
+        owns,
+        readEvent: () => {
+          const current = directoryState.session.get(sessionID)
+          return current && {
+            policy: current.subagentModels ?? { mode: "inherit" },
+            timestamp: current.subagentModelsChangedAt ?? current.time.updated,
+            revision: current.subagentModelsRevision,
+          }
+        },
+      })
+    : undefined
+  const [snapshot, actions] = createResource(
+    () => ({ source: origin, sessionID }),
+    ({ source, sessionID }) => {
+      if (!owns()) return { source, protocol: source.protocolKind(), error: new DOMException("", "AbortError") }
+      setState("unsupported", false)
+      return source.protocol
+        .then(async (protocol) => {
+          if (!owns()) throw new DOMException("", "AbortError")
+          if (protocol !== "v2" || !sessionID)
+            return {
+              protocol, source, error: undefined as unknown,
+            }
+          await policy!.load()
+          return { protocol, source, error: undefined as unknown }
+        })
+        .catch((error: unknown) => ({
+          source, protocol: source.protocolKind(), error,
+        }))
+    },
+  )
   const protocol = () => snapshot()?.protocol ?? origin.protocolKind()
   const failure = () => snapshot()?.error ?? policy?.state.error
   const unsupported = () => state.unsupported || sessionManagementUnsupported(failure())
@@ -65,14 +84,19 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
       supported={!owns() || unsupported() ? false : failure() || snapshot.loading ? undefined : !!snapshot()}
       loadFailed={!!failure() && !unsupported()}
       rulesReady={
-        protocol() === "v2"
+        owns() && (protocol() === "v2"
           ? !!snapshot() && !failure() && !snapshot.loading
-          : !sessionID || !!directoryState.session.get(sessionID)
+          : !sessionID || !!directoryState.session.get(sessionID))
       }
-      readRules={() => sessionID ? directoryState.session.get(sessionID)?.permission ?? [] : []}
+      readRules={() => (sessionID ? (directoryState.session.get(sessionID)?.permission ?? []) : [])}
       writeRules={async (permission) => {
         if (!owns() || !sessionID) throw new DOMException("", "AbortError")
-        const result = await origin.client.session.update({ sessionID, directory, permission })
+        const result = await origin.client.session.update({
+          sessionID,
+          directory,
+          permission,
+        })
+        if (!owns()) throw new DOMException("", "AbortError")
         if (!result.data) throw new Error("Session update returned no data")
         return result.data.permission ?? []
       }}
@@ -80,10 +104,12 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
         read: () => policy?.read() ?? { policy: { mode: "inherit" } },
         write: (next) => {
           if (!owns() || !policy) return Promise.reject(new DOMException("", "AbortError"))
-          return policy.write(next).catch((error: unknown) => {
-            if (life.active && sessionManagementUnsupported(error)) setState("unsupported", true)
-            throw error
-          })
+          return policy
+            .write(next)
+            .catch((error: unknown) => {
+              if (owns() && sessionManagementUnsupported(error)) setState("unsupported", true)
+              throw error
+            })
         },
       }}
       onRetry={() => {

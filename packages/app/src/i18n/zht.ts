@@ -1,8 +1,11 @@
 import { dict as en } from "./en"
+import { FrontendRecovery } from "./frontend-recovery"
 
 type Keys = keyof typeof en
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.zht,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "關於 HuGR Orchestra",
   "desktop.menu.hide": "隱藏 HuGR Orchestra",
@@ -726,21 +729,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "無法載入子代理程式模型。",
-  "session.subagentModels.unsupported": "此伺服器上無法使用子代理程式模型",
-  "session.subagentModels.denyAll": "未允許任何模型。已停用委派給子代理程式。",
-  "dialog.subagentModels.unsupported": "無法在此伺服器上變更子代理程式模型權限。",
-  "dialog.subagentModels.saveFailed": "無法確認模型權限。請再試一次。",
-  "dialog.subagentModels.inherited": "未設定工作階段模型限制。子代理程式會沿用其已設定的模型或上層工作階段的模型。",
-  "dialog.subagentModels.noneAllowed": "此工作階段中沒有允許子代理程式使用的已連線模型。",
-  "orchestra.agents.model.unavailable": "{{model}} 在此設定檔中無法使用。",
-  "orchestra.agents.model.incompatible": "{{model}} 不支援代理程式所需的文字輸入、文字輸出和工具呼叫。",
-  "orchestra.agents.models.loading": "正在載入已連線的模型…",
-  "orchestra.agents.models.error": "無法載入已連線的模型。請再試一次。",
-  "orchestra.agents.models.empty": "此設定檔中沒有可用的已連線模型。",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -862,7 +850,6 @@ export const dict = {
   "common.rename": "重新命名",
   "common.export": "匯出",
   "common.reset": "重設",
-  "common.retry": "重試",
   "common.archive": "封存",
   "common.delete": "刪除",
   "common.close": "關閉",
