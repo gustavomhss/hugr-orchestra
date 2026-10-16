@@ -174,23 +174,30 @@ it.instance("original backend rule retention survives the original Jimmy task an
 it.instance("a third interleaved owner ages backend's rule out of the shared ledger", () =>
   Effect.gen(function* () {
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
-    yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
+    const agents = yield* Agent.Service
+    const append = Effect.fnUntraced(function* (member: "backend" | "jimmy" | "archie") {
       const ctx = context(member)
       expect(receipt(yield* emit.execute({ entry: { ...task, lesson: `${member} observed source` } }, ctx)).outcome).toBe("admitted")
       expect(receipt(yield* emit.execute({ entry: { prId: "interleaved-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)).outcome).toBe("admitted")
       expect(receipt(yield* emit.execute({ entry: { rule: `${member} interleaved rule`, scope: "source" } }, ctx)).outcome).toBe("admitted")
-    }))
+    })
+    const header = Effect.fnUntraced(function* (member: "backend" | "jimmy" | "archie") {
+      const rendered = yield* AtlasHeader.render(yield* agents.get(member))
+      expect(rendered).toContain(`member="${member}"`)
+      expect(rendered).not.toContain("degraded=")
+      return rendered
+    })
+    yield* append("backend")
+    yield* append("jimmy")
+    expect(yield* header("backend")).toContain("backend interleaved rule")
+    yield* append("archie")
     // Atlas decays every rule by the whole log's waves (A26): Archie's three appends take backend's rule from age 3
     // (0.125) to age 6 (~0.016), below the near-zero floor, while the later owners' rules stay injected.
-    const agents = yield* Agent.Service
-    const headers = yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
-      return yield* AtlasHeader.render(yield* agents.get(member))
-    }))
-    expect(headers[0]).toContain('member="backend"')
-    expect(headers[0]).not.toContain("backend interleaved rule")
-    expect(headers[1]).toContain("jimmy interleaved rule")
-    expect(headers[2]).toContain("archie interleaved rule")
-    expect(headers[2]).not.toContain("jimmy interleaved rule")
+    expect(yield* header("backend")).not.toContain("backend interleaved rule")
+    expect(yield* header("jimmy")).toContain("jimmy interleaved rule")
+    const archie = yield* header("archie")
+    expect(archie).toContain("archie interleaved rule")
+    expect(archie).not.toContain("jimmy interleaved rule")
   }), { git: true },
 )
 
