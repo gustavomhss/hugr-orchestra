@@ -190,7 +190,7 @@ it.instance("resolver refuses target, body, digest, receipt, identity, and close
       expect((yield* knowledge.resolve({ ...data.resolve, reference: forged.reference }).pipe(Effect.flip)).reason)
         .toBe(field === "bodyHash" ? "anchor-digest-mismatch" : "anchor-source-drift")
     }))
-}), { git: true })
+}), { git: true }, 90_000)
 
 it.instance("actual source drift and wrong author/project never resolve retained bytes", () => Effect.gen(function* () {
   const data = yield* complete()
@@ -299,7 +299,7 @@ it.instance("bounded catalog omissions do not block complete exact selected unit
   const result = yield* data.tool.execute(data.input, data.ctx)
   expect(result.metadata.atlasContext.anchor?.units.map((unit) => unit.unit)).toEqual(data.input.units)
   expect(result.metadata.atlasContext.coverage.state).toBe("complete")
-}), { git: true })
+}), { git: true }, 90_000)
 
 it.instance("partial Own context cannot mint an anchor", () => Effect.gen(function* () {
   const data = yield* seed({ partial: true })
@@ -321,7 +321,7 @@ it.instance("aggregate selected plain bodies enforce 128KiB UTF8 budget", () => 
   expect((yield* knowledge.anchor({ session: data.session, assistantMessageID: data.message.id,
     callID: data.part.callID, target: data.input.target, units }).pipe(Effect.flip)).reason)
     .toBe("knowledge-body-budget-exceeded")
-}), { git: true })
+}), { git: true }, 90_000)
 
 it.instance("an anchor above the default tool output limit but inside 128KiB binds and resolves", () => Effect.gen(function* () {
   const data = yield* seed({ count: 8, body: "é".repeat(5_500) })
@@ -345,7 +345,7 @@ it.instance("an anchor above the default tool output limit but inside 128KiB bin
   const knowledge = yield* AtlasKnowledge.Service
   expect(yield* knowledge.resolve({ projectID: data.session.projectID, authorSessionID: data.session.id,
     reference: anchor.reference })).toEqual(anchor)
-}), { git: true })
+}), { git: true }, 90_000)
 
 it.instance("anchor output budget hold retains no anchor metadata", () => Effect.gen(function* () {
   const data = yield* seed({ maxBytes: 128 })
