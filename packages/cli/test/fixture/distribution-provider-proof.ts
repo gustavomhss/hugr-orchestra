@@ -140,7 +140,9 @@ export async function qualifyProvider(input: {
         expect(admitted.delivery).toBe("steer")
         await Bun.write(join(evidence, "admission.json"), Schema.encodeSync(Schema.fromJsonString(SessionInput.Admitted))(admitted))
         const polls: Array<{ active: boolean; context: typeof ContextResponse.Type }> = []
-        const deadline = Date.now() + 240_000
+        // Hosted free-tier turns have taken 80 s each under load; two turns plus the
+        // installed tool must fit with headroom, without weakening any assertion.
+        const deadline = Date.now() + 600_000
         while (true) {
           // Observe inactivity before the context snapshot: reading context first
           // lets a drain finish between the two calls and leaves a stale history.
