@@ -23,13 +23,21 @@ import { AtlasDiscovery } from "./atlas-discovery"
 import { AtlasMemory } from "./atlas-memory"
 import { readAtlasSource } from "./atlas-source"
 
+const Units = Schema.Array(AtlasKnowledge.UnitID).check(
+  Schema.isMinLength(1), Schema.isMaxLength(AtlasKnowledge.MAX_UNITS),
+  Schema.isUnique(),
+)
 export const Invocation = Schema.Struct({
   action: Schema.Literal("anchor"),
   target: AtlasKnowledge.Target,
-  units: Schema.Array(AtlasKnowledge.UnitID).check(
-    Schema.isMinLength(1), Schema.isMaxLength(AtlasKnowledge.MAX_UNITS),
-    Schema.isUnique(),
-  ),
+  units: Units,
+}).annotate({ parseOptions: { onExcessProperty: "error" } })
+// Some models send target and units as JSON text. That encoding decodes to the same closed Invocation; the stored
+// call input keeps the model's encoding, so compare decoded values, never raw input.
+export const InvocationInput = Schema.Struct({
+  action: Schema.Literal("anchor"),
+  target: Schema.Union([AtlasKnowledge.Target, Schema.fromJsonString(AtlasKnowledge.Target)]),
+  units: Schema.Union([Units, Schema.fromJsonString(Units)]),
 }).annotate({ parseOptions: { onExcessProperty: "error" } })
 
 export class Held extends Schema.TaggedErrorClass<Held>()("AtlasKnowledgeHeld", {
@@ -148,7 +156,8 @@ const make = Effect.gen(function* () {
       const session = yield* placement(input.session.id, input.session.projectID)
       if (session.directory !== input.session.directory) return yield* held("author-session-binding-mismatch", [session.id])
       const call = yield* observe(session.id, (call) => call.messageID === messageID && call.callID === input.callID)
-      if (!nativeCall(call, session.id) || call.status !== "running" || !isDeepStrictEqual(call.input, invocation))
+      if (!nativeCall(call, session.id) || call.status !== "running" ||
+        !isDeepStrictEqual(Option.getOrUndefined(Schema.decodeUnknownOption(InvocationInput)(call.input)), invocation))
         return yield* held("anchor-invocation-mismatch", [input.callID])
       const payload = {
         projectID: session.projectID, authorSessionID: session.id, assistantMessageID: messageID,
@@ -164,7 +173,7 @@ const make = Effect.gen(function* () {
       const session = yield* placement(input.authorSessionID, input.projectID)
       const call = yield* observe(session.id, (call) => record(call.anchor)?.reference === input.reference)
       const anchor = Option.getOrUndefined(Schema.decodeUnknownOption(AtlasKnowledge.Anchor)(call.anchor))
-      const invocation = Option.getOrUndefined(Schema.decodeUnknownOption(Invocation)(call.input))
+      const invocation = Option.getOrUndefined(Schema.decodeUnknownOption(InvocationInput)(call.input))
       if (!nativeCall(call, session.id) || call.status !== "completed" || !anchor || !invocation ||
         anchor.projectID !== input.projectID || anchor.authorSessionID !== session.id ||
         anchor.assistantMessageID !== call.messageID || anchor.callID !== call.callID ||
