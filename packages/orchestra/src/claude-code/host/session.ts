@@ -119,9 +119,9 @@ export const userInput = ClaudeHostAdmission.userInput
 export const inbox = ClaudeHostAdmission.inbox
 
 /**
- * The source of the synthetic user message that hands one Relay work package to a workflow-bound Session (engine.ts).
- * It is no owner request, but a turn delivers it like one: Claude Code's system prompt is fixed for the query, so the
- * work package's instructions can only arrive as input.
+ * The source of the synthetic text that hands one Relay work package to a workflow-bound Session (engine.ts). Its
+ * message is no owner request, but a turn delivers it like one: Claude Code's system prompt is fixed for the query, so
+ * the work package's instructions can only arrive as input.
  */
 export const WORKFLOW_STEP = "workflow-step"
 

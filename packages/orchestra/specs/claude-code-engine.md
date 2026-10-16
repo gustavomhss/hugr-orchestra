@@ -58,7 +58,8 @@ Both run Orchestra's own code; Claude mode only carries the calls.
   (`WORKFLOW_TASK_SELECTION_MISSING`), so every other dispatch stays Claude Code's `Agent`.
 - **Worker.** A workflow-bound Session whose agent is in Claude mode runs each work package as one Claude Code turn
   (`ClaudeCode.Service.workflowTurn`). Claude Code's system prompt is fixed per query, so the package's instructions
-  arrive as a synthetic user message, one per arm position (`ClaudeHost.WORKFLOW_STEP`). The loop settles the turn's
+  arrive as synthetic text, one per arm position (`ClaudeHost.WORKFLOW_STEP`): the first package's in the Task's brief,
+  so Claude Code reads both as one input, and each later one as its own user message. The loop settles the turn's
   reply through `RelayWorkflowSession.settle`, exactly as it settles a provider turn in normal mode. Writes still pass
   the gate under the Session's approved write roots, and the worker cannot dispatch (`WORKFLOW_NESTED_TASK_REFUSED`).
   This replaced the earlier `WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED` hold.

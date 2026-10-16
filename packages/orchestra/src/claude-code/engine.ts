@@ -25,9 +25,9 @@ export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interru
   readonly reconcileRevert: (session: Session.Info, agent?: string) => Effect.Effect<void>
   readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
   /**
-   * Run one Relay work package of a workflow-bound Session on Claude Code: hand its instructions over as a synthetic
-   * user message (one per `step.key`, so a resumed loop reuses it) and run the turn. Returns the turn's reply to that
-   * message, which the loop settles exactly as it settles a provider turn.
+   * Run one Relay work package of a workflow-bound Session on Claude Code: hand its instructions over as synthetic text
+   * (one per `step.key`, so a resumed loop reuses it) and run the turn. Returns the turn's reply to the message carrying
+   * that text, which the loop settles exactly as it settles a provider turn.
    */
   readonly workflowTurn: (input: { sessionID: SessionID; user: SessionV1.User; step: { key: string; text: string } }) =>
     Effect.Effect<SessionV1.WithParts | undefined>
@@ -60,19 +60,17 @@ const layer = Layer.effect(
       const history = yield* sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie)
       const found = history.find((message) => message.info.role === "user" &&
         message.parts.some((part) => ClaudeHost.workflowStep(part) === input.step.key))?.info
-      const step = found?.role === "user" ? found : yield* sessions.updateMessage({ id: MessageID.ascending(),
+      const answered = history.some((message) => message.info.role === "assistant" && message.info.parentID === input.user.id)
+      // The first package goes in the Task's unanswered brief, as one input: Claude Code may answer two inputs as two
+      // turns, and the brief's answer would then pass for the package's.
+      const step = found?.role === "user" ? found : answered ? yield* sessions.updateMessage({ id: MessageID.ascending(),
         sessionID: input.sessionID, role: "user", agent: input.user.agent, model: input.user.model, time: { created: Date.now() } })
+        : input.user
       if (!found) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: input.sessionID, messageID: step.id,
         type: "text", text: input.step.text, synthetic: true, metadata: { source: { type: ClaudeHost.WORKFLOW_STEP, key: input.step.key } } })
-      const reply = sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie, Effect.map((messages) =>
-        messages.findLast((message) => message.info.role === "assistant" && message.info.parentID === step.id)))
       yield* turn({ sessionID: input.sessionID, user: step })
-      const first = yield* reply
-      if (first?.info.role === "assistant" && first.info.time.completed !== undefined) return first
-      // The first package arrives with the Task's brief. Claude Code may answer the two inputs as two turns; the turn
-      // that ended answered the brief, and this second call waits for the one answering the step (or fails it).
-      yield* turn({ sessionID: input.sessionID, user: step })
-      return yield* reply
+      return (yield* sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie))
+        .findLast((message) => message.info.role === "assistant" && message.info.parentID === step.id)
     })
 
     const admitted: Interface["admitted"] = (user) => Effect.gen(function* () {
