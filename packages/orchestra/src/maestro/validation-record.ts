@@ -71,10 +71,12 @@ export class ValidationRejectedError extends Schema.TaggedErrorClass<ValidationR
   "MaestroValidationRejected",
   {
     reason: Schema.String,
+    /** Words for the model after the reason, such as the order the checks must take. */
+    detail: Schema.optional(Schema.String),
   },
 ) {
   override get message() {
-    return `${this._tag}: ${this.reason}`
+    return this.detail === undefined ? `${this._tag}: ${this.reason}` : `${this._tag}: ${this.reason}. ${this.detail}`
   }
 }
 
@@ -364,7 +366,8 @@ function requireChecks(value: unknown): Check[] {
     throw new ValidationRejectedError({ reason: "duplicate-check-id" })
   }
   if (checks.some((check, index) => index > 0 && checks[index - 1].id.localeCompare(check.id) >= 0)) {
-    throw new ValidationRejectedError({ reason: "checks-not-deterministic" })
+    throw new ValidationRejectedError({ reason: "checks-not-deterministic",
+      detail: `List checks sorted by id: ${JSON.stringify(checks.map((check) => check.id).toSorted((a, b) => a.localeCompare(b)))}; this call passed ${JSON.stringify(checks.map((check) => check.id))}.` })
   }
   return checks
 }

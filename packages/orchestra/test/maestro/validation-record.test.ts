@@ -198,7 +198,9 @@ describe("Maestro validation receipt", () => {
         expect(Exit.isFailure(rejected)).toBe(true)
         if (!Exit.isFailure(rejected)) throw new Error("noncanonical checks were admitted")
         const error = Cause.squash(rejected.cause)
-        expect(error instanceof Error && error.message).toBe("MaestroValidationRejected: checks-not-deterministic")
+        // The live proof's Maestro retried the same order three times on the bare code; the detail names the order.
+        expect(error instanceof Error && error.message).toBe("MaestroValidationRejected: checks-not-deterministic. " +
+          'List checks sorted by id: ["grounding","scope"]; this call passed ["scope","grounding"].')
         const database = yield* Database.Service
         expect(yield* database.db.select().from(EventTable).all().pipe(Effect.orDie)).toHaveLength(0)
         const valid = yield* recordValidation({ ...input, checks: [...checks].reverse() })
