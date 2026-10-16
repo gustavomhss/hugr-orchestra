@@ -46,6 +46,9 @@ async function preflight() {
   // The governed-chain fixes (#656) must be in the code under test.
   if ((await $`git -C ${repo} merge-base --is-ancestor 27cce3a4 HEAD`.nothrow().quiet()).exitCode !== 0)
     stop("this checkout lacks dev 27cce3a4 (#656); git pull origin dev first")
+  // Archie's atlas_context anchor and Relay knowledge consumption land with #658.
+  if (!existsSync(path.join(repo, "packages/orchestra/src/maestro/atlas-knowledge.ts")))
+    stop("this checkout lacks the Archie Atlas anchors (#658); use a checkout that contains it")
   const dirty = (await $`git -C ${fixture} status --porcelain`.text()).trim()
   if (dirty) stop(`fixture tree is not clean:\n${dirty}`)
   const config = path.join(fixture, "orchestra.json")
@@ -87,6 +90,11 @@ async function preflight() {
 async function author() {
   await withServer(async (api) => {
     const session = await api("POST", "/session", { title: "live proof: Maestro", agent: "maestro" })
+    // readAtlasSource holds provider-project-mismatch on exactly this comparison. The ID comes from the origin URL
+    // (else the root commit), and TERRITORY-CATALOG.json is published for it, so editing orchestra.json alone is not a fix.
+    const atlas = JSON.parse(readFileSync(path.join(fixture, "orchestra.json"), "utf8")).maestro.atlas
+    if (atlas.projectID !== session.projectID)
+      stop(`maestro.atlas.projectID ${atlas.projectID} is not this fixture's project ${session.projectID}; re-publish the Atlas catalog and snapshot for ${session.projectID} with the Atlas producer, commit, and rerun`)
     state.sessionID = session.id
     save()
     const brief = process.env.LIVE_PROOF_DEMAND ? readFileSync(process.env.LIVE_PROOF_DEMAND, "utf8") : DEFAULT_BRIEF
@@ -110,6 +118,15 @@ async function publish() {
   const block = [...proposal.matchAll(/```json\n([\s\S]*?)\n```/g)].map((m) => m[1]).find((body) => /"nodes"\s*:/.test(body))
   if (!block) stop("proposal.md has no ```json block with a native Relay document (nodes/connections)")
   const document = JSON.parse(block)
+  // The proof is Archie's knowledge reaching the workers; a document without anchors proves nothing new.
+  const references = (document.nodes as { parameters?: Record<string, unknown> }[]).flatMap((node) =>
+    ["relayKnowledge", "knowledge"].flatMap((name) => {
+      const value = node.parameters?.[name]
+      return typeof value === "string" ? JSON.parse(value) : Array.isArray(value) ? value : []
+    }))
+  if (!references.some((reference) => /^[0-9a-f]{64}$/.test(String(reference))))
+    stop("the Relay document carries no Atlas knowledge reference; archie did not anchor its context")
+  console.log(`knowledge references: ${references.join(", ")}`)
   await withServer(async (api) => {
     const fields = Object.fromEntries(Object.entries(document).filter(([name]) =>
       ["name", "description", "nodes", "connections", "nodeGroups", "tags", "meta", "isArchived"].includes(name)))
@@ -278,6 +295,10 @@ Propose making money handling exact: src/money.ts converts a decimal amount to i
 (non-finite and fractional-cent inputs are explicit errors), and src/checkout.ts totals integer cents exactly.
 Shape it as one linear work package with two relay.execute steps and disjoint write scopes: step 1 writes only
 src/money.ts, step 2 writes only src/checkout.ts and is revealed only after step 1 settles.
+Anchor the Atlas units each step needs with atlas_context action anchor (target kind work-package, id = the step's
+work package id; units used by both steps go in one anchor with target kind assignment). Put each step's returned
+reference in that relay.execute node's \`knowledge\` parameter and the shared one in the start node's
+\`relayKnowledge\` parameter, both as JSON arrays of reference strings, and list every receipt in the proposal.
 Include the native Relay authoring document as exactly one \`\`\`json code block with nodes and connections
 (a relay.startTrigger node plus the two relay.execute nodes), checklist items as objects with unique ids.
 List every unknown; leave none for the owner to resolve silently.`
