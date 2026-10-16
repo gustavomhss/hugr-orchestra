@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import type { Configuration } from "electron-builder"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 
 const legacyDesktopEntry = "resources/linux/orchestra-desktop.desktop"
 
@@ -74,7 +75,9 @@ for (const channel of channels) {
     else process.env.ORCHESTRA_CHANNEL = previous
 
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
-    expect(config.extraResources).toContainEqual({ from: "../orchestra/playbooks", to: "playbooks" })
+    expect(config.extraResources).toContainEqual({
+      from: path.join(WorkspacePaths.make(import.meta.dir).module("orchestra"), "playbooks"), to: "playbooks",
+    })
     expect(
       await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists(),
     ).toBe(true)

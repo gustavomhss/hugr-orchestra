@@ -8,6 +8,7 @@ import { join, resolve } from "node:path"
 import { parseArgs } from "node:util"
 import { nativeCliTarget, readCliManifest, verifyCliArtifact } from "../../desktop/src/main/cli-artifacts"
 import { namedTargets } from "./targets"
+import { linuxRuntimeLibc } from "@orchestra/script/tree-sitter-prebuilds"
 
 const cli = resolve(import.meta.dirname, "..")
 const args = parseArgs({
@@ -53,9 +54,11 @@ async function main() {
   if (
     item.os !== process.platform || item.arch !== process.arch ||
     !(item.arch === "x64" ? ["x86_64", "amd64", "x64"] : ["aarch64", "arm64"]).includes(cpu) ||
-    item.target !== nativeCliTarget(process.platform, process.arch)
+    (item.abi !== "musl" && item.target !== nativeCliTarget(process.platform, process.arch))
   )
     throw new Error(`NATIVE_HOST_CPU_UNAVAILABLE: ${item.target}`)
+  if (item.os === "linux" && linuxRuntimeLibc().kind !== (item.abi === "musl" ? "musl" : "glibc"))
+    throw new Error(`NATIVE_HOST_LIBC_MISMATCH: ${item.target}`)
   if (args.host && args["check-report"]) throw new Error("MODE_CONFLICT")
   if (args.host) return
   if (!args.report) throw new Error("REPORT_PATH_MISSING")

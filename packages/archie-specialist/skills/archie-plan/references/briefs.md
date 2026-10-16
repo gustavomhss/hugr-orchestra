@@ -45,7 +45,7 @@ Ask executors for compact baseline/files/check-command-cwd-exit/evidence/blocker
 
 Maestro reads compact returns first, then needed evidence, arranges independent acceptance and integration. A worker's local done claim does not close the Task/WP/epic; author does not act as its own acceptance reviewer. Do not prepopulate dispatch, approval, completion, publication, authorship-attestation or execution receipts. Actual identities and evidence are host facts.
 
-`repo-mapper`, `move-in`, `brief-usage-check`, Atlas Memory and backend toolkit powers are not granted here. Request missing acquisition/context-pressure/oracle evidence from host; missing capability is `UNKNOWN` with a blocker, never simulated output. Do not install external hooks/tools or add Relay token lines.
+`repo-mapper`, `move-in`, `brief-usage-check` and backend toolkit powers are not granted here. Use direct native Atlas context and your own bound Memory within the seat's grants; neither grants authority or Knowledge promotion. Request missing acquisition/context-pressure/oracle evidence from host; missing capability is `UNKNOWN` with a blocker, never simulated output. Do not install external hooks/tools or add Relay token lines.
 
 ## Source method and limits
 

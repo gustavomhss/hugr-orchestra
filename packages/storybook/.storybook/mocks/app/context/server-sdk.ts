@@ -52,6 +52,10 @@ export function useServerProtocol() {
   return protocolKind
 }
 
+export function useServerProtocol() {
+  return () => "v2" as const
+}
+
 export function ServerSDKProvider(props: { children?: unknown }) {
   return props.children
 }

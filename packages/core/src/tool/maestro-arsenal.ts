@@ -305,6 +305,10 @@ function capabilityFailure(result: { readonly content: readonly { readonly text:
     return "Arsenal capability failed; no successful outcome was recorded."
   if (failure.value.error === "invalid_arguments" && failure.value.message)
     return `Arsenal capability failed (invalid_arguments): ${failure.value.message.slice(0, 1024)}. Fix the arguments to match the inputSchema from ${names.describe}; no successful outcome was recorded.`
+  // A handler refusal starts with a static code such as COMPLETION_CONTRACT_MISSING; whatever follows it may name
+  // host paths, so only the leading code is returned.
+  const code = failure.value.error === "execution_failed" ? /^[A-Z][A-Z0-9_]{2,63}(?=$|:)/.exec(failure.value.message ?? "") : null
+  if (code) return `Arsenal capability failed (execution_failed: ${code[0]}); no successful outcome was recorded.`
   return `Arsenal capability failed (${failure.value.error}); no successful outcome was recorded.`
 }
 

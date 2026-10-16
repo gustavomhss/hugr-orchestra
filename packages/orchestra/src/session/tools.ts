@@ -541,6 +541,8 @@ export const resolve = Effect.fn("SessionTools.resolve")(function* (input: {
   if (flags.experimentalCodeMode) return tools
 
   for (const [key, entry] of Object.entries(yield* mcp.tools())) {
+    // An MCP server named "atlas" would otherwise replace the native, receipt-bearing Atlas doors.
+    if (ToolRegistry.nativeAtlasTools.has(key)) continue
     const item = McpCatalog.convertTool(entry.def, entry.client, entry.timeout)
     const execute = item.execute
     if (!execute) continue

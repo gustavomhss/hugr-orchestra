@@ -21,6 +21,7 @@ use super::diag::{self, Diag};
 use super::members::Members;
 use super::queues::{Inbox, MAX_REPLIES, Outbox};
 
+mod job_lifetime;
 mod members;
 
 /// Polls `f` until it holds, for at most 10 s.

@@ -80,11 +80,25 @@ function normalize(value: unknown, options: { stripNull?: boolean } = {}): unkno
     return normalize({ ...Object.assign({}, ...allOf), ...rest })
   }
 
+  if (typeof schema.pattern === "string") {
+    const pattern = portablePattern(schema.pattern)
+    if (pattern === undefined) delete schema.pattern
+    if (pattern !== undefined) schema.pattern = pattern
+  }
+
   if (schema.type === "integer" && schema.maximum === undefined) {
     return { minimum: Number.MIN_SAFE_INTEGER, ...schema, maximum: Number.MAX_SAFE_INTEGER }
   }
 
   return schema
+}
+
+// Providers check tool schemas with RE2-style engines, which refuse lookaround and `\u` escapes (OpenRouter
+// rejected a request with "pattern must be a valid regex"). The advertised pattern only guides the model; decoding
+// still enforces the original, so rewrite the two idioms we use and drop any other pattern a provider would refuse.
+function portablePattern(pattern: string) {
+  const rewritten = pattern.replace(/\(\?!\[\\s\\S\]\)$/, "$").replace(/\\u00([0-9a-fA-F]{2})/g, "\\x$1")
+  return /\(\?<?[=!]|\\u/.test(rewritten) ? undefined : rewritten
 }
 
 function isRecord(value: unknown): value is JsonObject {

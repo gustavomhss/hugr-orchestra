@@ -4,7 +4,7 @@ import { createStore } from "solid-js/store"
 import { parsePromptInputV2Editor, renderPromptInputV2Editor } from "@orchestra/session-ui/v2/prompt-input"
 import type { PromptInputV2PersistedState, PromptInputV2Prompt } from "@orchestra/session-ui/v2/prompt-input/types"
 import { createPromptInputV2Controller, createPromptInputV2State, materializePromptEditor, promptEditorInsertionHTML, remapPromptEditorRange, restorePromptEditorCaret } from "@orchestra/session-ui/v2/prompt-input/interaction"
-import { getCursorPosition, setCursorPosition } from "./editor-dom"
+import { getCursorPosition, setCursorPosition } from "@/components/prompt-input/editor-dom"
 
 test("V2 renderer/parser preserve pill metadata and UTF-16 cursor boundaries", () => {
   const prompt = [

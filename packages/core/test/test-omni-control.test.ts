@@ -136,6 +136,11 @@ const mentions: Record<string, string> = {
   "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
   "AGENTS.md": "documents the control",
+  ".github/workflows/distribution-bundle.yml": "distribution qualification pins suite scope and declared scope for its proof steps",
+  "packages/core/test/distribution-bundle-workflow.test.ts": "pins the distribution workflow's control scopes",
+  "packages/core/test/fixture/distribution-bundle.ts": "its trace fixture records the scope each bundle command ran under",
+  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": "the AUR guest runs its proof under declared scope with the strict spawner",
+  "packages/cli/test/fixture/distribution-musl/bootstrap.sh": "the musl guest runs its proof under declared scope with the strict spawner",
 }
 
 test("only the ledgered files mention the control's scope variable, and test-ci.yml sets it only from the request", () => {

@@ -35,8 +35,8 @@ export namespace RipgrepBundle {
   export const enabled = (env: Record<string, string | undefined> = process.env) => env[BUNDLED] !== "false"
 
   /**
-   * The pin key for a CLI build target, or undefined where none is pinned: ripgrep publishes no arm64 musl build (the
-   * x64 Linux pin is a static musl build, so it serves glibc and musl alike).
+   * The pin key for a CLI build target, or undefined where none is pinned. arm64 Linux has separate glibc and musl
+   * pins; the x64 Linux pin is a static musl build, so it serves glibc and musl alike.
    */
   export const key = (target: { os: string; arch: string; abi?: string }) => {
     const key = RipgrepRelease.key({ arch: target.arch, platform: target.os, musl: target.abi === "musl" })

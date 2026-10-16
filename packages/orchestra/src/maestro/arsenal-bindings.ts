@@ -54,6 +54,7 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { WorkflowHost } from "./workflow-host"
+import { AtlasKnowledge } from "./atlas-knowledge"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -191,6 +192,7 @@ export const node = makeGlobalNode({
     Git.node,
     EventV2Bridge.node,
     RelayWorkflowSession.node,
+    AtlasKnowledge.node,
   ],
 })
 
@@ -640,7 +642,7 @@ export const make = Effect.gen(function* () {
         if (name !== "relay-arm") return
         if (yield* WorkflowBinding.read(sessionID).pipe(Effect.provideService(Database.Service, database),
           Effect.mapError((error) => new ToolFailure({ message: error.reason }))))
-          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED" })
+          return yield* new ToolFailure({ message: "WORKFLOW_NATIVE_ARM_MUTATION_REFUSED: a workflow Task is already bound in this Session, so its arm cannot change; arm before dispatching the workflow Task, never after." })
         const input = Schema.decodeUnknownOption(
           Schema.Struct({
             action: Schema.String,
