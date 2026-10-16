@@ -5,6 +5,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Event } from "@orchestra/schema/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -18,7 +19,7 @@ import { MessageID, PartID } from "../../src/session/schema"
 import { Session } from "../../src/session/session"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 
-const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([Session.node, Database.node, EventV2Bridge.node])))
+const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([Session.node, SessionProjector.node, Database.node, EventV2Bridge.node])))
 
 // A model can choose references but cannot make them observed upstream authorship. Until the reviewed upstream
 // verifier is wired, the native preparation path must fail before touching a store, reserving or dispatching.
