@@ -41,12 +41,15 @@ it.live("actual Electron preload/frame IPC saves bounded bytes and cleans cancel
     (yield* Effect.promise(() => readFile(join(electronDirectory, "path.txt"), "utf8"))).trim(),
   )
   const command = process.platform === "linux" ? "xvfb-run" : electron
-  const args = [...(process.platform === "linux" ? ["-a", electron] : []), "--no-sandbox", join(root, "main.cjs")]
+  // xvfb-run folds Electron's stderr into stdout and keeps Xvfb's own errors in -e; report both on failure.
+  const xvfbLog = join(root, "xvfb.log")
+  const args = [...(process.platform === "linux" ? ["-a", "-e", xvfbLog, electron] : []), "--no-sandbox", join(root, "main.cjs")]
   console.log("Native response download command", { executable: command, args })
   const result = yield* proc.run(ChildProcess.make(command, args, {
     env: { ...process.env, ELECTRON_RUN_AS_NODE: undefined, RESPONSE_DOWNLOAD_FIXTURE_ROOT: root }, extendEnv: false,
     stdin: "ignore", stdout: "pipe", stderr: "pipe",
   }), { timeout: "45 seconds", maxOutputBytes: 16 * 1024, maxErrorBytes: 32 * 1024 })
-  expect(result.exitCode, result.stderr.toString()).toBe(0)
+  const xvfb = process.platform === "linux" ? yield* Effect.promise(() => readFile(xvfbLog, "utf8").catch(() => "")) : ""
+  expect(result.exitCode, [result.stderr.toString(), result.stdout.toString(), xvfb].join("\n")).toBe(0)
   expect(result.stdout.toString()).toContain("response-download-native:pass")
 }), 180000)
