@@ -69,7 +69,7 @@ export async function npmChannel(
         })
         packages.set(metadata.name, entries)
         blobs.set(packed[0].filename, tarball)
-        const destination = join(modules, "@orchestra", name)
+        const destination = join(modules, "@hugr", name)
         await mkdir(destination, { recursive: true })
         // Actual npm tarball extraction preserves archive modes; no fabricated bin.
         await successful([tar, "-xzf", tarball, "--strip-components=1", "-C", destination], box)
@@ -97,7 +97,7 @@ export async function npmChannel(
       await successful(["npm", "install", "--no-audit", "--no-fund", "--save-exact", "--include=optional",
         "--prefix", prefix, "--registry", registry, `@hugr/cli@${payload.version}`], npmBox, 180_000)
       const modules = join(prefix, "node_modules")
-      const platform = join(modules, "@orchestra", `cli-${target}`)
+      const platform = join(modules, "@hugr", `cli-${target}`)
       const expected = extracted.find((entry) => entry.version === payload.version)
       if (!expected) throw new Error("EXTRACTED_VERSION_MISSING")
       const registered = packages.get(`@hugr/cli-${target}`)?.get(payload.version)
