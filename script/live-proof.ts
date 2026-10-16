@@ -10,7 +10,7 @@
 // $LIVE_PROOF_OUT (default ~/orchestra-live-proof) so each step can be rerun after a fix.
 import path from "node:path"
 import os from "node:os"
-import { mkdirSync, existsSync, readFileSync, writeFileSync } from "node:fs"
+import { mkdirSync, existsSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { randomBytes } from "node:crypto"
 import { $ } from "bun"
 
@@ -198,6 +198,8 @@ async function withServer(body: (api: Api) => Promise<void>) {
     provider: { openrouter: { options: { apiKey: "{env:OPENROUTER_API_KEY}" }, models: { [model]: { tool_call: true } } } },
     agent: Object.fromEntries(["maestro", "archie", "lucy", "backend"].map((id) => [id, { model: `openrouter/${model}` }])),
   }
+  // A previous run's address must not be read as this server's.
+  rmSync(path.join(out, "server.out"), { force: true })
   const server = Bun.spawn(["bun", "run", path.join(repo, "packages/orchestra/src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
     cwd: fixture,
     env: { ...process.env, ORCHESTRA_SERVER_PASSWORD: password, ORCHESTRA_CONFIG_CONTENT: JSON.stringify(config),
