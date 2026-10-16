@@ -1,0 +1,76 @@
+diff --git a/packages/orchestra/test/server/httpapi-exercise/actions-native-data.ts b/packages/orchestra/test/server/httpapi-exercise/actions-native-data.ts
+index 0269aa8ce1..6db2b23785 100644
+--- a/packages/orchestra/test/server/httpapi-exercise/actions-native-data.ts
++++ b/packages/orchestra/test/server/httpapi-exercise/actions-native-data.ts
+@@ -21,7 +21,22 @@ export const Reply = Schema.Struct({
+   headers: Schema.optionalKey(Schema.Record(Schema.String, Schema.String)),
+ })
+ export const Replies = Schema.Record(Schema.String, Reply)
+-export const NativeCall = Schema.Struct({ method: Schema.String, endpoint: Schema.String, metadata: Schema.Boolean })
++export const RunnerConfig = Schema.Struct({
++  directory: Schema.NonEmptyString,
++  environment: Schema.Struct({ GH_CONFIG_DIR: Schema.optionalKey(Schema.String) }),
++  credentialSelection: Schema.Literal("config"),
++})
++export const githubTokenKeys = ["GH_TOKEN", "GITHUB_TOKEN", "GH_ENTERPRISE_TOKEN", "GITHUB_ENTERPRISE_TOKEN"] as const
++export const NativeCall = Schema.Struct({
++  method: Schema.String,
++  endpoint: Schema.String,
++  metadata: Schema.Boolean,
++  scope: Schema.Struct({
++    location: Schema.Literal(true),
++    configDirectory: Schema.Literal(true),
++    configCredentials: Schema.Literal(true),
++  }),
++})
+ 
+ export function nativeReplies(commit: string, blob: string, state = "completed") {
+   const repo = { id: 1234, full_name: "acme/widgets", default_branch: "main", private: false,
+diff --git a/packages/orchestra/test/server/httpapi-exercise/actions-provider-boundary.ts b/packages/orchestra/test/server/httpapi-exercise/actions-provider-boundary.ts
+index 0ee573666a..6df331a034 100644
+--- a/packages/orchestra/test/server/httpapi-exercise/actions-provider-boundary.ts
++++ b/packages/orchestra/test/server/httpapi-exercise/actions-provider-boundary.ts
+@@ -5,35 +5,35 @@ import { http } from "./dsl"
+ import type { Scenario } from "./types"
+ 
+ const refused = "Command does not belong to the GitHub execution dispatcher"
+-// These prove typed endpoint/admission/provider-domain refusal, not GitLab provider execution.
+-// Native GitLab token/HTTP qualification remains in Core's gitlab-command-http and Server's focused tests.
++// These are API-boundary cases on a GitHub binding: decoding/admission/refusal before the GitLab dispatcher.
++// Native GitLab execution remains in Core's gitlab-command-http tests; these cases do not reach that transport.
+ export const actionsProviderBoundaryScenarios: Scenario[] = [
+-  http.protected.put("/api/actions/run/{bindingID}/{runID}/name", "actions.run.rename.provider-boundary").mutating()
++  http.protected.put("/api/actions/run/{bindingID}/{runID}/name", "actions.run.rename.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "run.rename", { runID }))
+     .at((ctx) => ({ path: actionPath("/api/actions/run/{bindingID}/{runID}/name", ctx.state.ref, { runID }), headers: ctx.headers(),
+       body: { id: ctx.state.operation.id, input: { provider: "gitlab", name: "Fixture pipeline" } } }))
+     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "invalid_input", refused), "status"),
+-  http.protected.post("/api/actions/job/{bindingID}/{jobID}/play", "actions.job.play.provider-boundary").mutating()
++  http.protected.post("/api/actions/job/{bindingID}/{jobID}/play", "actions.job.play.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "job.play", { jobID }))
+     .at((ctx) => ({ path: actionPath("/api/actions/job/{bindingID}/{jobID}/play", ctx.state.ref, { jobID }), headers: ctx.headers(),
+       body: { id: ctx.state.operation.id, input: { provider: "gitlab" } } }))
+     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "invalid_input", refused), "status"),
+-  http.protected.post("/api/actions/job/{bindingID}/{jobID}/cancel", "actions.job.cancel.provider-boundary").mutating()
++  http.protected.post("/api/actions/job/{bindingID}/{jobID}/cancel", "actions.job.cancel.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "job.cancel", { jobID }))
+     .at((ctx) => ({ path: actionPath("/api/actions/job/{bindingID}/{jobID}/cancel", ctx.state.ref, { jobID }), headers: ctx.headers(),
+       body: { id: ctx.state.operation.id, input: { provider: "gitlab" } } }))
+     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "invalid_input", refused), "status"),
+-  http.protected.post("/api/actions/job/{bindingID}/{jobID}/erase", "actions.job.erase.provider-boundary").mutating()
++  http.protected.post("/api/actions/job/{bindingID}/{jobID}/erase", "actions.job.erase.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "job.erase", { jobID }))
+     .at((ctx) => ({ path: actionPath("/api/actions/job/{bindingID}/{jobID}/erase", ctx.state.ref, { jobID }), headers: ctx.headers(),
+       body: { id: ctx.state.operation.id, input: { provider: "gitlab" } } }))
+     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "invalid_input", refused), "status"),
+-  http.protected.post("/api/actions/pipeline/{bindingID}/merge-request/{mergeRequestID}", "actions.pipeline.mergeRequest.provider-boundary").mutating()
++  http.protected.post("/api/actions/pipeline/{bindingID}/merge-request/{mergeRequestID}", "actions.pipeline.mergeRequest.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "pipeline.mergeRequest", { resourceID: "17" }))
+     .at((ctx) => ({ path: actionPath("/api/actions/pipeline/{bindingID}/merge-request/{mergeRequestID}", ctx.state.ref,
+       { mergeRequestID: "17" }), headers: ctx.headers(), body: { id: ctx.state.operation.id, input: { provider: "gitlab" } } }))
+     .jsonEffect(400, (body, ctx) => commandFailure(body, ctx, ctx.state, "invalid_input", refused), "status"),
+-  http.protected.post("/api/actions/pipeline/{bindingID}/trigger", "actions.pipeline.trigger.provider-boundary").mutating()
++  http.protected.post("/api/actions/pipeline/{bindingID}/trigger", "actions.pipeline.trigger.api-boundary.github-binding").mutating()
+     .seeded((ctx) => seedCommand(ctx, "pipeline.trigger", { ref: "main" }))
+     .at((ctx) => ({ path: actionPath("/api/actions/pipeline/{bindingID}/trigger", ctx.state.ref), headers: ctx.headers(),
+       body: { id: ctx.state.operation.id, input: { provider: "gitlab", ref: "main", token: "fixture-only-never-sent" } } }))
