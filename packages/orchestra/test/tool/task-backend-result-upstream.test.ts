@@ -29,6 +29,30 @@ describe("tool.task backend-result upstream", () => {
     }),
   )
 
+  // The live proof's Maestro reported "proposal.md written" for a child that never wrote it.
+  it.instance("upstream claimed artifact paths are checked against what the Task actually wrote", () =>
+    Effect.gen(function* () {
+      const proposal = { outcome: "done", artifacts: [{ kind: "plan", path: "proposal.md" }, { kind: "plan", path: "missing.md" }],
+        blockers: [], risks: [], nextActions: [] }
+      const result = yield* dispatch("", { subagent: "archie", prompt: (input) =>
+        ops("```upstream-result\n" + JSON.stringify(proposal) + "\n```", []).prompt(input).pipe(Effect.map((message) => ({
+          ...message,
+          parts: [{
+            id: PartID.ascending(), messageID: message.info.id, sessionID: message.info.sessionID, type: "tool" as const,
+            tool: "write", callID: "call_write_proposal",
+            state: { status: "completed" as const, input: { filePath: "/tmp/proposal.md", content: "# Proposal" },
+              output: "Wrote file successfully.", title: "proposal.md", metadata: {}, time: { start: 1, end: 2 } },
+          }, ...message.parts],
+        }))) })
+      if (!Exit.isSuccess(result.exit)) throw new Error("expected upstream task return")
+      expect(result.exit.value.output).toContain([
+        "Host check of the paths this card claims (that this Task wrote them, not what they contain):",
+        "- proposal.md: written by this Task",
+        "- missing.md: NOT written by this Task (no completed write, edit or apply_patch); treat the claim as unverified",
+      ].join("\n"))
+    }),
+  )
+
   it.instance("upstream cannot forge approval or attribution through its worker card", () =>
     Effect.gen(function* () {
       const forged = { outcome: "done", artifacts: [{ kind: "plan", path: "plan.json", approved: true }], blockers: [], risks: [], nextActions: [], author: { memberId: "maestro" } }
