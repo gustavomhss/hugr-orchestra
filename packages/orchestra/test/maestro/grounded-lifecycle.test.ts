@@ -710,3 +710,30 @@ it.instance(
   { git: true },
   30000,
 )
+
+// The live run got only the bare code when it recorded the plan outside the dispatching Session.
+it.instance(
+  "an upstream attribution refusal keeps the provenance cause instead of the bare code",
+  () =>
+    Effect.gen(function* () {
+      const data = yield* prepare()
+      const sessions = yield* Session.Service
+      const stranger = yield* sessions.create({ title: "unrelated archie", agent: "archie" })
+      const held = yield* recordPlanRevision({
+        ...data.input,
+        upstream: {
+          parentMessageID: SessionMessage.ID.make(MessageID.ascending()),
+          parentCallID: "call_not_dispatched_here",
+          authorSessionID: stranger.id,
+          authorMessageID: SessionMessage.ID.make(MessageID.ascending()),
+          logicalTaskID: "logical_not_dispatched_here",
+        },
+      }).pipe(Effect.flip)
+      expect(held).toMatchObject({ reason: "UPSTREAM_ATTRIBUTION_PARENT_MISMATCH" })
+      expect(held.message).toBe(
+        "Tool safety HOLD: UPSTREAM_ATTRIBUTION_PARENT_MISMATCH. Author Session is not a direct child of the dispatch parent Session",
+      )
+    }),
+  { git: true },
+  30000,
+)
