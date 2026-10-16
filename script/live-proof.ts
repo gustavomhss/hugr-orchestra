@@ -70,12 +70,16 @@ async function preflight() {
     const probe = await fetch("https://openrouter.ai/api/v1/chat/completions", {
       method: "POST",
       headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "X-Title": "Orchestra" },
-      body: JSON.stringify({ model: id, max_tokens: 64, tool_choice: "required",
-        tools: [{ type: "function", function: { name: "ok", description: "Confirm", parameters: { type: "object", properties: {} } } }],
-        messages: [{ role: "user", content: "Call the ok tool." }] }),
+      // Orchestra tools take nested objects and arrays, and stored calls are re-read later, so a model that sends them
+      // as JSON text fails the governed chain even if one tool tolerates it.
+      body: JSON.stringify({ model: id, max_tokens: 512, tool_choice: "required",
+        tools: [{ type: "function", function: { name: "ok", description: "Confirm", parameters: { type: "object",
+          properties: { target: { type: "object", properties: { kind: { type: "string" } }, required: ["kind"] },
+            units: { type: "array", items: { type: "string" } } }, required: ["target", "units"] } } }],
+        messages: [{ role: "user", content: 'Call the ok tool with target.kind = "x" and units = ["a"].' }] }),
     }).catch((error: Error) => new Response(error.message, { status: 599 }))
     const body = await probe.text()
-    const called = probe.ok && /"tool_calls"/.test(body)
+    const called = probe.ok && nestedArguments(body)
     console.log(`  ${called ? "OK " : "no "} ${id}: HTTP ${probe.status}${called ? "" : ` ${body.slice(0, 160).replaceAll("\n", " ")}`}`)
     if (!called) await Bun.sleep(3500)
     return called ? id : undefined
@@ -85,6 +89,12 @@ async function preflight() {
   save()
   console.log(`model chosen: ${chosen} (override with LIVE_PROOF_MODEL)`)
   console.log("\nPREFLIGHT OK. Next: author")
+}
+
+function nestedArguments(body: string) {
+  const call = JSON.parse(body).choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments
+  const args = typeof call === "string" ? (() => { try { return JSON.parse(call) } catch { return undefined } })() : undefined
+  return typeof args?.target === "object" && args.target !== null && !Array.isArray(args.target) && Array.isArray(args.units)
 }
 
 async function author() {
