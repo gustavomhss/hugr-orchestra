@@ -66,12 +66,17 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         connected,
       )
       const extras: Record<string, any> = {}
+      // Default-labeled integration keys connect their base provider; labeled keys stay virtual entries.
+      const keyed = new Set<string>()
       for (const cred of yield* credentials.all()) {
         if (cred.value.type !== "key") continue
         const label = cred.label && cred.label !== "default" ? cred.label : ""
-        if (!label) continue
+        if (!label) {
+          if (Object.hasOwn(baseProviders, cred.integrationID)) keyed.add(cred.integrationID)
+          continue
+        }
         const base = baseProviders[cred.integrationID]
-        if (!base) continue
+        if (!base || !Object.hasOwn(baseProviders, cred.integrationID)) continue
         const id = `${cred.integrationID}#${cred.id}`
         extras[id] = {
           ...base,
@@ -95,7 +100,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         }),
         default: Provider.defaultModelIDs(providers),
         connected: Object.keys(providers).filter(
-          (id) => id in connected || legacy[id] || id in extras || (host && id === "anthropic"),
+          (id) => id in connected || legacy[id] || id in extras || keyed.has(id) || (host && id === "anthropic"),
         ),
       }
     })

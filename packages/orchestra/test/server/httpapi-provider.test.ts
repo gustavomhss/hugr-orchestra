@@ -1,5 +1,7 @@
 import { describe, expect } from "bun:test"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/schema/integration"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Effect, Layer } from "effect"
 import path from "path"
@@ -16,6 +18,15 @@ const testStateLayer = Layer.effectDiscard(
 )
 
 const it = testEffect(Layer.mergeAll(testStateLayer, LayerNode.compile(FSUtil.node), httpApiLayer))
+// The list handler reads the credential store directly; the dialog writes it
+// after the provider InstanceState loads, so this layer must resolve it too.
+const itCredential = testEffect(
+  Layer.mergeAll(
+    testStateLayer,
+    LayerNode.compile(LayerNode.group([FSUtil.node, Credential.node])),
+    httpApiLayer,
+  ),
+)
 const projectOptions = { config: { formatter: false, lsp: false } }
 const providerID = "test-oauth-parity"
 const oauthURL = "https://example.com/oauth"
@@ -392,5 +403,28 @@ describe("provider HttpApi", () => {
       expect(hasNonZeroModelCost(providerBody, "all", "google")).toBe(true)
     }),
     { ...projectOptions, init: writeProviderModelsMutationPlugin },
+  )
+
+  itCredential.instance(
+    "default integration key marks its base provider connected",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const credentials = yield* Credential.Service
+      yield* credentials.create({
+        integrationID: Integration.ID.make("opencode-go"),
+        value: Credential.Key.make({ type: "key", key: "test-go-key" }),
+      })
+
+      const response = yield* request("/provider", { headers: { "x-orchestra-directory": directory } })
+      expect(response.status).toBe(200)
+      const body = yield* response.json
+      expect(body).toMatchObject({ connected: expect.arrayContaining(["opencode-go"]) })
+      const provider = providerByID(body, "all", "opencode-go")
+      expect(isRecord(provider)).toBe(true)
+      // The key authenticates the runtime; it must never reach the client.
+      expect(isRecord(provider) && "key" in provider).toBe(false)
+      expect(JSON.stringify(body)).not.toContain("test-go-key")
+    }),
+    projectOptions,
   )
 })

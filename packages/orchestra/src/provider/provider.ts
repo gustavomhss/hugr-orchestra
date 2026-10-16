@@ -1090,11 +1090,13 @@ export const ConfigProvidersResult = Schema.Struct({
 })
 export type ConfigProvidersResult = Types.DeepMutable<Schema.Schema.Type<typeof ConfigProvidersResult>>
 
-export function toPublicInfo(provider: Info): Info {
+export function toPublicInfo(provider: Info): Omit<Info, "key"> {
+  // Keys authenticate the runtime; they must never reach clients or plugins.
+  const { key: _, ...rest } = provider
   return JSON.parse(
     JSON.stringify(
       {
-        ...provider,
+        ...rest,
         models: Object.fromEntries(Object.entries(provider.models).filter(([, model]) => Schema.is(Model)(model))),
       },
       (_, value) => {
@@ -1184,6 +1186,9 @@ interface State {
   sdk: Map<string, BundledSDK>
   modelLoaders: Record<string, CustomModelLoader>
   varsLoaders: Record<string, CustomVarsLoader>
+  // Pre-merge snapshot for providers carrying an integration key, so removing
+  // the credential restores the loader-time entry instead of leaking the key.
+  credentialKeys: Map<ProviderV2.ID, Info | undefined>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/Provider") {}
@@ -1713,6 +1718,7 @@ const layer = Layer.effect(
           sdk,
           modelLoaders,
           varsLoaders,
+          credentialKeys: new Map(),
         }
       }),
     )
@@ -1863,7 +1869,39 @@ const layer = Layer.effect(
 
     const ensureProvider = Effect.fn("Provider.ensureProvider")(function* (s: State, providerID: ProviderV2.ID) {
       const parsed = parseVirtualID(providerID)
-      if (!parsed) return s.providers[providerID]
+      if (!parsed) {
+        // Integration key credentials are written after this InstanceState loads, so merge a
+        // default-labeled key here; otherwise a provider connected from the dialog stays keyless.
+        // Fall back to the models.dev catalog: providers without any auth never enter `providers`.
+        // Newest credential wins; removing it restores the loader-time entry, never a stale key.
+        let base = s.providers[providerID]
+        if (!base) {
+          const cfg = yield* config.get()
+          const disabled = new Set(cfg.disabled_providers ?? [])
+          const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
+          if (enabled && !enabled.has(providerID)) return undefined
+          if (disabled.has(providerID)) return undefined
+          base = s.catalog[providerID]
+        }
+        const credential = (yield* credentials.all()).findLast(
+          (item) =>
+            item.value.type === "key" &&
+            ProviderV2.ID.make(item.integrationID) === providerID &&
+            (!item.label || item.label === "default"),
+        )
+        if (base && credential?.value.type === "key") {
+          if (base.key !== credential.value.key) {
+            if (!s.credentialKeys.has(providerID)) s.credentialKeys.set(providerID, s.providers[providerID])
+            s.providers[providerID] = { ...base, key: credential.value.key }
+          }
+        } else if (s.credentialKeys.has(providerID)) {
+          const previous = s.credentialKeys.get(providerID)
+          s.credentialKeys.delete(providerID)
+          if (previous) s.providers[providerID] = previous
+          else delete s.providers[providerID]
+        }
+        return s.providers[providerID]
+      }
       let base = s.providers[parsed.baseID]
       if (!base) {
         const cfg = yield* config.get()
