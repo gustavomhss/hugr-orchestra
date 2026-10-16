@@ -1090,7 +1090,7 @@ export const ConfigProvidersResult = Schema.Struct({
 })
 export type ConfigProvidersResult = Types.DeepMutable<Schema.Schema.Type<typeof ConfigProvidersResult>>
 
-export function toPublicInfo(provider: Info): Info {
+export function toPublicInfo(provider: Info): Omit<Info, "key"> {
   // Keys authenticate the runtime; they must never reach clients or plugins.
   const { key: _, ...rest } = provider
   return JSON.parse(

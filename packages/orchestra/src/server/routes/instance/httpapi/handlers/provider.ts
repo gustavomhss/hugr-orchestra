@@ -76,7 +76,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
           continue
         }
         const base = baseProviders[cred.integrationID]
-        if (!base) continue
+        if (!base || !Object.hasOwn(baseProviders, cred.integrationID)) continue
         const id = `${cred.integrationID}#${cred.id}`
         extras[id] = {
           ...base,
