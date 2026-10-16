@@ -1915,7 +1915,9 @@ const layer = Layer.effect(
             else delete s.providers[providerID]
           }
           // No credential: Zen anonymous models still run under the public sentinel.
-          const current = s.providers[providerID] as Info | undefined
+          // Fall back to the catalog entry when nothing is cached: providers
+          // without any auth never enter `providers` on their own.
+          const current: Info | undefined = s.providers[providerID] ?? base
           if (current && !current.key && providerID === ProviderV2.ID.opencode && hasAnonymousModel(current)) {
             s.providers[providerID] = { ...current, key: "public" }
           }
