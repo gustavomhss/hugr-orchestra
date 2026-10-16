@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test";
-import { copyFile, mkdir, mkdtemp, readFile, rename, rm, symlink } from "node:fs/promises";
+import { copyFile, mkdir, mkdtemp, readFile, rename, rm, rmdir, symlink } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { requirePackagedParserBindings } from "../src/onboard/parser-bindings.ts";
@@ -47,7 +47,13 @@ test.each([["x64", "musl"], ["x64", "glibc"], ["arm64", "musl"], ["arm64", "glib
         expect(() => requirePackagedParserBindings(root, input)).toThrow(`PARSER_BINDING_DIRECTORY_NOT_REAL: ${directory}`);
         await symlink(saved, directory, "dir");
         expect(() => requirePackagedParserBindings(root, input)).toThrow(`PARSER_BINDING_DIRECTORY_NOT_REAL: ${directory}`);
-      } finally { await rm(directory, { force: true }); await rename(saved, directory); }
+      } finally {
+        // Windows removes a directory symlink only through rmdir; Bun's rm reports EFAULT for it.
+        await (process.platform === "win32"
+          ? rmdir(directory).catch((error: NodeJS.ErrnoException) => { if (error.code !== "ENOENT") throw error; })
+          : rm(directory, { force: true }));
+        await rename(saved, directory);
+      }
       expect(requirePackagedParserBindings(root, input)).toEqual(files);
     }
   } finally { await rm(root, { recursive: true, force: true }); }

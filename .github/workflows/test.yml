@@ -358,6 +358,14 @@ jobs:
         with:
           artifact: omni-test-${{ runner.os }}-${{ runner.arch }}
 
+      # The native Windows artifact shim compiles with the toolchain packages/omni/rust-toolchain.toml pins
+      # (packages/core/src/artifact-native-windows.ts runs `rustup run 1.98.0`).
+      - name: Native Windows Rust toolchain
+        if: runner.os == 'Windows'
+        shell: bash
+        working-directory: packages/omni
+        run: rustup toolchain install
+
       - name: Configure git identity
         run: |
           git config --global user.email "bot@opencode.ai"
