@@ -199,7 +199,7 @@ describe("Atlas knowledge graph", () => {
     )
     expect(result(AuthoringGraph.compile(eight))).toHaveProperty("output")
     const nine = parameters(eight, "future", { knowledge: [references[8]] })
-    const failure = { failure: { message: "A workflow may select at most 8 distinct Atlas references" } }
+    const failure = { failure: { code: "knowledge-reference-limit", message: "A workflow may select at most 8 distinct Atlas references" } }
     expect(result(AuthoringGraph.validate(nine))).toMatchObject(failure)
     expect(result(AuthoringGraph.compile(nine))).toMatchObject(failure)
     expect(
@@ -241,7 +241,7 @@ describe("Atlas knowledge graph", () => {
       },
     }
     const nine = parameters(retained, "future", { knowledge: [references[8]] })
-    const failure = { failure: { message: "A workflow may select at most 8 distinct Atlas references" } }
+    const failure = { failure: { code: "knowledge-reference-limit", message: "A workflow may select at most 8 distinct Atlas references" } }
     expect(result(AuthoringGraph.validate(nine))).toMatchObject(failure)
     expect(result(AuthoringGraph.compile(nine))).toMatchObject(failure)
     ;[

@@ -465,7 +465,7 @@ function validateKnowledge(plan: Loose) {
     ),
   ])
   if (references.size > AtlasKnowledge.MAX_UNITS)
-    return refuse("A workflow may select at most 8 distinct Atlas references")
+    return refuse("A workflow may select at most 8 distinct Atlas references", 400, "knowledge-reference-limit")
 }
 
 // Each phase must be one contiguous stretch of the chain; Relay macros are flat scopes.
