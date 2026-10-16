@@ -110,7 +110,9 @@ export function requireOmniFiles(files: OmniFiles, target: { os: string; arch: s
       if (header < 64 || header + 26 > bytes.length || bytes.readUInt32LE(header) !== 0x4550 || bytes.readUInt16LE(header + 24) !== 0x20b)
         throw new Error(`OMNI_COMPANION_FORMAT_MISMATCH: ${kind}: ${file}`)
     }
-    if (kind === "supervisor" && target.os !== "win32" && !(stat.mode & 0o111))
+    // Only a POSIX host can witness the execute bit: NTFS stores none, so a Windows host producing a Unix target
+    // would refuse every supervisor here. copyOmni marks the shipped copy executable either way.
+    if (kind === "supervisor" && target.os !== "win32" && process.platform !== "win32" && !(stat.mode & 0o111))
       throw new Error(`OMNI_SUPERVISOR_NOT_EXECUTABLE: ${file}`)
   }
   return files
