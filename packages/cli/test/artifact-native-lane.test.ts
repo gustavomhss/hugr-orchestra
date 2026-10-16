@@ -103,7 +103,6 @@ await import("./artifact-fs.test")
 await import("./export-artifacts.test")
 await import("./artifact-abi.test")
 await import("./artifact-posix-race.test")
-await import("./artifact-posix-errno.test")
 if (lane.startsWith("darwin-")) await import("./artifact-case-alias.test")
 
 export {}

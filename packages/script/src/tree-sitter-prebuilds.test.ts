@@ -11,10 +11,13 @@ import {
   rmSync,
   symlinkSync,
   writeFileSync,
+  readFileSync,
 } from "node:fs"
 import { createRequire } from "node:module"
 import os from "node:os"
 import path from "node:path"
+import { WorkspacePaths } from "./workspace-paths"
+import { workspaceFixture } from "../test/fixture/workspace"
 import {
   NATIVE_MACHINES,
   copyTreeSitter,
@@ -25,8 +28,11 @@ import {
   requireTreeSitterBundle,
   resolveTreeSitter,
   treeSitterBundle,
+  treeSitterArtifactKey,
+  inspectElf,
+  requireElfLibc,
+  linuxRuntimeLibc,
 } from "./tree-sitter-prebuilds"
-import { workspaceFixture } from "../test/fixture/workspace"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const host = `${process.platform}-${process.arch}`
@@ -62,17 +68,9 @@ test.each(["linux-x64", "darwin-x64", "darwin-arm64", "win32-x64", "win32-arm64"
 )
 
 test("an install without the grammars or the core package is a named failure, not a pass", () => {
-  const empty = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-empty-"))
+  const empty = workspaceFixture("tree-sitter-empty")
   fixtures.push(empty)
-  const workspace = workspaceFixture(empty)
-  expect(workspace.module("maestro-arsenal")).toBe(path.join(realpathSync(empty), "packages/maestro-arsenal"))
-  const registry = path.join(empty, "script/module-registry.json")
-  renameSync(registry, `${registry}.away`)
-  try {
-    expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow("WORKSPACE_ROOT_NOT_FOUND:")
-  } finally {
-    renameSync(`${registry}.away`, registry)
-  }
+  expect(WorkspacePaths.make(empty).root).toBe(empty)
   expect(() => prepareTreeSitterPrebuilds({ root: empty, os: "linux", arch: "x64" })).toThrow(
     "TREE_SITTER_PREBUILDS_MISSING: linux-x64: tree-sitter, tree-sitter-javascript, tree-sitter-python, tree-sitter-typescript",
   )
@@ -146,9 +144,8 @@ const python = path.resolve(path.dirname(resolve("tree-sitter-python/package.jso
 // host-CPU binding, or the real package as an install without lifecycle scripts leaves it: sources, no binding.
 function grammarFixture(core: "stub" | "source") {
   // gyp computes relative paths from the real cwd; macOS tmpdir is behind the /var -> /private/var link.
-  const fixture = realpathSync(mkdtempSync(path.join(os.tmpdir(), "tree-sitter-rebuild-")))
+  const fixture = workspaceFixture("tree-sitter-rebuild")
   fixtures.push(fixture)
-  workspaceFixture(fixture)
   const modules = path.join(fixture, "node_modules")
   const gyp = lockfileNodeGyp(root)!
   const source = realpathSync(path.dirname(resolve("tree-sitter/package.json")))
@@ -237,9 +234,152 @@ test.each(Object.keys(NATIVE_MACHINES))(
   },
 )
 
-test("a musl CLI ships no tree-sitter, and its build resolves nothing", () => {
-  expect(treeSitterBundle({ os: "linux", arch: "x64", abi: "musl" })).toEqual([])
-  expect(resolveTreeSitter({ root, os: "linux", arch: "x64", abi: "musl" })).toEqual([])
+test("musl artifact keys differ from glibc but keep runtime binding paths; same-CPU glibc exports refuse admission", () => {
+  const target = { os: "linux", arch: "x64", abi: "musl" }
+  expect(treeSitterArtifactKey(target)).toBe("linux-x64-musl")
+  expect(treeSitterArtifactKey({ ...target, abi: undefined })).toBe("linux-x64")
+  expect(treeSitterBundle(target)).toEqual(treeSitterBundle({ ...target, abi: undefined }))
+  expect(treeSitterBundle(target).filter((file) => file.endsWith(".node"))).toHaveLength(3)
+  const artifacts = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-musl-artifacts-"))
+  fixtures.push(artifacts)
+  renameSync(bundleFixture(target), path.join(artifacts, "linux-x64-musl"))
+  expect(() => resolveTreeSitter({ root, ...target, artifacts })).toThrow("ELF_LIBC_MISMATCH")
+  expect(() => prepareTreeSitterPrebuilds({ root, ...target, rebuild: false })).toThrow("TREE_SITTER_NATIVE_MUSL_BUILD_REQUIRED")
+})
+
+test("parsed ELF dependencies reject truncated, unknown and mixed libc rather than scanning source bytes", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-elf-"))
+  fixtures.push(dir)
+  const file = path.join(dir, "binding.node")
+  writeFileSync(file, Buffer.alloc(0))
+  expect(() => inspectElf(file)).toThrow("ELF_TRUNCATED")
+  writeFileSync(file, Buffer.alloc(64))
+  expect(() => inspectElf(file)).toThrow("ELF64_UNSUPPORTED")
+  for (const [names, abi] of [["libc.so.6", "glibc"], ["libc.musl-x86_64.so.1", "musl"], ["libc.so.6,libc.musl-x86_64.so.1", undefined], ["libunknown.so", undefined]] as const) {
+    // Inert synthetic ELF only calibrates parser/admission, never native runtime.
+    const bytes = elfFixture(names.split(","))
+    writeFileSync(file, bytes)
+    expect(inspectElf(file).needed).toEqual(names.split(","))
+    for (const expected of ["musl", "glibc"] as const) {
+      if (abi === expected) expect(requireElfLibc(file, expected).machine).toBe(62)
+      if (abi !== expected) expect(() => requireElfLibc(file, expected)).toThrow("ELF_LIBC_MISMATCH")
+    }
+    writeFileSync(file, bytes.subarray(0, 180))
+    expect(() => inspectElf(file)).toThrow("ELF_TRUNCATED")
+  }
+})
+
+function elfFixture(names: string[], machine = 62) {
+  const bytes = Buffer.alloc(512)
+  Buffer.from("7f454c46020101", "hex").copy(bytes)
+  bytes.writeUInt16LE(3, 16)
+  bytes.writeUInt16LE(machine, 18)
+  bytes.writeUInt32LE(1, 20)
+  bytes.writeBigUInt64LE(64n, 32)
+  bytes.writeUInt16LE(56, 54)
+  bytes.writeUInt16LE(2, 56)
+  bytes.writeUInt32LE(1, 64)
+  bytes.writeBigUInt64LE(0x1000n, 80)
+  bytes.writeBigUInt64LE(512n, 96)
+  bytes.writeBigUInt64LE(512n, 104)
+  bytes.writeUInt32LE(2, 120)
+  bytes.writeBigUInt64LE(176n, 128)
+  bytes.writeBigUInt64LE(0x10b0n, 136)
+  const strings = Buffer.from(names.join("\0") + "\0")
+  strings.copy(bytes, 352)
+  const entries = [[5n, 0x1160n], [10n, BigInt(strings.length)], ...names.map((_, i) =>
+    [1n, BigInt(names.slice(0, i).reduce((n, s) => n + s.length + 1, 0))]), [0n, 0n]]
+  bytes.writeBigUInt64LE(BigInt(entries.length * 16), 152)
+  bytes.writeBigUInt64LE(BigInt(entries.length * 16), 160)
+  entries.forEach(([tag, value], i) => { bytes.writeBigInt64LE(tag!, 176 + i * 16); bytes.writeBigUInt64LE(value!, 184 + i * 16) })
+  return bytes
+}
+
+test("ELF dynamic VA wins over off-table opposite-libc decoy; conflicting file offset and indirect bounds refuse", () => {
+  const dir = mkdtempSync(path.join(os.tmpdir(), "tree-sitter-elf-mapping-"))
+  fixtures.push(dir)
+  const file = path.join(dir, "binding.node")
+  const actual = elfFixture(["libc.musl-x86_64.so.1"])
+  elfFixture(["libc.so.6"]).subarray(176, 240).copy(actual, 256)
+  actual.writeBigUInt64LE(0x11c0n, 264)
+  Buffer.from("libc.so.6\0").copy(actual, 448)
+  writeFileSync(file, actual)
+  expect(requireElfLibc(file, "musl").needed).toEqual(["libc.musl-x86_64.so.1"])
+  expect(() => requireElfLibc(file, "glibc")).toThrow("ELF_LIBC_MISMATCH")
+  for (const [mutate, diagnostic] of [
+    [(b: Buffer) => b.writeBigUInt64LE(256n, 128), "ELF_DYNAMIC_OFFSET_MISMATCH"],
+    [(b: Buffer) => b.writeBigUInt64LE(0x5000n, 136), "ELF_MAPPING_UNMAPPED"],
+    [(b: Buffer) => b.writeBigUInt64LE(511n, 104), "ELF_SEGMENT_MEMORY_INVALID"],
+    [(b: Buffer) => { b.writeBigUInt64LE(768n, 104); b.writeBigUInt64LE(0x1200n, 184) }, "ELF_MAPPING_NOT_FILE_BACKED"],
+    [(b: Buffer) => b.writeBigUInt64LE(999n, 216), "ELF_STRING_TABLE_INVALID"],
+    [(b: Buffer) => b.writeBigUInt64LE(4n, 200), "ELF_STRING_UNTERMINATED"],
+    [(b: Buffer) => b.writeBigInt64LE(21n, 224), "ELF_DYNAMIC_UNTERMINATED"],
+    [(b: Buffer) => { b.writeUInt16LE(3, 56); b.copy(b, 176, 120, 176) }, "ELF_DYNAMIC_DUPLICATED"],
+    [(b: Buffer) => { b.writeUInt16LE(3, 56); b.copy(b, 176, 64, 120) }, "ELF_LOAD_MAPPING_AMBIGUOUS"],
+  ] as const) {
+    const mutant = Buffer.from(actual)
+    mutate(mutant)
+    writeFileSync(file, mutant)
+    expect(() => inspectElf(file)).toThrow(diagnostic)
+  }
+  writeFileSync(file, actual)
+  expect(requireElfLibc(file, "musl").needed).toEqual(["libc.musl-x86_64.so.1"])
+})
+
+test.each(["prebuild", "preferred-core-release", "preferred-grammar-release"])("glibc preparation refuses same-CPU musl %s; native Linux additionally proves copy ordering", (slot) => {
+  const root = workspaceFixture("tree-sitter-prepare-abi")
+  fixtures.push(root)
+  const target = { os: "linux", arch: process.platform === "linux" ? process.arch : "x64", rebuild: false }
+  const machine = target.arch === "x64" ? 62 : 183
+  const musl = `libc.musl-${target.arch === "x64" ? "x86_64" : "aarch64"}.so.1`
+  const names = ["tree-sitter", "tree-sitter-javascript", "tree-sitter-python", "tree-sitter-typescript"]
+  const files = names.map((name) => {
+    const dir = path.join(root, "node_modules", name)
+    mkdirSync(path.join(dir, "prebuilds", `linux-${target.arch}`), { recursive: true })
+    writeFileSync(path.join(dir, "package.json"), JSON.stringify({ name }))
+    const file = path.join(dir, "prebuilds", `linux-${target.arch}`, `${name}.node`)
+    writeFileSync(file, elfFixture(["libc.so.6"], machine))
+    return file
+  })
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
+  const original = files.map((file) => readFileSync(file))
+  const bad = slot === "prebuild" ? files[2]! : path.join(root, "node_modules",
+    slot === "preferred-core-release" ? "tree-sitter" : "tree-sitter-python", "build/Release/preferred.node")
+  mkdirSync(path.dirname(bad), { recursive: true })
+  writeFileSync(bad, elfFixture([musl], machine))
+  expect(() => prepareTreeSitterPrebuilds({ root, ...target })).toThrow("ELF_LIBC_MISMATCH")
+  files.filter((file) => file !== bad).forEach((file) => expect(readFileSync(file)).toEqual(original[files.indexOf(file)]!))
+  rmSync(bad)
+  if (slot === "prebuild") writeFileSync(bad, original[2]!)
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
+  // All hosts exercised reuse admission above. Copy-order proof additionally
+  // needs the actual native GNU Linux host that authorizes this producer path.
+  // The bad parser is a different package from the eligible core copy candidate.
+  if (process.platform !== "linux" || slot === "preferred-core-release") return
+  expect(linuxRuntimeLibc().kind, "PARSER_COPY_ORDER_REQUIRES_NATIVE_GLIBC_LINUX").toBe("glibc")
+  const preferred = path.join(root, "node_modules/tree-sitter/build/Release/native-copy.node")
+  mkdirSync(path.dirname(preferred), { recursive: true })
+  writeFileSync(preferred, original[0]!)
+  rmSync(files[0]!)
+  expect(existsSync(files[0]!)).toBe(false)
+  const mutable = { ...target, rebuild: true }
+  expect(prepareTreeSitterPrebuilds({ root, ...mutable }).rebuilt, "REAL_CORE_COPY_BOUNDARY_POSITIVE_CONTROL").toContain("tree-sitter")
+  expect(readFileSync(files[0]!)).toEqual(readFileSync(preferred))
+  rmSync(files[0]!)
+  try {
+    writeFileSync(bad, elfFixture([musl], machine))
+    expect(() => prepareTreeSitterPrebuilds({ root, ...mutable })).toThrow("ELF_LIBC_MISMATCH")
+    expect(existsSync(files[0]!), "WRONG_ABI_MUST_PRECEDE_ELIGIBLE_CORE_COPY").toBe(false)
+    expect(readFileSync(preferred)).toEqual(original[0]!)
+    files.slice(1).filter((file) => file !== bad).forEach((file) => expect(readFileSync(file)).toEqual(original[files.indexOf(file)]!))
+  } finally {
+    if (slot === "prebuild") writeFileSync(bad, original[2]!)
+    if (slot !== "prebuild") rmSync(bad)
+  }
+  expect(prepareTreeSitterPrebuilds({ root, ...mutable }).rebuilt).toContain("tree-sitter")
+  expect(readFileSync(files[0]!)).toEqual(original[0]!)
+  rmSync(path.join(root, "node_modules/tree-sitter/build"), { recursive: true })
+  expect(prepareTreeSitterPrebuilds({ root, ...target }).rebuilt).toEqual([])
 })
 
 test("copyTreeSitter places the bundle under the given directory and checks it there", () => {

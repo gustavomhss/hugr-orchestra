@@ -114,6 +114,23 @@ it.live("Arsenal package conformance: real edit denial prevents profile persiste
   }),
 )
 
+it.live("Arsenal package conformance: a handler refusal returns its static code, not an opaque execution_failed", () =>
+  Effect.gen(function* () {
+    const agents = yield* setup([{ action: "*", resource: "*", effect: "allow" }])
+    yield* MaestroArsenal.registerScoped({
+      nativeMaestro: (id) => agents.get(id).pipe(Effect.map((agent) => agent?.id === maestro)),
+    })
+    const registry = yield* ToolRegistry.Service
+    yield* settleTool(registry, call(MaestroArsenal.names.describe, { name: "relay-arm" }))
+    expect(
+      yield* executeTool(registry, call(MaestroArsenal.names.execute, { name: "relay-arm", arguments: { action: "arm" } })),
+    ).toEqual({
+      type: "error",
+      value: "Arsenal capability failed (execution_failed: COMPLETION_CONTRACT_MISSING); no successful outcome was recorded.",
+    })
+  }),
+)
+
 it.live(
   "Arsenal package conformance: swallowed process denial remains failure; model observations cannot replace host binding",
   () =>

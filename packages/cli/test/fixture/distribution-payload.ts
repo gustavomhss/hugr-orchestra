@@ -4,7 +4,9 @@ import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
 
 export const tuple = process.platform === "win32"
-  ? { target: "windows-x64", os: "win32" as const, arch: "x64", machine: 0x8664, foreignMachine: 0xaa64, executable: "orchestra.exe", supervisor: "hugr-omni-supervisor.exe" }
+  ? process.arch === "arm64"
+    ? { target: "windows-arm64", os: "win32" as const, arch: "arm64", machine: 0xaa64, foreignMachine: 0x8664, executable: "orchestra.exe", supervisor: "hugr-omni-supervisor.exe" }
+    : { target: "windows-x64", os: "win32" as const, arch: "x64", machine: 0x8664, foreignMachine: 0xaa64, executable: "orchestra.exe", supervisor: "hugr-omni-supervisor.exe" }
   : { target: "linux-x64", os: "linux" as const, arch: "x64", machine: 62, foreignMachine: 183, executable: "orchestra", supervisor: "hugr-omni-supervisor" }
 
 // Independent contract pin for the compiled CLI's required path family. Do not
@@ -56,7 +58,7 @@ export async function payloadFixture(roots: string[], parent = tmpdir()) {
   const input = { dist: join(root, "dist"), out: join(root, "prepared"), version: "1.2.3", target: tuple.target }
   const source = join(input.dist, `cli-${tuple.target}`)
   await mkdir(join(source, "bin"), { recursive: true })
-  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@orchestra/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
+  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@hugr/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
   if (process.platform !== "win32") await chmod(join(source, "package.json"), 0o644)
   const files = [`bin/${tuple.executable}`, "bin/hugr_omni.node", `bin/${tuple.supervisor}`, "bin/extra/note.txt", ...treeSitterPaths]
   await Promise.all(files.map(async (file) => {

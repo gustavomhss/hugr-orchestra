@@ -17,15 +17,8 @@ export type ArtifactNative = {
   close(): void
 }
 
-export function artifactNativeError(
-  operation: string,
-  code: string | number,
-  details?: { result: number; errno: number; parent: number; leaf: string; output?: string },
-): never {
-  throw Object.assign(
-    new Error(`Artifact native ${operation} failed: ${code}${details ? ` ${JSON.stringify(details)}` : ""}`),
-    { code, ...details },
-  )
+export function artifactNativeError(operation: string, code: string | number): never {
+  throw Object.assign(new Error(`Artifact native ${operation} failed: ${code}`), { code })
 }
 
 export function requireArtifactLeaf(name: string) {
@@ -34,10 +27,16 @@ export function requireArtifactLeaf(name: string) {
 }
 
 export function requireArtifactHost(platform: string, cpu: string) {
-  if (platform === "win32" && cpu !== "x64")
-    throw new Error(`Unsupported artifact producer host: ${platform}/${cpu}; Bun 1.3.14 supports Windows x64 only`)
   if (!["linux", "darwin", "win32"].includes(platform) || !["x64", "arm64"].includes(cpu))
     throw new Error(`Unsupported artifact producer host: ${platform}/${cpu}`)
+}
+
+export async function artifactWindowsFFI() {
+  if (process.arch === "arm64") {
+    const { ArtifactNativeWindows } = await import("@orchestra/core/artifact-native-windows")
+    return ArtifactNativeWindows.load()
+  }
+  return import("bun:ffi")
 }
 
 export function artifactDirectoryName(bytes: Uint8Array) {

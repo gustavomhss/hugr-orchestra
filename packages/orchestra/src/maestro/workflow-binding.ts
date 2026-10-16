@@ -82,9 +82,12 @@ export const beforeTask = Effect.fn("WorkflowBinding.beforeTask")(function* (inp
   if (revision.sessionID !== parent.id || revision.workflowBinding.publication.projectID !== parent.projectID ||
     revision.workflowBinding.publication.documentID !== input.workflow.documentID)
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PLAN_REVISION_MISMATCH" })
-  if (!isDeepStrictEqual(revision.workflowBinding.parameters, input.workflow.parameters) ||
-    !isDeepStrictEqual(revision.workflowBinding.writePaths, input.writePaths))
-    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH" })
+  if (!isDeepStrictEqual(revision.workflowBinding.parameters, input.workflow.parameters))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH",
+      detail: `Plan revision ${revision.id} approved workflow parameters ${JSON.stringify(revision.workflowBinding.parameters)}; this Task passed ${JSON.stringify(input.workflow.parameters)}. Retry with exactly the approved parameters.` })
+  if (!isDeepStrictEqual(revision.workflowBinding.writePaths, input.writePaths))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_APPROVED_SCOPE_MISMATCH",
+      detail: `Plan revision ${revision.id} approved writePaths ${JSON.stringify(revision.workflowBinding.writePaths)}; this Task passed ${JSON.stringify(input.writePaths)}. Retry with exactly the approved writePaths, in the same order.` })
   const port = yield* host.publication({ directory: parent.directory, projectID: ProjectID.make(parent.projectID) })
   const materialized = yield* RelayWorkflowBinding.revalidate(port, revision.workflowBinding)
   yield* host.verifyUpstream(input.workflow.planRevisionID)

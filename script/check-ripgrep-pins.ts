@@ -1,22 +1,31 @@
 #!/usr/bin/env bun
 // Ripgrep pin gate. Every archive digest pinned in packages/core/src/ripgrep/release.ts must equal the digest in
-// upstream's published .sha256 file for that archive. The CI action and the Linux sandbox runtime take their pins from
-// the same table (packages/core/test/ripgrep-binary.test.ts guards the action), so this checks all of them.
+// upstream's published .sha256 file for that archive, and the canonical version must equal upstream's latest release.
+// packages/core/test/ripgrep-binary.test.ts guards the CI action's pins; the Linux sandbox runtime reads this table too.
 //
-// Reach: every platform key RipgrepBinary.keys() lists; no keys at all is a failure, not a pass. It reads only the
-// small .sha256 text files, over https, each request with a deadline; transient failures are retried, a 404 is not.
+// Reach: every platform key RipgrepRelease.keys() lists; no keys at all is a failure, not a pass. It reads only the
+// latest release metadata and small .sha256 text files, over https, each request with a deadline; transient failures
+// are retried, a 404 is not. It does not download archives or verify extracted executable digests.
 //
 // Usage: bun run script/check-ripgrep-pins.ts
 
-import { RipgrepBinary } from "../packages/core/src/ripgrep/binary"
+import { RipgrepRelease } from "../packages/core/src/ripgrep/release"
 
-const keys = RipgrepBinary.keys()
-if (keys.length === 0) fail("RipgrepBinary.keys() listed no platforms")
+const keys = RipgrepRelease.keys()
+if (keys.length === 0) fail("RipgrepRelease.keys() listed no platforms")
+
+const latest: unknown = await published("https://api.github.com/repos/BurntSushi/ripgrep/releases/latest")
+  .then((text) => JSON.parse(text))
+  .catch((error: unknown) => fail(`latest release metadata is not readable JSON: ${String(error)}`))
+if (!latest || typeof latest !== "object" || !("tag_name" in latest) || typeof latest.tag_name !== "string")
+  fail("latest release metadata has no tag_name string")
+if (latest.tag_name !== RipgrepRelease.VERSION)
+  fail(`canonical version ${RipgrepRelease.VERSION} but upstream's latest release is ${latest.tag_name}`)
 
 const problems = (
   await Promise.all(
     keys.map(async (key) => {
-      const release = RipgrepBinary.release(key)
+      const release = RipgrepRelease.archive(key)
       if (!release) return [`${key}: no release`]
       const text = await published(`${release.url}.sha256`)
       // Upstream writes `<hex>  <file>` on Unix and certutil's three-line format on Windows.

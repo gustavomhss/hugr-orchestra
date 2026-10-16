@@ -416,6 +416,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.29.0",
+        "@orchestra/schema": "workspace:*",
         "hugr-omni": "workspace:*",
         "tree-sitter": "0.25.0",
         "tree-sitter-python": "0.25.0",
@@ -647,6 +648,7 @@
     "packages/script": {
       "name": "@orchestra/script",
       "dependencies": {
+        "@orchestra/schema": "workspace:*",
         "semver": "^7.6.3",
       },
       "devDependencies": {

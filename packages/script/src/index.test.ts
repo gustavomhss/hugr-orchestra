@@ -4,14 +4,14 @@ import { tmpdir } from "node:os"
 import path from "node:path"
 import semver from "semver"
 import pkg from "../../orchestra/package.json" with { type: "json" }
-import { workspaceFixture } from "../test/fixture/workspace"
+import { copiedWorkspaceFixture } from "../test/fixture/workspace"
 
 async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean; missingRegistry?: boolean } = {}) {
   // A copied module reads a real isolated owned manifest, including SemVer boundary fixtures.
   const fixture = options.source === undefined ? undefined : await mkdtemp(path.join(tmpdir(), "orchestra-version-"))
   try {
     if (fixture) {
-      workspaceFixture(fixture, { version: options.source, bootstrap: true })
+      copiedWorkspaceFixture(fixture, { version: options.source, bootstrap: true })
       if (options.missingRegistry) await rm(path.join(fixture, "script/module-registry.json"))
     }
     const child = Bun.spawn([process.execPath, "--no-install", "--eval", `

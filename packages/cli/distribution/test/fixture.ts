@@ -3,11 +3,11 @@ import { createHash } from "node:crypto"
 import { chmod, lstat, mkdir, mkdtemp, readdir, readlink, realpath, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
-import { NATIVE_MACHINES, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
+import { linuxRuntimeLibc, NATIVE_MACHINES, treeSitterBundle } from "@orchestra/script/tree-sitter-prebuilds"
 
 export const os = process.platform === "darwin" ? "darwin" : "linux"
 export const cpu = process.arch === "arm64" ? "arm64" : "x64"
-export const target = `${os}-${cpu}`
+export const target = `${os}-${cpu}${process.platform === "linux" && linuxRuntimeLibc().kind === "musl" ? "-musl" : ""}`
 export const sha256 = (bytes: string | Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 export type Files = Record<string, string | Buffer>
 export type Payload = { dir: string; archive: string; digest: string; version: string }
@@ -68,7 +68,7 @@ export function fatHeader(arch = cpu, wide = false) {
 
 export function sourceFiles(version: string): Files {
   return {
-    "package.json": JSON.stringify({ name: `@orchestra/cli-${target}`, version, os: [os], cpu: [cpu] }),
+    "package.json": JSON.stringify({ name: `@hugr/cli-${target}`, version, os: [os], cpu: [cpu] }),
     "bin/orchestra": `#!/bin/sh
 set -eu
 file=$0
