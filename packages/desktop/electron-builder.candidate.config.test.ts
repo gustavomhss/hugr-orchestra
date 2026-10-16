@@ -1,6 +1,5 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { realpathSync } from "node:fs"
 import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { createRequire } from "node:module"
@@ -166,7 +165,7 @@ test("candidate configuration and CLI compile with real dependency types", () =>
   const options: ts.CompilerOptions = {
     noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true, allowImportingTsExtensions: true,
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
-    allowImportingTsExtensions: true, types: ["bun", "node"],
+    types: ["bun", "node"],
   }
   const files = ["electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "scripts/lean-candidate.ts", "electron-builder.candidate.config.test.ts", "electron-builder.candidate.runner.test.ts"]
   const program = ts.createProgram(files.map((file) => path.join(import.meta.dirname, file)), options)
