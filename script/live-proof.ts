@@ -15,6 +15,7 @@ import { randomBytes } from "node:crypto"
 import { $ } from "bun"
 
 const MODEL = process.env.LIVE_PROOF_MODEL ?? "thinkingmachines/inkling:free"
+// preflight stores the model that actually answered; later steps use it.
 const WRITE_PATHS: string[] = JSON.parse(process.env.LIVE_PROOF_WRITE_PATHS ?? '["src/money.ts","src/checkout.ts"]')
 const repo = path.resolve(import.meta.dir, "..")
 const fixture = path.resolve(process.argv[2] ?? "")
@@ -54,18 +55,32 @@ async function preflight() {
   const origin = await $`git -C ${fixture} rev-parse --verify origin/dev`.nothrow().quiet()
   if (origin.exitCode !== 0) stop("fixture has no origin/dev; the validation review base needs it (see the last run)")
 
+  // Free models can be gated to listed agent apps. Probe as Orchestra identifies itself (provider.ts: X-Title
+  // "Orchestra"), never as another app, and keep the first model that answers.
   const models = (await (await fetch("https://openrouter.ai/api/v1/models")).json()) as { data: { id: string; supported_parameters?: string[] }[] }
-  const found = models.data.find((model) => model.id === MODEL)
-  if (!found) stop(`OpenRouter has no model ${MODEL}; inkling ids: ${models.data.filter((m) => /inkling/i.test(m.id)).map((m) => m.id).join(", ") || "none"}`)
-  if (!found.supported_parameters?.includes("tools")) stop(`${MODEL} does not advertise tool calling on OpenRouter`)
-  const probe = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-    method: "POST",
-    headers: { authorization: `Bearer ${key}`, "content-type": "application/json" },
-    body: JSON.stringify({ model: MODEL, max_tokens: 16, messages: [{ role: "user", content: "Reply with exactly: TRANSPORT_OK" }] }),
-  })
-  const text = await probe.text()
-  if (!probe.ok) stop(`OpenRouter probe HTTP ${probe.status}: ${text.slice(0, 400)}`)
-  console.log(`model ${MODEL}: HTTP ${probe.status} ${JSON.parse(text).choices?.[0]?.message?.content ?? ""}`)
+  const candidates = [MODEL, ...models.data.filter((model) => model.id.endsWith(":free") &&
+    model.supported_parameters?.includes("tools")).map((model) => model.id)].filter((id, index, all) => all.indexOf(id) === index)
+  // One at a time, stopping at the first that calls the tool: the free tier allows few requests per minute.
+  const chosen = await candidates.reduce<Promise<string | undefined>>(async (previous, id) => {
+    const found = await previous
+    if (found) return found
+    const probe = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: { authorization: `Bearer ${key}`, "content-type": "application/json", "X-Title": "Orchestra" },
+      body: JSON.stringify({ model: id, max_tokens: 64, tool_choice: "required",
+        tools: [{ type: "function", function: { name: "ok", description: "Confirm", parameters: { type: "object", properties: {} } } }],
+        messages: [{ role: "user", content: "Call the ok tool." }] }),
+    }).catch((error: Error) => new Response(error.message, { status: 599 }))
+    const body = await probe.text()
+    const called = probe.ok && /"tool_calls"/.test(body)
+    console.log(`  ${called ? "OK " : "no "} ${id}: HTTP ${probe.status}${called ? "" : ` ${body.slice(0, 160).replaceAll("\n", " ")}`}`)
+    if (!called) await Bun.sleep(3500)
+    return called ? id : undefined
+  }, Promise.resolve(undefined))
+  if (!chosen) stop("no free OpenRouter model answered a tool call for Orchestra; a paid model or another provider is needed")
+  state.model = chosen
+  save()
+  console.log(`model chosen: ${chosen} (override with LIVE_PROOF_MODEL)`)
   console.log("\nPREFLIGHT OK. Next: author")
 }
 
@@ -158,12 +173,13 @@ async function report() {
 // ---------- server and session plumbing ----------
 
 async function withServer(body: (api: Api) => Promise<void>) {
+  const model = process.env.LIVE_PROOF_MODEL ?? state.model ?? stop("run preflight first to pick a model")
   const password = randomBytes(16).toString("hex")
   const config = {
-    model: `openrouter/${MODEL}`,
-    small_model: `openrouter/${MODEL}`,
-    provider: { openrouter: { options: { apiKey: "{env:OPENROUTER_API_KEY}" }, models: { [MODEL]: { tool_call: true } } } },
-    agent: Object.fromEntries(["maestro", "archie", "lucy", "backend"].map((id) => [id, { model: `openrouter/${MODEL}` }])),
+    model: `openrouter/${model}`,
+    small_model: `openrouter/${model}`,
+    provider: { openrouter: { options: { apiKey: "{env:OPENROUTER_API_KEY}" }, models: { [model]: { tool_call: true } } } },
+    agent: Object.fromEntries(["maestro", "archie", "lucy", "backend"].map((id) => [id, { model: `openrouter/${model}` }])),
   }
   const server = Bun.spawn(["bun", "run", path.join(repo, "packages/orchestra/src/index.ts"), "serve", "--port", "0", "--hostname", "127.0.0.1"], {
     cwd: fixture,
