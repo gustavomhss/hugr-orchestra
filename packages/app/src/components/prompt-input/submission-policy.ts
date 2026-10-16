@@ -257,9 +257,16 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         if (!ready()) return Promise.resolve(false)
         return input.api.command(command, { signal: input.signal })
       }
-      if (input.dispatch) return await input.dispatch(send)
+      if (input.dispatch) {
+        const sent = await input.dispatch(send)
+        if (!sent && current()) setIdle()
+        return sent
+      }
       setBusy()
-      if (!(await wait())) { setIdle(); return false }
+      if (!(await wait())) {
+        setIdle()
+        return false
+      }
       await send()
       return true
     } catch (err) {

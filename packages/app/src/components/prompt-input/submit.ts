@@ -655,7 +655,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         admission.cleanup?.()
         admission.abort = undefined
         current.source.setBusy(false)
-        // Mutation probe: retain promoted admissions.
+        // A promoted admission belongs to its Session now; the draft's next visit must create a new one.
+        if (admission.promoted && current.source.selections.get(selection) === admission) current.source.selections.delete(selection)
       })
     },
   }
