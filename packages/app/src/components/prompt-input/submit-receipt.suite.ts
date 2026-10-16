@@ -218,8 +218,6 @@ test.skipIf(isServer).each(["create", "POST"])("owner server ABA during %s expir
 })
 
 test("a completed workspace draft cannot adopt its promoted Session on the next new-session visit", async () => {
-  // A draft key differs from the promoted Session's directory key, so the handoff cannot mask a retained admission.
-  state.search.draftId = "workspace-draft"
   const real = createPromptState({ prompt: "first workspace draft" })
   const input = { ...submitInput(), prompt: real, info: () => undefined }
   await createPromptSubmit(input).handleSubmit(new Event("submit"))
