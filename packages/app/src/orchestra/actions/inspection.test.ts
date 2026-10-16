@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
-import { createActionsAPI, type ActionsScope } from "./api"
+import { ActionsRequestError, createActionsAPI, type ActionsScope } from "./api"
 import { initial } from "./contract"
 import { createActionsInspection } from "./inspection"
 
@@ -75,8 +75,10 @@ describe("Actions dialog inspection", () => {
     const before = structuredClone(scope.state)
     graphReply.resolve(graph())
     scopesReply.resolve(page([environment("production")]))
-    // Observe both rejections together; awaiting one first leaves the other briefly unhandled.
-    await Promise.all([expect(inspecting).rejects.toThrow("binding_stale"), expect(listing).rejects.toThrow("binding_stale")])
+    // Settle both before asserting: bun's `rejects` drains the loop, leaving the other rejection unhandled meanwhile.
+    const settled = await Promise.allSettled([inspecting, listing])
+    expect(settled.map((result) => result.status === "rejected" && result.reason instanceof ActionsRequestError
+      ? result.reason.kind : result.status)).toEqual(["binding_stale", "binding_stale"])
     expect(scope.state).toEqual(before)
   })
 
