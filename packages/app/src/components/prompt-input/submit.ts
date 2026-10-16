@@ -184,8 +184,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   const [activity, setActivity] = createStore({ existing: 0 })
   const admissionSource = () => sourceAdmission(prompt.capture(),
     input.pendingKey?.() ?? draftSessionKey(sdk().scope, sdk().directory, search.draftId))
-  // Create the store before the composer reads busy; untracked, or a route or server change would re-run the
-  // caller's scope and permanently dispose this submitter's owner.
+  // Create the store before the composer reads busy, untracked: a caller inside a tracked scope (such as a provider's
+  // children) would otherwise re-run on a route or server change and permanently dispose this submitter's owner.
   untrack(admissionSource)
 
   const errorMessage = (err: unknown) => {

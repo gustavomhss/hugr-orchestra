@@ -157,6 +157,11 @@ const ALLOWED_ASSIGNMENTS = {
   },
 } as const
 const bundlePin = "packages/core/test/distribution-bundle-workflow.test.ts"
+// Focused qualification steps that run only their own declaring tests; every other step inherits the job's suite scope.
+const DECLARED_STEPS = [
+  "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer",
+  "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles",
+]
 const aurGuest = "packages/cli/test/fixture/distribution-aur-guest.test.ts"
 
 test("only the ledgered files mention the control's scope variable, and test-ci.yml sets it only from the request", () => {
@@ -201,6 +206,8 @@ test("native scope and strict-mode mutations of real source fail by exact path",
     [bootstrap, "exec /usr/bin/env", "# exec /usr/bin/env", "OMNI_AUR_COMMAND"],
     ...["suite", "off"].map((value) => [musl, "ORCHESTRA_OMNI_CONTROL=declared", `ORCHESTRA_OMNI_CONTROL=${value}`, "OMNI_MUSL_ASSIGNMENTS"]),
     [musl, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1", "OMNI_MUSL_ASSIGNMENTS"],
+    [musl, "bun test --preload /proof/source/script/test-omni-control.ts", "bun test", "OMNI_MUSL_COMMAND"],
+    [workflow, 'GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test', 'GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" ORCHESTRA_OMNI_CONTROL=declared bun test', "OMNI_BUNDLE_STEP_SCOPE"],
     [workflow, "ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/elf.test.ts", "ORCHESTRA_OMNI_CONTROL=off bun test --timeout 120000 ./test/elf.test.ts", "OMNI_BUNDLE_STEP_SCOPE"],
     [bootstrap, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict;", "OMNI_AUR_ASSIGNMENTS"],
     ...["declared", "off", "0", "1"].map((value) => [bundlePin, 'job.env.ORCHESTRA_OMNI_CONTROL === "suite"', `job.env.ORCHESTRA_OMNI_CONTROL === "${value}"`, "OMNI_BUNDLE_PIN"]),
@@ -253,20 +260,42 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
     requireScope(sources[file]?.trim(), `OMNI_ASSIGNMENTS_SOURCE_EMPTY: ${file}`),
   )
   const workflow = ".github/workflows/distribution-bundle.yml"
-  const bundle = YAML.parse(sources[workflow]) as { jobs?: { qualification?: { env?: Record<string, unknown> } } }
+  const bundle = YAML.parse(sources[workflow]) as {
+    jobs?: { qualification?: { env?: Record<string, unknown>; steps?: { name?: string; run?: string }[] } }
+  }
   requireScope(
     bundle?.jobs?.qualification?.env?.ORCHESTRA_OMNI_CONTROL === ALLOWED_ASSIGNMENTS[workflow].ORCHESTRA_OMNI_CONTROL,
     `OMNI_BUNDLE_SCOPE: ${workflow}`,
   )
-  // Besides the job's suite scope, only focused steps that run their own declaring tests may name the variable.
-  const steps = sources[workflow].match(/ORCHESTRA_OMNI_CONTROL=declared bun test /g)?.length ?? 0
-  requireScope((sources[workflow].match(scopeVariable)?.length ?? 0) === steps + 1, `OMNI_BUNDLE_STEP_SCOPE: ${workflow}`)
+  // Besides the job's suite scope, exactly the named focused steps declare, once each, inline before their bun test.
+  const steps = bundle?.jobs?.qualification?.steps ?? []
+  requireScope(
+    steps.every((step) => {
+      const run = step.run ?? ""
+      const count = run.match(scopeVariable)?.length ?? 0
+      if (!DECLARED_STEPS.includes(step.name ?? "")) return count === 0
+      return count === 1 && run.match(/ORCHESTRA_OMNI_CONTROL=declared bun test /g)?.length === 1
+    }) &&
+      DECLARED_STEPS.every((name) => steps.filter((step) => step.name === name).length === 1) &&
+      sources[workflow].match(scopeVariable)?.length === DECLARED_STEPS.length + 1,
+    `OMNI_BUNDLE_STEP_SCOPE: ${workflow}`,
+  )
   const musl = "packages/cli/test/fixture/distribution-musl/bootstrap.sh"
   requireScope(
     /^[ \t]*ORCHESTRA_MUSL_GUEST=owned ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict ORCHESTRA_OMNI_CONTROL=declared \\\r?$/m.test(sources[musl]) &&
       sources[musl].match(scopeVariable)?.length === 1 &&
       sources[musl].match(/ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER(?![A-Z0-9_])/g)?.length === 1,
     `OMNI_MUSL_ASSIGNMENTS: ${musl}`,
+  )
+  const muslInvocations = sources[musl].match(/^exec env -i(?:[^\n]*\\\r?\n)*[^\n]*/gm) ?? []
+  requireScope(
+    muslInvocations.length === 1 && muslInvocations[0].replace(/\\\r?\n[ \t]*/g, " ").trim().split(/\s+/).join(" ") === [
+      "exec", "env", "-i", "CI=true", "HOME=/proof/home", "TMPDIR=/proof/tmp", 'PATH="$PATH"', "BUN_INSTALL_CACHE_DIR=/proof/bun-cache",
+      "ORCHESTRA_MUSL_GUEST=owned", ...Object.entries(ALLOWED_ASSIGNMENTS[musl]).map(([name, value]) => `${name}=${value}`),
+      "bun", "test", "--preload", "/proof/source/script/test-omni-control.ts", "--timeout", "3600000",
+      "./test/fixture/distribution-musl-guest.test.ts",
+    ].join(" "),
+    `OMNI_MUSL_COMMAND: ${musl}`,
   )
   const bootstrap = "packages/cli/test/fixture/distribution-aur/bootstrap.sh"
   // The fixture's closed literal env invocation is pinned; this is not a general shell dataflow scanner.
