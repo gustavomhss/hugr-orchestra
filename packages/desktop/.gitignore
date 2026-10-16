@@ -27,6 +27,7 @@ native/build/
 
 resources/orchestra-cli*
 resources/cli/
+resources/claude-code/
 resources/icons
 resources/*.metainfo.xml
 artifacts/

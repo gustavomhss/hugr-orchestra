@@ -1,0 +1,82 @@
+{
+  "date": "2026-10-12",
+  "branch": "frontend-recovery",
+  "baseline": "49ab2cec4f77bdbb33314503da4d85fcd075114e",
+  "delivery": "Published recovery branch plus composed native V2 policy, Task and archive/restore. Production web build completed; final integration CI and desktop candidate pending.",
+  "auditCoverage": [
+    "Shell, Home, navigation, settings and startup recovery",
+    "Provider discovery, credentials, OAuth, models and execution-host filtering",
+    "Agent configuration, stable identity and subagent model permissions",
+    "Draft admission, context preservation, interruption, questions, review, fork and archive",
+    "Workflow and hook creation, editing, autosave, publish, export, history and deletion",
+    "Skills, MCP, plugins, schedules, CI/CD, environment, shortcuts and workspaces",
+    "Desktop transport, native menus, deep links, permissions, zoom and Dock navigation",
+    "Keyboard, focus, responsive layouts, RTL and large-list rendering"
+  ],
+  "closedRootCauses": [
+    "Catalog bootstrap depended on an absent default-model endpoint",
+    "Release-date and family filters silently hid available models",
+    "Anonymous free Zen models were excluded by credential availability",
+    "Missing pricing was incorrectly converted into free pricing",
+    "Vendored OAuth status, completion and cancellation routes differed from Server",
+    "Two QueryClients prevented deduplication and coherent catalog refresh",
+    "Nested model stores overwrote persisted visibility preferences",
+    "Agent display names were used instead of stable file identifiers",
+    "Pending model permission writes and draft admission lost intent or crossed owners",
+    "Workflow saves, deletion, reload, publish and export raced with navigation",
+    "Installed hooks remained active after their authoring document was deleted",
+    "Modal nesting, wheel handling and narrow panes blocked workflow editing",
+    "Failed PTY cancellation and stale socket callbacks misrepresented CI/CD state",
+    "Cached MCP configuration and duplicate JSONC paths could overwrite effective configuration",
+    "Schedule migration fallback and metadata-only edits could duplicate jobs or change timezone",
+    "Changed server credentials left live clients stale",
+    "Native Dock navigation discarded canonical URLs",
+    "Command registration could publish an uninitialized accessor and retain disposed registrations",
+    "Staged edits were rendered as applied changes",
+    "Web startup bypassed the server recovery gate",
+    "Mobile navigation was unavailable at narrow and zoomed widths"
+  ],
+  "janitor": {
+    "default": "disabled",
+    "preference": "settings.general.janitorEnabled",
+    "behavior": "No report read, report subscription or notification while disabled; explicit opt-in in General settings."
+  },
+  "centralChecks": {
+    "packageTypechecks": ["schema", "core", "protocol", "server", "client", "orchestra", "ui", "session-ui", "app", "desktop"],
+    "appE2eTypecheck": "passed",
+    "appUnitGate": "75 passing outer tests across 11 files, including isolated prompt-submit domains",
+    "domGate": "All 17 selected test files passed in separate Bun processes; Happy DOM evidence is not native-browser evidence",
+    "chromiumAgents": "23 production-build cases passed",
+    "chromiumWorkflowRecovery": "18 production-build cases passed",
+    "chromiumShellAndServerRecovery": "6 production-build cases passed; 390, 720, 768 and 1440 CSS-pixel navigation",
+    "providerModelHttp": "Fresh isolated Location, free models, paid credential override, credential deletion, policies and null default passed",
+    "oauthHttp": "Actual vendored client status, completion, cancellation, wrong-owner and missing-attempt controls passed",
+    "installedHookDeletionHttp": "Authoritative enforcement retired; immutable versions and receipts retained",
+    "mcpJsonc": "Real-filesystem duplicate-key refusals and unambiguous mutation controls passed",
+    "desktopFocusedGate": "21 passing cases with real Omni process control",
+    "godfile": "Passed after structural source splits and the three owner-authorized generated-output ceiling updates",
+    "diffWhitespace": "passed"
+  },
+  "verificationNotes": [
+    "HTTP files that dispose the cached HttpApiApp.webHandler run in separate processes; combining them reuses a closed fixture.",
+    "Browser HTTP/WebSocket fixtures validate UI interaction and failure handling, not upstream provider authorization or packaged Electron behavior.",
+    "Focused mutation probes rejected the specific broken behaviors; passing checks do not establish whole-product perfection.",
+    "Recorded large-catalog tests verify bounded rows; session benchmark comparisons have shared-host variance and do not establish causal speedups."
+  ],
+  "explicitLimits": [
+    "CI was not run or published in this task.",
+    "No live model turns using owner credentials were performed.",
+    "Packaged desktop behavior on Windows/Linux and real screen-reader coverage remain unverified.",
+    "Core V2 model policy and Task enforcement are implemented. CCSDK execution requires its host consumer of the same guard; native Task explicitly rejects unsupported CC targets.",
+    "Older V2 servers lacking the new endpoints receive explanatory unsupported states; current V2 supports model policy, archive, archived listing and restore."
+  ],
+  "generatedCeilingAuthorization": {
+    "ownerAnswer": "Autorizar só gerados",
+    "scope": ["packages/client/src/generated-effect/client.ts", "packages/client/src/generated/client.ts", "packages/client/src/generated/types.ts"],
+    "handwrittenLimits": "unchanged"
+  },
+  "prBudgetAuthorization": {
+    "ownerAnswer": "Fonte pequena, provas juntas",
+    "scope": "Small contract/journey source PRs may carry the larger directly related tests and fixtures. Independent review and code gates remain required. Bundle heads for one full integration CI run."
+  }
+}

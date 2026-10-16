@@ -9,7 +9,7 @@ import { TextField } from "@orchestra/ui/text-field"
 import { useMutation } from "@tanstack/solid-query"
 import { showToast } from "@/utils/toast"
 import { useNavigate } from "@solidjs/router"
-import { createEffect, createMemo, createResource, Show } from "solid-js"
+import { createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ServerHealthIndicator, ServerRow } from "@/components/server/server-row"
 import { useGlobal } from "@/context/global"
@@ -40,7 +40,7 @@ interface ServerFormProps {
   onBack: () => void
 }
 
-function showRequestError(language: ReturnType<typeof useLanguage>, err: unknown) {
+function showRequestError(language: Pick<ReturnType<typeof useLanguage>, "t">, err: unknown) {
   showToast({
     variant: "error",
     title: language.t("common.requestFailed"),
@@ -48,9 +48,10 @@ function showRequestError(language: ReturnType<typeof useLanguage>, err: unknown
   })
 }
 
-function useDefaultServer() {
-  const language = useLanguage()
-  const platform = usePlatform()
+function useDefaultServer(
+  platform: ReturnType<typeof usePlatform>,
+  language: Pick<ReturnType<typeof useLanguage>, "t">,
+) {
   const [defaultKey, defaultUrlActions] = createResource(
     async () => {
       try {
@@ -78,8 +79,9 @@ function useDefaultServer() {
   return { defaultKey: () => defaultKey.latest, canDefault, setDefault }
 }
 
-function useServerPreview() {
-  const checkServerHealth = useCheckServerHealth()
+function useServerPreview(checkServerHealth: ReturnType<typeof useCheckServerHealth>) {
+  const lifetime = { generation: 0 }
+  onCleanup(() => lifetime.generation++)
 
   const looksComplete = (value: string) => {
     const normalized = normalizeServerUrl(value)
@@ -96,6 +98,7 @@ function useServerPreview() {
     password: string,
     setStatus: (value: boolean | undefined) => void,
   ) => {
+    const generation = ++lifetime.generation
     setStatus(undefined)
     if (!looksComplete(value)) return
     const normalized = normalizeServerUrl(value)
@@ -104,7 +107,7 @@ function useServerPreview() {
     if (username) http.username = username
     if (password) http.password = password
     const result = await checkServerHealth(http)
-    setStatus(result.healthy)
+    if (generation === lifetime.generation) setStatus(result.healthy)
   }
 
   return { previewStatus }
@@ -191,15 +194,49 @@ export function DialogSelectServer() {
 }
 
 export function useServerManagementController(options: { onSelect?: () => void; navigateOnAdd?: boolean } = {}) {
-  const navigate = useNavigate()
-  const server = useServer()
-  const tabs = useTabs()
-  const global = useGlobal()
-  const platform = usePlatform()
-  const language = useLanguage()
-  const { defaultKey, canDefault, setDefault } = useDefaultServer()
-  const { previewStatus } = useServerPreview()
-  const checkServerHealth = useCheckServerHealth()
+  return createServerManagementController(
+    {
+      navigate: useNavigate(),
+      server: useServer(),
+      tabs: useTabs(),
+      global: useGlobal(),
+      platform: usePlatform(),
+      language: useLanguage(),
+      settings: useSettings(),
+      checkServerHealth: useCheckServerHealth(),
+    },
+    options,
+  )
+}
+
+export function createServerManagementController(
+  input: {
+    navigate: ReturnType<typeof useNavigate>
+    server: Pick<ReturnType<typeof useServer>, "key" | "current" | "list" | "add" | "remove" | "setActive">
+    tabs: Pick<ReturnType<typeof useTabs>, "removeServer">
+    global: Pick<ReturnType<typeof useGlobal>, "servers" | "ensureServerCtx">
+    platform: ReturnType<typeof usePlatform>
+    language: Pick<ReturnType<typeof useLanguage>, "t">
+    settings: { general: Pick<ReturnType<typeof useSettings>["general"], "newLayoutDesigns"> }
+    checkServerHealth: ReturnType<typeof useCheckServerHealth>
+  },
+  options: { onSelect?: () => void; navigateOnAdd?: boolean } = {},
+) {
+  const navigate = input.navigate
+  const server = input.server
+  const tabs = input.tabs
+  const global = input.global
+  const platform = input.platform
+  const language = input.language
+  const settings = input.settings
+  const checkServerHealth = input.checkServerHealth
+  const { defaultKey, canDefault, setDefault } = useDefaultServer(platform, language)
+  const { previewStatus } = useServerPreview(checkServerHealth)
+  const lifetime = { generation: 0, disposed: false }
+  onCleanup(() => {
+    lifetime.disposed = true
+    lifetime.generation++
+  })
   const [store, setStore] = createStore({
     addServer: {
       url: "",
@@ -246,6 +283,8 @@ export function useServerManagementController(options: { onSelect?: () => void; 
 
   const addMutation = useMutation(() => ({
     mutationFn: async (value: string) => {
+      const generation = lifetime.generation
+      const current = () => !lifetime.disposed && generation === lifetime.generation
       const normalized = normalizeServerUrl(value)
       if (!normalized) {
         resetAdd()
@@ -260,6 +299,7 @@ export function useServerManagementController(options: { onSelect?: () => void; 
       if (store.addServer.password) conn.http.password = store.addServer.password
       if (store.addServer.password && store.addServer.username) conn.http.username = store.addServer.username
       const result = await checkServerHealth(conn.http)
+      if (!current()) return
       if (!result.healthy) {
         setStore("addServer", { error: language.t("dialog.server.add.error") })
         return
@@ -268,10 +308,11 @@ export function useServerManagementController(options: { onSelect?: () => void; 
         !settings.general.newLayoutDesigns() &&
         (await detectServerProtocol(conn.http, platform.fetch ?? globalThis.fetch)) === "v2"
       ) {
-        setStore("addServer", { error: language.t("dialog.server.add.error") })
+        if (current()) setStore("addServer", { error: language.t("dialog.server.add.error") })
         return
       }
 
+      if (!current()) return
       resetAdd()
       if (options.navigateOnAdd === false) {
         server.add(conn)
@@ -284,6 +325,8 @@ export function useServerManagementController(options: { onSelect?: () => void; 
 
   const editMutation = useMutation(() => ({
     mutationFn: async (input: { original: ServerConnection.Any; value: string }) => {
+      const generation = lifetime.generation
+      const current = () => !lifetime.disposed && generation === lifetime.generation
       if (input.original.type !== "http") return
       const normalized = normalizeServerUrl(input.value)
       if (!normalized) {
@@ -311,6 +354,7 @@ export function useServerManagementController(options: { onSelect?: () => void; 
         http: { url: normalized, username, password },
       }
       const result = await checkServerHealth(conn.http)
+      if (!current()) return
       if (!result.healthy) {
         setStore("editServer", { error: language.t("dialog.server.add.error") })
         return
@@ -319,15 +363,22 @@ export function useServerManagementController(options: { onSelect?: () => void; 
         !settings.general.newLayoutDesigns() &&
         (await detectServerProtocol(conn.http, platform.fetch ?? globalThis.fetch)) === "v2"
       ) {
-        setStore("editServer", { error: language.t("dialog.server.add.error") })
+        if (current()) setStore("editServer", { error: language.t("dialog.server.add.error") })
         return
       }
+      if (!current()) return
+      const previousDefault = await platform.getDefaultServer?.()
+      if (!current()) return
       if (normalized === input.original.http.url) {
+        const active = server.key
         server.add(conn)
+        server.setActive(active)
       } else {
         replaceServer(input.original, conn)
       }
-
+      if (previousDefault === ServerConnection.key(input.original) && normalized !== input.original.http.url)
+        await setDefault(ServerConnection.key(conn))
+      if (!current()) return
       resetEdit()
     },
   }))
@@ -351,7 +402,6 @@ export function useServerManagementController(options: { onSelect?: () => void; 
     return [current, ...list.filter((x) => x !== current)]
   })
 
-  const settings = useSettings()
   const current = createMemo<ServerConnection.Any | undefined>(() =>
     settings.general.newLayoutDesigns()
       ? undefined
@@ -463,11 +513,13 @@ export function useServerManagementController(options: { onSelect?: () => void; 
   })
 
   const resetForm = () => {
+    lifetime.generation++
     resetAdd()
     resetEdit()
   }
 
   const startAdd = () => {
+    lifetime.generation++
     resetEdit()
     setStore("addServer", {
       showForm: true,
@@ -481,6 +533,7 @@ export function useServerManagementController(options: { onSelect?: () => void; 
   }
 
   const startEdit = (conn: ServerConnection.Http) => {
+    lifetime.generation++
     resetAdd()
     setStore("editServer", {
       id: conn.http.url,
@@ -511,7 +564,7 @@ export function useServerManagementController(options: { onSelect?: () => void; 
   const isAddMode = createMemo(() => mode() === "add")
   const formBusy = createMemo(() => (isAddMode() ? addMutation.isPending : editMutation.isPending))
 
-  const formTitle = createMemo(() => {
+  const formTitle = () => {
     if (!isFormMode()) return language.t("dialog.server.title")
     return (
       <div class="flex items-center gap-2 -ml-2">
@@ -519,7 +572,7 @@ export function useServerManagementController(options: { onSelect?: () => void; 
         <span>{isAddMode() ? language.t("dialog.server.add.title") : language.t("dialog.server.edit.title")}</span>
       </div>
     )
-  })
+  }
 
   createEffect(() => {
     if (!store.editServer.id) return

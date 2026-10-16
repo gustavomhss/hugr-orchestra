@@ -3,6 +3,7 @@ import { existsSync } from "node:fs"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { NativeSessionFixture } from "../fixture/native-session"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Cause, Effect, Exit, Fiber } from "effect"
 import { bootstrap as cliBootstrap } from "../../src/cli/bootstrap"
@@ -13,7 +14,7 @@ import { testEffect } from "../lib/effect"
 import { waitGlobalBusEvent } from "../server/global-bus"
 
 const it = testEffect(
-  LayerNode.compile(LayerNode.group([InstanceStore.node, CrossSpawnSpawner.node]), [
+  NativeSessionFixture.build(LayerNode.group([InstanceStore.node, CrossSpawnSpawner.node]), [
     [InstanceStore.bootstrapNode, InstanceBootstrap.node],
   ]),
 )

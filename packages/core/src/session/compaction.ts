@@ -8,6 +8,8 @@ import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
 import { SessionSchema } from "./schema"
 import { Token } from "../util/token"
+import { SessionSubagentModels } from "./subagent-models"
+import { SessionRunnerModel } from "./runner/model"
 
 const DEFAULT_BUFFER = 20_000
 const DEFAULT_KEEP_TOKENS = 8_000
@@ -71,6 +73,7 @@ type Dependencies = {
     readonly stream: (request: LLMRequest) => Stream.Stream<LLMEvent, LLMError>
   }
   readonly config: readonly Config.Entry[]
+  readonly subagentModels: SessionSubagentModels.Interface
 }
 
 type Input = {
@@ -199,6 +202,7 @@ export const make = (dependencies: Dependencies) => {
 
     const chunks: string[] = []
     let failed = false
+    yield* dependencies.subagentModels.assert(input.sessionID, SessionRunnerModel.reference(input.model))
     const summarized = yield* dependencies.llm
       .stream(
         LLM.request({

@@ -11,6 +11,7 @@ function released(date: string) {
 }
 
 function cost(input: ModelsDev.Model["cost"]): ModelV2Info["cost"] {
+  if (!input) return []
   const base = {
     input: input?.input ?? 0,
     output: input?.output ?? 0,

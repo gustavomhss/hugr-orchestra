@@ -1,8 +1,11 @@
 import { dict as en } from "./en"
+import { FrontendRecovery } from "./frontend-recovery"
 
 type Keys = keyof typeof en
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.zh,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "关于 HuGR Orchestra",
   "desktop.menu.hide": "隐藏 HuGR Orchestra",
@@ -731,21 +734,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "无法加载子智能体模型。",
-  "session.subagentModels.unsupported": "此服务器上无法使用子智能体模型",
-  "session.subagentModels.denyAll": "未允许任何模型。已禁用向子智能体委派。",
-  "dialog.subagentModels.unsupported": "无法在此服务器上更改子智能体模型权限。",
-  "dialog.subagentModels.saveFailed": "无法确认模型权限。请重试。",
-  "dialog.subagentModels.inherited": "未设置会话模型限制。子智能体将沿用其已配置的模型或父会话的模型。",
-  "dialog.subagentModels.noneAllowed": "此会话中没有允许子智能体使用的已连接模型。",
-  "orchestra.agents.model.unavailable": "{{model}} 在此配置文件中不可用。",
-  "orchestra.agents.model.incompatible": "{{model}} 不支持智能体所需的文本输入、文本输出和工具调用。",
-  "orchestra.agents.models.loading": "正在加载已连接的模型…",
-  "orchestra.agents.models.error": "无法加载已连接的模型。请重试。",
-  "orchestra.agents.models.empty": "此配置文件中没有可用的已连接模型。",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -865,7 +853,6 @@ export const dict = {
   "common.rename": "重命名",
   "common.export": "导出",
   "common.reset": "重置",
-  "common.retry": "重试",
   "common.archive": "归档",
   "common.delete": "删除",
   "common.close": "关闭",

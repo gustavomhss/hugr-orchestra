@@ -44,7 +44,10 @@ export function SubagentModelPicker(props: {
   const pendingKey = () => props.pendingKey ?? props.directory
   const models = createMemo(() => connectedSubagentModels(props.providers))
   const modelIndex = createMemo(() => new Map(models().map((model) => [modelKey(model.provider.id, model.id), model])))
-  const editor = createModelRuleEditor({ read: props.readRules, write: props.writeRules })
+  const editor = createModelRuleEditor({
+    read: props.readRules,
+    write: props.writeRules,
+  })
   const policyEditor = createModelPolicyEditor({
     read: () => props.policy?.read() ?? { policy: { mode: "inherit" } },
     write: (policy) => {
@@ -61,6 +64,7 @@ export function SubagentModelPicker(props: {
     const current = policy()
     return current.mode === "allowlist" && current.models.length === 0
   }
+
   const inherited = () => {
     draftVersion()
     if (!props.sessionID) return pendingPolicy(pendingKey()).mode === "inherit"
@@ -72,38 +76,59 @@ export function SubagentModelPicker(props: {
       draftVersion()
       if (props.status !== "success" || !props.rulesReady) return []
       const current = policy()
-      const selected = props.protocol === "v2"
-        ? current.mode === "allowlist" ? current.models.map((model) => modelKey(model.providerID, model.id)) : []
-        : props.sessionID
-          ? editor.rules().filter((rule) => rule.permission === "task" && !/[?*]/.test(rule.pattern)).map((rule) => rule.pattern)
-          : [...pendingSelection(pendingKey())]
+      const selected =
+        props.protocol === "v2"
+          ? current.mode === "allowlist"
+            ? current.models.map((model) => modelKey(model.providerID, model.id))
+            : []
+          : props.sessionID
+            ? editor
+                .rules()
+                .filter((rule) => rule.permission === "task" && !/[?*]/.test(rule.pattern))
+                .map((rule) => rule.pattern)
+            : [...pendingSelection(pendingKey())]
       return [...new Set(selected)].flatMap((key) => {
         const parsed = parseModelKey(key)
         if (!parsed || modelIndex().has(key)) return []
-        if (props.protocol !== "v2" && props.sessionID && effectiveModelState(editor.rules(), parsed.providerID, parsed.modelID) !== "allow") return []
+        if (
+          props.protocol !== "v2" && props.sessionID &&
+          effectiveModelState(editor.rules(), parsed.providerID, parsed.modelID) !== "allow"
+        )
+          return []
         return [{ key, ...parsed }]
       })
     },
     undefined,
-    { equals: (left, right) => left.length === right.length && left.every((item, index) => item.key === right[index].key) },
+    {
+      equals: (left, right) =>
+        left.length === right.length && left.every((item, index) => item.key === right[index].key),
+    },
   )
   const choices = createMemo(() => [
     ...models().map((model) => ({ provider: model.provider, id: model.id, name: model.name, model })),
     ...unavailable().map((model) => ({
-      provider: { id: model.providerID, name: model.providerID }, id: model.modelID, name: model.modelID, model: undefined,
+      provider: { id: model.providerID, name: model.providerID },
+      id: model.modelID,
+      name: model.modelID,
+      model: undefined,
     })),
   ])
+
   const isAllowed = (providerID: string, modelID: string) => {
     if (props.protocol === "v2") {
       const current = policy()
-      return current.mode === "allowlist" && current.models.some((model) => model.providerID === providerID && model.id === modelID)
+      return current.mode === "allowlist" &&
+        current.models.some((model) => model.providerID === providerID && model.id === modelID)
     }
+    // Drafts have no session yet: truth is the pending selection.
+    // draftVersion() subscribes so plain-Set mutations re-render.
     if (!props.sessionID) {
       draftVersion()
       return pendingSelection(pendingKey()).has(modelKey(providerID, modelID))
     }
     return effectiveModelState(editor.rules(), providerID, modelID) === "allow"
   }
+
   const setAllowed = async (providerID: string, modelID: string, allow: boolean) => {
     if (!canChange()) return
     if (allow && modelUnavailable(modelIndex().get(modelKey(providerID, modelID)))) return
@@ -115,43 +140,70 @@ export function SubagentModelPicker(props: {
     await editor.set(providerID, modelID, allow)
   }
   const canChange = () => props.supported && props.status === "success" && props.rulesReady && !saving()
+  const canInherit = () => props.supported && props.rulesReady && !saving()
   const inherit = () => {
-    if (!canChange()) return
+    if (!canInherit()) return
     if (!props.sessionID) return clearPending(pendingKey())
     if (props.protocol === "v2") return policyEditor.inherit()
   }
+
   return (
-    <Dialog title={language.t("dialog.subagentModels.title")} description={language.t("dialog.subagentModels.description")}>
+    <Dialog
+      title={language.t("dialog.subagentModels.title")}
+      description={language.t("dialog.subagentModels.description")}
+    >
       <Show when={props.supported === false}>
         <p class="text-12-regular text-text-weak px-3" role="status">
           {language.t(props.protocol === "v2" ? "session.subagentModels.unsupported" : "dialog.subagentModels.unsupported")}
         </p>
       </Show>
       <Show when={props.protocol === "v2" ? policyEditor.state.failed : editor.state.failed}>
-        <p class="text-12-regular text-text-weak px-3" role="alert">{language.t("dialog.subagentModels.saveFailed")}</p>
+        <p class="text-12-regular text-text-weak px-3" role="alert">
+          {language.t("dialog.subagentModels.saveFailed")}
+        </p>
         <Show when={props.protocol === "v2"}>
-          <button type="button" class="text-12-regular text-text-weak px-3" disabled={!canChange()} onClick={() => void policyEditor.retry()}>
+          <button
+            type="button" class="text-12-regular text-text-weak px-3"
+            disabled={!canChange()} onClick={() => void policyEditor.retry()}
+          >
             {language.t("common.retry")}
           </button>
         </Show>
       </Show>
       <Show when={props.loadFailed}>
-        <p class="text-12-regular text-text-weak px-3" role="alert">{language.t("session.subagentModels.loadFailed")}</p>
-        <button type="button" class="text-12-regular text-text-weak px-3" onClick={props.onRetry}>{language.t("common.retry")}</button>
+        <p class="text-12-regular text-text-weak px-3" role="alert">
+          {language.t("session.subagentModels.loadFailed")}
+        </p>
+        <button type="button" class="text-12-regular text-text-weak px-3" disabled={props.supported === false} onClick={props.onRetry}>
+          {language.t("common.retry")}
+        </button>
       </Show>
       <Show when={!props.loadFailed && props.supported !== false && (!props.rulesReady || props.supported === undefined)}>
-        <p class="text-12-regular text-text-weak px-3" role="status">{language.t("orchestra.agents.loadingFile")}</p>
+        <p class="text-12-regular text-text-weak px-3" role="status">
+          {language.t("orchestra.agents.loadingFile")}
+        </p>
       </Show>
       <Show when={props.rulesReady && inherited()}>
-        <p class="text-12-regular text-text-weak px-3" role="status" data-status="inherited">{language.t("dialog.subagentModels.inherited")}</p>
+        <p class="text-12-regular text-text-weak px-3" role="status" data-status="inherited">
+          {language.t("dialog.subagentModels.inherited")}
+        </p>
       </Show>
-      <Show when={props.rulesReady && props.status === "success" && !inherited() && (!props.sessionID || props.protocol === "v2" ? denyAll() : models().length > 0 && models().every((model) => !isAllowed(model.provider.id, model.id)))}>
+      <Show
+        when={
+          props.rulesReady &&
+          props.status === "success" &&
+          !inherited() &&
+          (!props.sessionID || props.protocol === "v2"
+            ? denyAll()
+            : models().length > 0 && models().every((model) => !isAllowed(model.provider.id, model.id)))
+        }
+      >
         <p class="text-12-regular text-text-weak px-3" role="status" data-status="none-allowed">
           {language.t(!props.sessionID || props.protocol === "v2" ? "session.subagentModels.denyAll" : "dialog.subagentModels.noneAllowed")}
         </p>
       </Show>
       <Show when={(!props.sessionID || props.protocol === "v2") && !inherited()}>
-        <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canChange()} onClick={() => void inherit()}>
+        <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canInherit()} onClick={() => void inherit()}>
           {language.t("orchestra.agents.choice.inherit")}
         </button>
       </Show>
@@ -160,12 +212,15 @@ export function SubagentModelPicker(props: {
           {language.t(props.status === "error" ? "orchestra.agents.models.error" : "orchestra.agents.models.loading")}
         </p>
         <Show when={props.status === "error"}>
-          <button type="button" class="text-12-regular text-text-weak px-3" onClick={props.onRetry}>{language.t("orchestra.agents.retry")}</button>
+          <button type="button" class="text-12-regular text-text-weak px-3" disabled={props.supported === false} onClick={props.onRetry}>
+            {language.t("orchestra.agents.retry")}
+          </button>
         </Show>
       </Show>
       <Show when={props.status === "success"}>
         <List
           class="px-3"
+          virtual={{ rowHeight: 64, height: 360 }}
           aria-label={language.t("dialog.subagentModels.title")}
           search={{ placeholder: language.t("dialog.model.search.placeholder"), autofocus: true }}
           emptyMessage={language.t(choices().length ? "dialog.model.empty" : "orchestra.agents.models.empty")}
@@ -191,21 +246,34 @@ export function SubagentModelPicker(props: {
               placement={language.direction() === "rtl" ? "left-start" : "right-start"}
               gutter={12}
               openDelay={0}
-              value={item.model ? <ModelTooltip model={item.model} /> : language.t("orchestra.agents.model.unavailable", { model: `${item.provider.id}/${item.id}` })}
+              value={
+                item.model ? (
+                  <ModelTooltip model={item.model} />
+                ) : (
+                  language.t("orchestra.agents.model.unavailable", { model: `${item.provider.id}/${item.id}` })
+                )
+              }
             >
               <div class="w-full flex items-center gap-x-2">
                 {node}
                 <Switch
                   class="me-2 shrink-0"
                   checked={isAllowed(item.provider.id, item.id)}
-                  disabled={!props.supported || props.status !== "success" || !props.rulesReady || (!!modelUnavailable(item.model) && !isAllowed(item.provider.id, item.id))}
+                  disabled={
+                    !props.supported ||
+                    props.status !== "success" ||
+                    !props.rulesReady ||
+                    (!!modelUnavailable(item.model) && !isAllowed(item.provider.id, item.id))
+                  }
                   readOnly={saving()}
                   aria-disabled={saving() || undefined}
                   aria-busy={saving() || undefined}
                   onClick={(event: MouseEvent) => event.stopPropagation()}
                   onChange={(checked) => void setAllowed(item.provider.id, item.id, checked)}
                   hideLabel
-                >{item.name}</Switch>
+                >
+                  {item.name}
+                </Switch>
               </div>
             </Tooltip>
           )}
@@ -215,7 +283,11 @@ export function SubagentModelPicker(props: {
               <span class="truncate">
                 <bdi>{item.name}</bdi>
                 <Show when={modelUnavailable(item.model)}>
-                  {(issue) => <span class="block text-12-regular text-text-weak">{language.t(`orchestra.agents.model.${issue()}`, { model: item.id })}</span>}
+                  {(issue) => (
+                    <span class="block text-12-regular text-text-weak">
+                      {language.t(`orchestra.agents.model.${issue()}`, { model: item.id })}
+                    </span>
+                  )}
                 </Show>
               </span>
             </div>

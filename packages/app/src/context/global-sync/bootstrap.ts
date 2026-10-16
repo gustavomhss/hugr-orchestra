@@ -237,11 +237,27 @@ export const loadProvidersQuery = (
         const [providers, models, defaultModel] = await Promise.all([
           sdk.provider.list(location),
           sdk.model.list(location),
-          sdk.model.default(location),
+          loadDefaultModel(sdk.model, location),
         ])
-        return normalizeProviderList(providers.data, models.data, defaultModel.data)
+        return normalizeProviderList(providers.data, models.data, defaultModel)
       }),
   })
+
+export async function loadDefaultModel(
+  model: CatalogApi["model"],
+  input?: Parameters<CatalogApi["model"]["default"]>[0],
+) {
+  if (typeof model.default !== "function") return null
+  return model.default(input).then(
+    (result) => result.data,
+    (error: unknown) => {
+      const cause = error instanceof Error ? error.cause : undefined
+      const status = cause && typeof cause === "object" && "status" in cause ? cause.status : undefined
+      if (status === 404 || status === 405 || status === 501) return null
+      throw error
+    },
+  )
+}
 
 type AgentListApi = {
   readonly list: (input?: AgentListInput) => Promise<AgentListOutput>

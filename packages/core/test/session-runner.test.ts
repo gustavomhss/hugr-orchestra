@@ -11,19 +11,13 @@ import {
 } from "@orchestra/llm"
 import * as OpenAIChat from "@orchestra/llm/protocols/openai-chat"
 import { Database } from "@orchestra/core/database/database"
-import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
-import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { EventTable } from "@orchestra/core/event/sql"
-import { Project } from "@orchestra/core/project"
-import { ProjectTable } from "@orchestra/core/project/sql"
 import { QuestionV2 } from "@orchestra/core/question"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
-import { Snapshot } from "@orchestra/core/snapshot"
 import { ContextSnapshotDecodeError } from "@orchestra/core/session/error"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionInput } from "@orchestra/core/session/input"
@@ -31,15 +25,11 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { Prompt } from "@orchestra/core/session/prompt"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionExecution } from "@orchestra/core/session/execution"
-import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
 import { SessionRunner } from "@orchestra/core/session/runner"
-import * as SessionRunnerLLM from "@orchestra/core/session/runner/llm"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { AgentV2 } from "@orchestra/core/agent"
-import { Config } from "@orchestra/core/config"
-import { ConfigCompaction } from "@orchestra/core/config/compaction"
 import { Tool } from "@orchestra/core/tool/tool"
 import {
   SessionContextEpochTable,
@@ -51,14 +41,20 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { SystemContext } from "@orchestra/core/system-context"
 import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { SkillGuidance } from "@orchestra/core/skill/guidance"
-import { ReferenceGuidance } from "@orchestra/core/reference/guidance"
 import { ModelV2 } from "@orchestra/core/model"
 import { Location } from "@orchestra/core/location"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { Cause, DateTime, Deferred, Effect, Exit, Fiber, Layer, Schema, Stream } from "effect"
 import { asc, eq } from "drizzle-orm"
-import { testEffect } from "./lib/effect"
-import { PermissionFixture } from "./permission-fixture"
+import {
+  Harness,
+  fragmentFixture,
+  insertSession,
+  otherSessionID,
+  recoveryModel,
+  sessionID,
+  type FragmentKind,
+} from "./session-runner-harness"
 
 const requests: LLMRequest[] = []
 let response: LLMEvent[] = []
@@ -104,11 +100,6 @@ const compactModel = Model.make({
   provider: "fake",
   route: OpenAIChat.route.with({ limits: { context: 4_000, output: 50 } }),
 })
-const recoveryModel = Model.make({
-  id: "recovery",
-  provider: "fake",
-  route: OpenAIChat.route.with({ limits: { context: 20_000, output: 1_000 } }),
-})
 const authorizations: Tool.Context[] = []
 const executions: string[] = []
 const echo = Layer.effectDiscard(
@@ -141,7 +132,6 @@ const echo = Layer.effectDiscard(
     }),
   ),
 )
-const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: echo, deps: [ToolRegistry.node] })
 let modelResolveHook = Effect.void
 let currentModel = model
 const models = SessionRunnerModel.layerWith((session) =>
@@ -197,110 +187,9 @@ const skillGuidance = Layer.mock(SkillGuidance.Service, {
         : SystemContext.empty,
     ),
 })
-const referenceGuidance = Layer.mock(ReferenceGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) })
-const config = Layer.succeed(
-  Config.Service,
-  Config.Service.of({
-    entries: () =>
-      Effect.succeed([
-        new Config.Document({
-          type: "document",
-          info: new Config.Info({
-            compaction: new ConfigCompaction.Info({
-              buffer: 3_000,
-              keep: new ConfigCompaction.Keep({ tokens: 1_000 }),
-            }),
-          }),
-        }),
-      ]),
-  }),
-)
-const runnerLayer = AppNodeBuilder.build(SessionRunnerLLM.node, [
-  [Snapshot.node, Snapshot.noopLayer],
-  [LayerNodePlatform.llmClient, client],
-  [SessionRunnerModel.node, models],
-  [SystemContextRegistry.node, systemContext],
-  [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
-  [SkillGuidance.node, skillGuidance],
-  [ReferenceGuidance.node, referenceGuidance],
-  [PermissionV2.node, PermissionFixture.normalLayer],
-  [Config.node, config],
-])
-const execution = Layer.effect(
-  SessionExecution.Service,
-  Effect.gen(function* () {
-    const sessionRunner = yield* SessionRunner.Service
-    const coordinator = yield* SessionRunCoordinator.make<SessionV2.ID, SessionRunner.RunError>({
-      drain: (sessionID, force) => sessionRunner.run({ sessionID, force }),
-    })
-    return SessionExecution.Service.of({
-      active: coordinator.active,
-      resume: coordinator.run,
-      wake: coordinator.wake,
-      interrupt: coordinator.interrupt,
-    })
-  }),
-).pipe(Layer.provide(runnerLayer))
-const it = testEffect(
-  AppNodeBuilder.build(
-    LayerNode.group([
-      Database.node,
-      EventV2.node,
-      QuestionV2.node,
-      SessionProjector.node,
-      SessionStore.node,
-      ApplicationTools.node,
-      AgentV2.node,
-      ToolRegistry.node,
-      ToolRegistry.toolsNode,
-      echoNode,
-      SessionRunnerModel.node,
-      SystemContextRegistry.node,
-      SkillGuidance.node,
-      ReferenceGuidance.node,
-      Config.node,
-      Snapshot.node,
-      SessionRunnerLLM.node,
-      SessionExecution.node,
-      SessionV2.node,
-    ]),
-    [
-      [LayerNodePlatform.llmClient, client],
-      [PermissionV2.node, PermissionFixture.normalLayer],
-      [SessionRunnerModel.node, models],
-      [SystemContextRegistry.node, systemContext],
-      [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
-      [SkillGuidance.node, skillGuidance],
-      [ReferenceGuidance.node, referenceGuidance],
-      [Snapshot.node, Snapshot.noopLayer],
-      [SessionExecution.node, execution],
-      [Config.node, config],
-    ],
-  ),
-)
-const sessionID = SessionV2.ID.make("ses_runner_test")
-const otherSessionID = SessionV2.ID.make("ses_runner_other")
-
-const insertSession = (id: SessionV2.ID) =>
-  Effect.gen(function* () {
-    const { db } = yield* Database.Service
-    yield* db
-      .insert(SessionTable)
-      .values({
-        id,
-        project_id: Project.ID.global,
-        slug: id,
-        directory: "/project",
-        title: "test",
-        version: "test",
-      })
-      .onConflictDoNothing()
-      .run()
-      .pipe(Effect.orDie)
-  })
+const it = Harness.make({ client, models, echo, systemContext, skillGuidance })
 
 const setup = Effect.gen(function* () {
-  const { db } = yield* Database.Service
   response = []
   systemBaseline = "Initial context"
   systemRemoved = false
@@ -319,13 +208,7 @@ const setup = Effect.gen(function* () {
   toolExecutionsReady = 5
   activeToolExecutions = 0
   maxActiveToolExecutions = 0
-  yield* db
-    .insert(ProjectTable)
-    .values({ id: Project.ID.global, worktree: AbsolutePath.make("/project"), sandboxes: [] })
-    .onConflictDoNothing()
-    .run()
-    .pipe(Effect.orDie)
-  yield* insertSession(sessionID)
+  yield* Harness.setup
 })
 
 const providerUnavailable = () =>
@@ -383,80 +266,9 @@ const replaySessionProjection = (id: SessionV2.ID) =>
     )
   })
 
-type FragmentKind = "text" | "reasoning" | "tool input"
-
-type FragmentFixture = {
-  readonly delta: EventV2.Definition
-  readonly completeEvents: LLMEvent[]
-  readonly partialEvents: LLMEvent[]
-  readonly expectedAssistant: unknown
-  readonly expectedContent: unknown
-}
-
 const fragmentKinds: readonly FragmentKind[] = ["text", "reasoning", "tool input"]
 
 const fragmentID = (kind: FragmentKind, suffix: string) => `${kind === "tool input" ? "call" : kind}-${suffix}`
-
-const fragmentFixture = (kind: FragmentKind, id: string, chunks: readonly string[]): FragmentFixture => {
-  const text = chunks.join("")
-  switch (kind) {
-    case "text": {
-      const partialEvents = [
-        LLMEvent.stepStart({ index: 0 }),
-        LLMEvent.textStart({ id }),
-        ...chunks.map((text) => LLMEvent.textDelta({ id, text })),
-      ]
-      const expectedContent = { type: "text", id, text }
-      return {
-        delta: SessionEvent.Text.Delta,
-        partialEvents,
-        completeEvents: [
-          ...partialEvents,
-          LLMEvent.textEnd({ id }),
-          LLMEvent.stepFinish({ index: 0, reason: "stop" }),
-          LLMEvent.finish({ reason: "stop" }),
-        ],
-        expectedAssistant: { type: "assistant", finish: "stop", content: [expectedContent] },
-        expectedContent,
-      }
-    }
-    case "reasoning": {
-      const partialEvents = [
-        LLMEvent.stepStart({ index: 0 }),
-        LLMEvent.reasoningStart({ id }),
-        ...chunks.map((text) => LLMEvent.reasoningDelta({ id, text })),
-      ]
-      const expectedContent = { type: "reasoning", id, text }
-      return {
-        delta: SessionEvent.Reasoning.Delta,
-        partialEvents,
-        completeEvents: [
-          ...partialEvents,
-          LLMEvent.reasoningEnd({ id }),
-          LLMEvent.stepFinish({ index: 0, reason: "stop" }),
-          LLMEvent.finish({ reason: "stop" }),
-        ],
-        expectedAssistant: { type: "assistant", finish: "stop", content: [expectedContent] },
-        expectedContent,
-      }
-    }
-    case "tool input": {
-      const partialEvents = [
-        LLMEvent.stepStart({ index: 0 }),
-        LLMEvent.toolInputStart({ id, name: "echo" }),
-        ...chunks.map((text) => LLMEvent.toolInputDelta({ id, name: "echo", text })),
-      ]
-      const expectedContent = { type: "tool", id, state: { status: "pending", input: text } }
-      return {
-        delta: SessionEvent.Tool.Input.Delta,
-        partialEvents,
-        completeEvents: [...partialEvents, LLMEvent.toolInputEnd({ id, name: "echo" })],
-        expectedAssistant: { type: "assistant", content: [expectedContent] },
-        expectedContent,
-      }
-    }
-  }
-}
 
 const verifyEphemeralDeltas = (kind: FragmentKind) =>
   Effect.gen(function* () {
@@ -2529,18 +2341,15 @@ describe("SessionRunnerLLM", () => {
       yield* setup
       const session = yield* SessionV2.Service
       const parentID = SessionV2.ID.make("ses_runner_parent")
+      yield* insertSession(parentID)
       const { db } = yield* Database.Service
-      yield* db
-        .update(SessionTable)
-        .set({ parent_id: parentID })
-        .where(eq(SessionTable.id, sessionID))
-        .run()
-        .pipe(Effect.orDie)
+      yield* db.update(SessionTable).set({ parent_id: parentID }).where(eq(SessionTable.id, sessionID)).run()
       yield* session.prompt({ sessionID, prompt: Prompt.make({ text: "Run child request" }), resume: false })
 
       requests.length = 0
       yield* session.resume(sessionID)
 
+      expect(requests).toHaveLength(1)
       expect(requests[0]?.http?.headers?.["x-parent-session-id"]).toBe(parentID)
     }),
   )

@@ -154,6 +154,8 @@ export function TemplateCard(props: {
   documents: RelayDocument[]
   selected?: boolean
   radio?: boolean
+  disabled?: boolean
+  tabstop?: boolean
   onPick: (id: string) => void
 }) {
   const copy = useRelayCopy()
@@ -167,10 +169,12 @@ export function TemplateCard(props: {
       class="mx-card wf-tpl"
       role={props.radio ? "radio" : undefined}
       aria-checked={props.radio ? !!props.selected : undefined}
-      aria-disabled={blocked() ? "true" : undefined}
+      aria-disabled={blocked() || props.disabled ? "true" : undefined}
+      disabled={props.disabled}
+      tabindex={props.radio ? ((props.selected || props.tabstop) && !blocked() ? 0 : -1) : undefined}
       title={blocked() ? copy.t("orchestra.workflows.template.toolsMissingTitle") : undefined}
       data-template={props.id}
-      onClick={() => !blocked() && props.onPick(props.id)}
+      onClick={() => !blocked() && !props.disabled && props.onPick(props.id)}
     >
       <div class="mx-card-top">
         <span class="mx-mark">

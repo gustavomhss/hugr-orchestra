@@ -74,7 +74,8 @@ export const Model = Schema.Struct({
   release_date: Schema.String,
   attachment: Schema.Boolean,
   reasoning: Schema.Boolean,
-  temperature: Schema.Boolean,
+  // Public catalog may omit temperature; absence does not establish support.
+  temperature: Schema.optional(Schema.Boolean),
   tool_call: Schema.Boolean,
   reasoning_options: Schema.optional(Schema.Array(ReasoningOption)),
   interleaved: Schema.optional(

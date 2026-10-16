@@ -13,23 +13,6 @@ export type ModelPolicySnapshot = {
   readVersion?: number
 }
 
-type ModelPolicyEditorState = {
-  saving: boolean
-  failed: boolean
-  error?: unknown
-  acknowledged?: SubagentModelPolicy
-  retry?: SubagentModelPolicy
-}
-
-type ModelPolicyFreshness = {
-  timestamp?: number
-  revision?: number
-  ackRevision?: number
-  readVersion?: number
-  caughtUp: boolean
-  predecessors: SubagentModelPolicy[]
-}
-
 export function sameModelPolicy(left: SubagentModelPolicy, right: SubagentModelPolicy) {
   if (left.mode !== right.mode) return false
   if (left.mode === "inherit" || right.mode === "inherit") return true
@@ -61,13 +44,20 @@ export function createModelPolicyEditor(input: {
   read: () => ModelPolicySnapshot
   write: (policy: SubagentModelPolicy) => Promise<SubagentModelPolicy | ModelPolicySnapshot>
 }) {
-  const [state, setState] = createStore<ModelPolicyEditorState>({
+  const [state, setState] = createStore({
     saving: false,
     failed: false,
+    error: undefined as unknown,
+    acknowledged: undefined as SubagentModelPolicy | undefined,
+    retry: undefined as SubagentModelPolicy | undefined,
   })
-  const freshness: ModelPolicyFreshness = {
+  const freshness = {
+    timestamp: undefined as number | undefined,
+    revision: undefined as number | undefined,
+    ackRevision: undefined as number | undefined,
+    readVersion: undefined as number | undefined,
     caughtUp: false,
-    predecessors: [],
+    predecessors: [] as SubagentModelPolicy[],
   }
   const policy = () => {
     const current = input.read()
@@ -112,10 +102,9 @@ export function createModelPolicyEditor(input: {
     if (state.saving) return
     const selected = policy()
     const current = input.read()
-    // Adopt newer canonical authority before advancing the next write's freshness fence.
+    // Adopt canonical authority before the next write fence can hide it behind an older ACK.
     if (state.acknowledged && !sameModelPolicy(selected, state.acknowledged)) {
       freshness.ackRevision = current.revision
-      // A nested store setter would merge into the prior caller-owned ACK.
       setState({ acknowledged: selected })
     }
     freshness.predecessors.push(selected)
@@ -154,9 +143,59 @@ export function createModelPolicyEditor(input: {
   }
 }
 
+export interface ModelRule {
+  permission: string
+  pattern: string
+  action: "allow" | "deny" | "ask"
+}
+
 /** Chat visibility preferences must not hide models from the subagent permission editor. */
 export function connectedSubagentModels(providers: readonly Provider[]) {
   return providers.flatMap((provider) => Object.values(provider.models).map((model) => ({ ...model, provider })))
+}
+
+/** Serialize writes and use acknowledged rules while the session event is still in flight. */
+export function createModelRuleEditor(input: {
+  read: () => ModelRule[]
+  write: (rules: ModelRule[]) => Promise<ModelRule[]>
+}) {
+  const [state, setState] = createStore({
+    saving: false,
+    failed: false,
+    rules: undefined as ModelRule[] | undefined,
+  })
+  const rules = () => {
+    const current = input.read()
+    const acknowledged = state.rules
+    // V1 appends rules. An event can contain ACK A after ACK B already arrived over HTTP.
+    // Retain B only for a strict prefix; equal, extended or replaced snapshots are authoritative.
+    if (
+      acknowledged &&
+      current.length < acknowledged.length &&
+      current.every(
+        (rule, index) =>
+          rule.permission === acknowledged[index].permission &&
+          rule.pattern === acknowledged[index].pattern &&
+          rule.action === acknowledged[index].action,
+      )
+    )
+      return acknowledged
+    return current
+  }
+  return {
+    state,
+    rules,
+    async set(providerID: string, modelID: string, allow: boolean) {
+      if (state.saving) return
+      const permission = toggleModelRules(rules(), providerID, modelID, allow)
+      setState({ saving: true, failed: false })
+      await input
+        .write(permission)
+        .then((rules) => setState({ rules }))
+        .catch(() => setState("failed", true))
+        .finally(() => setState("saving", false))
+    },
+  }
 }
 
 /** Agent turns need text input/output and tool calls. Missing catalog entries remain visible as unavailable. */
@@ -167,52 +206,6 @@ export function modelUnavailable(model?: {
   if (!model || model.status === "deprecated") return "unavailable" as const
   if (!model.capabilities.toolcall || !model.capabilities.input.text || !model.capabilities.output.text)
     return "incompatible" as const
-}
-
-export interface ModelRule {
-  permission: string
-  pattern: string
-  action: "allow" | "deny" | "ask"
-}
-
-type ModelRuleEditorState = { saving: boolean; failed: boolean; rules?: ModelRule[] }
-
-/** V1 writes append. Hold the HTTP ACK while a strict-prefix event is still in flight. */
-export function createModelRuleEditor(input: {
-  read: () => ModelRule[]
-  write: (rules: ModelRule[]) => Promise<ModelRule[]>
-}) {
-  const [state, setState] = createStore<ModelRuleEditorState>({
-    saving: false,
-    failed: false,
-  })
-  const rules = () => {
-    const current = input.read()
-    const acknowledged = state.rules
-    if (
-      acknowledged &&
-      current.length < acknowledged.length &&
-      current.every((rule, index) =>
-        rule.permission === acknowledged[index].permission &&
-        rule.pattern === acknowledged[index].pattern &&
-        rule.action === acknowledged[index].action,
-      )
-    ) return acknowledged
-    return current
-  }
-  return {
-    state,
-    rules,
-    async set(providerID: string, modelID: string, allow: boolean) {
-      if (state.saving) return
-      const permission = toggleModelRules(rules(), providerID, modelID, allow)
-      setState({ saving: true, failed: false })
-      await input.write(permission)
-        .then((rules) => setState({ rules }))
-        .catch(() => setState("failed", true))
-        .finally(() => setState("saving", false))
-    },
-  }
 }
 
 export function parseModelKey(key: string) {
@@ -241,13 +234,13 @@ export function effectiveModelState(
   rules: readonly ModelRule[],
   providerID: string,
   modelID: string,
-): "allow" | "deny" | undefined {
+): ModelRule["action"] | undefined {
   const target = `${providerID}/${modelID}`
-  let state: "allow" | "deny" | undefined
+  let state: ModelRule["action"] | undefined
   for (const rule of rules) {
     if (rule.permission !== TASK && !wildcardMatch(TASK, rule.permission)) continue
     if (!wildcardMatch(target, rule.pattern)) continue
-    if (rule.action === "allow" || rule.action === "deny") state = rule.action
+    state = rule.action
   }
   return state
 }

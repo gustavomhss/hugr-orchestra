@@ -34,6 +34,27 @@ describe("contract hygiene", () => {
     expect(Pty.ID.create()).toStartWith("pty_")
   })
 
+  test("Session policy and archive events carry state without transcript message identities", () => {
+    expect(Object.keys(SessionEvent.SubagentModelsChanged.data.fields)).toEqual(["timestamp", "sessionID", "policy"])
+    expect(Object.keys(SessionEvent.ArchiveChanged.data.fields)).toEqual(["timestamp", "sessionID", "archived"])
+    const policy = {
+      timestamp: 1,
+      sessionID: "ses_state",
+      policy: { mode: "allowlist", models: [] },
+    } satisfies typeof SessionEvent.SubagentModelsChanged.data.Encoded
+    const restore = { timestamp: 1, sessionID: "ses_state", archived: null }
+    expect(
+      Schema.encodeSync(SessionEvent.SubagentModelsChanged.data)(
+        Schema.decodeUnknownSync(SessionEvent.SubagentModelsChanged.data)(policy),
+      ),
+    ).toEqual(policy)
+    expect(
+      Schema.encodeSync(SessionEvent.ArchiveChanged.data)(
+        Schema.decodeUnknownSync(SessionEvent.ArchiveChanged.data)(restore),
+      ),
+    ).toEqual(restore)
+  })
+
   test("reusable public identifiers are stable and unique", () => {
     const identifiers = [
       Agent.Color,
@@ -59,10 +80,12 @@ describe("contract hygiene", () => {
       (file) => !file.endsWith("-v1.ts"),
     )
     expect(files.length).toBeGreaterThan(0)
+    expect(files).toContain("session.ts")
     const source = await Promise.all(
       files.map((file) => Bun.file(new URL(`../src/${file}`, import.meta.url)).text()),
     ).then((values) => values.join("\n"))
 
+    expect(source).toContain('export * as Session from "./session"')
     expect(source).not.toContain("Schema.Any")
     expect(source).not.toContain("Schema.mutable")
   })

@@ -21,6 +21,38 @@ test.use({
 })
 test.setTimeout(180_000)
 
+for (const failure of ["http", "network"] as const) {
+  test(`audit: schedule delete ${failure} failure retains confirmation for retry`, async ({ page }) => {
+    const api = await setup(page)
+    await openSchedule(page)
+    await createTask(page, { name: "Keep on failure", prompt: "Inspect the release" })
+    const fault = { fail: true, deletes: 0 }
+    await page.route("**/api/schedule/*", (route) => {
+      if (route.request().method() !== "DELETE") return route.fallback()
+      fault.deletes++
+      if (!fault.fail) return route.fallback()
+      if (failure === "network") return route.abort("failed")
+      return route.fulfill({ status: 503, json: { message: "Delete denied" } })
+    })
+    await page
+      .getByRole("article", { name: "Keep on failure" })
+      .getByRole("button", { name: "Edit", exact: true })
+      .click()
+    await page.getByRole("dialog").getByRole("button", { name: "Remove task", exact: true }).click()
+    const confirm = page.getByRole("dialog", { name: "Remove this item?" })
+    await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
+    await expect(confirm.getByRole("alert")).toContainText("Could not remove Keep on failure:")
+    await expect(confirm.getByRole("button", { name: "Confirm", exact: true })).toBeEnabled()
+    expect(api.schedule.tasks.map((task) => task.name)).toEqual(["Keep on failure"])
+    fault.fail = false
+    await confirm.getByRole("button", { name: "Confirm", exact: true }).click()
+    await expect(confirm).toHaveCount(0)
+    await expect(page.getByRole("article", { name: "Keep on failure" })).toHaveCount(0)
+    expect(api.schedule.tasks).toEqual([])
+    expect(fault.deletes).toBe(2)
+  })
+}
+
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: a task is saved on the server per profile with local dates and the page runs nothing`, async ({
     page,

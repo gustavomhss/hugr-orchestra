@@ -48,6 +48,7 @@ export function processLifetime(options: QueryOptions & { systemPrompt: Preset }
   return {
     options: {
       ...options,
+      // The canonical resolver honors the Desktop's staged executable env path before deployed-directory defaults.
       pathToClaudeCodeExecutable: ClaudeCodeExecutable.resolve({ executable: options.pathToClaudeCodeExecutable, env: source }),
       env,
       spawnClaudeCodeProcess: (input) => {

@@ -210,11 +210,12 @@ function trace(options: Options, scenario: ActiveScenario, phase: string) {
 function projectOptions(
   project: ProjectOptions,
   llmUrl: string | undefined,
-): { git?: boolean; config?: Partial<ConfigV1.Info> } {
-  if (!project.llm || !llmUrl) return { git: project.git, config: project.config }
+): Pick<ProjectOptions, "git" | "config" | "init"> {
+  if (!project.llm || !llmUrl) return { git: project.git, config: project.config, init: project.init }
   const fake = fakeLlmConfig(llmUrl)
   return {
     git: project.git,
+    init: project.init,
     config: {
       ...fake,
       ...project.config,

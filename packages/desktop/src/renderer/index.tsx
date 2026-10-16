@@ -24,7 +24,10 @@ import { createEffect, createMemo, createResource, createSignal, onCleanup, Show
 import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { t } from "./i18n"
-import { initializationData } from "./initialization"
+import { dict } from "../../../app/src/i18n/en"
+import { openRendererPath } from "./open-path"
+import { listenForDeepLinks } from "./deep-links"
+import { initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
@@ -62,25 +65,11 @@ if (import.meta.env.VITE_SENTRY_DSN) {
 }
 
 const [updaterState, setUpdaterState] = createSignal<UpdaterState>({ status: "disabled" })
+let requestFailed = () => dict["common.requestFailed"]
 void window.api.updater.subscribe(setUpdaterState)
-
-const deepLinkEvent = "orchestra:deep-link"
 
 type DesktopWindowState = {
   id?: string
-}
-
-const emitDeepLinks = (urls: string[]) => {
-  if (urls.length === 0) return
-  window.__ORCHESTRA__ ??= {}
-  const pending = window.__ORCHESTRA__.deepLinks ?? []
-  window.__ORCHESTRA__.deepLinks = [...pending, ...urls]
-  window.dispatchEvent(new CustomEvent(deepLinkEvent, { detail: { urls } }))
-}
-
-const listenForDeepLinks = () => {
-  void window.api.consumeInitialDeepLinks().then((urls) => emitDeepLinks(urls))
-  return window.api.onDeepLink((urls) => emitDeepLinks(urls))
 }
 
 function windowLastActiveUrlKey(windowID: string) {
@@ -225,11 +214,10 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       window.api.openLocalFile(url)
     },
     async openPath(path: string, app?: string) {
-      if (os === "windows") {
-        const resolvedApp = app ? await window.api.resolveAppPath(app).catch(() => null) : null
-        return window.api.openPath(path, resolvedApp ?? undefined)
-      }
-      return window.api.openPath(path, app)
+      return openRendererPath({
+        path, app, open: window.api.openPath,
+        message: async () => requestFailed(),
+      })
     },
     async revealPath(path: string) {
       return window.api.revealPath(path)
@@ -294,14 +282,6 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 
     wslServers: wslServersApi,
 
-    getDisplayBackend: async () => {
-      return window.api.getDisplayBackend().catch(() => null)
-    },
-
-    setDisplayBackend: async (backend) => {
-      await window.api.setDisplayBackend(backend)
-    },
-
     webviewZoom,
 
     windowFullscreen,
@@ -332,7 +312,7 @@ let menuTrigger = null as null | ((id: string) => void)
 window.api.onMenuCommand((id) => {
   menuTrigger?.(id)
 })
-listenForDeepLinks()
+listenForDeepLinks(window, window.api)
 
 function LoadingSplash() {
   return (
@@ -360,6 +340,24 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   const [sidecar] = createResource(() => window.api.awaitInitialization())
 
   const [defaultServer] = createResource(() => platform.getDefaultServer?.())
+  const [recovery] = createResource(
+    () => !sidecar.loading && !defaultServer.loading && sidecar.error !== undefined,
+    async () => {
+      const { checkServerHealth } = await import("../../../app/src/utils/server-health")
+      const remote = await recoverRemoteServer(
+        await platform.storage?.("orchestra.global.dat").getItem("server") ?? null,
+        defaultServer.latest,
+        (http) => checkServerHealth(http, platform.fetch ?? fetch).then((result) => result.healthy),
+      )
+      if (remote) {
+        void platform.recordFatalRendererError?.({
+          error: sidecar.error instanceof Error ? sidecar.error.stack ?? sidecar.error.message : String(sidecar.error),
+          url: location.href, platform: "desktop", os: platform.os, version: pkg.version,
+        })
+      }
+      return remote ?? null
+    },
+  )
   const [locale] = createResource(loadLocale)
   const router = (props: BaseRouterProps) => (
     <DesktopMemoryRouter {...props} windowID={platform.windowID ?? "browser"} />
@@ -367,6 +365,8 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   const onboarding = Promise.withResolvers<void>()
 
   function Inner() {
+    const language = useLanguage()
+    requestFailed = () => language.t("common.requestFailed")
     const cmd = useCommand()
     menuTrigger = (id) => cmd.trigger(id)
 
@@ -388,11 +388,14 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
     const wslServers = useWslServers()
     const language = useLanguage()
     const ready = createMemo(
-      () => !defaultServer.loading && !sidecar.loading && !locale.loading && !wslServers.isLoading,
+      () => !defaultServer.loading && !sidecar.loading && !recovery.loading && !locale.loading && !wslServers.isLoading,
     )
     const servers = createMemo(() => {
-      const data = initializationData(sidecar)
+      if (!ready()) return []
+      const remote = recovery()
+      const data = initializationData(sidecar, !!remote)
       const list: ServerConnection.Any[] = []
+      if (remote) list.push(remote)
       if (data) {
         list.push({
           displayName: language.t("desktop.server.local"),
@@ -409,7 +412,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
       return list
     })
     const effectiveDefaultServer = createMemo(() =>
-      ServerConnection.Key.make(availableStartupServer(defaultServer.latest, wslServers.data)),
+      ServerConnection.Key.make((recovery.loading ? undefined : recovery()?.http.url) ?? availableStartupServer(defaultServer.latest, wslServers.data)),
     )
     return (
       <Show when={ready()} fallback={<LoadingSplash />}>

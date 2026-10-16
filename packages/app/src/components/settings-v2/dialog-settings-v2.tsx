@@ -1,4 +1,4 @@
-import { Component, createMemo, createSignal, startTransition } from "solid-js"
+import { type Accessor, Component, createMemo, createSignal, type JSX, Show, startTransition } from "solid-js"
 import { Dialog } from "@orchestra/ui/v2/dialog-v2"
 import { TabsV2 } from "@orchestra/ui/v2/tabs-v2"
 import { Icon } from "@orchestra/ui/icon"
@@ -13,7 +13,12 @@ import { SettingsServersV2 } from "./servers"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLayout } from "@/context/layout"
 import { useTabs } from "@/context/tabs"
-import { useServerSync } from "@/context/server-sync"
+import { ServerSyncProvider } from "@/context/server-sync"
+import { ServerSDKProvider, useServerSDK } from "@/context/server-sdk"
+import { ServerConnection } from "@/context/server"
+import { useGlobal } from "@/context/global"
+import { ModelsProvider } from "@/context/models"
+import { settingsProviderOwner } from "@/hooks/provider-catalog"
 
 export const DialogSettings: Component<{
   sessionID?: string
@@ -24,18 +29,45 @@ export const DialogSettings: Component<{
   const dialog = useDialog()
   const layout = useLayout()
   const tabs = useTabs()
-  const serverSync = useServerSync()
+  const sdk = useServerSDK()
+  const global = useGlobal()
   const [tab, setTab] = createSignal(props.defaultValue ?? "general")
-  const directory = createMemo(() => {
-    const route = layout.route()
-    if (route.type === "dir-new-sesssion") return route.dir
-    if (route.type === "draft") {
-      const draft = tabs.store.find((item) => item.type === "draft" && item.draftID === route.draftID)
-      return draft?.type === "draft" ? draft.directory : undefined
-    }
-    if (route.type === "session") return serverSync().session.get(route.sessionId)?.directory
-    return undefined
-  })
+  const owner = createMemo(
+    () => {
+      const target = settingsProviderOwner(layout.route(), {
+        current: ServerConnection.key(sdk().server),
+        draft: (id) => {
+          const draft = tabs.store.find((item) => item.type === "draft" && item.draftID === id)
+          return draft?.type === "draft" ? { server: draft.server, directory: draft.directory } : undefined
+        },
+        session: (server, id) => {
+          const connection = global.servers.list().find((item) => ServerConnection.key(item) === server)
+          return connection ? global.ensureServerCtx(connection).sync.session.get(id)?.directory : undefined
+        },
+        home: layout.home.selection(),
+      })
+      const server = global.servers.list().find((item) => ServerConnection.key(item) === target.server)
+      return server ? { server, directory: target.directory } : undefined
+    },
+    undefined,
+    { equals: (a, b) => a?.server === b?.server && a?.directory === b?.directory },
+  )
+
+  function ProviderScope(props: { children: (directory: Accessor<string | null | undefined>) => JSX.Element }) {
+    return (
+      <Show when={owner()} keyed fallback={<p role="status">{language.t("orchestra.providers.loading")}</p>}>
+        {(target) => (
+          <ServerSDKProvider server={() => target.server}>
+            <ServerSyncProvider server={() => target.server}>
+              <ModelsProvider directory={() => target.directory}>
+                {props.children(() => target.directory)}
+              </ModelsProvider>
+            </ServerSyncProvider>
+          </ServerSDKProvider>
+        )}
+      </Show>
+    )
+  }
 
   const showProviders = () => {
     void dialog.show(() => <DialogSettings sessionID={props.sessionID} defaultValue="providers" />)
@@ -103,10 +135,12 @@ export const DialogSettings: Component<{
           <SettingsServersV2 />
         </TabsV2.Content>
         <TabsV2.Content value="providers" class="settings-v2-panel">
-          <SettingsProvidersV2 directory={directory} onBack={showProviders} />
+          <ProviderScope>
+            {(directory) => <SettingsProvidersV2 directory={directory} onBack={showProviders} />}
+          </ProviderScope>
         </TabsV2.Content>
         <TabsV2.Content value="models" class="settings-v2-panel">
-          <SettingsModelsV2 />
+          <ProviderScope>{() => <SettingsModelsV2 />}</ProviderScope>
         </TabsV2.Content>
       </TabsV2>
     </Dialog>

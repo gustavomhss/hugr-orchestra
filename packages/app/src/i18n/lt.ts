@@ -1,4 +1,5 @@
 import { DESKTOP_NATIVE_KEYS } from "./desktop-native"
+import { FrontendRecovery } from "./frontend-recovery"
 
 const desktop = [
   "HuGR Orchestra",
@@ -91,6 +92,8 @@ const desktop = [
 ]
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.lt,
   ...Object.fromEntries(DESKTOP_NATIVE_KEYS.map((key, index) => [key, desktop[index]])),
   "command.category.suggested": "Siūloma",
   "command.category.view": "Rodinys",
@@ -693,21 +696,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "Nepavyko įkelti poagenčių modelių.",
-  "session.subagentModels.unsupported": "Poagenčių modeliai šiame serveryje nepasiekiami",
-  "session.subagentModels.denyAll": "Neleidžiamas joks modelis. Užduočių pavedimas poagentams išjungtas.",
-  "dialog.subagentModels.unsupported": "Šiame serveryje negalima keisti poagenčių modelių leidimų.",
-  "dialog.subagentModels.saveFailed": "Nepavyko patvirtinti modelių leidimų. Bandykite dar kartą.",
-  "dialog.subagentModels.inherited": "Seansui nenustatytas joks modelio apribojimas. Poagentai paveldi savo sukonfigūruotą modelį arba pirminio seanso modelį.",
-  "dialog.subagentModels.noneAllowed": "Šiame seanse poagentams neleidžiamas joks prijungtas modelis.",
-  "orchestra.agents.model.unavailable": "{{model}} šiame profilyje nepasiekiamas.",
-  "orchestra.agents.model.incompatible": "{{model}} nepalaiko agentams reikalingos teksto įvesties, teksto išvesties ir įrankių iškvietimų.",
-  "orchestra.agents.models.loading": "Įkeliami prijungti modeliai…",
-  "orchestra.agents.models.error": "Nepavyko įkelti prijungtų modelių. Bandykite dar kartą.",
-  "orchestra.agents.models.empty": "Šiame profilyje nėra pasiekiamų prijungtų modelių.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -857,7 +845,6 @@ export const dict = {
   "common.rename": "Pervardyti",
   "common.export": "Eksportuoti",
   "common.reset": "Nustatyti iš naujo",
-  "common.retry": "Bandyti dar kartą",
   "common.archive": "Archyvas",
   "common.delete": "Ištrinti",
   "common.close": "Uždaryti",

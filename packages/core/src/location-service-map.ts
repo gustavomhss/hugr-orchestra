@@ -1,4 +1,4 @@
-import { Context, Effect, Layer, LayerMap } from "effect"
+import { Context, Effect, Layer, LayerMap, Scope } from "effect"
 import { LayerNode } from "./effect/layer-node"
 import { Node } from "./effect/app-node"
 import { Location } from "./location"
@@ -14,5 +14,33 @@ export class Service extends Context.Service<
 }
 
 export const node = LayerNode.unbound(Service, Node.tags.values.global)
+
+/** Lazy acquisitions must see the completed application's exports, not a constructor's partial context. */
+export function withGlobalContext<A, E, R>(
+  layer: Layer.Layer<A, E, R>,
+  globalContext: Effect.Effect<Context.Context<never>>,
+) {
+  return layer.pipe(
+    Layer.flatMap((context) => {
+      const locations = Context.getUnsafe(context, Service)
+      const contextEffect = (ref: Location.Ref) =>
+        // Wait before entering the cache: early constructor forks must not retain a partial acquisition.
+        globalContext.pipe(
+          Effect.flatMap((globals) =>
+            locations
+              .contextEffect(ref)
+              .pipe(Effect.updateContext((current: Context.Context<Scope.Scope>) => Context.merge(current, globals))),
+          ),
+        )
+      return Layer.succeedContext(
+        Context.add(context, Service, {
+          ...locations,
+          get: (ref) => Layer.effectContext(contextEffect(ref)),
+          contextEffect,
+        }),
+      )
+    }),
+  )
+}
 
 export * as LocationServiceMap from "./location-service-map"

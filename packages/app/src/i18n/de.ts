@@ -1,8 +1,11 @@
 import { dict as en } from "./en"
+import { FrontendRecovery } from "./frontend-recovery"
 
 type Keys = keyof typeof en
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.de,
   "command.category.suggested": "Vorgeschlagen",
   "command.category.view": "Ansicht",
   "command.category.project": "Projekt",
@@ -577,21 +580,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "Unteragenten-Modelle konnten nicht geladen werden.",
-  "session.subagentModels.unsupported": "Unteragenten-Modelle sind auf diesem Server nicht verfügbar",
-  "session.subagentModels.denyAll": "Keine Modelle erlaubt. Die Delegation an Unteragenten ist deaktiviert.",
-  "dialog.subagentModels.unsupported": "Modellberechtigungen für Unteragenten können auf diesem Server nicht geändert werden.",
-  "dialog.subagentModels.saveFailed": "Modellberechtigungen konnten nicht bestätigt werden. Versuche es erneut.",
-  "dialog.subagentModels.inherited": "Für die Sitzung ist keine Modellbeschränkung festgelegt. Unteragenten übernehmen ihr konfiguriertes Modell oder das Modell der übergeordneten Sitzung.",
-  "dialog.subagentModels.noneAllowed": "In dieser Sitzung sind für Unteragenten keine verbundenen Modelle erlaubt.",
-  "orchestra.agents.model.unavailable": "{{model}} ist in diesem Profil nicht verfügbar.",
-  "orchestra.agents.model.incompatible": "{{model}} unterstützt keine Texteingabe, Textausgabe und Tool-Aufrufe, die Agenten benötigen.",
-  "orchestra.agents.models.loading": "Verbundene Modelle werden geladen…",
-  "orchestra.agents.models.error": "Verbundene Modelle konnten nicht geladen werden. Versuche es erneut.",
-  "orchestra.agents.models.empty": "In diesem Profil sind keine verbundenen Modelle verfügbar.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -711,7 +699,6 @@ export const dict = {
   "common.rename": "Umbenennen",
   "common.export": "Exportieren",
   "common.reset": "Zurücksetzen",
-  "common.retry": "Erneut versuchen",
   "common.archive": "Archivieren",
   "common.delete": "Löschen",
   "common.close": "Schließen",

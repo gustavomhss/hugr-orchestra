@@ -296,6 +296,13 @@ export function createPromptInputV2Controller(input: {
     return true
   }
 
+  const canSubmit = () => {
+    const persisted = draft.state
+    if (persisted.prompt.some((part) => part.type === "image")) return true
+    if (persisted.context.items.some((item) => !!item.comment?.trim())) return true
+    return persisted.prompt.some((part) => "content" in part && !!part.content.trim())
+  }
+
   return {
     state,
     view: input.view,
@@ -337,12 +344,7 @@ export function createPromptInputV2Controller(input: {
     removeAttachment(id: string) {
       draft.removeAttachment(id)
     },
-    canSubmit() {
-      const persisted = draft.state
-      if (persisted.prompt.some((part) => part.type === "image")) return true
-      if (persisted.context.items.some((item) => !!item.comment?.trim())) return true
-      return persisted.prompt.some((part) => "content" in part && !!part.content.trim())
-    },
+    canSubmit,
     setEditor(element: HTMLElement) {
       editor = element
       input.onEditor?.(element)
@@ -368,6 +370,7 @@ export function createPromptInputV2Controller(input: {
       dispatch({ type: "mode.normal" })
     },
     submit() {
+      if (!canSubmit()) return
       input.view.submit.onSubmit()
       dispatch({ type: "popover.close" })
     },

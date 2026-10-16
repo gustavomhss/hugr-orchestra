@@ -1,7 +1,11 @@
 import { dict as en } from "./en"
+import { FrontendRecovery } from "./frontend-recovery"
+
 type Keys = keyof typeof en
 
 export const dict = {
+  ...FrontendRecovery.subagentModelsBase,
+  ...FrontendRecovery.subagentModels.no,
   "desktop.menu.app": "HuGR Orchestra",
   "desktop.menu.about": "Om HuGR Orchestra",
   "desktop.menu.hide": "Skjul HuGR Orchestra",
@@ -618,21 +622,6 @@ export const dict = {
   "session.tasks.models.label": "Subagents · {{count}}",
   "session.tasks.models.all": "All",
   "command.tasks.models": "Subagent models…",
-  "dialog.subagentModels.title": "Subagent models",
-  "dialog.subagentModels.description": "Choose which models this session's subagents may use.",
-  "dialog.subagentModels.hint": "Unchecked models are denied for subagents in this session.",
-  "session.subagentModels.loadFailed": "Kunne ikke laste inn underagentmodeller.",
-  "session.subagentModels.unsupported": "Underagentmodeller er ikke tilgjengelige på denne serveren",
-  "session.subagentModels.denyAll": "Ingen modeller er tillatt. Delegering til underagenter er deaktivert.",
-  "dialog.subagentModels.unsupported": "Modelltillatelser for underagenter kan ikke endres på denne serveren.",
-  "dialog.subagentModels.saveFailed": "Modelltillatelsene kunne ikke bekreftes. Prøv igjen.",
-  "dialog.subagentModels.inherited": "Ingen modellbegrensning er angitt for økten. Underagenter arver sin konfigurerte modell eller modellen til overordnet økt.",
-  "dialog.subagentModels.noneAllowed": "Ingen tilkoblede modeller er tillatt for underagenter i denne økten.",
-  "orchestra.agents.model.unavailable": "{{model}} er ikke tilgjengelig i denne profilen.",
-  "orchestra.agents.model.incompatible": "{{model}} støtter ikke tekstinndata, tekstutdata og verktøykall som agenter krever.",
-  "orchestra.agents.models.loading": "Laster inn tilkoblede modeller…",
-  "orchestra.agents.models.error": "Tilkoblede modeller kunne ikke lastes inn. Prøv igjen.",
-  "orchestra.agents.models.empty": "Ingen tilkoblede modeller er tilgjengelige i denne profilen.",
   "session.tab.tasks": "Tasks",
   "session.tasks.subagent": "Subagent",
   "session.tasks.running": "Running",
@@ -740,7 +729,6 @@ export const dict = {
   "common.rename": "Gi nytt navn",
   "common.export": "Eksporter",
   "common.reset": "Tilbakestill",
-  "common.retry": "Prøv igjen",
   "common.archive": "Arkiver",
   "common.delete": "Slett",
   "common.close": "Lukk",

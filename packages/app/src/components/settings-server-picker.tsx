@@ -31,8 +31,8 @@ function SettingsServerDataProviders(props: ParentProps<{ server: ServerConnecti
   return (
     <QueryClientProvider client={serverCtx().queryClient}>
       <ServerSDKProvider server={() => props.server}>
-        <ServerSyncProvider>
-          <ModelsProvider>{props.children}</ModelsProvider>
+        <ServerSyncProvider server={() => props.server}>
+          <ModelsProvider directory={() => null}>{props.children}</ModelsProvider>
         </ServerSyncProvider>
       </ServerSDKProvider>
     </QueryClientProvider>

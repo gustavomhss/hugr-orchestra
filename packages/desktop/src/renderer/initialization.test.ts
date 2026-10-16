@@ -1,7 +1,27 @@
 import { describe, expect, test } from "bun:test"
-import { initializationData, initializationReady } from "./initialization"
+import { initializationData, initializationReady, recoverRemoteServer } from "./initialization"
 
 describe("desktop renderer initialization", () => {
+  test("desktop recovery: healthy configured remote survives sidecar failure with diagnostics preserved", async () => {
+    const error = new Error("sidecar startup failed")
+    const observed: unknown[] = []
+    const remote = await recoverRemoteServer(JSON.stringify({ list: [
+      "https://other.test", { type: "http", http: { url: "https://preferred.test", username: "user", password: "secret" } },
+    ] }), "https://preferred.test", async (http) => { observed.push(http); return true })
+    expect(remote?.http).toEqual({ url: "https://preferred.test", username: "user", password: "secret" })
+    expect(observed).toHaveLength(1)
+    expect(initializationData(Object.assign(() => { throw error }, { error }), !!remote)).toBeUndefined()
+    expect(error.message).toBe("sidecar startup failed")
+    expect((error as Error & { localServerStartup?: boolean }).localServerStartup).toBe(true)
+  })
+
+  test("desktop recovery: unhealthy or malformed configured remotes do not hide sidecar failure", async () => {
+    expect(await recoverRemoteServer("not json", null, async () => { throw new Error("must not probe") })).toBeUndefined()
+    const remote = await recoverRemoteServer(JSON.stringify({ list: ["https://offline.test"] }), null, async () => false)
+    expect(remote).toBeUndefined()
+    const error = new Error("sidecar startup failed")
+    expect(() => initializationData(Object.assign(() => undefined, { error }), !!remote)).toThrow(error)
+  })
   test("throws the original initialization error before rendering server providers", () => {
     const error = new Error("sidecar startup failed")
 

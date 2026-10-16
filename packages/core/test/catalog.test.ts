@@ -30,6 +30,118 @@ const catalogLayer = AppNodeBuilder.build(
 const it = testEffect(catalogLayer)
 
 describe("CatalogV2", () => {
+  it.effect("API settings credentials use runner precedence and public never authenticates paid Zen", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      const integrations = yield* Integration.Service
+      const configured = { settings: "synthetic-settings-key", body: undefined as string | undefined }
+      yield* integrations.transform((draft) => draft.update(Integration.ID.make("opencode"), () => {}))
+      yield* catalog.transform((draft) => {
+        draft.provider.update(ProviderV2.ID.opencode, (provider) => {
+          provider.api = {
+            type: "aisdk",
+            package: "@ai-sdk/openai-compatible",
+            settings: { apiKey: configured.settings },
+          }
+          if (configured.body !== undefined) provider.request.body.apiKey = configured.body
+        })
+        draft.model.update(ProviderV2.ID.opencode, ModelV2.ID.make("paid"), (model) => {
+          model.cost = [{ input: 1, output: 1, cache: { read: 0, write: 0 } }]
+        })
+        draft.model.update(ProviderV2.ID.opencode, ModelV2.ID.make("free"), (model) => {
+          model.cost = [{ input: 0, output: 0, cache: { read: 0, write: 0 } }]
+        })
+        draft.model.default.set(ProviderV2.ID.opencode, ModelV2.ID.make("paid"))
+      })
+      expect((yield* catalog.model.available()).map((model) => model.id)).toContain(ModelV2.ID.make("paid"))
+      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("paid"))
+      configured.body = "public"
+      yield* catalog.reload()
+      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      configured.body = undefined
+      configured.settings = "public"
+      yield* catalog.reload()
+      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+    }),
+  )
+  it.effect("anonymous Zen exposes only explicitly free models and cannot select a paid configured default", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      const integrations = yield* Integration.Service
+      const credentials = yield* Credential.Service
+      yield* integrations.transform((draft) => {
+        draft.update(Integration.ID.make("opencode"), () => {})
+        draft.update(Integration.ID.make("openai"), () => {})
+      })
+      yield* catalog.transform((draft) => {
+        draft.provider.update(ProviderV2.ID.opencode, () => {})
+        draft.provider.update(ProviderV2.ID.openai, () => {})
+        for (const [id, costs, enabled] of [
+          ["free", [{ input: 0, output: 0, cache: { read: 0, write: 0 } }], true],
+          ["paid", [{ input: 1, output: 1, cache: { read: 0, write: 0 } }], true],
+          ["output-paid", [{ input: 0, output: 1, cache: { read: 0, write: 0 } }], true],
+          ["cache-paid", [{ input: 0, output: 0, cache: { read: 1, write: 0 } }], true],
+          ["missing-price", [], true],
+          ["disabled-free", [{ input: 0, output: 0, cache: { read: 0, write: 0 } }], false],
+        ] as const) {
+          draft.model.update(ProviderV2.ID.opencode, ModelV2.ID.make(id), (model) => {
+            model.cost = [...costs]
+            model.enabled = enabled
+          })
+        }
+        draft.model.update(ProviderV2.ID.openai, ModelV2.ID.make("free"), (model) => {
+          model.cost = [{ input: 0, output: 0, cache: { read: 0, write: 0 } }]
+        })
+        draft.model.default.set(ProviderV2.ID.opencode, ModelV2.ID.make("paid"))
+      })
+      expect((yield* catalog.provider.available()).map((provider) => provider.id)).toEqual([ProviderV2.ID.opencode])
+      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("free"))
+      expect((yield* catalog.model.default())?.request.body.apiKey).toBe("public")
+      expect((yield* catalog.provider.get(ProviderV2.ID.opencode))?.request.body.apiKey).toBeUndefined()
+      expect(
+        (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("paid")))?.request.body.apiKey,
+      ).toBeUndefined()
+
+      const credential = yield* credentials.create({
+        integrationID: Integration.ID.make("opencode"),
+        value: Credential.Key.make({ type: "key", key: "synthetic-key" }),
+      })
+      expect((yield* catalog.model.available()).map((model) => model.id)).toContain(ModelV2.ID.make("paid"))
+      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("paid"))
+      yield* credentials.remove(credential.id)
+      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("free"))
+    }),
+  )
+
+  it.effect("anonymous Zen preserves configured request auth, disabled providers and policy", () =>
+    Effect.gen(function* () {
+      const catalog = yield* Catalog.Service
+      const policy = yield* Policy.Service
+      yield* catalog.transform((draft) => {
+        draft.provider.update(ProviderV2.ID.opencode, (provider) => {
+          provider.request.body.apiKey = "configured-key"
+        })
+        draft.model.update(ProviderV2.ID.opencode, ModelV2.ID.make("free"), (model) => {
+          model.cost = [{ input: 0, output: 0, cache: { read: 0, write: 0 } }]
+        })
+      })
+      expect((yield* catalog.model.default())?.request.body.apiKey).toBe("configured-key")
+      const disabled = yield* catalog.transform((draft) => {
+        draft.provider.update(ProviderV2.ID.opencode, (provider) => {
+          provider.disabled = true
+        })
+      })
+      expect(yield* catalog.model.available()).toEqual([])
+      expect(yield* catalog.provider.available()).toEqual([])
+      yield* disabled.dispose
+      yield* policy.load([new Policy.Info({ effect: "deny", action: "provider.use", resource: "opencode" })])
+      yield* catalog.reload()
+      expect(yield* catalog.model.available()).toEqual([])
+      expect(yield* catalog.provider.available()).toEqual([])
+    }),
+  )
   it.effect("publishes an updated event after catalog changes", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service

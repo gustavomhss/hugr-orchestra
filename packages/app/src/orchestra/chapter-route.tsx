@@ -5,9 +5,10 @@ import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { SDKProvider } from "@/context/sdk"
-import { ServerConnection } from "@/context/server"
+import { ServerConnection, useServer } from "@/context/server"
 import { ServerSDKProvider } from "@/context/server-sdk"
 import { ServerSyncProvider } from "@/context/server-sync"
+import { ModelsProvider } from "@/context/models"
 import { isWip } from "@/orchestra/navigation"
 import { pathKey } from "@/utils/path-key"
 
@@ -39,6 +40,10 @@ export function OrchestraChapterRoute() {
   const layout = useLayout()
   const global = useGlobal()
   const language = useLanguage()
+  const server = useServer()
+  const selectedServer = () =>
+    global.servers.list().find((item) => ServerConnection.key(item) === layout.home.selection().server) ??
+    server.current
   // Pages are owned by the selected repository profile. Remount only when that owner changes.
   const owner = createMemo(
     () => {
@@ -67,13 +72,29 @@ export function OrchestraChapterRoute() {
           <Show
             when={owner()}
             keyed
-            fallback={<p data-slot="orchestra-chapter-empty">{language.t("orchestra.profile.empty")}</p>}
+            fallback={
+              <Show
+                when={params.chapter === "settings" && selectedServer()}
+                keyed
+                fallback={<p data-slot="orchestra-chapter-empty">{language.t("orchestra.profile.empty")}</p>}
+              >
+                {(conn) => (
+                  <ServerSDKProvider server={() => conn}>
+                    <ServerSyncProvider server={() => conn}>
+                      <Dynamic component={page()} server={conn} directory="" />
+                    </ServerSyncProvider>
+                  </ServerSDKProvider>
+                )}
+              </Show>
+            }
           >
             {(owner) => (
               <ServerSDKProvider server={() => owner.server}>
                 <ServerSyncProvider server={() => owner.server}>
                   <SDKProvider directory={owner.directory}>
-                    <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                    <ModelsProvider directory={() => owner.directory}>
+                      <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                    </ModelsProvider>
                   </SDKProvider>
                 </ServerSyncProvider>
               </ServerSDKProvider>

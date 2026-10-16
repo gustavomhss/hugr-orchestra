@@ -1,30 +1,29 @@
 import { Orchestra } from "@orchestra/client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { ServerConnection } from "@/context/server"
-import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
+import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { SessionManagementUnsupported } from "./session-management-errors"
+import { normalizeSessionInfo, type AppSession } from "./session"
+import { directoryKey } from "@/context/global-sync/utils"
 
-export type SessionManagement = {
-  getSubagentModels: (id: string) => Promise<SubagentModelPolicy>
-  readSubagentModels: (id: string) => Promise<ModelPolicySnapshot>
-  setSubagentModels: (id: string, policy: SubagentModelPolicy) => Promise<SubagentModelPolicy>
-  waitSubagentModels: (id: string) => Promise<void>
-}
-
-/** The server SDK owns the captured credentials, scoped fetch and write barriers. */
+/** Construct once inside the server SDK: fetch must carry that context's abort signal. */
 export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
   protocol: Promise<ServerProtocol>
+  legacy: Pick<OrchestraClient, "session">
   signal?: AbortSignal
-}): SessionManagement {
+}) {
   const http = { ...input.server }
   const fetcher = input.fetch
   const protocol = input.protocol
+  const legacy = input.legacy
   const lifetime = input.signal
   const client = Orchestra.make({
     baseUrl: http.url,
+    // Declared 404s can be decoded to domain errors without their HTTP status. Classify at the transport boundary.
     fetch: Object.assign(
       async (request: string | URL | Request, init?: RequestInit) => {
         const response = await fetcher(request, init)
@@ -45,59 +44,109 @@ export function createSessionManagementForServer(input: {
       : undefined,
   })
   const writes = new Map<string, Promise<SubagentModelPolicy>>()
+  const versions = new Map<string, number>()
+  lifetime?.addEventListener("abort", () => {
+    writes.clear()
+    versions.clear()
+  }, { once: true })
   return {
-    getSubagentModels(id) {
+    listArchived(directory: string) {
       return runSessionManagementOperation(lifetime, async () => {
         if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
-        const policy = await client.sessions.getSubagentModels({ sessionID: id })
+        const sessions: AppSession[] = []
+        let cursor: string | undefined
+        while (true) {
+          const page = await client.sessions.list({ directory, includeArchived: true, order: "desc", limit: 100, cursor })
+          lifetime?.throwIfAborted()
+          sessions.push(...page.data.map(normalizeSessionInfo))
+          if (!page.data.length || !page.cursor.next) break
+          cursor = page.cursor.next
+        }
+        return sessions.filter((session) =>
+          session.time.archived !== undefined && directoryKey(session.directory) === directoryKey(directory),
+        )
+      })
+    },
+    getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        lifetime?.throwIfAborted()
+        const policy = await client.sessions.getSubagentModels({ sessionID })
         lifetime?.throwIfAborted()
         return policy
       })
     },
-    readSubagentModels(id) {
-      return runSessionManagementOperation<ModelPolicySnapshot>(lifetime, async () => {
+    readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
+      return runSessionManagementOperation(lifetime, async () => {
         if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
-        const snapshot = await client.sessions.get({ sessionID: id })
+        // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
+        const snapshot = await client.sessions.get({ sessionID })
         lifetime?.throwIfAborted()
         return { policy: snapshot.subagentModels ?? { mode: "inherit" }, timestamp: snapshot.time.updated }
       })
     },
-    setSubagentModels(id, policy) {
-      const previous = writes.get(id)
-      // A failed predecessor permits an explicit retry; dispatch waits never swallow it.
+    setSubagentModels(sessionID: string, policy: SubagentModelPolicy): Promise<SubagentModelPolicy> {
+      if (lifetime?.aborted) return Promise.reject(lifetime.reason)
+      versions.set(sessionID, (versions.get(sessionID) ?? 0) + 1)
+      const previous = writes.get(sessionID)
       const write = runSessionManagementOperation(lifetime, async () => {
+        // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
         await (previous ? previous.catch(() => undefined) : Promise.resolve())
         lifetime?.throwIfAborted()
         if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
-        const acknowledged = await client.sessions.setSubagentModels({ sessionID: id, policy })
+        const acknowledged = await client.sessions.setSubagentModels({ sessionID, policy })
         lifetime?.throwIfAborted()
-        if (writes.get(id) === write) writes.delete(id)
+        if (writes.get(sessionID) === write) writes.delete(sessionID)
         return acknowledged
       })
-      writes.set(id, write)
-      // Retain the original rejected promise as the barrier, even when its caller closes.
+      writes.set(sessionID, write)
       void write.catch(() => {})
       return write
     },
-    waitSubagentModels(id) {
+    subagentModelsWriteVersion(id: string): number {
+      return versions.get(id) ?? 0
+    },
+    waitSubagentModels(id: string): Promise<void> {
+      // Capture the barrier before lifecycle cleanup can clear the map; a disposed lifetime still rejects the wait.
+      const current = writes.get(id)
       return runSessionManagementOperation(lifetime, async () => {
-        while (true) {
-          const write = writes.get(id)
-          if (!write) return
-          await write
+        let write = current ?? writes.get(id)
+        while (write) {
+          const failure = await write.then(() => undefined, (error: unknown) => ({ error }))
           lifetime?.throwIfAborted()
-          if (writes.get(id) === write) return
+          const latest = writes.get(id)
+          if (latest && latest !== write) {
+            write = latest
+            continue
+          }
+          if (failure && latest === write) throw failure.error
+          return
         }
+      })
+    },
+    archive(sessionID: string, archived: boolean, directory: string) {
+      return runSessionManagementOperation(lifetime, async () => {
+        if ((await protocol) === "v1") {
+          lifetime?.throwIfAborted()
+          if (!archived) throw new SessionManagementUnsupported()
+          await legacy.session.update({ sessionID, directory, time: { archived: Date.now() } })
+          return
+        }
+        lifetime?.throwIfAborted()
+        await client.sessions.archive({ sessionID, archived })
       })
     },
   }
 }
 
-/** Race the complete generated operation, including body decoding after fetch resolves. */
+export type SessionManagement = ReturnType<typeof createSessionManagementForServer>
+
+/** Race the complete generated operation, including protocol selection and response body decoding. */
 async function runSessionManagementOperation<T>(lifetime: AbortSignal | undefined, load: () => Promise<T>): Promise<T> {
+  lifetime?.throwIfAborted()
   if (!lifetime) return load()
   const cancelled = Promise.withResolvers<never>()
   const onAbort = () => cancelled.reject(lifetime.reason)
@@ -106,5 +155,10 @@ async function runSessionManagementOperation<T>(lifetime: AbortSignal | undefine
     lifetime.throwIfAborted()
     return load()
   })
-  return Promise.race([operation, cancelled.promise]).finally(() => lifetime.removeEventListener("abort", onAbort))
+  return Promise.race([operation, cancelled.promise])
+    .then((value) => {
+      lifetime.throwIfAborted()
+      return value
+    })
+    .finally(() => lifetime.removeEventListener("abort", onAbort))
 }

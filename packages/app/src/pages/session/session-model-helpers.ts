@@ -10,6 +10,7 @@ type Local = {
 type ModelSelection = {
   model: {
     current(): { id: string; provider: { id: string } } | undefined
+    list?(): readonly { id: string; provider: { id: string } }[]
     set(model: { providerID: string; modelID: string }): void
     variant: {
       current(): string | undefined
@@ -50,6 +51,9 @@ export const syncPromptModel = (local: ModelSelection, prompt: PromptState) => {
 export const restorePromptModel = (local: ModelSelection, prompt: PromptState) => {
   const model = prompt.model.current()
   if (!model) return false
+  const choices = local.model.list?.()
+  if (choices && !choices.some((item) => item.provider.id === model.providerID && item.id === model.modelID))
+    return false
   const current = local.model.current()
   if (
     current?.provider.id === model.providerID &&

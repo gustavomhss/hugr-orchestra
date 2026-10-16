@@ -99,6 +99,36 @@ describe("syncPromptModel", () => {
 })
 
 describe("restorePromptModel", () => {
+  test("an engine-filtered saved model cannot change the fallback model's variant", () => {
+    const calls: unknown[] = []
+    const api = { id: "gpt-api", provider: { id: "openai" } }
+    const local = {
+      model: {
+        current: () => api,
+        list: () => [api],
+        set: (model: unknown) => calls.push(model),
+        variant: { current: () => undefined, set: (variant: unknown) => calls.push(variant) },
+      },
+    }
+    expect(
+      restorePromptModel(local, {
+        model: {
+          current: () => ({ providerID: "anthropic", modelID: "claude-host", variant: "high" }),
+          set() {},
+        },
+      }),
+    ).toBe(false)
+    expect(calls).toEqual([])
+    expect(
+      restorePromptModel(local, {
+        model: {
+          current: () => ({ providerID: "openai", modelID: "gpt-api", variant: "high" }),
+          set() {},
+        },
+      }),
+    ).toBe(true)
+    expect(calls).toEqual([{ providerID: "openai", modelID: "gpt-api" }, "high"])
+  })
   test("restores the persisted prompt model into session selection", () => {
     const calls: unknown[] = []
     const restored = restorePromptModel(

@@ -6,6 +6,7 @@ import { pluralCategory, type UiI18nPluralKey } from "@orchestra/ui/context/i18n
 import { Persist, persisted } from "@/utils/persist"
 import { dict as en } from "@/i18n/en"
 import { dict as uiEn } from "@orchestra/ui/i18n/en"
+import { EDIT_REVIEW_COPY } from "@orchestra/ui/i18n/edit-review"
 import { ORCHESTRA_COPY } from "@/i18n/orchestra"
 import {
   createDesktopNativeBundle,
@@ -27,7 +28,7 @@ function localeDirection(locale: Locale): Direction {
   return RTL_LOCALES.has(locale) ? "rtl" : "ltr"
 }
 
-type RawDictionary = typeof en & typeof uiEn & typeof ORCHESTRA_COPY
+type RawDictionary = typeof en & typeof uiEn & typeof ORCHESTRA_COPY & typeof EDIT_REVIEW_COPY
 type Dictionary = i18n.Flatten<RawDictionary>
 type PluralKey =
   | UiI18nPluralKey
@@ -47,7 +48,7 @@ const LOCALES: readonly Locale[] = DESKTOP_NATIVE_LOCALES
 
 const INTL = DESKTOP_NATIVE_LOCALE_TAGS
 
-const base = i18n.flatten({ ...en, ...uiEn, ...ORCHESTRA_COPY })
+const base = i18n.flatten({ ...en, ...uiEn, ...ORCHESTRA_COPY, ...EDIT_REVIEW_COPY })
 const dicts = new Map<Locale, Dictionary>([["en", base]])
 
 const merge = (app: Promise<Source>, ui: Promise<Source>, lean: Promise<Source>) =>

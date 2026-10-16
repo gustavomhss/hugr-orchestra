@@ -1,7 +1,7 @@
-import type { FilePart, Project, UserMessage, VcsFileDiff } from "@orchestra/sdk/v2"
+import type { FilePart, Project, UserMessage } from "@orchestra/sdk/v2"
 import { getFilename } from "@orchestra/core/util/path"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { createQuery, skipToken, useMutation, useQueryClient } from "@tanstack/solid-query"
+import { useMutation } from "@tanstack/solid-query"
 import {
   batch,
   ErrorBoundary,
@@ -22,7 +22,6 @@ import {
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { createResizeObserver } from "@solid-primitives/resize-observer"
-import { debounce } from "@solid-primitives/scheduled"
 import { useLocal } from "@/context/local"
 import { FileProvider, selectionFromLines, useFile, type FileSelection, type SelectedLineRange } from "@/context/file"
 import { createStore } from "solid-js/store"
@@ -64,6 +63,7 @@ import { useSettingsCommand } from "@/components/settings-dialog"
 import { setCursorPosition } from "@/components/prompt-input/editor-dom"
 import { promptLength } from "@/components/prompt-input/history"
 import { type FollowupDraft, followupSystem, sendFollowupDraft } from "@/components/prompt-input/submit"
+import { type QueuedPrompt, createQueuedPromptStore, queuedPromptPayload, queuedPromptSources } from "@/components/prompt-input/queued-prompt"
 import {
   createEvidenceComposerActions,
   createPromptInputController,
@@ -87,7 +87,6 @@ import { SessionReviewV2SidebarToggle } from "@orchestra/session-ui/v2/session-r
 import { createOrchestraReviewPanel } from "@/orchestra/review"
 import { createOrchestraPanelSizing } from "@/orchestra/panel-sizing"
 import { createReviewPanelV2State } from "@/pages/session/v2/review-panel-v2-state"
-import { reviewDiffDirectory, reviewDiffNeedsLoad, reviewRootDirectory } from "@/pages/session/v2/review-diff-kinds"
 import { TerminalPanel } from "@/pages/session/terminal-panel"
 import { TerminalPanelV2 } from "@/pages/session/terminal-panel-v2"
 import { useComposerCommands } from "@/pages/session/use-composer-commands"
@@ -95,19 +94,20 @@ import { useSessionCommands } from "@/pages/session/use-session-commands"
 import { useSessionHashScroll } from "@/pages/session/use-session-hash-scroll"
 import { Identifier } from "@/utils/id"
 import { diffs as list } from "@/utils/diffs"
-import { Persist, persisted } from "@/utils/persist"
 import { extractPromptFromParts } from "@/utils/prompt"
 import { formatServerError, isLocalSessionNotFoundError, isSessionNotFoundError } from "@/utils/server-errors"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
+import { SessionLineageBoundary } from "./session/session-lineage-boundary"
+import { createSessionVcsReview } from "./session/session-vcs-review"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
-type FollowupItem = FollowupDraft & { id: string }
+type FollowupItem = QueuedPrompt
 type FollowupEdit = Pick<FollowupItem, "id" | "prompt" | "context">
 const emptyFollowups: FollowupItem[] = []
 
 type ChangeMode = "git" | "branch" | "turn"
-type VcsMode = "git" | "branch"
 
 const sessionViewState = () => ({
   messageId: undefined as string | undefined,
@@ -180,7 +180,8 @@ export function SessionRouteErrorBoundary(
 ) {
   const settings = useSettings()
   return (
-    <ErrorBoundary
+    <SessionLineageBoundary
+      identity={() => JSON.stringify([props.serverKey, props.sessionID])}
       fallback={(error) =>
         settings.general.newLayoutDesigns() ? (
           <SessionRouteFrame padded={props.padded}>
@@ -194,7 +195,7 @@ export function SessionRouteErrorBoundary(
       }
     >
       {props.children}
-    </ErrorBoundary>
+    </SessionLineageBoundary>
   )
 }
 
@@ -360,9 +361,8 @@ export default function Page() {
   const local = useLocal()
   const file = useFile()
   const sync = useSync()
-  const queryClient = useQueryClient()
   const dialog = useDialog()
-  const language = useLanguage()
+  const language = sessionRecoveryLanguage(useLanguage())
   const sdk = useSDK()
   const serverSDK = useServerSDK()
   const settings = useSettings()
@@ -592,20 +592,8 @@ export default function Page() {
     deferRender: false,
   })
 
-  const [followup, setFollowup] = persisted(
-    Persist.serverWorkspace(serverSDK().scope, sdk().directory, "followup", ["followup.v1"]),
-    createStore<{
-      items: Record<string, FollowupItem[] | undefined>
-      failed: Record<string, string | undefined>
-      paused: Record<string, boolean | undefined>
-      edit: Record<string, FollowupEdit | undefined>
-    }>({
-      items: {},
-      failed: {},
-      paused: {},
-      edit: {},
-    }),
-  )
+  const followupOwner = { serverScopeKey: serverSDK().scope, directory: sdk().directory }
+  const [followup, setFollowup] = createQueuedPromptStore(followupOwner)
 
   createComputed((prev) => {
     const key = sessionKey()
@@ -661,38 +649,14 @@ export default function Page() {
         (desktopReviewOpen() && (activeTab() === "review" || (newSessionDesign() && !!activeFileTab())))
       : store.mobileTab === "changes",
   )
-  const vcsMode = createMemo<VcsMode | undefined>(() => {
-    const mode = reviewMode()
-    if (mode === "git" || mode === "branch") return mode
-  })
-  const vcsKey = createMemo(
-    () =>
-      ["session-vcs", sdk().directory, sync().data.vcs?.branch ?? "", sync().data.vcs?.default_branch ?? ""] as const,
-  )
-  const vcsQuery = createQuery(() => {
-    const mode = vcsMode()
-    const enabled = wantsReview() && sync().project?.vcs === "git"
-
-    return {
-      queryKey: [...vcsKey(), mode] as const,
-      enabled,
-      queryFn: mode
-        ? () =>
-            sdk()
-              .api.vcs.diff({ location: { directory: sdk().directory }, mode: mode === "git" ? "working" : mode })
-              .then((result) => result.data)
-              .catch((error) => {
-                console.debug("[session-review] failed to load vcs diff", { mode, error })
-                return []
-              })
-        : skipToken,
-    }
-  })
-  const refreshVcs = debounce(() => void queryClient.invalidateQueries({ queryKey: vcsKey() }), 100)
+  const vcsReview = createSessionVcsReview({ mode: reviewMode, wantsReview })
+  const refreshVcs = vcsReview.refresh
+  const reviewFailed = vcsReview.failed
   const reviewDiffs = () => {
+    if (reviewFailed()) return []
     if (reviewMode() === "git" || reviewMode() === "branch")
       // avoids suspense
-      return vcsQuery.isFetched ? (vcsQuery.data ?? []) : []
+      return vcsReview.diffs()
     return turnDiffs()
   }
   const activeReviewFile = () => {
@@ -703,54 +667,8 @@ export default function Page() {
   }
   const reviewCount = () => reviewDiffs().length
   const hasReview = () => reviewCount() > 0
-  const reviewReady = () => {
-    if (reviewMode() === "git" || reviewMode() === "branch") return !vcsQuery.isPending
-    return true
-  }
-  const loadReviewDiff = async (file: string, version?: number): Promise<VcsFileDiff | undefined> => {
-    const mode = vcsMode()
-    if (!mode) return
-    const root = reviewRootDirectory(sync().project?.worktree ?? sdk().directory)
-    const directory = reviewDiffDirectory(root, file)
-    const source = reviewDiffs().find((diff) => diff.file === file)
-    const valid = (diff: VcsFileDiff | undefined) => {
-      if (!diff || !source) return
-      if (diff.additions !== source.additions || diff.deletions !== source.deletions) return
-      if (reviewDiffNeedsLoad(diff)) return
-      return diff
-    }
-    const request = (scope: string, context?: number) =>
-      queryClient
-        .fetchQuery({
-          queryKey: [serverSDK().scope, ...vcsKey(), mode, "directory", scope, context, version] as const,
-          staleTime: Number.POSITIVE_INFINITY,
-          retry: 2,
-          queryFn: () =>
-            sdk()
-              .api.vcs.diff({
-                location: { directory: scope },
-                mode: mode === "git" ? "working" : mode,
-                context,
-              })
-              .then((result) => result.data),
-        })
-        .then((diffs) => diffs.find((diff) => diff.file === file))
-
-    if (directory !== root) {
-      try {
-        const scoped = valid(await request(directory))
-        if (scoped) return scoped
-      } catch (error) {
-        console.debug("[session-review] failed to load scoped vcs diff", { mode, file, directory, error })
-      }
-    }
-    try {
-      const bounded = valid(await request(root, 3))
-      if (bounded) return bounded
-    } catch (error) {
-      console.debug("[session-review] failed to load bounded vcs diff", { mode, file, root, error })
-    }
-  }
+  const reviewReady = vcsReview.ready
+  const loadReviewDiff = vcsReview.loadDiff
 
   const newSessionWorktree = createMemo(() => {
     if (store.newSessionWorktree === "create") return "create"
@@ -1215,12 +1133,14 @@ export default function Page() {
   )
 
   const reviewEmptyText = createMemo(() => {
+    if (reviewFailed()) return language.t("common.requestFailed")
     if (reviewMode() === "git") return language.t("session.review.noUncommittedChanges")
     if (reviewMode() === "branch") return language.t("session.review.noBranchChanges")
     return language.t("session.review.noChanges")
   })
 
   const reviewEmpty = (input: { loadingClass: string; emptyClass: string }) => {
+    if (reviewFailed()) return reviewError()
     if (reviewMode() === "git" || reviewMode() === "branch") {
       if (!reviewReady()) return <div class={input.loadingClass}>{language.t("session.review.loadingChanges")}</div>
       return empty(reviewEmptyText())
@@ -1239,6 +1159,7 @@ export default function Page() {
   }
 
   const reviewEmptyV2 = () => {
+    if (reviewFailed()) return reviewError()
     if ((reviewMode() === "git" || reviewMode() === "branch") && !reviewReady()) {
       return <div class="px-6 py-4 text-text-weak">{language.t("session.review.loadingChanges")}</div>
     }
@@ -1247,6 +1168,8 @@ export default function Page() {
     }
     return <SessionReviewEmptyChangesV2 />
   }
+
+  const reviewError = vcsReview.error
 
   const reviewContent = (input: {
     diffStyle: DiffStyle
@@ -1297,7 +1220,7 @@ export default function Page() {
     diffs: reviewDiffs,
     diffsReady: reviewReady,
     get diffVersion() {
-      return vcsQuery.dataUpdatedAt
+      return vcsReview.query.dataUpdatedAt
     },
     loadDiff: loadReviewDiff,
     get activeFile() {
@@ -1707,6 +1630,14 @@ export default function Page() {
   const followupMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; id: string; manual?: boolean }) => {
       const owner = sessionOwnership.capture()
+      const directorySDK = sdk()
+      const server = serverSDK()
+      const directorySync = sync()
+      const state = serverSync()
+      const sessionID = params.id
+      const credentials = JSON.stringify(server.server.http)
+      const current = () => owner.current() && serverSDK() === server && sdk().scope === directorySDK.scope &&
+        sdk().directory === directorySDK.directory && params.id === sessionID && JSON.stringify(server.server.http) === credentials
       const item = (followup.items[input.sessionID] ?? []).find((entry) => entry.id === input.id)
       if (!item) return
 
@@ -1714,18 +1645,26 @@ export default function Page() {
       setFollowup("failed", input.sessionID, undefined)
 
       const ok = await sendFollowupDraft({
-        api: sdk().api.session,
-        sync: sync(),
-        serverSync: serverSync(),
-        draft: { ...item, system: await followupSystem(platform, sdk().scope, serverSync(), sdk().directory) },
-        optimisticBusy: item.sessionDirectory === sdk().directory,
+        api: directorySDK.api.session,
+        sync: directorySync,
+        serverSync: state,
+        draft: { ...item, system: await followupSystem(platform, directorySDK.scope, state, directorySDK.directory) },
+        optimisticBusy: item.sessionDirectory === directorySDK.directory,
+        deliberate: input.manual === true,
+        currentSource: {
+          serverScopeKey: directorySDK.scope, directory: directorySDK.directory, sessionID,
+          protocol: server.protocol, management: server.sessionManagement,
+          current,
+        },
       }).catch((err) => {
-        setFollowup("failed", input.sessionID, input.id)
+        if (current()) setFollowup("failed", input.sessionID, input.id)
         fail(err)
         return false
       })
+      if (ok === false && current()) setFollowup("failed", input.sessionID, input.id)
       if (!ok) return
 
+      if (item.source) queuedPromptSources.release(item.source)
       setFollowup("items", input.sessionID, (items) => (items ?? []).filter((entry) => entry.id !== input.id))
       if (input.manual) owner.run(resumeScroll)
     },
@@ -1767,7 +1706,7 @@ export default function Page() {
   const queueFollowup = (draft: FollowupDraft) => {
     setFollowup("items", draft.sessionID, (items) => [
       ...(items ?? []),
-      { id: Identifier.ascending("message"), ...draft },
+      queuedPromptPayload(draft, Identifier.ascending("message")),
     ])
     setFollowup("failed", draft.sessionID, undefined)
     setFollowup("paused", draft.sessionID, undefined)
@@ -1792,6 +1731,7 @@ export default function Page() {
     const item = queuedFollowups().find((entry) => entry.id === id)
     if (!item) return
 
+    if (item.source) queuedPromptSources.release(item.source)
     setFollowup("items", sessionID, (items) => (items ?? []).filter((entry) => entry.id !== id))
     setFollowup("failed", sessionID, (value) => (value === id ? undefined : value))
     setFollowup("edit", sessionID, {

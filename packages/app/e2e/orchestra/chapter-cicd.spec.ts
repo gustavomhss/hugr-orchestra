@@ -340,9 +340,7 @@ for (const protocol of ["v1", "v2"] as const) {
   })
 }
 
-test("a failing run skips deployment; Stop is best effort and a cancelled run cannot complete later", async ({
-  page,
-}) => {
+test("a failing run skips deployment; confirmed cancellation cannot complete later", async ({ page }) => {
   await setup(page)
   const pty = await mockPty(page, "v2")
   await openChapter(page)
@@ -360,7 +358,6 @@ test("a failing run skips deployment; Stop is best effort and a cancelled run ca
   await page.keyboard.press("Escape")
 
   pty.reset()
-  pty.removeFailure = true
   await card.getByRole("button", { name: "Run", exact: true }).click()
   await expect.poll(() => pty.inputs).toEqual(["\r"])
   pty.sockets[0]!.send("partial\r\n")
@@ -373,9 +370,7 @@ test("a failing run skips deployment; Stop is best effort and a cancelled run ca
   // The process ends late on the server; the cancelled run must not become Passed.
   pty.exit(0)
   await card.getByRole("button", { name: "Logs", exact: true }).click()
-  await expect(page.locator('[data-slot="cicd-log"]')).toHaveText(
-    /^Run 2 · .+\npartial\nCancelled by you\.\nCould not stop the process: .+\. It may still be running on the server\.$/s,
-  )
+  await expect(page.locator('[data-slot="cicd-log"]')).toHaveText(/^Run 2 · .+\npartial\nCancelled by you\.$/s)
   await page.keyboard.press("Escape")
   await expect(card.locator(".mx-badge").first()).toHaveText("Cancelled")
   await page.reload()
@@ -383,6 +378,99 @@ test("a failing run skips deployment; Stop is best effort and a cancelled run ca
   expect(pty.gets).toBe(0)
   expect(pty.sockets).toHaveLength(1)
 })
+
+for (const protocol of ["v1", "v2"] as const) {
+  for (const failure of ["http", "network"] as const) {
+    test(`${protocol}: audit: stop ${failure} failure retains ownership and retry targets the same PTY`, async ({
+      page,
+    }) => {
+      await setup(page, { protocol })
+      const pty = await mockPty(page, protocol)
+      const prefix = protocol === "v1" ? "/pty" : "/api/pty"
+      const gate = Promise.withResolvers<void>()
+      const started = Promise.withResolvers<void>()
+      const fault = { fail: true, deletes: [] as string[] }
+      await page.route(
+        (url) => url.origin === serverA && url.pathname === `${prefix}/pty_cicd`,
+        async (route) => {
+          if (route.request().method() !== "DELETE") return route.fallback()
+          fault.deletes.push(new URL(route.request().url()).pathname)
+          if (!fault.fail) return route.fallback()
+          started.resolve()
+          await gate.promise
+          if (failure === "network") return route.abort("failed")
+          return route.fulfill({ status: 500, json: { message: "Stop denied" } })
+        },
+      )
+      await openChapter(page)
+      await createPipeline(page, { deploy: false })
+      const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
+      await card.getByRole("button", { name: "Run", exact: true }).click()
+      await expect.poll(() => pty.inputs).toEqual(["\r"])
+      await card.getByRole("button", { name: "Stop", exact: true }).click()
+      await started.promise
+      await expect(card.getByRole("button", { name: "Stopping…", exact: true })).toBeDisabled()
+      await expect(card.getByText("Running", { exact: true })).toBeVisible()
+      gate.resolve()
+      await expect(card.getByRole("alert")).toContainText("Could not stop the process:")
+      await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
+      await expect(card.getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
+      await expect(card.getByText("Cancelled", { exact: true })).toHaveCount(0)
+      // Removing a live pipeline must not discard the only PTY owner either.
+      await card.getByRole("button", { name: "Edit", exact: true }).click()
+      await page.getByRole("dialog").getByRole("button", { name: "Remove pipeline", exact: true }).click()
+      await page.getByRole("dialog").getByRole("button", { name: "Confirm", exact: true }).click()
+      await expect(page.getByRole("dialog").getByRole("alert")).toHaveText("Stop this pipeline before removing it.")
+      await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
+      fault.fail = false
+      await card.getByRole("button", { name: "Retry stop", exact: true }).click()
+      await expect(card.getByText("Cancelled", { exact: true })).toBeVisible()
+      await expect(card.getByRole("button", { name: "Run", exact: true })).toBeEnabled()
+      expect(fault.deletes).toEqual([`${prefix}/pty_cicd`, `${prefix}/pty_cicd`])
+      expect(pty.creates).toHaveLength(1)
+    })
+  }
+
+  test(`${protocol}: audit: stopping during delayed PTY creation waits for termination`, async ({ page }) => {
+    await setup(page, { protocol })
+    const pty = await mockPty(page, protocol)
+    const prefix = protocol === "v1" ? "/pty" : "/api/pty"
+    const gate = Promise.withResolvers<void>()
+    const started = Promise.withResolvers<void>()
+    await page.route(
+      (url) => url.origin === serverA && url.pathname === prefix,
+      async (route) => {
+        if (route.request().method() !== "POST") return route.fallback()
+        started.resolve()
+        await gate.promise
+        return route.fallback()
+      },
+    )
+    pty.removeFailure = true
+    await openChapter(page)
+    await createPipeline(page, { deploy: false })
+    const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
+    await card.getByRole("button", { name: "Run", exact: true }).click()
+    await started.promise
+    await card.getByRole("button", { name: "Stop", exact: true }).click()
+    await expect(card.getByRole("button", { name: "Stopping…", exact: true })).toBeDisabled()
+    gate.resolve()
+    await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
+    expect(pty.removed).toEqual(["pty_cicd"])
+    await expect.poll(() => pty.connections.length).toBe(1)
+    expect(pty.inputs).toEqual([])
+    // The failed stop's persisted identity survives a fresh page lifetime.
+    await page.reload()
+    await expect(card.getByRole("button", { name: "Retry stop", exact: true })).toBeEnabled()
+    await expect.poll(() => pty.connections.length).toBe(2)
+    expect(pty.inputs).toEqual([])
+    pty.removeFailure = false
+    await card.getByRole("button", { name: "Retry stop", exact: true }).click()
+    await expect(card.getByText("Cancelled", { exact: true })).toBeVisible()
+    expect(pty.removed).toEqual(["pty_cicd", "pty_cicd"])
+    expect(pty.creates).toHaveLength(1)
+  })
+}
 
 for (const [protocol, outcome] of [
   ["v2", "gone"],

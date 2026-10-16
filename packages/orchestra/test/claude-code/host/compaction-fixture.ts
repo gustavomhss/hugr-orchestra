@@ -17,6 +17,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect } from "effect"
 import { Agent } from "@/agent/agent"
 import { BackgroundJob } from "@/background/job"
+import { ClaudeHostGate } from "@/claude-code/host/gate"
 import { ClaudeHostHooks } from "@/claude-code/host/hooks"
 import { ClaudeHostJoin } from "@/claude-code/host/join"
 import { ClaudeHostMirror } from "@/claude-code/host/mirror"
@@ -79,7 +80,14 @@ export const make = Effect.fnUntraced(function* (input: {
   const fire = (event: HookInput, signal = abort.signal) => {
     const callback = hooks[event.hook_event_name]?.[0]?.hooks[0]
     if (!callback) throw new Error(`Missing ${event.hook_event_name} callback`)
-    return Effect.promise(() => callback(event, undefined, { signal }))
+    return Effect.promise(() => callback(event, undefined, { signal })).pipe(
+      Effect.tap((output) =>
+        Effect.sync(() => {
+          if (event.hook_event_name === "PreToolUse" && event.tool_name === "Agent" && ClaudeHostGate.denied(output))
+            console.error("Compaction fixture dispatch denied:", JSON.stringify(output))
+        }),
+      ),
+    )
   }
   const base = { session_id: `native-${chat.id}`, transcript_path: path.join(chat.directory, "native.jsonl"), cwd: chat.directory }
   const compact = (sessionID = base.session_id, signal = abort.signal, agentID?: string) =>

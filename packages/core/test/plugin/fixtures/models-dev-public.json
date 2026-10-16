@@ -1,0 +1,102 @@
+{
+  "deepinfra": {
+    "id": "deepinfra",
+    "env": ["DEEPINFRA_API_KEY"],
+    "npm": "@ai-sdk/deepinfra",
+    "name": "Deep Infra",
+    "doc": "https://deepinfra.com/models",
+    "models": {
+      "meta-llama/Llama-3.3-70B-Instruct-Turbo": {
+        "id": "meta-llama/Llama-3.3-70B-Instruct-Turbo",
+        "name": "Llama 3.3 70B Turbo",
+        "description": "Compact Llama instruction model for fast chat and local deployment",
+        "family": "llama",
+        "attachment": false,
+        "reasoning": false,
+        "tool_call": true,
+        "structured_output": true,
+        "release_date": "2024-12-06",
+        "last_updated": "2024-12-06",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": true,
+        "limit": { "context": 131072, "output": 16384 },
+        "cost": { "input": 0.1, "output": 0.32 }
+      },
+      "tencent/Hy3": {
+        "id": "tencent/Hy3",
+        "name": "Hy3",
+        "description": "Tencent Hy reasoning model for coding, instruction following, and agent tasks",
+        "family": "Hy",
+        "attachment": false,
+        "reasoning": true,
+        "reasoning_options": [],
+        "tool_call": true,
+        "structured_output": true,
+        "temperature": true,
+        "release_date": "2026-07-06",
+        "last_updated": "2026-07-06",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": true,
+        "limit": { "context": 262144, "input": 192000, "output": 128000 },
+        "status": "deprecated",
+        "cost": { "input": 0.13, "output": 0.53, "cache_read": 0.033 },
+        "canonical_model_id": "tencent/hy3"
+      }
+    }
+  },
+  "poe": {
+    "id": "poe",
+    "env": ["POE_API_KEY"],
+    "npm": "@ai-sdk/openai-compatible",
+    "api": "https://api.poe.com/v1",
+    "name": "Poe",
+    "doc": "https://creator.poe.com/docs/external-applications/openai-compatible-api",
+    "models": {
+      "cerebras/qwen3-32b-cs": {
+        "id": "cerebras/qwen3-32b-cs",
+        "name": "qwen3-32b-cs",
+        "description": "Legacy model retained for compatibility with older integrations",
+        "attachment": true,
+        "reasoning": true,
+        "reasoning_options": [],
+        "tool_call": true,
+        "temperature": false,
+        "release_date": "2025-05-15",
+        "last_updated": "2025-05-15",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": false,
+        "limit": { "context": 0, "output": 0 },
+        "status": "deprecated"
+      }
+    }
+  },
+  "opencode": {
+    "id": "opencode",
+    "env": ["OPENCODE_API_KEY"],
+    "npm": "@ai-sdk/openai-compatible",
+    "api": "https://opencode.ai/inference/v1",
+    "name": "OpenCode",
+    "doc": "https://opencode.ai/v2/docs/console/models/",
+    "models": {
+      "ling-3.0-flash-fin-free": {
+        "id": "ling-3.0-flash-fin-free",
+        "name": "Ling 3.0 Flash Fin Free",
+        "description": "Finance-enhanced model for financial research, multi-step investment workflows, and long-horizon planning and execution",
+        "family": "ling",
+        "attachment": false,
+        "reasoning": true,
+        "reasoning_options": [{ "type": "toggle" }],
+        "tool_call": true,
+        "structured_output": false,
+        "temperature": true,
+        "release_date": "2026-08-27",
+        "last_updated": "2026-09-03",
+        "modalities": { "input": ["text"], "output": ["text"] },
+        "open_weights": true,
+        "limit": { "context": 262144, "output": 32768 },
+        "cost": { "input": 0, "output": 0, "cache_read": 0 },
+        "canonical_model_id": "inclusionai/ling-3.0-flash-fin"
+      }
+    }
+  }
+}

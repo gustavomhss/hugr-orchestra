@@ -22,6 +22,7 @@ describe("legacy public event schemas", () => {
     ])
     const durable = SessionV1.Event.Definitions.filter((event) => event.durable !== undefined)
     expect(durable).toHaveLength(8)
+    expect(durable.find((event) => event.type === "session.v1.prompt.admitted")).toBe(SessionV1.Event.PromptAdmitted)
     expect(durable.every((event) => event.durable?.aggregate === "sessionID")).toBe(true)
     expect(durable.every((event) => event.durable?.version === 1)).toBe(true)
   })

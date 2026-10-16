@@ -22,7 +22,6 @@ import { Global } from "../src/global"
 import { Location } from "../src/location"
 import { PermissionV2 } from "../src/permission"
 import { Project } from "../src/project"
-import { ProjectTable } from "../src/project/sql"
 import { ReferenceGuidance } from "../src/reference/guidance"
 import { Relay } from "../src/relay"
 import { RelayHookInstall } from "../src/relay-hook-install"
@@ -36,7 +35,6 @@ import { SessionRunner } from "../src/session/runner"
 import { node } from "../src/session/runner/llm"
 import { SessionRunnerModel } from "../src/session/runner/model"
 import { SessionSchema } from "../src/session/schema"
-import { SessionTable } from "../src/session/sql"
 import { SessionStore } from "../src/session/store"
 import { SkillGuidance } from "../src/skill/guidance"
 import { Snapshot } from "../src/snapshot"
@@ -215,6 +213,7 @@ function sessions<A, E>(
       SessionStore.node,
       FSUtil.node,
       SessionV2.node,
+      SessionExecution.node,
     ]),
     [
       [SessionExecution.node, execution],
@@ -413,7 +412,7 @@ const model = Model.make({ id: "fake-model", provider: "fake", route: OpenAIChat
 
 function runner<A, E>(
   dirs: Dirs,
-  body: Effect.Effect<A, E, SessionRunner.Service | Database.Service | FSUtil.Service>,
+  body: Effect.Effect<A, E, SessionV2.Service | SessionRunner.Service | Database.Service | FSUtil.Service>,
 ) {
   const directory = AbsolutePath.make(dirs.work)
   const layer = AppNodeBuilder.build(
@@ -425,8 +424,11 @@ function runner<A, E>(
       FSUtil.node,
       Relay.node,
       node,
+      SessionV2.node,
+      SessionExecution.node,
     ]),
     [
+      [SessionExecution.node, SessionExecution.noopLayer],
       [Snapshot.node, Snapshot.noopLayer],
       [LayerNodePlatform.llmClient, client],
       [SessionRunnerModel.node, SessionRunnerModel.layerWith(() => Effect.succeed(model))],
@@ -465,29 +467,14 @@ describe("Relay hooks when a V2 drain settles", () => {
             ]),
           )
           const sessionID = SessionSchema.ID.make(`ses_idle_${randomUUID().replaceAll("-", "")}`)
-          const { db } = yield* Database.Service
-          yield* db
-            .insert(ProjectTable)
-            .values({ id: projectID, worktree: AbsolutePath.make(dirs.work), sandboxes: [] })
-            .onConflictDoNothing()
-            .run()
-            .pipe(Effect.orDie)
-          yield* db
-            .insert(SessionTable)
-            .values({
-              id: sessionID,
-              project_id: projectID,
-              slug: "idle",
-              directory: dirs.work,
-              title: "idle",
-              version: "test",
-            })
-            .run()
-            .pipe(Effect.orDie)
+          const sessions = yield* SessionV2.Service
+          yield* sessions.create({ id: sessionID, location: { directory: AbsolutePath.make(dirs.work) } })
           const run = (force: boolean) => SessionRunner.Service.use((runner) => runner.run({ sessionID, force }))
           // Nothing pending and no force: no drain, so no idle.
           yield* run(false)
           expect(yield* decisions(sessionID)).toEqual([])
+          yield* sessions.prompt({ sessionID, prompt: { text: "Finish the drain" }, resume: false })
+          expect(yield* sessions.messages({ sessionID })).toEqual([])
           // The Repair has no result to fail after the drain: the drain still succeeds.
           expect(Exit.isSuccess(yield* run(true).pipe(Effect.exit))).toBe(true)
           const decided = yield* decisions(sessionID)

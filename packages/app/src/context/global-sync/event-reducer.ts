@@ -16,7 +16,8 @@ import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"
 import { diffs as list, message as clean } from "@/utils/diffs"
 import { messageKey } from "@/utils/session-message"
-import { applySessionManagementEvent, mergeSessionManagementInfo, type AppSession, type SessionManagementEvent } from "@/utils/session"
+import { applySessionManagementEvent, decodeSessionManagementEvent, mergeSessionManagementInfo, type AppSession } from "@/utils/session"
+import { sessionManagementFences } from "../session-management-state"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])
 const SESSION_CONTENT_EVENTS = new Set([
@@ -108,8 +109,7 @@ export function cleanupDroppedSessionCaches(
 }
 
 export function applyDirectoryEvent(input: {
-  event: SessionManagementEvent
-  readSession?: (id: string) => AppSession | undefined
+  event: { type: string; properties?: unknown; current?: unknown }
   store: Store<State>
   setStore: SetStoreFunction<State>
   push: (directory: string) => void
@@ -121,40 +121,50 @@ export function applyDirectoryEvent(input: {
   retainedLimit?: number
   sessionContent?: boolean
   permission?: State["permission"]
+  fenceOwner?: object
+  readSession?: (sessionID: string) => AppSession | undefined
 }) {
   const event = input.event
   if (input.sessionContent === false && SESSION_CONTENT_EVENTS.has(event.type)) return
   const limit = Math.max(input.store.limit, input.retainedLimit ?? 0)
+  const fences = sessionManagementFences(input.fenceOwner ?? input.store, input.directory)
   switch (event.type) {
     case "server.instance.disposed": {
       input.push(input.directory)
       return
     }
     case "session.created": {
-      const snapshot = (event.properties as { info: AppSession }).info
-      const result = Binary.search(input.store.session, snapshot.id, (s) => s.id)
-      const info = mergeSessionManagementInfo(input.readSession?.(snapshot.id),
-        mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, snapshot))
+      const incoming = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
+      const info = fences.merge(
+        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
+        result.found ? input.store.session[result.index] : undefined,
+      )
+      if (info.time.archived !== undefined) {
+        if (result.found) applyDirectoryEvent({ ...input, event: { type: "session.updated", properties: { info } } })
+        break
+      }
       if (result.found) {
         input.setStore("session", result.index, reconcile(info))
         break
       }
       const next = input.store.session.slice()
       next.splice(result.index, 0, info)
-      const trimmed = trimSessions(next, { limit, permission: input.permission ?? input.store.permission })
+      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
       input.setStore("session", reconcile(trimmed, { key: "id" }))
       cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
       if (!info.parentID) input.setStore("sessionTotal", (value) => value + 1)
       break
     }
     case "session.updated": {
-      const snapshot = (event.properties as { info: AppSession }).info
-      const result = Binary.search(input.store.session, snapshot.id, (s) => s.id)
-      const info = mergeSessionManagementInfo(input.readSession?.(snapshot.id),
-        mergeSessionManagementInfo(result.found ? input.store.session[result.index] : undefined, snapshot))
-      if (info.time.archived) {
+      const incoming = (event.properties as { info: AppSession }).info
+      const result = Binary.search(input.store.session, incoming.id, (s) => s.id)
+      const info = fences.merge(
+        mergeSessionManagementInfo(input.readSession?.(incoming.id), incoming),
+        result.found ? input.store.session[result.index] : undefined,
+      )
+      if (info.time.archived !== undefined) {
         if (!result.found) break
-        if (input.store.session[result.index]!.time.archived === info.time.archived) break
         input.setStore(
           "session",
           produce((draft) => {
@@ -172,7 +182,7 @@ export function applyDirectoryEvent(input: {
       }
       const next = input.store.session.slice()
       next.splice(result.index, 0, info)
-      const trimmed = trimSessions(next, { limit, permission: input.permission ?? input.store.permission })
+      const trimmed = trimSessions(fences.visible(next), { limit, permission: input.permission ?? input.store.permission })
       input.setStore("session", reconcile(trimmed, { key: "id" }))
       cleanupDroppedSessionCaches(input.store, input.setStore, trimmed, input.setSessionTodo)
       break
@@ -181,6 +191,7 @@ export function applyDirectoryEvent(input: {
       const properties = event.properties as { sessionID?: string; info?: Session }
       const sessionID = properties.info?.id ?? properties.sessionID
       if (!sessionID) break
+      fences.delete(sessionID)
       const result = Binary.search(input.store.session, sessionID, (s) => s.id)
       const info = properties.info ?? (result.found ? input.store.session[result.index] : undefined)
       if (result.found) {
@@ -218,31 +229,31 @@ export function applyDirectoryEvent(input: {
       }))
       break
     }
-    case "session.next.subagent.models.changed": {
-      const properties = event.properties
-      if (!properties || typeof properties !== "object" || !("sessionID" in properties) || typeof properties.sessionID !== "string") break
+    case "session.next.subagent.models.changed":
+    case "session.next.archive.changed": {
+      const decoded = decodeSessionManagementEvent(event)
+      if (!decoded) break
+      const properties = decoded.properties
       const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-      const row = input.store.session[result.index]
-      if (!result.found || !row) break
-      const current = mergeSessionManagementInfo(input.readSession?.(row.id), row)
-      const next = applySessionManagementEvent(current, event)
-      // The server store may already hold this same sequence; still forward its fenced row to the directory.
-      input.setStore("session", result.index, reconcile(next ?? current))
+      if (!result.found) {
+        // Metadata must outlive an absent row while an authoritative list is pending.
+        if (fences.apply(decoded) && event.type === "session.next.archive.changed") input.push(input.directory)
+        break
+      }
+      const row = input.store.session[result.index]!
+      const current = fences.merge(row, input.readSession?.(row.id))
+      const changed = applySessionManagementEvent(current, decoded)
+      // Server and directory stores can share a row that this event already updated.
+      const info = changed ? fences.merge(changed, current) : current
+      if (info.time.archived !== undefined) {
+        input.setStore("session", produce((draft) => void draft.splice(result.index, 1)))
+        cleanupSessionCaches(input.setStore, info.id, input.setSessionTodo)
+        if (!info.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
+        break
+      }
+      input.setStore("session", result.index, reconcile(info))
       break
     }
-    // case "session.archived": {
-    //   const properties = event.properties as { sessionID: string }
-    //   const result = Binary.search(input.store.session, properties.sessionID, (session) => session.id)
-    //   if (!result.found) break
-    //   const info = input.store.session[result.index]
-    //   input.setStore(
-    //     "session",
-    //     produce((draft) => void draft.splice(result.index, 1)),
-    //   )
-    //   cleanupSessionCaches(input.setStore, properties.sessionID)
-    //   if (!info?.parentID) input.setStore("sessionTotal", (value) => Math.max(0, value - 1))
-    //   break
-    // }
     case "session.moved": {
       const properties = event.properties as {
         sessionID: string

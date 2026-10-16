@@ -4,7 +4,7 @@ import fs from "node:fs/promises"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Layer, Schema } from "effect"
-import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
+import { NativeSessionFixture } from "../../fixture/native-session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { SessionProjector } from "@orchestra/core/session/projector"
@@ -59,7 +59,7 @@ const sourceRoots = await Promise.all(Object.values(Seats.all).filter((seat) => 
   return { id: seat.id, path: source, available }
 }))
 const skillFiles = await SeatSkillContent.read("jimmy", skillRoot, Seats.all.jimmy.skills)
-const layer = AppNodeBuilderV1.build(LayerNode.group([
+const layer = NativeSessionFixture.legacy(LayerNode.group([
   Agent.node, InstanceStore.node, Session.node, SessionProjector.node, Permission.node, Skill.node,
   ToolRegistry.node, ResearchExecution.node, ResearchRecords.node, Database.node, FSUtil.node, EventV2Bridge.node,
   ResearchArtifacts.node, EventV2.node, Provider.node, SessionPrompt.node,

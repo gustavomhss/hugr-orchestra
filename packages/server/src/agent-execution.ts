@@ -1,10 +1,12 @@
 export * as AgentExecution from "./agent-execution"
 
-import { Context, Effect } from "effect"
 import type { Agent } from "@orchestra/schema/agent"
 import type { Location } from "@orchestra/core/location"
+import { Context, Effect } from "effect"
 
-/** Applications may annotate registry execution facts without changing Core agent selection. */
+/** Hosts may annotate their actual execution engine without changing the Core agent registry. */
 export const Annotate = Context.Reference<
-  (agents: Agent.Info[]) => Effect.Effect<Agent.Info[], never, Location.Service>
->("@orchestra/server/AgentExecution/Annotate", { defaultValue: () => (agents) => Effect.succeed(agents) })
+  (agents: readonly Agent.Info[]) => Effect.Effect<Agent.Info[], never, Location.Service>
+>("@orchestra/server/AgentExecution/Annotate", {
+  defaultValue: () => (agents) => Effect.succeed([...agents]),
+})
