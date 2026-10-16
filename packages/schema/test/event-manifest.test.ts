@@ -28,7 +28,7 @@ describe("public event manifest", () => {
       SessionV1.Event.Error,
     ])
     expect(EventManifest.Latest.size).toBe(108)
-    expect(EventManifest.Durable.size).toBe(70)
+    expect(EventManifest.Durable.size).toBe(71)
   })
 
   test("owns canonical research definitions only on the durable surface", () => {
