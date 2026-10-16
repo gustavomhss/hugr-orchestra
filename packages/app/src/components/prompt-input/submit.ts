@@ -109,7 +109,7 @@ export async function submitShellCommand(input: {
 }) {
   if (input.signal?.aborted || input.current?.() === false) return false
   if ((await input.before?.()) === false || input.signal?.aborted || input.current?.() === false) return false
-  const send = (request = input.request) => {
+  const send = (request = input.request, current = () => !input.signal?.aborted && input.current?.() !== false) => {
     const shell = request?.shell ?? {
       sessionID: input.sessionID,
       id: request ? Event.ID.make(request.id) : Event.ID.create(),
@@ -118,6 +118,7 @@ export async function submitShellCommand(input: {
       model: input.model,
     }
     if (request) request.shell = shell
+    if (!current()) return Promise.resolve(false)
     return input.api.shell(shell, { signal: input.signal })
   }
   if (input.dispatch) return input.dispatch(send)
@@ -201,8 +202,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const serverState = serverSync()
     const key = sessionID ? undefined : input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
     const target = sessionID ? undefined : prompt.capture()
+    const creating = target && key ? sourceAdmission(target, key).source : undefined
     input.onAbort?.()
     if (sessionID) return interruptPendingSession(source.scope, sessionID, source.api.session, serverState)
+    creating?.selections.forEach((admission) => admission.abort?.abort())
     const drafts = [...pending.values()].flatMap((jobs) => [...jobs].flatMap((job) => {
       const draft = job.draft
       return draft && draft.key === key && draft.target === target && draft.scope === source.scope &&
@@ -229,6 +232,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 
   const submit = async (target: PromptTarget, admission: Admission) => {
     const owner = ownership.capture()
+    const controller = new AbortController()
+    admission.abort = controller
     const promptRevision = target.current()
     const submission = createPromptSubmissionState({
       target,
@@ -315,7 +320,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         }
         sessionDirectory = createdWorktree.directory
         admission.directory = sessionDirectory
-        if (!ownsSource()) return false
+        if (!ownsSource() || controller.signal.aborted) return false
         WorktreeState.pending(directorySDK.scope, sessionDirectory)
       }
 
@@ -361,7 +366,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         session = created
       }
     }
-    if (!ownsSource()) return false
+    if (!ownsSource() || controller.signal.aborted) return false
     if (!session) {
       showToast({
         title: language.t("prompt.toast.promptSendFailed.title"),
@@ -419,7 +424,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       if (ownsSource()) syncState.session.optimistic.remove({ directory: sessionDirectory, sessionID: session.id,
         messageID: isNewSession ? admission.request?.id ?? messageID : messageID })
     }
-    const controller = new AbortController()
     admission.cleanup = trackPendingPrompt(directorySDK.scope, session.id, {
       abort: controller,
       cleanup: () => { removeOptimisticMessage(); restoreInput() },
@@ -486,8 +490,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         const request = selectRequest()
         if (!request.admitted) {
           request.revision = receipt.revision
-          // Keep the final owner/revision fence synchronous with the captured API call.
-          await send(request)
+          // Store observers can change ownership or policy; validate again after those mutations, at the API call.
+          const sent = await send(request, () => ownsSource() && !controller.signal.aborted && pendingSnapshot(rulesKey).revision === receipt.revision)
+          if (sent === false) continue
           request.admitted = true
         }
         return true
@@ -648,7 +653,9 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       current.source.setBusy(true)
       return submit(target, admission).finally(() => {
         admission.cleanup?.()
+        admission.abort = undefined
         current.source.setBusy(false)
+        // Mutation probe: retain promoted admissions.
       })
     },
   }

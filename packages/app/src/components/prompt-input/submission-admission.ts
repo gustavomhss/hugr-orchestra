@@ -13,6 +13,7 @@ export type Admission = {
   acknowledgedPolicy?: SubagentModelPolicy
   failedWrite?: FailedPolicyWrite
   cleanup?: VoidFunction
+  abort?: AbortController
   request?: AdmissionRequest
   promoted?: boolean
 }

@@ -237,7 +237,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
         return false
       }
       const messageID = input.request?.id ?? input.messageID ?? Identifier.ascending("message")
-      const send = (request = input.request) => {
+      const send = (request = input.request, ready = current) => {
         const command = request?.command ?? {
           sessionID: input.draft.sessionID,
           id: request?.id ?? messageID,
@@ -253,10 +253,13 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           files,
         }
         if (request) request.command = command
-        setBusy()
+        if (request) setBusy()
+        if (!ready()) return Promise.resolve(false)
         return input.api.command(command, { signal: input.signal })
       }
       if (input.dispatch) return await input.dispatch(send)
+      setBusy()
+      if (!(await wait())) { setIdle(); return false }
       await send()
       return true
     } catch (err) {
@@ -328,7 +331,7 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
       return false
     }
 
-    const send = (request?: AdmissionRequest) => {
+    const send = (request?: AdmissionRequest, ready = current) => {
       if (request) {
         if (!request.preparation) {
           // A new policy revision is a new action; request and optimistic part IDs move together.
@@ -346,6 +349,10 @@ export async function sendFollowupRequest(input: FollowupSendInput) {
           setBusy()
           add()
         })
+      }
+      if (!ready()) {
+        if (current()) batch(() => { setIdle(); remove() })
+        return Promise.resolve(false)
       }
       const requestParts = prepared.value.requestParts
       return input.api.prompt({

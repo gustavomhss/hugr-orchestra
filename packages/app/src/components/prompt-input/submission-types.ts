@@ -18,7 +18,7 @@ export type AdmissionRequest = {
   shell?: Parameters<DirectorySDK["api"]["session"]["shell"]>[0]
 }
 
-export type PromptDispatch = (send: (request: AdmissionRequest) => Promise<unknown>) => Promise<boolean>
+export type PromptDispatch = (send: (request: AdmissionRequest, current: () => boolean) => Promise<unknown>) => Promise<boolean>
 
 export type FollowupDraft = {
   sessionID: string

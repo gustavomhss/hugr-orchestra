@@ -123,7 +123,11 @@ test("failed exact retry reuses wire preparation, attachment bytes, optimistic p
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
   const first = promptInputs[0] as { id: string; legacyParts: { id: string }[]; system?: string; files: { uri: string }[]; agents: unknown[] }
   const serialized = JSON.stringify(first)
-  expect(first.legacyParts.length).toBeGreaterThan(4)
+  expect(first.legacyParts).toEqual(expect.arrayContaining([
+    expect.objectContaining({ type: "text" }),
+    expect.objectContaining({ type: "file" }),
+    expect.objectContaining({ type: "agent" }),
+  ]))
   expect(first.files).toContainEqual(expect.objectContaining({ uri: "data:image/png;base64,aGk=" }))
   expect(first.agents).toContainEqual(expect.objectContaining({ name: "backend" }))
   expect(optimistic[0]?.parts.map((part) => part.id)).toEqual(first.legacyParts.map((part) => part.id))

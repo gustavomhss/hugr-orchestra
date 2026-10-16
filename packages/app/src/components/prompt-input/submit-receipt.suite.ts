@@ -216,3 +216,75 @@ test.skipIf(isServer).each(["create", "POST"])("owner server ABA during %s expir
   expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
   root.dispose()
 })
+
+test("a completed workspace draft cannot adopt its promoted Session on the next new-session visit", async () => {
+  const real = createPromptState({ prompt: "first workspace draft" })
+  const input = { ...submitInput(), prompt: real, info: () => undefined }
+  await createPromptSubmit(input).handleSubmit(new Event("submit"))
+  expect(state.params.id).toBe("session-1")
+  state.params.id = undefined
+  state.sdkOverride = undefined
+  policyFixture.sdk = sdkFor("/repo/main", policyFixture.server)
+  real.set([{ type: "text", content: "next workspace draft", start: 0, end: 20 }])
+  await createPromptSubmit(input).handleSubmit(new Event("submit"))
+  expect(createdSessions).toEqual(["/repo/main", "/repo/main"])
+  expect(promptInputs).toEqual([
+    expect.objectContaining({ sessionID: "session-1", text: "first workspace draft" }),
+    expect.objectContaining({ sessionID: "session-2", text: "next workspace draft" }),
+  ])
+  expect(String(state.params.id)).toBe("session-2")
+})
+
+test.each(["prompt", "command"])("%s rejoins policy ACK when optimistic store observers edit the final revision", async (pathway) => {
+  const key = draftSessionKey(ServerScope.local, "/repo/main")
+  commands.push({ name: "review" })
+  const changed = { value: false }
+  state.statusObserved = () => {
+    if (changed.value) return
+    changed.value = true
+    togglePending(key, "provider", "last-boundary-model", true)
+  }
+  const real = createPromptState({ prompt: pathway === "command" ? "/review final boundary" : "final boundary" })
+  state.sendHook = async () => {
+    expect(policyFixture.server.sessionManagement.subagentModelsWriteVersion("session-1")).toBeGreaterThan(0)
+  }
+  await createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key }).handleSubmit(new Event("submit"))
+  expect(changed.value).toBe(true)
+  expect(promptInputs.length + sentCommands.length).toBe(1)
+  expect(pendingSnapshot(key).revision).toBe(0)
+})
+
+test.each(["prompt", "command"])("%s never dispatches after an optimistic store observer changes owner", async (pathway) => {
+  commands.push({ name: "review" })
+  const foreign = serverFor(ServerScope.fromServerKey(ServerConnection.Key.make("final-observer-foreign")))
+  state.statusObserved = () => {
+    policyFixture.server = foreign
+    policyFixture.sdk = sdkFor("/foreign", foreign)
+  }
+  const real = createPromptState({ prompt: pathway === "command" ? "/review final owner" : "final owner" })
+  await createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined }).handleSubmit(new Event("submit"))
+  expect(createdSessions).toHaveLength(1)
+  expect(promptInputs).toEqual([])
+  expect(sentCommands).toEqual([])
+  expect(promoted).toEqual([])
+})
+
+test("abort during initial Session creation retains its late receipt without dispatch; deliberate retry adopts it", async () => {
+  const gate = Promise.withResolvers<void>()
+  state.createSessionGate = gate.promise
+  const real = createPromptState({ prompt: "cancel initial creation" })
+  const contents = real.current()
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await state.createStarted.promise
+  await submit.abort()
+  gate.resolve()
+  await sending
+  expect(promptInputs).toEqual([])
+  expect(promoted).toEqual([])
+  expect(real.current()).toBe(contents)
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toEqual(["/repo/main"])
+  expect(promptInputs).toHaveLength(1)
+  expect(promoted).toHaveLength(1)
+})
