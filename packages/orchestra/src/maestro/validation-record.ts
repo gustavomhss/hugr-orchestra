@@ -171,8 +171,11 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["a3299fc84b55ea2db06883778675d0f7747c0a585f26f815efd7a9db06f1f98c", ROSTER_V2],
   // Before Jimmy's charter documented retained-source reads and the native tool/result-card shapes.
   ["6a1f034e0bb11b6ba2962716b087effe72b591f292a06c823595b97690dcebac", ROSTER_V2],
-  // Before the upstream authoring seat gained native Atlas context and drill closure.
+  // Before the upstream authoring seat gained native Atlas context and drill closure, and became a native Atlas
+  // Memory owner holding the direct Atlas context door.
   ["d5ea1eb8112a6e6dcf67a28bc78e8f9298ca15f9fecad67d4b31018405730346", ROSTER_V2],
+  // Before the archie seat anchored Atlas knowledge to assignments and work packages (dev 1d69eb7c7).
+  ["2651606b1bc8c46808086482c7b71297733573306096b641a6e24c7efe78382f", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],

@@ -25,6 +25,7 @@ import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { ArsenalCompletion } from "./arsenal-completion"
+import { AtlasKnowledge } from "./atlas-knowledge"
 import { readAtlasSource } from "./atlas-source"
 import { recordApproval } from "./approval-record"
 import { readAuthorization } from "./authorization"
@@ -50,6 +51,7 @@ export type Requirements =
   | Git.Service
   | FileSystem.FileSystem
   | EventV2Bridge.Service
+  | AtlasKnowledge.Service
 
 export interface Dependencies {
   readonly database: Database.Interface
@@ -128,8 +130,14 @@ export function make(deps: Dependencies) {
       if (path.basename(relay.paths.root) !== placement.projectID)
         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_PROJECT_MISMATCH" })
       const catalog = yield* deps.catalog(placement.directory)
+      const knowledge = yield* AtlasKnowledge.Service
       return {
         projectID: placement.projectID,
+        knowledge: (reference, authorSessionID) => deps.under(placement.directory,
+          knowledge.resolve({ projectID: placement.projectID, authorSessionID: SessionID.make(authorSessionID), reference }),
+        ).pipe(Effect.mapError((error) => new RelayWorkflowBinding.Held({
+          reason: `WORKFLOW_KNOWLEDGE_${error.reason}`,
+        }))),
         use: <A, E>(read: (store: Pick<AuthoringStore.Interface, "get" | "version">) => Effect.Effect<A, E>) =>
           Effect.scoped(Effect.gen(function* () {
             const store = yield* AuthoringStore.open(relay.paths.root, placement.projectID)
@@ -148,7 +156,7 @@ export function make(deps: Dependencies) {
           })
         })),
       } satisfies RelayWorkflowBinding.PublicationPort
-    }).pipe(Effect.mapError(held)),
+    }).pipe(Effect.provide(deps.context), Effect.mapError(held)),
 
     verifyUpstream: (id) => Effect.gen(function* () {
       const revision = yield* readWorkflowRevision(id)

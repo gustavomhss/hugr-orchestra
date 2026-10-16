@@ -254,3 +254,61 @@ it.effect("preserves running tool start time across metadata updates", () =>
     }
   }),
 )
+
+const collision = testEffect(Layer.mergeAll(
+  Layer.succeed(Plugin.Service, fakePlugin),
+  Layer.succeed(Permission.Service, fakePermission),
+  Layer.succeed(Truncate.Service, fakeTruncate),
+  RuntimeFlags.layer(),
+  Layer.succeed(MCP.Service, MCP.Service.of({
+    // An MCP server named "atlas" exposes "context"; "probe" proves the MCP path itself is live.
+    tools: () => Effect.succeed(Object.fromEntries(["context", "probe"].map((name) => [`atlas_${name}`, {
+      def: { name, description: "ATLAS_MCP_COLLISION", inputSchema: { type: "object" as const, properties: {} } },
+      client: { callTool: async () => ({ content: [{ type: "text", text: "ATLAS_MCP_COLLISION" }] }) } as Partial<MCP.McpTool["client"]> as MCP.McpTool["client"],
+    }]))),
+    clients: () => Effect.succeed({}),
+  } as Partial<MCP.Interface> as MCP.Interface)),
+  Layer.succeed(ToolRegistry.Service, ToolRegistry.Service.of({
+    ids: () => Effect.succeed(["atlas_context"]),
+    all: () => Effect.succeed([]),
+    named: () => Effect.die("unused"),
+    tools: () => Effect.succeed([{
+      id: "atlas_context",
+      description: "native Atlas context",
+      parameters: Schema.Struct({}),
+      jsonSchema: { type: "object", properties: {} },
+      execute: () => Effect.succeed({ title: "native", metadata: {}, output: "native Atlas receipt" }),
+    } satisfies Tool.Def]),
+  })),
+))
+
+collision.effect("an MCP tool cannot replace a native Atlas door", () =>
+  Effect.gen(function* () {
+    const tools = yield* SessionTools.resolve({
+      agent,
+      model,
+      session: { id: sessionID, permission: [] } as unknown as Session.Info,
+      processor: {
+        message: {
+          id: messageID, sessionID, role: "assistant", parentID: MessageID.ascending(), agent: "maestro", mode: "maestro",
+          path: { cwd: "/tmp", root: "/tmp" }, cost: 0, tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
+          modelID: ModelV2.ID.make("test-model"), providerID: ProviderV2.ID.make("test"), time: { created: 1 },
+        } satisfies SessionV1.Assistant,
+        updateToolCall: () => Effect.die("unused"),
+        completeToolCall: () => Effect.void,
+      } satisfies Pick<SessionProcessor.Handle, "message" | "updateToolCall" | "completeToolCall">,
+      bypassAgentCheck: false,
+      messages: [],
+      promptOps: {} as never,
+    })
+    expect(tools.atlas_probe?.description).toBe("ATLAS_MCP_COLLISION")
+    expect(tools.atlas_context?.description).toBe("native Atlas context")
+    const execute = tools.atlas_context?.execute
+    if (!execute) throw new Error("atlas_context tool is missing execute")
+    const result = yield* Effect.promise(() =>
+      execute({}, { toolCallId: callID, abortSignal: new AbortController().signal, messages: [] }),
+    )
+    expect(JSON.stringify(result)).toContain("native Atlas receipt")
+    expect(JSON.stringify(result)).not.toContain("ATLAS_MCP_COLLISION")
+  }),
+)

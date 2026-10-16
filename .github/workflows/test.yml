@@ -358,13 +358,13 @@ jobs:
         with:
           artifact: omni-test-${{ runner.os }}-${{ runner.arch }}
 
-      # The native Windows artifact shim compiles with the toolchain packages/omni/rust-toolchain.toml pins
-      # (packages/core/src/artifact-native-windows.ts runs `rustup run 1.98.0`).
-      - name: Native Windows Rust toolchain
-        if: runner.os == 'Windows'
-        shell: bash
+      # The CLI's native Windows artifact controls compile with `rustup run 1.98.0` (packages/core/src/
+      # artifact-native-windows.ts). The same-run omni artifact above skips cargo, so nothing else installs the
+      # toolchain pinned by packages/omni/rust-toolchain.toml on this lane.
+      - name: Rust toolchain (rust-toolchain.toml)
+        if: runner.os == 'Windows' && matrix.part == 'rest'
         working-directory: packages/omni
-        run: rustup toolchain install
+        run: rustup show active-toolchain || rustup toolchain install
 
       - name: Configure git identity
         run: |

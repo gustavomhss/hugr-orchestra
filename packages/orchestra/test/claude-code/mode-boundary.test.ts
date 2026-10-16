@@ -66,7 +66,7 @@ const INTERFACE = [
   "research/allowance", "maestro/discovery-result",
   // Reviewed runtime-audit additions: shared continuity/memory, provider configuration, location lifecycle,
   // event projection, Git operations and shell execution; none owns the normal provider loop.
-  "tool/shell/execution", "continuity/model", "maestro/atlas-memory", "provider/provider", "event-v2-bridge", "git",
+  "tool/shell/execution", "continuity/model", "maestro/atlas-memory", "maestro/atlas-knowledge", "provider/provider", "event-v2-bridge", "git",
   "project/instance-store",
   // Native compaction restores a retained plan only after reading its durable owner-message admission record.
   // This shared persistence port does not invoke either mode's LLM loop.
