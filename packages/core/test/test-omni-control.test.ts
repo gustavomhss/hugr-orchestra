@@ -138,7 +138,8 @@ const mentions: Record<string, string> = {
   ".github/workflows/distribution-bundle.yml": "native qualification requires suite-wide spawns; focused ABI steps declare (pinned below)",
   "packages/cli/test/fixture/distribution-aur/bootstrap.sh": "strict owned guest runs its declaring test (pinned below)",
   "packages/cli/test/fixture/distribution-musl/bootstrap.sh": "strict owned musl guest runs its declaring test (pinned below)",
-  "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value",
+  "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
+  "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
   "AGENTS.md": "documents the control",
 }
@@ -281,8 +282,9 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
   requireScope(
     args.join(" ") === [
       "exec", "/usr/bin/env", "CI=true", "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin", "ORCHESTRA_AUR_GUEST=owned",
-      'ORCHESTRA_AUR_BOOTSTRAP_SANDBOX="$bootstrap_sandbox"',
+      "ORCHESTRA_AUR_BOOTSTRAP_SANDBOX=enforced",
       ...Object.entries(ALLOWED_ASSIGNMENTS[bootstrap]).map(([name, value]) => `${name}=${value}`),
+      "ORCHESTRA_DISTRIBUTION_DENO=/proof/deno", "ORCHESTRA_DISTRIBUTION_DENO_VERSION=2.9.7",
       "/proof/bun", "test", "--preload", "/repo/script/test-omni-control.ts", "--timeout", "1800000",
       "./test/fixture/distribution-aur-guest.test.ts",
     ].join(" "),
@@ -299,7 +301,9 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
       child.left.getText(parsed) === "job.env.ORCHESTRA_OMNI_CONTROL" && ts.isStringLiteral(child.right) &&
       child.right.text === ALLOWED_ASSIGNMENTS[workflow].ORCHESTRA_OMNI_CONTROL)
   }), `OMNI_BUNDLE_PIN: ${bundlePin}`)
-  expect(sources[bundlePin].match(scopeVariable)).toHaveLength(1)
+  // The pin also spells the declared steps it pins; nothing else in it may name the variable.
+  requireScope((sources[bundlePin].match(scopeVariable)?.length ?? 0) ===
+    (sources[bundlePin].match(/ORCHESTRA_OMNI_CONTROL=declared bun test /g)?.length ?? 0) + 1, `OMNI_BUNDLE_PIN: ${bundlePin}`)
   const source = ts.createSourceFile(aurGuest, guest, ts.ScriptTarget.Latest, true)
   requireScope(source.statements.some((node) => {
     if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier) ||
