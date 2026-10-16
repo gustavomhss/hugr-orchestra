@@ -7,7 +7,7 @@ import { Skill } from "../../../schema/src/skill"
 import { Location } from "../../../schema/src/location"
 import { AbsolutePath } from "../../../schema/src/schema"
 import { PackagedSkills } from "@orchestra/core/packaged-skills"
-import { assertVersion, command, successful, snapshot, skillIdentity, nativeLibc } from "./distribution-native"
+import { assertVersion, command, successful, snapshot, skillIdentity, nativeLibc, startReason } from "./distribution-native"
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
 import type { WindowsIdentity } from "./distribution-windows-process"
@@ -333,7 +333,7 @@ export async function qualify(input: {
           console.error(`NATIVE_DAEMON_START_TREE_ADOPTED ${JSON.stringify({ rootPID: tree.pid, version: lease.version })}`)
         }),
       }).then((result) => {
-        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}`)
+        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}${startReason(result.stderr)}`)
         return result.stdout.trim()
       })
       : successful([input.launcher, "service", "start"], input.box, 30_000))

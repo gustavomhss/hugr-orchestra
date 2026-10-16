@@ -63,18 +63,23 @@ export const layer = Layer.effect(
       return createOrchestraClient({ baseUrl: url, headers: ServerAuth.headers({ password: yield* password() }) })
     })
 
+    // Failure messages are fixed reason codes: `service start` reports the last
+    // one, so they must never carry server output or the password.
     const healthy = Effect.fnUntraced(function* () {
-      const info = yield* registration()
-      const client = yield* createClient(info.url)
-      const response = yield* Effect.tryPromise(() => client.v2.health.get({ signal: AbortSignal.timeout(2_000) }))
+      const info = yield* registration().pipe(Effect.mapError(() => new Error("registration-unavailable")))
+      const client = yield* createClient(info.url).pipe(Effect.mapError(() => new Error("password-unavailable")))
+      const response = yield* Effect.tryPromise({
+        try: () => client.v2.health.get({ signal: AbortSignal.timeout(2_000) }),
+        catch: () => new Error("health-unreachable"),
+      })
       if (response.data?.healthy === true) return info
-      return yield* Effect.fail(new Error("Registered server is not healthy"))
+      return yield* Effect.fail(new Error("health-unhealthy"))
     })
 
     const compatible = Effect.fnUntraced(function* () {
       const info = yield* healthy()
       if (info.version === InstallationVersion) return info
-      return yield* Effect.fail(new Error("Registered server version does not match the client"))
+      return yield* Effect.fail(new Error("version-mismatch"))
     })
 
     const signal = (pid: number, signal: NodeJS.Signals) =>
@@ -117,20 +122,29 @@ export const layer = Layer.effect(
       const entrypoint = compiled ? undefined : process.argv[1]
       if (!compiled && entrypoint === undefined)
         return yield* Effect.fail(new Error("Failed to resolve CLI entrypoint"))
+      const started = Date.now()
+      const child: { exit?: string } = {}
       yield* Effect.try({
         try: () => {
-          spawn(process.execPath, [...(entrypoint ? [entrypoint] : []), "serve", "--register"], {
+          const daemon = spawn(process.execPath, [...(entrypoint ? [entrypoint] : []), "serve", "--register"], {
             detached: true,
             stdio: "ignore",
-          }).unref()
+          })
+          daemon.once("exit", (code, signal) => (child.exit = signal ? `signal=${signal}` : `code=${code}`))
+          daemon.unref()
         },
         catch: (cause) => new Error("Failed to start server", { cause }),
       })
 
       return yield* compatible().pipe(
-        Effect.retry(Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.recurs(100)))),
+        Effect.retry({
+          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.recurs(100))),
+          while: () => child.exit === undefined,
+        }),
         Effect.map((info) => info.url),
-        Effect.mapError(() => new Error("Failed to start server")),
+        Effect.mapError((error) => new Error(
+          `Failed to start server (${child.exit ? `exited ${child.exit}` : error.message}, ${Date.now() - started}ms)`,
+        )),
       )
     })
 
