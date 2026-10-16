@@ -48,7 +48,7 @@ async function fixture(directory: string, version = versions[0]!, name = target,
       ? JSON.stringify({ name: "synthetic-fixture", version: "1.0.0" }) : `${version}\n`, { mode: file === "hugr-omni-supervisor" ? 0o755 : 0o644 })
   }
   await writeFile(join(source, "bin/orchestra"), `#!/bin/sh\nset -eu\nhere=\${0%/*}\n${["marker", ...companions].map((file) => `test -f "$here/${file}" || exit 73`).join("\n")}\nprintf '%s\\n' '${version}' "$here"\n`, { mode: 0o755 })
-  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@orchestra/cli-${name}`, version, os: [tuple.os], cpu: [tuple.arch] }))
+  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@hugr/cli-${name}`, version, os: [tuple.os], cpu: [tuple.arch] }))
   const payload = join(directory, `payload-${version}-${name}`)
   await prepareDistribution({ dist: dirname(source), out: payload, version, target: name })
   return { source, payload, out: join(directory, "npm-output") }
@@ -88,7 +88,7 @@ describe.skipIf(windows)(windows ? "BLOCKED: Windows npm lifecycle needs a Bun-c
     const metadata = await Bun.file(join(platform, "package.json")).json()
     expect(metadata.files).toEqual([...manifest.files.map((file) => file.path), "distribution.json", "checksums.sha256"].sort())
     const wrapper = await Bun.file(join(value.out, "cli/package.json")).json()
-    expect(wrapper.optionalDependencies).toEqual({ [`@orchestra/cli-${target}`]: versions[0] })
+    expect(wrapper.optionalDependencies).toEqual({ [`@hugr/cli-${target}`]: versions[0] })
     expect(wrapper.bin).toEqual({ orchestra: "./bin/orchestra.cjs" })
     for (const key of ["dependencies", "devDependencies", "peerDependencies", "scripts", "workspaces"]) {
       expect(wrapper[key]).toBeUndefined(); expect(metadata[key]).toBeUndefined()
@@ -239,20 +239,20 @@ describe.skipIf(windows)(windows ? "BLOCKED: Windows npm lifecycle needs a Bun-c
       }
       for (const version of [versions[0]!, versions[1]!, versions[0]!]) {
         // Async child keeps same-loop HTTP registry serving npm requests.
-        await command(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund", "--save-exact", "--include=optional", "--prefix", prefix, "--registry", registry, `@orchestra/cli@${version}`], directory, env)
+        await command(["npm", "install", "--ignore-scripts", "--no-audit", "--no-fund", "--save-exact", "--include=optional", "--prefix", prefix, "--registry", registry, `@hugr/cli@${version}`], directory, env)
         const modules = join(prefix, "node_modules")
-        expect((await Bun.file(join(modules, "@orchestra/cli/package.json")).json()).version).toBe(version)
+        expect((await Bun.file(join(modules, "@hugr/cli/package.json")).json()).version).toBe(version)
         const lock = await Bun.file(join(prefix, "package-lock.json")).json()
-        expect((await Bun.file(join(prefix, "package.json")).json()).dependencies["@orchestra/cli"]).toBe(version)
-        expect(lock.packages["node_modules/@orchestra/cli"].version).toBe(version)
+        expect((await Bun.file(join(prefix, "package.json")).json()).dependencies["@hugr/cli"]).toBe(version)
+        expect(lock.packages["node_modules/@hugr/cli"].version).toBe(version)
         for (const name of targets) {
-          expect(lock.packages[`node_modules/@orchestra/cli-${name}`].version).toBe(version)
-          expect((await Bun.file(join(modules, `@orchestra/cli-${name}/package.json`)).json()).version).toBe(version)
-          await verifyDistribution(join(modules, `@orchestra/cli-${name}`), { version, target: name })
+          expect(lock.packages[`node_modules/@hugr/cli-${name}`].version).toBe(version)
+          expect((await Bun.file(join(modules, `@hugr/cli-${name}/package.json`)).json()).version).toBe(version)
+          await verifyDistribution(join(modules, `@hugr/cli-${name}`), { version, target: name })
         }
         const launched = (await command([join(modules, ".bin/orchestra")], directory, env)).trim().split("\n")
         expect(launched[0]).toBe(version)
-        expect(targets.map((name) => join(modules, `@orchestra/cli-${name}/bin`))).toContain(launched[1])
+        expect(targets.map((name) => join(modules, `@hugr/cli-${name}/bin`))).toContain(launched[1])
         expect(await readFile(join(launched[1]!, "marker"), "utf8")).toBe(`${version}\n`)
       }
     } finally {

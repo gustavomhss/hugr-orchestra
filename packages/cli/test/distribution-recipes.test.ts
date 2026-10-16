@@ -263,7 +263,7 @@ async function payloadFixture(target = "linux-x64-baseline") {
     "bin/companions/.packlist": "inert packlist bytes\0\x09\n",
     "bin/companions/extra.pod": "inert POD bytes\0\x0a\n",
     "package.json": JSON.stringify({
-      name: `@orchestra/cli-${target}`,
+      name: `@hugr/cli-${target}`,
       version: "1.2.3",
       os: [target.startsWith("darwin-") ? "darwin" : "linux"],
       cpu: [target.endsWith("arm64") ? "arm64" : "x64"],
