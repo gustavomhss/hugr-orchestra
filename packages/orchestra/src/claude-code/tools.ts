@@ -35,9 +35,12 @@ export function failure(cause: Cause.Cause<unknown>) {
   const tag = error?._tag ?? error?.name ?? ""
   // A rule denial is policy, not the owner: like Orchestra's own loop, show the rule and let the model carry on.
   if (/Denied/.test(tag)) return error?.message ?? "A permission rule denies this call."
-  if (/Rejected/.test(tag)) return "The owner rejected this call. Stop and wait for the owner's next message."
+  // Only the owner's own answer means stop; a governance refusal such as MaestroValidationRejected names its cause.
+  if (OWNER_REJECTED.includes(tag)) return "The owner rejected this call. Stop and wait for the owner's next message."
   return error?.message ?? String(error)
 }
+
+const OWNER_REJECTED = ["PermissionRejectedError", "QuestionRejectedError", "QuestionV2.RejectedError"]
 
 export function server(input: {
   defs: Tool.Def[]
