@@ -191,6 +191,22 @@ describe("Atlas publication knowledge binding", () => {
     })).toEqual(exact)
   }))
 
+  it.live("a published union over the reference cap holds before any resolver call", () => Effect.gen(function* () {
+    const f = yield* knowledgeFixture
+    const anchors = Array.from({ length: 9 }, (_, index) => packet(`unit-${index}`, "body"))
+    const eight = yield* AuthoringGraph.project("Reference cap", {
+      knowledge: anchors.slice(0, 8).map((anchor) => anchor.reference),
+      work_packages: [{ id: "implement", knowledge: [anchors[7].reference], checklist: [{ id: "ok", cmd: "true" }] }],
+    })
+    // The store keeps bodies as given; only the compiler sees the ninth distinct reference.
+    const nine = { ...eight, nodes: eight.nodes.map((node) => node.id !== "implement" ? node
+      : { ...node, parameters: { ...node.parameters, knowledge: JSON.stringify([anchors[8].reference]) } }) }
+    const saved = yield* f.store.save({ id: f.draft.id, body: nine })
+    yield* f.store.publish(saved.id, saved.versionId)
+    expect(yield* reason(RelayWorkflowBinding.acquire(f.input))).toBe("WORKFLOW_KNOWLEDGE_REFERENCE_LIMIT")
+    expect(f.calls).toEqual([])
+  }))
+
   it.live("legacy empty selection retains definition and materialization bytes", () => Effect.gen(function* () {
     const f = yield* fixture
     yield* f.store.publish(f.draft.id, f.draft.versionId)
