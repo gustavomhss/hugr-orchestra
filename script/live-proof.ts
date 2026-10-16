@@ -91,6 +91,17 @@ async function preflight() {
   console.log("\nPREFLIGHT OK. Next: author")
 }
 
+// The proposal's single ```json block holding nodes; a parse failure is reported with the parser's own message.
+function relayBlock(proposal: string): { ok: true; document: any } | { ok: false; error: string } {
+  const body = [...proposal.matchAll(/```json\n([\s\S]*?)\n```/g)].map((m) => m[1]).find((text) => /"nodes"\s*:/.test(text))
+  if (!body) return { ok: false, error: "no ```json block with nodes" }
+  try {
+    return { ok: true, document: JSON.parse(body) }
+  } catch (error) {
+    return { ok: false, error: String(error) }
+  }
+}
+
 function nestedArguments(body: string) {
   const call = JSON.parse(body).choices?.[0]?.message?.tool_calls?.[0]?.function?.arguments
   const args = typeof call === "string" ? (() => { try { return JSON.parse(call) } catch { return undefined } })() : undefined
@@ -116,6 +127,8 @@ async function author() {
     const task = (await toolParts(api)).findLast((part) => part.tool === "task")
     if (!task || task.state.status !== "completed") stop("the archie task did not complete; see the transcript above")
     if (!existsSync(path.join(fixture, "proposal.md"))) stop("archie did not write proposal.md")
+    const block = relayBlock(readFileSync(path.join(fixture, "proposal.md"), "utf8"))
+    if (!block.ok) stop(`proposal.md has no parseable native Relay document: ${block.error}`)
     await $`git -C ${fixture} add proposal.md`.quiet()
     await $`git -C ${fixture} commit -q -m ${"proposal: archie live proof"}`.quiet()
     console.log("\nAUTHOR OK (proposal.md committed in the fixture). Next: publish")
@@ -124,10 +137,9 @@ async function author() {
 
 async function publish() {
   // The proposal carries the native Relay document as one ```json block with nodes/connections.
-  const proposal = readFileSync(path.join(fixture, "proposal.md"), "utf8")
-  const block = [...proposal.matchAll(/```json\n([\s\S]*?)\n```/g)].map((m) => m[1]).find((body) => /"nodes"\s*:/.test(body))
-  if (!block) stop("proposal.md has no ```json block with a native Relay document (nodes/connections)")
-  const document = JSON.parse(block)
+  const block = relayBlock(readFileSync(path.join(fixture, "proposal.md"), "utf8"))
+  if (!block.ok) stop(`proposal.md has no parseable native Relay document: ${block.error}`)
+  const document = block.document
   // The proof is Archie's knowledge reaching the workers; a document without anchors proves nothing new.
   const references = (document.nodes as { parameters?: Record<string, unknown> }[]).flatMap((node) =>
     ["relayKnowledge", "knowledge"].flatMap((name) => {
@@ -317,17 +329,18 @@ work package id; units used by both steps go in one anchor with target kind assi
 reference in that relay.execute node's \`knowledge\` parameter and the shared one in the start node's
 \`relayKnowledge\` parameter, both as JSON arrays of reference strings, and list every receipt in the proposal.
 Include the native Relay authoring document as exactly one \`\`\`json code block in exactly this shape, filling the
-<...> slots and keeping every key; parameter values that hold lists are JSON text, as shown:
+<...> slots, copying the checklist values verbatim and keeping every key and brace. Parameter values that hold lists are
+JSON text, as shown. The block must parse with JSON.parse; keep the <...> fill-ins to plain sentences without quotes:
 {"name": "<title>",
  "nodes": [
   {"id": "start", "name": "Workflow start", "type": "relay.startTrigger", "position": [0, 0],
    "parameters": {"relayBrief": "<objective>", "relayRetryBudget": 2, "relayKnowledge": "[\\"<shared reference>\\"]"}},
   {"id": "step-1", "name": "Money", "type": "relay.execute", "position": [224, 0],
    "parameters": {"instructions": "<step 1 work>", "knowledge": "[\\"<step 1 reference>\\"]",
-    "checklist": "[{\\"id\\": \\"money-exact\\", \\"cmd\\": \\"<command proving step 1>\\"}]"}},
+    "checklist": "[{\\"id\\": \\"money-scope\\", \\"host_check\\": \\"owned-files\\"}]"}},
   {"id": "step-2", "name": "Checkout", "type": "relay.execute", "position": [448, 0],
    "parameters": {"instructions": "<step 2 work>", "knowledge": "[\\"<step 2 reference>\\"]",
-    "checklist": "[{\\"id\\": \\"checkout-exact\\", \\"cmd\\": \\"<command proving step 2>\\"}, {\\"id\\": \\"package\\", \\"host_check\\": \\"package-verification\\"}, {\\"id\\": \\"review\\", \\"host_check\\": \\"cold-review\\"}]"}}],
+    "checklist": "[{\\"id\\": \\"checkout-scope\\", \\"host_check\\": \\"owned-files\\"}, {\\"id\\": \\"package\\", \\"host_check\\": \\"package-verification\\"}, {\\"id\\": \\"review\\", \\"host_check\\": \\"cold-review\\"}]"}}],
  "connections": {"Workflow start": {"main": [[{"node": "Money", "type": "main", "index": 0}]]},
                  "Money": {"main": [[{"node": "Checkout", "type": "main", "index": 0}]]}}}
 List every unknown; leave none for the owner to resolve silently.`
