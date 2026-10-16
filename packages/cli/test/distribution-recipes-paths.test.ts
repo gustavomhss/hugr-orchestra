@@ -45,7 +45,7 @@ for (const recipe of ["homebrew", "aur"] as const) {
             "bin/orchestra": "inert CLI bytes\0\x01\n",
             "bin/helper/probe": "inert helper bytes\0\x02\n",
             "package.json": JSON.stringify({
-              name: `@orchestra/cli-${recipe === "homebrew" ? "darwin-arm64" : "linux-x64-baseline"}`,
+              name: `@hugr/cli-${recipe === "homebrew" ? "darwin-arm64" : "linux-x64-baseline"}`,
               version: "1.2.3",
               os: [recipe === "homebrew" ? "darwin" : "linux"],
               cpu: [recipe === "homebrew" ? "arm64" : "x64"],
