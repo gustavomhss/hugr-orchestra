@@ -151,6 +151,9 @@ export async function openLocalPipelines(page: Page, server: string) {
 export async function chooseProfile(page: Page, name: string) {
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
+  // The picker applies the selection only after its menu closes. Wait for it, or the next click can
+  // land on the previous profile's Actions page before the chapter remounts for the new one.
+  await expect(page.locator("#orchestra-profile-name")).toHaveText(name)
   // Actions navigation is persisted per profile; a newly selected profile starts in the native library.
   if (new URL(page.url()).pathname === "/orchestra/cicd")
     await openLocalPipelines(page, name === "Server A repository" ? serverA : serverB)
@@ -305,7 +308,7 @@ export async function setup(
   })
   await page.addInitScript(
     ({ serverB, scheme, directory }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({
