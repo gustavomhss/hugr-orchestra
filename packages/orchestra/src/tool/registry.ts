@@ -94,7 +94,8 @@ export function webSearchEnabled(flags = { exa: false, parallel: false }) {
 
 type TaskDef = Tool.InferDef<typeof TaskTool>
 type ReadDef = Tool.InferDef<typeof ReadTool>
-const nativeAtlasTools = new Set<string>([AtlasContextTool.id, AtlasMemoryRecallTool.id, AtlasMemoryEmitTool.id])
+// Host-owned Atlas doors: no configured plugin or MCP tool may take their IDs.
+export const nativeAtlasTools: ReadonlySet<string> = new Set<string>([AtlasContextTool.id, AtlasMemoryRecallTool.id, AtlasMemoryEmitTool.id])
 
 type PluginDef = Tool.Def & {
   executeWithSafety: (
