@@ -2,7 +2,7 @@ import { Actions } from "@orchestra/schema/actions"
 import { Effect, Schema } from "effect"
 import { check, stable } from "./assertions"
 import { rejected } from "./actions-checks"
-import { actionPath, actionsRequest, decodeLocation, nativeCalls, seedActions, seedBinding } from "./actions-fixture"
+import { actionPath, actionsRequest, createdProject, decodeLocation, nativeCalls, seedActions, seedBinding } from "./actions-fixture"
 import { bindingInput, root } from "./actions-native-data"
 import { http } from "./dsl"
 import type { Scenario } from "./types"
@@ -22,11 +22,12 @@ export const actionsBindingScenarios: Scenario[] = [
     .seeded(seedActions)
     .at((ctx) => ({ path: "/api/actions/binding", headers: ctx.headers(), body: bindingInput }))
     .jsonEffect(200, (body, ctx) => Effect.gen(function* () {
-      const binding = decodeLocation(Actions.Binding, body, ctx.state)
+      const native = { ...ctx.state, projectID: createdProject(body, ctx.state) }
+      const binding = decodeLocation(Actions.Binding, body, native)
       check(binding.revision === 1 && binding.projectID === "1234" && binding.account === "fixture-actor", "binding create must resolve native project/account")
       check(binding.directory === ctx.state.directory && binding.remote === "origin", "binding must retain isolated Location and verified remote")
       const list = yield* actionsRequest(ctx, "GET", "/api/actions/binding")
-      check(list.status === 200 && stable(decodeLocation(Schema.Array(Actions.Binding), list.body, ctx.state)) === stable([binding]), "HTTP create must persist exact binding")
+      check(list.status === 200 && stable(decodeLocation(Schema.Array(Actions.Binding), list.body, native)) === stable([binding]), "HTTP create must persist exact binding")
       const calls = yield* nativeCalls(ctx.state)
       check(stable(calls.map((call) => call.endpoint)) === stable(["repos/acme/widgets", "user"]), "create must observe provider project/account through production transport")
     }), "status"),

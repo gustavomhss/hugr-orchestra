@@ -25,6 +25,8 @@ export const actionsFailureScenarios: Scenario[] = [
       const native = yield* seedBinding(ctx)
       const foreign = path.join(native.directory, "other-location")
       yield* actionsGit(native.directory, ["clone", "--no-hardlinks", native.directory, foreign])
+      // Same native repository, different checkout: keep the clone's Project keyed by the same origin.
+      yield* actionsGit(foreign, ["remote", "set-url", "origin", "https://github.com/acme/widgets.git"])
       return { ...native, foreign }
     }))
     .at((ctx) => ({ path: actionPath("/api/actions/binding/{bindingID}", ctx.state.ref, {}, { "location[directory]": ctx.state.foreign }), headers: ctx.headers() }))

@@ -58,8 +58,7 @@ export function seedActions(ctx: ScenarioContext, state = "completed") {
     yield* Effect.promise(() => Bun.write(path.join(bin, "replies.json"), JSON.stringify(nativeReplies(commit, blob, state))))
     yield* Effect.promise(() => Bun.write(path.join(bin, "calls.jsonl"), ""))
     yield* Effect.promise(() => Bun.write(path.join(bin, "fixture-errors.jsonl"), ""))
-    const project = yield* ctx.project()
-    return { bin, commit, blob, directory, projectID: project.id, runnerConfig }
+    return { bin, commit, blob, directory, runnerConfig }
   }))
 }
 
@@ -68,9 +67,10 @@ export function seedBinding(ctx: ScenarioContext, state = "completed") {
     const native = yield* seedActions(ctx, state)
     const result = yield* actionsRequest(ctx, "POST", "/api/actions/binding", bindingInput)
     check(result.status === 200, `ActionsFixtureError:create-binding:${result.text}`)
-    const binding = decodeLocation(Actions.Binding, result.body, native)
+    const projectID = createdProject(result.body, native)
+    const binding = decodeLocation(Actions.Binding, result.body, { ...native, projectID })
     check(binding.revision === 1 && binding.projectID === "1234" && binding.account === "fixture-actor", "native binding identity must be observed")
-    return { ...native, binding, ref: { id: binding.id, revision: binding.revision } }
+    return { ...native, projectID, binding, ref: { id: binding.id, revision: binding.revision } }
   })
 }
 
@@ -83,6 +83,15 @@ export function actionsRequest(ctx: ScenarioContext, method: Method, pathname: s
     : method === "PUT" ? http.protected.put : method === "PATCH" ? http.protected.patch : http.protected.delete
   return call(builder(pathname, "actions.fixture.request").at(() => ({ path: pathname, body, headers: ctx.headers() })).json(),
     { ...ctx, state: undefined })
+}
+
+// Adding the origin remote in seedActions re-keys the Project, while the runner's instance keeps its pre-seed identity.
+// Pin the Project of the Location that admitted the binding, after checking it is this directory's; later responses must retain it.
+export function createdProject(body: unknown, native: { directory: string }) {
+  const created = Schema.decodeUnknownSync(Location.response(Actions.Binding))(body)
+  check(created.location.directory === native.directory && created.location.project.directory === native.directory,
+    "Actions binding must be created at the selected Location")
+  return created.location.project.id
 }
 
 export function decodeLocation<A>(schema: Schema.Decoder<A>, body: unknown, native: { directory: string; projectID: string }) {
