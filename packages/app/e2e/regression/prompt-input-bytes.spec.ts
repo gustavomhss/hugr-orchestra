@@ -9,10 +9,10 @@ const directory = "C:/Orchestra/PromptBytesRegression"
 const projectID = "proj_prompt_bytes"
 const provider = {
   all: [{
-    id: "opencode", name: "Orchestra", source: "config", env: [], options: {},
+    id: "orchestra", name: "Orchestra", source: "config", env: [], options: {},
     models: {
       "claude-opus-4-6": {
-        id: "claude-opus-4-6", providerID: "opencode", name: "Claude Opus 4.6",
+        id: "claude-opus-4-6", providerID: "orchestra", name: "Claude Opus 4.6",
         api: { id: "claude-opus-4-6", url: "https://provider.invalid", npm: "@ai-sdk/anthropic" },
         capabilities: {
           temperature: true, reasoning: true, attachment: true, toolcall: true, interleaved: false,
@@ -25,8 +25,8 @@ const provider = {
       },
     },
   }],
-  connected: ["opencode"],
-  default: { opencode: "claude-opus-4-6" },
+  connected: ["orchestra"],
+  default: { orchestra: "claude-opus-4-6" },
 } satisfies ProviderListResponse
 const sample = "\n```owner-demand\né — 😀\u200B\n\n``` \n\n"
 const rawClipboard = "\r\n```owner-demand\ré — 😀\u200B\r\n\r\n```\n"
@@ -63,7 +63,7 @@ for (const newLayoutDesigns of [false, true]) {
         provider,
         sessions: [{
           id: sessionID, slug: "prompt-bytes", projectID, directory, title: info.title, version: "dev",
-          agent: "maestro", model: { id: "claude-opus-4-6", providerID: "opencode" },
+          agent: "maestro", model: { id: "claude-opus-4-6", providerID: "orchestra" },
           time: { created: 1700000000000, updated: 1700000000000 },
         }],
         pageMessages: () => ({ items: [] }),
@@ -341,7 +341,7 @@ for (const newLayoutDesigns of [false, true]) {
           boundary: "HTTP bootstrap fixtures; actual production UI execution request captured then aborted. No backend admission or model/tool proof.",
         }, null, 2),
       })
-      expect(payload.model).toEqual({ providerID: "opencode", modelID: "claude-opus-4-6" })
+      expect(payload.model).toEqual({ providerID: "orchestra", modelID: "claude-opus-4-6" })
       expect(text).toBe(scenario.text)
       expect(receipt(text)).toEqual(receipt(scenario.text))
     })
