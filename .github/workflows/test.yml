@@ -353,6 +353,10 @@ jobs:
           sudo sysctl -w kernel.apparmor_restrict_unprivileged_userns=0
 
 
+      - name: Linux Electron dependencies
+        if: runner.os == 'Linux' && matrix.part == 'packages'
+        run: sudo apt-get install -y -qq xvfb xauth libgtk-3-0 libnss3 libasound2t64
+
       - name: Native test binaries
         uses: ./.github/actions/omni-binaries
         with:
