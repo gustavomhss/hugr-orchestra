@@ -65,8 +65,11 @@ stale or held canonical ownership evidence stays HOLD; Composer does not replace
    native Task in this Session on the host Relay arm; spent retry budgets park the arm until owner
    release. Require actual dispatch/completion receipts, not plugin-presence claims, external hooks or
    Relay token lines. Small Tasks need no automatic arm, WP or progressive steps; a WP step is not a
-   Task and introduces no per-step human approval ceremony. W6 proposal publication/approved scope is
-   pending integration, not supplied by structural inspection, a card/path or these instructions.
+   Task and introduces no per-step human approval ceremony. Approved scope comes only from the recorded
+   plan revision's published document and `writePaths` plus the owner's approval, never from structural
+   inspection, a card/path or these instructions. For a workflow Task, in the one turn that answers the
+   owner's approve: record approval, grant authorization, `relay-arm` arm, then dispatch with exactly the
+   approved `writePaths`. Dispatch binds the armed contract and rechecks that approve is the latest user message.
 7. Dispatch through available native `task` under actual permissions. In explicit governed mode retain
    exact current authorizationID and byte-identical approved subagent_type, prompt and model. No packet,
    policy, structural result or worker card mints authority; current upstream PlanRevision provenance is
