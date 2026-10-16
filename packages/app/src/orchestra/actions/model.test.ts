@@ -105,7 +105,8 @@ describe("Actions view-owned model", () => {
     await scope.model.refresh()
     old.resolve(located(page([{ ...workflow(), id: "obsolete" }], "obsolete-next")))
     await reading
-    expect(scope.model.state.workflows.value?.items.map((item) => item.id)).toEqual(["new"])
+    // The model keeps the whole native page; query filtering is presentation-owned since d8ee00372.
+    expect(scope.model.state.workflows.value?.items.map((item) => item.id)).toEqual(["old", "new"])
     await scope.model.more("workflows")
     const request = scope.requests.filter((request) => new URL(request.url).pathname.startsWith("/api/actions/workflow/")).at(-1)
     expect(request && new URL(request.url).searchParams.get("cursor")).toBe("old-next")

@@ -27,8 +27,9 @@ describe("Actions trusted DTO snapshots", () => {
     })
   })
 
-  test.each([null, undefined, false, 7, "release/雪", [], { ...base, ref: 7 },
-    { ...base, commit: "not-a-native-head" }, { ...base, extra: "untrusted" }])(
+  // One-element rows: bun spreads array rows, so a bare [] became zero arguments and a done callback.
+  test.each([[null], [undefined], [false], [7], ["release/雪"], [[]], [{ ...base, ref: 7 }],
+    [{ ...base, commit: "not-a-native-head" }], [{ ...base, extra: "untrusted" }]])(
     "keeps SourceBase primitive and excess-shape validation strict: %j", (value) => {
       expect(() => decodeAction(Actions.SourceBase, value)).toThrow("invalid_input")
       expect(() => snapshotAction(Actions.SourceBase, value)).toThrow("invalid_input")

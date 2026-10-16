@@ -75,8 +75,8 @@ describe("Actions dialog inspection", () => {
     const before = structuredClone(scope.state)
     graphReply.resolve(graph())
     scopesReply.resolve(page([environment("production")]))
-    await expect(inspecting).rejects.toThrow("binding_stale")
-    await expect(listing).rejects.toThrow("binding_stale")
+    // Observe both rejections together; awaiting one first leaves the other briefly unhandled.
+    await Promise.all([expect(inspecting).rejects.toThrow("binding_stale"), expect(listing).rejects.toThrow("binding_stale")])
     expect(scope.state).toEqual(before)
   })
 

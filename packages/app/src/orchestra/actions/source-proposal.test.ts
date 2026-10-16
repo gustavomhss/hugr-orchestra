@@ -134,7 +134,9 @@ describe("Actions source proposals", () => {
     expect(scope.intents[0].expected?.sourceVersion).toBeUndefined(); expect(scope.intents[1].expected?.sourceVersion).toBeUndefined()
     expect(scope.intents[2]).toMatchObject({ target: { path: scope.path, ref: reviewForm.branch, resourceID: defaultBase.ref }, expected: { commit: newCommit, sourceVersion: scope.version } })
     expect(scope.requests.map((item) => `${item.method} ${new URL(item.url).pathname.split("/").at(-1)}`)).toEqual([
-      "GET base", "POST validate-draft", "POST ab_proposal", "POST branch", "GET base", "POST ab_proposal", "POST write", "GET source", "POST ab_proposal", "POST review",
+      "GET base", "POST validate-draft", "POST ab_proposal", "POST branch", "GET base", "POST ab_proposal", "POST write",
+      // GitLab reads the written file at a proved branch head (c743386d6 readProposalSource).
+      ...(provider === "gitlab" ? ["GET base"] : []), "GET source", "POST ab_proposal", "POST review",
     ])
     expect(await scope.requests[6].json()).toEqual({ id: "aop_2", input: { provider, mode: "create", text: draft, message: reviewForm.message } })
     expect(scope.state.draftBase).toBeUndefined(); expect(scope.state.source.value?.version).toBe(scope.version)
