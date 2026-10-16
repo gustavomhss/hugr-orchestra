@@ -37,7 +37,7 @@ const nextSteps: Record<string, string> = {
   "review-not-approved":
     "Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
   "approval-not-current":
-    "The owner's latest message must be the exact approve reply to the newest presentation; call maestro_record_approval to see why it is not.",
+    "The owner's latest message must still be the exact approve reply to the newest presentation; any later user message, even an instruction to continue, makes it not current. Record approval and grant authorization in the turn that answers the owner's reply; call maestro_record_approval to see why it is not current.",
   "approval-binding-mismatch":
     "Pass approvalMessageID from the maestro_record_approval Bindings line and the validationRecordID that was presented.",
   "presentation-not-found": "Present again with a new methodVersion and wait for the owner's exact reply.",

@@ -52,7 +52,10 @@ export async function aurBootstrapEvidence(directory: string) {
 function pacmanFilesystemRestrictions(log: string) {
   const restrictions = log.split("\n").filter((line) =>
     /^debug: filesystem access has been restricted to .+, [Ll]andlock ABI is [1-9][0-9]*$/.test(line))
-  if (restrictions.length === 0 || /error:|landlock is not supported|Landlock is not supported/.test(log))
+  // A dropped mirror connection logs a retrieval error before pacman retries the
+  // next mirror; total download failure still fails the bootstrap exit status.
+  const diagnostics = log.split("\n").filter((line) => !/^error: failed retrieving file '[^']+' from \S+ : .+$/.test(line)).join("\n")
+  if (restrictions.length === 0 || /error:|landlock is not supported|Landlock is not supported/.test(diagnostics))
     throw new Error("AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED")
   return restrictions
 }

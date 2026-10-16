@@ -62,7 +62,7 @@ export const MaestroPresentApprovalTool = Tool.define(
     const fs = yield* FileSystem.FileSystem
     return {
       description:
-        "Present exact task intent for direct user approval. Requires native Maestro, same-Session/project durable plan and VALID validation, current clean context, and cold-review (`lucy`) APPROVE. Runtime computes the task hash; an optional supplied hash must match.",
+        "Present exact task intent for direct user approval. Requires native Maestro, same-Session/project durable plan and VALID validation, current clean context, and cold-review (`lucy`) APPROVE. Runtime computes the task hash; an optional supplied hash must match. End the turn after presenting: the owner's reply counts only as the very first user message after it. To present again, use a new methodVersion.",
       parameters: PresentationParameters,
       execute: (_params: Schema.Schema.Type<typeof PresentationParameters>, ctx) =>
         Effect.gen(function* () {
@@ -253,7 +253,7 @@ const holdNextSteps: Record<Extract<ApprovalResult, { status: "HOLD" }>["reason"
   "reply-not-after-presentation":
     "The owner has not replied since the presentation; end the turn and wait for the owner.",
   "reply-not-immediate":
-    "Another user message arrived between the presentation and this reply; present again with a new methodVersion, then end the turn and wait for the owner's exact reply.",
+    "Another user message arrived between the presentation and this reply. The approve word only counts as the very first user message after the presentation; an instruction, a follow-up or an earlier approve in between voids it, by design. Present again with a new methodVersion (the same methodVersion replays the earlier presentation), then end the turn and wait for the owner's exact reply.",
   "reply-already-bound":
     "This owner reply already decided another presentation; present again with a new methodVersion, then end the turn and wait for a new reply.",
   "presentation-identity-invalid":

@@ -137,6 +137,22 @@ test("successful record plus actual Landlock failure diagnostic is rejected", as
   await failure(f.directory, "AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED")
 })
 
+test("transient mirror retrieval retry does not hide enforced Landlock", async () => {
+  await using f = await fixture()
+  const log = `${restriction}\nerror: failed retrieving file 'python-3.14.8-1-x86_64.pkg.tar.zst' from fastly.mirror.pkgbuild.com : Recv failure: Connection reset by peer\n`
+  await Bun.write(join(f.directory, "bootstrap-pacman.log"), log)
+  await receipt(f, { ...f.receipt, logSha256: digest(log) })
+  expect(await aurBootstrapEvidence(f.directory)).toEqual({ ...f.receipt, logSha256: digest(log) })
+})
+
+test("mirror retry beside an actual Landlock failure diagnostic is still rejected", async () => {
+  await using f = await fixture()
+  const log = `${restriction}\nerror: failed retrieving file 'gcc.pkg.tar.zst' from mirror.example : Recv failure\nerror: restricting filesystem access failed because the Landlock ruleset could not be applied: Operation not permitted\n`
+  await Bun.write(join(f.directory, "bootstrap-pacman.log"), log)
+  await receipt(f, { ...f.receipt, logSha256: digest(log) })
+  await failure(f.directory, "AUR_PACMAN_DOWNLOAD_LANDLOCK_NOT_ENFORCED")
+})
+
 test("policy-provenance tampering and stale log digests are refused", async () => {
   await using f = await fixture()
   await receipt(f, { ...f.receipt, repositories: f.receipt.repositories.map((repo) => ({ ...repo, sigLevelSource: "pacman-conf-resolved-override" })) })
