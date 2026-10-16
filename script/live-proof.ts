@@ -97,7 +97,7 @@ async function author() {
       stop(`maestro.atlas.projectID ${atlas.projectID} is not this fixture's project ${session.projectID}; re-publish the Atlas catalog and snapshot for ${session.projectID} with the Atlas producer, commit, and rerun`)
     state.sessionID = session.id
     save()
-    const brief = process.env.LIVE_PROOF_DEMAND ? readFileSync(process.env.LIVE_PROOF_DEMAND, "utf8") : DEFAULT_BRIEF
+    const brief = process.env.LIVE_PROOF_DEMAND ? readFileSync(process.env.LIVE_PROOF_DEMAND, "utf8") : defaultBrief()
     await turn(api, [
       "Dispatch exactly one foreground `task` to subagent_type `archie` with writePaths [\"proposal.md\"] and the prompt between the markers, byte for byte.",
       "Do nothing else: no admission, plan, review or approval yet. When the task returns, report its terminal state and blockers and end the turn.",
@@ -292,7 +292,9 @@ function clip(text: string, max: number) {
   return text.length > max ? `${text.slice(0, max)} …(${text.length - max} more)` : text
 }
 
-const DEFAULT_BRIEF = `Proposal only: write proposal.md and nothing else.
+// A function so it is hoisted above the top-level step dispatch.
+function defaultBrief() {
+  return `Proposal only: write proposal.md and nothing else.
 Read the Atlas context yourself (atlas_context catalog first, then the units you choose) and load archie-work-package.
 Propose making money handling exact: src/money.ts converts a decimal amount to integer cents without floating-point loss
 (non-finite and fractional-cent inputs are explicit errors), and src/checkout.ts totals integer cents exactly.
@@ -305,3 +307,4 @@ reference in that relay.execute node's \`knowledge\` parameter and the shared on
 Include the native Relay authoring document as exactly one \`\`\`json code block with nodes and connections
 (a relay.startTrigger node plus the two relay.execute nodes), checklist items as objects with unique ids.
 List every unknown; leave none for the owner to resolve silently.`
+}
