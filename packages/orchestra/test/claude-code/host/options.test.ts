@@ -54,6 +54,8 @@ test("Maestro's append delegates through Agent with plugin seats and names Orche
   expect(append).toContain("Run `orchestra:archie` and `orchestra:backend` in the foreground")
   expect(append).toContain("mcp__orchestra__process")
   expect(append).toContain("mcp__orchestra__context_recall")
+  expect(append).toContain("`mcp__orchestra__maestro_request_review` (Maestro only) runs the governed cold review")
+  expect(append).toContain("An approved Relay workflow is dispatched with `mcp__orchestra__task`, never `Agent`")
   expect(append).toContain("TaskCreate and TaskUpdate")
   expect(append).toContain("TaskList or TaskGet")
   expect(append).not.toContain("TodoWrite")
@@ -61,12 +63,8 @@ test("Maestro's append delegates through Agent with plugin seats and names Orche
   expect(append).not.toMatch(/<env>|working directory:|precedence|follow them|override|instead of the Claude Code/i)
 })
 
-test("another main-thread seat keeps a short scoped body plus the exact native review limitation", async () => {
-  // Repair: the required review-dispatch limitation is additional context, not seat-body growth.
-  // Keep the existing <600 bound on the body, in UTF-8 bytes, and budget only this exact notice plus one space.
-  const notice = "`maestro_request_review` is unavailable in Claude mode: it requires Orchestra's prompt executor to dispatch " +
-    "a review. Claude Code owns delegation here. Use `Agent` with `subagent_type: \"orchestra:lucy\"` for a review; " +
-    "automatic governed review requests need a native dispatch integration before they can run."
+// Governed reviews and workflow dispatch are Maestro's, so another seat's body names neither.
+test("another main-thread seat keeps a short scoped body without Maestro's governed tools", async () => {
   for (const seat of ["backend", "jimmy"]) {
     const append = (await setup(seat).build()).systemPrompt.append ?? ""
     expect(append).toContain(`\`${seat}\` seat`)
@@ -74,9 +72,8 @@ test("another main-thread seat keeps a short scoped body plus the exact native r
     expect(append).toContain("mcp__orchestra__process")
     expect(append).toContain("use Bash for short commands")
     expect(append).not.toContain("Maestro")
-    expect(append.endsWith(` ${notice}`)).toBe(true)
-    expect(Buffer.byteLength(append.slice(0, -notice.length - 1), "utf8")).toBeLessThan(600)
-    expect(Buffer.byteLength(append, "utf8")).toBeLessThan(600 + 1 + Buffer.byteLength(notice, "utf8"))
+    expect(append).not.toContain("maestro_request_review")
+    expect(Buffer.byteLength(append, "utf8")).toBeLessThan(600)
   }
 })
 

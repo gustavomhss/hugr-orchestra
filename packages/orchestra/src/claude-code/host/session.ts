@@ -74,8 +74,8 @@ export interface Interface {
   /**
    * Run one turn when the user's agent is on Claude Code: everything the owner sent since the last delivery. False when
    * the agent runs on Orchestra's loop. Like the engine's turn, it always ends with an assistant reply to `user` (with
-   * `error` when it failed), so the loop's own exit check ends the run. `promptOps` is accepted for the engine's entry
-   * contract; delegation here is Claude Code's own `Agent` tool.
+   * `error` when it failed), so the loop's own exit check ends the run. Delegation here is Claude Code's own `Agent`
+   * tool; `promptOps` serves only the tools that start Orchestra child Sessions (workflow `task`, governed review).
    */
   readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
   /** Hand a message to the running turn (`priority: "next"`). False when no turn runs: the next turn sends it. */
@@ -118,6 +118,19 @@ const NAMESPACE = Buffer.from("8f0c5b3e6a2d4f1b9c7e0d2a4b6c8e1f", "hex")
 export const userInput = ClaudeHostAdmission.userInput
 export const inbox = ClaudeHostAdmission.inbox
 
+/**
+ * The source of the synthetic user message that hands one Relay work package to a workflow-bound Session (engine.ts).
+ * It is no owner request, but a turn delivers it like one: Claude Code's system prompt is fixed for the query, so the
+ * work package's instructions can only arrive as input.
+ */
+export const WORKFLOW_STEP = "workflow-step"
+
+/** The work package key a part hands over, when it is a workflow step's text. */
+export function workflowStep(part: SessionV1.Part) {
+  const source = part.type === "text" ? part.metadata?.source : undefined
+  return ClaudeCodeTranscript.record(source) && source.type === WORKFLOW_STEP && typeof source.key === "string" ? source.key : undefined
+}
+
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
 type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string; errorUUID?: string }
 type Live = {
@@ -158,6 +171,8 @@ type Live = {
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
+  /** The latest turn's prompt executor, for the served tools that start child Sessions (bridge.ts). */
+  promptOps?: () => Effect.Effect<TaskPromptOps>
 }
 
 const layer = Layer.effect(
@@ -634,7 +649,8 @@ const layer = Layer.effect(
       const historic = new Set(answered(history).filter((id) => !inputs[id]))
       const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : [])
       const users = history.filter((message) => (RequestSource.actual(message) ||
-        message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id) && !historic.has(message.info.id))
+        message.parts.some((part) => marker(part)?.type === "task-return" || workflowStep(part) !== undefined)) &&
+        !delivered.has(message.info.id) && !historic.has(message.info.id))
       const prompts = users.flatMap((message) => message.info.role === "user" ? [{ user: message.info, text: ClaudeCodeTranscript.hostPrompt([message]) }] : []).filter((item) => item.text)
       const prompt = prompts.map((item) => item.text).join("\n")
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
@@ -671,6 +687,7 @@ const layer = Layer.effect(
       }
       const host = started.value
       clearTimeout(host.idle)
+      if (input.promptOps) host.promptOps = input.promptOps
       if (model && model !== host.model) yield* setModel({ sessionID, model })
       const running = host.turn
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [], answered: new Set([input.user.id]) }

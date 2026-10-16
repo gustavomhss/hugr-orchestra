@@ -45,6 +45,27 @@ under `src` and fails on any other crossing; its `INTERFACE` list is the declare
   from the delegation hooks at `PreToolUse[Agent]`; any other subagent gets one at its first frame. Either way it exists
   before the subagent's first tool call, so an `orchestra` MCP call by a subagent finds its mirrored part.
 
+## Governed review and Relay workflows in Claude mode
+
+Both run Orchestra's own code; Claude mode only carries the calls.
+
+- **Review.** The server serves `maestro_request_review`. Like every served tool it runs with the latest turn's prompt
+  executor (`host/bridge.ts`), so the cold review runs as Orchestra's own `lucy` Task and records its receipt.
+- **Dispatch.** `task` is the one built-in duplicate the server serves (`ClaudeHostMcp.WORKFLOW_TASK`). Maestro
+  dispatches an approved Relay workflow with `mcp__orchestra__task`, which runs Orchestra's Task tool unchanged: the
+  same approval, plan, arm and write-root binding as in normal mode. The mirrored part is an Orchestra `task` part, which
+  is what `WorkflowBinding.taskCall` accepts. The gate holds a served `task` call without `workflow`
+  (`WORKFLOW_TASK_SELECTION_MISSING`), so every other dispatch stays Claude Code's `Agent`.
+- **Worker.** A workflow-bound Session whose agent is in Claude mode runs each work package as one Claude Code turn
+  (`ClaudeCode.Service.workflowTurn`). Claude Code's system prompt is fixed per query, so the package's instructions
+  arrive as a synthetic user message, one per arm position (`ClaudeHost.WORKFLOW_STEP`). The loop settles the turn's
+  reply through `RelayWorkflowSession.settle`, exactly as it settles a provider turn in normal mode. Writes still pass
+  the gate under the Session's approved write roots, and the worker cannot dispatch (`WORKFLOW_NESTED_TASK_REFUSED`).
+  This replaced the earlier `WORKFLOW_PROVIDER_BOUNDARY_UNSUPPORTED` hold.
+
+Tests: `test/claude-code/workflow-turn.test.ts`, `test/claude-code/host/bridge.test.ts`,
+`test/claude-code/host/gate-native.test.ts`, `test/claude-code/host/mcp.test.ts`.
+
 ## Auth
 
 Orchestra never touches Claude Code credentials. The binary signs in from its own store (`claude auth login`) or uses

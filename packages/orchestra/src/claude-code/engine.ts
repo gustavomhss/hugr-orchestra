@@ -11,7 +11,7 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Agent } from "@/agent/agent"
 import { SessionContinuity } from "@/continuity/service"
 import { Session } from "@/session/session"
-import type { SessionID } from "@/session/schema"
+import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { TaskPromptOps } from "@/tool/task"
 import { ClaudeHost } from "./host/session"
 
@@ -24,6 +24,13 @@ export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interru
   readonly admitted: (user: SessionV1.WithParts) => Effect.Effect<void>
   readonly reconcileRevert: (session: Session.Info, agent?: string) => Effect.Effect<void>
   readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
+  /**
+   * Run one Relay work package of a workflow-bound Session on Claude Code: hand its instructions over as a synthetic
+   * user message (one per `step.key`, so a resumed loop reuses it) and run the turn. Returns the turn's reply to that
+   * message, which the loop settles exactly as it settles a provider turn.
+   */
+  readonly workflowTurn: (input: { sessionID: SessionID; user: SessionV1.User; step: { key: string; text: string } }) =>
+    Effect.Effect<SessionV1.WithParts | undefined>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ClaudeCode") {}
@@ -49,6 +56,25 @@ const layer = Layer.effect(
       return yield* host.turn(input)
     })
 
+    const workflowTurn: Interface["workflowTurn"] = Effect.fn("ClaudeCode.workflowTurn")(function* (input) {
+      const history = yield* sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie)
+      const found = history.find((message) => message.info.role === "user" &&
+        message.parts.some((part) => ClaudeHost.workflowStep(part) === input.step.key))?.info
+      const step = found?.role === "user" ? found : yield* sessions.updateMessage({ id: MessageID.ascending(),
+        sessionID: input.sessionID, role: "user", agent: input.user.agent, model: input.user.model, time: { created: Date.now() } })
+      if (!found) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: input.sessionID, messageID: step.id,
+        type: "text", text: input.step.text, synthetic: true, metadata: { source: { type: ClaudeHost.WORKFLOW_STEP, key: input.step.key } } })
+      const reply = sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie, Effect.map((messages) =>
+        messages.findLast((message) => message.info.role === "assistant" && message.info.parentID === step.id)))
+      yield* turn({ sessionID: input.sessionID, user: step })
+      const first = yield* reply
+      if (first?.info.role === "assistant" && first.info.time.completed !== undefined) return first
+      // The first package arrives with the Task's brief. Claude Code may answer the two inputs as two turns; the turn
+      // that ended answered the brief, and this second call waits for the one answering the step (or fails it).
+      yield* turn({ sessionID: input.sessionID, user: step })
+      return yield* reply
+    })
+
     const admitted: Interface["admitted"] = (user) => Effect.gen(function* () {
       if (user.info.role !== "user") return
       const agent = yield* agents.get(user.info.agent)
@@ -60,7 +86,7 @@ const layer = Layer.effect(
     const reconcileRevert: Interface["reconcileRevert"] = (session) => Effect.gen(function* () {
       if (session.revert && session.metadata?.claudeCode) yield* host.reconcileRevert(session)
     })
-    return Service.of({ turn, admitted, steer: host.steer, interrupt: host.interrupt, setModel: host.setModel,
+    return Service.of({ turn, workflowTurn, admitted, steer: host.steer, interrupt: host.interrupt, setModel: host.setModel,
       fork: host.fork, release: host.release, reconcileRevert })
   }),
 )

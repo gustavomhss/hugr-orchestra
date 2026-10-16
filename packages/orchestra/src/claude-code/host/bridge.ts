@@ -5,6 +5,7 @@ import { Effect } from "effect"
 import type { Agent } from "@/agent/agent"
 import { Permission } from "@/permission"
 import type { Session } from "@/session/session"
+import type { TaskPromptOps } from "@/tool/task"
 import type { Tool } from "@/tool/tool"
 import { ClaudeHostMcp } from "./mcp"
 import type { ClaudeHostMirror } from "./mirror"
@@ -16,6 +17,8 @@ export type Live = {
   readonly turn?: { readonly view: ClaudeHostMirror.Mirror }
   readonly known: { readonly calls: Map<string, ClaudeHostMirror.Mirror> }
   readonly run: ClaudeHostMcp.Bridge["run"]
+  /** The prompt executor of the latest turn's loop: the served `task` and review tools start their child Sessions with it. */
+  readonly promptOps?: () => Effect.Effect<TaskPromptOps>
 }
 
 type Call = {
@@ -107,9 +110,10 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
       const agent = yield* services.agents.get(session.agent ?? author.agent).pipe(Effect.orDie)
       if (!agent || (agent.id ?? agent.name) !== call.reservation.seat || author.agent !== call.reservation.seat)
         return yield* Effect.die(new Error(`HOLD: MCP call ${part.callID} does not belong to its calling seat.`))
+      const promptOps = live.promptOps ? yield* live.promptOps() : undefined
       return {
         sessionID: part.sessionID, messageID: part.messageID, callID: part.callID, agent: agent.name, agentID: agent.id,
-        abort: call.signal, messages, extra: { claudeCode: true },
+        abort: call.signal, messages, extra: { claudeCode: true, ...(promptOps ? { promptOps } : {}) },
         metadata: (value) => Effect.gen(function* () {
           if (call.signal?.aborted) return
           const current = tool(part.callID)
