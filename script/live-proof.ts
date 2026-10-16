@@ -218,7 +218,9 @@ async function listening(file: string) {
     const match = existsSync(file) ? /listening on (http:\/\/\S+)/.exec(readFileSync(file, "utf8")) : null
     if (match) return match[1]
   }
-  stop(`server did not start; see ${path.join(out, "server.log")}`)
+  const log = path.join(out, "server.log")
+  const tail = existsSync(log) ? readFileSync(log, "utf8").split("\n").filter((line) => !/^\s+at /.test(line)).slice(-40).join("\n") : ""
+  stop(`server did not start; last lines of ${log}:\n${tail}`)
 }
 
 // Sends one prompt, answers permission asks with the owner, waits for idle, then prints what happened in that turn.
