@@ -137,8 +137,10 @@ export const layer = Layer.effect(
       })
 
       return yield* compatible().pipe(
+        // A cold daemon start takes up to ~5s on slow hosts (macOS Intel CI), so
+        // a retry count would race it. Wait on a deadline; an exited daemon ends it early.
         Effect.retry({
-          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.recurs(100))),
+          schedule: Schedule.spaced("50 millis").pipe(Schedule.both(Schedule.during("20 seconds"))),
           while: () => child.exit === undefined,
         }),
         Effect.map((info) => info.url),
