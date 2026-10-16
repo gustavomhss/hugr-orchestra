@@ -154,8 +154,21 @@ it.instance("anonymous zen models resolve under the public sentinel without cred
     // The fixture catalog lists active zero-cost Zen models; no auth is stored.
     const provider = yield* Provider.use.getProvider(ProviderV2.ID.opencode)
     expect(provider.key).toBe("public")
+    expect(
+      Object.values(provider.models).some((model) => model.status !== "deprecated" && model.cost.input === 0),
+    ).toBe(true)
     expect(Provider.hasAnonymousModel(provider)).toBe(true)
   }),
+)
+
+it.instance(
+  "disabled zen provider does not resolve anonymously",
+  Effect.gen(function* () {
+    expect(yield* Provider.use.getProvider(ProviderV2.ID.opencode).pipe(Effect.flip)).toBeInstanceOf(
+      Provider.NoProvidersError,
+    )
+  }),
+  { config: { disabled_providers: ["opencode"] } },
 )
 
 it.instance(
