@@ -318,7 +318,7 @@ function clip(text: string, max: number) {
 
 // A function so it is hoisted above the top-level step dispatch.
 function defaultBrief() {
-  return `Proposal only: write proposal.md and nothing else.
+  return `Proposal only: create proposal.md with the write tool; that file on disk is the deliverable, and text in your reply does not count.
 Read the Atlas context yourself (atlas_context catalog first, then the units you choose) and load archie-work-package.
 Propose making money handling exact: src/money.ts converts a decimal amount to integer cents without floating-point loss
 (non-finite and fractional-cent inputs are explicit errors), and src/checkout.ts totals integer cents exactly.
