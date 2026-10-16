@@ -694,7 +694,6 @@ describe("server session", () => {
     const second = store.sync("child")
 
     firstResponse.resolve(response())
-    // A read from a replaced load generation settles as not found and never repopulates the store.
     await expect(first).rejects.toThrow("Session not found: child")
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
@@ -716,7 +715,6 @@ describe("server session", () => {
 
     store.apply({ type: "message.removed", properties: { sessionID: "child", messageID: message.id } })
     firstResponse.resolve(response())
-    // A read from a replaced load generation settles as not found and never repopulates the store.
     await expect(first).rejects.toThrow("Session not found: child")
     secondResponse.resolve(response([{ info: message, parts: [] }]))
     await second
