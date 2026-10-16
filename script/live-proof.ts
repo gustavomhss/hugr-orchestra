@@ -124,11 +124,23 @@ async function author() {
       "Do nothing else: no admission, plan, review or approval yet. When the task returns, report its terminal state and blockers and end the turn.",
       "<<<BRIEF", brief, "BRIEF>>>",
     ].join("\n"))
-    const task = (await toolParts(api)).findLast((part) => part.tool === "task")
-    if (!task || task.state.status !== "completed") stop("the archie task did not complete; see the transcript above")
-    if (!existsSync(path.join(fixture, "proposal.md"))) stop("archie did not write proposal.md")
-    const block = relayBlock(readFileSync(path.join(fixture, "proposal.md"), "utf8"))
-    if (!block.ok) stop(`proposal.md has no parseable native Relay document: ${block.error}`)
+    // As in ordinary use, Archie gets the exact problem back and fixes its own proposal, at most twice.
+    for (const attempt of [1, 2, 3]) {
+      const task = (await toolParts(api)).findLast((part) => part.tool === "task")
+      if (!task || task.state.status !== "completed") stop("the archie task did not complete; see the transcript above")
+      const file = path.join(fixture, "proposal.md")
+      const block = existsSync(file) ? relayBlock(readFileSync(file, "utf8")) : { ok: false as const, error: "proposal.md does not exist on disk" }
+      if (block.ok) break
+      if (attempt === 3) stop(`proposal.md has no parseable native Relay document after two corrections: ${block.error}`)
+      console.log(`\ncorrection ${attempt}: ${block.error}`)
+      await turn(api, [
+        `Resume the same archie task with task_id ${task.state.metadata?.sessionId} (foreground, writePaths ["proposal.md"]) and this prompt, byte for byte:`,
+        "<<<FIX",
+        `The host read proposal.md and found: ${block.error}. Rewrite proposal.md with the write tool so its single \`\`\`json block parses with JSON.parse and follows the exact shape from the brief. Keep the rest of the proposal.`,
+        "FIX>>>",
+        "Do nothing else. When it returns, report its terminal state and end the turn.",
+      ].join("\n"))
+    }
     await $`git -C ${fixture} add proposal.md`.quiet()
     await $`git -C ${fixture} commit -q -m ${"proposal: archie live proof"}`.quiet()
     console.log("\nAUTHOR OK (proposal.md committed in the fixture). Next: publish")
