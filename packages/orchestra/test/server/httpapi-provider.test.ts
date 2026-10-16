@@ -423,6 +423,7 @@ describe("provider HttpApi", () => {
       expect(isRecord(provider)).toBe(true)
       // The key authenticates the runtime; it must never reach the client.
       expect(isRecord(provider) && "key" in provider).toBe(false)
+      expect(JSON.stringify(body)).not.toContain("test-go-key")
     }),
     projectOptions,
   )

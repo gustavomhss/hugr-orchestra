@@ -125,13 +125,27 @@ it.instance("default integration key connects its base provider without reload",
     const id = ProviderV2.ID.make("opencode-go")
     // No auth is stored yet, so resolution fails even though models.dev lists the provider.
     expect(yield* Provider.use.getProvider(id).pipe(Effect.flip)).toBeInstanceOf(Provider.NoProvidersError)
-    yield* credentials.create({
+    const first = yield* credentials.create({
       integrationID: Integration.ID.make("opencode-go"),
       value: Credential.Key.make({ type: "key", key: "test-go-key" }),
     })
     // The dialog writes the credential after this InstanceState loaded; the
     // runtime must still pick the key up when the provider is resolved.
     expect((yield* Provider.use.getProvider(id)).key).toBe("test-go-key")
+    // Newest credential wins when several default keys exist.
+    yield* credentials.create({
+      integrationID: Integration.ID.make("opencode-go"),
+      value: Credential.Key.make({ type: "key", key: "test-go-key-rotated" }),
+    })
+    expect((yield* Provider.use.getProvider(id)).key).toBe("test-go-key-rotated")
+    // Removing every credential restores the loader-time entry instead of
+    // leaving the revoked key usable.
+    yield* credentials.remove(first.id)
+    const rotated = (yield* credentials.all()).find(
+      (item) => item.integrationID === Integration.ID.make("opencode-go"),
+    )
+    if (rotated) yield* credentials.remove(rotated.id)
+    expect(yield* Provider.use.getProvider(id).pipe(Effect.flip)).toBeInstanceOf(Provider.NoProvidersError)
   }),
 )
 

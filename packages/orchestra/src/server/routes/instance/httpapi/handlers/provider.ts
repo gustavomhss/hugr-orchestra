@@ -72,7 +72,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         if (cred.value.type !== "key") continue
         const label = cred.label && cred.label !== "default" ? cred.label : ""
         if (!label) {
-          if (baseProviders[cred.integrationID]) keyed.add(cred.integrationID)
+          if (Object.hasOwn(baseProviders, cred.integrationID)) keyed.add(cred.integrationID)
           continue
         }
         const base = baseProviders[cred.integrationID]
