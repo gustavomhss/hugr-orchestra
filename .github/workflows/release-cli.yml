@@ -162,6 +162,22 @@ jobs:
             --payloads "$RUNNER_TEMP/payloads" --archives "$RUNNER_TEMP/archives" \
             --base-url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION" --out "$RUNNER_TEMP/assembled"
           cp "$RUNNER_TEMP"/archives/*.tar.gz packages/cli/distribution/install.sh "$RUNNER_TEMP/assembled/"
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
+        with:
+          node-version: "22"
+      # Artifact upload drops Unix modes, so packages are packed here, where executables still carry +x, and the
+      # publish job ships these exact tarballs.
+      - name: Pack npm packages and run the packed Linux CLI
+        run: |
+          set -euo pipefail
+          mkdir -p "$RUNNER_TEMP/assembled/npm-packs" "$RUNNER_TEMP/npm-smoke"
+          for package in "$RUNNER_TEMP"/assembled/npm/*/; do npm pack "$package" --pack-destination "$RUNNER_TEMP/assembled/npm-packs" >/dev/null; done
+          rm -rf "$RUNNER_TEMP/assembled/npm"
+          packs="$RUNNER_TEMP/assembled/npm-packs"
+          npm install --prefix "$RUNNER_TEMP/npm-smoke" --no-audit --no-fund --omit=optional \
+            "$packs/hugr-cli-linux-x64-baseline-$VERSION.tgz" "$packs/hugr-cli-$VERSION.tgz"
+          reported=$(HOME="$RUNNER_TEMP/npm-smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/orchestra" --version)
+          [ "$reported" = "$VERSION" ] || { echo "RELEASE_PACKED_VERSION_MISMATCH: $reported" >&2; exit 1; }
       - name: Generate the AUR .SRCINFO with real makepkg
         run: |
           set -euo pipefail
@@ -208,8 +224,8 @@ jobs:
         run: |
           set -euo pipefail
           [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
-          for package in assembled/npm/cli-*/; do npm publish "$package" --access public --provenance; done
-          npm publish assembled/npm/cli/ --access public --provenance
+          for package in assembled/npm-packs/hugr-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
+          npm publish "assembled/npm-packs/hugr-cli-$VERSION.tgz" --access public --provenance
       - name: Update the Homebrew tap
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
