@@ -253,6 +253,7 @@ import type {
   SessionShellResponses,
   SessionStatusErrors,
   SessionStatusResponses,
+  SessionSubagentModelsPolicy,
   SessionSummarizeErrors,
   SessionSummarizeResponses,
   SessionTodoErrors,
@@ -459,6 +460,8 @@ import type {
   V2SessionEventsResponses,
   V2SessionGetErrors,
   V2SessionGetResponses,
+  V2SessionGetSubagentModelsErrors,
+  V2SessionGetSubagentModelsResponses,
   V2SessionHistoryErrors,
   V2SessionHistoryResponses,
   V2SessionInterruptErrors,
@@ -491,6 +494,8 @@ import type {
   V2SessionRevertCommitResponses,
   V2SessionRevertStageErrors,
   V2SessionRevertStageResponses,
+  V2SessionSetSubagentModelsErrors,
+  V2SessionSetSubagentModelsResponses,
   V2SessionSwitchAgentErrors,
   V2SessionSwitchAgentResponses,
   V2SessionSwitchModelErrors,
@@ -6150,6 +6155,68 @@ export class Session3 extends HeyApiClient {
       url: "/api/session/{sessionID}",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Get session subagent model policy
+   *
+   * Read the stored outgoing subagent model policy. Corrupt stored policy is refused.
+   */
+  public getSubagentModels<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).get<
+      V2SessionGetSubagentModelsResponses,
+      V2SessionGetSubagentModelsErrors,
+      ThrowOnError
+    >({
+      url: "/api/session/{sessionID}/subagent-models",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Set session subagent model policy
+   *
+   * Durably replace the outgoing subagent model policy; inheritance and an empty allowlist are distinct.
+   */
+  public setSubagentModels<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      policy?: SessionSubagentModelsPolicy
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "policy" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2SessionSetSubagentModelsResponses,
+      V2SessionSetSubagentModelsErrors,
+      ThrowOnError
+    >({
+      url: "/api/session/{sessionID}/subagent-models",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 

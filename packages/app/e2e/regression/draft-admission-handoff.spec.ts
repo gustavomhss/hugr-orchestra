@@ -251,8 +251,8 @@ async function setup(page: Page) {
     directory,
     project: { id: session.projectID, worktree: directory, vcs: "git", name: "draft-handoff", time: session.time, sandboxes: [] },
     provider: {
-      all: [{ id: "opencode", name: "Orchestra", models: { "draft-model": { id: "draft-model", name: "Draft Model", limit: { context: 200000 }, variants: {} } } }],
-      connected: ["opencode"], default: { opencode: "draft-model" },
+      all: [{ id: "orchestra", name: "Orchestra", models: { "draft-model": { id: "draft-model", name: "Draft Model", limit: { context: 200000 }, variants: {} } } }],
+      connected: ["orchestra"], default: { orchestra: "draft-model" },
     },
     sessions,
     pageMessages: (id) => ({ items: id === sessionID ? fixture.messages : [] }),

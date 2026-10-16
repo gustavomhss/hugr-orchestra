@@ -54,6 +54,7 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { WorkflowHost } from "./workflow-host"
+import { AtlasKnowledge } from "./atlas-knowledge"
 
 /** Process-scoped application registration. Every invocation resolves its own actual Session placement. */
 const layer = Layer.effectDiscard(
@@ -191,6 +192,7 @@ export const node = makeGlobalNode({
     Git.node,
     EventV2Bridge.node,
     RelayWorkflowSession.node,
+    AtlasKnowledge.node,
   ],
 })
 

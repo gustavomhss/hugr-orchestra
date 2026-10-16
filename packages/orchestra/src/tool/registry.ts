@@ -18,6 +18,8 @@ import { LeanRecallTool } from "./lean-recall"
 import { ContextCompactTool } from "./context-compact"
 import { SessionContinuity } from "@/continuity/service"
 import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
+import { AtlasContextTool, boundRetained } from "./atlas-context"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ResearchRegistry } from "./research-registry"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
@@ -46,7 +48,6 @@ import { Tool } from "./tool"
 import { Config } from "@/config/config"
 import { type ToolContext, type ToolDefinition } from "@orchestra/plugin"
 import type { JSONSchema7, JSONSchema7Definition } from "@ai-sdk/provider"
-import { Schema } from "effect"
 import z from "zod"
 import { Plugin } from "../plugin"
 import { Provider } from "@/provider/provider"
@@ -59,7 +60,7 @@ import { Glob } from "@orchestra/core/util/glob"
 import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
 import path from "path"
 import { pathToFileURL } from "url"
-import { Effect, Layer, Context } from "effect"
+import { Effect, Layer, Context, Schema } from "effect"
 import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Format } from "../format"
@@ -92,6 +93,8 @@ export function webSearchEnabled(flags = { exa: false, parallel: false }) {
 
 type TaskDef = Tool.InferDef<typeof TaskTool>
 type ReadDef = Tool.InferDef<typeof ReadTool>
+// Host-owned Atlas doors: no configured plugin or MCP tool may take their IDs.
+export const nativeAtlasTools: ReadonlySet<string> = new Set<string>([AtlasContextTool.id, AtlasMemoryRecallTool.id, AtlasMemoryEmitTool.id])
 
 type PluginDef = Tool.Def & {
   executeWithSafety: (
@@ -467,12 +470,14 @@ const layer = Layer.effect(
                   () => context.abort.aborted,
                 )),
               )
-              .pipe(Effect.orDie),
+              .pipe(Effect.flatMap((result) => boundRetained(definition.id, result, truncate)), Effect.orDie),
         })),
         ...s.custom.map((definition) => ({
           ...definition,
           execute: (args: unknown, context: Tool.Context) =>
-            context.agentID === "jimmy"
+            nativeAtlasTools.has(definition.id)
+              ? Effect.die(new Error(`Configured tools cannot replace native Atlas tool ${definition.id}`))
+              : context.agentID === "jimmy"
               ? Effect.die(new Error("Discovery cannot execute configured plugin tools"))
               : definition.executeWithSafety(args, context, durableSafety, requiredBinding),
         })),
@@ -532,6 +537,7 @@ const layer = Layer.effect(
         input.durableSafety !== false,
         input.agent.native === true && input.agent.id === "backend",
       )).filter((tool, index) => {
+        if (index >= s.builtin.length && nativeAtlasTools.has(tool.id)) return false
         if (tool.id === MaestroRecordResultDecisionTool.id && (input.agent.id !== "maestro" || input.agent.native !== true)) return false
         if (
           Object.values(MaestroArsenal.names).some((name) => name === tool.id) &&
@@ -551,7 +557,7 @@ const layer = Layer.effect(
             input.agent.id !== "maestro") ||
           (tool.id === MaestroRecordReviewTool.id && input.agent.id !== "lucy") ||
           (tool.id === MaestroGrantAuthorizationTool.id && input.agent.id !== "maestro") ||
-          // Bound to the backend seat's Memory owner: a configured agent that merely reuses the id gets neither.
+          // A configured agent that merely reuses a supported seat id gets no native Memory tools.
           ((tool.id === AtlasMemoryRecallTool.id || tool.id === AtlasMemoryEmitTool.id) &&
             !AtlasMemory.supports(input.agent))
         ) {
@@ -763,18 +769,8 @@ export const node = LayerNode.make({
     Git.node,
     httpClient,
     CrossSpawnSpawner.node,
-    Format.node,
-    Truncate.node,
-    RuntimeFlags.node,
-    MCP.node,
-    Database.node,
-    Archive.node,
-    SessionContinuity.node,
-    ArsenalObservations.node,
-    AppProcess.node,
-    Global.node,
-    InstanceStore.node,
-    Permission.node,
+    Format.node, Truncate.node, AtlasKnowledge.node, RuntimeFlags.node, MCP.node, Database.node, Archive.node,
+    SessionContinuity.node, ArsenalObservations.node, AppProcess.node, Global.node, InstanceStore.node, Permission.node,
     Ripgrep.node,
     ...ResearchRegistry.nodes,
     // The Relay service of each Location, which holds the Arsenal completion arms (ArsenalBindings.make).

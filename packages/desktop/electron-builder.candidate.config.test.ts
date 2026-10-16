@@ -10,6 +10,9 @@ import baseVite from "./electron.vite.config"
 import vite from "./electron.vite.candidate.config"
 import { assertCandidateHost, assertMachOX64, inventory, verifyMaterials } from "./scripts/lean-candidate"
 import { leanNotices, leanPin } from "../orchestra/script/lean-notices"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
+
+const licenses = path.join(WorkspacePaths.make(import.meta.dirname).module("orchestra"), "dist/node/licenses")
 
 test("candidate identity disables production protocols, feeds and signing", () => {
   expect(builder.appId).toBe("ai.hugr.orchestra.lean.candidate")
@@ -34,7 +37,7 @@ test("candidate preserves production package filters and app resources, appends 
   const resources = baseBuilder.extraResources ?? []
   expect(builder.extraResources).toEqual([
     ...(Array.isArray(resources) ? resources : [resources]),
-    { from: "../orchestra/dist/node/licenses", to: "licenses" },
+    { from: licenses, to: "licenses" },
   ])
   expect(builder.extraResources).toContainEqual({ from: "resources/omni", to: "omni" })
   expect(builder.extraResources).toContainEqual({ from: "resources/cli", to: "cli" })
@@ -85,7 +88,7 @@ for (const channel of ["dev", "beta", "prod"]) {
     expect(graph.channel).toBe(JSON.stringify(channel))
     expect(graph.candidate).toBe('"1"')
     expect(graph.normal).toBeNull()
-    expect(graph.resources).toEqual([...graph.baseResources, { from: "../orchestra/dist/node/licenses", to: "licenses" }])
+    expect(graph.resources).toEqual([...graph.baseResources, { from: licenses, to: "licenses" }])
     // Every channel ships the owned CLI from resources/cli; the base graph is the one evaluated for this channel.
     expect(graph.resources).toContainEqual({ from: "resources/cli", to: "cli" })
     expect(graph.baseRpm).toBe({ dev: "orchestra-dev", beta: "orchestra-beta", prod: "orchestra" }[channel])
@@ -161,7 +164,7 @@ test("candidate configuration and CLI compile with real dependency types", () =>
   const options: ts.CompilerOptions = {
     noEmit: true, strict: true, skipLibCheck: true, allowJs: true, esModuleInterop: true,
     target: ts.ScriptTarget.ESNext, module: ts.ModuleKind.ESNext, moduleResolution: ts.ModuleResolutionKind.Bundler,
-    types: ["bun", "node"],
+    allowImportingTsExtensions: true, types: ["bun", "node"],
   }
   const files = ["electron-builder.candidate.config.ts", "electron.vite.candidate.config.ts", "scripts/lean-candidate.ts", "electron-builder.candidate.config.test.ts", "electron-builder.candidate.runner.test.ts"]
   const program = ts.createProgram(files.map((file) => path.join(import.meta.dirname, file)), options)

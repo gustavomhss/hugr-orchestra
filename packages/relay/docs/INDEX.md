@@ -5,9 +5,9 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-08T14:46:23Z
+- **Generated:** 2026-10-15T15:22:18Z
 - **Files:** 74
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `edccff59978fc5bf838bc4a0d96f0e28a1c64e0e72df7a85eff17debbf52fdc3`
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `f2ca62af43f05c26fcec02070abab00e3cbb9cc8d30cef966cf60bbd33deabc7`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -16,7 +16,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `CONTRIBUTING.md` | 60 | 2842 | `953c9d8f8dced59cb5f460b3b2adf522fd791f0c51bc16252eaab35edef8a02b` |
 | `PRODUCT.md` | 114 | 11642 | `b277ced56835e975bf4159661593a43952550b8cbf153abfc11aaca2d67f0a91` |
 | `README.md` | 102 | 6197 | `e66dccd12b27a18d2ebeddf72c0fcc48520fea50f6373fc66f96354725c24eaa` |
-| `SPEC.md` | 448 | 35100 | `20da67ba533aec279f5faf9a8bec650aa209558a8e516c8e0584d9fa78db9158` |
+| `SPEC.md` | 466 | 36706 | `49b0c29ca0e26acdb217693112e29cafba476a1b45d23912b7f787d917cbc633` |
 | `WHITEPAPER.md` | 123 | 7684 | `febba8ec4a88c9f2a8e4222039a9fab007eafe81c9f935a3b6ef731d292c912d` |
 | `benchmark/DESIGN.md` | 83 | 5594 | `96c0f824a36bf6fb4b7b2763cfba95499d1933680c6c7a8d4fcd3ce7df47e443` |
 | `benchmark/GOALS.md` | 44 | 3053 | `d138b4cdafe719702adf55d27e8f98628e862538fd399cf3733453e07fbaf29f` |
@@ -29,7 +29,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/FINDING-self-graded-review-verdicts.md` | 116 | 8181 | `561ea2e78936e8d479f686c68e62930a0da37a7dfd8f7438e3f14705b2248b10` |
 | `docs/README.md` | 47 | 2806 | `0abdb3deb1ee2b22c0904dc099b3fe81dbabd34aa6efe873840219dc972cdbc2` |
 | `docs/architecture.md` | 199 | 15560 | `7a81d8513ce5df669c562fb8868454347d32df9dd57c4e68c60b6955e182b988` |
-| `docs/authoring-api.md` | 89 | 5685 | `a0914a2222a5cde0a41ec94e2dc2deb1af1cdb708ff5aabab22afb8da1fd92cd` |
+| `docs/authoring-api.md` | 99 | 6674 | `8b8527b11a4862e669323a9b7680353dc2e9775e750540acfe5fe9d13e956ea6` |
 | `docs/authoring-sprints.md` | 248 | 16966 | `a54d5c8e16cc0f515b70d2f626fa2f2cc93e51dc8ff72ae134e25a4787481c11` |
 | `docs/auto-decompose.md` | 71 | 3589 | `a614f0b3b432fe36d1efdecb79a58e8fa6a9efb9cd6705cf20b0e3fd11a27e09` |
 | `docs/compaction.md` | 58 | 2569 | `ab6c2fc73746c1005748540a44bd586defe2619b049d9bd911e7f86eda96683a` |
@@ -60,7 +60,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/sdk.md` | 165 | 9710 | `e76b61e8ee8571c9c68ba6c5be45081d0215f48fb927feecb8f5f0fafa9e02f3` |
 | `docs/skills/relay-arm-hook/SKILL.md` | 114 | 14360 | `d8be9b58576e2a076b2b56a8f6beac031fa3907cdd342043b7b4a118ea5fb23b` |
 | `docs/skills/relay-audit/SKILL.md` | 114 | 15918 | `bcf595da0aa73e725cc20972299e7d9c6404ada243f79070be351cac02f32831` |
-| `docs/skills/relay-authoring/SKILL.md` | 96 | 5488 | `5bc9ca9ee4feed8ee7cd3c9f137f1f0b3624c4a26f8df8abb70f5367b5f029d4` |
+| `docs/skills/relay-authoring/SKILL.md` | 105 | 6333 | `69b4e11d14dce4f30dadeb2446475e3d3da86cd42a61d4cb51a9958bd5cea5c8` |
 | `docs/skills/relay-autodecompose/SKILL.md` | 98 | 5339 | `d2b11f5e65f9614f6ca6a1d123e31cd1fb7aaee5755bea3bc3b30599c5c35f37` |
 | `docs/skills/relay-benchmark/SKILL.md` | 144 | 12613 | `db5c6a14cc1baf0540bd4c36346f6f85f366fbdadec0e5db196f15d5ef09f8e7` |
 | `docs/skills/relay-blast-radius/SKILL.md` | 135 | 18979 | `9fc1138491e9bbf9b9da0d6118ee2db91d59e87b33d54fb5d7832153e7549404` |

@@ -65,6 +65,10 @@ export async function run(options: { mutation?: boolean; diagnose?: boolean; qui
       if (cell === "addon-missing") unlinkSync(addon)
       if (cell === "addon-corrupt") writeFileSync(addon, "V9 deliberately corrupt native addon\n")
       if (cell === "supervisor-missing") unlinkSync(supervisor)
+      // A freshly written executable's first Windows launch pays the host's on-access scan (about 2 s for this
+      // binary; later launches reject in under 0.1 s). Pay it untimed on the lazy legacy path, which loads no
+      // addon, so the budget below times the CLI's own rejection.
+      if (win) await execute(bin, ["--version"], { ...env, ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0" }, scratch.project, 30_000, [scratch.home])
       const beforeLoad = load()
       const observed = await execute(bin, ["debug", "omni"], env, scratch.project, cell === "intact" ? 30_000 : 2000, [scratch.home])
       const text = observed.stdout + observed.stderr

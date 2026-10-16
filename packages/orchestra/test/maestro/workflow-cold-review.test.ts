@@ -17,6 +17,7 @@ import { InstanceRef } from "@/effect/instance-ref"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { recordReview, recordValidation } from "@/maestro/validation-record"
 import { InstanceStore } from "@/project/instance-store"
@@ -124,7 +125,7 @@ cases.forEach((variant) => {
         expect(yield* check.pipe(Effect.flip)).toMatchObject({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
       }).pipe(Effect.provideService(InstanceRef, instance))
     }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(LayerNode.group([
-      filesystem, AppProcess.node, CrossSpawnSpawner.node,
+      filesystem, AppProcess.node, CrossSpawnSpawner.node, AtlasKnowledge.node,
     ])))))
   }), 90000)
 })

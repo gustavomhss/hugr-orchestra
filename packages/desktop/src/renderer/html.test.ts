@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { join, dirname, resolve } from "node:path"
 import { existsSync } from "node:fs"
 import { fileURLToPath } from "node:url"
+import config from "../../electron.vite.config"
 
 const dir = dirname(fileURLToPath(import.meta.url))
 const root = resolve(dir, "../..")
@@ -58,12 +59,10 @@ describe("electron renderer html", () => {
  */
 describe("electron vite publicDir", () => {
   test("configured publicDir resolves to a directory with oc-theme-preload.js", async () => {
-    const config = await Bun.file(join(root, "electron.vite.config.ts")).text()
-    const pub = config.match(/publicDir:\s*["']([^"']+)["']/)
-    const rendererRoot = config.match(/root:\s*["']([^"']+)["']/)
-    expect(pub).not.toBeNull()
-    expect(rendererRoot).not.toBeNull()
-    const resolved = resolve(root, rendererRoot![1], pub![1])
+    const pub = config.renderer?.publicDir
+    const rendererRoot = config.renderer?.root
+    if (typeof pub !== "string" || typeof rendererRoot !== "string") throw new Error("renderer publicDir and root must be paths")
+    const resolved = resolve(root, rendererRoot, pub)
     expect(existsSync(resolved)).toBe(true)
     expect(existsSync(join(resolved, "oc-theme-preload.js"))).toBe(true)
   })
