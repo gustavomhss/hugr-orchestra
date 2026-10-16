@@ -149,6 +149,15 @@ it.instance("default integration key connects its base provider without reload",
   }),
 )
 
+it.instance("anonymous zen models resolve under the public sentinel without credential", () =>
+  Effect.gen(function* () {
+    // The fixture catalog lists active zero-cost Zen models; no auth is stored.
+    const provider = yield* Provider.use.getProvider(ProviderV2.ID.opencode)
+    expect(provider.key).toBe("public")
+    expect(Provider.hasAnonymousModel(provider)).toBe(true)
+  }),
+)
+
 it.instance(
   "provider loaded from config with apiKey option",
   Effect.gen(function* () {

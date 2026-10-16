@@ -1090,6 +1090,19 @@ export const ConfigProvidersResult = Schema.Struct({
 })
 export type ConfigProvidersResult = Types.DeepMutable<Schema.Schema.Type<typeof ConfigProvidersResult>>
 
+// Anonymous access is a Zen-only contract, mirroring Catalog.isAnonymousZenModel:
+// a zero-cost active model needs no credential.
+export function hasAnonymousModel(provider: Pick<Info, "models">) {
+  return Object.values(provider.models).some(
+    (model) =>
+      model.status !== "deprecated" &&
+      model.cost?.input === 0 &&
+      model.cost?.output === 0 &&
+      model.cost?.cache?.read === 0 &&
+      model.cost?.cache?.write === 0,
+  )
+}
+
 export function toPublicInfo(provider: Info): Omit<Info, "key"> {
   // Keys authenticate the runtime; they must never reach clients or plugins.
   const { key: _, ...rest } = provider
@@ -1894,11 +1907,18 @@ const layer = Layer.effect(
             if (!s.credentialKeys.has(providerID)) s.credentialKeys.set(providerID, s.providers[providerID])
             s.providers[providerID] = { ...base, key: credential.value.key }
           }
-        } else if (s.credentialKeys.has(providerID)) {
-          const previous = s.credentialKeys.get(providerID)
-          s.credentialKeys.delete(providerID)
-          if (previous) s.providers[providerID] = previous
-          else delete s.providers[providerID]
+        } else {
+          if (s.credentialKeys.has(providerID)) {
+            const previous = s.credentialKeys.get(providerID)
+            s.credentialKeys.delete(providerID)
+            if (previous) s.providers[providerID] = previous
+            else delete s.providers[providerID]
+          }
+          // No credential: Zen anonymous models still run under the public sentinel.
+          const current = s.providers[providerID] as Info | undefined
+          if (current && !current.key && providerID === ProviderV2.ID.opencode && hasAnonymousModel(current)) {
+            s.providers[providerID] = { ...current, key: "public" }
+          }
         }
         return s.providers[providerID]
       }

@@ -427,4 +427,19 @@ describe("provider HttpApi", () => {
     }),
     projectOptions,
   )
+
+  it.instance(
+    "zen anonymous models list their provider connected without credential",
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const response = yield* request("/provider", { headers: { "x-orchestra-directory": directory } })
+      expect(response.status).toBe(200)
+      const body = yield* response.json
+      expect(body).toMatchObject({ connected: expect.arrayContaining(["opencode"]) })
+      const provider = providerByID(body, "all", "opencode")
+      expect(isRecord(provider)).toBe(true)
+      expect(isRecord(provider) && "key" in provider).toBe(false)
+    }),
+    projectOptions,
+  )
 })
