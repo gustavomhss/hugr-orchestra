@@ -6,7 +6,6 @@ import { children, createMemo, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
 import { createProviderResource } from "@/hooks/provider-catalog"
 import {
@@ -145,7 +144,6 @@ export function ProviderConnectDialog(props: {
   const language = useLanguage()
   const dialog = useDialog()
   const sdk = useServerSDK()
-  const platform = usePlatform()
   const location = { directory: props.directory }
   const integration = createProviderResource(
     () => ({ id: props.id, location, client: sdk(), server: sdk().scope }),
@@ -252,9 +250,6 @@ export function ProviderConnectDialog(props: {
         if (!alive.value) return
         const url = authorizationURL(result.data.url)
         if (!url) return fail(language.t("orchestra.providers.connectDialog.badLink"))
-        // The Orchestra console recognizes the desktop shell by its own OAuth client.
-        if (props.id === "opencode" && platform.platform === "desktop")
-          url.searchParams.set("client_id", "opencode-desktop")
         setState({ busy: false, attempt: { ...result.data, url: url.href } })
         if (result.data.mode === "auto") poll(result.data.attemptID)
       }, fail)

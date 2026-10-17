@@ -248,6 +248,9 @@ const getBase = (appId: string): Configuration => ({
   linux: {
     icon: `resources/icons`,
     category: "Development",
+    // deb needs a maintainer; without this electron-builder derives it from package.json author.email, which Orchestra
+    // does not publish yet.
+    maintainer: "HuGR",
     executableName: appId,
     desktop: {
       entry: {

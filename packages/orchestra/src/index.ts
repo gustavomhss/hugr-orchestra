@@ -114,14 +114,6 @@ const cli = yargs(args)
   )
   .command(
     lazy({
-      command: "console",
-      describe: false,
-      load: () => import("./cli/cmd/account"),
-      resolve: (m) => m.ConsoleCommand,
-    }),
-  )
-  .command(
-    lazy({
       command: "providers",
       aliases: ["auth"],
       describe: "manage AI providers and credentials",

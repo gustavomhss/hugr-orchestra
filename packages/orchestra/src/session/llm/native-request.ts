@@ -11,7 +11,6 @@ import {
 } from "@orchestra/llm/providers"
 import type { JSONSchema7, ModelMessage } from "ai"
 import type { Provider } from "@/provider/provider"
-import { InstallationHeaders } from "@orchestra/core/installation/headers"
 import { isRecord } from "@/util/record"
 
 type ToolInput = {
@@ -155,15 +154,7 @@ const requireBaseURL = (model: Provider.Model, url: string | undefined) => {
 export const model = (input: Provider.Model | RequestInput, headers?: Record<string, string>) => {
   const model = "model" in input ? input.model : input
   const url = baseURL(input)
-  const mergedHeaders = InstallationHeaders.forFreeModel(
-    model.providerID,
-    [
-      model.cost,
-      ...(model.cost.tiers ?? []),
-      ...(model.cost.experimentalOver200K ? [model.cost.experimentalOver200K] : []),
-    ],
-    { ...model.headers, ...headers },
-  )
+  const mergedHeaders = { ...model.headers, ...headers }
   const options = {
     ...("model" in input && input.apiKey ? { apiKey: input.apiKey } : {}),
     ...(url ? { baseURL: url } : {}),

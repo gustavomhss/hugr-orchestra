@@ -443,9 +443,8 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
-            "X-Source": "opencode",
+            "X-Title": "Orchestra",
+            "X-Source": "orchestra",
           },
         },
       }),
@@ -463,9 +462,8 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: provider.source === "config",
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
-            "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+            "X-Title": "Orchestra",
+            "X-BILLING-INVOKE-ORIGIN": "Orchestra",
           },
         },
       }),
@@ -578,8 +576,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
+            "X-Title": "Orchestra",
           },
         },
       }),
@@ -859,7 +856,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "X-Cerebras-3rd-Party-Integration": "opencode",
+            "X-Cerebras-3rd-Party-Integration": "orchestra",
           },
         },
       }),
@@ -868,8 +865,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
+            "X-Title": "Orchestra",
           },
         },
       }),

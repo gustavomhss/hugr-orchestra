@@ -30,7 +30,6 @@ import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { createProviderResource } from "@/hooks/provider-catalog"
@@ -375,7 +374,6 @@ function ProviderConnection(props: {
   const dialog = useDialog()
   const serverSDK = useServerSDK()
   const language = useLanguage()
-  const platform = usePlatform()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
   const providers = useProviders(props.directory)
@@ -453,11 +451,6 @@ function ProviderConnection(props: {
         })
         .then((x) => {
           if (!alive.value) return
-          if (props.provider === "opencode" && platform.platform === "desktop") {
-            const url = new URL(x.data.url)
-            url.searchParams.set("client_id", "opencode-desktop")
-            x.data.url = url.href
-          }
           dispatch({ type: "auth.complete", authorization: x.data })
         })
         .catch((e) => {
