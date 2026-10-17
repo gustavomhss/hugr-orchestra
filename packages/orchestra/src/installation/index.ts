@@ -66,10 +66,8 @@ export const FORMULA = "gustavomhss/tap/orchestra"
 
 // The desktop app ships its own copy of the CLI in Resources/cli; that copy is updated with the app.
 export function isDesktopBundle(execPath: string) {
-  return execPath.includes("/Resources/cli/") || execPath.includes("\\resources\\cli\\")
+  return ["/Resources/cli/", "/resources/cli/", "\\resources\\cli\\"].some((directory) => execPath.includes(directory))
 }
-
-export const UPGRADE_DISABLED_MESSAGE = "Upgrades are disabled: Orchestra has no release channel of its own yet."
 
 export interface Interface {
   readonly info: () => Effect.Effect<Info>

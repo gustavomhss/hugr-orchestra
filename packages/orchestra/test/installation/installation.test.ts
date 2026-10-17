@@ -142,6 +142,7 @@ describe("installation", () => {
   test("isDesktopBundle() recognises the app bundle's CLI directory on both platforms", () => {
     expect(Installation.isDesktopBundle("/Applications/Orchestra.app/Contents/Resources/cli/orchestra")).toBe(true)
     expect(Installation.isDesktopBundle("C:\\Orchestra\\resources\\cli\\orchestra.exe")).toBe(true)
+    expect(Installation.isDesktopBundle("/opt/HuGR Orchestra/resources/cli/orchestra")).toBe(true)
     expect(Installation.isDesktopBundle("/usr/local/bin/orchestra")).toBe(false)
   })
 
