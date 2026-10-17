@@ -1,9 +1,11 @@
 import { expect } from "bun:test"
-import { Effect } from "effect"
+import { Cause, Effect } from "effect"
+import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCode } from "@/claude-code/engine"
+import { ClaudeCodeTools } from "@/claude-code/tools"
 import { ClaudeHostAdmission } from "@/claude-code/host/admission"
 import { MessageID, PartID } from "@/session/schema"
 import { ClaudeEngineFixture } from "./engine-fixture"
@@ -71,12 +73,12 @@ ClaudeEngineFixture.it.instance("a turn settles on how it ended, not on tool err
     if (reply?.info.role !== "assistant") throw new Error("expected the package's reply")
     expect(ClaudeCode.settled(reply)).toBe(true)
 
-    const bash = (status: "completed" | "error" | "running") => ({
+    const bash = (status: "completed" | "error" | "running", error = "1 fail") => ({
       id: PartID.ascending(), sessionID: chat.id, messageID: reply.info.id, type: "tool" as const, tool: "Bash", callID: status,
       state: status === "completed"
         ? { status, input: { command: "bun test" }, output: "1 pass", title: "bun test", metadata: {}, time: { start: 1, end: 2 } }
         : status === "error"
-          ? { status, input: { command: "bun test" }, error: "1 fail", time: { start: 1, end: 2 } }
+          ? { status, input: { command: "bun test" }, error, time: { start: 1, end: 2 } }
           : { status, input: { command: "bun test" }, time: { start: 1 } },
     })
     const info = reply.info
@@ -84,6 +86,11 @@ ClaudeEngineFixture.it.instance("a turn settles on how it ended, not on tool err
       ({ info: { ...info, ...change }, parts: [...parts, ...reply.parts] })
     expect(ClaudeCode.settled(turn([bash("error"), bash("completed")]))).toBe(true)
     expect(ClaudeCode.settled(turn([bash("error"), bash("running")]))).toBe(false)
+    // The owner's rejection or dismissal is the owner saying stop, not a step the model worked through.
+    const rejected = ClaudeCodeTools.failure(Cause.fail(new PermissionV1.RejectedError()))
+    expect(ClaudeCode.settled(turn([bash("error", rejected), bash("completed")]))).toBe(false)
+    expect(ClaudeCode.settled(turn([bash("error", "The owner dismissed this question.")]))).toBe(false)
+    expect(ClaudeCode.settled(turn([], { finish: "content-filter" }))).toBe(false)
     expect(ClaudeCode.settled(turn([], { finish: "error" }))).toBe(false)
     expect(ClaudeCode.settled(turn([], { finish: undefined }))).toBe(false)
     expect(ClaudeCode.settled(turn([], { error: { name: "UnknownError", data: { message: "boom" } } }))).toBe(false)

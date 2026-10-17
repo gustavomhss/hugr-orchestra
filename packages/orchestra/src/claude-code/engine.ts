@@ -15,6 +15,7 @@ import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { TaskPromptOps } from "@/tool/task"
 import { ClaudeHost } from "./host/session"
 import { ClaudeHostAdmission } from "./host/admission"
+import { ClaudeCodeTools } from "./tools"
 
 export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interrupt" | "setModel" | "fork" | "release" | "reconcileRevert"> {
   /**
@@ -96,12 +97,14 @@ const layer = Layer.effect(
  * Whether a Claude Code turn ended in a state the Relay host may grade. Unlike a provider step, one turn holds many tool
  * calls the model already saw and acted on: a red test run before the fix, a missed Edit, a gate deny it worked around.
  * Those stay in the turn as `error` parts and do not fail it; whether the package is done is the Relay checks' call
- * in `host.settle`. Only an errored or unfinished turn, or a tool call left without a result, is unsettled.
+ * in `host.settle`. An errored or unfinished turn, a tool call left without a result, or a call the owner rejected
+ * (the owner said stop; normal mode blocks there too) is unsettled.
  */
 export function settled(reply: SessionV1.WithParts) {
   if (reply.info.role !== "assistant" || reply.info.error || !reply.info.finish) return false
   if (["unknown", "error", "content-filter"].includes(reply.info.finish)) return false
-  return reply.parts.every((part) => part.type !== "tool" || part.state.status === "completed" || part.state.status === "error")
+  return reply.parts.every((part) => part.type !== "tool" || part.state.status === "completed" ||
+    (part.state.status === "error" && !ClaudeCodeTools.ownerAnswered(part.state.error)))
 }
 
 export const node = LayerNode.make({
