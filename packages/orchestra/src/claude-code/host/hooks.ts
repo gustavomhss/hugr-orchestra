@@ -13,6 +13,7 @@ export * as ClaudeHostHooks from "./hooks"
 import { Effect, Exit, Option } from "effect"
 import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import type { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Archive } from "@/continuity/archive"
 import type { SessionID } from "@/session/schema"
@@ -48,6 +49,8 @@ export type Context = {
   readonly granted: ClaudeHostGate.Ports["granted"]
   readonly research?: Research
   readonly policy?: ClaudeHostGate.Ports
+  /** The host layer's arsenal bindings for the gate (ClaudeHostGate.live). */
+  readonly arsenal?: Effect.Success<typeof ArsenalBindings.make>
   /** Accepted per-call MCP dispatches and their SDK cancellation signals, owned by the query bridge. */
   readonly calls?: ClaudeHostMcp.Calls
   /** Resolve SDK selection metadata to canonical catalog identity; missing facts remain unknown. */
@@ -76,7 +79,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
-    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
+    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool, arsenal: ctx.arsenal }))
   const unsubscribe = ctx.join.subscribe((frame) => {
     void Promise.resolve().then(() => ctx.run(delegation.notify(frame))).catch((error: unknown) => {
       fault.reason = `Orchestra could not record the subagent delivery: ${String(error)}`

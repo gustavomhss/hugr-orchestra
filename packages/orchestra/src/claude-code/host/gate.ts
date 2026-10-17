@@ -167,11 +167,14 @@ export function agentCall(name: string) {
  * The gate on Orchestra's services. Needs, in the caller's context: Session, Agent, Permission, Config, FSUtil, the
  * child process spawner, the instance, and the arsenal bindings' services (ArsenalBindings.make).
  * `part` finds the mirrored part of a call, so a permission prompt is shown on it.
+ * `arsenal` is the host layer's bindings. The gate outlives the turn that builds it, so bindings made here would hold
+ * an instance cache in that turn's scope, and every call of a later turn would be interrupted once the scope closed.
  */
 export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
   readonly granted: Ports["granted"]
   readonly abort: AbortSignal
   readonly part?: (toolUseID: string) => SessionV1.ToolPart | undefined
+  readonly arsenal?: Effect.Success<typeof ArsenalBindings.make>
 }) {
   const sessions = yield* Session.Service
   const agents = yield* Agent.Service
@@ -181,7 +184,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
   const spawner = yield* ChildProcessSpawner
   const instance = yield* InstanceState.context
   const database = yield* Database.Service
-  const arsenal = yield* ArsenalBindings.make
+  const arsenal = input.arsenal ?? (yield* ArsenalBindings.make)
   const shell = Shell.acceptable((yield* config.get()).shell)
   const projectDirectory = instance.worktree === "/" ? instance.directory : instance.worktree
   const scopes = new Map<string, Scope.Closeable>()

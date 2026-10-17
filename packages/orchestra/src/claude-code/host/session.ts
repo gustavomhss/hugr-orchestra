@@ -506,7 +506,7 @@ const layer = Layer.effect(
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
         hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge, research,
-          run: live.run as ClaudeHostHooks.Context["run"],
+          run: live.run as ClaudeHostHooks.Context["run"], arsenal: bindings,
           models: (type, override) => Effect.gen(function* () {
             if (override !== undefined || type === "fork" || !definitions[type]?.model || definitions[type].model === "inherit") return undefined
             // Corroborate our fixed SDK definition using public metadata, without another provider turn.
