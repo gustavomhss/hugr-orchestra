@@ -455,8 +455,8 @@ jobs:
 
       - name: Run HttpApi exerciser gates
         if: matrix.part == 'gates'
-        # The gates finish in a few minutes; fail fast instead of holding the runner if a scenario wedges.
-        timeout-minutes: 15
+        # Effect mode takes about 15 minutes for 355 scenarios; fail instead of holding the runner if a scenario wedges.
+        timeout-minutes: 25
         working-directory: packages/orchestra
         run: bun run test:httpapi
 
