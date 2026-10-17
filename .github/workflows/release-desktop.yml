@@ -116,6 +116,8 @@ jobs:
           ORCHESTRA_VERSION: ${{ env.VERSION }}
         run: |
           set -euo pipefail
+          # download-artifact transfers file bytes, not Unix execute bits; the CLI build refuses a non-executable supervisor.
+          chmod +x "$OMNI_ARTIFACTS"/linux-*/hugr-omni-supervisor
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
           for target in $targets; do
             bun packages/cli/script/build.ts --skip-install --target "$target"
