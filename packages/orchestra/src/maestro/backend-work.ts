@@ -184,10 +184,11 @@ function claimedArtifacts(artifacts: NonNullable<BackendResult.WorkResult["artif
   const written = new Set(history.flatMap((message) => message.parts).flatMap((part) =>
     part.type === "tool" && part.state.status === "completed" ? touched(part.tool, part.state.input) : [])
     .map((file) => path.resolve(cwd, file)))
+  // Paths are the child's text: quote them so a path holding a newline cannot forge a host line.
   return ["Host check of the paths this card claims (that this Task wrote them, not what they contain):",
     ...paths.map((file) => written.has(path.resolve(cwd, file))
-      ? `- ${file}: written by this Task`
-      : `- ${file}: NOT written by this Task (no completed write, edit or apply_patch); treat the claim as unverified`)].join("\n")
+      ? `- ${JSON.stringify(file)}: written by this Task`
+      : `- ${JSON.stringify(file)}: NOT written by this Task (no completed write, edit or apply_patch); treat the claim as unverified`)].join("\n")
 }
 
 function touched(tool: string, input: Record<string, unknown>) {
@@ -197,5 +198,10 @@ function touched(tool: string, input: Record<string, unknown>) {
   // A patch the tool could not parse wrote nothing.
   const hunks = Effect.runSync(Effect.try({ try: () => Patch.parse(patch), catch: () => undefined }).pipe(
     Effect.orElseSucceed((): readonly Patch.Hunk[] => [])))
-  return hunks.flatMap((hunk) => hunk.type === "update" && hunk.movePath ? [hunk.path, hunk.movePath] : [hunk.path])
+  // A deleted file and the source of a move are not left written.
+  return hunks.flatMap((hunk) => {
+    if (hunk.type === "delete") return []
+    if (hunk.type === "update" && hunk.movePath) return [hunk.movePath]
+    return [hunk.path]
+  })
 }
