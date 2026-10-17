@@ -2,7 +2,10 @@ name: release-cli
 
 # Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
 # only with publish=true, publishes the GitHub release, npm (@hugr/cli), the Homebrew tap and AUR (orchestra-bin).
-# A dry run (the default) uploads every assembled artifact and publishes nothing. musl targets build inside the pinned
+# A dry run (the default) uploads every assembled artifact and publishes nothing. With sign=true the native build jobs sign
+# every macOS and Windows executable before the payload is hashed, archived, packed or checksummed, so every channel ships
+# the signed bytes; publish=true requires sign=true.
+# musl targets build inside the pinned
 # Alpine guests that distribution-bundle qualifies.
 on:
   workflow_dispatch:
@@ -13,6 +16,10 @@ on:
         type: string
       publish:
         description: Publish the GitHub release, npm, Homebrew tap and AUR
+        type: boolean
+        default: false
+      sign:
+        description: Sign and notarize macOS binaries and sign Windows binaries (needs the release environment secrets; required for publish)
         type: boolean
         default: false
 
@@ -34,11 +41,13 @@ jobs:
       - name: Require a stable, unreleased version
         env:
           PUBLISH: ${{ inputs.publish }}
+          SIGN: ${{ inputs.sign }}
           GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
           if [ "$PUBLISH" = true ]; then
+            [ "$SIGN" = true ] || { echo "RELEASE_PUBLISH_REQUIRES_SIGNING: publish=true needs sign=true" >&2; exit 1; }
             [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
             if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: v$VERSION" >&2; exit 1; fi
             if npm view "@hugr/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
@@ -71,6 +80,11 @@ jobs:
     needs: [plan, models]
     runs-on: ${{ matrix.host }}
     timeout-minutes: 60
+    # The release environment holds the signing secrets; an unsigned dry run needs no environment.
+    environment: ${{ inputs.sign && 'release' || '' }}
+    permissions:
+      contents: read
+      id-token: write
     strategy:
       fail-fast: true
       matrix:
@@ -114,6 +128,94 @@ jobs:
           ORCHESTRA_CHANNEL: latest
           MODELS_DEV_API_JSON: ${{ runner.temp }}/models-dev/models-api.json
         run: bun script/build.ts --single --skip-install --target "$TARGET"
+      - name: Require the macOS signing secrets
+        if: inputs.sign && runner.os == 'macOS'
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          for name in APPLE_CERTIFICATE_P12_BASE64 APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID; do
+            [ -n "${!name:-}" ] || { echo "RELEASE_SIGNING_SECRET_MISSING: $name" >&2; exit 1; }
+          done
+      - name: Import the Apple signing certificate
+        if: inputs.sign && runner.os == 'macOS'
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate-p12-base64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+      # Signs every Mach-O the payload ships (CLI, omni supervisor, .node bindings), not only the CLI: the payload
+      # validator accepts exactly these files under bin/.
+      - name: Sign and notarize the macOS binaries
+        if: inputs.sign && runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          [ -n "${CSC_NAME:-}" ] || { echo "RELEASE_SIGNING_IDENTITY_MISSING: CSC_NAME" >&2; exit 1; }
+          bin="packages/cli/dist/cli-$TARGET/bin"
+          signed=()
+          while IFS= read -r -d '' file; do
+            file "$file" | grep -q 'Mach-O' || continue
+            codesign --force --sign "$CSC_NAME" --options runtime --timestamp --entitlements packages/desktop/resources/entitlements.plist "$file"
+            codesign --verify --strict --verbose=2 "$file"
+            signed+=("$file")
+          done < <(find "$bin" -type f -print0)
+          [ "${#signed[@]}" -gt 0 ] || { echo "RELEASE_SIGNING_NO_BINARIES: $bin" >&2; exit 1; }
+          # Bare Mach-O binaries cannot be stapled: Gatekeeper looks the notarization ticket up online, so a first run offline is not covered.
+          zip="$RUNNER_TEMP/notarize-$TARGET.zip"
+          ditto -c -k --sequesterRsrc "${signed[@]}" "$zip"
+          xcrun notarytool submit "$zip" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait --output-format json | tee "$RUNNER_TEMP/notarize.json"
+          [ "$(jq -r .status "$RUNNER_TEMP/notarize.json")" = Accepted ] || { echo "RELEASE_NOTARIZATION_REJECTED: $(jq -r .id "$RUNNER_TEMP/notarize.json")" >&2; exit 1; }
+      - name: Delete the signing keychain
+        if: always() && inputs.sign && runner.os == 'macOS' && env.CSC_KEYCHAIN != ''
+        run: security delete-keychain "$CSC_KEYCHAIN"
+      - name: Require the Windows signing secrets
+        if: inputs.sign && runner.os == 'Windows'
+        env:
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE }}
+        run: |
+          set -euo pipefail
+          for name in AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AZURE_TRUSTED_SIGNING_ENDPOINT AZURE_TRUSTED_SIGNING_ACCOUNT_NAME AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE; do
+            [ -n "${!name:-}" ] || { echo "RELEASE_SIGNING_SECRET_MISSING: $name" >&2; exit 1; }
+          done
+      # azure/login v2.3.0, a457da9ea143d694b1b9c7c869ebb04ebe844ef5.
+      - name: Log in to Azure with OIDC
+        if: inputs.sign && runner.os == 'Windows'
+        uses: azure/login@a457da9ea143d694b1b9c7c869ebb04ebe844ef5
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          enable-AzPSSession: true
+      - name: Sign the Windows binaries
+        if: inputs.sign && runner.os == 'Windows'
+        shell: pwsh
+        env:
+          ORCHESTRA_REQUIRE_SIGNING: "1"
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE }}
+        run: |
+          $ErrorActionPreference = "Stop"
+          $files = @(Get-ChildItem "packages/cli/dist/cli-$env:TARGET/bin" -Recurse -File | Where-Object { $_.Extension -in ".exe", ".dll", ".node" })
+          if ($files.Count -eq 0) { throw "RELEASE_SIGNING_NO_BINARIES" }
+          & pwsh -File script/sign-windows.ps1 @($files.FullName)
+          if ($LASTEXITCODE -ne 0) { throw "WINDOWS_SIGNING_FAILED" }
+          foreach ($file in $files) {
+            $status = (Get-AuthenticodeSignature $file.FullName).Status
+            if ($status -ne "Valid") { throw "RELEASE_WINDOWS_SIGNATURE_INVALID: $($file.Name) $status" }
+          }
       - name: Require the built version
         run: |
           set -euo pipefail
@@ -267,7 +369,7 @@ jobs:
         run: |
           set -euo pipefail
           gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
-            --notes "Install with \`npm install -g @hugr/cli\`, \`brew install gustavomhss/tap/orchestra\`, the AUR package \`orchestra-bin\`, or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. Binaries are not code-signed in this release." \
+            --notes "Install with \`npm install -g @hugr/cli\`, \`brew install gustavomhss/tap/orchestra\`, the AUR package \`orchestra-bin\`, or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. macOS binaries are signed and notarized; Windows binaries are signed." \
             assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh
       # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
       - name: Publish npm packages
