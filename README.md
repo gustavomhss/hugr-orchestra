@@ -6,7 +6,7 @@ The app combines an Electron host (`packages/desktop`), a shared Solid UI (`pack
 
 ## Install
 
-The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. Binaries are not code-signed in the first release.
+The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. macOS installers and binaries are signed and notarized, and Windows binaries are signed.
 
 ### Desktop app
 
