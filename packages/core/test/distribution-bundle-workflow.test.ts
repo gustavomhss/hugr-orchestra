@@ -24,7 +24,6 @@ const Job = Schema.Struct({ name: Schema.optional(Schema.String), "runs-on": Sch
 const Workflow = Schema.Struct({ name: Schema.String, on: Schema.Record(Schema.String, Schema.Unknown),
   permissions: Schema.Record(Schema.String, Schema.String), defaults: Schema.Struct({ run: Schema.Struct({ shell: Schema.String }) }),
   env: Schema.Record(Schema.String, Schema.String), jobs: Schema.Record(Schema.String, Job) })
-const providerOptIn = "${{ fromJSON(inputs.provider && '[]' || '[{\"lane\":\"provider\"}]') }}"
 const source = YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text())
 const selector = await Bun.file(path.join(root, "packages/cli/script/test.ts")).text()
 const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "packages/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
@@ -62,13 +61,16 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, { "max-parallel": 3 })],
     ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, { "fail-fast": true })],
     ["BUNDLE_MATRIX", (value) => patchMatrix(value, () => [])],
-    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => rows, {}, { exclude: [{ lane: "provider" }] })],
-    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => rows, {}, { exclude: "${{ fromJSON('[{\"lane\":\"provider\"}]') }}" })],
-    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => rows, {}, { exclude: "${{ fromJSON(inputs.provider && '[]' || '[{\"lane\":\"aur\"}]') }}" })],
-    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => rows, {}, { exclude: "${{ fromJSON('[]') }}" })],
+    ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, {}, { exclude: [{ lane: "provider" }] })],
+    ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, {}, { lane: ["regression"] })],
     ["BUNDLE_PROVIDER_INPUT", (value) => ({ ...value, on: { ...value.on, workflow_dispatch: { inputs: { provider: { description: "Run the hosted provider qualification lane", type: "boolean", default: true } } } } })],
     ["BUNDLE_PROVIDER_INPUT", (value) => ({ ...value, on: { ...value.on, workflow_dispatch: null } })],
-    ["BUNDLE_MATRIX", (value) => patchMatrix(value, (rows) => rows, {}, { lane: ["regression"] })],
+    ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: undefined } } })],
+    ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: "${{ always() }}" } } })],
+    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => [...rows.slice(1), ...(value.jobs.provider?.strategy?.matrix.include ?? [])], {}, {}, (rows) => [...rows, ...(value.jobs.qualification?.strategy?.matrix.include?.slice(0, 1) ?? [])])],
+    ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, steps: value.jobs.provider?.steps.filter((step) => step.name !== "Require hosted provider credential") } } })],
+    ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, env: { ...value.jobs.provider?.env, OPENROUTER_API_KEY: "" } } } })],
+    ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, strategy: { ...value.jobs.provider?.strategy, "max-parallel": 2 } } } })],
     ["BUNDLE_LANE", (value) => patchRows(value, (row) => ({ ...row, lane: undefined }))],
     ["BUNDLE_LANE", (value) => patchRows(value, (row) => ({ ...row, lane: "heavy" }))],
     ["BUNDLE_ROWS_REPEATED", (value) => patchMatrix(value, (rows) => [...rows.slice(0, -1), rows[0]])],
@@ -130,15 +132,15 @@ function inspect(input: unknown, discovered = distribution) {
   check(value.name === "distribution-bundle" && Object.keys(value.on).toSorted().join() === "push,workflow_dispatch", "BUNDLE_TRIGGERS")
   expect(value.on.push).toEqual({ branches: ["distribution-bundle"] })
   expect(value.permissions).toEqual({ contents: "read" })
-  expect(Object.keys(value.jobs).toSorted()).toEqual(["qualification", "static"])
+  expect(Object.keys(value.jobs).toSorted()).toEqual(["provider", "qualification", "static"])
+  // The provider row needs the owner's hosted key and third-party quota: dispatch opts in, nothing else does.
+  check(JSON.stringify(value.on.workflow_dispatch) === JSON.stringify({ inputs: { provider: { description: "Run the hosted provider qualification lane", type: "boolean", default: false } } }), "BUNDLE_PROVIDER_INPUT")
   check(value.defaults.run.shell === "bash" && value.env.CI === "true", "BUNDLE_SHELL_CI")
   const job = value.jobs.qualification
-  check(job?.strategy?.matrix.include?.length && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 13, "BUNDLE_MATRIX")
-  check(Object.keys(job.strategy.matrix).toSorted().join() === "exclude,include", "BUNDLE_MATRIX")
-  // The provider row is the only opt-in row: excluded unless workflow_dispatch sets provider.
-  check(job.strategy.matrix.exclude === providerOptIn, "BUNDLE_PROVIDER_OPT_IN")
-  check(JSON.stringify(value.on.workflow_dispatch) === JSON.stringify({ inputs: { provider: { description: "Run the hosted provider qualification lane", type: "boolean", default: false } } }), "BUNDLE_PROVIDER_INPUT")
-  const rows = job.strategy.matrix.include
+  check(job?.strategy?.matrix.include?.length && job.strategy["fail-fast"] === false && job.strategy["max-parallel"] === 12, "BUNDLE_MATRIX")
+  check(Object.keys(job.strategy.matrix).join() === "include", "BUNDLE_MATRIX")
+  const provider = value.jobs.provider
+  const rows = [...job.strategy.matrix.include, ...(provider?.strategy?.matrix.include ?? [])]
   rows.forEach((row) => check(row.lane && ["regression", "aur", "musl", "provider"].includes(row.lane), `BUNDLE_LANE: ${row.package}/${row.host}`))
   check(new Set(rows.map((row) => `${row.lane}/${row.package}/${row.host}`)).size === rows.length, "BUNDLE_ROWS_REPEATED")
   check(JSON.stringify(rows.map((row) => [row.lane, row.package, row.host, row.cpu, row.platform]).toSorted()) === JSON.stringify([
@@ -150,11 +152,13 @@ function inspect(input: unknown, discovered = distribution) {
     ["musl", "cli", "ubuntu-latest", "X64", "linux"], ["musl", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
     ["provider", "cli", "ubuntu-latest", "X64", "linux"],
   ].toSorted()), "BUNDLE_ROWS")
+  check(provider && provider.if === "${{ inputs.provider }}" && job.strategy.matrix.include.every((row) => row.lane !== "provider") &&
+    provider.strategy?.matrix.include?.every((row) => row.lane === "provider"), "BUNDLE_PROVIDER_OPT_IN")
   check(job.name === "qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})", "BUNDLE_JOB_NAME")
   check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
   check(job.env.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER === "${{ matrix.platform == 'win32' && 'true' || 'false' }}", "BUNDLE_JOB_ENV_CONTEXT")
   check(!JSON.stringify(value).includes("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"), "BUNDLE_SPAWNER_OVERRIDE")
-  Object.values(value.jobs).forEach((lane) => { check(!lane.if && !lane["continue-on-error"] && lane["timeout-minutes"] > 0 && (!lane.defaults || lane.defaults.run.shell === "bash"), "BUNDLE_JOB_BYPASS"); lane.steps.forEach((step) => check(!step["continue-on-error"] && (!step.shell || step.shell === "bash"), "BUNDLE_STEP_BYPASS")) })
+  Object.values(value.jobs).forEach((lane) => { check((lane === provider || !lane.if) && !lane["continue-on-error"] && lane["timeout-minutes"] > 0 && (!lane.defaults || lane.defaults.run.shell === "bash"), "BUNDLE_JOB_BYPASS"); lane.steps.forEach((step) => check(!step["continue-on-error"] && (!step.shell || step.shell === "bash"), "BUNDLE_STEP_BYPASS")) })
   const admission = requireStep(job.steps, "Assert native CPU and exact files", "BUNDLE_CPU")
   const control = requireStep(job.steps, "Require nonce-bound positive control", "BUNDLE_CONTROL")
   const run = requireStep(job.steps, "Run tests", "BUNDLE_RUN")
@@ -219,6 +223,10 @@ function inspect(input: unknown, discovered = distribution) {
     ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "packages/maestro-arsenal", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
+  // Opting in runs the same qualification job; only its single row and parallelism differ.
+  check(provider.name === job.name && provider["runs-on"] === job["runs-on"] && provider["timeout-minutes"] === job["timeout-minutes"] &&
+    Bun.deepEquals(provider.env, job.env) && Bun.deepEquals(provider.steps, job.steps) && provider.strategy?.["fail-fast"] === false &&
+    provider.strategy["max-parallel"] === 1 && Object.keys(provider.strategy.matrix).join() === "include", "BUNDLE_PROVIDER_JOB")
 }
 
 function check(value: unknown, name: string): asserts value { if (!value) throw new Error(name) }
@@ -228,10 +236,12 @@ function requireStep(steps: readonly typeof Step.Type[], name: string, failure: 
   return matches[0]
 }
 function patchRows(value: typeof Workflow.Type, patch: (row: typeof Row.Type) => typeof Row.Type) {
-  return { ...value, jobs: { ...value.jobs, qualification: { ...value.jobs.qualification, strategy: { ...value.jobs.qualification?.strategy, matrix: { ...value.jobs.qualification?.strategy?.matrix, include: value.jobs.qualification?.strategy?.matrix.include?.map(patch) } } } } }
+  const rows = (job: (typeof value.jobs)[string] | undefined) => ({ ...job, strategy: { ...job?.strategy, matrix: { include: job?.strategy?.matrix.include?.map(patch) } } })
+  return { ...value, jobs: { ...value.jobs, qualification: rows(value.jobs.qualification), provider: rows(value.jobs.provider) } }
 }
-function patchMatrix(value: typeof Workflow.Type, patch: (rows: readonly typeof Row.Type[]) => readonly typeof Row.Type[], strategy = {}, matrix = {}) {
-  return { ...value, jobs: { ...value.jobs, qualification: { ...value.jobs.qualification, strategy: { ...value.jobs.qualification?.strategy, ...strategy, matrix: { ...value.jobs.qualification?.strategy?.matrix, ...matrix, include: patch(value.jobs.qualification?.strategy?.matrix.include ?? []) } } } } }
+function patchMatrix(value: typeof Workflow.Type, patch: (rows: readonly typeof Row.Type[]) => readonly typeof Row.Type[], strategy = {}, matrix = {}, provider = (rows: readonly typeof Row.Type[]) => rows) {
+  return { ...value, jobs: { ...value.jobs, qualification: { ...value.jobs.qualification, strategy: { ...value.jobs.qualification?.strategy, ...strategy, matrix: { ...matrix, include: patch(value.jobs.qualification?.strategy?.matrix.include ?? []) } } },
+    provider: { ...value.jobs.provider, strategy: { ...value.jobs.provider?.strategy, matrix: { include: provider(value.jobs.provider?.strategy?.matrix.include ?? []) } } } } }
 }
 function patchStep(value: typeof Workflow.Type, name: string | undefined, patch: (step: typeof Step.Type) => typeof Step.Type | undefined) {
   return { ...value, jobs: { ...value.jobs, qualification: { ...value.jobs.qualification, steps: value.jobs.qualification?.steps.flatMap((step) => step.name === name ? [patch(step)].filter((step) => step !== undefined) : [step]) } } }
