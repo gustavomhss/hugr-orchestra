@@ -1,205 +1,310 @@
-# Monolith map
+# Mapa do monólito Orchestra
 
-This is a snapshot of the repository as it stands on `dev` at `30c3f713cf` (2026-10-11). It records what each directory is and what is wrong with it. The fix is in [restructure-plan.md](restructure-plan.md).
+Auditoria ampla: `dev@49ab2cec4f77bdbb33314503da4d85fcd075114e`, 2026-10-11; delta revisado até `5e7d3eb2d2cf1abb50e208466ff09fd185cb8445`. Este mapa substitui o diagnóstico de `30c3f713cf`; não reutiliza seus números de volume nem suas conclusões de código morto. O [plano 0–100](restructure-plan.md) define destinos, ordem, provas e rollback.
 
-## Summary
+Auditoria de fontes, manifests, consumidores e readers em worktrees isolados. Os checks abaixo foram **identificados, não executados**. Toda execução futura precisa registrar revisão, alvo e alcance.
 
-- 12,153 tracked files, 319 MB in the working tree, and a 761 MiB git pack.
-- 46 workspace packages in total: 30 directories under `packages/`, plus 15 Atlas packages that are not in the Bun workspace.
-- 15 GitHub workflows, 7 of them for Omni alone.
-- About 280 tracked files still mention `opencode`.
+## 1. O que mudou no diagnóstico
 
-| Area                     |  Files |    Size | What it really is                                                                              |
-| ------------------------ | -----: | ------: | ---------------------------------------------------------------------------------------------- |
-| `specs/orchestra-visual` |    163 |  230 MB | Work evidence. 198 MB of it is a split `historical-evidence.tar.gz`                            |
-| `packages/relay`         |  3,652 |  6.5 MB | A TypeScript engine (29 src files), a Python oracle, and 3,303 golden files                    |
-| `packages/ui`            |  1,692 |  6.5 MB | Solid component library. 1,316 of the files are assets (1,210 icons)                           |
-| `packages/orchestra`     |  1,343 | 21.6 MB | The product backend: CLI, a server, Maestro, Continuity, tools, plus specs and benchmark dumps |
-| `foundation/atlas`       |  1,266 | 13.4 MB | A complete second monorepo (npm, vitest, its own CI and guards)                                |
-| `packages/app`           |  1,017 | 15.3 MB | Solid web UI, plus the Orchestra product chapters and desktop bridges                          |
-| `packages/core`          |    678 |  4.3 MB | Domain runtime and grab-bag: about 110 top-level entries                                       |
-| everything else          | ~2,340 |  ~20 MB |                                                                                                |
+| Premissa antiga | Fato da baseline atual | Fonte |
+| --- | --- | --- |
+| `packages/cli` é rewrite morto | CLI `orchestra` está empacotada no Desktop; V2 chama service status/start/password | `packages/cli/package.json:7–16`; `packages/desktop/src/main/background-cli.ts:20–61` |
+| Lean ainda não entrou | Core usa `hugr-lean@0.2.0` de tarball imutável aprovado; Orchestra integra captura/preferences/API | `packages/core/package.json:67`; `packages/core/vendor/README.md:6–30`; `packages/orchestra/src/session/LEAN-NATIVE.md:3–51` |
+| Todo import de fatia inverte arquitetura | Omni fornece infraestrutura de processo; há integrações de produto e imports de tipos que precisam de análise distinta | `packages/core/src/omni-spawner.ts:54–66,139–150`; `packages/core/src/tool-safety-hooks.ts:9–22` |
+| Nested `.github` é todo descartável | Omni usa workflows no espelho; Atlas fitness test lê seu `ci.yml` | `script/omni-mirror.sh:2–19`; `foundation/atlas/harness/gates/gate-directory.test.mjs:55–66` |
+| LICENSE Atlas é cópia dispensável | Atlas tem LICENSE Apache-2.0 | `foundation/atlas/LICENSE:1–3` |
+| Specs/tasks/docs de campanha são todos lixo | Parte é parser input, runtime asset, golden, corpus ou trabalho ainda aberto | Seções 4–5 abaixo |
+| Um server/SDK basta por troca direta | Gerações têm contratos, eventos, erros e consumidores diferentes; listener legado também monta handlers novos | `packages/orchestra/src/server/routes/instance/httpapi/api.ts:49–96`; `packages/orchestra/src/server/routes/instance/httpapi/server.ts:134–207` |
+| Mover app para `apps/web` é rename simples | App exporta biblioteca importada pelo renderer Desktop | `packages/app/src/index.ts:1–19`; `packages/desktop/src/renderer/index.tsx:429–435` |
+| Menos workflows prova organização | Há novas lanes de runtime/native/Nix; remover wrapper pode remover cobertura | `.github/workflows/runtime-products.yml`; `.github/workflows/artifact-native.yml`; `.github/workflows/nix-distribution.yml` |
 
-## Top-level layout today
+Esses fatos tornam inseguras as remoções globais do plano anterior. O problema continua real: ownership misturado, path coupling, APIs abertas demais, migrações incompletas e excesso de material de campanha na árvore ativa.
 
-```
-.github/        15 workflows, 3 composite actions, TEAM_MEMBERS
-.orchestra/     the product's own project config (dogfooding); must stay at root
-foundation/     atlas/  (a nested monorepo, not in the Bun workspace)
-nix/            flake support, hard-coded package paths, a pinned node_modules hash
-packages/       30 dirs: platform libraries, apps, imported slices, assets, and a skills folder, all at one level
-patches/        19 dependency patches + 1 stray script (install-korean-ime-fix.sh)
-perf/           a single note
-script/         root tooling: gates, test:ci, one-shot rename leftovers
-specs/          399 files; about 15 are living specs, the rest evidence, handoffs, research and screenshots
-CONTEXT.md, godfile-waivers.json, 24 config files
-```
+### Delta de dev durante a auditoria
 
-## Modules
+- PR #332 (`d126e5a109`): `core/src/util/task-tool.ts` é compartilhado por App/session-ui/TUI. `task`, `Agent` e `Task` têm o mesmo rendering; dispatch seat precede subagent type. Entra no contrato de 70-B.
+- PR #318 (`5e7d3eb2d2`): Nix distribui e qualifica tree-sitter no CLI, CLI staged e Desktop; exige imagem native/load/parse e receipt de completion. `nix/scripts/workspace-paths.json` resolve o build helper sem auto-install. Esses caminhos/probes entram em 30-C/E e na qualificação final.
+- Não houve inclusão de novo pacote de produção nesses deltas. Os diffs de manifests/domínios e os arquivos alterados foram revisados; a evidência de execução continua fora do alcance desta auditoria.
 
-The Kind column uses four values:
+## 2. Mapa completo de unidades de produção e desenvolvimento
 
-- platform: shared libraries.
-- app: deployable.
-- slice: an imported product capability.
-- other: anything that is not a module.
+As linhas são unidades lógicas. Um dataset pode não ter `package.json`; um módulo pode conter workspace coeso. Destino é **proposta**, não descrição de movimento já feito. Identidade pública permanece inicialmente igual.
 
-`internal deps` lists the `@orchestra/*` workspace dependencies that the package declares.
+| Caminho atual | Identidade / papel | Destino e observação |
+| --- | --- | --- |
+| `package.json` | `orchestra`, workspace/toolchain raiz | Raiz; distinguir do pacote homônimo na resolução |
+| `packages/orchestra` | `orchestra`; CLI/server legado e composição de produto | `apps/orchestra`; domínios extraídos depois, contratos preservados |
+| `packages/cli` | `@orchestra/cli`; CLI/daemon V2 distribuído | `apps/cli`; ativo, não candidato automático a remoção |
+| `packages/app` | `@orchestra/app`; UI reutilizável + entrada web | `packages/app-shell` + `apps/web`; split qualificado, nome público inicial mantido |
+| `packages/desktop` | `@orchestra/desktop`; Electron + delivery | `apps/desktop`; Dock e infra separados por fronteiras reais |
+| `packages/storybook` | `@orchestra/storybook`; workbench dev | `apps/storybook` |
+| `packages/schema` | `@orchestra/schema`; contratos browser-safe | `packages/schema` |
+| `packages/protocol` | `@orchestra/protocol`; HttpApi público | `packages/protocol` |
+| `packages/core` | `@orchestra/core`; Session/config/tools/persistência/serviços | `packages/core`, domínios internos explícitos; toolkit extraído depois |
+| `packages/server` | `@orchestra/server`; handlers/authorization/Location | `packages/server` |
+| `packages/client` | `@orchestra/client`; clientes Promise/Effect | `packages/client` |
+| `packages/sdk/js` | `@orchestra/sdk`; SDK público legado/root/v2 | `packages/sdk`; compatibilidade por consumidor antes de convergir |
+| `packages/sdk-next` | `@orchestra/sdk-next`; embedded composition | `packages/sdk-next` |
+| `packages/plugin` | `@orchestra/plugin`; APIs de plugins/TUI | `packages/plugin` |
+| `packages/llm` | `@orchestra/llm`; providers/protocolos | `packages/llm`; reconcile Copilot somente por prova |
+| `packages/codemode` | `@orchestra/codemode`; interpreter/tool programs | `packages/codemode` |
+| `packages/effect-drizzle-sqlite` | `@orchestra/effect-drizzle-sqlite`; adapter SQLite | Mesmo caminho; contract Bun/Node preservado |
+| `packages/effect-sqlite-node` | `@orchestra/effect-sqlite-node`; adapter declarado por Core | Mesmo caminho até consumer/retirement proof; não marcado morto |
+| `packages/ui` | `@orchestra/ui`; primitives/theme/assets | `packages/ui` |
+| `packages/session-ui` | `@orchestra/session-ui`; transcript/diffs/composer | `packages/session-ui` |
+| `packages/tui` | `@orchestra/tui`; renderer terminal/plugins | `packages/tui`; library, não entrypoint separado por obrigação |
+| `packages/httpapi-codegen` | `@orchestra/httpapi-codegen`; generator | `tooling/httpapi-codegen` |
+| `packages/http-recorder` | `@orchestra/http-recorder`; cassettes reais de teste | `tooling/http-recorder` |
+| `packages/script` | `@orchestra/script`; build/version/delivery | `tooling/build`; identidade preservada |
+| `packages/relay` | `@orchestra/relay`; TS runtime + oracle Python/bash | `modules/relay`; goldens, generators e profiles ficam íntegros |
+| `packages/maestro-arsenal` | `@orchestra/maestro-arsenal`; registry/MCP/capabilities | `modules/maestro/arsenal` |
+| `packages/capability-assets` | `@orchestra/capability-assets`; catálogo/provenance | `modules/capability-assets`; reservas declaradas não provam wiring executável |
+| `packages/backend-specialist` | Dataset de skills | `modules/specialists/backend`; README fora de `skills/` |
+| `packages/archie-specialist` | Dataset de skills upstream | `modules/specialists/archie`; stable ID e lookup preservados |
+| `packages/identity` | SVG/PNG de marca | `assets/brand` |
+| `foundation/atlas` | `atlas`; workspace npm com DAG @atlas | `modules/atlas`; domínio npm qualificado, campanha Bun opcional separada |
+| `packages/atlas-boundary` | `@orchestra/atlas-boundary`; bundles/declarações | `modules/atlas/boundary`; bytes/provenance preservados |
+| `packages/omni` | Workspace Rust process runtime | `native/omni`; root e QA workspaces distintos |
+| `packages/omni/bindings/node` | `hugr-omni`; NAPI JS/TS binding | Mesmo subtree relativo dentro de `native/omni` |
+| `packages/core/vendor/hugr-lean-0.2.0-native-465fb4c04773.tgz` | `hugr-lean@0.2.0`; dependência aprovada | `vendor/lean`, somente retarget equivalente do arquivo atual |
+| `packages/app/vendor/opencode-ai-client-1.17.13-v2.tgz` | Client upstream vendorizado | `vendor/client`; remover só depois de migrar todos os consumidores |
 
-| Path                             | Package                            | Kind               | Files | Purpose                                                             | Internal deps                                                                                         |
-| -------------------------------- | ---------------------------------- | ------------------ | ----: | ------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
-| `packages/schema`                | `@orchestra/schema`                | platform           |    88 | Effect Schema wire and storage contracts                            | none                                                                                                  |
-| `packages/protocol`              | `@orchestra/protocol`              | platform           |    30 | Public `HttpApi` definitions                                        | schema                                                                                                |
-| `packages/core`                  | `@orchestra/core`                  | platform           |   678 | Session runtime, tools, config, database, provider plugins, toolkit | schema, llm, plugin, effect-drizzle-sqlite, effect-sqlite-node, **relay, maestro-arsenal, hugr-omni** |
-| `packages/server`                | `@orchestra/server`                | platform           |    37 | `HttpApi` handlers over core                                        | core, protocol, schema, **relay**                                                                     |
-| `packages/client`                | `@orchestra/client`                | platform           |    23 | Generated Promise and Effect clients                                | schema, protocol                                                                                      |
-| `packages/sdk-next`              | `@orchestra/sdk-next`              | platform           |     9 | Embeds client + core + server                                       | client, core, server                                                                                  |
-| `packages/sdk/js`                | `@orchestra/sdk`                   | platform (legacy)  |    50 | Legacy hey-api SDK, still imported by about 206 files               | none                                                                                                  |
-| `packages/llm`                   | `@orchestra/llm`                   | platform           |   154 | Schema-first LLM client and provider adapters                       | schema                                                                                                |
-| `packages/plugin`                | `@orchestra/plugin`                | platform           |    40 | Public plugin API (v1 and v2)                                       | sdk                                                                                                   |
-| `packages/codemode`              | `@orchestra/codemode`              | platform           |    42 | Interpreter for confined tool programs                              | none                                                                                                  |
-| `packages/effect-drizzle-sqlite` | `@orchestra/effect-drizzle-sqlite` | platform           |    26 | Effect SQLite adapter for drizzle                                   | none                                                                                                  |
-| `packages/effect-sqlite-node`    | `@orchestra/effect-sqlite-node`    | platform (dead)    |     3 | Declared by core, never imported                                    | none                                                                                                  |
-| `packages/http-recorder`         | `@orchestra/http-recorder`         | platform (test)    |    24 | HTTP/WebSocket cassettes                                            | none                                                                                                  |
-| `packages/httpapi-codegen`       | `@orchestra/httpapi-codegen`       | platform (build)   |    18 | Generates the clients from `HttpApi`                                | none                                                                                                  |
-| `packages/script`                | `@orchestra/script`                | platform (build)   |     5 | Build and version helpers                                           | none                                                                                                  |
-| `packages/tui`                   | `@orchestra/tui`                   | platform (UI)      |   240 | OpenTUI terminal UI library                                         | core, plugin, sdk, ui                                                                                 |
-| `packages/ui`                    | `@orchestra/ui`                    | platform (UI)      | 1,692 | Component library, theme, icons                                     | none                                                                                                  |
-| `packages/session-ui`            | `@orchestra/session-ui`            | platform (UI)      |   123 | Session and message rendering                                       | core, sdk, ui                                                                                         |
-| `packages/orchestra`             | `orchestra`                        | app                | 1,343 | The shipped binary: CLI, server, TUI launcher                       | 14 packages                                                                                           |
-| `packages/app`                   | `@orchestra/app`                   | app                | 1,017 | Web UI, embedded in the binary and in desktop                       | core, schema, sdk, session-ui, ui                                                                     |
-| `packages/desktop`               | `@orchestra/desktop`               | app                |   400 | Electron shell, App Dock, Omni host, Linux workspace                | core, hugr-omni, app, ui                                                                              |
-| `packages/cli`                   | `@orchestra/cli`                   | app (unwired)      |    24 | Effect CLI rewrite, binary `lildax`; nothing ships it               | core, sdk, server, tui, script                                                                        |
-| `packages/storybook`             | `@orchestra/storybook`             | app (dev)          |    30 | Storybook host                                                      | session-ui, ui                                                                                        |
-| `foundation/atlas`               | `@atlas/*` x15                     | slice              | 1,266 | Git-native grounded knowledge layer                                 | not in the workspace                                                                                  |
-| `packages/atlas-boundary`        | `@orchestra/atlas-boundary`        | slice              |    15 | Generated bundles of Atlas source, consumed by Maestro              | none (built from `../../foundation/atlas`)                                                            |
-| `packages/omni`                  | `hugr-omni` (bindings only)        | slice              |   399 | Rust cross-OS process runtime + napi binding                        | Cargo workspace                                                                                       |
-| `packages/relay`                 | `@orchestra/relay`                 | slice              | 3,652 | Stop-boundary checklists and hash-chained ledger                    | schema                                                                                                |
-| `packages/maestro-arsenal`       | `@orchestra/maestro-arsenal`       | slice              |   112 | Maestro tool arsenal + MCP server                                   | hugr-omni                                                                                             |
-| `packages/backend-specialist`    | none                               | other              |    74 | Skill markdown for the backend seat; read by path                   | none                                                                                                  |
-| `packages/capability-assets`     | `@orchestra/capability-assets`     | slice              |    12 | Asset catalog; nothing imports it                                   | none                                                                                                  |
-| `packages/identity`              | none                               | other              |     6 | Brand marks (svg/png)                                               | none                                                                                                  |
-| `~/Documents/HuGR/HuGR-Lean`     | `hugr-lean`                        | slice (not yet in) |   108 | Deterministic offline tool-output filter                            | none                                                                                                  |
+### Submódulos Atlas, sem achatar o DAG
 
-## Findings
+Todos hoje ficam em `foundation/atlas/packages/<nome>` e propõem-se em `modules/atlas/packages/<nome>`, mantendo o nome `@atlas/<nome>`:
 
-### 1. Imported slices carry a full repo shell
+| Nome | Responsabilidade |
+| --- | --- |
+| `contracts` | Contratos e tipos fundamentais |
+| `kernel` | Modelo/identidades/regras fundamentais |
+| `persist` | Persistência do conhecimento |
+| `index` | Indexação |
+| `grounding` | Ligação entre conhecimento e fontes |
+| `knowledge` | Estado/revisões de conhecimento |
+| `retrieval` | Seleção/recuperação |
+| `memory` | Memória governada |
+| `tools` | Operações expostas |
+| `genesis` | Inicialização/composição |
+| `adapter-io` | Integração com filesystem/Git/prompts |
+| `cli` | CLI Atlas |
+| `mcp-server` | Exposição MCP |
+| `e2e` | Qualificação de integração |
+| `e2e-blackbox` | Qualificação black-box |
 
-Each slice was built in its own repo and copied in whole.
+Fontes: `foundation/atlas/package.json:6–29`; `foundation/atlas/ARCHITECTURE.md:7–76`. E2E packages são unidades de teste, não bibliotecas de runtime.
 
-- **Atlas** (`foundation/atlas`)
-  - It brought `.github/` (CI and release), `.claude/skills` (15 files), `CODEOWNERS`, `LICENSE`, `package-lock.json`, vitest, `tsc -b`, its own 400-line godfile guard and 29 `.mjs` gates.
-  - It is outside the Bun workspace. Root `test.yml` runs it with `npm ci` in a separate job.
-  - The nested `.github` never runs.
-- **Omni** (`packages/omni`)
-  - It brought `.github/`, `.claude-plugin/`, `AGENTS.md` + `CLAUDE.md`, `HANDOFF.md` (227 lines), `PLAN.md` (873 lines) and its own toolchain files.
-  - There is a second `Cargo.lock` under `qa/` and a stray `qa/vite/package-lock.json`.
-  - Some of this shell is deliberate: `script/omni-mirror.sh` replays `packages/omni` into `gustavomhss/hugr-omni`, so the shell serves the mirror.
-- **Relay** (`packages/relay`)
-  - It brought `CONTRIBUTING`, `CHANGELOG`, `SPEC`, `WHITEPAPER`, `PRODUCT` and `requirements-dev.txt`.
-  - It also carries a Python oracle (`bin/`, `lib/`, `benchmark/`, `tests/`) beside the TypeScript engine (`src/`, `test/`).
-  - Nothing in the product runs the Python. It exists only to regenerate the goldens.
-- **Lean** is not in yet. Its tracked core is clean (108 files, depth 4, no runtime deps). The shell to drop is its npm lockfile, `.github`, `AGENTS.md`, `PLAN.md` and the opencode plugin adapter naming.
+### Native/QA e manifests auxiliares
 
-### 2. Evidence, handoffs and research are versioned as if they were specs
+- Cargo root Omni: `crates/hugr-omni`, `crates/omni-proto`, `crates/omni-supervisor`, `crates/omni-fixture`, `bindings/node`. A binding herda o workspace; não é terceiro workspace Cargo.
+- Cargo separado: `packages/omni/qa`, crate `omni-qa`, lock próprio e path dependencies. Preservar separação até qualificação independente.
+- `packages/omni/qa/vite/package.json` (`qa-vite`), `packages/omni/scripts/readme-check/fixture/package.json` (`fixture-app`) e `packages/desktop/test/omni-smoke/package.json` pertencem a harnesses/fixtures, não ao workspace de produção por glob indiscriminado.
+- Licenças/pins no vendor são unidades de distribuição, não packages a executar.
 
-- `specs/orchestra-visual/handoff/archives` holds 208 MB in 35 files, mostly `.tar.gz` parts. That is 65% of the tracked bytes in the repo.
-- `specs/orchestra-visual/evidence` holds 95 files (12 MB) and `screenshots` holds 5 more.
-- `specs/backend-specialist` has 197 files. `research` (2.3 MB) and `evidence` (1 MB) are dumps; only the top-level design and `contracts/` are living documents.
-- `packages/orchestra/specs` has 120 files, including `benchmark-evidence` (77 files). The package root also holds `BENCHMARK.md` and 7 `bench-*.sh/.py` scripts.
-- Living specs are only `specs/v2`, parts of `specs/hugr-maestro`, `specs/storage`, `specs/tui-package.md` and `specs/seat-framework`.
-- Removing these from the tree does not shrink clones. The bytes stay in history (761 MiB pack).
+Fontes: `packages/omni/Cargo.toml:1–11`; `packages/omni/qa/Cargo.toml:10–22`; manifests auxiliares citados.
 
-### 3. One flat `packages/` level mixes four kinds of thing
+## 3. Domínios escondidos dentro dos pacotes
 
-Platform libraries (`effect-sqlite-node`, `http-recorder`) sit next to apps (`app`, `desktop`), imported slices (`relay`, `omni`, `maestro-arsenal`), a brand-asset folder (`identity`) and a skills folder (`backend-specialist`). The directory name says nothing about role or allowed dependencies.
+| Domínio atual | Ownership desejado | Fronteira a preservar antes de extrair |
+| --- | --- | --- |
+| `core/src/session`, `session.ts` | Session | Admissão, projeção, execution coordinator, model turns, safe boundaries |
+| `orchestra/src/agent` | Framework Agent em Core + contribuições Maestro na composição | Service/tag/Instance scope, generate prompt, defaults/aliases/labels/subagent permissions |
+| `core/src/system-context` | System Context | Álgebra/registry; producers nos domínios; history/epoch Session-owned |
+| `core/src/database`, `config`, `permission`, `filesystem`, `project`, `tool` | Domínios internos Core | Paths/journal/cache/scope/registry e APIs explícitas |
+| `core/src/backend-toolkit` | Engine de plataforma interna Core + assets em `modules/backend-toolkit` | Recipe/default provenance, aquisição/readiness/process capability; nenhuma dependência circular |
+| `orchestra/src/maestro`, `playbooks` | `modules/maestro` | Seats, governance, Task, proposal/settlement, Own/Atlas |
+| `orchestra/src/continuity` | `modules/continuity` | Serviço compartilhado, persistence/admission e engine adapters |
+| `desktop/src/main/app-dock-*`, Orchestra plugins e App controllers | `modules/app-dock` | IPC, autorização, profiles/generations, controller lifetime, browser/Linux separation |
+| `orchestra/src/claude-code` | Adapter de engine na composição de produto | Preset, permission, durable mirror, process joining e pause guard |
+| `orchestra/src/acp`, Core `control-plane` | Adapter ACP e Core service explícitos | SDK/session contracts e move-session ownership |
+| `app/src/orchestra`, `pages/session`, `context` | App-shell feature/domain modules | Server/directory ownership, tabs/drafts, async cancellation e theme/locale |
+| Desktop WSL/Omni/window/updater | Desktop platform adapters | Process/data identity, resource placement e estado de updater existente |
 
-### 4. Dependency direction is inverted in places
+O número de pacotes só cresce quando a separação precisa de contrato, distribuição ou toolchain independentes. Uma pasta com responsabilidade e README pode ser um módulo interno suficiente.
 
-- **Platform depends on slices.** `core` depends at runtime on `relay` (`core/src/relay*.ts`, `tool-safety-*`), `maestro-arsenal` (`core/src/tool/maestro-arsenal-omni.ts`) and `hugr-omni`. `server` depends on `relay`. The base layer should not know about product capabilities.
-- **Core depends on the legacy SDK.** It uses `@orchestra/sdk` type imports, and also reaches it through `plugin`, which is built on `sdk`. The sdk import is not declared as a runtime dependency.
-- **The app reuses the TUI's internals.** `orchestra` imports `@orchestra/tui` in 52 places for utilities (`util/locale`, `util/error`, `config/tui*`).
-- **The web UI imports server-side code.** `app` imports `core` in 115 places, only for small helpers (`util/path`, `encode`, `retry`, `flag`).
-- **Core has no API boundary.** It exports `"./*": "./src/*.ts"`, so every root file is public. `server` imports core by file path.
-- **Only a few packages have boundary tests.** `client`, `sdk-next`, `relay` (`layering.test.ts`) and schema `v1` isolation have them. Core, server, protocol and llm have none.
+### Disposição completa dos domínios legados de Orchestra
 
-### 5. Duplicated generations and half-finished migrations
+Prefix da primeira coluna: `packages/orchestra/src/`. Os owners abaixo são lógicos; preservar scopes/IDs/exports e facades V1 até migrar cada consumidor. Cada owner ganha README na raiz adequada. 70-G reconcilia esta tabela com todos os diretórios/arquivos reais; novo domínio descoberto precisa de disposição antes do fechamento.
 
-- **Two CLIs.** `packages/orchestra/src/cli` is live. `packages/cli` (`lildax`) is an unwired rewrite.
-- **Two servers.** `packages/orchestra/src/server` (75 files) and `@orchestra/server` (35 files) are half-migrated into each other.
-- **Three wire-type generations:** `sdk/js/gen`, `client/generated` and `schema`.
-- **Two UI generations.** `ui/src/v2` (89 files), `session-ui/src/v2` (31), and `layout.tsx` beside `layout-new.tsx`.
-- **Two Copilot providers:** `core/src/github-copilot` (25 files) and `llm/src/providers/github-copilot.ts`.
-- **Legacy `v1` subtrees** in schema and core. Core's is imported from live code, so it is not isolated.
-- **Vendored client tarball.** `app/vendor/opencode-ai-client-1.17.13-v2.tgz` is a vendored upstream client used by `app` and `session-ui`. The repo's own `@orchestra/client` exists.
+| Fonte | Owner/path final | Facade e WP de resolução |
+| --- | --- | --- |
+| `cli`, `index.ts`, `temporary.ts` | `apps/orchestra/src` entrada/bootstrap/composição | Comandos legados, Node facade e build assets preservados; 60-B, 70-G, 80-A |
+| `node.ts` | Facade pública de composição; implementations nos owners abaixo | Preserve Config/Server/bootstrap/Database exports; 70-F/G, 80-A/B |
+| `server` | `packages/server/src/compat/v1` + handlers canônicos | `/doc`, UI/static/lifecycle e auth/SSE preservados; 70-G, 80-A |
+| `session`, `storage`, `background` | Core `src/v1` Session/storage/jobs; orquestração legada em `modules/session-engine` | Model/store/history/platform helpers separados de SessionPrompt/Continuity/Claude wiring; Instance scope/#db preservados; corte 70-C antes de 70-D/G, 80-A |
+| `agent` | Core Agent/compat V1; roster/presets/native-seat policy nos módulos de produto | Service/tag/scope, generate.txt, defaults/labels/aliases/subagent permissions; injeção de produto em 70-C antes da extração; 70-A/G, 80-A/B |
+| `config`, `permission`, `question`, `command`, `skill`, `env` | Core config/policy/interaction/instruction com compat V1 | Defaults, permission order, reader paths e errors; 70-A/G, 80-A |
+| `account`, `auth` | Core account/credential e compat auth.json | OAuth/API identity, herança/read-only e stores; 70-A/G, 80-D |
+| `project`, `git`, `worktree`, `snapshot` | Core project/repository/filesystem e compat V1 | Identidade/worktree/revisions/receipts/scopes; 70-A/G, 80-A |
+| `provider`, `plugin` | Core provider/plugin-host + LLM transport owners | Presets/hooks/headers/auth/variants e API de plugins; 70-G, 80-B/D |
+| `tool` | Core tools/registry/compat V1; adapters de produto no respectivo módulo | Mesmas permissions/capture/settlement; 70-C/G, 80-A |
+| `lsp`, `mcp`, `ide`, `format` | Core `integration/{lsp,mcp,ide,format}` e adapters compat V1 | Connections, LSP state, spawned processes e editor capabilities; 70-G, 80-D |
+| `control-plane` | Core `control-plane`, handlers no Server | Process-global move service e rotas existentes; 70-G, 80-A |
+| `acp` | `modules/acp` | Adapter/protocolo SDK, sem nova Session orchestration; 70-G |
+| `maestro` | `modules/maestro` | Seats/governance/Task/Atlas/Own; 70-D |
+| `continuity` | `modules/continuity` | Serviço canônico + engine/transport adapters explícitos; 70-D |
+| `claude-code` | `modules/engine-adapters/claude-code` | Preset, paused guard, mirror e process joining; 70-G |
+| `janitor` | `modules/janitor`; bindings Desktop/CLI no app | Background loops/resources/history; 70-G |
+| `bus`, `event-manifest.ts`, `event-v2-bridge.ts`, `sync` | Core event compatibility + contratos schema quando portáveis | Mesmo GlobalBus singleton/ID/shape/bridge; 70-G, 80-B |
+| `effect` | Core infrastructure + compat Instance boundary | MemoMap/tags/finalizers; bindings app ficam composição; 70-A/G |
+| `installation`, `util`, `id`, `image`, `patch` | Core infrastructure; helpers browser-safe em `packages/util` | Public aliases e bytes/encoding/paths preservados; 70-B/G, 80-D |
+| `audio.d.ts`, `markdown.d.ts`, `sql.d.ts` | Declarations do pacote que usa cada loader/asset | Build-resolution/type contracts, sem runtime novo; 60-D, 70-G |
 
-### 6. Product domains are hidden inside apps and core
+Fontes de distinções importantes: `orchestra/src/background/job.ts:17–35` mantém registry Instance-scoped; `src/bus/global.ts:11–22` é singleton com atribuição de ID; `src/node.ts:1–4` exporta API; `src/lsp/lsp.ts:120–147` contém state/service, não apenas bootstrap. Relocar o monólito não fecha apps finos; 70-G precisa qualificar essa disposição por consumidor.
 
-- **`packages/orchestra/src`:**
+`src/agent/agent.ts:12,32–46,82–119` liga framework/prompt a contribuições Maestro; `src/agent/subagent-permissions.ts:14–25` define herança de permissões. `src/session/prompt.ts:26–29,125–137`, `src/continuity/service.ts:3–11,112–149` e `src/claude-code/engine.ts:18–36,55–90` exigem o corte de contratos/wiring 70-C antes de qualquer import retarget. Mover SessionPrompt inteiro para Core criaria dependência de produto na plataforma; sua orquestração legada tem owner específico em `modules/session-engine`.
 
-  | Domain          | Files |
-  | --------------- | ----: |
-  | `maestro`       |    54 |
-  | `continuity`    |    27 |
-  | `claude-code`   |    13 |
-  | `acp`           |    12 |
-  | `control-plane` |     9 |
-  | `janitor`       |     9 |
+## 4. Dependências e contratos que determinam a ordem
 
-- **App Dock** is spread across 64 files in `desktop/src/main/app-dock-*`, 9 in `orchestra/src/plugin/app-dock*` and 1 in `app`.
-- **`packages/core/src`:**
+### Session, dados e lifetimes
 
-  | Domain                      | Files |
-  | --------------------------- | ----: |
-  | `backend-toolkit`           |    44 |
-  | `database`                  |    50 |
-  | `plugin` (provider plugins) |    44 |
-  | `github-copilot`            |    25 |
+- `core/src/session.ts:415–439`: hooks, admissão e advisory wake; ID/retry em `session/input.ts:59–160`.
+- `session/projector.ts:462–475` + `event.ts:384–431`: atomicidade da promoção e commit/notification.
+- `session/execution/local.ts:14–35`, `run-coordinator.ts:67–103`, `location-services.ts:46–127`: process-global versus Location-scoped.
+- `database/database.ts:43–62`, `database/path.ts:5–75`, `global.ts:10–29`, `credential.ts:172–239`: localização e compatibilidade de dados.
+- `database/migration.ts:43–105`: identidade/ordem das migrações; não reaplicar reset histórico ao relocar.
+- DB usa WAL (`core/src/database/database.ts:27–32`); draft store adia documents e grava blobs antes (`desktop/src/main/draft-store.ts:18–79`). Snapshot legível pode ser incompleto: flush/capture consistente e igualdade por IDs/refs/hash são pré-condições.
+- `orchestra/src/auth/index.ts:10,73–88` usa `Global.Path.data/auth.json`, independente de um `ORCHESTRA_DB` temporário; `plugin/xai.ts:241–263` rotaciona refresh remoto. Sandbox precisa de isolamento de paths e identidade, não só cópia de DB.
 
-  Core also has loose root clusters: `tool-safety-*`, `omni*` and `relay-hook-*`.
+### APIs e clientes
 
-- **`packages/app/src`:** `orchestra` (142 files, including a `relay/` folder that overlaps the Relay slice) and `wsl` plus four desktop-bridge files that belong to the desktop platform layer.
+- `protocol/src/api.ts:30–97`: contrato atual `/api`; `server/src/routes.ts:44–73`: concrete handlers/auth/Location.
+- SDK root congelado e `sdk/v2` misto continuam ativos; client Promise/Effect e sdk-next embedded têm papéis diferentes.
+- Legacy prompt return/SSE `properties` versus admission atual/SSE `data` não são diferenças cosméticas.
+- `orchestra/.../httpapi/public.ts:88–196,553–560` transforma OpenAPI para compatibilidade; não substituir pelo raw Protocol OpenAPI.
+- Imports de SDK apenas como tipos não exigem promoção automática para runtime. Orchestra usa valores de Core com declaração em devDependencies: avaliar esse descompasso separadamente.
+- Exports wildcard do Core e demais pacotes são superfície existente. Fechar o wildcard exige inventário e reexports, não um rename de manifest.
 
-### 7. Tooling hard-codes directory paths
+### UI e Desktop
 
-Moving a directory today breaks these:
+- `app/src/index.ts`, `desktop/src/renderer/index.tsx`: facade e Platform injection compartilhadas.
+- `app/vite.js`, `desktop/electron.vite.config.ts`, `ui/src/styles/tailwind/index.css`, markdown workers: aliases/globs/assets/conditions dependem de paths.
+- `app/src/context/settings.tsx:57–60,121–123`: visual shell e V1/V2 transport são eixos distintos; sunset e fixtures de clock requerem análise própria.
+- Desktop stores são lazy; app IDs/data roots/window/profile revisions e `drafts.sqlite` são persistência existente.
+- `desktop/src/main/background-cli.ts:20–61`: CLI V2 é consumidor empacotado real.
+- `desktop/src/main/app-dock-rpc.ts:132–149` versus `linux-workspace-rpc.ts:110–128`: autoridades/envelopes de RPC diferem; extração não autoriza unificá-las.
 
-| Target               | Referencing files | Notable couplings                                                                                                                                                             |
-| -------------------- | ----------------: | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `packages/orchestra` |               107 | root `dev` script, `nix/*.nix`, 3 workflows, `desktop/electron-builder.config.ts` (`../orchestra/playbooks`), `packages/script/src/index.ts` (`../../orchestra/package.json`) |
-| `packages/app`       |                54 | 65 `godfile-waivers.json` keys, `translate-app`, nix, `session-ui` `file:../app/vendor/...`                                                                                   |
-| `packages/omni`      |                47 | 6 workflows, `turbo.json` inputs, the workspace glob, `omni:build`, oxlint and prettier ignores, the mirror script                                                            |
-| `packages/core`      |                36 | `postinstall`, workflows, `turbo.json` inputs                                                                                                                                 |
-| `packages/desktop`   |                29 | `nix/desktop.nix`, 2 workflows, tsconfig `references ../app`                                                                                                                  |
-| `foundation/atlas`   |                10 | `test.yml` (4 places), `godfile.ts`, ~25 `spawn-allowlist.json` keys, `atlas-boundary` build + tsconfig                                                                       |
+### Fatias importadas e arquivos aparentemente descartáveis
 
-Other couplings:
+- Atlas README/ARCHITECTURE/corpus/WP cards/ledgers e `.orchestra/skills/own` alimentam parsers, scheduling e snapshot verification.
+- Atlas `gate-directory.test.mjs:55–66` lê nested workflow; Own verifica revisions/paths/ancestry. Sua remoção exige migrar os readers.
+- Own/materializer usam Git `revision:./path` relativo à raiz atual; EARS CI projeta prefix fixo e pode criar empty tree (`own-snapshot-guard.mjs:45–50`; `scripts/materialize-own-snapshot.mjs:100–103,171–198`; `.github/workflows/test.yml:105–116`). Reader prefix-aware por revisão precisa preceder a relocação Atlas.
+- Atlas LICENSE Apache-2.0, Omni dual MIT/Apache, Arsenal Apache/NOTICE, Lean LICENSE/NOTICE/licenses/SOURCES permanecem.
+- Relay `test/golden/ORACLE` + `FORMAT.md`: dados TS vêm de oracle independente; não regenerar expectativas com implementação sob teste.
+- Relay `src/authoring/store.ts:239–259`: profiles são assets relativos; glob/import negativo não prova que não são usados.
+- Lean pin: source `465fb4c04773f1a40733c9f4c334b980e3195646`, SHA-256 `369206cd0a468904d7896c3e729535911e9258a7d4a3e9c8eedb078b6a096ec1`; copiar repo doador atual é outra mudança.
+- `orchestra/script/lean-notices.ts:18–45`: packaging verifica o archive e copia notices; não separar assets de atribuição.
+- `orchestra/test/skill/backend-skills.test.ts:136–146`: README dentro da árvore de skills quebra contrato exato.
+- `orchestra/src/claude-code/sdk.ts:41–67`: guard mantém engine pausada antes de ler login/spawn. Esse estado deve permanecer.
 
-- `script/test-ci.ts` resolves packages with the regex `^packages/${name}/`.
-- The `setup-bun` cache globs are depth-based: `packages/*/node_modules` and `packages/*/*/node_modules`.
-- `.github/TEAM_MEMBERS` is reached through `../../../`.
-- `nix/hashes.json` breaks on any workspace change.
-- `turbo.json` task keys use package names, so they survive a move.
+## 5. Corpus, histórico e limpeza: candidatos e bloqueadores
 
-### 8. Leftovers and dead weight
+| Área | Material histórico candidato | Material/readers a preservar |
+| --- | --- | --- |
+| Visual | `specs/orchestra-visual/handoff/archives`, logs/screenshots de campaign | Mock aprovado, receipts, manifests e `restore-evidence.ts`; hash + fresh restore |
+| Backend | `specs/backend-specialist/research`, delivery/session notes superseded | Acceptance/contracts atuais, obrigações e referências de testes |
+| Continuity | Experiment/review notes e benchmark outputs históricos | Gold/probes/scoring/harness, contratos de prefixo e operação |
+| Desktop | Briefs/recovery/plans encerrados | App Dock brownfield corpus, contract witnesses, active closeout |
+| Atlas | Campaign recut/WAVE/SESSION-STATE superseded | Requirement/WP acceptance links, reference docs, Own bundle e ledgers |
+| Omni | Campaign/HANDOFF seções históricas | PLAN/API/GUARANTEES/readme/skill parser inputs, conformance/QA e espelho |
+| Relay | `docs/roadmaps` e outras campanhas encerradas | `bin/gen-doc-index.py`/`check-docs.py` e pointers para contratos vigentes |
+| Raiz | Perf notes e organização duplicada | `CONTEXT.md` fallback, AGENTS/skills/commands descobertos, guias necessários |
 
-- **Unwired code:**
-  - `packages/cli` is unwired.
-  - `effect-sqlite-node` is dead.
-  - `capability-assets` has no consumer and no turbo test entry.
-  - `packages/identity` is a folder of images posing as a package.
-- **One-shot scripts and stray files:**
-  - `script/rename-codemod.ts` and `script/hooks` are one-shot leftovers. `rename-ledger.ts` stays while `core/test/rename-guard.test.ts` uses it.
-  - `script/generate.ts` calls the legacy SDK build.
-  - `patches/install-korean-ime-fix.sh` is not a patch.
-  - `husky` is in `prepare`, but `.husky/` does not exist.
-- **Waivers and noisy workflows:**
-  - `test.yml` keeps a one-off waiver for PR 126.
-  - `omni-desktop-smoke` only fires for PRs into `omni-closeout`.
-  - `toolkit-arm` is dispatch-only.
-  - Four workflows (`typecheck`, `storybook`, `nix-eval`, `native`) repeat the same epic-label boilerplate.
-- **Leftover opencode references:** `.orchestra/*.json` still points `$schema` at opencode.ai, and about 280 files mention opencode.
-- **Misplaced config:**
-  - `CONTEXT.md` (session vocabulary, referenced by prompts) sits at root.
-  - `godfile-waivers.json` sits at root, away from the gate that reads it.
-- **Nested agent docs:** 20 `AGENTS.md`/`CLAUDE.md` files are spread through the tree.
+Leitores demonstrados:
+
+- `core/src/instruction-context.ts:50–58`, `core/src/skill.ts:83`, `orchestra/src/session/instruction.ts:63–67,129–143`: documentos de instrução e globs são runtime assets.
+- `orchestra/test/maestro/arsenal-one-evaluator.test.ts:35–37`: contrato em `specs/hugr-maestro/arsenal-port.md` é input de teste.
+- `orchestra/script/continuity-bench/v4.ts:25,67,170`: `$BENCH_DIR` e arquivos dinâmicos; `benchmark-evidence/scoring/deterministic.py` lê frozen answers.
+- `foundation/atlas/harness/gates/id-integrity.mjs:149–153,300–342`: requirement/scenario/WP traceability; `doc-transcript-guard.mjs:14–31`: document output replay.
+- `omni/scripts/brief.py:21–27`, `scripts/guarantees-check/check.mjs:116–119`, `scripts/readme-check/check.mjs:91–103`: PLAN/acceptance/headings/guides são entradas.
+- `specs/runtime-closure/CHECKPOINT.md:48–56` e `desktop/docs/plans/dock-accessibility/closeout.md:10–16`: há obrigações abertas; idade não comprova encerramento.
+- `specs/orchestra-visual/handoff/README.md:54–55`: `missingTrackedPaths` é forense, não lista de arquivos autorizados a apagar.
+
+Nenhuma classe recebe exclusão global por regex de nome. Cada lote precisa classificação, consumers, archive quando necessário e qualificação dos readers. O Git histórico sozinho não substitui um archive restaurável com todos os dados necessários.
+
+O inventário de limpeza é exaustivo: as áreas desta tabela priorizam, não delimitam o escopo. Todo item acumulado precisa de disposição reconciliada antes de 100.
+
+## 6. Tooling, CI e acoplamentos de caminho
+
+| Site | Acoplamento / risco | Pré-condição do movimento |
+| --- | --- | --- |
+| `script/test-ci.ts:108–160,178–226` | Presume package dir, normaliza filtros; Python depende de `.py` em todos os args | Resolver language-aware; exact-test ordering/selection mantidos |
+| `test-ci-upload.ts` / `test-ci.yml` | Snapshot, ignore rules, limites e exact-tree receipt | Rename não omite arquivo nem importa WIP; digest e leitura correspondem |
+| `turbo.json:12–41` | `^transit`, Rust root/campaign inputs, outputs | Cache invalida quando assets/dependências mudam; outputs reais incluídos |
+| `setup-bun/action.yml` | Installed-tree cache e profundidade dos node_modules | OS/CPU/toolchain/hooks/cwd corretos; sem usar cache como prova de runtime |
+| `script/godfile.ts` | Exclui Atlas; waivers e legacy oversize por caminho | Preservar alcance; não usar LOC gate como prova de cleanup documental |
+| `check-spawn-imports.ts` | Scan delimitado + allowlist por site | Retarget exato, stale entries falham; não ampliar exclusões para esconder movimento |
+| `script/omni-mirror.sh:17–19,45–61,77–84` | Prefix fixo, first-parent/history/tag-tree equality | Resolução old/new por revisão antes da relocação |
+| Core/CLI/Desktop Omni loaders/copiers | `hugr_omni.node` producer versus `hugr-omni.node` npm; supervisor adjacente | Pair/filename/ABI/resources/realpath preservados |
+| Build helpers/desktop playbooks/skill generators | Paths relativos, version source, embeds | Registro + asset resolution; identidade e conteúdo iguais |
+| Nix `node_modules.nix:32–48,72–84,129–140` | Globs suportados limitados; fileset `packages`; recursive hashes stale | Fileset/locks adaptados + build closure/hash medidos por host |
+| Nix delta #318 | Workspace-path alias; bundles tree-sitter e capture/completion nos três locais | Retarget resolver + manter native image/load/parse e receipt obrigatório |
+| `.gitattributes`, ignores, vendor manifests | LF, union merge, byte-exact bundles, tarball relativos | Novo path tem mesma policy antes de gerar/empacotar |
+
+O registry não substitui parsers/compilers/OS que conhecem a semântica. Novo guard deve provar discovery não vazio, correspondence nos dois sentidos, missing/malformed/stale como erros e mutantes reais; não ser uma tabela que concorda consigo mesma.
+
+## 7. Checks concretos para o plano
+
+### Como executar na baseline
+
+- Typecheck: `bun typecheck` **no diretório do package**. Nunca `tsc` direto como substituto geral.
+- Atlas: seu script `npm run typecheck` executa o project build necessário a `dist`; preservar esse pipeline em CI. A regra do package Bun não autoriza substituir esse build por no-emit.
+- Testes Orchestra: `bun run test:ci <package> <arquivos...> --os both` na raiz; local `bun test` é bloqueado por policy.
+- Relay Python: somente args de arquivos `.py` selecionam pytest; argumentos mistos/diretórios mudam runner. Python qualifica Linux separadamente.
+- Atlas tem pipeline npm/Vitest/project build independente em Actions; deve executar os mesmos scripts/gates reais, preservando `dist`, refs e ambiente.
+- Comandos adicionais que executam testes também obedecem à policy de CI. A listagem abaixo não autoriza testes locais nem declara que passaram.
+
+| Área | Suites/comandos existentes a selecionar |
+| --- | --- |
+| Session/Core | `test/session-create.test.ts`, `session-prompt`, `session-runner`, `session-run-coordinator`, `session-runner-recorded`, `location-layer`, `session-runner-tool-registry` |
+| Dados/config | Core `test/database-migration.test.ts`, `database-sqlite`, `credential-inherit`, `config/config`, `location-filesystem`, `project` |
+| APIs | Client `test/contract-identity.test.ts`, `import-boundaries`, `type-conformance`, `promise`, `effect`; sdk-next `embedded`/boundaries; schema compatibility/event/v1 |
+| Legacy HTTP/SDK | Orchestra `test/server/httpapi-public-openapi.test.ts`, query-schema-drift, authorization, SDK, sdk-v1-smoke, sdk-error-shape; `test:httpapi` |
+| Plugins | Core `test/plugin/sdk-runtime.test.ts`, `sdk-authority`; SDK/plugin export/consumer tests |
+| UI | App `test:unit`, `test:browser` (browser/solid conditions), `typecheck:e2e`, selected Playwright; session-ui/UI tests; TUI lifecycle/runtime/keymap; Storybook build |
+| Atlas | npm install/project typecheck/build, godfile/layer/reference-model/spec/id/command/wiring/ADR/req/EARS/doc-transcript/service/Own guards; npm tests; Own materialization tests; WP audit |
+| Boundary | `bun run check:generated` em atlas-boundary, JS/declaration byte checks e Maestro consumers |
+| Relay | TS/Node parity/layering/gate/ledger/arm; Python audit/provenance/oracle-drift/docs; `bin/gen-doc-index.py --check`; independent golden generators em ambiente pinned |
+| Lean | Core processor/telemetry, Orchestra native/item/profile/project/package/replay tests, notices digest; actual ShellTool calls, não apenas parser fixture |
+| Agents | Seat-name/label/framework/skills build; backend toolkit/acquisition/process/readiness; upstream Arsenal/authoring; Continuity persistence; Claude plan-approval/preset/lifecycle; ACP/control-plane |
+| Omni | `scripts/ci.mjs`, conformance/QA, Node/Bun binding contracts, artifact import/load/spawn/stop e mirror replay; flags release expandem alcance |
+| Runtime/delivery | `runtime-products.yml`, tree-sitter/Omni artifacts, Desktop packaged lifecycle, native/accessibility/WSL, Nix artifact/distribution/toolchain qualification |
+| Guards | `bun run check:godfile`, `bun run check:spawn-imports`, declared corpus/gate fitness tests |
+
+Geração obrigatória:
+
+- Protocol ou Server HttpApi público alterado: `bun run generate` em `packages/client`; não editar `src/generated`/`src/generated-effect`.
+- SDK legado: `./packages/sdk/js/script/build.ts`; root `script/generate.ts` também possui responsibilities OpenAPI/format e não é lixo por usar legado.
+- Clients: `check:generated` usa regeneration + diff. Skill/toolkit/boundary generators têm provenance/assets próprios; mover os inputs sem requalificar o generator não basta.
+
+### Alcance e lacunas que precisam continuar honestos
+
+- Epic CI atual: units Linux/Windows; Atlas/generated/HttpApi/Relay Python em Linux; browser tests frequentemente mocked. Executar no environment real quando a propriedade requer integração.
+- Omni artifact matrix tem combinações GNU/musl/Darwin/Windows x64/ARM64; CLI desabilita Omni em alguns targets. Preservar suporte declarado, não inventar equivalência.
+- Desktop smoke unsigned cobre ciclo de vida em runners determinados; não qualifica automaticamente assinatura/notarização/installers ou todos os CPUs.
+- WSL workflow descreve proof preparado/unrun; script foreground não substitui teste de controller Electron.
+- Dock security/live/RPC/accessibility inclui harnesses fora de Bun discovery e cenários opt-in. Teste skipped não fecha comportamento exigido.
+- V7 pode terminar `unrun-busy`; isso é falta de medição, não validação verde de overhead.
+- Epic normal usa previous-pass/changed scope/Turbo pass cache. O modo completo de 30-F precisa forçar execução required no exato candidate, preservando build cache somente quando inputs forem demonstrados. Omni release/npm delivery precisa das lanes `--release`/`pack:true` aplicáveis.
+- Nix metadata hash atual, cache hit e eval warning não provam closure funcional no host/artefato final.
+- Lean possui backend preferences/telemetry/API; contrato de dashboard e integração de UI são escopos distintos. Não completar feature ausente escondida na reorganização.
+
+Essas limitações são entradas da matriz 00-B. Depois de implementados os movimentos, a conclusão exige os checks requeridos no candidate final e o alcance exato dos receipts, como definido no [plano](restructure-plan.md).
+
+## 8. Implementação publicada após a auditoria
+
+O mapa acima conserva a baseline histórica da auditoria. A stack draft sobre `dev@e87fd95799cb` publicou os seguintes mappings, com readers e checks localizados; ainda não altera os paths de `dev`:
+
+| Fonte da auditoria | Path implementado | PR |
+| --- | --- | --- |
+| `packages/relay` | `modules/relay` | #525 |
+| `packages/capability-assets` | `modules/capability-assets` | #526 |
+| `packages/maestro-arsenal` | `modules/maestro/arsenal` | #528 |
+| `packages/backend-specialist` / `packages/archie-specialist` | `modules/specialists/backend` / `modules/specialists/archie` | #527 |
+| `packages/identity` | `assets/brand` | #552 |
+| `packages/httpapi-codegen` | `tooling/httpapi-codegen` | #551 |
+| `packages/http-recorder` | `tooling/http-recorder` | #553 |
+| `packages/omni` | `native/omni` | #615, após readers históricos #607/#606/#605 |
+| `foundation/atlas` | `modules/atlas` | #614 |
+| `packages/atlas-boundary` | `modules/atlas/boundary` | #614 |
+
+Composição mais recente: `atlas-module@1f1d2f8801b420f59004cc3c81b3ed99901dbe60`, tree `ff111cb5e96f7e9fd760643025d71991dc6da5dc`, sobre `omni-module@ea9fe371cf5a9eff515cb4b3c3bfc3ce18f47d1d`. Identidades públicas, runtimes, skills, oracle/cassettes e contracts permanecem; exceções exatas de config/fixture/metadata, provas e cadência automática estão no registro de execução do [plano](restructure-plan.md). Omni preserva 406 members/modes, Atlas 1.269 members/blobs/modes e boundary 16 members/modes; Cargo/QA/corpus/Own/locks e gerados permanecem exatos. Readers continuam resolvendo o prefix por revisão, e o boundary continua sob o guard host apesar do parent Atlas ter gate próprio. Hosted qualification final, dados/archives e demais movimentos mantêm seus estados próprios; as drafts não mudam `dev`.
