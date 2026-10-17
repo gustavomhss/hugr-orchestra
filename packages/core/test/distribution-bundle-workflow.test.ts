@@ -67,7 +67,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_PROVIDER_INPUT", (value) => ({ ...value, on: { ...value.on, workflow_dispatch: null } })],
     ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: undefined } } })],
     ["BUNDLE_PROVIDER_OPT_IN", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, if: "${{ always() }}" } } })],
-    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => [...rows.slice(1), ...(value.jobs.provider?.strategy?.matrix.include ?? [])], {}, {}, (rows) => [...rows, ...(value.jobs.qualification?.strategy?.matrix.include?.slice(0, 1) ?? [])])],
+    ["BUNDLE_PROVIDER_OPT_IN", (value) => patchMatrix(value, (rows) => [...rows.slice(1), ...(value.jobs.provider?.strategy?.matrix.include ?? [])], {}, {}, () => value.jobs.qualification?.strategy?.matrix.include?.slice(0, 1) ?? [])],
     ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, steps: value.jobs.provider?.steps.filter((step) => step.name !== "Require hosted provider credential") } } })],
     ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, env: { ...value.jobs.provider?.env, OPENROUTER_API_KEY: "" } } } })],
     ["BUNDLE_PROVIDER_JOB", (value) => ({ ...value, jobs: { ...value.jobs, provider: { ...value.jobs.provider, strategy: { ...value.jobs.provider?.strategy, "max-parallel": 2 } } } })],
