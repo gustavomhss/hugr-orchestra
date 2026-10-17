@@ -5,6 +5,7 @@ import { Effect, Option } from "effect"
 import path from "path"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
+import { Patch } from "@orchestra/core/patch"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { MessageV2 } from "@/session/message-v2"
 import { Session } from "@/session/session"
@@ -37,6 +38,7 @@ export function track(input: {
   const evidence: { value?: BackendResult.WorkResult } = {}
   const returned: { value?: BackendResult.WorkResult } = {}
   const ended: { value?: BackendResult.WorkResult } = {}
+  const claimed: { note?: string } = {}
   const completion: { observed?: true; interrupted?: true; projection?: Pick<BackendResult.WorkResult, "verification" | "hostChecks" | "delta"> } = {}
   const project = (result: BackendResult.WorkResult): BackendResult.WorkResult => ({
     ...result,
@@ -92,7 +94,10 @@ export function track(input: {
   })))
 
   return {
-    report: (text: string) => evidence.value ? DiscoveryResult.report(text, evidence.value) : text,
+    report: (text: string) => {
+      const reported = evidence.value ? DiscoveryResult.report(text, evidence.value) : text
+      return claimed.note ? `${reported}\n\n${claimed.note}` : reported
+    },
     publish,
     observe: Effect.fn("SeatWork.observe")(function* (facts: ArsenalCompletion.Facts) {
       completion.observed = true
@@ -123,6 +128,8 @@ export function track(input: {
       const captured = yield* bound(yield* assemble(snapshot, session), session)
       returned.value = structuredClone(captured)
       evidence.value = structuredClone(captured)
+      claimed.note = captured.schema === UpstreamResult.SCHEMA && captured.card?.parsed
+        ? claimedArtifacts(captured.artifacts ?? [], [...session, snapshot]) : undefined
       yield* input.publish(structuredClone(captured))
       return captured
     }),
@@ -166,4 +173,35 @@ export function track(input: {
 function lastAssistant(messages: readonly SessionV1.WithParts[]) {
   // MessageV2.stream is newest-first, including across pages.
   return messages.find((message) => message.info.role === "assistant")
+}
+
+// An upstream card's artifact paths are the worker's claims. Name which of them this Task actually wrote, so the
+// caller does not report a file that was never written; this checks that a write happened, not what it contains.
+function claimedArtifacts(artifacts: NonNullable<BackendResult.WorkResult["artifacts"]>, history: readonly SessionV1.WithParts[]) {
+  const paths = artifacts.flatMap((artifact) => artifact.path ? [artifact.path] : [])
+  const cwd = history.flatMap((message) => message.info.role === "assistant" ? [message.info.path.cwd] : [])[0]
+  if (!paths.length || !cwd) return undefined
+  const written = new Set(history.flatMap((message) => message.parts).flatMap((part) =>
+    part.type === "tool" && part.state.status === "completed" ? touched(part.tool, part.state.input) : [])
+    .map((file) => path.resolve(cwd, file)))
+  // Paths are the child's text: quote them so a path holding a newline cannot forge a host line.
+  return ["Host check of the paths this card claims (that this Task wrote them, not what they contain):",
+    ...paths.map((file) => written.has(path.resolve(cwd, file))
+      ? `- ${JSON.stringify(file)}: written by this Task`
+      : `- ${JSON.stringify(file)}: NOT written by this Task (no completed write, edit or apply_patch); treat the claim as unverified`)].join("\n")
+}
+
+function touched(tool: string, input: Record<string, unknown>) {
+  if ((tool === "write" || tool === "edit") && typeof input.filePath === "string") return [input.filePath]
+  if (tool !== "apply_patch" || typeof input.patchText !== "string") return []
+  const patch = input.patchText
+  // A patch the tool could not parse wrote nothing.
+  const hunks = Effect.runSync(Effect.try({ try: () => Patch.parse(patch), catch: () => undefined }).pipe(
+    Effect.orElseSucceed((): readonly Patch.Hunk[] => [])))
+  // A deleted file and the source of a move are not left written.
+  return hunks.flatMap((hunk) => {
+    if (hunk.type === "delete") return []
+    if (hunk.type === "update" && hunk.movePath) return [hunk.movePath]
+    return [hunk.path]
+  })
 }

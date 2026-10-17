@@ -1,5 +1,39 @@
 # Jimmy final handoff — 2026-10-10
 
+## Closure (2026-10-17)
+
+The Jimmy campaign is closed.
+
+- **Orchestra loop:** Jimmy is on `dev` and runs there (#334).
+- **Claude mode:** Jimmy runs as a plugin subagent of the Claude Code host, landed with the host in #362. Its CI passed (45 checks).
+  - Its tools are limited to Orchestra's research capture tools, and the seat's permission floor is enforced through `PreToolUse`.
+  - The research allowance is enforced as follows:
+    - provider turns by `maxTurns` (24);
+    - tool calls and captured bytes by hooks (64 calls, 64 MiB);
+    - a dispatch deadline of 600 s;
+    - exhaustion stops only Jimmy, with the named `budget_exhausted` reason.
+  - Details: `src/claude-code/host/research.ts` and `test/claude-code/host/jimmy*.test.ts`.
+- **Live proof in Claude mode (2026-10-13/14):** run against an exact published source, not against the latest `dev`.
+  - **Full research handoff** (`PASS_POSITIVE_ONLY`, independent cold review `ACCEPT_POSITIVE_ONLY`): one parent and one foreground Jimmy dispatch on Haiku 5.5. The run captured the source, retained the finding and the document, checked the card's references, and delivered the qualification packet complete to the parent.
+  - **Boundary probes:**
+    - the hook refuses built-in Write before it executes;
+    - the allowance is observed at 24/24, then denies with `continue:false`, and the parent continues;
+    - `Query.stopTask` stops a joined child that has a pending capture.
+  - **Not claimed:** a 600 s wall-clock wait (the deadline was proved on a virtual clock only), the SDK's native max-turn terminal cause, and hidden physical provider work.
+  - The receipts are local to the owner's machine, under `_worktrees/_tools/briefs/jimmy-harness/`. The index is `remaining-acceptance/closure/RESULT.md`.
+
+Closed items:
+
+- **Claude-mode delivery:** done. The adapter-era note below ("will rejoin Claude mode") is historical.
+- **R01 grader control:** closed as not applicable. That control belonged to the gpt-6.1-sol study, and no full 42-slot study is planned. The original and confirmation results stay recorded below as they were.
+- **OpenAI qualification study:** superseded. The owner moved model runs to Claude, and its results remain as historical evidence. No release claim rests on it.
+
+Declared limits, not tracked as open work:
+
+- **Early stop:** on SWE-QA-Pro, Jimmy concluded after a median of 5 of its 24 provider turns. The verify-depth prompt improved answers (+0.53) but did not deepen exploration. Jimmy is near parity with plain Claude Code (−0.62); see [SWE-QA-PRO.md](SWE-QA-PRO.md).
+- **Uncounted provider work in Claude mode:** hidden retries, compaction and in-flight provider work are not counted against the allowance. The deadline cannot cancel a provider call that is already running.
+- **R14:** interruption plus compaction plus resume from the Atlas checkpoint has no Claude-mode qualification evidence.
+
 ## Landing note (2026-10-11)
 
 - On landing, Jimmy's Claude Code engine customizations were dropped; the engine is paused for its host/plugin redesign.

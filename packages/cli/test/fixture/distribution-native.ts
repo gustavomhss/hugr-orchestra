@@ -53,8 +53,14 @@ export async function successful(args: string[], box: Pick<Sandbox, "cwd" | "env
   const result = await command(args, box, timeout)
   // Daemon password/stdout never enter failure diagnostics.
   if (result.code !== 0)
-    throw new Error(`Command failed (${result.code}): ${args.join(" ")}${args[1] === "service" ? "" : `\n${result.stderr}`}`)
+    throw new Error(`Command failed (${result.code}): ${args.join(" ")}${args[1] === "service" ? startReason(result.stderr) : `\n${result.stderr}`}`)
   return result.stdout.trim()
+}
+
+// Service stderr stays private; only the CLI's fixed start reason code passes.
+export function startReason(stderr: string) {
+  const reason = stderr.match(/Failed to start server \((?:exited (?:code=\d+|signal=SIG[A-Z0-9]+)|[a-z-]+), \d+ms\)/)?.[0]
+  return reason ? `\n${reason}` : ""
 }
 
 export async function assertVersion(launcher: string, version: string, box: Sandbox) {
