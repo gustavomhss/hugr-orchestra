@@ -129,10 +129,10 @@ async function showRemovalSummary(targets: RemovalTargets, method: Installation.
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string> = {
-      npm: "npm uninstall -g orchestra-ai",
-      pnpm: "pnpm uninstall -g orchestra-ai",
-      bun: "bun remove -g orchestra-ai",
-      yarn: "yarn global remove orchestra-ai",
+      npm: "npm uninstall -g @hugr/cli",
+      pnpm: "pnpm uninstall -g @hugr/cli",
+      bun: "bun remove -g @hugr/cli",
+      yarn: "yarn global remove @hugr/cli",
       brew: "brew uninstall orchestra",
       choco: "choco uninstall orchestra",
       scoop: "scoop uninstall orchestra",
@@ -147,10 +147,10 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string[]> = {
-      npm: ["npm", "uninstall", "-g", "orchestra-ai"],
-      pnpm: ["pnpm", "uninstall", "-g", "orchestra-ai"],
-      bun: ["bun", "remove", "-g", "orchestra-ai"],
-      yarn: ["yarn", "global", "remove", "orchestra-ai"],
+      npm: ["npm", "uninstall", "-g", "@hugr/cli"],
+      pnpm: ["pnpm", "uninstall", "-g", "@hugr/cli"],
+      bun: ["bun", "remove", "-g", "@hugr/cli"],
+      yarn: ["yarn", "global", "remove", "@hugr/cli"],
       brew: ["brew", "uninstall", "orchestra"],
       choco: ["choco", "uninstall", "orchestra"],
       scoop: ["scoop", "uninstall", "orchestra"],
