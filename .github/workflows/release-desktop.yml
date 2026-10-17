@@ -20,12 +20,9 @@ on:
         description: Upload the installers to the existing GitHub release v<version>
         type: boolean
         default: false
-  # TEMPORARY dry-run proof trigger (removed before review): no inputs, so sign and publish are false.
-  push:
-    branches: [desktop-release-pipeline]
 
 concurrency:
-  group: release-desktop-${{ inputs.version || github.ref }}
+  group: release-desktop-${{ inputs.version }}
   cancel-in-progress: false
 
 permissions:
@@ -36,7 +33,7 @@ defaults:
     shell: bash
 
 env:
-  VERSION: ${{ inputs.version || '0.0.1' }}
+  VERSION: ${{ inputs.version }}
 
 jobs:
   plan:
@@ -162,7 +159,7 @@ jobs:
     env:
       SIGN: ${{ inputs.sign == true }}
       ORCHESTRA_CHANNEL: prod
-      ORCHESTRA_VERSION: ${{ inputs.version || '0.0.1' }}
+      ORCHESTRA_VERSION: ${{ inputs.version }}
       # sign=false: electron-builder.config.ts drops identity, notarization and Windows signing.
       ORCHESTRA_DESKTOP_UNSIGNED: ${{ inputs.sign != true && '1' || '' }}
       CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign != true && 'false' || 'true' }}
