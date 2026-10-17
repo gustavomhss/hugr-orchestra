@@ -161,7 +161,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
           return data.tag_name.replace(/^v/, "")
         },
         // A failed lookup must never break startup or the update notice: report the running version.
-        Effect.catch(() => Effect.succeed(InstallationVersion)),
+        Effect.catchCause(() => Effect.succeed(InstallationVersion)),
       ),
       upgrade: Effect.fn("Installation.upgrade")(function* (method: Method, target: string) {
         const command = upgradeCommand(method, target)
