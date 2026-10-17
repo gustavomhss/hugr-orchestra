@@ -1,0 +1,54 @@
+name: "Apple signing"
+description: >-
+  Imports a Developer ID Application certificate into a temporary keychain on a macOS runner and exports CSC_NAME (the
+  "Developer ID Application: ..." identity) and CSC_KEYCHAIN. The keychain is on the search list so plain codesign
+  (packages/desktop/scripts/utils.ts signs the bundled CLI before electron-builder runs) finds the identity too.
+  Callers delete $RUNNER_TEMP/orchestra-signing.keychain-db in an `if: always()` step.
+inputs:
+  certificate-p12-base64:
+    description: "Base64 of the Developer ID Application .p12"
+    required: true
+  certificate-password:
+    description: "Password of the .p12"
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Import the Developer ID certificate into a temporary keychain
+      shell: bash
+      env:
+        P12_BASE64: ${{ inputs.certificate-p12-base64 }}
+        P12_PASSWORD: ${{ inputs.certificate-password }}
+      run: |
+        set -euo pipefail
+        [ "$RUNNER_OS" = macOS ] || { echo "::error::apple-signing runs on macOS only: $RUNNER_OS"; exit 1; }
+        if [ -z "$P12_BASE64" ] || [ -z "$P12_PASSWORD" ]; then
+          echo "::error::APPLE_SIGNING_CERT_MISSING: certificate-p12-base64 and certificate-password are required"
+          exit 1
+        fi
+        keychain="$RUNNER_TEMP/orchestra-signing.keychain-db"
+        p12="$RUNNER_TEMP/orchestra-signing.p12"
+        keychain_password="$(openssl rand -hex 32)"
+        trap 'rm -f "$p12"' EXIT
+        printf '%s' "$P12_BASE64" | base64 --decode > "$p12"
+        security create-keychain -p "$keychain_password" "$keychain"
+        security set-keychain-settings -lut 21600 "$keychain"
+        security unlock-keychain -p "$keychain_password" "$keychain"
+        security import "$p12" -k "$keychain" -P "$P12_PASSWORD" -f pkcs12 -T /usr/bin/codesign -T /usr/bin/security
+        security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain" >/dev/null
+        # Prepend the temporary keychain, keep the user's own keychains searchable.
+        existing=()
+        while IFS= read -r line; do
+          line="${line#"${line%%[![:space:]]*}"}"; line="${line%\"}"; line="${line#\"}"
+          [ -n "$line" ] && existing+=("$line")
+        done < <(security list-keychains -d user)
+        security list-keychains -d user -s "$keychain" "${existing[@]}"
+        identity="$(security find-identity -v -p codesigning "$keychain" | sed -n 's/^ *[0-9][0-9]*) [0-9A-F]\{40\} "\(Developer ID Application: .*\)"$/\1/p' | head -n 1)"
+        if [ -z "$identity" ]; then
+          echo "::error::APPLE_SIGNING_IDENTITY_NOT_FOUND: no valid Developer ID Application identity in the certificate"
+          security find-identity -v -p codesigning "$keychain" || true
+          exit 1
+        fi
+        echo "Signing identity: $identity"
+        echo "CSC_NAME=$identity" >> "$GITHUB_ENV"
+        echo "CSC_KEYCHAIN=$keychain" >> "$GITHUB_ENV"
