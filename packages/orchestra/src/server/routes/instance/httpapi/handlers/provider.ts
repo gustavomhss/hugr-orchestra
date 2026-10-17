@@ -67,14 +67,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
       )
       const extras: Record<string, any> = {}
       // Default-labeled integration keys connect their base provider; labeled keys stay virtual entries.
-      // Zen anonymous models need no credential at all, mirroring the core catalog contract.
-      // Anonymity is decided by the trusted models.dev entry, never merged content.
       const keyed = new Set<string>()
-      const anonymous = new Set(
-        Object.entries(filtered)
-          .filter(([id, item]) => id === "opencode" && Provider.hasAnonymousModel(Provider.fromModelsDevProvider(item)))
-          .map(([id]) => id),
-      )
       for (const cred of yield* credentials.all()) {
         if (cred.value.type !== "key") continue
         const label = cred.label && cred.label !== "default" ? cred.label : ""
@@ -107,13 +100,7 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
         }),
         default: Provider.defaultModelIDs(providers),
         connected: Object.keys(providers).filter(
-          (id) =>
-            id in connected ||
-            legacy[id] ||
-            id in extras ||
-            keyed.has(id) ||
-            anonymous.has(id) ||
-            (host && id === "anthropic"),
+          (id) => id in connected || legacy[id] || id in extras || keyed.has(id) || (host && id === "anthropic"),
         ),
       }
     })
