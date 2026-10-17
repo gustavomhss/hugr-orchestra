@@ -428,17 +428,15 @@ describe("provider HttpApi", () => {
     projectOptions,
   )
 
+  // Zen's free tier rejects every client but its own, so free Zen models must not make it the first-run default.
   it.instance(
-    "zen anonymous models list their provider connected without credential",
+    "zen without a credential is not connected",
     Effect.gen(function* () {
       const directory = (yield* TestInstance).directory
       const response = yield* request("/provider", { headers: { "x-orchestra-directory": directory } })
       expect(response.status).toBe(200)
       const body = yield* response.json
-      expect(body).toMatchObject({ connected: expect.arrayContaining(["opencode"]) })
-      const provider = providerByID(body, "all", "opencode")
-      expect(isRecord(provider)).toBe(true)
-      expect(isRecord(provider) && "key" in provider).toBe(false)
+      expect(isRecord(body) && Array.isArray(body.connected) && body.connected.includes("opencode")).toBe(false)
     }),
     projectOptions,
   )
