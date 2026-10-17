@@ -34,7 +34,6 @@ import { ModelsDev } from "@orchestra/core/models-dev"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Question } from "@/question"
-import { marker } from "@/continuity/alias"
 import { RequestSource } from "@/continuity/request-source"
 import { Archive } from "@/continuity/archive"
 import { MessageID, PartID, SessionID } from "@/session/schema"
@@ -115,21 +114,6 @@ export function claudeSessionID(sessionID: string) {
 }
 const NAMESPACE = Buffer.from("8f0c5b3e6a2d4f1b9c7e0d2a4b6c8e1f", "hex")
 
-export const userInput = ClaudeHostAdmission.userInput
-export const inbox = ClaudeHostAdmission.inbox
-
-/**
- * The source of the synthetic text that hands one Relay work package to a workflow-bound Session (engine.ts). Its
- * message is no owner request, but a turn delivers it like one: Claude Code's system prompt is fixed for the query, so
- * the work package's instructions can only arrive as input.
- */
-export const WORKFLOW_STEP = "workflow-step"
-
-/** The work package key a part hands over, when it is a workflow step's text. */
-export function workflowStep(part: SessionV1.Part) {
-  const source = part.type === "text" ? part.metadata?.source : undefined
-  return ClaudeCodeTranscript.record(source) && source.type === WORKFLOW_STEP && typeof source.key === "string" ? source.key : undefined
-}
 
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
 type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string; errorUUID?: string }
@@ -138,7 +122,7 @@ type Live = {
   query: Query
   bridge?: ReturnType<typeof ClaudeHostBridge.create>
   research?: ClaudeHostResearch.Runtime
-  inbox: ReturnType<typeof inbox>
+  inbox: ReturnType<typeof ClaudeHostAdmission.inbox>
   abort: AbortController
   agent: Agent.Info
   seat: string
@@ -171,8 +155,7 @@ type Live = {
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
-  /** The latest turn's prompt executor, for the served tools that start child Sessions (bridge.ts). */
-  promptOps?: () => Effect.Effect<TaskPromptOps>
+  promptOps?: () => Effect.Effect<TaskPromptOps> // the latest turn's, for served tools that start child Sessions
 }
 
 const layer = Layer.effect(
@@ -225,7 +208,7 @@ const layer = Layer.effect(
       if (live.queued.has(user.id) || live.delivered.has(user.id)) return
       const previous = live.inputs[user.id]
       if (previous && previous.status !== "pending") return yield* Effect.die(new Error(`Claude Code input submission is unresolved for ${user.id}`))
-      const message = { ...userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
+      const message = { ...ClaudeHostAdmission.userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
       live.inputs[user.id] = { uuid: message.uuid, status: "pending" }
       yield* write(live.sessionID, { inputs: live.inputs })
       if (live.closed || live.stopping || live.closing || live.queued.has(user.id) || live.delivered.has(user.id)) return
@@ -476,7 +459,7 @@ const layer = Layer.effect(
         ? ClaudeCodeTranscript.record(input.state.modelUsage) ? input.state.modelUsage : {} : {}
       const uuids = ClaudeCodeTranscript.record(input.state.uuids) ? input.state.uuids : {}
       const live: Live = {
-        sessionID: input.sessionID, inbox: inbox(async (message) => {
+        sessionID: input.sessionID, inbox: ClaudeHostAdmission.inbox(async (message) => {
           const user = message.uuid ? live.sends.get(message.uuid) : undefined
           if (!user || live.closed) return
           live.inputs[user.id].status = "submitted"
@@ -648,8 +631,7 @@ const layer = Layer.effect(
       const inputs = ClaudeHostAdmission.read(state.inputs)
       const historic = new Set(answered(history).filter((id) => !inputs[id]))
       const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : [])
-      const users = history.filter((message) => (RequestSource.actual(message) ||
-        message.parts.some((part) => marker(part)?.type === "task-return" || workflowStep(part) !== undefined)) &&
+      const users = history.filter((message) => (RequestSource.actual(message) || message.parts.some(ClaudeHostAdmission.handover)) &&
         !delivered.has(message.info.id) && !historic.has(message.info.id))
       const prompts = users.flatMap((message) => message.info.role === "user" ? [{ user: message.info, text: ClaudeCodeTranscript.hostPrompt([message]) }] : []).filter((item) => item.text)
       const prompt = prompts.map((item) => item.text).join("\n")

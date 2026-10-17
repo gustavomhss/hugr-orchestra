@@ -14,6 +14,7 @@ import { Session } from "@/session/session"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { TaskPromptOps } from "@/tool/task"
 import { ClaudeHost } from "./host/session"
+import { ClaudeHostAdmission } from "./host/admission"
 
 export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interrupt" | "setModel" | "fork" | "release" | "reconcileRevert"> {
   /**
@@ -59,7 +60,7 @@ const layer = Layer.effect(
     const workflowTurn: Interface["workflowTurn"] = Effect.fn("ClaudeCode.workflowTurn")(function* (input) {
       const history = yield* sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie)
       const found = history.find((message) => message.info.role === "user" &&
-        message.parts.some((part) => ClaudeHost.workflowStep(part) === input.step.key))?.info
+        message.parts.some((part) => ClaudeHostAdmission.workflowStep(part) === input.step.key))?.info
       const answered = history.some((message) => message.info.role === "assistant" && message.info.parentID === input.user.id)
       const brief = history.find((message) => message.info.role === "user")?.info.id === input.user.id
       // The first package goes in the Task's unanswered brief, as one input: Claude Code may answer two inputs as two
@@ -69,7 +70,7 @@ const layer = Layer.effect(
         sessionID: input.sessionID, role: "user", agent: input.user.agent, model: input.user.model, time: { created: Date.now() } })
         : input.user
       if (!found) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: input.sessionID, messageID: step.id,
-        type: "text", text: input.step.text, synthetic: true, metadata: { source: { type: ClaudeHost.WORKFLOW_STEP, key: input.step.key } } })
+        type: "text", text: input.step.text, synthetic: true, metadata: { source: { type: ClaudeHostAdmission.WORKFLOW_STEP, key: input.step.key } } })
       yield* turn({ sessionID: input.sessionID, user: step })
       return (yield* sessions.messages({ sessionID: input.sessionID }).pipe(Effect.orDie))
         .findLast((message) => message.info.role === "assistant" && message.info.parentID === step.id)

@@ -2,7 +2,26 @@ export * as ClaudeHostAdmission from "./admission"
 
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import { marker } from "@/continuity/alias"
 import { ClaudeCodeTranscript } from "../transcript"
+
+/**
+ * The source of the synthetic text that hands one Relay work package to a workflow-bound Session (engine.ts). Its
+ * message is no owner request, but a turn delivers it like one: Claude Code's system prompt is fixed for the query, so
+ * the work package's instructions can only arrive as input.
+ */
+export const WORKFLOW_STEP = "workflow-step"
+
+/** The work package key a part hands over, when it is a workflow step's text. */
+export function workflowStep(part: SessionV1.Part) {
+  const source = part.type === "text" ? part.metadata?.source : undefined
+  return ClaudeCodeTranscript.record(source) && source.type === WORKFLOW_STEP && typeof source.key === "string" ? source.key : undefined
+}
+
+/** A message the host delivers like an owner request though it holds none: a Task's return or a workflow step. */
+export function handover(part: SessionV1.Part) {
+  return marker(part)?.type === "task-return" || workflowStep(part) !== undefined
+}
 
 /** A send identity survives control failure and reopening; submission is not acknowledgment. */
 export type Input = {

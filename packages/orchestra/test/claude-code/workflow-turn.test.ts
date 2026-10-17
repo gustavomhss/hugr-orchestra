@@ -4,7 +4,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCode } from "@/claude-code/engine"
-import { ClaudeHost } from "@/claude-code/host/session"
+import { ClaudeHostAdmission } from "@/claude-code/host/admission"
 import { MessageID, PartID } from "@/session/schema"
 import { ClaudeEngineFixture } from "./engine-fixture"
 
@@ -38,7 +38,7 @@ ClaudeEngineFixture.it.instance("each work package is one turn whose reply answe
     expect(ClaudeEngineFixture.state.apiCalls).toBe(0)
     const messages = yield* sessions.messages({ sessionID: chat.id })
     const carriers = [wp1, wp2].map((item) => messages.find((message) =>
-      message.parts.some((part) => ClaudeHost.workflowStep(part) === item.key)))
+      message.parts.some((part) => ClaudeHostAdmission.workflowStep(part) === item.key)))
     // The first package rides in the brief itself; the second is its own synthetic user message.
     expect(carriers.map((message) => message?.info.id)).toEqual([brief.id, expect.any(String)])
     expect(carriers[1]?.info.role).toBe("user")
