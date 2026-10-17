@@ -7,7 +7,7 @@ import { Skill } from "../../../schema/src/skill"
 import { Location } from "../../../schema/src/location"
 import { AbsolutePath } from "../../../schema/src/schema"
 import { PackagedSkills } from "@orchestra/core/packaged-skills"
-import { assertVersion, command, successful, snapshot, skillIdentity, nativeLibc } from "./distribution-native"
+import { assertVersion, command, successful, snapshot, skillIdentity, nativeLibc, startReason } from "./distribution-native"
 import type { Oracle, Sandbox } from "./distribution-native"
 import { corroborateProcess, installedCompanionProbe } from "./distribution-native-process"
 import type { WindowsIdentity } from "./distribution-windows-process"
@@ -322,6 +322,7 @@ export async function qualify(input: {
     expect(rgVersion?.match(/^ripgrep (\d+\.\d+\.\d+)(?: \(rev [0-9a-f]+\))?$/)?.[1]).toBe(RipgrepRelease.VERSION)
     expect(await successful([join(rg, RipgrepRelease.executable()), "--fixed-strings", "--count-matches", "export interface Shape", "sample.ts"], input.box)).toBe("1")
     lease.attempted = true
+    const startedAt = performance.now()
     const started = await (process.platform === "win32"
       ? command([input.launcher, "service", "start"], input.box, 30_000, {
         register: (tree) => Effect.gen(function* () {
@@ -333,11 +334,15 @@ export async function qualify(input: {
           console.error(`NATIVE_DAEMON_START_TREE_ADOPTED ${JSON.stringify({ rootPID: tree.pid, version: lease.version })}`)
         }),
       }).then((result) => {
-        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}`)
+        if (result.code !== 0) throw new Error(`NATIVE_DAEMON_START_COMMAND_FAILED: code=${result.code}${startReason(result.stderr)}`)
         return result.stdout.trim()
       })
       : successful([input.launcher, "service", "start"], input.box, 30_000))
-      .finally(() => captureReceipt(lease))
+      .finally(() => {
+        // Metadata only: readiness margin on slow hosts, never start's output.
+        console.error(`NATIVE_DAEMON_START_ELAPSED ${JSON.stringify({ version: input.version, elapsedMs: Math.round(performance.now() - startedAt) })}`)
+        return captureReceipt(lease)
+      })
     if (!lease.receipt) throw new Error("NATIVE_DAEMON_RECEIPT_MISSING_AFTER_START")
     if (started !== lease.receipt.url) throw new Error("NATIVE_DAEMON_START_RECEIPT_ENDPOINT_MISMATCH")
     const endpoint = new URL(started)
