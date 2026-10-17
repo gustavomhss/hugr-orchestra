@@ -4,6 +4,52 @@ HuGR Orchestra is a desktop app for software work. You talk to Maestro, the lead
 
 The app combines an Electron host (`packages/desktop`), a shared Solid UI (`packages/app`), and local server/session services. `packages/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
 
+## Install
+
+The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. Binaries are not code-signed in the first release.
+
+### Desktop app
+
+Download the installer for your system from the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page. Files are named `orchestra-desktop-<os>-<arch>.<ext>`:
+
+| System  | File                                                                        |
+| ------- | --------------------------------------------------------------------------- |
+| macOS   | `orchestra-desktop-mac-arm64.dmg` (Apple silicon), `orchestra-desktop-mac-x64.dmg` (Intel) |
+| Windows | `orchestra-desktop-win-x64.exe`                                             |
+| Linux   | `orchestra-desktop-linux-x86_64.AppImage`, plus `.deb` and `.rpm` packages of the same build |
+
+The `.deb` and `.rpm` follow each package format's own architecture name (`amd64` and `x86_64`), so their file names differ slightly from the AppImage.
+
+### Command line
+
+```bash
+npm install -g @hugr/cli
+brew install gustavomhss/tap/orchestra
+```
+
+Arch Linux users can install the AUR package `orchestra-bin`.
+
+Each release also attaches per-platform `.tar.gz` archives, `SHA256SUMS` and `install.sh`. Download an archive and its digest from `SHA256SUMS`, then run:
+
+```sh
+sh install.sh \
+  --prefix "$HOME/.local/orchestra" \
+  --version <version> \
+  --target <target> \
+  --archive /absolute/path/to/orchestra.tar.gz \
+  --sha256 <digest>
+```
+
+`install.sh` supports macOS and glibc Linux on x64 and arm64. It does not edit shell configuration. See the [distribution guide](packages/cli/distribution/README.md) for targets, updates and rollback.
+
+### First run
+
+Orchestra needs a model to work with. Connect a provider with your API key in the provider dialog, or sign in to Claude Code first to use Claude mode.
+
+### Upgrading
+
+For npm and Homebrew installs, run `orchestra upgrade`. The desktop app does not update itself yet: download the new installer and install it over the old one.
+
 ## Run from source
 
 You need Bun 1.3.14, the version pinned in `package.json`.
