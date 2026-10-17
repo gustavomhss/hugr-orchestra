@@ -5,7 +5,6 @@ import { DateTime, Effect, Layer, Schema } from "effect"
 import { Headers } from "effect/unstable/http"
 import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
-import { InstallationVersion } from "@orchestra/core/installation/version"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ProjectV2 } from "@orchestra/core/project"
@@ -91,7 +90,7 @@ describe("SessionRunnerModel", () => {
     }),
   )
 
-  it.live("sends the OpenCode Zen user agent for free models after header overrides", () =>
+  it.live("never overrides the configured user agent, free Zen models included", () =>
     Effect.gen(function* () {
       const captured: Array<{ userAgent: string | null; custom: string | null; auth: string | null }> = []
       const server = yield* Effect.acquireRelease(
@@ -115,13 +114,8 @@ describe("SessionRunnerModel", () => {
       )
       const free = { input: 0, output: 0, cache: { read: 0, write: 0 } }
       const cases = [
-        { providerID: "opencode", cost: [free], expected: `opencode/${InstallationVersion}` },
-        { providerID: "opencode#credential", cost: [free], expected: `opencode/${InstallationVersion}` },
-        { providerID: "opencode", cost: [{ ...free, input: 1 }], expected: "orchestra/config" },
-        { providerID: "opencode", cost: [{ ...free, output: 1 }], expected: "orchestra/config" },
-        { providerID: "opencode", cost: [{ ...free, input: -1 }], expected: "orchestra/config" },
-        { providerID: "opencode", cost: [free, { ...free, input: 1 }], expected: "orchestra/config" },
-        { providerID: "opencode", cost: [], expected: "orchestra/config" },
+        { providerID: "opencode", cost: [free], expected: "orchestra/config" },
+        { providerID: "opencode#credential", cost: [free], expected: "orchestra/config" },
         { providerID: "openrouter", cost: [free], expected: "orchestra/config" },
       ]
       yield* Effect.forEach(cases, (item) =>
