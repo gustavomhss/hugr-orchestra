@@ -1,6 +1,9 @@
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
+import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
 import { Effect, Layer, Schema, Context } from "effect"
+import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
+import { withTransientReadRetry } from "@/util/effect-http-client"
 import { serviceUse } from "@orchestra/core/effect/service-use"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
@@ -11,7 +14,7 @@ import semver from "semver"
 import { InstallationChannel, InstallationVersion } from "@orchestra/core/installation/version"
 import { InstallationEvent } from "@orchestra/schema/installation-event"
 
-export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "brew" | "scoop" | "choco" | "unknown"
+export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "brew" | "scoop" | "choco" | "desktop" | "unknown"
 
 export type ReleaseType = "patch" | "minor" | "major"
 
@@ -56,6 +59,16 @@ export class UpgradeFailedError extends Schema.TaggedErrorClass<UpgradeFailedErr
   }
 }
 
+const GitHubRelease = Schema.Struct({ tag_name: Schema.String })
+
+export const PACKAGE = "@hugr/cli"
+export const FORMULA = "gustavomhss/tap/orchestra"
+
+// The desktop app ships its own copy of the CLI in Resources/cli; that copy is updated with the app.
+export function isDesktopBundle(execPath: string) {
+  return execPath.includes("/Resources/cli/") || execPath.includes("\\resources\\cli\\")
+}
+
 export const UPGRADE_DISABLED_MESSAGE = "Upgrades are disabled: Orchestra has no release channel of its own yet."
 
 export interface Interface {
@@ -69,13 +82,10 @@ export class Service extends Context.Service<Service, Interface>()("@orchestra/I
 
 export const use = serviceUse(Service)
 
-// Orchestra is a fork that no longer tracks upstream opencode and publishes no releases of its own.
-// Every upstream channel (GitHub releases, npm, brew, choco, scoop, the curl installer) would install
-// upstream opencode over Orchestra, so latest() reports the running version and upgrade() always fails.
-// Re-enable only once Orchestra has its own release channel.
-const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
+const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Service> = Layer.effect(
   Service,
   Effect.gen(function* () {
+    const http = HttpClient.filterStatusOk(withTransientReadRetry(yield* HttpClient.HttpClient))
     const appProcess = yield* AppProcess.Service
 
     const text = Effect.fnUntraced(
@@ -88,6 +98,16 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
       Effect.catch(() => Effect.succeed("")),
     )
 
+    const run = Effect.fnUntraced(
+      function* (cmd: string[]) {
+        const result = yield* appProcess.run(
+          ChildProcess.make(cmd[0], cmd.slice(1), { cwd: Global.Path.state, extendEnv: true }),
+        )
+        return { code: result.exitCode, stderr: result.stderr.toString("utf8") }
+      },
+      Effect.catch((err) => Effect.succeed({ code: 1, stderr: err instanceof Error ? err.message : String(err) })),
+    )
+
     const result: Interface = {
       info: Effect.fn("Installation.info")(function* () {
         return {
@@ -96,6 +116,7 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
         }
       }),
       method: Effect.fn("Installation.method")(function* () {
+        if (isDesktopBundle(process.execPath)) return "desktop" as Method
         if (process.execPath.includes(path.join(".orchestra", "bin"))) return "curl" as Method
         if (process.execPath.includes(path.join(".local", "bin"))) return "curl" as Method
         const exec = process.execPath.toLowerCase()
@@ -121,7 +142,7 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
         for (const check of checks) {
           const output = yield* check.command()
           const installedName =
-            check.name === "brew" || check.name === "choco" || check.name === "scoop" ? "orchestra" : "orchestra-ai"
+            check.name === "brew" || check.name === "choco" || check.name === "scoop" ? "orchestra" : PACKAGE
           if (output.includes(installedName)) {
             return check.name
           }
@@ -129,11 +150,27 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
 
         return "unknown" as Method
       }),
-      latest: Effect.fn("Installation.latest")(function* () {
-        return InstallationVersion
-      }),
-      upgrade: Effect.fn("Installation.upgrade")(function* () {
-        return yield* new UpgradeFailedError({ stderr: UPGRADE_DISABLED_MESSAGE })
+      latest: Effect.fn("Installation.latest")(
+        function* () {
+          const response = yield* http.execute(
+            HttpClientRequest.get("https://api.github.com/repos/gustavomhss/hugr-orchestra/releases/latest").pipe(
+              HttpClientRequest.acceptJson,
+            ),
+          )
+          const data = yield* HttpClientResponse.schemaBodyJson(GitHubRelease)(response)
+          return data.tag_name.replace(/^v/, "")
+        },
+        // A failed lookup must never break startup or the update notice: report the running version.
+        Effect.catch(() => Effect.succeed(InstallationVersion)),
+      ),
+      upgrade: Effect.fn("Installation.upgrade")(function* (method: Method, target: string) {
+        const command = upgradeCommand(method, target)
+        if (typeof command === "string") return yield* new UpgradeFailedError({ stderr: command })
+        const outcome = yield* run(command)
+        if (outcome.code === 0) return
+        return yield* new UpgradeFailedError({
+          stderr: outcome.stderr.trim() || `${command.join(" ")} failed (exit code ${outcome.code}).`,
+        })
       }),
     }
 
@@ -141,7 +178,25 @@ const layer: Layer.Layer<Service, never, AppProcess.Service> = Layer.effect(
   }),
 )
 
-export const node = LayerNode.make({ service: Service, layer: layer, deps: [AppProcess.node] })
+// The argv that upgrades this install, or the instruction to show when Orchestra cannot upgrade it itself.
+export function upgradeCommand(method: Method, target: string): string[] | string {
+  if (method === "npm") return ["npm", "install", "-g", `${PACKAGE}@${target}`]
+  if (method === "pnpm") return ["pnpm", "add", "-g", `${PACKAGE}@${target}`]
+  if (method === "bun") return ["bun", "add", "-g", `${PACKAGE}@${target}`]
+  if (method === "yarn") return ["yarn", "global", "add", `${PACKAGE}@${target}`]
+  if (method === "brew") return ["brew", "upgrade", FORMULA]
+  if (method === "curl")
+    return "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
+  if (method === "desktop") return "This CLI belongs to the Orchestra desktop app. Update the desktop app instead."
+  if (method === "scoop" || method === "choco") return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
+  return "Orchestra could not tell how it was installed. On Arch Linux run `paru -Syu orchestra-bin`; otherwise reinstall with npm i -g @hugr/cli."
+}
+
+export const node = LayerNode.make({
+  service: Service,
+  layer: layer,
+  deps: [AppProcess.node, LayerNodePlatform.httpClient],
+})
 
 const { runPromise } = makeRuntime(Service, AppNodeBuilder.build(node))
 
