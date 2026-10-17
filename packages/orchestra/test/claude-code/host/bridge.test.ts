@@ -105,9 +105,9 @@ it.instance("a native lucy MCP review passes the review tool's identity and chil
   const client = yield* f.client([checked])
   const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() => client.callTool({ name: "maestro_record_review", arguments: f.arguments("record_review") })))
   expect(observed.called).toBe(true)
-  // No validation was admitted. MCP renders the typed review rejection through its public owner-rejection contract.
+  // No validation was admitted. A governance refusal reaches the model with its cause, not as the owner's rejection.
   expect(result.isError).toBe(true)
-  expect(result.content[0].text).toBe("The owner rejected this call. Stop and wait for the owner's next message.")
+  expect(result.content[0].text).toBe("MaestroReviewRejected: validation-not-found")
   expect(result.content[0].text).not.toContain("Review recording requires")
 }), 60_000)
 
