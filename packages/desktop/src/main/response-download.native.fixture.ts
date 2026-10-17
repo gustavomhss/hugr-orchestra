@@ -103,7 +103,8 @@ async function main(root: string) {
     assert.equal((await execute(owned, `window.api.responseDownload.ready(${JSON.stringify(dying.handle)})`)).status, "ok")
     assert.equal((await temporary()).length, 1, "Renderer death positive control requires live temp file")
     const gone = new Promise<void>((resolve) => owned.webContents.once("render-process-gone", () => resolve()))
-    owned.webContents.forcefullyCrashRenderer()
+    // forcefullyCrashRenderer can leave the Linux/Xvfb renderer hung instead of gone; kill its OS process directly.
+    process.kill(owned.webContents.getOSProcessId(), "SIGKILL")
     await gone
     const until = Date.now() + 5000
     while ((await temporary()).length && Date.now() < until) await new Promise((resolve) => setTimeout(resolve, 20))

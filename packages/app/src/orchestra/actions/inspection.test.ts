@@ -65,8 +65,10 @@ describe("Actions dialog inspection", () => {
     const scopesReply = Promise.withResolvers<Actions.ResourcePage>()
     const scope = fixture({ graph: () => graphReply.promise, resources: () => scopesReply.promise })
     const abort = new AbortController()
-    const inspecting = scope.inspection.inspectWorkflow("11", "release", abort.signal)
-    const listing = scope.inspection.resourceScopes(abort.signal)
+    // Settle each read when it starts; bun reports a rejection that lands before `expect().rejects` observes it.
+    const settle = (read: Promise<unknown>) => read.then(() => "resolved", (error: Error) => error.message)
+    const inspecting = settle(scope.inspection.inspectWorkflow("11", "release", abort.signal))
+    const listing = settle(scope.inspection.resourceScopes(abort.signal))
     expect(scope.calls).toHaveLength(2)
     if (change === "binding") scope.state.binding = { ...binding, id: Actions.BindingID.make("ab_other"), account: "account-b" }
     if (change === "revision") scope.state.binding = { ...binding, revision: 8 }
@@ -75,8 +77,7 @@ describe("Actions dialog inspection", () => {
     const before = structuredClone(scope.state)
     graphReply.resolve(graph())
     scopesReply.resolve(page([environment("production")]))
-    // Observe both rejections together; awaiting one first leaves the other briefly unhandled.
-    await Promise.all([expect(inspecting).rejects.toThrow("binding_stale"), expect(listing).rejects.toThrow("binding_stale")])
+    expect(await Promise.all([inspecting, listing])).toEqual(["binding_stale", "binding_stale"])
     expect(scope.state).toEqual(before)
   })
 
