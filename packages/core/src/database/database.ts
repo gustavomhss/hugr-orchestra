@@ -7,7 +7,6 @@ import { Global } from "../global"
 import { Flag } from "../flag/flag"
 import { isAbsolute, join } from "path"
 import { DatabaseMigration } from "./migration"
-import { InstallationChannel } from "../installation/version"
 import { makeGlobalNode } from "../effect/app-node"
 
 const makeDatabase = EffectDrizzleSqlite.makeWithDefaults()
@@ -45,13 +44,7 @@ export function path() {
     if (Flag.ORCHESTRA_DB === ":memory:" || isAbsolute(Flag.ORCHESTRA_DB)) return Flag.ORCHESTRA_DB
     return join(Global.Path.data, Flag.ORCHESTRA_DB)
   }
-  if (
-    ["latest", "beta", "prod"].includes(InstallationChannel) ||
-    process.env.ORCHESTRA_DISABLE_CHANNEL_DB === "1" ||
-    process.env.ORCHESTRA_DISABLE_CHANNEL_DB === "true"
-  )
-    return releasePath()
-  return join(Global.Path.data, `orchestra-${InstallationChannel.replace(/[^a-zA-Z0-9._-]/g, "-")}.db`)
+  return releasePath()
 }
 
 /** The database used by release channels (the installed app). */
