@@ -395,12 +395,12 @@ export function make(input: {
       const report = ended ? ClaudeHostResearchResult.report(retained, ended) : retained
       // Maestro records a plan from a proposal with these identities, and Claude Code's Agent result carries none of
       // them. They are host facts; maestro_record_plan_revision re-verifies every one against the durable records.
-      const proposal = workResult?.schema === UpstreamResult.SCHEMA ? `${report}
-
-Host attribution of this proposal ` +
-        `(maestro_record_plan_revision upstream): ${JSON.stringify({ parentMessageID: (yield* find(entry))?.messageID,
+      // They come first, before any text the child wrote, so a look-alike line in that text cannot pass for them.
+      const parent = workResult?.schema === UpstreamResult.SCHEMA ? yield* find(entry) : undefined
+      const proposal = workResult?.schema === UpstreamResult.SCHEMA ? "Host attribution of this proposal " +
+        `(maestro_record_plan_revision upstream): ${JSON.stringify({ parentMessageID: parent?.messageID,
           parentCallID: entry.toolUseID, authorSessionID: entry.child, authorMessageID: author.info.id,
-          logicalTaskID: workResult.taskId, dispatchKind: "claude-code-agent" })}` : undefined
+          logicalTaskID: workResult.taskId, dispatchKind: "claude-code-agent" })}\n\n${report}` : undefined
       yield* write(entry, proposal ?? report, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
       return proposal ?? (ended || workResult?.schema === "discovery-work-result-v1" ? report : undefined)
