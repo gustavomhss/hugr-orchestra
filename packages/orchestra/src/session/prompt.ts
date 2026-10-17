@@ -1103,7 +1103,7 @@ const layer = Layer.effect(
 
           if (workflow && (yield* agents.get(lastUser.agent))?.engine === "claude-code") {
             // Claude Code runs a whole turn on its own loop, so one work package is one turn. Its instructions arrive as
-            // input (the system prompt is fixed per query), and the reply settles exactly like a provider turn below.
+            // input (the system prompt is fixed per query), and the reply settles through the same Relay host below.
             const reply = yield* claudeCode.workflowTurn({ sessionID, user: lastUser, step: {
               key: `${workflow.token}/${workflow.view.position}/${workflow.view.attempt}/${workflow.view.ledgerSeq}`,
               text: [`Relay work package \`${workflow.view.wp}\`. Do this step now; Orchestra checks it when your turn ends.`,
@@ -1113,8 +1113,7 @@ const layer = Layer.effect(
               return yield* Effect.die(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" }))
             const next = yield* RelayWorkflowSession.settle({ current: workflow,
               assistantMessageID: SessionMessage.ID.make(reply.info.id),
-              succeeded: !reply.info.error && !!reply.info.finish && !["unknown", "error", "content-filter"].includes(reply.info.finish) &&
-                reply.parts.every((part) => part.type !== "tool" || part.state.status === "completed"),
+              succeeded: ClaudeCode.settled(reply),
             }).pipe(Effect.orDie)
             if (next) continue
             break

@@ -27,7 +27,7 @@ export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interru
   /**
    * Run one Relay work package of a workflow-bound Session on Claude Code: hand its instructions over as synthetic text
    * (one per `step.key`, so a resumed loop reuses it) and run the turn. Returns the turn's reply to the message carrying
-   * that text, which the loop settles exactly as it settles a provider turn.
+   * that text, which the loop settles through `settled`.
    */
   readonly workflowTurn: (input: { sessionID: SessionID; user: SessionV1.User; step: { key: string; text: string } }) =>
     Effect.Effect<SessionV1.WithParts | undefined>
@@ -61,9 +61,11 @@ const layer = Layer.effect(
       const found = history.find((message) => message.info.role === "user" &&
         message.parts.some((part) => ClaudeHost.workflowStep(part) === input.step.key))?.info
       const answered = history.some((message) => message.info.role === "assistant" && message.info.parentID === input.user.id)
+      const brief = history.find((message) => message.info.role === "user")?.info.id === input.user.id
       // The first package goes in the Task's unanswered brief, as one input: Claude Code may answer two inputs as two
-      // turns, and the brief's answer would then pass for the package's.
-      const step = found?.role === "user" ? found : answered ? yield* sessions.updateMessage({ id: MessageID.ascending(),
+      // turns, and the brief's answer would then pass for the package's. Any other message (an owner's steer) keeps its
+      // own answer; the package gets a message of its own.
+      const step = found?.role === "user" ? found : answered || !brief ? yield* sessions.updateMessage({ id: MessageID.ascending(),
         sessionID: input.sessionID, role: "user", agent: input.user.agent, model: input.user.model, time: { created: Date.now() } })
         : input.user
       if (!found) yield* sessions.updatePart({ id: PartID.ascending(), sessionID: input.sessionID, messageID: step.id,
@@ -88,6 +90,18 @@ const layer = Layer.effect(
       fork: host.fork, release: host.release, reconcileRevert })
   }),
 )
+
+/**
+ * Whether a Claude Code turn ended in a state the Relay host may grade. Unlike a provider step, one turn holds many tool
+ * calls the model already saw and acted on: a red test run before the fix, a missed Edit, a gate deny it worked around.
+ * Those stay in the turn as `error` parts and do not fail it; whether the package is done is the Relay checks' call
+ * in `host.settle`. Only an errored or unfinished turn, or a tool call left without a result, is unsettled.
+ */
+export function settled(reply: SessionV1.WithParts) {
+  if (reply.info.role !== "assistant" || reply.info.error || !reply.info.finish) return false
+  if (["unknown", "error", "content-filter"].includes(reply.info.finish)) return false
+  return reply.parts.every((part) => part.type !== "tool" || part.state.status === "completed" || part.state.status === "error")
+}
 
 export const node = LayerNode.make({
   service: Service,
