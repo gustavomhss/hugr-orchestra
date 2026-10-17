@@ -3,6 +3,13 @@ on:
   push:
     branches: [distribution-bundle]
   workflow_dispatch:
+    inputs:
+      provider:
+        # Opt-in: the provider lane needs the owner's hosted-inference key and
+        # third-party quota, so it runs before a release, not in every bundle.
+        description: Run the hosted provider qualification lane
+        type: boolean
+        default: false
 permissions:
   contents: read
 defaults:
@@ -41,6 +48,8 @@ jobs:
       fail-fast: false
       max-parallel: 13
       matrix:
+        # Without the opt-in input (including push), the provider row is excluded.
+        exclude: ${{ fromJSON(inputs.provider && '[]' || '[{"lane":"provider"}]') }}
         include:
           # Preserve regression coverage; expensive closures get independent native runners.
           - lane: regression
