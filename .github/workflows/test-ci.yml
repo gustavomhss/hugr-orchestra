@@ -176,6 +176,14 @@ jobs:
         if: steps.request.outputs.runner != 'pytest'
         uses: ./.github/actions/omni-binaries
 
+      # The CLI's native Windows artifact controls compile with `rustup run 1.98.0` (packages/core/src/
+      # artifact-native-windows.ts). The omni artifact above skips cargo, so nothing else installs the toolchain
+      # pinned by packages/omni/rust-toolchain.toml.
+      - name: Rust toolchain (rust-toolchain.toml)
+        if: runner.os == 'Windows' && steps.request.outputs.directory == 'packages/cli'
+        working-directory: packages/omni
+        run: rustup show active-toolchain || rustup toolchain install
+
       # A per-run secret for the omni positive control's verdict line: script/test-omni-control.ts prints it in its one
       # verdict line and removes it from the environment before any test loads; test-ci.ts accepts only that line.
       - name: Omni control nonce

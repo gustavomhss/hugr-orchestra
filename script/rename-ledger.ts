@@ -129,6 +129,11 @@ export const protectedStrings: Protected[] = [
   // Context patterns come before the plain `opencode-go` entry, which would otherwise hide their context.
   { pattern: /"opencode"(?=,\s*"opencode-go")/g, reason: "the Zen provider id in a provider list" },
   { pattern: /(?<=connected[^\n]{0,40})"opencode"/g, reason: "the Zen provider id in a connected-provider fixture" },
+  {
+    pattern: /disabled_providers: \["opencode"\]|providerByID\(body, "all", "opencode"\)/g,
+    paths: /^packages\/orchestra\/test\/(?:provider\/provider|server\/httpapi-provider)\.test\.ts$/,
+    reason: "the Zen provider id in a provider test",
+  },
   { pattern: /\bOpenCode (?:Zen|Go)\b/g, reason: "third-party provider name" },
   {
     pattern: /\bopencode-go\b|\bopencode(?:Zen|Go)\b/g,
