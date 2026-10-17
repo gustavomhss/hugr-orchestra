@@ -98,7 +98,7 @@ const layer = Layer.effect(
  * calls the model already saw and acted on: a red test run before the fix, a missed Edit, a gate deny it worked around.
  * Those stay in the turn as `error` parts and do not fail it; whether the package is done is the Relay checks' call
  * in `host.settle`. An errored or unfinished turn, a tool call left without a result, or a call the owner rejected
- * (the owner said stop; normal mode blocks there too) is unsettled.
+ * (the owner said stop, where normal mode blocks too) is unsettled.
  */
 export function settled(reply: SessionV1.WithParts) {
   if (reply.info.role !== "assistant" || reply.info.error || !reply.info.finish) return false

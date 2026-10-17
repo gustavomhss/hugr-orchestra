@@ -90,6 +90,9 @@ ClaudeEngineFixture.it.instance("a turn settles on how it ended, not on tool err
     const rejected = ClaudeCodeTools.failure(Cause.fail(new PermissionV1.RejectedError()))
     expect(ClaudeCode.settled(turn([bash("error", rejected), bash("completed")]))).toBe(false)
     expect(ClaudeCode.settled(turn([bash("error", "The owner dismissed this question.")]))).toBe(false)
+    // A rejection with feedback is a correction the model acts on in the same turn, as in normal mode.
+    const corrected = ClaudeCodeTools.failure(Cause.fail(new PermissionV1.CorrectedError({ feedback: "use integer math" })))
+    expect(ClaudeCode.settled(turn([bash("error", corrected), bash("completed")]))).toBe(true)
     expect(ClaudeCode.settled(turn([], { finish: "content-filter" }))).toBe(false)
     expect(ClaudeCode.settled(turn([], { finish: "error" }))).toBe(false)
     expect(ClaudeCode.settled(turn([], { finish: undefined }))).toBe(false)

@@ -44,11 +44,12 @@ const OWNER_REJECTED = ["PermissionRejectedError", "QuestionRejectedError", "Que
 const OWNER_STOP = "The owner rejected this call"
 
 /**
- * Whether a failed call's text is the owner's own answer: a rejection (`failure`) or a dismissed question (the host's
- * AskUserQuestion deny). Claude Code reads both as a tool error and may end its turn normally after them.
+ * Whether a failed call's text is the owner saying stop: a bare rejection (`failure`) or a dismissed question (the
+ * host's AskUserQuestion deny). Claude Code reads both as a tool error and may end its turn normally after them. A
+ * rejection with feedback is a correction the model acts on, as in normal mode, so it does not count.
  */
 export function ownerAnswered(error: string) {
-  return error.includes(OWNER_STOP) || error.includes("The owner dismissed this question")
+  return error.includes(`${OWNER_STOP}. Stop and wait`) || error.includes("The owner dismissed this question")
 }
 
 export function server(input: {
