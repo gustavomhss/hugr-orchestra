@@ -224,10 +224,16 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
   return {
     granted: input.granted,
     close: Effect.suspend(() => Effect.forEach([...scopes.keys()], release, { discard: true })),
-    hold: (actor, name) => Effect.gen(function* () {
+    hold: (actor, name, input) => Effect.gen(function* () {
+      const task = ClaudeCodeTools.orchestra(name) === ClaudeHostMcp.WORKFLOW_TASK
       // A workflow-bound Session runs its bound work only; it never starts teammates (task.ts parity).
-      if (agentCall(name) && (yield* WorkflowBinding.read(actor.sessionID).pipe(Effect.provideService(Database.Service, database))))
+      if ((agentCall(name) || task) &&
+        (yield* WorkflowBinding.read(actor.sessionID).pipe(Effect.provideService(Database.Service, database))))
         return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_NESTED_TASK_REFUSED"))
+      if (task && input.workflow === undefined)
+        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_TASK_SELECTION_MISSING. " +
+          "mcp__orchestra__task runs only an approved Relay workflow dispatch: pass workflow, authorizationID and the " +
+          "approved writePaths. Dispatch any other work with Agent and subagent_type \"orchestra:<seat>\"; nothing was dispatched."))
     }),
     safety: (actor, call, toolUseID) => Effect.gen(function* () {
       const session = yield* sessions.get(actor.sessionID)

@@ -33,7 +33,8 @@ function fake(id: string): Tool.Def {
   return { id, description: id, parameters: Schema.Struct({}), execute: () => Effect.succeed({ title: id, output: id, metadata: {} }) }
 }
 
-it.instance("the orchestra server lists no tool that duplicates a Claude Code built-in", () => Effect.gen(function* () {
+// `task` is the one served duplicate: a Relay workflow dispatch needs Orchestra's own Task (the gate holds any other use).
+it.instance("the orchestra server lists no Claude Code built-in duplicate but the workflow task", () => Effect.gen(function* () {
   const sessions = yield* Session.Service
   const registry = yield* ToolRegistry.Service
   const chat = yield* sessions.create({ title: "Host MCP listing" })
@@ -41,17 +42,16 @@ it.instance("the orchestra server lists no tool that duplicates a Claude Code bu
   // Positive controls: the registry holds both built-in duplicates and additive tools.
   expect(all.map((def) => def.id)).toEqual(expect.arrayContaining(["bash", "read", "task", "context_recall", "context_compact", "maestro_record_review"]))
   const served = ClaudeHostMcp.exposed(all).map((def) => def.id)
-  expect(served).toEqual(expect.arrayContaining(["context_recall", "maestro_record_review", "atlas_memory_recall"]))
-  expect(served.filter((id) => DUPLICATES.includes(id.toLowerCase()))).toEqual([])
+  expect(served).toEqual(expect.arrayContaining(["context_recall", "maestro_record_review", "maestro_request_review", "atlas_memory_recall"]))
+  expect(served.filter((id) => DUPLICATES.includes(id.toLowerCase()))).toEqual([ClaudeHostMcp.WORKFLOW_TASK])
   expect(served).not.toContain("context_compact")
   expect(served).not.toContain("invalid")
-  expect(served).not.toContain("maestro_request_review")
 
   const client = yield* connect(ClaudeHostMcp.server({ sessionID: chat.id, directory: "/", worktree: "/", agent: "maestro",
     abort: new AbortController(), tools: [...all, fake("dock_click"), fake("research_capture"), fake("process")] }))
   const listed = (yield* Effect.promise(() => client.listTools())).tools.map((tool) => tool.name)
   expect(listed).toEqual(expect.arrayContaining(["context_recall", "dock_click", "research_capture", "process", ClaudeHostMcp.GRANT]))
-  expect(listed.filter((name) => DUPLICATES.includes(name.toLowerCase()))).toEqual([])
+  expect(listed.filter((name) => DUPLICATES.includes(name.toLowerCase()))).toEqual([ClaudeHostMcp.WORKFLOW_TASK])
   expect(listed).not.toContain("context_compact")
   expect(new Set(listed).size).toBe(listed.length)
 }), 60_000)
