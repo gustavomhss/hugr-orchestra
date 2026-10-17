@@ -461,6 +461,85 @@ function row(page: Page, name: string) {
   return page.locator(`[data-mcp-name="${name}"]`)
 }
 
+for (const path of ["/config", "/mcp/config"] as const) {
+  test(`audit: MCP ${path} must load before editing; read failure has retry`, async ({ page }) => {
+    const state = fixture()
+    await setup(page, state)
+    const gate = Promise.withResolvers<void>()
+    const started = Promise.withResolvers<void>()
+    const fault = { fail: true }
+    await page.route(
+      (url) => url.origin === serverA && url.pathname === path,
+      async (route) => {
+        if (!fault.fail) return route.fallback()
+        started.resolve()
+        await gate.promise
+        return json(route, { message: "Config read denied" }, 503)
+      },
+    )
+    await openChapter(page)
+    await started.promise
+    await row(page, "broken").getByRole("button", { name: "Configure", exact: true }).click()
+    const dialog = page.getByRole("dialog", { name: "Configure broken" })
+    await expect(dialog.getByRole("status")).toHaveText("Loading MCP configuration…")
+    await expect(dialog.getByRole("textbox")).toHaveCount(0)
+    await expect(dialog.getByRole("button", { name: "Save", exact: true })).toHaveCount(0)
+    gate.resolve()
+    await expect(dialog.getByRole("alert")).toHaveText("Could not load MCP configuration. Retry before editing.")
+    await expect(dialog).not.toContainText("This server is configured outside this profile.")
+    fault.fail = false
+    await dialog.getByRole("button", { name: "Retry", exact: true }).click()
+    await expect(dialog.getByLabel("Command or server URL")).toHaveValue(`bunx 'broken server' --token {env:TOKEN}`)
+    await expect(dialog.getByLabel("Command or server URL")).toBeEditable()
+    await dialog.getByLabel("Command or server URL").fill("bunx keep-this-draft")
+    // A status event refetches config; it must not recreate the editable draft on failure.
+    fault.fail = true
+    const refreshed = page.waitForResponse(
+      (response) => new URL(response.url()).pathname === path && response.status() === 503,
+    )
+    state.events[serverA] = [{ directory, payload: { type: "mcp.status.changed", properties: {} } }]
+    await refreshed
+    await expect(dialog.getByLabel("Command or server URL")).toHaveValue("bunx keep-this-draft")
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await expect(dialog).toHaveCount(0)
+    expect(state.requests.filter((request) => request.method === "PUT").map((request) => request.body)).toEqual([
+      { config: { type: "local", command: ["bunx", "keep-this-draft"] } },
+    ])
+  })
+}
+
+test("audit: MCP tools distinguish loading, read failure, retry, empty and unknown", async ({ page }) => {
+  const state = fixture()
+  state.tools[serverA].broken = []
+  await setup(page, state)
+  const gate = Promise.withResolvers<void>()
+  const fault = { fail: true }
+  await page.route(
+    (url) => url.origin === serverA && url.pathname === "/mcp/tools",
+    async (route) => {
+      if (!fault.fail) return route.fallback()
+      await gate.promise
+      return json(route, { message: "Tools unavailable" }, 503)
+    },
+  )
+  await openChapter(page)
+  await row(page, "online").getByRole("button", { name: "Tools", exact: true }).click()
+  const dialog = page.getByRole("dialog", { name: "online tools" })
+  await expect(dialog.getByRole("status")).toHaveText("Loading MCP tools…")
+  gate.resolve()
+  await expect(dialog.getByRole("alert")).toContainText("Could not load MCP tools.")
+  await expect(dialog).not.toContainText("Connect this server to list its tools.")
+  fault.fail = false
+  await dialog.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(dialog.locator(".mx-row strong")).toHaveText(["search_docs", "read_page"])
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await row(page, "broken").getByRole("button", { name: "Tools", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText("This server reports no tools.")
+  await page.getByRole("dialog").getByRole("button", { name: "Cancel", exact: true }).click()
+  await row(page, "shared").getByRole("button", { name: "Tools", exact: true }).click()
+  await expect(page.getByRole("dialog").getByRole("status")).toHaveText("Connect this server to list its tools.")
+})
+
 async function toggleConnection(page: Page, name: string) {
   const connection = row(page, name).getByRole("switch")
   await expect(connection).toBeEnabled()

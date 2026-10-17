@@ -6,10 +6,10 @@ const validBounds = (bounds: DockBounds) =>
 export function panelBoundsToContent(bounds: DockBounds, zoom: number): DockBounds {
   if (!Number.isFinite(zoom) || zoom <= 0 || !validBounds(bounds)) throw new Error("Invalid App Dock bounds")
   const result = {
-    x: Math.round(bounds.x / zoom),
-    y: Math.round(bounds.y / zoom),
-    width: Math.round(bounds.width / zoom),
-    height: Math.round(bounds.height / zoom),
+    x: Math.round(bounds.x * zoom),
+    y: Math.round(bounds.y * zoom),
+    width: Math.round(bounds.width * zoom),
+    height: Math.round(bounds.height * zoom),
   }
   if (!validBounds(result)) throw new Error("Invalid App Dock bounds")
   return result

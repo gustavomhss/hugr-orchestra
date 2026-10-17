@@ -230,8 +230,7 @@ const sourceMessages = Array.from({ length: 12 }, (_, index) => [
 
 function renderable(part: MessagePart) {
   if (part.type === "tool" && part.tool === "todowrite") return false
-  if (part.type === "text") return !!part.text.trim()
-  if (part.type === "reasoning") return !!part.text.trim()
+  if (part.type === "text" || part.type === "reasoning") return typeof part.text === "string" && !!part.text.trim()
   return part.type !== "step-start" && part.type !== "step-finish" && part.type !== "patch"
 }
 

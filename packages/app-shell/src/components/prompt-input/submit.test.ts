@@ -1,8 +1,9 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 
-// Bun's module mocks outlive their test file. Keep the original suite in a child
-// process so its SDK and context mocks cannot replace other tests' real imports.
+// Bun's module mocks outlive their test file. The suite entry imports dispatch,
+// admission, delivery and policy domains plus one shared harness inside this child process.
+// Its SDK and context fixtures cannot replace other test files' real imports.
 test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)", async (condition) => {
   const child = Bun.spawn(
     [
@@ -27,4 +28,17 @@ test.each(["solid", "browser"])("prompt submit with isolated module mocks (%s)",
   ])
 
   expect(code, stdout + stderr).toBe(0)
+  if (condition === "browser") {
+    ;[
+      "reactive owner ABA during ACK permanently expires attempt; deliberate retry adopts same Session",
+      "reactive owner disposal during ACK expires attempt without consuming draft",
+      "reactive owner ABA after queued clear cannot revive captured queued send",
+      "queued store JSON roundtrip and explicit reload Send: same-owner",
+      "disposed or credentials-edited live sources cannot silently rebind",
+      "real writers join SET during canonical GET: same-policy",
+      "real writers join SET during canonical GET: changed-policy",
+      "real writers join SET during canonical GET: failed",
+      "pre-route abort still cancels its captured draft after owner ABA",
+    ].forEach((name) => expect(stdout + stderr).toContain(`(pass) ${name}`))
+  }
 }, 35_000)

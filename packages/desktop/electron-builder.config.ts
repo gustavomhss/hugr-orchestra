@@ -1,8 +1,10 @@
 import { execFile } from "node:child_process"
+import { createHash } from "node:crypto"
+import { readFile } from "node:fs/promises"
+import { readFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
 import { fileURLToPath, pathToFileURL } from "node:url"
-import { readFileSync } from "node:fs"
 import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 import { promisify } from "node:util"
 
@@ -48,8 +50,12 @@ const metainfoFpm = (appId: string) =>
   `${path.join(packageDir, "resources", `${appId}.metainfo.xml`)}=/usr/share/metainfo/${appId}.metainfo.xml`
 
 async function signWindows(configuration: { path: string }) {
-  // CLI bytes are already signed and hashed by staging. Re-signing would invalidate their manifest.
-  if (/\/resources\/(cli|claude-code)\//.test(configuration.path.replaceAll("\\", "/"))) return
+  // CLI and upstream Claude bytes are already hashed by staging. Re-signing would invalidate their manifests.
+  if (
+    ["/resources/cli/", "/resources/claude-code/"].some((directory) =>
+      configuration.path.replaceAll("\\", "/").includes(directory),
+    )
+  ) return
   if (process.platform !== "win32") return
   if (process.env.GITHUB_ACTIONS !== "true") return
 
@@ -74,8 +80,9 @@ const APP_IDS = {
 
 async function verifyPackagedResources(context: AfterPackContext) {
   const { verifyPackagedCli } = await import("./scripts/cli-packaging")
-  const { Arch } = await import("electron-builder")
+  const { verifyClaudeAsset } = await import("./scripts/stage-claude")
   const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
+  const { Arch } = await import("electron-builder")
   const directory =
     context.electronPlatformName === "darwin"
       ? path.join(context.appOutDir, `${context.packager.appInfo.productFilename}.app`, "Contents/Resources/cli")
@@ -87,10 +94,10 @@ async function verifyPackagedResources(context: AfterPackContext) {
     context.packager.appInfo.version,
     await ripgrepChecks(),
   )
-  verifyClaudeCodeResource(path.join(path.dirname(directory), "claude-code"), {
-    os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
-    arch: Arch[context.arch],
-  })
+  const claude = path.join(path.dirname(directory), "claude-code")
+  const platform = context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName
+  await verifyClaudeAsset(claude, platform, Arch[context.arch])
+  verifyClaudeCodeResource(claude, { os: platform, arch: Arch[context.arch] })
 }
 
 // The rg each CLI target ships in Resources/cli/ripgrep-<target>/ is signed by staging, not here (Resources/cli is
@@ -136,16 +143,14 @@ const getBase = (appId: string): Configuration => ({
     "!resources/cli{,/**/*}",
     "!resources/icons/**/*",
     "!resources/omni/**",
+    "!resources/claude-code{,/**/*}",
   ],
   beforePack: async (context) => {
     const { verifyPackagedCli } = await import("./scripts/cli-packaging")
+    const { verifyClaudeAsset } = await import("./scripts/stage-claude")
+    const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
     const { Arch } = await import("electron-builder")
     const { prepareTreeSitterPrebuilds } = await import("@orchestra/script/tree-sitter-prebuilds")
-    const { verifyClaudeCodeResource } = await import(pathToFileURL(path.join(orchestraDir, "script/claude-code-resources.ts")).href)
-    verifyClaudeCodeResource(path.join(orchestraDir, "dist/node/claude-code"), {
-      os: context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName,
-      arch: Arch[context.arch],
-    })
     // The app's node_modules carry tree-sitter prebuilds and the core binding maestro-arsenal parses with; repair,
     // build or refuse them before electron-builder copies them.
     // A universal macOS app is packed per architecture first, and each of those passes is checked.
@@ -162,6 +167,14 @@ const getBase = (appId: string): Configuration => ({
       context.packager.appInfo.version,
       await ripgrepChecks(),
     )
+    const platform = context.electronPlatformName === "mas" ? "darwin" : context.electronPlatformName
+    const staged = await verifyClaudeAsset(path.join(packageDir, "resources/claude-code"), platform, Arch[context.arch])
+    const produced = verifyClaudeCodeResource(path.join(orchestraDir, "dist/node/claude-code"), {
+      os: platform,
+      arch: Arch[context.arch],
+    })
+    if (createHash("sha256").update(await readFile(produced)).digest("hex") !== staged.sha256)
+      throw new Error("Desktop and Node Claude Code producers staged different executable bytes")
   },
   afterPack: verifyPackagedResources,
   afterSign: verifyPackagedResources,
@@ -186,7 +199,10 @@ const getBase = (appId: string): Configuration => ({
       to: "playbooks",
     },
     { from: "resources/cli", to: "cli" },
-    { from: path.join(orchestraDir, "dist/node/claude-code"), to: "claude-code" },
+    // One writer for the executable and receipt; the Node producer contributes only its required notices.
+    { from: "resources/claude-code", to: "claude-code", filter: ["claude", "claude.exe", "manifest.json"] },
+    { from: path.join(orchestraDir, "dist/node/claude-code/README.md"), to: "claude-code/README.md" },
+    { from: path.join(orchestraDir, "dist/node/claude-code/LICENSE.md"), to: "claude-code/LICENSE.md" },
     {
       from: "resources/omni",
       to: "omni",

@@ -1,4 +1,9 @@
 import { SkillV2 } from "@orchestra/core/skill"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { Location } from "@orchestra/core/location"
+import { Relay } from "@orchestra/core/relay"
+import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
+import path from "path"
 import { RelayForbiddenError } from "@orchestra/protocol/groups/relay-document"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
 import { AuthoringHook } from "@orchestra/relay/authoring/hook"
@@ -12,6 +17,7 @@ import { RelayDocuments } from "../relay-documents"
 export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.document", (handlers) =>
   Effect.gen(function* () {
     const documents = yield* RelayDocuments.Service
+    const fs = yield* FSUtil.Service
     return handlers
       .handle("relay.document.list", () =>
         RelayDocuments.respond(
@@ -71,7 +77,32 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
         ),
       )
       .handle("relay.document.remove", (ctx) =>
-        RelayDocuments.refusals(documents.use((store) => store.remove(ctx.params.documentID))).pipe(
+        RelayDocuments.refusals(documents.use((store) => Effect.gen(function* () {
+          const document = yield* store.get(ctx.params.documentID)
+          if (!AuthoringHook.isHook(document)) return yield* store.remove(document.id)
+          const relay = yield* Relay.Service
+          const location = yield* Location.Service
+          const retired = yield* RelayHookInstall.uninstallDocument({
+            data: path.dirname(path.dirname(relay.paths.root)),
+            projectID: location.project.id,
+            document: document.id,
+            principal: Principal.of(ctx.request),
+          }).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.mapError((error) => RelayDocuments.refusal(error.message, 503, error.reason)),
+          )
+          // Filesystem installs and SQLite rows cannot share a transaction. Never re-enable enforcement on failure.
+          yield* Effect.forEach(retired, (change) => relay.record(change.install.installID, change.receipt).pipe(
+            Effect.mapError(() => RelayDocuments.refusal(
+              "The hook was uninstalled, but its receipt could not be recorded. The document was not deleted.",
+              503,
+              "receipt-unrecorded",
+            )),
+          ))
+          yield* store.remove(document.id).pipe(Effect.mapError((error) => retired.length
+            ? RelayDocuments.refusal(`The hook was uninstalled, but the document could not be deleted: ${error.message}`, error.status, error.code)
+            : error))
+        }))).pipe(
           Effect.as(HttpApiSchema.NoContent.make()),
         ),
       )

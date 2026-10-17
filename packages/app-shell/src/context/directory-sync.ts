@@ -1,11 +1,12 @@
 import { Binary } from "@orchestra/core/util/binary"
 import type { Message, Part, Session } from "@orchestra/sdk/v2/client"
-import { createMemo } from "solid-js"
+import { batch, createMemo } from "solid-js"
 import { produce, reconcile, type SetStoreFunction } from "solid-js/store"
 import type { createServerSdkContext } from "./server-sdk"
 import type { createServerSyncContextInner } from "./server-sync"
 import type { State } from "./global-sync/types"
 import { normalizeSessionInfo } from "@/utils/session"
+import { sessionManagementFences } from "./session-management-state"
 
 const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 const sessionFields = new Set([
@@ -28,6 +29,7 @@ export const createDirSyncContext = (
 ) => {
   const client = serverSDK.createClient({ directory, throwOnError: true })
   const current = createMemo(() => serverSync.child(directory, { mcp: true }))
+  const fences = sessionManagementFences(serverSync.session, directory)
   const absolute = (path: string) => (current()[0].path.directory + "/" + path).replace("//", "/")
   const data = new Proxy({} as State, {
     get(_, property: keyof State) {
@@ -40,9 +42,14 @@ export const createDirSyncContext = (
     if (typeof input[0] === "string" && sessionFields.has(input[0])) {
       return (serverSync.session.set as (...args: unknown[]) => unknown)(...input)
     }
-    const result = (current()[1] as (...args: unknown[]) => unknown)(...input)
-    if (input[0] === "session") current()[0].session.forEach(serverSync.session.remember)
-    return result
+    return batch(() => {
+      const result = (current()[1] as (...args: unknown[]) => unknown)(...input)
+      if (input[0] === "session" || typeof input[0] === "function") {
+        const sessions = fences.visible(current()[0].session.map(serverSync.session.remember), serverSync.session.get)
+        current()[1]("session", reconcile(sessions, { key: "id" }))
+      }
+      return result
+    })
   }) as SetStoreFunction<State>
 
   const index = (sessionID: string) => {
@@ -50,13 +57,18 @@ export const createDirSyncContext = (
     if (!session || session.directory !== directory) return
     const [store, setStore] = current()
     const result = Binary.search(store.session, session.id, (item) => item.id)
+    const info = fences.merge(session, result.found ? store.session[result.index] : undefined)
+    if (info.time.archived !== undefined) {
+      if (result.found) setStore("session", produce((draft) => void draft.splice(result.index, 1)))
+      return
+    }
     if (result.found) {
-      setStore("session", result.index, reconcile(session))
+      setStore("session", result.index, reconcile(info))
       return
     }
     setStore(
       "session",
-      produce((draft) => void draft.splice(result.index, 0, session)),
+      produce((draft) => void draft.splice(result.index, 0, info)),
     )
   }
 
@@ -125,11 +137,10 @@ export const createDirSyncContext = (
         const [store, setStore] = current()
         setStore("limit", (value) => value + count)
         const response = await serverSDK.api.session.list({ directory, limit: store.limit, order: "desc" })
-        const sessions = response.data
-          .map(normalizeSessionInfo)
+        const sessions = fences.visible(response.data.map(normalizeSessionInfo).map(serverSync.session.remember), serverSync.session.get)
           .sort((a, b) => cmp(a.id, b.id))
           .slice(0, store.limit)
-        setStore("session", reconcile(sessions.map(serverSync.session.remember), { key: "id" }))
+        setStore("session", reconcile(sessions, { key: "id" }))
       },
       more: createMemo(() => current()[0].session.length >= current()[0].limit),
       archive: async (sessionID: string) => {

@@ -220,6 +220,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -230,6 +231,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -240,6 +242,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -250,16 +253,29 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
     readonly cursor?: string | undefined
   }["search"]
+  readonly includeArchived?: {
+    readonly workspace?: string | undefined
+    readonly limit?: number | undefined
+    readonly order?: "asc" | "desc" | undefined
+    readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
+    readonly directory?: string | undefined
+    readonly project?: string | undefined
+    readonly subpath?: string | undefined
+    readonly cursor?: string | undefined
+  }["includeArchived"]
   readonly directory?: {
     readonly workspace?: string | undefined
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -270,6 +286,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -280,6 +297,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -290,6 +308,7 @@ export type SessionsListInput = {
     readonly limit?: number | undefined
     readonly order?: "asc" | "desc" | undefined
     readonly search?: string | undefined
+    readonly includeArchived?: boolean | undefined
     readonly directory?: string | undefined
     readonly project?: string | undefined
     readonly subpath?: string | undefined
@@ -460,6 +479,13 @@ export type SessionsGetOutput = {
     }
   }
 }["data"]
+
+export type SessionsArchiveInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly archived: { readonly archived: boolean }["archived"]
+}
+
+export type SessionsArchiveOutput = void
 
 export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
@@ -864,6 +890,14 @@ export type SessionsHistoryOutput = {
                 }>
               }
         }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.archive.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: { readonly timestamp: number; readonly sessionID: string; readonly archived: number | null }
       }
     | {
         readonly id: string
@@ -1976,6 +2010,73 @@ export type IntegrationsConnectOauthOutput = {
   }
 }
 
+export type IntegrationsOauthStatusInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsOauthStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | {
+        readonly status: "pending"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "complete"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "failed"
+        readonly message: string
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+    | {
+        readonly status: "expired"
+        readonly time: {
+          readonly created: number | "Infinity" | "-Infinity" | "NaN"
+          readonly expires: number | "Infinity" | "-Infinity" | "NaN"
+        }
+      }
+}
+
+export type IntegrationsOauthCompleteInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly code?: { readonly code?: string | undefined }["code"]
+}
+
+export type IntegrationsOauthCompleteOutput = void
+
+export type IntegrationsOauthCancelInput = {
+  readonly integrationID: { readonly integrationID: string; readonly attemptID: string }["integrationID"]
+  readonly attemptID: { readonly integrationID: string; readonly attemptID: string }["attemptID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type IntegrationsOauthCancelOutput = void
+
 export type IntegrationsAttemptStatusInput = {
   readonly attemptID: { readonly attemptID: string }["attemptID"]
   readonly location?: {
@@ -2759,6 +2860,7 @@ export type RelayDocumentsListOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -2766,6 +2868,7 @@ export type RelayDocumentsListOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -2836,6 +2939,7 @@ export type RelayDocumentsListOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -2843,6 +2947,7 @@ export type RelayDocumentsListOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null
@@ -2890,8 +2995,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -2911,13 +3016,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -2925,6 +3031,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -2958,8 +3065,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -2979,13 +3086,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -2993,6 +3101,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3026,8 +3135,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3047,13 +3156,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3061,6 +3171,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3094,8 +3205,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3115,13 +3226,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3129,6 +3241,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3162,8 +3275,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3183,13 +3296,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3197,6 +3311,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3230,8 +3345,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3251,13 +3366,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3265,6 +3381,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3298,8 +3415,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3319,13 +3436,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3333,6 +3451,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3366,8 +3485,8 @@ export type RelayDocumentsCreateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3387,13 +3506,14 @@ export type RelayDocumentsCreateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3401,6 +3521,7 @@ export type RelayDocumentsCreateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3480,6 +3601,7 @@ export type RelayDocumentsCreateOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3487,6 +3609,7 @@ export type RelayDocumentsCreateOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3557,6 +3680,7 @@ export type RelayDocumentsCreateOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -3564,6 +3688,7 @@ export type RelayDocumentsCreateOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null
@@ -3658,6 +3783,7 @@ export type RelayDocumentsGetOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3665,6 +3791,7 @@ export type RelayDocumentsGetOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3735,6 +3862,7 @@ export type RelayDocumentsGetOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -3742,6 +3870,7 @@ export type RelayDocumentsGetOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null
@@ -3790,8 +3919,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3811,13 +3940,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3825,6 +3955,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3861,8 +3992,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3882,13 +4013,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3896,6 +4028,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -3932,8 +4065,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -3953,13 +4086,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -3967,6 +4101,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4003,8 +4138,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4024,13 +4159,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4038,6 +4174,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4074,8 +4211,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4095,13 +4232,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4109,6 +4247,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4145,8 +4284,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4166,13 +4305,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4180,6 +4320,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4216,8 +4357,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4237,13 +4378,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4251,6 +4393,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4287,8 +4430,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4308,13 +4451,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4322,6 +4466,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4358,8 +4503,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4379,13 +4524,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4393,6 +4539,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4429,8 +4576,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4450,13 +4597,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4464,6 +4612,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4500,8 +4649,8 @@ export type RelayDocumentsUpdateInput = {
       readonly name: string
       readonly type: string
       readonly position: readonly [number, number]
-      readonly parameters: { readonly [x: string]: unknown }
-      readonly typeVersion?: number
+      readonly parameters: { readonly [x: string]: JsonValue }
+      readonly typeVersion?: number | "Infinity" | "-Infinity" | "NaN"
     }>
     readonly connections?: {
       readonly [x: string]: {
@@ -4521,13 +4670,14 @@ export type RelayDocumentsUpdateInput = {
         readonly kind?: "workflow" | "hook"
         readonly sprint?: {
           readonly brief?: string
-          readonly gen?: number
+          readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
           readonly retry_budget?: number
           readonly macros?: ReadonlyArray<{
             readonly id: string
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4535,6 +4685,7 @@ export type RelayDocumentsUpdateInput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4617,6 +4768,7 @@ export type RelayDocumentsUpdateOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4624,6 +4776,7 @@ export type RelayDocumentsUpdateOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4694,6 +4847,7 @@ export type RelayDocumentsUpdateOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -4701,6 +4855,7 @@ export type RelayDocumentsUpdateOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null
@@ -4798,6 +4953,7 @@ export type RelayDocumentsVersionsOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4805,6 +4961,7 @@ export type RelayDocumentsVersionsOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4890,6 +5047,7 @@ export type RelayDocumentsVersionOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -4897,6 +5055,7 @@ export type RelayDocumentsVersionOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -4947,6 +5106,7 @@ export type RelayDocumentsSprintOutput = {
       readonly gen?: number | "Infinity" | "-Infinity" | "NaN"
       readonly retry_budget?: number
       readonly macros?: ReadonlyArray<{ readonly id: string; readonly title?: string; readonly instructions?: string }>
+      readonly knowledge?: ReadonlyArray<string>
       readonly work_packages: ReadonlyArray<{
         readonly id: string
         readonly title?: string
@@ -4954,6 +5114,7 @@ export type RelayDocumentsSprintOutput = {
         readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
         readonly instructions?: string
         readonly self_check?: ReadonlyArray<string>
+        readonly knowledge?: ReadonlyArray<string>
         readonly checklist?: ReadonlyArray<{
           readonly id: string
           readonly assert?: string | null
@@ -5097,6 +5258,7 @@ export type RelayDocumentsDefinitionOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -5104,6 +5266,7 @@ export type RelayDocumentsDefinitionOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -5362,6 +5525,7 @@ export type RelayPublishPublishOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -5369,6 +5533,7 @@ export type RelayPublishPublishOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -5439,6 +5604,7 @@ export type RelayPublishPublishOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -5446,6 +5612,7 @@ export type RelayPublishPublishOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null
@@ -5541,6 +5708,7 @@ export type RelayPublishUnpublishOutput = {
             readonly title?: string
             readonly instructions?: string
           }>
+          readonly knowledge?: ReadonlyArray<string>
           readonly work_packages: ReadonlyArray<{
             readonly id: string
             readonly title?: string
@@ -5548,6 +5716,7 @@ export type RelayPublishUnpublishOutput = {
             readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
             readonly instructions?: string
             readonly self_check?: ReadonlyArray<string>
+            readonly knowledge?: ReadonlyArray<string>
             readonly checklist?: ReadonlyArray<{
               readonly id: string
               readonly assert?: string | null
@@ -5618,6 +5787,7 @@ export type RelayPublishUnpublishOutput = {
               readonly title?: string
               readonly instructions?: string
             }>
+            readonly knowledge?: ReadonlyArray<string>
             readonly work_packages: ReadonlyArray<{
               readonly id: string
               readonly title?: string
@@ -5625,6 +5795,7 @@ export type RelayPublishUnpublishOutput = {
               readonly kind?: "execute" | "gate" | "review" | "inject" | "human"
               readonly instructions?: string
               readonly self_check?: ReadonlyArray<string>
+              readonly knowledge?: ReadonlyArray<string>
               readonly checklist?: ReadonlyArray<{
                 readonly id: string
                 readonly assert?: string | null

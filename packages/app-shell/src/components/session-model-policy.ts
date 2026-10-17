@@ -3,36 +3,38 @@ import { createStore } from "solid-js/store"
 import type { SessionManagement } from "@/utils/session-management"
 import { sameModelPolicy, type ModelPolicySnapshot, type SubagentModelPolicy } from "./subagent-model-rules"
 
-type PolicyState = {
-  snapshot?: ModelPolicySnapshot
-  observation?: string
-  refreshing: boolean
-  error?: unknown
-}
-type PolicyLifetime = { active: boolean; read: number; pending?: Promise<ModelPolicySnapshot> }
-
-/** HTTP snapshots carry local read receipts, never guessed durable ACK sequences. */
+/** An HTTP snapshot has a local read receipt, never a guessed durable event sequence. */
 export function createSessionModelPolicy(input: {
   sessionID: string
   management: Pick<SessionManagement, "getSubagentModels" | "readSubagentModels" | "setSubagentModels">
   readEvent: () => ModelPolicySnapshot | undefined
+  owns?: () => boolean
 }) {
-  const [state, setState] = createStore<PolicyState>({ refreshing: false })
-  const life: PolicyLifetime = { active: true, read: 0 }
-  onCleanup(() => { life.active = false })
+  const [state, setState] = createStore({
+    snapshot: undefined as ModelPolicySnapshot | undefined,
+    observation: undefined as string | undefined,
+    refreshing: false,
+    error: undefined as unknown,
+  })
+  const life = { active: true, read: 0, pending: undefined as Promise<ModelPolicySnapshot> | undefined }
+  onCleanup(() => {
+    life.active = false
+  })
+  const owns = () => life.active && (input.owns?.() ?? true)
   const observation = () => {
     const event = input.readEvent()
     return JSON.stringify(event && [event.timestamp, event.revision, event.policy])
   }
   const refresh = () => {
-    if (!life.active) return Promise.reject(new DOMException("", "AbortError"))
+    if (!owns()) return Promise.reject(new DOMException("", "AbortError"))
     if (life.pending) return life.pending
     setState({ refreshing: true, error: undefined })
     const pending = (async () => {
-      while (life.active) {
+      while (owns()) {
         const before = observation()
         const current = await input.management.readSubagentModels(input.sessionID)
-        if (!life.active) throw new DOMException("", "AbortError")
+        if (!owns()) throw new DOMException("", "AbortError")
+        // If an event arrived during the read, get again after that observation; neither source carries an ACK sequence.
         if (before !== observation()) continue
         const snapshot = { policy: current.policy, timestamp: current.timestamp, readVersion: ++life.read }
         setState({ snapshot, observation: before })
@@ -41,12 +43,12 @@ export function createSessionModelPolicy(input: {
       throw new DOMException("", "AbortError")
     })()
       .catch((error: unknown) => {
-        if (life.active) setState("error", error)
+        if (owns()) setState("error", error)
         throw error
       })
       .finally(() => {
         life.pending = undefined
-        if (life.active) setState("refreshing", false)
+        if (owns()) setState("refreshing", false)
       })
     life.pending = pending
     return pending
@@ -56,7 +58,7 @@ export function createSessionModelPolicy(input: {
     const snapshot = state.snapshot
     if (!current || !snapshot || current.timestamp !== snapshot.timestamp) return
     if (sameModelPolicy(current.policy, snapshot.policy) || observation() === state.observation) return
-    // Equal timestamps cannot order an event against a revisionless HTTP ACK.
+    // Equal timestamps cannot order an event against a revisionless HTTP ACK. Keep the ACK until this read resolves.
     void refresh().catch(() => {})
   })
   return {
@@ -68,14 +70,14 @@ export function createSessionModelPolicy(input: {
       return state.snapshot
     },
     async load() {
-      if (!life.active) throw new DOMException("", "AbortError")
+      if (!owns()) throw new DOMException("", "AbortError")
       await input.management.getSubagentModels(input.sessionID)
       return refresh()
     },
     async write(policy: SubagentModelPolicy) {
-      if (!life.active) throw new DOMException("", "AbortError")
+      if (!owns()) throw new DOMException("", "AbortError")
       await input.management.setSubagentModels(input.sessionID, policy)
-      // A pre-write read is not the ACK fence. Always read again after it settles.
+      // A previous read may predate the write. Finish it, then read after the ACK.
       if (life.pending) await life.pending.catch(() => {})
       return refresh()
     },

@@ -598,6 +598,12 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-save.bad {
   color: var(--mx-bad);
+  flex-wrap: wrap;
+  white-space: normal;
+}
+.wf-save-error {
+  max-inline-size: 24em;
+  overflow-wrap: anywhere;
 }
 .wf-issues {
   display: inline-flex;
@@ -1288,6 +1294,30 @@ html[data-color-scheme="light"] .wf-drawer {
 }
 
 /* ---------- Node details (three columns, kit dialog parts) ---------- */
+.wf-modal-layer {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  place-items: center;
+  padding: 16px;
+}
+.wf-modal-backdrop {
+  position: absolute;
+  inset: 0;
+  background: var(--mx-backdrop);
+  backdrop-filter: blur(5px);
+}
+.wf-modal-layer > .mx-dialog {
+  position: relative;
+  max-inline-size: 100%;
+  max-block-size: 100%;
+}
+.wf-canvas[data-readonly="true"] :is(.wf-rail, .wf-node-tools, .wf-stub, .wf-edge-tools, .wf-port) {
+  display: none;
+}
 .wf-scrim {
   position: absolute;
   inset: 0;
@@ -1308,9 +1338,22 @@ html[data-color-scheme="light"] .wf-drawer {
   }
 }
 .wf-ndv {
+  position: relative;
+  container: relay-details / inline-size;
   inline-size: min(1180px, 100%);
+  max-inline-size: 100%;
   block-size: min(760px, 100%);
-  max-block-size: none;
+  max-block-size: 100%;
+  margin: auto;
+}
+.wf-params {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-inline-size: 0;
+}
+.wf-ndv-switcher {
+  display: none;
 }
 .wf-ndv .mx-dialog-head {
   align-items: center;
@@ -1360,6 +1403,38 @@ html[data-color-scheme="light"] .wf-drawer {
 }
 .wf-ndv-col.mid {
   padding: 18px 22px 24px;
+}
+@container relay-details (max-width: 1100px) {
+  .wf-ndv-switcher {
+    display: flex;
+    flex: none;
+    margin: 10px 16px;
+  }
+  .wf-ndv-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wf-ndv-col[data-active="false"] {
+    display: none;
+  }
+  .wf-ndv-col + .wf-ndv-col {
+    border-inline-start: 0;
+  }
+  .wf-ndv .mx-dialog-head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+  .wf-ndv .mx-dialog-foot {
+    flex-wrap: wrap;
+    flex: none;
+  }
+}
+@container relay-details (max-width: 520px) {
+  .wf-ndv .mx-fields {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .wf-ndv-col.mid {
+    padding-inline: 16px;
+  }
 }
 .wf-col-head {
   display: flex;

@@ -369,6 +369,66 @@ describe("SessionRunCoordinator", () => {
     ),
   )
 
+  it.effect("ownership-aware: cancellation belongs only to the waiter that starts the active entry", () =>
+    Effect.scoped(Effect.gen(function* () {
+      const started = yield* Deferred.make<void>()
+      const stopped = yield* Deferred.make<void>()
+      const runs: boolean[] = []
+      const coordinator = yield* SessionRunCoordinator.make<string, never>({
+        drain: (_key, force) => Effect.sync(() => runs.push(force)).pipe(
+          Effect.andThen(Deferred.succeed(started, undefined)),
+          Effect.andThen(Effect.never),
+          Effect.onInterrupt(() => Deferred.succeed(stopped, undefined)),
+        ),
+      })
+      const owner = yield* coordinator.run("session", { interruptOnCancel: true }).pipe(Effect.forkChild)
+      yield* Deferred.await(started)
+      const joiner = yield* coordinator.run("session", { interruptOnCancel: true }).pipe(Effect.forkChild)
+      yield* Effect.yieldNow
+      yield* Fiber.interrupt(joiner)
+      expect((yield* coordinator.active).has("session")).toBe(true)
+      yield* Fiber.interrupt(owner)
+      yield* Deferred.await(stopped)
+      expect((yield* coordinator.active).size).toBe(0)
+      expect(runs).toEqual([true])
+    })),
+  )
+
+  it.effect("ownership-aware: a stopped starter cannot cancel a different successor entry", () =>
+    Effect.scoped(Effect.gen(function* () {
+      const started = yield* Deferred.make<void>()
+      const cleanupStarted = yield* Deferred.make<void>()
+      const cleanupGate = yield* Deferred.make<void>()
+      const successorStarted = yield* Deferred.make<void>()
+      const forces: boolean[] = []
+      const coordinator = yield* SessionRunCoordinator.make<string, never>({
+        drain: (_key, force) => {
+          forces.push(force)
+          if (forces.length === 1) return Deferred.succeed(started, undefined).pipe(
+            Effect.andThen(Effect.never),
+            Effect.onInterrupt(() => Deferred.succeed(cleanupStarted, undefined).pipe(
+              Effect.andThen(Deferred.await(cleanupGate)),
+            )),
+          )
+          return Deferred.succeed(successorStarted, undefined).pipe(Effect.andThen(Effect.never))
+        },
+      })
+      const owner = yield* coordinator.run("session", { interruptOnCancel: true }).pipe(Effect.forkChild)
+      yield* Deferred.await(started)
+      const interruption = yield* coordinator.interrupt("session").pipe(Effect.forkChild)
+      yield* Deferred.await(cleanupStarted)
+      yield* coordinator.wake("session")
+      yield* Deferred.succeed(cleanupGate, undefined)
+      yield* Fiber.join(interruption)
+      const exit = yield* Fiber.await(owner)
+      expect(Exit.isFailure(exit) && Cause.hasInterruptsOnly(exit.cause)).toBe(true)
+      expect((yield* coordinator.active).has("session")).toBe(true)
+      yield* Deferred.await(successorStarted)
+      expect(forces).toEqual([true, false])
+      yield* coordinator.interrupt("session")
+    })),
+  )
+
   it.effect("runs different keys concurrently", () =>
     Effect.scoped(
       Effect.gen(function* () {

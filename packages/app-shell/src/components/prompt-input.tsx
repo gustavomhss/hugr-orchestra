@@ -49,14 +49,20 @@ import { DialogSelectModelUnpaidV2 } from "@/components/dialog-select-model-unpa
 import { useCommand } from "@/context/command"
 import { usePermission } from "@/context/permission"
 import { useLanguage } from "@/context/language"
-import { useLocal } from "@/context/local"
 import { effectiveModelState, hasModelScope } from "@/components/subagent-model-rules"
 import { useServerProtocol } from "@/context/server-sdk"
-import { useDraftSessionKey, useSubagentModelPolicy } from "./prompt-input/draft-session"
-import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
+import { createDraftSessionState } from "./prompt-input/draft-session"
+import { useProviders } from "@/hooks/use-providers"
 import { usePlatform } from "@/context/platform"
 import { createSessionTabs } from "@/pages/session/helpers"
-import { createTextFragment, getCursorPosition, setCursorPosition, setRangeEdge } from "./prompt-input/editor-dom"
+import {
+  createCaretPlaceholder,
+  createTextFragment,
+  getCursorPosition,
+  setCursorPosition,
+  setRangeEdge,
+} from "./prompt-input/editor-dom"
+import { insertPromptEditorText, materializePromptEditor, readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
 import { createPromptAttachments } from "./prompt-input/attachments"
 import { ACCEPTED_FILE_TYPES, pickAttachmentFiles } from "./prompt-input/files"
 import {
@@ -765,6 +771,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     onSelect: handleSlashSelect,
   })
 
+  const pillParts = new WeakMap<HTMLElement, FileAttachmentPart | AgentPart>()
   const createPill = (part: FileAttachmentPart | AgentPart) => {
     const pill = document.createElement("span")
     pill.textContent = part.content
@@ -784,25 +791,20 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     pill.setAttribute("contenteditable", "false")
     pill.style.userSelect = "text"
     pill.style.cursor = "default"
+    pillParts.set(pill, part)
     return pill
   }
 
   const isNormalizedEditor = () =>
     Array.from(editorRef.childNodes).every((node) => {
       if (node.nodeType === Node.TEXT_NODE) {
-        const text = node.textContent ?? ""
-        if (!text.includes("\u200B")) return true
-        if (text !== "\u200B") return false
-
-        const prev = node.previousSibling
-        const next = node.nextSibling
-        const prevIsBr = prev?.nodeType === Node.ELEMENT_NODE && (prev as HTMLElement).tagName === "BR"
-        return !!prevIsBr && !next
+        return true
       }
       if (node.nodeType !== Node.ELEMENT_NODE) return false
       const el = node as HTMLElement
       if (el.dataset.type === "file") return true
       if (el.dataset.type === "agent") return true
+      if (el.hasAttribute("data-prompt-caret")) return true
       return el.tagName === "BR"
     })
 
@@ -820,7 +822,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     const last = editorRef.lastChild
     if (last?.nodeType === Node.ELEMENT_NODE && (last as HTMLElement).tagName === "BR") {
-      editorRef.appendChild(document.createTextNode("\u200B"))
+      editorRef.appendChild(createCaretPlaceholder())
     }
   }
 
@@ -855,9 +857,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const reconcile = (input: Prompt) => {
     if (mirror.input) {
       mirror.input = false
-      if (isNormalizedEditor()) return
-
-      renderEditorWithCursor(input)
+      // Keep native editing nodes/undo entries; materialize structural breaks only at the next editing boundary.
       return
     }
 
@@ -883,9 +883,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     let buffer = ""
 
     const flushText = () => {
-      let content = buffer
-      if (content.includes("\r")) content = content.replace(/\r\n?/g, "\n")
-      if (content.includes("\u200B")) content = content.replace(/\u200B/g, "")
+      const content = buffer
       buffer = ""
       if (!content) return
       parts.push({ type: "text", content, start: position, end: position + content.length })
@@ -894,20 +892,24 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     const pushFile = (file: HTMLElement) => {
       const content = file.textContent ?? ""
+      const saved = pillParts.get(file)
       const source =
-        file.dataset.sourceType === "resource" && file.dataset.sourceClientName && file.dataset.sourceUri
-          ? {
-              type: "resource" as const,
-              text: {
-                value: content,
-                start: position,
-                end: position + content.length,
-              },
-              clientName: file.dataset.sourceClientName,
-              uri: file.dataset.sourceUri,
-            }
-          : undefined
+        saved?.type === "file" && saved.source
+          ? { ...saved.source, text: { value: content, start: position, end: position + content.length } }
+          : file.dataset.sourceType === "resource" && file.dataset.sourceClientName && file.dataset.sourceUri
+            ? {
+                type: "resource" as const,
+                text: {
+                  value: content,
+                  start: position,
+                  end: position + content.length,
+                },
+                clientName: file.dataset.sourceClientName,
+                uri: file.dataset.sourceUri,
+              }
+            : undefined
       parts.push({
+        ...(saved?.type === "file" ? saved : {}),
         type: "file",
         path: file.dataset.path!,
         content,
@@ -924,6 +926,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     const pushAgent = (agent: HTMLElement) => {
       const content = agent.textContent ?? ""
       parts.push({
+        ...pillParts.get(agent),
         type: "agent",
         name: agent.dataset.name!,
         content,
@@ -933,41 +936,18 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       position += content.length
     }
 
-    const visit = (node: Node) => {
-      if (node.nodeType === Node.TEXT_NODE) {
-        buffer += node.textContent ?? ""
-        return
-      }
-      if (node.nodeType !== Node.ELEMENT_NODE) return
-
-      const el = node as HTMLElement
-      if (el.dataset.type === "file") {
+    readPromptEditor(editorRef).segments.forEach(({ node, content }) => {
+      if (node instanceof HTMLElement && node.dataset.type === "file") {
         flushText()
-        pushFile(el)
+        pushFile(node)
         return
       }
-      if (el.dataset.type === "agent") {
+      if (node instanceof HTMLElement && node.dataset.type === "agent") {
         flushText()
-        pushAgent(el)
+        pushAgent(node)
         return
       }
-      if (el.tagName === "BR") {
-        buffer += "\n"
-        return
-      }
-
-      for (const child of Array.from(el.childNodes)) {
-        visit(child)
-      }
-    }
-
-    const children = Array.from(editorRef.childNodes)
-    children.forEach((child, index) => {
-      const isBlock = child.nodeType === Node.ELEMENT_NODE && ["DIV", "P"].includes((child as HTMLElement).tagName)
-      visit(child)
-      if (isBlock && index < children.length - 1) {
-        buffer += "\n"
-      }
+      buffer += content
     })
 
     flushText()
@@ -985,9 +965,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         ? rawParts[0].content
         : rawParts.map((p) => ("content" in p ? p.content : "")).join("")
     const hasNonText = rawParts.some((part) => part.type !== "text")
-    const textContent = (editorRef.textContent ?? "").replace(/\u200B/g, "")
-    const shouldReset =
-      textContent.length === 0 && rawText.replace(/\n/g, "").length === 0 && !hasNonText && images.length === 0
+    const shouldReset = rawText.length === 0 && !hasNonText && images.length === 0
 
     if (shouldReset) {
       closePopover()
@@ -1040,7 +1018,14 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
 
     if (selection.rangeCount === 0) return false
     const range = selection.getRangeAt(0)
-    if (!editorRef.contains(range.startContainer)) return false
+    if (!editorRef.contains(range.startContainer) || !editorRef.contains(range.endContainer)) return false
+    if (part.type === "text") {
+      const inserted = insertPromptEditorText(editorRef, part.content, "insertText")
+      if (inserted) prompt.capture().store[1]("cursor", getCursorPosition(editorRef))
+      closePopover()
+      return inserted
+    }
+    materializePromptEditor(editorRef, range)
 
     if (part.type === "file" || part.type === "agent") {
       const cursorPosition = getCursorPosition(editorRef)
@@ -1063,40 +1048,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       range.insertNode(gap)
       range.insertNode(pill)
       range.setStartAfter(gap)
-      range.collapse(true)
-      selection.removeAllRanges()
-      selection.addRange(range)
-    }
-
-    if (part.type === "text") {
-      const fragment = createTextFragment(part.content)
-      const last = fragment.lastChild
-      range.deleteContents()
-      range.insertNode(fragment)
-      if (last) {
-        if (last.nodeType === Node.TEXT_NODE) {
-          const text = last.textContent ?? ""
-          if (text === "\u200B") {
-            range.setStart(last, 0)
-          }
-          if (text !== "\u200B") {
-            range.setStart(last, text.length)
-          }
-        }
-        if (last.nodeType !== Node.TEXT_NODE) {
-          const isBreak = last.nodeType === Node.ELEMENT_NODE && (last as HTMLElement).tagName === "BR"
-          const next = last.nextSibling
-          const emptyText = next?.nodeType === Node.TEXT_NODE && (next.textContent ?? "") === ""
-          if (isBreak && (!next || emptyText)) {
-            const placeholder = next && emptyText ? next : document.createTextNode("\u200B")
-            if (!next) last.parentNode?.insertBefore(placeholder, null)
-            placeholder.textContent = "\u200B"
-            range.setStart(placeholder, 0)
-          } else {
-            range.setStartAfter(last)
-          }
-        }
-      }
       range.collapse(true)
       selection.removeAllRanges()
       selection.addRange(range)
@@ -1198,11 +1149,20 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const variants = createMemo(() => ["default", ...props.controls.model.selection.variant.list()])
   // Check provider variants directly: `variants` also includes the UI-only default option.
   const showVariantControl = createMemo(() => props.controls.model.selection.variant.list().length > 0)
-  const local = useLocal()
-  const pendingKey = useDraftSessionKey()
-  const protocol = useServerProtocol()
-  const policyLanguage = sessionRecoveryLanguage(language)
-  const subagentPolicy = useSubagentModelPolicy(() => props.controls.session.id, pendingKey)
+  const draftSession = createDraftSessionState({ sessionID: () => props.controls.session.id })
+  const pendingKey = draftSession.pendingKey
+  const subagentLife = { active: true }
+  onCleanup(() => { subagentLife.active = false })
+  const subagentSource = createMemo(() => {
+    const source = sdk()
+    return { source, directory: source.directory, sessionID: props.controls.session.id, pendingKey: pendingKey() }
+  })
+  const subagentProtocol = useServerProtocol()
+  const subagentUnresolved = () => !!props.controls.session.id && (
+    subagentProtocol() === undefined || (subagentProtocol() === "v2" &&
+      (draftSession.loading() || !!draftSession.error() || !draftSession.policy()))
+  )
+  const providers = useProviders(() => sdk().directory)
   const subagentRules = createMemo(() => {
     const id = props.controls.session.id
     if (!id) return []
@@ -1210,29 +1170,29 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return Array.isArray(permission) ? permission : []
   })
   const subagentLabel = createMemo(() => {
-    if (props.controls.session.id && protocol() === undefined) return language.t("common.loading")
-    if (!props.controls.session.id || protocol() === "v2") {
-      const policy = subagentPolicy.policy()
-      if (subagentPolicy.error()) return policyLanguage.t("session.subagentModels.loadFailed")
-      if (!policy) return language.t("common.loading")
-      return policy.mode === "inherit" ? policyLanguage.t("dialog.subagentModels.inherited") : `${policy.models.length}`
+    if (props.controls.session.id && subagentProtocol() === undefined) return language.t("common.loading")
+    if (!props.controls.session.id || subagentProtocol() === "v2") {
+      const policy = draftSession.policy()
+      if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
+      if (draftSession.loading() || !policy) return language.t("common.loading")
+      return policy.mode === "inherit" ? language.t("dialog.subagentModels.inherited") : `${policy.models.length}`
     }
     if (!hasModelScope(subagentRules())) return language.t("session.tasks.models.all")
-    const allowed = local.model
-      .list()
-      .filter((m) => local.model.visible({ modelID: m.id, providerID: m.provider.id }))
-      .filter((m) => effectiveModelState(subagentRules(), m.provider.id, m.id) === "allow").length
+    const allowed = providers
+      .connected()
+      .flatMap((provider) =>
+        Object.values(provider.models).filter(
+          (model) => effectiveModelState(subagentRules(), provider.id, model.id) === "allow",
+        ),
+      ).length
     return `${allowed}`
   })
-  const openSubagentModels = () => {
-    const source = sdk()
-    const directory = source.directory
-    if (!directory) return
-    const selection = { sessionID: props.controls.session.id, directory, pendingKey: pendingKey() }
-    void import("@/components/dialog-subagent-models").then((x) => {
-      if (sdk() !== source || props.controls.session.id !== selection.sessionID || pendingKey() !== selection.pendingKey) return
-      dialog.show(() => <x.DialogSubagentModels {...selection} />)
-    })
+  const openSubagentModels = async () => {
+    const selection = subagentSource()
+    if (!selection.directory || !subagentLife.active || subagentUnresolved()) return
+    const { DialogSubagentModels } = await import("@/components/dialog-subagent-models")
+    if (!subagentLife.active || subagentSource() !== selection || subagentUnresolved()) return
+    dialog.show(() => <DialogSubagentModels sessionID={selection.sessionID} directory={selection.directory} pendingKey={selection.pendingKey} />)
   }
   const accepting = createMemo(() => {
     const id = props.controls.session.id
@@ -1240,11 +1200,12 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     return permission.isAutoAccepting(id, sdk().directory)
   })
 
-  const { abort, handleSubmit } =
+  const { abort, handleSubmit, submitting } =
     props.submission ??
     createPromptSubmit({
       prompt,
       info,
+      pendingKey,
       imageAttachments,
       commentCount,
       autoAccept: () => accepting(),
@@ -1263,7 +1224,6 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         setStore({ popover, slashMenu: false, slashMenuQuery: "" })
       },
       newSessionWorktree: () => props.newSessionWorktree,
-      pendingKey,
       onNewSessionWorktreeReset: props.onNewSessionWorktreeReset,
       shouldQueue: props.shouldQueue,
       onQueue: props.onQueue,
@@ -1287,7 +1247,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
         const offset = selection.anchorOffset
         if (node && node.nodeType === Node.TEXT_NODE) {
           const text = node.textContent ?? ""
-          if (/^\u200B+$/.test(text) && offset > 0) {
+          if (node.parentElement?.hasAttribute("data-prompt-caret") && text.startsWith("\u200B") && offset === 1) {
             const range = document.createRange()
             range.setStart(node, 0)
             range.collapse(true)
@@ -1347,15 +1307,10 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       }
     }
 
-    // Handle Shift+Enter BEFORE IME check - Shift+Enter is never used for IME input
-    // and should always insert a newline regardless of composition state
-    if (event.key === "Enter" && event.shiftKey) {
+    if (event.key === "Enter" && isImeComposing(event)) return
+    if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
       addPart({ type: "text", content: "\n", start: 0, end: 0 })
       event.preventDefault()
-      return
-    }
-
-    if (event.key === "Enter" && isImeComposing(event)) {
       return
     }
 
@@ -1502,6 +1457,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
       />
       <DockShellForm
         data-dock-border-underlay="legacy"
+        data-prompt-admitting={String(submitting?.() ?? false)}
         onSubmit={handleSubmit}
         classList={{
           "group/prompt-input": true,
@@ -1801,6 +1757,8 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
                         class="min-w-0 max-w-[220px] text-13-regular text-text-base group"
                         data-action="prompt-subagent-models"
                         onClick={openSubagentModels}
+                        disabled={subagentUnresolved()}
+                        aria-busy={!!props.controls.session.id && (subagentProtocol() === undefined || draftSession.loading()) || undefined}
                       >
                         <span class="truncate">
                           {language.t("session.tasks.models.label", { count: subagentLabel() })}

@@ -162,6 +162,19 @@ describe("i18n parity", () => {
     }
   })
 
+  test("subagent model recovery copy is localized in every declared app dictionary", async () => {
+    const source = await dictionary("./en.ts")
+    const keys = ["unsupported", "saveFailed", "inherited", "noneAllowed"].map((key) => `dialog.subagentModels.${key}`)
+    expect(appLocales.length).toBeGreaterThan(0)
+    for (const locale of appLocales) {
+      const target = await dictionary(`./${locale}.ts`)
+      for (const key of keys) {
+        expect({ locale, key, translated: Object.hasOwn(target, key) && !!target[key].trim() && target[key] !== source[key] })
+          .toEqual({ locale, key, translated: true })
+      }
+    }
+  })
+
   test("changed-file summary keys preserve rendered English copy and localize complete phrases", async () => {
     const source = await dictionary("../../../ui/src/i18n/en.ts")
     expect(source["ui.sessionTurn.diffs.changed.one"].replace("{{count}}", "1")).toBe("1 Changed file")

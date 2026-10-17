@@ -2,12 +2,13 @@ import { Dialog } from "@kobalte/core/dialog"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { iconNames } from "@orchestra/ui/icons/provider"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
-import { children, createMemo, createResource, For, type JSX, onCleanup, Show } from "solid-js"
+import { children, createMemo, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
+import { createProviderResource } from "@/hooks/provider-catalog"
 import {
   authorizationURL,
   type CatalogEntry,
@@ -146,15 +147,16 @@ export function ProviderConnectDialog(props: {
   const sdk = useServerSDK()
   const platform = usePlatform()
   const location = { directory: props.directory }
-  const [integration] = createResource(() =>
-    sdk()
-      .api.integration.get({ integrationID: props.id, location })
-      .then((result) => connectableIntegration(result.data)),
+  const integration = createProviderResource(
+    () => ({ id: props.id, location, client: sdk(), server: sdk().scope }),
+    (input) =>
+      input.client.api.integration
+        .get({ integrationID: input.id, location: input.location })
+        .then((result) => connectableIntegration(result.data)),
   )
-  // Unsettled or failed reads must not suspend the chapter route; the API key method is the fallback.
-  const loading = () => integration.state === "pending" || integration.state === "unresolved"
+  const loading = integration.loading
   const methods = createMemo(() => {
-    const values = (integration.state === "ready" ? (integration()?.methods ?? []) : []).flatMap((method) =>
+    const values = (integration.data()?.methods ?? []).flatMap((method) =>
       method.type === "key" || method.type === "oauth" ? [method] : [],
     )
     return values.length ? values : [{ type: "key" as const }]
@@ -166,6 +168,7 @@ export function ProviderConnectDialog(props: {
     answers: {} as Record<string, string>,
     error: undefined as string | undefined,
     busy: false,
+    connected: false,
     attempt: undefined as undefined | { attemptID: string; url: string; instructions: string; mode: "auto" | "code" },
   })
   const method = () => methods()[state.method] ?? methods()[0]
@@ -187,8 +190,10 @@ export function ProviderConnectDialog(props: {
     setState("attempt", undefined)
   }
   const finish = async () => {
-    await props.onConnected().catch(() => undefined)
-    if (alive.value) dialog.close()
+    setState({ connected: true, key: "", code: "", busy: true, error: undefined })
+    await props.onConnected().then(() => {
+      if (alive.value) dialog.close()
+    }, fail)
   }
   const poll = (attemptID: string) => {
     void sdk()
@@ -204,7 +209,9 @@ export function ProviderConnectDialog(props: {
   }
 
   const submit = async () => {
+    if (integration.error()) return integration.retry()
     const current = method()
+    if (state.connected && !state.busy) return finish()
     // Automatic sign-in completes by polling; Enter in its read-only code field must not submit an empty code.
     if (state.busy || state.attempt?.mode === "auto") return
     if (current.type === "key" && !state.key.trim()) {
@@ -257,16 +264,24 @@ export function ProviderConnectDialog(props: {
     <MxDialog
       title={language.t("provider.connect.title", { provider: props.name })}
       description={language.t("orchestra.providers.connectDialog.description")}
-      error={state.error}
+      error={
+        integration.error() ? errorMessage(integration.error()?.cause, language.t("common.requestFailed")) : state.error
+      }
       busy={state.busy || loading()}
-      submit={state.attempt?.mode === "auto" ? undefined : language.t("orchestra.providers.connectDialog.submit")}
+      submit={
+        state.connected || integration.error()
+          ? language.t("orchestra.providers.retry")
+          : state.attempt?.mode === "auto"
+            ? undefined
+            : language.t("orchestra.providers.connectDialog.submit")
+      }
       onSubmit={() => void submit()}
     >
       <label class="mx-field">
         <span>{language.t("orchestra.providers.connectDialog.method")}</span>
         <select
           name="method"
-          disabled={loading() || state.busy || !!state.attempt}
+          disabled={loading() || !!integration.error() || state.busy || state.connected || !!state.attempt}
           onChange={(event) =>
             setState({ method: Number(event.currentTarget.value), error: undefined, attempt: undefined, code: "" })
           }

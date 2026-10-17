@@ -18,6 +18,7 @@ type Config = {
   output?: "stdout" | "stderr"
   mib?: number
   waitFile?: string
+  produced?: string
   treeArgs?: string[]
   stopping?: string
   diagnosticSecret?: boolean
@@ -60,6 +61,7 @@ if (config.output) {
   const chunk = Buffer.alloc(1024 * 1024, 120)
   for (let i = 0; i < config.mib; i++) require("node:fs").writeSync(fd, chunk)
 }
+if (config.produced) writeFileSync(config.produced, "")
 if (config.treeArgs) {
   if (config.stopping) process.on("SIGTERM", () => {
     writeFileSync(config.stopping, "")
@@ -108,6 +110,21 @@ if (config.treeArgs) {
     root,
     directory,
     install,
+    /**
+     * An install whose installer outlives its own output: the child stops writing, the host drains every byte the
+     * child produced, and only then is it released to exit. A child that exits with output still in flight loses
+     * the tail (omni keeps 16 MiB per stream for a consumer, native/omni/docs/api-contract.md §4), which would put
+     * the 64 MiB cap out of reach and let that loss stand in for it.
+     */
+    drained: (config: Config) =>
+      Effect.gen(function* () {
+        const produced = path.join(root, "produced")
+        const release = path.join(root, "release")
+        const attempt = yield* Effect.forkScoped(install({ ...config, produced, waitFile: release }))
+        yield* Effect.promise(() => until(() => Bun.file(produced).exists()))
+        yield* Effect.promise(() => writeFile(release, ""))
+        return yield* Fiber.join(attempt)
+      }),
     worker: (config: Config) => BackendToolkit.hosted(root, engine(config), { ...BackendToolkitManifest.RUNTIMES, node: runtime }, directory, host.target, true),
   }
 })
@@ -127,7 +144,7 @@ it.live(
       const f = yield* fixture
       if (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1") expectSpawn(import.meta.path)
       const before = Omni.snapshot()
-      yield* f.install({ output: "stdout", mib: 64 })
+      yield* f.drained({ output: "stdout", mib: 64 })
       if (process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "1") {
         expect(Omni.snapshot().spawns).toBeGreaterThan(before.spawns)
         expect(Omni.snapshot().delegations).toBe(before.delegations)
@@ -167,7 +184,7 @@ it.live(
       Effect.gen(function* () {
         const f = yield* fixture
         expect(
-          yield* f.install({ output, mib: 65 }).pipe(
+          yield* f.drained({ output, mib: 65 }).pipe(
             Effect.flip,
             Effect.map((error) => error.reason),
           ),

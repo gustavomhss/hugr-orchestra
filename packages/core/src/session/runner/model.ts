@@ -1,12 +1,12 @@
 export * as SessionRunnerModel from "./model"
 
 import { makeLocationNode } from "../../effect/app-node"
-import { type Model } from "@orchestra/llm"
+import { GenerationOptions, type Model } from "@orchestra/llm"
 import * as AnthropicMessages from "@orchestra/llm/protocols/anthropic-messages"
 import * as OpenAICompatibleChat from "@orchestra/llm/protocols/openai-compatible-chat"
 import * as OpenAIResponses from "@orchestra/llm/protocols/openai-responses"
 import { Auth, type AnyRoute } from "@orchestra/llm/route"
-import { Context, Effect, Layer, Schema } from "effect"
+import { Context, Effect, Layer, Option, Schema } from "effect"
 import { produce } from "immer"
 import { Catalog } from "../../catalog"
 import { Credential } from "../../credential"
@@ -15,6 +15,24 @@ import { InstallationHeaders } from "../../installation/headers"
 import { ModelV2 } from "../../model"
 import { ProviderV2 } from "../../provider"
 import { SessionSchema } from "../schema"
+import { SessionSubagentModels } from "../subagent-models"
+
+const references = new WeakMap<Model, ModelV2.Ref>()
+
+export const reference = (model: Model): ModelV2.Ref | undefined => references.get(model)
+
+/** Captures catalog identity before transport/deployment lowering, including for embedded resolvers. */
+export const withReference = (model: Model, ref: ModelV2.Ref): Model => {
+  references.set(
+    model,
+    ModelV2.Ref.make({
+      id: ref.id,
+      providerID: ref.providerID,
+      ...(ref.variant === undefined ? {} : { variant: ref.variant }),
+    }),
+  )
+  return model
+}
 
 export class ModelNotSelectedError extends Schema.TaggedErrorClass<ModelNotSelectedError>()(
   "SessionRunnerModel.ModelNotSelectedError",
@@ -67,6 +85,7 @@ export class UnsupportedApiError extends Schema.TaggedErrorClass<UnsupportedApiE
 }
 
 export type Error =
+  | SessionSubagentModels.Error
   | ModelNotSelectedError
   | ModelUnavailableError
   | VariantUnavailableError
@@ -90,7 +109,7 @@ const apiKey = (model: ModelV2.Info, credential?: Credential.Value) => {
   if (typeof value === "string") return Auth.value(value)
 }
 
-const withDefaults = (model: ModelV2.Info, route: AnyRoute) => {
+const withDefaults = (model: ModelV2.Info, route: AnyRoute, generation: GenerationOptions) => {
   const body = model.request.body
   const httpBody = Object.hasOwn(body, "apiKey")
     ? Object.fromEntries(Object.entries(body).filter(([key]) => key !== "apiKey"))
@@ -101,6 +120,7 @@ const withDefaults = (model: ModelV2.Info, route: AnyRoute) => {
     headers: InstallationHeaders.forFreeModel(model.providerID, model.cost, model.request.headers),
     http: { body: httpBody },
     limits: { context: model.limit.context, output: model.limit.output },
+    generation,
   })
 }
 
@@ -134,7 +154,16 @@ const apiName = (model: ModelV2.Info) =>
 export const fromCatalogModel = (
   model: ModelV2.Info,
   credential?: Credential.Value,
-): Effect.Effect<Model, UnsupportedApiError> => {
+): Effect.Effect<Model, UnsupportedApiError | ModelUnavailableError> => {
+  // Native V2 api.settings.generation uses canonical LLM options, not http.body.
+  // Strict decoding rejects misspellings/coercion; absence keeps empty defaults.
+  const generation = Schema.decodeUnknownOption(GenerationOptions, { onExcessProperty: "error" })(
+    model.api.settings?.generation === undefined ? {} : model.api.settings.generation,
+  )
+  if (Option.isNone(generation))
+    return Effect.fail(new ModelUnavailableError({
+      providerID: model.providerID, modelID: model.id, cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
+    }))
   const resolved =
     credential?.type !== "key" || credential.metadata === undefined
       ? model
@@ -144,24 +173,24 @@ export const fromCatalogModel = (
   const key = apiKey(resolved, credential)
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai") {
     return Effect.succeed(
-      withDefaults(resolved, OpenAIResponses.route)
+      withDefaults(resolved, OpenAIResponses.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/anthropic") {
     return Effect.succeed(
-      withDefaults(resolved, AnthropicMessages.route)
+      withDefaults(resolved, AnthropicMessages.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.header("x-api-key", key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   if (resolved.api.type === "aisdk" && resolved.api.package === "@ai-sdk/openai-compatible" && resolved.api.url) {
     return Effect.succeed(
-      withDefaults(resolved, OpenAICompatibleChat.route)
+      withDefaults(resolved, OpenAICompatibleChat.route, generation.value)
         .with({ auth: key === undefined ? Auth.none : Auth.bearer(key) })
         .model({ id: resolved.api.id }),
-    )
+    ).pipe(Effect.map((value) => withReference(value, model)))
   }
   return Effect.fail(
     new UnsupportedApiError({
@@ -173,7 +202,12 @@ export const fromCatalogModel = (
 }
 
 export const resolve = (session: SessionSchema.Info, model: ModelV2.Info, credential?: Credential.Value) =>
-  withVariant(model, session.model?.variant).pipe(Effect.flatMap((model) => fromCatalogModel(model, credential)))
+  withVariant(model, session.model?.variant).pipe(
+    Effect.flatMap((model) => fromCatalogModel(model, credential)),
+    Effect.map((value) =>
+      withReference(value, { id: model.id, providerID: model.providerID, variant: session.model?.variant }),
+    ),
+  )
 
 export const supported = (model: ModelV2.Info) =>
   model.api.type === "aisdk" &&
@@ -187,17 +221,27 @@ export const locationLayer = Layer.effect(
   Effect.gen(function* () {
     const catalog = yield* Catalog.Service
     const integrations = yield* Integration.Service
+    const policies = yield* SessionSubagentModels.Service
     return Service.of({
       resolve: Effect.fn("SessionRunnerModel.resolve")(function* (session) {
         // Location plugins populate and filter the catalog asynchronously during layer startup.
-        const defaultModel = session.model ? undefined : yield* catalog.model.default()
+        const ceilings = yield* policies.forSession(session.id)
+        if (session.model && !SessionSubagentModels.permits(ceilings, session.model))
+          return yield* new SessionSubagentModels.ModelDeniedError({
+            sessionID: session.id,
+            model: session.model,
+            reason: "not-allowed",
+          })
+        const candidates = (yield* catalog.model.available()).filter((model) =>
+          SessionSubagentModels.permits(ceilings, model),
+        )
+        const defaultModel = session.model || candidates.length === 0 ? undefined : yield* catalog.model.default()
         const selected = session.model
-          ? (yield* catalog.model.available()).find(
-              (model) => model.providerID === session.model?.providerID && model.id === session.model.id,
-            )
-          : defaultModel && supported(defaultModel)
-            ? defaultModel
-            : (yield* catalog.model.available()).find(supported)
+          ? candidates.find((model) => model.providerID === session.model?.providerID && model.id === session.model.id)
+          : (candidates.find(
+              (model) =>
+                model.providerID === defaultModel?.providerID && model.id === defaultModel.id && supported(model),
+            ) ?? candidates.find(supported))
         if (!selected && session.model)
           return yield* new ModelUnavailableError({
             providerID: session.model.providerID,
@@ -231,4 +275,8 @@ export const locationLayer = Layer.effect(
   }),
 )
 
-export const node = makeLocationNode({ service: Service, layer: locationLayer, deps: [Catalog.node, Integration.node] })
+export const node = makeLocationNode({
+  service: Service,
+  layer: locationLayer,
+  deps: [Catalog.node, Integration.node, SessionSubagentModels.node],
+})

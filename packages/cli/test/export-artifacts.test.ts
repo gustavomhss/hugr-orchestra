@@ -39,7 +39,7 @@ async function fixture(run: (input: { root: string; dist: string; out: string })
       await writeFile(
         join(source, "package.json"),
         JSON.stringify({
-          name: `@orchestra/cli-${item.target}`,
+          name: `@hugr/cli-${item.target}`,
           version,
           os: [item.os],
           cpu: [item.arch],
@@ -369,7 +369,7 @@ test("rejects wrong source version before replacing previous output", () =>
     const metadata = join(input.dist, "cli-linux-arm64/package.json")
     await writeFile(
       metadata,
-      JSON.stringify({ name: "@orchestra/cli-linux-arm64", version: "wrong", os: ["linux"], cpu: ["arm64"] }),
+      JSON.stringify({ name: "@hugr/cli-linux-arm64", version: "wrong", os: ["linux"], cpu: ["arm64"] }),
     )
     const before = await snapshot(input.dist)
     const result = await run(input, ["windows-x64-baseline", "linux-arm64"])
@@ -409,7 +409,7 @@ test("rejects bad package tuple, malformed metadata and missing/nonregular sourc
       "[]",
       ...[{ name: "foreign" }, { os: ["darwin"] }, { cpu: ["x64"] }, { os: ["linux", "darwin"] }, { cpu: "arm64" }].map(
         (change) =>
-          JSON.stringify({ name: "@orchestra/cli-linux-arm64", version, os: ["linux"], cpu: ["arm64"], ...change }),
+          JSON.stringify({ name: "@hugr/cli-linux-arm64", version, os: ["linux"], cpu: ["arm64"], ...change }),
       ),
     ]) {
       await writeFile(metadata, value)

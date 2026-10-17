@@ -7,10 +7,58 @@ import { artifactDirectoryName, artifactOwnedHandle, requireArtifactHost } from 
 import { requireOrdinaryWindowsPath } from "../script/artifact-windows-root"
 import { namedTargets } from "../script/targets"
 import { artifactFixture } from "./artifact-fs.test"
+import { artifactPosix } from "../script/artifact-posix"
 
-test("producer host policy rejects Windows ARM but preserves Windows ARM targets", () => {
-  expect(() => requireArtifactHost("win32", "arm64")).toThrow("Unsupported artifact producer host: win32/arm64")
-  expect(() => requireArtifactHost("win32", "x64")).not.toThrow()
+test("POSIX per-call errno adapter ignores ambient errno and never suppresses EAGAIN", () => {
+  const parent = { handle: 1n, identity: "unused-on-failure" }
+  const calls = { open: () => -2, mkdir: () => -17, unlink: () => -2, publish: () => -17, list: () => [],
+    flags: { root: 0, directory: 0, read: 0, write: 0 }, close: () => {},
+    errno: () => { throw new Error("ambient errno must never be sampled") } }
+  const native = artifactPosix(calls)
+  expect(() => native.directory(parent, "existing", { create: true })).toThrow("open directory failed: ENOENT")
+  expect(() => native.directory(parent, "existing", { create: true, exclusive: true })).toThrow("mkdir failed: EEXIST")
+  expect(() => artifactPosix({ ...calls, mkdir: () => -11 }).directory(parent, "new", { create: true })).toThrow("mkdir failed: 11")
+  expect(() => native.root("/")).toThrow("open root failed: ENOENT")
+  expect(() => native.write(parent, "new", Buffer.from("bytes"), false)).toThrow("create file failed: ENOENT")
+  expect(() => native.removeFile(parent, "missing")).not.toThrow()
+  expect(() => native.removeDirectory(parent, "missing", parent)).not.toThrow()
+  expect(() => artifactPosix({ ...calls, unlink: () => -11 }).removeFile(parent, "file")).toThrow("unlink file failed: 11")
+  expect(() => artifactPosix({ ...calls, open: () => -11 }).removeDirectory(parent, "dir", parent)).toThrow("reopen cleanup directory failed: 11")
+})
+
+if (process.platform !== "win32")
+  test("POSIX native ABI returns captured errno for collision missing paths and exclusive rename", () =>
+    artifactFixture(async (input) => {
+      const operations = await (async () => {
+        if (process.platform === "linux") {
+          const { artifactLinuxOperations } = await import("../script/artifact-linux")
+          return artifactLinuxOperations()
+        }
+        const { artifactDarwinOperations } = await import("../script/artifact-darwin")
+        return artifactDarwinOperations()
+      })()
+      const parent = operations.open(-1, input.root, operations.flags.directory, 0)
+      try {
+        expect(parent).toBeGreaterThanOrEqual(0)
+        expect(operations.mkdir(parent, "existing")).toBe(0)
+        expect(operations.mkdir(parent, "existing")).toBe(-17)
+        expect(operations.open(parent, "missing", operations.flags.read, 0)).toBe(-2)
+        expect(operations.unlink(parent, "missing", false)).toBe(-2)
+        expect(operations.mkdir(parent, "stage")).toBe(0)
+        expect(operations.publish(parent, "stage", "existing")).toBe(-17)
+        expect(operations.list(parent)).toContain("stage")
+        expect(() => operations.list(-1)).toThrow("Artifact fdopendir failed: 9")
+        const empty = operations.open(parent, "existing", operations.flags.directory, 0)
+        try {
+          expect(empty).toBeGreaterThanOrEqual(0)
+          expect(operations.list(empty)).toEqual([])
+        } finally { if (empty >= 0) closeSync(empty) }
+      } finally { if (parent >= 0) closeSync(parent); operations.close() }
+    }))
+
+test("producer host policy admits Windows 64-bit CPUs and rejects unsupported hosts", () => {
+  for (const cpu of ["x64", "arm64"]) expect(() => requireArtifactHost("win32", cpu)).not.toThrow()
+  for (const cpu of ["ia32", "arm", "riscv64", ""]) expect(() => requireArtifactHost("win32", cpu)).toThrow("Unsupported artifact producer host")
   expect(namedTargets.some((entry) => entry.target === "windows-arm64")).toBe(true)
   expect(() => requireArtifactHost("freebsd", "x64")).toThrow("Unsupported artifact producer host")
 })

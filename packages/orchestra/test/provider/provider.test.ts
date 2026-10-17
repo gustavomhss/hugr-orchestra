@@ -2,11 +2,9 @@ import { afterEach, expect, test } from "bun:test"
 import { mkdir, unlink } from "fs/promises"
 import path from "path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Effect, Exit, Layer } from "effect"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Global } from "@orchestra/core/global"
 import { disposeAllInstances, provideInstanceEffect, tmpdirScoped, TestInstance } from "../fixture/fixture"
 import { Auth } from "@/auth"
@@ -17,11 +15,12 @@ import { Provider } from "@/provider/provider"
 
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Filesystem } from "@/util/filesystem"
-import { InstanceBootstrap } from "@/project/bootstrap"
-import { InstanceStore } from "@/project/instance-store"
+import { ProviderFixture } from "./fixture"
 import { testEffect } from "../lib/effect"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/schema/integration"
 
 const originalEnv = new Map<string, string | undefined>()
 
@@ -83,7 +82,7 @@ const paid = (providers: Record<string, { models: Record<string, { cost: { input
 
 const languageBaseURL = (language: unknown) => (language as { config: { baseURL: string } }).config.baseURL
 
-const it = testEffect(LayerNode.compile(LayerNode.group([Provider.node, Env.node, Plugin.node])))
+const it = testEffect(LayerNode.compile(LayerNode.group([Provider.node, Env.node, Plugin.node, Credential.node])))
 const experimentalModels = testEffect(providerLayer({ enableExperimentalModels: true }))
 
 const alphaProviderConfig = {
@@ -118,6 +117,58 @@ it.instance("provider loaded from env variable", () =>
     expect(providers[ProviderV2.ID.anthropic].source).toBe("env")
     expect(providers[ProviderV2.ID.anthropic].options.headers["anthropic-beta"]).toBeDefined()
   }),
+)
+
+it.instance("default integration key connects its base provider without reload", () =>
+  Effect.gen(function* () {
+    const credentials = yield* Credential.Service
+    const id = ProviderV2.ID.make("opencode-go")
+    // No auth is stored yet, so resolution fails even though models.dev lists the provider.
+    expect(yield* Provider.use.getProvider(id).pipe(Effect.flip)).toBeInstanceOf(Provider.NoProvidersError)
+    const first = yield* credentials.create({
+      integrationID: Integration.ID.make("opencode-go"),
+      value: Credential.Key.make({ type: "key", key: "test-go-key" }),
+    })
+    // The dialog writes the credential after this InstanceState loaded; the
+    // runtime must still pick the key up when the provider is resolved.
+    expect((yield* Provider.use.getProvider(id)).key).toBe("test-go-key")
+    // Newest credential wins when several default keys exist.
+    yield* credentials.create({
+      integrationID: Integration.ID.make("opencode-go"),
+      value: Credential.Key.make({ type: "key", key: "test-go-key-rotated" }),
+    })
+    expect((yield* Provider.use.getProvider(id)).key).toBe("test-go-key-rotated")
+    // Removing every credential restores the loader-time entry instead of
+    // leaving the revoked key usable.
+    yield* credentials.remove(first.id)
+    const rotated = (yield* credentials.all()).find(
+      (item) => item.integrationID === Integration.ID.make("opencode-go"),
+    )
+    if (rotated) yield* credentials.remove(rotated.id)
+    expect(yield* Provider.use.getProvider(id).pipe(Effect.flip)).toBeInstanceOf(Provider.NoProvidersError)
+  }),
+)
+
+it.instance("anonymous zen models resolve under the public sentinel without credential", () =>
+  Effect.gen(function* () {
+    // The fixture catalog lists active zero-cost Zen models; no auth is stored.
+    const provider = yield* Provider.use.getProvider(ProviderV2.ID.opencode)
+    expect(provider.key).toBe("public")
+    expect(
+      Object.values(provider.models).some((model) => model.status !== "deprecated" && model.cost.input === 0),
+    ).toBe(true)
+    expect(Provider.hasAnonymousModel(provider)).toBe(true)
+  }),
+)
+
+it.instance(
+  "disabled zen provider does not resolve anonymously",
+  Effect.gen(function* () {
+    expect(yield* Provider.use.getProvider(ProviderV2.ID.opencode).pipe(Effect.flip)).toBeInstanceOf(
+      Provider.NoProvidersError,
+    )
+  }),
+  { config: { disabled_providers: ["opencode"] } },
 )
 
 it.instance(
@@ -1969,12 +2020,6 @@ it.instance(
 // Tests that need plugin file setup or multi-instance flows fall back to a
 // scoped tmpdir + provideInstance pattern via it.effect.
 
-const instanceStoreLayer = LayerNode.compile(InstanceStore.node, [
-  [InstanceStore.bootstrapNode, InstanceBootstrap.node],
-])
-const provideMultiInstance = <A, E, R>(eff: Effect.Effect<A, E, R>) =>
-  eff.pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
-
 it.effect("plugin config providers persist after instance dispose", () =>
   Effect.gen(function* () {
     const dir = yield* tmpdirScoped()
@@ -2026,7 +2071,7 @@ it.effect("plugin config providers persist after instance dispose", () =>
     const second = yield* loadAndList
     expect(second[ProviderV2.ID.make("demo")]).toBeDefined()
     expect(second[ProviderV2.ID.make("demo")].models[ModelV2.ID.make("chat")]).toBeDefined()
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )
 
 it.instance(
@@ -2070,17 +2115,14 @@ it.effect("Zen loads only when a config apiKey is present", () =>
     })
 
     const listIn = (directory: string) =>
-      Provider.use
-        .list()
-        .pipe(provideInstanceEffect(directory))
-        .pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
+      Provider.use.list().pipe(provideInstanceEffect(directory), ProviderFixture.provide)
 
     const none = yield* listIn(noneDir)
     const keyedCount = paid(yield* listIn(keyedDir))
 
     expect(none[ProviderV2.ID.make("opencode")]).toBeUndefined()
     expect(keyedCount).toBeGreaterThan(0)
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )
 
 it.effect("Zen loads only when auth exists", () =>
@@ -2089,10 +2131,7 @@ it.effect("Zen loads only when auth exists", () =>
     const keyedDir = yield* tmpdirScoped()
 
     const listIn = (directory: string) =>
-      Provider.use
-        .list()
-        .pipe(provideInstanceEffect(directory))
-        .pipe(Effect.provide(instanceStoreLayer), Effect.provide(AppNodeBuilder.build(CrossSpawnSpawner.node)))
+      Provider.use.list().pipe(provideInstanceEffect(directory), ProviderFixture.provide)
 
     const none = yield* listIn(noneDir)
 
@@ -2112,5 +2151,5 @@ it.effect("Zen loads only when auth exists", () =>
 
     expect(none[ProviderV2.ID.make("opencode")]).toBeUndefined()
     expect(keyedCount).toBeGreaterThan(0)
-  }).pipe(provideMultiInstance),
+  }).pipe(ProviderFixture.provide),
 )

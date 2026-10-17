@@ -1,12 +1,11 @@
 import { createSimpleContext } from "@orchestra/ui/context"
-import { createEffect, createMemo, createRoot } from "solid-js"
+import { type Accessor, createEffect, createMemo, createRoot, getOwner, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createServerProjects, RECENTLY_CLOSED_DISPLAY_LIMIT, ServerConnection, useServer } from "./server"
 import { pathKey } from "@/utils/path-key"
 import { useServerHealth } from "@/utils/server-health"
 import { createServerSdkContext } from "./server-sdk"
 import { createServerSyncContext } from "./server-sync"
-import { getOwner } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
 import type { ServerScope } from "@/utils/server-scope"
 
@@ -35,40 +34,13 @@ export const { use: useGlobal, provider: GlobalProvider } = createSimpleContext(
       if (store.settings.serverKey !== key) setStore("settings", "serverKey", key)
     })
 
-    const serverCtxs = new Map<
-      ServerConnection.Key,
-      { dispose: () => void; serverCtx: ReturnType<typeof createServerCtx> }
-    >()
-
-    const owner = getOwner()
-
-    const ensureServerCtx = (conn: ServerConnection.Any) => {
-      const key = ServerConnection.key(conn)
-      const existing = serverCtxs.get(key)
-      if (existing) return existing.serverCtx
-      const root = createRoot((dispose) => {
-        const serverCtx = createServerCtx(conn, server.scope(key), server.projects.forServer(key))
-        return { dispose, serverCtx }
-      }, owner as any)
-      serverCtxs.set(key, root)
-      return root.serverCtx
-    }
-
-    createMemo(() => {
-      for (const conn of server.list) {
-        ensureServerCtx(conn)
-      }
-    })
-
-    createEffect(() => {
-      for (const [key] of serverCtxs) {
-        if (!server.list.find((conn) => ServerConnection.key(conn) === key)) {
-          const { dispose } = serverCtxs.get(key)!
-          dispose()
-          serverCtxs.delete(key)
-        }
-      }
-    })
+    const ensureServerCtx = createServerContextCache(
+      () => server.list,
+      (conn) => {
+        const key = ServerConnection.key(conn)
+        return createServerCtx(conn, server.scope(key), server.projects.forServer(key))
+      },
+    )
 
     return {
       servers: {
@@ -93,6 +65,54 @@ export const { use: useGlobal, provider: GlobalProvider } = createSimpleContext(
   },
 })
 
+// Tab/project identity stays stable; transport credentials belong to a disposable context lifetime.
+export function createServerContextCache<T>(
+  servers: Accessor<ServerConnection.Any[]>,
+  create: (conn: ServerConnection.Any) => T,
+) {
+  const owner = getOwner()
+  const contexts = new Map<ServerConnection.Key, { identity: string; dispose: () => void; value: T }>()
+  const ensure = (input: ServerConnection.Any) => {
+    const key = ServerConnection.key(input)
+    // Callers may still hold a previous connection object after editing the same server.
+    const conn = servers().find((item) => ServerConnection.key(item) === key) ?? input
+    const identity = JSON.stringify([
+      conn.type,
+      conn.http.url,
+      conn.http.username,
+      conn.http.password,
+      conn.type === "http" && conn.authToken,
+    ])
+    const existing = contexts.get(key)
+    if (existing?.identity === identity) return existing.value
+    existing?.dispose()
+    const root = createRoot(
+      (dispose) => ({
+        identity,
+        dispose,
+        value: create({ ...conn, http: { ...conn.http } }),
+      }),
+      owner,
+    )
+    contexts.set(key, root)
+    return root.value
+  }
+  createEffect(() => {
+    const list = servers()
+    list.forEach(ensure)
+    contexts.forEach((context, key) => {
+      if (list.some((conn) => ServerConnection.key(conn) === key)) return
+      context.dispose()
+      contexts.delete(key)
+    })
+  })
+  onCleanup(() => {
+    contexts.forEach((context) => context.dispose())
+    contexts.clear()
+  })
+  return ensure
+}
+
 function createServerCtx(
   conn: ServerConnection.Any,
   scope: ServerScope,
@@ -107,6 +127,7 @@ function createServerCtx(
       },
     },
   })
+  onCleanup(() => queryClient.clear())
   const sdk = createServerSdkContext(conn, scope)
   const sync = createServerSyncContext(sdk)
 

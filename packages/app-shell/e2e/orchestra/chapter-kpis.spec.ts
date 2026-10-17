@@ -377,9 +377,15 @@ test("Configure tracking opens Providers and Manage opens the models settings", 
   await page.goto("/")
   await expect(value(page, "tokens")).toHaveText("1.8M")
   await home(page).getByRole("button", { name: "Manage" }).click()
-  await expect(page.getByRole("dialog").getByRole("tab", { name: "Models", selected: true })).toBeVisible()
-  await page.keyboard.press("Escape")
-  await expect(page.getByRole("dialog")).toHaveCount(0)
+  await expect(page).toHaveURL(/\/orchestra\/settings\?section=models$/)
+  const settings = page.locator('[data-mx-page="settings"]')
+  await expect(settings.getByRole("button", { name: "Models", exact: true })).toHaveAttribute("aria-current", "page")
+  await expect(
+    settings.locator('[data-section="models"]').getByRole("heading", { name: "Models", exact: true }),
+  ).toBeVisible()
+  await page.locator('[data-component="orchestra-sidebar"]').getByRole("button", { name: "Home", exact: true }).click()
+  await expect(page).toHaveURL(new URL("/", page.url()).toString())
+  await expect(value(page, "tokens")).toHaveText("1.8M")
   await home(page).getByRole("button", { name: "Configure tracking" }).click()
   await expect(page).toHaveURL(/\/orchestra\/providers$/)
   await expect(page.locator('[data-component="orchestra-chapter"][data-chapter="providers"]')).toBeVisible()

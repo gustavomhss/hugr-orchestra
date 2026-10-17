@@ -48,7 +48,7 @@ async function openProjectDialog(page: Page, entry: "desktop" | "legacy") {
   await expectAppVisible(add)
   await add.click()
   await expect(rows(page)).toHaveCount(5)
-  return page.getByRole("textbox").last()
+  return page.getByRole("dialog").getByRole("combobox", { name: "Search folders", exact: true })
 }
 
 ;(["desktop", "legacy"] as const).forEach((entry) => {

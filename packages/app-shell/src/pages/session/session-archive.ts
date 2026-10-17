@@ -1,5 +1,5 @@
-import { useNavigate } from "@solidjs/router"
-import { produce } from "solid-js/store"
+import { useLocation, useNavigate } from "@solidjs/router"
+import { createStore, produce } from "solid-js/store"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
@@ -10,20 +10,41 @@ import { errorMessage } from "@/pages/layout/helpers"
 import { useSessionKey } from "@/pages/session/session-layout"
 import { legacySessionHref, requireServerKey, sessionHref } from "@/utils/session-route"
 import { showToast } from "@/utils/toast"
+import { useServerSDK } from "@/context/server-sdk"
+import { ServerConnection } from "@/context/server"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
+import { ScopedKey } from "@/utils/server-scope"
+import { sessionManagementUnsupported } from "@/utils/session-management-errors"
+import type { AppSession } from "@/utils/session"
+import type { ServerSDK } from "@/context/server-sdk"
 
-export function useSessionArchive() {
-  const language = useLanguage()
+const [operations, setOperations] = createStore<Record<string, boolean>>({})
+const [unsupported, setUnsupported] = createStore<Record<string, boolean>>({})
+
+export function useSessionArchive(input?: { server: ServerSDK; directory: string }) {
+  const language = sessionRecoveryLanguage(useLanguage())
+  const location = useLocation()
   const navigate = useNavigate()
   const sdk = useSDK()
   const sync = useSync()
   const serverSync = useServerSync()
+  const serverSDK = useServerSDK()
   const tabs = useTabs()
   const { params } = useSessionKey()
+  const frozen = input ? { source: sdk(), state: sync(), serverState: serverSync() } : undefined
+  const origin = () => input?.server ?? serverSDK()
+  const available = () => !!origin().protocolKind() && !unsupported[origin().scope]
+  const restorable = () => origin().protocolKind() === "v2" && !unsupported[origin().scope]
+  const busy = (sessionID: string) => operations[ScopedKey.from(origin().scope, sessionID)] ?? false
 
-  const navigateAfterRemoval = (sessionID: string, parentID?: string, nextSessionID?: string) => {
+  const navigateAfterRemoval = (sessionID: string, parentID?: string, nextSessionID?: string, target = {
+    serverKey: params.serverKey,
+    dir: params.dir,
+    directory: sdk().directory,
+  }) => {
     if (params.id !== sessionID) return
     const href = (id: string) =>
-      params.serverKey ? sessionHref(requireServerKey(params.serverKey), id) : legacySessionHref(sdk().directory, id)
+      target.serverKey ? sessionHref(requireServerKey(target.serverKey), id) : legacySessionHref(target.directory, id)
     if (parentID) {
       navigate(href(parentID))
       return
@@ -32,43 +53,105 @@ export function useSessionArchive() {
       navigate(href(nextSessionID))
       return
     }
-    if (params.serverKey) {
-      tabs.newDraft({ server: requireServerKey(params.serverKey), directory: sdk().directory })
+    if (target.serverKey) {
+      tabs.newDraft({ server: requireServerKey(target.serverKey), directory: target.directory })
       return
     }
-    navigate(`/${params.dir}/session`)
+    navigate(`/${target.dir}/session`)
   }
 
   const archive = async (sessionID: string) => {
-    const session = sync().session.get(sessionID)
-    if (!session) return
-    if ((await sdk().protocol) !== "v1") return
+    const source = frozen?.source ?? sdk()
+    const pathname = location.pathname
+    const state = frozen?.state ?? sync()
+    const serverState = frozen?.serverState ?? serverSync()
+    const serverSDK = origin()
+    const server = ServerConnection.key(serverSDK.server)
+    const key = ScopedKey.from(serverSDK.scope, sessionID)
+    const target = { serverKey: params.serverKey, dir: params.dir, directory: source.directory }
+    const session = state.session.get(sessionID)
+    if (!session || operations[key]) return
+    const revision = session.archiveRevision
+    const timestamp = session.archiveChangedAt
+    if (unsupported[serverSDK.scope]) {
+      showToast({ title: language.t("session.archive.unavailable") })
+      return
+    }
 
-    const sessions = sync().data.session ?? []
+    const sessions = state.data.session ?? []
     const index = sessions.findIndex((s) => s.id === sessionID)
     const nextSession = index === -1 ? undefined : (sessions[index + 1] ?? sessions[index - 1])
 
-    await sdk()
-      .client.session.update({ sessionID, directory: sdk().directory, time: { archived: Date.now() } })
+    setOperations(key, true)
+    await serverSDK.sessionManagement
+      .archive(sessionID, true, source.directory)
       .then(() => {
-        sync().set(
+        const current = state.session.get(sessionID)
+        if (
+          current && current.time.archived === undefined &&
+          ((current.archiveRevision ?? -1) > (revision ?? -1) || (current.archiveChangedAt ?? 0) > (timestamp ?? 0))
+        ) return
+        state.set(
           produce((draft) => {
             const index = draft.session.findIndex((s) => s.id === sessionID)
             if (index !== -1) draft.session.splice(index, 1)
           }),
         )
-        sync().session.evict(sessionID)
-        serverSync().homeSessions.remove(sessionID)
-        navigateAfterRemoval(sessionID, session.parentID, nextSession?.id)
-        notifySessionTabsRemoved({ directory: sdk().directory, sessionIDs: [sessionID] })
+        state.session.evict(sessionID)
+        serverState.homeSessions.remove(sessionID)
+        if (location.pathname === pathname) navigateAfterRemoval(sessionID, session.parentID, nextSession?.id, target)
+        notifySessionTabsRemoved({ server, directory: source.directory, sessionIDs: [sessionID] })
       })
-      .catch((err) => {
+      .catch((err: unknown) => {
+        if (sessionManagementUnsupported(err)) setUnsupported(serverSDK.scope, true)
         showToast({
-          title: language.t("common.requestFailed"),
+          title: language.t(sessionManagementUnsupported(err) ? "session.archive.unavailable" : "common.requestFailed"),
           description: errorMessage(err, language.t("common.requestFailed")),
         })
       })
+      .finally(() => setOperations(produce((draft) => { delete draft[key] })))
   }
 
-  return { archive, navigateAfterRemoval }
+  const restore = async (sessionID: string, info?: AppSession) => {
+    const serverSDK = origin()
+    const source = frozen?.source ?? sdk()
+    const state = frozen?.state ?? sync()
+    const serverState = frozen?.serverState ?? serverSync()
+    const key = ScopedKey.from(serverSDK.scope, sessionID)
+    const session = info ?? state.session.get(sessionID)
+    if (!session || operations[key]) return false
+    const initial = serverState.session.get(sessionID) ?? session
+    const revision = initial.archiveRevision
+    const timestamp = initial.archiveChangedAt ?? initial.time.updated
+    if (serverSDK.protocolKind() !== "v2" || unsupported[serverSDK.scope]) {
+      showToast({ title: language.t("session.restore.unavailable") })
+      return false
+    }
+    setOperations(key, true)
+    return serverSDK.sessionManagement.archive(sessionID, false, session.directory ?? input?.directory ?? source.directory)
+      .then(async () => {
+        const current = serverState.session.get(sessionID)
+        if (current?.time.archived !== undefined &&
+          ((current.archiveRevision ?? -1) > (revision ?? -1) || (current.archiveChangedAt ?? current.time.updated) > timestamp)) return false
+        // A void ACK carries no archive revision. Read before projecting and respect remember's event fence.
+        const restored = serverState.session.remember(await serverState.session.resolve(sessionID, { force: true }))
+        if (restored.time.archived !== undefined) return false
+        serverState.homeSessions.apply({ type: "session.updated", properties: { sessionID, info: restored } })
+        state.set("session", (sessions) =>
+          [...sessions.filter((item) => item.id !== sessionID), restored].sort((a, b) => a.id.localeCompare(b.id)),
+        )
+        return true
+      })
+      .catch((err: unknown) => {
+        if (sessionManagementUnsupported(err)) setUnsupported(serverSDK.scope, true)
+        showToast({
+          title: language.t(sessionManagementUnsupported(err) ? "session.restore.unavailable" : "common.requestFailed"),
+          description: errorMessage(err, language.t("common.requestFailed")),
+        })
+        return false
+      })
+      .finally(() => setOperations(produce((draft) => { delete draft[key] })))
+  }
+
+  return { archive, restore, available, restorable, busy, navigateAfterRemoval }
 }

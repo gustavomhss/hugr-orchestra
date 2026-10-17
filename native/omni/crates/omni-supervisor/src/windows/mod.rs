@@ -175,7 +175,7 @@ impl Supervisor {
             self.next_poll = now + if stopping { POLL_STOPPING } else { POLL_LINGERING };
         }
         self.answer_stops(stopped);
-        // Released and gone: the pid pin, the Job and the member record go now.
+        // The Job closed at settle; released and gone drops the pid pin and member record.
         let members = &self.members;
         self.trees.retain(|&id, t| {
             let keep = !(t.gone && t.released);

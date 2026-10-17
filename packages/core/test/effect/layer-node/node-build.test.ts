@@ -8,6 +8,9 @@ import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import type { LocationError, LocationServices } from "@orchestra/core/location-services"
 import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { SessionV2 } from "@orchestra/core/session"
+import { SessionExecution } from "@orchestra/core/session/execution"
+import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { tmpdir } from "../../fixture/tmpdir"
 
 class Value extends Context.Service<Value, { readonly value: string }>()("test/TagValue") {}
@@ -64,9 +67,14 @@ describe("node build", () => {
       }) as unknown as Effect.Effect<LayerMap.LayerMap<Location.Ref, LocationServices, LocationError>, never, CycleB>,
     )
     const map = Node.makeGlobalNode({ service: LocationServiceMap.Service, layer: mapLayer, deps: [b] })
-    expect(() => AppNodeBuilder.build(LayerNode.group([a]), [[LocationServiceMap.node, map]])).toThrow(
-      "Cycle detected in layer tree",
-    )
+    await expect(
+      Effect.runPromise(
+        Layer.build(AppNodeBuilder.build(LayerNode.group([a]), [[LocationServiceMap.node, map]])).pipe(Effect.scoped),
+      ),
+    ).rejects.toMatchObject({
+      message:
+        "Cycle detected in layer tree: test/NodeBuildA -> @orchestra/example/LocationServiceMap -> test/NodeBuildB -> test/NodeBuildA",
+    })
   })
 
   test("shares top-level project with location services", async () => {
@@ -84,9 +92,13 @@ describe("node build", () => {
       }),
     )
     const ref = Location.Ref.make({ directory: AbsolutePath.make(tmp.path) })
-    const layer = AppNodeBuilder.build(LayerNode.group([Project.node, LocationServiceMap.node]), [
-      [Project.node, projectLayer],
-    ])
+    const layer = AppNodeBuilder.build(
+      LayerNode.group([Project.node, LocationServiceMap.node, SessionV2.node, SessionExecution.node]),
+      [
+        [Project.node, projectLayer],
+        [SessionExecution.node, SessionExecutionLocal.node],
+      ],
+    )
     const program = Effect.gen(function* () {
       yield* Project.Service
       const locations = yield* LocationServiceMap.Service

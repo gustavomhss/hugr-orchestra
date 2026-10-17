@@ -34,6 +34,7 @@ const applicationServices = LayerNode.group([
   ToolOutputStore.cleanupNode,
   ResearchArtifacts.node,
   SessionV2.node,
+  SessionExecution.node,
   SessionSubagentModels.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,

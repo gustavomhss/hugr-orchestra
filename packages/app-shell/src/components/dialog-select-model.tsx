@@ -19,7 +19,7 @@ import { decode64 } from "@/utils/base64"
 import { handleDocumentSearchKeydown } from "@/utils/search-keydown"
 import { createMenuDismissController } from "@/utils/menu-dismiss-controller"
 import { createEventListener } from "@solid-primitives/event-listener"
-import { matchesModelSearch } from "./dialog-select-model-search"
+import { createModelSelectorNavigation, matchesModelSearch } from "./dialog-select-model-search"
 import { isFree, ModelList, modelKey } from "./dialog-select-model-list"
 import { createGroupedVirtualizer } from "./grouped-virtualizer"
 import { virtualScrollElement } from "./virtual-scroll-element"
@@ -238,10 +238,10 @@ function ModelSelectorPopoverV2View(props: {
 
   const models = createMemo(() => props.models(store.search))
   const groups = createMemo(() => props.groups(models()))
-  const keys = () => [...models().map(modelKey), manageKey]
+  const navigation = createModelSelectorNavigation(groups, modelKey, manageKey)
   const initialActive = () => {
     const selected = props.current()
-    const options = keys()
+    const options = navigation.keys()
     if (selected && options.includes(selected)) return selected
     return options[0] ?? ""
   }
@@ -270,7 +270,7 @@ function ModelSelectorPopoverV2View(props: {
     dismiss.afterClose(props.onManage)
   }
   const selectActive = () => {
-    const item = models().find((item) => modelKey(item) === store.active)
+    const item = navigation.find(store.active)
     if (item) {
       selectModel(item)
       return
@@ -278,17 +278,13 @@ function ModelSelectorPopoverV2View(props: {
     if (store.active === manageKey) manage()
   }
   const moveActive = (delta: number) => {
-    const options = keys()
-    if (options.length === 0) return
-    const index = options.indexOf(store.active)
-    const start = index === -1 ? 0 : index
-    const next = options[(start + delta + options.length) % options.length]
+    const next = navigation.next(store.active, delta)
     setStore("active", next)
     scrollToRow?.(next)
   }
   const setSearch = (value: string) => {
-    const first = props.models(value)[0]
-    setStore({ search: value, active: first ? modelKey(first) : manageKey })
+    setStore("search", value)
+    setStore("active", navigation.keys()[0])
   }
 
   createEffect(() => {

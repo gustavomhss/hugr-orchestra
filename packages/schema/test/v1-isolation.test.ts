@@ -22,9 +22,11 @@ test("current source does not import the V1 subtree directly", async () => {
     (file) => !allowed.has(file),
   )
   expect(files.length).toBeGreaterThan(0)
-  const directImports = await Promise.all(
+  expect(files).toContain("session.ts")
+  const sources = await Promise.all(
     files.map(async (file) => ({ file, source: await Bun.file(new URL(`../src/${file}`, import.meta.url)).text() })),
-  ).then((values) => values.filter((value) => value.source.includes('from "./v1/')))
+  )
+  expect(sources.find((value) => value.file === "session.ts")?.source).toContain('export * as Session from "./session"')
 
-  expect(directImports).toEqual([])
+  expect(sources.filter((value) => value.source.includes('from "./v1/'))).toEqual([])
 })

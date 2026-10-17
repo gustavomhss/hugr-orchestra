@@ -103,7 +103,7 @@ describe("Maestro Arsenal playbooks", () => {
   test.each([
     ["maestro-decompose", "52c132a44e03e23b56566514d0a10d3a12305d3e16dbc3aa7700b2cf19a8f17d"],
     ["maestro-contract", "cc91d68a944ceba506ff1c5b24bd2bc1a4b873d6d39acf948d01f6fe54a8dcaa"],
-    ["maestro-pack", "158e22580f1476781a29b9e3db6fcd73e0d7eb0ea21e5c12a7edc1b3ea54dd92"],
+    ["maestro-pack", "50a4e3c66bf8e32a4ccdc7c4349d411f8fea8e4ef9c23dcf631070eb97bbf975"],
   ])("%s matches its reviewed procedure artifact SHA-256", async (name, digest) => {
     const skill = await readSkill(name)
     expect(createHash("sha256").update(await Bun.file(skill.location).bytes()).digest("hex")).toBe(digest)

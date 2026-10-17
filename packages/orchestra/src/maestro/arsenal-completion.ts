@@ -184,7 +184,7 @@ export const make = Effect.gen(function* () {
     if (!host && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
     if (!host) return
     const binding = yield* host.resolve(input)
-    if (!binding && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
+    if (!binding && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND", detail: ARM_FIRST })
     if (!binding) return
     if (typeof host.relay !== "function" || typeof host.observe !== "function")
       return yield* new ToolSafety.Denied({ reason: "completion-evaluator-or-observer-unbound" })
@@ -204,8 +204,9 @@ export const make = Effect.gen(function* () {
         dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
         globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
       }).pipe(Effect.provideService(FileSystem.FileSystem, fs),
-        Effect.mapError((error) => new ToolSafety.Denied({ reason: error instanceof RelayWorkflowBinding.Held
-        ? error.reason : "WORKFLOW_BINDING_ACQUISITION" })))
+        Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held
+          ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
+          : new ToolSafety.Denied({ reason: "WORKFLOW_BINDING_ACQUISITION" })))
       const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
       receipts.set(receipt, { host, binding, ...loaded, checks, relay, baseRevision, workflow })
       return receipt
@@ -381,6 +382,9 @@ export const make = Effect.gen(function* () {
   }
   return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
 })
+
+// The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.
+const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm (contract.sessionID is this Session), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."
 
 /** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */
 export const locationRelay = (get: (ref: Location.Ref) => Layer.Layer<Relay.Service, unknown>) =>

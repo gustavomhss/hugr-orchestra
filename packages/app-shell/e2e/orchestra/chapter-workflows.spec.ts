@@ -212,3 +212,73 @@ test("the command palette reaches Workflows and Hooks from any page", async ({ p
   await page.getByRole("option", { name: /^Hooks/ }).click()
   await expect(page).toHaveURL(/\/orchestra\/hooks$/)
 })
+
+test("workflow authoring: typed names, failed autosave retry and creation focus", async ({ page }) => {
+  const state = await setupRelay(page)
+  await openWorkflows(page)
+  const create = page.getByRole("button", { name: "New workflow", exact: true })
+  await create.click()
+  const dialog = page.getByRole("dialog", { name: "New workflow" })
+  const name = dialog.getByRole("textbox", { name: "Name", exact: true })
+  await expect(name).toBeFocused()
+  await name.fill("Keep my workflow name")
+  await dialog.getByRole("radio", { name: /Blank workflow/ }).click()
+  await expect(name).toHaveValue("Keep my workflow name")
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+  await expect(create).toBeFocused()
+
+  await page.goto("/orchestra/workflows/relay-wp-execute/node/green.implement")
+  const details = page.locator('[data-component="relay-node-details"]')
+  const stepName = details.getByRole("textbox", { name: "Name", exact: true })
+  await stepName.fill("Review")
+  await stepName.pressSequentially(" changes")
+  await expect(stepName).toHaveValue("Review changes")
+
+  const path = "**/api/relay/document/relay-wp-execute*"
+  await page.route(path, async (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback()
+    await route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ _tag: "RelayUnavailableError", code: "unavailable", message: "Storage unavailable; retry." }) })
+  })
+  const instructions = details.getByRole("textbox", { name: "Instructions", exact: true })
+  await instructions.fill("Keep these unsaved instructions.")
+  await expect(details.locator('[data-save="error"]')).toContainText("Storage unavailable; retry.")
+  await expect(instructions).toHaveValue("Keep these unsaved instructions.")
+  await page.unroute(path)
+  await details.getByRole("button", { name: "Try again", exact: true }).click()
+  await expect(details.locator('[data-save="saved"]')).toBeVisible()
+  const saved = state.writes.filter((write) => write.method === "PATCH").at(-1)?.body as { nodes: { id: string; name: string; parameters: { instructions: string } }[] }
+  expect(saved.nodes.find((node) => node.id === "green.implement")).toMatchObject({ name: "Review changes", parameters: { instructions: "Keep these unsaved instructions." } })
+})
+
+test("workflow authoring: leaving during autosave serializes later edits against the returned version", async ({ page }) => {
+  const state = await setupRelay(page)
+  await openWorkflows(page)
+  await page.goto("/orchestra/workflows/relay-wp-execute/node/green.implement")
+  const details = page.locator('[data-component="relay-node-details"]')
+  const pending = Promise.withResolvers<void>()
+  const arrived = Promise.withResolvers<void>()
+  const requests: { versionId: string; nodes: { id: string; parameters: { instructions: string } }[] }[] = []
+  await page.route("**/api/relay/document/relay-wp-execute*", async (route) => {
+    if (route.request().method() !== "PATCH") return route.fallback()
+    requests.push(route.request().postDataJSON())
+    if (requests.length === 1) {
+      arrived.resolve()
+      await pending.promise
+    }
+    return route.fallback()
+  })
+  const instructions = details.getByRole("textbox", { name: "Instructions", exact: true })
+  await instructions.fill("First edit")
+  await arrived.promise
+  await instructions.fill("Last edit before leaving")
+  await page.keyboard.press("Escape")
+  await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
+  await expect(page).toHaveURL(/\/orchestra\/workflows$/)
+  expect(requests).toHaveLength(1)
+  pending.resolve()
+  await expect.poll(() => state.writes.filter((write) => write.method === "PATCH").length).toBe(2)
+  expect(requests).toHaveLength(2)
+  expect(requests[1].versionId).not.toBe(requests[0].versionId)
+  expect(requests[1].nodes.find((node) => node.id === "green.implement")?.parameters.instructions).toBe("Last edit before leaving")
+})

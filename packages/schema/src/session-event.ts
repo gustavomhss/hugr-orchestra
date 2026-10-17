@@ -83,6 +83,13 @@ export const SubagentModelsChanged = Event.define({
 })
 export type SubagentModelsChanged = typeof SubagentModelsChanged.Type
 
+export const ArchiveChanged = Event.define({
+  type: "session.next.archive.changed",
+  ...options,
+  schema: { ...Base, archived: Schema.NullOr(DateTimeUtcFromMillis) },
+})
+export type ArchiveChanged = typeof ArchiveChanged.Type
+
 export const Moved = Event.define({
   type: "session.next.moved",
   ...options,
@@ -461,6 +468,7 @@ export const DurableDefinitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,
+  ArchiveChanged,
   Moved,
   Prompted,
   PromptAdmitted,
@@ -493,6 +501,7 @@ export const Definitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,
+  ArchiveChanged,
   Moved,
   Prompted,
   PromptAdmitted,

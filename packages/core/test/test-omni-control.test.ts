@@ -1,13 +1,14 @@
 // The omni positive control (script/test-omni-control.ts) as Bun runs it: each case is a real `bun test` over a
 // throwaway directory whose bunfig preloads only the control. Omni.count() stands in for a spawn, so no case needs the
-// addon. Also pins where the control's scope may be set: only test-ci.yml's Run tests step (from the request) and
-// turbo.json's cache key mention the variable, so every test.yml lane keeps expecting a spawn.
+// addon. The closed source ledger pins request-selected test:ci scope, suite-scoped distribution qualification,
+// and the strict AUR guest's declared scope. Native lanes still require their positive spawn controls.
 import { expect, test } from "bun:test"
 import { YAML } from "bun"
 import { mkdtemp, rm } from "node:fs/promises"
 import { readFileSync, statSync } from "node:fs"
 import { tmpdir } from "node:os"
 import path from "node:path"
+import ts from "typescript"
 
 const root = path.resolve(import.meta.dir, "../../..")
 const omni = JSON.stringify(path.join(root, "packages/core/src/omni.ts"))
@@ -134,23 +135,42 @@ const mentions: Record<string, string> = {
   "script/test-omni-control.ts": "the control reads its scope",
   ".github/workflows/test-ci.yml": "the Run tests step sets the scope from the request (pinned below)",
   "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
+  ".github/workflows/distribution-bundle.yml": "native qualification requires suite-wide spawns; focused ABI steps declare (pinned below)",
+  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": "strict owned guest runs its declaring test (pinned below)",
+  "packages/cli/test/fixture/distribution-musl/bootstrap.sh": "strict owned musl guest runs its declaring test (pinned below)",
+  "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
+  "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
   "AGENTS.md": "documents the control",
 }
+
+const ALLOWED_ASSIGNMENTS = {
+  ".github/workflows/test-ci.yml": { ORCHESTRA_OMNI_CONTROL: "${{ steps.request.outputs.omni_control }}" },
+  ".github/workflows/distribution-bundle.yml": { ORCHESTRA_OMNI_CONTROL: "suite" },
+  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": {
+    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict",
+    ORCHESTRA_OMNI_CONTROL: "declared",
+  },
+  "packages/cli/test/fixture/distribution-musl/bootstrap.sh": {
+    ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict",
+    ORCHESTRA_OMNI_CONTROL: "declared",
+  },
+} as const
+const bundlePin = "packages/core/test/distribution-bundle-workflow.test.ts"
+// Focused qualification steps that run only their own declaring tests; every other step inherits the job's suite scope.
+const DECLARED_STEPS = [
+  "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer",
+  "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles",
+]
+const aurGuest = "packages/cli/test/fixture/distribution-aur-guest.test.ts"
 
 test("only the ledgered files mention the control's scope variable, and test-ci.yml sets it only from the request", () => {
   const listing = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root })
   expect(listing.exitCode).toBe(0)
   const tracked = listing.stdout.toString().split("\0").filter(Boolean)
   expect(tracked.length).toBeGreaterThan(1000)
-  const found = Object.fromEntries(tracked.flatMap((file) => {
-    // Submodules and symlinks to directories are tracked entries without file content of their own.
-    if (!statSync(path.join(root, file), { throwIfNoEntry: false })?.isFile()) return []
-    const text = readFileSync(path.join(root, file), "latin1")
-    const count = text.match(scopeVariable)?.length ?? 0
-    return count > 0 ? [[file, count]] : []
-  }))
-  expect(Object.keys(found).toSorted()).toEqual(Object.keys(mentions).toSorted())
+  const sources = scopeSources(tracked)
+  const found = inspectScopeSources(sources)
   expect(found[".github/workflows/test-ci.yml"]).toBe(1)
   expect(found["turbo.json"]).toBe(1)
   expect(readFileSync(path.join(root, "turbo.json"), "utf8")).toMatch(/"globalEnv":\s*\[[^\]]*"ORCHESTRA_OMNI_CONTROL"[^\]]*\]/)
@@ -160,11 +180,180 @@ test("only the ledgered files mention the control's scope variable, and test-ci.
   }
   const steps = workflow.jobs.test!.steps
   const run = steps.findIndex((step) => step.name === "Run tests")
-  expect(steps[run]?.env?.ORCHESTRA_OMNI_CONTROL).toBe("${{ steps.request.outputs.omni_control }}")
+  expect(steps[run]?.env?.ORCHESTRA_OMNI_CONTROL).toBe(
+    ALLOWED_ASSIGNMENTS[".github/workflows/test-ci.yml"].ORCHESTRA_OMNI_CONTROL,
+  )
   expect(steps.find((step) => step.id === "request")?.run).toContain("omni_control=${omniControlScope(request)}")
   const nonce = steps.findIndex((step) => step.name === "Omni control nonce")
   expect(nonce).toBeGreaterThan(-1)
   expect(nonce).toBeLessThan(run)
   expect(steps[nonce]?.run).toContain('echo "omni control nonce: $nonce"')
   expect(steps[nonce]?.run).toContain('echo "ORCHESTRA_OMNI_CONTROL_NONCE=$nonce" >> "$GITHUB_ENV"')
+  inspectNativeAssignments(sources, readFileSync(path.join(root, aurGuest), "utf8"))
 })
+
+test("native scope and strict-mode mutations of real source fail by exact path", () => {
+  const sources = Object.fromEntries(Object.keys(mentions).map((file) => [file, readFileSync(path.join(root, file), "utf8")]))
+  const guest = readFileSync(path.join(root, aurGuest), "utf8")
+  inspectNativeAssignments(sources, guest)
+  const workflow = ".github/workflows/distribution-bundle.yml"
+  const bootstrap = "packages/cli/test/fixture/distribution-aur/bootstrap.sh"
+  const musl = "packages/cli/test/fixture/distribution-musl/bootstrap.sh"
+  const mutations = [
+    ...["declared", "off", "0", "1"].map((value) => [workflow, "ORCHESTRA_OMNI_CONTROL: suite", `ORCHESTRA_OMNI_CONTROL: ${value}`, "OMNI_BUNDLE_SCOPE"]),
+    ...["suite", "off", "0", "1"].map((value) => [bootstrap, "ORCHESTRA_OMNI_CONTROL=declared", `ORCHESTRA_OMNI_CONTROL=${value}`, "OMNI_AUR_ASSIGNMENTS"]),
+    ...["0", "1"].map((value) => [bootstrap, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict", `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${value}`, "OMNI_AUR_ASSIGNMENTS"]),
+    [bootstrap, "exec /usr/bin/env", "# exec /usr/bin/env", "OMNI_AUR_COMMAND"],
+    ...["suite", "off"].map((value) => [musl, "ORCHESTRA_OMNI_CONTROL=declared", `ORCHESTRA_OMNI_CONTROL=${value}`, "OMNI_MUSL_ASSIGNMENTS"]),
+    [musl, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=1", "OMNI_MUSL_ASSIGNMENTS"],
+    [musl, "bun test --preload /proof/source/script/test-omni-control.ts", "bun test", "OMNI_MUSL_COMMAND"],
+    [workflow, 'GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" bun test', 'GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL_NONCE="$nonce" ORCHESTRA_OMNI_CONTROL=declared bun test', "OMNI_BUNDLE_STEP_SCOPE"],
+    [workflow, "ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/elf.test.ts", "ORCHESTRA_OMNI_CONTROL=off bun test --timeout 120000 ./test/elf.test.ts", "OMNI_BUNDLE_STEP_SCOPE"],
+    [bootstrap, "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict;", "OMNI_AUR_ASSIGNMENTS"],
+    ...["declared", "off", "0", "1"].map((value) => [bundlePin, 'job.env.ORCHESTRA_OMNI_CONTROL === "suite"', `job.env.ORCHESTRA_OMNI_CONTROL === "${value}"`, "OMNI_BUNDLE_PIN"]),
+  ]
+  mutations.forEach(([file, before, after, failure]) => {
+    expect(sources[file].split(before)).toHaveLength(2)
+    expect(() => inspectNativeAssignments({ ...sources, [file]: sources[file].replace(before, after) }, guest)).toThrow(`${failure}: ${file}`)
+  })
+  expect(guest.split("expectSpawn(import.meta.path)")).toHaveLength(2)
+  expect(() => inspectNativeAssignments(sources, guest.replace("expectSpawn(import.meta.path)", "// expectSpawn(import.meta.path)"))).toThrow(`OMNI_AUR_GUEST_DECLARE: ${aurGuest}`)
+  expect(() => inspectNativeAssignments(sources, guest.replace('import { expectSpawn }', 'import type { expectSpawn }'))).toThrow(`OMNI_AUR_GUEST_IMPORT: ${aurGuest}`)
+})
+
+test("scope extraction has known-file controls and rejects empty, missing, unledgered and stale sources", () => {
+  expect(() => scopeSources([])).toThrow("OMNI_SCOPE_LIST_EMPTY")
+  expect(() => inspectScopeSources({})).toThrow("OMNI_SCOPE_EXTRACTION_EMPTY")
+  const sources = Object.fromEntries(Object.keys(mentions).map((file) => [file, readFileSync(path.join(root, file), "utf8")]))
+  expect(inspectScopeSources(sources)["script/test-omni-control.ts"]).toBeGreaterThan(0)
+  expect(() => inspectScopeSources(Object.fromEntries(Object.keys(sources).map((file) => [file, ""])))).toThrow("OMNI_SCOPE_EXTRACTION_EMPTY")
+  const workflow = ".github/workflows/distribution-bundle.yml"
+  expect(() => inspectScopeSources(Object.fromEntries(Object.entries(sources).filter(([file]) => file !== workflow)))).toThrow(`OMNI_SCOPE_STALE: ${workflow}`)
+  expect(() => inspectScopeSources({ ...sources, "packages/probe/unledgered.ts": "ORCHESTRA_OMNI_CONTROL=declared" })).toThrow("OMNI_SCOPE_UNLEDGERED: packages/probe/unledgered.ts")
+  expect(inspectScopeSources({ ...sources, [workflow]: `${sources[workflow]}\n# no-op control\n` })[workflow]).toBe(inspectScopeSources(sources)[workflow])
+})
+
+function scopeSources(tracked: readonly string[]) {
+  requireScope(tracked.length > 0, "OMNI_SCOPE_LIST_EMPTY")
+  return Object.fromEntries(tracked.flatMap((file) => {
+    // Submodules and symlinks to directories have no file content of their own.
+    if (!statSync(path.join(root, file), { throwIfNoEntry: false })?.isFile()) return []
+    const text = readFileSync(path.join(root, file), "latin1")
+    return text.match(scopeVariable)?.length ? [[file, text]] : []
+  }))
+}
+
+function inspectScopeSources(sources: Record<string, string>) {
+  const found = Object.fromEntries(Object.entries(sources).flatMap(([file, text]) => {
+    const count = text.match(scopeVariable)?.length ?? 0
+    return count > 0 ? [[file, count]] : []
+  }))
+  requireScope(Object.keys(found).length > 0, "OMNI_SCOPE_EXTRACTION_EMPTY")
+  Object.keys(found).forEach((file) => requireScope(Object.hasOwn(mentions, file), `OMNI_SCOPE_UNLEDGERED: ${file}`))
+  Object.keys(mentions).forEach((file) => requireScope(Object.hasOwn(found, file), `OMNI_SCOPE_STALE: ${file}`))
+  expect(Object.keys(found).toSorted()).toEqual(Object.keys(mentions).toSorted())
+  return found
+}
+
+function inspectNativeAssignments(sources: Record<string, string>, guest: string) {
+  Object.keys(ALLOWED_ASSIGNMENTS).forEach((file) =>
+    requireScope(sources[file]?.trim(), `OMNI_ASSIGNMENTS_SOURCE_EMPTY: ${file}`),
+  )
+  const workflow = ".github/workflows/distribution-bundle.yml"
+  const bundle = YAML.parse(sources[workflow]) as {
+    jobs?: { qualification?: { env?: Record<string, unknown>; steps?: { name?: string; run?: string }[] } }
+  }
+  requireScope(
+    bundle?.jobs?.qualification?.env?.ORCHESTRA_OMNI_CONTROL === ALLOWED_ASSIGNMENTS[workflow].ORCHESTRA_OMNI_CONTROL,
+    `OMNI_BUNDLE_SCOPE: ${workflow}`,
+  )
+  // Besides the job's suite scope, exactly the named focused steps declare, once each, inline before their bun test.
+  const steps = bundle?.jobs?.qualification?.steps ?? []
+  requireScope(
+    steps.every((step) => {
+      const run = step.run ?? ""
+      const count = run.match(scopeVariable)?.length ?? 0
+      if (!DECLARED_STEPS.includes(step.name ?? "")) return count === 0
+      return count === 1 && run.match(/ORCHESTRA_OMNI_CONTROL=declared bun test /g)?.length === 1
+    }) &&
+      DECLARED_STEPS.every((name) => steps.filter((step) => step.name === name).length === 1) &&
+      sources[workflow].match(scopeVariable)?.length === DECLARED_STEPS.length + 1,
+    `OMNI_BUNDLE_STEP_SCOPE: ${workflow}`,
+  )
+  const musl = "packages/cli/test/fixture/distribution-musl/bootstrap.sh"
+  requireScope(
+    /^[ \t]*ORCHESTRA_MUSL_GUEST=owned ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict ORCHESTRA_OMNI_CONTROL=declared \\\r?$/m.test(sources[musl]) &&
+      sources[musl].match(scopeVariable)?.length === 1 &&
+      sources[musl].match(/ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER(?![A-Z0-9_])/g)?.length === 1,
+    `OMNI_MUSL_ASSIGNMENTS: ${musl}`,
+  )
+  const muslInvocations = sources[musl].match(/^exec env -i(?:[^\n]*\\\r?\n)*[^\n]*/gm) ?? []
+  requireScope(
+    muslInvocations.length === 1 && muslInvocations[0].replace(/\\\r?\n[ \t]*/g, " ").trim().split(/\s+/).join(" ") === [
+      "exec", "env", "-i", "CI=true", "HOME=/proof/home", "TMPDIR=/proof/tmp", 'PATH="$PATH"', "BUN_INSTALL_CACHE_DIR=/proof/bun-cache",
+      "ORCHESTRA_MUSL_GUEST=owned", ...Object.entries(ALLOWED_ASSIGNMENTS[musl]).map(([name, value]) => `${name}=${value}`),
+      "bun", "test", "--preload", "/proof/source/script/test-omni-control.ts", "--timeout", "3600000",
+      "./test/fixture/distribution-musl-guest.test.ts",
+    ].join(" "),
+    `OMNI_MUSL_COMMAND: ${musl}`,
+  )
+  const bootstrap = "packages/cli/test/fixture/distribution-aur/bootstrap.sh"
+  // The fixture's closed literal env invocation is pinned; this is not a general shell dataflow scanner.
+  const invocations = sources[bootstrap].match(/^exec \/usr\/bin\/env(?:[^\n]*\\\r?\n)*[^\n]*/gm) ?? []
+  requireScope(invocations.length === 1, `OMNI_AUR_COMMAND: ${bootstrap}`)
+  const args = invocations[0].replace(/\\\r?\n[ \t]*/g, " ").trim().split(/\s+/)
+  requireScope(
+    Object.entries(ALLOWED_ASSIGNMENTS[bootstrap]).every(([name, value]) => args.includes(`${name}=${value}`)),
+    `OMNI_AUR_ASSIGNMENTS: ${bootstrap}`,
+  )
+  expect(sources[bootstrap].match(scopeVariable)).toHaveLength(1)
+  expect(sources[bootstrap].match(/ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER(?![A-Z0-9_])/g)).toHaveLength(1)
+  requireScope(
+    args.join(" ") === [
+      "exec", "/usr/bin/env", "CI=true", "PATH=/usr/local/sbin:/usr/local/bin:/usr/bin", "ORCHESTRA_AUR_GUEST=owned",
+      "ORCHESTRA_AUR_BOOTSTRAP_SANDBOX=enforced",
+      ...Object.entries(ALLOWED_ASSIGNMENTS[bootstrap]).map(([name, value]) => `${name}=${value}`),
+      "ORCHESTRA_DISTRIBUTION_DENO=/proof/deno", "ORCHESTRA_DISTRIBUTION_DENO_VERSION=2.9.7",
+      "/proof/bun", "test", "--preload", "/repo/script/test-omni-control.ts", "--timeout", "1800000",
+      "./test/fixture/distribution-aur-guest.test.ts",
+    ].join(" "),
+    `OMNI_AUR_GUEST_TARGET: ${bootstrap}`,
+  )
+  const parsed = ts.createSourceFile(bundlePin, sources[bundlePin] ?? "", ts.ScriptTarget.Latest, true)
+  const inspect = parsed.statements.find((node) => ts.isFunctionDeclaration(node) && node.name?.text === "inspect")
+  requireScope(inspect && someNode(inspect, (node) => {
+    if (!ts.isCallExpression(node) || !ts.isIdentifier(node.expression) || node.expression.text !== "check" ||
+      !node.arguments[1] || !ts.isStringLiteral(node.arguments[1]) || node.arguments[1].text !== "BUNDLE_MATRIX_WIRING")
+      return false
+    return someNode(node.arguments[0], (child) => ts.isBinaryExpression(child) &&
+      child.operatorToken.kind === ts.SyntaxKind.EqualsEqualsEqualsToken &&
+      child.left.getText(parsed) === "job.env.ORCHESTRA_OMNI_CONTROL" && ts.isStringLiteral(child.right) &&
+      child.right.text === ALLOWED_ASSIGNMENTS[workflow].ORCHESTRA_OMNI_CONTROL)
+  }), `OMNI_BUNDLE_PIN: ${bundlePin}`)
+  // The pin also spells the declared steps it pins; nothing else in it may name the variable.
+  requireScope((sources[bundlePin].match(scopeVariable)?.length ?? 0) ===
+    (sources[bundlePin].match(/ORCHESTRA_OMNI_CONTROL=declared bun test /g)?.length ?? 0) + 1, `OMNI_BUNDLE_PIN: ${bundlePin}`)
+  const source = ts.createSourceFile(aurGuest, guest, ts.ScriptTarget.Latest, true)
+  requireScope(source.statements.some((node) => {
+    if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier) ||
+      node.moduleSpecifier.text !== "../../../core/test/fixture/omni-expect") return false
+    const bindings = node.importClause?.namedBindings
+    return bindings && ts.isNamedImports(bindings) && bindings.elements.some((binding) =>
+      binding.name.text === "expectSpawn" && !binding.propertyName && !binding.isTypeOnly)
+  }), `OMNI_AUR_GUEST_IMPORT: ${aurGuest}`)
+  requireScope(source.statements.some((node) => {
+    if (!ts.isExpressionStatement(node) || !ts.isCallExpression(node.expression) || !ts.isIdentifier(node.expression.expression) || node.expression.expression.text !== "test") return false
+    const callback = node.expression.arguments[1]
+    if (!callback || !ts.isArrowFunction(callback) || !ts.isBlock(callback.body)) return false
+    const first = callback.body.statements[0]
+    return first && ts.isExpressionStatement(first) && ts.isCallExpression(first.expression) && ts.isIdentifier(first.expression.expression) && first.expression.expression.text === "expectSpawn" && first.expression.arguments.length === 1 && first.expression.arguments[0].getText(source) === "import.meta.path"
+  }), `OMNI_AUR_GUEST_DECLARE: ${aurGuest}`)
+}
+
+function someNode(node: ts.Node, match: (node: ts.Node) => boolean): boolean {
+  return match(node) || ts.forEachChild(node, (child) => someNode(child, match)) === true
+}
+
+function requireScope(value: unknown, failure: string): asserts value {
+  if (!value) throw new Error(failure)
+}

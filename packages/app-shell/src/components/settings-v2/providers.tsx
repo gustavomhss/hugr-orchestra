@@ -1,10 +1,9 @@
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { Tag } from "@orchestra/ui/v2/badge-v2"
-import { useDialog } from "@orchestra/ui/context/dialog"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { type Accessor, type Component, For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { DialogCustomProvider } from "../dialog-custom-provider"
+import { ProviderDiscoveryStatus } from "../dialog-connect-provider"
 import { createProviderSettingsController, providerIdentity } from "./provider-controller"
 import { SettingsListV2 } from "./parts/list"
 import "./settings-v2.css"
@@ -12,10 +11,9 @@ import "./settings-v2.css"
 const PROVIDER_ICON_SIZE = 16
 
 export const SettingsProvidersV2: Component<{
-  directory: Accessor<string | undefined>
+  directory: Accessor<string | null | undefined>
   onBack?: () => void
 }> = (props) => {
-  const dialog = useDialog()
   const language = useLanguage()
   const controller = createProviderSettingsController({ directory: props.directory, onBack: props.onBack })
 
@@ -103,6 +101,7 @@ export const SettingsProvidersV2: Component<{
 
         <div class="settings-v2-section">
           <h3 class="settings-v2-section-title">{language.t("settings.providers.section.popular")}</h3>
+          <ProviderDiscoveryStatus source={controller.discovery} v2 />
           <SettingsListV2>
             <For each={controller.popular()}>
               {(item) => (
@@ -149,14 +148,7 @@ export const SettingsProvidersV2: Component<{
                     </p>
                   </div>
                 </div>
-                <ButtonV2
-                  size="normal"
-                  variant="neutral"
-                  icon="plus"
-                  onClick={() => {
-                    dialog.show(() => <DialogCustomProvider onBack={dialog.close} />)
-                  }}
-                >
+                <ButtonV2 size="normal" variant="neutral" icon="plus" onClick={controller.connectCustom}>
                   {language.t("common.connect")}
                 </ButtonV2>
               </div>

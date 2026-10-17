@@ -610,7 +610,7 @@ export const SettingsGeneral: Component = () => {
             </div>
           </SettingsRow>
 
-          <Show when={linux()}>
+          <Show when={linux() && platform.getDisplayBackend && platform.setDisplayBackend}>
             <SettingsRow
               title={
                 <div class="flex items-center gap-2">

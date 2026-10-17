@@ -8,6 +8,7 @@ import { SessionID } from "./session-id"
 import { SessionMessage } from "./session-message"
 import { Event } from "./event"
 import { RelayAuthoring } from "./relay-authoring"
+import { AtlasKnowledge } from "./atlas-knowledge"
 
 // One arm: `arms/<token>/`, the directory binding one runner to a sprint, metadata, persisted state and a ledger.
 
@@ -44,6 +45,7 @@ export const WorkflowDefinition = Schema.Struct({
   resolvedSkills: Schema.Array(RelayAuthoring.SkillBinding),
   parameters: Schema.Record(Schema.String, Schema.String),
   writePaths: Schema.Array(Schema.NonEmptyString),
+  knowledge: optional(Schema.Array(AtlasKnowledge.Anchor)),
 }).annotate({ identifier: "RelayArm.WorkflowDefinition" })
 export interface WorkflowDefinition extends Schema.Schema.Type<typeof WorkflowDefinition> {}
 

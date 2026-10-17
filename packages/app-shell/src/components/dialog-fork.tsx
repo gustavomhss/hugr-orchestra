@@ -1,5 +1,5 @@
-import { Component, createMemo } from "solid-js"
-import { useNavigate, useParams } from "@solidjs/router"
+import { Component, createEffect, createMemo, onCleanup } from "solid-js"
+import { useLocation, useNavigate, useParams } from "@solidjs/router"
 import { useSync } from "@/context/sync"
 import { useSDK } from "@/context/sdk"
 import { usePrompt } from "@/context/prompt"
@@ -8,9 +8,12 @@ import { Dialog } from "@orchestra/ui/dialog"
 import { List } from "@orchestra/ui/list"
 import { showToast } from "@/utils/toast"
 import { extractPromptFromParts } from "@/utils/prompt"
-import type { TextPart as SDKTextPart } from "@orchestra/sdk/v2/client"
+import type { TextPart } from "@orchestra/sdk/v2/client"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { useLanguage } from "@/context/language"
+import { useServerSDK } from "@/context/server-sdk"
+import { ServerConnection } from "@/context/server"
+import { sessionHref } from "@/utils/session-route"
 
 interface ForkableMessage {
   id: string
@@ -25,24 +28,39 @@ function formatTime(date: Date): string {
 export const DialogFork: Component = () => {
   const params = useParams()
   const navigate = useNavigate()
+  const location = useLocation()
+  const pathname = location.pathname
   const sync = useSync()
   const sdk = useSDK()
   const prompt = usePrompt()
   const dialog = useDialog()
   const language = useLanguage()
+  const serverSDK = useServerSDK()
+  const source = sdk()
+  const sourceSync = sync()
+  const sourceID = params.id
+  const server = ServerConnection.key(serverSDK().server)
+  let active = true
+  let pending = false
+  onCleanup(() => {
+    active = false
+  })
+  createEffect(() => {
+    if (location.pathname !== pathname || params.id !== sourceID || sdk().scope !== source.scope) active = false
+  })
 
   const messages = createMemo((): ForkableMessage[] => {
-    const sessionID = params.id
+    const sessionID = sourceID
     if (!sessionID) return []
 
-    const msgs = sync().data.message[sessionID] ?? []
+    const msgs = sourceSync.data.message[sessionID] ?? []
     const result: ForkableMessage[] = []
 
     for (const message of msgs) {
       if (message.role !== "user") continue
 
-      const parts = sync().data.part[message.id] ?? []
-      const textPart = parts.find((x): x is SDKTextPart => x.type === "text" && !x.synthetic && !x.ignored)
+      const parts = sourceSync.data.part[message.id] ?? []
+      const textPart = parts.find((x): x is TextPart => x.type === "text" && !x.synthetic && !x.ignored)
       if (!textPart) continue
 
       result.push({
@@ -56,28 +74,34 @@ export const DialogFork: Component = () => {
   })
 
   const handleSelect = (item: ForkableMessage | undefined) => {
-    if (!item) return
+    if (!item || !active || pending) return
 
-    const sessionID = params.id
+    const sessionID = sourceID
     if (!sessionID) return
 
-    const parts = sync().data.part[item.id] ?? []
+    const parts = sourceSync.data.part[item.id] ?? []
     const restored = extractPromptFromParts(parts, {
-      directory: sdk().directory,
+      directory: source.directory,
       attachmentName: language.t("common.attachment"),
     })
-    const dir = base64Encode(sdk().directory)
+    const dir = base64Encode(source.directory)
+    pending = true
 
-    sdk()
-      .api.session.fork({ sessionID, messageID: item.id })
+    return source.api.session
+      .fork({ sessionID, messageID: item.id })
       .then((forked) => {
+        if (!active || location.pathname !== pathname || params.id !== sourceID || sdk().scope !== source.scope) return
+        const target = prompt.capture({ dir, id: forked.id })
+        target.set(restored)
         dialog.close()
-        prompt.set(restored, undefined, { dir, id: forked.id })
-        navigate(`/${dir}/session/${forked.id}`)
+        navigate(sessionHref(server, forked.id))
       })
       .catch((err: unknown) => {
         const message = err instanceof Error ? err.message : String(err)
         showToast({ title: language.t("common.requestFailed"), description: message })
+      })
+      .finally(() => {
+        pending = false
       })
   }
 

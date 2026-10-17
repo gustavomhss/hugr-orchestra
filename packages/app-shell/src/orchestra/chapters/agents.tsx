@@ -1,37 +1,35 @@
-import { createEffect, createMemo, For, Show } from "solid-js"
+import { createEffect, createMemo, Show } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
-import { useQuery, useQueryClient } from "@tanstack/solid-query"
+import { useQuery } from "@tanstack/solid-query"
 import type { Agent, AgentFileInput } from "@orchestra/sdk/v2/client"
 import { getFilename } from "@orchestra/core/util/path"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
-import { useSync } from "@/context/sync"
 import { useSDK } from "@/context/sdk"
 import { useTabs } from "@/context/tabs"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
-import { useProviders } from "@/hooks/use-providers"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge } from "./kit"
 import { AgentDialog } from "./agents-dialog"
-import { agentRoster, agentUnavailable } from "./agents-roster"
+import { agentModels, agentRoster, agentUnavailable } from "./agents-roster"
+import { modelUnavailable } from "@/components/subagent-model-rules"
+import { AgentsRoster } from "./agents-view"
 import "./agents.css"
 
 export default function Agents(props: ChapterPageProps) {
   const language = useLanguage()
-  const sync = useSync()
   const sdk = useSDK()
   const serverSync = useServerSync()
+  // The chapter owns its catalog query. Full directory bootstrap would read /agent again in its owner cache.
+  const sync = () => serverSync().child(props.directory, { bootstrap: false })
   const tabs = useTabs()
-  const providers = useProviders(() => props.directory)
-  const queryClient = useQueryClient()
+  const providers = useQuery(() => serverSync().queryOptions.providers(directoryKey(props.directory)))
   const query = useQuery(() => {
     const options = serverSync().queryOptions.agents(directoryKey(props.directory))
     return {
-      // Legacy SDK throws only the response body, losing the HTTP status. Keep the
-      // page's query separate so bootstrap cannot replace its status-aware loader.
-      queryKey: [...options.queryKey, "chapter-agents"],
-      initialData: () => queryClient.getQueryData(options.queryKey),
+      // Share bootstrap's cache and in-flight request. Page-initiated reads preserve HTTP status.
+      ...options,
       queryFn: async ({ signal }) => {
         if ((await sdk().protocol) !== "v1") {
           return sdk()
@@ -56,20 +54,15 @@ export default function Agents(props: ChapterPageProps) {
     failed: false,
   })
   createEffect(() => {
-    if (query.isSuccess && query.data) sync().set("agent", reconcile(query.data))
+    if (query.isSuccess && query.data) sync()[1]("agent", reconcile(query.data))
   })
-  const roster = createMemo(() => agentRoster(sync().data.agent))
+  const roster = createMemo(() => agentRoster(query.isSuccess ? query.data : []))
+  const connected = createMemo(() => new Set(providers.isSuccess ? providers.data.connected : []))
   const models = createMemo(() =>
-    providers.connected().map((provider) => ({
-      id: provider.id,
-      name: provider.name,
-      models: Object.values(provider.models).map((model) => ({
-        value: `${provider.id}/${model.id}`,
-        label: model.name,
-      })),
-    })),
+    agentModels(
+      [...(providers.isSuccess ? providers.data.all.values() : [])].filter((provider) => connected().has(provider.id)),
+    ),
   )
-  const connected = createMemo(() => new Set(providers.connected().map((provider) => provider.id)))
   const legacy = (directory = props.directory) => sdk().createClient({ directory, throwOnError: false })
   const requestError = (result: { response?: Response; error?: unknown }) => {
     const kind =
@@ -129,7 +122,7 @@ export default function Agents(props: ChapterPageProps) {
   createEffect(() => {
     const pending = state.pending
     if (!pending || pending.directory !== props.directory) return
-    if (Object.values(sync().data.session_status).some((status) => status && status.type !== "idle")) return
+    if (Object.values(sync()[0].session_status).some((status) => status && status.type !== "idle")) return
     void reloadLegacy(pending.directory).then((done) => {
       if (!done || state.pending !== pending) return
       setState("pending", undefined)
@@ -138,8 +131,17 @@ export default function Agents(props: ChapterPageProps) {
   })
   const availability = (agent: Agent) => {
     // Unknown until this profile's provider catalog has loaded.
-    if (providers.all().size === 0) return
+    if (!providers.isSuccess) return
     const provider = agent.model?.providerID
+    if (agent.model && provider && connected().has(provider)) {
+      const issue = modelUnavailable(providers.data.all.get(provider)?.models[agent.model.modelID])
+      if (issue)
+        return {
+          ok: false,
+          title: language.t(`orchestra.agents.model.${issue}`, { model: `${provider}/${agent.model.modelID}` }),
+          modelIssue: true,
+        }
+    }
     if (provider ? connected().has(provider) : connected().size > 0) return { ok: true, title: undefined }
     return {
       ok: false,
@@ -147,11 +149,6 @@ export default function Agents(props: ChapterPageProps) {
         ? language.t("orchestra.agents.providerMissingTitle", { provider })
         : language.t("orchestra.agents.noProviderTitle"),
     }
-  }
-  const steps = (agent: Agent) => {
-    if (agent.steps === undefined) return language.t("orchestra.agents.stepsUnlimited")
-    if (agent.steps === 1) return language.t("orchestra.agents.stepsOne")
-    return language.t("orchestra.agents.stepsCount", { count: agent.steps })
   }
   const openChat = () => {
     setState({ opening: true, failed: false })
@@ -228,67 +225,14 @@ export default function Agents(props: ChapterPageProps) {
                 </div>
               }
             >
-              <ul class="mx-grid agents-grid" aria-label={language.t("orchestra.agents.roster")}>
-                <For each={roster()}>
-                  {(item) => (
-                    <li class="agent mx-card" aria-labelledby={`agent-${item.agent.name}`}>
-                      <div class="agent-top mx-card-top">
-                        <span class="mx-mark">
-                          <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
-                            <path d="m8 1 2 5 5 2-5 2-2 5-2-5-5-2 5-2 2-5Z" />
-                          </svg>
-                        </span>
-                        <b id={`agent-${item.agent.name}`}>
-                          <bdi>{item.agent.name}</bdi>
-                        </b>
-                        <span class="agent-role">{item.agent.mode}</span>
-                      </div>
-                      <p>{item.agent.description ?? language.t("orchestra.agents.noDescription")}</p>
-                      <div class="mx-meta">
-                        <MxBadge>
-                          <bdi
-                            title={
-                              item.agent.model
-                                ? `${item.agent.model.providerID}/${item.agent.model.modelID}`
-                                : undefined
-                            }
-                          >
-                            {item.agent.model?.modelID ?? language.t("orchestra.agents.defaultModel")}
-                          </bdi>
-                        </MxBadge>
-                        <MxBadge>{steps(item.agent)}</MxBadge>
-                        <Show when={availability(item.agent)}>
-                          {(status) => (
-                            <span class={status().ok ? "mx-badge good" : "mx-badge bad"} title={status().title}>
-                              {language.t(
-                                status().ok ? "orchestra.agents.available" : "orchestra.agents.providerMissing",
-                              )}
-                            </span>
-                          )}
-                        </Show>
-                      </div>
-                      <footer class="mx-card-foot">
-                        <button type="button" class="mx-btn" onClick={() => setState("editing", { agent: item.agent })}>
-                          {language.t("orchestra.agents.configure")}
-                        </button>
-                        <Show
-                          when={item.chat}
-                          fallback={<p class="mx-note agents-note">{language.t("orchestra.agents.maestroOnly")}</p>}
-                        >
-                          <button
-                            type="button"
-                            class="mx-btn"
-                            disabled={state.opening || !tabs.ready()}
-                            onClick={() => openChat()}
-                          >
-                            {language.t("orchestra.agents.openChat")}
-                          </button>
-                        </Show>
-                      </footer>
-                    </li>
-                  )}
-                </For>
-              </ul>
+              <AgentsRoster
+                agents={query.data ?? []}
+                availability={availability}
+                onConfigure={(agent) => setState("editing", { agent })}
+                onChat={openChat}
+                opening={state.opening}
+                chatReady={tabs.ready()}
+              />
             </Show>
           </Show>
         </Show>
@@ -302,9 +246,11 @@ export default function Agents(props: ChapterPageProps) {
         {(editing) => (
           <AgentDialog
             agent={editing.agent}
-            agents={sync().data.agent}
+            agents={query.data ?? []}
             directory={props.directory}
             models={models()}
+            modelsStatus={providers.status}
+            onRetryModels={() => void providers.refetch()}
             load={load}
             save={save}
             onClose={() => {

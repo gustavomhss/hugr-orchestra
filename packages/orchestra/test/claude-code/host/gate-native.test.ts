@@ -27,6 +27,7 @@ import { Config } from "@/config/config"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { Plugin } from "@/plugin"
 import { WriteRoots } from "@/maestro/write-roots"
 import { Npm } from "@orchestra/core/npm"
@@ -44,7 +45,7 @@ import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
 // no SDK query, model, policy port or sandbox wrapper is scripted. Each git instance has its own project profile.
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   Session.node, SessionProjector.node, AppProcess.node, LocationServiceMap.node, Permission.node, Git.node,
-  ArsenalObservations.node, Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, FSUtil.node,
+   ArsenalObservations.node, AtlasKnowledge.node, Database.node, EventV2Bridge.node, CrossSpawnSpawner.node, FSUtil.node,
   Plugin.node, Config.node, Agent.node, RuntimeFlags.node,
 ]), [
   [Auth.node, AuthTest.empty],

@@ -4,8 +4,24 @@ import type {
   AgentFileInfo,
   AgentFileInput,
   AgentFilePermission,
+  Provider,
 } from "@orchestra/sdk/v2/client"
 import { agentKey } from "@/context/agent-identity"
+import { modelUnavailable } from "@/components/subagent-model-rules"
+
+export function agentModels(providers: readonly Provider[]) {
+  return providers.map((provider) => ({
+    id: provider.id,
+    name: provider.name,
+    models: Object.values(provider.models).map((model) => ({
+      value: `${provider.id}/${model.id}`,
+      label: model.name,
+      unavailable: modelUnavailable(model),
+    })),
+  }))
+}
+
+export type ModelGroup = ReturnType<typeof agentModels>[number]
 
 // The tool permissions an agent file can override, in the order the profile settings list them.
 export const PERMISSION_TOOLS = [
@@ -49,7 +65,7 @@ export function agentRoster(agents: readonly Agent[]) {
     .map((agent) => ({
       agent,
       subagent: agent.mode === "subagent",
-      // The user talks only to Maestro; every other agent works through it. Its id is stable, its name configurable.
+      // The user talks only to Maestro; every other agent works through it.
       chat: agentKey(agent) === "maestro",
     }))
 }
@@ -75,7 +91,12 @@ export function modelKey(agent: Agent) {
 
 /** Every session runs on Maestro, so the editor keeps it primary and never removes it. */
 export function isMaestro(agent: Agent | undefined) {
-  return (agent?.id ?? agent?.name) === "maestro"
+  return !!agent && agentKey(agent) === "maestro"
+}
+
+/** Existing agents are always addressed by id, including removal and labels containing spaces. */
+export function agentFileTarget(draft: AgentDraft, agent: Agent | undefined) {
+  return agent ? agentKey(agent) : draft.name.trim()
 }
 
 /**
@@ -85,10 +106,10 @@ export function isMaestro(agent: Agent | undefined) {
 export function agentDraft(agent: Agent | undefined, file: AgentFileInfo | undefined): AgentDraft {
   const steps = file?.steps ?? agent?.steps
   return {
-    name: agent?.name ?? "",
+    name: isMaestro(agent) ? "maestro" : (agent?.name ?? ""),
     mode: isMaestro(agent) ? "primary" : (file?.mode ?? agent?.mode ?? "subagent"),
     description: file?.description ?? agent?.description ?? "",
-    model: file?.model ?? (agent ? modelKey(agent) : ""),
+    model: file?.model ?? "",
     steps: steps === undefined ? "" : String(steps),
     system: file?.system ?? agent?.prompt ?? "",
     permission: Object.fromEntries(
@@ -108,7 +129,7 @@ export function agentFileInput(
   agent: Agent | undefined,
 ): AgentFileInput {
   const resolved = agent ? agentDraft(agent, undefined) : undefined
-  const keep = (key: "mode" | "description" | "model" | "steps" | "system", value: string) =>
+  const keep = (key: "mode" | "description" | "steps" | "system", value: string) =>
     value !== "" && (file?.[key] !== undefined || !resolved || resolved[key].trim() !== value)
   const description = draft.description.trim()
   const steps = draft.steps.trim()
@@ -127,9 +148,10 @@ export function agentFileInput(
     }),
   ])
   return {
-    ...(keep("mode", draft.mode) ? { mode: draft.mode } : {}),
+    ...(isMaestro(agent) ? { mode: "primary" } : keep("mode", draft.mode) ? { mode: draft.mode } : {}),
     ...(keep("description", description) ? { description } : {}),
-    ...(keep("model", draft.model) ? { model: draft.model } : {}),
+    // The empty choice removes the file override. Any chosen model is explicit, even if it matches inheritance.
+    ...(draft.model ? { model: draft.model } : {}),
     ...(keep("steps", steps) ? { steps: Number(steps) } : {}),
     ...(keep("system", system) ? { system } : {}),
     permission,
@@ -153,7 +175,7 @@ export function removeInput(file: AgentFileInfo | undefined): AgentFileInput {
 
 export function draftError(draft: AgentDraft, names: readonly string[], creating: boolean) {
   const name = draft.name.trim()
-  if (!NAME.test(name) || RESERVED.test(name)) return "name" as const
+  if (creating && (!NAME.test(name) || RESERVED.test(name))) return "name" as const
   if (creating && names.some((item) => item.toLowerCase() === name.toLowerCase())) return "duplicate" as const
   const steps = draft.steps.trim()
   if (steps && !(/^\d+$/.test(steps) && Number(steps) > 0)) return "steps" as const

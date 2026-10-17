@@ -1,8 +1,11 @@
 import { expect, test } from "bun:test"
+import { realpathSync } from "node:fs"
 import path from "node:path"
 import type { Configuration } from "electron-builder"
+import { WorkspacePaths } from "@orchestra/script/workspace-paths"
 
 const legacyDesktopEntry = "resources/linux/orchestra-desktop.desktop"
+const orchestraDir = realpathSync(path.join(import.meta.dir, "../orchestra"))
 
 const channels = [
   { channel: "dev", appId: "ai.hugr.orchestra.dev" },
@@ -74,9 +77,11 @@ for (const channel of channels) {
     else process.env.ORCHESTRA_CHANNEL = previous
 
     // The desktop main process points the server at Resources/playbooks (src/main/server.ts).
-    expect(config.extraResources).toContainEqual({ from: "../orchestra/playbooks", to: "playbooks" })
+    expect(config.extraResources).toContainEqual({
+      from: path.join(WorkspacePaths.make(import.meta.dir).module("orchestra"), "playbooks"), to: "playbooks",
+    })
     expect(
-      await Bun.file(path.join(import.meta.dir, "../orchestra/playbooks/maestro-governed/SKILL.md")).exists(),
+      await Bun.file(path.join(orchestraDir, "playbooks/maestro-governed/SKILL.md")).exists(),
     ).toBe(true)
   })
 }
@@ -128,6 +133,27 @@ for (const channel of ["dev", "beta", "prod"] as const) {
     expect(typeof config.afterPack).toBe("function")
     expect(typeof config.afterSign).toBe("function")
     expect(config.mac?.signIgnore).toContain("/Resources/cli/")
+    expect(config.mac?.signIgnore).toContain("/Resources/claude-code/")
+    expect(config.files).toContain("!resources/claude-code{,/**/*}")
+    expect(config.extraResources).toContainEqual({
+      from: "resources/claude-code",
+      to: "claude-code",
+      filter: ["claude", "claude.exe", "manifest.json"],
+    })
+    expect(config.extraResources).toContainEqual({
+      from: path.join(orchestraDir, "dist/node/claude-code/README.md"),
+      to: "claude-code/README.md",
+    })
+    expect(config.extraResources).toContainEqual({
+      from: path.join(orchestraDir, "dist/node/claude-code/LICENSE.md"),
+      to: "claude-code/LICENSE.md",
+    })
+    const resources = [config.extraResources ?? []].flat()
+      .filter((resource): resource is Exclude<typeof resource, string> => typeof resource !== "string")
+      .filter((resource) => resource.to === "claude-code" || resource.to?.startsWith("claude-code/"))
+    expect(resources.map((resource) => resource.to).sort()).toEqual([
+      "claude-code", "claude-code/LICENSE.md", "claude-code/README.md",
+    ])
     expect(config.extraMetadata?.version).toBe(process.env.ORCHESTRA_VERSION ?? "1.18.27")
   })
 }

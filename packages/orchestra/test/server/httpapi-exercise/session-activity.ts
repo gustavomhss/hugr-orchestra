@@ -1,9 +1,26 @@
-import { array, check, object } from "./assertions"
+import { array, check, data, object } from "./assertions"
 import { http, route } from "./dsl"
 import { type Scenario } from "./types"
 
-// Home KPI aggregate and background-process routes over the routed project's sessions.
+// Home KPI aggregate, background-process and subagent-model policy routes over the routed project's sessions.
 export const sessionActivityScenarios: Scenario[] = [
+  http.protected
+    .get("/api/session/{sessionID}/subagent-models", "v2.session.getSubagentModels")
+    .seeded((ctx) => ctx.session({ title: "Subagent models get" }))
+    .at((ctx) => ({
+      path: route("/api/session/{sessionID}/subagent-models", { sessionID: ctx.state.id }),
+      headers: ctx.headers(),
+    }))
+    .json(200, data(object)),
+  http.protected
+    .post("/api/session/{sessionID}/subagent-models", "v2.session.setSubagentModels")
+    .seeded((ctx) => ctx.session({ title: "Subagent models set" }))
+    .at((ctx) => ({
+      path: route("/api/session/{sessionID}/subagent-models", { sessionID: ctx.state.id }),
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { policy: { mode: "allowlist", models: [] } },
+    }))
+    .json(200, data(object)),
   http.protected
     .get("/session/{sessionID}/processes", "session.processes.list")
     .seeded((ctx) => ctx.session({ title: "Process route session" }))

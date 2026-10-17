@@ -32,6 +32,9 @@ export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Ag
     variant: agent.model?.variant,
     prompt: agent.system,
     options: settings(agent),
+    ...("engine" in agent && (agent.engine === "orchestra" || agent.engine === "claude-code")
+      ? { engine: agent.engine }
+      : {}),
     steps: agent.steps,
   }))
 }
@@ -88,7 +91,7 @@ export function normalizeProviderList(
       name: provider.name,
       source: "custom",
       env: [],
-      options: provider.settings ?? {},
+      options: catalogOptions(provider),
       models: {},
     })
   }
@@ -140,7 +143,7 @@ export function normalizeProviderList(
       ...{ costAvailable: cost !== undefined },
       limit: model.limit,
       status: model.status,
-      options: model.settings ?? {},
+      options: catalogOptions(model),
       headers: model.headers ?? {},
       release_date: new Date(model.time.released).toISOString().slice(0, 10),
       variants: Object.fromEntries(model.variants.map((variant) => [variant.id, variant.settings ?? {}])),
@@ -161,6 +164,15 @@ export function normalizeProviderList(
       }),
     ),
   }
+}
+
+// The vendored client used top-level settings; current Protocol puts transport settings in api.
+// Preserve host-only markers and every other option without inventing a connection or engine.
+function catalogOptions(item: { readonly settings?: Record<string, unknown> }) {
+  const api = "api" in item && item.api && typeof item.api === "object" ? item.api : undefined
+  const options =
+    api && "settings" in api && api.settings && typeof api.settings === "object" ? api.settings : undefined
+  return { ...item.settings, ...options }
 }
 
 export function sanitizeProject(project: Project) {

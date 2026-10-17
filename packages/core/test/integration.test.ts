@@ -11,6 +11,75 @@ import { testEffect } from "./lib/effect"
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Integration.node, Credential.node, EventV2.node])))
 
 describe("Integration", () => {
+  it.effect("missing attempt status uses the typed authorization error channel", () =>
+    Effect.gen(function* () {
+      const integrations = yield* Integration.Service
+      const result = yield* integrations.attempt.status(Integration.AttemptID.make("con_missing")).pipe(Effect.exit)
+      expect(result._tag).toBe("Failure")
+      if (result._tag !== "Failure") throw new Error("Expected missing attempt to fail")
+      expect(result.cause.reasons[0]?._tag).toBe("Fail")
+      const reason = result.cause.reasons[0]
+      if (reason?._tag !== "Fail") throw new Error("Expected typed missing-attempt error")
+      expect(reason.error).toBeInstanceOf(Integration.AuthorizationError)
+    }),
+  )
+  it.effect("retains authoritative attempt ownership through complete, failed, expired and cancelled states", () =>
+    Effect.gen(function* () {
+      const integrations = yield* Integration.Service
+      const credentials = yield* Credential.Service
+      const integrationID = Integration.ID.make("owner")
+      const unrelated = Integration.ID.make("unrelated")
+      const methodID = Integration.MethodID.make("code")
+      yield* integrations.transform((draft) =>
+        draft.method.update({
+          integrationID,
+          method: { id: methodID, type: "oauth", label: "Code" },
+          authorize: () =>
+            Effect.succeed({
+              mode: "code" as const,
+              url: "https://example.test/oauth",
+              instructions: "Enter code",
+              callback: (code) =>
+                code === "fail"
+                  ? Effect.fail(new Error("synthetic authorization failure"))
+                  : Effect.succeed(
+                      Credential.OAuth.make({
+                        type: "oauth",
+                        methodID,
+                        access: "synthetic",
+                        refresh: "synthetic",
+                        expires: 1,
+                      }),
+                    ),
+            }),
+        }),
+      )
+      const complete = yield* integrations.connection.oauth({ integrationID, methodID, inputs: {} })
+      expect(yield* integrations.attempt.ownedBy(complete.attemptID, integrationID)).toBe(true)
+      expect(yield* integrations.attempt.ownedBy(complete.attemptID, unrelated)).toBe(false)
+      yield* integrations.attempt.complete({ attemptID: complete.attemptID, code: "ok" })
+      expect((yield* integrations.attempt.status(complete.attemptID)).status).toBe("complete")
+      expect(yield* integrations.attempt.ownedBy(complete.attemptID, integrationID)).toBe(true)
+      expect(yield* integrations.attempt.ownedBy(complete.attemptID, unrelated)).toBe(false)
+
+      const failed = yield* integrations.connection.oauth({ integrationID, methodID, inputs: {} })
+      yield* integrations.attempt.complete({ attemptID: failed.attemptID, code: "fail" }).pipe(Effect.exit)
+      expect((yield* integrations.attempt.status(failed.attemptID)).status).toBe("failed")
+      expect(yield* integrations.attempt.ownedBy(failed.attemptID, integrationID)).toBe(true)
+      expect(yield* integrations.attempt.ownedBy(failed.attemptID, unrelated)).toBe(false)
+
+      const cancelled = yield* integrations.connection.oauth({ integrationID, methodID, inputs: {} })
+      yield* integrations.attempt.cancel(cancelled.attemptID)
+      expect(yield* integrations.attempt.ownedBy(cancelled.attemptID, integrationID)).toBe(false)
+      const expired = yield* integrations.connection.oauth({ integrationID, methodID, inputs: {} })
+      yield* TestClock.adjust(Duration.minutes(10))
+      yield* Effect.yieldNow
+      expect((yield* integrations.attempt.status(expired.attemptID)).status).toBe("expired")
+      expect(yield* integrations.attempt.ownedBy(expired.attemptID, integrationID)).toBe(true)
+      expect(yield* integrations.attempt.ownedBy(expired.attemptID, unrelated)).toBe(false)
+      expect(yield* credentials.list(integrationID)).toHaveLength(1)
+    }),
+  )
   it.effect("registers integrations through the editor", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service

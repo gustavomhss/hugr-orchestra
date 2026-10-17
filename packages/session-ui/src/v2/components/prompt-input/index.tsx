@@ -1,4 +1,4 @@
-import { createEffect, createMemo, For, Show, type Accessor, type JSX } from "solid-js"
+import { createEffect, createMemo, For, Show, untrack, type Accessor, type JSX } from "solid-js"
 import { FileIcon } from "@orchestra/ui/file-icon"
 import { Icon } from "@orchestra/ui/icon"
 import { IconButton } from "@orchestra/ui/icon-button"
@@ -15,13 +15,16 @@ import { CommentCardV2 } from "../comment-card-v2"
 import { typeLabel } from "../../../components/message-file"
 import type {
   PromptInputV2Attachment,
+  PromptInputV2AgentPart,
   PromptInputV2Comment,
+  PromptInputV2FilePart,
   PromptInputV2Option,
   PromptInputV2PersistedState,
   PromptInputV2Prompt,
   PromptInputV2Suggestion,
 } from "./types"
 import type { PromptInputV2Interaction, PromptInputV2SelectControl } from "./interaction"
+import { insertPromptEditorText, promptEditorCursor, promptEditorRangeEdge, readPromptEditor } from "./interaction"
 import "./attachments.css"
 
 export type {
@@ -53,6 +56,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
   const view = props.controller.view
   let editor: HTMLDivElement | undefined
   let localInput = false
+  const composition = { active: false }
   const updateCursor = () => {
     if (!editor || !window.getSelection()?.isCollapsed) return
     props.controller.onCursor(promptInputV2Cursor(editor))
@@ -71,7 +75,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
       localInput = false
       return
     }
-    renderPromptInputV2Editor(editor, parts)
+    renderPromptInputV2Editor(editor, parts, untrack(props.controller.cursor))
   })
 
   return (
@@ -118,7 +122,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
         }}
         onSubmit={(event) => {
           event.preventDefault()
-          if (!props.disabled) props.controller.submit()
+          if (!props.disabled && !props.readOnly && props.controller.canSubmit()) props.controller.submit()
         }}
         onDragEnter={props.controller.onDragEnter}
         onDragOver={props.controller.onDragOver}
@@ -149,7 +153,7 @@ export function PromptInputV2(props: PromptInputV2Props) {
             ref={(element) => {
               editor = element
               props.controller.setEditor(element)
-              renderPromptInputV2Editor(element, props.controller.parts())
+              renderPromptInputV2Editor(element, props.controller.parts(), props.controller.cursor())
             }}
             data-component="prompt-input"
             role="textbox"
@@ -164,21 +168,34 @@ export function PromptInputV2(props: PromptInputV2Props) {
             class="relative z-10 block min-h-[60px] max-h-[180px] w-full overflow-y-auto whitespace-pre-wrap bg-transparent px-4 pt-4 pb-2 text-[13px] font-[440] leading-5 text-v2-text-text-base focus:outline-none empty:before:content-['\200B'] [&_[data-mention=file]]:text-syntax-property [&_[data-mention=agent]]:text-syntax-type [&_[data-mention=reference]]:text-syntax-keyword"
             classList={{ "font-mono!": state.mode === "shell", "opacity-50": props.disabled }}
             onInput={(event) => {
-              const cursor = promptInputV2Cursor(event.currentTarget)
-              const prompt = parsePromptInputV2Editor(event.currentTarget)
-              const images = props.controller.parts().filter((part) => part.type === "image")
+              const input = event.currentTarget
+              const controller = props.controller
+              const prompt = parsePromptInputV2Editor(input)
+              const images = controller.parts().filter((part) => part.type === "image")
               localInput = true
-              props.controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], cursor)
+              controller.onInput(prompt.map((part) => part.content).join(""), [...prompt, ...images], promptInputV2Cursor(input))
             }}
             onKeyDown={(event) => {
-              if (props.controller.onKeyDown(event)) return
+              const composing = composition.active || event.isComposing || event.keyCode === 229
+              if (props.controller.onKeyDown(event, composing)) return
+              if (composing) return
+              if (event.key === "Enter" && event.shiftKey && !event.altKey && !event.ctrlKey && !event.metaKey) {
+                event.preventDefault()
+                if (insertPromptEditorText(event.currentTarget, "\n", "insertLineBreak")) {
+                  props.controller.onCursor(promptEditorCursor(event.currentTarget))
+                }
+                return
+              }
               if (event.key === "Enter" && !event.shiftKey && !event.isComposing) {
                 event.preventDefault()
-                if (event.repeat) return
+                if (event.repeat || props.disabled || props.readOnly || !props.controller.canSubmit()) return
                 props.controller.submit()
               }
             }}
             onKeyUp={updateCursor}
+            onCompositionStart={() => { composition.active = true }}
+            onCompositionEnd={() => { composition.active = false }}
+            onBlur={() => { composition.active = false }}
             onPointerUp={updateCursor}
             onPaste={props.controller.onPaste}
             onFocus={() => props.controller.dispatch({ type: "focus.editor" })}
@@ -263,14 +280,18 @@ export function PromptInputV2(props: PromptInputV2Props) {
   )
 }
 
-function renderPromptInputV2Editor(editor: HTMLDivElement, prompt: PromptInputV2Prompt) {
+const mentionParts = new WeakMap<HTMLElement, PromptInputV2FilePart | PromptInputV2AgentPart>()
+
+export function renderPromptInputV2Editor(editor: HTMLDivElement, prompt: PromptInputV2Prompt, cursor?: number) {
   const active = document.activeElement === editor
+  const position = cursor ?? promptEditorCursor(editor)
   editor.replaceChildren(
     ...prompt.flatMap<Node>((part) => {
       if (part.type === "image") return []
       if (part.type === "text") return [document.createTextNode(part.content)]
       const mention = document.createElement("span")
       mention.textContent = part.content
+      mentionParts.set(mention, part)
       mention.contentEditable = "false"
       mention.dataset.mention =
         part.type === "file" && part.mime === "application/x-directory" ? "reference" : part.type
@@ -286,13 +307,13 @@ function renderPromptInputV2Editor(editor: HTMLDivElement, prompt: PromptInputV2
   if (!active) return
   const selection = window.getSelection()
   const range = document.createRange()
-  range.selectNodeContents(editor)
-  range.collapse(false)
+  promptEditorRangeEdge(editor, range, "start", position)
+  range.collapse(true)
   selection?.removeAllRanges()
   selection?.addRange(range)
 }
 
-function parsePromptInputV2Editor(editor: HTMLDivElement) {
+export function parsePromptInputV2Editor(editor: HTMLDivElement) {
   const parts: Exclude<PromptInputV2Prompt[number], PromptInputV2Attachment>[] = []
   let buffer = ""
   let position = 0
@@ -306,8 +327,10 @@ function parsePromptInputV2Editor(editor: HTMLDivElement) {
   const mention = (element: HTMLElement) => {
     flush()
     const content = element.textContent ?? ""
+    const saved = mentionParts.get(element)
     if (element.dataset.mention === "agent") {
       parts.push({
+        ...(saved?.type === "agent" ? saved : {}),
         type: "agent",
         name: element.dataset.name ?? content.slice(1),
         content,
@@ -318,6 +341,7 @@ function parsePromptInputV2Editor(editor: HTMLDivElement) {
       return
     }
     parts.push({
+      ...(saved?.type === "file" ? saved : {}),
       type: "file",
       path: element.dataset.path ?? content.slice(1),
       content,
@@ -325,48 +349,26 @@ function parsePromptInputV2Editor(editor: HTMLDivElement) {
       end: position + content.length,
       ...(element.dataset.mime ? { mime: element.dataset.mime } : {}),
       ...(element.dataset.filename ? { filename: element.dataset.filename } : {}),
+      ...(saved?.type === "file" && saved.source
+        ? { source: { ...saved.source, text: { value: content, start: position, end: position + content.length } } }
+        : {}),
     })
     position += content.length
   }
-  const visit = (node: Node) => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      buffer += node.textContent ?? ""
-      return
-    }
-    if (!(node instanceof HTMLElement)) return
-    if (node.dataset.mention) {
+  readPromptEditor(editor).segments.forEach(({ node, content }) => {
+    if (node instanceof HTMLElement && node.dataset.mention) {
       mention(node)
       return
     }
-    if (node.tagName === "BR") {
-      buffer += "\n"
-      return
-    }
-    Array.from(node.childNodes).forEach(visit)
-  }
-
-  Array.from(editor.childNodes).forEach((node, index, nodes) => {
-    visit(node)
-    if (node instanceof HTMLElement && ["DIV", "P"].includes(node.tagName) && index < nodes.length - 1) buffer += "\n"
+    buffer += content
   })
   flush()
-  if (
-    parts.every((part) => part.type === "text") &&
-    parts.every((part) => part.content.replace(/[\n\u200B]/g, "") === "")
-  ) {
-    return [{ type: "text" as const, content: "", start: 0, end: 0 }]
-  }
   if (parts.length > 0) return parts
   return [{ type: "text" as const, content: "", start: 0, end: 0 }]
 }
 
 function promptInputV2Cursor(editor: HTMLDivElement) {
-  const selection = window.getSelection()
-  if (!selection?.rangeCount || !editor.contains(selection.anchorNode)) return editor.textContent?.length ?? 0
-  const range = selection.getRangeAt(0).cloneRange()
-  range.selectNodeContents(editor)
-  range.setEnd(selection.anchorNode!, selection.anchorOffset)
-  return range.toString().length
+  return promptEditorCursor(editor)
 }
 
 export function PromptInputV2Attachments(props: {

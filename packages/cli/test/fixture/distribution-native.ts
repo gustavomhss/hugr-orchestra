@@ -7,11 +7,13 @@ import { ConfigMarkdown } from "@orchestra/core/config/markdown"
 import { Schema } from "effect"
 import { prepareDistribution, archiveDistribution, verifyDistribution } from "../../script/distribution-payload"
 import { command } from "./distribution-native-process"
+import { linuxRuntimeLibc } from "@orchestra/script/tree-sitter-prebuilds"
 
 export { command } from "./distribution-native-process"
 
 export const cli = resolve(import.meta.dirname, "../..")
-export const target = `${process.platform === "win32" ? "windows" : process.platform}-${process.arch}${process.arch === "x64" ? "-baseline" : ""}`
+export const nativeLibc = process.platform === "linux" ? linuxRuntimeLibc() : undefined
+export const target = `${process.platform === "win32" ? "windows" : process.platform}-${process.arch}${process.arch === "x64" ? "-baseline" : ""}${nativeLibc?.kind === "musl" ? "-musl" : ""}`
 export const versions = ["1.18.27", "1.18.28"] as const
 export const sha256 = (bytes: string | Uint8Array) => createHash("sha256").update(bytes).digest("hex")
 
@@ -51,8 +53,14 @@ export async function successful(args: string[], box: Pick<Sandbox, "cwd" | "env
   const result = await command(args, box, timeout)
   // Daemon password/stdout never enter failure diagnostics.
   if (result.code !== 0)
-    throw new Error(`Command failed (${result.code}): ${args.join(" ")}${args[1] === "service" ? "" : `\n${result.stderr}`}`)
+    throw new Error(`Command failed (${result.code}): ${args.join(" ")}${args[1] === "service" ? startReason(result.stderr) : `\n${result.stderr}`}`)
   return result.stdout.trim()
+}
+
+// Service stderr stays private; only the CLI's fixed start reason code passes.
+export function startReason(stderr: string) {
+  const reason = stderr.match(/Failed to start server \((?:exited (?:code=\d+|signal=SIG[A-Z0-9]+)|[a-z-]+), \d+ms\)/)?.[0]
+  return reason ? `\n${reason}` : ""
 }
 
 export async function assertVersion(launcher: string, version: string, box: Sandbox) {
@@ -121,9 +129,10 @@ export function skillIdentity(version: string, oracle: Oracle) {
   return `${version.replace(/[^A-Za-z0-9._-]/g, "-").slice(0, 60)}-${sha256(version)}-${oracle.digest}`
 }
 
-export async function buildVersions(directory: string) {
+export async function buildVersions(directory: string, artifacts?: { omni: string; treeSitter: string; logs: string }) {
   const { resolveTreeSitter } = await import("@orchestra/script/tree-sitter-prebuilds")
   const box = await sandbox(join(directory, "builder"))
+  if (artifacts && nativeLibc?.kind !== "musl") throw new Error("NATIVE_EXPLICIT_ARTIFACTS_REQUIRE_VERIFIED_MUSL")
   await successful([process.execPath, "script/runtime-proof.ts", "--target", target, "--host"], { ...box, cwd: cli })
   const oracle = await captureOracle() // Canonical bytes captured before either compile.
   const release = resolve(cli, "../../native/omni/target/release")
@@ -142,16 +151,21 @@ export async function buildVersions(directory: string) {
   await Bun.write(models, "{}") // Non-provider proof only; no model request is qualified.
   const payloads = []
   for (const version of versions) {
-    const env = { ...box.env, ORCHESTRA_VERSION: version, ORCHESTRA_CHANNEL: "dev", MODELS_DEV_API_JSON: models }
-    expect("OMNI_ARTIFACTS" in env).toBe(false)
+    const env = { ...box.env, ORCHESTRA_VERSION: version, ORCHESTRA_CHANNEL: "dev", MODELS_DEV_API_JSON: models,
+      ...(artifacts ? { OMNI_ARTIFACTS: artifacts.omni, TREE_SITTER_ARTIFACTS: artifacts.treeSitter } : {}) }
+    if (!artifacts) expect("OMNI_ARTIFACTS" in env).toBe(false)
     expect("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER" in env).toBe(false)
-    await successful([process.execPath, "script/build.ts", "--single", "--skip-install", "--target", target], { cwd: cli, env }, 900_000)
+    const args = [process.execPath, "script/build.ts", "--single", "--skip-install", "--target", target]
+    const compiled = await command(args, { cwd: cli, env }, 900_000)
+    if (artifacts) await Bun.write(join(artifacts.logs, `cli-build-${version}.json`), JSON.stringify(compiled, null, 2))
+    if (compiled.code !== 0) throw new Error(`Command failed (${compiled.code}): ${args.join(" ")}\n${compiled.stderr}`)
     const built = join(cli, "dist", `cli-${target}`)
     for (const file of hashes) {
       expect(sha256(await readFile(file.source))).toBe(file.sha256)
       expect(sha256(await readFile(join(built, file.path)))).toBe(file.sha256)
     }
-    for (const file of resolveTreeSitter({ root: resolve(cli, "../.."), os: process.platform, arch: process.arch }))
+    for (const file of resolveTreeSitter({ root: resolve(cli, "../.."), os: process.platform, arch: process.arch,
+      abi: nativeLibc?.kind === "musl" ? "musl" : undefined, artifacts: artifacts?.treeSitter }))
       expect(sha256(await readFile(join(built, "bin/tree-sitter", file.to)))).toBe(sha256(await readFile(file.from)))
     // Copy AND admit full closure before the next build replaces this target.
     const dist = join(directory, `captured-${version}`)

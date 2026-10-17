@@ -62,13 +62,21 @@ it.instance("native identity survives rename; tools isolate owners and reconcile
   Effect.gen(function* () {
     const agents = yield* Agent.Service
     const jimmy = yield* agents.get("jimmy")
+    const archie = yield* agents.get("archie")
     expect(jimmy.name).toBe("discovery-renamed")
     expect(AtlasMemory.owner(jimmy)).toBe("jimmy")
+    expect(archie.name).toBe("planning-renamed")
+    expect(AtlasMemory.owner(archie)).toBe("archie")
+    expect(AtlasMemory.owner(undefined)).toBeUndefined()
+    expect(AtlasMemory.owner({ native: true })).toBeUndefined()
+    expect(AtlasMemory.owner({ id: LEGACY_BACKEND_ID, native: true })).toBeUndefined()
+    expect(AtlasMemory.supports({ ...archie, native: false })).toBe(false)
+    expect(AtlasMemory.supports({ ...archie, native: undefined })).toBe(false)
     expect(AtlasMemory.supports({ ...jimmy, native: false })).toBe(false)
     expect(AtlasMemory.supports({ id: "atlas", native: true })).toBe(false)
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
     const recall = yield* Tool.init(yield* AtlasMemoryRecallTool)
-    const refs = yield* Effect.forEach(["backend", "jimmy"] as const, Effect.fnUntraced(function* (member) {
+    const refs = yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
       const asks: unknown[] = []
       const ctx = context(member, asks)
       const entry = { ...task, lesson: `${member} checks the applicable source revision` }
@@ -87,45 +95,109 @@ it.instance("native identity survives rename; tools isolate owners and reconcile
       const pr = yield* emit.execute({ entry: { prId: "shared-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)
       expect(receipt(pr).outcome).toBe("admitted")
       expect(JSON.parse((yield* recall.execute({ kind: "pr", prId: "shared-pr" }, ctx)).output).records).toHaveLength(1)
-      const rule = yield* emit.execute({ entry: { rule: `${member} rule only`, scope: "source" } }, ctx)
-      expect(receipt(rule).outcome).toBe("admitted")
       return receipt(first).ref
     }))
-    expect(refs[0]).not.toEqual(refs[1])
-    const backendHeader = yield* AtlasHeader.render(yield* agents.get("backend"))
-    const jimmyHeader = yield* AtlasHeader.render(jimmy)
-    expect(backendHeader).toContain('member="backend"')
-    expect(backendHeader).toContain("backend rule only")
-    expect(backendHeader).not.toContain("jimmy rule only")
-    expect(jimmyHeader).toContain('member="jimmy"')
-    expect(jimmyHeader).toContain("jimmy rule only")
-    expect(jimmyHeader).not.toContain("backend rule only")
+    expect(new Set(refs.map((ref) => JSON.stringify(ref))).size).toBe(3)
+    // Keep all owners' rules fresh together: unrelated task/PR appends also advance Atlas's decay wave.
+    yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
+      const rule = yield* emit.execute({ entry: { rule: `${member} rule only`, scope: "source" } }, context(member))
+      expect(receipt(rule).outcome).toBe("admitted")
+    }))
+    yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
+      const agent = yield* agents.get(member)
+      const header = yield* AtlasHeader.render(agent)
+      expect(header).toContain(`member="${member}"`)
+      expect(header).toContain(`${member} rule only`)
+      ;["backend", "jimmy", "archie"].filter((other) => other !== member).forEach((other) =>
+        expect(header).not.toContain(`${other} rule only`),
+      )
+    }))
     const fs = yield* FileSystem.FileSystem
     const lines = (yield* fs.readFileString(path.join((yield* TestInstance).directory, ".atlas/memory.jsonl"))).trim().split("\n")
-    expect(lines).toHaveLength(6)
-  }), { git: true, config: { agent: { jimmy: { name: "discovery-renamed" } } } },
+    expect(lines).toHaveLength(9)
+  }), { git: true, config: { agent: { jimmy: { name: "discovery-renamed" }, archie: { name: "planning-renamed" } } } },
 )
 
 it.instance("only backend reads legacy owners; foreign refs and ambiguous checkpoints refuse", () =>
   Effect.gen(function* () {
     const backend = yield* AtlasMemory.open(execution, { id: "backend", native: true })
     const jimmy = yield* AtlasMemory.open(execution, { id: "jimmy", native: true })
-    if ("unavailable" in backend || "unavailable" in jimmy) throw new Error("native binding unavailable")
+    const archie = yield* AtlasMemory.open(execution, { id: "archie", native: true })
+    if ("unavailable" in backend || "unavailable" in jimmy || "unavailable" in archie) throw new Error("native binding unavailable")
     expect(backend.binding.legacyOwners).toEqual([LEGACY_BACKEND_ID])
     expect(jimmy.binding.legacyOwners).toEqual([])
+    expect(archie.binding.legacyOwners).toEqual([])
     const legacy = createNativeMemory({ ...backend.binding, memoryOwner: LEGACY_BACKEND_ID, legacyOwners: [] })
     const written = legacy.write(task)
     if (!written.ok) throw new Error(JSON.stringify(written))
     expect(backend.recall({ kind: "task", taskId: task.taskId }).refs).toEqual([written.ref])
     expect(jimmy.recall({ kind: "task", taskId: task.taskId })).toMatchObject({ store: "complete", records: [] })
     expect(jimmy.resolveFold({ kind: "task", id: task.taskId }, written.ref)).toMatchObject({ ok: false, refusal: "foreign-owner" })
+    expect(archie.recall({ kind: "task", taskId: task.taskId })).toMatchObject({ store: "complete", records: [] })
+    expect(archie.resolveFold({ kind: "task", id: task.taskId }, written.ref)).toMatchObject({ ok: false, refusal: "foreign-owner" })
     const own = jimmy.write(task)
     if (!own.ok) throw new Error(JSON.stringify(own))
+    expect(archie.resolveFold({ kind: "task", id: task.taskId }, own.ref)).toMatchObject({ ok: false, refusal: "foreign-owner" })
+    const planned = archie.write(task)
+    if (!planned.ok) throw new Error(JSON.stringify(planned))
+    expect(jimmy.resolveFold({ kind: "task", id: task.taskId }, planned.ref)).toMatchObject({ ok: false, refusal: "foreign-owner" })
+    expect(backend.resolveFold({ kind: "task", id: task.taskId }, planned.ref)).toMatchObject({ ok: false, refusal: "foreign-owner" })
     const newer = jimmy.write({ ...task, lesson: "newer own checkpoint" })
     if (!newer.ok) throw new Error(JSON.stringify(newer))
     expect(jimmy.resolveFold({ kind: "task", id: task.taskId })).toMatchObject({ ok: false, refusal: "ambiguous" })
     expect(jimmy.resolveFold({ kind: "task", id: task.taskId }, newer.ref)).toMatchObject({ ok: true, ref: newer.ref })
     expect(jimmy.resolveFold({ kind: "pr", id: task.taskId }, newer.ref)).toMatchObject({ ok: false, refusal: "unit-mismatch" })
+  }), { git: true },
+)
+
+it.instance("original backend rule retention survives the original Jimmy task and PR interleaving", () =>
+  Effect.gen(function* () {
+    const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
+    yield* Effect.forEach(["backend", "jimmy"] as const, Effect.fnUntraced(function* (member) {
+      const ctx = context(member)
+      expect(receipt(yield* emit.execute({ entry: { ...task, lesson: `${member} observed source` } }, ctx)).outcome).toBe("admitted")
+      expect(receipt(yield* emit.execute({ entry: { prId: "interleaved-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)).outcome).toBe("admitted")
+      expect(receipt(yield* emit.execute({ entry: { rule: `${member} interleaved rule`, scope: "source" } }, ctx)).outcome).toBe("admitted")
+    }))
+    const agents = yield* Agent.Service
+    const backend = yield* agents.get("backend")
+    const jimmy = yield* agents.get("jimmy")
+    const backendHeader = yield* AtlasHeader.render(backend)
+    const jimmyHeader = yield* AtlasHeader.render(jimmy)
+    expect(backendHeader).toContain("backend interleaved rule")
+    expect(backendHeader).not.toContain("jimmy interleaved rule")
+    expect(jimmyHeader).toContain("jimmy interleaved rule")
+    expect(jimmyHeader).not.toContain("backend interleaved rule")
+  }), { git: true },
+)
+
+it.instance("a third interleaved owner ages backend's rule out of the shared ledger", () =>
+  Effect.gen(function* () {
+    const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
+    const agents = yield* Agent.Service
+    const append = Effect.fnUntraced(function* (member: "backend" | "jimmy" | "archie") {
+      const ctx = context(member)
+      expect(receipt(yield* emit.execute({ entry: { ...task, lesson: `${member} observed source` } }, ctx)).outcome).toBe("admitted")
+      expect(receipt(yield* emit.execute({ entry: { prId: "interleaved-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)).outcome).toBe("admitted")
+      expect(receipt(yield* emit.execute({ entry: { rule: `${member} interleaved rule`, scope: "source" } }, ctx)).outcome).toBe("admitted")
+    })
+    const header = Effect.fnUntraced(function* (member: "backend" | "jimmy" | "archie") {
+      const rendered = yield* AtlasHeader.render(yield* agents.get(member))
+      expect(rendered).toContain(`member="${member}"`)
+      expect(rendered).not.toContain("degraded=")
+      return rendered
+    })
+    yield* append("backend")
+    yield* append("jimmy")
+    expect(yield* header("backend")).toContain("backend interleaved rule")
+    yield* append("archie")
+    // Atlas decays every rule by the whole log's waves (A26): Archie's three appends take backend's rule from age 3
+    // (0.125) to age 6 (~0.016), below the near-zero floor, while the later owners' rules stay injected.
+    expect(yield* header("backend")).not.toContain("backend interleaved rule")
+    expect(yield* header("jimmy")).toContain("jimmy interleaved rule")
+    const archie = yield* header("archie")
+    expect(archie).toContain("archie interleaved rule")
+    expect(archie).not.toContain("jimmy interleaved rule")
   }), { git: true },
 )
 
@@ -158,28 +230,29 @@ it.instance("missing identity cannot bind backend; real partial and unavailable 
     expect(JSON.parse(unavailable.output)).not.toHaveProperty("records")
     expect(yield* AtlasHeader.render({ id: "jimmy", native: true })).toContain('member="jimmy" degraded="unavailable"')
     expect(yield* AtlasHeader.render({ id: "backend", native: true })).toContain('member="backend" degraded="unavailable"')
+    expect(yield* AtlasHeader.render({ id: "archie", native: true })).toContain('member="archie" degraded="unavailable"')
   }), { git: true },
 )
 
-it.instance("jimmy resume admits exact own fold once using durable admission evidence", () =>
+;(["jimmy", "archie"] as const).map((member) => it.instance(`${member} resume admits exact own fold once using durable admission evidence`, () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
     const sessions = yield* Session.Service
-    const agent = yield* agents.get("jimmy")
-    const child = yield* sessions.create({ agent: "jimmy" })
+    const agent = yield* agents.get(member)
+    const child = yield* sessions.create({ agent: member })
     const memory = yield* AtlasMemory.open(execution, agent)
     if ("unavailable" in memory) throw new Error(memory.unavailable)
     const written = memory.write(task)
     if (!written.ok) throw new Error(JSON.stringify(written))
     const user = yield* sessions.updateMessage({
-      id: MessageID.ascending(), role: "user", sessionID: child.id, agent: "jimmy",
+      id: MessageID.ascending(), role: "user", sessionID: child.id, agent: member,
       model: { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test") }, time: { created: Date.now() },
     })
     const input = { agent, sessionID: child.id, unit: { kind: "task" as const, id: task.taskId }, ctx: context("maestro") }
     const admitted = yield* AtlasResume.admit(input)
     expect(admitted).toHaveLength(1)
     expect(admitted[0].metadata.atlasResume).toMatchObject({
-      key: { memoryOwner: "jimmy", kind: "task", id: task.taskId }, verdict: { ok: true, ref: written.ref },
+      key: { memoryOwner: member, kind: "task", id: task.taskId }, verdict: { ok: true, ref: written.ref },
     })
     yield* sessions.updatePart({ ...admitted[0], id: PartID.ascending(), sessionID: child.id, messageID: user.id })
     expect(yield* AtlasResume.admit(input)).toEqual([])
@@ -214,12 +287,12 @@ it.instance("jimmy resume admits exact own fold once using durable admission evi
       metadata: { atlasResume: { ...admitted[0].metadata.atlasResume, residency: "restored" } },
     })
   }), { git: true },
-)
+))
 
-it.instance("real scanner blocks sensitive content; complete Atlas refusal survives tool settlement", () =>
+;(["jimmy", "archie"] as const).map((member) => it.instance(`real scanner blocks sensitive content for ${member}; complete Atlas refusal survives tool settlement`, () =>
   Effect.gen(function* () {
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
-    const clean = yield* emit.execute({ entry: task }, context("jimmy"))
+    const clean = yield* emit.execute({ entry: task }, context(member))
     expect(receipt(clean).outcome).toBe("admitted")
     // Invalid, synthetic private-key fragment: upstream's measured scanner control, not an allowlisted token.
     const blocked = yield* emit.execute({ entry: {
@@ -229,19 +302,19 @@ it.instance("real scanner blocks sensitive content; complete Atlas refusal survi
         "MIIEowIBAAKCAQEA3Tz2mr7SZiAMfQyuvBjM9OiJjRazXBZ1BjP5CE/Wm/RrFqiIiaEQ",
         "-----END RSA PRIVATE KEY-----",
       ].join("\n"),
-    } }, context("jimmy"))
+    } }, context(member))
     expect(receipt(blocked)).toMatchObject({ outcome: "refused", refusal: { ok: false, refusal: "scanner-blocked", scanner: "gitleaks" } })
     expect(JSON.parse(blocked.output).refusal).toEqual(receipt(blocked).refusal)
     expect(JSON.parse(blocked.output).note).toBe("Not remembered.")
-    const malformed = yield* emit.execute({ entry: { ...task, owner: "backend" } }, context("jimmy"))
+    const malformed = yield* emit.execute({ entry: { ...task, owner: "backend" } }, context(member))
     expect(receipt(malformed)).toMatchObject({ outcome: "refused", refusal: { ok: false, refusal: "undetermined-kind" } })
-    const memory = yield* AtlasMemory.open(execution, { id: "jimmy", native: true })
+    const memory = yield* AtlasMemory.open(execution, { id: member, native: true })
     if ("unavailable" in memory) throw new Error(memory.unavailable)
     expect(memory.recall({ kind: "task", taskId: task.taskId }).records).toHaveLength(1)
   }), { git: true },
-)
+))
 
-it.instance("lost response after actual append stays uncertain; identical retry reconciles without another append", () =>
+;(["jimmy", "archie"] as const).map((member) => it.instance(`${member} lost response after actual append stays uncertain; identical retry reconciles without another append`, () =>
   Effect.gen(function* () {
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
     const loseResponse: typeof AtlasMemory.open = (execution, agent) => AtlasMemory.open(execution, agent).pipe(
@@ -254,19 +327,19 @@ it.instance("lost response after actual append stays uncertain; identical retry 
         },
       }),
     )
-    const uncertain = yield* emit.execute({ entry: task }, context("jimmy")).pipe(Effect.provideService(Open, loseResponse))
+    const uncertain = yield* emit.execute({ entry: task }, context(member)).pipe(Effect.provideService(Open, loseResponse))
     expect(receipt(uncertain).outcome).toBe("uncertain")
     expect(receipt(uncertain).ref).toBeUndefined()
     const fs = yield* FileSystem.FileSystem
     const log = path.join((yield* TestInstance).directory, ".atlas/memory.jsonl")
     const before = yield* fs.readFileString(log)
     expect(before.trim().split("\n")).toHaveLength(1)
-    const retry = yield* emit.execute({ entry: task }, context("jimmy"))
+    const retry = yield* emit.execute({ entry: task }, context(member))
     expect(receipt(retry)).toMatchObject({ outcome: "admitted", reconciled: true })
     expect(receipt(retry).ref?.eventId).toBeString()
     expect(yield* fs.readFileString(log)).toBe(before)
   }), { git: true },
-)
+))
 
 it.instance("native receipt selection uses latest jimmy checkpoint; reconciled old and refused writes do not advance it", () =>
   Effect.gen(function* () {
@@ -312,11 +385,11 @@ it.instance("overlapping same-process native tasks preserve owner isolation and 
     const sessions = yield* Session.Service
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
     const recall = yield* Tool.init(yield* AtlasMemoryRecallTool)
-    const callers = yield* Effect.forEach(["backend", "jimmy", "backend", "jimmy"] as const, (member, index) =>
+    const callers = yield* Effect.forEach(["backend", "jimmy", "archie", "backend", "jimmy", "archie"] as const, (member, index) =>
       Effect.gen(function* () {
         const child = yield* sessions.create({ agent: member })
         const ctx = { ...context(member), sessionID: child.id, callID: `overlap-${index}`, messageID: MessageID.ascending() }
-        const entry = { ...task, taskId: `overlap-${Math.floor(index / 2)}`, lesson: `${member} retains its own conditional evidence` }
+        const entry = { ...task, taskId: `overlap-${Math.floor(index / 3)}`, lesson: `${member} retains its own conditional evidence` }
         return { member, ctx, entry }
       }),
     )

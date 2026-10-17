@@ -149,7 +149,7 @@ it.instance("registers native team specialists with fixed profiles", () =>
   }),
 )
 
-it.instance("backend alone gets backend skills and Atlas grants", () =>
+it.instance("backend alone gets backend skills; native memory seats get Atlas grants", () =>
   Effect.gen(function* () {
     const backend = yield* load((service) => service.get("backend"))
     const check = (permission: string, pattern: string) =>
@@ -174,6 +174,7 @@ it.instance("backend alone gets backend skills and Atlas grants", () =>
     // Bound Atlas Memory tools are granted by explicit tool ID. Their runtime binding isolates supported owners.
     expect(check("atlas_memory_recall", "backend")).toBe("allow")
     expect(check("atlas_memory_emit", "backend")).toBe("allow")
+    expect(check("atlas_context", "backend")).toBe("allow")
     expect(check("atlas_memory_header", "*")).toBe("deny")
 
     // The shared profiles stay exactly as they were for every other native seat.
@@ -229,8 +230,8 @@ it.instance("backend alone gets backend skills and Atlas grants", () =>
       expect(agent.mode).toBe("subagent")
       for (const name of backendSkills.names)
         expect(Permission.evaluate("skill", name, agent.permission).action).toBe("deny")
-      for (const tool of ["atlas_memory_recall", "atlas_memory_emit"])
-        expect(Permission.evaluate(tool, "*", agent.permission).action).toBe(seat.id === "jimmy" ? "allow" : "deny")
+      for (const tool of ["atlas_context", "atlas_memory_recall", "atlas_memory_emit"])
+        expect(Permission.evaluate(tool, "*", agent.permission).action).toBe(seat.id === "jimmy" || seat.id === "archie" ? "allow" : "deny")
       expect(
         Permission.evaluate("external_directory", path.join(backendSkills.root, "*"), agent.permission).action,
       ).toBe("deny")
@@ -252,7 +253,9 @@ it.instance("upstream registration retains native scope and isolates its authori
     expect((yield* skills.available(backend)).map((skill) => skill.name)).not.toContain("archie-plan")
     expect((yield* skills.all()).map((skill) => skill.name)).not.toContain("archie-plan")
     expect(yield* agents.get("bobby")).toBeUndefined()
-    for (const tool of ["task", "question", "atlas_memory_recall", "atlas_memory_emit", "maestro_record_review", "maestro_record_approval"])
+    for (const tool of ["atlas_context", "atlas_memory_recall", "atlas_memory_emit"])
+      expect(evaluate(upstream, tool)).toBe("allow")
+    for (const tool of ["task", "question", "maestro_record_review", "maestro_record_approval", "research_record", "research_capture", "research_view"])
       expect(evaluate(upstream, tool)).toBe("deny")
   }),
 )

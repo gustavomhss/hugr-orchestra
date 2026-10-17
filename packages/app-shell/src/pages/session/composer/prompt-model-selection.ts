@@ -10,6 +10,7 @@ import { useSDK } from "@/context/sdk"
 import { useSync } from "@/context/sync"
 import { useProviders } from "@/hooks/use-providers"
 import { resolveDefaultModel } from "@/hooks/provider-catalog"
+import { modelSupportsExecution } from "@/hooks/model-execution"
 
 type ModelCandidate = Pick<ModelKey, "providerID" | "modelID">
 type ModelCatalog = { all: ReadonlyMap<string, { models: Record<string, unknown> }>; connected: readonly string[] }
@@ -20,16 +21,23 @@ export const createPromptModelContext = () =>
 export function selectPromptModel(
   input: Partial<Record<"chosen" | "agent" | "configured" | "fallback", ModelCandidate>> & {
     recent?: readonly ModelCandidate[]
+    engine?: unknown
   },
   catalog: ModelCatalog,
 ) {
   return [input.chosen, input.agent, input.configured, ...(input.recent ?? []), input.fallback].find(
-    (item): item is ModelCandidate =>
-      !!item && catalog.connected.includes(item.providerID) && !!catalog.all.get(item.providerID)?.models[item.modelID],
+    (item): item is ModelCandidate => {
+      if (!item || !catalog.connected.includes(item.providerID)) return false
+      const provider = catalog.all.get(item.providerID)
+      const model = provider?.models[item.modelID]
+      return !!model && modelSupportsExecution(item.providerID, provider, model, input.engine)
+    },
   )
 }
 
-export function createPromptModelSelection(input: { agent: () => { model?: ModelKey; variant?: string } | undefined }) {
+export function createPromptModelSelection(input: {
+  agent: () => { model?: ModelKey; variant?: string; engine?: string } | undefined
+}) {
   const sdk = useSDK()
   const sync = useSync()
   const models = useModels()
@@ -46,10 +54,15 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
   })
   const providers = useProviders(() => sdk().directory)
   const connected = createMemo(() => new Set(providers.connected().map((item) => item.id)))
+  const engine = () => input.agent()?.engine ?? sync().data.config.agent?.maestro?.engine
 
   const valid = (model: ModelCandidate) => {
     const provider = providers.all().get(model.providerID)
-    return !!provider?.models[model.modelID] && connected().has(model.providerID)
+    return (
+      !!provider?.models[model.modelID] &&
+      connected().has(model.providerID) &&
+      modelSupportsExecution(model.providerID, provider, provider.models[model.modelID], engine())
+    )
   }
 
   const configured = () => {
@@ -61,7 +74,11 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
   const fallback = () => {
     const defaults = providers.default()
     return providers.connected().flatMap((provider) => {
-      const modelID = defaults[provider.id] ?? Object.values(provider.models)[0]?.id
+      const preferred = defaults[provider.id]
+      const modelID =
+        preferred && valid({ providerID: provider.id, modelID: preferred })
+          ? preferred
+          : Object.values(provider.models).find((model) => valid({ providerID: provider.id, modelID: model.id }))?.id
       return modelID ? [{ providerID: provider.id, modelID }] : []
     })[0]
   }
@@ -74,6 +91,7 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
         configured: configured(),
         recent: models.recent.list(),
         fallback: fallback(),
+        engine: engine(),
       },
       { all: providers.all(), connected: providers.connected().map((item) => item.id) },
     )
@@ -83,6 +101,7 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
   const recentModels = createMemo(() =>
     models.recent
       .list()
+      .filter(valid)
       .map(models.find)
       .filter((item): item is NonNullable<typeof item> => !!item),
   )
@@ -91,7 +110,7 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
     ready: models.ready,
     current,
     recent: recentModels,
-    list: models.list,
+    list: () => models.list().filter((model) => valid({ providerID: model.provider.id, modelID: model.id })),
     cycle(direction: 1 | -1) {
       const items = recentModels()
       const item = current()
@@ -102,6 +121,7 @@ export function createPromptModelSelection(input: { agent: () => { model?: Model
       if (next) selection.set({ providerID: next.provider.id, modelID: next.id })
     },
     set(item: ModelKey | undefined, options?: { recent?: boolean }) {
+      if (item && !valid(item)) return
       startTransition(() =>
         batch(() => {
           prompt.model.set(item ? { ...item, variant: prompt.model.current()?.variant } : undefined)

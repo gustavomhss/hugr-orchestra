@@ -21,7 +21,10 @@ export const keptPaths: Kept[] = [
     reason: "branding detector and its planted old-product counterexamples must keep the name they reject",
   },
   { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
-  { path: /^nix\/W5-readiness\.md$/, reason: "Nix readiness record naming the upstream npm packages it pins and replaces" },
+  {
+    path: /^nix\/W5-readiness\.md$/,
+    reason: "Nix readiness record naming the upstream npm packages it pins and replaces",
+  },
   {
     path: /^specs\/backend-specialist\/evidence\//,
     reason: "raw live-model evidence: session exports name the third-party Zen provider and model ids verbatim",
@@ -103,6 +106,16 @@ export const protectedStrings: Protected[] = [
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {
+    pattern: /"@opencode-ai\/client": "file:\.\.\/app\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
+    paths: /^packages\/orchestra\/package\.json$/,
+    reason: "Orchestra's HTTP compatibility proofs depend on the exact published client name and vendored tarball",
+  },
+  {
+    pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
+    paths: /^packages\/storybook\/\.storybook\/mocks\/app\/context\/server-sdk\.ts$/,
+    reason: "Storybook's OAuth mock imports the vendored promise client's upstream integration types",
+  },
+  {
     pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
     paths: /^packages\/app(?:-shell)?\/src\//,
     reason: "names exported by the vendored upstream @opencode-ai/client tarball",
@@ -125,12 +138,14 @@ export const protectedStrings: Protected[] = [
   { pattern: /OPENCODE_API_KEY\b/g, reason: "Zen's own API key variable, as published by models.dev" },
   {
     pattern: /opencode\/\$\{InstallationVersion\}/g,
-    paths: /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+    paths:
+      /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
     reason: "Zen free-model transport User-Agent, preserved by dev PR #91",
   },
   {
     pattern: /opencode(?:#credential|-test)\b/g,
-    paths: /^packages\/core\/test\/session-runner-model\.test\.ts$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+    paths:
+      /^packages\/core\/test\/session-runner-model\.test\.ts$|^packages\/(?:opencode|orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
     reason: "Zen provider-family fixtures for credential and free-model header eligibility",
   },
   {
@@ -194,6 +209,77 @@ export const protectedStrings: Protected[] = [
     pattern: /\["opencode", "/g,
     paths: /\/test\/provider\/transform\.test\.ts$/,
     reason: "the Zen provider id in a transform table",
+  },
+  {
+    pattern: /(?<=catalog\.all\.get\()"opencode"/g,
+    paths: /^packages\/app\/src\/context\/global-sync\/provider-bootstrap\.test\.ts$/,
+    reason: "Zen provider map lookups after normalization through the vendored promise client",
+  },
+  {
+    pattern: /\bcatalog\("opencode"\)/g,
+    paths: /^packages\/app\/src\/context\/server-provider-refresh\.test\.ts$/,
+    reason: "Zen provider id in the pre-auth catalog refresh fixture",
+  },
+  {
+    pattern: /"opencode\/zen-free"/g,
+    paths: /^packages\/app\/src\/hooks\/model-execution\.test\.ts$/,
+    reason: "Zen provider/model wire reference retained among API execution choices",
+  },
+  {
+    pattern: /\bprovider\("opencode"\)|\bmodel\("opencode", "zen-free"\)/g,
+    paths: /^packages\/app\/src\/testing\/model-execution-fixture\.ts$/,
+    reason: "Zen provider and free-model wire ids in the mixed-engine normalization fixture",
+  },
+  {
+    pattern: /\bprovider\("opencode"|"opencode\/free"/g,
+    paths: /^packages\/app\/test-browser\/model-catalog\.test\.ts$/,
+    reason: "Zen provider/model wire ids used to prove older free models remain selectable",
+  },
+  {
+    pattern: /\bproviders: \["opencode"\]/g,
+    paths: /^packages\/app\/test-browser\/provider-resource\.test\.ts$/,
+    reason: "Zen provider id in the catalog returned before and after an auth refresh failure",
+  },
+  {
+    pattern: /\bresource: "opencode"/g,
+    paths: /^packages\/core\/test\/catalog\.test\.ts$/,
+    reason: "provider.use policy resource must match the external Zen provider id",
+  },
+  {
+    pattern: /\b(?:enabled|disabled)_providers: \["opencode"|"provider\.use", "opencode", "allow"/g,
+    paths: /^packages\/core\/test\/config\/provider-policy-migration\.test\.ts$/,
+    reason: "legacy provider restrictions and migrated policy decisions retain the Zen wire id",
+  },
+  {
+    pattern: /"opencode"(?=:\s*\{)|"id": "opencode"|"name": "OpenCode"/g,
+    paths: /^packages\/core\/test\/plugin\/fixtures\/models-dev-public\.json$/,
+    reason: "verbatim models.dev snapshot retains its external Zen provider key, id and published name",
+  },
+  {
+    pattern: /\["deepinfra", "poe", "opencode"\]/g,
+    paths: /^packages\/core\/test\/plugin\/models-dev\.test\.ts$/,
+    reason: "decoded provider keys must equal the raw models.dev snapshot's external ids",
+  },
+  {
+    pattern: /\bmodel: "opencode\/httpapi-free"|\benabled_providers: \["opencode"\]/g,
+    paths: /^packages\/orchestra\/test\/server\/httpapi-exercise\/catalog\.ts$/,
+    reason: "HTTP default-model exercise config must select and enable the external Zen provider by its wire id",
+  },
+  {
+    pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
+    paths: /^packages\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
+    reason: "HTTP compatibility proof imports the vendored upstream client's published promise entrypoint",
+  },
+  {
+    pattern: /\bOpenCode(?=\.make\()|(?<=import \{ )OpenCode(?= \} from)/g,
+    paths: /^packages\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
+    reason: "OpenCode is the vendored promise client's actual exported factory used by the HTTP compatibility proof",
+  },
+  {
+    pattern:
+      /"opencode\/ux-paid"|\b(?:enabled|disabled)_providers: \["opencode"\]|(?<=\.toContain\(\s*)"opencode"|\bresource: "opencode"/g,
+    paths: /^packages\/orchestra\/test\/server\/httpapi-model-recovery\.test\.ts$/,
+    reason: "HTTP model recovery config, returned provider and policy resource must address the external Zen wire id",
   },
   {
     pattern: /\bopencode-v2-openapi\.json\b/g,

@@ -5,6 +5,7 @@ import { Effect, JsonSchema, Schema } from "effect"
 import type { AgentV2 } from "../agent"
 import type { SessionMessage } from "../session/message"
 import type { SessionSchema } from "../session/schema"
+import type { ModelV2 } from "../model"
 import { ToolModelCapture } from "./model-capture"
 
 export interface Context {
@@ -12,6 +13,8 @@ export interface Context {
   readonly agent: AgentV2.ID
   readonly assistantMessageID: SessionMessage.ID
   readonly toolCallID: string
+  /** Captured catalog identity of the provider turn; transport deployment IDs may differ. */
+  readonly model?: ModelV2.Ref
 }
 
 export type SchemaType<A> = Schema.Codec<A, any, never, never>

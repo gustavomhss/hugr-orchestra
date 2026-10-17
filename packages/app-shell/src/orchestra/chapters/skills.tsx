@@ -38,6 +38,9 @@ export default function Skills(props: ChapterPageProps) {
   // A signal, not a store field: setting a store path to an object merges into the previous object, so the keyed
   // dialog would not remount and the previous dialog's pending close event would clear the next one.
   const [dialog, setDialog] = createSignal<SkillDialogState>()
+  const close = (current: SkillDialogState) => {
+    if (dialog() === current) setDialog(undefined)
+  }
   // No server setting decides which skills a profile offers, so availability is this app's per-profile choice,
   // keyed by skill file location because names can repeat across folders.
   const [local, setLocal] = persisted(
@@ -97,7 +100,7 @@ export default function Skills(props: ChapterPageProps) {
     })
   }
 
-  async function save(input: SkillSaveInput) {
+  async function save(current: SkillDialogState, input: SkillSaveInput) {
     const protocol = await serverSDK().protocol
     // V2 goes through the legacy SDK's generated v2 group: `currentApi` is the vendored @opencode-ai/client
     // release, which predates the skill write routes.
@@ -112,12 +115,12 @@ export default function Skills(props: ChapterPageProps) {
     if (!result?.data) return writeFailure(result?.response?.status, result?.error)
     const saved = "data" in result.data ? result.data.data : result.data
     if (abort.signal.aborted) return
-    setDialog(undefined)
+    close(current)
     setState("pending", saved.location)
     await load().catch(() => refresh())
   }
 
-  async function remove(skill: SkillEntry) {
+  async function remove(current: SkillDialogState, skill: SkillEntry) {
     const protocol = await serverSDK().protocol
     const result = await (
       protocol === "v1"
@@ -129,7 +132,7 @@ export default function Skills(props: ChapterPageProps) {
     ).catch(() => undefined)
     if (!result?.response?.ok) return writeFailure(result?.response?.status, result?.error)
     if (abort.signal.aborted) return
-    setDialog(undefined)
+    close(current)
     setState("pending", undefined)
     setLocal("disabled", (locations) => locations.filter((location) => location !== skill.location))
     await load().catch(() => refresh())
@@ -255,10 +258,12 @@ export default function Skills(props: ChapterPageProps) {
         {(current) => (
           <SkillDialog
             state={current}
-            onClose={() => setDialog(undefined)}
-            onSave={save}
-            onRemove={remove}
-            onAskRemove={(skill) => setDialog({ type: "remove", skill })}
+            onClose={() => close(current)}
+            onSave={(input) => save(current, input)}
+            onRemove={(skill) => remove(current, skill)}
+            onAskRemove={(skill) => {
+              if (dialog() === current) setDialog({ type: "remove", skill })
+            }}
           />
         )}
       </Show>

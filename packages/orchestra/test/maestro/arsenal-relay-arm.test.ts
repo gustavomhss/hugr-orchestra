@@ -34,6 +34,7 @@ import { Tool } from "@/tool/tool"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Git } from "@/git"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -52,7 +53,7 @@ const it = testEffect(
   TestAppNodeBuilder.build(
     LayerNode.group([filesystem, Agent.node, BackgroundJob.node, EventV2Bridge.node, Git.node, Config.node,
       CrossSpawnSpawner.node, Session.node, SessionProjector.node, SessionRunState.node, SessionStatus.node, Truncate.node,
-      ToolRegistry.node, Database.node, RuntimeFlags.node, Ripgrep.node]),
+       ToolRegistry.node, Database.node, RuntimeFlags.node, Ripgrep.node, AtlasKnowledge.node]),
     [[RuntimeFlags.node, RuntimeFlags.layer({})]],
   ),
 )
@@ -294,7 +295,7 @@ live.live(
                 .toMatchObject([{ wp: "gate", reason: "owner: the owner fixed the tree" }])
               expect(yield* permissions.list()).toEqual([])
             }).pipe(Effect.provideService(InstanceRef, instance))
-          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([AppProcess.node, Global.node])))),
+          }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([AppProcess.node, Global.node, AtlasKnowledge.node])))),
         ),
       )
     }),

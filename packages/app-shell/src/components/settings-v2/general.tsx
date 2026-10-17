@@ -77,10 +77,13 @@ const PermissionScopeSetting: Component<{ controller: PermissionScopeController 
     >
       <div data-action="settings-auto-accept-permissions">
         <Switch
+          hideLabel
           checked={props.controller.accepting()}
           disabled={!props.controller.enabled()}
           onChange={props.controller.set}
-        />
+        >
+          {language.t("command.permissions.autoaccept.enable")}
+        </Switch>
       </div>
     </SettingsRowV2>
   )
@@ -309,14 +312,28 @@ export const SettingsGeneralV2: Component<{
         <ShellSetting controller={shell} />
 
         <SettingsRowV2
+          title={language.t("settings.general.row.janitor.title")}
+          description={language.t("settings.general.row.janitor.description")}
+        >
+          <div data-action="settings-janitor">
+            <Switch hideLabel checked={settings.general.janitorEnabled()} onChange={settings.general.setJanitorEnabled}>
+              {language.t("settings.general.row.janitor.title")}
+            </Switch>
+          </div>
+        </SettingsRowV2>
+
+        <SettingsRowV2
           title={language.t("settings.general.row.reasoningSummaries.title")}
           description={language.t("settings.general.row.reasoningSummaries.description")}
         >
           <div data-action="settings-feed-reasoning-summaries">
             <Switch
+              hideLabel
               checked={settings.general.showReasoningSummaries()}
               onChange={(checked) => settings.general.setShowReasoningSummaries(checked)}
-            />
+            >
+              {language.t("settings.general.row.reasoningSummaries.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -326,9 +343,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-feed-shell-tool-parts-expanded">
             <Switch
+              hideLabel
               checked={settings.general.shellToolPartsExpanded()}
               onChange={(checked) => settings.general.setShellToolPartsExpanded(checked)}
-            />
+            >
+              {language.t("settings.general.row.shellToolPartsExpanded.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -338,9 +358,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-feed-edit-tool-parts-expanded">
             <Switch
+              hideLabel
               checked={settings.general.editToolPartsExpanded()}
               onChange={(checked) => settings.general.setEditToolPartsExpanded(checked)}
-            />
+            >
+              {language.t("settings.general.row.editToolPartsExpanded.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -351,9 +374,12 @@ export const SettingsGeneralV2: Component<{
           >
             <div data-action="settings-mobile-titlebar-bottom">
               <Switch
+                hideLabel
                 checked={settings.general.mobileTitlebarPosition() === "bottom"}
                 onChange={(checked) => settings.general.setMobileTitlebarPosition(checked ? "bottom" : "top")}
-              />
+              >
+                {language.t("settings.general.row.mobileTitlebarBottom.title")}
+              </Switch>
             </div>
           </SettingsRowV2>
         </Show>
@@ -372,9 +398,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-show-file-tree">
             <Switch
+              hideLabel
               checked={settings.general.showFileTree()}
               onChange={(checked) => settings.general.setShowFileTree(checked)}
-            />
+            >
+              {language.t("settings.general.row.showFileTree.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -384,9 +413,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-show-search">
             <Switch
+              hideLabel
               checked={settings.general.showSearch()}
               onChange={(checked) => settings.general.setShowSearch(checked)}
-            />
+            >
+              {language.t("settings.general.row.showSearch.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -396,9 +428,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-show-status">
             <Switch
+              hideLabel
               checked={settings.general.showStatus()}
               onChange={(checked) => settings.general.setShowStatus(checked)}
-            />
+            >
+              {language.t("settings.general.row.showStatus.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
       </SettingsListV2>
@@ -416,9 +451,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-notifications-agent">
             <Switch
+              hideLabel
               checked={settings.notifications.agent()}
               onChange={(checked) => settings.notifications.setAgent(checked)}
-            />
+            >
+              {language.t("settings.general.notifications.agent.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -428,9 +466,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-notifications-permissions">
             <Switch
+              hideLabel
               checked={settings.notifications.permissions()}
               onChange={(checked) => settings.notifications.setPermissions(checked)}
-            />
+            >
+              {language.t("settings.general.notifications.permissions.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
 
@@ -440,9 +481,12 @@ export const SettingsGeneralV2: Component<{
         >
           <div data-action="settings-notifications-errors">
             <Switch
+              hideLabel
               checked={settings.notifications.errors()}
               onChange={(checked) => settings.notifications.setErrors(checked)}
-            />
+            >
+              {language.t("settings.general.notifications.errors.title")}
+            </Switch>
           </div>
         </SettingsRowV2>
       </SettingsListV2>
@@ -478,7 +522,9 @@ export const SettingsGeneralV2: Component<{
             description={language.t("settings.general.row.pinchZoom.description")}
           >
             <div data-action="settings-pinch-zoom">
-              <Switch checked={pinchZoom.latest} onChange={onPinchZoomChange} />
+              <Switch hideLabel checked={pinchZoom.latest} onChange={onPinchZoomChange}>
+                {language.t("settings.general.row.pinchZoom.title")}
+              </Switch>
             </div>
           </SettingsRowV2>
         </SettingsListV2>

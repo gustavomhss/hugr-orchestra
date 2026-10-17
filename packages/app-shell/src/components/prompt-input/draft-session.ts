@@ -16,8 +16,10 @@ export function useDraftSessionKey() {
   const [search] = useSearchParams<{ draftId?: string }>()
   return createMemo(() => {
     const key = draftSessionKey(sdk().scope, sdk().directory, search.draftId)
+    if (!search.draftId) return key
     const tab = tabs.store.find((tab) => tab.type === "draft" && tab.draftID === search.draftId)
     if (!tab) return key
+    // Tab memory outlives composer mounts, but is disposed on close and promotion.
     return tabs.state(tab, `subagent-models:${key}`, () => {
       onCleanup(() => clearPending(key))
       return key
@@ -25,7 +27,15 @@ export function useDraftSessionKey() {
   })
 }
 
-/** V2 labels read canonical policy; legacy wildcard permissions cannot describe it. */
+export function createDraftSessionState(input: {
+  sessionID: Accessor<string | undefined>
+  pendingKey?: Accessor<string>
+}) {
+  const pendingKey = input.pendingKey ?? useDraftSessionKey()
+  return { pendingKey, ...useSubagentModelPolicy(input.sessionID, pendingKey) }
+}
+
+/** Canonical GETs, rather than delayed event projections, own V2 policy labels. */
 export function useSubagentModelPolicy(sessionID: Accessor<string | undefined>, pendingKey: Accessor<string>) {
   const serverSDK = useServerSDK()
   const sync = useSync()

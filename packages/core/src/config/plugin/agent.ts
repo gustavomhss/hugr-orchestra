@@ -37,6 +37,7 @@ const agentKeys = new Set([
   "request",
   "system",
   "description",
+  "engine",
   "mode",
   "hidden",
   "color",
@@ -47,12 +48,13 @@ const agentKeys = new Set([
 
 export const Plugin = define({
   id: "config-agent",
-  effect: Effect.fn(function* (ctx) {
+  effect: Effect.fn(function* () {
+    const agents = yield* AgentV2.Service
     const config = yield* Config.Service
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
     const location = Option.getOrUndefined(yield* Effect.serviceOption(Location.Service))
-    yield* ctx.agent.transform(
+    yield* agents.transform(
       Effect.fn(function* (draft) {
         const entries = yield* config.entries()
         // Config lists `.orchestra` folders once, when the location opens. One created later (by the agent
@@ -116,6 +118,7 @@ export const Plugin = define({
               }
               if (item.system !== undefined) agent.system = item.system
               if (item.description !== undefined) agent.description = item.description
+              if (item.engine !== undefined) agent.engine = item.engine
               if (item.mode !== undefined && !maestro) agent.mode = item.mode
               if (item.hidden !== undefined) agent.hidden = item.hidden
               if (item.color !== undefined) agent.color = item.color
