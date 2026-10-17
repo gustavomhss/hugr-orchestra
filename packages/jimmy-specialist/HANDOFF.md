@@ -13,6 +13,14 @@ The Jimmy campaign is closed.
     - a dispatch deadline of 600 s;
     - exhaustion stops only Jimmy, with the named `budget_exhausted` reason.
   - Details: `src/claude-code/host/research.ts` and `test/claude-code/host/jimmy*.test.ts`.
+- **Live proof in Claude mode (2026-10-13/14):** run against an exact published source, not against the latest `dev`.
+  - **Full research handoff** (`PASS_POSITIVE_ONLY`, independent cold review `ACCEPT_POSITIVE_ONLY`): one parent and one foreground Jimmy dispatch on Haiku 5.5. The run captured the source, retained the finding and the document, checked the card's references, and delivered the qualification packet complete to the parent.
+  - **Boundary probes:**
+    - the hook refuses built-in Write before it executes;
+    - the allowance is observed at 24/24, then denies with `continue:false`, and the parent continues;
+    - `Query.stopTask` stops a joined child that has a pending capture.
+  - **Not claimed:** a 600 s wall-clock wait (the deadline was proved on a virtual clock only), the SDK's native max-turn terminal cause, and hidden physical provider work.
+  - The receipts are local to the owner's machine, under `_worktrees/_tools/briefs/jimmy-harness/`. The index is `remaining-acceptance/closure/RESULT.md`.
 
 Closed items:
 
