@@ -54,6 +54,7 @@ const ReviewParameters = Schema.Struct({
     sha256: Schema.NonEmptyString,
   }),
   checks: Schema.Array(Check),
+  stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
 
 export const MaestroRecordValidationTool = Tool.define(
@@ -196,6 +197,7 @@ export const MaestroRecordReviewTool = Tool.define(
           sha256: true,
         },
         checks: [{ id: true, status: true, detail: true }],
+        stage: true,
       },
       execute: (params: Schema.Schema.Type<typeof ReviewParameters>, ctx) =>
         Effect.gen(function* () {
