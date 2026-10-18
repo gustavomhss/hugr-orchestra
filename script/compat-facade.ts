@@ -2,7 +2,7 @@
 // Routes a package's non-test imports of a legacy specifier (registry `legacy[].compat`) through its own
 // `<package>/src/compat/<facade>.ts` (D13). Only the string literal of an import, export-from or import-type
 // specifier changes; the quote and everything else on the line stay. Default and namespace imports, dynamic
-// `import()` and `require()` of a legacy specifier are refused, not rewritten.
+// `import()`, `require()` and every other form of a legacy specifier are refused, not rewritten.
 //
 // Usage: bun run script/compat-facade.ts <alias> <prefix>... [--write|--check]
 import { readFileSync, writeFileSync } from "node:fs"
@@ -27,7 +27,7 @@ prefixes.forEach((prefix) => {
 const files = workspace.files.filter(
   (file) =>
     SOURCE.test(file) &&
-    !isTestFile(file) &&
+    !isTestFile(file.slice(member.path.length + 1)) &&
     !file.startsWith(compat) &&
     prefixes.some((prefix) => file === prefix || file.startsWith(`${prefix.replace(/\/$/, "")}/`)),
 )
@@ -38,10 +38,12 @@ const nodeNext = /"moduleResolution"\s*:\s*"node(?:16|next)"/i.test(
 )
 const changed = files.flatMap((file) => {
   const text = readFileSync(path.join(root, file), "utf8")
-  const edits = specifiersOf(file, text)
+  const parsed = specifiersOf(file, text)
+  if (parsed.errors.length > 0) fail(`FACADE_PARSE_ERROR:${file}: ${parsed.errors[0]}`)
+  const edits = parsed.found
     .filter((item) => facades.has(item.specifier))
     .map((item) => {
-      if (item.unsupported || item.kind === "dynamic" || item.kind === "require" || item.kind === "import-equals")
+      if (item.unsupported || !["import", "export", "import-type"].includes(item.kind))
         fail(`FACADE_UNSUPPORTED_IMPORT_FORM:${file}:${item.specifier}`)
       const facade = `${compat}${facades.get(item.specifier)}`
       if (!tracked.has(`${facade}.ts`)) fail(`FACADE_MISSING:${facade}.ts`)

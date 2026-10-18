@@ -1,16 +1,20 @@
 #!/usr/bin/env bun
-// Module-boundary gate. Reads the import positions (import/export-from, import-equals, import(), require(), import
-// types, import.meta.glob) of tracked and untracked-but-not-ignored source files under a package registered in
-// script/module-registry.json, with the TypeScript parser and no type checker, and checks rules R0-R12 against
-// script/module-architecture.json. Workspace specifiers resolve through the working tree's package.json `exports`
-// only, never through node_modules. A violation of a ledgerable rule passes only while script/boundary-ledger.json
-// lists it; a listed entry that no longer occurs is stale and fails, so the ledger only shrinks.
+// Module-boundary gate. Reads the import and resolution positions (import/export-from, import-equals, import(),
+// require(), createRequire(...)(), require.resolve(), import.meta.resolve(), import types, import.meta.glob,
+// `/// <reference path|types>` and a leading `@jsxImportSource` pragma) of tracked and untracked-but-not-ignored
+// source files under a package registered in script/module-registry.json, with the TypeScript parser and no type
+// checker, and checks rules R0-R13 against script/module-architecture.json. Workspace specifiers resolve through the
+// working tree's package.json `exports` only, never through node_modules. A violation of a ledgerable rule passes only
+// while script/boundary-ledger.json lists it with a reason that starts with the rule's decision id; a listed entry
+// that no longer occurs is stale and fails. Growth of the ledger itself is caught only with `--base <ref>`: then any
+// key, or any per-rule count, above the ledger at the merge-base with that ref fails. CI passes `--base origin/dev`.
 //
-// Not checked: specifiers that are not string literals, files under node_modules/, dist/ and modules/atlas/ (except
-// modules/atlas/boundary/), undeclared npm packages, and anything only a type checker, bundler or runtime resolver sees.
-// Whether a README's prose is any good is a human call; R8 checks only structure and existence.
+// Not checked: specifiers that are not string literals, a createRequire result kept under a name other than
+// `require`, files under node_modules/, a package's own top-level dist/, modules/atlas/ (except modules/atlas/boundary/),
+// undeclared npm packages, and anything only a type checker, bundler or runtime resolver sees. Whether a README's prose
+// is any good is a human call; R8 checks only structure and existence.
 //
-// Usage: bun run script/check-module-boundaries.ts [--no-stale] [--scope <prefix>...] [--json] [--prune] [--seed]
+// Usage: bun run script/check-module-boundaries.ts [--no-stale] [--scope <prefix>...] [--json] [--prune] [--seed] [--base <ref>]
 import { existsSync, readFileSync, writeFileSync } from "node:fs"
 import path from "node:path"
 import {
@@ -65,14 +69,18 @@ if (import.meta.main) {
 export function run(options: { root: string; args: string[]; minFiles?: number; minEdges?: number }) {
   const out: string[] = []
   const err: string[] = []
-  const report = { new: [] as Violation[], stale: [] as Entry[], counts: {} as Record<string, number> }
+  const report = { new: [] as Violation[], stale: [] as Entry[], growth: [] as string[], counts: {} as Record<string, number> }
   const finish = (code: number) => ({ code, out, err, report })
   const fatal = (message: string) => {
     err.push(`ERROR ${message}`)
     return finish(1)
   }
-  const flags = new Set(options.args.filter((arg) => arg.startsWith("--")))
-  const scope = flags.has("--scope") ? options.args.filter((arg) => !arg.startsWith("--")).map((arg) => arg.replace(/\/+$/, "")) : undefined
+  const baseIndex = options.args.indexOf("--base")
+  const baseRef = baseIndex < 0 ? undefined : options.args[baseIndex + 1]
+  if (baseIndex >= 0 && (baseRef === undefined || baseRef.startsWith("--"))) return fatal("--base needs a git ref")
+  const args = options.args.filter((_, index) => baseIndex < 0 || (index !== baseIndex && index !== baseIndex + 1))
+  const flags = new Set(args.filter((arg) => arg.startsWith("--")))
+  const scope = flags.has("--scope") ? args.filter((arg) => !arg.startsWith("--")).map((arg) => arg.replace(/\/+$/, "")) : undefined
   const unknown = [...flags].filter((flag) => !["--no-stale", "--scope", "--json", "--prune", "--seed"].includes(flag))
   if (unknown.length > 0) return fatal(`unknown option ${unknown.join(" ")}`)
   if (scope !== undefined && (scope.length === 0 || flags.has("--seed"))) return fatal("--scope needs at least one path prefix and cannot seed")
@@ -104,8 +112,14 @@ export function run(options: { root: string; args: string[]; minFiles?: number; 
     return finish(report.new.length > 0 ? 1 : 0)
   }
   if (!existsSync(ledgerFile)) return fatal(`LEDGER_MISSING: ${LEDGER} does not exist; the lead seeds it once with --seed`)
-  const ledger = readLedger(ledgerFile)
+  const ledger = readLedger(readFileSync(ledgerFile, "utf8"), LEDGER)
   if (typeof ledger === "string") return fatal(ledger)
+  if (baseRef !== undefined) {
+    const growth = ledgerGrowth(options.root, baseRef, ledger)
+    if (typeof growth === "string") return fatal(growth)
+    report.growth = growth.lines
+    out.push(...growth.notes)
+  }
   const listed = new Set(ledger.map(key))
   const found = new Set(result.violations.map(key))
   report.new = result.violations.filter((item) => !ledgerable(item.rule) || !listed.has(key(item)))
@@ -116,29 +130,36 @@ export function run(options: { root: string; args: string[]; minFiles?: number; 
   if (!flags.has("--json")) {
     err.push(...report.new.map(line))
     err.push(...report.stale.map((entry) => `STALE ${entry.rule} ${entry.file} ${entry.specifier}: no longer occurs; remove it from ${LEDGER}`))
+    err.push(...report.growth)
     out.push(
       `module-boundaries: ${result.parsed} files parsed, ${result.edges} cross-package edges, ${result.violations.length} violations ` +
         `(${result.violations.length - report.new.length} ledgered), ${report.new.length} new, ${report.stale.length} stale${flags.has("--prune") ? " (pruned)" : ""}`,
     )
   }
-  return finish(report.new.length > 0 || (report.stale.length > 0 && !flags.has("--no-stale") && !flags.has("--prune")) ? 1 : 0)
+  return finish(report.new.length > 0 || report.growth.length > 0 || (report.stale.length > 0 && !flags.has("--no-stale") && !flags.has("--prune")) ? 1 : 0)
 }
 
 export function check(workspace: Workspace, inScope: (file: string) => boolean) {
   const files = new Set(workspace.files)
   const dirs = new Set(workspace.files.flatMap((file) => file.split("/").slice(0, -1).map((_, index, parts) => parts.slice(0, index + 1).join("/"))))
   const exists = (file: string) => files.has(file) || dirs.has(file)
-  const scanned = workspace.files.filter(
-    (file) =>
+  const scanned = workspace.files.filter((file) => {
+    const member = workspace.memberOf(file)
+    return (
+      member !== undefined &&
       SOURCE.test(file) &&
       inScope(file) &&
-      !/(^|\/)(node_modules|dist)\//.test(file) &&
-      (!file.startsWith("modules/atlas/") || file.startsWith("modules/atlas/boundary/")) &&
-      workspace.memberOf(file) !== undefined,
-  )
+      !/(^|\/)node_modules\//.test(file) &&
+      !file.startsWith(`${member.path}/dist/`) &&
+      (!file.startsWith("modules/atlas/") || file.startsWith("modules/atlas/boundary/"))
+    )
+  })
+  const parseErrors: Violation[] = []
   const edges = scanned.flatMap((file) => {
     const from = workspace.memberOf(file) as Member
-    return specifiersOf(file, readFileSync(path.join(workspace.root, file), "utf8")).map((item) => resolveEdge(workspace, files, from, file, item))
+    const parsed = specifiersOf(file, readFileSync(path.join(workspace.root, file), "utf8"))
+    parseErrors.push(...parsed.errors.slice(0, 1).map((error) => ({ rule: "R13", file, specifier: "parse", message: `syntax error: ${error}` })))
+    return parsed.found.map((item) => resolveEdge(workspace, files, from, file, item))
   })
   const violations = [
     ...registryRule(workspace, exists),
@@ -147,6 +168,7 @@ export function check(workspace: Workspace, inScope: (file: string) => boolean) 
     ...wildcardRule(workspace),
     ...readmeRule(workspace, exists),
     ...edges.flatMap((edge) => edgeRules(workspace, files, edge)),
+    ...parseErrors,
   ]
   const unique = [...new Map(violations.map((item) => [`${item.rule}|${item.file}|${item.specifier}`, item])).values()]
   return {
@@ -159,7 +181,9 @@ export function check(workspace: Workspace, inScope: (file: string) => boolean) 
 function resolveEdge(workspace: Workspace, files: Set<string>, from: Member, file: string, item: { specifier: string; kind: string; typeOnly: boolean }): Edge {
   const edge = { file, specifier: item.specifier, kind: item.kind, typeOnly: item.typeOnly, from }
   const stem = (target: string) => {
-    const resolved = [target, `${target}.ts`, `${target}.tsx`, `${target}/index.ts`].find((candidate) => files.has(candidate)) ?? target
+    // A `.js` written for an ESM build names its `.ts` source.
+    const source = target.replace(/\.([cm]?)js(x?)$/, ".$1ts$2")
+    const resolved = [target, `${target}.ts`, `${target}.tsx`, `${target}/index.ts`, `${target}/index.tsx`, source, source.replace(/\.ts$/, ".tsx")].find((candidate) => files.has(candidate)) ?? target
     return { ...edge, to: workspace.memberOf(resolved), target: resolved }
   }
   if (item.specifier.startsWith(".") || item.specifier.startsWith("/"))
@@ -182,7 +206,7 @@ function edgeRules(workspace: Workspace, files: Set<string>, edge: Edge): Violat
   const at = (rule: string, message: string) => ({ rule, file: edge.file, specifier: edge.specifier, message })
   const from = edge.from
   const to = edge.to
-  const test = isTestFile(edge.file)
+  const test = isTestFile(edge.file.slice(from.path.length + 1))
   const cross = to !== undefined && to !== from
   const relative = edge.file.slice(from.path.length + 1)
   const legacy = (file: string) =>
@@ -268,10 +292,17 @@ function registryRule(workspace: Workspace, exists: (file: string) => boolean): 
     Object.entries(spec.domains ?? {}).filter(([, domain]) => domain.kind === "product").map(([id]) => id),
   )
   const aliases = workspace.registry.map((entry) => entry.alias)
+  const manifests = workspace.files.filter((file) => file.endsWith("/package.json")).map((file) => file.slice(0, -"/package.json".length))
+  const matches = (pattern: string) => manifests.filter((dir) => (pattern.includes("*") ? patternRank(pattern, dir) > 0 : dir === pattern))
+  const members = new Set(workspace.workspaces.flatMap(matches))
+  const registered = workspace.registry.map((entry) => entry.path)
   const relayHost = architecture.packages[architecture.relayContainment.package]?.domains
   return [
     ...aliases.filter((alias) => !(alias in architecture.packages)).map((alias) => at(alias, "registered in module-registry.json but not described")),
     ...Object.keys(architecture.packages).filter((alias) => !aliases.includes(alias)).map((alias) => at(alias, "described but not in module-registry.json")),
+    ...[...members].filter((dir) => !registered.includes(dir)).map((dir) => at(dir, "root workspaces member is not in module-registry.json, so nothing under it is scanned")),
+    ...registered.filter((dir) => !members.has(dir)).map((dir) => at(dir, "registered package is not a root workspaces member")),
+    ...workspace.workspaces.filter((pattern) => matches(pattern).length === 0).map((pattern) => at(`workspaces.${pattern}`, "root workspaces pattern matches no package.json")),
     ...Object.entries(architecture.layers).flatMap(([layer, allowed]) => allowed.filter((reference) => !known(reference)).map((reference) => at(`layers.${layer}`, `unknown layer ${reference}`))),
     ...workspace.members.flatMap((member) => {
       const spec = member.spec
@@ -341,7 +372,7 @@ function browserSafeRule(workspace: Workspace): Violation[] {
       .map((file) => `${member.path}/${file}`)
       .filter((file) => existsSync(path.join(workspace.root, file)))
       .flatMap((file) =>
-        specifiersOf(file, readFileSync(path.join(workspace.root, file), "utf8")).map((item) => ({
+        specifiersOf(file, readFileSync(path.join(workspace.root, file), "utf8")).found.map((item) => ({
           rule: "R2",
           file,
           specifier: item.specifier,
@@ -388,10 +419,10 @@ function readmeRule(workspace: Workspace, exists: (file: string) => boolean): Vi
   return [...problems].map(([file, list]) => ({ rule: "R8", file, specifier: "README", message: list.join("; ") }))
 }
 
-function readLedger(file: string): Entry[] | string {
-  const value: unknown = JSON.parse(readFileSync(file, "utf8"))
+function readLedger(source: string, name: string): Entry[] | string {
+  const value: unknown = JSON.parse(source)
   const entries = value && typeof value === "object" && "entries" in value ? value.entries : undefined
-  if (!Array.isArray(entries)) return `${LEDGER}: expected { "entries": [...] }`
+  if (!Array.isArray(entries)) return `${name}: expected { "entries": [...] }`
   const text = (entry: unknown, field: string) => {
     const item = entry && typeof entry === "object" ? (entry as Record<string, unknown>)[field] : undefined
     return typeof item === "string" && item.trim().length > 0 ? item : undefined
@@ -400,10 +431,43 @@ function readLedger(file: string): Entry[] | string {
     (entry): entry is Entry =>
       ["rule", "file", "specifier", "reason"].every((field) => text(entry, field) !== undefined) && (text(entry, "rule") ?? "") in REASONS,
   )
-  if (valid.length !== entries.length) return `${LEDGER}: every entry needs a ledgerable rule and non-empty file, specifier and reason`
+  if (valid.length !== entries.length) return `${name}: every entry needs a ledgerable rule and non-empty file, specifier and reason`
+  const unjustified = valid.find((entry) => !new RegExp(`^${decision(entry.rule)}: \\S`).test(entry.reason))
+  if (unjustified) return `${name}: ${unjustified.rule} ${unjustified.file} ${unjustified.specifier}: the reason must start with "${decision(unjustified.rule)}: "`
   const keys = valid.map((entry) => `${entry.rule}|${entry.file}|${entry.specifier}`)
   const duplicate = keys.find((key, index) => keys.indexOf(key) !== index)
-  return duplicate === undefined ? valid : `${LEDGER}: duplicate entry ${duplicate}`
+  return duplicate === undefined ? valid : `${name}: duplicate entry ${duplicate}`
+}
+
+function decision(rule: string) {
+  return (REASONS[rule] ?? "").split(":")[0]
+}
+
+/** Keys and per-rule counts the ledger gained over its state at the merge-base with `baseRef`. */
+function ledgerGrowth(root: string, baseRef: string, ledger: Entry[]) {
+  const git = (args: string[]) => Bun.spawnSync(["git", ...args], { cwd: root })
+  const merged = git(["merge-base", baseRef, "HEAD"])
+  const commit = merged.exitCode === 0 ? merged : git(["rev-parse", "--verify", `${baseRef}^{commit}`])
+  if (commit.exitCode !== 0) return `BASE_UNRESOLVED: cannot resolve ${baseRef}; fetch it first (${commit.stderr.toString().trim()})`
+  const sha = commit.stdout.toString().trim()
+  const shown = git(["show", `${sha}:${LEDGER}`])
+  // The commit resolved, so a failed show means the ledger did not exist there yet (the commit that introduces it).
+  if (shown.exitCode !== 0)
+    return { lines: [], notes: [`module-boundaries: ${baseRef} (${sha.slice(0, 10)}) has no ${LEDGER}; there is no earlier ledger to compare`] }
+  const base = readLedger(shown.stdout.toString(), `${LEDGER} at ${sha.slice(0, 10)}`)
+  if (typeof base === "string") return `BASE_LEDGER_INVALID: ${base}`
+  const key = (entry: Entry) => `${entry.rule}|${entry.file}|${entry.specifier}`
+  const known = new Set(base.map(key))
+  const count = (entries: Entry[], rule: string) => entries.filter((entry) => entry.rule === rule).length
+  return {
+    lines: [
+      ...ledger.filter((entry) => !known.has(key(entry))).map((entry) => `LEDGER_GROWTH ${entry.rule} ${entry.file} ${entry.specifier}: not in the ledger at ${baseRef}; the ledger only shrinks`),
+      ...[...new Set(ledger.map((entry) => entry.rule))]
+        .filter((rule) => count(ledger, rule) > count(base, rule))
+        .map((rule) => `LEDGER_COUNT_RAISED ${rule}: ${count(ledger, rule)} entries, ${count(base, rule)} at ${baseRef}`),
+    ],
+    notes: [],
+  }
 }
 
 function writeLedger(file: string, entries: Entry[]) {

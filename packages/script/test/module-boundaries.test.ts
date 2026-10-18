@@ -5,7 +5,7 @@ import { mkdirSync, mkdtempSync, readFileSync, realpathSync, rmSync, symlinkSync
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { check, run } from "../../../script/check-module-boundaries"
-import { loadWorkspace, renderReadmeBlock, type Architecture } from "../../../script/module-architecture"
+import { isTestFile, loadWorkspace, renderReadmeBlock, type Architecture } from "../../../script/module-architecture"
 
 type Tree = { files: Record<string, string>; architecture: Architecture; ledger: Record<string, string>[] }
 
@@ -43,6 +43,7 @@ function base(): Tree {
   ].map((entry) => ({ ...entry, kind: "bun", scope: "." }))
   const files = {
     ".gitignore": "node_modules/\n",
+    "package.json": json({ name: "fixture-root", private: true, workspaces: ["packages/*", "apps/*", "modules/relay"] }),
     "script/module-registry.json": json({ format: 1, modules }),
     "packages/schema/package.json": json({ name: "@fx/schema", exports: { ".": "./src/index.ts", "./thing": "./src/thing.ts" } }),
     "packages/schema/src/index.ts": "export const a = 1\n",
@@ -151,7 +152,13 @@ function put(root: string, file: string, content: string) {
 const found = (root: string) => check(loadWorkspace(root), () => true).violations
 const gate = (root: string, ...args: string[]) => run({ root, args, minFiles: 1, minEdges: 1 })
 const rules = (root: string, file: string) => found(root).filter((item) => item.file === file).map((item) => item.rule)
-const entry = (rule: string, file: string, specifier: string) => ({ rule, file, specifier, reason: "fixture exception" })
+const decisions: Record<string, string> = { R1: "D13", R3: "D13", R4: "D7", R6a: "D10", R12: "D0" }
+const entry = (rule: string, file: string, specifier: string, reason = `${decisions[rule]}: fixture exception`) => ({ rule, file, specifier, reason })
+const commit = (root: string) => {
+  const git = (args: string[]) => expect(Bun.spawnSync(["git", "-c", "user.name=Fixture", "-c", "user.email=fixture@example.invalid", ...args], { cwd: root }).exitCode).toBe(0)
+  git(["add", "-A"])
+  git(["commit", "-qm", "base"])
+}
 
 describe("module-boundary gate", () => {
   test("the clean fixture has no violation and passes strict mode", () => {
@@ -367,5 +374,141 @@ describe("module-boundary gate", () => {
     mkdirSync(path.join(root, "node_modules/@fx"), { recursive: true })
     symlinkSync(decoy, path.join(root, "node_modules/@fx/schema"), process.platform === "win32" ? "junction" : "dir")
     expect(found(root).map((item) => `${item.rule} ${item.specifier}`)).toEqual(["R6b @fx/schema/decoy"])
+  })
+
+  test("--base fails when the ledger gains a key or raises a count, and passes when it does not", () => {
+    const root = fixture()
+    commit(root)
+    expect(gate(root, "--base", "HEAD").code).toBe(0)
+    put(root, "packages/core/src/session/sdk.ts", 'import type { Client } from "@fx/sdk"\nexport type C = Client\n')
+    put(root, "script/boundary-ledger.json", json({ entries: [entry("R1", "packages/core/src/session/sdk.ts", "@fx/sdk"), entry("R3", "packages/core/src/session/sdk.ts", "@fx/sdk")] }))
+    // Without a base the hand-added rows hide the new violations; that is the hole --base closes.
+    expect(gate(root).code).toBe(0)
+    const grown = gate(root, "--base", "HEAD")
+    expect(grown.code).toBe(1)
+    expect(grown.report.growth).toEqual([
+      "LEDGER_GROWTH R1 packages/core/src/session/sdk.ts @fx/sdk: not in the ledger at HEAD; the ledger only shrinks",
+      "LEDGER_GROWTH R3 packages/core/src/session/sdk.ts @fx/sdk: not in the ledger at HEAD; the ledger only shrinks",
+      "LEDGER_COUNT_RAISED R1: 1 entries, 0 at HEAD",
+      "LEDGER_COUNT_RAISED R3: 1 entries, 0 at HEAD",
+    ])
+    commit(root)
+    expect(gate(root, "--base", "HEAD").code).toBe(0)
+    expect(gate(root, "--base", "no-such-ref").err[0]).toContain("BASE_UNRESOLVED")
+  })
+
+  test("--base passes with a note when the base has no ledger yet", () => {
+    const root = fixture()
+    rmSync(path.join(root, "script/boundary-ledger.json"))
+    commit(root)
+    put(root, "script/boundary-ledger.json", json({ entries: [] }))
+    const result = gate(root, "--base", "HEAD")
+    expect(result.code).toBe(0)
+    expect(result.out[0]).toContain("there is no earlier ledger to compare")
+  })
+
+  test("a ledger reason must start with the decision id of its rule", () => {
+    const violation = (tree: Tree) => {
+      tree.files["packages/ui/src/direct.ts"] = 'import type { Client } from "@fx/sdk"\nexport type C = Client\n'
+    }
+    const vague = fixture((tree) => {
+      violation(tree)
+      tree.ledger.push(entry("R3", "packages/ui/src/direct.ts", "@fx/sdk", "x"))
+    })
+    expect(gate(vague).err[0]).toContain('the reason must start with "D13: "')
+    const wrong = fixture((tree) => {
+      violation(tree)
+      tree.ledger.push(entry("R3", "packages/ui/src/direct.ts", "@fx/sdk", "D7: wrong decision"))
+    })
+    expect(gate(wrong).code).toBe(1)
+    const justified = fixture((tree) => {
+      violation(tree)
+      tree.ledger.push(entry("R3", "packages/ui/src/direct.ts", "@fx/sdk"))
+    })
+    expect(gate(justified).code).toBe(0)
+  })
+
+  test("R0 fails on a root workspaces member that is not registered, and on a registered package outside workspaces", () => {
+    const extra = fixture((tree) => {
+      tree.files["packages/extra/package.json"] = json({ name: "@fx/extra" })
+      tree.files["packages/extra/src/index.ts"] = 'export * from "@fx/sdk"\n'
+    })
+    expect(found(extra).map((item) => `${item.rule} ${item.specifier}: ${item.message}`)).toEqual([
+      "R0 packages/extra: root workspaces member is not in module-registry.json, so nothing under it is scanned",
+    ])
+    const outside = fixture((tree) => {
+      tree.files["package.json"] = json({ name: "fixture-root", private: true, workspaces: ["packages/*", "apps/*"] })
+    })
+    expect(found(outside).map((item) => `${item.rule} ${item.specifier}`)).toEqual(["R0 modules/relay"])
+  })
+
+  test("support folders count as tests only directly under the package root; *.suite.ts stays a test file", () => {
+    expect(isTestFile("test/a.ts")).toBe(true)
+    expect(isTestFile("example/a.ts")).toBe(true)
+    expect(isTestFile("src/example/a.ts")).toBe(false)
+    expect(isTestFile("src/test/a.ts")).toBe(false)
+    expect(isTestFile("src/a.suite.ts")).toBe(true)
+    expect(isTestFile("src/a.test.tsx")).toBe(true)
+    const root = fixture((tree) => {
+      tree.files["packages/ui/src/example/zz.ts"] = 'export * from "@fx/sdk"\n'
+      tree.files["packages/ui/example/zz.ts"] = 'export * from "@fx/sdk"\n'
+      tree.files["packages/ui/src/shared.suite.ts"] = 'export * from "@fx/sdk"\n'
+    })
+    expect(rules(root, "packages/ui/src/example/zz.ts")).toEqual(["R3"])
+    expect(rules(root, "packages/ui/example/zz.ts")).toEqual([])
+    expect(rules(root, "packages/ui/src/shared.suite.ts")).toEqual([])
+  })
+
+  test("R11 sees through a .js suffix and the @/ alias, also for a product file owned by an exact pattern", () => {
+    const root = fixture((tree) => {
+      // A product file inside a platform-legacy folder: only resolving `.js` to `.ts` reaches its exact pattern.
+      tree.files["apps/app/src/session/compact.ts"] = "export const compact = 1\n"
+      tree.architecture.packages.app?.domains?.continuity?.patterns.push("src/session/compact.ts")
+      tree.files["apps/app/src/session/suffix.ts"] = 'export { compact } from "./compact.js"\n'
+      tree.files["apps/app/src/session/alias.ts"] = 'export { compact } from "@/session/compact.js"\n'
+      tree.files["apps/app/src/session/folder.ts"] = 'export { a } from "../maestro/a.js"\n'
+      tree.files["apps/app/src/composed.ts"] = 'export { compact } from "./session/compact.js"\n'
+      tree.architecture.packages.app?.domains?.composition?.patterns.push("src/composed.ts")
+    })
+    expect(rules(root, "apps/app/src/session/suffix.ts")).toEqual(["R11"])
+    expect(rules(root, "apps/app/src/session/alias.ts")).toEqual(["R11"])
+    expect(rules(root, "apps/app/src/session/folder.ts")).toEqual(["R11"])
+    expect(rules(root, "apps/app/src/composed.ts")).toEqual([])
+  })
+
+  test("only a package's own top-level dist/ is skipped", () => {
+    const root = fixture((tree) => {
+      tree.files["packages/ui/src/dist/zz.ts"] = 'export * from "@fx/sdk"\n'
+      tree.files["packages/ui/dist/zz.ts"] = 'export * from "@fx/sdk"\n'
+    })
+    expect(rules(root, "packages/ui/src/dist/zz.ts")).toEqual(["R3"])
+    expect(rules(root, "packages/ui/dist/zz.ts")).toEqual([])
+  })
+
+  test("reference directives, the jsx pragma and resolution calls are scanned", () => {
+    const root = fixture((tree) => {
+      tree.files["packages/ui/src/reference.ts"] = '/// <reference path="../../core/src/util/path.ts" />\n/// <reference types="@fx/schema" />\nexport {}\n'
+      tree.files["packages/ui/src/pragma.tsx"] = "/** @jsxImportSource @fx/schema */\nexport const view = 1\n"
+      tree.files["packages/ui/src/create-require.ts"] = 'import { createRequire } from "node:module"\nexport const a = createRequire(import.meta.url)("@fx/schema")\n'
+      tree.files["packages/ui/src/require-resolve.ts"] = 'export const b = require.resolve("@fx/schema")\n'
+      tree.files["packages/ui/src/meta-resolve.ts"] = 'export const c = import.meta.resolve("@fx/schema")\n'
+      tree.files["packages/ui/src/declared.ts"] = 'export const d = require.resolve("@fx/core/util/path")\n'
+    })
+    expect(found(root).filter((item) => item.file.startsWith("packages/ui/src/")).map((item) => `${item.rule} ${item.file} ${item.specifier}`)).toEqual([
+      "R4 packages/ui/src/create-require.ts @fx/schema",
+      "R4 packages/ui/src/meta-resolve.ts @fx/schema",
+      "R4 packages/ui/src/pragma.tsx @fx/schema",
+      "R4 packages/ui/src/reference.ts @fx/schema",
+      "R4 packages/ui/src/require-resolve.ts @fx/schema",
+      "R5 packages/ui/src/reference.ts ../../core/src/util/path.ts",
+    ])
+  })
+
+  test("a file with a syntax error fails instead of being skipped", () => {
+    const root = fixture((tree) => {
+      tree.files["packages/ui/src/broken.ts"] = "export const = 1\n"
+    })
+    expect(found(root).map((item) => `${item.rule} ${item.file}`)).toEqual(["R13 packages/ui/src/broken.ts"])
+    expect(gate(root).code).toBe(1)
   })
 })

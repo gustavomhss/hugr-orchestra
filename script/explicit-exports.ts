@@ -84,7 +84,7 @@ function inverse(workspace: Workspace, packagePath: string, key: string, value: 
   const prefix = path.posix.join(packagePath, head)
   const star = key.indexOf("*")
   return workspace.files
-    .filter((file) => file.startsWith(prefix) && file.endsWith(tail) && !file.endsWith(".d.ts") && !isTestFile(file))
+    .filter((file) => file.startsWith(prefix) && file.endsWith(tail) && !file.endsWith(".d.ts") && !isTestFile(file.slice(packagePath.length + 1)))
     .map((file) => `${key.slice(0, star)}${file.slice(prefix.length, file.length - tail.length)}${key.slice(star + 1)}`)
 }
 
