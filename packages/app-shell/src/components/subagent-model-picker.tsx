@@ -3,7 +3,7 @@ import { List } from "@orchestra/ui/list"
 import { Switch } from "@orchestra/ui/switch"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { createMemo, Show } from "solid-js"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "../compat/sdk-v2-client"
 import { useLanguage } from "@/context/language"
 import { ModelTooltip } from "./model-tooltip"
 import {

@@ -411,6 +411,12 @@ jobs:
         if: matrix.part == 'packages'
         run: bun run check:spawn-imports
 
+      # The base comparison fails when the boundary ledger gains a key or a per-rule count over dev's; it needs the full
+      # history this job's packages lane checks out (fetch-depth 0), like the godfile gate.
+      - name: Run module-boundary gate
+        if: matrix.part == 'packages'
+        run: bun run check:boundaries --base origin/dev
+
       # Every pinned ripgrep digest, not only the runners' platforms, against upstream's .sha256 files.
       - name: Run ripgrep pin gate
         if: matrix.part == 'packages'

@@ -9,7 +9,7 @@ import { createApiForServer, type ServerApi } from "@/utils/server"
 import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
 import { clearPending, pendingSnapshot } from "../draft-subagent-models"
-import type { Part } from "@orchestra/sdk/v2/client"
+import type { Part } from "../../compat/sdk-v2-client"
 
 export let createPromptSubmit: typeof import("./submit").createPromptSubmit
 export let sendFollowupDraft: typeof import("./submit").sendFollowupDraft

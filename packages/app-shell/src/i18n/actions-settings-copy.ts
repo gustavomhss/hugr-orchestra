@@ -1,0 +1,29 @@
+export * as ActionsSettingsCopy from "./actions-settings-copy"
+
+// Copy for Actions connection settings and schedules.
+export const dict = {
+  "orchestra.actions.settings.detail": "Connection, capabilities and execution policy for this project.",
+  "orchestra.actions.settings.summary": "{{provider}} · Project scope",
+  "orchestra.actions.settings.connection": "Project connection",
+  "orchestra.actions.settings.host": "Host",
+  "orchestra.actions.settings.signInValue": "Connected server’s {{cli}} session",
+  "orchestra.actions.settings.writeAccess": "Write access",
+  "orchestra.actions.settings.readAccess": "Read access",
+  "orchestra.actions.settings.connectionNote": "Select one explicit remote and host. Enterprise and self-managed hosts require a configured connection; another server is never selected silently.",
+  "orchestra.actions.settings.connectionDetails": "Connection details",
+  "orchestra.actions.settings.serverAuth": "Server-managed authentication",
+  "orchestra.actions.settings.configureConnection": "Configure connection",
+  "orchestra.actions.settings.capabilities": "Available capabilities",
+  "orchestra.actions.settings.capability.read": "Read runs and logs",
+  "orchestra.actions.settings.capability.execute": "Start, retry and cancel",
+  "orchestra.actions.settings.capability.resources": "Manage project resources",
+  "orchestra.actions.settings.capability.review": "Review deployments",
+  "orchestra.actions.settings.capability.source": "Edit source",
+  "orchestra.actions.settings.capability.live": "Live job logs",
+  "orchestra.actions.settings.capabilitiesNote": "Availability follows server-reported permissions, capabilities, version and resource state. Inherited resources keep their owning scope.",
+  "orchestra.actions.settings.evidence": "Provider evidence",
+  "orchestra.actions.settings.policy": "Retention & execution policy",
+  "orchestra.actions.settings.days": "days",
+  "orchestra.actions.settings.editLocal": "Configure local policy",
+  "orchestra.actions.settings.editNative": "Configure provider policy",
+} as const

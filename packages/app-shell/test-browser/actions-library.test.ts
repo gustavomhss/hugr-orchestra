@@ -45,9 +45,8 @@ function control<T extends Element>(host: Element, selector: string) {
 
 test("native metadata card has empty latest run, lazy Source footer and bound actual CI navigation", () => {
   using view = fixture()
-  expect(control(view.host, ".collection-preview").textContent).toContain("release/native")
-  expect(control(view.host, ".collection-preview").textContent).toContain("orchestra.actions.unknown")
-  expect(control(view.host, ".collection-last").textContent).toContain("orchestra.actions.emptyRuns")
+  expect(control(view.host, ".collection-preview").textContent).toBe("orchestra.actions.metadataOnly")
+  expect(control(view.host, ".collection-last").textContent).toContain("orchestra.actions.noRecentRun")
   expect(control(view.host, ".collection-last").textContent).not.toContain("orchestra.actions.unknown")
   expect(control(view.host, ".collection-triggers").textContent).toContain("push")
   control<HTMLButtonElement>(view.host, ".mx-card-foot > div button:last-child").click()
@@ -58,11 +57,27 @@ test("native metadata card has empty latest run, lazy Source footer and bound ac
   expect(view.routes.at(-1)).toEqual({ view: "runs" })
 })
 
-test("observed active/disabled buttons filter cards locally and preserve unmatched-state honesty", () => {
+test("actual Orchestra CI shows the latest observed run identity and status, and opens that run", () => {
+  using view = fixture()
+  view.setState("runs", { status: "ready", value: { capturedAt: 1, items: [{ id: "38177025125", bindingID: view.workflow.bindingID,
+    workflowID: view.workflow.id, name: "test", ref: "dev", commit: "b".repeat(40), event: "push", status: "completed",
+    conclusion: "success", attempt: 2, createdAt: "2026-10-01T00:00:00Z" }] } })
+  const reference = control<HTMLButtonElement>(view.host, ".collection-reference")
+  expect(reference.textContent).toContain("orchestra.actions.runAttempt(run=38177025125,attempt=2)")
+  expect(control(reference, ".actions-status").textContent).toBe("orchestra.actions.passed")
+  reference.click()
+  expect(view.routes.at(-1)).toEqual({ view: "run", runID: "38177025125", workflowID: view.workflow.id, path: view.workflow.path, ref: "b".repeat(40) })
+  expect(view.host.querySelectorAll(".collection-runs .run-head span")).toHaveLength(4)
+})
+
+test("fixed All/Active/Disabled buttons filter cards locally and preserve unmatched-state honesty", () => {
   using view = fixture()
   const disabled = { ...view.workflow, id: "8642", name: "Disabled build", path: ".github/workflows/disabled.yml", state: "disabled_manually" }
   view.setState("workflows", "value", { capturedAt: 1, items: [view.workflow, disabled] })
   const filters = () => [...view.host.querySelectorAll<HTMLButtonElement>(".wf-range button")]
+  view.setState("workflows", "value", { capturedAt: 1, items: [view.workflow] })
+  expect(filters()).toHaveLength(3)
+  view.setState("workflows", "value", { capturedAt: 1, items: [view.workflow, disabled] })
   expect(filters().map((button) => button.textContent)).toEqual(["orchestra.actions.all", "orchestra.actions.active", "orchestra.actions.disabled"])
   filters()[2].click()
   expect(filters()[2].getAttribute("aria-pressed")).toBe("true")
@@ -80,7 +95,7 @@ test("observed active/disabled buttons filter cards locally and preserve unmatch
 
 test("GitLab configured is enabled and Unknown authorization permits request until native denial", () => {
   using view = fixture("gitlab")
-  expect(control(view.host, ".mx-card-top > .mx-badge").textContent).toContain("orchestra.actions.enabled")
+  expect(control(view.host, ".mx-card-top > .mx-badge").textContent).toContain("orchestra.actions.active")
   const dispatch = control<HTMLButtonElement>(view.host, ".mx-card-foot > button")
   expect(dispatch.disabled).toBe(false)
   dispatch.click()
@@ -113,9 +128,9 @@ test("recent list stays bounded, latest execution Unknown stays distinct from no
   }))
   view.setState("runs", { status: "ready", value: { capturedAt: 1, items: runs } })
   expect(view.host.querySelectorAll(".collection-runs .run-row")).toHaveLength(3)
-  expect(control(view.host, ".collection-last").textContent).toContain("#104")
+  expect(control(view.host, ".collection-last").textContent).toContain("104")
   expect(control(view.host, ".collection-last").textContent).toContain("orchestra.actions.unknown")
-  expect(control(view.host, ".collection-last").textContent).not.toContain("orchestra.actions.emptyRuns")
+  expect(control(view.host, ".collection-last").textContent).not.toContain("orchestra.actions.noRecentRun")
   view.setState("runs", { status: "loading" })
   expect(control(view.host, ".collection-last").textContent).toContain("orchestra.actions.loading")
   view.setState("runs", { status: "error", error: { kind: "provider_unavailable", message: "orchestra.actions.unavailable" } })

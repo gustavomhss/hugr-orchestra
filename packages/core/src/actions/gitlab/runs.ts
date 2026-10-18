@@ -90,6 +90,8 @@ function toRun(binding: Actions.Binding, pipeline: typeof ActionsGitLabNative.Pi
   return Actions.Run.make({ id: String(pipeline.id), bindingID: binding.id, workflowID: ActionsGitLabNative.workflowID(binding),
     name: pipeline.name === undefined ? `Pipeline ${pipeline.id}` : pipeline.name, ref: pipeline.ref, commit: pipeline.sha, event: pipeline.source,
     repositoryID: String(pipeline.project_id),
+    ...(pipeline.name ? { title: pipeline.name } : {}),
+    ...(pipeline.iid === undefined ? {} : { number: Number(pipeline.iid) }),
     status: pipeline.status, ...(ActionsGitLabNative.conclusion(pipeline.status) === undefined ? {} : { conclusion: pipeline.status }),
     ...(pipeline.user ? { actor: pipeline.user.username } : {}),
     ...(pipeline.created_at === undefined || pipeline.created_at === null ? {} : { createdAt: pipeline.created_at }),

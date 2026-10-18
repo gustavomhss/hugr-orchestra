@@ -3,9 +3,9 @@ import {
   type SnapshotFileDiff,
   Message as MessageType,
   Part as PartType,
-} from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
-import type { SessionStatus } from "@orchestra/sdk/v2"
+} from "../compat/sdk-v2-client"
+import type { FileDiffInfo } from "../compat/vendored-client-promise"
+import type { SessionStatus } from "../compat/sdk-v2"
 import { useData } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 
