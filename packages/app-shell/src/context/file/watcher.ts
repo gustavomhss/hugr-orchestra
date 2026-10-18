@@ -1,4 +1,4 @@
-import type { FileNode } from "@orchestra/sdk/v2"
+import type { FileNode } from "../../compat/sdk-v2"
 
 type WatcherEvent = {
   type: string

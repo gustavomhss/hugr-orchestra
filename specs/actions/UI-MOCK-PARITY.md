@@ -69,7 +69,7 @@ Scope: V facet only, read-only. No row closes on this audit; a PASS here would s
 need its R/I/M/L facets.
 
 **Mock authority.** `_worktrees/actions-campaign/artifacts/actions-mock` no longer
-existed. The 20 source files were recovered from the OpenCode session database at
+existed. The 20 source files were recovered from the earlier coding-agent session database at
 their last complete read (2026-10-14). Recovered `resources.css` and
 `collections.css` are byte-identical to the surviving 2026-10-11 copies. Only 8 of 20
 gallery PNGs were recoverable (workflows, dispatch-dialog, logs, variables,
@@ -114,6 +114,52 @@ Evidence: `parity/<id>.jpg`, with the mock on the left and the app on the right.
 Not covered: the GitLab provider (no GitLab binding was created), populated
 environments, runners and deployment review, downloads and saves, keyboard and focus,
 and the L facet.
+
+## Visual parity closure 2026-10-18
+
+Scope: V facet only, read-only, same mock authority and reference run as the 2026-10-17 audit. This section
+supersedes the V column of that audit. R/I/M/L facets are unchanged: a V PASS does not close a row on its own.
+
+**Changes.** Bundle branch `actions-polish`: area PRs #784, #785, #786, #787, #788, #790, #791, #793 (round 1),
+#795, #796, #797, #798, #799, #800, #801 (round 2), plus lead integration commits. #801 adds `title` (GitHub
+`display_title`, GitLab pipeline `name`), `number` (`run_number`, `iid`) and GitHub completed-run `duration` to
+`Actions.Run`.
+
+**App under test.** `actions-polish` merged with `dev` (`e6eee0726d` plus the fixes listed in the PR), `apps/web`
+`vite build` production preview, own backend on `127.0.0.1:4161` with isolated XDG and `ORCHESTRA_DB`, English
+locale, 1512x982 dark unless noted. The backend ran with `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=0` because no local
+omni addon was built; this affects only how the backend spawns `gh`, not the UI. Real provider:
+`gustavomhss/hugr-orchestra` on GitHub; reference run `38177025125` (run #193), job `114581461372`. The only write
+was the local repository binding in the isolated backend. No provider mutation, no dispatch, no dialog submitted;
+downloads and saves were not invoked.
+
+Evidence: `parity/final/<id>.jpg`, mock on the left, app on the right (`mode-narrow.jpg` is app only).
+
+| ID | V (2026-10-18) | Evidence | Result / residual difference |
+| --- | --- | --- | --- |
+| P01 | PASS | `final/workflows.jpg` | `All / Active / Disabled` segmented control, tab counts and icons, Browse and Workflows groups with counts, `Actual Orchestra CI` card with run number, attempt and status. Residual: GitHub workflows have no description or job list, so the card shows the native empty-preview line instead of sample jobs. |
+| P02 | PASS | `final/runs.jpg` | Fixed status filter, column headers, `N of M` count, commit title and `#number`, workflow name second line, relative time. Duration shows `—` while a run is queued or running (native). |
+| P03 | PASS | `final/real-ci.jpg` | All 15 jobs join their 7 definitions: real statuses, matrix nodes `×2`, `×5`, `×3` with run counts, `Grouped jobs / Matrix executions` toggle, job-key labels, translated diagnostics. A link with only `actionsRun` loads the run and graph. Residual: the mock's column captions, legend and per-job icons are sample-workflow decoration and were not ported; node rows are packed tighter. |
+| P04 | PASS | `final/source.jpg`, `final/workflows.jpg` | The reference card opens the recorded run. Workflow header card: eyebrow, title, `Active` chip, `Disable` and `Run workflow`, path row. Residual: trigger chips appear once the workflow graph is loaded (core does not fill catalog triggers). |
+| P05 | PASS | `final/jobs.jpg`, `final/logs.jpg` | Run header with provider, `Run #193`, title, status, event, actor, age, duration, attempt select, `Re-run` / `Delete run`, identity row with `7 jobs · 15 executions`, tab counts. The reference run's native title is `test` (workflow_dispatch). |
+| P06 | PASS | `final/jobs.jpg` | Full-width rows with runner, declared needs, duration, `Inspect` and `Logs`; context rail groups jobs by definition with counts. |
+| P07 | PASS | `final/logs.jpg` | Own log search copy, job title with runner · duration, `Completed job output · status updates separately`, `Download log`, bounded preview with line numbers. Full save not invoked. |
+| P08 | PASS | `final/artifacts.jpg` | `103 kB`, `11 MB`, `Expires in 7 days`, `Run #193`, no raw id. Download not invoked. |
+| P09 | PASS | `final/source.jpg` | `actionsView=source` resolves the default ref; one neutral unavailable state; ref label separated; source sits under the workflow (or run) header and tab row. |
+| P10 | PASS | `final/caches.jpg` | Sub-tab strip removed; resource deep links and reloads load; resource surfaces sit in the content column; the rail keeps library and history in view. |
+| P11 | BLOCKED | — | Unchanged: the provider has 0 environments and no pending deployment. No fixture was invented. |
+| P12 | PASS | `final/variables.jpg`, `final/variable-dialog.jpg` | Outline icons, 16px lock note, visible close button, styled Scope select under the surface header. GitHub has no populated protected/masked flags to compare. |
+| P13 | BLOCKED | — | Unchanged: the provider has 0 runners. No fixture was invented. |
+| P14 | PASS (GitHub) | `final/caches.jpg` | Sizes in kB/MB, `Last used … ago`, provider-reported total, single-line keys with full key on focus/hover. GitLab invalidation remains BLOCKED (no GitLab binding). |
+| P15 | PASS (GitHub) | `final/schedules.jpg` | GitHub schedules list loads from YAML (the default branch has no `schedule:` trigger, so the empty state is native); unreadable workflows are reported per item; the provider badge no longer flips. GitLab CRUD remains BLOCKED (no GitLab binding). |
+| P16 | PASS | `final/settings.jpg` | Project settings header, `Project connection`, `Available capabilities` with human labels and state badges, retention and provider policy cards, provider select shows provider · project · host. Capability states read `Unknown` because authorization is unknown (AUTHORIZATION-POLICY.md). |
+| P17 | PASS | all | Titlebar `Orchestra / Actions / <view>` (run: `test / Run #193`), deep links to run, source and resources load, profile chip names the project. |
+| P18 | PASS | `final/caches.jpg`, `final/schedules.jpg` | No internal `Idle` text; provider failures show recovery copy with Refresh. |
+| P19 | PASS | `final/dispatch-dialog.jpg`, `final/variable-dialog.jpg` | Dialogs centered in the top layer with blurred backdrop; provider/scope header, `Execution target`, `New execution` note; stacked checkbox label and hint. Opened and closed only. |
+| P20 | PASS (light, narrow) | `final/mode-light.jpg`, `final/mode-narrow.jpg` | Light theme fixed (primary buttons keep their fill on hover). At 420px tabs fit and no row overflows (`scrollWidth` 420). RTL: new rules use logical properties only (code review); forced RTL was not re-shot in this pass. |
+
+Builds: the visual pass needed five production builds of `apps/web` (first pass, then after each fix round and
+after merging `dev`); no typecheck or test suite ran locally.
 
 ## Exact modal kinds
 

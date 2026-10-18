@@ -4,10 +4,10 @@ name: nix-toolchain
 on:
   push:
     branches: [nix-closure]
-    paths: ["flake.nix", "flake.lock", "package.json", "packages/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
+    paths: ["flake.nix", "flake.lock", "package.json", "apps/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
   pull_request:
     types: [opened, reopened, synchronize, labeled]
-    paths: ["flake.nix", "flake.lock", "package.json", "packages/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
+    paths: ["flake.nix", "flake.lock", "package.json", "apps/desktop/package.json", "nix/**", ".github/workflows/nix-toolchain.yml"]
   workflow_dispatch:
 
 permissions:

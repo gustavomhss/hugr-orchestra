@@ -46,6 +46,8 @@ export const make = Effect.fnUntraced(function* (provider: Actions.ProviderKind 
     if (observed.path === "projects/9347/pipeline_schedules") return observed.method === "GET" ? { data: [schedule], headers: { "x-next-page": "", "x-total": "1" } } : { data: schedule, status: 201 }
     if (observed.path === "projects/9347/pipeline_schedules/13") return { data: schedule }
     if (observed.path === "repositories/9347/actions/workflows/24") return { data: { id: 24, path: ".github/workflows/nightly.yml", name: "Nightly", state: "active" } }
+    if (observed.path === "repositories/9347/contents/.github/workflows")
+      return { data: [{ type: "file", name: "nightly.yml", path: ".github/workflows/nightly.yml", sha: blob }] }
     if (observed.path === "fixture/workflows") return { data: { items: [{ id: "24", bindingID: binding.id, name: "Nightly", path: ".github/workflows/nightly.yml", state: "active", dispatchable: false }], capturedAt: Date.now() } }
     if (observed.path === "fixture/source") return { data: { bindingID: binding.id, path: observed.query.path,
       ref: observed.query.ref, commit, version: blob, text: state.source, editable: true } }

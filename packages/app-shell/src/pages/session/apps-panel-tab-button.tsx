@@ -1,3 +1,4 @@
+import { useLanguage } from "@/context/language"
 import { sameTab, tabLabel, type Tab, type TabIdentity } from "./apps-panel-controller"
 
 export function TabButton(props: {
@@ -6,6 +7,7 @@ export function TabButton(props: {
   select: (tab: Tab) => void
   setMenu: (menu: { tab: Tab; x: number; y: number; rtl: boolean; invoker: HTMLButtonElement }) => void
 }) {
+  const language = useLanguage()
   const openMenu = (x: number, y: number, invoker: HTMLButtonElement) =>
     props.setMenu({ tab: props.tab, x, y, rtl: getComputedStyle(invoker).direction === "rtl", invoker })
   const keydown = (event: KeyboardEvent) => {
@@ -64,7 +66,7 @@ export function TabButton(props: {
       <bdi dir="auto" class="zen-tab-title">
         {tabLabel(props.tab)}
       </bdi>
-      {props.tab.pinned && <span class="zen-tab-pinmark">Pinned</span>}
+      {props.tab.pinned && <span class="zen-tab-pinmark">{language.t("orchestra.dock.tab.pinned")}</span>}
       {props.tab.audible && <span class="zen-tab-audio">&#9835;</span>}
     </button>
   )

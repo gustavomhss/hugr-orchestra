@@ -51,6 +51,8 @@ export function EditorHead(props: {
   const library = () => relayPath.library(props.kind)
   const libraryName = () => copy.t(workflow() ? "orchestra.workflows.title" : "orchestra.hooks.title")
   const published = () => !!props.document.activeVersionId
+  // A failed save explains itself and offers its ways out in a row of its own below the head, which keeps its height.
+  const unsaved = () => !props.readOnly && (props.save.state === "error" || props.save.state === "conflict")
   // Why Publish is off, by what is going on right now.
   const publishReason = () => {
     if (props.canPublish || props.readOnly) return undefined
@@ -69,6 +71,7 @@ export function EditorHead(props: {
     props.onPublish()
   }
   return (
+    <>
     <header class="wf-head">
       <div class="wf-head-left">
         <a
@@ -149,7 +152,9 @@ export function EditorHead(props: {
       </Show>
       <div class="wf-head-right">
         <Show when={!props.readOnly} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
-          <SaveStatus save={props.save} onRetry={props.onRetry} onReload={props.onReload} />
+          <Show when={!unsaved()}>
+            <SaveStatus save={props.save} onRetry={props.onRetry} onReload={props.onReload} />
+          </Show>
         </Show>
         <Show when={props.issues.length}>
           <button
@@ -267,6 +272,12 @@ export function EditorHead(props: {
         )}
       </Show>
     </header>
+    <Show when={unsaved()}>
+      <div class="wf-save-row">
+        <SaveStatus save={props.save} onRetry={props.onRetry} onReload={props.onReload} />
+      </div>
+    </Show>
+    </>
   )
 }
 

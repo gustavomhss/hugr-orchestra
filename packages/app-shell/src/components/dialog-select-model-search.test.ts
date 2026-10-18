@@ -13,6 +13,12 @@ describe("matchesModelSearch", () => {
     expect(matchesModelSearch("gpt 5", ["GPT-5.5", "gpt-5.5", "OpenAI"])).toBe(true)
   })
 
+  test("matches words spread across the provider and the model", () => {
+    expect(matchesModelSearch("anthropic sonnet", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(true)
+    expect(matchesModelSearch("sonnet anthropic", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(true)
+    expect(matchesModelSearch("openai sonnet", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(false)
+  })
+
   test("does not match unrelated searches", () => {
     expect(matchesModelSearch("claude", ["GPT-5.5", "gpt-5.5", "OpenAI"])).toBe(false)
   })
@@ -46,4 +52,18 @@ test("keyboard selection follows rendered provider groups, including search and 
   state.groups = []
   expect(navigation.keys()).toEqual(["manage"])
   expect(navigation.next("manage", 1)).toBe("manage")
+})
+
+test("keyboard selection ends with every footer action in order", () => {
+  const navigation = createModelSelectorNavigation(
+    () => [{ items: [{ id: "a" }] }],
+    (item) => item.id,
+    "connect",
+    "manage",
+  )
+  expect(navigation.keys()).toEqual(["a", "connect", "manage"])
+  expect(navigation.next("a", 1)).toBe("connect")
+  expect(navigation.next("connect", 1)).toBe("manage")
+  expect(navigation.next("manage", 1)).toBe("a")
+  expect(navigation.next("a", -1)).toBe("manage")
 })

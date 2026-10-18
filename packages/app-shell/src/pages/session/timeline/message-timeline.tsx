@@ -46,7 +46,7 @@ import type {
   Part as PartType,
   ToolPart,
   UserMessage,
-} from "@orchestra/sdk/v2"
+} from "../../../compat/sdk-v2"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { getFilename } from "@orchestra/core/util/path"
@@ -731,7 +731,9 @@ export function MessageTimeline(props: {
     const name = createMemo(
       () => sessionTitle(sync().session.get(props.sessionID)?.title) ?? language.t("command.session.new"),
     )
+    const [state, setState] = createStore({ deleting: false })
     const handleDelete = async () => {
+      setState("deleting", true)
       await deleteSession(props.sessionID)
       dialog.close()
     }
@@ -746,10 +748,10 @@ export function MessageTimeline(props: {
             />
           </DialogHeader>
           <DialogFooter>
-            <ButtonV2 variant="ghost" onClick={() => dialog.close()}>
+            <ButtonV2 variant="ghost" disabled={state.deleting} onClick={() => dialog.close()}>
               {language.t("common.cancel")}
             </ButtonV2>
-            <ButtonV2 variant="danger" onClick={handleDelete}>
+            <ButtonV2 variant="danger" disabled={state.deleting} onClick={handleDelete}>
               {language.t("session.delete.button")}
             </ButtonV2>
           </DialogFooter>
@@ -759,16 +761,14 @@ export function MessageTimeline(props: {
     return (
       <Dialog title={language.t("session.delete.title")} fit>
         <div class="flex flex-col gap-4 pl-6 pr-2.5 pb-3">
-          <div class="flex flex-col gap-1">
-            <span class="text-14-regular text-text-strong">
-              {language.t("session.delete.confirm", { name: name() })}
-            </span>
+          <div class="flex flex-col gap-1 text-14-regular text-text-strong">
+            {language.t("session.delete.confirm", { name: name() })}
           </div>
           <div class="flex justify-end gap-2">
-            <Button variant="ghost" size="large" onClick={() => dialog.close()}>
+            <Button variant="ghost" size="large" disabled={state.deleting} onClick={() => dialog.close()}>
               {language.t("common.cancel")}
             </Button>
-            <Button variant="primary" size="large" onClick={handleDelete}>
+            <Button variant="primary" size="large" disabled={state.deleting} onClick={handleDelete}>
               {language.t("session.delete.button")}
             </Button>
           </div>

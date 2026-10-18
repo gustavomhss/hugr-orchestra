@@ -40,7 +40,7 @@ const bootstrap = await (async () => {
   } }).values
   requireAuthoring(args["inventory-digest"] === undefined || /^[a-f0-9]{64}$/.test(args["inventory-digest"]), "AUTHORING_INVENTORY_DIGEST_INVALID")
   const candidate = await canonical(args.candidate, true)
-  const effect = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const effect = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
   return { args, candidate, effect }
 })().catch((error: unknown) => { console.error(error instanceof AuthoringError ? error.message : "AUTHORING_CANDIDATE_EFFECT_BOOTSTRAP_FAILED"); process.exit(1) })
 const { Option, Schema } = bootstrap.effect
@@ -63,7 +63,7 @@ async function main() {
   const project = await canonical(join(pilot, "project"), true)
   requireAuthoring(!inside(pilot, candidate) && !inside(candidate, pilot), "AUTHORING_CANDIDATE_FIXTURE_OVERLAP")
   const nativeSourceHashes = await Promise.all([...sourcePaths, "claude-code/engine.ts", "claude-code/sdk.ts"].map(async (file) => ({ file,
-    sha256: sha256(await read(await canonical(join(candidate, "packages/orchestra/src", file), false))) })))
+    sha256: sha256(await read(await canonical(join(candidate, "apps/orchestra/src", file), false))) })))
   const head = await gitHead(candidate)
   requireAuthoring(/^[a-f0-9]{40}$/.test(head), "AUTHORING_CANDIDATE_HEAD_INVALID")
   const packet = dirname(pilot)
@@ -216,7 +216,7 @@ async function launch(entry: string, candidate: string, env: Record<string, stri
   const state: { bytes: number; failure?: string; cleanupFailure?: string; groupGone?: boolean; primaryGone?: boolean; stopping?: Promise<void>; stopDone?: () => void; exitObserved: boolean; closeObserved: boolean; status?: number | null; signal?: string | null; endedAt?: number; identity?: { pid: number; ppid: number; pgid: number; osStart: string }; admittedAlive?: boolean } = { bytes: 0, exitObserved: false, closeObserved: false }
   const startedAt = Date.now()
   const stopped = new Promise<void>((done) => { state.stopDone = done })
-  const child = spawn(process.execPath, [entry], { cwd: join(candidate, "packages/orchestra"), env, detached: true, stdio: "pipe" })
+  const child = spawn(process.execPath, [entry], { cwd: join(candidate, "apps/orchestra"), env, detached: true, stdio: "pipe" })
   const exited = new Promise<number | null>((done) => {
     child.once("exit", (status, signal) => { state.exitObserved = true; state.status = status; state.signal = signal; state.endedAt = Date.now(); done(status) })
     child.once("close", (status, signal) => { state.closeObserved = true; state.status ??= status; state.signal ??= signal; state.endedAt ??= Date.now(); done(status) })
@@ -322,7 +322,7 @@ function stage(name: string, phase: "before" | "after" | "failed", code?: string
 }
 stage("initializer", "before")
 try {
-const requireCandidate = createRequire(job.candidate + "/packages/orchestra/package.json")
+const requireCandidate = createRequire(job.candidate + "/apps/orchestra/package.json")
 const { Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
 const { ChildProcess, ChildProcessSpawner } = await import(requireCandidate.resolve("effect/unstable/process"))
 const { CrossSpawnSpawner } = await import(job.candidate + "/packages/core/src/cross-spawn-spawner.ts")
@@ -337,7 +337,7 @@ const originalSpawner = { ...sharedSpawner }, containedSpawner = ChildProcessSpa
 Object.assign(sharedSpawner, containedSpawner)
 stage("spawner", "after")
 const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
-const { Git } = await import(job.candidate + "/packages/orchestra/src/git/index.ts")
+const { Git } = await import(job.candidate + "/apps/orchestra/src/git/index.ts")
 const processRuntime = ManagedRuntime.make(LayerNode.compile(LayerNode.group([AppProcess.node, Git.node])), { memoMap })
 const releaseSpawner = () => processRuntime.dispose().finally(() => { Object.assign(sharedSpawner, originalSpawner); return spawnerRuntime.dispose() })
 try {
@@ -351,19 +351,19 @@ const seeded = await processRuntime.runPromise(Effect.gen(function* () {
 }))
 stage("consumers", "after")
 stage("app_runtime", "before")
-const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
+const { AppRuntime } = await import(job.candidate + "/apps/orchestra/src/effect/app-runtime.ts")
 stage("app_runtime", "after")
 try {
-const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
-const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
-const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
-const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
-const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
-const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
-const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats/index.ts")
-const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
-const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
-const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
+const { InstanceStore } = await import(job.candidate + "/apps/orchestra/src/project/instance-store.ts")
+const { InstanceRef } = await import(job.candidate + "/apps/orchestra/src/effect/instance-ref.ts")
+const { Agent } = await import(job.candidate + "/apps/orchestra/src/agent/agent.ts")
+const { Session } = await import(job.candidate + "/apps/orchestra/src/session/session.ts")
+const { SessionPrompt } = await import(job.candidate + "/apps/orchestra/src/session/prompt.ts")
+const { ToolRegistry } = await import(job.candidate + "/apps/orchestra/src/tool/registry.ts")
+const { Seats } = await import(job.candidate + "/apps/orchestra/src/maestro/seats/index.ts")
+const { Permission } = await import(job.candidate + "/apps/orchestra/src/permission/index.ts")
+const { WriteRoots } = await import(job.candidate + "/apps/orchestra/src/maestro/write-roots.ts")
+const { PromptGuard } = await import(job.candidate + "/apps/orchestra/src/session/prompt-guard.ts")
 function requireFact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
 const shutdown = () => { void Promise.race([AppRuntime.dispose().finally(releaseSpawner), Bun.sleep(2_000)]).finally(() => process.exit(143)) }
 process.once("SIGTERM", shutdown); process.once("SIGINT", shutdown)
@@ -440,8 +440,8 @@ if (job.preflightOnly) {
 } else {
 try {
   console.log(JSON.stringify({ type: "authoring_native_preflight", sessionID: direct.id, projectID: direct.projectID, worktree: loaded.ctx.worktree }))
-  const { Provider } = await import(job.candidate + "/packages/orchestra/src/provider/provider.ts")
-  const { BackendResult } = await import(job.candidate + "/packages/orchestra/src/maestro/backend-result.ts")
+  const { Provider } = await import(job.candidate + "/apps/orchestra/src/provider/provider.ts")
+  const { BackendResult } = await import(job.candidate + "/apps/orchestra/src/maestro/backend-result.ts")
   stage("direct_turn", "before")
   // Real SessionPrompt path: the claude-code engine honors PromptGuard before it spawns the SDK query.
   const returned = await AppRuntime.runPromise(PromptGuard.provide(realPrompt({ sessionID: direct.id, agent: "archie", model: Provider.parseModel(job.model),
@@ -476,7 +476,7 @@ process.exit(process.exitCode ?? 0)
 }
 async function verifyDirect(path: string, sessionID: string, project: string, model: string, assignment: string, worktree: string, candidate: string, workResult: unknown) {
   await canonical(path, false)
-  const { UpstreamResult } = await import(join(candidate, "packages/orchestra/src/maestro/upstream-result.ts"))
+  const { UpstreamResult } = await import(join(candidate, "apps/orchestra/src/maestro/upstream-result.ts"))
   const db = new Database(path, { readonly: true, strict: true })
   try {
     const session = decode(Schema.Struct({ id: Schema.String, project_id: Schema.String, parent_id: Schema.NullOr(Schema.String), directory: Schema.String, agent: Schema.NullOr(Schema.String), permission: Schema.String }),

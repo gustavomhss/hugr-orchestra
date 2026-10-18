@@ -33,7 +33,7 @@ requireArgument(args["workspace-config"])
 async function verify() {
 const { cliTreeSitterTarget, nativeCliTarget, readCliManifest, verifyCliArtifact } =
   await import(join(await sourceModule(source, "desktop"), "src/main/cli-artifacts.ts")) as
-    Pick<typeof import("../../packages/desktop/src/main/cli-artifacts.ts"),
+    Pick<typeof import("../../apps/desktop/src/main/cli-artifacts.ts"),
       "cliTreeSitterTarget" | "nativeCliTarget" | "readCliManifest" | "verifyCliArtifact">
 const omniLoader = join(await sourceModule(source, "omni/bindings/node"), "index.js")
 const manifest = await Bun.file(join(source, "nix/toolchain-sources.json")).json()
@@ -71,7 +71,7 @@ const treeSitterBundles = {
   cliStaged: await treeSitter(join(dirname(cliArtifact.path), `tree-sitter-${target}`), process.execPath, {}),
   desktop: await treeSitter(join(resources, "cli", `tree-sitter-${target}`), executable, { ELECTRON_RUN_AS_NODE: "1" }),
 }
-// The owned CLI prints exactly its version for --version (packages/cli/src/index.ts).
+// The owned CLI prints exactly its version for --version (apps/cli/src/index.ts).
 artifacts.forEach((artifact) => {
   const reported = execute(artifact.path, ["--version"]).trim()
   if (reported !== version) fail(`RAW_CLI_VERSION:${artifact.directory}:${reported}`)

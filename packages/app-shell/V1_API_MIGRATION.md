@@ -140,12 +140,10 @@ These calls are retained as fallback adapters. The current production path suppl
   - Built-in provider key connections now use `POST /api/integration/:integrationID/connect/key`.
   - `src/components/dialog-connect-provider.tsx`
   - `src/components/dialog-custom-provider.tsx`
-  - `src/components/settings-providers.tsx`
-  - `src/components/settings-v2/providers.tsx`
+  - `src/orchestra/chapters/providers-list.tsx`
 - [ ] Migrate global disposal from `POST /global/dispose`.
   - `src/components/dialog-connect-provider.tsx`
-  - `src/components/settings-providers.tsx`
-  - `src/components/settings-v2/providers.tsx`
+  - `src/orchestra/chapters/providers-list.tsx`
 
 ## Permissions And Questions
 

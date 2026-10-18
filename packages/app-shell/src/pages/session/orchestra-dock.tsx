@@ -30,7 +30,7 @@ export function OrchestraDock(props: {
 }) {
   const language = useLanguage()
   const platform = usePlatform()
-  const dock = appDockController()
+  const dock = appDockController(language.t)
   const id = createUniqueId()
   const [view, setView] = createStore({ draft: undefined as DockAddressDraft | undefined })
   const activeURL = () => dock.state.tabs.find((tab) => sameTab(tab, dock.state.active))?.url

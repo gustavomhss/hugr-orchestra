@@ -1,6 +1,6 @@
 /** @jsxImportSource @opentui/solid */
 import type { TuiPlugin, TuiPluginApi, TuiRouteCurrent } from "@orchestra/plugin/tui"
-import type { SnapshotFileDiff, VcsFileDiff } from "@orchestra/sdk/v2"
+import type { SnapshotFileDiff, VcsFileDiff } from "../../compat/sdk-v2"
 import {
   TextAttributes,
   type BorderSides,

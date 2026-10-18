@@ -20,6 +20,7 @@ import {
   createMemo,
   createUniqueId,
   For,
+  type JSX,
   Match,
   onCleanup,
   onMount,
@@ -28,14 +29,14 @@ import {
 } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
-import { useServerSDK } from "@/context/server-sdk"
+import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { createProviderResource } from "@/hooks/provider-catalog"
 import { formatServerError } from "@/utils/server-errors"
-import { connectableIntegration } from "@/orchestra/chapters/providers-data"
+import { authorizationURL, connectableIntegration } from "@/orchestra/chapters/providers-data"
 import { CustomProviderForm } from "./dialog-custom-provider"
 import { createProviderConnectionState, formatError, type ConnectMethod } from "./provider-connection"
 
@@ -62,12 +63,16 @@ export const DialogConnectProvider: Component<{
   const settings = useSettings()
   const sdk = useServerSDK()
   const newLayout = settings.general.newLayoutDesigns
-  const reset = controller.back
-  const back = { current: reset }
+  // Back returns to the provider list from anything picked in it, and to wherever the dialog was opened from
+  // (`controller.back`) when it opened straight on a provider.
+  const picked = { value: false }
+  const leave = () => (picked.value ? controller.select(undefined) : controller.back())
+  const back = { current: leave }
   let focusHost: HTMLDivElement | undefined
   const holdFocus = () => focusHost?.focus({ preventScroll: true })
   const select = (provider?: string) => {
-    back.current = reset
+    picked.value = true
+    back.current = leave
     controller.select(provider)
   }
 
@@ -82,7 +87,7 @@ export const DialogConnectProvider: Component<{
             <ProviderConnection
               provider={provider()}
               directory={props.directory}
-              onBack={reset}
+              onBack={leave}
               setBack={(handler) => (back.current = handler)}
             />
           )}
@@ -163,6 +168,7 @@ function ProviderPicker(props: {
   if (settings.general.newLayoutDesigns())
     return <ProviderPickerV2 directory={props.directory} onSelect={props.onSelect} onPrepare={props.onPrepare} />
   const providers = useProviderDiscovery(props.directory)
+  const protocol = useServerProtocol()
   const language = useLanguage()
   const popularGroup = () => language.t("dialog.provider.group.popular")
   const otherGroup = () => language.t("dialog.provider.group.other")
@@ -187,7 +193,8 @@ function ProviderPicker(props: {
         key={(x) => x?.id}
         items={() => {
           language.locale()
-          return [{ id: CUSTOM_ID, name: customLabel() }, ...providers.all()]
+          // Only v1 servers can save a custom provider.
+          return [...(protocol() === "v1" ? [{ id: CUSTOM_ID, name: customLabel() }] : []), ...providers.all()]
         }}
         filterKeys={["id", "name"]}
         groupBy={(x) => (popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
@@ -230,6 +237,7 @@ function ProviderPickerV2(props: {
   onPrepare?: () => void
 }) {
   const providers = useProviderDiscovery(props.directory)
+  const protocol = useServerProtocol()
   const language = useLanguage()
   const [store, setStore] = createStore({
     filter: "",
@@ -241,7 +249,8 @@ function ProviderPickerV2(props: {
   const all = createMemo(() => {
     language.locale()
     const query = store.filter.trim().toLowerCase()
-    const values = [custom(), ...providers.all()]
+    // Only v1 servers can save a custom provider.
+    const values = [...(protocol() === "v1" ? [custom()] : []), ...providers.all()]
     if (!query) return values
     return values.filter((provider) => `${provider.id} ${provider.name}`.toLowerCase().includes(query))
   })
@@ -453,18 +462,39 @@ function ProviderConnection(props: {
         })
         .then((x) => {
           if (!alive.value) return
-          if (props.provider === "opencode" && platform.platform === "desktop") {
-            const url = new URL(x.data.url)
-            url.searchParams.set("client_id", "opencode-desktop")
-            x.data.url = url.href
+          // Only a web link from the server becomes the authorization target.
+          const url = authorizationURL(x.data.url)
+          if (!url) {
+            dispatch({ type: "auth.error", error: language.t("orchestra.providers.connectDialog.badLink") })
+            return
           }
-          dispatch({ type: "auth.complete", authorization: x.data })
+          if (props.provider === "opencode" && platform.platform === "desktop")
+            url.searchParams.set("client_id", "opencode-desktop")
+          dispatch({ type: "auth.complete", authorization: { ...x.data, url: url.href } })
         })
         .catch((e) => {
           if (!alive.value) return
-          dispatch({ type: "auth.error", error: formatError(e, language.t("common.requestFailed")) })
+          dispatch({ type: "auth.error", error: formatError(e, language.t("orchestra.providers.oauth.failed")) })
         })
     }
+  }
+
+  // The same button in the dialog's two chromes.
+  function ActionButton(buttonProps: { onClick: () => void; children: JSX.Element }) {
+    return (
+      <Show
+        when={newLayout()}
+        fallback={
+          <Button class="self-start" onClick={buttonProps.onClick}>
+            {buttonProps.children}
+          </Button>
+        }
+      >
+        <ButtonV2 class="self-start" onClick={buttonProps.onClick}>
+          {buttonProps.children}
+        </ButtonV2>
+      </Show>
+    )
   }
 
   function AuthPromptsView() {
@@ -742,7 +772,7 @@ function ProviderConnection(props: {
         .api.integration.connect.key({
           integrationID: props.provider,
           location: location(),
-          key: apiKey,
+          key: apiKey.trim(),
           label: label || undefined,
         })
         .then(() => {
@@ -957,10 +987,19 @@ function ProviderConnection(props: {
       return instructions
     })
 
+    // Cancel leaves this view while a status request may still be in flight; its answer must be ignored.
+    const polling = { active: true }
+    onCleanup(() => {
+      polling.active = false
+      if (timer.current === undefined) return
+      clearTimeout(timer.current)
+      timer.current = undefined
+    })
+
     onMount(() => {
-      const poll = async () => {
+      const poll = async (failures = 0) => {
         const authorization = store.authorization
-        if (!authorization || !alive.value) return
+        if (!authorization || !alive.value || !polling.active) return
         const result = await serverSDK()
           .api.integration.oauth.status({
             integrationID: props.provider,
@@ -969,9 +1008,17 @@ function ProviderConnection(props: {
           })
           .then((value) => ({ ok: true as const, status: value.data }))
           .catch((error) => ({ ok: false as const, error }))
-        if (!alive.value) return
+        if (!alive.value || !polling.active) return
+        // One dropped request must not end a sign-in the person is still completing in the browser.
+        if (!result.ok && failures < 2) {
+          timer.current = setTimeout(() => poll(failures + 1), 1_000)
+          return
+        }
         if (!result.ok) {
-          dispatch({ type: "auth.error", error: formatError(result.error, language.t("common.requestFailed")) })
+          dispatch({
+            type: "auth.error",
+            error: formatError(result.error, language.t("orchestra.providers.oauth.failed")),
+          })
           return
         }
         if (result.status.status === "complete") {
@@ -979,14 +1026,17 @@ function ProviderConnection(props: {
           return
         }
         if (result.status.status === "failed") {
-          dispatch({ type: "auth.error", error: result.status.message })
+          dispatch({
+            type: "auth.error",
+            error: result.status.message || language.t("orchestra.providers.oauth.failed"),
+          })
           return
         }
         if (result.status.status === "expired") {
-          dispatch({ type: "auth.error", error: language.t("common.requestFailed") })
+          dispatch({ type: "auth.error", error: language.t("orchestra.providers.oauth.expired") })
           return
         }
-        timer.current = setTimeout(poll, 1_000)
+        timer.current = setTimeout(() => poll(), 1_000)
       }
       void poll()
     })
@@ -1011,6 +1061,7 @@ function ProviderConnection(props: {
           <Spinner />
           <span>{language.t("provider.connect.status.waiting")}</span>
         </div>
+        <ActionButton onClick={goBack}>{language.t("common.cancel")}</ActionButton>
       </div>
     )
   }
@@ -1075,16 +1126,14 @@ function ProviderConnection(props: {
                   <Icon name="circle-ban-sign" class="text-icon-critical-base" />
                   <span>{language.t("provider.connect.status.failed", { error: store.error ?? "" })}</span>
                 </div>
-                <Show when={store.connected}>
-                  <Show
-                    when={newLayout()}
-                    fallback={
-                      <Button onClick={() => void complete()}>{language.t("orchestra.providers.retry")}</Button>
-                    }
+                {/* A stored sign-in only needs its refresh repeated; a failed attempt starts over. */}
+                <div class="mt-3 flex flex-col">
+                  <ActionButton
+                    onClick={() => void (store.connected ? complete() : selectMethod(store.methodIndex ?? 0))}
                   >
-                    <ButtonV2 onClick={() => void complete()}>{language.t("orchestra.providers.retry")}</ButtonV2>
-                  </Show>
-                </Show>
+                    {language.t("orchestra.providers.retry")}
+                  </ActionButton>
+                </div>
               </div>
             </Match>
             <Match when={method()?.type === "key"}>
@@ -1104,28 +1153,6 @@ function ProviderConnection(props: {
         </div>
       </div>
     </div>
-  )
-}
-
-export function ProviderDiscoveryStatus(props: {
-  source: Pick<ReturnType<typeof useProviderDiscovery>, "loading" | "error" | "retry">
-  v2?: boolean
-}) {
-  const language = useLanguage()
-  return (
-    <Show
-      when={!props.source.loading()}
-      fallback={
-        <p role="status" class="flex items-center gap-2 px-3 py-2">
-          <Spinner />
-          {language.t("orchestra.providers.loading")}
-        </p>
-      }
-    >
-      <Show when={props.source.error()}>
-        {(error) => <ProviderLoadError error={error().cause} retry={props.source.retry} v2={props.v2} />}
-      </Show>
-    </Show>
   )
 }
 

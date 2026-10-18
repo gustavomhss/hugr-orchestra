@@ -1,4 +1,4 @@
-import type { Message, UserMessage } from "@orchestra/sdk/v2"
+import type { Message, UserMessage } from "../../../compat/sdk-v2"
 import { createMemo, createResource, onCleanup, untrack, type Accessor } from "solid-js"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"
@@ -16,7 +16,7 @@ export function createTimelineModel(input: {
   let refreshFrame: number | undefined
   let refreshTimer: number | undefined
 
-  const [resource] = createResource(
+  const [resource, { refetch }] = createResource(
     () => input.sessionID(),
     (id) => {
       clearRefresh()
@@ -82,6 +82,7 @@ export function createTimelineModel(input: {
     messages,
     ready,
     resource,
+    refetch,
     userMessages,
     visibleUserMessages,
   }

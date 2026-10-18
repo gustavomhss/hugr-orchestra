@@ -1,4 +1,4 @@
-import type { FileSystemEntry } from "@orchestra/sdk/v2/types"
+import type { FileSystemEntry } from "../../compat/sdk-v2-types.js"
 import type { Effect } from "effect"
 
 export interface FileSystem {

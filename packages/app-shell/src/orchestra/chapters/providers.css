@@ -15,7 +15,8 @@
   margin: 0 0 16px;
 }
 
-.mx-page .mx-row > .mx-brand {
+/* The list also renders inside the Settings dialog, outside any .mx-page. */
+.mx-row > .mx-brand {
   flex: none;
   color: var(--orchestra-text);
 }
@@ -27,7 +28,8 @@
   margin: 0 0 18px;
 }
 
-/* Mock `.mx-dialog form` and its close icon; the dialog stack's layer ignores pointer events. */
+/* Mock `.mx-dialog form` and its close icon for the Disconnect question; the dialog stack's layer ignores
+   pointer events. */
 .providers-dialog {
   pointer-events: auto;
 }
@@ -37,23 +39,6 @@
   max-block-size: calc(100vh - 66px);
   flex-direction: column;
   margin: 0;
-}
-/* The catalog scrolls inside the picker so the custom endpoint entry below it stays in view. */
-.providers-dialog .providers-picker {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-.providers-picker > .mx-table {
-  min-block-size: 0;
-  flex: 0 1 auto;
-  overflow: auto;
-}
-.providers-picker > .mx-note {
-  flex: none;
-}
-.providers-dialog .mx-row > .mx-brand {
-  flex: none;
 }
 .providers-dialog .mx-dialog-head .mx-link {
   display: grid;
@@ -70,19 +55,6 @@
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.providers-dialog .providers-authorize {
-  margin: 0 0 16px;
-  font-size: 12px;
-}
-.providers-dialog .providers-authorize .mx-link {
-  font-size: 12px;
-  text-decoration: underline;
-}
-.providers-dialog .mx-field input:disabled,
-.providers-dialog .mx-field select:disabled {
-  opacity: 0.6;
-}
-
 [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .providers-dialog) {
   background: var(--mx-backdrop);
   backdrop-filter: blur(5px);

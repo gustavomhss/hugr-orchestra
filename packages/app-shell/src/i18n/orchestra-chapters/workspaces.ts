@@ -3,6 +3,7 @@ export const WORKSPACES_COPY = {
   "orchestra.workspaces.heading": "Where the work",
   "orchestra.workspaces.headingAccent": "actually runs.",
   "orchestra.workspaces.new": "New workspace",
+  "orchestra.workspaces.gitRequired": "New workspaces are git worktrees, so this project needs a git repository.",
   "orchestra.workspaces.use": "Use workspace",
   "orchestra.workspaces.configure": "Configure",
   "orchestra.workspaces.active": "Active",

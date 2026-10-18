@@ -6,8 +6,12 @@ import { useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
 import { useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
+import { SDKProvider } from "@/context/sdk"
 import { ServerConnection, useServer } from "@/context/server"
+import { ServerSDKProvider } from "@/context/server-sdk"
+import { ServerSyncProvider } from "@/context/server-sync"
 import { tabKey, useTabs } from "@/context/tabs"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { createHomeController } from "@/pages/home/home-controller"
 import { homeProjectDirectories, profileProject, projectForSession } from "@/pages/layout/helpers"
 
@@ -149,6 +153,36 @@ export function ShellNavigationCommands() {
       onSelect: () => command.trigger("tab.next"),
     },
   ])
+  // The session page registers its own copy for the open session; the shell offers it on every other page.
+  command.register("orchestra.archived", () => {
+    if (layout.route().type === "session") return []
+    const conn = connection()
+    const directory = target().directory
+    const sdk = conn && global.ensureServerCtx(conn).sdk
+    // Same condition as the session page: only servers that can restore can list archived sessions.
+    const routed = !!sdk && (sdk.protocolKind() === "v2" || sdk.sessionManagement.hasArchiveRoutes())
+    return [
+      {
+        id: "session.archived",
+        title: sessionRecoveryLanguage(language).t("session.archived.title"),
+        category: language.t("command.category.session"),
+        disabled: !conn || !directory || !routed,
+        onSelect: async () => {
+          if (!conn || !directory) return
+          const { DialogArchivedSessions } = await import("@/components/dialog-archived-sessions")
+          void dialog.show(() => (
+            <ServerSDKProvider server={() => conn}>
+              <ServerSyncProvider server={() => conn}>
+                <SDKProvider directory={directory}>
+                  <DialogArchivedSessions directory={directory} />
+                </SDKProvider>
+              </ServerSyncProvider>
+            </ServerSDKProvider>
+          ))
+        },
+      },
+    ]
+  })
   command.register("orchestra.relay", () =>
     [
       {

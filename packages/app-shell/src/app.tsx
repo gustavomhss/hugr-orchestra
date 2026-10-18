@@ -30,10 +30,8 @@ import {
   createResource,
   createSignal,
   ErrorBoundary,
-  For,
   type JSX,
   lazy,
-  onCleanup,
   type ParentProps,
   Show,
 } from "solid-js"
@@ -48,12 +46,12 @@ import { GlobalProvider, useGlobal } from "@/context/global"
 import { LanguageProvider, type Locale, useLanguage } from "@/context/language"
 import { LayoutProvider, useLayout } from "@/context/layout"
 import { ModelPreferencesProvider, ModelsProvider } from "@/context/models"
-import { ConnectionRecovery } from "@/orchestra/shell/connection-recovery"
+import { ConnectionError } from "@/orchestra/shell/connection-error"
 import { NotificationProvider } from "@/context/notification"
 import { PermissionProvider } from "@/context/permission"
 import { usePlatform } from "@/context/platform"
 import { PromptProvider } from "@/context/prompt"
-import { ServerConnection, ServerProvider, serverName, useServer } from "@/context/server"
+import { ServerConnection, ServerProvider, useServer } from "@/context/server"
 import { JanitorProvider } from "@/context/janitor"
 import { JanitorWidget } from "@/components/janitor-widget"
 import { SettingsProvider, useSettings } from "@/context/settings"
@@ -65,8 +63,16 @@ import LegacyLayout from "@/pages/layout"
 import NewLayout from "@/pages/layout-new"
 import { ErrorPage } from "./pages/error"
 import { useCheckServerHealth } from "./utils/server-health"
-import { legacySessionHref, legacySessionServer, requireServerKey, sessionHref } from "./utils/session-route"
+import {
+  legacySessionHref,
+  legacySessionServer,
+  parseServerKey,
+  requireServerKey,
+  sessionHref,
+} from "./utils/session-route"
+import { showToast } from "./utils/toast"
 import { createSessionLineage } from "@/pages/session/session-lineage"
+import { errorMessage } from "@/pages/layout/helpers"
 
 import { SessionPage, SessionRouteErrorBoundary, TargetSessionRouteContent } from "@/pages/session"
 import { NewHome } from "@/pages/home"
@@ -114,16 +120,17 @@ const SessionRoute = () => {
 function TargetServerRoute(props: ParentProps) {
   const params = useParams<{ serverKey: string; id: string }>()
   const global = useGlobal()
-  const conn = createMemo(() => {
-    const key = requireServerKey(params.serverKey)
-    return global.servers.list().find((item) => ServerConnection.key(item) === key)
-  })
+  const server = useServer()
+  const key = createMemo(() => parseServerKey(params.serverKey))
+  const conn = createMemo(() => global.servers.list().find((item) => ServerConnection.key(item) === key()))
 
   return (
     // Owns the server-identity remount. Session changes must NOT remount this
     // subtree (SessionRouteErrorBoundary resets and createSessionLineage
     // re-resolves reactively instead); both rely on this key for server changes.
-    <Show when={requireServerKey(params.serverKey)} keyed>
+    // A malformed key or a removed server leaves instead of loading against the selected server, which only
+    // resolves its own key.
+    <Show when={(conn() || key() === server.key) && key()} keyed fallback={<Navigate href="/" />}>
       <ServerSDKProvider server={conn}>
         <ServerSyncProvider server={conn}>{props.children}</ServerSyncProvider>
       </ServerSDKProvider>
@@ -223,7 +230,7 @@ function ResolvedDraftRoute(props: { draft: DraftTab }) {
   const serverKey = () => props.draft.server
 
   return (
-    <Show when={`${props.draft.server}\0${props.draft.directory}`} keyed>
+    <Show when={conn() && `${props.draft.server}\0${props.draft.directory}`} keyed fallback={<Navigate href="/" />}>
       <ServerSDKProvider server={conn}>
         <ServerSyncProvider server={conn}>
           <ModelsProvider directory={directory}>
@@ -423,7 +430,13 @@ function DesktopCommands() {
         title: language.t("command.logs.export"),
         category: language.t("command.category.settings"),
         onSelect: () => {
-          void platform.exportDebugLogs?.()
+          void platform.exportDebugLogs?.().catch((error: unknown) =>
+            showToast({
+              variant: "error",
+              title: language.t("orchestra.shell.logs.exportFailed"),
+              description: errorMessage(error, language.t("common.requestFailed")),
+            }),
+          )
         },
       })
     }
@@ -613,59 +626,14 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
         </Show>
       </Show>
       <Show when={loading()}>
-        <div class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background-base">
+        <div
+          class="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background-base"
+          data-tauri-drag-region
+        >
           <HugrSplash />
         </div>
       </Show>
     </>
-  )
-}
-
-function ConnectionError(props: { onRetry?: () => void; onServerSelected?: (key: ServerConnection.Key) => void }) {
-  const language = useLanguage()
-  const server = useServer()
-  const others = () => server.list.filter((s) => ServerConnection.key(s) !== server.key)
-  const name = createMemo(() => server.name || server.key)
-  const serverToken = "\u0000server\u0000"
-  const unreachable = createMemo(() => language.t("app.server.unreachable", { server: serverToken }).split(serverToken))
-
-  const timer = setInterval(() => props.onRetry?.(), 1000)
-  onCleanup(() => clearInterval(timer))
-
-  return (
-    <div class="h-dvh w-screen overflow-y-auto flex flex-col items-center justify-center-safe bg-background-base gap-6 p-6">
-      <div class="shrink-0 flex flex-col items-center max-w-md text-center">
-        <HugrSplash class="mb-4" />
-        <p class="text-14-regular text-text-base">
-          {unreachable()[0]}
-          <span class="text-text-strong font-medium">{name()}</span>
-          {unreachable()[1]}
-        </p>
-        <p class="mt-1 text-12-regular text-text-weak">{language.t("app.server.retrying")}</p>
-      </div>
-      <Show when={others().length > 0}>
-        <div class="shrink-0 flex flex-col gap-2 w-full max-w-sm">
-          <span class="text-12-regular text-text-base text-center">{language.t("app.server.otherServers")}</span>
-          <div class="flex flex-col gap-1 bg-surface-base rounded-lg p-2">
-            <For each={others()}>
-              {(conn) => {
-                const key = ServerConnection.key(conn)
-                return (
-                  <button
-                    type="button"
-                    class="flex items-center gap-3 w-full px-3 py-2 rounded-md hover:bg-surface-raised-base-hover transition-colors text-left"
-                    onClick={() => props.onServerSelected?.(key)}
-                  >
-                    <span class="text-14-regular text-text-strong truncate">{serverName(conn)}</span>
-                  </button>
-                )
-              }}
-            </For>
-          </div>
-        </div>
-      </Show>
-      <ConnectionRecovery onServerSelected={props.onServerSelected} />
-    </div>
   )
 }
 

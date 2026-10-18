@@ -2,7 +2,7 @@
 
 HuGR Orchestra is a desktop app for software work. You talk to Maestro, the lead agent. Maestro scopes the work, delegates it to a team of specialist agents, and brings the plan and the results back to you for approval.
 
-The app combines an Electron host (`packages/desktop`), a shared Solid UI (`packages/app-shell`), and local server/session services. `apps/web` owns the browser bootstrap and web distribution. `packages/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
+The app combines an Electron host (`apps/desktop`), a shared Solid UI (`packages/app-shell`), and local server/session services. `apps/web` owns the browser bootstrap and web distribution. `apps/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
 
 ## Run from source
 
@@ -18,16 +18,16 @@ bun install
 bun run dev:desktop
 ```
 
-This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](packages/desktop/README.md) for package-local commands and packaging inputs.
+This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](apps/desktop/README.md) for package-local commands and packaging inputs.
 
 A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; it does not isolate the entire Electron profile, settings, or draft store.
 
 ### Other entry points
 
-- `bun dev` runs the terminal UI and server from `packages/orchestra/src/index.ts`. `bun dev <directory>` runs it against another directory.
+- `bun dev` runs the terminal UI and server from `apps/orchestra/src/index.ts`. `bun dev <directory>` runs it against another directory.
 - `bun run dev:web` runs the web UI from `apps/web`.
-- From `packages/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](packages/cli/README.md) for daemon/API commands and compiled resources.
-- `./packages/orchestra/script/build.ts --single` compiles a standalone binary for your platform into `packages/orchestra/dist/orchestra-<platform>/bin/orchestra`.
+- From `apps/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](apps/cli/README.md) for daemon/API commands and compiled resources.
+- `./apps/orchestra/script/build.ts --single` compiles a standalone binary for your platform into `apps/orchestra/dist/orchestra-<platform>/bin/orchestra`.
 
 ### Checks
 
@@ -38,36 +38,36 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 
 ## Where things live
 
-| Path                       | What it holds                                                                                   |
-| -------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`packages/desktop`](packages/desktop/README.md) | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging |
-| [`packages/app-shell`](packages/app-shell/README.md) | Shared Solid UI and public `@orchestra/app` exports consumed by Web and Desktop |
-| [`apps/web`](apps/web/README.md) | Browser bootstrap, development server and web distribution |
-| [`packages/cli`](packages/cli/README.md) | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts |
-| `packages/orchestra`       | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration |
-| [`packages/core`](packages/core/README.md) | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting |
-| [`packages/schema`](packages/schema/README.md) | Portable contracts, canonical schema identity, and wire/storage datatypes |
-| [`packages/protocol`](packages/protocol/README.md) | Public HTTP contract, route schemas, errors, and middleware requirements |
-| [`packages/server`](packages/server/README.md) | HTTP handler/middleware implementation over Core and Protocol |
-| [`packages/client`](packages/client/README.md) | Generated Promise/Effect network clients; runtime depends on Schema/Protocol, not Core/Server |
-| [`packages/sdk-next`](packages/sdk-next/README.md) | Scoped embedded host composing Client, Core, and Server |
-| [`packages/plugin`](packages/plugin/README.md) | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority |
-| [`modules/relay`](modules/relay/README.md) | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle |
-| [`modules/capability-assets`](modules/capability-assets/README.md) | Data-only capability catalog, pinned source provenance, and license notices |
-| [`modules/maestro/arsenal`](modules/maestro/arsenal/README.md) | Maestro tool registry, MCP adapter, governance contracts, and host-authorized operations |
+| Path                                                                                                                     | What it holds                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| [`apps/desktop`](apps/desktop/README.md)                                                                                 | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging                              |
+| [`packages/app-shell`](packages/app-shell/README.md)                                                                     | Shared Solid UI and public `@orchestra/app` exports consumed by Web and Desktop                                         |
+| [`apps/web`](apps/web/README.md)                                                                                         | Browser bootstrap, development server and web distribution                                                              |
+| [`apps/cli`](apps/cli/README.md)                                                                                         | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts                                        |
+| `apps/orchestra`                                                                                                         | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration                           |
+| [`packages/core`](packages/core/README.md)                                                                               | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting              |
+| [`packages/schema`](packages/schema/README.md)                                                                           | Portable contracts, canonical schema identity, and wire/storage datatypes                                               |
+| [`packages/protocol`](packages/protocol/README.md)                                                                       | Public HTTP contract, route schemas, errors, and middleware requirements                                                |
+| [`packages/server`](packages/server/README.md)                                                                           | HTTP handler/middleware implementation over Core and Protocol                                                           |
+| [`packages/client`](packages/client/README.md)                                                                           | Generated Promise/Effect network clients; runtime depends on Schema/Protocol, not Core/Server                           |
+| [`packages/sdk-next`](packages/sdk-next/README.md)                                                                       | Scoped embedded host composing Client, Core, and Server                                                                 |
+| [`packages/plugin`](packages/plugin/README.md)                                                                           | Public legacy/TUI/V2 plugin authoring contracts; hosts own loading and authority                                        |
+| [`modules/relay`](modules/relay/README.md)                                                                               | Relay workflow/gate runtime, profiles, fixtures, and retained Python oracle                                             |
+| [`modules/capability-assets`](modules/capability-assets/README.md)                                                       | Data-only capability catalog, pinned source provenance, and license notices                                             |
+| [`modules/maestro/arsenal`](modules/maestro/arsenal/README.md)                                                           | Maestro tool registry, MCP adapter, governance contracts, and host-authorized operations                                |
 | [`modules/specialists/backend`](modules/specialists/backend/README.md), [`archie`](modules/specialists/archie/README.md) | Authored native-seat skills and complete UTF-8 companions; source and embedded lookup share the existing seat framework |
-| [`assets/brand`](assets/brand/README.md) | Preserved PNG/SVG identity source assets; separate from app public logos and Desktop channel icons |
-| [`tooling/httpapi-codegen`](tooling/httpapi-codegen/README.md) | Existing HttpApi compiler and Client generators, with unchanged package identity and generated bytes |
-| [`tooling/http-recorder`](tooling/http-recorder/README.md) | Existing HTTP/WebSocket test recorder, replay cassettes and source/package adapters |
-| `packages/sdk/js`          | Existing generated SDK retained for its supported consumers |
-| [`native/omni`](native/omni/README.md) | Native process infrastructure, addon/supervisor, conformance, and artifact producers |
-| [`script`](script/README.md) | Repository tooling and immutable manifest/asset/pin inventory |
-| [`modules/atlas`](modules/atlas/README.md) | Atlas npm workspace, corpus/Own and source domain; `boundary/` retains the host bundles |
-| `specs/hugr-maestro`       | Maestro's contracts, roadmap and work packages                                                  |
-| `specs/backend-specialist` | The backend specialist's architecture and tool contracts                                        |
-| `specs/orchestra-visual`   | The visual design handoff and its verification                                                  |
-| `specs/v2`                 | V2 designs: API, sessions, configuration, providers, tools and the plugin lifecycle             |
-| `CONTEXT.md`               | Vocabulary of the session runtime                                                               |
-| `AGENTS.md`                | Rules for agents that work in this repository                                                   |
+| [`assets/brand`](assets/brand/README.md)                                                                                 | Preserved PNG/SVG identity source assets; separate from app public logos and Desktop channel icons                      |
+| [`tooling/httpapi-codegen`](tooling/httpapi-codegen/README.md)                                                           | Existing HttpApi compiler and Client generators, with unchanged package identity and generated bytes                    |
+| [`tooling/http-recorder`](tooling/http-recorder/README.md)                                                               | Existing HTTP/WebSocket test recorder, replay cassettes and source/package adapters                                     |
+| `packages/sdk/js`                                                                                                        | Existing generated SDK retained for its supported consumers                                                             |
+| [`native/omni`](native/omni/README.md)                                                                                   | Native process infrastructure, addon/supervisor, conformance, and artifact producers                                    |
+| [`script`](script/README.md)                                                                                             | Repository tooling and immutable manifest/asset/pin inventory                                                           |
+| [`modules/atlas`](modules/atlas/README.md)                                                                               | Atlas npm workspace, corpus/Own and source domain; `boundary/` retains the host bundles                                 |
+| `specs/hugr-maestro`                                                                                                     | Maestro's contracts, roadmap and work packages                                                                          |
+| `specs/backend-specialist`                                                                                               | The backend specialist's architecture and tool contracts                                                                |
+| `specs/orchestra-visual`                                                                                                 | The visual design handoff documents; its evidence is retained outside Git (`docs/archives`)                             |
+| `specs/v2`                                                                                                               | V2 designs: API, sessions, configuration, providers, tools and the plugin lifecycle                                     |
+| `CONTEXT.md`                                                                                                             | Vocabulary of the session runtime                                                                                       |
+| `AGENTS.md`                                                                                                              | Rules for agents that work in this repository                                                                           |
 
 Runtime direction is Schema → Core/Protocol → Server. Client runtime uses Schema/Protocol only; `sdk-next` is the permitted embedded composition. The table describes current paths; remaining planned `apps/`, `modules/`, `native/`, and `tooling/` moves remain separate deliveries.

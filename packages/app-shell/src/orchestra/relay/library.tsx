@@ -28,6 +28,8 @@ type Props = {
   source: RelaySource
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
+  // The folder is outside git: its workflows would be shared by every such folder, so nothing new is made here.
+  shared: boolean
   // The chapter keeps the view, so search and filter survive a round trip through an editor.
   view?: LibraryView
   go: (path: string, replace?: boolean) => void
@@ -112,7 +114,7 @@ export function WorkflowLibrary(props: Props) {
     {
       label: copy.t("orchestra.workflows.menu.duplicate"),
       icon: "workflows",
-      disabled: duplication.busy(),
+      disabled: duplication.busy() || props.shared,
       run: () => void duplicate(document),
     },
     "-",
@@ -134,7 +136,7 @@ export function WorkflowLibrary(props: Props) {
         <button
           type="button"
           class="mx-btn primary"
-          disabled={!loaded()}
+          disabled={!loaded() || props.shared}
           onClick={() => openTemplate("blank")}
         >
           <Ic name="plus" />
@@ -143,6 +145,7 @@ export function WorkflowLibrary(props: Props) {
       }
     >
       <p class="wf-xlink">
+        <Show when={!props.shared}>{copy.t("orchestra.workflows.scope", { project: props.profile })} </Show>
         <a
           href={relayPath.library("hook")}
           onClick={(event) => {
@@ -162,6 +165,11 @@ export function WorkflowLibrary(props: Props) {
           {copy.t("orchestra.palette.executions")}
         </a>
       </p>
+      <Show when={props.shared}>
+        <p class="wf-retained" role="status" data-slot="relay-repository-required">
+          <span>{copy.t("orchestra.workflows.scope.repositoryRequired")}</span>
+        </p>
+      </Show>
       <RetainedDrafts source={props.source} kind="workflow" go={props.go} />
       <Switch>
         <Match when={props.source.documents.isPending}>
@@ -210,7 +218,12 @@ export function WorkflowLibrary(props: Props) {
                     : "orchestra.workflows.empty.bodyBlank",
                 )}
                 <br />
-                <button type="button" class="mx-btn primary" onClick={() => openTemplate("blank")}>
+                <button
+                  type="button"
+                  class="mx-btn primary"
+                  disabled={props.shared}
+                  onClick={() => openTemplate("blank")}
+                >
                   <Ic name="plus" />
                   {copy.t("orchestra.workflows.template.blank")}
                 </button>
@@ -315,13 +328,20 @@ export function WorkflowLibrary(props: Props) {
               <span class="mx-meta">{copy.t("orchestra.workflows.templates.meta")}</span>
             </div>
             <div class="wf-tpl-grid">
-              <TemplateCard id="blank" flows={flows()} documents={props.source.list()} onPick={openTemplate} />
+              <TemplateCard
+                id="blank"
+                flows={flows()}
+                documents={props.source.list()}
+                disabled={props.shared}
+                onPick={openTemplate}
+              />
               <For each={templates(props.source.list())}>
                 {(document) => (
                   <TemplateCard
                     id={document.id}
                     flows={flows()}
                     documents={props.source.list()}
+                    disabled={props.shared}
                     onPick={openTemplate}
                   />
                 )}
@@ -330,7 +350,7 @@ export function WorkflowLibrary(props: Props) {
           </Show>
         </Match>
       </Switch>
-      <Show when={props.route.create && loaded()}>
+      <Show when={props.route.create && loaded() && !props.shared}>
         <CreateWorkflowDialog
           source={props.source}
           flows={flows()}

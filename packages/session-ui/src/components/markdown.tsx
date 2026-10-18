@@ -90,11 +90,13 @@ async function code(text: string, language: string | undefined, key: string, com
 type CopyLabels = {
   copy: string
   copied: string
+  failed: string
 }
 
 type CopyButtonState = {
   setLabels: Setter<CopyLabels>
   setCopied: Setter<boolean>
+  setFailed: Setter<boolean>
   dispose: () => void
 }
 
@@ -121,17 +123,26 @@ function createCopyButton(labels: CopyLabels) {
   const dispose = render(() => {
     const [labelState, setLabels] = createSignal(labels, { equals: false })
     const [copied, setCopied] = createSignal(false)
+    const [failed, setFailed] = createSignal(false)
     state.setLabels = setLabels
     state.setCopied = setCopied
-    return <MarkdownCopyButton labels={labelState} copied={copied} />
+    state.setFailed = setFailed
+    return <MarkdownCopyButton labels={labelState} copied={copied} failed={failed} />
   }, host)
   state.dispose = dispose
   copyButtonState.set(host, state as CopyButtonState)
   return host
 }
 
-function MarkdownCopyButton(props: { labels: Accessor<CopyLabels>; copied: Accessor<boolean> }) {
-  const label = () => (props.copied() ? props.labels().copied : props.labels().copy)
+function MarkdownCopyButton(props: {
+  labels: Accessor<CopyLabels>
+  copied: Accessor<boolean>
+  failed: Accessor<boolean>
+}) {
+  const label = () => {
+    if (props.failed()) return props.labels().failed
+    return props.copied() ? props.labels().copied : props.labels().copy
+  }
   return (
     <TooltipV2 placement="top" value={label()}>
       <IconButtonV2
@@ -143,6 +154,7 @@ function MarkdownCopyButton(props: { labels: Accessor<CopyLabels>; copied: Acces
           <>
             <IconV2 name="outline-copy" data-copy-icon />
             <IconV2 name="check" data-check-icon />
+            <IconV2 name="xmark-small" data-fail-icon />
           </>
         }
       />
@@ -150,10 +162,30 @@ function MarkdownCopyButton(props: { labels: Accessor<CopyLabels>; copied: Acces
   )
 }
 
+// A missing or refused clipboard (insecure context, denied permission) resolves false so the button can say so.
+function copyText(text: string) {
+  if (!navigator?.clipboard) return Promise.resolve(false)
+  return navigator.clipboard.writeText(text).then(
+    () => true,
+    () => false,
+  )
+}
+
+function setCopyFailed(host: HTMLElement, labels: CopyLabels) {
+  const state = copyButtonState.get(host)
+  state?.setLabels(labels)
+  state?.setCopied(false)
+  state?.setFailed(true)
+  host.removeAttribute("data-copied")
+  host.setAttribute("data-failed", "true")
+}
+
 function setCopyState(host: HTMLElement, labels: CopyLabels, copied: boolean) {
   const state = copyButtonState.get(host)
   state?.setLabels(labels)
   state?.setCopied(copied)
+  state?.setFailed(false)
+  host.removeAttribute("data-failed")
   if (copied) {
     host.setAttribute("data-copied", "true")
     return
@@ -303,11 +335,10 @@ function setupCodeCopy(root: HTMLDivElement, getLabels: () => CopyLabels) {
     const code = button.closest('[data-component="markdown-code"]')?.querySelector("code")
     const content = code?.textContent ?? ""
     if (!content) return
-    const clipboard = navigator?.clipboard
-    if (!clipboard) return
-    await clipboard.writeText(content)
     const labels = getLabels()
-    setCopyState(button, labels, true)
+    const copied = await copyText(content)
+    if (copied) setCopyState(button, labels, true)
+    if (!copied) setCopyFailed(button, labels)
     const existing = timeouts.get(button)
     if (existing) clearTimeout(existing)
     const timeout = setTimeout(() => setCopyState(button, labels, false), 2000)
@@ -508,6 +539,7 @@ export function Markdown(
     const labels = {
       copy: i18n.t("ui.message.copy"),
       copied: i18n.t("ui.message.copied"),
+      failed: i18n.t("ui.message.copyFailed"),
     }
     const nextCodeKeys = new Set(content.filter((block) => block.mode === "code").map((block) => block.key))
     activeCodeKeys.forEach((key) => {
@@ -529,6 +561,7 @@ export function Markdown(
       copyCleanup = setupCodeCopy(container, () => ({
         copy: i18n.t("ui.message.copy"),
         copied: i18n.t("ui.message.copied"),
+        failed: i18n.t("ui.message.copyFailed"),
       }))
   })
 

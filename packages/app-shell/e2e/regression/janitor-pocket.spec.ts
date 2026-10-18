@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type {} from "../../../desktop/src/renderer/env"
+import type {} from "../../../../apps/desktop/src/renderer/env"
 import {
   directory,
   sessionID as routeSessionID,
@@ -124,7 +124,6 @@ for (const viewport of [
       onPrompt: (input) => prompts.push(input),
       sessions: [session(), session({ id: janitorSessionID, title: "Janitor chat" })],
     })
-    await page.getByRole("button", { name: "Dismiss Tabs information", exact: true }).click()
     const debug = page.getByRole("button", { name: "Toggle debug tools", exact: true })
     if ((await debug.getAttribute("aria-pressed")) === "true") await debug.click()
     await expect(debug).toHaveAttribute("aria-pressed", "false")

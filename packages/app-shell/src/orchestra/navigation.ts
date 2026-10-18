@@ -29,6 +29,8 @@ export const navigation = [
 
 // Capability pages without an entry here use their navigation label, as the reference does.
 const crumbs = {
+  // The Actions page is mounted as both `cicd` (its navigation entry) and `actions` (its chapter route).
+  actions: "orchestra.actions.title",
   agents: "orchestra.shell.crumb.agents",
   dock: "orchestra.shell.crumb.dock",
   workspaces: "orchestra.shell.crumb.workspaces",

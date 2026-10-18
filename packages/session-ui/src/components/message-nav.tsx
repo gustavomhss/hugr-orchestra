@@ -1,4 +1,4 @@
-import { UserMessage } from "@orchestra/sdk/v2"
+import { UserMessage } from "../compat/sdk-v2"
 import { HoverCard } from "@kobalte/core/hover-card"
 import { ComponentProps, For, Match, Show, createSignal, splitProps, Switch } from "solid-js"
 import { DiffChanges } from "@orchestra/ui/diff-changes"

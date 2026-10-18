@@ -9,7 +9,7 @@ import "./dock.css"
 // Without the desktop bridge the browser chrome still renders and its page area says so.
 export default function DockPage() {
   const language = useLanguage()
-  const dock = appDockController()
+  const dock = appDockController(language.t)
 
   return (
     <section class="orchestra-dock" aria-labelledby="orchestra-dock-title" data-status={dock.state.status}>

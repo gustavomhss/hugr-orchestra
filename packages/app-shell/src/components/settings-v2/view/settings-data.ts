@@ -1,4 +1,4 @@
-import type { PermissionActionConfig, PermissionRuleConfig } from "@orchestra/sdk/v2/client"
+import type { PermissionActionConfig, PermissionRuleConfig } from "../../../compat/sdk-v2-client"
 import { matchWildcard } from "@/utils/wildcard"
 
 // Sections of the routed Settings view, in navigation order. The first six are the approved
@@ -41,7 +41,7 @@ export const PERMISSION_ACTIONS = ["allow", "ask", "deny"] as const
 
 type Rule = { key: string; pattern: string; action: PermissionActionConfig }
 
-// The server's own defaults (packages/orchestra/src/agent/agent.ts). It evaluates them first, then each agent's
+// The server's own defaults (apps/orchestra/src/agent/agent.ts). It evaluates them first, then each agent's
 // built-in rules (plan denies edits, for example), then the configured rules; the last matching rule wins. Only
 // their "*" defaults are listed: everything is allowed except doom_loop and external_directory, which ask.
 const BUILT_IN: Rule[] = [
@@ -119,19 +119,4 @@ export function contextLabel(tokens: number | undefined) {
   if (tokens % 1024 === 0) return `${tokens / 1024}K`
   if (tokens >= 1_000_000) return `${Math.round(tokens / 100_000) / 10}M`
   return `${Math.round(tokens / 1000)}K`
-}
-
-// New turns use the configured default model (`config.model`, "provider/model"). Choosing a
-// route keeps the current model when that provider serves it, otherwise the provider's default.
-export function routeModel(input: {
-  provider: { id: string; models: Record<string, unknown> }
-  defaults: Record<string, string>
-  current?: { providerID: string; modelID: string }
-}) {
-  const models = Object.keys(input.provider.models)
-  const keep = input.current && models.includes(input.current.modelID) ? input.current.modelID : undefined
-  const fallback = input.defaults[input.provider.id]
-  const model = keep ?? (fallback && models.includes(fallback) ? fallback : models[0])
-  if (!model) return
-  return `${input.provider.id}/${model}`
 }

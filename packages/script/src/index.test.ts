@@ -3,7 +3,7 @@ import { mkdtemp, rm } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import semver from "semver"
-import pkg from "../../orchestra/package.json" with { type: "json" }
+import pkg from "../../../apps/orchestra/package.json" with { type: "json" }
 import { copiedWorkspaceFixture } from "../test/fixture/workspace"
 
 async function load(options: { version?: string; channel?: string; bump?: string; source?: string; probe?: boolean; missingRegistry?: boolean } = {}) {

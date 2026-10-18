@@ -2,7 +2,7 @@ import { Dialog } from "@kobalte/core/dialog"
 import { DialogHeader, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
 import { For, Show, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { CAVEMAN_ID, INTENSITIES, intensity, type LlmBehavior } from "@/utils/llm-behaviors"
+import { CAVEMAN_ID, INTENSITIES, intensity, seedText, type LlmBehavior } from "@/utils/llm-behaviors"
 import { uuid } from "@/utils/uuid"
 
 // Mark copied from the approved mock's plugins icon.
@@ -24,11 +24,23 @@ export function BehaviorDialog(props: {
   const language = useLanguage()
   const id = props.behavior?.id ?? uuid()
   const caveman = id === CAVEMAN_ID
+  const shown = {
+    name: props.behavior ? seedText(props.behavior, "name", language.t("orchestra.plugins.caveman.name")) : "",
+    description: props.behavior
+      ? seedText(props.behavior, "description", language.t("orchestra.plugins.caveman.description"))
+      : "",
+  }
+  // Text the person left as shown keeps what is stored, so saving a new intensity does not freeze one language
+  // into the profile's built-in behavior.
+  const typed = (data: FormData, key: "name" | "description") => {
+    const value = String(data.get(key)).trim()
+    return props.behavior && value === shown[key] ? props.behavior[key] : value
+  }
   return (
     <PluginsDialog
       title={
         props.behavior
-          ? language.t("orchestra.plugins.dialog.configure", { name: props.behavior.name })
+          ? language.t("orchestra.plugins.dialog.configure", { name: shown.name })
           : language.t("orchestra.plugins.dialog.add")
       }
       subtitle={language.t(
@@ -39,8 +51,8 @@ export function BehaviorDialog(props: {
       onSubmit={(data) =>
         props.onSave({
           id,
-          name: String(data.get("name")).trim(),
-          description: String(data.get("description")).trim(),
+          name: typed(data, "name"),
+          description: typed(data, "description"),
           instructions: String(data.get("instructions")),
           enabled: props.behavior?.enabled ?? true,
           ...(caveman ? { intensity: INTENSITIES.find((item) => item === data.get("intensity")) ?? "full" } : {}),
@@ -48,10 +60,10 @@ export function BehaviorDialog(props: {
       }
     >
       <Field label={language.t("orchestra.plugins.field.name")}>
-        <input name="name" type="text" required value={props.behavior?.name ?? ""} />
+        <input name="name" type="text" required value={shown.name} />
       </Field>
       <Field label={language.t("orchestra.plugins.field.description")}>
-        <input name="description" type="text" required value={props.behavior?.description ?? ""} />
+        <input name="description" type="text" required value={shown.description} />
       </Field>
       <Show when={caveman && props.behavior}>
         {(behavior) => (
@@ -60,7 +72,7 @@ export function BehaviorDialog(props: {
               <For each={INTENSITIES}>
                 {(item) => (
                   <option value={item} selected={item === intensity(behavior())}>
-                    {item}
+                    {language.t(`orchestra.plugins.intensity.${item}`)}
                   </option>
                 )}
               </For>

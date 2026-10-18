@@ -26,7 +26,7 @@ import { Tooltip } from "@orchestra/ui/tooltip"
 import { DropdownMenu } from "@orchestra/ui/dropdown-menu"
 import { Dialog } from "@orchestra/ui/dialog"
 import { getFilename } from "@orchestra/core/util/path"
-import { Session } from "@orchestra/sdk/v2/client"
+import { Session } from "../compat/sdk-v2-client"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { createStore, produce, reconcile } from "solid-js/store"
@@ -53,8 +53,8 @@ import { useTheme, type ColorScheme } from "@orchestra/ui/theme/context"
 import { useCommand, type CommandOption } from "@/context/command"
 import { ConstrainDragXAxis, getDraggableId } from "@/utils/solid-dnd"
 import { DebugBar } from "@/components/debug-bar"
-import { TabsInfoPopup } from "@/components/help-button"
-import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
+import { Titlebar } from "@/components/titlebar"
+import { useTitlebarUpdate } from "@/components/updater-action"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { ServerConnection, useServer } from "@/context/server"
 import { useLanguage, type Locale } from "@/context/language"
@@ -159,11 +159,7 @@ export default function LegacyLayout(props: ParentProps) {
     return state.version
   }
   const installUpdate = () => void platform.updater?.install()
-  const titlebarUpdate: TitlebarUpdate = {
-    version: updateVersion,
-    installing: () => platform.updater?.state().status === "installing",
-    install: installUpdate,
-  }
+  const titlebarUpdate = useTitlebarUpdate()
 
   const editor = createInlineEditorController()
   const setBusy = (directory: string, value: boolean) => {
@@ -2326,7 +2322,6 @@ export default function LegacyLayout(props: ParentProps) {
         </div>
         {import.meta.env.DEV && import.meta.env.VITE_DISABLE_DEBUG_BAR !== "1" && state.debugTools && <DebugBar />}
       </div>
-      <TabsInfoPopup />
       <ToastRegion v2={false} />
     </div>
   )

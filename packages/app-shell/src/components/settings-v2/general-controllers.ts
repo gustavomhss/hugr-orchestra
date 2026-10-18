@@ -1,4 +1,5 @@
 import { createMemo, createResource, type Accessor } from "solid-js"
+import { useLanguage } from "@/context/language"
 import { usePermission } from "@/context/permission"
 import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
@@ -15,6 +16,7 @@ import {
   useSettings,
 } from "@/context/settings"
 import { playSoundById, SOUND_OPTIONS } from "@/utils/sound"
+import { showToast } from "@/utils/toast"
 import { createSoundPreviewController, readShells, type ShellOption } from "./general-controller-behavior"
 
 export { createShellOptions, createSoundPreviewController } from "./general-controller-behavior"
@@ -48,6 +50,7 @@ export function createPermissionScopeController(sessionID: Accessor<string | und
 }
 
 export function createShellSettingsController() {
+  const language = useLanguage()
   const serverSdk = useServerSDK()
   const serverSync = useServerSync()
   const [shells, { refetch }] = createResource(
@@ -69,7 +72,17 @@ export function createShellSettingsController() {
     current,
     select: (value: string) => {
       if (value === current()) return
-      void serverSync().updateConfig({ shell: value })
+      const before = serverSync().data.config.shell
+      serverSync().set("config", "shell", value)
+      serverSync()
+        .updateConfig({ shell: value })
+        .catch((err: unknown) => {
+          serverSync().set("config", "shell", before)
+          showToast({
+            title: language.t("common.requestFailed"),
+            description: err instanceof Error ? err.message : String(err),
+          })
+        })
     },
   }
 }

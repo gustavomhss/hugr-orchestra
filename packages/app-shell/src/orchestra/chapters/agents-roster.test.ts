@@ -11,6 +11,7 @@ import {
   isMaestro,
   PERMISSION_TOOLS,
   removeInput,
+  restoreInput,
 } from "./agents-roster"
 
 const agent = (name: string, mode: Agent["mode"], hidden = false): Agent => ({
@@ -198,6 +199,13 @@ describe("Agent editor", () => {
       revision: "r1",
     })
     expect(removeInput(undefined)).toMatchObject({ disable: true })
+  })
+
+  test("restoring writes the same definition without disable", () => {
+    const restored = restoreInput({ ...file, disable: true })
+    expect(restored).toEqual({ ...removeInput(file), disable: undefined })
+    expect(JSON.parse(JSON.stringify(restored))).not.toHaveProperty("disable")
+    expect(restored.revision).toBe("r1")
   })
 
   test("validates the name, duplicates on create and a positive whole turn allowance", () => {

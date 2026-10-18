@@ -1,7 +1,7 @@
 import { createEffect, createMemo, createRoot, getOwner, onCleanup } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import { createSimpleContext } from "@orchestra/ui/context"
-import type { PermissionRequest } from "@orchestra/sdk/v2/client"
+import type { PermissionRequest } from "../compat/sdk-v2-client"
 import { Persist, persisted } from "@/utils/persist"
 import type { ServerSDK } from "@/context/server-sdk"
 import type { ServerSync } from "./server-sync"
@@ -11,7 +11,7 @@ import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
 import { type DraftTab, useTabs } from "./tabs"
 import { useSettings } from "./settings"
-import { requireServerKey } from "@/utils/session-route"
+import { parseServerKey } from "@/utils/session-route"
 import type { ServerScope } from "@/utils/server-scope"
 import { normalizePermissionRequest } from "./global-sync/utils"
 import {
@@ -71,8 +71,8 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
     })
 
     const activeServer = createMemo(() => {
-      if (params.serverKey && settings.general.newLayoutDesigns()) return requireServerKey(params.serverKey)
-      return activeDraft()?.server ?? server.key
+      const routed = settings.general.newLayoutDesigns() ? parseServerKey(params.serverKey) : undefined
+      return routed ?? activeDraft()?.server ?? server.key
     })
 
     const ensure = (key: ServerConnection.Key) => {

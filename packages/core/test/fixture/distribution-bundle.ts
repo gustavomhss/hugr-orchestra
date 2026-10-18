@@ -56,6 +56,8 @@ export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression
     row.lane === lane && row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))
   check(selected.length === 1 && selected[0], `BUNDLE_FIXTURE_NATIVE_ROW_MISSING_OR_REPEATED: ${lane}/${pkg}/${process.platform}/${process.arch}`)
   const row = { ...selected[0], files: files ?? [...selected[0].files] }
+  // Mirrors the workflow's PACKAGE_DIR: the CLI is an app, core a library.
+  const packageDir = pkg === "cli" ? "apps/cli" : `packages/${pkg}`
   const dir = yield* Effect.acquireRelease(
     Effect.promise(() => mkdtemp(path.join(tmpdir(), "distribution-bundle-"))),
     (dir) => Effect.promise(() => rm(dir, { recursive: true, force: true })),
@@ -64,12 +66,12 @@ export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression
     await mkdir(path.join(dir, "script"))
     await mkdir(path.join(dir, "fake-bin"))
     await mkdir(path.join(dir, "distribution-logs"))
-    await mkdir(path.join(dir, "packages", pkg), { recursive: true })
+    await mkdir(path.join(dir, packageDir), { recursive: true })
     await copyFile(path.join(root, "script/test-ci-request.ts"), path.join(dir, "script/test-ci-request.ts"))
-    await copyFile(path.join(root, "packages", pkg, "package.json"), path.join(dir, "packages", pkg, "package.json"))
+    await copyFile(path.join(root, packageDir, "package.json"), path.join(dir, packageDir, "package.json"))
     await Promise.all(row.files.map(async (file) => {
-      await mkdir(path.dirname(path.join(dir, "packages", pkg, file)), { recursive: true })
-      await Bun.write(path.join(dir, "packages", pkg, file), "// ORCHESTRATION-ONLY: inert file-selection input\n")
+      await mkdir(path.dirname(path.join(dir, packageDir, file)), { recursive: true })
+      await Bun.write(path.join(dir, packageDir, file), "// ORCHESTRATION-ONLY: inert file-selection input\n")
     }))
     // Only the Bun command boundary is fake. Bash, tee, Node, filesystem IO and AppProcess are real.
     await Bun.write(path.join(dir, "fake-bin/bun"), '#!/usr/bin/env bash\nexec "$BUNDLE_REAL_BUN" "$BUNDLE_CHILD" "$@"\n')
@@ -100,9 +102,9 @@ process.exitCode = Number(process.env.BUNDLE_CHILD_EXIT)
   })
   const capture = path.join(dir, "capture.json")
   const log = path.join(dir, "distribution-logs/run.log")
-  return { dir, row, capture, log, cwd: path.join(dir, "packages", pkg), env: {
+  return { dir, row, capture, log, cwd: path.join(dir, packageDir), env: {
     ...process.env,
-    ROW: JSON.stringify(row), PACKAGE: pkg, GITHUB_WORKSPACE: dir,
+    ROW: JSON.stringify(row), PACKAGE: pkg, PACKAGE_DIR: packageDir, GITHUB_WORKSPACE: dir,
     RUNNER_ARCH: row.cpu, RUNNER_OS: row.platform === "linux" ? "Linux" : row.platform === "darwin" ? "macOS" : "Windows",
     BUNDLE_REAL_BUN: process.execPath.replaceAll("\\", "/"),
     BUNDLE_REAL_BIN: shellPath(path.dirname(process.execPath)), BUNDLE_BIN: shellPath(path.join(dir, "fake-bin")),
@@ -118,7 +120,7 @@ export const boundaryFixture = () => Effect.gen(function* () {
   const trace = path.join(box.dir, "commands.jsonl")
   const deno = path.join(box.dir, "deno runtime", "deno")
   yield* Effect.promise(async () => {
-    await Promise.all(["packages/cli", "packages/script", "packages/desktop", "native/omni", "packages/schema", "modules/maestro/arsenal"].map((dir) => mkdir(path.join(box.dir, dir), { recursive: true })))
+    await Promise.all(["apps/cli", "packages/script", "apps/desktop", "native/omni", "packages/schema", "modules/maestro/arsenal"].map((dir) => mkdir(path.join(box.dir, dir), { recursive: true })))
     await mkdir(path.dirname(deno))
     await copyFile(path.join(root, "script/distribution-deno.ts"), path.join(box.dir, "script/distribution-deno.ts"))
     await mkdir(path.join(box.dir, "packages/core/test"), { recursive: true })

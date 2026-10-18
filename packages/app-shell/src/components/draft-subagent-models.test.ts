@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { clearPending, modelKey, pendingPolicy, pendingRules, pendingSelection, pendingSnapshot, togglePending } from "./draft-subagent-models"
+import { clearPending, modelKey, pendingPolicy, pendingRules, pendingSelection, pendingSnapshot, restorePending, togglePending } from "./draft-subagent-models"
 
 const DIR = "/tmp/draft-test"
 
@@ -64,6 +64,23 @@ describe("draft subagent models", () => {
     expect(inherited.revision).toBeGreaterThan(second.revision)
     expect(clearPending(key, initial.revision)).toBe(false)
     expect(clearPending(key, inherited.revision)).toBe(true)
+  })
+
+  test("a selection saved with the draft is restored as a fresh edit, unless a newer one exists", () => {
+    const key = `${DIR}/restore`
+    clearPending(key, pendingSnapshot(key).revision)
+    const saved = { mode: "allowlist" as const, models: [{ providerID: "router", id: "team/model" }] }
+    expect(restorePending(key, { mode: "inherit" })).toBe(false)
+    expect(restorePending(key, saved)).toBe(true)
+    expect(pendingPolicy(key)).toEqual(saved)
+    expect(pendingSnapshot(key).revision).toBeGreaterThan(0)
+    togglePending(key, "router", "other", true)
+    expect(restorePending(key, saved)).toBe(false)
+    expect(pendingSelection(key).has(modelKey("router", "other"))).toBe(true)
+    clearPending(key, pendingSnapshot(key).revision)
+    expect(restorePending(key, { mode: "allowlist", models: [] })).toBe(true)
+    expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [] })
+    clearPending(key, pendingSnapshot(key).revision)
   })
 
   test("caller mutation cannot edit pending selections or policy snapshots", () => {

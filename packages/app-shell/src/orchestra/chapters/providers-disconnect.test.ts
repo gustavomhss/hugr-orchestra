@@ -6,7 +6,7 @@ const babel = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir
 Bun.plugin({
   name: "provider-disconnect-boundary",
   setup(build) {
-    build.onLoad({ filter: /providers\.tsx\?disconnect-test$/ }, async (args) => {
+    build.onLoad({ filter: /providers-list\.tsx\?disconnect-test$/ }, async (args) => {
       const source = await Bun.file(args.path.replace(/\?disconnect-test$/, "")).text()
       const node = babel("@babel/parser")
         .parse(source, { sourceType: "module", plugins: ["jsx", "typescript"] })
@@ -20,8 +20,8 @@ Bun.plugin({
     })
   },
 })
-const { disconnectProvider }: typeof import("./providers") = await import(
-  `${Bun.resolveSync("./providers.tsx", import.meta.dir)}?disconnect-test`
+const { disconnectProvider }: typeof import("./providers-list") = await import(
+  `${Bun.resolveSync("./providers-list.tsx", import.meta.dir)}?disconnect-test`
 )
 
 test("V1 custom disconnect surfaces removal/config failures and never disables after failed removal", async () => {

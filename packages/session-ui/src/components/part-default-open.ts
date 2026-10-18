@@ -1,4 +1,4 @@
-import type { Part as PartType, ToolPart } from "@orchestra/sdk/v2"
+import type { Part as PartType, ToolPart } from "../compat/sdk-v2"
 
 function deletionOnly(part: ToolPart) {
   if (!("metadata" in part.state)) return false
