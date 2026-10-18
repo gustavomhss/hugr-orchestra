@@ -9,11 +9,11 @@ import {
 } from "./settings-data"
 
 describe("settings sections", () => {
-  test("accepts known sections and falls back to general", () => {
+  test("accepts known sections and falls back to permissions", () => {
     expect(settingsSection("models")).toBe("models")
     expect(settingsSection("servers")).toBe("servers")
-    expect(settingsSection("nope")).toBe("general")
-    expect(settingsSection(undefined)).toBe("general")
+    expect(settingsSection("nope")).toBe("permissions")
+    expect(settingsSection(undefined)).toBe("permissions")
   })
 })
 

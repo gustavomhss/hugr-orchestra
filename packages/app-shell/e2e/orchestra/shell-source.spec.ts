@@ -34,7 +34,7 @@ for (const width of [390, 720, 768, 1440]) {
     await nav.getByRole("button", { name: "General", exact: true }).click()
     await expect(page.locator('[data-action="settings-language"]')).toBeVisible()
     await nav.getByRole("button", { name: "Models", exact: true }).click()
-    await expect(page.getByRole("status").filter({ hasText: "Select a repository profile" })).toBeVisible()
+    await expect(page.getByRole("status").filter({ hasText: "Open a project to manage this section" })).toBeVisible()
     await nav.getByRole("button", { name: "Servers", exact: true }).click()
     await expect(page.getByRole("button", { name: /Add server/i })).toBeVisible()
     await nav.getByRole("button", { name: "Shortcuts", exact: true }).click()

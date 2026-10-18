@@ -164,7 +164,7 @@ test("outside git the library refuses new workflows and says why, even on the Ne
   await page.goto("/orchestra/workflows/new")
   const view = page.locator('[data-mx-page="orchestra-workflows"]')
   await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
-    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    "Hooks and workflows need a git repository with at least one commit. This folder has no repository or no first commit yet, so they would apply to every such folder.",
   )
   await expect(view.locator(".wf-xlink")).not.toContainText("Available to every agent session")
   await expect(page.getByRole("dialog", { name: "New workflow" })).toHaveCount(0)

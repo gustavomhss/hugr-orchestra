@@ -80,7 +80,7 @@ test("outside git the page refuses new hooks and offers to remove the ones insta
   await page.goto("/orchestra/hooks")
   const view = page.locator('[data-mx-page="orchestra-hooks"]')
   await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
-    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    "Hooks and workflows need a git repository with at least one commit. This folder has no repository or no first commit yet, so they would apply to every such folder.",
   )
   await expect(view.locator(".hk-scope")).not.toContainText("Applies to every agent session")
   await expect(view.getByRole("button", { name: "New hook", exact: true })).toBeDisabled()

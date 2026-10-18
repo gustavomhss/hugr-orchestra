@@ -68,10 +68,6 @@ export function SessionHeader() {
     terminalKeybind: command.keybindParts("terminal.toggle"),
     terminalOpened: view().terminal.opened(),
     onTerminalToggle: toggleTerminal,
-    fileTreeLabel: language.t("command.fileTree.toggle"),
-    fileTreeKeybind: command.keybindParts("fileTree.toggle"),
-    fileTreeOpened: layout.fileTree.opened(),
-    onFileTreeToggle: () => layout.fileTree.toggle(),
   }))
 
   const [centerMount, setCenterMount] = createSignal<HTMLElement | null>(null)
@@ -142,10 +138,6 @@ type SessionHeaderV2ActionsState = {
   terminalKeybind: string[]
   terminalOpened: boolean
   onTerminalToggle: () => void
-  fileTreeLabel: string
-  fileTreeKeybind: string[]
-  fileTreeOpened: boolean
-  onFileTreeToggle: () => void
 }
 
 function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
@@ -181,31 +173,6 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
           aria-expanded={props.state.terminalOpened}
           aria-controls="terminal-panel"
           icon={<Icon name={props.state.terminalOpened ? "terminal-active" : "terminal"} size="small" />}
-        />
-      </TooltipV2>
-      <TooltipV2
-        class="shrink-0"
-        placement="bottom"
-        value={
-          <>
-            {props.state.fileTreeLabel}
-            <Show when={props.state.fileTreeKeybind.length > 0}>
-              <KeybindV2 keys={props.state.fileTreeKeybind} variant="neutral" />
-            </Show>
-          </>
-        }
-      >
-        <IconButtonV2
-          type="button"
-          variant="ghost-muted"
-          size="large"
-          class="!w-9 shrink-0"
-          state={props.state.fileTreeOpened ? "pressed" : undefined}
-          onClick={props.state.onFileTreeToggle}
-          aria-label={props.state.fileTreeLabel}
-          aria-expanded={props.state.fileTreeOpened}
-          aria-controls="file-tree-panel"
-          icon={<Icon name={props.state.fileTreeOpened ? "file-tree-active" : "file-tree"} size="small" />}
         />
       </TooltipV2>
       <Show when={props.state.reviewVisible}>

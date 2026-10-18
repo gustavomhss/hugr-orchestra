@@ -16,7 +16,7 @@ export const SETTINGS_SECTIONS = [
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 
 export function settingsSection(value: unknown): SettingsSection {
-  return SETTINGS_SECTIONS.find((item) => item === value) ?? "general"
+  return SETTINGS_SECTIONS.find((item) => item === value) ?? "permissions"
 }
 
 // The tools the mock lists, in its order.
