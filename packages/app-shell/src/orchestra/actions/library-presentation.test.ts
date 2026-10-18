@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
 import { initial, type State } from "./contract"
-import { libraryPresentation, runFilters, workflowFilters, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 const binding: Actions.Binding = {
   id: Actions.BindingID.make("ab_library"), revision: 1, remote: "origin", projectID: "21", projectPath: "gustavomhss/hugr-orchestra", directory: "/repo/native",
@@ -47,12 +47,19 @@ test("workflow filters are fixed, group known disabled states and keep unknown n
 })
 
 test("run filters are a fixed list of distinct native status values per provider", () => {
-  const labels = ["orchestra.actions.all", "orchestra.actions.failed", "orchestra.actions.running", "orchestra.actions.needsApproval",
+  const labels = (waiting: string) => ["orchestra.actions.all", "orchestra.actions.failed", "orchestra.actions.running", waiting,
     "orchestra.actions.queued", "orchestra.actions.passed"]
-  expect(runFilters("github").map((item) => item.label)).toEqual(labels)
-  expect(runFilters("gitlab").map((item) => item.label)).toEqual(labels)
+  expect(runFilters("github").map((item) => item.label)).toEqual(labels("orchestra.actions.needsApproval"))
+  expect(runFilters("gitlab").map((item) => item.label)).toEqual(labels("orchestra.actions.manual"))
   expect(runFilters("github").map((item) => item.value)).toEqual(["", "failure", "in_progress", "waiting", "queued", "success"])
   expect(runFilters("gitlab").map((item) => item.value)).toEqual(["", "failed", "running", "manual", "pending", "success"])
+})
+
+test("a stored status from another provider or an old raw value counts as All", () => {
+  expect(selectedFilter(runFilters("github"), "failure")).toBe("failure")
+  expect(selectedFilter(runFilters("gitlab"), "failure")).toBe("")
+  expect(selectedFilter(runFilters("github"), "completed")).toBe("")
+  expect(selectedFilter(workflowFilters, "disabled")).toBe("disabled")
 })
 
 test("recent and latest runs join by binding and workflow, use creation time and preserve native execution status", () => {

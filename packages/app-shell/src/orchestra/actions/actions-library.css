@@ -27,9 +27,11 @@
 .actions-page .collection-last > strong { font-size: 12px; font-weight: 500; }
 .actions-page .workflow-card .mx-card-foot > div { display: flex; gap: 6px; }
 
-/* Run table: header and rows share fixed tracks so the columns line up. */
-.actions-page .collection-run-list .run-head,
-.actions-page .actions-collection .mx-table > .run-row { grid-template-columns: minmax(210px, 1fr) minmax(150px, .65fr) 120px 100px; gap: 16px; }
+/* Run table: header and rows share fixed tracks so the columns line up; narrow widths keep the shell's tracks. */
+@media (min-width: 851px) {
+  .actions-page .collection-run-list .run-head,
+  .actions-page .actions-collection .mx-table > .run-row { grid-template-columns: minmax(210px, 1fr) minmax(150px, .65fr) 120px 100px; gap: 16px; }
+}
 .actions-page .collection-run-list .run-head { padding: 0 16px 10px; font-size: 9.5px; }
 .actions-page .actions-collection .mx-table > .run-row { inline-size: 100%; border: 0; border-block-start: 1px solid var(--actions-line); cursor: pointer; }
 .actions-page .actions-collection .mx-table > .run-row:first-child { border-block-start: 0; }

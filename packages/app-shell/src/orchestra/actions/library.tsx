@@ -7,7 +7,7 @@ import type { Model, Translate, ViewProps } from "./contract"
 import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
-import { libraryPresentation, runFilters, workflowFilters, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 export function Library(props: ViewProps & { embedded?: boolean }) {
   const model = props.model
@@ -81,13 +81,15 @@ function WorkflowState(props: { props: ViewProps; page: readonly Actions.Workflo
 function RunHistoryView(props: { model: Model; t: Translate; embedded?: boolean; header?: boolean }) {
   const page = createMemo(() => props.model.state.runs.value?.items.filter((item) => item.bindingID === props.model.state.binding?.id
     && (!props.model.state.route.workflowID || item.workflowID === props.model.state.route.workflowID)).slice(0, 100) ?? [])
-  const runs = createMemo(() => filterRuns(page(), props.model.state.filters))
+  const statusFilters = createMemo(() => runFilters(props.model.state.binding?.provider.kind))
+  const status = createMemo(() => selectedFilter(statusFilters(), props.model.state.filters.status))
+  const runs = createMemo(() => filterRuns(page(), { ...props.model.state.filters, status: status() }))
   const refs = createMemo(() => withSelected(options(page().map((run) => run.ref)), props.model.state.filters.ref))
   const events = createMemo(() => withSelected(options(page().map((run) => run.event)), props.model.state.filters.event))
   return <section class={props.embedded ? "actions-collection collection-runs" : "actions-collection mx-page"} aria-label={props.t("orchestra.actions.runs")}>
     <Show when={props.header !== false}><header class="mx-heading"><div><h2>{props.t("orchestra.actions.runs")}</h2></div><Show when={!props.embedded}><button type="button" class="mx-btn" onClick={() => void props.model.refresh()}>{props.t("orchestra.actions.refresh")}</button></Show></header></Show>
-    <Toolbar t={props.t} query={props.model.state.filters.query} status={props.model.state.filters.status} placeholder="orchestra.actions.searchRuns"
-      filters={runFilters(props.model.state.binding?.provider.kind)} onFilter={(patch) => props.model.filter(patch)} />
+    <Toolbar t={props.t} query={props.model.state.filters.query} status={status()} placeholder="orchestra.actions.searchRuns"
+      filters={statusFilters()} onFilter={(patch) => props.model.filter(patch)} />
     <div class="mx-toolbar collection-filters">
       <FilterSelect label={props.t("orchestra.actions.ref")} aria={props.t("orchestra.actions.ref")} selected={props.model.state.filters.ref} values={refs()} all={props.t("orchestra.actions.allRefs")} onChange={(value) => props.model.filter({ ref: value })} />
       <FilterSelect label={props.t("orchestra.actions.event")} aria={props.t("orchestra.actions.event")} selected={props.model.state.filters.event} values={events()} all={props.t("orchestra.actions.allEvents")} onChange={(value) => props.model.filter({ event: value })} />
@@ -168,18 +170,14 @@ function WorkflowCard(props: { props: ViewProps; workflow: Actions.Workflow; run
 }
 
 function RunTable(props: { model: Model; t: Translate; runs: readonly Actions.Run[] }) {
-  // Native runs carry no commit title, so the run name stays the title; the workflow name is added only when it differs.
-  const workflowName = (run: Actions.Run) => {
-    const name = props.model.state.workflows.value?.items.find((item) => item.bindingID === run.bindingID && item.id === run.workflowID)?.name
-    return name && name !== run.name ? name : undefined
-  }
   const unknown = () => props.t("orchestra.actions.unknown")
   return <div class="collection-run-list">
-    <div class="run-head" aria-hidden="true"><span>{props.t("orchestra.actions.runColumn")}</span><span>{props.t("orchestra.actions.refColumn")}</span>
+    <div class="run-head"><span>{props.t("orchestra.actions.runColumn")}</span><span>{props.t("orchestra.actions.refColumn")}</span>
       <span>{props.t("orchestra.actions.resultColumn")}</span><span>{props.t("orchestra.actions.timeColumn")}</span></div>
     <div class="mx-table runs-table"><For each={props.runs}>{(run) => <button type="button" class="mx-row run-row" onClick={() => props.model.navigate({ view: "run", runID: run.id })}>
       <span class="mx-grow"><strong><bdi>{run.name ?? run.id}</bdi></strong>
-        <small><Show when={workflowName(run)}>{(name) => <><bdi>{name()}</bdi> · </>}</Show><bdi dir="ltr">#{run.id}</bdi> · {props.t("orchestra.actions.attempt")} {run.attempt ?? unknown()}</small>
+        {/* Native runs carry no commit title, so the run name stays the title; the workflow name is added only when it differs. */}
+        <small><Show when={props.model.state.workflows.value?.items.find((item) => item.bindingID === run.bindingID && item.id === run.workflowID && item.name !== run.name)?.name}>{(name) => <><bdi>{name()}</bdi> · </>}</Show><bdi dir="ltr">#{run.id}</bdi> · {props.t("orchestra.actions.attempt")} {run.attempt ?? unknown()}</small>
         <small><bdi>{run.actor ?? unknown()}</bdi></small></span>
       <span class="collection-run-ref"><span class="ref"><Icon name="branch" /><bdi>{run.ref ?? unknown()}</bdi></span><small><bdi dir="ltr">{shortSHA(run.commit)}</bdi> · <bdi>{run.event}</bdi></small></span>
       <span class="collection-run-result"><Status status={run.status} conclusion={run.conclusion} t={props.t} /></span>

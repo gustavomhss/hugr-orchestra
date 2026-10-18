@@ -40,10 +40,15 @@ export function runFilters(kind?: Actions.ProviderKind) {
     { value: "", label: "orchestra.actions.all" },
     { value: gitlab ? "failed" : "failure", label: "orchestra.actions.failed" },
     { value: gitlab ? "running" : "in_progress", label: "orchestra.actions.running" },
-    { value: gitlab ? "manual" : "waiting", label: "orchestra.actions.needsApproval" },
+    { value: gitlab ? "manual" : "waiting", label: gitlab ? "orchestra.actions.manual" : "orchestra.actions.needsApproval" },
     { value: gitlab ? "pending" : "queued", label: "orchestra.actions.queued" },
     { value: "success", label: "orchestra.actions.passed" },
   ] as const
+}
+
+/** A stored status that is not an option of the current list (e.g. after a provider switch) counts as All. */
+export function selectedFilter(filters: readonly { value: string }[], status: string) {
+  return filters.some((item) => item.value === status) ? status : ""
 }
 
 export function workflowState(state: string): { filter: string; label?: Parameters<Translate>[0]; tone: string } {
