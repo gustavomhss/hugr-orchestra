@@ -144,7 +144,7 @@ export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
   const pages = state.sources.filter((source) => source.origin.kind === "url")
   const seen = [...seenUrls, ...pages.map((source) => source.origin.uri)]
   const captured = pages.filter((source) => source.complete).map((source) => ({ url: source.origin.uri, capturedAt: source.capturedAt }))
-  const subquestions = new Map(state.subquestions.map((sub) => [sub.ref.id, sub.ref]))
+  const subquestions = new Map<string, Research.RecordRef>(state.subquestions.map((sub) => [sub.ref.id, sub.ref]))
   return yield* InquiryCheck.run({
     binding,
     ...(close ? { sufficiency: close.sufficiency } : {}),

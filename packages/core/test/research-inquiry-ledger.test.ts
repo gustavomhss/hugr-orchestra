@@ -2,7 +2,9 @@ import { describe, expect } from "bun:test"
 import { Effect, Layer } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Locate } from "@orchestra/core/research-toolkit/locate"
 import { callFrame, researchFixture } from "./research-binding.test"
 import { testEffect } from "./lib/effect"
 
@@ -40,8 +42,11 @@ describe("research inquiry ledger (J5.1)", () => {
       expect(steps.map((step) => step.type).filter((type) => type.startsWith("research.inquiry."))).toEqual([
         "research.inquiry.opened", "research.inquiry.checked", "research.inquiry.closed",
       ])
+      // The parent reads the closed card by binding (J5.13).
+      expect(yield* ResearchLedger.closed(fixture.binding)).toEqual(card(check))
       // A resumed Task is a new dispatch: its stream starts after its own allowance and holds no earlier inquiry.
       const resumed = yield* allowances.bind(fixture.binding, "dispatch-two")
+      expect(yield* ResearchLedger.closed(fixture.binding)).toBeUndefined()
       expect((yield* records.dispatch(resumed)).filter((step) => step.type.startsWith("research.inquiry."))).toEqual([])
       expect((yield* records.dispatch({ ...resumed, dispatchCallID: "never-bound" }).pipe(Effect.flip)).code).toBe("binding_missing")
     }).pipe(Effect.provide(ResearchAllowance.layer)),
@@ -60,6 +65,29 @@ describe("research inquiry ledger (J5.1)", () => {
       yield* lines(1, 2)
       expect((yield* lines(1, 2, "original").pipe(Effect.flip)).code).toBe("reference_invalid")
       expect((yield* lines(5, 6, "original").pipe(Effect.flip)).code).toBe("reference_invalid")
+    }),
+  ))
+
+  it.live("a code_locate snapshot resolves original lines inside one of its ranges", () => researchFixture((fixture) =>
+    Effect.gen(function* () {
+      const records = yield* ResearchRecords.Service
+      const content = [Locate.SNAPSHOT, "==> src/y.ts:30-31", "30: export function relayed() {", "31:   return 2", "",
+        "==> src/x.ts:1-1", "1: export const x = 1"].join("\n")
+      const capture = (uri: string) => Effect.gen(function* () {
+        const context = yield* fixture.call()
+        return yield* callFrame(fixture.binding, context, records.capture(fixture.binding, context, {
+          origin: { kind: "file", uri }, representation: "text", mediaType: "text/plain", content, complete: true }))
+      })
+      const snapshot = yield* capture(fixture.binding.worktree)
+      const lines = (ref: Research.SourceRef, start: number, end: number) =>
+        records.verifyEvidence(fixture.binding, { source: ref, locator: { kind: "lines", start, end, basis: "original" } })
+      yield* lines(snapshot.ref, 30, 31)
+      yield* lines(snapshot.ref, 1, 1)
+      expect((yield* lines(snapshot.ref, 29, 30).pipe(Effect.flip)).code).toBe("reference_invalid")
+      expect((yield* lines(snapshot.ref, 1, 30).pipe(Effect.flip)).code).toBe("reference_invalid")
+      // The same bytes read as an ordinary file keep the file's own coordinates.
+      const plain = yield* capture("notes.txt")
+      expect((yield* lines(plain.ref, 30, 31).pipe(Effect.flip)).code).toBe("reference_invalid")
     }),
   ))
 })
