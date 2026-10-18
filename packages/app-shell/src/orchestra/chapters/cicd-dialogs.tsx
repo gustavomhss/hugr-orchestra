@@ -1,6 +1,6 @@
-import { createEffect, createSignal, createUniqueId, For, onMount, Show, type JSX } from "solid-js"
+import { createEffect, createSignal, createUniqueId, onMount, Show, type JSX } from "solid-js"
 import { useLanguage } from "@/context/language"
-import { ENVIRONMENTS, TRIGGERS, type Pipeline } from "./cicd-data"
+import type { Pipeline } from "./cicd-data"
 import type { PipelineDefinition } from "./cicd-runner"
 
 // Marks copied from the mock's icon set (16-unit stroke icons).
@@ -133,29 +133,28 @@ export function PipelineDialog(props: {
       onClose={props.onClose}
       onSubmit={(data) => {
         const name = String(data.get("name") ?? "").trim()
-        const branch = String(data.get("branch") ?? "").trim()
         const command = String(data.get("command") ?? "")
           .replace(/\r\n?/g, "\n")
           .trim()
         const problem = !name
           ? "orchestra.cicd.field.nameRequired"
-          : !branch
-            ? "orchestra.cicd.field.branchRequired"
-            : !command
-              ? "orchestra.cicd.field.commandsRequired"
-              : undefined
+          : !command
+            ? "orchestra.cicd.field.commandsRequired"
+            : undefined
         if (problem) {
           setError(language.t(problem))
           return false
         }
+        // Branch, trigger, environment and deploy have no inputs here: an existing pipeline keeps its stored
+        // values, and a new one starts on the current branch.
         props.onSave({
           id: item()?.id ?? crypto.randomUUID(),
           name,
-          branch,
-          trigger: TRIGGERS.find((value) => value === data.get("trigger")) ?? "manual",
+          branch: item()?.branch ?? props.branch,
+          trigger: item()?.trigger ?? "manual",
           command,
-          environment: ENVIRONMENTS.find((value) => value === data.get("environment")) ?? "preview",
-          deploy: data.has("deploy"),
+          environment: item()?.environment ?? "preview",
+          deploy: item()?.deploy ?? false,
         })
       }}
     >
@@ -163,45 +162,16 @@ export function PipelineDialog(props: {
         <span>{language.t("orchestra.cicd.field.name")}</span>
         <input name="name" type="text" value={item()?.name ?? ""} required />
       </label>
-      <div class="mx-fields">
-        <label class="mx-field">
-          <span>{language.t("orchestra.cicd.field.branch")}</span>
-          <input name="branch" type="text" value={item()?.branch ?? props.branch} required />
-        </label>
-        <label class="mx-field">
-          <span>{language.t("orchestra.cicd.field.trigger")}</span>
-          <select name="trigger">
-            <For each={TRIGGERS}>
-              {(value) => (
-                <option value={value} selected={value === (item()?.trigger ?? "manual")}>
-                  {language.t(`orchestra.cicd.trigger.${value}`)}
-                </option>
-              )}
-            </For>
-          </select>
-        </label>
-      </div>
       <label class="mx-field">
         <span>{language.t("orchestra.cicd.field.commands")}</span>
-        <textarea name="command" dir="ltr" spellcheck={false}>
-          {item()?.command ?? "bun run build && bun test"}
+        <textarea
+          name="command"
+          dir="ltr"
+          spellcheck={false}
+          placeholder={language.t("orchestra.cicd.field.commandsPlaceholder")}
+        >
+          {item()?.command ?? ""}
         </textarea>
-      </label>
-      <label class="mx-field">
-        <span>{language.t("orchestra.cicd.field.environment")}</span>
-        <select name="environment">
-          <For each={ENVIRONMENTS}>
-            {(value) => (
-              <option value={value} selected={value === (item()?.environment ?? "preview")}>
-                {language.t(`orchestra.cicd.environment.${value}`)}
-              </option>
-            )}
-          </For>
-        </select>
-      </label>
-      <label class="cicd-choice">
-        <input type="checkbox" name="deploy" checked={item()?.deploy ?? false} />
-        {language.t("orchestra.cicd.field.deploy")}
       </label>
       <Show when={item()}>
         <button type="button" class="mx-btn" onClick={() => props.onRemove()}>

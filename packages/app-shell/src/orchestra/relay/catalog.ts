@@ -1,5 +1,5 @@
 import type { RelayNodeType } from "./client"
-import { CONDITION, type FlowNode, type Outputs, START, TRIGGER } from "./graph"
+import { CONDITION, ENFORCING, type Flow, type FlowNode, type Outputs, recordOnly, START, TRIGGER } from "./graph"
 
 // 16-unit line icons for controls (same stroke style as the sidebar marks).
 export const ICON = {
@@ -100,9 +100,14 @@ export const WORKFLOW_ENTRIES: WorkflowEntry[] = [
   { key: "execute", type: "relay.execute", group: "work", glyph: "execute", tone: "execute" },
   { key: "inject", type: "relay.inject", group: "work", glyph: "inject", tone: "inject" },
   { key: "review", type: "relay.review", group: "work", glyph: "review", tone: "review" },
-  { key: "human", type: "relay.human", group: "work", glyph: "human", tone: "human" },
   { key: "gate", type: "relay.gate", group: "gates", glyph: "gate", tone: "gate" },
   { key: "phase", type: "phase", group: "structure", glyph: "phase", tone: "execute" },
+]
+
+// Maestro cannot run a Human approval step, so the add panel no longer offers it. A document that already has one
+// still draws it.
+const RETIRED_ENTRIES: WorkflowEntry[] = [
+  { key: "human", type: "relay.human", group: "work", glyph: "human", tone: "human" },
 ]
 
 const HOOK_ACTIONS: HookEntry[] = [
@@ -127,8 +132,25 @@ export function operationTimings(operation: string) {
   return ["before", "after"]
 }
 
-// Hook entries offered by this server: one trigger per operation it lists, then the actions it implements.
-export function hookEntries(types: RelayNodeType[] | undefined): (HookEntry | TriggerEntry)[] {
+// Tools worth suggesting for a trigger's Tool condition; MCP tools are `<server>_<tool>` and can be typed in.
+export function toolSuggestions(operation: unknown) {
+  if (operation === "read") return ["read"]
+  if (operation === "edit") return ["edit", "apply_patch"]
+  if (operation === "write") return ["write", "apply_patch"]
+  if (operation === "command") return ["bash"]
+  return ["read", "edit", "write", "apply_patch", "bash", "glob", "grep", "webfetch", "task"]
+}
+
+// The events an Event condition can see: the operations of the call, a tool trigger sees any of the tool operations.
+export function eventSuggestions(operation: unknown, timing: unknown) {
+  const when = timing === "after" ? "after" : "before"
+  const operations = operation === "tool" ? ["read", "edit", "write", "command", "tool"] : [String(operation)]
+  return operations.map((item) => `${item}.${when}`)
+}
+
+// Hook entries offered by this server: one trigger per operation it lists, then the actions it implements. Once the hook
+// listens to a session start or stop, the actions that could only be dropped there are left out.
+export function hookEntries(types: RelayNodeType[] | undefined, flow?: Flow): (HookEntry | TriggerEntry)[] {
   const trigger = types?.find((item) => item.type === TRIGGER)
   const operations = trigger?.parameters
     .find((parameter) => parameter.name === "operation")
@@ -143,9 +165,11 @@ export function hookEntries(types: RelayNodeType[] | undefined): (HookEntry | Tr
       operation,
     }),
   )
-  if (!types) return [...triggers, ...HOOK_ACTIONS]
+  const current = flow?.nodes.find((node) => node.type === TRIGGER)?.parameters.operation
+  const offered = HOOK_ACTIONS.filter((entry) => !recordOnly(current) || !ENFORCING.includes(entry.type))
+  if (!types) return [...triggers, ...offered]
   const listed = new Set(types.map((item) => item.type))
-  return [...triggers, ...HOOK_ACTIONS.filter((entry) => listed.has(entry.type))]
+  return [...triggers, ...offered.filter((entry) => listed.has(entry.type))]
 }
 
 export function operationGlyph(operation: string): Glyph {
@@ -168,18 +192,19 @@ export function hookOutputs(types: RelayNodeType[] | undefined): Outputs {
 export function nodeGlyph(node: FlowNode): Glyph {
   if (node.type === START) return "start"
   if (node.type === TRIGGER) return operationGlyph(String(node.parameters.operation ?? "edit"))
-  const entry = [...WORKFLOW_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
+  const entry = [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
   return entry?.glyph ?? "execute"
 }
 
 export function nodeTone(node: FlowNode): Tone {
   if (node.type === START || node.type === TRIGGER) return "start"
-  const entry = [...WORKFLOW_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
+  const entry = [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
   return entry?.tone ?? "execute"
 }
 
 // The i18n key suffix for a node type ("execute", "gate", "condition", …).
-export const workflowKey = (type: string) => WORKFLOW_ENTRIES.find((item) => item.type === type)?.key
+export const workflowKey = (type: string) =>
+  [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES].find((item) => item.type === type)?.key
 export const hookKey = (type: string) => HOOK_ACTIONS.find((item) => item.type === type)?.key
 export const isFileOperation = (value: string): value is "read" | "edit" | "write" | "command" =>
   value === "read" || value === "edit" || value === "write" || value === "command"

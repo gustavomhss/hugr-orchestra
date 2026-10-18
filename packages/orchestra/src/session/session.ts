@@ -552,6 +552,9 @@ const layer: Layer.Layer<
           sessionStartOutput,
         )
         .pipe(Effect.catch((err) => Effect.logError("session.start hook failed", { sessionID: result.id, err })))
+      // Installed `session-start` hooks run once the Session is stored, as V2's do. They only record and run beside
+      // the Session, so creating it never waits on them and their outcome never undoes it.
+      yield* PromptHost.record(result, "session-start").pipe(Effect.exit, Effect.forkDetach)
 
       return result
     })

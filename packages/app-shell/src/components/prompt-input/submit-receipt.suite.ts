@@ -8,10 +8,10 @@ import { pendingSnapshot, togglePending } from "../draft-subagent-models"
 import { draftSessionKey } from "./draft-session"
 import {
   commands, createPromptSubmit, createdSessions, optimistic, policyFixture, promoted, promptInputs,
-  sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, statusUpdates, submitInput,
+  savedPolicies, sdkFor, sentCommands, sentShell, serverFor, setReactiveOwner, state, statusUpdates, submitInput,
 } from "./submit-harness"
 
-test.each(["prompt", "command", "shell"])("admitted %s receipt reconciliation performs no new dispatch, optimistic insertion or busy mutation", async (pathway) => {
+test.each(["prompt", "command", "shell"])("admitted %s promotes to its placement after a worktree change; a second Send posts nothing", async (pathway) => {
   state.selected = "main"
   commands.push({ name: "review" })
   const entered = Promise.withResolvers<void>()
@@ -27,83 +27,75 @@ test.each(["prompt", "command", "shell"])("admitted %s receipt reconciliation pe
   state.selected = "/repo/worktree-b"
   gate.resolve()
   await sending
-  expect(promoted).toEqual([])
+  expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
   expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
   if (pathway !== "shell") expect(statusUpdates.length).toBeGreaterThan(0)
   const insertions = optimistic.length
   const statuses = statusUpdates.slice()
-  state.selected = "main"
   await submit.handleSubmit(new Event("submit"))
   expect(promptInputs.length + sentCommands.length + sentShell.length).toBe(1)
   expect(optimistic).toHaveLength(insertions)
   expect(statusUpdates).toEqual(statuses)
   expect(createdSessions).toEqual(["/repo/main"])
-  expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+  expect(promoted).toHaveLength(1)
 })
 
-test.each(["prompt", "policy"])("fresh receipt preserves newer %s edit until deliberate next Send", async (edit) => {
+test.each(["prompt", "policy", "model"])("%s edit during a draft send still promotes and never posts the admitted prompt again", async (edit) => {
   const key = draftSessionKey(ServerScope.local, "/repo/main")
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
-  const revisions: number[] = []
-  state.sendHook = async () => { revisions.push(pendingSnapshot(key).revision); entered.resolve(); await gate.promise }
-  const initialRevision = pendingSnapshot(key).revision
+  state.sendHook = async () => { entered.resolve(); await gate.promise }
   const real = createPromptState({ prompt: "admitted turn" })
-  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+  const submit = createPromptSubmit({
+    ...submitInput(), prompt: real, pendingKey: () => key,
+    info: () => state.params.id ? { id: state.params.id } : undefined,
+  })
   const sending = submit.handleSubmit(new Event("submit"))
   await entered.promise
   if (edit === "prompt") real.set([{ type: "text", content: "newer draft", start: 0, end: 11 }])
   if (edit === "policy") togglePending(key, "provider", "new-model", true)
-  const contents = real.current()
-  const context = real.context.items()
-  const policy = pendingSnapshot(key)
+  if (edit === "model") state.modelID = "newer-model"
   gate.resolve()
   await sending
-  expect(real.current()).toBe(contents)
-  expect(real.context.items()).toBe(context)
-  expect(pendingSnapshot(key)).toEqual(policy)
-  expect(promoted).toEqual([])
-  expect(promptInputs).toHaveLength(1)
-  const first = promptInputs[0] as { id: string }
-  await submit.handleSubmit(new Event("submit"))
-  expect(promptInputs).toHaveLength(2)
-  expect(promptInputs[1]).not.toMatchObject({ id: first.id })
-  expect(revisions).toEqual([initialRevision, policy.revision])
   expect(createdSessions).toHaveLength(1)
+  expect(promptInputs).toEqual([expect.objectContaining({ sessionID: "session-1", text: "admitted turn" })])
+  expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
+  expect(state.params.id).toBe("session-1")
   expect(pendingSnapshot(key).revision).toBe(0)
-  expect(promoted).toHaveLength(1)
+  if (edit === "policy") expect(savedPolicies.at(-1)).toMatchObject({
+    sessionID: "session-1", policy: { mode: "allowlist", models: [expect.objectContaining({ id: "new-model" })] },
+  })
+  // Newer text waits unsent in the Session composer; any other edit leaves nothing to post.
+  expect(real.current()[0]).toMatchObject({ content: edit === "prompt" ? "newer draft" : "" })
+  state.sendHook = async () => {}
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toHaveLength(1)
+  expect(promptInputs.map((input) => (input as { text: string }).text))
+    .toEqual(edit === "prompt" ? ["admitted turn", "newer draft"] : ["admitted turn"])
 })
 
 // Server Solid snapshots createMemo. Positive control proves the context accessor sees this edit.
-test.skipIf(isServer)("fresh receipt preserves newer context edit until deliberate next Send", async () => {
+test.skipIf(isServer)("context edit during a draft send still promotes and keeps the new context unsent", async () => {
   expect(isServer).toBe(false)
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
   state.sendHook = async () => { entered.resolve(); await gate.promise }
   const real = createPromptState({ prompt: "admitted turn" })
-  const contents = real.current()
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
   const sending = submit.handleSubmit(new Event("submit"))
   await entered.promise
   real.context.add({ type: "file", path: "/repo/main/new", comment: "newer context" })
   expect(real.context.items()).toEqual([expect.objectContaining({ path: "/repo/main/new", comment: "newer context" })])
-  const context = real.context.items()
   gate.resolve()
   await sending
-  expect(real.current()).toBe(contents)
-  expect(real.context.items()).toBe(context)
-  expect(promoted).toEqual([])
+  expect(promoted).toEqual([{ directory: "/repo/main", sessionID: "session-1" }])
   expect(promptInputs).toHaveLength(1)
-  const first = promptInputs[0] as { id: string }
-  await submit.handleSubmit(new Event("submit"))
-  expect(promptInputs).toHaveLength(2)
-  expect(promptInputs[1]).not.toMatchObject({ id: first.id })
-  expect(promptInputs[1]).toMatchObject({ files: [expect.objectContaining({ uri: "file:///repo/main/new" })] })
+  expect(real.current()[0]).toMatchObject({ content: "" })
+  expect(real.context.items()).toEqual([expect.objectContaining({ path: "/repo/main/new", comment: "newer context" })])
   expect(createdSessions).toHaveLength(1)
-  expect(promoted).toHaveLength(1)
 })
 
-test.each(["failed", "admitted"])("selection changed during %s request stays separate and shares source busy lock", async (outcome) => {
+test.each(["failed", "admitted"])("selection changed during %s request shares the source busy lock; a failed one stays separate", async (outcome) => {
   const entered = Promise.withResolvers<void>()
   const gate = Promise.withResolvers<void>()
   state.sendHook = async () => {
@@ -125,8 +117,14 @@ test.each(["failed", "admitted"])("selection changed during %s request stays sep
   gate.resolve()
   await sending
   expect(waiting).toEqual({ sessions: ["/repo/worktree-a"], dispatches: 1 })
-  expect(real.current()).toBe(contents)
   expect(state.selected).toBe("/repo/worktree-b")
+  if (outcome === "admitted") {
+    // The admitted prompt hands the draft to its own placement even though the selection moved on.
+    expect(promoted).toEqual([{ directory: "/repo/worktree-a", sessionID: "session-1" }])
+    expect(state.worktreeResets).toBe(1)
+    return
+  }
+  expect(real.current()).toBe(contents)
   expect(promoted).toEqual([])
   expect(state.worktreeResets).toBe(0)
   state.sendHook = async () => {}

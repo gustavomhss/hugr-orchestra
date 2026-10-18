@@ -5,17 +5,18 @@ import { layerBase, parseRelayRoute, relayPath } from "./route"
 describe("routes", () => {
   test("library views", () => {
     expect(parseRelayRoute("workflow", "")).toEqual({ page: "library", kind: "workflow", tab: "list", create: false })
+    // Workflow runs are hidden: their executions URL opens the library.
     expect(parseRelayRoute("workflow", "/executions")).toEqual({
       page: "library",
       kind: "workflow",
-      tab: "runs",
+      tab: "list",
       create: false,
     })
     expect(parseRelayRoute("hook", "/activity")).toEqual({ page: "library", kind: "hook", tab: "runs", create: false })
     expect(parseRelayRoute("hook", "/new")).toEqual({ page: "library", kind: "hook", tab: "list", create: true })
   })
 
-  test("every editor layer has its own URL and parses back to it", () => {
+  test("every editor layer has its own URL and parses back to it, and workflow run URLs fall back to the canvas", () => {
     const cases = [
       relayPath.editor("workflow", "wp-execute"),
       relayPath.add("workflow", "wp-execute"),
@@ -37,27 +38,20 @@ describe("routes", () => {
       { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false },
       { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: true },
       { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false, node: "gate.gate" },
-      {
-        page: "editor",
-        kind: "workflow",
-        id: "wp-execute",
-        tab: "editor",
-        add: false,
-        view: "1042",
-        node: "gate.gate",
-      },
-      { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false, view: "1042" },
-      { page: "editor", kind: "workflow", id: "wp-execute", tab: "runs", add: false },
-      { page: "editor", kind: "workflow", id: "wp-execute", tab: "runs", add: false, run: "1042" },
+      { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false, node: "gate.gate" },
+      { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false },
+      { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false },
+      { page: "editor", kind: "workflow", id: "wp-execute", tab: "editor", add: false },
       { page: "editor", kind: "hook", id: "protect", tab: "runs", add: false },
     ])
   })
 
   test("IDs are encoded and decoded, and a layer closes back to the canvas it sits on", () => {
     expect(relayPath.node("workflow", "a b", "x/y")).toBe("/orchestra/workflows/a%20b/node/x%2Fy")
-    const route = parseRelayRoute("workflow", "/a%20b/run/7/node/x%2Fy")
-    expect(route).toMatchObject({ id: "a b", view: "7", node: "x/y" })
-    if (route.page === "editor") expect(layerBase(route)).toBe("/orchestra/workflows/a%20b/run/7")
+    const route = parseRelayRoute("workflow", "/a%20b/node/x%2Fy")
+    expect(route).toMatchObject({ id: "a b", node: "x/y" })
+    if (route.page === "editor") expect(layerBase(route)).toBe("/orchestra/workflows/a%20b")
+    expect(parseRelayRoute("workflow", "/a%20b/run/7/node/x%2Fy")).not.toHaveProperty("view")
     expect(parseRelayRoute("hook", "/h/run/7").page).toBe("editor")
     expect(parseRelayRoute("hook", "/h/run/7")).not.toHaveProperty("view")
   })

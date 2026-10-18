@@ -5,7 +5,7 @@ import { Icon } from "@orchestra/ui/v2/icon"
 import { ProjectAvatar } from "@orchestra/ui/v2/project-avatar-v2"
 import { useNavigate } from "@solidjs/router"
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import { createEffect, createMemo, createRoot, For, getOwner, onCleanup, Show, type JSX } from "solid-js"
+import { createMemo, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { useCommand } from "@/context/command"
@@ -13,6 +13,7 @@ import { useGlobal } from "@/context/global"
 import { directoryKey } from "@/context/global-sync/utils"
 import { getProjectAvatarVariant, type LocalProject, useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
 import { ServerConnection, serverName, useServer } from "@/context/server"
 import { tabKey, type SessionTab, type Tab, useTabs } from "@/context/tabs"
 import { HugrBrand } from "@/orchestra/brand"
@@ -30,6 +31,7 @@ import {
   profileProject,
   projectForSession,
 } from "@/pages/layout/helpers"
+import { fileManagerApp } from "@/utils/file-manager"
 import { createMenuDismissController } from "@/utils/menu-dismiss-controller"
 import { pathKey } from "@/utils/path-key"
 import { isLocalSessionNotFoundError, isSessionNotFoundError } from "@/utils/server-errors"
@@ -79,14 +81,12 @@ export function OrchestraSidebar(props: {
   const navigate = useNavigate()
   const dialog = useDialog()
   const pickDirectory = useDirectoryPicker()
+  const platform = usePlatform()
   const home = createHomeController()
-  const [state, setState] = createStore({
-    profileOpen: false,
-    settings: undefined as (() => JSX.Element) | undefined,
-  })
+  const [state, setState] = createStore({ profileOpen: false })
   let menuRef: HTMLDivElement | undefined
   const dismiss = createMenuDismissController(() => menuRef)
-  const requests = { settings: 0, profile: 0, disposed: false }
+  const requests = { profile: 0, disposed: false }
   onCleanup(() => {
     requests.disposed = true
   })
@@ -128,6 +128,10 @@ export function OrchestraSidebar(props: {
         (session ? projectForSession(session, group?.projects() ?? []) : undefined) ??
         (ctx && target.directory ? profileProject(ctx, target.directory) : undefined),
     }
+  })
+  const selected = createMemo(() => {
+    const target = profile()
+    return target.conn && target.project ? { conn: target.conn, project: target.project } : undefined
   })
 
   // The profile card only reads: passive reads must not initialize (bootstrap) the selected directory.
@@ -304,48 +308,6 @@ export function OrchestraSidebar(props: {
     chooseProject(conn, true)
   }
 
-  async function openSettingsPanel(panel: "providers" | "shortcuts") {
-    const current = ++requests.settings
-    const target = profile()
-    const route = layout.route()
-    const conn = target.conn ?? server.current
-    if (!conn) return
-    const [{ DialogSettings }, { ServerSDKProvider }, { ServerSyncProvider }, { ModelsProvider }] = await Promise.all([
-      import("@/components/settings-v2"),
-      import("@/context/server-sdk"),
-      import("@/context/server-sync"),
-      import("@/context/models"),
-    ])
-    if (requests.disposed || requests.settings !== current || layout.route() !== route) return
-    if (profile().server !== target.server || profile().directory !== target.directory) return
-    // Dialog replacements inherit the opening owner, not the replaced content's providers.
-    const launch = () => (
-      <ServerSDKProvider server={() => conn}>
-        <ServerSyncProvider server={() => conn}>
-          <ModelsProvider directory={() => target.directory}>
-            <SettingsLauncher
-              valid={
-                layout.route() === route &&
-                profile().server === target.server &&
-                profile().directory === target.directory
-              }
-              content={() => (
-                <DialogSettings
-                  sessionID={route.type === "session" ? route.sessionId : undefined}
-                  defaultValue={panel}
-                />
-              )}
-              onClose={() => {
-                if (state.settings === launch) setState("settings", undefined)
-              }}
-            />
-          </ModelsProvider>
-        </ServerSyncProvider>
-      </ServerSDKProvider>
-    )
-    setState("settings", () => launch)
-  }
-
   function openPending(title: string, chapter: string) {
     void dialog.show(() => (
       <Dialog class="orchestra-pending-dialog">
@@ -399,9 +361,6 @@ export function OrchestraSidebar(props: {
         iconOnly
         onToggle={props.onToggle}
       />
-      <Show when={state.settings} keyed>
-        {(launch) => launch()}
-      </Show>
       <div class="orchestra-navigation">
         <nav id="orchestra-navigation" class="orchestra-nav">
           <For each={navigation}>
@@ -448,7 +407,6 @@ export function OrchestraSidebar(props: {
                         if (item.id === "maestro") return openMaestro()
                         if (item.id === "search") return command.show()
                         if (chapterPages[item.id]) return openChapter(item.id)
-                        if (item.id === "providers" || item.id === "shortcuts") return void openSettingsPanel(item.id)
                         if (item.chapter) openPending(language.t(item.label), item.chapter)
                       }}
                     >
@@ -595,6 +553,50 @@ export function OrchestraSidebar(props: {
                   )}
                 </For>
               </DropdownMenu.RadioGroup>
+              <Show when={selected()}>
+                {(item) => (
+                  <>
+                    <DropdownMenu.Separator class="my-1 h-px bg-v2-border-border-muted" />
+                    <DropdownMenu.Item
+                      class="orchestra-profile-item"
+                      onSelect={() => {
+                        const target = item()
+                        afterProfileClose(() => home.project.edit(target.conn, target.project))
+                      }}
+                    >
+                      <Icon name="edit" />
+                      <DropdownMenu.ItemLabel>{language.t("dialog.project.edit.title")}</DropdownMenu.ItemLabel>
+                    </DropdownMenu.Item>
+                    <Show when={home.project.canReveal(item().conn)}>
+                      <DropdownMenu.Item
+                        class="orchestra-profile-item"
+                        onSelect={() => {
+                          const target = item()
+                          afterProfileClose(() => home.project.reveal(target.conn, target.project))
+                        }}
+                      >
+                        <Icon name="folder" />
+                        <DropdownMenu.ItemLabel>
+                          {language.t(
+                            fileManagerApp(platform.platform === "desktop" ? (platform.os ?? "unknown") : "unknown")
+                              .actionLabel,
+                          )}
+                        </DropdownMenu.ItemLabel>
+                      </DropdownMenu.Item>
+                    </Show>
+                    <DropdownMenu.Item
+                      class="orchestra-profile-item"
+                      onSelect={() => {
+                        const target = item()
+                        afterProfileClose(() => home.project.close(target.conn, target.project.worktree))
+                      }}
+                    >
+                      <Icon name="close" />
+                      <DropdownMenu.ItemLabel>{language.t("orchestra.shell.project.close")}</DropdownMenu.ItemLabel>
+                    </DropdownMenu.Item>
+                  </>
+                )}
+              </Show>
               <Show when={!groups().some((group) => group.projects().length > 0)}>
                 <p class="orchestra-profile-empty">{language.t("orchestra.profile.empty")}</p>
               </Show>
@@ -605,54 +607,4 @@ export function OrchestraSidebar(props: {
       </div>
     </aside>
   )
-}
-
-function SettingsLauncher(props: { valid: boolean; content: () => JSX.Element; onClose: () => void }) {
-  const dialog = useDialog()
-  const owner = getOwner()
-  const lifetime = { opened: false, disposed: false }
-  const close = () => {
-    if (dialog.active?.owner === owner) dialog.close()
-  }
-
-  createEffect(() => {
-    if (!props.valid) return props.onClose()
-    const active = dialog.active
-    if (lifetime.opened) {
-      if (active?.owner !== owner) props.onClose()
-      return
-    }
-    // show() adopts an active owner; defer stack closure until the previous close releases its lock.
-    if (active) {
-      queueMicrotask(() => {
-        if (!lifetime.disposed && dialog.active === active) dialog.close()
-      })
-      return
-    }
-    lifetime.opened = true
-    void dialog
-      .show(
-        () => (lifetime.disposed ? undefined : props.content()),
-        () => {
-          if (!lifetime.disposed) props.onClose()
-        },
-      )
-      .then(() => {
-        if (lifetime.disposed) close()
-      })
-  })
-  onCleanup(() => {
-    lifetime.disposed = true
-    // Nested settings dialogs share this owner; drain its stack after the launcher is gone.
-    createRoot((dispose) => {
-      createEffect(() => {
-        const active = dialog.active
-        if (active?.owner !== owner) return dispose()
-        queueMicrotask(() => {
-          if (dialog.active === active) dialog.close()
-        })
-      })
-    })
-  })
-  return null
 }

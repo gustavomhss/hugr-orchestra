@@ -8,6 +8,7 @@ import {
   RelayError,
   relayUnsupported,
   type RelayDocumentView,
+  writeFailure,
 } from "./client"
 import { createRunClient, decodeRun } from "./runs"
 
@@ -97,6 +98,18 @@ describe("authoring routes through the generated client", () => {
     expect(await api.requests[1].json()).toEqual({ document: "hook-1" })
   })
 
+  test("unpublish withdraws the published version under the loaded checksum", async () => {
+    const api = server(() => located(view({ active: false, activeVersionId: null })))
+    const loaded = decodeDocument(view({ active: true, activeVersionId: "v4" }))
+    const result = await api.client.unpublish(loaded)
+    expect([api.requests[0].method, new URL(api.requests[0].url).pathname]).toEqual([
+      "POST",
+      "/api/relay/document/relay-wp-execute/unpublish",
+    ])
+    expect(await api.requests[0].json()).toEqual({ expectedChecksum: "c".repeat(64) })
+    expect(result.activeVersionId).toBeNull()
+  })
+
   test("refusals keep their tag, code and message; only a route the server lacks reads as unsupported", async () => {
     const missing = server(() => new Response("Not Found", { status: 404, headers: { "content-type": "text/plain" } }))
     expect(relayUnsupported(await missing.client.documents().catch((error: unknown) => error))).toBe(true)
@@ -126,6 +139,26 @@ describe("authoring routes through the generated client", () => {
     expect(conflict instanceof RelayError && [conflict.status, conflict.code]).toEqual([409, "version-conflict"])
   })
 
+  test("a forced save says so; no answer reads as offline, a deleted document as missing", async () => {
+    const api = server(() => located(view({ versionId: "v6", versionCounter: 6 })))
+    await api.client.save(decodeDocument(view()), { name: "Mine" }, { force: true })
+    expect(await api.requests[0].json()).toEqual({
+      name: "Mine",
+      versionId: "v4",
+      expectedChecksum: "c".repeat(64),
+      force: true,
+    })
+    const down = server(() => {
+      throw new TypeError("Failed to fetch")
+    })
+    const offline = await down.client.save(decodeDocument(view()), {}).catch((cause: unknown) => cause)
+    expect(offline instanceof RelayError && [offline.status, offline.code]).toEqual([-1, "transport"])
+    expect(writeFailure(offline)).toBe("offline")
+    expect(writeFailure(new RelayError(404, "Resource not found", "not-found", "RelayNotFoundError"))).toBe("missing")
+    expect(writeFailure(new RelayError(409, "Changed", "version-conflict", "RelayConflictError"))).toBe("conflict")
+    expect(writeFailure(new RelayError(404, "404"))).toBe("error")
+  })
+
   test("decisions are ledger lines, timed in epoch seconds", async () => {
     const line = {
       ts: 1_791_300_000,
@@ -148,6 +181,22 @@ describe("authoring routes through the generated client", () => {
     expect(new URL(api.requests[0].url).pathname).toBe("/api/relay/hook/inst-1/decisions")
     expect([decision.decision, decision.node, decision.session, decision.seq]).toEqual(["d1", "block", "ses_1", 7])
     expect(decisionTime(decision)).toBe(1_791_300_000_000)
+  })
+
+  test("repair states its confirmation, and order names every install in the new sequence", async () => {
+    const api = server((request) =>
+      new URL(request.url).pathname.endsWith("/repair")
+        ? located({ backup: "/data/hooks.json.corrupt-1-ab", installs: [] })
+        : located({ installs: [{ installID: "b", order: 0 }, { installID: "a", order: 1 }] }),
+    )
+    const repaired = await api.client.repair()
+    expect([api.requests[0].method, new URL(api.requests[0].url).pathname]).toEqual(["POST", "/api/relay/hook/repair"])
+    expect(await api.requests[0].json()).toEqual({ confirm: true })
+    expect([repaired.backup, repaired.installs]).toEqual(["/data/hooks.json.corrupt-1-ab", []])
+    const installs = await api.client.order(["b", "a"])
+    expect([api.requests[1].method, new URL(api.requests[1].url).pathname]).toEqual(["PATCH", "/api/relay/hook/order"])
+    expect(await api.requests[1].json()).toEqual({ installIDs: ["b", "a"] })
+    expect(installs.map((item) => item.installID)).toEqual(["b", "a"])
   })
 })
 

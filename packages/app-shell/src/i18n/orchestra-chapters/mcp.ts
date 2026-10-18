@@ -6,13 +6,21 @@ export const MCP_COPY = {
   "orchestra.mcp.empty": "No MCP servers configured.",
   "orchestra.mcp.emptyHint": "Add a server to make its tools available to this profile.",
   "orchestra.mcp.error": "Error",
-  "orchestra.mcp.disabled": "Disabled",
+  "orchestra.mcp.disabled": "Disconnected (until restart)",
   "orchestra.mcp.needsAuth": "Needs auth",
   "orchestra.mcp.toolCount": "{{count}} tools",
   "orchestra.mcp.toolCountOne": "1 tool",
   "orchestra.mcp.configure": "Configure",
   "orchestra.mcp.tools": "Tools",
-  "orchestra.mcp.enable": "Enable {{name}}",
+  "orchestra.mcp.enable": "Connect {{name}} (until restart)",
+  "orchestra.mcp.offHint":
+    'Switches here last until restart. To keep a server off, set "enabled": false in its entry in {{file}}.',
+  "orchestra.mcp.registrationHint":
+    "This server needs a registered OAuth client. Add oauth.clientId to its entry in {{file}}.",
+  "orchestra.mcp.authWaiting": "Finish signing in in your browser…",
+  "orchestra.mcp.authBrowserFailed": "The server could not open a browser. Open this link to continue:",
+  "orchestra.mcp.authCopy": "Copy link",
+  "orchestra.mcp.authOpen": "Open link",
   "orchestra.mcp.configureTitle": "Configure {{name}}",
   "orchestra.mcp.editSubtitle":
     "Connect tools to this profile. Saving updates its project config and restarts its MCP servers.",
@@ -28,6 +36,8 @@ export const MCP_COPY = {
   "orchestra.mcp.name": "Name",
   "orchestra.mcp.transport": "Transport",
   "orchestra.mcp.endpoint": "Command or server URL",
+  "orchestra.mcp.credentialsHint":
+    "Need environment variables, headers or an OAuth client? Add them to {{file}} after saving.",
   "orchestra.mcp.remove": "Remove server",
   "orchestra.mcp.invalidUrl": "Enter a valid server URL.",
   "orchestra.mcp.invalidCommand": "Enter a valid command.",
@@ -35,6 +45,10 @@ export const MCP_COPY = {
   "orchestra.mcp.lastError": "Last connection error: {{detail}}",
   "orchestra.mcp.cancel": "Cancel",
   "orchestra.mcp.save": "Save",
+  "orchestra.mcp.saveAnyway": "Save anyway",
+  "orchestra.mcp.saveRunningOne": "Saving restarts MCP for this project and stops 1 running session. Save anyway?",
+  "orchestra.mcp.saveRunning":
+    "Saving restarts MCP for this project and stops {{count}} running sessions. Save anyway?",
   "orchestra.mcp.confirm": "Confirm",
   "orchestra.mcp.closeDialog": "Close dialog",
   "orchestra.mcp.toolsTitle": "{{name}} tools",
@@ -47,4 +61,6 @@ export const MCP_COPY = {
   "orchestra.mcp.removeTitle": "Remove this item?",
   "orchestra.mcp.removeSubtitle": "Its configuration is removed from this profile.",
   "orchestra.mcp.removeNote": "This removes {{name}} from {{profile}}'s project config.",
+  "orchestra.mcp.removeRunningOne": "Removing restarts MCP for this project and stops 1 running session.",
+  "orchestra.mcp.removeRunning": "Removing restarts MCP for this project and stops {{count}} running sessions.",
 }

@@ -20,6 +20,9 @@ export type McpCard = {
 const MASK = "•••"
 const SECRET = /token|key|secret|passw|auth|credential/i
 
+/** Where the page's MCP writes land by default (`McpProjectConfig.files`); env, headers and OAuth go there too. */
+export const MCP_CONFIG_FILE = "orchestra.json"
+
 // Mock badges: Connected (good), Error (bad), Disabled (neutral). The remaining live states keep
 // their own labels so a server that needs attention never reads as healthy.
 export const mcpBadges = {
@@ -42,6 +45,17 @@ export function mcpAction(status: McpStatus["status"]) {
 
 export function mcpError(status: McpStatus) {
   return "error" in status ? status.error : undefined
+}
+
+/** The `mcp.browser.open.failed` payload. Only web links are offered, never another scheme. */
+export function mcpBrowserOpenFailed(properties: unknown): { name: string; url: string } | undefined {
+  if (!properties || typeof properties !== "object") return
+  if (!("mcpName" in properties) || typeof properties.mcpName !== "string") return
+  if (!("url" in properties) || typeof properties.url !== "string") return
+  if (!URL.canParse(properties.url)) return
+  const protocol = new URL(properties.url).protocol
+  if (protocol !== "http:" && protocol !== "https:") return
+  return { name: properties.mcpName, url: properties.url }
 }
 
 /**

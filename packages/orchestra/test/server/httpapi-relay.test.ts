@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test } from "bun:test"
+import { Database } from "bun:sqlite"
 import { createHash } from "crypto"
 import fs from "fs/promises"
 import os from "os"
@@ -136,6 +137,42 @@ describe("relay documents", () => {
     expect((await call(tmp.path, "DELETE", "/api/relay/document/relay-design")).status).toBe(204)
     const again = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
     expect(again.map((item) => item.id)).not.toContain("relay-design")
+  })
+
+  test("a stored document that no longer validates is left out of the list instead of failing it", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const before = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    const relay = await relayRoot(tmp.path)
+    const db = new Database(path.join(relay.root, "authoring.sqlite3"))
+    db.query("INSERT INTO documents(workspace,id,body) VALUES(?,?,?)").run(
+      relay.projectID,
+      "broken",
+      JSON.stringify({ id: "broken", name: "Broken", nodes: "not a list" }),
+    )
+    db.close()
+    const after = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    expect(after.map((item) => item.id)).toEqual(before.map((item) => item.id))
+  })
+
+  test("publish refuses a workflow Maestro cannot run, and says why", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const design = await ok(tmp.path, "GET", "/api/relay/document/relay-design")
+    expect(
+      await refused(tmp.path, "POST", "/api/relay/document/relay-design/publish", { versionId: design.versionId }),
+    ).toMatchObject({ status: 409, code: "profile-tools-missing" })
+    const base = workflowDocument("true")
+    const signed = await ok(tmp.path, "POST", "/api/relay/document", {
+      ...base,
+      nodes: [...base.nodes, node("sign", "Sign off", "relay.human", [448, 0], { instructions: "Sign off" })],
+      connections: { ...base.connections, Build: edge("Sign off") },
+    })
+    expect(
+      await refused(tmp.path, "POST", `/api/relay/document/${signed.id}/publish`, { versionId: signed.versionId }),
+    ).toMatchObject({
+      status: 409,
+      code: "step-unsupported",
+      message: "Human approval steps cannot run yet. Remove them to run this workflow.",
+    })
   })
 
   test("a save rounds positions, keeps an uncompilable draft with its diagnostic, and guards its version", async () => {

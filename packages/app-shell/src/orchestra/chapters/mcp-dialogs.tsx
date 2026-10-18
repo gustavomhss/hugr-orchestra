@@ -6,6 +6,7 @@ import { mcpErrorDetail } from "./mcp-actions"
 import { createMcpEditState, type McpEditSnapshot } from "./mcp-edit-state"
 import {
   type McpCard,
+  MCP_CONFIG_FILE,
   mcpConfig,
   mcpDraft,
   mcpNameValid,
@@ -110,6 +111,8 @@ type McpEditProps = {
   names: readonly string[]
   // False when the server cannot report an existing server's config (V2): saving would guess.
   writable: boolean
+  // Sessions of this profile that a config write would stop (it restarts the profile's MCP servers).
+  running: () => Promise<number>
   onSave: (name: string, config: McpServerConfig) => Promise<unknown>
   onRemove: () => void
   onClose: () => void
@@ -188,6 +191,8 @@ function McpEditor(props: McpEditProps) {
     endpoint: initial?.endpoint ?? "",
     error: card && "error" in card.status ? language.t("orchestra.mcp.lastError", { detail: card.status.error }) : "",
     busy: false,
+    // Sessions the owner was warned about; Save then reads "Save anyway" and writes without asking again.
+    running: 0,
   })
 
   async function submit(close: () => void) {
@@ -203,9 +208,18 @@ function McpEditor(props: McpEditProps) {
     // Saving restarts every MCP server in the profile, so an unedited dialog writes nothing.
     if (card && mcpUnchanged(card.entry, result.config)) return close()
     setDraft({ busy: true, error: "" })
-    await props
-      .onSave(name, result.config)
-      .then(close)
+    await (draft.running ? Promise.resolve(0) : props.running())
+      .then((running) => {
+        if (running)
+          return setDraft({
+            busy: false,
+            running,
+            error: language.t(running === 1 ? "orchestra.mcp.saveRunningOne" : "orchestra.mcp.saveRunning", {
+              count: running,
+            }),
+          })
+        return props.onSave(name, result.config).then(close)
+      })
       .catch((error: unknown) =>
         setDraft({
           busy: false,
@@ -222,7 +236,7 @@ function McpEditor(props: McpEditProps) {
       subtitle={language.t("orchestra.mcp.editSubtitle")}
       error={draft.error}
       busy={draft.busy}
-      save={locked ? undefined : language.t("orchestra.mcp.save")}
+      save={locked ? undefined : language.t(draft.running ? "orchestra.mcp.saveAnyway" : "orchestra.mcp.save")}
       onSubmit={(close) => void submit(close)}
       onClose={() => props.onClose()}
     >
@@ -260,6 +274,11 @@ function McpEditor(props: McpEditProps) {
           onInput={(event) => setDraft("endpoint", event.currentTarget.value)}
         />
       </label>
+      <Show when={!locked}>
+        <p class="mx-note orchestra-mcp-dialog-note" role="note">
+          {language.t("orchestra.mcp.credentialsHint", { file: MCP_CONFIG_FILE })}
+        </p>
+      </Show>
       <Show when={card && !initial}>
         <p class="mx-note orchestra-mcp-dialog-note" role="note">
           {language.t(locked ? "orchestra.mcp.configUnavailable" : "orchestra.mcp.configOutside")}
@@ -336,11 +355,20 @@ export function McpToolsDialog(props: {
 export function McpRemoveDialog(props: {
   name: string
   profile: string
+  // Sessions of this profile that removing would stop (it restarts the profile's MCP servers).
+  running: () => Promise<number>
   onConfirm: () => Promise<unknown>
   onClose: () => void
 }) {
   const language = useLanguage()
-  const [state, setState] = createStore({ busy: false, error: "" })
+  const [state, setState] = createStore({ busy: false, error: "", running: 0 })
+  // Read up front so the warning is on screen before Confirm. If this read fails or is late, Confirm checks again.
+  onMount(() => {
+    void props.running().then(
+      (running) => setState("running", running),
+      () => undefined,
+    )
+  })
   return (
     <McpDialog
       title={language.t("orchestra.mcp.removeTitle")}
@@ -350,9 +378,11 @@ export function McpRemoveDialog(props: {
       save={language.t("orchestra.mcp.confirm")}
       onSubmit={(close) => {
         setState({ busy: true, error: "" })
-        void props
-          .onConfirm()
-          .then(close)
+        void (state.running ? Promise.resolve(0) : props.running())
+          .then((running) => {
+            if (running) return setState({ busy: false, running })
+            return props.onConfirm().then(close)
+          })
           .catch((error: unknown) =>
             setState({
               busy: false,
@@ -364,6 +394,13 @@ export function McpRemoveDialog(props: {
       }}
       onClose={() => props.onClose()}
     >
+      <Show when={state.running}>
+        <p class="mx-error" role="alert">
+          {language.t(state.running === 1 ? "orchestra.mcp.removeRunningOne" : "orchestra.mcp.removeRunning", {
+            count: state.running,
+          })}
+        </p>
+      </Show>
       <p class="mx-note">{language.t("orchestra.mcp.removeNote", { name: props.name, profile: props.profile })}</p>
     </McpDialog>
   )

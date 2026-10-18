@@ -6,15 +6,18 @@ import { type Flow, type FlowNode, updateNode } from "./graph"
 import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 
 // Node details: a three-column layer over the canvas (input, parameters, output) with previous and next.
+// With `runs` off there is no run data to show, so the parameters stand alone, followed by an optional summary.
 // The editor owns its URL; Escape and the close buttons return to the canvas.
 export function NodeDetails(props: {
   node: FlowNode
   kind: string
   previous?: FlowNode
   next?: FlowNode
+  runs?: boolean
   input: JSX.Element
   params: JSX.Element
   output: JSX.Element
+  summary?: JSX.Element
   save: JSX.Element
   actions?: JSX.Element
   readOnly?: boolean
@@ -32,7 +35,7 @@ export function NodeDetails(props: {
       <div class="wf-modal-layer">
       <Dialog.Overlay class="wf-modal-backdrop" />
       <Dialog.Content
-        class="mx-dialog wf-ndv"
+        class={props.runs === false ? "mx-dialog wf-ndv single" : "mx-dialog wf-ndv"}
         aria-labelledby={title}
         data-component="relay-node-details"
         onEscapeKeyDown={(event) => {
@@ -101,23 +104,30 @@ export function NodeDetails(props: {
             </button>
           </div>
         </header>
-        <div class="wf-ndv-switcher wf-range" role="group" aria-label={copy.t("orchestra.workflows.details.view")}>
-          <For each={["params", "input", "output"] as const}>{(pane) => (
-            <button type="button" aria-pressed={view.pane === pane} onClick={() => setView("pane", pane)}>
-              {copy.t(`orchestra.workflows.details.${pane}`)}
-            </button>
-          )}</For>
-        </div>
+        <Show when={props.runs !== false}>
+          <div class="wf-ndv-switcher wf-range" role="group" aria-label={copy.t("orchestra.workflows.details.view")}>
+            <For each={["params", "input", "output"] as const}>{(pane) => (
+              <button type="button" aria-pressed={view.pane === pane} onClick={() => setView("pane", pane)}>
+                {copy.t(`orchestra.workflows.details.${pane}`)}
+              </button>
+            )}</For>
+          </div>
+        </Show>
         <div class="wf-ndv-body">
-          <div class="wf-ndv-col" data-active={view.pane === "input"} role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
-            {props.input}
-          </div>
-          <div class="wf-ndv-col mid" data-active={view.pane === "params"} role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
+          <Show when={props.runs !== false}>
+            <div class="wf-ndv-col" data-active={view.pane === "input"} role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
+              {props.input}
+            </div>
+          </Show>
+          <div class="wf-ndv-col mid" data-active={props.runs === false || view.pane === "params"} role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
             <fieldset class="wf-params" disabled={props.readOnly}>{props.params}</fieldset>
+            <Show when={props.summary}>{(summary) => <div class="wf-ndv-summary">{summary()}</div>}</Show>
           </div>
-          <div class="wf-ndv-col" data-active={view.pane === "output"} role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
-            {props.output}
-          </div>
+          <Show when={props.runs !== false}>
+            <div class="wf-ndv-col" data-active={view.pane === "output"} role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
+              {props.output}
+            </div>
+          </Show>
         </div>
         <footer class="mx-dialog-foot">
           {props.save}
@@ -189,14 +199,24 @@ export function Empty(props: { children: JSX.Element }) {
   return <div class="wf-col-empty">{props.children}</div>
 }
 
+// A one-line field drops pasted line breaks and glues the lines together without a word. The paste is refused instead,
+// and `refused` says so.
+export function pasteOneLine(event: ClipboardEvent, refused: () => void) {
+  if (!/[\r\n]/.test(event.clipboardData?.getData("text") ?? "")) return
+  event.preventDefault()
+  refused()
+}
+
 export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (flow: Flow) => void }) {
   const copy = useRelayCopy()
   const id = createUniqueId()
-  const [draft, setDraft] = createStore({ name: props.node.name, error: "" as "" | "required" | "taken" })
+  const [draft, setDraft] = createStore({ name: props.node.name, error: "" as "" | "required" | "taken" | "lines" })
   createEffect(on(() => [props.node.id, props.node.name], (next, previous) => {
     if (next[0] === previous?.[0] && next[1] === draft.name.trim()) return
     setDraft({ name: props.node.name, error: "" })
   }, { defer: true }))
+  // A refused paste leaves the typed name as it was, so it never keeps the field from closing.
+  const blocked = () => draft.error === "required" || draft.error === "taken"
   return (
     <label class="mx-field" classList={{ invalid: !!draft.error }}>
       <span id={`${id}-label`}>{copy.t("orchestra.workflows.details.name")}</span>
@@ -214,9 +234,10 @@ export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (fl
           if (!name || taken || name === props.node.name) return
           props.onChange(updateNode(props.flow, props.node.id, { name }))
         }}
-        onBlur={() => !draft.error && setDraft("name", props.node.name)}
+        onPaste={(event) => pasteOneLine(event, () => setDraft("error", "lines"))}
+        onBlur={() => !blocked() && setDraft({ name: props.node.name, error: "" })}
         on:keydown={(event) => {
-          if (event.key === "Enter" && !draft.error) event.currentTarget.blur()
+          if (event.key === "Enter" && !blocked()) event.currentTarget.blur()
           if (event.key !== "Escape" || !draft.error) return
           event.preventDefault()
           event.stopPropagation()
@@ -225,7 +246,13 @@ export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (fl
       />
       <Show when={draft.error}>
         <span id={id} class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
-          {copy.t(draft.error === "required" ? "orchestra.workflows.details.nameRequired" : "orchestra.workflows.details.nameTaken")}
+          {copy.t(
+            draft.error === "required"
+              ? "orchestra.workflows.details.nameRequired"
+              : draft.error === "lines"
+                ? "orchestra.workflows.details.nameOneLine"
+                : "orchestra.workflows.details.nameTaken",
+          )}
         </span>
       </Show>
     </label>

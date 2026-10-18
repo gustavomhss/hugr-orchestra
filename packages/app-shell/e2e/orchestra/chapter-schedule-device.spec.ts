@@ -92,7 +92,7 @@ test("a task overdue when the page opens runs at once; a one-off more than a day
   // A day later with time paused: only the check on open can dispatch, never the 15 s interval.
   await page.clock.pauseAt(new Date("2031-01-16T10:00:00-05:00"))
   // Paused time also pauses animation frames, so skip the frame-based actionability wait of click().
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).dispatchEvent("click")
+  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Schedule", exact: true }).dispatchEvent("click")
   await expect
     .poll(async () => {
       await page.clock.runFor(500)
@@ -219,7 +219,7 @@ test("leaving the page mid-run neither navigates nor keeps scheduling", async ({
   expect(api.attempts).toBe(1)
   expect(page.url()).toBe(home)
 
-  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).click()
+  await page.locator(".orchestra-sidebar").getByRole("button", { name: "Schedule", exact: true }).click()
   await expect(page.getByRole("article", { name: "Leave me" }).locator(".mx-badge")).toHaveText(["Once", "Paused"])
   await expect(page.getByRole("article", { name: "Leave me" }).locator("p").nth(1)).toContainText("1 run")
   await expect.poll(() => api.attempts).toBe(2)

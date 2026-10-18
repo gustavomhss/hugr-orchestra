@@ -30,7 +30,7 @@ describe("breadcrumbLabel", () => {
       "Workflows",
       "Hooks",
       "CI/CD",
-      "Agendar",
+      "Schedule",
       ".env",
       "Providers",
       "Shortcuts",
@@ -49,6 +49,7 @@ test("marks exactly the owner's revisit-before-production screens as WIP", () =>
     "agents",
     "mcp",
     "cicd",
+    "env",
     "workspaces",
   ])
   expect(isWip("missing")).toBe(false)
