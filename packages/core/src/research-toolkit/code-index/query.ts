@@ -261,13 +261,14 @@ function execute(scope: Scope, query: CodeIndex.CodeQuery): Effect.Effect<Findin
     case "map":
       return map(scope, query)
     default:
-      return resolve(scope, query).pipe(Effect.flatMap((found) => {
-        if (!found.resolved) return Effect.succeed({ candidates: found.candidates, hits: [] })
+      return Effect.gen(function* () {
+        const found = yield* resolve(scope, query)
+        if (!found.resolved) return { candidates: found.candidates, hits: [] } satisfies Findings
         const resolved = found.resolved
         if (query.op === "definition")
-          return Effect.succeed({ resolved, candidates: [], hits: [{ range: resolved.ref.range, role: "definition" as const, via: resolved.ref }] })
-        return related(scope, resolved, query.op).pipe(Effect.map((hits) => ({ resolved, candidates: [], hits })))
-      }))
+          return { resolved, candidates: [], hits: [{ range: resolved.ref.range, role: "definition", via: resolved.ref }] } satisfies Findings
+        return { resolved, candidates: [], hits: yield* related(scope, resolved, query.op) } satisfies Findings
+      })
   }
 }
 
