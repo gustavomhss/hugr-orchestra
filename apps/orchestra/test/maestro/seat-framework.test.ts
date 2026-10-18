@@ -89,6 +89,8 @@ describe("native seat framework", () => {
     const packageRoot = path.join(tmp.path, "apps/orchestra")
     await fs.mkdir(path.join(packageRoot, "src/agent/prompt"), { recursive: true })
     await fs.mkdir(path.join(packageRoot, "src/maestro/seats"), { recursive: true })
+    // Seat skill trees live in packages/, beside apps/ in the real layout.
+    await fs.mkdir(path.join(tmp.path, "packages"), { recursive: true })
     const index = path.join(packageRoot, "src/maestro/seats/index.ts")
     const before = await Bun.file(path.resolve(import.meta.dirname, "../../src/maestro/seats/index.ts")).text()
     await Bun.write(index, before)

@@ -27,6 +27,7 @@ import { createDesktopDraftStore } from "./draft-store"
 import { registerJanitorIpcHandlers } from "./janitor-ipc"
 import { nativeT } from "./native-translations"
 import { registerAppDockIpcHandlers } from "./ipc-app-dock"
+import { registerResponseDownloadIpc } from "./response-download"
 import { setWindowZoom } from "./window-zoom"
 import { openDesktopPath } from "./apps"
 
@@ -61,6 +62,16 @@ type Deps = {
 
 export function registerIpcHandlers(deps: Deps) {
   const appDockIpc = registerAppDockIpcHandlers()
+  registerResponseDownloadIpc({
+    ipcMain,
+    app,
+    BrowserWindow,
+    choose: (win, filename) =>
+      dialog.showSaveDialog(win, {
+        title: nativeT("desktop.dialog.saveFile"),
+        defaultPath: filename,
+      }),
+  })
   const drafts = createDesktopDraftStore(join(app.getPath("userData"), "drafts.sqlite"))
   const updaterSubscriptions = createUpdaterSubscriptions()
   app.once("will-quit", updaterSubscriptions.clear)

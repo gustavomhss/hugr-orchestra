@@ -29,7 +29,7 @@ describe("breadcrumbLabel", () => {
       "LLM Plugins",
       "Workflows",
       "Hooks",
-      "CI/CD",
+      "Actions",
       "Schedule",
       ".env",
       "Providers",
