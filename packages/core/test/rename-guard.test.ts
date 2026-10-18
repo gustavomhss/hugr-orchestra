@@ -4,6 +4,7 @@
 // descriptions never name the upstream product: those texts live in tracked files, so this guard covers them.
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
+import { readFileSync } from "node:fs"
 import { kept, keptPaths, oldNames, protectedStrings } from "../../../script/rename-ledger"
 
 const root = path.resolve(import.meta.dir, "../../..")
@@ -55,7 +56,7 @@ describe("rename guard", () => {
     expect(
       keptPaths
         .filter((entry) => !entry.requires || tracked.some((file) => file.startsWith(`${entry.requires}/`)))
-        .filter((entry) => !tracked.some((file) => entry.path.test(file)))
+        .filter((entry) => !tracked.some((file) => entry.path.test(file) && (/opencode/i.test(file) || /opencode/i.test(readFileSync(path.join(root, file), "latin1")))))
         .map((entry) => entry.reason),
     ).toEqual([])
     expect(
@@ -84,5 +85,9 @@ describe("rename guard", () => {
     expect(oldNames("packages/x/src/a.ts", 'Bun.file("./fixtures/opencode-v2-openapi.json")')).toEqual([
       'packages/x/src/a.ts:1: Bun.file("./fixtures/opencode-v2-openapi.json")',
     ])
+  })
+
+  test("recorded HTTP cassettes stay covered by a kept path", () => {
+    expect(keptPaths.find((entry) => entry.path.test("apps/orchestra/test/fixtures/recordings/session/native-zen-tool-loop.json"))).toBeDefined()
   })
 })

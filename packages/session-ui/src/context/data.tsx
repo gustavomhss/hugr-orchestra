@@ -1,5 +1,5 @@
-import type { Message, Session, Part, SnapshotFileDiff, SessionStatus, Provider } from "@orchestra/sdk/v2"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
+import type { Message, Session, Part, SnapshotFileDiff, SessionStatus, Provider } from "../compat/sdk-v2"
+import type { FileDiffInfo } from "../compat/vendored-client-promise"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 import type { Capability } from "@orchestra/schema/capability"

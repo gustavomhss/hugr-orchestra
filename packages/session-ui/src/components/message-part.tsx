@@ -29,7 +29,7 @@ import {
   UserMessage,
   QuestionAnswer,
   QuestionInfo,
-} from "@orchestra/sdk/v2"
+} from "../compat/sdk-v2"
 import { useData } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 import { useDialog } from "@orchestra/ui/context/dialog"

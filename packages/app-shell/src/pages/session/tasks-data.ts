@@ -8,7 +8,7 @@ import type {
   QuestionRequest,
   Session,
   SessionStatus,
-} from "@orchestra/sdk/v2/client"
+} from "../../compat/sdk-v2-client"
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"

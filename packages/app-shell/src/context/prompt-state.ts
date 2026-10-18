@@ -1,5 +1,5 @@
 import { checksum } from "@orchestra/core/util/encode"
-import type { FilePartSource } from "@orchestra/sdk/v2/client"
+import type { FilePartSource } from "../compat/sdk-v2-client"
 import { batch, createMemo, type Accessor } from "solid-js"
 import { createStore, type SetStoreFunction } from "solid-js/store"
 import type { FileSelection } from "@/context/file"

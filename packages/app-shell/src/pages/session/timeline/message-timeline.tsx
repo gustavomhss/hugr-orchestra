@@ -46,7 +46,7 @@ import type {
   Part as PartType,
   ToolPart,
   UserMessage,
-} from "@orchestra/sdk/v2"
+} from "../../../compat/sdk-v2"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { getFilename } from "@orchestra/core/util/path"
