@@ -59,10 +59,12 @@ describe("external relay runs", () => {
       }),
     )
     await place(path.join(runs(tmp.path), "byte-flip"), "mutant/byte-flip")
+    // The ledger the Python library itself wrote.
+    await place(path.join(runs(tmp.path), "golden-python"), "python")
 
     const list = (await get(tmp.path, "/api/relay/run")).body.data as Json[]
     expect(list.map((run) => run.runID).toSorted()).toEqual(
-      [...expected.map((run) => run.runID), "byte-flip"].toSorted(),
+      [...expected.map((run) => run.runID), "byte-flip", "golden-python"].toSorted(),
     )
     expect(list.map((run) => run.startedAt)).toEqual(list.map((run) => run.startedAt).toSorted((a, b) => b - a))
     expect(
@@ -76,6 +78,19 @@ describe("external relay runs", () => {
       expect(audit).toMatchObject({ status: "pending", code: "external-self-reported" })
       expect(audit.rows[0]).toEqual({ label: "Chain", value: "chain intact, self-reported" })
     }
+    expect((await get(tmp.path, "/api/relay/run/golden-python")).body.data).toMatchObject({
+      documentID: "external:LangGraph",
+      status: "completed",
+      agent: "langgraph",
+      steps: [
+        { wp: "write_code", status: "passed", attempts: 2 },
+        { wp: "deploy", status: "passed", attempts: 1 },
+      ],
+    })
+    expect((await get(tmp.path, "/api/relay/run/golden-python/audit")).body.data).toMatchObject({
+      status: "pending",
+      code: "external-self-reported",
+    })
     const broken = (await get(tmp.path, "/api/relay/run/byte-flip/audit")).body.data
     expect(broken).toMatchObject({ status: "fail", code: "ledger-broken" })
     expect(broken.rows[0].value).toMatch(/^TAMPERED line 3:/)
