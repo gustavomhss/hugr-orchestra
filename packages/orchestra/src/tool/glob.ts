@@ -46,6 +46,8 @@ export const GlobTool = Tool.define(
             bypass: false,
             kind: "directory",
           })
+          // Checked after the external-directory gate so a refused path does not reveal whether it exists.
+          if (!info) throw new Error(`glob path does not exist: ${search}`)
 
           const limit = 100
           const files = yield* ripgrep.glob({ cwd: search, pattern: params.pattern, limit })

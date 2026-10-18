@@ -191,7 +191,7 @@ exports[`tool parameters JSON Schema (wire shape) question 1`] = `
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
     "questions": {
-      "description": "Questions to ask",
+      "description": "Questions to ask (at least one)",
       "items": {
         "properties": {
           "header": {
@@ -235,6 +235,7 @@ exports[`tool parameters JSON Schema (wire shape) question 1`] = `
         ],
         "type": "object",
       },
+      "minItems": 1,
       "type": "array",
     },
   },
@@ -540,7 +541,9 @@ exports[`tool parameters JSON Schema (wire shape) webfetch 1`] = `
       "type": "string",
     },
     "timeout": {
-      "description": "Optional timeout in seconds (max 120)",
+      "description": "Optional timeout in seconds (1 to 120, default 30)",
+      "maximum": 120,
+      "minimum": 1,
       "type": "number",
     },
     "url": {
@@ -560,8 +563,10 @@ exports[`tool parameters JSON Schema (wire shape) websearch 1`] = `
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
     "contextMaxCharacters": {
-      "description": "Maximum characters for context string optimized for LLMs (default: 10000)",
-      "type": "number",
+      "description": "Maximum characters for context string optimized for LLMs (default: 10000, maximum: 50000)",
+      "maximum": 50000,
+      "minimum": 1,
+      "type": "integer",
     },
     "livecrawl": {
       "description": "Live crawl mode - 'fallback': use live crawling as backup if cached content unavailable, 'preferred': prioritize live crawling (default: 'fallback')",
@@ -572,8 +577,10 @@ exports[`tool parameters JSON Schema (wire shape) websearch 1`] = `
       "type": "string",
     },
     "numResults": {
-      "description": "Number of search results to return (default: 8)",
-      "type": "number",
+      "description": "Number of search results to return (default: 8, maximum: 20)",
+      "maximum": 20,
+      "minimum": 1,
+      "type": "integer",
     },
     "query": {
       "description": "Websearch query",
