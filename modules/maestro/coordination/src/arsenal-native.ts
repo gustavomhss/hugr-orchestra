@@ -8,9 +8,8 @@ import { Location } from "@orchestra/core/location"
 import { LocationMutation } from "@orchestra/core/location-mutation"
 import { PermissionV2 } from "@orchestra/core/permission"
 import { AgentV2 } from "@orchestra/core/agent"
-import { SessionStore } from "@orchestra/core/session/store"
-import { SessionSchema } from "@orchestra/core/session/schema"
-import { SessionMessage } from "@orchestra/core/session/message"
+import { SessionSchema, SessionStore } from "@orchestra/core/session"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { Patch } from "@orchestra/core/patch"
 
 /** The Location registry and its native permission queue share this captured V2 owner. */

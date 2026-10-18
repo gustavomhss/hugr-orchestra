@@ -15,7 +15,7 @@ import type {
   Options,
   SDKTaskNotificationMessage,
 } from "@anthropic-ai/claude-agent-sdk"
-import type { SessionSchema } from "@orchestra/core/session/schema"
+import type { SessionSchema } from "@orchestra/core/session"
 
 /**
  * What HOST hands the plugin, MCP and hook builders: one Claude-hosted Orchestra session. Fields past `abort` are

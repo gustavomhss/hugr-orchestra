@@ -1,4 +1,4 @@
-import { SessionSchema } from "@orchestra/core/session/schema"
+import { SessionSchema } from "@orchestra/core/session"
 import { Effect, Schema } from "effect"
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("SessionAuthorityDenied", {

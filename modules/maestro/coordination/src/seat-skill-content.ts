@@ -3,7 +3,7 @@ export * as SeatSkillContent from "./seat-skill-content"
 import fs from "node:fs/promises"
 import path from "node:path"
 import matter from "gray-matter"
-import { ConfigMarkdown } from "@orchestra/core/config/markdown"
+import { ConfigMarkdown } from "@orchestra/core/config"
 
 export class PackagingError extends Error {
   override name = "SeatSkillPackagingError"
