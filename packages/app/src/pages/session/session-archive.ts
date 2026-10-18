@@ -33,8 +33,8 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   const { params } = useSessionKey()
   const frozen = input ? { source: sdk(), state: sync(), serverState: serverSync() } : undefined
   const origin = () => input?.server ?? serverSDK()
-  // Restore exists only on V2: the V1 session update cannot clear time.archived. Offer Archive nowhere it could not be undone.
-  const restorable = () => origin().protocolKind() === "v2" && !unsupported[origin().scope]
+  // Restore needs the V2 session routes: the V1 session update cannot clear time.archived. Offer Archive nowhere it could not be undone.
+  const restorable = () => archiveRouted(origin()) && !unsupported[origin().scope]
   const available = restorable
   const busy = (sessionID: string) => operations[ScopedKey.from(origin().scope, sessionID)] ?? false
 
@@ -74,7 +74,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
     if (!session || operations[key]) return
     const revision = session.archiveRevision
     const timestamp = session.archiveChangedAt
-    if (serverSDK.protocolKind() !== "v2" || unsupported[serverSDK.scope]) {
+    if (!archiveRouted(serverSDK) || unsupported[serverSDK.scope]) {
       showToast({ title: language.t("session.archive.unavailable") })
       return
     }
@@ -124,7 +124,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
     const initial = serverState.session.get(sessionID) ?? session
     const revision = initial.archiveRevision
     const timestamp = initial.archiveChangedAt ?? initial.time.updated
-    if (serverSDK.protocolKind() !== "v2" || unsupported[serverSDK.scope]) {
+    if (!archiveRouted(serverSDK) || unsupported[serverSDK.scope]) {
       showToast({ title: language.t("session.restore.unavailable") })
       return false
     }
@@ -155,4 +155,9 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   }
 
   return { archive, restore, available, restorable, busy, navigateAfterRemoval }
+}
+
+// The desktop sidecar reads as V1 but serves the V2 archive routes; its session management probes for them.
+function archiveRouted(server: ServerSDK) {
+  return server.protocolKind() === "v2" || server.sessionManagement.hasArchiveRoutes()
 }

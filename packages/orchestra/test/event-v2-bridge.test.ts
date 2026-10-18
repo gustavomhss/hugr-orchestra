@@ -1,6 +1,6 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, Schema } from "effect"
+import { DateTime, Effect, Schema } from "effect"
 import { eq } from "drizzle-orm"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -9,6 +9,7 @@ import { AbsolutePath } from "@orchestra/core/schema"
 import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { MessageTable, PartTable, SessionTable } from "@orchestra/core/session/sql"
+import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
 import { GlobalBus } from "@/bus/global"
@@ -348,6 +349,52 @@ it.instance(
       )
       expect(observed.map((event) => decode(event))).toEqual(notifications)
       expect(core).toEqual(["session.v1.prompt.admitted"])
+    }),
+  { git: true },
+)
+
+it.instance(
+  "archive changes reach legacy consumers and replicas encoded, followed by the committed session row",
+  () =>
+    Effect.gen(function* () {
+      const sessions = yield* Session.Service
+      const bridge = yield* EventV2Bridge.Service
+      const session = yield* sessions.create()
+      const observed: unknown[] = []
+      const listener = (event: { payload: unknown }) => {
+        observed.push(event)
+      }
+      yield* Effect.acquireRelease(
+        Effect.sync(() => GlobalBus.on("event", listener)),
+        () =>
+          Effect.sync(() => {
+            GlobalBus.off("event", listener)
+          }),
+      )
+      const timestamp = DateTime.makeUnsafe(200)
+      const event = yield* bridge.publish(SessionEvent.ArchiveChanged, {
+        sessionID: session.id,
+        timestamp,
+        archived: timestamp,
+      })
+      if (!event.durable) return yield* Effect.die("Archive changes must be durable")
+      const notifications = observed.map((item) => decode(item))
+      expect(notifications.map((item) => item.payload.type)).toEqual([
+        "session.next.archive.changed",
+        "sync",
+        "session.updated",
+      ])
+      // The app decodes these timestamps as epoch millis; an ISO string would be dropped.
+      const encoded = { sessionID: session.id, timestamp: 200, archived: 200 }
+      expect(notifications[0].payload.properties).toEqual(encoded)
+      expect(notifications[2].payload.properties).toMatchObject({ sessionID: session.id, info: { id: session.id } })
+      expect(notifications[1].payload.syncEvent).toEqual({
+        id: event.id,
+        type: "session.next.archive.changed.1",
+        seq: event.durable.seq,
+        aggregateID: session.id,
+        data: encoded,
+      })
     }),
   { git: true },
 )
