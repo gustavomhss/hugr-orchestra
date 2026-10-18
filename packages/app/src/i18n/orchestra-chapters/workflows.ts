@@ -215,6 +215,9 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.publish.nothing": "Nothing yet",
   "orchestra.workflows.publish.contents": "Contents",
   "orchestra.workflows.publish.budget": "retries per step: {{count}}",
+  "orchestra.workflows.publish.acceptanceLabel": "Always added",
+  "orchestra.workflows.publish.acceptance":
+    "Archie adds the required final checks, a package verification and an independent review, to every plan made from this workflow.",
   "orchestra.workflows.useInChat.prompt": "Use the published workflow “{{name}}” (workflow id: {{id}}) for: ",
   "orchestra.workflows.unpublish.title": "Unpublish {{name}}?",
   "orchestra.workflows.unpublish.body":

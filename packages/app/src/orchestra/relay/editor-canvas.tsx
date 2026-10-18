@@ -160,7 +160,7 @@ export function CanvasTab(props: Props) {
     }
     const hasTrigger = props.flow.nodes.some((node) => node.type === TRIGGER)
     const operations = hookOperations(types())
-    return hookEntries(types()).flatMap((entry): PanelEntry[] => {
+    return hookEntries(types(), props.flow).flatMap((entry): PanelEntry[] => {
       if (entry.group !== "trigger")
         return [
           {
@@ -203,7 +203,7 @@ export function CanvasTab(props: Props) {
     const [prefix, operation, timing] = key.split(":")
     const trigger = prefix === "trigger"
     const step = WORKFLOW_ENTRIES.find((item) => item.key === key)
-    const action = hookEntries(types()).find((item) => item.key === key && item.group !== "trigger")
+    const action = hookEntries(types(), props.flow).find((item) => item.key === key && item.group !== "trigger")
     const type = trigger ? TRIGGER : (step ?? action)?.type
     if (!type) return
     const name = trigger

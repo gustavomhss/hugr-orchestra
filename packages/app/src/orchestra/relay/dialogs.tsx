@@ -150,6 +150,8 @@ export function PublishDialog(props: {
               copy.t("orchestra.workflows.publish.budget", { count: retryBudget(props.flow) }),
             ].join(" · ")}
           </dd>
+          <dt>{copy.t("orchestra.workflows.publish.acceptanceLabel")}</dt>
+          <dd>{copy.t("orchestra.workflows.publish.acceptance")}</dd>
         </Show>
       </dl>
       <Show when={props.install}>
