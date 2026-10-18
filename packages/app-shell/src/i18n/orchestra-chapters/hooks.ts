@@ -4,7 +4,10 @@ export const HOOKS_COPY = {
   "orchestra.hooks.eyebrow": "{{profile}} · Guardrails",
   "orchestra.hooks.description":
     "Rules that watch what agents do and can block, ask, remind or record. Publish a hook, then install it.",
-  "orchestra.hooks.scope": "Applies to every agent session in {{project}}.",
+  "orchestra.hooks.scope": "Applies to every agent session in {{project}} and its other checkouts.",
+  "orchestra.hooks.scope.sharedInstalls":
+    "The hooks installed here apply to every folder that is not a git repository, not only this one. Uninstall them unless that is what you want.",
+  "orchestra.hooks.scope.uninstall": "Uninstall {{name}}",
   "orchestra.hooks.crosslink": "For a multi-step plan Maestro follows, use Workflows.",
   "orchestra.hooks.crosslink.open": "Open Workflows",
   "orchestra.hooks.unsupported": "This server does not support hooks yet.",

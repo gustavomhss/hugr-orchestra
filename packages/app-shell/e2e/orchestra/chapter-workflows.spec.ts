@@ -157,6 +157,21 @@ test("a server without the Relay routes says so on both chapters", async ({ page
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
 })
 
+test("outside git the library refuses new workflows and says why, even on the New workflow route", async ({ page }) => {
+  await setupRelay(page)
+  // Every folder outside git resolves to the one global project those folders share.
+  await page.route("**/api/project/current**", (route) => route.fulfill({ json: { id: "global", directory: "/" } }))
+  await page.goto("/orchestra/workflows/new")
+  const view = page.locator('[data-mx-page="orchestra-workflows"]')
+  await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
+    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+  )
+  await expect(view.locator(".wf-xlink")).not.toContainText("Available to every agent session")
+  await expect(page.getByRole("dialog", { name: "New workflow" })).toHaveCount(0)
+  await expect(view.getByRole("button", { name: "New workflow", exact: true })).toBeDisabled()
+  await expect(view.locator(".wf-tpl-grid .wf-tpl").first()).toBeDisabled()
+})
+
 test("a template that can run is copied as the user's own workflow; one that cannot is not offered", async ({ page }) => {
   const state = await setupRelay(page)
   await page.goto("/orchestra/workflows/new")

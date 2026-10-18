@@ -20,6 +20,9 @@ export const WORKFLOWS_COPY = {
     "Reusable step-by-step plans for Maestro. Each step is done by an agent and must pass its checks before the next one starts. Publish a workflow, then ask Maestro to use it in chat.",
   "orchestra.workflows.xlink":
     "For a rule that applies to every session, such as blocking edits to generated files, use Hooks.",
+  "orchestra.workflows.scope": "Available to every agent session in {{project}} and its other checkouts.",
+  "orchestra.workflows.scope.repositoryRequired":
+    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
   "orchestra.workflows.unsupported": "This server does not support workflows yet.",
   "orchestra.workflows.checkAgain": "Check again",
   "orchestra.workflows.loading": "Loading workflows…",
