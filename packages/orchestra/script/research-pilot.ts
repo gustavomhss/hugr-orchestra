@@ -221,7 +221,7 @@ const identity = {
 }
 await fs.writeFile(path.join(data, "preparation.json"), JSON.stringify({ caseID, preparedAt, timeoutMs, stage: "provisional-pilot", identity,
   resumeTimeoutMs: caseID === "R14" ? resumeTimeoutMs : undefined, totalTimeoutMs: caseID === "R14" ? totalTimeoutMs : undefined,
-  dispatchCeilings: caseID === "R14" ? [{ dispatch: 1, timeoutMs, ...Research.Limits }, { dispatch: 2, timeoutMs: resumeTimeoutMs, ...Research.Limits }] : undefined,
+  dispatchCeilings: caseID === "R14" ? [{ dispatch: 1, timeoutMs, ...Research.Tiers.quick }, { dispatch: 2, timeoutMs: resumeTimeoutMs, ...Research.Tiers.quick }] : undefined,
   setup: { atlas: setup?.atlas ? "configured-unqualified" : "unconfigured", lsp: lsp ? "configured-unqualified" : "disabled",
     continuation: caseID === "R14" ? "native-interruption" : "not-requested", scanner: setup?.scanner ? "hashed-fallback-unqualified" : "unprovisioned",
     isolation: "state/config placement; not an OS sandbox" },
@@ -324,7 +324,7 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
     const children = yield* sessions.children(parent.id)
     const histories = yield* Effect.forEach(children, (child) => sessions.messages({ sessionID: child.id }))
     return { caseID, stage: "provisional-pilot", model: jimmyModel, startedAt, endedAt: Date.now(),
-      limits: Research.Limits, timeoutMs, deadlineSignaled, parentSessionID: parent.id, output, metadata: continuation?.metadata ?? first.metadata.value, histories, qualityGrade: "not-run",
+      limits: { ...Research.Limits, ...Research.Tiers.quick }, timeoutMs, deadlineSignaled, parentSessionID: parent.id, output, metadata: continuation?.metadata ?? first.metadata.value, histories, qualityGrade: "not-run",
       continuation,
       identity: { ...identity, effectivePromptSha256: createHash("sha256").update(specialist.prompt ?? "").digest("hex"),
         tools: tools.map((tool) => tool.id).toSorted(), temperature: specialist.temperature ?? null, topP: specialist.topP ?? null,

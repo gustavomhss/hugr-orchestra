@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
 import type { UpdaterState } from "@orchestra/app/updater"
+import { RESPONSE_DOWNLOAD_CHUNK_BYTES } from "./response-download"
+
+let responseDownloadWriting = false
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
 let updaterState: UpdaterState | undefined
@@ -160,6 +163,22 @@ const api: ElectronAPI = {
   releasePickedFiles: (token) => ipcRenderer.invoke("release-picked-files", token),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   saveFilePicker: (opts) => ipcRenderer.invoke("save-file-picker", opts),
+  responseDownload: {
+    start: (filename) => ipcRenderer.invoke("response-download-start", filename),
+    ready: (handle) => ipcRenderer.invoke("response-download-ready", handle),
+    write: async (handle, sequence, chunk) => {
+      if (responseDownloadWriting || !(chunk instanceof ArrayBuffer) || chunk.byteLength === 0
+        || chunk.byteLength > RESPONSE_DOWNLOAD_CHUNK_BYTES) return { status: "error", code: "transfer_failed" }
+      responseDownloadWriting = true
+      try {
+        return await ipcRenderer.invoke("response-download-write", handle, sequence, chunk)
+      } finally {
+        responseDownloadWriting = false
+      }
+    },
+    finish: (handle, sequence) => ipcRenderer.invoke("response-download-finish", handle, sequence),
+    cancel: (handle) => ipcRenderer.invoke("response-download-cancel", handle),
+  },
   openExternal: (url) => ipcRenderer.send("open-external", url),
   openLocalFile: (url) => ipcRenderer.send("open-local-file", url),
   openPath: (path, app) => ipcRenderer.invoke("open-path", path, app),
