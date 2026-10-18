@@ -121,6 +121,37 @@ it.live("missing check binding and callback overflow HOLD before dispatch; absen
   }),
 )
 
+it.live("a workflow Task's arm names no checks and the host never reads any from it; an ordinary Task's arm needs its chain", () =>
+  Effect.gen(function* () {
+    const directory = yield* repository()
+    const stateDirectory = yield* tmpdirScoped()
+    const fs = yield* FSUtil.Service
+    const binding: ArsenalCompletion.Binding = { directory, stateDirectory, projectID: "project", sessionID: "parent",
+      taskID: "child", callID: "call", planID: "plan", token: "arm-fixture", ownedPaths: [] }
+    const file = path.join(stateDirectory, "project", "completion", "arm-fixture.json")
+    yield* fs.makeDirectory(path.dirname(file), { recursive: true })
+    const relay = yield* relayFor({ directory, projectID: "project" })
+    const completion = yield* ArsenalCompletion.make.pipe(Effect.provideService(ArsenalCompletion.NativeHost, {
+      resolve: () => Effect.succeed(binding), checks: new Map(), relay: () => Effect.succeed(relay), observe: () => Effect.void,
+    }))
+    const workflow: ArsenalCompletion.Dispatch = { ...binding, workflow: { selection: { documentID: "packet",
+      planRevisionID: Event.ID.make("evt_plan"), parameters: {} }, assistantMessageID: "msg_dispatch",
+      logicalTaskID: "logical", writePaths: ["src/money.ts"], subagentType: "backend", prompt: "Implement packet" } }
+    const store = (chain?: ReadonlyArray<{ id: string; checks: ReadonlyArray<{ id: string; hostCheck: string }> }>) =>
+      fs.writeFileString(file, JSON.stringify({ schema: 1, projectID: "project",
+        contract: { sessionID: "parent", label: "fixture", ...(chain ? { chain } : {}) } }))
+    yield* store()
+    expect((yield* Effect.flip(completion.beforeDispatch(binding))).reason).toBe("completion-contract-chain-missing")
+    // The workflow Task gets past the arm without any check read from it, to the workflow binding: here its first
+    // refusal is the missing native workflow host, which the real host replaces with the approved plan's controls.
+    expect((yield* Effect.flip(completion.beforeDispatch(workflow))).reason).toBe("UPSTREAM_ATTRIBUTION_MISSING")
+    // A model typo in an arm's chain holds an ordinary Task and is never consulted for a workflow Task.
+    yield* store([{ id: "gate", checks: [{ id: "typo", hostCheck: "pakage-verification" }] }])
+    expect((yield* Effect.flip(completion.beforeDispatch(binding))).reason).toBe("completion-host-check-unbound")
+    expect((yield* Effect.flip(completion.beforeDispatch(workflow))).reason).toBe("UPSTREAM_ATTRIBUTION_MISSING")
+  }),
+)
+
 it.live("a workflow Task dispatched before its arm holds WORKFLOW_NATIVE_ARM_UNBOUND and names the order", () =>
   Effect.gen(function* () {
     const directory = yield* repository()
@@ -316,28 +347,29 @@ it.live("a workflow settlement holds only an unreviewed workers' result before g
   Effect.gen(function* () {
     const binding: ArsenalCompletion.Binding = { sessionID: "parent", taskID: "child", callID: "call", directory: "/",
       projectID: "project", planID: "evt_plan", token: "token", stateDirectory: "", ownedPaths: [] }
-    const counts = { transitions: 0, checks: 0 }
+    const counts = { transitions: 0, checks: 0, holds: 0 }
     // Stands in for relay.transition: a call is the arm grading the gate, which spends its retry budget on a fail.
     const transition = Effect.sync(() => {
       counts.transitions++
       return "graded"
     })
     const settle = (reason: string | undefined, checklist = [{ id: "review", host_check: "cold-review" }]) =>
-      ArsenalCompletion.settleWorkflow({ checklist, binding, transition, coldReview: () => Effect.gen(function* () {
-        counts.checks++
-        if (reason) return yield* Effect.fail(new RelayWorkflowBinding.Held({ reason }))
-        return { status: "pass" as const }
-      }) })
+      ArsenalCompletion.settleWorkflow({ checklist, binding, transition, held: Effect.sync(() => { counts.holds++ }),
+        coldReview: () => Effect.gen(function* () {
+          counts.checks++
+          if (reason) return yield* Effect.fail(new RelayWorkflowBinding.Held({ reason }))
+          return { status: "pass" as const }
+        }) })
 
-    // No code receipt for the result: the hold reaches Maestro and the arm is never touched.
+    // No code receipt for the result: the hold is recorded, reaches Maestro and the arm is never touched.
     expect(yield* Effect.flip(settle(CodeReview.REQUIRED))).toMatchObject({ reason: CodeReview.REQUIRED })
-    expect(counts).toEqual({ transitions: 0, checks: 1 })
+    expect(counts).toEqual({ transitions: 0, checks: 1, holds: 1 })
     // A FIX_FIRST or REJECT receipt, a stale or missing binding and a pass are all graded by the arm.
     const graded = ["WORKFLOW_CODE_REVIEW_NOT_APPROVED", "WORKFLOW_COLD_REVIEW_STALE", "WORKFLOW_COLD_REVIEW_MISSING", undefined]
     expect(yield* Effect.forEach(graded, (reason) => settle(reason))).toEqual(["graded", "graded", "graded", "graded"])
-    expect(counts).toEqual({ transitions: 4, checks: 5 })
+    expect(counts).toEqual({ transitions: 4, checks: 5, holds: 1 })
     // A gate that does not grade the cold review never runs it early.
     expect(yield* settle(CodeReview.REQUIRED, [{ id: "build", host_check: "package-verification" }])).toBe("graded")
-    expect(counts).toEqual({ transitions: 5, checks: 5 })
+    expect(counts).toEqual({ transitions: 5, checks: 5, holds: 1 })
   }),
 )

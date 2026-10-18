@@ -7,6 +7,7 @@ import type { Provider } from "../compat/sdk-v2-client"
 import { useLanguage } from "@/context/language"
 import { ModelTooltip } from "./model-tooltip"
 import {
+  allowsEveryModel,
   connectedSubagentModels,
   createModelPolicyEditor,
   createModelRuleEditor,
@@ -69,7 +70,7 @@ export function SubagentModelPicker(props: {
     draftVersion()
     if (!props.sessionID) return pendingPolicy(pendingKey()).mode === "inherit"
     if (props.protocol === "v2") return policy().mode === "inherit"
-    return !hasModelScope(editor.rules())
+    return !hasModelScope(editor.rules()) || allowsEveryModel(editor.rules())
   }
   const unavailable = createMemo(
     () => {
@@ -145,6 +146,7 @@ export function SubagentModelPicker(props: {
     if (!canInherit()) return
     if (!props.sessionID) return clearPending(pendingKey())
     if (props.protocol === "v2") return policyEditor.inherit()
+    return editor.inherit()
   }
 
   return (
@@ -202,7 +204,7 @@ export function SubagentModelPicker(props: {
           {language.t(!props.sessionID || props.protocol === "v2" ? "session.subagentModels.denyAll" : "dialog.subagentModels.noneAllowed")}
         </p>
       </Show>
-      <Show when={(!props.sessionID || props.protocol === "v2") && !inherited()}>
+      <Show when={!inherited()}>
         <button class="text-12-regular text-text-weak px-3" type="button" disabled={!canInherit()} onClick={() => void inherit()}>
           {language.t("orchestra.agents.choice.inherit")}
         </button>

@@ -1,6 +1,6 @@
 import type { ServerConnection } from "./server"
 import { decode64 } from "@/utils/base64"
-import { requireServerKey } from "@/utils/session-route"
+import { parseServerKey } from "@/utils/session-route"
 
 export type LayoutRoute =
   | { type: "home" }
@@ -24,11 +24,10 @@ export const currentRoute = (pathname: string, search: string): LayoutRoute => {
   }
 
   if (parts[0] === "server" && parts[2] === "session" && parts[3]) {
-    return {
-      type: "session",
-      sessionId: parts[3],
-      server: requireServerKey(parts[1]),
-    }
+    // A malformed key stays on Home; the session route redirects there instead of crashing the shell.
+    const server = parseServerKey(parts[1])
+    if (!server) return { type: "home" }
+    return { type: "session", sessionId: parts[3], server }
   }
 
   const dirBase64 = parts[0]

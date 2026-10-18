@@ -55,6 +55,12 @@ export type HostCheck = (binding: Binding) => Effect.Effect<CheckOutcome, unknow
 export interface Host {
   /** Native authority resolves a stored token by actual dispatch identity. Never read model metadata. */
   readonly resolve: (input: Dispatch) => Effect.Effect<Binding | undefined, ToolSafety.Denied>
+  /**
+   * Whether the dispatching Session holds any stored arm. This cheap precheck before reservation only catches "no arm at
+   * all in this Session"; an arm for a different workflow passes it and is refused by beforeDispatch, whose empty reserved
+   * child the Task tool then runs fresh on the next dispatch.
+   */
+  readonly armed?: (input: { readonly sessionID: string; readonly directory: string }) => Effect.Effect<boolean, ToolSafety.Denied>
   readonly checks: ReadonlyMap<string, HostCheck>
   /** The Relay service of the binding's Location, which holds the arm and its ledger. */
   readonly relay: (placement: { readonly directory: string; readonly projectID: string }) => Effect.Effect<Relay.Interface, ToolSafety.Denied>
@@ -142,9 +148,10 @@ export const make = Effect.gen(function* () {
     )
     if (stateValue.projectID !== binding.projectID || stateValue.contract.sessionID !== binding.sessionID)
       return yield* new ToolSafety.Denied({ reason: "completion-project-or-session-mismatch" })
-    const checks = stateValue.contract.chain.flatMap((gate) => gate.checks)
+    const chain = stateValue.contract.chain ?? []
+    const checks = chain.flatMap((gate) => gate.checks)
     if (checks.length > 1000 || new Set(checks.map((check) => check.id)).size !== checks.length ||
-      new Set(stateValue.contract.chain.map((gate) => gate.id)).size !== stateValue.contract.chain.length)
+      new Set(chain.map((gate) => gate.id)).size !== chain.length)
       return yield* new ToolSafety.Denied({ reason: "completion-callback-cap-or-duplicate" })
     return { contract: stateValue.contract, fingerprint: createHash("sha256").update(JSON.stringify(stateValue)).digest("hex") }
   })).pipe(Effect.mapError((error) => error instanceof ToolSafety.Denied ? error : new ToolSafety.Denied({ reason: "completion-state-acquisition" })))
@@ -181,6 +188,14 @@ export const make = Effect.gen(function* () {
     })
   })
 
+  // A workflow Task without an arm holds before its authorization reserves the write-once governed child.
+  // beforeDispatch still runs every binding check once the child exists.
+  const beforeReserve = Effect.fn("ArsenalCompletion.beforeReserve")(function* (input: { sessionID: string; directory: string }) {
+    if (!host) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
+    if (host.armed && !(yield* host.armed(input)))
+      return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND", detail: ARM_FIRST })
+  })
+
   const beforeDispatch = Effect.fn("ArsenalCompletion.beforeDispatch")(function* (input: Dispatch) {
     if (!host && input.workflow) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
     if (!host) return
@@ -196,14 +211,17 @@ export const make = Effect.gen(function* () {
       return yield* new ToolSafety.Denied({ reason: "completion-dispatch-binding-mismatch" })
     const loaded = yield* load(binding)
     const checks = new Map(host.checks)
-    if (loaded.contract.chain.some((gate) => gate.checks.some((check) => !checks.has(check.hostCheck))))
+    // A workflow Task's arm only names the token: the host arms the approved plan's own controls (WorkflowBinding.adopt)
+    // and never reads checks from the contract. An ordinary Task's arm is its chain of checks.
+    if (!input.workflow && !loaded.contract.chain?.length)
+      return yield* new ToolSafety.Denied({ reason: "completion-contract-chain-missing", detail: CHAIN_REQUIRED })
+    if (!input.workflow && loaded.contract.chain?.some((gate) => gate.checks.some((check) => !checks.has(check.hostCheck))))
       return yield* new ToolSafety.Denied({ reason: "completion-host-check-unbound" })
     const baseRevision = yield* head(binding.directory)
     const relay = yield* host.relay(binding)
     if (input.workflow) {
       const workflow = yield* WorkflowBinding.adopt({ token: binding.token, relay,
-        dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
-        globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
+        dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection }, availableChecks: new Set(checks.keys()),
       }).pipe(Effect.provideService(FileSystem.FileSystem, fs),
         Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held
           ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
@@ -364,6 +382,7 @@ export const make = Effect.gen(function* () {
           checklist: ready.materialized.sprint.work_packages[position.view.index]?.checklist,
           coldReview: current.checks.get("cold-review"),
           binding: current.binding,
+          held: ready.recordReviewHeld(settlement),
           transition: current.relay.transition({
             token: ready.token, binding: ready.binding, settlement,
             agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,
@@ -386,11 +405,20 @@ export const make = Effect.gen(function* () {
       Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
     ) : Effect.void
   }
-  return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
+  // The workflow arm's current step for a bound receipt, read fresh; undefined for any other dispatch.
+  const workflowView = (receipt: Receipt | undefined) => {
+    const current = receipt ? receipts.get(receipt) : undefined
+    if (!current?.workflow) return Effect.succeed(undefined)
+    return current.relay.currentStep(current.workflow.token, current.workflow.binding).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "WORKFLOW_STATE_ACQUISITION" })),
+    )
+  }
+  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost, workflowView }
 })
 
 // The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.
-const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm (contract.sessionID is this Session), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."
+const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm, with a contract of only sessionID (this Session) and a label naming this Task, without chain (the host arms the approved plan's own checks), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."
+const CHAIN_REQUIRED = "The newest arm in this Session has no chain, which only a workflow Task's arm may omit. Arm this Task's checks in contract.chain, then dispatch it again."
 
 /** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */
 export const locationRelay = (get: (ref: Location.Ref) => Layer.Layer<Relay.Service, unknown>) =>
@@ -424,7 +452,7 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
   return {
     brief: contract.label,
     retry_budget: contract.retryBudget ?? 3,
-    work_packages: contract.chain.map((gate) => ({
+    work_packages: (contract.chain ?? []).map((gate) => ({
       id: gate.id,
       ...(gate.instructions === undefined ? {} : { instructions: gate.instructions }),
       checklist: gate.checks.map((check) => ({ id: check.id, host_check: check.hostCheck })),
@@ -436,19 +464,24 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
  * One workflow settlement. A gate that grades the final cold review asks for the code review first: while the
  * workers' result has no code receipt at all, only Maestro can request one, so the hold returns the Task to Maestro
  * before the arm grades, without touching the arm or spending the gate's retry budget. Every other outcome, including
- * a FIX_FIRST or REJECT receipt and a stale or missing binding, is graded as usual.
+ * a FIX_FIRST or REJECT receipt and a stale or missing binding, is graded as usual. `held` durably records the hold
+ * before it returns; that record is what lets the authorized resume continue this step (WorkflowBinding.continuesHeldStep).
  */
-export function settleWorkflow<A, E, R>(input: {
+export function settleWorkflow<A, E, R, E2, R2>(input: {
   readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | null | undefined
   readonly coldReview: HostCheck | undefined
   readonly binding: Binding
+  readonly held: Effect.Effect<void, E2, R2>
   readonly transition: Effect.Effect<A, E, R>
 }) {
   return Effect.gen(function* () {
     if (input.coldReview && input.checklist?.some((control) => control.host_check === "cold-review")) {
       const exit = yield* Effect.exit(input.coldReview(input.binding))
       const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
-      if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) return yield* Effect.fail(error)
+      if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) {
+        yield* input.held
+        return yield* Effect.fail(error)
+      }
     }
     return yield* input.transition
   })

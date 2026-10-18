@@ -202,6 +202,23 @@
   color: var(--v2-text-text-faint);
 }
 
+.settings-v2-nav-footer > [data-component="button-v2"] {
+  align-self: flex-start;
+}
+
+.settings-v2-scope-note {
+  padding: 24px 40px 0;
+  font-size: 12px;
+  font-weight: 440;
+  line-height: 1;
+  color: var(--v2-text-text-faint);
+  user-select: none;
+}
+
+.settings-v2-scope-note + .settings-v2-tab-header {
+  padding-top: 16px;
+}
+
 .settings-v2-legacy-panel {
   height: 100%;
   overflow: hidden;
@@ -211,130 +228,14 @@
   display: contents;
 }
 
-.settings-v2-provider-row {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-block: 20px;
-  border-bottom: 0.5px solid var(--v2-border-border-base);
-}
-
-.settings-v2-provider-row:last-child {
-  border-bottom: none;
-}
-
-@media (min-width: 640px) {
-  .settings-v2-provider-row {
-    flex-wrap: nowrap;
-  }
-}
-
-.settings-v2-providers [data-component="provider-icon"] {
-  color: var(--v2-icon-icon-base);
-}
-
-.settings-v2-provider-lead {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  align-items: flex-start;
-  gap: 10px;
-}
-
-.settings-v2-provider-lead:not(:has(.settings-v2-provider-copy)) {
-  align-items: center;
-}
-
-.settings-v2-provider-copy {
-  display: flex;
-  min-width: 0;
-  flex: 1;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.settings-v2-provider-main {
-  display: flex;
-  min-width: 0;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px;
-}
-
-.settings-v2-provider-name {
-  font-size: 13px;
-  font-weight: 530;
-  line-height: 16px;
-  color: var(--v2-text-text-base);
-}
-
-.settings-v2-provider-description {
-  margin-block: -3.5px;
-  font-size: 13px;
-  font-weight: 440;
-  line-height: 20px;
-  color: var(--v2-text-text-muted);
-}
-
-.settings-v2-provider-empty {
-  padding-block: 20px;
-  font-size: 13px;
-  font-weight: 440;
-  line-height: 1;
-  color: var(--v2-text-text-muted);
-}
-
-.settings-v2-provider-env-hint {
-  padding-inline-end: 12px;
-  font-size: 13px;
-  font-weight: 440;
-  line-height: 1;
-  color: var(--v2-text-text-muted);
-  opacity: 0;
-  transition: opacity 200ms ease;
-  cursor: default;
-}
-
-.group:hover .settings-v2-provider-env-hint {
-  opacity: 1;
-}
-
-.settings-v2-providers-view-all {
-  margin-top: 20px;
-  padding: 0;
-  border: 0;
-  background: transparent;
-  font-size: 13px;
-  font-weight: 530;
-  line-height: 1;
-  color: var(--v2-text-text-accent);
-  cursor: pointer;
-  text-align: start;
-}
-
-.settings-v2-providers-view-all:hover {
-  color: var(--v2-text-text-accent-hover);
-}
-
-.settings-v2-tab-body.settings-v2-providers {
-  gap: 32px;
-}
-
-.settings-v2-tab-header:has(+ .settings-v2-tab-body.settings-v2-providers) {
-  padding-bottom: 32px;
-}
-
-.settings-v2-providers .settings-v2-section-title {
-  padding-bottom: 0;
-  font-size: 13px;
-  font-weight: 530;
-  line-height: 1;
-}
-
-.settings-v2-providers .settings-v2-section-title + [data-component="settings-v2-list"] {
-  margin-top: 16px;
+/* Providers and Shortcuts render the chapter screens' own list and editor; give them the kit's type. */
+.settings-v2-tab-body.settings-v2-kit {
+  display: block;
+  font-family: var(--mx-sans);
+  font-optical-sizing: none;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: normal;
 }
 
 .settings-v2-tab-header.settings-v2-tab-header--stacked {
@@ -488,103 +389,8 @@
   color: var(--v2-text-text-base);
 }
 
-.settings-v2-shortcuts .settings-v2-section {
-  gap: 16px;
-}
-
-.settings-v2-shortcuts .settings-v2-section-title {
-  padding-bottom: 0;
-  font-size: 13px;
-  font-weight: 530;
-  line-height: 1;
-}
-
-.settings-v2-shortcuts [data-component="settings-v2-list"] {
-  display: flex;
-  flex-direction: column;
-  gap: 0;
-  padding: 20px;
-  border-radius: 6px;
-}
-
-.settings-v2-shortcuts [data-component="settings-v2-list"] > div {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  padding-top: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-}
-
-.settings-v2-shortcuts [data-component="settings-v2-list"] > div:not(:last-child) {
-  padding-bottom: 16px;
-  margin-bottom: 16px;
-  border-bottom: 0.5px solid var(--v2-border-border-base);
-}
-
-.settings-v2-shortcuts [data-component="settings-v2-list"] > div > span {
-  font-weight: 440;
-  font-size: 13px;
-  line-height: 1;
-  letter-spacing: -0.04px;
-  color: var(--v2-text-text-base);
-  font-variation-settings: "slnt" 0;
-}
-
-.settings-v2-keybind-button {
-  box-sizing: border-box;
-  flex-shrink: 0;
-  padding: 6px 8px;
-  margin: -6px -8px;
-  border: 0;
-  border-radius: 2px;
-  background: transparent;
-  cursor: pointer;
-  font-style: normal;
-  font-weight: 530;
-  font-size: 11px;
-  line-height: 1;
-  letter-spacing: 0.05px;
-  font-variant-numeric: tabular-nums;
-  font-feature-settings:
-    "tnum" on,
-    "lnum" on;
-  font-variation-settings: "slnt" 0;
-  color: var(--v2-text-text-faint);
-}
-
-.settings-v2-keybind-button:hover {
-  background-color: var(--v2-background-bg-layer-02);
-}
-
-.settings-v2-keybind-button:focus-visible {
-  outline: 2px solid var(--v2-border-border-focus);
-  outline-offset: 2px;
-}
-
-.settings-v2-keybind-button--active {
-  color: var(--v2-text-text-faint);
-  border-radius: 2px;
-  background-color: var(--v2-background-bg-layer-02);
-}
-
-.settings-v2-shortcuts-status {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  padding-block: 48px;
-  font-size: 13px;
-  font-weight: 440;
-  line-height: 1;
-  color: var(--v2-text-text-muted);
-  text-align: center;
-}
-
-.settings-v2-shortcuts-status-filter {
-  color: var(--v2-text-text-base);
+.settings-v2-models-status > [data-component="button-v2"] {
+  margin-top: 12px;
 }
 
 .settings-v2-tab-body.settings-v2-servers {

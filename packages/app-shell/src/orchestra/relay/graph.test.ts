@@ -183,6 +183,27 @@ describe("hook rules", () => {
     expect(conditionFields("something-new")).toEqual(["path", "tool", "command", "event"])
   })
 
+  test("a Windows-style \\ in a path pattern is flagged; an escape of a glob character is not", () => {
+    const on = (field: string, pattern: string) =>
+      issues(
+        wired(
+          [
+            trigger("tool", "before"),
+            hookNode("c", CONDITION, { field, pattern }),
+            hookNode("b", "relay.hookBlock", { message: "No." }),
+          ],
+          [
+            ["t", "c"],
+            ["c", "b"],
+          ],
+        ),
+      )
+    expect(on("path", "src\\generated\\**")).toEqual([{ code: "path-backslash", node: "c" }])
+    expect(on("path", "src/generated/**")).toEqual([])
+    expect(on("path", "src/\\*.ts")).toEqual([])
+    expect(on("command", "dir src\\generated")).toEqual([])
+  })
+
   test("what follows Require repair never runs, unless another path reaches it", () => {
     const repair = hookNode("p", "relay.hookRepair", { message: "Fix it." })
     const remind = hookNode("r", "relay.hookRemind", { message: "Careful." })
@@ -267,6 +288,11 @@ describe("hook rules", () => {
     expect(blocked("write", "src/generated/client.ts")).toEqual(["relay.hookBlock"])
     expect(blocked("read", "src/generated/client.ts")).toEqual([])
     expect(blocked("edit", "src/app.ts")).toEqual([])
+    // A shell command carries no path, so its own branch checks the command.
+    const shell = (command: string) =>
+      walkHook(flow, { operation: "command", timing: "before", command, tool: "bash" }).actions.map((item) => item.type)
+    expect(shell("sed -i s/a/b/ src/generated/client.ts")).toEqual(["relay.hookBlock"])
+    expect(shell("bun test")).toEqual([])
     expect(issues(flow)).toEqual([])
   })
 })

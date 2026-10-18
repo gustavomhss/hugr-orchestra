@@ -116,7 +116,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       servers: { list: () => servers.map((server) => server.connection) },
       ensureServerCtx: (connection: ServerConnection.Any) => servers.find((server) => server.connection === connection)!,
     }) }))
-    mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ home: { selection: () => selection } }) }))
+    mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ ready: () => true, home: { selection: () => selection } }) }))
     mock.module(solidDom("../src/context/server", import.meta.dir), () => ({ ServerConnection, useServer: () => ({
       get current() { return servers.find((server) => ServerConnection.key(server.connection) === selection.server)?.connection },
     }) }))
@@ -201,9 +201,9 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       select("directory", "/fallback-name")
       await until(() => host.textContent!.includes("Orchestra profile · fallback-name"))
       select("server", ServerConnection.key(unsupported.connection))
-      await until(() => !!host.querySelector('[role="alert"]'))
-      expect(protocol.read?.()).toBe("v2")
-      expect(total()).toBe("Unavailable")
+      await until(() => protocol.read?.() === "v2" && total() === "Unavailable")
+      // The empty state says Lean is unavailable; no error banner repeats it.
+      expect(host.querySelector('[role="alert"]')).toBeNull()
       expect(host.querySelector('[role="switch"]')).toBeNull()
       expect(unsupported.requests).toHaveLength(0)
       expect(one.listeners.size).toBe(0)

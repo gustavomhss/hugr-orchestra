@@ -73,7 +73,7 @@ export function AgentsRoster(props: {
                   <b id={`agent-${agentKey(item.agent)}`}>
                     <bdi>{item.agent.name}</bdi>
                   </b>
-                  <span class="agent-role">{item.agent.mode}</span>
+                  <span class="agent-role">{language.t(`orchestra.agents.mode.${item.agent.mode}`)}</span>
                 </div>
                 <p>{item.agent.description ?? language.t("orchestra.agents.noDescription")}</p>
                 <div class="mx-meta">

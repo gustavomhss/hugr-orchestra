@@ -283,6 +283,9 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
                 </div>
                 <div class="flex-1">
                   <TextField
+                    // Header values are usually credentials (Authorization: Bearer ...), so they stay masked.
+                    type="password"
+                    autocomplete="off"
                     label={language.t("provider.custom.headers.value.label")}
                     hideLabel
                     placeholder={language.t("provider.custom.headers.value.placeholder")}
@@ -307,6 +310,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
           <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addHeader} class="self-start">
             {language.t("provider.custom.headers.add")}
           </Button>
+          <p class="text-12-regular text-text-weak">{language.t("orchestra.providers.custom.headersHint")}</p>
         </div>
 
         <Button

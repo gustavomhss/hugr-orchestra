@@ -48,7 +48,7 @@ export type Issue =
       code: "trigger-count" | "needs-before" | "pattern-empty" | "hook-loose" | "message-empty" | "check-command"
       node: string
     }
-  | { code: "record-only" | "field-unavailable" | "cycle" | "never-runs"; node: string }
+  | { code: "record-only" | "field-unavailable" | "cycle" | "never-runs" | "path-backslash"; node: string }
   | { code: "server"; text: string }
 
 export const HOOK_OUTPUTS: Outputs = {
@@ -368,6 +368,14 @@ function hookIssues(flow: Flow): Issue[] {
       node.type === CONDITION && !String(node.parameters.pattern ?? "")
         ? [{ code: "pattern-empty" as const, node: node.id }]
         : []
+    // Paths reach a hook `/`-separated, and in a path pattern `\` only escapes the next character, so a Windows-style
+    // `src\generated\**` never matches. A `\` before one of the glob's own characters is a real escape.
+    const backslash =
+      node.type === CONDITION &&
+      (node.parameters.field ?? "path") === "path" &&
+      /\\(?![?*[\]{},!\\])/.test(String(node.parameters.pattern ?? ""))
+        ? [{ code: "path-backslash" as const, node: node.id }]
+        : []
     const check =
       node.type === "relay.hookVerify" && !String(node.parameters.check ?? "")
         ? [{ code: "check-command" as const, node: node.id }]
@@ -384,7 +392,7 @@ function hookIssues(flow: Flow): Issue[] {
       : running.has(node.id)
         ? []
         : [{ code: "never-runs" as const, node: node.id }]
-    return [...before, ...silent, ...field, ...pattern, ...check, ...message, ...loose]
+    return [...before, ...silent, ...field, ...pattern, ...backslash, ...check, ...message, ...loose]
   })
   const actions = flow.nodes.some((node) => node.type !== TRIGGER && node.type !== CONDITION)
   const action: Issue[] = actions ? [] : [{ code: "no-action", node: triggers[0]?.id }]

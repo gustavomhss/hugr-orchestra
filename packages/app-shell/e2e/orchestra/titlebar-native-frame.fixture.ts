@@ -104,6 +104,7 @@ export const KeybindV2 = Icon
 export const TooltipV2 = Tooltip
 export const WindowsAppMenu = () => null
 export const TitlebarTabStrip = () => null
+export const useDraftCloseGuard = () => (_tab, close) => close()
 `
 const entryModule = `
 import { createEffect } from "solid-js"
@@ -306,6 +307,7 @@ export function nativeFrameViteConfig(cache: string) {
             source.startsWith("@orchestra/ui/") ||
             source === "@solidjs/router" ||
             source === "@/components/titlebar-tab-strip" ||
+            source === "@/components/titlebar-draft-close" ||
             source === "./windows-app-menu" ||
             source === "./titlebar-tab-order" ||
             source === "./command-tooltip-keybind" ||

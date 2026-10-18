@@ -173,6 +173,11 @@ export function removeInput(file: AgentFileInfo | undefined): AgentFileInput {
   }
 }
 
+/** The write that undoes `removeInput`: the same definition without `disable`, which the server drops from the file. */
+export function restoreInput(file: AgentFileInfo): AgentFileInput {
+  return { ...removeInput(file), disable: undefined }
+}
+
 export function draftError(draft: AgentDraft, names: readonly string[], creating: boolean) {
   const name = draft.name.trim()
   if (creating && (!NAME.test(name) || RESERVED.test(name))) return "name" as const

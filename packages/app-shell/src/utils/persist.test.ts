@@ -185,6 +185,11 @@ describe("persist localStorage resilience", () => {
     expect(a.storage).not.toBe(Persist.workspace("/home/luke/repo", "prompt").storage)
   })
 
+  test("a draft's subagent model choices are cleaned up with its prompt", async () => {
+    const { draftPersistedKeys } = await import("./persist")
+    expect(draftPersistedKeys()).toEqual(expect.arrayContaining(["prompt", "subagent-models"]))
+  })
+
   test("removes draft storage when removing persisted target", () => {
     const target = Persist.draft("draft-a", "prompt")
     storage.setItem(`${target.storage}:${target.key}`, '{"value":1}')

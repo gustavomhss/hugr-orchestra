@@ -254,8 +254,8 @@ test("step rename preserves spaces while typing and serialized connections follo
   const [state, setState] = createStore({ flow: flowFromDocument(doc(), "workflow") })
   const host = mount(() => createComponent(WorkflowDetails, {
     get flow() { return state.flow }, get node() { return state.flow.nodes[1] },
-    run: undefined, frozen: undefined, issues: [], skills: { names: [], error: false, retry() {} }, save: undefined,
-    onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
+    run: undefined, frozen: undefined, issues: [], skills: { names: [], error: false, retry() {} }, description: "", save: undefined,
+    onChange: (flow) => setState("flow", flow), onDescribe() {}, onNav() {}, onClose() {}, onReview() {},
   }))
   const input = document.querySelector<HTMLInputElement>('[data-component="relay-node-details"] input[data-autofocus]')!
   expect(input).not.toBeNull()
@@ -284,7 +284,7 @@ test("the skill list marks a skill that no longer exists and says when it cannot
   mount(() => createComponent(WorkflowDetails, {
     get flow() { return state.flow }, get node() { return state.flow.nodes[1] }, run: undefined, frozen: undefined, issues: [],
     get skills() { return { names: state.names, error: !state.names, retry() {} } },
-    save: undefined, onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
+    description: "", save: undefined, onChange: (flow) => setState("flow", flow), onDescribe() {}, onNav() {}, onClose() {}, onReview() {},
   }))
   const text = () => document.querySelector('[data-component="relay-node-details"]')!.textContent!
   expect(text()).toContain("gone (not found)")

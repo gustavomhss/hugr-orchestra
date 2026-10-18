@@ -405,7 +405,9 @@ unusable fields yield `RECORD-INVALID` / exit `2` and `record_errors`; missing o
 present malformed/empty oracle is invalid. Malformed JSON/nonobject chain records yield `TAMPERED`
 / exit `1` through the offline verifier, with a structured `verify --json` result for those cases.
 Broken integrity takes precedence over record/sprint validity. Other JSON labels remain `NO-CONTROLS`,
-`CONTROL-FAIL`, `ORACLE-CHANGED`, `ORACLE-DRIFT`, `ESCALATED`, and `TRUNCATED`. Every final deterministic
+`CONTROL-FAIL`, `ORACLE-CHANGED`, `ORACLE-DRIFT`, `ESCALATED`, and `TRUNCATED`. In the TS engine a last
+`workflow-disposition` whose `sourceSeq` is the seq of the entry right before it reads as that entry's event
+for `last_event`, `TRUNCATED` and `ESCALATED` (PARITY-EXCEPTIONS W7-6). Every final deterministic
 verdict other than `pass`, including legacy `advisory`, is a failure. Judge verdicts do not independently
 affect the exit. This checks recorded verdicts and named ID/oracle agreement, not fresh artifact
 validity, authenticated reviewer independence, every WP's completion, DoD coverage, or every plan field.

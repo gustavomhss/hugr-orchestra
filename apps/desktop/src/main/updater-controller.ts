@@ -6,7 +6,7 @@ export type UpdaterReadyRecord = { version: string }
 
 export type UpdaterBackend = {
   checkForUpdates(): Promise<{ isUpdateAvailable?: boolean; updateInfo?: { version?: string } } | null | undefined>
-  downloadUpdate(): Promise<unknown>
+  downloadUpdate(onProgress: (percent: number) => void): Promise<unknown>
   quitAndInstall(): void
 }
 
@@ -18,6 +18,8 @@ type UpdaterPersistence = {
 
 export function createUpdaterController(input: {
   enabled: boolean
+  // Set for a build that cannot replace itself: a found update is announced with this page, never downloaded.
+  releasePage?: (version: string) => string
   currentVersion: string
   backend: UpdaterBackend
   persistence: UpdaterPersistence
@@ -29,7 +31,8 @@ export function createUpdaterController(input: {
   const listeners = new Set<(state: UpdaterState) => void>()
 
   const transition = (next: UpdaterState) => {
-    input.log?.("updater state changed", { from: state.status, to: next.status })
+    // Download progress repeats "downloading"; log only status changes.
+    if (next.status !== state.status) input.log?.("updater state changed", { from: state.status, to: next.status })
     state = next
     listeners.forEach((listener) => listener(state))
     return state
@@ -41,16 +44,22 @@ export function createUpdaterController(input: {
     if (pending) return pending
 
     pending = (async () => {
-      transition({ status: "checking" })
+      // An announced update stays on screen while the periodic check runs, so the titlebar link does not blink.
+      if (state.status !== "available") transition({ status: "checking" })
       const result = await input.backend.checkForUpdates()
       const version = result?.updateInfo?.version
       if (!result?.isUpdateAvailable || !version || version === input.currentVersion) {
         await input.persistence.clear()
         return transition({ status: "up-to-date" })
       }
+      if (input.releasePage) return transition({ status: "available", version, url: input.releasePage(version) })
 
       transition({ status: "downloading", version })
-      await input.backend.downloadUpdate()
+      await input.backend.downloadUpdate((value) => {
+        const percent = Math.floor(value)
+        if (state.status !== "downloading" || state.percent === percent) return
+        transition({ status: "downloading", version, percent })
+      })
       await input.persistence.set({ version })
       return transition({ status: "ready", version })
     })()

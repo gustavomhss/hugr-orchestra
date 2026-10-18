@@ -219,8 +219,21 @@
     display: none;
   }
 
-  [data-slot="markdown-copy-button"][data-copied="true"] [data-copy-icon] {
+  [data-slot="markdown-copy-button"] [data-fail-icon] {
     display: none;
+  }
+
+  [data-slot="markdown-copy-button"][data-copied="true"] [data-copy-icon],
+  [data-slot="markdown-copy-button"][data-failed="true"] [data-copy-icon] {
+    display: none;
+  }
+
+  [data-slot="markdown-copy-button"][data-failed="true"] {
+    opacity: 1;
+  }
+
+  [data-slot="markdown-copy-button"][data-failed="true"] [data-fail-icon] {
+    display: inline-flex;
   }
 
   [data-slot="markdown-copy-button"][data-copied="true"] [data-check-icon] {

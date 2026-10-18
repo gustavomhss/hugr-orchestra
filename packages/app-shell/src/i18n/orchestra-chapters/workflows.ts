@@ -20,7 +20,11 @@ export const WORKFLOWS_COPY = {
     "Reusable step-by-step plans for Maestro. Each step is done by an agent and must pass its checks before the next one starts. Publish a workflow, then ask Maestro to use it in chat.",
   "orchestra.workflows.xlink":
     "For a rule that applies to every session, such as blocking edits to generated files, use Hooks.",
+  "orchestra.workflows.scope": "Available to every agent session in {{project}} and its other checkouts.",
+  "orchestra.workflows.scope.repositoryRequired":
+    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
   "orchestra.workflows.unsupported": "This server does not support workflows yet.",
+  "orchestra.workflows.checkAgain": "Check again",
   "orchestra.workflows.loading": "Loading workflows…",
   "orchestra.workflows.error": "Could not load workflows. {{reason}}",
   "orchestra.workflows.refreshFailed": "Could not refresh the list. Showing what was loaded earlier.",
@@ -373,6 +377,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.canvas.newPhase": "Phase {{n}}",
   "orchestra.workflows.canvas.startStays": "Start holds the goal and the fixes allowed per step, so it stays.",
   "orchestra.workflows.canvas.entryNoInput": "Start and triggers take no incoming connection.",
+  "orchestra.workflows.canvas.wireEmpty": "Nothing was connected. Let go of the wire over the step it should lead to.",
+  "orchestra.workflows.canvas.wireSelf": "A step cannot connect to itself.",
   "orchestra.workflows.canvas.phaseBlocked": "It can't join “{{phase}}” from there",
   "orchestra.workflows.canvas.phaseBlockedBody":
     "A phase is one unbroken stretch of the sequence. Connect the step next to the phase first, or choose its phase in the step's details.",
@@ -562,6 +568,9 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.noChecksHint": "No checks: this step finishes as soon as the agent stops.",
   "orchestra.workflows.details.objective": "Goal",
   "orchestra.workflows.details.objectiveHint": "What this workflow must achieve. Every step sees it.",
+  "orchestra.workflows.details.purpose": "What is it for?",
+  "orchestra.workflows.details.purposeHint":
+    "A short note shown in the library, where you can search it. Steps don't receive it.",
   "orchestra.workflows.details.budgetField": "Fixes allowed per step",
   "orchestra.workflows.details.budgetHint":
     "With {{count}}, a step may fail {{count}} times. The next failure pauses the run until a person decides.",

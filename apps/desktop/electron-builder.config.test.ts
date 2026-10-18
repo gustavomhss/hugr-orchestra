@@ -32,7 +32,7 @@ for (const channel of channels) {
     expect(config.rpm?.fpm).toContainEqual(expect.stringContaining(`/usr/share/metainfo/${channel.appId}.metainfo.xml`))
   })
 
-  test(`embeds no update feed in ${channel.channel} builds`, async () => {
+  test(`embeds Orchestra's update feed in prod builds only (${channel.channel})`, async () => {
     const previous = process.env.ORCHESTRA_CHANNEL
     process.env.ORCHESTRA_CHANNEL = channel.channel
 
@@ -43,7 +43,12 @@ for (const channel of channels) {
     else process.env.ORCHESTRA_CHANNEL = previous
 
     // null, not undefined: an omitted publish lets electron-builder infer a GitHub feed from the git remote.
-    expect(config.publish).toBeNull()
+    if (channel.channel !== "prod") expect(config.publish).toBeNull()
+    if (channel.channel === "prod")
+      expect(config.publish).toEqual({
+        provider: "generic",
+        url: "https://github.com/gustavomhss/hugr-orchestra/releases/download/desktop-latest",
+      })
   })
 }
 

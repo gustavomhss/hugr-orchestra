@@ -1,12 +1,11 @@
-import { type Accessor, Component, createMemo, createSignal, type JSX, Show, startTransition } from "solid-js"
+import { Component, createMemo, createSignal, type JSX, Show, startTransition } from "solid-js"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { Dialog } from "@orchestra/ui/v2/dialog-v2"
 import { TabsV2 } from "@orchestra/ui/v2/tabs-v2"
 import { Icon } from "@orchestra/ui/icon"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { SettingsGeneralV2 } from "./general"
-import { SettingsKeybinds } from "../settings-keybinds"
-import { SettingsProvidersV2 } from "./providers"
 import { SettingsModelsV2 } from "./models"
 import "./settings-v2.css"
 import { SettingsServersV2 } from "./servers"
@@ -15,10 +14,12 @@ import { useLayout } from "@/context/layout"
 import { useTabs } from "@/context/tabs"
 import { ServerSyncProvider } from "@/context/server-sync"
 import { ServerSDKProvider, useServerSDK } from "@/context/server-sdk"
-import { ServerConnection } from "@/context/server"
+import { ServerConnection, serverName } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { ModelsProvider } from "@/context/models"
 import { settingsProviderOwner } from "@/hooks/provider-catalog"
+import { ProviderList } from "@/orchestra/chapters/providers-list"
+import { ShortcutsEditor, ShortcutsReset } from "@/orchestra/chapters/shortcuts-editor"
 
 export const DialogSettings: Component<{
   sessionID?: string
@@ -53,17 +54,24 @@ export const DialogSettings: Component<{
     { equals: (a, b) => a?.server === b?.server && a?.directory === b?.directory },
   )
 
-  function ProviderScope(props: { children: (directory: Accessor<string | null | undefined>) => JSX.Element }) {
+  function ProviderScope(props: {
+    children: (target: { server: ServerConnection.Any; directory: string | null | undefined }) => JSX.Element
+  }) {
     return (
       <Show when={owner()} keyed fallback={<p role="status">{language.t("orchestra.providers.loading")}</p>}>
         {(target) => (
-          <ServerSDKProvider server={() => target.server}>
-            <ServerSyncProvider server={() => target.server}>
-              <ModelsProvider directory={() => target.directory}>
-                {props.children(() => target.directory)}
-              </ModelsProvider>
-            </ServerSyncProvider>
-          </ServerSDKProvider>
+          <>
+            <p class="settings-v2-scope-note">
+              {language.t("orchestra.settings.scope.server", { server: serverName(target.server) })}
+            </p>
+            <ServerSDKProvider server={() => target.server}>
+              <ServerSyncProvider server={() => target.server}>
+                <ModelsProvider directory={() => target.directory}>
+                  {props.children(target)}
+                </ModelsProvider>
+              </ServerSyncProvider>
+            </ServerSDKProvider>
+          </>
         )}
       </Show>
     )
@@ -120,6 +128,9 @@ export const DialogSettings: Component<{
               </div>
             </div>
             <div class="settings-v2-nav-footer">
+              <ButtonV2 variant="neutral" size="small" onClick={() => dialog.close()}>
+                {language.t("common.close")}
+              </ButtonV2>
               <span>{language.t("app.name.desktop")}</span>
               <span>v{platform.version}</span>
             </div>
@@ -129,18 +140,52 @@ export const DialogSettings: Component<{
           <SettingsGeneralV2 sessionID={props.sessionID} />
         </TabsV2.Content>
         <TabsV2.Content value="shortcuts" class="settings-v2-panel">
-          <SettingsKeybinds v2 />
+          <div class="settings-v2-tab-header settings-v2-tab-header--stacked">
+            <div class="settings-v2-tab-header-row">
+              <h2 class="settings-v2-tab-title">{language.t("settings.shortcuts.title")}</h2>
+              <ShortcutsReset />
+            </div>
+          </div>
+          <div class="settings-v2-tab-body settings-v2-kit">
+            <ShortcutsEditor />
+          </div>
         </TabsV2.Content>
         <TabsV2.Content value="servers" class="settings-v2-panel">
           <SettingsServersV2 />
         </TabsV2.Content>
         <TabsV2.Content value="providers" class="settings-v2-panel">
           <ProviderScope>
-            {(directory) => <SettingsProvidersV2 directory={directory} onBack={showProviders} />}
+            {(target) => (
+              <ProviderList
+                server={target.server}
+                directory={target.directory ?? ""}
+                onBack={showProviders}
+                onModels={() => void startTransition(() => setTab("models"))}
+              >
+                {(list) => (
+                  <>
+                    <div class="settings-v2-tab-header settings-v2-tab-header--stacked">
+                      <div class="settings-v2-tab-header-row">
+                        <h2 class="settings-v2-tab-title">{language.t("settings.providers.title")}</h2>
+                        {list.connect}
+                      </div>
+                    </div>
+                    <div class="settings-v2-tab-body settings-v2-kit">{list.body}</div>
+                  </>
+                )}
+              </ProviderList>
+            )}
           </ProviderScope>
         </TabsV2.Content>
         <TabsV2.Content value="models" class="settings-v2-panel">
-          <ProviderScope>{() => <SettingsModelsV2 />}</ProviderScope>
+          <ProviderScope>
+            {(target) => (
+              <SettingsModelsV2
+                directory={() => target.directory}
+                onConnect={() => void startTransition(() => setTab("providers"))}
+              />
+            )}
+          </ProviderScope>
         </TabsV2.Content>
       </TabsV2>
     </Dialog>

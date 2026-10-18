@@ -124,6 +124,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const base = () => draft.state.base
   const flow = () => draft.state.flow
   const name = () => draft.state.name
+  const description = () => draft.state.description
   const save = draft.state.save
   // A phase left without steps is not kept, and its instructions go with it, so an edit that would do that asks first.
   const [emptying, setEmptying] = createSignal<{ flow: Flow; names: string }>()
@@ -142,6 +143,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const undo = () => travel(draft.undo)
   const redo = () => travel(draft.redo)
   const rename = (next: string) => { if (!props.route.view) draft.rename(next) }
+  const describe = (next: string) => { if (!props.route.view) draft.describe(next) }
   const flush = draft.flush
   const reload = draft.reload
   onCleanup(draft.release)
@@ -235,6 +237,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (!version) return false
     return (
       version.name === name() &&
+      (version.description ?? "") === description() &&
       JSON.stringify(documentFields(flow())) === JSON.stringify(documentFields(flowFromDocument(version, kind)))
     )
   }
@@ -329,6 +332,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     const version = base().activeVersion
     if (!version) return
     if (version.name !== name()) rename(version.name)
+    if ((version.description ?? "") !== description()) describe(version.description ?? "")
     edit(flowFromDocument(version, kind))
     setSelected([])
   }
@@ -340,7 +344,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       const created = await props.source.client
         .create(
           copyDocument(
-            { ...base(), ...documentFields(flow()) },
+            { ...base(), description: description(), ...documentFields(flow()) },
             copy.t("orchestra.workflows.create.copyName", { name: name() }),
           ),
         )
@@ -617,6 +621,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               document={base()}
               flow={props.route.view ? frozenFlow()! : flow()}
               frozen={frozenFlow()}
+              description={props.route.view ? frozen.data?.description ?? "" : description()}
               readOnly={!!props.route.view || save.state === "conflict"}
               outputs={outputs()}
               issues={props.route.view ? issues(frozenFlow()!, [...(frozen.data?.meta.relay?.diagnostics ?? [])]) : found()}
@@ -634,6 +639,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               test={test()}
               save={save}
               edit={edit}
+              describe={describe}
               select={setSelected}
               api={(value) => (api = value)}
               keys={(handler) => (canvasKeys = handler)}

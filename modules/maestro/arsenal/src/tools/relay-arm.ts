@@ -36,7 +36,7 @@ const tool: ToolDef<RelayArmInput> = {
     const contract = validateCompletion({ ...input.contract, retryBudget: input.contract.retryBudget ?? 3 })
     const token = `arm-${createHash("sha256").update(JSON.stringify({ projectID: context.projectID, contract })).digest("hex").slice(0, 32)}`
     await updateState(context, "completion", token, () => ({ schema: 1, projectID: context.projectID, contract }))
-    return text({ token, contract, bindingRequired: contract.chain.flatMap((gate) => gate.checks.map((check) => check.hostCheck)), enforced: false, permissionOwner: "native-host" })
+    return text({ token, contract, bindingRequired: (contract.chain ?? []).flatMap((gate) => gate.checks.map((check) => check.hostCheck)), enforced: false, permissionOwner: "native-host" })
   },
 }
 export default tool

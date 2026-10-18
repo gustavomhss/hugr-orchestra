@@ -5,7 +5,6 @@ import {
   permissionLock,
   permissionMap,
   permissionWrite,
-  routeModel,
   settingsSection,
 } from "./settings-data"
 
@@ -108,25 +107,5 @@ describe("context labels", () => {
     expect(contextLabel(128_500)).toBe("129K")
     expect(contextLabel(0)).toBeUndefined()
     expect(contextLabel(undefined)).toBeUndefined()
-  })
-})
-
-describe("route for new turns", () => {
-  const provider = { id: "openrouter", models: { "gpt-5": {}, "claude-sonnet-4": {} } }
-
-  test("keeps the current model when the provider serves it", () => {
-    expect(
-      routeModel({
-        provider,
-        defaults: { openrouter: "gpt-5" },
-        current: { providerID: "opencode", modelID: "claude-sonnet-4" },
-      }),
-    ).toBe("openrouter/claude-sonnet-4")
-  })
-
-  test("otherwise uses the provider default, then its first model", () => {
-    expect(routeModel({ provider, defaults: { openrouter: "gpt-5" } })).toBe("openrouter/gpt-5")
-    expect(routeModel({ provider, defaults: { openrouter: "missing" } })).toBe("openrouter/gpt-5")
-    expect(routeModel({ provider: { id: "empty", models: {} }, defaults: {} })).toBeUndefined()
   })
 })

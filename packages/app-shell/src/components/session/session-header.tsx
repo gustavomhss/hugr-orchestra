@@ -242,6 +242,10 @@ export function SessionHeader() {
     reviewVisible: isDesktop(),
     reviewOpened: view().reviewPanel.opened(),
     onReviewToggle: () => view().reviewPanel.toggle(),
+    terminalLabel: language.t("command.terminal.toggle"),
+    terminalKeybind: command.keybindParts("terminal.toggle"),
+    terminalOpened: view().terminal.opened(),
+    onTerminalToggle: toggleTerminal,
   }))
 
   const selectApp = (app: OpenApp) => {
@@ -524,6 +528,10 @@ type SessionHeaderV2ActionsState = {
   reviewVisible: boolean
   reviewOpened: boolean
   onReviewToggle: () => void
+  terminalLabel: string
+  terminalKeybind: string[]
+  terminalOpened: boolean
+  onTerminalToggle: () => void
 }
 
 function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
@@ -536,6 +544,31 @@ function SessionHeaderV2Actions(props: { state: SessionHeaderV2ActionsState }) {
           <StatusPopoverV2 />
         </Tooltip>
       </Show>
+      <TooltipV2
+        class="shrink-0"
+        placement="bottom"
+        value={
+          <>
+            {props.state.terminalLabel}
+            <Show when={props.state.terminalKeybind.length > 0}>
+              <KeybindV2 keys={props.state.terminalKeybind} variant="neutral" />
+            </Show>
+          </>
+        }
+      >
+        <IconButtonV2
+          type="button"
+          variant="ghost-muted"
+          size="large"
+          class="!w-9 shrink-0"
+          state={props.state.terminalOpened ? "pressed" : undefined}
+          onClick={props.state.onTerminalToggle}
+          aria-label={props.state.terminalLabel}
+          aria-expanded={props.state.terminalOpened}
+          aria-controls="terminal-panel"
+          icon={<Icon name={props.state.terminalOpened ? "terminal-active" : "terminal"} size="small" />}
+        />
+      </TooltipV2>
       <Show when={props.state.reviewVisible}>
         <TooltipV2
           class="shrink-0"

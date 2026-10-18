@@ -155,6 +155,8 @@ test("closing admitting draft tears down its owner and stays Home on a late crea
   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "true")
   fixture.rejectPrompts = true
   await page.locator(draftTab).getByRole("button", { name: "Close tab", exact: true }).click()
+  // The composer still holds the text while it is admitted, so closing asks before discarding it.
+  await page.getByRole("dialog").getByRole("button", { name: "Discard draft", exact: true }).click()
   await expect(page.locator(draftTab)).toHaveCount(0)
   expect(await original.evaluate((element) => element.isConnected)).toBe(false)
   // Desktop tab close selects within the current profile; B's tab is deliberately hidden here.

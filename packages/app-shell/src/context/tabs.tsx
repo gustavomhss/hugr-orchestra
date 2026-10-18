@@ -246,6 +246,13 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         memory.remove(`draft:${draftID}`)
         removeDraftPersisted(draftID)
       },
+      // Closing a draft deletes its saved prompt, so callers ask first when this is true. A draft that was never
+      // opened in this window has its prompt read from storage first.
+      async draftHasContent(tab: DraftTab) {
+        const prompt = memory.ensure(tabKey(tab), "prompt", () => createDraftPromptSession(tab.draftID))
+        await prompt.ready.promise
+        return prompt.dirty() || prompt.context.items().length > 0
+      },
       removeTab,
       // User-initiated close: records the tab so it can be reopened.
       // Cleanup paths (missing sessions, archive, server removal) go through

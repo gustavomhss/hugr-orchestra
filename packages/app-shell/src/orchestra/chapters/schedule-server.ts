@@ -184,6 +184,7 @@ export function createServerScheduleSource(
       return undefined
     },
     setEnabled: (id, enabled) => update(id, { enabled }),
+    refresh: load,
     remove: async (id) => {
       const task = name(id)
       const result = await api()
