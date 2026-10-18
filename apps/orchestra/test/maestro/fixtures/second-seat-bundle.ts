@@ -32,6 +32,9 @@ test("build genuine second-seat Bun bundle", async () => {
           if (/^(?:[A-Za-z]:[\\/]|@\/|@test\/|bun:|node:)/.test(args.path) || args.path === "orchestra-seat-skills.gen.ts") return
           // Bun's external star-reexport lowering emits an unbound namespace for Orchestra's TUI facades.
           if (args.path.startsWith("@orchestra/tui/")) return { path: Bun.resolveSync(args.path, args.resolveDir) }
+          // The seat registry and seat-skill-root live in @orchestra/maestro: bundle them so the snapshot registry
+          // and the embedded seat-skill module land in the artifact, as in the product build.
+          if (args.path.startsWith("@orchestra/maestro/")) return { path: Bun.resolveSync(args.path, args.resolveDir) }
           return { path: Bun.resolveSync(args.path, args.resolveDir), external: true }
         })
       },

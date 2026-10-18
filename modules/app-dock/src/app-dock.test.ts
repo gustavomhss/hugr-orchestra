@@ -2,14 +2,10 @@ import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
 import { AppDockPlugin, createAppDockHooks } from "./app-dock"
-import { Permission } from "orchestra/permission"
 import { context, input, fakePort, turn, admission, control, type Envelope } from "./app-dock.fixture"
 
 // A native timeout tells the model the app may be busy in a dialog (see app-dock.ts hints).
 const busy = expect.stringContaining("may be busy, e.g. showing a dialog an action opened")
-
-type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]
-
 
 test("observed native action mode is explicit and survives actual tool schema and RPC", async () => {
   const f = fakePort()

@@ -90,7 +90,7 @@ describe("seat scaffold validation", () => {
         .replace('from "./seats"', `from ${JSON.stringify(registry)}`)
         .replace('from "./seats/seat"', `from ${JSON.stringify(path.join(seatsSource, "src/seats/seat.ts"))}`)
         .replace('from "./seat-skill-root"', `from ${JSON.stringify(path.join(seatsSource, "src/seat-skill-root.ts"))}`)
-        .replace('from "../tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "src/tool/truncation-dir.ts"))}`)
+        .replace('from "@orchestra/core/tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/tool/truncation-dir.ts"))}`)
         .replace('from "@orchestra/core/tool/upstream-arsenal"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/tool/upstream-arsenal.ts"))}`))
       await expect(import(copied)).rejects.toThrow(error)
     }
@@ -254,7 +254,9 @@ test("legacy negative test detects isolated mutation and passes after restoratio
   const binding = '  if (canonicalMemberId(id) !== id) throw new Error(`Native seat id must be canonical: ${id}`)'
   expect(original.split(binding)).toHaveLength(2)
   const copied = path.join(tmp.path, "scaffold.ts")
-  const copy = original.replaceAll('from "../src/', `from "${path.join(source, "src").replaceAll("\\", "/")}/`)
+  // The copy lives outside the workspace, so its package imports of the seat module become absolute source paths.
+  const copy = original.replaceAll('from "@orchestra/maestro/', `from "${path.join(seatsSource, "src").replaceAll("\\", "/")}/`)
+  expect(copy).not.toContain('from "@orchestra/')
   const config = path.join(tmp.path, "bunfig.toml")
   await fs.writeFile(config, `[test]\npreload = ${JSON.stringify([path.resolve(source, "../../script/test-guard.ts")])}\n`)
   const negative = path.join(tmp.path, "legacy.test.ts")

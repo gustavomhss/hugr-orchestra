@@ -2,10 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
 import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
-import { Permission } from "orchestra/permission"
 import { context, input, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
-
-type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]
 
 test("dock_find pages native continuations itself and returns compact matches from the matching observation", async () => {
   const { hooks, calls } = host((_op, args) => args.cursor === undefined ? page([control("n:a", "Explorer")], "c1")
@@ -457,21 +454,11 @@ test("dock_* called by an agent addresses browser tabs; without an agent the leg
   expect(dock.calls.map((call) => call.args)).toEqual([{ world: "browser" }, {}])
 })
 
+// How the host's permission engine evaluates this scope is proven in apps/orchestra/test/plugin/linux-workspace-scope.test.ts.
 test("the Linux workspace is its own scope: host agents lose its tools, the linux agent holds only them", () => {
   const config: { permission?: unknown; agent?: Record<string, Record<string, unknown>> } = {
     permission: { "*": "allow", dock: "ask" }, agent: { linux: { model: "opencode/mimo" } } }
   scopeLinuxWorkspace(config)
-  const tools = ["bash", "read", "edit", "webfetch", "task", "todowrite", "linux_exec", "linux_read", "ui_find", "ui_act", "dock_read",
-    "dock_find", "dock_action"]
-  const global = Permission.fromConfig(config.permission as PermissionConfig)
-  const linux = Permission.merge(global, Permission.fromConfig(config.agent!.linux!.permission as PermissionConfig))
-  // dock_find and dock_action only reach native controls, which host agents' browser-scoped calls never do.
-  expect([...Permission.disabled(tools, global)].sort()).toEqual(["dock_action", "dock_find", "linux_exec", "linux_read", "ui_act", "ui_find"])
-  expect(tools.filter((tool) => !Permission.disabled(tools, linux).has(tool)).sort())
-    .toEqual(["linux_exec", "linux_read", "todowrite", "ui_act", "ui_find"])
-  // Execution asks under the plugin permission names; the user's own dock rule still applies inside the scope.
-  expect(Permission.evaluate("linux", "exec", linux).action).toBe("allow")
-  expect(Permission.evaluate("dock", "action", linux).action).toBe("ask")
   expect(config.agent!.linux).toMatchObject({ mode: "subagent", model: "opencode/mimo" })
   // The linux agent speaks as Orchestra's, never as the upstream product.
   expect(config.agent!.linux!.prompt).toStartWith("You are the Linux workspace agent of HuGR Orchestra")
