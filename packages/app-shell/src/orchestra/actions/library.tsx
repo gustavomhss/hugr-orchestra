@@ -7,7 +7,7 @@ import type { Model, Translate, ViewProps } from "./contract"
 import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
-import { libraryPresentation, runFilters, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, runIdentity, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 export function Library(props: ViewProps & { embedded?: boolean }) {
   const model = props.model
@@ -31,7 +31,7 @@ export function Library(props: ViewProps & { embedded?: boolean }) {
               <span class="mx-mark"><Icon name="workflow" /></span><span class="collection-reference-copy">
                 <strong>{props.t("orchestra.actions.actualOrchestraCI")} · <bdi>{workflow().name ?? workflow().id}</bdi></strong>
                 <small><bdi dir="ltr">{workflow().path}</bdi> · <Show when={run()} fallback={<bdi>{binding().projectPath}</bdi>}>{(item) =>
-                  props.t("orchestra.actions.runAttempt", { run: item().id, attempt: item().attempt ?? props.t("orchestra.actions.unknown") })}</Show></small>
+                  props.t("orchestra.actions.runAttempt", { run: runIdentity(item()).number, attempt: item().attempt ?? props.t("orchestra.actions.unknown") })}</Show></small>
               </span><span class="collection-reference-context"><Show when={run()} fallback={props.t("orchestra.actions.open")}>{(item) =>
                 <Status status={item().status} conclusion={item().conclusion} t={props.t} />}</Show><Icon name="arrow" /></span>
             </button>
@@ -156,9 +156,11 @@ function WorkflowCard(props: { props: ViewProps; workflow: Actions.Workflow; run
         <Match when={model.state.runs.status === "error"}><span role="alert">{props.props.t(model.state.runs.error?.message ?? "orchestra.actions.unavailable")}</span></Match>
         <Match when={props.run}>{(run) => <>
           <button type="button" class="collection-last-run title-link mx-link" onClick={() => model.navigate({ view: "run", runID: run().id })}>
-            <Status status={run().status} conclusion={run().conclusion} t={props.props.t} /><span><bdi dir="ltr">#{run().id}</bdi> · <time dateTime={run().createdAt} title={stamp(run().createdAt)}>{relative(run().createdAt)}</time></span>
+            <Status status={run().status} conclusion={run().conclusion} t={props.props.t} /><span><bdi dir="ltr">{runIdentity(run()).number}</bdi> · <time dateTime={run().createdAt} title={stamp(run().createdAt)}>{relative(run().createdAt)}</time></span>
           </button><small><bdi>{run().ref}</bdi> · {duration(run().duration)}</small>
-        </>}</Match><Match when={true}><strong>{props.props.t("orchestra.actions.emptyRuns")}</strong></Match></Switch>
+        </>}</Match>
+        {/* Only a bounded recent page is loaded, so a missing run here does not mean the workflow never ran. */}
+        <Match when={true}><strong>{props.props.t("orchestra.actions.noRecentRun")}</strong></Match></Switch>
     </div>
     <footer class="mx-card-foot"><button type="button" class="mx-btn primary" disabled={!allowed()} onClick={() => {
       if (allowed()) model.dialog({ kind: "dispatch", workflowID: props.workflow.id })
@@ -175,9 +177,9 @@ function RunTable(props: { model: Model; t: Translate; runs: readonly Actions.Ru
     <div class="run-head"><span>{props.t("orchestra.actions.runColumn")}</span><span>{props.t("orchestra.actions.refColumn")}</span>
       <span>{props.t("orchestra.actions.resultColumn")}</span><span>{props.t("orchestra.actions.timeColumn")}</span></div>
     <div class="mx-table runs-table"><For each={props.runs}>{(run) => <button type="button" class="mx-row run-row" onClick={() => props.model.navigate({ view: "run", runID: run.id })}>
-      <span class="mx-grow"><strong><bdi>{run.name ?? run.id}</bdi></strong>
-        {/* Native runs carry no commit title, so the run name stays the title; the workflow name is added only when it differs. */}
-        <small><Show when={props.model.state.workflows.value?.items.find((item) => item.bindingID === run.bindingID && item.id === run.workflowID && item.name !== run.name)?.name}>{(name) => <><bdi>{name()}</bdi> · </>}</Show><bdi dir="ltr">#{run.id}</bdi> · {props.t("orchestra.actions.attempt")} {run.attempt ?? unknown()}</small>
+      <span class="mx-grow"><strong><bdi>{runIdentity(run).title}</bdi></strong>
+        {/* The workflow name is the secondary line unless it already is the title (runs without a native title). */}
+        <small><Show when={props.model.state.workflows.value?.items.find((item) => item.bindingID === run.bindingID && item.id === run.workflowID && item.name !== runIdentity(run).title)?.name}>{(name) => <><bdi>{name()}</bdi> · </>}</Show><bdi dir="ltr">{runIdentity(run).number}</bdi> · {props.t("orchestra.actions.attempt")} {run.attempt ?? unknown()}</small>
         <small><bdi>{run.actor ?? unknown()}</bdi></small></span>
       <span class="collection-run-ref"><span class="ref"><Icon name="branch" /><bdi>{run.ref ?? unknown()}</bdi></span><small><bdi dir="ltr">{shortSHA(run.commit)}</bdi> · <bdi>{run.event}</bdi></small></span>
       <span class="collection-run-result"><Status status={run.status} conclusion={run.conclusion} t={props.t} /></span>

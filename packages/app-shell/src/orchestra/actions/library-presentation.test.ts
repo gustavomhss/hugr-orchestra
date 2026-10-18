@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
 import { initial, type State } from "./contract"
-import { libraryPresentation, runFilters, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, runIdentity, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 const binding: Actions.Binding = {
   id: Actions.BindingID.make("ab_library"), revision: 1, remote: "origin", projectID: "21", projectPath: "gustavomhss/hugr-orchestra", directory: "/repo/native",
@@ -115,4 +115,10 @@ test("collection does not inspect source or graph and rejects stale loading/erro
   state.binding = undefined
   expect(libraryPresentation(state, filters).actualOrchestraCI).toBeUndefined()
   expect(libraryPresentation(state, filters).recent).toEqual([])
+})
+
+test("run identity prefers the native title and number, falling back to name and bare native id", () => {
+  expect(runIdentity(run)).toEqual({ title: "Native run", number: "101" })
+  expect(runIdentity({ ...run, name: null })).toEqual({ title: "101", number: "101" })
+  expect(runIdentity({ ...run, title: "fix: keep identity", number: 248 })).toEqual({ title: "fix: keep identity", number: "#248" })
 })
