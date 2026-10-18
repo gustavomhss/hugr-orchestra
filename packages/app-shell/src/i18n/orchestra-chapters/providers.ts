@@ -36,7 +36,11 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.connectDialog.confirmation": "Confirmation code",
   "orchestra.providers.connectDialog.waiting": "Waiting for authorization…",
   "orchestra.providers.connectDialog.submit": "Connect",
+  "orchestra.providers.connectDialog.keySaved.title": "API key saved for {{provider}}",
+  "orchestra.providers.connectDialog.keySaved.description": "It is checked when you send your first message.",
+  "orchestra.providers.connectDialog.updateKey": "Update API key",
   "orchestra.providers.connectDialog.badLink": "The server returned an authorization link that is not a web address.",
+  "orchestra.providers.configDescription": "Connected from your config file",
   "orchestra.providers.disconnectDialog.title": "Disconnect {{provider}}?",
   "orchestra.providers.disconnectDialog.description": "This removes the stored key or sign-in for {{provider}}.",
   "orchestra.providers.custom.description":

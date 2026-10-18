@@ -7,6 +7,7 @@ import { createStore, reconcile } from "solid-js/store"
 import { formatKeybind, useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
+import { serverName } from "@/context/server"
 import { useSettings } from "@/context/settings"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
@@ -62,6 +63,8 @@ export default function ShortcutsPage(props: ChapterPageProps) {
     ),
   )
   const profile = createMemo(() => {
+    // Shortcuts are server-wide; without a project the page names the server.
+    if (!props.directory) return serverName(props.server)
     const directory = pathKey(props.directory)
     const project = global
       .ensureServerCtx(props.server)

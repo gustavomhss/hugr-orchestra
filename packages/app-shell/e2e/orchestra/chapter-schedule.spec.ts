@@ -59,10 +59,10 @@ for (const scheme of ["dark", "light"] as const) {
   }) => {
     const api = await setup(page, { scheme })
     await page.goto("/", { waitUntil: "domcontentloaded" })
-    await page.locator(".orchestra-sidebar").getByRole("button", { name: "Agendar", exact: true }).click()
+    await page.locator(".orchestra-sidebar").getByRole("button", { name: "Schedule", exact: true }).click()
     await expect(page).toHaveURL(/\/orchestra\/schedule$/)
     const view = page.locator('[data-mx-page="orchestra-schedule"]')
-    await expect(view.getByRole("heading", { level: 1 })).toHaveText("Agendar")
+    await expect(view.getByRole("heading", { level: 1 })).toHaveText("Schedule")
     await expect(view.locator(".mx-eyebrow")).toHaveText("Schedule repository / profile configuration")
     await expect(view.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
     await expect(view.locator(".mx-note").last()).toHaveText(NOTE)

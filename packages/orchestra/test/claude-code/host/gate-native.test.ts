@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test"
 import fs from "node:fs/promises"
 import { realpathSync } from "node:fs"
 import path from "node:path"
-import { Deferred, Effect, Exit, Fiber, FileSystem } from "effect"
+import { Deferred, Effect, Exit, Fiber, FileSystem, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -38,6 +38,11 @@ import { TestInstance, provideInstance, tmpdirScoped } from "../../fixture/fixtu
 import { seatShellRuns } from "../../fixture/seat-sandbox"
 import { pollWithTimeout, testEffect } from "../../lib/effect"
 import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
+import { createHash } from "node:crypto"
+import { EventV2 } from "@orchestra/core/event"
+import { EventTable } from "@orchestra/core/event/sql"
+import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
+import { RelayHook } from "@orchestra/schema/relay-hook"
 
 // Actual gate, profile loader, Session, Permission and filesystem. Only account/network integrations are replaced;
 // no SDK query, model, policy port or sandbox wrapper is scripted. Each git instance has its own project profile.
@@ -430,5 +435,61 @@ describe("native gate real policy", () => {
     expect(duplicate.filter(Exit.isSuccess)).toHaveLength(1)
     expect(duplicate.filter(Exit.isFailure)).toHaveLength(1)
     yield* f.gate.release("duplicate")
+  }), { git: true }, 60_000)
+
+  // Claude Code's own tools meet the project's installed Relay hooks as the V1 tools boundary does: under Orchestra's
+  // tool name and project-relative path, a Block refuses before the call, an Ask reaches the native card, an After
+  // Remind comes back when the call settles, and every decision is durable for the hook's Activity.
+  it.instance("installed hooks run before and after Claude Code's own tools", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const bridge = yield* EventV2Bridge.Service
+    const permission = yield* Permission.Service
+    const database = yield* Database.Service
+    const binding = { data: Global.Path.data, projectID: f.session.projectID, principal: "user:test" }
+    yield* f.filesystem.ensureDir(MaestroArsenal.stateDirectory(Global.Path.data, f.session.projectID))
+    const step = (id: string, type: RelayHook.NodeType, parameters: Record<string, unknown>) =>
+      ({ id, name: id, type, position: [0, 0], parameters })
+    const hook = (name: string, event: string, steps: ReadonlyArray<ReturnType<typeof step>>) => ({
+      schema: "relay.hook.v1", name, binding: "host-required", installed: false,
+      nodes: [step("event", RelayHook.NodeType.trigger, { operation: event.split(".")[0], timing: event.split(".")[1] }), ...steps],
+      connections: steps.map((item, index) => ({ from: index === 0 ? "event" : steps[index - 1]!.id, port: 0, to: item.id })),
+    })
+    yield* Effect.forEach([
+      hook("No secrets", "write.before", [
+        step("secret", RelayHook.NodeType.condition, { field: "path", pattern: "secret/**" }),
+        step("block", RelayHook.NodeType.block, { message: "Keep secrets out." }),
+      ]),
+      hook("Changelog", "write.after", [step("note", RelayHook.NodeType.remind, { message: "Update the changelog." })]),
+      hook("Commands", "command.before", [step("ask", RelayHook.NodeType.approve, { message: "Confirm it." })]),
+    ], (snapshot) => Effect.acquireRelease(
+      RelayHookInstall.install({ ...binding, document: snapshot.name, version: "v1", snapshot,
+        sha256: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex") }),
+      (installed) => RelayHookInstall.uninstall({ ...binding, installID: installed.install.installID }).pipe(Effect.orDie, Effect.asVoid),
+    ), { discard: true })
+    // Decisions go through the host's event boundary, as in the desktop app.
+    const decide = (name: string, input: Record<string, unknown>, id?: string) =>
+      f.decide(name, input, id).pipe(Effect.provideService(EventV2.Service, bridge))
+    refused(yield* decide("Write", { file_path: "secret/key.txt", content: "x" }), "Blocked by hook 'No secrets': Keep secrets out.")
+    expect(yield* decide("Write", { file_path: "src/app.ts", content: "x" }, "hooked-write")).toEqual({ allow: true })
+    const pending = yield* Effect.forkScoped(decide("Bash", { command: "git status" }, "hooked-bash"))
+    const card = yield* pollWithTimeout(permission.list().pipe(Effect.map((requests) =>
+      requests.find((request) => request.metadata.action === "relay_hook"))), "hook Ask never reached the native card")
+    expect(card.metadata.message).toBe("Hook 'Commands' asks for approval: Confirm it.")
+    yield* permission.reply({ requestID: card.id, reply: "once" })
+    expect((yield* Fiber.join(pending)).allow).toBe(true)
+    expect(yield* f.gate.settle("hooked-write", true).pipe(Effect.provideService(EventV2.Service, bridge)))
+      .toEqual(["Hook 'Changelog': Update the changelog."])
+    // Settling ends the call's hook state; a call that failed runs no `after` hooks.
+    expect(yield* f.gate.settle("hooked-write", true)).toEqual([])
+    expect(yield* f.gate.settle("hooked-bash", false)).toEqual([])
+    const decisions = (yield* database.db.select().from(EventTable).all())
+      .filter((row) => row.type === EventV2.versionedType(RelayHook.Decided.type, 1))
+      .map((row) => Schema.decodeUnknownSync(RelayHook.Decided.data)(row.data))
+      .filter((decision) => decision.sessionID === f.session.id)
+    expect(decisions.map((item) => [item.action, item.outcome, item.trigger, item.tool, item.subject])).toEqual([
+      ["block", "blocked", "write.before", "write", "secret/key.txt"],
+      ["approve", "approved", "command.before", "bash", createHash("sha256").update("git status").digest("hex")],
+      ["remind", "reminded", "write.after", "write", "src/app.ts"],
+    ])
   }), { git: true }, 60_000)
 })

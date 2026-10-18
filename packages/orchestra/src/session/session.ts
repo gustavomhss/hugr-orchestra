@@ -552,17 +552,17 @@ const layer: Layer.Layer<
           },
           sessionStartOutput,
         )
-        // A plugin hook that throws dies inside `trigger`; log it like a hook failure instead of failing creation.
         .pipe(logHookFailure("session.start hook failed", result.id))
-
+      // Installed `session-start` hooks run beside the stored Session, as V2's do; creation never waits on them.
+      yield* PromptHost.record(result, "session-start").pipe(Effect.exit, Effect.forkDetach)
       // Creator-supplied keys win: a plugin may add metadata, never overwrite what the caller set.
       const added = Object.fromEntries(
         Object.entries(sessionStartOutput.metadata).filter(([key]) => !(key in (result.metadata ?? {}))),
       )
       if (Object.keys(added).length === 0) return result
-      const metadata = { ...result.metadata, ...added }
-      yield* patch(result.id, { metadata }).pipe(Effect.orDie)
-      return { ...result, metadata }
+      const next = { ...result, metadata: { ...result.metadata, ...added } } // not `patch`: no re-read of the new row
+      yield* events.publish(SessionV1.Event.Updated, { sessionID: result.id, info: next })
+      return next
     })
 
     const get = Effect.fn("Session.get")(function* (id: SessionID) {
@@ -655,7 +655,6 @@ const layer: Layer.Layer<
               sessionEndOutput)
             .pipe(
               Effect.timeout(5000),
-              Effect.catch((err) => Effect.logError("session.end hook failed or timed out", { sessionID, err })),
               logHookFailure("session.end hook failed or timed out", sessionID),
             )
         }

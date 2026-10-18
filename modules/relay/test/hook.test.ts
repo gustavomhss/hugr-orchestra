@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
+import { HookMatch } from "@orchestra/schema/hook-match"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import { HookEvaluate } from "../src/hook/evaluate"
 
@@ -495,6 +496,12 @@ describe("patterns", () => {
     expect(HookEvaluate.matches("command", "GIT PUSH*", "git push origin")).toBe(process.platform === "win32")
     expect(HookEvaluate.matches("tool", "Edit", "edit")).toBe(process.platform === "win32")
     expect(HookEvaluate.matches("path", "SRC/**", "src/a.ts")).toBe(false)
+  })
+
+  test("the shared matcher (the app's hook Test) folds case only when asked", () => {
+    expect(HookMatch.matches("command", "GIT PUSH*", "git push origin")).toBe(false)
+    expect(HookMatch.matches("command", "GIT PUSH*", "git push origin", true)).toBe(true)
+    expect(HookMatch.matches("path", "SRC/**", "src/a.ts", true)).toBe(false)
   })
 
   test("many stars against a long model-written command stay linear", () => {
