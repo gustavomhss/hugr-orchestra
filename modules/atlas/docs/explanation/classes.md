@@ -25,7 +25,7 @@ mistaken for ratified truth.
 Current upstream identity is `archie`, profile `upstream`, packaged assets `packages/archie-specialist`,
 config `agent.archie.name`; old-ID routing is not an active alias. The candidate/source-status evidence
 below predates this correction and does not qualify the renamed runtime. See
-[NAMING-CORRECTION.md](../../../../specs/upstream-specialist/NAMING-CORRECTION.md).
+[NAMING-CORRECTION.md](../../../../docs/specs/upstream-specialist/NAMING-CORRECTION.md).
 
 The upstream rows follow the target ownership in [TEAM.md](../TEAM.md). Native upstream registration, profile
 `upstream`, config/environment label resolution, packaged assets and the result card/projection are implemented
@@ -34,7 +34,7 @@ in unlanded candidate `ff3b57d4a6323a150949072d06ad379f666a65af`, not deployed o
 V2 application binding, Maestro planning transfer and W6 immutable publication/revision, actual upstream
 provenance and native approved-scope binding remain mandatory pending integration; real qualification
 remains pending. See the
-[Maestro/runtime handoff](../../../../specs/upstream-specialist/maestro-planning-handoff.md) for source pins.
+[Maestro/runtime handoff](../../../../docs/specs/upstream-specialist/maestro-planning-handoff.md) for source pins.
 This map grants no capability and is not semantic enforcement. The Memory column describes the foundation
 model, not installed memory for each row: the runtime Atlas Memory boundary supports only `backend`.
 

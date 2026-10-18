@@ -16,7 +16,7 @@ Maestro's existing tool catalog and host-authorized operations. Public package i
 
 The canonical integration semantics, persistence limits and verification scope live in
 [governance/HOST-BINDINGS.md](src/governance/HOST-BINDINGS.md). The current port contract is
-[arsenal-port.md](../../../specs/hugr-maestro/arsenal-port.md). Source attribution remains in
+[arsenal-port.md](../../../docs/specs/hugr-maestro/arsenal-port.md). Source attribution remains in
 `LICENSE`, `NOTICE` and the adaptation traces.
 
 ## Development

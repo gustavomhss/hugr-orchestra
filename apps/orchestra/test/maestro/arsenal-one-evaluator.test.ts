@@ -15,7 +15,7 @@ const scope = [
   "modules/maestro/arsenal/test",
   "packages/core/src",
   "modules/relay/src",
-  "specs/hugr-maestro",
+  "docs/specs/hugr-maestro",
 ]
 
 test("no source, test or doc names the removed Arsenal evaluator", () => {
@@ -33,7 +33,7 @@ test("no source, test or doc names the removed Arsenal evaluator", () => {
     "modules/maestro/arsenal/src/tools/relay-arm.ts",
     "modules/relay/src/arm/evaluate.ts",
     "modules/maestro/arsenal/src/governance/HOST-BINDINGS.md",
-    "specs/hugr-maestro/arsenal-port.md",
+    "docs/specs/hugr-maestro/arsenal-port.md",
   ])
     expect(files).toContain(path.join(repository, known))
   expect(files.length).toBeGreaterThan(500)

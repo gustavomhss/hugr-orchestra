@@ -69,7 +69,7 @@ describe("recorded floors", () => {
     expect(wrong).toEqual([])
   })
 
-  // The measured table (specs/backend-specialist/toolkit-floors.md): the highest requirements, by the binary that sets them.
+  // The measured table (docs/specs/backend-specialist/toolkit-floors.md): the highest requirements, by the binary that sets them.
   test("measured highs are recorded", () => {
     const { ENGINES, RUNTIMES } = BackendToolkitManifest
     expect(ENGINES["ast-grep"].floor["linux-x64"]).toEqual({ glibc: "2.34" })
