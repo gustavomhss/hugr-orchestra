@@ -68,6 +68,7 @@ function policyFocusFixture() {
     if (request.method !== "GET") throw new Error(`Unexpected policy focus mutation: ${request.method} ${path}`)
     if (path === "/api/actions/binding") return located([binding])
     if (path.endsWith("/capabilities")) return located([])
+    if (path === `/api/actions/workflow/${binding.id}`) return located({ items: [], capturedAt: 1 })
     if (path.endsWith("/policy")) return located({ binding: { id: binding.id, revision: binding.revision }, policy: { retentionDays: 17, execution: "Project default" } })
     if (path === `/api/actions/resource/${binding.id}`) return hydration.promise ?? located(page)
     throw new Error(`Unexpected policy focus request: ${path}`)

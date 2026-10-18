@@ -2,13 +2,13 @@ import type { JSX } from "solid-js"
 import type { Actions } from "@orchestra/schema/actions"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { Empty, Icon, Status } from "./components"
-import type { Data, State, ViewProps } from "./contract"
+import type { Data, ViewProps } from "./contract"
 import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
 import { canRequest } from "./request-policy"
 import { jobDuration, logAvailable, runArtifacts, runnerLabel } from "./output-views"
-import { join } from "./matrix"
+import { runJobs, runJoins } from "./run-joins"
 
 export function WorkflowDetail(props: ViewProps) {
   const workflow = createMemo(() => {
@@ -109,8 +109,7 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
   const attempt = () => model.state.route.attempt ?? props.run.attempt
   // "7 jobs · 15 executions": definitions from a graph at this run's commit, executions from a complete job page; unknown parts are omitted.
   const counts = createMemo(() => {
-    const graph = model.state.graph.status === "ready" ? model.state.graph.value : undefined
-    const definitions = graph && graph.source.bindingID === props.run.bindingID && graph.source.commit === props.run.commit ? graph.jobs.length : undefined
+    const definitions = runJoins(model.state).graph?.jobs.length
     const executions = knownCount(model.state.jobs, runJobs(model.state, props.run.id).length)
     return [definitions === undefined ? "" : definitions === 1 ? t("orchestra.actions.definitionCountOne") : t("orchestra.actions.definitionCount", { count: definitions }),
       executions === undefined ? "" : executions === 1 ? t("orchestra.actions.executionCountOne") : t("orchestra.actions.executionCount", { count: executions })]
@@ -181,7 +180,7 @@ function RunActions(props: { props: ViewProps; run: Actions.Run }) {
     <Show when={current()} fallback={<span class="mx-badge">{t("orchestra.actions.historicalAttempt")}</span>}>
       <Show when={!terminal()}><button type="button" class="mx-btn" disabled={!allowed("run.cancel")}
         onClick={() => props.props.model.dialog({ kind: "cancel", runID: props.run.id })}><Icon name="stop" />{t("orchestra.actions.stop")}</button></Show>
-      <Show when={failed() || retryFailed()}><button type="button" class="mx-btn primary" disabled={!retryFailed()} onClick={() => retry("failed")}>
+      <Show when={failed()}><button type="button" class="mx-btn primary" disabled={!retryFailed()} onClick={() => retry("failed")}>
         <Icon name="retry" />{t(github() ? "orchestra.actions.rerunFailed" : "orchestra.actions.retryFailed")}</button></Show>
       <Show when={github() && terminal()}><button type="button" class="mx-btn" disabled={!allowed("run.retry")} onClick={() => retry("all")}>
         <Icon name="retry" />{t("orchestra.actions.rerunAll")}</button></Show>
@@ -196,7 +195,7 @@ function JobHeader(props: { props: ViewProps; job: Actions.Job }) {
 }
 
 function JobFacts(props: { props: ViewProps; job: Actions.Job }) {
-  const joined = createMemo(() => definition(props.props.model.state, props.job))
+  const joined = createMemo(() => runJoins(props.props.model.state).jobs.get(props.job.id))
   return <dl class="mx-meta"><dt>{props.props.t("orchestra.actions.runner")}</dt><dd><bdi>{props.job.runner ?? props.props.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.props.t("orchestra.actions.definition")}</dt><dd dir="ltr">{joined()?.id ?? props.props.t("orchestra.actions.unjoined")}</dd></dl>
 }
 
@@ -210,15 +209,17 @@ function JobSteps(props: { props: ViewProps; job: Actions.Job }) {
 function JobList(props: { props: ViewProps; runID: string }) {
   const state = props.props.model.state
   const jobs = createMemo(() => runJobs(state, props.runID))
-  return <Show when={state.route.tab === "jobs"}><section class="collection-section detail-jobs"><h2 class="run-sr-only">{props.props.t("orchestra.actions.jobs")}</h2><Switch><Match when={state.jobs.status === "loading"}><p role="status">{props.props.t("orchestra.actions.loading")}</p></Match><Match when={state.jobs.status === "error"}><p role="alert">{props.props.t(state.jobs.error?.message ?? "orchestra.actions.unavailable")}</p></Match><Match when={!jobs().length}><Empty title={props.props.t("orchestra.actions.emptyJobs")} /></Match><Match when={jobs().length}><div class="mx-table"><For each={jobs()}>{(job) => <JobRow props={props.props} job={job} />}</For></div></Match></Switch><Show when={state.jobs.value?.next}><button type="button" class="mx-btn" onClick={() => void props.props.model.more("jobs")}>{props.props.t("orchestra.actions.more")}</button></Show></section></Show>
+  // One join per update for the whole list; rows look their definition up by job id.
+  const joins = createMemo(() => runJoins(state).jobs)
+  return <Show when={state.route.tab === "jobs"}><section class="collection-section detail-jobs"><h2 class="run-sr-only">{props.props.t("orchestra.actions.jobs")}</h2><Switch><Match when={state.jobs.status === "loading"}><p role="status">{props.props.t("orchestra.actions.loading")}</p></Match><Match when={state.jobs.status === "error"}><p role="alert">{props.props.t(state.jobs.error?.message ?? "orchestra.actions.unavailable")}</p></Match><Match when={!jobs().length}><Empty title={props.props.t("orchestra.actions.emptyJobs")} /></Match><Match when={jobs().length}><div class="mx-table"><For each={jobs()}>{(job) => <JobRow props={props.props} job={job} definition={joins().get(job.id)} />}</For></div></Match></Switch><Show when={state.jobs.value?.next}><button type="button" class="mx-btn" onClick={() => void props.props.model.more("jobs")}>{props.props.t("orchestra.actions.more")}</button></Show></section></Show>
 }
 
-function JobRow(props: { props: ViewProps; job: Actions.Job }) {
+function JobRow(props: { props: ViewProps; job: Actions.Job; definition?: Actions.GraphJob }) {
   const model = props.props.model
   const t = props.props.t
   // Needs are shown only when the job joins the graph definition at the run's commit; otherwise they are unknown, not empty.
-  // Needs are job keys, the same labels the graph nodes use; `name:` templates may hold unresolved expressions.
-  const needs = createMemo(() => definition(model.state, props.job)?.needs)
+  // They are job keys, the same labels the graph nodes use; `name:` templates may hold unresolved expressions.
+  const needs = () => props.definition?.needs
   return <div class="mx-row detail-job-row">
     <div class="mx-grow"><strong><button type="button" class="title-link" onClick={() => model.navigate({ ...model.state.route, view: "job", jobID: props.job.id })}><bdi>{props.job.name}</bdi></button></strong>
       <small><bdi>{runnerLabel(props.job, t)}</bdi><Show when={needs()}>{(list) => <> · {list().length ? t("orchestra.actions.jobNeeds", { jobs: list().join(", ") }) : t("orchestra.actions.noDependencies")}</>}</Show></small></div>
@@ -235,22 +236,6 @@ function JobRow(props: { props: ViewProps; job: Actions.Job }) {
 function knownCount(data: Data<{ readonly items: readonly unknown[]; readonly next?: string }>, owned: number) {
   const items = data.status === "ready" && !data.value?.next ? data.value?.items : undefined
   return items && items.length <= 100 && owned === items.length ? owned : undefined
-}
-
-function runJobs(state: State, runID: string) {
-  return state.jobs.value?.items.filter((item) => item.runID === runID && item.bindingID === state.binding?.id).slice(0, 100) ?? []
-}
-
-// The one place a native job is joined to its graph definition (job facts and job rows).
-function definition(state: State, job: Actions.Job) {
-  const graph = state.graph.status === "ready" ? state.graph.value : undefined
-  const run = state.run.status === "ready" ? state.run.value : undefined
-  const binding = state.binding
-  const workflow = state.workflows.value?.items.find((item) => item.id === run?.workflowID && item.bindingID === binding?.id)
-  // A partial graph (run-time matrix values) still declares every job key and its needs.
-  if (!(graph && graph.state !== "unresolved" && run && binding && workflow && job.runID === run.id && run.id === state.route.runID && job.bindingID === binding.id && run.bindingID === binding.id && graph.source.bindingID === binding.id && graph.source.path === workflow.path && graph.source.commit && graph.source.commit === run.commit && graph.source.ref === run.commit)) return undefined
-  const id = [...join(new Map(graph.jobs.map((item) => [item.id, item])), [job], binding.provider.kind === "github").keys()][0]
-  return graph.jobs.find((item) => item.id === id)
 }
 
 // Native title (GitHub display_title, GitLab pipeline name) and run number when the provider gives them.

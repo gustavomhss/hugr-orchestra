@@ -12,7 +12,8 @@ import { createActionsAPI } from "../actions/api"
 import { Empty, Icon, type IconName } from "../actions/components"
 import type { Model, Route, Translate, ViewProps } from "../actions/contract"
 import { navigationPreferences, readNavigation, resourceDialog, resourceLinks, selectedRoute, synchronizeNavigation, tabKeydown } from "../actions/entry-routing"
-import { join, label } from "../actions/matrix"
+import { label } from "../actions/matrix"
+import { runJobs, runJoins } from "../actions/run-joins"
 import { createActionsModel, type ActionsPreference } from "../actions/model"
 import { saveActionsResponse } from "../actions/save"
 import { canRequest } from "../actions/request-policy"
@@ -85,7 +86,7 @@ const CommandOutput = lazy(async () => {
 })
 const LocalPipelines = lazy(() => import("./cicd"))
 
-export default function Actions(props: ChapterPageProps) {
+export default function ActionsChapter(props: ChapterPageProps) {
   const language = useLanguage()
   const platform = usePlatform()
   const sdk = useServerSDK()
@@ -133,9 +134,7 @@ function Workbench(props: ChapterPageProps & {
     && item.id === (state.route.workflowID ?? (state.route.runID ? state.run.value?.workflowID : undefined))))
   const run = createMemo(() => state.run.status === "ready" && state.run.value && state.run.value.id === state.route.runID
     && state.run.value.bindingID === state.binding?.id ? state.run.value : undefined)
-  const jobs = createMemo(() => state.jobs.status === "ready" ? state.jobs.value?.items.filter((item) =>
-    item.bindingID === state.binding?.id && item.runID === state.route.runID
-    && (state.route.attempt === undefined || item.attempt === undefined || item.attempt === state.route.attempt)).slice(0, 100) ?? [] : [])
+  const jobs = createMemo(() => state.jobs.status === "ready" && state.route.runID ? runJobs(state, state.route.runID) : [])
   // `#<number>` when the provider numbers runs, otherwise the native id.
   const runLabel = () => {
     const value = run()
@@ -143,14 +142,13 @@ function Workbench(props: ChapterPageProps & {
   }
   // Jobs group by workflow definition once the run's graph is loaded (matrix executions counted); otherwise by name.
   const groups = createMemo(() => {
-    const graph = state.graph.status === "ready" ? state.graph.value : undefined
+    const joins = runJoins(state)
     const single = (job: Actions.Job) => ({ id: job.id, label: job.name, jobs: [job] })
-    if (!graph || graph.source.commit !== run()?.commit) return jobs().map(single)
-    const definitions = new Map(graph.jobs.map((job) => [job.id, job] as const))
-    const joined = join(definitions, jobs(), state.binding?.provider.kind === "github")
-    const grouped = new Set([...joined.values()].flat().map((job) => job.id))
-    return [...[...definitions.values()].flatMap((job) => joined.get(job.id)?.length ? [{ id: job.id, label: label(job), jobs: joined.get(job.id) ?? [] }] : []),
-      ...jobs().filter((job) => !grouped.has(job.id)).map(single)]
+    if (!joins.graph) return jobs().map(single)
+    return [...joins.graph.jobs.flatMap((definition) => {
+      const members = jobs().filter((job) => joins.jobs.get(job.id)?.id === definition.id)
+      return members.length ? [{ id: definition.id, label: label(definition), jobs: members }] : []
+    }), ...jobs().filter((job) => !joins.jobs.has(job.id)).map(single)]
   })
   // Count only what is known: a native total, or a list whose last page is loaded. A truncated page shows none.
   const loaded = (data: { status: string; value?: { items: readonly { bindingID: string }[]; next?: string; total?: number } }) =>

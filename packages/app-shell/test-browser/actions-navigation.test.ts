@@ -26,7 +26,7 @@ function fixture(query: Record<string, string>, preferences?: ActionsPreferences
     if (url.pathname.startsWith("/api/actions/workflow/")) return located(page([]))
     if (url.pathname.startsWith("/api/actions/run/")) return located(page([]))
     throw new Error(`Unexpected test route ${url.pathname}`)
-  }, { preconnect: globalThis.fetch.preconnect })
+  }, { preconnect() {} })
   const mounted: { model?: ReturnType<typeof createActionsModel> } = {}
   const api = createActionsAPI({ server: { type: "http", http: { url: "http://localhost:4096" } }, fetch, directory })
   const dispose = createRoot((dispose) => {

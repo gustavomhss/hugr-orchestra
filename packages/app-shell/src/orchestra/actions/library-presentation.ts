@@ -52,7 +52,7 @@ export function selectedFilter(filters: readonly { value: string }[], status: st
 }
 
 export function runIdentity(run: Actions.Run) {
-  return { title: run.title ?? run.name ?? run.id, number: run.number === undefined ? run.id : `#${run.number}` }
+  return { title: run.title || run.name || run.id, number: run.number === undefined ? run.id : `#${run.number}` }
 }
 
 export function workflowState(state: string): { filter: string; label?: Parameters<Translate>[0]; tone: string } {

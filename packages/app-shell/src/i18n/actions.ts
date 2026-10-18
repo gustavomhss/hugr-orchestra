@@ -238,7 +238,6 @@ export const dict = {
   "orchestra.actions.waiting": "Waiting",
   "orchestra.actions.canceled": "Canceled",
   "orchestra.actions.skipped": "Skipped",
-  "orchestra.actions.idle": "Idle",
   "orchestra.actions.default": "Default",
   "orchestra.actions.zoomIn": "Zoom in",
   "orchestra.actions.zoomOut": "Zoom out",

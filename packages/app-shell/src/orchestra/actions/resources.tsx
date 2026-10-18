@@ -1,6 +1,7 @@
 import type { Actions } from "@orchestra/schema/actions"
 import { For, Match, Show, Switch } from "solid-js"
 import { Empty, Icon } from "./components"
+import type { ActionKey } from "@/i18n/actions"
 import type { Model, State, Translate, ViewProps } from "./contract"
 import { bytes, relative } from "./format"
 import { ArtifactRow } from "./output-views"
@@ -341,7 +342,7 @@ function Meta(p: RP & { kind: Kind; resource: Item; data: Data; status: string; 
   if (p.kind === "caches") return <><strong>{bytes(amount(p.data.sizeInBytes) ?? amount(p.data.size))}</strong><small>{p.t("orchestra.actions.lastUsed", { age: relative(text(p.data, "lastAccessedAt") || text(p.data, "age")) })}</small></>
   // A schedule whose workflow could not be read keeps its row and states the problem there.
   if (p.kind === "schedules" && unreadable(p.data, p.resource.status))
-    return <><strong>{p.t("orchestra.actions.scheduleUnreadable")}</strong><small><bdi>{problem(p.data)}</bdi></small></>
+    return <><strong>{p.t("orchestra.actions.scheduleUnreadable")}</strong><small><bdi>{scheduleProblem(p.data, p.t)}</bdi></small></>
   const owner = p.resource.owner || text(p.data, "owner") || text(p.data, "actor")
   if (p.kind === "schedules" && p.state.binding?.provider.kind === "github") {
     return <><code dir="ltr">{text(p.data, "ref")}</code><small>{p.t("orchestra.actions.defaultBranchWorkflowSource")}</small></>
@@ -386,6 +387,18 @@ function sensitive(r: Item, d: Data) { return r.sensitive === true || text(d, "t
 // A workflow whose YAML could not be read keeps its row; the problem replaces cron and ref.
 function unreadable(d: Data, status?: string) { return d.unreadable === true || status === "Unreadable" || Boolean(problem(d)) }
 function problem(d: Data) { return text(d, "problem") || text(d, "error") || text(json(d.error), "message") }
+// Core's problem text is an English diagnostic; known kinds read as translated copy.
+function scheduleProblem(d: Data, t: Translate) {
+  const kind = text(d, "problemKind")
+  return Object.hasOwn(scheduleProblems, kind) ? t(scheduleProblems[kind]) : problem(d)
+}
+const scheduleProblems: Record<string, ActionKey> = {
+  not_found: "orchestra.actions.scheduleProblem.not_found",
+  source_unresolved: "orchestra.actions.scheduleProblem.source_unresolved",
+  source_conflict: "orchestra.actions.scheduleProblem.source_conflict",
+  metadata_truncated: "orchestra.actions.scheduleProblem.metadata_truncated",
+  invalid_input: "orchestra.actions.scheduleProblem.invalid_input",
+}
 function amount(value: unknown) { return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined }
 function json(value: unknown): Data { return isData(value) ? value : {} }
 function isData(value: unknown): value is Data { return typeof value === "object" && value !== null && !Array.isArray(value) }
