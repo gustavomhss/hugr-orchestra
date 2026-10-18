@@ -10,7 +10,7 @@ const mode = process.env.ORCHESTRA_UPSTREAM_DRIFT
 if (!snapshot || !marker) throw new Error("UPSTREAM_DRIFT_FIXTURE_PLACEMENT_MISSING")
 if (mode !== "missing" && mode !== "nonpure") throw new Error("UPSTREAM_DRIFT_FIXTURE_MODE_INVALID")
 
-const source = path.resolve(import.meta.dirname, "../../../maestro-arsenal/src")
+const source = path.resolve(import.meta.dirname, "../../../../modules/maestro/arsenal/src")
 await fs.cp(source, path.join(snapshot, "src"), { recursive: true })
 const file = path.join(snapshot, "src/registry.ts")
 const original = await Bun.file(file).text()
@@ -41,7 +41,7 @@ plugin({
   name: "upstream-arsenal-package-source-snapshot",
   setup(build) {
     // Load copied, narrowly changed bytes at the actual package registry path; all other modules stay real.
-    build.onLoad({ filter: /[\\/]maestro-arsenal[\\/]src[\\/]registry\.ts$/ }, () => ({
+    build.onLoad({ filter: /[\\/]modules[\\/]maestro[\\/]arsenal[\\/]src[\\/]registry\.ts$/ }, () => ({
       loader: "ts",
       contents: registry,
     }))

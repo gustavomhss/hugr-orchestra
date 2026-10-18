@@ -5,8 +5,8 @@ import { ChildProcess } from "effect/unstable/process"
 import { Omni } from "../src/omni"
 import { OmniSpawner } from "../src/omni-spawner"
 import os from "node:os"
-import { ROOT, until } from "../../omni/campaign/lib"
-import { run } from "../../omni/campaign/v7-overhead"
+import { ROOT, until } from "../../../native/omni/campaign/lib"
+import { run } from "../../../native/omni/campaign/v7-overhead"
 
 // Dedicated hosted proof: excluded from ordinary Bun suffix discovery, selected by its exact path.
 test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown", async () => {
@@ -38,7 +38,7 @@ test("macOS V7 completes 1000 paced pairs and rejects measured caller slowdown",
 
 test("V7 rejects malformed pacing flags before any timing acceptance", async () => {
   for (const args of [["--idle-ms"], ["--idle-ms="], ["--idle-ms= "], ["--idle-ms=5\n"], ["--idle-ms=NaN"], ["--idle-ms=1", "--idle-ms=2"]]) {
-    const proc = Bun.spawn([process.execPath, path.join(ROOT, "packages/omni/campaign/v7-overhead.ts"), ...args], {
+    const proc = Bun.spawn([process.execPath, path.join(ROOT, "native/omni/campaign/v7-overhead.ts"), ...args], {
       cwd: ROOT, stdout: "pipe", stderr: "pipe", timeout: 10_000,
     })
     const [stdout, stderr, code] = await Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])

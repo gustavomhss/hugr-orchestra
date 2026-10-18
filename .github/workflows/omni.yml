@@ -1,7 +1,7 @@
 name: omni
 
-# hugr-omni's own gate (packages/omni/scripts/ci.mjs) on Linux, Windows and macOS. It runs on pushes to dev that touch
-# packages/omni, on pull requests that touch packages/omni (and when the epic label is added to one), and by hand. Orchestra's
+# hugr-omni's own gate (native/omni/scripts/ci.mjs) on Linux, Windows and macOS. It runs on pushes to dev that touch
+# native/omni, on pull requests that touch native/omni (and when the epic label is added to one), and by hand. Orchestra's
 # test guard does not apply to it.
 on:
   push:
@@ -9,10 +9,12 @@ on:
       - dev
     paths:
       - "packages/omni/**"
+      - "native/omni/**"
   pull_request:
     types: [opened, synchronize, reopened, labeled]
     paths:
       - "packages/omni/**"
+      - "native/omni/**"
       - ".github/workflows/omni.yml"
   workflow_dispatch:
     inputs:
@@ -50,7 +52,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: packages/omni
+        working-directory: native/omni
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -69,7 +71,7 @@ jobs:
       - name: Rust cache
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: packages/omni -> target
+          workspaces: native/omni -> target
           save-if: ${{ github.ref == 'refs/heads/dev' }}
 
       - name: Linux PID-reuse test needs unprivileged user namespaces

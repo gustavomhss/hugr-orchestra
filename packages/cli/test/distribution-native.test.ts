@@ -11,7 +11,7 @@ import { requireDistributionHost } from "./fixture/distribution-host"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 
 // Native qualification only. Hosted test-ci supplies installed build dependencies
-// and real packages/omni/target/release companions through omni-binaries action.
+// and real native/omni/target/release companions through omni-binaries action.
 // No synthetic native headers, spawner-off bypass, provider, brew or makepkg proof.
 // Reach: compiled skill bundle vs captured source bytes, isolated HOME/cwd/cache.
 // Checkout remains readable: this does not qualify a source-inaccessible OS sandbox.

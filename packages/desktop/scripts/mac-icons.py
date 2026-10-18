@@ -67,7 +67,7 @@ def main():
     parser.add_argument("--preview-dir", type=Path, help="Save 16–1024 px PNG previews outside the asset folders")
     args = parser.parse_args()
     desktop = Path(__file__).resolve().parents[1]
-    source = desktop.parent / "app/public/orchestra/hugr-symbol-inverse.svg"
+    source = desktop.parent / "app-shell/public/orchestra/hugr-symbol-inverse.svg"
     if hashlib.sha256(source.read_bytes()).hexdigest() != SOURCE_HASH:
         raise ValueError("Official inverse symbol hash changed; obtain brand approval before regenerating")
 

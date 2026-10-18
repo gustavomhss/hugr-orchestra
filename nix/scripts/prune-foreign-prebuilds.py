@@ -28,7 +28,13 @@ def main():
     root, system = Path(sys.argv[1]).resolve(), sys.argv[2]
     require(system in HOSTS, "UNSUPPORTED_SYSTEM")
     host = HOSTS[system]
-    trees = [root / "node_modules"] + [path for path in (root / "packages").glob("*/node_modules") if path.is_dir()]
+    trees = [root / "node_modules"] + [
+        path
+        # The same workspace roots nix/orchestra.nix and nix/desktop.nix walk after copying node_modules.
+        for pattern in ("packages/*", "apps/*", "modules/*", "modules/*/*", "tooling/*")
+        for path in root.glob(f"{pattern}/node_modules")
+        if path.is_dir()
+    ]
     require(trees[0].is_dir(), "DEPENDENCY_SOURCE_MISSING")
     removed, retained = [], []
     for tree in trees:

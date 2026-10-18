@@ -29,7 +29,7 @@ const root = path.resolve(import.meta.dir, "../../..")
 // Files that drive the surface but declare no spawn, each with its reason. Shrink-only: a stale entry fails.
 const ledger: Record<string, string> = {
   "packages/core/test/omni-campaign-inventory.test.ts":
-    "tests the omni campaign's process inventory; it reaches the surface only through packages/omni/campaign helpers, and its own processes start through node:child_process",
+    "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
     "unit tests of the loader, the counters (which it takes back) and the verdict; its process-tree case spawns through node:child_process on purpose",
   "packages/desktop/src/main/omni-appcontainer.test.ts":

@@ -5,7 +5,7 @@ import { SeatSkillRoot } from "@/maestro/seat-skill-root"
 import { backendSkills } from "@/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
 
-const SOURCE = path.resolve(import.meta.dir, "../../../backend-specialist/skills")
+const SOURCE = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
 
 describe("backend skill root", () => {
   test("running from source resolves the authored tree in place", async () => {

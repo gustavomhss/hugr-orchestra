@@ -7,7 +7,7 @@ import type { Session, ToolPart } from "@orchestra/sdk/v2"
 if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {
   test("real Solid DOM Lean metrics", async () => {
     const child = Bun.spawn([
-      process.execPath, "--conditions=browser", "test", "--preload", "../app/happydom.ts", import.meta.path,
+      process.execPath, "--conditions=browser", "test", "--preload", "../app-shell/happydom.ts", import.meta.path,
     ], { env: { ...process.env, LEAN_TOOL_METRICS_DOM: "1" }, stdout: "pipe", stderr: "pipe" })
     const [stdout, stderr, code] = await Promise.all([
       new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited,

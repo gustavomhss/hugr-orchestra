@@ -25,14 +25,14 @@ import { TARGETS } from "../src/backend-toolkit/target"
 const PACKS = path.join(import.meta.dir, "../src/backend-toolkit/packs")
 const RECIPES = path.join(
   import.meta.dir,
-  "../../backend-specialist/skills/backend-implement/references/recipes/external",
+  "../../../modules/specialists/backend/skills/backend-implement/references/recipes/external",
 )
-const SKILLS = (await readdir(path.resolve(import.meta.dir, "../../backend-specialist/skills"), { withFileTypes: true }))
+const SKILLS = (await readdir(path.resolve(import.meta.dir, "../../../modules/specialists/backend/skills"), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory()).map((entry) => entry.name).toSorted()
 if (SKILLS.length === 0) throw new Error("No packaged backend entry skills")
 await Promise.all(SKILLS.map(async (name) => {
   if (!/^backend-[a-z]+(?:-[a-z]+)*$/.test(name)) throw new Error(`Invalid backend entry skill directory: ${name}`)
-  const skill = matter(await readFile(path.resolve(import.meta.dir, "../../backend-specialist/skills", name, "SKILL.md"), "utf8"))
+  const skill = matter(await readFile(path.resolve(import.meta.dir, "../../../modules/specialists/backend/skills", name, "SKILL.md"), "utf8"))
   if (skill.data.name !== name) throw new Error(`Backend entry skill name mismatch: ${name}`)
 }))
 
@@ -63,7 +63,7 @@ if (!valid) {
   if (!SKILLS.includes(skill)) throw new Error(`Unknown backend entry skill: ${skill}`)
 })
 await writeFile(path.resolve(import.meta.dir, "../src/backend-toolkit/entry-skills.gen.ts"), [
-  "// Generated from packages/backend-specialist/skills by script/toolkit-pack.ts skills.",
+  "// Generated from modules/specialists/backend/skills by script/toolkit-pack.ts skills.",
   "export const ENTRY_SKILLS = [",
   ...SKILLS.map((skill) => `  ${JSON.stringify(skill)},`),
   "] as const",

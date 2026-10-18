@@ -57,8 +57,9 @@ test.each(["bun", "node"] as const)("%s whole native registry and Maestro Task/p
   const deadline = performance.now() + 110000
   await using tmp = await tmpdir()
   const packageRoot = path.resolve(import.meta.dir, "../..")
-  // Keep relocation inside the fixture: Seats.skillSource walks four parents from the packaged module.
-  const outdir = path.join(tmp.path, "install/packages/orchestra/dist/node")
+  // Keep relocation inside the fixture: Seats.skillSource walks up to five parents from the packaged module
+  // (four to a sibling specialist package, five to modules/specialists).
+  const outdir = path.join(tmp.path, "install/root/packages/orchestra/dist/node")
   await fs.mkdir(outdir, { recursive: true })
   const bundle = path.join(outdir, target === "bun" ? `packaged-proof${process.platform === "win32" ? ".exe" : ""}` : "packaged-proof.mjs")
   const defines = {

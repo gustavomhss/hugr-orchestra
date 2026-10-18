@@ -1,9 +1,9 @@
 name: omni-mirror
 
-# Publishes packages/omni to its read-only GitHub mirror, github.com/gustavomhss/hugr-omni
+# Publishes the commit's Omni tree to its read-only GitHub mirror, github.com/gustavomhss/hugr-omni
 # (packages/omni/skills/omni-release/references/mirror.md).
-# - A push to dev that touches packages/omni: script/omni-mirror.sh replays dev's first-parent commits that change
-#   packages/omni onto the mirror's main (one mirror commit each, deterministic, with an Orchestra-Commit trailer) and
+# - A push to dev that touches packages/omni or native/omni: script/omni-mirror.sh replays first-parent tree changes
+#   onto the mirror's main (one mirror commit each, deterministic, with an Orchestra-Commit trailer) and
 #   pushes fast-forward only, never forced. A mirror that has a commit Orchestra does not turns the job red. The gate is
 #   not run again here: omni.yml runs it on the same push on three OSes.
 # - A tag omni-v<version>: the mirror's tag v<version> points at the mirror commit made from the tagged commit, once
@@ -17,6 +17,7 @@ on:
       - "omni-v*"
     paths:
       - "packages/omni/**"
+      - "native/omni/**"
       - ".github/workflows/omni-mirror.yml"
       - "script/omni-mirror.sh"
   # By hand, to publish dev's current split after a failed run.
@@ -64,7 +65,7 @@ jobs:
             echo "GIT_SSH_COMMAND=ssh -o StrictHostKeyChecking=yes"
           } >> "$GITHUB_ENV"
 
-      # Replays dev's first-parent commits that change packages/omni onto the mirror's main, fast-forward only; a tag
+      # Replays dev's first-parent Omni tree changes onto the mirror's main, fast-forward only; a tag
       # points at the mirror commit made from the tagged commit. The script refuses a mirror that has a commit
       # Orchestra does not.
       - name: Publish to the mirror
