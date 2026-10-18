@@ -272,6 +272,7 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
   } & Record<string, unknown>
   expect(Object.keys(body).toSorted()).toEqual([
     "connections",
+    "description",
     "expectedChecksum",
     "name",
     "nodeGroups",
