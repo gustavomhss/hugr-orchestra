@@ -21,6 +21,7 @@ import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, emptiedPhases, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
+import { workflowFile } from "./import"
 import { HookActivity, TestDialog } from "./hook-activity"
 import { installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
@@ -362,7 +363,10 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (!draft.active()) return
     if (save.dirty || save.state !== "saved") throw new Error(save.error || copy.t("orchestra.workflows.export.unsaved"))
     const version = base().versionId
-    const value = await props.source.client.definition(props.id)
+    // A workflow downloads as its authoring document (Import reads it); a hook keeps its compiled export.
+    const value = kind === "workflow"
+      ? workflowFile({ ...base(), description: description(), ...documentFields(flow()) })
+      : await props.source.client.definition(props.id)
     if (!value || !draft.active()) return
     if (save.dirty || save.state !== "saved" || base().versionId !== version)
       throw new Error(copy.t("orchestra.workflows.export.unsaved"))
