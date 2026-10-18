@@ -42,8 +42,8 @@ export function SessionHeader() {
     return getFilename(projectDirectory())
   })
   const hotkey = createMemo(() => command.keybind("file.open"))
-  const search = settings.visibility.search
-  const status = settings.visibility.status
+  const search = settings.general.showSearch
+  const status = settings.general.showStatus
   const isDesktop = createMediaQuery("(min-width: 768px)")
 
   const toggleTerminal = () => {

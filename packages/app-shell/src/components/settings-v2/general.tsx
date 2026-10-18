@@ -533,14 +533,6 @@ export const SettingsGeneralV2: Component<{
         <DisplaySection />
 
         <AdvancedSection />
-
-        <Show when={settings.general.layoutTransitionAvailable()}>
-          <InterfaceSection />
-        </Show>
-
-        <Show when={settings.general.newInterfaceNoticeVisible()}>
-          <InterfaceNoticeSection />
-        </Show>
       </div>
     </>
   )
