@@ -625,7 +625,9 @@ export namespace Task {
   export type WorkflowReviewHeld = typeof WorkflowReviewHeld.Type
 
   // A workflow arm moved from an execution Session that never ran a provider turn (`from`, whose own WorkflowBound
-  // record stays) to the dispatched child that binds it next (`to`). Durable only, not public.
+  // record stays and which never takes the arm again) to the child that took it (`executionSessionID`). The authority
+  // fields name the Task call that moved it. A move that stopped before its record (a crash) is recorded later by
+  // another call, named in `recoveredBy` instead, since the moving call is no longer known. Durable only, not public.
   export const WorkflowRebound = Event.define({
     type: "maestro.task.workflow_rebound",
     durable: { version: 1, aggregate: "executionSessionID" },
@@ -633,8 +635,12 @@ export namespace Task {
       executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
       from: RelayArm.WorkflowBinding.fields.executionSessionID,
       token: RelayArm.Token,
-      authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
-      authorityCallID: Schema.NonEmptyString,
+      authorityMessageID: Schema.optional(RelayArm.WorkflowSettlement.fields.assistantMessageID),
+      authorityCallID: Schema.optional(Schema.NonEmptyString),
+      recoveredBy: Schema.optional(Schema.Struct({
+        authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+        authorityCallID: Schema.NonEmptyString,
+      })),
     },
   })
   export type WorkflowRebound = typeof WorkflowRebound.Type

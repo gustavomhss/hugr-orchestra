@@ -138,7 +138,7 @@ export const TaskTool = Tool.define(
     const config = yield* Config.Service
     const sessions = yield* Session.Service
     const research = yield* Effect.serviceOption(ResearchExecution.Service)
-    const status = yield* Effect.serviceOption(SessionStatus.Service)
+    const status = yield* SessionStatus.Service
     const researchRecords = yield* Effect.serviceOption(ResearchRecords.Service)
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
@@ -462,8 +462,7 @@ export const TaskTool = Tool.define(
       }).pipe(Effect.provideService(WorkflowBinding.Activity, (executionSessionID) => Effect.gen(function* () {
         // A child counts as running while its Task job runs or its Session is busy or retrying in this process.
         if ((yield* background.get(executionSessionID))?.status === "running") return true
-        if (Option.isNone(status)) return false
-        return (yield* status.value.get(SessionID.make(executionSessionID))).type !== "idle"
+        return (yield* status.get(SessionID.make(executionSessionID))).type !== "idle"
       })))
 
       if (params.governed) {

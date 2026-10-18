@@ -4,7 +4,7 @@ import path from "node:path"
 import { randomUUID } from "node:crypto"
 import { rmSync } from "node:fs"
 import { isDeepStrictEqual } from "node:util"
-import { lstat, mkdir, readdir, rename, rmdir, writeFile } from "node:fs/promises"
+import { lstat, mkdir, readdir, rename, rm, rmdir, writeFile } from "node:fs/promises"
 import { Effect, Option, Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { RelaySprint } from "@orchestra/schema/relay-sprint"
@@ -90,6 +90,8 @@ export const create = (
 
 // The files `create` writes. An arm holding anything else has been graded, positioned, released or is running.
 const CREATED = new Set<string>([RelayArm.Files.agentID, RelayArm.Files.meta, RelayArm.Files.sprint])
+// The staging files `replace` writes before its rename.
+const STAGING = /^\.(?:meta\.json|agent_id)~[0-9a-f-]{36}$/
 
 /**
  * Moves a workflow arm that has graded nothing from the execution Session `from` to the one in `input` (TS-only; a
@@ -119,7 +121,10 @@ export const rebind = (
       const holder = Option.getOrUndefined(yield* ArmState.read(target, RelayArm.Files.agentID))
       if (holder === input.agentID && equal(Option.some(yield* existingBytes(target)), meta)) return "unchanged" as const
       const entries = yield* io(target, () => readdir(target))
-      if (entries.some((name) => !CREATED.has(name) && name !== RelayArm.Files.runLock) ||
+      // A rebind that died between its write and its rename leaves its staging file; under the lock it is only debris.
+      const staged = entries.filter((name) => STAGING.test(name))
+      yield* Effect.forEach(staged, (name) => io(target, () => rm(path.join(target, name), { force: true })), { discard: true })
+      if (entries.some((name) => !CREATED.has(name) && name !== RelayArm.Files.runLock && !STAGING.test(name)) ||
         !Buffer.from(loaded.sprintBytes).equals(sprint) || (holder !== input.from && holder !== input.agentID) ||
         !loaded.meta.workflow || !input.meta.workflow ||
         ![input.from, input.agentID].includes(loaded.meta.session_id ?? "") ||

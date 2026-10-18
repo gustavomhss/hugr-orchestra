@@ -259,19 +259,20 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
  * and before its child's first provider turn (a pre-model check, a crash), leaving the content-addressed arm bound to
  * a child that did nothing; the identical re-arm returns the same token, so only a move frees it.
  *
- * "Never ran" is read from durable facts only: no reply of that child carries a finish or any part, in either message
- * store, and no code-review hold was recorded for it. The prompt loop persists an empty reply before the pre-model
- * check, so the reply's existence proves nothing; a provider turn writes a part or a finish before any tool runs, and
- * a reply that held for a review (the one settlement that leaves the arm untouched) recorded the hold. A child that
- * runs in this process right now (Activity) counts as having run, since its first output may not be written yet.
- * Relay then moves the arm only if it graded nothing and is held by that child (ArmCreate.rebind).
+ * The guarantee is the holder check at every turn, not this one: every provider turn of a bound child reads its step
+ * first (RelayWorkflowSession.current), and RelayWorkflowCurrentStep.read refuses a child that is not the arm's holder,
+ * so a child the arm moved away from, in any process or on any later wake, never calls the model again on it.
+ * ranProviderTurn is only the best-effort courtesy of not taking the arm from a child that produced output or runs in
+ * this process now: no reply of that child carries a finish or any part (the prompt loop persists an empty reply before
+ * the pre-model check, so a reply's existence proves nothing), no code-review hold was recorded for it, and Activity
+ * says it is not running. Relay then moves the arm only if it graded nothing and is held by that child (ArmCreate.rebind).
  *
- * Each move is recorded as WorkflowRebound on the child that took the arm, by the dispatch that records it; the old
- * child's WorkflowBound stays, and its binding no longer matches the arm. The arm's `agent_id` is the holder, and
- * recordedHolder is the holder Orchestra's records leave. They differ only when a move
- * stopped between Relay and its record, so every dispatch that reaches here first records that move. The record
- * converges in any order: a retry of the same authorization reaches the same child (Dispatch.childSessionID), finds the
- * arm already its own (`create` is unchanged) and only records it; another authorization records it, then moves on.
+ * Moves only go forward: a child moved from never takes the arm again. Each move is recorded as WorkflowRebound on the
+ * child that took the arm; the old child's WorkflowBound stays. The arm's `agent_id` is the holder, and `records` reads
+ * the holder Orchestra recorded. They differ only when a move stopped between Relay and its record, so every dispatch
+ * that reaches here records that move first, as its `recoveredBy`. A retry of the same authorization reaches the same
+ * child (Dispatch.childSessionID), finds the arm already its own (`create` is unchanged) and only records it; another
+ * authorization records it, then moves the arm on.
  */
 const moveArm = Effect.fn("WorkflowBinding.moveArm")(function* (input: {
   readonly token: RelayArm.Token
@@ -281,15 +282,17 @@ const moveArm = Effect.fn("WorkflowBinding.moveArm")(function* (input: {
   readonly conflict: boolean
 }) {
   const held = Option.getOrUndefined(yield* input.relay.holder(input.token))
-  const recorded = yield* recordedHolder(input.token)
-  if (held && recorded && held !== recorded) yield* recordMove({ ...input, from: recorded, to: held })
+  const recorded = yield* records(input.token)
+  if (held && recorded.holder && held !== recorded.holder && !recorded.movedFrom.has(held))
+    yield* recordMove({ ...input, from: recorded.holder, to: held, recovered: true })
   if (!input.conflict) return
-  if (!held || held === input.arm.agentID) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
+  if (!held || held === input.arm.agentID || recorded.movedFrom.has(input.arm.agentID))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
   if (yield* ranProviderTurn(held))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH",
       detail: `This arm is bound to Task session ${held}, which ran or is running. Arm a new contract for this Task.` })
   yield* input.relay.rebind({ ...input.arm, from: held })
-  yield* recordMove({ ...input, from: held, to: input.arm.agentID })
+  yield* recordMove({ ...input, from: held, to: input.arm.agentID, recovered: false })
 })
 
 /**
@@ -300,39 +303,41 @@ export const Activity = Context.Reference<(executionSessionID: string) => Effect
   "@orchestra/WorkflowBinding/Activity", { defaultValue: () => () => Effect.succeed(true) })
 
 /**
- * The execution Session Orchestra recorded as holding this token: bound or moved to, and never moved from. Event `seq`
- * orders one aggregate only and each record lives on its own child, so the holder is read off the move graph, not by
- * recency. Anything but exactly one such Session is no recorded holder.
+ * The token's bindings and moves. Since a child moved from never takes the arm again, the holder Orchestra recorded is
+ * the single child bound or moved to that was never moved from; anything else is no recorded holder.
  */
-const recordedHolder = Effect.fn("WorkflowBinding.recordedHolder")(function* (token: string) {
+const records = Effect.fn("WorkflowBinding.records")(function* (token: string) {
   const database = yield* Database.Service
   const rows = yield* database.db.select({ data: EventTable.data }).from(EventTable).where(and(
     inArray(EventTable.type, [EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1),
       EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)]),
     sql`json_extract(${EventTable.data}, '$.token') = ${token}`,
   )).all().pipe(Effect.orDie)
-  const records = rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(Schema.Struct({
+  const decoded = rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(Schema.Struct({
     executionSessionID: Schema.String, from: Schema.optional(Schema.String) }))(row.data)))
-  const moved = new Set(records.flatMap((record) => record.from === undefined ? [] : [record.from]))
-  const holders = [...new Set(records.map((record) => record.executionSessionID))].filter((id) => !moved.has(id))
-  return holders.length === 1 ? holders[0] : undefined
+  const movedFrom = new Set(decoded.flatMap((record) => record.from === undefined ? [] : [record.from]))
+  const holders = [...new Set(decoded.map((record) => record.executionSessionID))].filter((id) => !movedFrom.has(id))
+  return { holder: holders.length === 1 ? holders[0] : undefined, movedFrom }
 })
 
+// `recovered`: this call records a move it did not make, so it is named as the recorder, not as the mover.
 const recordMove = Effect.fn("WorkflowBinding.recordMove")(function* (input: {
   readonly token: RelayArm.Token
   readonly dispatch: Dispatch
   readonly from: string
   readonly to: string
+  readonly recovered: boolean
 }) {
   const database = yield* Database.Service
   const id = EventV2.ID.make(`evt_maestro_workflow_rebound_${createHash("sha256")
     .update(JSON.stringify([input.token, input.from, input.to])).digest("hex")}`)
   const stored = database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
   if (yield* stored) return
+  const authority = { authorityMessageID: SessionMessage.ID.make(input.dispatch.assistantMessageID),
+    authorityCallID: input.dispatch.callID }
   const events = yield* EventV2Bridge.Service
   yield* events.publish(MaestroEvent.Task.WorkflowRebound, { executionSessionID: SessionID.make(input.to),
-    from: SessionID.make(input.from), token: input.token,
-    authorityMessageID: SessionMessage.ID.make(input.dispatch.assistantMessageID), authorityCallID: input.dispatch.callID },
+    from: SessionID.make(input.from), token: input.token, ...(input.recovered ? { recoveredBy: authority } : authority) },
   { id }).pipe(Effect.catchCause((cause) => stored.pipe(Effect.flatMap((found) => found ? Effect.void : Effect.failCause(cause)))))
 })
 

@@ -27,7 +27,11 @@ export const read = Effect.fn("RelayWorkflowCurrentStep.read")(function* (
   const loaded = yield* ArmLoad.arm(arm)
   if (!isDeepStrictEqual(loaded.meta.workflow, binding) ||
     loaded.meta.project_id !== binding.definition.publication.projectID ||
-    loaded.meta.session_id !== binding.executionSessionID)
+    loaded.meta.session_id !== binding.executionSessionID ||
+    // The holder is checked on every read, and every provider turn of a bound child reads its step first, so a child
+    // the arm moved away from (ArmCreate.rebind) is refused before its next model call, in any process. Host-made arms
+    // always record a holder; an arm without one is held by its meta alone.
+    Option.exists(yield* ArmState.read(arm, RelayArm.Files.agentID), (holder) => holder !== binding.executionSessionID))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
   if (RelayWorkflowBinding.digest(loaded.sprintBytes) !== binding.definition.materialization.digest ||
     loaded.sprintBytes.length !== binding.definition.materialization.byteLength)

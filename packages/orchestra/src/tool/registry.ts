@@ -80,6 +80,7 @@ import { Skill } from "../skill"
 import { Permission } from "@/permission"
 import { BackgroundJob } from "@/background/job"
 import { BackgroundProcess } from "@/background/process"
+import { SessionStatus } from "@/session/status"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
@@ -764,6 +765,7 @@ export const node = LayerNode.make({
     SessionStore.node,
     BackgroundJob.node,
     BackgroundProcess.node,
+    SessionStatus.node,
     Provider.node,
     LSP.node,
     Instruction.node,
