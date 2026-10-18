@@ -168,11 +168,12 @@ export default {
     },
     {
       filetype: "vue",
-      wasm: "https://github.com/anomalyco/tree-sitter-vue/releases/download/v0.1.2/tree-sitter-vue.wasm",
+      // Mirrored from tree-sitter-vue v0.1.2 (MIT); see the release notes for sources and sha256.
+      wasm: "https://github.com/gustavomhss/hugr-orchestra/releases/download/tree-sitter-grammars-v1/tree-sitter-vue.wasm",
       queries: {
         highlights: [
-          "https://raw.githubusercontent.com/anomalyco/tree-sitter-vue/v0.1.2/queries/html_tags/highlights.scm",
-          "https://raw.githubusercontent.com/anomalyco/tree-sitter-vue/v0.1.2/queries/vue/highlights.scm",
+          "https://github.com/gustavomhss/hugr-orchestra/releases/download/tree-sitter-grammars-v1/vue-html_tags-highlights.scm",
+          "https://github.com/gustavomhss/hugr-orchestra/releases/download/tree-sitter-grammars-v1/vue-highlights.scm",
         ],
       },
     },
@@ -251,8 +252,8 @@ export default {
     },
     {
       filetype: "clojure",
-      // temporarily using fork to fix issues
-      wasm: "https://github.com/anomalyco/tree-sitter-clojure/releases/download/v0.0.1/tree-sitter-clojure.wasm",
+      // Mirrored from a patched fork of clj-commons/tree-sitter-clojure v0.0.1 (CC0-1.0).
+      wasm: "https://github.com/gustavomhss/hugr-orchestra/releases/download/tree-sitter-grammars-v1/tree-sitter-clojure.wasm",
       queries: {
         highlights: [
           "https://raw.githubusercontent.com/nvim-treesitter/nvim-treesitter/refs/heads/master/queries/clojure/highlights.scm",
