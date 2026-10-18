@@ -51,7 +51,7 @@ ClaudeEngineFixture.it.instance("production host qualifies Jimmy's own retained 
     if (!pre || !post) throw new Error("Missing default host tool hooks")
     const base = { session_id: frame.session_id, transcript_path: "/tmp/scripted-transcript", cwd: params.options?.cwd ?? "/tmp" }
     const signal = params.options?.abortController?.signal ?? new AbortController().signal
-    const dispatch = { subagent_type: "orchestra:jimmy", description: "Investigate conditions",
+    const dispatch = { subagent_type: "orchestra:jimmy-quick", description: "Investigate conditions",
       prompt: "Find the applicability conditions.", run_in_background: false }
     yield { type: "assistant", ...frame, uuid: "dispatch-frame", message: { id: "msg_jimmy_dispatch", content: [
       { type: "tool_use", id: callID, name: "Agent", input: dispatch },

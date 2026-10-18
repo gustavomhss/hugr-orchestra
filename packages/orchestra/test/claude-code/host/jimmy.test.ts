@@ -20,7 +20,7 @@ ClaudeResearchFixture.it.instance("native Agent binds actual Task and denies ung
   expect(yield* LogicalTask.read(dispatch.child)).toMatchObject({ memberID: "jimmy", authoritySessionID: fixture.parent.id,
     executionSessionID: dispatch.child })
   expect(yield* ResearchBinding.resolve(dispatch.child, fixture.parent.projectID)).toMatchObject({ memberID: "jimmy" })
-  for (const name of ["Bash", "Write", "Edit", "Read", "Grep", "WebFetch", "Agent", "mcp__orchestra__process", "mcp__orchestra__edit"])
+  for (const name of ["Bash", "Write", "Edit", "WebFetch", "LSP", "Agent", "mcp__orchestra__process", "mcp__orchestra__edit"])
     expect(yield* dispatch.pre(name, `denied-${name}`)).toMatchObject({ hookSpecificOutput: { permissionDecision: "deny" } })
   expect(yield* dispatch.pre("Skill", "wrong-skill", { skill: "orchestra:backend-implement" }))
     .toMatchObject({ hookSpecificOutput: { permissionDecision: "deny" } })
@@ -156,7 +156,7 @@ ClaudeResearchFixture.it.instance("native byte reservation refuses retention bey
   expect(yield* records.view(binding, { action: "corpus" })).toMatchObject({ sources: [] })
 }), 30_000)
 
-ClaudeResearchFixture.it.instance("plugin and SDK maxTurns carry the deep ceiling while a dispatch keeps its bound tier limit", () => Effect.gen(function* () {
+ClaudeResearchFixture.it.instance("plugin and SDK maxTurns follow each tier agent while a dispatch keeps its bound tier limit", () => Effect.gen(function* () {
   const fixture = yield* ClaudeResearchFixture.setup()
   const dispatch = yield* fixture.nativeDispatch()
   const limit = yield* fixture.research.execute(dispatch.child,
@@ -164,10 +164,11 @@ ClaudeResearchFixture.it.instance("plugin and SDK maxTurns carry the deep ceilin
   expect(limit).toBe(24)
   const input = { seats: [fixture.seat], tools: { jimmy: fixture.tools.map((tool) => tool.id) }, root: path.join(fixture.parent.directory, "plugin") }
   const plugin = yield* Effect.promise(() => ClaudeHostPlugin.build(input))
-  expect(yield* Effect.promise(() => Bun.file(path.join(plugin.path, "agents/jimmy.md")).text()))
+  expect(yield* Effect.promise(() => Bun.file(path.join(plugin.path, "agents/jimmy-deep.md")).text()))
     .toMatch(/^---\n[^]*\nmaxTurns: 96\n---\n/)
   const sdk = yield* Effect.promise(() => ClaudeHostPlugin.build({ ...input, sdk: { jimmy: {} } }))
-  expect(sdk.sdkAgents["orchestra:jimmy"].maxTurns).toBe(Research.Tiers.deep.providerCalls)
+  expect(sdk.sdkAgents["orchestra:jimmy-quick"].maxTurns).toBe(Research.Tiers.quick.providerCalls)
+  expect(sdk.sdkAgents["orchestra:jimmy-deep"].maxTurns).toBe(Research.Tiers.deep.providerCalls)
   expect(yield* ClaudeResearchFixture.charges(dispatch.child)).toEqual([])
 }), 30_000)
 

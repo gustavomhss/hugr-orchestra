@@ -16,6 +16,7 @@ import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Archive } from "@/continuity/archive"
+import { ResearchSeatTools } from "@/research/seat-tools"
 import type { SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { ClaudeCodeTools } from "../tools"
@@ -24,6 +25,7 @@ import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMemory } from "./memory"
+import { ClaudeHostPlugin } from "./plugin"
 import { ClaudeHostResearch } from "./research"
 import { ClaudeHostResearchResult } from "./research-result"
 
@@ -63,17 +65,19 @@ export type Context = {
  * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
  */
 export type Research = ClaudeHostResearchResult.Port & {
-  /** Bind the dispatch's allowance, at the dispatcher's effort tier, to the child Session at `PreToolUse[Agent]`. */
+  /** Bind the dispatch's allowance, at the tier its `subagent_type` names, to the child Session at `PreToolUse[Agent]`. */
   readonly enter: (executionSessionID: SessionID, dispatchCallID: string,
-    tier: NonNullable<ReturnType<typeof ClaudeHostResearch.effort>>) => Effect.Effect<void, unknown>
+    tier: NonNullable<Parameters<ClaudeHostResearch.Runtime["enter"]>[2]>) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
-  /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
-  readonly capture?: (executionSessionID: SessionID, callID: string, tool: string, input: unknown, output: string) => Effect.Effect<void, unknown>
+  /** Retain a native reader's or search's output (J1.7). Without it, those outputs are withheld from the seat. */
+  readonly capture?: ClaudeHostResearch.Runtime["capture"]
+  /** Mark and read the dispatch's closed inquiry (J5.5). */
+  readonly conclude?: ClaudeHostResearch.Runtime["conclude"]
+  readonly concluded?: ClaudeHostResearch.Runtime["concluded"]
 }
 
-/** Claude Code's native reads whose results Jimmy may cite only through recorded provenance. */
-const CAPTURED = ["Read", "Grep", "Glob", "WebFetch", "WebSearch", "LSP"]
+const CLOSED = "inquiry closed"
 
 export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatcher[]>> {
   const delegation = ClaudeHostDelegation.make({ sessionID: ctx.sessionID, agent: ctx.agent,
@@ -103,6 +107,8 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       if ("hold" in actor) return ClaudeHostGate.deny(actor.hold)
       const exhausted = yield* researchStopReason(actor)
       if (exhausted) return { ...ClaudeHostGate.deny(exhausted), continue: false, stopReason: exhausted }
+      if (actor.seat === ResearchSeatTools.SEAT && ctx.research?.concluded && (yield* ctx.research.concluded(actor.sessionID)))
+        return { ...ClaudeHostGate.deny(CLOSED), continue: false, stopReason: CLOSED }
       const args = record(input.tool_input)
       if (ClaudeCodeTools.orchestra(input.tool_name) && Object.hasOwn(args, ClaudeHostMcp.DISPATCH))
         return ClaudeHostGate.deny("HOLD: the MCP dispatch receipt is supplied by the host, so model-supplied receipts are refused.")
@@ -112,18 +118,19 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
-        const tier = ClaudeHostResearch.effort(args.prompt)
-        const invalidTier = "HOLD: jimmy's brief starts with an unknown effort line. Use `effort: quick`, `effort: focused` or `effort: deep`, or omit the line for quick."
-        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
-          return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
-        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !tier) return ClaudeHostGate.deny(invalidTier)
+        // The tier is the plugin agent the call names, `orchestra:jimmy-<tier>` (J1.4), never text in the brief.
+        const type = typeof args.subagent_type === "string" ? args.subagent_type : ""
+        const named = type.startsWith(ClaudeHostDelegation.PREFIX) ? ClaudeHostPlugin.agent(type.slice(ClaudeHostDelegation.PREFIX.length)) : undefined
+        if (named?.seat === ResearchSeatTools.SEAT && !ctx.research)
+          return ClaudeHostGate.deny(`HOLD: ${named.seat}'s research allowance is not available on this host.`)
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
-        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy")
-          yield* tier ? ctx.research.enter(dispatched, input.tool_use_id, tier) : Effect.fail(new Error(invalidTier))
+        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === ResearchSeatTools.SEAT)
+          yield* named?.tier ? ctx.research.enter(dispatched, input.tool_use_id, named.tier)
+            : Effect.fail(new Error(`HOLD: ${type} names no research tier`))
       }
-      if (actor.seat === "jimmy") {
-        if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+      if (actor.seat === ResearchSeatTools.SEAT) {
+        if (!ctx.research) return ClaudeHostGate.deny(`HOLD: ${actor.seat}'s research allowance is not available on this host.`)
         const charged = yield* Effect.exit(ctx.research.tool(actor.sessionID, input.tool_use_id, input.tool_name))
         const reason = yield* researchStopReason(actor)
         if (reason) return { ...ClaudeHostGate.deny(reason), continue: false, stopReason: reason }
@@ -132,6 +139,9 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         }
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) yield* delegation.admit(input, actor)
+      // The dispatch's web domains replace any the seat chose (J1.9); no binding leaves the search unrestricted.
+      const domains = actor.seat === ResearchSeatTools.SEAT && input.tool_name === "WebSearch" ? delegation.domains(actor.sessionID) : undefined
+      if (domains) return ClaudeHostGate.output({ allow: true, input: { ...(decision.input ?? args), allowed_domains: [...domains] } })
       const own = ClaudeCodeTools.orchestra(input.tool_name)
       if (own && ctx.calls) return ClaudeHostGate.output({ ...decision, input: ctx.calls.reserve({
         callID: input.tool_use_id, sessionID: actor.sessionID, seat: actor.seat,
@@ -164,13 +174,23 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       yield* evidence(actor, input.tool_name, input.tool_use_id, refused ? "held" : "success", refused)
       const context = agent ? yield* delegation.settle(input, refused) : undefined
       if (refused) return withheld(refused, context)
-      if (actor.seat === "jimmy" && CAPTURED.includes(input.tool_name)) {
-        if (!ctx.research?.capture) return withheld("jimmy's provenance capture is not available on this host")
-        const captured = yield* Effect.exit(ctx.research.capture(actor.sessionID, input.tool_use_id, input.tool_name,
-          input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
-        if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
-      }
-      const additional = [context, Exit.isSuccess(hooked) ? hooked.value.join("\n") : ""].filter(Boolean).join("\n\n")
+      const captured: readonly string[] = ResearchSeatTools.CAPTURED
+      const retained = actor.seat === ResearchSeatTools.SEAT && captured.includes(input.tool_name)
+        ? yield* Effect.gen(function* () {
+          if (!ctx.research?.capture) return yield* Effect.fail(new Error(`${actor.seat}'s provenance capture is not available on this host`))
+          const part = yield* anchor(input.tool_use_id)
+          if (!part) return yield* Effect.fail(new Error(`no mirrored ${input.tool_name} call ${input.tool_use_id} to anchor it`))
+          return yield* ctx.research.capture({ sessionID: actor.sessionID, callID: input.tool_use_id, tool: input.tool_name,
+            response: input.tool_response, part: { messageID: part.messageID, tool: part.tool } })
+        }).pipe(Effect.exit) : undefined
+      if (retained && Exit.isFailure(retained)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(retained.cause)}`)
+      // A reread of an unchanged span keeps its output; the note points at the evidence already retained.
+      const duplicate = retained?.value.duplicate
+        ? `Orchestra already retained this span unchanged in this dispatch as ${JSON.stringify(retained.value.ref)}; rereading it adds nothing.` : ""
+      // A successful close is the end of the dispatch's inquiry: a refused close arrives as PostToolUseFailure.
+      if (actor.seat === ResearchSeatTools.SEAT && ClaudeCodeTools.orchestra(input.tool_name) === "inquiry" &&
+        record(input.tool_input).action === "close" && ctx.research?.conclude) yield* ctx.research.conclude(actor.sessionID)
+      const additional = [context, Exit.isSuccess(hooked) ? hooked.value.join("\n") : "", duplicate].filter(Boolean).join("\n\n")
       if (!additional) return {}
       return { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: additional,
         ...(context ? { updatedToolOutput: context } : {}) } }
@@ -271,9 +291,21 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     })
   }
 
+  // The mirrored part of a native call: Claude Code may run a hook before its tool_use block reaches the stream.
+  function anchor(callID: string) {
+    return Effect.gen(function* () {
+      for (let round = 0; round < 150; round++) {
+        const part = ctx.parts?.tool(callID)
+        if (part) return part
+        yield* Effect.sleep("20 millis")
+      }
+      return undefined
+    })
+  }
+
   function researchStopReason(actor: ClaudeHostGate.Actor) {
     // Tool-hook stop control ends the calling loop (CLI 2.1.289), never the parent's Agent return hook.
-    return actor.seat === "jimmy" && actor.agentID && ctx.research?.stopReason
+    return actor.seat === ResearchSeatTools.SEAT && actor.agentID && ctx.research?.stopReason
       ? ctx.research.stopReason(actor.sessionID).pipe(Effect.flatMap((text) =>
         text === undefined ? Effect.succeed(undefined) : ClaudeHostResearchResult.diagnostic(text))) : Effect.succeed(undefined)
   }

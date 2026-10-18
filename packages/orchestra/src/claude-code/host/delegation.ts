@@ -10,7 +10,7 @@ export * as ClaudeHostDelegation from "./delegation"
 // - for a background non-proposal seat: the delivery, from the stream's `task_notification` only, never `SubagentStop`.
 // The parent part keeps Claude Code's raw tool name; no record ever claims a `task` call Orchestra did not run.
 import { isDeepStrictEqual } from "node:util"
-import { Effect, Exit, Semaphore } from "effect"
+import { Effect, Exit, Option, Schema, Semaphore } from "effect"
 import type { PreToolUseHookInput, PostToolUseHookInput, PostToolUseFailureHookInput, SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
@@ -18,6 +18,7 @@ import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { Database } from "@orchestra/core/database/database"
 import { SessionTable } from "@orchestra/core/session/sql"
 import { eq } from "drizzle-orm"
+import { Research } from "@orchestra/schema/research"
 import type { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { Agent } from "@/agent/agent"
 import { Config } from "@/config/config"
@@ -31,11 +32,13 @@ import { Seats, type Seat } from "@/maestro/seats"
 import { SessionAuthority } from "@/maestro/session-authority"
 import { UpstreamResult } from "@/maestro/upstream-result"
 import { WriteRoots } from "@/maestro/write-roots"
+import { ResearchSeatTools } from "@/research/seat-tools"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import type { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
+import { ClaudeHostPlugin } from "./plugin"
 import { ClaudeHostResearchResult } from "./research-result"
 
 /** Plugin-scoped seat names: `orchestra:<seat id>`. */
@@ -82,6 +85,8 @@ type Record = {
   readonly child?: SessionID
   readonly grantID?: string
   readonly writeRoots: readonly string[]
+  /** The research seat's web search domains for this dispatch (J1.9); absent means unrestricted. */
+  readonly allowedDomains?: readonly string[]
   readonly logical?: LogicalTask.Binding
   /** The subagent's last text from `SubagentStop`: the author of a background run, recorded only once it is delivered. */
   final?: string
@@ -233,8 +238,12 @@ export function make(input: {
         if (authority.ancestry.length - 1 >= (cfg.subagent_depth ?? 1))
           return yield* refuse("You cannot start teammates of your own, so no teammate was started. Do this work yourself, or say in your report what still needs a teammate.")
         yield* assertChild(hook.tool_use_id, ownership, dispatcher.sessionID, selection?.ref)
-        const grant = seat.writeRoots ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID, ownership) : undefined
-        const permission = yield* WriteRoots.bind(seat.id, grant?.writePaths,
+        // The research seat's grant is optional and carries only its web domains (J1.9).
+        const research = seat.id === ResearchSeatTools.SEAT
+        const grant = seat.writeRoots || (research && ClaudeHostMcp.referenced(text(args, "prompt") ?? ""))
+          ? yield* take(seat, text(args, "prompt") ?? "", dispatcher.sessionID, ownership) : undefined
+        const domains = research ? grant?.allowedDomains ?? configured(cfg.agent?.[seat.id]?.options) : undefined
+        const permission = yield* WriteRoots.bind(seat.id, seat.writeRoots ? grant?.writePaths : undefined,
           GovernedTaskReservation.childPermissions({ parent, next, primaryTools: cfg.experimental?.primary_tools }))
         const brief = yield* lastUser(parent.id)
         const confirmed = input.models ? yield* input.models(subagentType, args.model) : undefined
@@ -249,7 +258,7 @@ export function make(input: {
           model: brief.model, time: { created: Date.now() } } satisfies SessionV1.User)
         yield* sessions.updatePart({ id: PartID.ascending(), sessionID: child.id, messageID: prompt.id, type: "text", text: text(args, "prompt") ?? "" })
         const entry = { ...base, model: confirmed?.model, modelRef: confirmed?.ref, seat, child: child.id, logical, grantID: grant?.grantID ?? Identifier.create("grt", "ascending"),
-          writeRoots: WriteRoots.read(permission) ?? [] }
+          writeRoots: WriteRoots.read(permission) ?? [], ...(domains?.length ? { allowedDomains: domains } : {}) }
         records.set(hook.tool_use_id, entry)
         join.dispatched(hook.tool_use_id, { seat: seat.id, grantID: entry.grantID, child: child.id })
         yield* running(entry)
@@ -346,7 +355,7 @@ export function make(input: {
       }
       // Dispatch admission may have been ahead of this settlement when its record was not yet published.
       if (refused !== undefined && entry && !entry.settled) entry.rejection ??= structuredClone(hook)
-      const researchControl = entry?.seat?.id === "jimmy" && entry.child
+      const researchControl = entry?.seat?.id === ResearchSeatTools.SEAT && entry.child
         ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
       const ended = ClaudeHostResearchResult.terminal(researchControl)
       if (entry?.rejection) return yield* reject(entry, entry.rejection, researchControl, ended)
@@ -413,7 +422,7 @@ export function make(input: {
       const entry = records.get(hook.tool_use_id)
       if (!entry || entry.settled || entry.rejection) return undefined
       const error = yield* ClaudeHostResearchResult.diagnostic(hook.error)
-      const researchControl = entry.seat?.id === "jimmy" && entry.child
+      const researchControl = entry.seat?.id === ResearchSeatTools.SEAT && entry.child
         ? yield* ClaudeHostResearchResult.close(entry.child, entry.toolUseID, join, input.research) : undefined
       const part = yield* find(entry)
       if (!part) return yield* refuse(`HOLD: the ${entry.toolName} call ${entry.toolUseID} has no mirrored part to record`)
@@ -551,6 +560,8 @@ export function make(input: {
     /** The child Session of a dispatch, for mirroring its `parent_tool_use_id` frames. */
     child: (toolUseID: string) => records.get(toolUseID)?.child,
     seat: (toolUseID: string) => records.get(toolUseID)?.seat?.id,
+    /** The web search domains bound to the dispatch that created this child Session (J1.9). */
+    domains: (child: SessionID) => [...records.values()].find((entry) => entry.child === child)?.allowedDomains,
     /** Every dispatch of this host session so far, for working memory. */
     summaries: () => [...records.values()].flatMap((entry): Summary[] => entry.seat ? [{
       toolUseID: entry.toolUseID, subagentType: entry.subagentType, child: entry.child, grantID: entry.grantID,
@@ -676,15 +687,28 @@ export function make(input: {
   }
 }
 
-/** The seat a plugin-scoped subagent type names, from the registry; anything else is a HOLD. */
+/**
+ * The seat a plugin-scoped subagent type names, from the registry; anything else is a HOLD. The research seat is named
+ * only with its tier, `orchestra:jimmy-<tier>` (J1.4); no other seat takes a tier suffix.
+ */
 function resolve(subagentType: string) {
   return Effect.gen(function* () {
-    const route = lookupRouteGrant(subagentType.slice(PREFIX.length))
+    const named = ClaudeHostPlugin.agent(subagentType.slice(PREFIX.length))
+    if (named.seat === ResearchSeatTools.SEAT && !named.tier)
+      return yield* refuse(`HOLD: ${named.seat} is dispatched with its research tier. Use subagent_type ` +
+        `${Research.Depth.literals.map((tier) => `"${PREFIX}${named.seat}-${tier}"`).join(", ")}.`)
+    const route = lookupRouteGrant(named.seat)
     if (route.status === "HOLD") return yield* refuse(`HOLD: ${subagentType} is not an Orchestra seat (${route.reason}).`)
     const seat = Seats.find(route.grant.memberId)
     if (!seat) return yield* refuse(`HOLD: ${subagentType} is not an Orchestra seat (unknown-member-id).`)
     return seat
   })
+}
+
+// The configured default domains, `agent.jimmy.web.allowedDomains`, which the agent config keeps among its options.
+function configured(options: unknown) {
+  return Option.getOrUndefined(Schema.decodeUnknownOption(Schema.Struct({
+    web: Schema.Struct({ allowedDomains: Schema.Array(Schema.String) }) }))(options))?.web.allowedDomains
 }
 
 function refuse(reason: string) {
