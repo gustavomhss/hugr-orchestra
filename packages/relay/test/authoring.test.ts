@@ -309,6 +309,27 @@ describe("W7-3: the compiled plan is a Relay sprint", () => {
   })
 })
 
+describe("W7-5: a control with no check is refused", () => {
+  const sprint = (control: Record<string, unknown>) => ({ work_packages: [{ id: "wp1", title: "A", checklist: [control] }] })
+  const compiled = (control: Record<string, unknown>) =>
+    settle(AuthoringGraph.compile(Effect.runSync(AuthoringGraph.project("Plan", sprint(control) as RelaySprint.Sprint))))
+
+  test("a control with only an id and a kind names itself and its WP", () => {
+    const result = compiled({ id: "wp1-test", kind: "command", command: "bun test" })
+    expect(result).toEqual({
+      refusal: { status: 400, code: "control-empty", message: "Control wp1-test of wp1 has no cmd, judge or host_check" },
+    })
+  })
+
+  test("cmd, judge or host_check makes the same control compile", () => {
+    for (const check of [{ cmd: "bun test" }, { judge: "reads well" }, { host_check: "tests" }])
+      expect(compiled({ id: "wp1-test", ...check })).toHaveProperty("output")
+    expect(compiled({ id: "wp1-test", cmd: null })).toHaveProperty("refusal")
+    expect(compiled({ id: "wp1-test", cmd: "" })).toHaveProperty("refusal")
+    expect(compiled({ id: "wp1-test", judge: "" })).toHaveProperty("refusal")
+  })
+})
+
 describe("W7-4: lint names a WP by text", () => {
   test("a WP ID that is not text is reported by its Python str()", () => {
     const findings = AuthoringLint.lint({ work_packages: [{ id: 5, checklist: [] }, { checklist: [] }] })
