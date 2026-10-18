@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { SessionNotFoundError } from "@orchestra/sdk/v2/client"
 import type { ConfigInvalidError, ProviderModelNotFoundError } from "./server-errors"
-import { formatServerError, isSessionNotFoundError, parseReadableConfigInvalidError } from "./server-errors"
+import { formatServerError, hookRefusal, isSessionNotFoundError, parseReadableConfigInvalidError } from "./server-errors"
 
 function fill(text: string, vars?: Record<string, string | number>) {
   if (!vars) return text
@@ -171,5 +171,32 @@ describe("isSessionNotFoundError", () => {
         "ses_tab",
       ),
     ).toBe(false)
+  })
+})
+
+describe("hookRefusal", () => {
+  const body = {
+    name: "PromptBlockedError",
+    data: {
+      message: "Blocked by hook 'No prompts': Not now.",
+      reason: "relay-hook-block",
+      hook: { name: "No prompts", message: "Not now." },
+    },
+  }
+
+  test("reads the hook's name and words from an SDK-wrapped refusal", () => {
+    const wrapped = new Error(body.data.message, { cause: { body, status: 409 } })
+
+    expect(hookRefusal(wrapped)).toEqual({ name: "No prompts", message: "Not now." })
+    expect(hookRefusal(body)).toEqual({ name: "No prompts", message: "Not now." })
+  })
+
+  test("ignores refusals without a hook and other errors", () => {
+    const profile = { name: "PromptBlockedError", data: { message: "Tool safety HOLD: profile-invalid" } }
+
+    expect(hookRefusal(new Error("x", { cause: { body: profile, status: 409 } }))).toBeUndefined()
+    expect(hookRefusal(new Error("Session is busy"))).toBeUndefined()
+    expect(hookRefusal({ name: "SessionBusyError", data: { hook: body.data.hook } })).toBeUndefined()
+    expect(hookRefusal(undefined)).toBeUndefined()
   })
 })

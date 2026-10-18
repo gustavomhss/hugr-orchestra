@@ -32,8 +32,8 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(cards).toHaveCount(2)
     await expect(chapter.locator(".mx-eyebrow")).toHaveText("Server A project / profile configuration")
     await expect(cards.locator("h3")).toHaveText([catalog[0].name, catalog[1].name])
-    await expect(cards.first().locator(".mx-meta .mx-badge")).toHaveText(["Project", "Available"])
-    await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Global", "Available"])
+    await expect(cards.first().locator(".mx-meta .mx-badge")).toHaveText(["Project"])
+    await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Global"])
     await expect(cards.first().getByText(catalog[0].description, { exact: true })).toBeVisible()
     expect(requests).toHaveLength(1)
     const url = new URL(requests[0])
@@ -112,9 +112,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(instructions).toHaveValue(catalog[0].content)
   })
 
-  test(`${protocol}: create, edit, remove, read-only skills, reload notice and local availability`, async ({
-    page,
-  }) => {
+  test(`${protocol}: create, edit, remove, read-only skills and reload notice`, async ({ page }) => {
     const writes: { method: string; url: string; body: unknown }[] = []
     const builtin = {
       name: "style-guide",
@@ -136,7 +134,7 @@ for (const protocol of ["v1", "v2"] as const) {
     const cards = chapter.locator(".skills-card")
     const dialog = page.getByRole("dialog")
     await expect(cards.locator("h3")).toHaveText([catalog[0].name, governed.name, catalog[1].name, builtin.name])
-    await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Built-in", "Available"])
+    await expect(cards.last().locator(".mx-meta .mx-badge")).toHaveText(["Built-in"])
 
     await cards.last().getByRole("button", { name: "Read", exact: true }).click()
     await expect(dialog.locator("h2")).toHaveText(`Read ${builtin.name}`)
@@ -196,10 +194,8 @@ for (const protocol of ["v1", "v2"] as const) {
       builtin.name,
     ])
     await expect(notice).toHaveCount(0)
-    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Project", "Available"])
+    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Project"])
 
-    // Availability follows the file, so renaming a disabled skill keeps it disabled.
-    await chapter.getByRole("switch", { name: `Enable ${catalog[0].name}` }).click()
     await cards.first().getByRole("button", { name: "Read & edit" }).click()
     await dialog.getByRole("textbox", { name: "Name" }).fill("boundary-check")
     await dialog.getByRole("textbox", { name: "Description" }).fill("Inspect every public interface")
@@ -207,11 +203,6 @@ for (const protocol of ["v1", "v2"] as const) {
     await expect(dialog).toHaveCount(0)
     await expect(cards.first().locator("h3")).toHaveText("boundary-check")
     await expect(cards.first().getByText("Inspect every public interface", { exact: true })).toBeVisible()
-    await expect(chapter.getByRole("switch", { name: "Enable boundary-check" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    )
-    await expect(cards.first().locator(".mx-meta .mx-badge")).toHaveText(["Project", "Disabled"])
     expect(writes[2]).toEqual({
       method: "PUT",
       url: writes[2].url,
@@ -237,27 +228,8 @@ for (const protocol of ["v1", "v2"] as const) {
     expect(new URL(writes[3].url).searchParams.get("path")).toBe(created)
     expectDirectory(writes[3].url)
 
-    const toggle = chapter.getByRole("switch", { name: `Enable ${catalog[1].name}` })
-    await expect(toggle).toHaveAttribute("aria-checked", "true")
-    await toggle.click()
-    await expect(toggle).toHaveAttribute("aria-checked", "false")
-    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Global", "Disabled"])
-    await expect(chapter.locator(".mx-note")).toHaveText(
-      "Availability is saved for this profile in this app; agents still receive every registered skill.",
-    )
-    await page.reload()
-    await expect(chapter.getByRole("switch", { name: `Enable ${catalog[1].name}` })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    )
-    await expect(chapter.getByRole("switch", { name: "Enable boundary-check" })).toHaveAttribute(
-      "aria-checked",
-      "false",
-    )
-    await expect(chapter.getByRole("switch", { name: `Enable ${governed.name}` })).toHaveAttribute(
-      "aria-checked",
-      "true",
-    )
+    await expect(cards.nth(2).locator(".mx-meta .mx-badge")).toHaveText(["Global"])
+    await expect(chapter.getByRole("switch")).toHaveCount(0)
     expect(writes).toHaveLength(4)
 
     function expectDirectory(input: string) {

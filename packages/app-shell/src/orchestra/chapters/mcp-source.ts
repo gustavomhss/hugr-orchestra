@@ -53,8 +53,15 @@ export function createMcpSource(input: {
       if (await v1()) return void (await input.sdk.client.mcp.disconnect({ name }))
       await api().disconnect({ server: name, location })
     },
-    async authenticate(name: string) {
-      await input.sdk.client.mcp.auth.authenticate({ name })
+    // The request stays open until the browser sign-in finishes, so the caller can abort it.
+    async authenticate(name: string, signal?: AbortSignal) {
+      await input.sdk.client.mcp.auth.authenticate({ name }, { signal })
+    },
+    // Sessions of this profile mid-turn. A V1 config write disposes the project instance, which cancels them.
+    async working() {
+      if (!(await v1())) return 0
+      const statuses = (await input.sdk.client.session.status()).data ?? {}
+      return Object.values(statuses).filter((status) => status.type !== "idle").length
     },
     async save(name: string, config: McpServerConfig) {
       if (await v1()) return void (await request(input, "PUT", `/mcp/${encodeURIComponent(name)}/config`, { config }))

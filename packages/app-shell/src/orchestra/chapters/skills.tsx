@@ -7,9 +7,8 @@ import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
-import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
-import { MxBadge, MxPage, MxToggle } from "./kit"
+import { MxBadge, MxPage } from "./kit"
 import { SkillDialog, type SkillDialogState, type SkillSaveInput } from "./skills-dialog"
 import {
   filterSkills,
@@ -41,12 +40,6 @@ export default function Skills(props: ChapterPageProps) {
   const close = (current: SkillDialogState) => {
     if (dialog() === current) setDialog(undefined)
   }
-  // No server setting decides which skills a profile offers, so availability is this app's per-profile choice,
-  // keyed by skill file location because names can repeat across folders.
-  const [local, setLocal] = persisted(
-    Persist.serverWorkspace(serverSDK().scope, props.directory, "orchestra-skills"),
-    createStore({ disabled: [] as string[] }),
-  )
   const unlisted = createMemo(() =>
     state.pending && !state.skills.some((skill) => skill.location === state.pending) ? state.pending : undefined,
   )
@@ -134,7 +127,6 @@ export default function Skills(props: ChapterPageProps) {
     if (abort.signal.aborted) return
     close(current)
     setState("pending", undefined)
-    setLocal("disabled", (locations) => locations.filter((location) => location !== skill.location))
     await load().catch(() => refresh())
   }
 
@@ -193,7 +185,6 @@ export default function Skills(props: ChapterPageProps) {
             {(skill) => {
               const source = () => skillSource(skill.location, props.directory)
               const access = () => skillAccess(skill.location, props.directory)
-              const enabled = () => !local.disabled.includes(skill.location)
               return (
                 <li class="mx-card skills-card" data-skill-location={skill.location}>
                   <div class="mx-card-top">
@@ -211,9 +202,6 @@ export default function Skills(props: ChapterPageProps) {
                   </p>
                   <div class="mx-meta">
                     <MxBadge>{language.t(`orchestra.skills.source.${source()}`)}</MxBadge>
-                    <MxBadge tone={enabled() ? "good" : undefined}>
-                      {language.t(enabled() ? "orchestra.skills.registered" : "orchestra.skills.disabled")}
-                    </MxBadge>
                   </div>
                   <footer class="mx-card-foot">
                     <button
@@ -223,17 +211,6 @@ export default function Skills(props: ChapterPageProps) {
                     >
                       {language.t(access() === "edit" ? "orchestra.skills.read" : "orchestra.skills.readOnly")}
                     </button>
-                    <MxToggle
-                      checked={enabled()}
-                      label={language.t("orchestra.skills.toggle", { name: skill.name })}
-                      onChange={(next) =>
-                        setLocal("disabled", (locations) =>
-                          next
-                            ? locations.filter((location) => location !== skill.location)
-                            : [...locations, skill.location],
-                        )
-                      }
-                    />
                   </footer>
                 </li>
               )
@@ -250,9 +227,6 @@ export default function Skills(props: ChapterPageProps) {
             </button>
           </p>
         )}
-      </Show>
-      <Show when={state.status === "ready" && state.skills.length}>
-        <p class="mx-note">{language.t("orchestra.skills.localNote")}</p>
       </Show>
       <Show when={dialog()} keyed>
         {(current) => (

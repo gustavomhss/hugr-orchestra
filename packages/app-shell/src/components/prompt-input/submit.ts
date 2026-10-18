@@ -24,7 +24,7 @@ import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
 import { setCursorPosition } from "./editor-dom"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError, hookRefusal } from "@/utils/server-errors"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
@@ -189,6 +189,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   untrack(admissionSource)
 
   const errorMessage = (err: unknown) => {
+    const refusal = hookRefusal(err)
+    if (refusal) return language.t("orchestra.chat.send.blockedByHook", refusal)
     if (err && typeof err === "object" && "message" in err && typeof err.message === "string") return err.message
     if (err && typeof err === "object" && "data" in err) {
       const data = err.data
@@ -205,8 +207,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const key = sessionID ? undefined : input.pendingKey?.() ?? draftSessionKey(source.scope, source.directory, search.draftId)
     const target = sessionID ? undefined : prompt.capture()
     const creating = target && key ? sourceAdmission(target, key).source : undefined
+    const failed = (error: unknown) => showToast({
+      variant: "error",
+      title: language.t("orchestra.chat.stop.failed"),
+      description: errorMessage(error),
+    })
     input.onAbort?.()
-    if (sessionID) return interruptPendingSession(source.scope, sessionID, source.api.session, serverState)
+    if (sessionID) return interruptPendingSession(source.scope, sessionID, source.api.session, serverState, failed)
     creating?.selections.forEach((admission) => admission.abort?.abort())
     const drafts = [...pending.values()].flatMap((jobs) => [...jobs].flatMap((job) => {
       const draft = job.draft
@@ -214,7 +221,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         draft.directory === source.directory ? [draft] : []
     }))
     return Promise.all([...new Map(drafts.map((draft) => [ScopedKey.from(draft.scope, draft.sessionID), draft])).values()]
-      .map((draft) => interruptPendingSession(draft.scope, draft.sessionID, draft.api, draft.serverState)))
+      .map((draft) => interruptPendingSession(draft.scope, draft.sessionID, draft.api, draft.serverState, failed)))
   }
 
   const seed = (state: ServerSync, dir: string, info: Session) => {
@@ -236,7 +243,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const owner = ownership.capture()
     const controller = new AbortController()
     admission.abort = controller
-    const promptRevision = target.current()
     const submission = createPromptSubmissionState({
       target,
       prompt: target.current(),
@@ -503,18 +509,17 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     }
     const promote = async () => {
       if (!isNewSession || !admission.request?.admitted || admission.promoted || !ownsSource()) return
+      // Subagent models picked while the prompt was in flight are acknowledged on its Session before the handoff.
+      if (pendingSnapshot(rulesKey).revision !== admission.request.revision) await waitPolicy()
       await startTransition(() => {
         if (!ownsSource() || controller.signal.aborted || admission.promoted) return
         const request = admission.request
         if (!request?.admitted || request.revision === undefined) return
-        if (target.current() !== promptRevision || JSON.stringify(target.current()) !== JSON.stringify(currentPrompt) ||
-          JSON.stringify(target.context.items()) !== JSON.stringify(context)) return
-        if (pendingSnapshot(rulesKey).revision !== request.revision) return
-        if ((input.newSessionWorktree?.() || "main") !== worktreeSelection || input.mode() !== mode) return
-        if (modelSelection.current()?.id !== model.modelID || modelSelection.current()?.provider.id !== model.providerID ||
-          modelSelection.variant.current() !== variant) return
+        // An admitted prompt always hands the draft off to its Session, so Enter on the draft can never post it again.
+        // Edits made during the send (text, context, model, agent) move into the Session composer unsent.
+        clearPending(rulesKey, receipt.revision ?? request.revision)
+        const selectedModel = modelSelection.current()
         const selectedAgent = local.agent.current()
-        if (!selectedAgent || agentKey(selectedAgent) !== agent || !clearPending(rulesKey, request.revision)) return
         const next = prompt.capture({ dir: base64Encode(sessionDirectory), id: session.id })
         handoffAdmission(next, draftSessionKey(directorySDK.scope, sessionDirectory), sourceAdmission(target, rulesKey).source)
         batch(() => {
@@ -525,7 +530,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           input.setPopover(null)
           input.onNewSessionWorktreeReset?.()
           input.onSubmit?.()
-          local.session.promote(sessionDirectory, session.id, { agent, model, variant: variant ?? null })
+          local.session.promote(sessionDirectory, session.id, selectedModel && selectedAgent ? {
+            agent: agentKey(selectedAgent),
+            model: { modelID: selectedModel.id, providerID: selectedModel.provider.id },
+            variant: modelSelection.variant.current() ?? null,
+          } : { agent, model, variant: variant ?? null })
           layout.handoff.setTabs(base64Encode(sessionDirectory), session.id)
           if (draftID && draftServer) tabs.promoteDraft(draftID, { server: draftServer, sessionId: session.id })
           if (!draftID) navigate(`/${base64Encode(sessionDirectory)}/session/${session.id}`)
@@ -620,7 +629,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         }
         if (ownsSource()) showToast({
           title: language.t(isCommand ? "prompt.toast.commandSendFailed.title" : "prompt.toast.promptSendFailed.title"),
-          description: isCommand ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
+          description: isCommand && !hookRefusal(err) ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
         })
         removeOptimisticMessage()
         restoreInput()
@@ -675,7 +684,13 @@ function trackPendingPrompt(scope: ServerScope, sessionID: string, job: PendingP
   }
 }
 
-function interruptPendingSession(scope: ServerScope, sessionID: string, api: DirectorySDK["api"]["session"], state: ServerSync) {
+function interruptPendingSession(
+  scope: ServerScope,
+  sessionID: string,
+  api: DirectorySDK["api"]["session"],
+  state: ServerSync,
+  failed: (error: unknown) => void,
+) {
   state.session.set("todo", sessionID, [])
   const key = ScopedKey.from(scope, sessionID)
   const jobs = pending.get(key)
@@ -684,5 +699,12 @@ function interruptPendingSession(scope: ServerScope, sessionID: string, api: Dir
     state.session.set("session_status", sessionID, { type: "idle" })
     ;[...jobs].reverse().forEach((job) => { job.abort.abort(); job.cleanup() })
   }
-  return api.interrupt({ sessionID }).catch(() => {})
+  return api.interrupt({ sessionID }).catch((error: unknown) => {
+    failed(error)
+    // The run may still be going: read its status back instead of keeping the optimistic idle.
+    return api
+      .active()
+      .then((active) => state.session.set("session_status", sessionID, active[sessionID] ? { type: "busy" } : { type: "idle" }))
+      .catch(() => {})
+  })
 }

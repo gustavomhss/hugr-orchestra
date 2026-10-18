@@ -26,6 +26,10 @@ export function runClient(server: ServerConnection.Any, directory: string, fetch
   })
 }
 
+// Workflow runs are hidden for launch: the server has no run routes yet (WP17), so nothing asks for them, polls them
+// or counts them. Turn this on with the Executions views when the routes ship.
+export const runsEnabled = false
+
 export type RelaySource = ReturnType<typeof createRelaySource>
 
 export function createRelaySource(input: { server: ServerConnection.Any; directory: string; kind: RelayKind }) {
@@ -40,8 +44,17 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const queryClient = () => ctx.queryClient
   const key = (...parts: string[]) => relayKey(ctx.sdk.scope, input.directory, ...parts)
 
+  // Another window or a restart can change the library while this one is in the background, so coming back to it
+  // (or the network coming back) refreshes the documents and the installs instead of waiting for the first save to fail.
   const documents = useQuery(
-    () => ({ queryKey: key("documents"), queryFn: client.documents, retry: false, refetchOnMount: "always" as const }),
+    () => ({
+      queryKey: key("documents"),
+      queryFn: client.documents,
+      retry: false,
+      refetchOnMount: "always" as const,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    }),
     queryClient,
   )
   const supported = () => !documents.isError || !relayUnsupported(documents.error)
@@ -57,7 +70,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const runs = useQuery(
     () => ({
       queryKey: key("runs"),
-      queryFn: input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
+      queryFn: runsEnabled && input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
       retry: false,
       refetchInterval: (query: { state: { data?: RelayRun[] } }) =>
         query.state.data?.some((run) => run.status === "running") ? 10_000 : false,
@@ -69,6 +82,8 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
       queryKey: key("installs"),
       queryFn: input.kind === "hook" && documents.isSuccess ? client.installs : skipToken,
       retry: false,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
     }),
     queryClient,
   )
@@ -85,11 +100,24 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   )
   const invalidate = (...parts: string[]) => void ctx.queryClient.invalidateQueries({ queryKey: key(...parts) })
 
+  // A hook decision is published before its ledger receipt is written, so Activity refetches once a burst of
+  // decisions has settled instead of on the event itself.
+  let decided: ReturnType<typeof setTimeout> | undefined
+  onCleanup(() => clearTimeout(decided))
+
   // Durable relay.* events arrive on the profile's event stream; each one refreshes what it can change.
   onCleanup(
     ctx.sdk.event.on(input.directory, (event) => {
       const type: string = event.type
       if (!type.startsWith("relay.")) return
+      if (type === "relay.hook.decided") {
+        clearTimeout(decided)
+        decided = setTimeout(() => {
+          invalidate("decisions")
+          invalidate("decisions-all")
+        }, 1000)
+        return
+      }
       if (type.startsWith("relay.hook")) {
         invalidate("documents")
         return invalidate("installs")
@@ -126,7 +154,7 @@ export function useAwaitingRuns(target: () => { server: ServerConnection.Any; di
   const query = useQuery(
     () => {
       const current = target()
-      if (!current) return { queryKey: ["orchestra-relay-awaiting"], queryFn: skipToken }
+      if (!runsEnabled || !current) return { queryKey: ["orchestra-relay-awaiting"], queryFn: skipToken }
       const ctx = global.ensureServerCtx(current.server)
       const client = runClient(current.server, current.directory, platform.fetch)
       return {
@@ -143,7 +171,7 @@ export function useAwaitingRuns(target: () => { server: ServerConnection.Any; di
   )
   createEffect(() => {
     const current = target()
-    if (!current) return
+    if (!runsEnabled || !current) return
     const ctx = global.ensureServerCtx(current.server)
     onCleanup(
       ctx.sdk.event.on(current.directory, (event) => {

@@ -70,6 +70,12 @@ export function createProviderSettingsController(input: {
     return true
   }
 
+  // The server sets source "config" on every provider with a config entry, and that entry keeps the provider listed
+  // whatever the auth store holds, so removing a stored key does not disconnect it (v1 only; v2 removes credentials).
+  // An OpenAI-compatible endpoint with models is the exception: disconnect disables it through config.
+  const keptByConfig = (item: ProviderItem) =>
+    protocol() === "v1" && source(item) === "config" && !isConfigCustom(item.id)
+
   const type = (item: ProviderItem) => {
     const current = source(item)
     if (current === "env") return language.t("settings.providers.tag.environment")
@@ -137,7 +143,15 @@ export function createProviderSettingsController(input: {
     popular,
     type,
     protocol,
-    canDisconnect: (item: ProviderItem) => source(item) !== "env" && (protocol() === "v1" || !isConfigCustom(item.id)),
+    canDisconnect: (item: ProviderItem) =>
+      source(item) !== "env" && !keptByConfig(item) && (protocol() === "v1" || !isConfigCustom(item.id)),
+    // Why a provider has no Disconnect button.
+    disconnectHint: (item: ProviderItem) =>
+      language.t(
+        keptByConfig(item)
+          ? "orchestra.providers.configDescription"
+          : "settings.providers.connected.environmentDescription",
+      ),
     note: (id: string) => PROVIDER_NOTES.find((item) => item.match(id))?.key,
     connect: (provider?: string) => {
       const scope = captureScope()
@@ -199,9 +213,15 @@ export function createProviderSettingsController(input: {
         return
       }
       if (isConfigCustom(providerID)) {
-        await serverSdk()
+        const removed = await serverSdk()
           .client.auth.remove({ providerID })
-          .catch(() => undefined)
+          .then(() => true)
+          .catch((err: unknown) => {
+            failed(err)
+            return false
+          })
+        // A stored key that could not be removed must not be reported as disconnected.
+        if (!removed) return
         await disableProvider(providerID, name)
         return
       }
