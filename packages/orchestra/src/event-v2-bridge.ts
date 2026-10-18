@@ -8,8 +8,10 @@ import { Location } from "@orchestra/core/location"
 import { Project } from "@orchestra/core/project"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionEvent } from "@orchestra/core/session/event"
 import { Database } from "@orchestra/core/database/database"
 import { SessionTable } from "@orchestra/core/session/sql"
+import type { SessionID } from "@/session/schema"
 import { eq } from "drizzle-orm"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 
@@ -54,30 +56,31 @@ const layer: Layer.Layer<Service, never, EventV2.Service | Database.Service> = L
             : ctx?.project.id,
           workspace: explicit ? explicit.workspaceID : yield* WorkspaceRef,
         }
+        // Legacy consumers such as the TUI follow only session.updated; send them the committed row.
+        const updated = Effect.fnUntraced(function* (sessionID: SessionID) {
+          const row = yield* database.db
+            .select()
+            .from(SessionTable)
+            .where(eq(SessionTable.id, sessionID))
+            .get()
+            .pipe(Effect.orDie)
+          if (!row) return
+          const { Session } = yield* Effect.promise(() => import("@/session/session"))
+          GlobalBus.emit("event", {
+            ...route,
+            payload: {
+              id: EventV2.ID.create(),
+              type: SessionV1.Event.Updated.type,
+              properties: { sessionID, info: Session.fromRow(row) },
+            },
+          })
+        })
         const admitted =
           event.type === SessionV1.Event.PromptAdmitted.type && event.durable !== undefined
             ? Schema.decodeUnknownSync(SessionV1.Event.PromptAdmitted.data)(event.data)
             : undefined
         if (admitted) {
-          if (admitted.transition) {
-            const row = yield* database.db
-              .select()
-              .from(SessionTable)
-              .where(eq(SessionTable.id, admitted.sessionID))
-              .get()
-              .pipe(Effect.orDie)
-            if (row) {
-              const { Session } = yield* Effect.promise(() => import("@/session/session"))
-              GlobalBus.emit("event", {
-                ...route,
-                payload: {
-                  id: EventV2.ID.create(),
-                  type: SessionV1.Event.Updated.type,
-                  properties: { sessionID: admitted.sessionID, info: Session.fromRow(row) },
-                },
-              })
-            }
-          }
+          if (admitted.transition) yield* updated(admitted.sessionID)
           GlobalBus.emit("event", {
             ...route,
             payload: {
@@ -97,8 +100,15 @@ const layer: Layer.Layer<Service, never, EventV2.Service | Database.Service> = L
             }),
           )
         }
+        // Listeners receive decoded data, where a DateTime serializes as an ISO string. Consumers of this event decode
+        // epoch millis (the app's live decoder and workspace replay), so send its encoded form.
+        const archived =
+          event.type === SessionEvent.ArchiveChanged.type && Schema.is(SessionEvent.ArchiveChanged.data)(event.data)
+            ? event.data
+            : undefined
+        const data = archived ? Schema.encodeSync(SessionEvent.ArchiveChanged.data)(archived) : event.data
         if (!admitted)
-          GlobalBus.emit("event", { ...route, payload: { id: event.id, type: event.type, properties: event.data } })
+          GlobalBus.emit("event", { ...route, payload: { id: event.id, type: event.type, properties: data } })
         if (event.durable === undefined) return
         GlobalBus.emit("event", {
           ...route,
@@ -109,10 +119,11 @@ const layer: Layer.Layer<Service, never, EventV2.Service | Database.Service> = L
               type: EventV2.versionedType(event.type, event.durable.version),
               seq: event.durable.seq,
               aggregateID: event.durable.aggregateID,
-              data: event.data,
+              data,
             },
           },
         })
+        if (archived) yield* updated(archived.sessionID)
       }),
     )
     yield* Effect.addFinalizer(() => unsubscribe)
