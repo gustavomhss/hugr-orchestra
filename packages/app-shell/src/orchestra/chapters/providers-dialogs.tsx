@@ -2,7 +2,7 @@ import { Dialog } from "@kobalte/core/dialog"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { iconNames } from "@orchestra/ui/icons/provider"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
-import { children, createMemo, For, type JSX, onCleanup, Show } from "solid-js"
+import { children, createMemo, For, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
@@ -15,6 +15,7 @@ import {
   type CatalogEntry,
   connectableIntegration,
   errorMessage,
+  matches,
   noteKey,
   visiblePrompts,
 } from "./providers-data"
@@ -106,28 +107,52 @@ export function ProviderPickerDialog(props: {
   onCustom: () => void
 }) {
   const language = useLanguage()
+  const [state, setState] = createStore({ search: "" })
+  let search: HTMLInputElement | undefined
+  // The catalog has 70+ providers on v1. Kobalte focuses the close button first, so focus the search afterwards.
+  onMount(() => requestAnimationFrame(() => search?.focus()))
+  const entries = createMemo(() =>
+    props.entries.filter((entry) => matches([entry.name, entry.id, summary(entry, language.t)], state.search)),
+  )
   return (
     <MxDialog
       title={language.t("orchestra.providers.connect")}
       description={language.t("orchestra.providers.picker.description")}
       bodyClass="providers-picker"
     >
-      <div class="mx-table">
-        <For each={props.entries}>
-          {(entry) => (
-            <div class="mx-row" data-provider-id={entry.id}>
-              <ProviderBrand id={entry.id} />
-              <div class="mx-grow">
-                <strong>{entry.name}</strong>
-                <Show when={summary(entry, language.t)}>{(text) => <small>{text()}</small>}</Show>
+      <input
+        ref={search}
+        class="mx-search"
+        placeholder={language.t("orchestra.providers.search")}
+        aria-label={language.t("orchestra.providers.searchLabel")}
+        autocomplete="off"
+        spellcheck={false}
+        value={state.search}
+        onInput={(event) => setState("search", event.currentTarget.value)}
+      />
+      <Show when={entries().length || !state.search.trim()}>
+        <div class="mx-table">
+          <For each={entries()}>
+            {(entry) => (
+              <div class="mx-row" data-provider-id={entry.id}>
+                <ProviderBrand id={entry.id} />
+                <div class="mx-grow">
+                  <strong>{entry.name}</strong>
+                  <Show when={summary(entry, language.t)}>{(text) => <small>{text()}</small>}</Show>
+                </div>
+                <button type="button" class="mx-btn" onClick={() => props.onConnect(entry)}>
+                  {language.t("common.connect")}
+                </button>
               </div>
-              <button type="button" class="mx-btn" onClick={() => props.onConnect(entry)}>
-                {language.t("common.connect")}
-              </button>
-            </div>
-          )}
-        </For>
-      </div>
+            )}
+          </For>
+        </div>
+      </Show>
+      <Show when={!entries().length && state.search.trim()}>
+        <div class="mx-empty" role="status">
+          {language.t("orchestra.providers.noMatches")}
+        </div>
+      </Show>
       <p class="mx-note">
         <button type="button" class="mx-btn" onClick={props.onCustom}>
           {language.t("dialog.provider.custom.label")}
@@ -197,17 +222,26 @@ export function ProviderConnectDialog(props: {
       if (alive.value) dialog.close()
     }, fail)
   }
-  const poll = (attemptID: string) => {
+  const poll = (attemptID: string, failures = 0) => {
     void sdk()
       .api.integration.oauth.status({ integrationID: props.id, attemptID, location })
       .then((result) => {
         if (!alive.value) return
         if (result.data.status === "complete") return finish()
-        if (result.data.status === "failed") return restart(result.data.message)
-        if (result.data.status === "expired") return restart(language.t("common.requestFailed"))
+        if (result.data.status === "failed")
+          return restart(result.data.message || language.t("orchestra.providers.oauth.failed"))
+        if (result.data.status === "expired") return restart(language.t("orchestra.providers.oauth.expired"))
         alive.timer = setTimeout(() => poll(attemptID), 1_000)
       })
-      .catch((error) => alive.value && restart(error))
+      .catch((error) => {
+        if (!alive.value) return
+        // One dropped request must not end a sign-in the person is still completing in the browser.
+        if (failures < 2) {
+          alive.timer = setTimeout(() => poll(attemptID, failures + 1), 1_000)
+          return
+        }
+        restart(errorMessage(error, language.t("orchestra.providers.oauth.failed")))
+      })
   }
 
   const submit = async () => {
@@ -397,7 +431,7 @@ export function ProviderConnectDialog(props: {
 
 export function CustomProviderDialog(props: {
   unavailable?: string
-  onSubmit: (input: { name: string; endpoint: string; model: string }) => Promise<string | undefined>
+  onSubmit: (input: { name: string; endpoint: string; model: string; key: string }) => Promise<string | undefined>
 }) {
   const language = useLanguage()
   const dialog = useDialog()
@@ -405,6 +439,7 @@ export function CustomProviderDialog(props: {
     name: "",
     endpoint: "http://localhost:8080/v1",
     model: "",
+    key: "",
     error: props.unavailable,
     busy: false,
   })
@@ -430,7 +465,12 @@ export function CustomProviderDialog(props: {
       onSubmit={async () => {
         if (state.busy || props.unavailable) return
         setState("busy", true)
-        const error = await props.onSubmit({ name: state.name, endpoint: state.endpoint, model: state.model })
+        const error = await props.onSubmit({
+          name: state.name,
+          endpoint: state.endpoint,
+          model: state.model,
+          key: state.key,
+        })
         setState({ busy: false, error })
         if (!error) dialog.close()
       }}
@@ -438,6 +478,18 @@ export function CustomProviderDialog(props: {
       {field("name", language.t("orchestra.providers.custom.name"))}
       {field("endpoint", language.t("orchestra.providers.custom.endpoint"))}
       {field("model", language.t("orchestra.providers.custom.model"))}
+      <label class="mx-field">
+        <span>{language.t("orchestra.providers.custom.key")}</span>
+        <input
+          name="credential"
+          type="password"
+          autocomplete="off"
+          spellcheck={false}
+          disabled={!!props.unavailable}
+          value={state.key}
+          onInput={(event) => setState({ key: event.currentTarget.value, error: undefined })}
+        />
+      </label>
     </MxDialog>
   )
 }

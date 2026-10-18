@@ -178,18 +178,23 @@ export function routeModel(card: ProviderCard, preferred: string | undefined) {
   return card.models[0]?.id
 }
 
-export function customProvider(input: { name: string; endpoint: string; model: string; existing: Set<string> }) {
-  const id = input.name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
+export function customProvider(input: {
+  name: string
+  endpoint: string
+  model: string
+  key?: string
+  existing: Set<string>
+}) {
+  const id = customProviderID(input.name.trim())
   const endpoint = input.endpoint.trim()
   const model = input.model.trim()
+  const key = input.key?.trim()
   if (!id || input.existing.has(id)) return { error: "name" as const }
   if (!/^https?:\/\//.test(endpoint) || !URL.canParse(endpoint)) return { error: "endpoint" as const }
   if (!model) return { error: "model" as const }
   return {
     id,
+    ...(key ? { key } : {}),
     config: {
       npm: OPENAI_COMPATIBLE,
       name: input.name.trim(),
@@ -197,6 +202,21 @@ export function customProvider(input: { name: string; endpoint: string; model: s
       models: { [model]: { name: model } },
     },
   }
+}
+
+// A name without Latin letters (Cyrillic, CJK, Arabic...) has no readable slug, so its id is derived from the
+// name itself: the same name always gets the same id, and a second provider with that name is still refused.
+function customProviderID(name: string) {
+  const slug = name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+  if (slug || !/[\p{L}\p{N}]/u.test(name)) return slug
+  const hash = Array.from(name).reduce(
+    (value, char) => Math.imul(value ^ (char.codePointAt(0) ?? 0), 16777619) >>> 0,
+    2166136261,
+  )
+  return `custom-${hash.toString(36)}`
 }
 
 const decodeMethods = Schema.decodeUnknownOption(Schema.Array(Integration.Method))
@@ -279,5 +299,11 @@ export function errorMessage(value: unknown, fallback: string): string {
   if (value instanceof Error && value.message) return value.message
   if (value && typeof value === "object" && "message" in value && typeof value.message === "string" && value.message)
     return value.message
+  // Server error bodies carry their text in `data.message`.
+  if (value && typeof value === "object" && "data" in value) {
+    const data = value.data
+    if (data && typeof data === "object" && "message" in data && typeof data.message === "string" && data.message)
+      return data.message
+  }
   return fallback
 }

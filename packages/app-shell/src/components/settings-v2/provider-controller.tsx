@@ -136,6 +136,46 @@ export function createProviderSettingsController(input: {
       description: err instanceof Error ? err.message : String(err),
     })
 
+  // A stored key or sign-in cannot be restored, so every removal asks first; the chapter page asks the same way.
+  const confirm = (ask: { title: string; description: string; submit: string }, run: () => Promise<unknown>) =>
+    void dialog.push(() => (
+      <ConfirmRemove
+        {...ask}
+        onConfirm={() => {
+          dialog.close()
+          void run()
+        }}
+      />
+    ))
+  const disconnectAsk = (provider: string) => ({
+    title: language.t("orchestra.providers.disconnectDialog.title", { provider }),
+    description: language.t("orchestra.providers.disconnectDialog.description", { provider }),
+    submit: language.t("common.disconnect"),
+  })
+
+  const disconnectV1 = async (providerID: string, name: string) => {
+    if (isConfigCustom(providerID)) {
+      const removed = await serverSdk()
+        .client.auth.remove({ providerID })
+        .then(() => true)
+        .catch((err: unknown) => {
+          failed(err)
+          return false
+        })
+      // A stored key that could not be removed must not be reported as disconnected.
+      if (!removed) return
+      await disableProvider(providerID, name)
+      return
+    }
+    await serverSdk()
+      .client.auth.remove({ providerID })
+      .then(async () => {
+        await serverSdk().client.global.dispose()
+        disconnected(name)
+      })
+      .catch(failed)
+  }
+
   return {
     providers,
     discovery,
@@ -166,7 +206,7 @@ export function createProviderSettingsController(input: {
       const scope = captureScope()
       void dialog.show(() => (
         <scope.Provider>
-          <DialogCustomProvider onBack={dialog.close} />
+          <DialogCustomProvider onBack={input.onBack ?? dialog.close} />
         </scope.Provider>
       ))
     },
@@ -193,66 +233,45 @@ export function createProviderSettingsController(input: {
               disconnected(name)
             })
             .catch(failed)
-        if (plan.ids.length === 1) return remove()
-        // Removing every credential a provider row stands for is confirmed first.
-        void dialog.push(() => (
-          <ConfirmRemove
-            title={language.t("orchestra.settings.providers.removeAll.title", {
+        // Several credentials behind one row are named in the question.
+        if (plan.ids.length === 1) return confirm(disconnectAsk(name), remove)
+        return confirm(
+          {
+            title: language.t("orchestra.settings.providers.removeAll.title", {
               count: plan.ids.length,
               provider: name,
-            })}
-            description={language.t("orchestra.settings.providers.removeAll.description", {
+            }),
+            description: language.t("orchestra.settings.providers.removeAll.description", {
               labels: plan.labels.join(", "),
-            })}
-            onConfirm={() => {
-              dialog.close()
-              void remove()
-            }}
-          />
-        ))
-        return
+            }),
+            submit: language.t("orchestra.settings.providers.remove"),
+          },
+          remove,
+        )
       }
-      if (isConfigCustom(providerID)) {
-        const removed = await serverSdk()
-          .client.auth.remove({ providerID })
-          .then(() => true)
-          .catch((err: unknown) => {
-            failed(err)
-            return false
+      return confirm(disconnectAsk(name), () => disconnectV1(providerID, name))
+    },
+    removeKey: (credentialID: string, providerName: string) =>
+      confirm(disconnectAsk(providerName), async () => {
+        const directory = input.directory()
+        const location = directory ? { directory } : undefined
+        const remove =
+          protocol() === "v2"
+            ? serverSdk().api.credential.remove({ credentialID, location })
+            : serverSdk()
+                .createClient({ directory: directory ?? undefined, throwOnError: true })
+                .v2.credential.remove({ credentialID, location })
+        await remove
+          .then(async () => {
+            await providers.refresh()
+            disconnected(providerName)
           })
-        // A stored key that could not be removed must not be reported as disconnected.
-        if (!removed) return
-        await disableProvider(providerID, name)
-        return
-      }
-      await serverSdk()
-        .client.auth.remove({ providerID })
-        .then(async () => {
-          await serverSdk().client.global.dispose()
-          disconnected(name)
-        })
-        .catch(failed)
-    },
-    removeKey: async (credentialID: string, providerName: string) => {
-      const directory = input.directory()
-      const location = directory ? { directory } : undefined
-      const remove =
-        protocol() === "v2"
-          ? serverSdk().api.credential.remove({ credentialID, location })
-          : serverSdk()
-              .createClient({ directory: directory ?? undefined, throwOnError: true })
-              .v2.credential.remove({ credentialID, location })
-      await remove
-        .then(async () => {
-          await providers.refresh()
-          disconnected(providerName)
-        })
-        .catch(failed)
-    },
+          .catch(failed)
+      }),
   }
 }
 
-function ConfirmRemove(props: { title: string; description: string; onConfirm: () => void }) {
+function ConfirmRemove(props: { title: string; description: string; submit: string; onConfirm: () => void }) {
   const dialog = useDialog()
   const language = useLanguage()
   return (
@@ -268,7 +287,7 @@ function ConfirmRemove(props: { title: string; description: string; onConfirm: (
           {language.t("common.cancel")}
         </ButtonV2>
         <ButtonV2 variant="contrast" onClick={props.onConfirm}>
-          {language.t("orchestra.settings.providers.remove")}
+          {props.submit}
         </ButtonV2>
       </DialogFooter>
     </Dialog>

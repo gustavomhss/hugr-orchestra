@@ -20,10 +20,10 @@ export const matchesModelSearch = (query: string, values: string[]) => {
 export function createModelSelectorNavigation<T>(
   groups: () => ReadonlyArray<{ items: readonly T[] }>,
   key: (item: T) => string,
-  manage: string,
+  ...actions: string[]
 ) {
   const items = () => groups().flatMap((group) => group.items)
-  const keys = () => [...items().map(key), manage]
+  const keys = () => [...items().map(key), ...actions]
   return {
     keys,
     find: (active: string) => items().find((item) => key(item) === active),

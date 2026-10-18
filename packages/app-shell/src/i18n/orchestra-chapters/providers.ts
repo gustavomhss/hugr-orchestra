@@ -35,6 +35,9 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.connectDialog.codeRequired": "Enter the authorization code to continue.",
   "orchestra.providers.connectDialog.confirmation": "Confirmation code",
   "orchestra.providers.connectDialog.waiting": "Waiting for authorization…",
+  "orchestra.providers.oauth.failed":
+    "The server gave no reason. Check that you approved the sign-in in your browser, then try again.",
+  "orchestra.providers.oauth.expired": "The sign-in link expired. Start the sign-in again.",
   "orchestra.providers.connectDialog.submit": "Connect",
   "orchestra.providers.connectDialog.keySaved.title": "API key saved for {{provider}}",
   "orchestra.providers.connectDialog.keySaved.description": "It is checked when you send your first message.",
@@ -48,6 +51,7 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.custom.name": "Name",
   "orchestra.providers.custom.endpoint": "Base URL",
   "orchestra.providers.custom.model": "Model ID",
+  "orchestra.providers.custom.key": "API key (optional)",
   "orchestra.providers.custom.nameError": "Choose a unique provider name.",
   "orchestra.providers.custom.endpointError": "Enter a valid endpoint URL.",
   "orchestra.providers.custom.modelError": "Enter the model ID this endpoint serves.",

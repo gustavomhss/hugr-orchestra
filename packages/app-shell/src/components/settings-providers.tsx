@@ -1,12 +1,10 @@
 import { Button } from "@orchestra/ui/button"
-import { useDialog } from "@orchestra/ui/context/dialog"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { Tag } from "@orchestra/ui/tag"
 import { type Component, For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { ProviderDiscoveryStatus } from "./dialog-connect-provider"
 import { createProviderSettingsController } from "./settings-v2/provider-controller"
-import { DialogCustomProvider } from "./dialog-custom-provider"
 import { SettingsList } from "./settings-list"
 import { SettingsServerPicker, SettingsServerScope } from "./settings-server-picker"
 
@@ -19,7 +17,6 @@ export const SettingsProviders: Component<{ onBack?: () => void }> = (props) => 
 }
 
 const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => {
-  const dialog = useDialog()
   const language = useLanguage()
   const controller = createProviderSettingsController({ directory: () => null, onBack: props.onBack })
 
@@ -122,9 +119,7 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
                   size="large"
                   variant="secondary"
                   icon="plus-small"
-                  onClick={() => {
-                    dialog.show(() => <DialogCustomProvider onBack={dialog.close} />)
-                  }}
+                  onClick={controller.connectCustom}
                 >
                   {language.t("common.connect")}
                 </Button>

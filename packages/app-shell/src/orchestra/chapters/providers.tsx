@@ -176,13 +176,19 @@ function ProvidersScreen(props: ChapterPageProps) {
             if (result.error === "endpoint") return language.t("orchestra.providers.custom.endpointError")
             return language.t("orchestra.providers.custom.modelError")
           }
-          return sync()
-            .updateConfig({
+          // Same order as the Settings form: the key goes to the auth store first, then the endpoint to config.
+          const save = async () => {
+            if (result.key)
+              await sdk().client.auth.set({ providerID: result.id, auth: { type: "api", key: result.key } })
+            await sync().updateConfig({
               provider: { [result.id]: result.config },
               disabled_providers: (sync().data.config.disabled_providers ?? []).filter((id) => id !== result.id),
             })
-            .then(() => undefined)
-            .catch((error: unknown) => errorMessage(error, language.t("common.requestFailed")))
+          }
+          return save().then(
+            () => undefined,
+            (error: unknown) => errorMessage(error, language.t("common.requestFailed")),
+          )
         }}
       />
     ))

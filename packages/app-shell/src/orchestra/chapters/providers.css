@@ -44,10 +44,18 @@
   flex-direction: column;
   overflow: hidden;
 }
+.providers-picker > .mx-search {
+  flex: none;
+  max-inline-size: none;
+  margin-block-end: 12px;
+}
 .providers-picker > .mx-table {
   min-block-size: 0;
   flex: 0 1 auto;
   overflow: auto;
+}
+.providers-picker > .mx-empty {
+  flex: none;
 }
 .providers-picker > .mx-note {
   flex: none;
