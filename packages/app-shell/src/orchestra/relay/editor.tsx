@@ -324,6 +324,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     return props.source.client
       .unpublish(base())
       .then((item) => rememberDocument(props.source.queryClient(), props.source.key("documents"), item, draft.active))
+      // An unpublished hook's installs stop firing; the installs list shows them as unpublished.
+      .then(() => kind === "hook" && props.source.invalidate("installs"))
       .finally(draft.release)
   }
 
@@ -428,10 +430,10 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     ...(canDiscard()
       ? [{ label: copy.t("orchestra.workflows.editor.discardChanges"), run: () => setDialog("revert") }]
       : []),
-    ...(kind === "workflow" && base().activeVersionId
+    ...(base().activeVersionId
       ? [{ label: copy.t("orchestra.workflows.editor.unpublish"), run: () => void openUnpublish() }]
       : []),
-    ...(canDiscard() || (kind === "workflow" && base().activeVersionId) ? ["-" as const] : []),
+    ...(canDiscard() || base().activeVersionId ? ["-" as const] : []),
     { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setDialog("delete") },
     ] satisfies MenuItem[] : []),
   ]
@@ -715,7 +717,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         <Match when={dialog() === "unpublish"}>
           <ConfirmDialog
             title={copy.t("orchestra.workflows.unpublish.title", { name: name() })}
-            body={copy.t("orchestra.workflows.unpublish.body")}
+            body={copy.t(kind === "hook" ? "orchestra.hooks.unpublish.body" : "orchestra.workflows.unpublish.body")}
             confirm={copy.t("orchestra.workflows.unpublish.confirm")}
             onConfirm={unpublish}
             onClose={() => setDialog(undefined)}

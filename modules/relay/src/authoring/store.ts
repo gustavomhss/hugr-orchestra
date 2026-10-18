@@ -12,7 +12,8 @@ import { AuthoringGraph } from "./graph"
 import { connect } from "#sqlite"
 
 // Documents, versions and scopes in `authoring.sqlite3` (`#sqlite`; relay_authoring/store.py; WP8). The same tables
-// and row bodies as the Python store, so a Python-made database opens unchanged. There is no executions table: runs
+// and row bodies as the Python store, so a Python-made database opens unchanged. Unlike Python, a save rewrites only the
+// draft and a publish freezes the version (R2-21); per-save versions an older store wrote stay readable. There is no executions table: runs
 // are durable events. A Python-made database keeps its own executions table; nothing here reads or drops it.
 //
 // Rows are returned as stored, as the Python store returns them: `AuthoringGraph.validate` is the gate, in the layer
@@ -131,14 +132,9 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
         versionId,
         versionCounter: (previous?.versionCounter ?? 0) + 1,
       })
+      // The document row is the one mutable working draft and its versionId the draft's revision guard. A save writes
+      // no version row: only publishing freezes one.
       put("documents", id, document)
-      db.run(
-        "INSERT INTO versions(workspace,document_id,id,body) VALUES(?,?,?,?)",
-        workspaceID,
-        id,
-        versionId,
-        dumps({ ...document, workflowId: id }, false),
-      )
       return document as unknown as RelayAuthoring.Document
     }
 
@@ -177,6 +173,15 @@ export const open = (dataDir: string, workspaceID: string): Effect.Effect<Interf
           checkChecksum(document, expectedChecksum)
           if (document.versionId !== versionID)
             return AuthoringGraph.refuse("The version changed before publishing", 409, "version-conflict")
+          // The draft as it stands becomes an immutable version. A version already frozen (republished, or written per
+          // save by an older store) keeps the row it has, so a pinned checksum never drifts.
+          db.run(
+            "INSERT INTO versions(workspace,document_id,id,body) VALUES(?,?,?,?) ON CONFLICT(workspace,id) DO NOTHING",
+            workspaceID,
+            id,
+            versionID,
+            dumps({ ...document, workflowId: id }, false),
+          )
           const published = {
             ...attribute(document, "publishedBy", principal),
             active: true,

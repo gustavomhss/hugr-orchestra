@@ -213,9 +213,8 @@ describe("relay documents", () => {
       name: "Forced",
       versionCounter: 3,
     })
-    expect(((await ok(tmp.path, "GET", `${route}/version`)) as Json[]).map((item) => item.versionCounter)).toEqual([
-      3, 2, 1,
-    ])
+    // Saves rewrite the working draft; none of them is a version.
+    expect(await ok(tmp.path, "GET", `${route}/version`)).toEqual([])
     expect(await refused(tmp.path, "GET", "/api/relay/document/missing")).toMatchObject({
       status: 404,
       tag: "RelayNotFoundError",
@@ -262,6 +261,36 @@ describe("relay documents", () => {
     const unpublished = await ok(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: published.checksum })
     expect(unpublished).toMatchObject({ active: false, activeVersionId: null, unpublishedBy: os.userInfo().username })
     expect(unpublished.publishedBy).toBeUndefined()
+  })
+
+  test("R2-21: autosaves keep one working draft and make no version; only publish makes one", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const document = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))
+    const route = `/api/relay/document/${document.id}`
+    const versions = async () => (await ok(tmp.path, "GET", `${route}/version`)) as Json[]
+    expect(await versions()).toEqual([])
+    const first = await ok(tmp.path, "PATCH", route, { name: "Once", versionId: document.versionId })
+    const second = await ok(tmp.path, "PATCH", route, {
+      name: "Twice",
+      versionId: first.versionId,
+      expectedChecksum: first.checksum,
+    })
+    expect(second).toMatchObject({ name: "Twice", versionCounter: 3 })
+    expect(await versions()).toEqual([])
+    // The draft keeps its revision guard: a save of the replaced revision is still a conflict.
+    expect(await refused(tmp.path, "PATCH", route, { name: "Stale", versionId: first.versionId })).toMatchObject({
+      status: 409,
+      code: "version-conflict",
+    })
+
+    const published = await ok(tmp.path, "POST", `${route}/publish`, { versionId: second.versionId })
+    expect((await versions()).map((item) => [item.versionId, item.name])).toEqual([[second.versionId, "Twice"]])
+    expect(published.activeVersion).toMatchObject({ versionId: second.versionId, name: "Twice" })
+    const edited = await ok(tmp.path, "PATCH", route, { name: "Edited", versionId: published.versionId })
+    expect(await versions()).toHaveLength(1)
+    expect(await ok(tmp.path, "GET", `${route}/version/${second.versionId}`)).toMatchObject({ name: "Twice" })
+    await ok(tmp.path, "POST", `${route}/publish`, { versionId: edited.versionId })
+    expect((await versions()).map((item) => item.name)).toEqual(["Edited", "Twice"])
   })
 
   test("export, sprint and node types compile with the skill catalog", async () => {
@@ -421,6 +450,67 @@ describe("relay hooks", () => {
     expect((await call(tmp.path, "GET", `/api/relay/document/${hook.id}`)).status).toBe(404)
     expect(await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/version/${hook.versionId}`)).toMatchObject({ versionId: hook.versionId })
     expect((await ledger(root, installed.installID)).map((entry) => entry.event)).toEqual(["hook-installed", "hook-uninstalled"])
+  })
+
+  test("N-14: unpublishing a hook stops its installs firing until it is published again", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { root, data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Stop after unpublish"))
+    const route = `/api/relay/document/${hook.id}`
+    const published = await ok(tmp.path, "POST", `${route}/publish`, { versionId: hook.versionId })
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id })
+    const other = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Keep firing"))
+    await ok(tmp.path, "POST", `/api/relay/document/${other.id}/publish`, { versionId: other.versionId })
+    const kept = await ok(tmp.path, "POST", "/api/relay/hook", { document: other.id })
+    const stored = async () =>
+      JSON.parse(await fs.readFile(RelayHookInstall.file(data, projectID), "utf8")).installs as Json[]
+
+    // A stale unpublish is refused by the store, and the installs are left as they were.
+    expect(
+      await refused(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: "0".repeat(64) }),
+    ).toMatchObject({ status: 409, code: "version-conflict" })
+    expect(await stored()).toEqual([installed, kept])
+
+    const unpublished = await ok(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: published.checksum })
+    expect(unpublished).toMatchObject({ active: false, activeVersionId: null })
+    // The install keeps its pin, order and enabled state; only the mark stops it firing.
+    expect(await stored()).toEqual([{ ...installed, unpublished: true }, kept])
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([{ ...installed, unpublished: true }, kept])
+    expect(await refused(tmp.path, "POST", `/api/relay/hook/${installed.installID}/update`, {})).toMatchObject({
+      status: 409,
+      code: "not-published",
+    })
+    // It can still be paused, resumed and removed while unpublished; resuming does not make it fire.
+    expect(await ok(tmp.path, "POST", `/api/relay/hook/${installed.installID}/disable`)).toMatchObject({
+      enabled: false,
+      unpublished: true,
+    })
+    expect(await ok(tmp.path, "POST", `/api/relay/hook/${installed.installID}/enable`)).toMatchObject({
+      enabled: true,
+      unpublished: true,
+    })
+
+    // Publishing it again lets the install fire its pinned version.
+    const again = await ok(tmp.path, "GET", route)
+    await ok(tmp.path, "POST", `${route}/publish`, { versionId: again.versionId, expectedChecksum: again.checksum })
+    expect(await stored()).toEqual([installed, kept])
+    expect((await ledger(root, installed.installID)).map((entry) => entry.event)).toEqual([
+      "hook-installed",
+      "hook-unpublished",
+      "hook-disabled",
+      "hook-enabled",
+      "hook-republished",
+    ])
+    expect((await ledger(root, kept.installID)).map((entry) => entry.event)).toEqual(["hook-installed"])
+  })
+
+  test("N-14: publishing and unpublishing a hook nobody installed writes no hooks.json", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Never installed"))
+    const published = await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, { versionId: hook.versionId })
+    await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/unpublish`, { expectedChecksum: published.checksum })
+    expect(await fs.stat(RelayHookInstall.file(data, projectID)).then(() => true, () => false)).toBe(false)
   })
 
   test("an install pins the published version and every change is receipted with its principal", async () => {
