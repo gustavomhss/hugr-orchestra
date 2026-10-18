@@ -442,15 +442,17 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionID: session.id, api, serverState,
       } : undefined,
     })
-    // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. Delete it when the
-    // server confirms it holds no messages. When that cannot be confirmed, keep it and label it so the user can delete
-    // it. The draft itself (text, context, subagent models, worktree) stays as it was for the next try.
-    const settleEmptySession = async () => {
+    // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. The draft itself
+    // (text, context, subagent models, worktree) stays as it was for the next try.
+    // Once the prompt was dispatched, the Session is kept and labelled: the server may have admitted it before the
+    // failure (an admitted input is not a message until it is promoted), so the retry must reuse this Session and
+    // message ID. Only a send that never left (its policy write failed) deletes a Session the server confirms empty.
+    const settleEmptySession = async (dispatched: boolean) => {
       const created = admission.session
       if (!isNewSession || !created || admission.request?.admitted) return
       const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
       if (empty === false) return
-      const removed = empty === true &&
+      const removed = !dispatched && empty === true &&
         (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
       if (!removed) return seed(serverState, sessionDirectory, { ...created, title: language.t("orchestra.chat.send.emptySession") })
       const [, setStore] = serverState.child(sessionDirectory)
@@ -476,7 +478,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         title: language.t("common.requestFailed"),
         description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
       })
-      await settleEmptySession()
+      await settleEmptySession(false)
       return false as const
     }
     const receipt = { revision: undefined as number | undefined }
@@ -604,7 +606,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           description: errorMessage(err),
         })
         restoreInput()
-        await settleEmptySession()
+        await settleEmptySession(true)
         return false
       })
       if (sent !== false) await promote()
@@ -659,7 +661,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         })
         removeOptimisticMessage()
         restoreInput()
-        await settleEmptySession()
+        await settleEmptySession(true)
         return false
       })
   }
