@@ -88,6 +88,8 @@ fn run(steps: Vec<Step>, out: &mut Out) -> Result<(), String> {
                 hang();
             }
             Step::Hold(ms) => descend::hold(ms, log_ref)?,
+            Step::Alloc(mib) => alloc(mib),
+            Step::AllocChild(mib) => descend::alloc(mib, log_ref)?,
             Step::Escape => descend::escape(out, log_ref)?,
             Step::Escaped => {
                 sys::setsid();
@@ -122,6 +124,13 @@ fn run(steps: Vec<Step>, out: &mut Out) -> Result<(), String> {
 fn exit(code: u32) -> ! {
     // Windows keeps the full 32-bit value (ExitProcess takes a u32); Unix keeps the low 8 bits.
     std::process::exit(code as i32)
+}
+
+/// Holds `mib` mebibytes that are resident: every page is written, and the buffer is never freed.
+fn alloc(mib: u64) {
+    let mut bytes = vec![0u8; (mib as usize) << 20];
+    bytes.chunks_mut(4096).for_each(|page| page[0] = 1);
+    std::mem::forget(std::hint::black_box(bytes));
 }
 
 fn hang() -> ! {

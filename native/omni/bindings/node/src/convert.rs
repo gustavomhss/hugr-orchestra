@@ -143,6 +143,9 @@ pub(crate) fn command(
     if let Some(timeout) = millis("timeoutMs")? {
         cmd.timeout(timeout);
     }
+    if let Some(cap) = field::<f64>(env, &o, "maxRssBytes", "a number of bytes")? {
+        cmd.max_rss_bytes(binding::byte_limit("maxRssBytes", cap).map_err(omni)? as u64);
+    }
     if let Some(grace) = millis("graceMs")? {
         cmd.grace(grace);
     }
@@ -328,6 +331,7 @@ fn reason(r: Reason) -> &'static str {
         Reason::Killed => "killed",
         Reason::Timeout => "timeout",
         Reason::Aborted => "aborted",
+        Reason::MemoryExceeded => "memory_exceeded",
     }
 }
 
