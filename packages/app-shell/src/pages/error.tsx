@@ -303,7 +303,7 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
               {language.t("error.page.action.exportLogs")}
             </Button>
           </Show>
-          <Show when={Sentry.isEnabled}>
+          <Show when={Sentry.isEnabled()}>
             {(_) => {
               const [reported, setReported] = createSignal(false)
               return (
