@@ -67,7 +67,7 @@ function parse(tip: string): TipPart[] {
   return parts
 }
 
-const NO_MODELS_TIP = "Run {highlight}/connect{/highlight} to add an AI provider and start coding"
+const NO_MODELS_TIP = "Free models are ready to use. Run {highlight}/connect{/highlight} to add your own provider, such as Claude, GPT or Gemini"
 const NO_MODELS_PARTS = parse(NO_MODELS_TIP)
 
 function shortcutText(value: string) {
@@ -192,7 +192,10 @@ const TIPS: Tip[] = [
   (shortcuts) => press(shortcuts.messagesFirst(), "to jump to the beginning of the conversation"),
   (shortcuts) => press(shortcuts.messagesLast(), "to jump to the most recent message"),
   (shortcuts) => press(shortcuts.inputNewline(), "to add newlines in your prompt"),
-  (shortcuts) => press(shortcuts.inputClear(), "when typing to clear the input field"),
+  (shortcuts) =>
+    shortcuts.inputClear()
+      ? `Press ${shortcutText(shortcuts.inputClear())} to clear the input field when it has text; press it again on an empty prompt to exit`
+      : undefined,
   (shortcuts) => press(shortcuts.sessionInterrupt(), "to stop the AI mid-response"),
   "Use {highlight}@agent-name{/highlight} in prompts to invoke specialized subagents",
   (shortcuts) => {
