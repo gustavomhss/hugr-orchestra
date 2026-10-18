@@ -204,24 +204,28 @@ function ConnectFields(props: { form: FormState; setForm: SetStoreFunction<FormS
 }
 
 function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; data: DispatchData; refs: readonly string[]; t: ViewProps["t"] }) {
+  const inputID = createUniqueId()
   const listID = createUniqueId()
   const hintID = createUniqueId()
   return <>
     <fieldset class="ad-group"><legend>{props.t("orchestra.actions.executionTarget")}</legend><div class="ad-group-body">
-      {/* No native branch listing exists; refs this project already reported are offered as suggestions. */}
-      <label class="mx-field"><span>{props.t("orchestra.actions.branchOrTag")}<span class="ad-required" aria-hidden="true">*</span></span>
-        <input name="ref" autofocus dir="ltr" required spellcheck={false} list={listID} aria-describedby={hintID} value={props.form.ref} onInput={(event) => props.setForm("ref", event.currentTarget.value)} />
+      {/* No native branch listing exists; refs this project already reported are offered as suggestions.
+          The hint stays outside the label so it describes the input without joining its name. */}
+      <div class="mx-field"><label for={inputID}>{props.t("orchestra.actions.branchOrTag")}<span class="ad-required" aria-hidden="true">*</span></label>
+        <input id={inputID} name="ref" autofocus dir="ltr" required spellcheck={false} list={listID} aria-describedby={hintID} value={props.form.ref} onInput={(event) => props.setForm("ref", event.currentTarget.value)} />
         <datalist id={listID}><For each={props.refs}>{(ref) => <option value={ref} />}</For></datalist>
-        <small id={hintID}>{props.t("orchestra.actions.branchOrTagHint")}</small></label>
+        <small id={hintID}>{props.t("orchestra.actions.branchOrTagHint")}</small></div>
     </div></fieldset>
-    <Show when={props.data.status === "loading"}><p class="ad-note" role="status">{props.t("orchestra.actions.loading")}</p></Show>
-    <Show when={props.data.error}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
-    <Show when={props.data.status === "idle"}><p class="ad-note">{props.t("orchestra.actions.noSource")}</p></Show>
-    <Show when={props.data.status === "ready"}>
-      <Show when={props.data.definitions} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
-        {(definition) => <Show when={definition().length}><fieldset class="ad-group"><legend>{props.t("orchestra.actions.runInputs")}</legend><div class="ad-group-body"><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></div></fieldset></Show>}
+    <fieldset class="ad-group"><legend>{props.t("orchestra.actions.runInputs")}</legend><div class="ad-group-body">
+      <Show when={props.data.status === "loading"}><p class="ad-note" role="status">{props.t("orchestra.actions.loading")}</p></Show>
+      <Show when={props.data.error}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
+      <Show when={props.data.status === "idle"}><p class="ad-note">{props.t("orchestra.actions.noSource")}</p></Show>
+      <Show when={props.data.status === "ready"}>
+        <Show when={props.data.definitions} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
+          {(definition) => <Show when={definition().length} fallback={<p class="ad-note">{props.t("orchestra.actions.noRunInputs")}</p>}><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></Show>}
+        </Show>
       </Show>
-    </Show>
+    </div></fieldset>
      <Show when={props.form.provider === "gitlab"}>
        <fieldset class="ad-group">
          <legend>{props.t("orchestra.actions.variables")}</legend>

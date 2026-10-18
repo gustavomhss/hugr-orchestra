@@ -10,17 +10,20 @@
 .actions-page .actions-dialog .ad-eyebrow { margin-block-end: 5px; color: var(--actions-dim); font-size: 10px; line-height: 1.5; }
 .actions-page .actions-dialog .ad-mark { flex: none; }
 .actions-page .actions-dialog .mx-btn.icon { inline-size: 30px; flex: none; padding: 0; }
-.actions-page .actions-dialog .mx-btn .wf-ic { inline-size: 16px; block-size: 16px; }
+/* The resource dialogs' close glyph; relay.css sizes button glyphs at 14px, the mock at 16px. */
+.actions-page .actions-dialog .mx-btn.icon .wf-ic { inline-size: 16px; block-size: 16px; }
 
 /* Fields. */
 .actions-page .actions-dialog .ad-group legend { padding: 0; color: var(--actions-strong); font-weight: 500; }
-.actions-page .actions-dialog .mx-field > span { color: var(--actions-dim); font-size: 11px; line-height: 1.5; }
+.actions-page .actions-dialog .mx-field > :is(span, label) { color: var(--actions-dim); font-size: 11px; line-height: 1.5; }
 .actions-page .actions-dialog .ad-required { margin-inline-start: 4px; color: var(--actions-dim); }
-.actions-page .actions-dialog .mx-field small { color: var(--actions-dim); }
+/* Scope-catalog alerts keep their own colour. */
+.actions-page .actions-dialog .mx-field small:not([role="alert"]) { color: var(--actions-dim); }
 .actions-page .actions-dialog .mx-field .ad-code { font-family: var(--mx-mono); font-size: 11px; }
 .actions-page .actions-dialog .mx-field :is(input, select, textarea):focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
 
 /* Checkbox: label and hint stack beside the box. */
+/* Only the resource forms' Check component renders `.check-field`. */
 .actions-page .actions-dialog .check-field { display: flex; }
 .actions-page .actions-dialog .check-field input[type="checkbox"] { margin: 3px 0 0; }
 .actions-page .actions-dialog .check-field > span { display: flex; min-inline-size: 0; flex-direction: column; gap: 3px; }

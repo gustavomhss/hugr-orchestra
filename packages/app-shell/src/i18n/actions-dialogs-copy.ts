@@ -9,6 +9,7 @@ export const dict = {
   "orchestra.actions.branchOrTag": "Branch or tag",
   "orchestra.actions.branchOrTagHint": "A new execution uses the source revision at this ref.",
   "orchestra.actions.runInputs": "Run inputs",
+  "orchestra.actions.noRunInputs": "No inputs are declared at this ref.",
   "orchestra.actions.newExecution": "New execution",
   "orchestra.actions.newExecution.detail": "Starting a run resolves the selected ref. Re-running an existing execution keeps its original source revision.",
 } as const
