@@ -17,11 +17,11 @@ Fontes: o código do Atlas (`modules/atlas`) e o do app (`packages/app-shell`, `
    - um contrato de view congelado;
    - um mock aprovado e guardado no repositório;
    - um registro de paridade visual.
-5. **Recomendação de interface:**
-   - **lista primeiro, grafo só sob demanda**;
-   - layout de trabalho em três zonas: navegação contextual, lista e **Inspector**;
-   - **chips de citação nas sessões** que abrem o Inspector no lugar;
-   - **somente leitura até a fase W3**; a escrita governada fica para a W4, com decisão do owner.
+5. **Recomendação de interface** (revisada depois da primeira rodada de mock, seção 5):
+   - **três lugares só:** Visão geral, Conhecimento e Revisar;
+   - **linguagem de produto:** Regra, Cuidado, Sugestão; Em dia, Código mudou, Não vale mais. O vocabulário interno do Atlas fica atrás de "Detalhes técnicos";
+   - **detalhes abrem ao lado da lista** e também a partir das citações no Chat;
+   - **a memória de cada agente mora em Agents**, não no Atlas.
 6. **O Atlas tem regras de honestidade que a UI precisa respeitar** (seção 6). Por exemplo:
    - as duas bandas da pack nunca aparecem misturadas;
    - um valor de freshness ausente aparece como `[?]`, nunca como FRESH;
@@ -174,76 +174,84 @@ Somam-se as metas de leitura do ORC/SEAT, que um humano também quer inspecionar
 
 ## 5. Proposta: arquitetura de informação e navegação
 
-### 5.1 Posição no app
+> **Revisão 2026-10-18.** A primeira versão desta seção tinha 13 telas, espelhava a estrutura interna do Atlas (territórios, escopos, nodeKey, tiers, bandas, negações, saúde do CAS) e mostrava cadeados de fase na tela. O owner rejeitou com razão: o usuário não sabe o que é nada disso e não precisa saber. Esta versão parte do que a pessoa quer fazer.
 
-- **Entrada no sidebar:** `{ id: "atlas", label: "orchestra.nav.atlas", chapter: "C15" }`. A sugestão é colocá-la logo abaixo de `workflows`: Maestro, depois Workflows, depois Atlas, que é a camada de conhecimento que os dois consomem. **Decisão do owner** (D1).
-- **Escopo:** um capítulo por projeto (não é server-wide). Quando o perfil não tem `maestro.atlas` configurado, aparece `ChapterEmpty` com o motivo e o próximo passo, usando os códigos de `AtlasContextHeld`.
-- **Rota:** `/orchestra/atlas/<view>/<id?>`, por path segments, como o Relay faz em `orchestra/relay/route.ts`. O path é mais legível que query params para deep links compartilháveis.
+### 5.1 O modelo mental
 
-### 5.2 Layout do capítulo
+O Atlas, para quem usa o Orchestra, responde a três perguntas:
 
-```
-┌ sidebar app ┐┌──────────────────────── capítulo Atlas ─────────────────────────┐
-│ …           ││ eyebrow: Atlas › Território api › escopo packages/server        │
-│ Maestro     │├──────────────┬──────────────────────────────┬──────────────────┤
-│ Workflows   ││ nav contexto │ lista / tabela (virtualizada)│ Inspector        │
-│ ▸ Atlas     ││ Visão geral  │ filtros · busca · contadores │ claim · tier     │
-│ MCP …       ││ Territórios  │ ┌──────────────────────────┐ │ seal · freshness │
-│             ││ Fatos        │ │ linha: claim · tier ·    │ │ âncora @sha      │
-│             ││ Drift   (12) │ │ freshness · âncora · sha │ │ [ver código]     │
-│             ││ Relações     │ └──────────────────────────┘ │ relações (d=1)   │
-│             ││ Memória      │                              │ histórico        │
-│             ││ Saúde        │                              │ próximo passo    │
-└─────────────┘└──────────────┴──────────────────────────────┴──────────────────┘
-```
+1. **O que os meus agentes sabem sobre este projeto?** É a Visão geral e o Conhecimento, navegado por área e pasta do código.
+2. **Isso ainda é verdade?** Cada item mostra um estado simples, verificado contra o código atual.
+3. **O que precisa de mim?** É uma fila única em Revisar, com as decisões que só uma pessoa toma.
 
-- Segue o workbench do Actions: um `aside` contextual, um `main` com eyebrow/breadcrumb e um drawer de inspector.
-- Abaixo de 1280px, o Inspector vira overlay. Abaixo de 1024px, vira drill-in de tela cheia. É o mesmo comportamento do shell.
+Todo o resto (ids, tiers, hashes, bandas, retrieval) é mecanismo, e a UI não fala dele.
+
+### 5.2 Vocabulário: o que a UI diz e o que isso é no Atlas
+
+| Na tela | No Atlas | Por quê |
+|---|---|---|
+| **Regra** | fato governante, tier T1, ratificado | É o que os agentes seguem |
+| **Cuidado** | fato no slot `gotcha` / `rationale` | "Atenção ao mexer aqui" |
+| **Sugestão** | banda advisory, T2, não ratificada | Proposta de um agente; os agentes a tratam como palpite |
+| **Regra crítica** | T0, ratificação humana | Só uma pessoa confirma ou muda |
+| **Em dia** | FRESH, e HOLDS quando há checagem | — |
+| **Código mudou** | drift mecânico: a âncora mudou, o claim segue valendo | Um clique atualiza a referência (re-ground) |
+| **Não vale mais** | drift semântico, BROKEN | Bloqueia; alguém decide |
+| **Ainda não verificado** | freshness ausente (`[?]`) ou STALE | Nunca vira "Em dia" por omissão |
+| **Área** / **Pasta** | território / escopo | Nomes que qualquer dev entende |
+| **"Se este código mudar, confira também"** | `dependent`, raio de impacto | Substitui o grafo |
+| **"Quem disse"** e **Histórico** | proveniência, ratificação, linhagem de supersede | — |
+| **Confirmar / Editar / Remover / Descartar** | ratificar e reemitir via `atlas-emit`, ligar via `atlas-link`, supersede (nunca apagar) | Toda ação é reversível ("Desfazer") e fica no histórico |
+| **Memória do agente** (em Agents) | Memory por seat: orientation, lições de task/pr, logbook | Aparece só para backend, jimmy e archie, que têm `atlasMemory` |
+
+Ids, tier, tipo de checagem e commit ficam num bloco **"Detalhes técnicos"**, fechado por padrão, no painel de detalhes.
 
 ### 5.3 Telas
 
-Status: **W1–W4** é a fase sugerida (seção 8). **Leitura nova** quer dizer que precisa de uma entrada nova no boundary ou no Atlas.
+O mock interativo está em [`mock/`](mock/README.md) e mostra o estado final, sem marcas de fase. O faseamento está na seção 8.
 
-| # | Tela | Conteúdo | Meta | Fonte de dados | Fase |
-|---|---|---|---|---|---|
-| A01 | **Visão geral** | Saúde do store (CAS sound?), contagens por tier e freshness, fila de drift, territórios sem cobertura, sha indexado vs HEAD, estado do índice (pronto / construindo / falhou) | G2, G28 | `doctor cas/index`, `territories`, `query` | W1 |
-| A02 | **Territórios** | Tabela: nome, owner, tier, globs, cobertura. Uma matriz território × estado para a visão densa. Caminhos `uncovered` destacados | G12 | `territories` (leitura nova), catálogo Own (já existe) | W1 |
-| A03 | **Escopo (OwnPack)** | A "página do escopo": role, owner, tier, banda **Invariantes** e banda **Advisory** em seções separadas, gotchas, `dependent` (raio de impacto), `finer` (subescopos), `tokenEstimate` / `advisoryDropped` | G3, G7 | `own` (leitura nova; hoje só no CLI) | W1 |
-| A04 | **Fatos** | Lista virtualizada por escopo com filtros de família, tier, freshness, status e seal. Busca. Não existe "todos os fatos": a lista é sempre por escopo, até o Atlas ganhar essa leitura | G1 | `query --by scope` (leitura nova) | W1 |
-| A05 | **Inspector de fato** | Claim, família, tier, seal (proven/justified), freshness por âncora, âncora com `qualifiedPath` e o código no sha (`session-ui/file`), proveniência, sameAs/subsumes, mini-grafo d=1, lineage (`doctor archive`), `guidance.next` | G1a, G2, G13a | `node`, `doctor why`, `relations`, `doctor archive` | W1 (núcleo), W2 (relações) |
-| A06 | **Drift** | Fila agrupada em **mecânico** (re-groundável) e **semântico** (BROKEN). Mostra a âncora antes e depois lado a lado. Filtro por sha ou merge-base | G20, G13 | `reconcile <mergeBase>`, `doctor why` | W1 só leitura; W4 aceitar re-ground |
-| A07 | **Relações / raio de impacto** | **Árvore recolhível com contagens por distância** (padrão call hierarchy). Direção in/out/both. O grafo de vizinhança (d ≤ 2) é uma alternativa sob demanda, com limites como `actions/graph.tsx` | G4, G20 | `relations`, `dependent` da OwnPack | W2 |
-| A08 | **Negações e abstenções** | "Nada em S chama X", com a lista de abstenções e seus motivos visível por padrão, como no CLI | G1 | `negations --abstained` | W2 |
-| A09 | **Memória por seat** | Seletor de seat (só os que têm `atlasMemory`). Mostra o header que o seat recebe: Awareness (5 facetas e o estado de cada), Orientation, as 12 primeiras Rules e o custo em tokens. Recall de task/pr/logbook **sob demanda**, nunca automático. Memória visualmente distinta de Knowledge | G5, G24, G25 | `readBoundHeader` (já existe), `recall` (já existe) | W2, depois da decisão D4 |
-| A10 | **Histórico e arquivo** | Linha do tempo por fato ou escopo: emitido, verificado, drift, supersede, decaimento. A lineage abre versões antigas por content address | G14, G23 | `doctor archive`, `node` | W3 |
-| A11 | **Saúde do store** | `doctor cas` (objetos, órfãos, corrompidos), `doctor index`, `verify-store` (re-provado, quebrado, inverificável, pendente) | G28 | leituras novas | W3 |
-| A12 | **Propostas (staging)** | Candidatos do `mine`, com recusa por linha. Exige a leitura "listar staging", que o Atlas não tem | G9, G16 | Atlas novo | W4 |
-| A13 | **Ratificação e links** | Fila de ratificação (T0 só humano), `link` / `--retract` sameAs, aceitar re-ground mecânico. **A UI não concede aprovação por conta própria**: cada ação passa pela porta governada com ator e token | G9, G11, G14 | `atlas-link`, `atlas-emit` | W4, depois da decisão D2 |
+| Tela | O que tem | Fonte no Atlas |
+|---|---|---|
+| **Visão geral** | Três números (quanto sabem; quanto está em dia; quanto precisa de você), "Precisa da sua atenção", cartões por área com a saúde de cada uma, e mudanças recentes em linguagem natural | `query` / `own` agregados, `reconcile`, histórico |
+| **Conhecimento** | Tudo, por área ou por pasta, agrupado por pasta. Filtros por tipo (Regras, Cuidados, Sugestões) e "Precisa de atenção", mais busca. As áreas e as pastas da área aberta ficam no trilho lateral, com um ponto de saúde | `own <scope>` por pasta; `territories` para as áreas |
+| **Detalhes** (painel e página) | O texto; o estado explicado numa frase; onde vale, com o código e as linhas; quem disse e quem confirmou; o histórico; "Se este código mudar, confira também"; itens relacionados; ações. Detalhes técnicos fechados | `node`, `doctor why`, `doctor archive`, `relations`, `dependent` |
+| **Revisar** | Quatro abas com contagem: **Não vale mais** (antes e depois do código; Atualizar regra / Remover / "Corrigir o código em vez disso", que abre uma sessão com o agente), **Precisa da sua confirmação** (regras críticas), **Sugestões** (Confirmar / Editar / Descartar) e **Código mudou** (Atualizar, ou "Atualizar todas"). Tudo com Desfazer | `reconcile`, staging do `mine`, portas governadas |
+| **Agents › Memória** | Por agente: "Trabalhando agora", "Lições aprendidas" (com "usada há…", "some em N dias" e Esquecer) e "Notas de PRs passados". Agentes sem memória dizem isso claramente | `memory-header`, `memory-recall` |
+| **Chat** | Chips de citação inline ("regra · prompt.ts"; em vermelho quando a regra não vale mais) que abrem os detalhes ao lado. "Usou N coisas do Atlas" lista o que entrou e o que ficou de fora. "Salvo na memória do Backend" quando o agente grava memória | recibos `atlasContext` e `atlasMemory` nos tool-parts |
+| **Atlas desligado / lendo o código** | "Ativar o Atlas neste projeto", com uma frase do porquê. "Lendo o código… cerca de 5 s" com esqueleto, sem número inventado | `AtlasContextHeld`, build do índice |
 
-Fica de fora até o Atlas mudar: diff entre versões (G27, `atlas-diff` não está ligado), export/import (G15, que gravam arquivos; quando entrarem, entram como download via `Platform.downloadResponse`) e o modo trigger.
+**O que saiu da UI, e por quê:**
 
-### 5.4 Navegação transversal (fora do capítulo)
+- **Territórios como tela própria e a matriz:** viraram "Áreas", no trilho e na Visão geral.
+- **Negações e abstenções:** uma negação provada é só mais uma Regra ("O client nunca importa o core"). Abstenção não é algo que a pessoa decide.
+- **Grafo de relações:** virou a lista "Se este código mudar, confira também", que responde à pergunta real.
+- **Saúde do store e verify-store:** são diagnóstico. Se forem necessários, vão para Configurações ou para o CLI.
+- **Propostas e Ratificação como telas separadas:** foram unificadas em Revisar.
+- **Campos degenerados, trigger, diff de versões e cadeados de fase:** o que não existe não aparece.
 
-1. **Chips de citação na sessão.** Os tool-parts `atlas_context` e `atlas_memory_*` já guardam recibos (`atlasContext`, `atlasMemory`, `atlasResume`). A timeline da sessão renderiza um chip como `fato · T1 · FRESH · server/x.ts @a1b2c3` ou `memória · backend · gravada`. O chip vem do recibo, não do texto do modelo. Ao clicar, **o Inspector (A05) abre como painel lateral da sessão**, sem sair dela. Isso fecha a lacuna S19-W1 ("Atlas consumer/navigation").
-2. **"Por que o agente sabia isso?"** Por turno, um painel com o header injetado (Awareness, Orientation e Rules), as packs consultadas e o que foi descartado pelo teto. Fase W2.
-3. **Diálogo de governança.** A seção "Grounding · Atlas / Own" ganha um link "Abrir Atlas" para A01.
-4. **Paleta (`mod+k`).** Comandos "Atlas: Visão geral", "Atlas: Drift", "Atlas: Abrir escopo…" e "Atlas: Abrir fato por nodeKey…", registrados em `navigation-commands.tsx`. A paleta complementa o sidebar e não o substitui.
-5. **Deep links.** O formato interno é `/orchestra/atlas/fact/<nodeKey>`, `/orchestra/atlas/node/<contentAddress>` e `/orchestra/atlas/scope/<qualifiedPath>`. O desktop pode ganhar `orchestra://atlas/...` para links vindos de comentários em PR e do CLI. Fase W3, opcional.
-6. **Breadcrumb estrutural:** Atlas › território › escopo › fato, em `setCrumbTrail`. O Actions teve o bug do breadcrumb preso em "home" (`specs/actions/UI-MOCK-PARITY.md`, P17); aqui ele entra como teste.
+### 5.4 Navegação
+
+- **Sidebar:** um item "Atlas", logo abaixo de Workflows (D1), com a contagem de Revisar em âmbar quando houver algo.
+- **Trilho do capítulo:** Visão geral · Conhecimento · Revisar (com contagem), depois ÁREAS com um ponto de saúde em cada. A área aberta expande as suas pastas. No rodapé: "Verificado há 12 min · Verificar de novo".
+- **Detalhes ao lado:** abrem sem sair da lista (`?item=<id>` na URL); `j`/`k` passam para o próximo, `Esc` fecha. Abaixo de 1280 px o painel fica por cima da lista; abaixo de 760 px ocupa a tela. "Abrir como página" dá um link próprio.
+- **Toda tela é uma URL:** voltar, recarregar e compartilhar caem no mesmo lugar.
+- **Busca `⌘K`:** encontra conhecimento, áreas, pastas e memória de agentes, além de ações.
+- **Atalhos:** `g o`, `g k`, `g r`, `g a`, `g c`, `/` e `?`.
+- **Breadcrumb pela estrutura:** Atlas › Conhecimento › Área › pasta.
+- **Chat → detalhes** pelos chips; **Agents → Memória** por uma aba própria; e a memória aponta para o Atlas ("o conhecimento compartilhado mora no Atlas").
 
 ---
 
 ## 6. Invariantes de UI (viram critérios de aceite)
 
-1. **As bandas nunca se misturam.** Invariantes (T1 ou mais) e advisory (T2) ficam em seções separadas, e uma linha T2 nunca usa a forma visual de uma invariante ratificada (`contracts/src/pack.ts:22-26`).
-2. **A freshness é por linha.** Um valor ausente aparece como `[?]`, nunca como FRESH (`query.md:46-48`). O `stale` da pack não serve de semáforo.
-3. **Os três eixos de estado não se fundem** (seção 1.2). Cada estado tem ícone e texto, nunca só cor.
-4. **Indisponível não é zero.** Os campos degenerados (dependencies, hits, ppr, budget, trigger) e os estados HOLD do `AtlasContextHeld` aparecem como "indisponível" com o motivo e o próximo passo. É a mesma regra do S19-W1-T1 para custo e contexto.
-5. **nodeKey ≠ content address.** O tipo de cada id é explícito na rota e no contrato.
-6. **Ler não dá autoridade para escrever.** Toda escrita passa por `atlas-emit`, `atlas-link` ou `atlas-memory-emit`, com ator identificado. A UI não gera aprovação sozinha (S20), e T0 exige ratificação humana.
-7. **Estado operacional só de fonte real** (ROOT-INV-04, `specs/orchestra-visual/handoff/epic-215.json`). Mocks e fixtures nunca são exibidos como se fossem dados reais.
-8. **O renderer nunca lê `.atlas/`.** Tudo passa pelo client gerado.
-9. **Memória ≠ Knowledge na apresentação.** A Knowledge aparece só para leitura na visão do seat, e o decaimento da Memória fica visível.
+1. **Linguagem de produto na superfície.** Nenhum termo interno (nodeKey, tier, banda, seal, freshness, hash) aparece fora de "Detalhes técnicos".
+2. **Confirmado e sugerido nunca se parecem.** Sugestões (T2) têm forma visual própria (borda tracejada, texto atenuado, "sugerido por") e nunca aparecem como Regra (`contracts/src/pack.ts:22-26`).
+3. **Estado é sempre ícone + palavra**, nunca só cor. Um estado ausente aparece como "Ainda não verificado", nunca como "Em dia" (`query.md:46-48`).
+4. **O que não existe não aparece.** Nada de campo degenerado, modo vazio ou cadeado de fase. Atlas desligado ou lendo o código são estados explícitos, nunca zero.
+5. **Os números batem entre si.** Toda contagem é derivada da mesma lista que a tela mostra.
+6. **Toda ação é reversível e fica registrada.** Desfazer aparece na hora; remover é supersede, nunca apagar. Regra crítica só é confirmada por uma pessoa, e a UI nunca aprova sozinha (S20).
+7. **Estado operacional só de fonte real** (ROOT-INV-04). O renderer nunca lê `.atlas/`; tudo passa pelo client gerado.
+8. **Memória ≠ Conhecimento.** A memória é do agente e mora em Agents; o conhecimento é do projeto e mora no Atlas.
 
 ---
 
@@ -275,7 +283,7 @@ packages/app-shell/src/orchestra/atlas/{api,model,contract}.ts   store da view, 
   - O servidor mantém um read model composto por `(projectID, worktree, HEAD sha)`, montado de forma preguiçosa e reaproveitado entre requests.
   - A UI tem um estado explícito "construindo índice", não um spinner infinito.
 - **Sem push no Atlas.** O Atlas não emite eventos. O servidor invalida o read model quando o HEAD ou a worktree mudam e publica um evento de instância `atlas.updated`. A UI invalida as queries, como o Relay já faz.
-- **Escritor único.** Ler não conflita com escrever. Quando a escrita entrar (W4), ela usa o mesmo caminho das ferramentas (`createNativeMemory` e as portas governadas) e respeita "um escritor por raiz".
+- **Escritor único.** Ler não conflita com escrever. Quando a escrita entrar (W3), ela usa o mesmo caminho das ferramentas (`createNativeMemory` e as portas governadas) e respeita "um escritor por raiz".
 - **Nada de MCP stdio nem de processo filho.** Tudo roda no processo, pelo bundle; o allowlist de spawn não cresce.
 
 **Volumes:**
@@ -288,15 +296,14 @@ packages/app-shell/src/orchestra/atlas/{api,model,contract}.ts   store da view, 
 
 ## 8. Fases sugeridas
 
-Cada fase é uma fatia que pode ir para produção, com os gates do `specs/orchestra-visual/CHAPTERS-SCOPE.md`: só dados reais; estados de loading, vazio, erro e indisponível; teclado; escuro e claro; RTL; E2E pelo sidebar; isolamento ao trocar de perfil.
+Cada fase é uma fatia que pode ir para produção, com os gates do `specs/orchestra-visual/CHAPTERS-SCOPE.md`: só dados reais; estados de loading, vazio, erro e indisponível; teclado; escuro e claro; RTL; E2E pelo sidebar; isolamento ao trocar de perfil. A fase de uma tela não aparece na UI: uma tela entra quando a fase dela entra.
 
 | Fase | Entrega | Pré-requisito |
 |---|---|---|
-| **W0 — Contrato e mock** | `specs/atlas-ui/UI-INVENTORY.md`, `UI-DELIVERY-PLAN.md`, `contract.ts` congelado e o mock aprovado **guardado no repositório com hashes** (lição do Actions: o código-fonte do mock se perdeu e foi recuperado do banco de sessões). Registro de paridade P01… com as facetas R/I/V/M/L | Decisões D1–D5 |
-| **W1 — Núcleo somente leitura** | Entrada boundary `knowledge-read`, a porta e a Layer, os grupos Protocol e Server, o client gerado. Telas A01–A05 (núcleo) e A06 (só leitura). Link a partir do diálogo de governança | W0 |
-| **W2 — Contexto e sessão** | A05 completo (relações e mini-grafo), A07, A08, A09. Chips de citação na timeline com o Inspector lateral. Painel "por que o agente sabia" | W1; D4 para A09 |
-| **W3 — Histórico e operação** | A10, A11, paleta completa, deep links `orchestra://atlas`, matriz de screenshots | W2 |
-| **W4 — Escrita governada** | A06 (aceitar re-ground mecânico), A12, A13 (link, retract, ratificação) | D2; leituras e portas novas no Atlas (listar staging) |
+| **W0 — Contrato e mock** | Mock aprovado (este, depois da revisão do owner) congelado com hashes; `UI-INVENTORY.md`, `UI-DELIVERY-PLAN.md`, `contract.ts` e registro de paridade | D1–D5 |
+| **W1 — Ler** | Entrada `knowledge-read` no boundary, a porta e a Layer, os grupos Protocol e Server, o client gerado. Visão geral, Conhecimento, Detalhes, e os estados desligado e lendo o código | W0, D3 |
+| **W2 — No contexto** | Chips de citação e "Usou N coisas do Atlas" no Chat; aba Memória em Agents | W1, D4 |
+| **W3 — Revisar** | Revisar com as quatro abas e Desfazer; Editar e Remover nos detalhes. Escrita só pelas portas governadas, com a pessoa como ator | W1, D2; leitura "listar staging" no Atlas para as sugestões vindas do `mine` |
 
 **Processo (copiar o do Actions):**
 
@@ -322,11 +329,11 @@ Cada fase é uma fatia que pode ir para produção, com os gates do `specs/orche
 | # | Pergunta | Recomendação |
 |---|---|---|
 | D1 | Onde o Atlas fica no sidebar e com que nome | Abaixo de Workflows, com o rótulo "Atlas" |
-| D2 | A UI escreve no Atlas? | Não até a W3. Na W4, só pelas portas governadas, com ator e token explícitos; T0 só humano |
-| D3 | A entrada nova `knowledge-read` no boundary (é mudança no Atlas) | Sim. Sem ela não existe tela de Knowledge, só Own e Memória |
-| D4 | O estado real da Memória (README vs card da campanha 11) e quais seats aparecem | Corrigir o README e o `classes.md` antes; mostrar backend, jimmy e archie, como no runtime |
-| D5 | Quem desenha o mock e onde ele vive | O primeiro mock interativo já está em [`specs/atlas-ui/mock/`](mock/README.md), com todas as telas. Falta a aprovação visual do owner antes de congelar com hashes |
-| D6 | O nome do Steward na UI ("Steward" ou outro) e quem pode ratificar | Seguir `functional-surface.md` |
+| D2 | A UI escreve no Atlas? | Sim, em Revisar e nos Detalhes (W3), só pelas portas governadas e com a pessoa como ator; regra crítica só humana |
+| D3 | A entrada nova `knowledge-read` no boundary (é mudança no Atlas) | Sim. Sem ela não existe Conhecimento na UI |
+| D4 | O estado real da Memória (README vs card da campanha 11) e quais agentes aparecem | Corrigir o README e o `classes.md` antes; mostrar backend, jimmy e archie, como no runtime |
+| D5 | O mock | A segunda versão, em linguagem de produto, está em [`mock/`](mock/README.md). Falta a sua aprovação visual antes de congelar |
+| D6 | O vocabulário da seção 5.2 (Regra, Cuidado, Sugestão; Em dia, Código mudou, Não vale mais) | Aprovar ou ajustar antes da W0, porque ele vira o i18n |
 
 ---
 

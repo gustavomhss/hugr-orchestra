@@ -1,63 +1,48 @@
-# Atlas chapter — interactive design preview
+# Atlas — interactive design preview
 
-An interactive mock of every Atlas screen proposed in [`../STUDY.md`](../STUDY.md). It is a preview with sample data, not a connected client: nothing reads `.atlas/`, and governed writes are shown locked with the phase that delivers them.
+This preview covers the Atlas screens proposed in [`../STUDY.md`](../STUDY.md) (section 5) in their final shape, with no phase markers. All data is sample data and nothing reads `.atlas/`. Review actions work, can be undone, and reset on reload.
 
 ## Open it
 
-Open `index.html` in Chrome directly (`file://` works, the scripts are classic), or serve the repository root and open the page:
+Open `index.html` in Chrome. It works straight from disk (`file://`) because the scripts are classic, not modules.
+
+You can also serve the repository root:
 
 ```bash
 python3 -m http.server 4791 --bind 127.0.0.1
 ```
 
-Then open `http://127.0.0.1:4791/specs/atlas-ui/mock/index.html`.
+and open `http://127.0.0.1:4791/specs/atlas-ui/mock/index.html`.
 
-The page links the real chapter kit (`packages/app-shell/src/orchestra/chapters/kit.css`), the Relay parts (`relay/relay.css`), the bundled fonts and the brand assets from the app, so it uses production tokens and controls. The shell is carried over from the approved Actions preview.
+The page links the app's real chapter kit (`packages/app-shell/src/orchestra/chapters/kit.css`), the Relay parts, the fonts and the brand assets. The shell comes from the approved Actions preview.
 
-## What it covers
+## Screens
 
-`#/gallery` lists every screen with its study ID and phase:
+Use "All screens" in the top bar to reach any of them.
 
-- A01 Overview
-- A02 Territories (table and matrix)
-- A03 Scope briefing
-- A04 Facts
-- A05 Inspector (drawer and page)
-- A06 Drift
-- A07 Relations (tree and layered graph)
-- A08 Negations
-- A09 Memory
-- A10 History
-- A11 Store health
-- A12 Proposals
-- A13 Ratification
-- S01 Session citation chips and "why it knew"
-- The command palette, the shortcut sheet, the ratify dialog and the HOLD state
+- **Overview.** What agents know, how much is up to date, what needs you, the areas of the code and recent changes.
+- **Knowledge.** Everything, by area or folder, with kind and status filters.
+- **Details.** A panel beside the list, or a page you can link to.
+- **Review.** Four tabs: no longer true, needs your confirmation, suggestions, and code moved.
+- **Agents › Memory.** What one agent remembers. Agent memory lives in Agents, not in Atlas.
+- **Chat.** Citation chips and "Used N things from Atlas".
+- **Off and reading states.** Switch with "State" in the top bar.
 
-The top bar switches:
+## Interaction
 
-- **State:** Ready, Building index, or Not configured (HOLD);
-- **Light / dark;**
-- **LTR / RTL.**
-
-## Interaction model
-
-- Every view is a URL (hash route): back/forward, reload and shared links land on the same screen. The open fact is part of the URL (`?inspect=<nodeKey>`).
-- Selecting a row opens the inspector in place, beside the list.
-  - Below 1280px it overlays the list; below 760px it takes the screen.
-  - `j`/`k` step through facts and `Esc` closes it.
-- `⌘K` opens the palette over any screen. It searches screens, territories, scopes, units, facts, seats and actions; `scope:` and `unit:` narrow it.
-- `g` followed by a letter jumps between screens (`?` lists them). `/` focuses the list filter.
+- Every screen is a URL, and an open item is `?item=<id>`.
+- `⌘K` searches everything.
+- `j` and `k` move between items, and `Esc` closes details.
+- `g` plus a letter jumps between screens. Press `?` to list them.
 
 ## Files
 
 | File | Contents |
 | --- | --- |
 | `index.html` | Page shell and script order |
-| `shell.css` | Window, sidebar and chapter context rail |
-| `atlas.css` | Atlas parts, built on kit tokens only |
-| `ui.js` | Icons, state marks (freshness, truth and tier kept separate) and helpers |
-| `data.js` | Sample data shaped like `own`, `query`, `doctor` and `memory-header` output |
-| `views-knowledge.js` | A01–A06 |
-| `views-more.js` | A07–A13, S01, gallery and HOLD |
-| `app.js` | Router, navigation, inspector, palette and keyboard |
+| `shell.css` | Window, sidebar and side rail |
+| `atlas.css` | Atlas parts, built only on kit tokens |
+| `ui.js` | Icons, plain-language states and kinds, helpers |
+| `data.js` | Sample knowledge; every count is derived from it |
+| `views.js` | Overview, Knowledge, Review, Details, Agents › Memory, Chat, Off |
+| `app.js` | Router, rail, details panel, review actions with Undo, search, keyboard, gallery |

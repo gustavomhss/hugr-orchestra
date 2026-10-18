@@ -68,49 +68,43 @@ window.Atlas = window.Atlas || {}
   A.icon = (name, cls = "") => `<svg class="wf-ic ${cls}" viewBox="0 0 16 16" aria-hidden="true">${paths[name] ?? paths.dot}</svg>`
   A.esc = (value) => String(value ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[c])
   A.short = (hex, n = 8) => (hex ? `${hex.slice(0, n)}` : "")
+  A.hash = (seed) => {
+    let h = 2166136261
+    return Array.from({ length: 2 }, (_, i) => { for (const c of `${seed}:${i}`) h = Math.imul(h ^ c.charCodeAt(0), 16777619) >>> 0; return h.toString(16).padStart(8, "0") }).join("")
+  }
   A.num = (n) => Number(n).toLocaleString("en-US")
 
-  // Three separate vocabularies (contracts/src/status.ts): anchor freshness, predicate truth, tier. Never merged.
-  const fresh = {
-    FRESH: ["good", "checkc", "Fresh", "Anchor subtree hash matches the indexed code."],
-    DRIFTED: ["warm", "drift", "Drifted", "The anchored subtree changed since this fact was grounded."],
-    STALE: ["stale", "clock", "Stale", "Advisory drift: served flagged, does not block."],
+  // Plain-language states. Each one is glyph + word, never colour alone.
+  const statuses = {
+    ok: ["good", "checkc", "Up to date", "Checked against the current code."],
+    moved: ["warm", "drift", "Code moved", "Still true. The code it points to moved and the reference needs updating."],
+    broken: ["bad", "xc", "No longer true", "The code changed and this no longer holds. Agents are warned not to rely on it."],
+    unchecked: ["", "clock", "Not checked yet", "Atlas could not check this against the current code yet."],
   }
-  A.freshness = (value) => {
-    if (!fresh[value]) return `<span class="at-state unknown" data-tip="Freshness not reported for this row. Shown as [?], never as Fresh.">[?]</span>`
-    const [tone, glyph, label, tip] = fresh[value]
-    return `<span class="at-state ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
+  A.status = (value, plain = false) => {
+    const [tone, glyph, label, tip] = statuses[value] ?? statuses.unchecked
+    return `<span class="at-state ${tone}" ${plain ? "" : `data-tip="${tip}"`}>${A.icon(glyph)}${label}</span>`
   }
-  const truth = {
-    HOLDS: ["good", "check", "Holds", "The predicate check passed at the indexed sha."],
-    BROKEN: ["bad", "xc", "Broken", "Semantic drift: the predicate no longer holds. Blocks merge."],
-    NA: ["", "minusc", "N/A", "The check does not apply to the current code."],
-    advisory: ["blue", "sparkle", "Advisory", "A claim, not a checked predicate."],
+  A.statusTip = (value) => (statuses[value] ?? statuses.unchecked)[3]
+  const kinds = {
+    rule: ["blue", "shield", "Rule", "Confirmed. Agents follow it."],
+    caution: ["warm", "warning", "Caution", "Confirmed. Something to watch out for."],
+    suggestion: ["dash", "sparkle", "Suggestion", "Proposed by an agent. Not confirmed yet, so agents treat it as a hint."],
   }
-  A.truth = (value) => {
-    if (!truth[value]) return `<span class="at-state unknown">[?]</span>`
-    const [tone, glyph, label, tip] = truth[value]
-    return `<span class="at-state ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
+  A.kind = (item) => {
+    if (item.critical) return `<span class="at-kind crit" data-tip="Critical rule. Only a person can confirm or change it.">${A.icon("lock")}Critical rule</span>`
+    const [tone, glyph, label, tip] = kinds[item.kind]
+    return `<span class="at-kind ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
   }
-  const tierTip = { T0: "T0 · ratified by a human Steward", T1: "T1 · governing, ratified", T2: "T2 · advisory machine proposal, not ratified" }
-  A.tier = (value) => `<span class="at-tier ${String(value).toLowerCase()}" data-tip="${tierTip[value] ?? value}">${A.esc(value)}</span>`
-  A.seal = (value) => (value ? `<span class="at-seal ${value}" data-tip="${value === "proven" ? "Proven: a deterministic check backs it." : "Justified: argued from evidence, not machine-proven."}">${value}</span>` : "")
-
-  const familyGlyph = { advisory: "sparkle", predicate: "check", relation: "relations", negation: "negation", transition: "branch", "test-vacuity": "warning" }
-  A.family = (value) => `<span class="at-family" data-tip="${A.esc(value)} fact">${A.icon(familyGlyph[value] ?? "fact")}</span>`
-
-  A.seatChip = (seat, kind = "") => {
-    const s = A.data.seats[seat] ?? { label: seat }
-    return `<span class="at-seat ${kind}"><i>${A.esc(s.label[0])}</i>${A.esc(s.label)}</span>`
+  A.agent = (id) => {
+    const a = A.data.agents[id] ?? { name: id }
+    return `<span class="at-seat ${a.human ? "human" : ""}"><i>${A.esc(a.name[0])}</i>${A.esc(a.name)}</span>`
   }
+  A.where = (item) => `<code class="at-where">${A.esc(item.file)}<span>:${item.line}</span></code>`
 
   A.badge = (label, tone = "") => `<span class="mx-badge ${tone}">${A.esc(label)}</span>`
   A.btn = (label, action, opts = {}) =>
     `<button type="button" class="mx-btn ${opts.primary ? "primary" : ""} ${opts.icon && !label ? "icon" : ""}" data-action="${action}" ${opts.value !== undefined ? `data-value="${A.esc(opts.value)}"` : ""} ${opts.disabled ? "disabled" : ""} ${opts.tip ? `data-tip="${A.esc(opts.tip)}"` : ""} ${opts.label ? `aria-label="${A.esc(opts.label)}"` : ""}>${opts.icon ? A.icon(opts.icon) : ""}${A.esc(label)}</button>`
-  // A governed write that this phase does not ship: visible, explained, never a dead click.
-  A.lockedBtn = (label, phase = "W4") =>
-    `<button type="button" class="mx-btn at-locked" data-action="locked" data-value="${A.esc(label)}" data-tip="Governed write through an Atlas door. Arrives in ${phase}; this preview shows where it will live.">${A.icon("lock", "lock")}${A.esc(label)}</button>`
-
   A.bar = (parts, cls = "") =>
     `<span class="at-bar ${cls}">${parts.filter((p) => p[1] > 0).map(([tone, value]) => `<i class="${tone}" style="flex:${value}"></i>`).join("")}</span>`
 
