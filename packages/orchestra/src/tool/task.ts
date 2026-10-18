@@ -580,7 +580,7 @@ export const TaskTool = Tool.define(
             sessionID: ctx.sessionID,
             authorizationID: params.authorizationID,
             permission: childPermissions,
-            requireCurrent: true,
+            requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
           }).pipe(
             Effect.provideService(Database.Service, database),
             Effect.provideService(EventV2Bridge.Service, events),
@@ -601,7 +601,7 @@ export const TaskTool = Tool.define(
               sessionID: ctx.sessionID,
               authorizationID: params.authorizationID,
               permission: childPermissions,
-              requireCurrent: true,
+              requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
             }).pipe(
               Effect.provideService(Database.Service, database),
               Effect.provideService(EventV2Bridge.Service, events),
