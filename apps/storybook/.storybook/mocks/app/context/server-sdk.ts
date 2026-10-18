@@ -86,7 +86,7 @@ export function useServerSDK() {
       },
     },
   }
-  return () => ({ client, api, scope: "story-server", protocolKind: () => "v2" as const })
+  return () => ({ client, api, scope: "story-server", server: { type: "mock" }, protocolKind: () => "v2" as const })
 }
 
 export function useServerProtocol() {

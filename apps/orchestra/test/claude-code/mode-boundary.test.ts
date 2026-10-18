@@ -31,7 +31,7 @@ const ADAPTER_EDGES = [
   {
     file: "server/routes/instance/httpapi/handlers/provider.ts",
     target: "claude-code/host/provider",
-    reason: "Legacy provider discovery adapts the host sign-in status.",
+    reason: "Legacy provider discovery adapts the host sign-in status and starts the Claude sign-in.",
   },
   {
     file: "server/routes/instance/httpapi/server.ts",
@@ -71,6 +71,8 @@ const INTERFACE = [
   // Native compaction restores a retained plan only after reading its durable owner-message admission record.
   // This shared persistence port does not invoke either mode's LLM loop.
   "maestro/admission-record",
+  // The Claude sign-in runs the CLI's own `auth login` through the shared process spawner.
+  "util/process",
   // The upstream work-result card schema the delegation hook reads to attach host attribution to an archie proposal.
   "maestro/upstream-result",
 ]

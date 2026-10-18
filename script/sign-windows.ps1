@@ -9,7 +9,12 @@ if (-not $Path -or $Path.Count -eq 0) {
   throw "At least one path is required"
 }
 
+# A release build (release-desktop.yml sign=true) sets ORCHESTRA_REQUIRE_SIGNING=1: missing signing fails it instead of
+# shipping an unsigned binary.
+$required = $env:ORCHESTRA_REQUIRE_SIGNING -eq "1"
+
 if ($env:GITHUB_ACTIONS -ne "true") {
+  if ($required) { throw "WINDOWS_SIGNING_NOT_CONFIGURED: signing is required but this is not running on GitHub Actions" }
   Write-Host "Skipping Windows signing because this is not running on GitHub Actions"
   exit 0
 }
@@ -21,6 +26,7 @@ $vars = @{
 }
 
 if ($vars.Values | Where-Object { -not $_ }) {
+  if ($required) { throw "WINDOWS_SIGNING_NOT_CONFIGURED: signing is required but Azure Artifact Signing is not configured" }
   Write-Host "Skipping Windows signing because Azure Artifact Signing is not configured"
   exit 0
 }

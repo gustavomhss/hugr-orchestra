@@ -4,10 +4,10 @@
   "version": "1.18.27",
   "type": "module",
   "license": "MIT",
-  "homepage": "https://opencode.ai",
+  "homepage": "https://github.com/gustavomhss/hugr-orchestra",
+  "bugs": "https://github.com/gustavomhss/hugr-orchestra/issues",
   "author": {
-    "name": "Orchestra",
-    "email": "hello@opencode.ai"
+    "name": "Orchestra"
   },
   "scripts": {
     "linux": "bun scripts/linux-workspace.ts",

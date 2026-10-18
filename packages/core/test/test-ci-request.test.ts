@@ -139,6 +139,12 @@ test("bun, node and env requests survive validation; unlisted or malformed env f
   expect(validateRequest({ ...valid, env }, isFile).env).toEqual(env)
   expect(() => parseOptions(["app", "--env", "PATH=x"])).toThrow("KEY one of")
   expect(() => parseOptions(["app", "--env", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=a b"])).toThrow("needs a value matching")
+  expect(parseOptions(["app", "--env", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict"]).env).toEqual({ ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict" })
+  // "0" is legacy rollback and a typo also reads as legacy: either would silence the omni positive control.
+  for (const value of ["0", "strick", "off", "true"]) {
+    expect(() => parseOptions(["app", "--env", `ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${value}`])).toThrow("needs a value matching")
+    expect(() => validateRequest({ ...valid, env: { ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: value } }, isFile)).toThrow("needs a value matching")
+  }
   expect(() => validateRequest({ package: "app", env: { PATH: "x" }, args: [] }, isFile)).toThrow("KEY one of")
   expect(() => validateRequest({ package: "app", env: [], args: [] }, isFile)).toThrow("env must be an object")
 })
@@ -269,8 +275,13 @@ test("controlVerdict accepts exactly one verdict line carrying this job's nonce,
   const frame = row("Run tests", " 70 |   if (problem) throw new Error(`${tag}: FAIL (${reason}). ${problem}`)")
   expect(controlVerdict(job, [header, nonceRow, fake, otherNonce, frame, verdict].join("\n")))
     .toBe("omni positive control: pass (declared: 1 test(s) in a.test.ts); 3 omni spawn(s), 0 delegated.")
-  expect(controlVerdict(job, [nonceRow, thrown].join("\r\n")))
-    .toBe("omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.")
+  // Only "pass" and "not applicable" count: a FAIL or an "off" (legacy rollback, nothing checked) verdict is rejected.
+  expect(() => controlVerdict(job, [nonceRow, thrown].join("\r\n")))
+    .toThrow("did not pass: omni positive control: FAIL (suite: every run must spawn through omni). no omni spawn.")
+  const off = row("Run tests", `omni positive control [${nonce}]: off (legacy rollback); nothing checked.`)
+  expect(() => controlVerdict(job, [nonceRow, off].join("\n"))).toThrow("did not pass: omni positive control: off (legacy rollback)")
+  const passing = row("Run tests", `omni positive control [${nonce}]: passing (suite: ...)`)
+  expect(() => controlVerdict(job, [nonceRow, passing].join("\n"))).toThrow("did not pass")
   // Interleaved output on the verdict's line still yields the verdict.
   const interleaved = row("Run tests", `(pass) a [1ms]omni positive control [${nonce}]: not applicable (focused: no declaring test ran); nothing.`)
   expect(controlVerdict(job, [nonceRow, interleaved].join("\n"))).toBe("omni positive control: not applicable (focused: no declaring test ran); nothing.")

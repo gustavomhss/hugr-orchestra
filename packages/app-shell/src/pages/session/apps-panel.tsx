@@ -11,7 +11,6 @@ import { pathKey } from "@/utils/path-key"
 import {
   appDockController,
   appDockProfile,
-  isLinux,
   sameTab,
   type AppDockAPI,
   type Bookmark,
@@ -21,7 +20,7 @@ import {
 import { bounds, createAppDockBoundsSync } from "./apps-panel-resize"
 import { FindBar, LibraryPopover } from "./apps-panel-library"
 import { DockModes, LinuxToolbar } from "./apps-panel-linux"
-import { TabButton } from "./apps-panel-tab-button"
+import { tabButtonID, tabPanelID, TabStrip } from "./apps-panel-tab-button"
 import { TabMenu } from "./apps-panel-tab-menu"
 import { createLinuxMenuController, LinuxMenu } from "./linux-menu"
 import "./apps-panel.css"
@@ -49,6 +48,7 @@ export function AppsPanel(
   const sdk = useSDK()
   const global = useGlobal()
   const settings = useSettings()
+  const t = language.t
   const desktop = createMediaQuery("(min-width: 768px)")
   // Orchestra's desktop workspace (the titlebar's profile-scoped tab mode) binds the Dock to the
   // repository profile. Everywhere else the Apps panel keeps its manual browser profiles.
@@ -262,14 +262,14 @@ export function AppsPanel(
         class={`zen-browser-shell ${view.sidebarCollapsed && !props.compact ? "is-sidebar-collapsed" : ""} ${props.compact ? "is-compact" : ""} ${view.findOpen && !activeLinux() ? "is-finding" : ""}`}
         data-status={state.status}
       >
-        <aside class="zen-browser-sidebar" aria-label={language.t("orchestra.dock.sidebar.label")}>
-          <div class="zen-workspace-indicator" aria-label={language.t("orchestra.dock.workspace.current")}>
+        <aside class="zen-browser-sidebar" aria-label={t("appDock.browser.workspaces")}>
+          <div class="zen-workspace-indicator" role="group" aria-label={t("appDock.browser.workspace")}>
             <button
               class="zen-sidebar-toggle"
               type="button"
-              aria-label={
-                view.sidebarCollapsed ? language.t("orchestra.nav.expand") : language.t("orchestra.nav.collapse")
-              }
+              aria-label={t(
+                view.sidebarCollapsed ? "appDock.browser.sidebar.expand" : "appDock.browser.sidebar.collapse",
+              )}
               aria-pressed={view.sidebarCollapsed}
               onClick={toggleSidebar}
             >
@@ -278,7 +278,7 @@ export function AppsPanel(
             {!activeLinux() && <span class="zen-workspace-indicator-dot" aria-hidden="true" />}
             {activeLinux() && !view.sidebarCollapsed && (
               <strong class="zen-workspace-kind">
-                <bdi dir="ltr">{language.t("appDock.linux.title")}</bdi>
+                <bdi dir="ltr">{t("appDock.linux.title")}</bdi>
               </strong>
             )}
             {!repository() && !activeLinux() && (
@@ -286,7 +286,7 @@ export function AppsPanel(
                 <select
                   class="zen-workspace-indicator-name"
                   value={state.profile}
-                  aria-label={language.t("orchestra.dock.profile.select")}
+                  aria-label={t("appDock.browser.profile.label")}
                   disabled={state.status === "loading"}
                   onChange={(event) => {
                     setView("libraryOpen", undefined)
@@ -304,7 +304,7 @@ export function AppsPanel(
                 <button
                   class="zen-profile-add"
                   type="button"
-                  aria-label={language.t("orchestra.dock.profile.create")}
+                  aria-label={t("appDock.browser.profile.create")}
                   onClick={() => setView("profileCreating", true)}
                 >
                   +
@@ -318,15 +318,15 @@ export function AppsPanel(
                 autofocus
                 value={view.profileDraft}
                 onInput={(event) => setView("profileDraft", event.currentTarget.value)}
-                placeholder={language.t("orchestra.dock.profile.name")}
-                aria-label={language.t("orchestra.dock.profile.newName")}
+                placeholder={t("appDock.browser.profile.placeholder")}
+                aria-label={t("appDock.browser.profile.name")}
               />
-              <button type="submit" aria-label={language.t("orchestra.dock.profile.save")}>
+              <button type="submit" aria-label={t("appDock.browser.profile.save")}>
                 +
               </button>
               <button
                 type="button"
-                aria-label={language.t("orchestra.dock.profile.cancel")}
+                aria-label={t("appDock.browser.profile.cancel")}
                 onClick={() => setView("profileCreating", false)}
               >
                 x
@@ -334,39 +334,15 @@ export function AppsPanel(
             </form>
           )}
           {activeLinux() && <LinuxMenu controller={linuxMenu} collapsed={view.sidebarCollapsed} />}
-          <div
-            class="zen-tabs"
-            role="tablist"
-            aria-label={language.t("orchestra.dock.tab.list")}
+          <TabStrip
+            tabs={state.tabs}
+            active={() => state.active}
             hidden={activeLinux()}
-          >
-            {state.tabs.filter((tab) => tab.pinned && !isLinux(tab.url)).length > 0 && (
-              <div class="zen-tab-section-label">{language.t("orchestra.dock.tab.pinned")}</div>
-            )}
-            {state.tabs
-              .filter((tab) => tab.pinned && !isLinux(tab.url))
-              .map((tab) => (
-                <TabButton
-                  tab={tab}
-                  active={() => state.active}
-                  select={dock.select}
-                  setMenu={(menu) => setView("menu", menu)}
-                />
-              ))}
-            {state.tabs
-              .filter((tab) => !tab.pinned && !isLinux(tab.url))
-              .map((tab) => (
-                <TabButton
-                  tab={tab}
-                  active={() => state.active}
-                  select={dock.select}
-                  setMenu={(menu) => setView("menu", menu)}
-                />
-              ))}
-            <button class="zen-new-tab" type="button" disabled={!ready()} onClick={() => void dock.openNewTab()}>
-              {language.t("orchestra.dock.tab.new")}
-            </button>
-          </div>
+            disabled={!ready()}
+            select={dock.select}
+            setMenu={(menu) => setView("menu", menu)}
+            onNewTab={() => void dock.openNewTab()}
+          />
         </aside>
         <main class="zen-browser-content">
           {activeLinux() && <LinuxToolbar dock={dock} menu={linuxMenu} />}
@@ -383,7 +359,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button"
               type="button"
-              aria-label={language.t("orchestra.dock.nav.back")}
+              aria-label={t("appDock.browser.back")}
               disabled={!activeTab()?.canGoBack || !!activeCrashed() || !capability("appDockCommand")}
               onClick={() => command("back")}
             >
@@ -392,7 +368,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button"
               type="button"
-              aria-label={language.t("orchestra.dock.nav.forward")}
+              aria-label={t("appDock.browser.forward")}
               disabled={!activeTab()?.canGoForward || !!activeCrashed() || !capability("appDockCommand")}
               onClick={() => command("forward")}
             >
@@ -401,11 +377,7 @@ export function AppsPanel(
             <button
               class={`zen-nav-button zen-nav-extra ${bookmarked() ? "is-active" : ""}`}
               type="button"
-              aria-label={
-                bookmarked()
-                  ? language.t("orchestra.dock.nav.removeBookmark")
-                  : language.t("orchestra.dock.nav.addBookmark")
-              }
+              aria-label={t(bookmarked() ? "appDock.browser.bookmark.remove" : "appDock.browser.bookmark.add")}
               disabled={!!activeCrashed()}
               onClick={dock.toggleBookmark}
             >
@@ -426,13 +398,13 @@ export function AppsPanel(
                 props.onDraftChange?.(undefined)
                 dock.setURL(activeTab()?.url ?? "")
               }}
-              aria-label={language.t("orchestra.dock.nav.address")}
+              aria-label={t("appDock.browser.address")}
               disabled={!!activeCrashed()}
             />
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.library.bookmarks")}
+              aria-label={t("appDock.browser.bookmarks")}
               onClick={() => toggleLibrary("bookmarks")}
             >
               &#9734;
@@ -440,7 +412,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.library.history")}
+              aria-label={t("appDock.browser.history")}
               onClick={() => toggleLibrary("history")}
             >
               &#8986;
@@ -448,7 +420,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.find.label")}
+              aria-label={t("appDock.browser.find.label")}
               disabled={!!activeCrashed()}
               onClick={() => setView("findOpen", true)}
             >
@@ -457,7 +429,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.nav.zoomOut")}
+              aria-label={t("appDock.browser.zoomOut")}
               disabled={!!activeCrashed()}
               onClick={() => zoom(-0.1)}
             >
@@ -466,7 +438,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.nav.zoomIn")}
+              aria-label={t("appDock.browser.zoomIn")}
               disabled={!!activeCrashed()}
               onClick={() => zoom(0.1)}
             >
@@ -475,7 +447,7 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={language.t("orchestra.dock.library.downloads")}
+              aria-label={t("appDock.browser.downloads")}
               onClick={() => toggleLibrary("downloads")}
             >
               &#8595;
@@ -483,17 +455,11 @@ export function AppsPanel(
             <button
               class="zen-nav-button zen-nav-extra"
               type="button"
-              aria-label={
-                state.fullscreen
-                  ? language.t("orchestra.dock.nav.exitFullscreen")
-                  : language.t("orchestra.dock.nav.enterFullscreen")
-              }
+              aria-label={t(state.fullscreen ? "appDock.browser.fullscreen.exit" : "appDock.browser.fullscreen.enter")}
               disabled={!!activeCrashed()}
               onClick={toggleFullscreen}
             >
-              {state.fullscreen
-                ? language.t("orchestra.dock.nav.exitFullscreenButton")
-                : language.t("orchestra.dock.nav.fullscreenButton")}
+              {t(state.fullscreen ? "appDock.browser.fullscreen.exitShort" : "appDock.browser.fullscreen.enterShort")}
             </button>
             <button
               class="zen-open-button"
@@ -501,21 +467,17 @@ export function AppsPanel(
               disabled={!state.active || !!activeCrashed() || !capability("appDockCommand")}
               onClick={() => command("reload")}
             >
-              {activeTab()?.loading
-                ? language.t("orchestra.dock.page.loading")
-                : language.t("orchestra.dock.page.reload")}
+              {activeTab()?.loading ? t("common.loading") : t("appDock.browser.reload")}
             </button>
             <button class="zen-open-button" type="submit" disabled={!api || !ready() || !!activeCrashed()}>
-              {activeTab()?.loading
-                ? language.t("orchestra.dock.page.loading")
-                : language.t("orchestra.dock.page.open")}
+              {activeTab()?.loading ? t("common.loading") : t("common.open")}
             </button>
             {state.active && (
               <button
                 class="zen-nav-button"
                 type="button"
                 onClick={() => void dock.close()}
-                aria-label={language.t("orchestra.dock.tab.close")}
+                aria-label={t("appDock.browser.closeTab")}
               >
                 x
               </button>
@@ -528,12 +490,16 @@ export function AppsPanel(
           )}
           {state.permission && (
             <div class="zen-error warn" role="status" aria-live="polite">
-              {language.t("orchestra.dock.page.permission", { permission: state.permission.permission })}
+              {t("appDock.browser.permission.denied", { permission: state.permission.permission })}
             </div>
           )}
           {activeCrashed() && (
             <div class="zen-tab-crash" role="alert" aria-live="assertive">
-              <span>{language.t("orchestra.dock.tab.crashed", { reason: activeCrashed()!.reason })}</span>
+              <span>
+                {t("appDock.browser.crash.message", {
+                  reason: t(`appDock.browser.crash.reason.${activeCrashed()!.reason}`),
+                })}
+              </span>
               <button
                 class="zen-open-button"
                 type="button"
@@ -543,15 +509,13 @@ export function AppsPanel(
                 }
                 onClick={recover}
               >
-                {state.recovering
-                  ? language.t("orchestra.dock.tab.recovering")
-                  : language.t("orchestra.dock.tab.recover")}
+                {state.recovering ? t("appDock.browser.recovering") : t("appDock.browser.recover")}
               </button>
             </div>
           )}
           {activeLinux() && state.windowError && !linuxMenu.store.busy && (
             <div class="zen-error" role="status">
-              {language.t("common.requestFailed")}
+              {t("common.requestFailed")}
             </div>
           )}
           <Show when={view.libraryOpen}>
@@ -578,14 +542,19 @@ export function AppsPanel(
           </Show>
           {/* The page area. The native browser covers the view inside it, which starts below the find
               bar while that is open so the bar stays above the page it searches. */}
-          <div class="zen-browser-host">
+          <div
+            class="zen-browser-host"
+            id={tabPanelID}
+            role={state.active && !activeLinux() ? "tabpanel" : undefined}
+            aria-labelledby={state.active && !activeLinux() ? tabButtonID(state.active) : undefined}
+          >
             <div ref={host} class="zen-browser-view" />
             {api ? (
               props.placeholder
             ) : (
               <div class="zen-empty-state">
-                <strong>{language.t("orchestra.dock.page.desktopOnly")}</strong>
-                <span>{language.t("orchestra.dock.page.desktopOnlyHint")}</span>
+                <strong>{t("appDock.browser.unavailable.title")}</strong>
+                <span>{t("appDock.browser.unavailable.description")}</span>
               </div>
             )}
             {/* The browser side with no page. Views that already report an empty Dock (the cockpit card,
@@ -596,8 +565,8 @@ export function AppsPanel(
               !activeLinux() &&
               (state.tabs.length > 0 || !(props.compact || "placeholder" in props)) && (
                 <div class="zen-empty-state">
-                  <strong>{language.t("appDock.browser.title")}</strong>
-                  <span>{language.t("appDock.browser.empty")}</span>
+                  <strong>{t("appDock.browser.title")}</strong>
+                  <span>{t("appDock.browser.empty")}</span>
                 </div>
               )}
           </div>

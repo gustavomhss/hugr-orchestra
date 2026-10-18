@@ -198,4 +198,23 @@ describe("acp session state", () => {
       expect(missingPart).toBeUndefined()
     }),
   )
+
+  sessionTest.effect("keeps only the most recently updated part metadata", () =>
+    Effect.gen(function* () {
+      const session = yield* ACPSession.Service
+      yield* session.create({ id: "ses_capped", cwd: "/workspace" })
+      const record = (partId: string) => session.recordPartMetadata({ sessionId: "ses_capped", messageId: "msg_1", partId })
+      yield* record("part_0")
+      yield* record("part_1")
+      yield* Effect.forEach(Array.from({ length: ACPSession.MAX_KNOWN_PARTS - 2 }, (_, index) => `part_${index + 2}`), record)
+      yield* record("part_0")
+      yield* record("part_overflow")
+
+      const lookup = (partId: string) => session.tryGetPartMetadata({ sessionId: "ses_capped", messageId: "msg_1", partId })
+      expect((yield* session.get("ses_capped")).knownParts.size).toBe(ACPSession.MAX_KNOWN_PARTS)
+      expect(yield* lookup("part_1")).toBeUndefined()
+      expect((yield* lookup("part_0"))?.partId).toBe("part_0")
+      expect((yield* lookup("part_overflow"))?.partId).toBe("part_overflow")
+    }),
+  )
 })

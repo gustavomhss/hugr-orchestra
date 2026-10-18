@@ -6,6 +6,7 @@ import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { PromptContext } from "@orchestra/schema/prompt-context"
 import { PromptHost } from "./prompt-host"
+import { logHookFailure } from "./hook-failure"
 import { EventV2 } from "@orchestra/core/event"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
@@ -1328,7 +1329,7 @@ const layer = Layer.effect(
               const stopOutput = { continue: false }
               yield* plugin
                 .trigger("stop", stopInput, stopOutput)
-                .pipe(Effect.catch((err) => Effect.logError("stop hook failed", { sessionID, err })))
+                .pipe(logHookFailure("stop hook failed", sessionID))
 
               if (stopOutput.continue) {
                 yield* Effect.logInfo("stop hook requested continue", {

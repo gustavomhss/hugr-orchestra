@@ -39,6 +39,7 @@ import { Snapshot } from "@/snapshot"
 import { ProjectV2 } from "@orchestra/core/project"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
 import { SessionID, MessageID, PartID } from "./schema"
+import { logHookFailure } from "./hook-failure"
 
 import type { Provider } from "@/provider/provider"
 import { Effect, Layer, Option, Context, Schema, Types } from "effect"
@@ -551,12 +552,17 @@ const layer: Layer.Layer<
           },
           sessionStartOutput,
         )
-        .pipe(Effect.catch((err) => Effect.logError("session.start hook failed", { sessionID: result.id, err })))
-      // Installed `session-start` hooks run once the Session is stored, as V2's do. They only record and run beside
-      // the Session, so creating it never waits on them and their outcome never undoes it.
+        .pipe(logHookFailure("session.start hook failed", result.id))
+      // Installed `session-start` hooks run beside the stored Session, as V2's do; creation never waits on them.
       yield* PromptHost.record(result, "session-start").pipe(Effect.exit, Effect.forkDetach)
-
-      return result
+      // Creator-supplied keys win: a plugin may add metadata, never overwrite what the caller set.
+      const added = Object.fromEntries(
+        Object.entries(sessionStartOutput.metadata).filter(([key]) => !(key in (result.metadata ?? {}))),
+      )
+      if (Object.keys(added).length === 0) return result
+      const next = { ...result, metadata: { ...result.metadata, ...added } } // not `patch`: no re-read of the new row
+      yield* events.publish(SessionV1.Event.Updated, { sessionID: result.id, info: next })
+      return next
     })
 
     const get = Effect.fn("Session.get")(function* (id: SessionID) {
@@ -649,7 +655,7 @@ const layer: Layer.Layer<
               sessionEndOutput)
             .pipe(
               Effect.timeout(5000),
-              Effect.catch((err) => Effect.logError("session.end hook failed or timed out", { sessionID, err })),
+              logHookFailure("session.end hook failed or timed out", sessionID),
             )
         }
 

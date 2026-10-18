@@ -34,12 +34,11 @@ describe("LSPClient interop", () => {
         }),
     })
 
-    await client.connection.sendNotification("test/trigger", {
-      method: "workspace/workspaceFolders",
+    // The fake server forwards the client's reply, so this awaits the answer instead of sleeping past it.
+    expect(await client.connection.sendRequest<unknown>("test/request-client", { method: "workspace/workspaceFolders" })).toEqual({
+      result: [{ name: "workspace", uri: pathToFileURL(tmp.path).href }],
+      error: null,
     })
-
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    expect(client.connection).toBeDefined()
     await client.shutdown()
   })
 
@@ -59,12 +58,16 @@ describe("LSPClient interop", () => {
         }),
     })
 
-    await client.connection.sendNotification("test/trigger", {
-      method: "client/registerCapability",
-    })
-
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    expect(client.connection).toBeDefined()
+    expect(
+      await client.connection.sendRequest<unknown>("test/request-client", {
+        method: "client/registerCapability",
+        params: {
+          registrations: [
+            { id: "test-diagnostic-registration", method: "textDocument/diagnostic", registerOptions: { identifier: "syntax" } },
+          ],
+        },
+      }),
+    ).toEqual({ result: null, error: null })
     await client.shutdown()
   })
 
@@ -84,12 +87,15 @@ describe("LSPClient interop", () => {
         }),
     })
 
-    await client.connection.sendNotification("test/trigger", {
-      method: "client/unregisterCapability",
-    })
-
-    await new Promise((resolve) => setTimeout(resolve, 100))
-    expect(client.connection).toBeDefined()
+    expect(
+      await client.connection.sendRequest<unknown>("test/request-client", {
+        method: "client/unregisterCapability",
+        params: { unregisterations: [{ id: "test-diagnostic-registration", method: "textDocument/diagnostic" }] },
+      }),
+    ).toEqual({ result: null, error: null })
+    // A method the client does not handle comes back as an error, so the null replies above are real answers.
+    const unhandled = await client.connection.sendRequest("test/request-client", { method: "test/not-a-client-method" })
+    expect((unhandled as { error: { code: number } | null }).error?.code).toBe(-32601)
     await client.shutdown()
   })
 

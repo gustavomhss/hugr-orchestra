@@ -25,6 +25,10 @@ Terminal UI used by the CLI.
 
 - The KV and persistence contexts write under the core `Global` paths.
 
+## Language policy
+
+The TUI is English-only for now. Strings are written in place and there is no i18n layer. Do not add ad hoc translation dictionaries; a localization layer needs its own design, as the web and desktop apps have one in `packages/app-shell`.
+
 ## Commands
 
 - `bun typecheck`

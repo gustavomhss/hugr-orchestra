@@ -1,3 +1,4 @@
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { useDialog } from "@orchestra/ui/context/dialog"
@@ -7,6 +8,7 @@ import { useLocal } from "@/context/local"
 import { useProviders } from "@/hooks/use-providers"
 import { decode64 } from "@/utils/base64"
 import { useLanguage } from "@/context/language"
+import { useClaudeMode } from "@/orchestra/use-claude-mode"
 
 const featuredProviders = ["openai", "anthropic", "google", "github-copilot"]
 
@@ -18,6 +20,7 @@ export const DialogSelectModelUnpaidV2: Component = () => {
   const directory = () => decode64(local.slug())
   const providers = useProviders(directory)
   const language = useLanguage()
+  const claudeMode = useClaudeMode(directory)
 
   const openProviders = (provider?: string) => {
     void import("./dialog-connect-provider").then((x) => {
@@ -60,6 +63,16 @@ export const DialogSelectModelUnpaidV2: Component = () => {
           <p data-section="no-provider" class="px-3 pb-3 text-[13px] font-[440] leading-5 text-v2-text-text-muted">
             {language.t("orchestra.chat.model.noProvider")}
           </p>
+
+          <ButtonV2
+            variant="contrast"
+            size="large"
+            class="mb-2 w-full"
+            data-action="claude-mode"
+            onClick={() => void claudeMode()}
+          >
+            {language.t("orchestra.providers.claudeMode.use")}
+          </ButtonV2>
 
           <div class="flex w-full flex-col">
             <div class="flex w-full flex-col items-start rounded-lg border-[0.5px] border-v2-border-border-muted bg-v2-background-bg-layer-02 p-2.5 pt-2">

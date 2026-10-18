@@ -235,3 +235,39 @@ test("the rg a build signs must carry a valid signature; an intentionally unsign
   expect(ripgrepSigning("linux-x64-baseline", azure, "linux")).toBeUndefined()
   expect(signatureCheck("linux-x64-baseline", "/x/rg", "linux")).toBeUndefined()
 })
+
+test("ORCHESTRA_DESKTOP_UNSIGNED=1 builds prod installers with no signing identity or notarization", async () => {
+  const previous = { channel: process.env.ORCHESTRA_CHANNEL, unsigned: process.env.ORCHESTRA_DESKTOP_UNSIGNED }
+  process.env.ORCHESTRA_CHANNEL = "prod"
+  process.env.ORCHESTRA_DESKTOP_UNSIGNED = "1"
+  const unsigned = (await import(`./electron-builder.config.ts?unsigned=1`)).default as Configuration
+  delete process.env.ORCHESTRA_DESKTOP_UNSIGNED
+  const signed = (await import(`./electron-builder.config.ts?unsigned=0`)).default as Configuration
+  if (previous.channel === undefined) delete process.env.ORCHESTRA_CHANNEL
+  if (previous.channel !== undefined) process.env.ORCHESTRA_CHANNEL = previous.channel
+  if (previous.unsigned !== undefined) process.env.ORCHESTRA_DESKTOP_UNSIGNED = previous.unsigned
+
+  expect(unsigned.mac?.identity).toBeNull()
+  expect(unsigned.mac?.sign).toBeUndefined()
+  expect(unsigned.mac?.notarize).toBe(false)
+  expect(unsigned.dmg?.sign).toBe(false)
+  expect(unsigned.win?.signtoolOptions).toBeUndefined()
+  expect(unsigned.win?.signAndEditExecutable).toBe(false)
+  // Everything else is the release config: same identity, targets, resources and desktop-latest update feed.
+  expect(unsigned.appId).toBe("ai.hugr.orchestra")
+  expect(unsigned.mac?.target).toEqual(["dmg", "zip"])
+  expect(unsigned.win?.target).toEqual(["nsis"])
+  expect(unsigned.linux?.target).toEqual(["AppImage", "deb", "rpm"])
+  expect(unsigned.mac?.signIgnore).toEqual(signed.mac?.signIgnore)
+  expect(unsigned.extraResources).toEqual(signed.extraResources)
+  expect(unsigned.publish).toEqual(signed.publish)
+  expect(unsigned.publish).toMatchObject({ url: expect.stringContaining("/releases/download/desktop-latest") })
+
+  // Without the switch the release config signs and notarizes.
+  expect(signed.mac?.identity).toBeUndefined()
+  expect(typeof signed.mac?.sign).toBe("function")
+  expect(signed.mac?.notarize).toBe(true)
+  expect(signed.dmg?.sign).toBe(true)
+  expect(typeof signed.win?.signtoolOptions?.sign).toBe("function")
+  expect(signed.win?.signAndEditExecutable).toBeUndefined()
+})

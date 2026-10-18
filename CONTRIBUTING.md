@@ -14,15 +14,15 @@ However, any UI or core product feature must go through a design review with the
 
 If you are unsure if a PR would be accepted, feel free to ask a maintainer or look for issues with any of the following labels:
 
-- [`help wanted`](https://github.com/anomalyco/opencode/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahelp-wanted)
-- [`good first issue`](https://github.com/anomalyco/opencode/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
-- [`bug`](https://github.com/anomalyco/opencode/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug)
-- [`perf`](https://github.com/anomalyco/opencode/issues?q=is%3Aopen%20is%3Aissue%20label%3A%22perf%22)
+- [`help wanted`](https://github.com/gustavomhss/hugr-orchestra/issues?q=is%3Aissue%20state%3Aopen%20label%3Ahelp-wanted)
+- [`good first issue`](https://github.com/gustavomhss/hugr-orchestra/issues?q=is%3Aissue%20state%3Aopen%20label%3A%22good%20first%20issue%22)
+- [`bug`](https://github.com/gustavomhss/hugr-orchestra/issues?q=is%3Aissue%20state%3Aopen%20label%3Abug)
+- [`perf`](https://github.com/gustavomhss/hugr-orchestra/issues?q=is%3Aopen%20is%3Aissue%20label%3A%22perf%22)
 
 > [!NOTE]
 > PRs that ignore these guardrails will likely be closed.
 
-Want to take on an issue? Leave a comment and a maintainer may assign it to you unless it is something we are already working on.
+Want to take on an issue? Leave a comment and a maintainer may assign it to you unless it is something we are already working on. Bugs and questions go to [GitHub Issues](https://github.com/gustavomhss/hugr-orchestra/issues).
 
 ## Adding New Providers
 
@@ -71,9 +71,10 @@ Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`).
 
 - Core pieces:
   - `apps/orchestra`: Orchestra core business logic & server.
-  - `apps/orchestra/src/cli/cmd/tui/`: The TUI code, written in SolidJS with [opentui](https://github.com/sst/opentui)
-  - `packages/app`: The shared web UI components, written in SolidJS
-  - `apps/desktop`: The native desktop app, built with Electron (wraps `packages/app`)
+  - `packages/tui`: The TUI code, written in SolidJS with [opentui](https://github.com/sst/opentui)
+  - `packages/app-shell`: The shared web UI components, written in SolidJS
+  - `apps/web`: The browser bootstrap and development server
+  - `apps/desktop`: The native desktop app, built with Electron (wraps `packages/app-shell`)
   - `packages/plugin`: Source for `@orchestra/plugin`
 
 ### Understanding bun dev vs orchestra
@@ -116,10 +117,10 @@ To test UI changes during development:
 2. **Then run the web app:**
 
 ```bash
-bun run --cwd packages/app dev
+bun run dev:web
 ```
 
-This starts a local dev server at http://localhost:5173 (or similar port shown in output). Most UI changes can be tested here, but the server must be running for full functionality.
+This starts a local dev server at http://localhost:3000 (the port is set in `apps/web/vite.config.ts`). Most UI changes can be tested here, but the server must be running for full functionality.
 
 ### Running the Desktop App
 
@@ -139,7 +140,10 @@ bun run --cwd apps/desktop package
 ```
 
 > [!NOTE]
-> If you make changes to the API or SDK (e.g. `apps/orchestra/src/server/server.ts`), run `./script/generate.ts` to regenerate the SDK and related files.
+> After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; do not edit `src/generated` or `src/generated-effect` by hand. The legacy JavaScript SDK is rebuilt separately with `./packages/sdk/js/script/build.ts`. [AGENTS.md](./AGENTS.md) is the reference for both commands, and CI runs `check:generated`, so a stale generated file fails the build.
+
+> [!NOTE]
+> The repository ships no enforced commit hooks: `.husky` only holds what `husky` installs, so nothing runs on commit. Run the checks yourself before pushing.
 
 Please try to follow the [style guide](./AGENTS.md)
 
@@ -176,13 +180,6 @@ Some debug methods that can be problematic:
 With that said, you may want to try these methods, as they might work for you.
 
 ## Pull Request Expectations
-
-### Issue First Policy
-
-**All PRs must reference an existing issue.** Before opening a PR, open an issue describing the bug or feature. This helps maintainers triage and prevents duplicate work. PRs without a linked issue may be closed without review.
-
-- Use `Fixes #123` or `Closes #123` in your PR description to link the issue
-- For small fixes, a brief issue is fine - just enough context for maintainers to understand the problem
 
 ### General Requirements
 
@@ -250,23 +247,4 @@ These are not strictly enforced, they are just general guidelines:
 
 ## Feature Requests
 
-For net-new functionality, start with a design conversation. Open an issue describing the problem, your proposed approach (optional), and why it belongs in Orchestra. The core team will help decide whether it should move forward; please wait for that approval instead of opening a feature PR directly.
-
-## Issue Requirements
-
-All issues **must** use one of our issue templates:
-
-- **Bug report** — for reporting bugs (requires a description)
-- **Feature request** — for suggesting enhancements (requires verification checkbox and description)
-- **Question** — for asking questions (requires the question)
-
-Blank issues are not allowed. When a new issue is opened, an automated check verifies that it follows a template and meets our contributing guidelines. If an issue doesn't meet the requirements, you'll receive a comment explaining what needs to be fixed and have **2 hours** to edit the issue. After that, it will be automatically closed.
-
-Issues may be flagged for:
-
-- Not using a template
-- Required fields left empty or filled with placeholder text
-- AI-generated walls of text
-- Missing meaningful content
-
-If you believe your issue was incorrectly flagged, let a maintainer know.
+For net-new functionality, start with a design conversation. Describe the problem, your proposed approach (optional), and why it belongs in Orchestra, in an issue or by asking a maintainer. The core team will help decide whether it should move forward; please wait for that approval instead of opening a feature PR directly.

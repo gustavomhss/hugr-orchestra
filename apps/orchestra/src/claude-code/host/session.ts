@@ -8,10 +8,10 @@ export * as ClaudeHost from "./session"
 // - Stop is `interrupt()`, the model picker is `setModel()`;
 // - Claude Code's session id is derived 1:1 from the Orchestra session id, so resume and fork use the SDK's own
 //   `resume` / `forkSession` and need no transcript store;
-import { createHash } from "node:crypto"
-import { Context, Effect, Exit, FileSystem, Layer, Semaphore } from "effect"
+import { Context, Effect, Exit, FileSystem, Layer } from "effect"
 import type { AgentDefinition, AgentInfo, CanUseTool, ModelInfo, ModelUsage, PermissionResult, Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -68,6 +68,7 @@ import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
 import { ClaudeHostOptions } from "./options"
+import { claudeSessionID } from "./session-id"
 
 export interface Interface {
   /**
@@ -104,15 +105,7 @@ export const Adapters = Context.Reference<Partial<Omit<ClaudeHostOptions.Adapter
 /** How long a session's process outlives its last turn, so a quick follow-up does not respawn it. */
 export const IdleRelease = Context.Reference<number>("@orchestra/ClaudeHost/IdleRelease", { defaultValue: () => 60_000 })
 
-/** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */
-export function claudeSessionID(sessionID: string) {
-  const hash = createHash("sha1").update(NAMESPACE).update(sessionID).digest()
-  hash[6] = (hash[6] & 0x0f) | 0x50
-  hash[8] = (hash[8] & 0x3f) | 0x80
-  const hex = hash.subarray(0, 16).toString("hex")
-  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join("-")
-}
-const NAMESPACE = Buffer.from("8f0c5b3e6a2d4f1b9c7e0d2a4b6c8e1f", "hex")
+export { claudeSessionID }
 
 
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
@@ -135,6 +128,8 @@ type Live = {
   settledResults: Set<string>
   inputs: Record<string, ClaudeHostAdmission.Input>
   queued: Set<string>
+  /** Inputs a `send` is submitting, reserved before its first await so a concurrent send of the same input yields. */
+  sending: Set<string>
   starts: Record<string, string>
   sends: Map<string, SessionV1.User>
   ends: Record<string, string>
@@ -184,28 +179,29 @@ const layer = Layer.effect(
     const preparation = yield* Effect.context<Effect.Services<ReturnType<typeof ClaudeHostMcp.prepare>> | ResearchRecords.Service>()
     const serviceState = { disposed: false }
     const lives = new Map<SessionID, Live>()
-    const startups = new Map<SessionID, Semaphore.Semaphore>()
+    // Keyed by every Session this process hosts; an entry leaves once no holder or waiter remains.
+    const startups = KeyedMutex.makeUnsafe<SessionID>()
     const releasing = new Set<SessionID>()
     const revisions = new Map<SessionID, number>()
-    const writes = new Map<SessionID, Semaphore.Semaphore>()
-    const exclusive = <A, E, R>(locks: Map<SessionID, Semaphore.Semaphore>, sessionID: SessionID, effect: Effect.Effect<A, E, R>) => Effect.suspend(() => {
-      const lock = locks.get(sessionID) ?? Semaphore.makeUnsafe(1)
-      locks.set(sessionID, lock)
-      return lock.withPermits(1)(effect)
-    })
+    const writes = KeyedMutex.makeUnsafe<SessionID>()
 
     const read = (sessionID: SessionID) => sessions.get(sessionID).pipe(Effect.orDie, Effect.map((session) => {
       const value = session.metadata?.claudeCode
       return ClaudeCodeTranscript.record(value) ? value : {}
     }))
-    const write = (sessionID: SessionID, value: Record<string, unknown>) => exclusive(writes, sessionID, Effect.gen(function* () {
+    const write = (sessionID: SessionID, value: Record<string, unknown>) => writes.withLock(sessionID)(Effect.gen(function* () {
       const latest = (yield* sessions.get(sessionID).pipe(Effect.orDie)).metadata ?? {}
       yield* sessions.setMetadata({ sessionID, metadata: { ...latest,
         claudeCode: { ...(ClaudeCodeTranscript.record(latest.claudeCode) ? latest.claudeCode : {}), ...value } } })
     }))
 
-    const send = (live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") => Effect.gen(function* () {
-      if (live.queued.has(user.id) || live.delivered.has(user.id)) return
+    // An exact-retry steer can race another send of the same input across the awaits in `submit`; only one pushes it.
+    const send = (live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") => Effect.suspend(() => {
+      if (live.queued.has(user.id) || live.delivered.has(user.id) || live.sending.has(user.id)) return Effect.void
+      live.sending.add(user.id)
+      return submit(live, view, user, prompt, priority).pipe(Effect.ensuring(Effect.sync(() => live.sending.delete(user.id))))
+    })
+    const submit = (live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") => Effect.gen(function* () {
       const previous = live.inputs[user.id]
       if (previous && previous.status !== "pending") return yield* Effect.die(new Error(`Claude Code input submission is unresolved for ${user.id}`))
       const message = { ...ClaudeHostAdmission.userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
@@ -470,7 +466,7 @@ const layer = Layer.effect(
           live.inputs[user.id].status = "pending"
           await live.run(write(live.sessionID, { inputs: live.inputs }), true)
         }), abort, agent: input.agent, seat: input.agent.id ?? input.user.agent, model: input.model, discard: false, background: 0,
-        inputs: ClaudeHostAdmission.read(input.state.inputs), queued: new Set(),
+        inputs: ClaudeHostAdmission.read(input.state.inputs), queued: new Set(), sending: new Set(),
         delivered: new Set(Array.isArray(input.state.delivered) ? input.state.delivered.map(String) : []),
         settledResults: new Set(Array.isArray(input.state.settledResults) ? input.state.settledResults.map(String) : []),
         uuids: ClaudeHostBoundary.strings(uuids), starts: ClaudeHostBoundary.strings(input.state.starts), sends: new Map(), ends: ClaudeHostBoundary.strings(input.state.ends),
@@ -568,7 +564,7 @@ const layer = Layer.effect(
       }).pipe(Effect.onInterrupt(() => Effect.promise(() => close(live))))
     })
 
-    const start = (input: Parameters<typeof launch>[0]) => exclusive(startups, input.sessionID, Effect.gen(function* () {
+    const start = (input: Parameters<typeof launch>[0]) => startups.withLock(input.sessionID)(Effect.gen(function* () {
       if (input.revision !== (revisions.get(input.sessionID) ?? 0)) return yield* Effect.fail(new Error("Claude Code startup ownership was released"))
       const owner = lives.get(input.sessionID)
       if (owner?.closing || owner?.stopping) yield* Effect.promise(() => owner.stopping ?? owner.closing!)
@@ -746,7 +742,7 @@ const layer = Layer.effect(
       revisions.set(sessionID, (revisions.get(sessionID) ?? 0) + 1)
       const acquired = lives.get(sessionID)
       if (acquired) yield* stop(acquired)
-      return yield* exclusive(startups, sessionID, Effect.gen(function* () {
+      return yield* startups.withLock(sessionID)(Effect.gen(function* () {
         const live = lives.get(sessionID)
         if (!live) return yield* interrupt(sessionID)
         if (live.turn && !live.stopping) return yield* stop(live)

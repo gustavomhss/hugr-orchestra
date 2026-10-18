@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { posix } from "path"
-import { configEntryNameFromPath } from "@/config/entry-name"
+import { ConfigEntryName } from "@/config/entry-name"
 
 // Use POSIX semantics so the test is deterministic regardless of host OS —
 // production code passes paths through `path.relative` on the runtime
@@ -14,24 +14,24 @@ const AGENT_PREFIXES = ["agent/", "agents/"]
 
 describe("configEntryNameFromPath", () => {
   test("strips an `agents/` prefix and returns the bare name", () => {
-    expect(configEntryNameFromPath("agents/build.md", AGENT_PREFIXES)).toBe("build")
+    expect(ConfigEntryName.fromPath("agents/build.md", AGENT_PREFIXES)).toBe("build")
   })
 
   test("strips an `agent/` (singular) prefix", () => {
-    expect(configEntryNameFromPath("agent/build.md", AGENT_PREFIXES)).toBe("build")
+    expect(ConfigEntryName.fromPath("agent/build.md", AGENT_PREFIXES)).toBe("build")
   })
 
   test("preserves nested subdirectories in the key", () => {
-    expect(configEntryNameFromPath("agents/team/build.md", AGENT_PREFIXES)).toBe("team/build")
+    expect(ConfigEntryName.fromPath("agents/team/build.md", AGENT_PREFIXES)).toBe("team/build")
   })
 
   test("normalizes Windows-style backslashes", () => {
-    expect(configEntryNameFromPath("agents\\team\\build.md", AGENT_PREFIXES)).toBe("team/build")
+    expect(ConfigEntryName.fromPath("agents\\team\\build.md", AGENT_PREFIXES)).toBe("team/build")
   })
 
   test("falls back to basename when no prefix matches", () => {
-    expect(configEntryNameFromPath("orphaned.md", AGENT_PREFIXES)).toBe("orphaned")
-    expect(configEntryNameFromPath("anywhere/orphaned.md", [])).toBe("orphaned")
+    expect(ConfigEntryName.fromPath("orphaned.md", AGENT_PREFIXES)).toBe("orphaned")
+    expect(ConfigEntryName.fromPath("anywhere/orphaned.md", [])).toBe("orphaned")
   })
 
   // Regression for #25713: a username (or any parent segment) containing
@@ -45,13 +45,13 @@ describe("configEntryNameFromPath", () => {
     const item = "/home/agent/.config/orchestra/agents/build.md"
     const relative = posix.relative(dir, item)
     expect(relative).toBe("agents/build.md")
-    expect(configEntryNameFromPath(relative, AGENT_PREFIXES)).toBe("build")
+    expect(ConfigEntryName.fromPath(relative, AGENT_PREFIXES)).toBe("build")
   })
 
   test("regression #25713: parent /agents/ segment is irrelevant", () => {
     const dir = "/srv/agents/team/.config/orchestra"
     const item = "/srv/agents/team/.config/orchestra/agents/build.md"
     const relative = posix.relative(dir, item)
-    expect(configEntryNameFromPath(relative, AGENT_PREFIXES)).toBe("build")
+    expect(ConfigEntryName.fromPath(relative, AGENT_PREFIXES)).toBe("build")
   })
 })

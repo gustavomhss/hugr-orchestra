@@ -2,8 +2,8 @@ import { afterEach, describe, expect } from "bun:test"
 import path from "path"
 import fs from "fs/promises"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Cause, Deferred, Effect, Exit, Fiber, Layer } from "effect"
-import { EditTool } from "../../src/tool/edit"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Option } from "effect"
+import { EditTool, fileLock } from "../../src/tool/edit"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { LSP } from "@/lsp/lsp"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -36,6 +36,7 @@ const layer = LayerNode.compile(
 )
 
 const it = testEffect(layer)
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
 
 const init = Effect.fn("EditToolTest.init")(function* () {
   const info = yield* EditTool
@@ -568,6 +569,32 @@ describe("tool.edit", () => {
         ])
 
         expect(yield* load(filepath)).toBe("top = 1\nmiddle = keep\nbottom = 2\n")
+      }),
+    )
+
+    // File symlinks need elevated rights on Windows.
+    posix("an edit through a symlink holds the lock of the file it points to", () =>
+      Effect.gen(function* () {
+        const test = yield* TestInstance
+        const target = path.join(test.directory, "target.txt")
+        const link = path.join(test.directory, "link.txt")
+        yield* put(target, "value = 0\n")
+        yield* Effect.promise(() => fs.symlink(target, link))
+        const real = yield* Effect.promise(() => fs.realpath(target))
+
+        const held: boolean[] = []
+        const probe = {
+          ...ctx,
+          // The permission ask runs inside the read-modify-write section, so the target's lock must be taken here.
+          ask: () =>
+            fileLock(real)
+              .withPermitsIfAvailable(1)(Effect.void)
+              .pipe(Effect.map((free) => void held.push(Option.isNone(free)))),
+        }
+        yield* run({ filePath: link, oldString: "value = 0", newString: "value = 1" }, probe)
+
+        expect(held).toEqual([true])
+        expect(yield* load(target)).toBe("value = 1\n")
       }),
     )
   })

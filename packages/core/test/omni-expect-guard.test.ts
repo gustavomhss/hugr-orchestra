@@ -14,7 +14,8 @@
 // - It declares when its AST contains a call to an identifier or property named expectSpawn.
 //
 // Not covered, said plainly: tests that reach omni through general modules (AppProcess, Process, the spawner layer,
-// the shell tool). Those are judged by the full suite's control, which every test.yml lane applies.
+// the shell tool). Those are judged by the full suite's control, which test.yml applies to every lane of a package that
+// preloads it. app-shell preloads it only in its test:browser script, so its test-browser files are outside this guard.
 import { expect, test } from "bun:test"
 import { TOML } from "bun"
 import { mkdtemp, mkdir, rm } from "node:fs/promises"
@@ -26,8 +27,25 @@ import { preloadsControl } from "../../../script/test-ci-request"
 
 const root = path.resolve(import.meta.dir, "../../..")
 
+// The CLI's artifact tests reach the surface only through apps/cli/script/artifact-native.ts artifactWindowsFFI(),
+// whose omni compile of the native helper runs on win32-arm64 alone and once per process (ArtifactNativeWindows.load()
+// caches it), so no single test of theirs owns that spawn. fixture/artifact-native-windows-controls.ts declares it.
+const cliArtifactFFI =
+  "reaches ArtifactNativeWindows only through script/artifact-native.ts artifactWindowsFFI(): one cached omni compile per process, on win32-arm64 only, declared by fixture/artifact-native-windows-controls.ts"
+
 // Files that drive the surface but declare no spawn, each with its reason. Shrink-only: a stale entry fails.
 const ledger: Record<string, string> = {
+  "apps/cli/test/artifact-abi.test.ts": cliArtifactFFI,
+  "apps/cli/test/artifact-case-alias.test.ts": cliArtifactFFI,
+  "apps/cli/test/artifact-fs.test.ts": cliArtifactFFI,
+  "apps/cli/test/artifact-posix-race.test.ts": cliArtifactFFI,
+  "apps/cli/test/distribution-install-preservation.test.ts": cliArtifactFFI,
+  "apps/cli/test/distribution-install.test.ts": cliArtifactFFI,
+  "apps/cli/test/distribution-npm.test.ts": cliArtifactFFI,
+  "apps/cli/test/distribution-payload-integrity.test.ts": cliArtifactFFI,
+  "apps/cli/test/distribution-payload.test.ts":
+    "its own Windows ABI test calls ArtifactNativeWindows' pure PE checks and spawns nothing; the spawning Windows controls it imports declare in fixture/artifact-native-windows-controls.ts",
+  "apps/cli/test/export-artifacts.test.ts": cliArtifactFFI,
   "packages/core/test/omni-campaign-inventory.test.ts":
     "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
@@ -117,7 +135,7 @@ test("every test file that drives omni's spawn surface declares its spawning tes
   expect(result.checked).toBeGreaterThan(100)
   // The files this PR declares are seen as driving the surface: the reading engages the real tree.
   expect(result.flagged).toEqual(expect.arrayContaining([
-    "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts",
+    "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts", "apps/cli/test/distribution-process.test.ts",
     "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts",
   ]))
 })
@@ -169,6 +187,75 @@ test("teeth: undeclared, type-only, helper-reached, declared and stale-ledger fi
       .toEqual(["no package preloads script/test-omni-control.ts"])
     expect(guard(base, tracked.filter((file) => file !== "packages/core/src/spawner.ts"), {}).problems)
       .toContain("no source module calls Omni.count(\"spawns\"); the surface reading broke")
+  } finally {
+    await rm(base, { recursive: true, force: true })
+  }
+})
+
+// The converse leg: a test file that calls expectSpawn is held to it only when the control is loaded, so its package
+// must preload script/test-omni-control.ts, in bunfig.toml or in a package.json script whose `bun test` names the
+// file's top directory (app-shell's test:browser). Without the control, expectSpawn records into a list nobody reads.
+function uncontrolled(base: string, tracked: string[]) {
+  const declaring = tracked.filter((file) => /\.test\.tsx?$/.test(file)).filter((file) => {
+    const text = readFileSync(path.join(base, file), "utf8")
+    if (!text.includes("expectSpawn")) return false
+    const visit = (node: ts.Node): boolean => (ts.isCallExpression(node) && (
+      (ts.isIdentifier(node.expression) && node.expression.text === "expectSpawn") ||
+      (ts.isPropertyAccessExpression(node.expression) && node.expression.name.text === "expectSpawn"))) ||
+      ts.forEachChild(node, visit) === true
+    return visit(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true))
+  })
+  if (declaring.length === 0) return ["no test file calls expectSpawn; the reading broke"]
+  const set = new Set(tracked)
+  return declaring.flatMap((file) => {
+    const parts = file.split("/")
+    const pkg = parts.slice(0, -1).map((_, index) => parts.slice(0, parts.length - 1 - index).join("/") + "/")
+      .find((dir) => set.has(`${dir}package.json`))
+    if (pkg === undefined) return [`${file} calls expectSpawn outside any package`]
+    const bunfig = `${pkg}bunfig.toml`
+    if (set.has(bunfig) && preloadsControl(TOML.parse(readFileSync(path.join(base, bunfig), "utf8")) as { test?: { preload?: unknown } }))
+      return []
+    const top = file.slice(pkg.length).split("/")[0]
+    const scripts = Object.values((JSON.parse(readFileSync(path.join(base, `${pkg}package.json`), "utf8")) as { scripts?: Record<string, string> }).scripts ?? {})
+    const covered = scripts.some((script) => /\bbun test\b/.test(script) &&
+      /--preload\s+(?:\.\.\/)+script\/test-omni-control\.ts(?:\s|$)/.test(script) && script.split(/\s+/).includes(`./${top}`))
+    return covered ? [] : [`${file} calls expectSpawn but ${pkg} does not preload script/test-omni-control.ts for it`]
+  })
+}
+
+test("every test file that calls expectSpawn runs under the omni positive control", () => {
+  const listing = Bun.spawnSync(["git", "ls-files"], { cwd: root })
+  expect(listing.exitCode).toBe(0)
+  expect(uncontrolled(root, listing.stdout.toString().split("\n").filter(Boolean))).toEqual([])
+})
+
+test("teeth: a declaring test file in a package without the control fails by name", async () => {
+  const base = await mkdtemp(path.join(tmpdir(), "omni-expect-control-"))
+  try {
+    const declares = 'import { expectSpawn } from "x"\ntest("a", () => { expectSpawn(import.meta.path) })\n'
+    const files: Record<string, string> = {
+      "packages/a/package.json": "{}",
+      "packages/a/bunfig.toml": '[test]\npreload = ["../../script/test-omni-control.ts"]\n',
+      "packages/a/test/a.test.ts": declares,
+      "packages/b/package.json": '{"scripts":{"test":"bun test --preload ./happydom.ts ./src"}}',
+      "packages/b/bunfig.toml": '[test]\npreload = ["../../script/test-guard.ts"]\n',
+      "packages/b/test/b.test.ts": declares,
+      "packages/c/package.json": '{"scripts":{"test:browser":"bun test --preload ../../script/test-omni-control.ts ./test-browser"}}',
+      "packages/c/test-browser/c.test.ts": declares,
+      "packages/c/src/c.test.ts": declares,
+      "packages/c/test/comment.test.ts": "// expectSpawn(import.meta.path) only in a comment\n",
+    }
+    await Promise.all(Object.entries(files).map(async ([file, body]) => {
+      await mkdir(path.dirname(path.join(base, file)), { recursive: true })
+      await Bun.write(path.join(base, file), body)
+    }))
+    const tracked = Object.keys(files)
+    expect(uncontrolled(base, tracked).toSorted()).toEqual([
+      "packages/b/test/b.test.ts calls expectSpawn but packages/b/ does not preload script/test-omni-control.ts for it",
+      "packages/c/src/c.test.ts calls expectSpawn but packages/c/ does not preload script/test-omni-control.ts for it",
+    ])
+    expect(uncontrolled(base, tracked.filter((file) => !/[bc]\.test/.test(file) || file.includes("test-browser")))).toEqual([])
+    expect(uncontrolled(base, ["packages/c/test/comment.test.ts"])).toEqual(["no test file calls expectSpawn; the reading broke"])
   } finally {
     await rm(base, { recursive: true, force: true })
   }

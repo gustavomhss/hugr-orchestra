@@ -219,6 +219,15 @@ describe("McpProjectConfig", () => {
     }),
   )
 
+  it.live("drops a profile's writer lock once its writes finish", () =>
+    Effect.gen(function* () {
+      const dir = yield* scratch
+      yield* McpProjectConfig.write(dir.path, "server", { type: "local", command: ["server"] })
+      yield* McpProjectConfig.remove(dir.path, "server")
+      expect(yield* McpProjectConfig.writers.size).toBe(0)
+    }),
+  )
+
   it.live("writes through a symlinked config without replacing the link", () =>
     Effect.gen(function* () {
       const dir = yield* scratch

@@ -1040,7 +1040,7 @@ test("direct footer shows editable prompts and additional queued work while runn
     expect(frame).toContain("a-model-name-long-enough-to-force-responsive-truncation")
     expect(frame).toContain("3 queued")
     expect(frame).toContain("ctrl+b background")
-    expect(frame).toContain("ctrl+x q 3 queued")
+    expect(frame).toContain("ctrl+x p 3 queued")
     expect(frame).toContain("ctrl+x down subagents")
     expect(frame).toContain("ctrl+p cmd")
     expect(frame).toContain("a-model-name-long-enough-to-force-responsive-truncation")

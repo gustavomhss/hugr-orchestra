@@ -35,13 +35,16 @@ function convertToLineEnding(text: string, ending: "\n" | "\r\n"): string {
 
 const locks = new Map<string, Semaphore.Semaphore>()
 
-function lock(filePath: string) {
-  const resolvedFilePath = FSUtil.resolve(filePath)
-  const hit = locks.get(resolvedFilePath)
+/**
+ * The read-modify-write lock that edit and write share for one file. Callers pass the `physicalPath` result, so a
+ * symlink and its target, or two spellings of one file, serialize on the same lock.
+ */
+export function fileLock(physical: string) {
+  const hit = locks.get(physical)
   if (hit) return hit
 
   const next = Semaphore.makeUnsafe(1)
-  locks.set(resolvedFilePath, next)
+  locks.set(physical, next)
   return next
 }
 
@@ -88,7 +91,7 @@ export const EditTool = Tool.define(
           let diff = ""
           let contentOld = ""
           let contentNew = ""
-          yield* lock(filePath).withPermits(1)(
+          yield* fileLock(physical).withPermits(1)(
             Effect.gen(function* () {
               if (params.oldString === "") {
                 const existed = yield* afs.existsSafe(physical)

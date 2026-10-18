@@ -17,6 +17,7 @@ import contextEpochAgentMigration from "@orchestra/core/database/migration/20260
 import simplifyIntegrationCredentialsMigration from "@orchestra/core/database/migration/20260611192811_lush_chimera"
 import simplifySessionInputMigration from "@orchestra/core/database/migration/20260622202450_simplify_session_input"
 import promptContextMigration from "@orchestra/core/database/migration/20261008025417_prompt_context"
+import sessionListIndexesMigration from "@orchestra/core/database/migration/20261018031800_session_list_indexes"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
@@ -196,6 +197,55 @@ describe("DatabaseMigration", () => {
           { name: "session_message_session_time_created_id_idx" },
           { name: "session_message_session_type_seq_idx" },
         ])
+      }),
+    )
+  })
+
+  test("adds Session list indexes on a fresh database and on upgrade without touching rows", async () => {
+    const indexes = sql`SELECT name, sql FROM sqlite_master WHERE type = 'index' AND name IN ('session_project_time_updated_idx', 'session_time_archived_time_updated_id_idx', 'session_project_time_archived_time_created_id_idx') ORDER BY name`
+    const expected = [
+      {
+        name: "session_project_time_archived_time_created_id_idx",
+        sql: "CREATE INDEX `session_project_time_archived_time_created_id_idx` ON `session` (`project_id`,`time_archived`,`time_created`,`id`)",
+      },
+      {
+        name: "session_project_time_updated_idx",
+        sql: "CREATE INDEX `session_project_time_updated_idx` ON `session` (`project_id`,`time_updated`)",
+      },
+      {
+        name: "session_time_archived_time_updated_id_idx",
+        sql: "CREATE INDEX `session_time_archived_time_updated_id_idx` ON `session` (`time_archived`,`time_updated`,`id`)",
+      },
+    ]
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* DatabaseMigration.apply(db)
+        expect(yield* db.all(indexes)).toEqual(expected)
+      }),
+    )
+    await run(
+      Effect.gen(function* () {
+        const db = yield* makeDb
+        yield* DatabaseMigration.applyOnly(
+          db,
+          migrations.filter((migration) => migration.id !== sessionListIndexesMigration.id),
+        )
+        expect(yield* db.all(indexes)).toEqual([])
+        yield* db.run(
+          sql`INSERT INTO project (id, worktree, time_created, time_updated, sandboxes) VALUES ('global', '/project', 1, 1, '[]')`,
+        )
+        yield* db.run(
+          sql`INSERT INTO session (id, project_id, slug, directory, title, version, time_created, time_updated, time_archived) VALUES ('ses_old', 'global', 'old', '/project', 'Old', 'test', 1, 2, 3)`,
+        )
+        yield* DatabaseMigration.apply(db)
+        expect(yield* db.all(indexes)).toEqual(expected)
+        expect(
+          yield* db.get(sql`SELECT id, project_id, time_created, time_updated, time_archived FROM session`),
+        ).toEqual({ id: "ses_old", project_id: "global", time_created: 1, time_updated: 2, time_archived: 3 })
+        expect(
+          yield* db.get(sql`SELECT count(*) as count FROM migration WHERE id = ${sessionListIndexesMigration.id}`),
+        ).toEqual({ count: 1 })
       }),
     )
   })

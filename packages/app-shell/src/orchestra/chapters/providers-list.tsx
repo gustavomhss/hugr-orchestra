@@ -12,6 +12,7 @@ import { refetchProviderResource, resolveDefaultModel } from "@/hooks/provider-c
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { displayName } from "@/pages/layout/helpers"
 import { showToast } from "@/utils/toast"
+import { ClaudeModeSection } from "./claude-mode"
 import { MxBadge } from "./kit"
 import {
   errorMessage,
@@ -296,6 +297,7 @@ export function ProviderList(props: {
               </p>
             </div>
           </Show>
+          <ClaudeModeSection />
           <Show when={!cards().length && state.search.trim()}>
             <div class="mx-empty" role="status">
               {language.t("orchestra.providers.noMatches")}

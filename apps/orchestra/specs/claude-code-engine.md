@@ -80,7 +80,10 @@ it adds no token, scope, plan, tier or host-managed provider variable and strips
 activation requirement. The host also drops inherited `CLAUDE_CODE_ENTRYPOINT` so the SDK identifies its own caller
 and enables documented task output (`host/options.ts`); neither collects credentials or sets billing controls. Sign-in status comes from `accountInfo()`
 (spike S2) and the init frame, never a secret. A signed-out session ends the turn with "Claude Code is not signed in.
-Run `claude auth login` in a terminal, then send your message again." A billing refusal ends it with "Anthropic
+Sign in to Claude in Settings › Claude mode, or run `claude auth login`, then send your message again." The app's Sign in
+(`POST /provider/claude-code/login`, `claude-code/login.ts`) runs that same `claude auth login --claudeai` with the
+binary Claude mode runs; the CLI opens the browser and stores the login, and Orchestra relays only the fallback URL and
+the code the owner pastes. `GET /provider/claude-code/account` reports `accountInfo()`'s email and subscription. A billing refusal ends it with "Anthropic
 returned: <message>", verbatim, and is never retried.
 
 Tests: `test/claude-code/spawn-environment.test.ts` (spawn-environment audit), `test/claude-code/credential-access.test.ts`
