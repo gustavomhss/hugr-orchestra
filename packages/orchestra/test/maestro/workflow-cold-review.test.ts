@@ -104,7 +104,10 @@ const approvedPlan = Effect.fn("WorkflowColdReviewTest.approvedPlan")(function* 
   })
   const validation = { id: recorded.id, ...Schema.decodeUnknownSync(MaestroEvent.Validation.RecordedV3.data)(recorded) }
   if (!("reviewBaseSHA" in validation)) throw new Error("fixture validation lacks review baseline")
-  // The repair plan's committed spec; the implementation it plans does not exist yet.
+  // Existing sources inside and outside the approved writePaths, then the repair plan's committed spec; the
+  // implementation it plans does not exist yet.
+  yield* commit(directory, "src/legacy.ts", "export const legacy = 1\n")
+  yield* commit(directory, "docs/readme.txt", "outside the approved scope\n")
   const head = yield* commit(directory, "price.test.txt", "price rounds half up\n")
   yield* events.publish(MaestroEvent.Context.Recorded, {
     id: contextRecordID, sessionID: session.id, projectID: session.projectID, planRevisionID,
@@ -207,7 +210,7 @@ it.live("the workers' uncommitted result completes only with a code-stage APPROV
             sha256: result.sha256 }
         }))
         // Lucy as the real producer sees her: she records the exact artifact JSON the tool handed her.
-        const lucy = (verdict: "APPROVE" | "FIX_FIRST"): TaskPromptOps => ({
+        const lucy = (verdict: "APPROVE" | "FIX_FIRST" | "REJECT"): TaskPromptOps => ({
           cancel: () => Effect.void,
           resolvePromptParts: (template) => Effect.succeed([{ type: "text", text: template }]),
           prompt: (input) => Effect.gen(function* () {
@@ -229,7 +232,7 @@ it.live("the workers' uncommitted result completes only with a code-stage APPROV
           }).pipe(Effect.orDie),
         })
         const tool = yield* MaestroRequestReviewTool
-        const request = (verdict: "APPROVE" | "FIX_FIRST") => tool.init().pipe(Effect.flatMap((def) => def.execute(
+        const request = (verdict: "APPROVE" | "FIX_FIRST" | "REJECT") => tool.init().pipe(Effect.flatMap((def) => def.execute(
           { validationRecordID: validation.id, workCard: validation.workCard, reviewMethodVersion: "cold-review-fixture-v1",
             stage: "code" },
           { sessionID: session.id, messageID: MessageID.ascending(), agent: "maestro", agentID: "maestro",
@@ -257,9 +260,9 @@ it.live("the workers' uncommitted result completes only with a code-stage APPROV
         yield* Effect.forEach(refused, ([artifact, reason]) => record(artifact).pipe(Effect.flip,
           Effect.map((error) => expect(error).toMatchObject({ reason }))))
 
-        // FIX_FIRST through the real tool keeps the workflow held.
+        // FIX_FIRST through the real tool fails the check as a graded failure, not as the no-cost unreviewed hold.
         expect((yield* request("FIX_FIRST")).output).toStartWith("FIX_FIRST: evt_maestro_review_")
-        yield* held("WORKFLOW_CODE_REVIEW_REQUIRED")
+        yield* held("WORKFLOW_CODE_REVIEW_NOT_APPROVED")
         // The resumed workers fix it: a new tree that the FIX_FIRST receipt does not cover.
         const fixed = "export const round = (value: number) => Math.floor(value + 0.5)\n"
         yield* write(directory, "src/price.ts", fixed)
@@ -295,12 +298,28 @@ it.live("the workers' uncommitted result completes only with a code-stage APPROV
         // A changed edit after the review is a result the receipt does not cover; restoring it is covered again.
         yield* write(directory, "src/price.ts", "export const round = (value: number) => Math.ceil(value)\n")
         yield* held("WORKFLOW_CODE_REVIEW_REQUIRED")
+        // REJECT is a graded failure too, so it ends in the gate's normal escalation.
+        expect((yield* request("REJECT")).output).toStartWith("REJECT: evt_maestro_review_")
+        yield* held("WORKFLOW_CODE_REVIEW_NOT_APPROVED")
         yield* write(directory, "src/price.ts", fixed)
         expect(yield* check).toMatchObject({ status: "pass" })
         // An edit outside the approved writePaths holds, whatever was reviewed.
         yield* write(directory, "notes.txt", "outside the approved scope\n")
         yield* held("WORKFLOW_COLD_REVIEW_STALE")
         yield* Effect.promise(() => rm(path.join(directory, "notes.txt")))
+        expect(yield* check).toMatchObject({ status: "pass" })
+        // So does a deletion outside them.
+        yield* Effect.promise(() => rm(path.join(directory, "docs/readme.txt")))
+        yield* held("WORKFLOW_COLD_REVIEW_STALE")
+        yield* write(directory, "docs/readme.txt", "outside the approved scope\n")
+        expect(yield* check).toMatchObject({ status: "pass" })
+        // A deletion, then a rename, inside the writePaths are part of the result and need their own review.
+        yield* Effect.promise(() => rm(path.join(directory, "src/legacy.ts")))
+        yield* held("WORKFLOW_CODE_REVIEW_REQUIRED")
+        yield* write(directory, "src/renamed.ts", "export const legacy = 1\n")
+        yield* held("WORKFLOW_CODE_REVIEW_REQUIRED")
+        expect((yield* current).changedPaths).toEqual(["src/legacy.ts", "src/price.ts", "src/renamed.ts"])
+        expect((yield* request("APPROVE")).output).toStartWith("APPROVE: evt_maestro_review_")
         expect(yield* check).toMatchObject({ status: "pass" })
         // HEAD must stay the plan-reviewed head.
         yield* commit(directory, "src/price.ts", fixed)

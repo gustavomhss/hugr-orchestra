@@ -9,6 +9,8 @@ import { AppProcess } from "@orchestra/core/process"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { ChildProcess } from "effect/unstable/process"
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { CodeReview } from "@/maestro/code-review"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
 import { Event } from "@orchestra/schema/event"
@@ -307,5 +309,35 @@ it.live("a contract changed under the same token is completion-contract-drift at
     expect((yield* Effect.flip(arm.completion.verifiedCompletion(receipt, "child"))).reason).toBe("completion-contract-drift")
     expect((yield* Effect.flip(arm.completion.beforeDispatch(arm.binding))).reason).toBe("completion-contract-drift")
     expect(arm.ran).toEqual([])
+  }),
+)
+
+it.live("a workflow settlement holds only an unreviewed workers' result before grading; every other outcome is graded", () =>
+  Effect.gen(function* () {
+    const binding: ArsenalCompletion.Binding = { sessionID: "parent", taskID: "child", callID: "call", directory: "/",
+      projectID: "project", planID: "evt_plan", token: "token", stateDirectory: "", ownedPaths: [] }
+    const counts = { transitions: 0, checks: 0 }
+    // Stands in for relay.transition: a call is the arm grading the gate, which spends its retry budget on a fail.
+    const transition = Effect.sync(() => {
+      counts.transitions++
+      return "graded"
+    })
+    const settle = (reason: string | undefined, checklist = [{ id: "review", host_check: "cold-review" }]) =>
+      ArsenalCompletion.settleWorkflow({ checklist, binding, transition, coldReview: () => Effect.gen(function* () {
+        counts.checks++
+        if (reason) return yield* Effect.fail(new RelayWorkflowBinding.Held({ reason }))
+        return { status: "pass" as const }
+      }) })
+
+    // No code receipt for the result: the hold reaches Maestro and the arm is never touched.
+    expect(yield* Effect.flip(settle(CodeReview.REQUIRED))).toMatchObject({ reason: CodeReview.REQUIRED })
+    expect(counts).toEqual({ transitions: 0, checks: 1 })
+    // A FIX_FIRST or REJECT receipt, a stale or missing binding and a pass are all graded by the arm.
+    const graded = ["WORKFLOW_CODE_REVIEW_NOT_APPROVED", "WORKFLOW_COLD_REVIEW_STALE", "WORKFLOW_COLD_REVIEW_MISSING", undefined]
+    expect(yield* Effect.forEach(graded, (reason) => settle(reason))).toEqual(["graded", "graded", "graded", "graded"])
+    expect(counts).toEqual({ transitions: 4, checks: 5 })
+    // A gate that does not grade the cold review never runs it early.
+    expect(yield* settle(CodeReview.REQUIRED, [{ id: "build", host_check: "package-verification" }])).toBe("graded")
+    expect(counts).toEqual({ transitions: 5, checks: 5 })
   }),
 )

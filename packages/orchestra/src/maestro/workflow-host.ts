@@ -135,9 +135,14 @@ export function make(deps: Dependencies) {
         : `The workers' result is ${result.status}.` })
     // The workers' result needs its own code review, bound to this exact tree.
     const code = yield* findReview(binding.sessionID, validation.id, result.tree)
-    if (code?.data.verdict !== "APPROVE")
+    // Only a result nobody reviewed yet holds before grading; a FIX_FIRST or REJECT is a graded failure that spends
+    // the gate's retry budget, so review and resume loops stay bounded and end in the normal park.
+    if (!code)
       return yield* new RelayWorkflowBinding.Held({ reason: CodeReview.REQUIRED,
-        detail: `The workers' result (tree ${result.tree}) has ${code ? `a ${code.data.verdict} code review` : "no code review"}. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then resumes this workflow Task with its task_id ${binding.taskID}; after FIX_FIRST or REJECT the resumed workers fix the result and it is reviewed again.` })
+        detail: `The workers' result (tree ${result.tree}) has no code review. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then resumes this workflow Task with its task_id ${binding.taskID}.` })
+    if (code.data.verdict !== "APPROVE")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_NOT_APPROVED",
+        detail: `The code review of the workers' result (tree ${result.tree}) is ${code.data.verdict}: ${code.id}. The workers fix its findings; the new result is reviewed again.` })
     if (code.data.sessionID !== binding.sessionID || code.data.validationRecordID !== validation.id ||
       code.data.projectID !== binding.projectID || code.data.reviewerID !== "lucy" ||
       code.data.workCardHash !== validation.workCardHash || code.data.artifact.workCardHash !== validation.workCardHash ||

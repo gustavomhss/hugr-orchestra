@@ -13,13 +13,15 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Git } from "@/git"
 
-/** The hold the final cold-review check raises while the workers' result has no code-stage APPROVE. */
+/** The hold the final cold-review check raises while the workers' result has no code-stage receipt at all. */
 export const REQUIRED = "WORKFLOW_CODE_REVIEW_REQUIRED"
 
 /**
  * The workers' result as the code-stage review sees it. Workers never commit (their sandbox denies `.git`), so the
  * result is the working tree written as a tree object through a temporary index: the plan-reviewed head plus every
- * non-ignored change. HEAD must still be that head, and every changed path must lie inside the approved writePaths.
+ * change Git does not ignore. HEAD must still be that head, and every such changed path must lie inside the approved
+ * writePaths. Known gap: files matched by `.gitignore` never enter the result, so writes to ignored paths are neither
+ * reviewed nor scope-checked here; only the worker write sandbox bounds them.
  */
 export const result = Effect.fn("CodeReview.result")(function* (input: {
   readonly worktree: string
@@ -80,7 +82,14 @@ export const result = Effect.fn("CodeReview.result")(function* (input: {
       diff: diff.text(),
       sha256: createHash("sha256").update(diff.stdout).digest("hex"),
     }
-  }).pipe(Effect.ensuring(Effect.sync(() => rmSync(index, { force: true }))))
+  }).pipe(
+    Effect.ensuring(
+      Effect.sync(() => {
+        rmSync(index, { force: true })
+        rmSync(`${index}.lock`, { force: true })
+      }),
+    ),
+  )
 })
 
 /** The approved writePaths of a plan revision's bound workflow; a revision without one has no code stage. */
