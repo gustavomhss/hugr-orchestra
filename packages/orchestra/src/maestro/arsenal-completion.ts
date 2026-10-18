@@ -18,6 +18,7 @@ import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { WorkflowBinding } from "./workflow-binding"
+import { CodeReview } from "./code-review"
 import { isDeepStrictEqual } from "node:util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Git } from "@/git"
@@ -276,7 +277,7 @@ export const make = Effect.gen(function* () {
           if (Option.isNone(audit) || audit.value.result !== "PASS")
             return yield* new ToolSafety.Denied({ reason: "WORKFLOW_AUDIT_UNAVAILABLE" })
           yield* current.workflow.host.complete(current.workflow.binding).pipe(
-            Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
+            Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason, detail: error.detail })),
           )
           return { verified: true as const, planID: binding.planID, taskID, checks: audit.value.controls.length }
         }
@@ -359,6 +360,15 @@ export const make = Effect.gen(function* () {
         if (position.token !== ready.token || !isDeepStrictEqual(position.binding, ready.binding))
           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
         yield* ready.verifySettlement(settlement.assistantMessageID)
+        // A gate that grades the final cold review asks for the code review first. Only Maestro can request it, so the
+        // hold returns the Task to Maestro before the arm grades, without spending the gate's retry budget.
+        const coldReview = current.checks.get("cold-review")
+        if (coldReview && ready.materialized.sprint.work_packages[position.view.index]?.checklist
+          ?.some((control) => control.host_check === "cold-review")) {
+          const exit = yield* Effect.exit(coldReview(current.binding))
+          const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+          if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) return yield* error
+        }
         return yield* current.relay.transition({
         token: ready.token, binding: ready.binding, settlement,
         agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,

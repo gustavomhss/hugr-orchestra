@@ -27,6 +27,7 @@ import {
   type RosterMember,
 } from "./roster"
 import { contextIsCurrent, readContext } from "./context-record"
+import { CodeReview } from "./code-review"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
 type LegacyValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.Recorded.data>
@@ -534,12 +535,23 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
   const stage =
     input.stage === undefined || input.stage === "plan" ? "plan" : input.stage === "code" ? "code" : undefined
   if (!stage) return yield* new ReviewRejectedError({ reason: "malformed-review-stage" })
-  const reviewed = yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root)
-  const artifact = reviewed.artifact
-  // A code review starts where the APPROVE plan review ended, so it covers exactly what the workers added since.
+  // A code review covers the workers' uncommitted result from where the APPROVE plan review ended.
   const planned = stage === "code" ? yield* findReview(input.sessionID, input.validationRecordID) : undefined
-  if (stage === "code" && (planned?.data.verdict !== "APPROVE" || artifact.baseSHA !== planned.data.artifact.headSHA))
+  if (stage === "code" && planned?.data.verdict !== "APPROVE")
     return yield* new ReviewRejectedError({ reason: "code-review-base-mismatch" })
+  const code = planned
+    ? yield* CodeReview.verify(input.artifact, {
+        worktree: trusted.root,
+        base: planned.data.artifact.headSHA,
+        planRevisionID: record.planRevisionID ?? "",
+        workCardHash: record.workCardHash,
+        maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
+      })
+    : undefined
+  if (code && "reason" in code) return yield* new ReviewRejectedError({ reason: code.reason })
+  const reviewed =
+    code ?? (yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root))
+  const artifact = reviewed.artifact
   if (record.contextRecordID) {
     const context = yield* readContext(record.contextRecordID)
     // Workers move HEAD after approval, so only the plan stage needs the recorded context to still be current.
@@ -761,36 +773,11 @@ function requireFindings(value: unknown, artifact: ReviewData["artifact"], diff:
     ) {
       throw new ReviewRejectedError({ reason: "malformed-finding" })
     }
-    if (!artifact.changedPaths.includes(finding.path) || !hasAddedLine(diff, finding.path, line)) {
+    if (!artifact.changedPaths.includes(finding.path) || !CodeReview.hasAddedLine(diff, finding.path, line)) {
       throw new ReviewRejectedError({ reason: "finding-not-in-artifact" })
     }
     return { path: finding.path, line, message: finding.message }
   })
-}
-
-function hasAddedLine(diff: string, findingPath: string, findingLine: number) {
-  let file: string | undefined
-  let line: number | undefined
-  for (const value of diff.split("\n")) {
-    if (value.startsWith("+++ b/")) {
-      file = value.slice(6)
-      line = undefined
-      continue
-    }
-    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(value)
-    if (hunk) {
-      line = Number(hunk[1])
-      continue
-    }
-    if (line === undefined || file !== findingPath) continue
-    if (value.startsWith("+") && !value.startsWith("+++")) {
-      if (line === findingLine) return true
-      line++
-      continue
-    }
-    if (!value.startsWith("-\\ No newline at end of file") && !value.startsWith("-")) line++
-  }
-  return false
 }
 
 function isCheckStatus(value: unknown): value is Check["status"] {

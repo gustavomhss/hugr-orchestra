@@ -9,6 +9,8 @@ import { Git } from "@/git"
 import { REVIEW_ARTIFACT_MAX_BYTES, findReview, readValidation, workCardHash } from "@/maestro/validation-record"
 import { contextIsCurrent, readContext, STALE_CONTEXT_NEXT_STEP } from "@/maestro/context-record"
 import { readPlanRevision } from "@/maestro/plan-revision"
+import { CodeReview } from "@/maestro/code-review"
+import { omit } from "remeda"
 import type { TaskPromptOps } from "@/tool/task"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
@@ -85,60 +87,16 @@ export const MaestroRequestReviewTool = Tool.define(
             return yield* Effect.fail(new Error("Review artifact requires Git root"))
           if (!("reviewBaseSHA" in validation))
             return yield* Effect.fail(new Error("Review artifact requires bound baseline"))
+          const plan = yield* readPlanRevision(validation.planRevisionID)
+          if (!plan) return yield* Effect.fail(new Error("Review delegation requires the bound plan revision"))
           const planned = stage === "code" ? yield* findReview(ctx.sessionID, params.validationRecordID) : undefined
           if (stage === "code" && planned?.data.verdict !== "APPROVE")
             return yield* Effect.fail(new Error("Code review requires an APPROVE plan review for this validation"))
-          const baseSHA = planned ? planned.data.artifact.headSHA : validation.reviewBaseSHA
-          if (stage === "code" && headSHA === baseSHA)
-            return yield* Effect.fail(
-              new Error("Code review has nothing to review: HEAD is still the plan-reviewed head"),
-            )
-          const status =
-            stage === "code"
-              ? yield* git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: worktree })
-              : undefined
-          if (status && (status.exitCode !== 0 || status.truncated || status.text().trim()))
-            return yield* Effect.fail(new Error("Code review requires the workers' result committed and a clean tree"))
-          const plan = yield* readPlanRevision(validation.planRevisionID)
-          if (!plan) return yield* Effect.fail(new Error("Review delegation requires the bound plan revision"))
-          const names = yield* git.run(
-            ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", baseSHA, headSHA, "--", "."],
-            { cwd: worktree },
-          )
-          const changedPaths = names.text().split("\0").filter(Boolean)
-          const diff = yield* git.run(
-            [
-              "diff",
-              "--binary",
-              "--full-index",
-              "--no-ext-diff",
-              "--no-renames",
-              "--src-prefix=a/",
-              "--dst-prefix=b/",
-              baseSHA,
-              headSHA,
-              "--",
-              ".",
-            ],
-            { cwd: worktree, maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES },
-          )
           // The bound base comes from validation (plan) or the APPROVE plan review (code), never from the card, so a
           // smaller card cannot shrink the diff.
-          if (diff.truncated && stage === "code")
-            return yield* Effect.fail(
-              new Error(
-                `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: the code review covers everything the workers committed since the plan review, here ${baseSHA}..${headSHA}. The owner or a maintainer decides how to split the work.`,
-              ),
-            )
-          if (diff.truncated)
-            return yield* Effect.fail(
-              new Error(
-                `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${baseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
-              ),
-            )
-          if (names.exitCode !== 0 || names.truncated || diff.exitCode !== 0 || diff.stdout.length === 0)
-            return yield* Effect.fail(new Error("Review artifact diff unavailable"))
-          const sha256 = createHash("sha256").update(diff.stdout).digest("hex")
+          const artifact = planned
+            ? yield* codeArtifact(worktree, planned.data.artifact.headSHA, validation.planRevisionID)
+            : yield* planArtifact(worktree, validation.reviewBaseSHA, headSHA)
           const ops = ctx.extra?.promptOps as TaskPromptOps | undefined
           if (!ops) return yield* Effect.fail(new Error("Review delegation requires promptOps"))
           const child = yield* sessions.create({ parentID: ctx.sessionID, agent: "lucy" })
@@ -167,8 +125,8 @@ export const MaestroRequestReviewTool = Tool.define(
                     `work card:\n${params.workCard}`,
                     `plan revision JSON: ${JSON.stringify(plan)}`,
                     `reviewMethodVersion: ${params.reviewMethodVersion}`,
-                    `artifact JSON: ${JSON.stringify({ baseSHA, headSHA, worktree, changedPaths, sha256 })}`,
-                    `diff under review (git diff --binary --full-index ${baseSHA} ${headSHA}; read it, do not copy it into the receipt):\n${diff.text()}`,
+                    `artifact JSON: ${JSON.stringify({ ...omit(artifact, ["diff"]), worktree })}`,
+                    `diff under review (git diff --binary --full-index ${artifact.baseSHA} ${artifact.headSHA}; read it, do not copy it into the receipt):\n${artifact.diff}`,
                     `checks JSON: ${JSON.stringify(validation.checks)}`,
                     ...("skills" in context
                       ? context.skills.map(
@@ -182,9 +140,12 @@ export const MaestroRequestReviewTool = Tool.define(
               },
               {
                 beforeModel: Effect.gen(function* () {
-                  if (stage === "plan") return yield* contextIsCurrent(context)
-                  const current = yield* git.run(["rev-parse", "HEAD"], { cwd: worktree })
-                  return current.exitCode === 0 && current.text().trim() === headSHA
+                  if (!planned) return yield* contextIsCurrent(context)
+                  // The workers' result must still be the exact tree under review.
+                  return yield* codeArtifact(worktree, artifact.baseSHA, validation.planRevisionID).pipe(
+                    Effect.map((current) => current.headSHA === artifact.headSHA),
+                    Effect.orElseSucceed(() => false),
+                  )
                 }).pipe(
                   Effect.provideService(Database.Service, database),
                   Effect.provideService(Config.Service, config),
@@ -210,7 +171,7 @@ export const MaestroRequestReviewTool = Tool.define(
           const review = yield* findReview(
             ctx.sessionID,
             params.validationRecordID,
-            stage === "code" ? headSHA : undefined,
+            planned ? artifact.headSHA : undefined,
           ).pipe(Effect.provideService(Database.Service, database))
           if (review)
             return {
@@ -239,13 +200,96 @@ export const MaestroRequestReviewTool = Tool.define(
 // A plan review that judged the committed branch asked for the planned work itself; the plan stage rules that out.
 const PLAN_STAGE = [
   "Stage: plan. This review runs before the owner approves and before any worker runs.",
-  "Judge the plan revision (goal, acceptance, scope, units and their Atlas grounding, constraints, risks), the Relay workflow it binds (work packages, instructions, checklist controls, writePaths) and the committed spec and tests in the diff.",
+  "Judge the plan revision (goal, acceptance, scope, units and their Atlas grounding, constraints, risks) and the committed diff (spec, tests and any code already there). The Relay workflow appears only as its binding in the plan revision: publication checksums, parameters, resolved skills and writePaths. Judge those; you cannot read its work packages, so never assume their content.",
   "The planned implementation does not exist yet. A work package that has not run, or a file the plan will change that is still unchanged, is expected and is never a finding.",
-  "Return FIX_FIRST or REJECT only for a defect in the plan, its workflow or the committed spec and tests: a wrong or untestable acceptance criterion, scope or writePaths that miss or exceed the goal, a wrong spec or test, an unguarded risk. Cite each finding on an added line of the diff.",
+  "Return FIX_FIRST or REJECT only for a defect in the plan, its workflow binding or the committed diff: a wrong or untestable acceptance criterion, scope or writePaths that miss or exceed the goal, a wrong spec, test or code, an unguarded risk. Cite each finding on an added line of the diff.",
 ].join("\n")
 
 const CODE_STAGE = [
   "Stage: code. The owner approved the plan and the workers ran.",
-  "The diff is exactly what the workers committed since the plan-reviewed head (the artifact baseSHA). Judge it against the work card and the approved plan revision: correct, complete, inside the approved writePaths, tests that exercise the change, no regression or unsafe behavior.",
+  "The diff is exactly what the workers changed in the working tree since the plan-reviewed head (the artifact baseSHA); the artifact headSHA is that result written as a Git tree. Judge it against the work card and the approved plan revision: correct, complete, tests that exercise the change, no regression or unsafe behavior. The host already holds it inside the approved writePaths.",
   "Cite each finding on an added line of the diff.",
 ].join("\n")
+
+// The committed branch delta the plan stage reviews.
+const planArtifact = Effect.fn("MaestroRequestReview.planArtifact")(function* (
+  worktree: string,
+  baseSHA: string,
+  headSHA: string,
+) {
+  const git = yield* Git.Service
+  const names = yield* git.run(
+    ["diff", "--no-ext-diff", "--no-renames", "--name-only", "-z", baseSHA, headSHA, "--", "."],
+    {
+      cwd: worktree,
+    },
+  )
+  const diff = yield* git.run(
+    [
+      "diff",
+      "--binary",
+      "--full-index",
+      "--no-ext-diff",
+      "--no-renames",
+      "--src-prefix=a/",
+      "--dst-prefix=b/",
+      baseSHA,
+      headSHA,
+      "--",
+      ".",
+    ],
+    { cwd: worktree, maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES },
+  )
+  if (diff.truncated)
+    return yield* Effect.fail(
+      new Error(
+        `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${baseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
+      ),
+    )
+  if (names.exitCode !== 0 || names.truncated || diff.exitCode !== 0 || diff.stdout.length === 0)
+    return yield* Effect.fail(new Error("Review artifact diff unavailable"))
+  return {
+    baseSHA,
+    headSHA,
+    changedPaths: names.text().split("\0").filter(Boolean),
+    sha256: createHash("sha256").update(diff.stdout).digest("hex"),
+    diff: diff.text(),
+  }
+})
+
+// The workers' uncommitted result the code stage reviews, written by the host as a tree from the plan-reviewed head.
+const codeArtifact = Effect.fn("MaestroRequestReview.codeArtifact")(function* (
+  worktree: string,
+  baseSHA: string,
+  planRevisionID: string,
+) {
+  const writePaths = yield* CodeReview.writePaths(planRevisionID)
+  if (!writePaths) return yield* Effect.fail(new Error("Code review requires the plan's bound workflow writePaths"))
+  const result = yield* CodeReview.result({
+    worktree,
+    base: baseSHA,
+    writePaths,
+    maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
+  })
+  if (result.status === "ready")
+    return {
+      baseSHA,
+      headSHA: result.tree,
+      changedPaths: result.changedPaths,
+      sha256: result.sha256,
+      diff: result.diff,
+    }
+  return yield* Effect.fail(
+    new Error(
+      result.status === "head-moved"
+        ? `Code review requires HEAD to stay at the plan-reviewed head ${baseSHA}: workers leave their result uncommitted.`
+        : result.status === "unchanged"
+          ? "Code review has nothing to review: the working tree still matches the plan-reviewed head."
+          : result.status === "outside"
+            ? `The workers' result changes paths outside the approved writePaths ${JSON.stringify(writePaths)}: ${JSON.stringify(result.outside.slice(0, 10))}.`
+            : result.status === "too-large"
+              ? `Review artifact exceeds ${REVIEW_ARTIFACT_MAX_BYTES} bytes: the code review covers the workers' whole result since the plan review. The owner or a maintainer decides how to split the work.`
+              : "Review artifact diff unavailable",
+    ),
+  )
+})

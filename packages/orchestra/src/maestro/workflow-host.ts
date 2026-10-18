@@ -32,6 +32,7 @@ import { readAuthorization } from "./authorization"
 import { contextIsCurrent, readContext } from "./context-record"
 import { readWorkflowRevision } from "./plan-revision"
 import { canonicalMemberId, nativeProfiles, roster } from "./roster"
+import { CodeReview } from "./code-review"
 import { taskHash } from "./task-hash"
 import { UpstreamProvenance } from "./upstream-provenance"
 import {
@@ -110,26 +111,33 @@ export function make(deps: Dependencies) {
       !reviewActorMatches(review.data.actor, binding, "lucy") ||
       ![review.data.artifact.baseSHA, review.data.artifact.headSHA].every((sha) => /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
-    const status = yield* deps.git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
     const head = yield* deps.git.run(["rev-parse", "HEAD"], { cwd: binding.directory })
     const placement = yield* InstanceState.context
-    const diffDigest = (base: string, tip: string) => deps.git.run([
+    const diff = yield* deps.git.run([
       "diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/",
-      base, tip, "--", ".",
-    ], { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 }).pipe(Effect.map((diff) =>
-      diff.exitCode || diff.truncated || !diff.stdout.length ? undefined : RelayWorkflowBinding.digest(diff.stdout)))
-    if (status.exitCode || status.truncated || status.text().trim() || head.exitCode || head.truncated ||
-      (yield* diffDigest(review.data.artifact.baseSHA, review.data.artifact.headSHA)) !== review.data.artifact.sha256 ||
-      (yield* deps.fs.realPath(review.data.artifact.worktree)) !== (yield* deps.fs.realPath(placement.worktree)))
+      review.data.artifact.baseSHA, review.data.artifact.headSHA, "--", ".",
+    ], { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 })
+    const worktree = yield* deps.fs.realPath(placement.worktree)
+    // Workers never commit: HEAD stays the plan-reviewed head and their result lives in the working tree.
+    if (head.exitCode || head.truncated || head.text().trim() !== review.data.artifact.headSHA || diff.exitCode ||
+      diff.truncated || !diff.stdout.length || RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
+      (yield* deps.fs.realPath(review.data.artifact.worktree)) !== worktree)
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
-    // The plan review approved the tree before execution; whatever the workers committed since needs its own code
-    // review, bound to this exact result. A run that committed nothing completes on the plan review alone.
-    const result = head.text().trim()
-    if (result === review.data.artifact.headSHA) return
-    const code = yield* findReview(binding.sessionID, validation.id, result)
+    const writePaths = yield* CodeReview.writePaths(binding.planID)
+    if (!writePaths) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    const result = yield* CodeReview.result({ worktree: review.data.artifact.worktree, base: review.data.artifact.headSHA,
+      writePaths, maxOutputBytes: 2 * 1024 * 1024 })
+    // A run that changed nothing completes on the plan review alone, as before.
+    if (result.status === "unchanged") return
+    if (result.status !== "ready")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE", detail: result.status === "outside"
+        ? `The working tree changes paths outside the approved writePaths ${JSON.stringify(writePaths)}: ${JSON.stringify(result.outside.slice(0, 10))}.`
+        : `The workers' result is ${result.status}.` })
+    // The workers' result needs its own code review, bound to this exact tree.
+    const code = yield* findReview(binding.sessionID, validation.id, result.tree)
     if (code?.data.verdict !== "APPROVE")
-      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_REQUIRED",
-        detail: `The workers' result ${result} has ${code ? `a ${code.data.verdict} code review` : "no code review"}. Call maestro_request_review with stage "code" and the approved validationRecordID and work card; after FIX_FIRST or REJECT the workers fix it, commit, and the new head is reviewed again.` })
+      return yield* new RelayWorkflowBinding.Held({ reason: CodeReview.REQUIRED,
+        detail: `The workers' result (tree ${result.tree}) has ${code ? `a ${code.data.verdict} code review` : "no code review"}. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then resumes this workflow Task with its task_id ${binding.taskID}; after FIX_FIRST or REJECT the resumed workers fix the result and it is reviewed again.` })
     if (code.data.sessionID !== binding.sessionID || code.data.validationRecordID !== validation.id ||
       code.data.projectID !== binding.projectID || code.data.reviewerID !== "lucy" ||
       code.data.workCardHash !== validation.workCardHash || code.data.artifact.workCardHash !== validation.workCardHash ||
@@ -137,9 +145,8 @@ export function make(deps: Dependencies) {
       code.data.grantHash !== validation.grantHash || code.data.reviewPolicyHash !== validation.reviewPolicyHash ||
       !reviewActorMatches(code.data.actor, binding, "lucy"))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
-    if (code.data.artifact.baseSHA !== review.data.artifact.headSHA ||
-      (yield* diffDigest(review.data.artifact.headSHA, result)) !== code.data.artifact.sha256 ||
-      (yield* deps.fs.realPath(code.data.artifact.worktree)) !== (yield* deps.fs.realPath(placement.worktree)))
+    if (code.data.artifact.baseSHA !== review.data.artifact.headSHA || code.data.artifact.sha256 !== result.sha256 ||
+      (yield* deps.fs.realPath(code.data.artifact.worktree)) !== worktree)
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
   }).pipe(Effect.provide(deps.context)))
 
