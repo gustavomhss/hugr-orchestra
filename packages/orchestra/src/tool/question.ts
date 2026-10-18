@@ -4,8 +4,9 @@ import { Question } from "../question"
 import { ToolText } from "@orchestra/core/tool/text"
 
 export const Parameters = Schema.Struct({
-  // An empty list would open a question prompt with nothing to answer.
-  questions: Schema.mutable(Schema.Array(Question.Prompt).check(Schema.isMinLength(1))).annotate({
+  // An empty list would open a question prompt with nothing to answer. The check goes after `mutable`,
+  // which rebuilds the array node and drops checks applied inside it.
+  questions: Schema.mutable(Schema.Array(Question.Prompt)).check(Schema.isMinLength(1)).annotate({
     description: "Questions to ask (at least one)",
   }),
 })

@@ -560,9 +560,9 @@ const layer: Layer.Layer<
         Object.entries(sessionStartOutput.metadata).filter(([key]) => !(key in (result.metadata ?? {}))),
       )
       if (Object.keys(added).length === 0) return result
-      const metadata = { ...result.metadata, ...added }
-      yield* patch(result.id, { metadata }).pipe(Effect.orDie)
-      return { ...result, metadata }
+      const next = { ...result, metadata: { ...result.metadata, ...added } } // not `patch`: no re-read of the new row
+      yield* events.publish(SessionV1.Event.Updated, { sessionID: result.id, info: next })
+      return next
     })
 
     const get = Effect.fn("Session.get")(function* (id: SessionID) {
