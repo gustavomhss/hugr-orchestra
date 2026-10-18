@@ -49,7 +49,7 @@ export type Runtime = {
 }
 
 /** An engine that runs on a private runtime; every byte of its own install is pinned. */
-export type HostedEngine<Id extends string = EngineId> = {
+export type HostedEngine<Id extends string = string> = {
   readonly id: Id
   readonly version: string
   readonly license: string
@@ -97,9 +97,13 @@ export type HostedEngine<Id extends string = EngineId> = {
   readonly unsupported?: Readonly<Partial<Record<TargetId, string>>>
 }
 
-export type Engine<Id extends string = EngineId> = NativeEngine<Id> | HostedEngine<Id>
+/**
+ * One pinned engine. The id type defaults to any string so the lifecycle in `index.ts` serves every toolkit's manifest
+ * (J6.1); `EngineId` names the backend's own ids.
+ */
+export type Engine<Id extends string = string> = NativeEngine<Id> | HostedEngine<Id>
 
-export type NativeEngine<Id extends string = EngineId> = {
+export type NativeEngine<Id extends string = string> = {
   readonly id: Id
   readonly version: string
   /** SPDX identifier of the upstream license. */

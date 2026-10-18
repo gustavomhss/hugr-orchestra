@@ -32,6 +32,23 @@ describe("toolkit command", () => {
   )
 
   cliIt.live(
+    "status --research --json prints the research engines and the worktree's shards",
+    ({ home, orchestra }) =>
+      Effect.gen(function* () {
+        const result = yield* orchestra.spawn(["toolkit", "status", "--research", "--json"], {
+          env: { RESEARCH_TOOLKIT_ROOT: path.join(home, "research-toolkit") },
+        })
+        orchestra.expectExit(result, 0, "toolkit status --research --json")
+        // No research pack is shipped yet and no index builder is wired, so every engine is named unsupported.
+        expect(JSON.parse(result.stdout)).toEqual({
+          engines: ["scip-typescript", "scip-python", "typescript"].map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
+          shards: [],
+        })
+      }),
+    60_000,
+  )
+
+  cliIt.live(
     "a failed prefetch exits non-zero and names the engine and cause",
     ({ home, orchestra }) =>
       Effect.gen(function* () {
