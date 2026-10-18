@@ -1,11 +1,5 @@
 [
   {
-    "path": "specs/orchestra-visual/handoff/archives",
-    "disposition": "retain-recovery",
-    "owner": "visual-handoff",
-    "readers": ["specs/orchestra-visual/handoff/restore-evidence.ts", "specs/orchestra-visual/handoff/evidence-snapshot.json"]
-  },
-  {
     "path": "apps/orchestra/specs/benchmark-evidence",
     "disposition": "review-history",
     "owner": "continuity",
