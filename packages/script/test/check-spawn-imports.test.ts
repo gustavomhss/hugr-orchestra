@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { hits } from "./check-spawn-imports.ts"
+import { hits } from "../src/spawn-imports.ts"
 
 const name = ["Stdio", "Client", "Transport"].join("")
 
