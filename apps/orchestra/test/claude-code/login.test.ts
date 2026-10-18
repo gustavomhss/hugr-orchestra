@@ -3,7 +3,7 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { ClaudeCodeLogin } from "@/claude-code/login"
 import { tmpdir } from "../fixture/fixture"
-import { expectSpawn } from "../../../core/test/fixture/omni-expect"
+import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 
 // A stand-in for Claude Code 2.1.289 `auth login`: the same stdout lines, the URL inside the OSC 8 hyperlink the CLI
 // prints, then one `code#state` line read from stdin for the manual flow. Unlike the real CLI, which keeps reading after
