@@ -391,6 +391,29 @@ describe("host-acquired publication binding", () => {
     yield* Effect.sync(() => writeFileSync(file, "Skill version two"))
     expect(yield* reason(RelayWorkflowBinding.revalidate(port, acquired.definition))).toBe("WORKFLOW_SKILL_DRIFT")
   }))
+
+  it.live("the host's acceptance controls end the materialized plan and are bound by its bytes", () => Effect.gen(function* () {
+    const f = yield* fixture
+    yield* f.store.publish(f.draft.id, f.draft.versionId)
+    const plain = yield* RelayWorkflowBinding.acquire(f.input)
+    const acceptance = [{ id: "package-verification", host_check: "package-verification" },
+      { id: "cold-review", host_check: "cold-review" }]
+    const port: RelayWorkflowBinding.PublicationPort = { ...f.port, acceptance }
+    const acquired = yield* RelayWorkflowBinding.acquire({ ...f.input, port })
+    expect(acquired.sprint.work_packages.slice(0, -1)).toEqual(plain.sprint.work_packages.slice(0, -1))
+    expect(acquired.sprint.work_packages.at(-1)?.checklist)
+      .toEqual([...(plain.sprint.work_packages.at(-1)?.checklist ?? []), ...acceptance])
+    expect(acquired.definition.materialization.digest).toBe(RelayWorkflowBinding.digest(acquired.bytes))
+    expect(acquired.definition.materialization.digest).not.toBe(plain.definition.materialization.digest)
+    expect(yield* RelayWorkflowBinding.revalidate(port, acquired.definition)).toEqual(acquired)
+    expect(yield* reason(RelayWorkflowBinding.revalidate(f.port, acquired.definition))).toBe("WORKFLOW_MATERIALIZATION_DRIFT")
+    expect((yield* RelayWorkflowBinding.catalog(port))[0]?.sprint).toEqual(acquired.sprint)
+    // A plan that already ends on a check keeps it and its bytes: only what the last step lacks is appended.
+    expect(RelayWorkflowBinding.attach(acquired.sprint, acceptance)).toBe(acquired.sprint)
+    const verified = { work_packages: [{ id: "finish", checklist: [{ id: "verify", host_check: "package-verification" }] }] }
+    expect(RelayWorkflowBinding.attach(verified, acceptance).work_packages[0]?.checklist)
+      .toEqual([{ id: "verify", host_check: "package-verification" }, acceptance[1]])
+  }))
 })
 
 describe("workflow catalog and publish admission", () => {

@@ -133,6 +133,8 @@ export function make(deps: Dependencies) {
       const knowledge = yield* AtlasKnowledge.Service
       return {
         projectID: placement.projectID,
+        // Users never author host checks: every workflow plan ends on the registered global acceptance checks.
+        acceptance: WorkflowBinding.ACCEPTANCE_CONTROLS,
         knowledge: (reference, authorSessionID) => deps.under(placement.directory,
           knowledge.resolve({ projectID: placement.projectID, authorSessionID: SessionID.make(authorSessionID), reference }),
         ).pipe(Effect.mapError((error) => new RelayWorkflowBinding.Held({

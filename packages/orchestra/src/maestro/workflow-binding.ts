@@ -67,8 +67,17 @@ export const NativeHost = Context.Reference<Host | undefined>("@orchestra/Workfl
 /** Global acceptance a workflow Task requires: the last work package carries these host checks. */
 export const GLOBAL_ACCEPTANCE = ["package-verification", "cold-review"]
 
+/** What the host attaches to every workflow plan as it materializes it, so the plan the owner approves carries them. */
+export const ACCEPTANCE_CONTROLS = GLOBAL_ACCEPTANCE.map((name) => ({ id: name, host_check: name }))
+
 export function accepts(sprint: RelaySprint.Sprint) {
   return GLOBAL_ACCEPTANCE.every((name) => sprint.work_packages.at(-1)?.checklist?.some((control) => control.host_check === name))
+}
+
+/** The plan's global acceptance checks as the completion contract arms them: same id and host check. */
+export function acceptance(sprint: RelaySprint.Sprint) {
+  return (sprint.work_packages.at(-1)?.checklist ?? []).flatMap((control) =>
+    control.host_check && GLOBAL_ACCEPTANCE.includes(control.host_check) ? [{ id: control.id, hostCheck: control.host_check }] : [])
 }
 
 export const beforeTask = Effect.fn("WorkflowBinding.beforeTask")(function* (input: Omit<Dispatch, "taskID" | "logicalTaskID">,
@@ -177,7 +186,8 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
    if (!input.globalChecks.length || !accepts(ready.materialized.sprint) ||
      input.globalChecks.some((check) =>
     !controls.some((control) => control.id === check.id && control.host_check === check.hostCheck)))
-    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_GLOBAL_ACCEPTANCE_MISSING" })
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_GLOBAL_ACCEPTANCE_MISSING",
+      detail: `The approved plan's last step carries ${JSON.stringify(acceptance(ready.materialized.sprint))}; the armed contract checks ${JSON.stringify(input.globalChecks)} must be among them.` })
   if (controls.some((control) => control.host_check && !input.availableChecks.has(control.host_check)))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_CHECK_UNBOUND" })
   if (existing && (!isDeepStrictEqual(existing.binding, ready.binding) || existing.token !== input.token))

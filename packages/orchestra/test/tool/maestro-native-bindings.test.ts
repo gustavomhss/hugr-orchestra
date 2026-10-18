@@ -402,18 +402,21 @@ describe("Maestro native output bindings", () => {
           ])
           const plain = yield* publish("Plain", [{ id: "plain-check", cmd: "true" }])
           yield* store.save({ body: { name: "Draft only" } })
-          const port: RelayWorkflowBinding.PublicationPort = {
+          const bare: RelayWorkflowBinding.PublicationPort = {
             projectID: ProjectID.make(session.projectID),
             use: (read) => read(store),
             skills: () => Effect.fail(new AuthoringGraph.Refusal({ status: 404, code: "skill-unavailable", message: "No skill" })),
           }
+          // The native host attaches the global acceptance checks to every workflow plan it materializes.
+          const port: RelayWorkflowBinding.PublicationPort = { ...bare, acceptance: WorkflowBinding.ACCEPTANCE_CONTROLS }
           const unreached = () => Effect.die(new Error("the catalog only reads publications"))
-          const host: WorkflowBinding.Host = {
-            publication: () => Effect.succeed(port),
+          const serving = (publication: RelayWorkflowBinding.PublicationPort): WorkflowBinding.Host => ({
+            publication: () => Effect.succeed(publication),
             verifyUpstream: unreached,
             approve: unreached,
             complete: unreached,
-          }
+          })
+          const host = serving(port)
           const tool = yield* MaestroWorkflowsTool
           const definition = yield* tool.init()
           const caller = {
@@ -426,21 +429,30 @@ describe("Maestro native output bindings", () => {
             metadata: () => Effect.void,
             ask: () => Effect.void,
           }
-          const run = (params: { workflow?: string }) =>
+          const run = (params: { workflow?: string }, native = host) =>
             definition.execute(params, caller).pipe(
-              Effect.provideService(WorkflowBinding.NativeHost, host),
+              Effect.provideService(WorkflowBinding.NativeHost, native),
               Effect.map((result) => JSON.parse(result.output)),
             )
           const listed = yield* run({})
-          expect(listed.workflows).toEqual([
-            { id: accepted.id, name: "Accepted", description: "", publishedVersionID: accepted.versionId },
+          // An editor-built workflow runs: its plan ends on the attached checks, which Maestro arms by these ids.
+          expect(listed.workflows.toSorted((left: { name: string }, right: { name: string }) =>
+            left.name.localeCompare(right.name))).toEqual([
+            { id: accepted.id, name: "Accepted", description: "", publishedVersionID: accepted.versionId, acceptance: [
+              { id: "verify", hostCheck: "package-verification" }, { id: "cold", hostCheck: "cold-review" },
+            ] },
+            { id: plain.id, name: "Plain", description: "", publishedVersionID: plain.versionId, acceptance: [
+              { id: "package-verification", hostCheck: "package-verification" }, { id: "cold-review", hostCheck: "cold-review" },
+            ] },
           ])
           expect(listed.unavailable).toBeUndefined()
-          const resolved = yield* run({ workflow: " plain " })
+          // Without the attachment the binding still refuses it, and the catalog says why.
+          const resolved = yield* run({ workflow: " plain " }, serving(bare))
           expect(resolved.workflows).toEqual([])
           expect(resolved.unavailable).toEqual([
             { id: plain.id, name: "Plain", reason: expect.stringContaining("WORKFLOW_GLOBAL_ACCEPTANCE_MISSING") },
           ])
+          expect((yield* run({ workflow: " plain " })).workflows.map((item: { id: string }) => item.id)).toEqual([plain.id])
           expect((yield* run({ workflow: accepted.id })).workflows.map((item: { id: string }) => item.id)).toEqual([accepted.id])
 
           // Planning with it without upstream names the archie dispatch it needs, before any publication is read.
