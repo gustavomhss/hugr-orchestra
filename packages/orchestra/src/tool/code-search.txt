@@ -1,0 +1,7 @@
+Lexical search over the working tree with ripgrep. Use it to find where a string, identifier or pattern appears; use `code_query` for what a symbol means (definitions, references, callers).
+
+- `pattern` is at most 512 characters and is never read as an option. `mode` is `literal` (default, exact text), `identifier` (exact text bounded by identifier characters, so `parse` does not match `parseJson`) or `regex` (ripgrep syntax).
+- Matching is case-sensitive; pass `caseSensitive: false` to ignore case. `paths` is up to 16 globs relative to the working directory, for example `src/**/*.ts` or `!**/test/**`. `context` adds 0 to 5 lines around each hit.
+- Hidden files are searched. `.gitignore` is respected, so generated or ignored files are not in scope.
+- Results are `path:line text` rows sorted by path, at most `limit` (default 50, maximum 200). When `next` is returned, call again with `offset: next` for more.
+- `coverage` states what was examined: files searched, whether ignore rules applied, binaries skipped, and `complete`. A zero-hit result with `coverage.complete: true` is the only way to say a text is absent from this scope; an incomplete or truncated result proves nothing about absence.

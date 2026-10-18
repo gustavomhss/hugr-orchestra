@@ -6,6 +6,7 @@ import { Effect, Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import type { Agent } from "@/agent/agent"
 import { AtlasMemory } from "@/maestro/atlas-memory"
 import { nativeProfiles } from "@/maestro/roster"
@@ -32,7 +33,8 @@ export const IDS: readonly string[] = [AtlasContextTool, ResearchRecordTool, Res
 // What the seat may see on the loop: its descriptor, never a tool its permissions merely reach through another tool.
 const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
 
-export const nodes = [ResearchRecords.node, ResearchExecution.node] as const
+// RipgrepBinary: code_search runs the bundled ripgrep with its own argv.
+export const nodes = [ResearchRecords.node, ResearchExecution.node, RipgrepBinary.node] as const
 
 // The output digest of each tool and argument set a dispatch already ran, with the call that ran it. An identical call
 // whose output digest is unchanged is refused (efficiency.md): the model already holds that result.
