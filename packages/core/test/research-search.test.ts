@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import fs from "fs/promises"
 import path from "path"
 import { Effect } from "effect"
@@ -122,7 +122,7 @@ describe("CodeSearch", () => {
     ),
   )
 
-  it("builds the argv from the host: -e carries the pattern, globs come only from paths", () => {
+  test("builds the argv from the host: -e carries the pattern, globs come only from paths", () => {
     const args = CodeSearch.argv({ pattern: "--glob=x", paths: ["src/**"] })
     expect(args.slice(args.indexOf("-e"))).toEqual(["-e", "--glob=x", "--", "."])
     expect(args.filter((arg) => arg.startsWith("--glob="))).toEqual(["--glob=!**/.git/**", "--glob=src/**"])
