@@ -17,7 +17,7 @@ import {
   TRIGGER,
   uniqueID,
   uniqueName,
-  pathMatch,
+  conditionHolds,
   walkHook,
   wildcard,
 } from "./graph"
@@ -327,18 +327,31 @@ describe("hook test walk", () => {
     expect(walkHook(hook, { operation: "edit", timing: "before" }).path).toEqual(["t", "c", "r", "a"])
   })
 
-  test("paths: * and ? stay in a segment, ** crosses them, classes, alternatives and negation", () => {
-    expect(pathMatch("src/*.ts", "src/a.ts")).toBe(true)
-    expect(pathMatch("src/*.ts", "src/a/b.ts")).toBe(false)
-    expect(pathMatch("src/**", "src/a/b.ts")).toBe(true)
-    expect(pathMatch("src/**/b.ts", "src/b.ts")).toBe(true)
-    expect(pathMatch("src/?.ts", "src/ab.ts")).toBe(false)
-    expect(pathMatch("src/[ab].ts", "src/b.ts")).toBe(true)
-    expect(pathMatch("src/[!ab].ts", "src/b.ts")).toBe(false)
-    expect(pathMatch("src/*.{ts,tsx}", "src/a.tsx")).toBe(true)
-    expect(pathMatch("!src/**", "lib/a.ts")).toBe(true)
-    expect(pathMatch("src/{a,b", "src/a")).toBe(false)
-    expect(pathMatch("a.b", "axb")).toBe(false)
+  test("Require repair ends the walk, as its denial ends the call at runtime", () => {
+    const repaired: Flow = {
+      ...hook,
+      nodes: [...hook.nodes, node("p", "Repair", "relay.hookRepair", { message: "Fix it." })],
+      edges: [
+        { from: "t", to: "c", port: 0 },
+        { from: "c", to: "p", port: 1 },
+        { from: "p", to: "r", port: 0 },
+      ],
+    }
+    expect(walkHook(repaired, edit("src/session/recovery.ts")).path).toEqual(["t", "c", "p"])
+  })
+
+  // The runtime matcher (HookGlob) is checked against Bun's in packages/relay/test/hook.test.ts; these rows pin the
+  // cases where the old regex port of the Test disagreed with it, or threw.
+  test("path conditions use the runtime glob", () => {
+    const path = (pattern: string, value: string) => conditionHolds({ field: "path", pattern }, edit(value))
+    expect(path("src/**", "src/a/b.ts")).toBe(true)
+    expect(path("src/**/b.ts", "src/b.ts")).toBe(true)
+    expect(path("src/*.ts", "src/a/b.ts")).toBe(false)
+    expect(path("src/**.ts", "src/a/b.ts")).toBe(false)
+    expect(path("src/[draft", "src/[draft")).toBe(false)
+    expect(path("src/[z-a]", "src/b")).toBe(false)
+    expect(path("[\\d]", "d")).toBe(true)
+    expect(path("!src/**", "lib/a.ts")).toBe(true)
   })
 
   test("commands: * crosses everything, | is literal, and a trailing ' *' also matches the bare command", () => {
@@ -349,5 +362,6 @@ describe("hook test walk", () => {
     expect(wildcard("git push* | rm -rf *", "git push* | rm -rf now")).toBe(true)
     expect(wildcard("edit.before", "edit.before")).toBe(true)
     expect(wildcard("edit.before", "editxbefore")).toBe(false)
+    expect(wildcard("cd app/src *", "cd app\\src && ls")).toBe(true)
   })
 })

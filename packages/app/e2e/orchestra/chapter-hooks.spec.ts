@@ -36,13 +36,23 @@ for (const scheme of ["dark", "light"] as const) {
     await view.getByRole("tab", { name: /Activity/ }).click()
     await expect(page).toHaveURL(/\/orchestra\/hooks\/activity$/)
     const fires = view.getByRole("listitem")
-    await expect(fires).toHaveCount(6)
+    // "Allowed" rows stay hidden until asked for.
+    await expect(fires).toHaveCount(4)
     await expect(fires.first()).toContainText("src/generated/client.ts")
     await expect(fires.first().locator(".mx-badge")).toHaveText("Blocked")
-    // A command's subject is its sha256, never its text.
-    const command = fires.filter({ hasText: "command.before" })
-    await expect(command.locator("strong")).toHaveText("command sha256 5b8c0f1f2d0b…")
+    // A command's subject is its sha256, never its text, so the row names the event instead of the hash.
+    const command = fires.filter({ hasText: "Before shell command" })
+    await expect(command.locator("strong")).toHaveText("Shell command — text not stored")
     await expect(command.locator(".mx-badge")).toHaveText("Approved")
+    await expect(command.getByRole("button", { name: "Open session" })).toHaveAttribute("title", "ses_tabs")
+    await view.getByRole("button", { name: "Show allowed (2)" }).click()
+    await expect(fires).toHaveCount(6)
+    const results = view.getByRole("group", { name: "Filter by result" })
+    await results.getByRole("button", { name: /^Approved/ }).click()
+    await expect(fires).toHaveCount(1)
+    await results.getByRole("button", { name: /^All\s*\d+$/ }).click()
+    await view.getByRole("combobox", { name: "Filter by hook" }).selectOption({ label: "Protect generated files" })
+    await expect(fires).toHaveCount(5)
   })
 }
 
@@ -75,7 +85,9 @@ test("hook canvas: Yes and No ports, Pass and Fail on a Run gate, and a test wal
   const dialog = page.getByRole("dialog", { name: "Test hook" })
   await dialog.getByRole("textbox", { name: "File path" }).fill("src/generated/types.gen.ts")
   await dialog.getByRole("button", { name: "Run test" }).click()
-  await expect(canvas(page).locator(".wf-banner")).toContainText("Test · src/generated/types.gen.ts → Block change")
+  await expect(canvas(page).locator(".wf-banner")).toContainText(
+    "Draft test · src/generated/types.gen.ts → Block change",
+  )
   await expect(canvas(page).locator('.wf-node[data-id="a"]')).toHaveClass(/dim/)
   await page.keyboard.press("Escape")
   await expect(canvas(page).locator(".wf-node.dim")).toHaveCount(0)

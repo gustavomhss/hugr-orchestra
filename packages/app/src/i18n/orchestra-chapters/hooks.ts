@@ -41,7 +41,17 @@ export const HOOKS_COPY = {
   "orchestra.hooks.activity.loading": "Reading activity…",
   "orchestra.hooks.activity.note": "Each row is one event this hook handled in {{profile}}.",
   "orchestra.hooks.activity.open": "Open hook",
-  "orchestra.hooks.activity.commandHash": "command sha256 {{hash}}…",
+  "orchestra.hooks.activity.openSession": "Open session",
+  "orchestra.hooks.activity.commandHidden": "Shell command — text not stored",
+  "orchestra.hooks.activity.promptHidden": "Prompt — text not stored",
+  "orchestra.hooks.activity.hookFilter": "Filter by hook",
+  "orchestra.hooks.activity.allHooks": "All hooks",
+  "orchestra.hooks.activity.unnamedHook": "Unnamed hook",
+  "orchestra.hooks.activity.outcomeFilter": "Filter by result",
+  "orchestra.hooks.activity.all": "All",
+  "orchestra.hooks.activity.showAllowed": "Show allowed ({{count}})",
+  "orchestra.hooks.activity.hideAllowed": "Hide allowed",
+  "orchestra.hooks.activity.noMatches": "No events match these filters.",
 
   "orchestra.hooks.create.title": "New hook",
   "orchestra.hooks.create.description": "Pick the event it listens for. You add conditions and actions on the canvas.",
@@ -127,7 +137,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.canvas.notFired": "not fired yet",
   "orchestra.hooks.canvas.installedEarlier": "Installed in {{profile}} · an earlier version",
   "orchestra.hooks.canvas.update": "Install the published version",
-  "orchestra.hooks.canvas.test": "Test · {{label}} → {{result}}",
+  "orchestra.hooks.canvas.test": "Draft test · {{label}} → {{result}}",
   "orchestra.hooks.canvas.graphOnly": "Graph only; nothing ran",
   "orchestra.hooks.canvas.clear": "Clear",
 
@@ -161,10 +171,17 @@ export const HOOKS_COPY = {
 
   "orchestra.hooks.testDialog.title": "Test hook",
   "orchestra.hooks.testDialog.description":
-    "Walks the graph with a sample event. Nothing is blocked, installed or executed.",
+    "Walks this draft with a sample call, matching patterns the way installed hooks do. Run gates count as passed and Ask as approved. Nothing is blocked, installed or executed.",
   "orchestra.hooks.testDialog.run": "Run test",
   "orchestra.hooks.testDialog.noTrigger": "Add a trigger first.",
   "orchestra.hooks.testDialog.noAction": "No action reached",
+  "orchestra.hooks.testDialog.invalid": "Invalid pattern. Check the conditions' patterns and test again.",
+  "orchestra.hooks.testDialog.call": "Sample call",
+  "orchestra.hooks.testDialog.call.read": "Read a file",
+  "orchestra.hooks.testDialog.call.edit": "Edit a file",
+  "orchestra.hooks.testDialog.call.write": "Create or overwrite a file",
+  "orchestra.hooks.testDialog.call.command": "Run a shell command",
+  "orchestra.hooks.testDialog.call.tool": "Use another tool",
   "orchestra.hooks.testDialog.noSubject":
     "This event carries no path, command or tool, so conditions on those take No. Conditions on the event still apply.",
 
