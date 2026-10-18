@@ -9,14 +9,17 @@ export { completionSchema } from "./contracts.ts"
 export function validateCompletion(contract: CompletionContract) {
   id(contract.sessionID)
   requireValue(typeof contract.label === "string" && contract.label.length > 0 && contract.label.length <= 4096, "COMPLETION_LABEL_INVALID")
-  requireValue(Array.isArray(contract.chain) && contract.chain.length > 0 && contract.chain.length <= 32, "COMPLETION_CHAIN_EMPTY_OR_OVERFLOW")
+  requireValue(contract.chain === undefined ||
+    Array.isArray(contract.chain) && contract.chain.length > 0 && contract.chain.length <= 32, "COMPLETION_CHAIN_EMPTY_OR_OVERFLOW")
   const retryBudget = contract.retryBudget ?? 3
   requireValue(Number.isInteger(retryBudget) && retryBudget >= 0 && retryBudget <= 32, "COMPLETION_RETRY_BUDGET_INVALID")
+  // A workflow Task's arm names no checks: the host arms the approved plan's own controls when the Task binds.
+  if (contract.chain === undefined) return { ...contract, retryBudget }
   requireValue(new Set(contract.chain.map((gate) => gate.id)).size === contract.chain.length, "COMPLETION_GATE_DUPLICATE")
   const checks = contract.chain.flatMap((gate) => {
     id(gate.id)
     requireValue(Array.isArray(gate.checks) && gate.checks.length > 0 && gate.checks.length <= 64, `COMPLETION_CHECKS_EMPTY: ${gate.id}`)
-    gate.checks.forEach((check: CompletionContract["chain"][number]["checks"][number]) => { id(check.id); id(check.hostCheck) })
+    gate.checks.forEach((check) => { id(check.id); id(check.hostCheck) })
     return gate.checks
   })
   requireValue(new Set(checks.map((check) => check.id)).size === checks.length, "COMPLETION_CHECK_DUPLICATE")

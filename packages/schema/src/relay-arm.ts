@@ -268,16 +268,19 @@ export const Contract = Schema.Struct({
   sessionID: ContractID,
   label: Schema.NonEmptyString.check(Schema.isMaxLength(4096)),
   retryBudget: Schema.optional(Schema.Int.check(Schema.isGreaterThanOrEqualTo(0), Schema.isLessThanOrEqualTo(32))),
-  chain: Schema.Array(
-    Schema.Struct({
-      id: ContractID,
-      instructions: Schema.optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
-      checks: Schema.Array(Schema.Struct({ id: ContractID, hostCheck: ContractID })).check(
-        Schema.isMinLength(1),
-        Schema.isMaxLength(64),
-      ),
-    }),
-  ).check(Schema.isMinLength(1), Schema.isMaxLength(32)),
+  // Absent on a workflow Task's arm: the host arms the approved plan's own controls. An ordinary Task's arm needs it.
+  chain: Schema.optional(
+    Schema.Array(
+      Schema.Struct({
+        id: ContractID,
+        instructions: Schema.optional(Schema.NonEmptyString.check(Schema.isMaxLength(4096))),
+        checks: Schema.Array(Schema.Struct({ id: ContractID, hostCheck: ContractID })).check(
+          Schema.isMinLength(1),
+          Schema.isMaxLength(64),
+        ),
+      }),
+    ).check(Schema.isMinLength(1), Schema.isMaxLength(32)),
+  ),
 }).annotate({ identifier: "RelayArm.Contract" })
 export type Contract = typeof Contract.Type
 
@@ -299,6 +302,7 @@ export const CompletionHold = Schema.Literals([
   "completion-authorization-mismatch",
   "completion-callback-cap-or-duplicate",
   "completion-checks-not-passing",
+  "completion-contract-chain-missing",
   "completion-contract-drift",
   "completion-dispatch-binding-mismatch",
   "completion-evaluation-acquisition",
