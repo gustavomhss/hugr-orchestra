@@ -1,4 +1,5 @@
 import { type Accessor, Component, createMemo, createSignal, type JSX, Show, startTransition } from "solid-js"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { Dialog } from "@orchestra/ui/v2/dialog-v2"
 import { TabsV2 } from "@orchestra/ui/v2/tabs-v2"
 import { Icon } from "@orchestra/ui/icon"
@@ -15,7 +16,7 @@ import { useLayout } from "@/context/layout"
 import { useTabs } from "@/context/tabs"
 import { ServerSyncProvider } from "@/context/server-sync"
 import { ServerSDKProvider, useServerSDK } from "@/context/server-sdk"
-import { ServerConnection } from "@/context/server"
+import { ServerConnection, serverName } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { ModelsProvider } from "@/context/models"
 import { settingsProviderOwner } from "@/hooks/provider-catalog"
@@ -57,13 +58,18 @@ export const DialogSettings: Component<{
     return (
       <Show when={owner()} keyed fallback={<p role="status">{language.t("orchestra.providers.loading")}</p>}>
         {(target) => (
-          <ServerSDKProvider server={() => target.server}>
-            <ServerSyncProvider server={() => target.server}>
-              <ModelsProvider directory={() => target.directory}>
-                {props.children(() => target.directory)}
-              </ModelsProvider>
-            </ServerSyncProvider>
-          </ServerSDKProvider>
+          <>
+            <p class="settings-v2-scope-note">
+              {language.t("orchestra.settings.scope.server", { server: serverName(target.server) })}
+            </p>
+            <ServerSDKProvider server={() => target.server}>
+              <ServerSyncProvider server={() => target.server}>
+                <ModelsProvider directory={() => target.directory}>
+                  {props.children(() => target.directory)}
+                </ModelsProvider>
+              </ServerSyncProvider>
+            </ServerSDKProvider>
+          </>
         )}
       </Show>
     )
@@ -120,6 +126,9 @@ export const DialogSettings: Component<{
               </div>
             </div>
             <div class="settings-v2-nav-footer">
+              <ButtonV2 variant="neutral" size="small" onClick={() => dialog.close()}>
+                {language.t("common.close")}
+              </ButtonV2>
               <span>{language.t("app.name.desktop")}</span>
               <span>v{platform.version}</span>
             </div>
@@ -140,7 +149,14 @@ export const DialogSettings: Component<{
           </ProviderScope>
         </TabsV2.Content>
         <TabsV2.Content value="models" class="settings-v2-panel">
-          <ProviderScope>{() => <SettingsModelsV2 />}</ProviderScope>
+          <ProviderScope>
+            {(directory) => (
+              <SettingsModelsV2
+                directory={directory}
+                onConnect={() => void startTransition(() => setTab("providers"))}
+              />
+            )}
+          </ProviderScope>
         </TabsV2.Content>
       </TabsV2>
     </Dialog>

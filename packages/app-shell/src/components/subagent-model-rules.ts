@@ -182,18 +182,25 @@ export function createModelRuleEditor(input: {
       return acknowledged
     return current
   }
+  const save = async (permission: ModelRule[]) => {
+    setState({ saving: true, failed: false })
+    await input
+      .write(permission)
+      .then((rules) => setState({ rules }))
+      .catch(() => setState("failed", true))
+      .finally(() => setState("saving", false))
+  }
   return {
     state,
     rules,
-    async set(providerID: string, modelID: string, allow: boolean) {
+    set(providerID: string, modelID: string, allow: boolean) {
       if (state.saving) return
-      const permission = toggleModelRules(rules(), providerID, modelID, allow)
-      setState({ saving: true, failed: false })
-      await input
-        .write(permission)
-        .then((rules) => setState({ rules }))
-        .catch(() => setState("failed", true))
-        .finally(() => setState("saving", false))
+      return save(toggleModelRules(rules(), providerID, modelID, allow))
+    },
+    // Rules are append-only, so a session cannot drop its model scope: allowing every model is the same as inheriting.
+    inherit() {
+      if (state.saving) return
+      return save([{ permission: TASK, pattern: ALL_MODELS, action: "allow" }])
     },
   }
 }
@@ -220,12 +227,19 @@ export function wildcardMatch(str: string, pattern: string): boolean {
 }
 
 const TASK = "task"
+const ALL_MODELS = "*/*"
 
 /** True when the session carries model-scoped task rules. Mirrors the
     detection in TaskTool (packages/orchestra/src/tool/task.ts) exactly:
     permission === "task" with a "/" in the pattern. */
 export function hasModelScope(rules: readonly ModelRule[]): boolean {
   return rules.some((rule) => rule.permission === TASK && rule.pattern.includes("/"))
+}
+
+/** True when the last model-scoped task rule allows every model, so nothing restricts the session's subagents. */
+export function allowsEveryModel(rules: readonly ModelRule[]): boolean {
+  const last = rules.findLast((rule) => rule.permission === TASK && rule.pattern.includes("/"))
+  return last?.pattern === ALL_MODELS && last.action === "allow"
 }
 
 /** Effective state for one provider/model: last matching rule wins,
@@ -257,7 +271,7 @@ export function toggleModelRules(
 ): ModelRule[] {
   const out: ModelRule[] = []
   if (allow && !hasModelScope(rules)) {
-    out.push({ permission: TASK, pattern: "*/*", action: "deny" })
+    out.push({ permission: TASK, pattern: ALL_MODELS, action: "deny" })
   }
   out.push({ permission: TASK, pattern: `${providerID}/${modelID}`, action: allow ? "allow" : "deny" })
   return out

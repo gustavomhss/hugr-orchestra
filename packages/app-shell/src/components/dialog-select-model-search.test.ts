@@ -13,6 +13,12 @@ describe("matchesModelSearch", () => {
     expect(matchesModelSearch("gpt 5", ["GPT-5.5", "gpt-5.5", "OpenAI"])).toBe(true)
   })
 
+  test("matches words spread across the provider and the model", () => {
+    expect(matchesModelSearch("anthropic sonnet", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(true)
+    expect(matchesModelSearch("sonnet anthropic", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(true)
+    expect(matchesModelSearch("openai sonnet", ["Claude Sonnet 4", "claude-sonnet-4", "Anthropic"])).toBe(false)
+  })
+
   test("does not match unrelated searches", () => {
     expect(matchesModelSearch("claude", ["GPT-5.5", "gpt-5.5", "OpenAI"])).toBe(false)
   })

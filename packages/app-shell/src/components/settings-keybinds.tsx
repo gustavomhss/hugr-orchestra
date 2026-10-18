@@ -452,6 +452,7 @@ function SettingsKeybindsV2View(props: {
                           <button
                             type="button"
                             data-keybind-id={id}
+                            data-dialog-escape-claim={props.active() === id ? "" : undefined}
                             classList={{
                               "settings-v2-keybind-button": true,
                               "settings-v2-keybind-button--active": props.active() === id,
