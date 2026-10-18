@@ -1,6 +1,5 @@
 export * as CodeSearch from "./search"
 
-import path from "path"
 import { Effect, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "../process"
@@ -18,6 +17,8 @@ export class Failure extends Schema.TaggedErrorClass<Failure>()("CodeSearch.Fail
 export interface Options {
   readonly cwd: string
   readonly signal?: AbortSignal
+  /** HEAD of the worktree, from Git.history.head; the caller owns it so search spawns nothing but ripgrep. */
+  readonly commit?: string
   /** Resolves the index symbol containing a line; absent while no index exists. */
   readonly enclosing?: (path: string, line: number) => Effect.Effect<CodeIndex.SymbolRef | undefined>
 }
@@ -85,7 +86,7 @@ export const run = (input: CodeIndex.SearchInput, options: Options) =>
       matches,
       ...(more ? { next: offset + limit } : {}),
       basis: {
-        basis: { commit: yield* commit(options.cwd), shards: [] },
+        basis: { commit: options.commit ?? "unversioned", shards: [] },
         execution: { op: "code_search", ms: Date.now() - started },
         coverage: {
           documents: parsed.searched,
@@ -156,23 +157,3 @@ function clip(line: string) {
   const text = line.replace(/\r?\n$/u, "")
   return text.length > MAX_TEXT ? text.slice(0, MAX_TEXT).replace(/[\uD800-\uDBFF]$/u, "") + "..." : text
 }
-
-// The HEAD commit read from the repository files, so no git process is spawned. A worktree's `.git` is a file that
-// names its git dir, and shared refs live in the common dir.
-const commit = (cwd: string) =>
-  Effect.promise(async () => {
-    const dot = path.join(cwd, ".git")
-    const pointer = await Bun.file(dot).text().catch(() => undefined)
-    const gitdir = pointer?.startsWith("gitdir:") ? path.resolve(cwd, pointer.slice(7).trim()) : dot
-    const head = (await Bun.file(path.join(gitdir, "HEAD")).text().catch(() => "")).trim()
-    if (!head) return "unversioned"
-    if (!head.startsWith("ref:")) return head
-    const ref = head.slice(4).trim()
-    const common = await Bun.file(path.join(gitdir, "commondir")).text().then((text) => path.resolve(gitdir, text.trim()), () => gitdir)
-    for (const dir of [gitdir, common]) {
-      const direct = (await Bun.file(path.join(dir, ref)).text().catch(() => "")).trim()
-      if (direct) return direct
-    }
-    const packed = await Bun.file(path.join(common, "packed-refs")).text().catch(() => "")
-    return packed.split("\n").find((row) => row.endsWith(` ${ref}`))?.split(" ")[0] ?? "unversioned"
-  })
