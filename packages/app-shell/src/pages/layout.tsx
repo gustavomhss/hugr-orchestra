@@ -1397,7 +1397,20 @@ export default function LegacyLayout(props: ParentProps) {
     })
     const dismiss = () => dismissToast(progress)
 
-    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(() => [])
+    const failed = (err: unknown) => {
+      showToast({
+        title: language.t("workspace.reset.failed.title"),
+        description: errorMessage(err, language.t("common.requestFailed")),
+      })
+      return false as const
+    }
+    // Without the session list the reset cannot archive or clear them, so stop before touching the workspace.
+    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(failed)
+    if (!sessions) {
+      setBusy(directory, false)
+      dismiss()
+      return
+    }
 
     clearWorkspaceTerminals(
       directory,
@@ -1412,20 +1425,13 @@ export default function LegacyLayout(props: ParentProps) {
     const result = await serverSDK()
       .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
       .then((x) => x.data)
-      .catch((err) => {
-        showToast({
-          title: language.t("workspace.reset.failed.title"),
-          description: errorMessage(err, language.t("common.requestFailed")),
-        })
-        return false
-      })
+      .catch(failed)
 
     if (!result) {
       setBusy(directory, false)
       dismiss()
       return
     }
-
     if ((await serverSDK().protocol) === "v1")
       await Promise.all(
         sessions
@@ -1440,10 +1446,8 @@ export default function LegacyLayout(props: ParentProps) {
               .catch(() => undefined),
           ),
       )
-
     setBusy(directory, false)
     dismiss()
-
     showToast({
       title: language.t("workspace.reset.success.title"),
       description: language.t("workspace.reset.success.description"),
