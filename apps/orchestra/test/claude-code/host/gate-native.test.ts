@@ -273,11 +273,14 @@ describe("native gate real policy", () => {
     const f = yield* fixture([], "archie")
     // The seat's own rules decide, with no session-wide allow on top.
     yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [] })
-    const copy = (...file: string[]) => path.join(ClaudeHostPlugin.ROOT, "0".repeat(16), "skills", ...file)
+    const plugin = path.join(ClaudeHostPlugin.ROOT, "0".repeat(16))
+    const copy = (...file: string[]) => path.join(plugin, "skills", ...file)
+    yield* f.filesystem.ensureDir(path.join(plugin, "agents"))
+    yield* Effect.addFinalizer(() => f.filesystem.remove(plugin, { recursive: true }).pipe(Effect.ignore))
+    yield* f.filesystem.writeFileString(path.join(plugin, "agents", "archie.md"), "harmless")
     expect(yield* f.decide("Read", { file_path: copy("archie-work-package", "references", "native-fields.md") })).toEqual({ allow: true })
     refused(yield* f.decide("Read", { file_path: copy("backend-implement", "SKILL.md") }), "rule which prevents")
-    refused(yield* f.decide("Read", { file_path: path.join(ClaudeHostPlugin.ROOT, "0".repeat(16), "agents", "archie.md") }),
-      "rule which prevents")
+    refused(yield* f.decide("Read", { file_path: path.join(plugin, "agents", "archie.md") }), "rule which prevents")
     refused(yield* f.decide("Write", { file_path: copy("archie-work-package", "SKILL.md"), content: "harmless" }),
       "rule which prevents")
   }), { git: true })
