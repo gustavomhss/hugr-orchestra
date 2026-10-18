@@ -4,8 +4,8 @@ export * as ClaudeHostHooks from "./hooks"
 // record they write comes from inside Orchestra's process.
 // - PreToolUse: the policy gate (gate.ts) for every call, then the Agent dispatch record (delegation.ts) and Jimmy's
 //   per-call allowance charge. Any failure here is a deny.
-// - PostToolUse: output inspection, the native safety evidence, Jimmy's provenance and byte charges, and the Agent
-//   settlement record.
+// - PostToolUse: output inspection, the installed Relay hooks' `after` (their notes go to the model as context), the
+//   native safety evidence, Jimmy's provenance and byte charges, and the Agent settlement record.
 // - SubagentStop: the subagent's last text (a background run's author, recorded only once it is delivered).
 // - The join's `task_notification` frames (join.ts, fed by HOST's stream consumer): background deliveries.
 // - SessionStart(compact): owned retained memory and honestly labelled query-local state, with no model call.
@@ -13,6 +13,7 @@ export * as ClaudeHostHooks from "./hooks"
 import { Effect, Exit, Option } from "effect"
 import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import type { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Archive } from "@/continuity/archive"
 import type { SessionID } from "@/session/schema"
@@ -23,6 +24,7 @@ import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMemory } from "./memory"
+import { ClaudeHostResearch } from "./research"
 import { ClaudeHostResearchResult } from "./research-result"
 
 /**
@@ -48,6 +50,8 @@ export type Context = {
   readonly granted: ClaudeHostGate.Ports["granted"]
   readonly research?: Research
   readonly policy?: ClaudeHostGate.Ports
+  /** The host layer's arsenal bindings for the gate (ClaudeHostGate.live). */
+  readonly arsenal?: Effect.Success<typeof ArsenalBindings.make>
   /** Accepted per-call MCP dispatches and their SDK cancellation signals, owned by the query bridge. */
   readonly calls?: ClaudeHostMcp.Calls
   /** Resolve SDK selection metadata to canonical catalog identity; missing facts remain unknown. */
@@ -59,8 +63,9 @@ export type Context = {
  * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
  */
 export type Research = ClaudeHostResearchResult.Port & {
-  /** Bind the dispatch's allowance to the child Session, at `PreToolUse[Agent]`. */
-  readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
+  /** Bind the dispatch's allowance, at the dispatcher's effort tier, to the child Session at `PreToolUse[Agent]`. */
+  readonly enter: (executionSessionID: SessionID, dispatchCallID: string,
+    tier: NonNullable<ReturnType<typeof ClaudeHostResearch.effort>>) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
   /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
@@ -76,7 +81,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
-    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
+    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool, arsenal: ctx.arsenal }))
   const unsubscribe = ctx.join.subscribe((frame) => {
     void Promise.resolve().then(() => ctx.run(delegation.notify(frame))).catch((error: unknown) => {
       fault.reason = `Orchestra could not record the subagent delivery: ${String(error)}`
@@ -107,11 +112,15 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
+        const tier = ClaudeHostResearch.effort(args.prompt)
+        const invalidTier = "HOLD: jimmy's brief starts with an unknown effort line. Use `effort: quick`, `effort: focused` or `effort: deep`, or omit the line for quick."
         if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
           return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !tier) return ClaudeHostGate.deny(invalidTier)
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
-        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
+        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy")
+          yield* tier ? ctx.research.enter(dispatched, input.tool_use_id, tier) : Effect.fail(new Error(invalidTier))
       }
       if (actor.seat === "jimmy") {
         if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
@@ -130,8 +139,9 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       }) })
       return ClaudeHostGate.output(decision)
     }).pipe(Effect.catchCause((cause) => Effect.succeed(ClaudeHostGate.deny(ClaudeCodeTools.failure(cause)))),
-      // A call denied after its jail was set up never runs, so nothing else would release that jail.
-      Effect.tap((output) => ClaudeHostGate.denied(output) ? release(input.tool_use_id) : Effect.void)))
+      // A call denied after its jail or its hooks' `before` was set up never runs, so nothing else would end them.
+      Effect.tap((output) => ClaudeHostGate.denied(output)
+        ? release(input.tool_use_id).pipe(Effect.andThen(settle(input.tool_use_id, false).pipe(Effect.ignore))) : Effect.void)))
   }
 
   const post: HookCallback = (input) => {
@@ -146,7 +156,10 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
       if (exhausted) return { ...withheld(exhausted), continue: false, stopReason: exhausted }
       // Today's output boundary for Orchestra's tools: a recognized credential never reaches the model or a record.
       const inspected = yield* Effect.exit(ToolSafety.inspect(input.tool_response))
-      const refused = Exit.isFailure(inspected) ? ClaudeCodeTools.failure(inspected.cause) : undefined
+      // Then the installed hooks' `after`: their notes reach the model beside the result, and a refusal withholds it.
+      const hooked = yield* Effect.exit(settle(input.tool_use_id, Exit.isSuccess(inspected)))
+      const refused = Exit.isFailure(inspected) ? ClaudeCodeTools.failure(inspected.cause)
+        : Exit.isFailure(hooked) ? ClaudeCodeTools.failure(hooked.cause) : undefined
       if ("hold" in actor) return {}
       yield* evidence(actor, input.tool_name, input.tool_use_id, refused ? "held" : "success", refused)
       const context = agent ? yield* delegation.settle(input, refused) : undefined
@@ -157,7 +170,10 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
           input.tool_input, typeof input.tool_response === "string" ? input.tool_response : JSON.stringify(input.tool_response ?? null)))
         if (Exit.isFailure(captured)) return withheld(`its provenance was not recorded: ${ClaudeCodeTools.failure(captured.cause)}`)
       }
-      return context ? { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: context, updatedToolOutput: context } } : {}
+      const additional = [context, Exit.isSuccess(hooked) ? hooked.value.join("\n") : ""].filter(Boolean).join("\n\n")
+      if (!additional) return {}
+      return { hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: additional,
+        ...(context ? { updatedToolOutput: context } : {}) } }
     }))
   }
 
@@ -169,10 +185,13 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
     return ctx.run(Effect.gen(function* () {
       const context = ClaudeHostGate.agentCall(input.tool_name) ? yield* delegation.fail(input) : undefined
       yield* release(input.tool_use_id)
+      // A failed call runs no `after` hooks; the notes its `before` hooks recorded still reach the model.
+      const notes = yield* settle(input.tool_use_id, false).pipe(Effect.orElseSucceed(() => []))
       const actor = yield* delegation.actor(input.agent_id)
       const exhausted = "hold" in actor ? undefined : yield* researchStopReason(actor)
       if (exhausted) return { continue: false, stopReason: exhausted }
-      return context ? { hookSpecificOutput: { hookEventName: "PostToolUseFailure", additionalContext: context } } : {}
+      const additional = [context, notes.join("\n")].filter(Boolean).join("\n\n")
+      return additional ? { hookSpecificOutput: { hookEventName: "PostToolUseFailure", additionalContext: additional } } : {}
     }))
   }
 
@@ -239,6 +258,17 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   function release(toolUseID: string) {
     // No acquired policy means no jail to release. Never initialize policy during denial cleanup.
     return policy.value ? Effect.promise(() => policy.value!).pipe(Effect.flatMap((policy) => policy.release(toolUseID))) : Effect.void
+  }
+
+  // The installed hooks' `after` of a call the gate let through (ClaudeHostGate.Ports.settle), and the end of its state.
+  function settle(toolUseID: string, succeeded: boolean) {
+    return Effect.gen(function* () {
+      // No acquired policy means no call passed the gate, so no hook ran before one.
+      const acquired = policy.value
+      if (!acquired) return []
+      const gate = yield* Effect.promise(() => acquired)
+      return gate.settle ? yield* gate.settle(toolUseID, succeeded) : []
+    })
   }
 
   function researchStopReason(actor: ClaudeHostGate.Actor) {

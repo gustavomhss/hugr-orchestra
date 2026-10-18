@@ -177,3 +177,39 @@ export type ScheduleRunError = { readonly _tag: "ScheduleRunError"; readonly mes
 
 export const isScheduleRunError = (value: unknown): value is ScheduleRunError =>
   typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ScheduleRunError"
+
+export type ActionsError = {
+  readonly _tag: "ActionsError"
+  readonly kind:
+    | "binding_missing"
+    | "binding_stale"
+    | "host_mismatch"
+    | "cli_missing"
+    | "not_authenticated"
+    | "permission_denied"
+    | "capability_unavailable"
+    | "not_found"
+    | "invalid_input"
+    | "source_conflict"
+    | "source_unresolved"
+    | "rate_limited"
+    | "metadata_truncated"
+    | "transport_failed"
+    | "transfer_failed"
+    | "outcome_unknown"
+    | "operation_missing"
+    | "operation_expired"
+    | "operation_reused"
+    | "intent_conflict"
+    | "maintenance_required"
+  readonly message: string
+  readonly bindingID?: string
+  readonly provider?: "github" | "gitlab"
+  readonly resourceID?: string
+  readonly retryAfter?: number
+  readonly operationID?: string
+  readonly disposition?: "definitely_unsent" | "definitely_rejected" | "unknown"
+}
+
+export const isActionsError = (value: unknown): value is ActionsError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ActionsError"

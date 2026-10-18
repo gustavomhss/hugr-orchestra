@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { SessionMessage } from "@orchestra/schema/session-message"
@@ -45,7 +46,7 @@ afterEach(async () => {
 })
 
 const it = testEffect(TestAppNodeBuilder.build(
-  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node, SessionProjector.node,
+  LayerNode.group([filesystem, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node, SessionProjector.node, SessionSubagentModels.node,
     EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Snapshot.node, SessionStatus.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],
 ))
@@ -158,13 +159,17 @@ describe("Claude Code Agent dispatch records", () => {
     yield* Effect.promise(() => fire(fixture.hooks, { ...base, hook_event_name: "SubagentStop", stop_hook_active: false, agent_id: "a5e1c0ffee",
       agent_type: "orchestra:archie", agent_transcript_path: "/tmp/agent.jsonl", last_assistant_message: final }))
     const settled = yield* Effect.promise(() => fire(fixture.hooks, post("toolu_01", output("a5e1c0ffee", final))))
-    expect(settled).toEqual({})
     yield* fixture.finish()
 
     const recorded = yield* fixture.part("toolu_01")
     if (recorded?.state.status !== "completed") throw new Error("expected the completed Agent part")
     expect(recorded.tool).toBe("Agent")
-    expect(recorded.state.output).toBe(final)
+    // Maestro reads the host's attribution first, then the child's final text; the part records what Maestro read.
+    const handed = recorded.state.output
+    const split = handed.indexOf("\n\n")
+    expect(handed.slice(split + 2)).toBe(final)
+    expect(settled).toEqual({ hookSpecificOutput: { hookEventName: "PostToolUse", additionalContext: handed, updatedToolOutput: handed } })
+    const attribution = JSON.parse(handed.slice(handed.indexOf("{"), split))
     expect(recorded.metadata?.providerExecuted).toBe(true)
     // The mirror resolves the child Session from the part's own metadata.
     expect(recorded.metadata?.sessionId).toBe(child)
@@ -185,9 +190,11 @@ describe("Claude Code Agent dispatch records", () => {
     expect(author.parts.flatMap((item) => item.type === "text" ? [item.metadata] : []))
       .toEqual([{ source: "claude-code-agent-output", agentID: "a5e1c0ffee" }])
 
+    expect(attribution).toEqual({ parentMessageID: fixture.message.id, parentCallID: "toolu_01", authorSessionID: child,
+      authorMessageID: author.info.id, logicalTaskID: logical!.taskId, dispatchKind: "claude-code-agent" })
+    // What Maestro is handed is exactly what the provenance check accepts.
     const observed = yield* UpstreamProvenance.observe({ projectID: fixture.parent.projectID, parentSessionID: fixture.parent.id,
-      parentMessageID: SessionMessage.ID.make(fixture.message.id), parentCallID: "toolu_01", authorSessionID: child,
-      authorMessageID: SessionMessage.ID.make(author.info.id), logicalTaskID: logical!.taskId, dispatchKind: "claude-code-agent" })
+      ...attribution })
     expect(Schema.decodeUnknownSync(UpstreamAttribution.Any)(observed)).toEqual(observed)
     expect(observed).toMatchObject({ schema: "maestro-upstream-attribution-v2", dispatch: { kind: "claude-code-agent", tool: "Agent",
       subagentType: "orchestra:archie", executor: "claude-code-host", agentID: "a5e1c0ffee", grantID } })

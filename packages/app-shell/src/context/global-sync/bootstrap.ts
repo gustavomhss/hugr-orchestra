@@ -42,7 +42,7 @@ import { QueryClient, queryOptions } from "@tanstack/solid-query"
 import { loadMcpQuery, loadMcpResourcesQuery } from "../server-sync"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
-import { normalizeSessionInfo } from "@/utils/session"
+import { normalizeSessionInfo, type AppSession } from "@/utils/session"
 import type { ServerProtocol } from "@/utils/server-protocol"
 import type { ServerApi } from "@/utils/server"
 
@@ -215,6 +215,38 @@ function warmSessions(input: {
         mergeSession(input.setStore, normalizeSessionInfo(session)),
       ),
     ),
+  ).then(() => undefined)
+}
+
+// The directory list loads root Sessions only, and a parent finds a subagent's request by walking
+// that list from the parent down. A subagent blocked on a request emits nothing, so after a reload
+// the owning Session and every Session between it and its root must be indexed here. Only the
+// owner must resolve; an ancestor that cannot be read leaves the chain short instead of failing
+// the whole request load.
+function indexRequestSessions(input: {
+  ids: string[]
+  directory: string
+  session: ServerSession
+  setStore: SetStoreFunction<State>
+}) {
+  const lineage = (sessionID: string | undefined): AppSession[] => {
+    const session = sessionID ? input.session.get(sessionID) : undefined
+    return session ? [session, ...lineage(session.parentID)] : []
+  }
+  return Promise.all(
+    [...new Set(input.ids)]
+      .filter((id) => !!id)
+      .map((sessionID) =>
+        input.session.lineage
+          .resolve(sessionID)
+          .catch(() => input.session.resolve(sessionID))
+          .then(() =>
+            lineage(sessionID)
+              .filter((session) => !!session.parentID && session.directory === input.directory)
+              .filter((session) => session.time.archived === undefined)
+              .forEach((session) => mergeSession(input.setStore, session)),
+          ),
+      ),
   ).then(() => undefined)
 }
 
@@ -488,7 +520,7 @@ export async function bootstrapDirectory(input: {
               permissions.filter((permission) => !!permission.id && !!permission.sessionID),
             )
             const warm = input.session
-              ? Promise.all(ids.map((sessionID) => input.session!.resolve(sessionID))).then(() => undefined)
+              ? indexRequestSessions({ ids, directory: input.directory, session: input.session, setStore: input.setStore })
               : warmSessions({ ids, store: input.store, setStore: input.setStore, api: input.api.session })
             return warm.then(() =>
               batch(() => {
@@ -524,7 +556,7 @@ export async function bootstrapDirectory(input: {
               questions.filter((question) => !!question.id && !!question.sessionID) as QuestionRequest[],
             )
             const warm = input.session
-              ? Promise.all(ids.map((sessionID) => input.session!.resolve(sessionID))).then(() => undefined)
+              ? indexRequestSessions({ ids, directory: input.directory, session: input.session, setStore: input.setStore })
               : warmSessions({ ids, store: input.store, setStore: input.setStore, api: input.api.session })
             return warm.then(() =>
               batch(() => {

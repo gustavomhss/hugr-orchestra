@@ -1,7 +1,7 @@
 // Adapted from TechLead a68e7af, Copyright 2026 HuGR Labs, Apache-2.0.
 import { readdir, lstat, realpath } from "node:fs/promises";
 import { join, relative } from "node:path";
-import { type Tool, type ArsenalContext, text } from "../contract.ts";
+import { type Tool, type ArsenalContext, ReadDenied, text } from "../contract.ts";
 import { AcquisitionError, boundRoot, inside, projectPath, requireContext } from "../engine/acquisition.ts";
 import { acquisitionDescriptors } from "../engine/descriptors.ts";
 
@@ -45,7 +45,11 @@ export async function mapRepository(input: RepoMapInput, context: ArsenalContext
       const path = join(directory, child.name);
       const rel = relative(root, path).replaceAll("\\", "/");
       stats.inspected++;
-      await context.authorize({ effect: "read", paths: [path], commands: [] });
+      const denied = await context.authorize({ effect: "read", paths: [path], commands: [] }).then(() => false, (error: unknown) => {
+        if (error instanceof ReadDenied) return true;
+        throw error;
+      });
+      if (denied) { issue(rel, "read-denied"); continue; }
       if (child.isSymbolicLink()) {
         const destination = await realpath(path).catch(() => undefined);
         entries.push({ path: rel, type: "symlink" });

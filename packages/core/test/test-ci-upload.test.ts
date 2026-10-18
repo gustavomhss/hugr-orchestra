@@ -123,7 +123,7 @@ describe("test:ci rate limit", () => {
   })
 })
 
-// The files of apps/orchestra the tests below pretend exist; test/cli is a directory.
+// The files of packages/orchestra the tests below pretend exist; test/cli is a directory.
 const files = new Set(["a.test.ts", "test/cli/run/permission.shared.test.ts", "test/cli/tui/editor-context.test.tsx"])
 const isFile = (file: string) => files.has(file)
 
@@ -158,8 +158,8 @@ describe("test:ci test paths", () => {
       testPaths(
         "orchestra",
         [
-          "apps/orchestra/a.test.ts",
-          "./apps/orchestra/test/cli/run/permission.shared.test.ts",
+          "packages/orchestra/a.test.ts",
+          "./packages/orchestra/test/cli/run/permission.shared.test.ts",
           "test\\cli\\tui\\editor-context.test.tsx",
           "packages\\orchestra\\a.test.ts",
           ".\\a.test.ts",
@@ -177,7 +177,7 @@ describe("test:ci test paths", () => {
 
   test("passes directories and filters through unchanged", () => {
     expect(
-      testPaths("orchestra", ["test/cli", "permission", "apps/orchestra/test/cli", "*.test.ts", "--bail"], isFile),
+      testPaths("orchestra", ["test/cli", "permission", "packages/orchestra/test/cli", "*.test.ts", "--bail"], isFile),
     ).toEqual(["test/cli", "permission", "test/cli", "*.test.ts", "--bail"])
   })
 })

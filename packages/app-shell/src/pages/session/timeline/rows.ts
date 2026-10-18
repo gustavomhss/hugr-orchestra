@@ -29,7 +29,7 @@ export type TimelineRowMap = {
   Thinking: { userMessageID: string; reasoningHeading?: string }
   Retry: { userMessageID: string }
   DiffSummary: { userMessageID: string; diffs: SummaryDiff[] }
-  Error: { userMessageID: string; text: string }
+  Error: { userMessageID: string; text: string; providerID?: string }
 }
 
 export namespace Timeline {
@@ -224,11 +224,20 @@ export namespace Timeline {
           text: unwrapErrorMessage(
             typeof data === "string" ? data : data === undefined || data === null ? "" : String(data),
           ),
+          providerID: authFailureProvider(assistantMessages.at(-1)),
         }),
       )
     }
 
     return rows
+  }
+
+  // The provider whose API key the user can fix: its key is missing (ProviderAuthError) or the provider rejected it
+  // (a wrong key is an APIError with status 401, not a ProviderAuthError).
+  function authFailureProvider(message: AssistantMessage | undefined) {
+    const error = message?.error
+    if (error?.name === "ProviderAuthError") return error.data.providerID
+    if (error?.name === "APIError" && error.data.statusCode === 401) return message?.providerID
   }
 
   function reasoningHeading(text: string) {

@@ -38,7 +38,7 @@ const ledger: Record<string, string> = {
 
 function guard(base: string, tracked: string[], exceptions: Record<string, string>) {
   const problems: string[] = []
-  const packages = tracked.filter((file) => /^packages\/[^/]+\/bunfig\.toml$/.test(file))
+  const packages = tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/bunfig\.toml$/.test(file))
     .filter((file) => preloadsControl(TOML.parse(readFileSync(path.join(base, file), "utf8")) as { test?: { preload?: unknown } }))
     .map((file) => path.posix.dirname(file) + "/")
   if (packages.length === 0) return { problems: ["no package preloads script/test-omni-control.ts"], flagged: [], checked: 0 }
@@ -55,7 +55,7 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     call.arguments.length > 0 && ts.isStringLiteral(call.arguments[0]!) && call.arguments[0].text === "spawns"
   const counter = "packages/core/src/omni.ts"
   if (!set.has(counter)) return { problems: [`${counter} is not tracked`], flagged: [], checked: 0 }
-  const surface = new Set([counter, ...tracked.filter((file) => /^packages\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
+  const surface = new Set([counter, ...tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
     !/\.test\.tsx?$/.test(file) && readFileSync(path.join(base, file), "utf8").includes("Omni.count(") && calls(file, counts))])
   if (surface.size === 1) problems.push("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   const resolve = (from: string, specifier: string) => {

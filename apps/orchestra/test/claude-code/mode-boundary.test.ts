@@ -71,6 +71,8 @@ const INTERFACE = [
   // Native compaction restores a retained plan only after reading its durable owner-message admission record.
   // This shared persistence port does not invoke either mode's LLM loop.
   "maestro/admission-record",
+  // The upstream work-result card schema the delegation hook reads to attach host attribution to an archie proposal.
+  "maestro/upstream-result",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */

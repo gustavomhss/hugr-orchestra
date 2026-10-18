@@ -1,27 +1,21 @@
-import { useDirectoryPicker } from "@/components/directory-picker"
 import { useServerManagementController } from "@/components/dialog-select-server"
-import { useSettingsCommand } from "@/components/settings-dialog"
+import { useSettingsDialog } from "@/components/settings-dialog"
 import { DialogServerV2 } from "@/components/settings-v2/dialog-server-v2"
 import { type LocalProject } from "@/context/layout"
 import { useLanguage } from "@/context/language"
 import { useNotification } from "@/context/notification"
-import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
-import { closeHomeProject, errorMessage, homeProjectDirectories } from "@/pages/layout/helpers"
 import { Persist, persisted } from "@/utils/persist"
-import { showToast } from "@/utils/toast"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { createResource } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { HomeController } from "./home-controller"
 
 export function createHomeProjectsController(home: HomeController) {
-  const platform = usePlatform()
-  const pickDirectory = useDirectoryPicker()
   const dialog = useDialog()
   const language = useLanguage()
   const notification = useNotification()
-  const openSettings = useSettingsCommand()
+  const openSettings = useSettingsDialog()
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),
@@ -34,10 +28,6 @@ export function createHomeProjectsController(home: HomeController) {
   )
   function directories(project: LocalProject) {
     return [project.worktree, ...(project.sandboxes ?? [])]
-  }
-
-  function canRevealProject(conn: ServerConnection.Any) {
-    return platform.platform === "desktop" && !!platform.openPath && ServerConnection.local(conn)
   }
 
   return {
@@ -71,11 +61,7 @@ export function createHomeProjectsController(home: HomeController) {
       select: home.project.select,
       add: home.project.add,
       openNewSession: home.project.openProjectNewSession,
-      edit: (conn: ServerConnection.Any, project: LocalProject) => {
-        void import("@/components/dialog-edit-project-v2").then(({ DialogEditProjectV2 }) => {
-          void dialog.show(() => <DialogEditProjectV2 server={conn} project={project} />)
-        })
-      },
+      edit: home.project.edit,
       unseenCount: (conn: ServerConnection.Any, project: LocalProject) => {
         const state = notification.ensureServerState(ServerConnection.key(conn))
         return directories(project).reduce((total, directory) => total + state.project.unseenCount(directory), 0)
@@ -86,37 +72,13 @@ export function createHomeProjectsController(home: HomeController) {
           .filter((directory) => state.project.unseenCount(directory) > 0)
           .forEach((directory) => state.project.markViewed(directory))
       },
-      choose: (conn: ServerConnection.Any) => {
-        if (home.server.health(conn)?.healthy === false) return
-        pickDirectory({
-          server: conn,
-          title: language.t("command.project.open"),
-          multiple: true,
-          onSelect: (result) => home.project.add(conn, homeProjectDirectories(result)),
-        })
-      },
-      close: (conn: ServerConnection.Any, directory: string) => {
-        const next = closeHomeProject(
-          home.selection.value(),
-          ServerConnection.key(conn),
-          home.server.context(conn).projects,
-          directory,
-        )
-        if (next) home.selection.set(next)
-      },
+      choose: home.project.choose,
+      close: home.project.close,
       move: (conn: ServerConnection.Any, worktree: string, index: number) => {
         home.server.context(conn).projects.move(worktree, index)
       },
-      canReveal: canRevealProject,
-      reveal: (conn: ServerConnection.Any, project: LocalProject) => {
-        if (!platform.openPath || !canRevealProject(conn)) return
-        platform.openPath(project.worktree).catch((cause: unknown) =>
-          showToast({
-            title: language.t("common.requestFailed"),
-            description: errorMessage(cause, language.t("common.requestFailed")),
-          }),
-        )
-      },
+      canReveal: home.project.canReveal,
+      reveal: home.project.reveal,
     },
     utility: {
       settings: openSettings,

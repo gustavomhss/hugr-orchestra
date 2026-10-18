@@ -2,7 +2,7 @@ export * as HookEvaluate from "./evaluate"
 
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
-import { HookGlob } from "./glob"
+import { HookMatch } from "@orchestra/schema/hook-match"
 
 // Pure hook evaluation (WP9): which installed actions fire for one invocation, in what order. Core enforces them
 // (WP11); nothing here grants anything. The Python Relay never ran hooks, so there is no golden: the tests pin this.
@@ -50,15 +50,10 @@ export const plan = (installs: ReadonlyArray<RelayHook.Install>, invocation: Inv
     .toSorted((a, b) => a.order - b.order)
     .flatMap((install) => fire(install, invocation))
 
-// `**` crosses directories in path patterns (HookGlob: minimatch-like and case-sensitive); other fields use Orchestra's
-// permission Wildcard.
-export const matches = (field: "path" | "tool" | "command" | "event", pattern: string, value: string): boolean => {
-  if (field === "path") return HookGlob.match(pattern, value)
-  const fold = process.platform === "win32"
-  const normalized = pattern.replaceAll("\\", "/")
-  const subject = value.replaceAll("\\", "/")
-  return star(normalized, subject, fold) || (normalized.endsWith(" *") && star(normalized.slice(0, -2), subject, fold))
-}
+// The matcher lives in @orchestra/schema (HookMatch) so the app's hook Test runs the same one; the engine only decides
+// whether to fold case, as Orchestra's permission Wildcard does on Windows.
+export const matches = (field: "path" | "tool" | "command" | "event", pattern: string, value: string): boolean =>
+  HookMatch.matches(field, pattern, value, process.platform === "win32")
 
 const TOOL_OPERATIONS = new Set<string>(RelayHook.ToolOperation.literals)
 
@@ -124,47 +119,4 @@ function holds(condition: RelayHook.ConditionParameters, parts: ReadonlyArray<Pa
     return parts.some((part) => matches("event", condition.pattern, `${part.operation}.${invocation.timing}`))
   const value = condition.field === "tool" ? invocation.tool : invocation.command
   return value !== undefined && matches(condition.field, condition.pattern, value)
-}
-
-/**
- * Orchestra's Wildcard (core/src/util/wildcard.ts: `*` any run, newlines included; `?` one character; everything else
- * literal; case-insensitive on Windows) without its regex. That regex backtracks polynomially on several stars, and the
- * value here is a model-written command, so this matches greedily in O(pattern × value): the first and last literal
- * segments are anchored and each middle one takes its leftmost fit.
- */
-function star(pattern: string, value: string, fold: boolean) {
-  const segments = pattern.split("*")
-  const head = segments[0]!
-  if (segments.length === 1) return value.length === head.length && fits(head, value, 0, fold)
-  const tail = segments.at(-1)!
-  const end = value.length - tail.length
-  if (end < head.length || !fits(head, value, 0, fold) || !fits(tail, value, end, fold)) return false
-  return (
-    segments
-      .slice(1, -1)
-      .reduce<
-        number | undefined
-      >((from, segment) => (from === undefined ? undefined : leftmost(segment, value, from, end, fold)), head.length) !==
-    undefined
-  )
-}
-
-// The end of the leftmost fit of `segment` in `value[from, limit)`.
-function leftmost(segment: string, value: string, from: number, limit: number, fold: boolean) {
-  const start = Array.from({ length: limit - segment.length - from + 1 }, (_, offset) => from + offset).find((index) =>
-    fits(segment, value, index, fold),
-  )
-  return start === undefined ? undefined : start + segment.length
-}
-
-// Whether `segment` (`?` = any one UTF-16 unit, as in a non-unicode regex) matches `value` at `index`.
-function fits(segment: string, value: string, index: number, fold: boolean) {
-  return segment
-    .split("")
-    .every(
-      (char, offset) =>
-        char === "?" ||
-        char === value[index + offset] ||
-        (fold && char.toUpperCase() === value[index + offset]!.toUpperCase()),
-    )
 }

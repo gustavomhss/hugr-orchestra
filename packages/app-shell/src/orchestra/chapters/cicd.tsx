@@ -199,17 +199,6 @@ export default function Cicd(props: ChapterPageProps) {
                   >
                     {language.t(`orchestra.cicd.status.${item.status}`)}
                   </MxBadge>
-                  <MxBadge>
-                    <bdi>{item.branch}</bdi>
-                  </MxBadge>
-                  <MxBadge>{trigger(item.trigger)}</MxBadge>
-                  <MxBadge>
-                    {item.deploy
-                      ? language.t("orchestra.cicd.deploy", {
-                          environment: language.t(`orchestra.cicd.environment.${item.environment}`),
-                        })
-                      : language.t("orchestra.cicd.checksOnly")}
-                  </MxBadge>
                 </div>
                 <Show when={pipelines.stopping(item.id)?.error}>
                   {(error) => (

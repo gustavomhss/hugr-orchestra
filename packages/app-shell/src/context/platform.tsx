@@ -51,6 +51,12 @@ type PlatformBase = {
   /** Restart the app  */
   restart(): Promise<void>
 
+  /**
+   * Run `handler` before this window closes or the app quits, for work the page must save first. The desktop waits
+   * for it at most 3 s, then closes anyway (desktop only). Returns a function that unregisters it.
+   */
+  onBeforeUnload?(handler: () => Promise<void>): () => void
+
   /** Send a system notification */
   notify(title: string, description?: string, onClick?: () => void): Promise<void>
 
@@ -65,6 +71,9 @@ type PlatformBase = {
 
   /** Open a native save file picker dialog (desktop only) */
   saveFilePickerDialog?(opts?: SaveFilePickerOptions): Promise<string | null>
+
+  /** Save raw response bytes with backpressure; cancellation rejects with AbortError. */
+  downloadResponse?(response: Response, filename: string): Promise<void>
 
   /** Storage mechanism, defaults to localStorage */
   storage?: (name?: string) => SyncStorage | AsyncStorage

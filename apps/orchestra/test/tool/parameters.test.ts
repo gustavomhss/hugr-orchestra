@@ -249,6 +249,13 @@ describe("tool parameters", () => {
         "Native Atlas specialist resume only: the task or PR unit whose latest admitted own Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for unsupported agents.",
       )
     })
+    test("research effort accepts only the three tiers and is optional", () => {
+      const brief = { description: "d", prompt: "p", subagent_type: "jimmy" }
+      for (const effort of ["quick", "focused", "deep"] as const) expect(parse(Task, { ...brief, effort }).effort).toBe(effort)
+      expect(parse(Task, brief).effort).toBeUndefined()
+      for (const effort of ["max", "Deep", "", 2]) expect(accepts(Task, { ...brief, effort })).toBe(false)
+      expect(toJsonSchema(Task).properties?.effort).toMatchObject({ enum: ["quick", "focused", "deep"] })
+    })
     test("rejects missing prompt", () => {
       expect(accepts(Task, { description: "d", subagent_type: "general" })).toBe(false)
     })

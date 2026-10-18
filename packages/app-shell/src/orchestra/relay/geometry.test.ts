@@ -2,16 +2,23 @@ import { describe, expect, test } from "bun:test"
 import {
   bounds,
   centerOn,
+  contains,
+  DRAWER,
   edgePath,
   fitView,
   groupRect,
   intersects,
   minimapPoint,
+  neighbour,
   NODE,
+  nudge,
+  popupAt,
   portY,
   rounded,
   snap,
   toWorld,
+  viewInset,
+  wheelFactor,
   zoomAt,
 } from "./geometry"
 
@@ -127,5 +134,77 @@ describe("view", () => {
   test("box selection includes nodes that touch the box", () => {
     expect(intersects({ x: 0, y: 0 }, { x: 50, y: 50, w: 10, h: 10 })).toBe(true)
     expect(intersects({ x: 0, y: 0 }, { x: 56, y: 0, w: 10, h: 10 })).toBe(false)
+  })
+
+  test("the add drawer's room is reserved on the side where the drawer is", () => {
+    expect(viewInset(false, false)).toEqual({ left: 30, top: 64, right: 30, bottom: 126 })
+    expect(viewInset(true, false)).toEqual({ left: 30, top: 64, right: 30 + DRAWER, bottom: 126 })
+    // In a right-to-left UI the drawer is on the left, and so is the reserve.
+    expect(viewInset(true, true)).toEqual({ left: 30 + DRAWER, top: 64, right: 30, bottom: 126 })
+  })
+
+  test("centring in what a left-hand drawer leaves free starts after the drawer", () => {
+    const view = centerOn({ k: 1, x: 0, y: 0 }, { x: 100, y: 200 }, { x: DRAWER, w: 800 - DRAWER, h: 600 })
+    expect(view.x + 100 + NODE / 2).toBe(DRAWER + (800 - DRAWER) / 2)
+  })
+
+  test("one wheel event zooms by at most 10%, however far the wheel turned", () => {
+    expect(wheelFactor(100)).toBe(0.9)
+    expect(wheelFactor(-100)).toBe(1.1)
+    expect(wheelFactor(0)).toBe(1)
+    expect(wheelFactor(4)).toBeCloseTo(Math.exp(-0.04), 10)
+    expect(zoomAt({ k: 1, x: 0, y: 0 }, wheelFactor(-1000), 0, 0).k).toBeCloseTo(1.1, 10)
+  })
+
+  test("a span moves just far enough to sit inside the room, or lines up its start when it is wider", () => {
+    expect(nudge(10, 50, 0, 100)).toBe(0)
+    expect(nudge(-20, 20, 0, 100)).toBe(20)
+    expect(nudge(80, 130, 0, 100)).toBe(-30)
+    expect(nudge(-50, 300, 0, 100)).toBe(50)
+    expect(contains({ x: 0, y: 0, w: 10, h: 10 }, { x: 10, y: 5 })).toBe(true)
+    expect(contains({ x: 0, y: 0, w: 10, h: 10 }, { x: 11, y: 5 })).toBe(false)
+  })
+})
+
+describe("popups", () => {
+  const area = { w: 1000, h: 600 }
+  const size = { w: 200, h: 150 }
+
+  test("a popup opens below its button, or above it when there is no room below", () => {
+    expect(popupAt({ x: 100, top: 20, bottom: 50 }, size, area)).toEqual({ x: 100, y: 56 })
+    expect(popupAt({ x: 100, top: 540, bottom: 570 }, size, area)).toEqual({ x: 100, y: 384 })
+  })
+
+  test("a popup that fits neither way is pinned inside the window, and never leaves it sideways", () => {
+    expect(popupAt({ x: 100, top: 200, bottom: 230 }, { w: 200, h: 560 }, area)).toEqual({ x: 100, y: 32 })
+    expect(popupAt({ x: 950, top: 20, bottom: 50 }, size, area).x).toBe(792)
+    expect(popupAt({ x: -40, top: 20, bottom: 50 }, size, area).x).toBe(8)
+  })
+})
+
+describe("arrow keys between steps", () => {
+  const nodes = [
+    { id: "a", x: 0, y: 0 },
+    { id: "b", x: 136, y: 0 },
+    { id: "c", x: 136, y: 140 },
+    { id: "loose", x: 400, y: 4 },
+  ]
+  const edges = [
+    { from: "a", to: "b", port: 0 },
+    { from: "a", to: "c", port: 1 },
+  ]
+
+  test("they follow the wires first, and Down takes the lower output", () => {
+    expect(neighbour(nodes, edges, "a", "right")).toBe("b")
+    expect(neighbour(nodes, edges, "a", "down")).toBe("c")
+    expect(neighbour(nodes, edges, "b", "left")).toBe("a")
+  })
+
+  test("without a wire that way they go to the closest step lying that way", () => {
+    expect(neighbour(nodes, edges, "b", "right")).toBe("loose")
+    // A step with no wires is reached by position, preferring the one most in line with it.
+    expect(neighbour(nodes, edges, "loose", "left")).toBe("b")
+    expect(neighbour(nodes, edges, "a", "left")).toBeUndefined()
+    expect(neighbour(nodes, edges, "missing", "right")).toBeUndefined()
   })
 })

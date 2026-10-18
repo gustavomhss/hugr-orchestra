@@ -29,6 +29,7 @@ import { LogicalTask } from "@/maestro/logical-task"
 import { lookupRouteGrant } from "@/maestro/route-grant"
 import { Seats, type Seat } from "@/maestro/seats"
 import { SessionAuthority } from "@/maestro/session-authority"
+import { UpstreamResult } from "@/maestro/upstream-result"
 import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
@@ -392,9 +393,17 @@ export function make(input: {
       const workResult = recorded && ended ? { ...recorded, terminal: ended } : recorded
       const retained = workResult ? DiscoveryResult.report(reply, workResult) : reply
       const report = ended ? ClaudeHostResearchResult.report(retained, ended) : retained
-      yield* write(entry, report, { ...base, ...(workResult ? { workResult } : {}) })
+      // Maestro records a plan from a proposal with these identities, and Claude Code's Agent result carries none of
+      // them. They are host facts; maestro_record_plan_revision re-verifies every one against the durable records.
+      // They come first, before any text the child wrote, so a look-alike line in that text cannot pass for them.
+      const parent = workResult?.schema === UpstreamResult.SCHEMA ? yield* find(entry) : undefined
+      const proposal = workResult?.schema === UpstreamResult.SCHEMA ? "Host attribution of this proposal " +
+        `(maestro_record_plan_revision upstream): ${JSON.stringify({ parentMessageID: parent?.messageID,
+          parentCallID: entry.toolUseID, authorSessionID: entry.child, authorMessageID: author.info.id,
+          logicalTaskID: workResult.taskId, dispatchKind: "claude-code-agent" })}\n\n${report}` : undefined
+      yield* write(entry, proposal ?? report, { ...base, ...(workResult ? { workResult } : {}) })
       entry.settled = true
-      return ended || workResult?.schema === "discovery-work-result-v1" ? report : undefined
+      return proposal ?? (ended || workResult?.schema === "discovery-work-result-v1" ? report : undefined)
     }))
   })
 

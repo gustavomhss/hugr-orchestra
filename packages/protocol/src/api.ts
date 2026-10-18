@@ -27,6 +27,15 @@ import { RelayHookGroup } from "./groups/relay-hook"
 import { PullRequestGroup } from "./groups/pull-request"
 import { ScheduleGroup } from "./groups/schedule"
 import { makeResearchArtifactGroup } from "./groups/research-artifact"
+import { ActionsBindingGroup } from "./groups/actions-binding"
+import { ActionsOperationGroup } from "./groups/actions-operation"
+import { ActionsWorkflowGroup } from "./groups/actions-workflow"
+import { ActionsRunGroup } from "./groups/actions-run"
+import { ActionsJobGroup } from "./groups/actions-job"
+import { ActionsPipelineGroup } from "./groups/actions-pipeline"
+import { ActionsResourceGroup } from "./groups/actions-resource"
+import { ActionsSourceGroup } from "./groups/actions-source"
+import { ActionsTransferGroup } from "./groups/actions-transfer"
 
 // Protocol owns middleware placement, while Server injects concrete keys so Core service identities stay downstream.
 const makeApiFromGroup = <
@@ -66,6 +75,15 @@ const makeApiFromGroup = <
     .add(RelayHookGroup.middleware(locationMiddleware))
     .add(PullRequestGroup.middleware(locationMiddleware))
     .add(ScheduleGroup.middleware(locationMiddleware))
+    .add(ActionsBindingGroup.middleware(locationMiddleware))
+    .add(ActionsOperationGroup.middleware(locationMiddleware))
+    .add(ActionsWorkflowGroup.middleware(locationMiddleware))
+    .add(ActionsRunGroup.middleware(locationMiddleware))
+    .add(ActionsJobGroup.middleware(locationMiddleware))
+    .add(ActionsPipelineGroup.middleware(locationMiddleware))
+    .add(ActionsResourceGroup.middleware(locationMiddleware))
+    .add(ActionsSourceGroup.middleware(locationMiddleware))
+    .add(ActionsTransferGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

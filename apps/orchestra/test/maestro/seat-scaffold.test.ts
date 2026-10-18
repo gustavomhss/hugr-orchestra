@@ -14,6 +14,8 @@ async function fixture() {
   return tmpdir({
     init: async (dir) => {
       const root = path.join(dir, "apps/orchestra")
+      // Seat skill trees live in packages/, beside apps/ in the real layout.
+      await fs.mkdir(path.join(dir, "packages"), { recursive: true })
       await fs.mkdir(path.join(root, "src/agent/prompt"), { recursive: true })
       await fs.mkdir(path.join(root, "src/maestro/seats"), { recursive: true })
       const index = path.join(root, "src/maestro/seats/index.ts")

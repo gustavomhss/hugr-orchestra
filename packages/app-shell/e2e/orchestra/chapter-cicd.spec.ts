@@ -6,6 +6,7 @@ import {
   directory,
   mockPty,
   openChapter,
+  openLocalPipelines,
   openSource,
   serverA,
   serverB,
@@ -135,12 +136,15 @@ test("profiles on different servers keep separate inventories and discard a late
 })
 
 test("the pressed WIP item opens no tooltip that would take a dialog's Escape", async ({ page }) => {
+  await page.clock.install()
   await setup(page)
-  // Clicks the CI/CD item and leaves the pointer on it.
   await openChapter(page)
-  // A timer queued now fires after the 400ms tooltip open delay that the hover started before the click.
-  await page.evaluate(() => new Promise((resolve) => setTimeout(resolve, 450)))
+  // Actions is no longer WIP; MCP still exercises cancellation of the pending hover tooltip.
+  await page.locator(".orchestra-nav").getByRole("button", { name: "MCP", exact: true }).click()
+  await page.clock.fastForward(450)
   await expect(page.getByRole("tooltip")).toHaveCount(0)
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await openLocalPipelines(page, serverA)
   const source = await openSource(page, ".github/workflows/ci.yml")
   await page.keyboard.press("Escape")
   await expect(source).toHaveCount(0)
@@ -220,29 +224,25 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   )
   await page.getByRole("button", { name: "New pipeline", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "New pipeline" })
-  await expect(dialog.locator('[name="branch"]')).toHaveValue("main")
-  await expect(dialog.locator('[name="command"]')).toHaveValue("bun run build && bun test")
+  await expect(dialog.locator('[name="command"]')).toHaveValue("")
+  await expect(dialog.locator('[name="command"]')).toHaveAttribute("placeholder", "One shell command per line")
+  await expect(dialog.locator('[name="branch"], [name="trigger"], [name="environment"]')).toHaveCount(0)
+  await expect(dialog.getByRole("checkbox")).toHaveCount(0)
   await expect(dialog.getByRole("button", { name: "Remove pipeline" })).toHaveCount(0)
   await dialog.locator('[name="name"]').fill("   ")
   await dialog.getByRole("button", { name: "Save", exact: true }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Enter a name.")
   await dialog.locator('[name="name"]').fill("Project checks")
-  await dialog.locator('[name="branch"]').fill("  ")
-  await dialog.getByRole("button", { name: "Save", exact: true }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Enter a branch.")
-  await dialog.locator('[name="branch"]').fill(" main ")
   await dialog.locator('[name="command"]').fill("   ")
   await dialog.getByRole("button", { name: "Save", exact: true }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Add at least one command.")
   await dialog.locator('[name="command"]').fill("bun run build && bun run lint && bun test")
-  await dialog.locator('[name="trigger"]').selectOption({ label: "On push" })
-  await dialog.locator('[name="environment"]').selectOption({ label: "Staging" })
   await dialog.getByRole("button", { name: "Save", exact: true }).click()
   await expect(dialog).toHaveCount(0)
   const card = page.locator("article.mx-card")
   await expect(card.getByRole("heading", { name: "Project checks" })).toBeVisible()
   await expect(card.locator("p")).toHaveText("bun run build && bun run lint && bun test")
-  await expect(card.locator(".mx-badge")).toHaveText(["Not run", "main", "On push", "Checks only"])
+  await expect(card.locator(".mx-badge")).toHaveText(["Not run"])
   await expect(card.getByRole("button")).toHaveText(["Run", "Logs", "Edit"])
   await card.getByRole("button", { name: "Logs", exact: true }).click()
   const logs = page.getByRole("dialog", { name: "Project checks · logs" })
@@ -253,12 +253,11 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
 
   await card.getByRole("button", { name: "Edit", exact: true }).click()
   const edit = page.getByRole("dialog", { name: "Edit Project checks" })
-  await expect(edit.locator('[name="trigger"]')).toHaveValue("push")
-  await expect(edit.locator('[name="environment"]')).toHaveValue("staging")
-  await edit.locator('[name="branch"]').fill("release")
-  await edit.getByRole("checkbox", { name: "Include a deployment stage" }).check()
+  await expect(edit.locator('[name="command"]')).toHaveValue("bun run build && bun run lint && bun test")
+  await expect(edit.locator('[name="branch"], [name="trigger"], [name="environment"]')).toHaveCount(0)
+  await expect(edit.getByRole("checkbox")).toHaveCount(0)
   await edit.getByRole("button", { name: "Save", exact: true }).click()
-  await expect(card.locator(".mx-badge")).toHaveText(["Not run", "release", "On push", "Deploy: Staging"])
+  await expect(card.locator(".mx-badge")).toHaveText(["Not run"])
 
   const search = page.getByRole("textbox", { name: "Search CI/CD" })
   await expect(search).toHaveAttribute("placeholder", "Search ci/cd")
@@ -272,7 +271,7 @@ test("pipelines are created, validated, edited, searched, persisted per profile 
   await expect(workflowRows(page)).toHaveCount(2)
 
   await page.reload()
-  await expect(card.locator(".mx-badge")).toHaveText(["Not run", "release", "On push", "Deploy: Staging"])
+  await expect(card.locator(".mx-badge")).toHaveText(["Not run"])
   await chooseProfile(page, "Server B repository")
   await expect(page.locator("article.mx-card")).toHaveCount(0)
   await expect(page.locator(".mx-empty")).toBeVisible()
@@ -295,7 +294,7 @@ for (const protocol of ["v1", "v2"] as const) {
     await setup(page, { protocol })
     const pty = await mockPty(page, protocol)
     await openChapter(page)
-    await createPipeline(page, { deploy: true })
+    await createPipeline(page)
     const card = page.locator("article.mx-card")
     // The second click of a double click must not stop the run the first click started.
     await card.getByRole("button", { name: "Run", exact: true }).dblclick()
@@ -320,7 +319,7 @@ for (const protocol of ["v1", "v2"] as const) {
     pty.exit(0)
     await expect(logs.getByText("main · Passed", { exact: true })).toBeVisible()
     await expect(logs.locator('[data-slot="cicd-log"]')).toHaveText(
-      /\nprogress 100%\n\nExited with code 0\.\nDeploy to Staging: not executed, no deployment target is connected\.\nPipeline passed\.$/,
+      /\nprogress 100%\n\nExited with code 0\.\nPipeline passed\.$/,
     )
     await expect.poll(() => pty.removed).toEqual(["pty_cicd"])
     const download = page.waitForEvent("download")
@@ -336,11 +335,11 @@ for (const protocol of ["v1", "v2"] as const) {
   })
 }
 
-test("a failing run skips deployment; confirmed cancellation cannot complete later", async ({ page }) => {
+test("a failing run fails the pipeline; confirmed cancellation cannot complete later", async ({ page }) => {
   await setup(page)
   const pty = await mockPty(page, "v2")
   await openChapter(page)
-  await createPipeline(page, { deploy: true, branch: "release" })
+  await createPipeline(page)
   const card = page.locator("article.mx-card")
   await card.getByRole("button", { name: "Run", exact: true }).click()
   await expect.poll(() => pty.inputs).toEqual(["\r"])
@@ -349,7 +348,7 @@ test("a failing run skips deployment; confirmed cancellation cannot complete lat
   await expect(card.locator(".mx-badge.bad")).toHaveText("Failed")
   await card.getByRole("button", { name: "Logs", exact: true }).click()
   await expect(page.locator('[data-slot="cicd-log"]')).toHaveText(
-    /^Run 1 · .+\nWorking tree branch: main\nConfigured branch \(not checked out\): release\n.+\ntest failed\n\nExited with code 2\.\nDeploy to Staging: skipped due to failed checks\.\nPipeline failed\.$/s,
+    /^Run 1 · .+\nWorking tree branch: main\n.+\ntest failed\n\nExited with code 2\.\nPipeline failed\.$/s,
   )
   await page.keyboard.press("Escape")
 
@@ -399,7 +398,7 @@ for (const protocol of ["v1", "v2"] as const) {
         },
       )
       await openChapter(page)
-      await createPipeline(page, { deploy: false })
+      await createPipeline(page)
       const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
       await card.getByRole("button", { name: "Run", exact: true }).click()
       await expect.poll(() => pty.inputs).toEqual(["\r"])
@@ -444,7 +443,7 @@ for (const protocol of ["v1", "v2"] as const) {
     )
     pty.removeFailure = true
     await openChapter(page)
-    await createPipeline(page, { deploy: false })
+    await createPipeline(page)
     const card = page.getByRole("article").filter({ has: page.getByRole("heading", { name: "Project checks" }) })
     await card.getByRole("button", { name: "Run", exact: true }).click()
     await started.promise
@@ -477,7 +476,7 @@ for (const [protocol, outcome] of [
     await setup(page, { protocol })
     const pty = await mockPty(page, protocol)
     await openChapter(page)
-    await createPipeline(page, { deploy: false })
+    await createPipeline(page)
     const card = page.locator("article.mx-card")
     await card.getByRole("button", { name: "Run", exact: true }).click()
     await expect.poll(() => pty.inputs).toEqual(["\r"])
@@ -507,7 +506,7 @@ test("a run the server cannot start is a start failure, not a failed check", asy
   const pty = await mockPty(page, "v2")
   pty.createFailure = true
   await openChapter(page)
-  await createPipeline(page, { deploy: false })
+  await createPipeline(page)
   const card = page.locator("article.mx-card")
   await card.getByRole("button", { name: "Run", exact: true }).click()
   await expect(card.locator(".mx-badge.bad")).toHaveText("Start failed")
@@ -526,7 +525,7 @@ for (const scheme of ["dark", "light"] as const) {
     if ((await debug.isVisible()) && (await debug.getAttribute("aria-pressed")) === "true") await debug.click()
     const notice = page.getByRole("button", { name: "Dismiss Tabs information", exact: true })
     if (await notice.count()) await notice.click()
-    await createPipeline(page, { deploy: true })
+    await createPipeline(page)
     await page.screenshot({ path: test.info().outputPath(`${scheme}.png`) })
     const view = page.getByRole("button", { name: "View .github/workflows/release.yaml", exact: true })
     await view.focus()

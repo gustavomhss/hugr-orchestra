@@ -20,7 +20,8 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   lean: lazy(() => import("./chapters/lean")),
   mcp: lazy(() => import("./chapters/mcp")),
   skills: lazy(() => import("./chapters/skills")),
-  cicd: lazy(() => import("./chapters/cicd")),
+  cicd: lazy(() => import("./chapters/actions")),
+  actions: lazy(() => import("./chapters/actions")),
   env: lazy(() => import("./chapters/env")),
   agents: lazy(() => import("./chapters/agents")),
   workspaces: lazy(() => import("./chapters/workspaces")),
@@ -33,6 +34,11 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   workflows: lazy(() => import("./chapters/workflows")),
   hooks: lazy(() => import("./chapters/hooks")),
 }
+
+// These chapters configure the whole server, so they render without a project (with an empty directory).
+const serverWideChapters = ["settings", "providers", "shortcuts"]
+
+const ChapterEmpty = lazy(() => import("./chapter-empty"))
 
 export function OrchestraChapterRoute() {
   const params = useParams<{ chapter: string }>()
@@ -73,9 +79,9 @@ export function OrchestraChapterRoute() {
             keyed
             fallback={
               <Show
-                when={params.chapter === "settings" && selectedServer()}
+                when={serverWideChapters.includes(params.chapter) && selectedServer()}
                 keyed
-                fallback={<p data-slot="orchestra-chapter-empty">{language.t("orchestra.profile.empty")}</p>}
+                fallback={<ChapterEmpty server={selectedServer()} />}
               >
                 {(conn) => (
                   <ServerSDKProvider server={() => conn}>

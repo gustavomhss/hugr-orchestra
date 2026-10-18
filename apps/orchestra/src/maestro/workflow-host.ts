@@ -32,6 +32,7 @@ import { readAuthorization } from "./authorization"
 import { contextIsCurrent, readContext } from "./context-record"
 import { readWorkflowRevision } from "./plan-revision"
 import { canonicalMemberId, nativeProfiles, roster } from "./roster"
+import { CodeReview } from "./code-review"
 import { taskHash } from "./task-hash"
 import { UpstreamProvenance } from "./upstream-provenance"
 import {
@@ -110,17 +111,47 @@ export function make(deps: Dependencies) {
       !reviewActorMatches(review.data.actor, binding, "lucy") ||
       ![review.data.artifact.baseSHA, review.data.artifact.headSHA].every((sha) => /^[a-f0-9]{40}(?:[a-f0-9]{24})?$/.test(sha)))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
-    const status = yield* deps.git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
     const head = yield* deps.git.run(["rev-parse", "HEAD"], { cwd: binding.directory })
     const placement = yield* InstanceState.context
     const diff = yield* deps.git.run([
       "diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/",
       review.data.artifact.baseSHA, review.data.artifact.headSHA, "--", ".",
     ], { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 })
-    if (status.exitCode || status.truncated || status.text().trim() || head.exitCode || head.truncated ||
-      head.text().trim() !== review.data.artifact.headSHA || diff.exitCode || diff.truncated || !diff.stdout.length ||
-      RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
-      (yield* deps.fs.realPath(review.data.artifact.worktree)) !== (yield* deps.fs.realPath(placement.worktree)))
+    const worktree = yield* deps.fs.realPath(placement.worktree)
+    // Workers never commit: HEAD stays the plan-reviewed head and their result lives in the working tree.
+    if (head.exitCode || head.truncated || head.text().trim() !== review.data.artifact.headSHA || diff.exitCode ||
+      diff.truncated || !diff.stdout.length || RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
+      (yield* deps.fs.realPath(review.data.artifact.worktree)) !== worktree)
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
+    const writePaths = yield* CodeReview.writePaths(binding.planID)
+    if (!writePaths) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    const result = yield* CodeReview.result({ worktree: review.data.artifact.worktree, base: review.data.artifact.headSHA,
+      writePaths, maxOutputBytes: 2 * 1024 * 1024 })
+    // A run that changed nothing completes on the plan review alone, as before.
+    if (result.status === "unchanged") return
+    if (result.status !== "ready")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE", detail: result.status === "outside"
+        ? `The working tree changes paths outside the approved writePaths ${JSON.stringify(writePaths)}: ${JSON.stringify(result.outside.slice(0, 10))}.`
+        : `The workers' result is ${result.status}.` })
+    // The workers' result needs its own code review, bound to this exact tree.
+    const code = yield* findReview(binding.sessionID, validation.id, result.tree)
+    // Only a result nobody reviewed yet holds before grading; a FIX_FIRST or REJECT is a graded failure that spends
+    // the gate's retry budget, so review and resume loops stay bounded and end in the normal park.
+    if (!code)
+      return yield* new RelayWorkflowBinding.Held({ reason: CodeReview.REQUIRED,
+        detail: `The workers' result (tree ${result.tree}) has no code review. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then resumes this workflow Task with its task_id ${binding.taskID}.` })
+    if (code.data.verdict !== "APPROVE")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_NOT_APPROVED",
+        detail: `The code review of the workers' result (tree ${result.tree}) is ${code.data.verdict}: ${code.id}. The workers fix its findings; the new result is reviewed again.` })
+    if (code.data.sessionID !== binding.sessionID || code.data.validationRecordID !== validation.id ||
+      code.data.projectID !== binding.projectID || code.data.reviewerID !== "lucy" ||
+      code.data.workCardHash !== validation.workCardHash || code.data.artifact.workCardHash !== validation.workCardHash ||
+      code.data.routedMemberID !== validation.routedMemberID || code.data.rosterHash !== validation.rosterHash ||
+      code.data.grantHash !== validation.grantHash || code.data.reviewPolicyHash !== validation.reviewPolicyHash ||
+      !reviewActorMatches(code.data.actor, binding, "lucy"))
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    if (code.data.artifact.baseSHA !== review.data.artifact.headSHA || code.data.artifact.sha256 !== result.sha256 ||
+      (yield* deps.fs.realPath(code.data.artifact.worktree)) !== worktree)
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
   }).pipe(Effect.provide(deps.context)))
 
@@ -133,15 +164,17 @@ export function make(deps: Dependencies) {
       const knowledge = yield* AtlasKnowledge.Service
       return {
         projectID: placement.projectID,
+        // Users never author host checks: every workflow plan ends on the registered global acceptance checks.
+        acceptance: WorkflowBinding.ACCEPTANCE_CONTROLS,
         knowledge: (reference, authorSessionID) => deps.under(placement.directory,
           knowledge.resolve({ projectID: placement.projectID, authorSessionID: SessionID.make(authorSessionID), reference }),
         ).pipe(Effect.mapError((error) => new RelayWorkflowBinding.Held({
           reason: `WORKFLOW_KNOWLEDGE_${error.reason}`,
         }))),
-        use: <A, E>(read: (store: Pick<AuthoringStore.Interface, "get" | "version">) => Effect.Effect<A, E>) =>
+        use: <A, E>(read: (store: Pick<AuthoringStore.Interface, "get" | "version" | "documents">) => Effect.Effect<A, E>) =>
           Effect.scoped(Effect.gen(function* () {
             const store = yield* AuthoringStore.open(relay.paths.root, placement.projectID)
-            return yield* read({ get: store.get, version: store.version })
+            return yield* read({ get: store.get, version: store.version, documents: store.documents })
           })).pipe(Effect.catchDefect(() => Effect.fail(new RelayWorkflowBinding.Held({
             reason: "WORKFLOW_PUBLICATION_ACQUISITION",
           })))),

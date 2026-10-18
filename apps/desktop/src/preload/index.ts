@@ -1,6 +1,9 @@
 import { contextBridge, ipcRenderer, webUtils } from "electron"
 import type { ElectronAPI, WslServersEvent } from "./types"
 import type { UpdaterState } from "@orchestra/app/updater"
+import { RESPONSE_DOWNLOAD_CHUNK_BYTES } from "./response-download"
+
+let responseDownloadWriting = false
 
 const updaterCallbacks = new Set<(state: UpdaterState) => void>()
 let updaterState: UpdaterState | undefined
@@ -9,6 +12,14 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
   updaterState = state
   updaterCallbacks.forEach((callback) => callback(state))
 }
+// Main asks before it closes this window or quits, and waits for the answer at most 3 s. A handler that throws or
+// rejects still lets the answer go.
+const unloadHandlers = new Set<() => Promise<void>>()
+ipcRenderer.on("before-unload", (_: unknown, id: string) => {
+  void Promise.allSettled([...unloadHandlers].map((handler) => Promise.resolve().then(handler))).then(() =>
+    ipcRenderer.send("before-unload-done", id),
+  )
+})
 
 const api: ElectronAPI = {
   appDockLinuxOpen: (bounds, profile) => ipcRenderer.invoke("app-dock-linux-open", bounds, profile),
@@ -131,6 +142,10 @@ const api: ElectronAPI = {
   },
 
   getWindowID: () => ipcRenderer.invoke("get-window-id"),
+  onBeforeUnload: (handler) => {
+    unloadHandlers.add(handler)
+    return () => void unloadHandlers.delete(handler)
+  },
   onMenuCommand: (cb) => {
     const handler = (_: unknown, id: string) => cb(id)
     ipcRenderer.on("menu-command", handler)
@@ -148,6 +163,22 @@ const api: ElectronAPI = {
   releasePickedFiles: (token) => ipcRenderer.invoke("release-picked-files", token),
   getPathForFile: (file) => webUtils.getPathForFile(file),
   saveFilePicker: (opts) => ipcRenderer.invoke("save-file-picker", opts),
+  responseDownload: {
+    start: (filename) => ipcRenderer.invoke("response-download-start", filename),
+    ready: (handle) => ipcRenderer.invoke("response-download-ready", handle),
+    write: async (handle, sequence, chunk) => {
+      if (responseDownloadWriting || !(chunk instanceof ArrayBuffer) || chunk.byteLength === 0
+        || chunk.byteLength > RESPONSE_DOWNLOAD_CHUNK_BYTES) return { status: "error", code: "transfer_failed" }
+      responseDownloadWriting = true
+      try {
+        return await ipcRenderer.invoke("response-download-write", handle, sequence, chunk)
+      } finally {
+        responseDownloadWriting = false
+      }
+    },
+    finish: (handle, sequence) => ipcRenderer.invoke("response-download-finish", handle, sequence),
+    cancel: (handle) => ipcRenderer.invoke("response-download-cancel", handle),
+  },
   openExternal: (url) => ipcRenderer.send("open-external", url),
   openLocalFile: (url) => ipcRenderer.send("open-local-file", url),
   openPath: (path, app) => ipcRenderer.invoke("open-path", path, app),

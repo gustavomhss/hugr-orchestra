@@ -23,6 +23,15 @@ import { RelayHookHandler } from "./handlers/relay-hook"
 import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
 import { ResearchArtifactHandler } from "./handlers/research-artifact"
+import { ActionsBindingHandler } from "./handlers/actions-binding"
+import { ActionsOperationHandler } from "./handlers/actions-operation"
+import { ActionsWorkflowHandler } from "./handlers/actions-workflow"
+import { ActionsRunHandler } from "./handlers/actions-run"
+import { ActionsJobHandler } from "./handlers/actions-job"
+import { ActionsPipelineHandler } from "./handlers/actions-pipeline"
+import { ActionsResourceHandler } from "./handlers/actions-resource"
+import { ActionsSourceHandler } from "./handlers/actions-source"
+import { ActionsTransferHandler } from "./handlers/actions-transfer"
 
 export const handlers = Layer.mergeAll(
   HealthHandler,
@@ -50,4 +59,13 @@ export const handlers = Layer.mergeAll(
   PullRequestHandler,
   ScheduleHandler,
   ResearchArtifactHandler,
+  ActionsBindingHandler,
+  ActionsOperationHandler,
+  ActionsWorkflowHandler,
+  ActionsRunHandler,
+  ActionsJobHandler,
+  ActionsPipelineHandler,
+  ActionsResourceHandler,
+  ActionsSourceHandler,
+  ActionsTransferHandler,
 )
