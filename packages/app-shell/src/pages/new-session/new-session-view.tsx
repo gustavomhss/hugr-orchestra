@@ -1,4 +1,4 @@
-import { useDialog } from "@orchestra/ui/context/dialog"
+import { useNavigate } from "@solidjs/router"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
@@ -97,7 +97,7 @@ export function NewSessionStatus(props: { mount: Accessor<HTMLElement | null>; v
 
 function ProviderTip() {
   const language = useLanguage()
-  const dialog = useDialog()
+  const navigate = useNavigate()
   const sdk = useSDK()
   const serverSync = useServerSync()
   const providers = useProviders(() => sdk().directory)
@@ -117,11 +117,7 @@ function ProviderTip() {
     show: visible,
     element: () => ref() ?? null,
   })
-  const openProviders = () => {
-    void import("@/components/dialog-connect-provider").then(({ DialogConnectProvider }) => {
-      void dialog.show(() => <DialogConnectProvider directory={() => sdk().directory} />)
-    })
-  }
+  const openProviders = () => navigate("/orchestra/providers")
 
   return (
     <Show when={presence.present()}>
@@ -138,7 +134,7 @@ function ProviderTip() {
             class="flex h-6 min-w-0 items-center rounded-[4px] pl-1.5 text-[13px] leading-none tracking-[-0.04px] text-v2-text-text-faint transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-muted focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-muted focus-visible:outline-none"
             onClick={openProviders}
           >
-            <span class="truncate">{language.t("home.providerTip")}</span>
+            <span class="truncate">{language.t("orchestra.chat.providerTip")}</span>
             <span class="flex size-6 shrink-0 items-center justify-center" aria-hidden="true">
               <IconV2 name="chevron-down" size="small" class="-rotate-90" />
             </span>

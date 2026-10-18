@@ -1,6 +1,7 @@
 // Copy owned by the shell screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const SHELL_COPY = {
   "orchestra.shell.navigation": "Navigation",
+  "orchestra.shell.goHome": "Go home",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
   "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",

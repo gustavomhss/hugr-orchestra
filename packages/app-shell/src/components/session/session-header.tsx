@@ -293,33 +293,40 @@ export function SessionHeader() {
 
   return (
     <>
-      <Show when={search() && centerMount()} keyed>
+      <Show when={centerMount()} keyed>
         {(mount) => (
           <Portal mount={mount}>
-            <Button
-              type="button"
-              variant="ghost"
-              size="small"
-              class="hidden md:flex w-[240px] max-w-full min-w-0 items-center gap-2 justify-between rounded-md border border-border-weak-base bg-surface-panel shadow-none cursor-default"
-              onClick={() => command.trigger("file.open")}
-              aria-label={language.t("session.header.searchFiles")}
-            >
-              <div class="flex min-w-0 flex-1 items-center overflow-visible">
-                <span class="flex-1 min-w-0 text-12-regular text-text-weak truncate text-left">
-                  {language.t("session.header.search.placeholder", {
-                    project: name(),
-                  })}
-                </span>
-              </div>
+            <Show when={!search() && name()}>
+              <span class="min-w-0 truncate text-12-regular text-text-weak" data-component="session-project-name">
+                {name()}
+              </span>
+            </Show>
+            <Show when={search()}>
+              <Button
+                type="button"
+                variant="ghost"
+                size="small"
+                class="hidden md:flex w-[240px] max-w-full min-w-0 items-center gap-2 justify-between rounded-md border border-border-weak-base bg-surface-panel shadow-none cursor-default"
+                onClick={() => command.trigger("file.open")}
+                aria-label={language.t("session.header.searchFiles")}
+              >
+                <div class="flex min-w-0 flex-1 items-center overflow-visible">
+                  <span class="flex-1 min-w-0 text-12-regular text-text-weak truncate text-left">
+                    {language.t("session.header.search.placeholder", {
+                      project: name(),
+                    })}
+                  </span>
+                </div>
 
-              <Show when={hotkey()} keyed>
-                {(keybind) => (
-                  <Keybind class="shrink-0 !border-0 !bg-transparent !shadow-none px-0 text-text-weaker">
-                    {keybind}
-                  </Keybind>
-                )}
-              </Show>
-            </Button>
+                <Show when={hotkey()} keyed>
+                  {(keybind) => (
+                    <Keybind class="shrink-0 !border-0 !bg-transparent !shadow-none px-0 text-text-weaker">
+                      {keybind}
+                    </Keybind>
+                  )}
+                </Show>
+              </Button>
+            </Show>
           </Portal>
         )}
       </Show>
