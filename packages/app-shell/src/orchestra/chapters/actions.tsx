@@ -1,11 +1,12 @@
 import { useSearchParams } from "@solidjs/router"
-import { createEffect, createMemo, For, lazy, Match, onCleanup, Show, Suspense, Switch, untrack } from "solid-js"
+import { createEffect, createMemo, createUniqueId, For, lazy, Match, onCleanup, Show, Suspense, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
 import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
+import { setCrumbTrail } from "../crumbs"
 import { createActionsAPI } from "../actions/api"
 import { Empty, Icon, Status, type IconName } from "../actions/components"
 import type { Model, Route, Translate, ViewProps } from "../actions/contract"
@@ -100,7 +101,7 @@ export default function Actions(props: ChapterPageProps) {
     <Show when={ready()} fallback={<Empty title={t("orchestra.actions.loading")} busy />}>
       <Workbench server={props.server} directory={props.directory} api={api} t={t}
         preferences={query.actionsScope === api.preferenceKey ? readNavigation(query) ?? preferences.navigation : preferences.navigation}
-        remember={(value) => setPreferences("navigation", navigationPreferences(value))}
+        remember={(value) => setPreferences("navigation", navigationPreferences(value))} wanted={() => preferences.navigation.bindingID}
         save={(response) => saveActionsResponse(response, platform)} query={() => query}
         write={(value, replace) => setQuery(value, { replace, scroll: false })} />
     </Show>
@@ -112,6 +113,7 @@ function Workbench(props: ChapterPageProps & {
   t: Translate
   preferences: ActionsPreference
   remember: (value: ActionsPreference) => void
+  wanted: () => ActionsPreference["bindingID"]
   save: (response: Response) => Promise<void>
   query: Parameters<typeof synchronizeNavigation>[0]["query"]
   write: Parameters<typeof synchronizeNavigation>[0]["write"]
@@ -122,14 +124,20 @@ function Workbench(props: ChapterPageProps & {
   const model: Model = { ...native, get sourceDiscardBlocked() { return native.sourceDiscardBlocked },
     navigate: (route) => native.navigate(selectedRoute(native.state, route)) }
   const state = model.state
-  const [view, setView] = createStore({ query: "", ref: "" })
+  const [view, setView] = createStore({ query: "" })
+  const ids = createUniqueId()
+  // A loaded run names its workflow only while that run is the selection; settings and resources keep none.
   const workflow = createMemo(() => state.workflows.value?.items.find((item) => item.bindingID === state.binding?.id
-    && item.id === (state.route.workflowID ?? state.run.value?.workflowID)))
-   const run = createMemo(() => state.run.status === "ready" && state.run.value && state.run.value.id === state.route.runID
+    && item.id === (state.route.workflowID ?? (state.route.runID ? state.run.value?.workflowID : undefined))))
+  const run = createMemo(() => state.run.status === "ready" && state.run.value && state.run.value.id === state.route.runID
     && state.run.value.bindingID === state.binding?.id ? state.run.value : undefined)
   const jobs = createMemo(() => state.jobs.status === "ready" ? state.jobs.value?.items.filter((item) =>
     item.bindingID === state.binding?.id && item.runID === state.route.runID
     && (state.route.attempt === undefined || item.attempt === undefined || item.attempt === state.route.attempt)).slice(0, 100) ?? [] : [])
+  // Count only what is known: a native total, or a list whose last page is loaded. A truncated page shows none.
+  const loaded = (data: { status: string; value?: { items: readonly { bindingID: string }[]; next?: string; total?: number } }) =>
+    data.status !== "ready" || !data.value ? undefined
+      : data.value.total ?? (data.value.next ? undefined : data.value.items.filter((item) => item.bindingID === state.binding?.id).length)
   const catalog = createMemo(() => state.workflows.value?.items.filter((item) => item.bindingID === state.binding?.id
     && `${item.name ?? ""} ${item.path}`.toLowerCase().includes(view.query.toLowerCase())).slice(0, 100) ?? [])
   const canCreate = createMemo(() => canRequest(state, "source.write"))
@@ -138,16 +146,22 @@ function Workbench(props: ChapterPageProps & {
   const contextual = () => ["workflow", "run", "job", "source"].includes(state.route.view) || state.route.view === "runs" && Boolean(state.route.workflowID)
   const loading = () => <Empty title={props.t("orchestra.actions.loading")} busy />
 
-  synchronizeNavigation({ model, scope: props.api.preferenceKey, query: props.query, write: props.write })
+  synchronizeNavigation({ model, scope: props.api.preferenceKey, query: props.query, write: props.write, wanted: props.wanted })
+  // The titlebar names the chapter ("Orchestra / Actions"); the trail adds the current selection like the mock.
   createEffect(() => {
-    const ref = state.route.ref ?? ""
-    untrack(() => setView("ref", ref))
+    const resource = resourceLinks.find((item) => item[0] === (state.route.resourceKind ?? "artifacts"))
+    const job = state.route.jobID ? jobs().find((item) => item.id === state.route.jobID) : undefined
+    setCrumbTrail([
+      ...(workflow() ? [workflow()?.name ?? workflow()?.id ?? ""] : []),
+      ...(state.route.runID ? [`${props.t("orchestra.actions.run")} ${state.route.runID}`] : []),
+      ...(job ? [job.name] : []),
+      ...(state.route.view === "runs" && !state.route.workflowID ? [props.t("orchestra.actions.shell.runs")] : []),
+      ...(state.route.view === "resources" && resource ? [props.t(resource[1])] : []),
+      ...(state.route.view === "settings" ? [props.t("orchestra.actions.shell.settings")] : []),
+      ...(state.route.view === "local" ? [props.t("orchestra.actions.local")] : []),
+    ])
   })
-  createEffect(() => {
-    const value = run()
-    if (!value || !state.route.runID || state.route.ref === value.commit) return
-    untrack(() => model.navigate({ ...state.route, ref: value.commit }))
-  })
+  onCleanup(() => setCrumbTrail([]))
 
   const nav = (label: string, route: Route, icon: IconName, selected: boolean) =>
     <button type="button" class="actions-nav-item" classList={{ selected }} aria-current={selected ? "page" : undefined}
@@ -157,9 +171,9 @@ function Workbench(props: ChapterPageProps & {
       <aside class="actions-sidebar actions-context" aria-label={props.t("orchestra.actions.title")}>
         <header class="actions-context-head"><span class="mx-mark"><Icon name="workflow" /></span>
           <div><strong>{props.t("orchestra.actions.title")}</strong><small><bdi>{state.binding?.projectPath ?? props.directory}</bdi></small></div></header>
-        <div class="context-group">
-          {nav(props.t("orchestra.actions.library"), { view: "library" }, "workflow", state.route.view === "library")}
-          {nav(props.t("orchestra.actions.runs"), { view: "runs" }, "retry", state.route.view === "runs" && !state.route.workflowID)}
+        <div class="context-group" role="group" aria-labelledby={`${ids}-browse`}><div class="context-label" id={`${ids}-browse`}>{props.t("orchestra.actions.shell.browse")}</div>
+          {nav(props.t("orchestra.actions.shell.allWorkflows"), { view: "library" }, "workflow", state.route.view === "library")}
+          {nav(props.t("orchestra.actions.shell.allRuns"), { view: "runs" }, "retry", state.route.view === "runs" && !state.route.workflowID)}
         </div>
         <Show when={workflow()}>{(item) => <div class="context-selection">
           <strong><bdi>{item().name ?? item().id}</bdi></strong><small><bdi dir="ltr">{item().path}</bdi></small>
@@ -178,11 +192,15 @@ function Workbench(props: ChapterPageProps & {
               <span><bdi>{job.name}</bdi><Status status={job.status} conclusion={job.conclusion} t={props.t} /></span>
             </button>}</For></Show>
         </div></Show>
-        <Show when={!contextual() && state.route.view !== "runs" && state.workflows.value?.items.some((item) => item.bindingID === state.binding?.id)}><div class="context-group">
-          <div class="context-label">{props.t("orchestra.actions.library")}</div>
-          <input type="search" class="context-search" value={view.query} maxlength={512} placeholder={props.t("orchestra.actions.search")}
-            aria-label={props.t("orchestra.actions.search")} onInput={(event) => setView("query", event.currentTarget.value)} />
-          <For each={catalog()}>{(item) => nav(item.name ?? item.id, { view: "workflow", workflowID: item.id }, "workflow", false)}</For>
+        <Show when={!contextual() && state.workflows.value?.items.some((item) => item.bindingID === state.binding?.id)}><div class="context-group context-catalog" role="group" aria-labelledby={`${ids}-workflows`}>
+          <div class="context-label" id={`${ids}-workflows`}>{props.t("orchestra.actions.shell.workflows")} <span>{loaded(state.workflows)}</span></div>
+          <input type="search" class="context-search" value={view.query} maxlength={512} placeholder={props.t("orchestra.actions.shell.findWorkflow")}
+            aria-label={props.t("orchestra.actions.shell.findWorkflow")} onInput={(event) => setView("query", event.currentTarget.value)} />
+          <div class="context-catalog-list"><For each={catalog()}>{(item) =>
+            <button type="button" class="actions-nav-item" onClick={() => model.navigate({ view: "workflow", workflowID: item.id })}>
+              <Icon name="workflow" /><span><bdi>{item.name ?? item.id}</bdi></span>
+              <Show when={item.state.startsWith("disabled")}><span class="context-origin">{props.t("orchestra.actions.shell.off")}</span></Show>
+            </button>}</For></div>
           <Show when={!catalog().length}><small>{props.t("orchestra.actions.noMatches")}</small></Show>
         </div></Show>
         <div class="context-group context-project"><div class="context-label">{props.t("orchestra.actions.projectResources")}</div>
@@ -224,22 +242,14 @@ function Workbench(props: ChapterPageProps & {
               <Icon name="settings" />{props.t("orchestra.actions.connect")}</button>
           </div></Show>
           <Show when={!contextual()}><nav class="wf-tabs" role="tablist" aria-label={props.t("orchestra.actions.title")} onKeyDown={tabKeydown}>
-            <For each={[["library", "orchestra.actions.library"], ["runs", "orchestra.actions.runs"],
-              ["resources", "orchestra.actions.resources"], ["settings", "orchestra.actions.settings"]] as const}>{(item) =>
+            <For each={[["library", "orchestra.actions.shell.workflows", "workflow"], ["runs", "orchestra.actions.shell.runs", "retry"],
+              ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
               <button type="button" role="tab" class="wf-tab" aria-selected={state.route.view === item[0]} tabindex={state.route.view === item[0] ? 0 : -1}
-                onClick={() => model.navigate({ view: item[0] })}>{props.t(item[1])}</button>}</For>
+                onClick={() => model.navigate({ view: item[0] })}><Icon name={item[2]} />{props.t(item[1])}
+                <Show when={item[0] === "library" ? loaded(state.workflows) : item[0] === "runs" ? loaded(state.runs) : undefined}>{(count) =>
+                  <span class="wf-count">{count()}</span>}</Show></button>}</For>
           </nav></Show>
-          <Show when={state.route.view === "workflow" && tab() === "graph"}><form class="source-toolbar" onSubmit={(event) => {
-            event.preventDefault(); if (view.ref.trim()) model.navigate({ ...state.route, ref: view.ref.trim() })
-          }}><label>{props.t("orchestra.actions.ref")} <input dir="ltr" value={view.ref} maxlength={2048} aria-label={props.t("orchestra.actions.ref")}
-            onInput={(event) => setView("ref", event.currentTarget.value)} /></label><button type="submit" class="mx-btn" disabled={!view.ref.trim()}>{props.t("orchestra.actions.open")}</button></form></Show>
           <ContextActions model={model} t={props.t} />
-          <Show when={run() && state.binding?.provider.kind === "github"}><label class="execution-history">{props.t("orchestra.actions.attempt")}
-            <input type="number" min={1} max={run()?.attempt ?? 1} step={1} aria-label={props.t("orchestra.actions.attempt")}
-              value={state.route.attempt ?? run()?.attempt ?? 1} onChange={(event) => {
-                const attempt = Number(event.currentTarget.value)
-                if (Number.isSafeInteger(attempt) && attempt > 0 && attempt <= (run()?.attempt ?? 1)) model.navigate({ ...state.route, attempt })
-              }} /></label></Show>
           <Show when={state.commandError}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
           <Show when={state.operation}><div class="provider-note" role="status"><strong>{props.t("orchestra.actions.receipt")}</strong>
             <code dir="ltr"> {state.operation?.id}</code> <span>{props.t(state.operation?.state === "accepted" ? "orchestra.actions.accepted"
@@ -277,26 +287,15 @@ function Workbench(props: ChapterPageProps & {
 
 function ContextActions(props: ViewProps) {
   const state = props.model.state
-  const workflow = createMemo(() => state.route.view === "workflow" && state.workflows.status === "ready"
-    ? state.workflows.value?.items.find((item) => item.id === state.route.workflowID && item.bindingID === state.binding?.id) : undefined)
   const run = createMemo(() => state.run.status === "ready" && state.run.value && state.run.value.id === state.route.runID
     && state.run.value.bindingID === state.binding?.id ? state.run.value : undefined)
   const current = () => !state.route.attempt || state.route.attempt === run()?.attempt
-   const allowed = (operation: string) => canRequest(state, operation)
-  const terminal = () => ["completed", "success", "failed", "canceled", "cancelled", "skipped"].includes(run()?.status ?? "")
-  return <div class="heading-actions">
-    <Show when={workflow() && state.binding?.provider.kind === "github"}><button type="button" class="mx-btn"
-      disabled={!allowed(workflow()?.state === "active" ? "workflow.disable" : "workflow.enable")
-        || !(workflow()?.state === "active" || workflow()?.state.startsWith("disabled_"))}
-      onClick={() => { const item = workflow(); if (item) void props.model.workflowState(item.state !== "active", item.id) }}>
-      {props.t(workflow()?.state === "active" ? "orchestra.actions.disabled" : "orchestra.actions.enabled")}</button></Show>
-    <Show when={run()}>{(item) => <>
-      <Show when={["waiting", "manual"].includes(item().status ?? "")}><button type="button" class="mx-btn primary"
-        disabled={!current() || !allowed("deployment.review")} onClick={() => props.model.dialog({ kind: "approval", runID: item().id })}>
-        {props.t("orchestra.actions.reviewDeployment")}</button></Show>
-      <button type="button" class="mx-btn danger" disabled={!current() || !terminal() || !allowed("run.delete")}
-        onClick={() => props.model.dialog({ kind: "remove", runID: item().id })}>{props.t("orchestra.actions.remove")}</button>
-    </>}</Show>
+  const allowed = (operation: string) => canRequest(state, operation)
+  // Workflow and run header controls live in the detail headers; only deployment review has no other home yet.
+  return <div class="heading-actions actions-context-actions">
+    <Show when={run() && ["waiting", "manual"].includes(run()?.status ?? "")}><button type="button" class="mx-btn primary"
+      disabled={!current() || !allowed("deployment.review")} onClick={() => { const item = run(); if (item) props.model.dialog({ kind: "approval", runID: item.id }) }}>
+      {props.t("orchestra.actions.reviewDeployment")}</button></Show>
   </div>
 }
 

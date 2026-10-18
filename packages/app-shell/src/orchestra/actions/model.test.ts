@@ -22,6 +22,13 @@ function deferred<T>() {
   return { promise, resolve(value: T) { result.resolve?.(value) } }
 }
 
+// Deep links load from the model's own first read; poll instead of refresh(), which would force a second read.
+async function settle(done: () => boolean, tries = 200): Promise<void> {
+  if (done() || tries === 0) return
+  await Bun.sleep(1)
+  return settle(done, tries - 1)
+}
+
 function fixture(respond?: (request: Request) => Response | void | Promise<Response | void>, preferences?: ActionsPreferences) {
   const requests: Request[] = []
   const fetch = Object.assign(async (value: string | URL | Request, init?: RequestInit) => {
@@ -302,5 +309,39 @@ describe("Actions view-owned model", () => {
     old.resolve(located(page([{ id: "old-variable", bindingID: "ab_a", kind: "variables", name: "obsolete", data: {} }])))
     await reading
     expect(scope.model.state.resources.value?.items.map((item) => item.id)).toEqual(["runner-1"])
+  })
+})
+
+describe("Actions deep links", () => {
+  test("a run-only link loads the run, then completes workflow, path and commit without resetting it", async () => {
+    using scope = fixture(undefined, { route: { view: "run", runID: "101" } })
+    await settle(() => scope.model.state.graph.status === "ready")
+    expect(scope.model.state.run.status).toBe("ready")
+    expect(scope.model.state.route).toMatchObject({ view: "run", runID: "101", workflowID: "11", ref: run().commit, tab: "graph" })
+    expect(scope.model.state.graph.value?.source.path).toBe(workflow().path)
+    expect(scope.requests.filter((request) => new URL(request.url).pathname === "/api/actions/run/ab_a/101")).toHaveLength(1)
+  })
+
+  test("a source link without ref reads the workflow's default ref from the catalog", async () => {
+    using scope = fixture((request) => {
+      if (new URL(request.url).pathname === "/api/actions/workflow/ab_a") return located(page([{ ...workflow(), defaultRef: "dev" }]))
+      if (new URL(request.url).pathname.endsWith("/source")) return located({ bindingID: "ab_a", path: workflow().path, ref: "dev",
+        commit: run().commit, version: "b".repeat(40), text: "jobs: {}", editable: false })
+    }, { route: { view: "source", workflowID: "11", path: workflow().path } })
+    await settle(() => scope.model.state.source.status !== "idle" && scope.model.state.source.status !== "loading")
+    expect(scope.model.state.route.ref).toBe("dev")
+    const source = scope.requests.find((request) => new URL(request.url).pathname.endsWith("/source"))
+    expect(source && new URL(source.url).searchParams.get("ref")).toBe("dev")
+  })
+
+  test("selecting a binding of another provider drops the provider-native run status filter", async () => {
+    using scope = fixture((request) => {
+      if (new URL(request.url).pathname === "/api/actions/binding")
+        return located([binding(), { ...binding("ab_b"), provider: { kind: "gitlab", hostname: "gitlab.com", apiOrigin: "https://gitlab.com" } }])
+    }, { bindingID: Actions.BindingID.make("ab_a"), route: { view: "runs" }, filters: { status: "failure" } })
+    await scope.model.refresh()
+    expect(scope.model.state.filters.status).toBe("failure")
+    scope.model.selectBinding(Actions.BindingID.make("ab_b"))
+    expect(scope.model.state.filters.status).toBe("")
   })
 })
