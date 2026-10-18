@@ -13,6 +13,7 @@ export * as ClaudeHostHooks from "./hooks"
 import { Effect, Exit, Option } from "effect"
 import type { HookCallback, HookCallbackMatcher, HookEvent, HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import type { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { ArsenalObservations } from "@/maestro/arsenal-observations"
 import { Archive } from "@/continuity/archive"
 import type { SessionID } from "@/session/schema"
@@ -23,6 +24,7 @@ import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMemory } from "./memory"
+import { ClaudeHostResearch } from "./research"
 import { ClaudeHostResearchResult } from "./research-result"
 
 /**
@@ -48,6 +50,8 @@ export type Context = {
   readonly granted: ClaudeHostGate.Ports["granted"]
   readonly research?: Research
   readonly policy?: ClaudeHostGate.Ports
+  /** The host layer's arsenal bindings for the gate (ClaudeHostGate.live). */
+  readonly arsenal?: Effect.Success<typeof ArsenalBindings.make>
   /** Accepted per-call MCP dispatches and their SDK cancellation signals, owned by the query bridge. */
   readonly calls?: ClaudeHostMcp.Calls
   /** Resolve SDK selection metadata to canonical catalog identity; missing facts remain unknown. */
@@ -59,8 +63,9 @@ export type Context = {
  * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
  */
 export type Research = ClaudeHostResearchResult.Port & {
-  /** Bind the dispatch's allowance to the child Session, at `PreToolUse[Agent]`. */
-  readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
+  /** Bind the dispatch's allowance, at the dispatcher's effort tier, to the child Session at `PreToolUse[Agent]`. */
+  readonly enter: (executionSessionID: SessionID, dispatchCallID: string,
+    tier: NonNullable<ReturnType<typeof ClaudeHostResearch.effort>>) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
   /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
@@ -76,7 +81,7 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
   const policy: { value?: Promise<ClaudeHostGate.Ports> } = {}
   const fault: { reason?: string } = {}
   const ports = () => policy.value ??= ctx.policy ? Promise.resolve(ctx.policy)
-    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool }))
+    : ctx.run(ClaudeHostGate.live({ granted: ctx.granted, abort: ctx.abort.signal, part: ctx.parts?.tool, arsenal: ctx.arsenal }))
   const unsubscribe = ctx.join.subscribe((frame) => {
     void Promise.resolve().then(() => ctx.run(delegation.notify(frame))).catch((error: unknown) => {
       fault.reason = `Orchestra could not record the subagent delivery: ${String(error)}`
@@ -107,11 +112,15 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
+        const tier = ClaudeHostResearch.effort(args.prompt)
+        const invalidTier = "HOLD: jimmy's brief starts with an unknown effort line. Use `effort: quick`, `effort: focused` or `effort: deep`, or omit the line for quick."
         if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
           return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !tier) return ClaudeHostGate.deny(invalidTier)
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
-        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
+        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy")
+          yield* tier ? ctx.research.enter(dispatched, input.tool_use_id, tier) : Effect.fail(new Error(invalidTier))
       }
       if (actor.seat === "jimmy") {
         if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")

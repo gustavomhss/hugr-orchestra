@@ -1,129 +1,22 @@
 import { createHash } from "node:crypto"
 import { afterEach, describe, expect } from "bun:test"
-import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
-import { Database } from "@orchestra/core/database/database"
-import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { filesystem } from "@orchestra/core/effect/app-node-platform"
-import { Skill } from "../../src/skill"
 import { EventV2 } from "@orchestra/core/event"
-import { ModelV2 } from "@orchestra/core/model"
-import { ProviderV2 } from "@orchestra/core/provider"
-import { SessionProjector } from "@orchestra/core/session/projector"
-import { SessionV1 } from "@orchestra/core/v1/session"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Cause, Effect, Exit, FileSystem, Schema } from "effect"
 import { mkdir } from "node:fs/promises"
 import path from "node:path"
-import { Agent } from "../../src/agent/agent"
-import { Config } from "../../src/config/config"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
 import { Git } from "../../src/git"
 import { readValidation, REVIEW_ARTIFACT_MAX_BYTES, workCardHash } from "../../src/maestro/validation-record"
 import { recordContext } from "../../src/maestro/context-record"
-import type { SessionPrompt } from "../../src/session/prompt"
-import { MessageID, PartID } from "../../src/session/schema"
 import { Session } from "../../src/session/session"
 import { MaestroPresentApprovalTool } from "../../src/tool/maestro-approval"
 import { MaestroRequestReviewTool } from "../../src/tool/maestro-review"
 import { MaestroRecordValidationTool } from "../../src/tool/maestro-validation"
-import type { TaskPromptOps } from "../../src/tool/task"
-import { Truncate } from "../../src/tool/truncate"
 import { disposeAllInstances, provideInstance, TestInstance } from "../fixture/fixture"
-import { testEffect } from "../lib/effect"
+import { it, promptOps, seed, workCard } from "./evidence-fixture"
 
 afterEach(async () => disposeAllInstances())
-
-const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
-const workCard = [
-  "# Card",
-  "## Definition of Done",
-  "Lucy reviews the full branch diff.",
-  "## Invariants",
-  "The working tree stays clean from context to review.",
-  "## Quality Standards",
-  "Review evidence binds exact SHAs.",
-  "## Completeness Criteria",
-  "Every committed path in the branch delta is covered.",
-  "## Success Criteria",
-  "A durable review receipt exists for this card.",
-  "",
-].join("\n")
-const it = testEffect(
-  LayerNode.compile(
-    LayerNode.group([
-      filesystem,
-      Skill.node,
-      Agent.node,
-      Config.node,
-      CrossSpawnSpawner.node,
-      Database.node,
-      EventV2Bridge.node,
-      Git.node,
-      Session.node,
-      SessionProjector.node,
-      Truncate.node,
-    ]),
-  ),
-)
-
-const seed = Effect.fn("MaestroEvidenceToolsTest.seed")(function* () {
-  const sessions = yield* Session.Service
-  const chat = yield* sessions.create({ title: "evidence tools" })
-  const user = yield* sessions.updateMessage({
-    id: MessageID.ascending(),
-    role: "user",
-    sessionID: chat.id,
-    agent: "maestro",
-    model,
-    time: { created: Date.now() },
-  })
-  const assistant: SessionV1.Assistant = {
-    id: MessageID.ascending(),
-    role: "assistant",
-    parentID: user.id,
-    sessionID: chat.id,
-    mode: "maestro",
-    agent: "maestro",
-    cost: 0,
-    path: { cwd: chat.directory, root: chat.directory },
-    tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    modelID: model.modelID,
-    providerID: model.providerID,
-    time: { created: Date.now() },
-  }
-  yield* sessions.updateMessage(assistant)
-  return { chat, assistant }
-})
-
-function promptOps(onPrompt: (input: SessionPrompt.PromptInput) => void): TaskPromptOps {
-  return {
-    cancel: () => Effect.void,
-    resolvePromptParts: (template) => Effect.succeed([{ type: "text", text: template }]),
-    prompt: (input) =>
-      Effect.sync(() => {
-        onPrompt(input)
-        const id = MessageID.ascending()
-        return {
-          info: {
-            id,
-            role: "assistant",
-            parentID: input.messageID ?? MessageID.ascending(),
-            sessionID: input.sessionID,
-            mode: input.agent ?? "lucy",
-            agent: input.agent ?? "lucy",
-            cost: 0,
-            path: { cwd: "/tmp", root: "/tmp" },
-            tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-            modelID: input.model?.modelID ?? model.modelID,
-            providerID: input.model?.providerID ?? model.providerID,
-            time: { created: Date.now() },
-            finish: "stop",
-          },
-          parts: [{ id: PartID.ascending(), messageID: id, sessionID: input.sessionID, type: "text", text: "done" }],
-        }
-      }),
-  }
-}
 
 describe("Maestro evidence tools", () => {
   it.instance(
@@ -259,6 +152,11 @@ describe("Maestro evidence tools", () => {
         // Lucy reads the diff as text and never receives it as base64 to copy back.
         expect(prompt).toContain(full.text())
         expect(prompt).not.toContain(full.stdout.toString("base64"))
+        // The plan stage judges the plan and its committed spec; the planned implementation is not expected yet.
+        expect(prompt).toContain("Stage: plan")
+        expect(prompt).toContain("is never a finding")
+        expect(prompt).toMatch(/^plan revision JSON: .*review full branch diff/m)
+        expect(prompt).toContain('maestro_record_review exactly once with stage "plan"')
 
         const sessions = yield* Session.Service
         const other = yield* sessions.create({ title: "foreign context" })
@@ -326,6 +224,18 @@ describe("Maestro evidence tools", () => {
         if (Exit.isFailure(dirtyReview))
           expect(Cause.pretty(dirtyReview.cause)).toContain("Review delegation context is stale or dirty")
         yield* fs.writeFileString(first, "first\n")
+        const unapproved = yield* tool.init().pipe(
+          Effect.flatMap((def) =>
+            def.execute(
+              { validationRecordID, workCard, reviewMethodVersion: "review-v1", stage: "code" },
+              { ...caller, sessionID: chat.id },
+            ),
+          ),
+          Effect.exit,
+        )
+        expect(Exit.isFailure(unapproved)).toBe(true)
+        if (Exit.isFailure(unapproved))
+          expect(Cause.pretty(unapproved.cause)).toContain("Code review requires an APPROVE plan review")
         const hookTool = yield* MaestroRequestReviewTool.pipe(
           Effect.provideService(Session.Service, {
             ...sessions,

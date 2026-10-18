@@ -15,6 +15,7 @@ import { WORKSPACES_COPY } from "./orchestra-chapters/workspaces"
 import { DOCK_COPY } from "./orchestra-chapters/dock"
 import { SETTINGS_COPY } from "./orchestra-chapters/settings"
 import { CHAT_COPY } from "./orchestra-chapters/chat"
+import { ActionsCopy } from "./actions"
 import { SESSION_RECOVERY_COPY } from "./session-recovery"
 import { DESKTOP_RECOVERY_COPY } from "./desktop-recovery"
 import { FRONTEND_RECOVERY_COPY } from "./frontend-recovery"
@@ -381,6 +382,8 @@ export const ORCHESTRA_COPY = {
   ...DOCK_COPY,
   ...SETTINGS_COPY,
   ...CHAT_COPY,
+  // English-only Actions copy: other locales fall back to it until translated.
+  ...ActionsCopy.dict,
   ...SESSION_RECOVERY_COPY,
   ...DESKTOP_RECOVERY_COPY,
   ...FRONTEND_RECOVERY_COPY,

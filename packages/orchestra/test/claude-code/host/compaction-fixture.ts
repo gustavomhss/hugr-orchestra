@@ -12,6 +12,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionProjector } from "@orchestra/core/session/projector"
+import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect } from "effect"
 import { Agent } from "@/agent/agent"
@@ -43,7 +44,7 @@ import { testEffect } from "../../lib/effect"
 
 export const it = testEffect(TestAppNodeBuilder.build(
   LayerNode.group([ClaudeHost.node, filesystem, FSUtil.node, CrossSpawnSpawner.node, Agent.node, BackgroundJob.node, Session.node,
-    SessionProjector.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
+    SessionProjector.node, SessionSubagentModels.node, EventV2Bridge.node, Database.node, Config.node, Todo.node, Archive.node, Truncate.node,
     ArsenalBindings.node, Git.node, Skill.node, Permission.node, AppProcess.node, ArsenalObservations.node,
     LocationServiceMap.node]),
   [[RuntimeFlags.node, RuntimeFlags.layer({})]],

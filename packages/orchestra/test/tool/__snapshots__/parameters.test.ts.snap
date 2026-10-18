@@ -336,6 +336,15 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
       "description": "A 3-5 word label the owner sees for this task",
       "type": "string",
     },
+    "effort": {
+      "description": "jimmy only: the research effort tier, fixed for this dispatch. quick (default), focused or deep; each step doubles its provider-call, tool, byte and time allowance. Ignored for other teammates.",
+      "enum": [
+        "quick",
+        "focused",
+        "deep",
+      ],
+      "type": "string",
+    },
     "governed": {
       "description": "Exact approval binding required only for an explicit governed Task.",
       "properties": {

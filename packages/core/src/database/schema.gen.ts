@@ -83,6 +83,32 @@ export default {
         );
       `)
       yield* tx.run(`
+        CREATE TABLE \`actions_operation\` (
+          \`id\` text PRIMARY KEY,
+          \`location_key\` text NOT NULL,
+          \`project_id\` text NOT NULL,
+          \`directory\` text NOT NULL,
+          \`workspace_id\` text,
+          \`binding_id\` text NOT NULL,
+          \`binding_revision\` integer NOT NULL,
+          \`provider_kind\` text NOT NULL,
+          \`provider_hostname\` text NOT NULL,
+          \`provider_api_origin\` text NOT NULL,
+          \`provider_project_id\` text NOT NULL,
+          \`actor\` text NOT NULL,
+          \`client_id\` text NOT NULL,
+          \`kind\` text NOT NULL,
+          \`target\` text NOT NULL,
+          \`expected\` text,
+          \`state\` text NOT NULL,
+          \`time_created\` integer NOT NULL,
+          \`time_expires\` integer NOT NULL,
+          \`time_updated\` integer NOT NULL,
+          \`result\` text,
+          \`reason\` text
+        );
+      `)
+      yield* tx.run(`
         CREATE TABLE \`credential\` (
           \`id\` text PRIMARY KEY,
           \`integration_id\` text,
@@ -302,6 +328,15 @@ export default {
       `)
       yield* tx.run(
         `CREATE INDEX \`project_checkpoint_project_time_id_idx\` ON \`project_checkpoint\` (\`project_id\`,\`time_created\`,\`id\`);`,
+      )
+      yield* tx.run(
+        `CREATE UNIQUE INDEX \`actions_operation_location_binding_client_idx\` ON \`actions_operation\` (\`location_key\`,\`binding_id\`,\`client_id\`);`,
+      )
+      yield* tx.run(
+        `CREATE INDEX \`actions_operation_state_expires_idx\` ON \`actions_operation\` (\`state\`,\`time_expires\`);`,
+      )
+      yield* tx.run(
+        `CREATE INDEX \`actions_operation_state_updated_idx\` ON \`actions_operation\` (\`state\`,\`time_updated\`);`,
       )
       yield* tx.run(`CREATE UNIQUE INDEX \`event_aggregate_seq_idx\` ON \`event\` (\`aggregate_id\`,\`seq\`);`)
       yield* tx.run(`CREATE INDEX \`event_aggregate_type_seq_idx\` ON \`event\` (\`aggregate_id\`,\`type\`,\`seq\`);`)

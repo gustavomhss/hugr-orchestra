@@ -1,0 +1,53 @@
+# Includes and hidden templates remain native, never invented execution nodes.
+include:
+  - local: ci/base.yml
+  - project: infrastructure/templates
+    ref: v2
+    file: /build.yml
+stages: [compile, verify, publish]
+default:
+  image: alpine:3.20
+  before_script: [echo default]
+variables:
+  MODE: strict
+workflow:
+  name: "$CI_COMMIT_REF_NAME"
+  rules:
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'
+.base:
+  stage: compile
+  script: [echo base]
+  variables: {A: first, COMMON: base}
+build:
+  stage: compile
+  tags: [linux, docker]
+  script: [make build]
+  artifacts: {paths: [dist/], expire_in: 1 week}
+  parallel:
+    matrix:
+      - {OS: [linux, windows], ARCH: [amd64, arm64]}
+test:
+  stage: verify
+  needs:
+    - {job: build, artifacts: true}
+    - {job: absent, optional: true, artifacts: false}
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "dev"'
+      when: manual
+      allow_failure: true
+    - when: never
+  script: [make test]
+local-child:
+  extends: .base
+  variables: {COMMON: child}
+deploy:
+  stage: publish
+  needs:
+    - test
+    - {project: shared/build, job: package, ref: dev, artifacts: true}
+  trigger:
+    project: downstream/application
+    branch: main
+    strategy: depend
+  resource_group: production
+  environment: {name: production}

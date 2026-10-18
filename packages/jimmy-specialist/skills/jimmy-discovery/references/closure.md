@@ -4,7 +4,7 @@ Read for every task and again before final output. Use [record operations](recor
 
 ## Stop by the question
 
-Stop when the requested answer is supported under its material conditions, the premise is refuted, an indispensable observation is unavailable, or the effort/host allowance ends. More tools, a target source count or a confidence percentage do not justify continued work.
+Stop when the requested answer is supported under its material conditions, the premise is refuted, an indispensable observation is unavailable, or the effort/host allowance ends. More tools, a target source count or a confidence percentage do not justify continued work. Reaching the caller's tier bound closes partial with the next step; do not escalate the tier yourself.
 
 - `answered`: the bounded question is supported, including an evidenced refutation of its premise.
 - `partial`: useful subanswers survive, but a material part remains unresolved or effort ended.
@@ -19,6 +19,16 @@ State which claim depends on which missing observation, the exact failed operati
 For a needed probe, specify exact inputs, relevant version/environment, permitted scratch effects, competing predicted outcomes, controls and discard/stop criteria. Ask Maestro to route it to a qualified executor. Execute only an actually exposed, permitted, separately qualified finite recipe; arbitrary shell, product edits, delegation and live mutation remain outside this role.
 
 Coverage distinguishes examined scope, deliberate exclusions and acquisition/analysis failures. Include unsupported languages, unread full text, unresolved runtime selection and missing source retention when material. An honest limited answer is preferable to a universal claim from incomplete retrieval.
+
+## Commit the basis
+
+Before composing the final answer, list the exact `file:line` ranges and URL passages you actually read and verified as its basis. Each cited claim maps to one of them through a retained locator; the host's `Citation check: pass|fail ...` block flags a `path:line` or URL citation with no mapped source. Drop a range you did not verify rather than citing it from memory or a search hit.
+
+Keep located code in the answer. When the investigation found the implementing body, selector or consumer, name its `file:line` range in the answer itself; do not replace it with a summary of the search. Prefer precision over recall: a few verified ranges that support the answer beat a long list of plausible candidates. Put unverified candidates under limitations or next actions, labelled as such.
+
+## Cover every subquestion
+
+For a multi-part question, list its subquestions and check that each has at least one supporting finding or retained passage. A subquestion without support is reported partial, by name; do not let a well-supported part stand in for it. Before closing, scan retrieved but unused material for passages that bear on any subquestion, including contrary ones, and either use them or state why they do not apply. Overall sufficiency is `answered` only when every material subquestion is.
 
 ## Publish before the card
 

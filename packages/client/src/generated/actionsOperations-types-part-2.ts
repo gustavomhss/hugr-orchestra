@@ -1,0 +1,277 @@
+export type ActionsOperationsPrepareOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}
+
+export type ActionsOperationsGetInput = {
+  readonly bindingID: { readonly bindingID: string; readonly operationID: string }["bindingID"]
+  readonly operationID: { readonly bindingID: string; readonly operationID: string }["operationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsOperationsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}
+
+export type ActionsOperationsReconcileInput = {
+  readonly bindingID: { readonly bindingID: string; readonly operationID: string }["bindingID"]
+  readonly operationID: { readonly bindingID: string; readonly operationID: string }["operationID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["location"]
+  readonly revision: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly revision: number
+  }["revision"]
+}
+
+export type ActionsOperationsReconcileOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly bindingID: string
+    readonly clientID: string
+    readonly kind:
+      | "workflow.dispatch"
+      | "workflow.enable"
+      | "workflow.disable"
+      | "run.retry"
+      | "run.retryFailed"
+      | "run.cancel"
+      | "run.forceCancel"
+      | "run.delete"
+      | "run.approveFork"
+      | "run.rename"
+      | "job.retry"
+      | "job.play"
+      | "job.cancel"
+      | "job.erase"
+      | "logs.delete"
+      | "source.branch"
+      | "source.write"
+      | "source.delete"
+      | "source.review"
+      | "resource.create"
+      | "resource.update"
+      | "resource.delete"
+      | "artifact.keep"
+      | "deployment.review"
+      | "environment.stop"
+      | "runner.register"
+      | "runner.assign"
+      | "runner.remove"
+      | "cache.clear"
+      | "schedule.play"
+      | "schedule.takeOwnership"
+      | "pipeline.mergeRequest"
+      | "pipeline.trigger"
+      | "secureFile.upload"
+      | "resourceGroup.processMode"
+    readonly state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+    readonly target: {
+      readonly workflowID?: string
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly resourceKind?:
+        | "artifacts"
+        | "environments"
+        | "deployments"
+        | "variables"
+        | "runners"
+        | "caches"
+        | "schedules"
+        | "triggers"
+        | "secureFiles"
+        | "resourceGroups"
+        | "pipelineVariables"
+        | "testReports"
+        | "policy"
+      readonly scope?: string
+      readonly path?: string
+      readonly ref?: string
+    }
+    readonly createdAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly expiresAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly updatedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly result?: {
+      readonly runID?: string
+      readonly jobID?: string
+      readonly resourceID?: string
+      readonly attempt?: number
+      readonly unattributed?: boolean
+    }
+    readonly reason?: string
+  }
+}

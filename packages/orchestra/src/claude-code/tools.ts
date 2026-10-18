@@ -31,12 +31,25 @@ function servable(def: Tool.Def) {
 /** A rejected or failed call, as the model reads it. */
 export function failure(cause: Cause.Cause<unknown>) {
   const error = Cause.squash(cause) as { feedback?: string; message?: string; _tag?: string; name?: string }
-  if (typeof error?.feedback === "string") return `The owner rejected this call with feedback: ${error.feedback}`
+  if (typeof error?.feedback === "string") return `${OWNER_STOP} with feedback: ${error.feedback}`
   const tag = error?._tag ?? error?.name ?? ""
   // A rule denial is policy, not the owner: like Orchestra's own loop, show the rule and let the model carry on.
   if (/Denied/.test(tag)) return error?.message ?? "A permission rule denies this call."
-  if (/Rejected/.test(tag)) return "The owner rejected this call. Stop and wait for the owner's next message."
+  // Only the owner's own answer means stop; a governance refusal such as MaestroValidationRejected names its cause.
+  if (OWNER_REJECTED.includes(tag)) return `${OWNER_STOP}. Stop and wait for the owner's next message.`
   return error?.message ?? String(error)
+}
+
+const OWNER_REJECTED = ["PermissionRejectedError", "QuestionRejectedError", "QuestionV2.RejectedError"]
+const OWNER_STOP = "The owner rejected this call"
+
+/**
+ * Whether a failed call's text is the owner saying stop: a bare rejection (`failure`) or a dismissed question (the
+ * host's AskUserQuestion deny). Claude Code reads both as a tool error and may end its turn normally after them. A
+ * rejection with feedback is a correction the model acts on, as in normal mode, so it does not count.
+ */
+export function ownerAnswered(error: string) {
+  return error.includes(`${OWNER_STOP}. Stop and wait`) || error.includes("The owner dismissed this question")
 }
 
 export function server(input: {

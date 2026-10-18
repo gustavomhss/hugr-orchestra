@@ -14,7 +14,8 @@ const workflow = Schema.decodeUnknownSync(Schema.Struct({ jobs: Schema.Struct({ 
   strategy: Schema.Struct({ matrix: Schema.Struct({ include: Schema.Array(Row) }) }),
   steps: Schema.Array(Schema.Struct({ name: Schema.optional(Schema.String), run: Schema.optional(Schema.String),
     "working-directory": Schema.optional(Schema.String) })),
-}) }) }))(YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text()))
+}), provider: Schema.Struct({ strategy: Schema.Struct({ matrix: Schema.Struct({ include: Schema.Array(Row) }) }) }),
+}) }))(YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text()))
 
 export function check(value: unknown, name: string): asserts value {
   if (!value) throw new Error(name)
@@ -50,7 +51,8 @@ function shellPath(file: string) {
 }
 
 export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "aur" | "musl" | "provider" = "regression") => Effect.gen(function* () {
-  const selected = workflow.jobs.qualification.strategy.matrix.include.filter((row) =>
+  // The opt-in provider row runs as its own job with the qualification steps.
+  const selected = [...workflow.jobs.qualification.strategy.matrix.include, ...workflow.jobs.provider.strategy.matrix.include].filter((row) =>
     row.lane === lane && row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))
   check(selected.length === 1 && selected[0], `BUNDLE_FIXTURE_NATIVE_ROW_MISSING_OR_REPEATED: ${lane}/${pkg}/${process.platform}/${process.arch}`)
   const row = { ...selected[0], files: files ?? [...selected[0].files] }

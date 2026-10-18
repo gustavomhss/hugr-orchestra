@@ -12,7 +12,8 @@ import { EventTable } from "../event/sql"
 import { makeGlobalNode } from "../effect/app-node"
 
 export interface Interface {
-  readonly bind: (binding: Research.Binding, dispatchCallID: string) => Effect.Effect<Research.Allowance, Research.Error>
+  /** The caller's effort tier is fixed here; re-binding the same dispatch with another tier is a mismatch. */
+  readonly bind: (binding: Research.Binding, dispatchCallID: string, tier?: Research.Depth) => Effect.Effect<Research.Allowance, Research.Error>
   readonly charge: (
     allowance: Research.Allowance,
     kind: "provider" | "tool" | "bytes",
@@ -45,13 +46,17 @@ export const layer = Layer.effect(
         return yield* new Research.Error({ code: "binding_mismatch", message: "Dispatch allowance differs from admitted binding or limits" })
     })
 
-    const bind: Interface["bind"] = Effect.fn("ResearchAllowance.bind")((binding, dispatchCallID) =>
+    const bind: Interface["bind"] = Effect.fn("ResearchAllowance.bind")((binding, dispatchCallID, tier = "quick") =>
       Effect.gen(function* () {
+        if (!Object.hasOwn(Research.Tiers, tier))
+          return yield* new Research.Error({ code: "unsupported", message: `Unknown research effort tier: ${String(tier)}` })
+        const limits = Research.Tiers[tier]
         const allowance = yield* Schema.decodeUnknownEffect(Research.Allowance)({
-          binding, dispatchCallID,
-          providerLimit: Research.Limits.providerCalls,
-          toolLimit: Research.Limits.toolCalls,
-          byteLimit: Research.Limits.capturedBytes,
+          binding, dispatchCallID, tier,
+          providerLimit: limits.providerCalls,
+          toolLimit: limits.toolCalls,
+          byteLimit: limits.capturedBytes,
+          deadlineSeconds: limits.deadlineSeconds,
         })
         const id = eventID("bound", binding.executionSessionID, dispatchCallID)
         if (yield* read(id)) {

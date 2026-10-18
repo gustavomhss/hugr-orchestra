@@ -1,4 +1,5 @@
 export { Agent } from "./agent"
+export { Actions } from "./actions"
 export { AgentFile } from "./agent-file"
 export { Behavior } from "./behavior"
 export { Capability } from "./capability"

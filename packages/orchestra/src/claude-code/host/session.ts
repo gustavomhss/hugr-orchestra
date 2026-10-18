@@ -34,7 +34,6 @@ import { ModelsDev } from "@orchestra/core/models-dev"
 import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import { Question } from "@/question"
-import { marker } from "@/continuity/alias"
 import { RequestSource } from "@/continuity/request-source"
 import { Archive } from "@/continuity/archive"
 import { MessageID, PartID, SessionID } from "@/session/schema"
@@ -75,8 +74,8 @@ export interface Interface {
   /**
    * Run one turn when the user's agent is on Claude Code: everything the owner sent since the last delivery. False when
    * the agent runs on Orchestra's loop. Like the engine's turn, it always ends with an assistant reply to `user` (with
-   * `error` when it failed), so the loop's own exit check ends the run. `promptOps` is accepted for the engine's entry
-   * contract; delegation here is Claude Code's own `Agent` tool.
+   * `error` when it failed), so the loop's own exit check ends the run. Delegation here is Claude Code's own `Agent`
+   * tool; `promptOps` serves only the tools that start Orchestra child Sessions (workflow `task`, governed review).
    */
   readonly turn: (input: { sessionID: SessionID; user: SessionV1.User; promptOps?: () => Effect.Effect<TaskPromptOps> }) => Effect.Effect<boolean>
   /** Hand a message to the running turn (`priority: "next"`). False when no turn runs: the next turn sends it. */
@@ -108,8 +107,6 @@ export const IdleRelease = Context.Reference<number>("@orchestra/ClaudeHost/Idle
 
 export { claudeSessionID }
 
-export const userInput = ClaudeHostAdmission.userInput
-export const inbox = ClaudeHostAdmission.inbox
 
 type Outcome = { ok: true } | { ok: false; aborted?: boolean; message: string }
 type Turn = { view: ClaudeHostMirror.Mirror; user: SessionV1.User; cost: number; waiters: ((outcome: Outcome) => void)[]; answered: Set<MessageID>; error?: string; errorUUID?: string }
@@ -118,7 +115,7 @@ type Live = {
   query: Query
   bridge?: ReturnType<typeof ClaudeHostBridge.create>
   research?: ClaudeHostResearch.Runtime
-  inbox: ReturnType<typeof inbox>
+  inbox: ReturnType<typeof ClaudeHostAdmission.inbox>
   abort: AbortController
   agent: Agent.Info
   seat: string
@@ -153,6 +150,7 @@ type Live = {
   ended?: string
   make: (user: SessionV1.User) => ClaudeHostMirror.Mirror
   run: <A>(effect: Effect.Effect<A, unknown>, teardown?: boolean) => Promise<A>
+  promptOps?: () => Effect.Effect<TaskPromptOps> // the latest turn's, for served tools that start child Sessions
 }
 
 const layer = Layer.effect(
@@ -206,7 +204,7 @@ const layer = Layer.effect(
     const submit = (live: Live, view: ClaudeHostMirror.Mirror, user: SessionV1.User, prompt: string, priority?: "next") => Effect.gen(function* () {
       const previous = live.inputs[user.id]
       if (previous && previous.status !== "pending") return yield* Effect.die(new Error(`Claude Code input submission is unresolved for ${user.id}`))
-      const message = { ...userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
+      const message = { ...ClaudeHostAdmission.userInput(prompt, priority), uuid: previous?.uuid ?? crypto.randomUUID() }
       live.inputs[user.id] = { uuid: message.uuid, status: "pending" }
       yield* write(live.sessionID, { inputs: live.inputs })
       if (live.closed || live.stopping || live.closing || live.queued.has(user.id) || live.delivered.has(user.id)) return
@@ -457,7 +455,7 @@ const layer = Layer.effect(
         ? ClaudeCodeTranscript.record(input.state.modelUsage) ? input.state.modelUsage : {} : {}
       const uuids = ClaudeCodeTranscript.record(input.state.uuids) ? input.state.uuids : {}
       const live: Live = {
-        sessionID: input.sessionID, inbox: inbox(async (message) => {
+        sessionID: input.sessionID, inbox: ClaudeHostAdmission.inbox(async (message) => {
           const user = message.uuid ? live.sends.get(message.uuid) : undefined
           if (!user || live.closed) return
           live.inputs[user.id].status = "submitted"
@@ -504,7 +502,7 @@ const layer = Layer.effect(
         mcp: overrides.mcp ?? ((value) => ClaudeHostMcp.server({ ...value, bridge, tools: prepared?.tools ?? [] })),
         // Orchestra's policy gate and delegation records, on the mirrored parts of this session and its seats.
         hooks: overrides.hooks ?? ((value) => ClaudeHostHooks.create({ ...value, join: live.join, granted: prepared?.granted ?? {}, calls: bridge, research,
-          run: live.run as ClaudeHostHooks.Context["run"],
+          run: live.run as ClaudeHostHooks.Context["run"], arsenal: bindings,
           models: (type, override) => Effect.gen(function* () {
             if (override !== undefined || type === "fork" || !definitions[type]?.model || definitions[type].model === "inherit") return undefined
             // Corroborate our fixed SDK definition using public metadata, without another provider turn.
@@ -629,8 +627,8 @@ const layer = Layer.effect(
       const inputs = ClaudeHostAdmission.read(state.inputs)
       const historic = new Set(answered(history).filter((id) => !inputs[id]))
       const delivered = new Set(Array.isArray(state.delivered) ? state.delivered.map(String) : [])
-      const users = history.filter((message) => (RequestSource.actual(message) ||
-        message.parts.some((part) => marker(part)?.type === "task-return")) && !delivered.has(message.info.id) && !historic.has(message.info.id))
+      const users = history.filter((message) => (RequestSource.actual(message) || message.parts.some(ClaudeHostAdmission.handover)) &&
+        !delivered.has(message.info.id) && !historic.has(message.info.id))
       const prompts = users.flatMap((message) => message.info.role === "user" ? [{ user: message.info, text: ClaudeCodeTranscript.hostPrompt([message]) }] : []).filter((item) => item.text)
       const prompt = prompts.map((item) => item.text).join("\n")
       const model = input.user.model.providerID === "anthropic" ? input.user.model.modelID : undefined
@@ -667,6 +665,7 @@ const layer = Layer.effect(
       }
       const host = started.value
       clearTimeout(host.idle)
+      if (input.promptOps) host.promptOps = input.promptOps
       if (model && model !== host.model) yield* setModel({ sessionID, model })
       const running = host.turn
       const turn = running ?? { view: host.make(input.user), user: input.user, cost: typeof state.cost === "number" ? state.cost : 0, waiters: [], answered: new Set([input.user.id]) }

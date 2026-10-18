@@ -7,6 +7,8 @@ export async function readPreferencesSnapshot(...args: Parameters<typeof import(
   return readPreferencesSnapshot(...args)
 }
 export type { CompletionContract } from "./governance/completion"
+export { ReadDenied } from "./contract"
+export { trustedAsset } from "./engine/trusted-assets"
 export type { ArsenalContext, Descriptor, Effect, Tool, ToolTextResult } from "./contract"
 export { setProcessRunner, processRunner } from "./process-runner"
 export type { ProcessRequest, ProcessResult, ProcessRunner } from "./process-runner"

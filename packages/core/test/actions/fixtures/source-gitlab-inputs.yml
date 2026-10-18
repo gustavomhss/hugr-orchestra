@@ -1,0 +1,41 @@
+# Native header, raw input metadata and comments stay authoritative.
+spec:
+  inputs:
+    environment:
+      description: Deploy target
+      default: staging
+      options: [staging, production]
+    retries:
+      type: number
+      default: 0
+      options: [0, 1, 2]
+    publish:
+      type: boolean
+      default: false
+    services:
+      type: array
+      default: []
+      options: [api, worker]
+    required-string:
+    future-native-input:
+      type: string
+      unknown: {keep: native}
+---
+# Literal DAG remains inspectable without input interpolation.
+stages: [build, test]
+build:
+  stage: build
+  script: |
+    echo literal separator below
+    ---
+test:
+  stage: test
+  needs: [build]
+  script: echo test
+deploy:
+  stage: $[[ inputs.environment ]]
+  needs:
+    - build
+    - $[[ inputs.required-string ]]
+  tags: $[[ inputs.services ]]
+  script: echo $[[ inputs.publish ]] with $[[ inputs.retries ]] retries

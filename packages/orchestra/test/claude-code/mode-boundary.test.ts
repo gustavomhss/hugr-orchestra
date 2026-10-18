@@ -93,6 +93,8 @@ const INTERFACE = [
   "maestro/admission-record",
   // The Claude sign-in runs the CLI's own `auth login` through the shared process spawner.
   "util/process",
+  // The upstream work-result card schema the delegation hook reads to attach host attribution to an archie proposal.
+  "maestro/upstream-result",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
