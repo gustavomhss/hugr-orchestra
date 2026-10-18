@@ -19,6 +19,7 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Account } from "@/account/account"
 import { Auth } from "@/auth"
 import { ClaudeHostGate } from "@/claude-code/host/gate"
+import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Database } from "@orchestra/core/database/database"
@@ -266,6 +267,19 @@ describe("native gate real policy", () => {
     refused(yield* f.decide("Write", { file_path: "local-alias/new/deep/file.txt", content: "harmless" }), "rule which prevents")
     expect(yield* f.decide("Write", { file_path: "permitted/new/deep/file.txt", content: "harmless" })).toEqual({ allow: true })
     expect(yield* f.filesystem.readFileString(path.join(outside, "sentinel.txt"))).toBe("outside sentinel")
+  }), { git: true })
+
+  it.instance("a seat reads its own skills from the published plugin copy, and only reads them", () => Effect.gen(function* () {
+    const f = yield* fixture([], "archie")
+    // The seat's own rules decide, with no session-wide allow on top.
+    yield* f.sessions.setPermission({ sessionID: f.session.id, permission: [] })
+    const copy = (...file: string[]) => path.join(ClaudeHostPlugin.ROOT, "0".repeat(16), "skills", ...file)
+    expect(yield* f.decide("Read", { file_path: copy("archie-work-package", "references", "native-fields.md") })).toEqual({ allow: true })
+    refused(yield* f.decide("Read", { file_path: copy("backend-implement", "SKILL.md") }), "rule which prevents")
+    refused(yield* f.decide("Read", { file_path: path.join(ClaudeHostPlugin.ROOT, "0".repeat(16), "agents", "archie.md") }),
+      "rule which prevents")
+    refused(yield* f.decide("Write", { file_path: copy("archie-work-package", "SKILL.md"), content: "harmless" }),
+      "rule which prevents")
   }), { git: true })
 
   it.instance("external permission requests preserve canonical roots and missing descendants through directory aliases", () => Effect.gen(function* () {
