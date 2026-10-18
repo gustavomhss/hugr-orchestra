@@ -75,25 +75,43 @@ window.Atlas = window.Atlas || {}
   }
   A.num = (n) => Number(n).toLocaleString("en-US")
 
-  // Atlas vocabulary, shown as glyph + word with a one-line explanation on hover.
+  // Plain words first, the Atlas term on hover (specs/atlas-ui/DESIGN.md glossary).
   const states = {
-    fresh: ["good", "checkc", "Fresh", "The anchored code still hashes the same as when the fact was derived."],
-    drifted: ["warm", "drift", "Drifted", "The anchored file changed since the fact was derived and its old content exists nowhere at HEAD (semantic). reconcile exits 2 for a merge that changes it."],
-    retired: ["", "minusc", "Superseded", "Retired through emit (authoring SUPERSEDED). Reads do not filter it yet, so agents still receive it (R6)."],
-    pending: ["blue", "clock", "In staging", "Mined, not promoted yet. Agents never see staging."],
+    fresh: ["good", "checkc", "Up to date", "FRESH · the anchored code still hashes as it did when the fact was derived."],
+    drifted: ["warm", "drift", "Changed", "DRIFTED · the anchored file changed since the fact was derived."],
+    retired: ["", "minusc", "Replaced", "authoring SUPERSEDED · still sent to agents today (R6)."],
+    pending: ["blue", "clock", "Mined", "A staging candidate · agents never see staging."],
   }
   A.chip = (value) => {
     const [tone, glyph, label, tip] = states[value] ?? states.fresh
     return `<span class="at-state ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
   }
-  A.band = (x) => (x.tier === "T0" || x.tier === "T1"
-    ? `<span class="at-kind blue" data-tip="Governing band: ratified, drives agent behaviour.">${A.icon("shield")}Governing</span>`
-    : `<span class="at-kind dash" data-tip="Advisory band: proposals nobody ratified. Agents receive them as hints, apart from the rules.">${A.icon("sparkle")}Advisory</span>`)
-  A.tier = (t) => `<span class="at-tier-chip" data-tip="${{ T0: "T0 · must be right; only a person ratifies", T1: "T1 · load-bearing; ratified", T2: "T2 · default; advisory" }[t] ?? t}">${A.esc(t)}</span>`
-  A.origin = (x) => (x.scope === "atlas:mined"
-    ? `<span class="at-origin" data-tip="Mined by genesis and promoted through the emit door.">${A.icon("sparkle")}Mined</span>`
-    : `<span class="at-origin" data-tip="Emitted directly by an agent or a person.">${A.icon("fact")}Emitted</span>`)
-  A.family = (f) => `<span class="at-origin" data-tip="${{ advisory: "Advisory: a grounded claim with no executable check.", predicate: "Predicate: carries a check with a HOLDS / BROKEN / NA verdict.", relation: "Relation: a proven edge between two units.", negation: "Negation: nothing in a scope calls a target.", transition: "Transition: what changed between two commits.", "test-vacuity": "Test vacuity: a test that cannot fail." }[f] ?? f}">${A.esc(f)}</span>`
+  const tierWord = { T0: ["Core", "T0 · must be right; only a person ratifies (ratifier name billy)"], T1: ["Ratified", "T1 · load-bearing; ratified with an approval key"], T2: ["Hint", "T2 · advisory; mined or written, nobody ratified it"] }
+  A.tier = (t) => `<span class="at-tier-chip" data-tip="${tierWord[t]?.[1] ?? t}">${tierWord[t]?.[0] ?? A.esc(t)}</span>`
+  A.band = (x) => A.tier(x.tier)
+  const familyWord = { advisory: ["Stated", "advisory · a grounded sentence with no executable check"], predicate: ["Tested", "predicate · carries a check: HOLDS, BROKEN or NA"], relation: ["Link", "relation · a proven edge: depends-on or calls"], negation: ["Never calls", "negation · nothing in a scope calls a target"], transition: ["Code change", "transition · what changed between two commits"], "test-vacuity": ["Hollow test", "test-vacuity · a test that cannot fail"] }
+  A.family = (f) => `<span class="at-origin" data-tip="${familyWord[f]?.[1] ?? f}">${familyWord[f]?.[0] ?? A.esc(f)}</span>`
+  A.familyWord = (f) => familyWord[f]?.[0] ?? f
+  A.origin = (x) => (x.scope === "atlas:mined" ? "Mined" : "Written")
+  // At most two chips on a row: the state, then one of tier (when it governs), family (when not Stated) or example.
+  // An illustrated item keeps its chip and gets a dashed outline ("example") instead of a third chip.
+  A.second = (x) => {
+    const chip = x.tier !== "T2" ? A.tier(x.tier) : x.family && x.family !== "advisory" ? A.family(x.family) : x.example ? '<span class="at-pill">example</span>' : ""
+    return x.example && chip && !chip.includes("at-pill") ? chip.replace('class="', 'data-example="1" class="ex ') : chip
+  }
+  // One sentence per refusal code; the code stays in Technical details.
+  A.REFUSALS = {
+    ungrounded: "The code changed since then", unauthorized: "You can't write to this group", unratified: "Needs an approval key",
+    contended: "Changed by someone else meanwhile", "untrusted-store": "This store is in git, so Atlas refuses writes", untrusted: "This store is in git, so Atlas refuses writes",
+    "closed-slot-violation": "This kind isn't allowed here", "canonical-form violation": "Wording doesn't fit the template", "scanner-blocked": "Looks like it contains a secret",
+    "scanner-unavailable": "No secret scanner is installed", "over-cap": "Too many rule words for this member", ambiguous: "Several checkpoints, pick one", "undetermined-kind": "It doesn't match a memory template",
+    "template-invalid": "A field is missing or has the wrong type", "unit-missing-or-ambiguous": "That unit isn't in the published catalog",
+  }
+  A.refusal = (code) => A.REFUSALS[code] ?? code
+  A.help = (text) => `<button type="button" class="at-help" data-tip="${A.esc(text)}" aria-label="${A.esc(text)}">?</button>`
+  A.hashv = (h) => (h ? `<code class="at-hashv" data-tip="${A.esc(h)}">${A.esc(String(h).slice(0, 8))}…</code>` : "—")
+  A.tech = (rows, label = "Technical details") => `<details class="ins-tech"><summary>${A.icon("chev")}${label}</summary><dl class="at-kv">${rows.filter(Boolean).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl></details>`
+
   A.agent = (id) => {
     const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie", maestro: "Maestro", "seat:orchestrator": "seat:orchestrator", you: "You" }
     const name = names[id] ?? id
@@ -115,11 +133,16 @@ window.Atlas = window.Atlas || {}
     R7: "Rebuild the Own snapshot from the app, so live changes reach agents. Today a maintainer re-materializes it from a reviewed snapshot JSON, never from the live store.",
     R8: "Replace a fact's claim. Today a same-tier rewrite adds the new claim to the set and the old one stays served; only a tier raise replaces claims.",
   }
+  // The full label appears once, in the footer of the sheet the action opens; buttons carry only a dot.
   A.newcap = (id) => `<span class="at-newcap" data-tip="Requires a new capability · ${id}: ${A.esc(A.REQS[id])}">${A.icon("sparkle")}New capability · ${id}</span>`
+  A.newdot = (id) => `<i class="at-newdot" data-tip="New capability · ${id}: ${A.esc(A.REQS[id])}"></i>`
 
   A.badge = (label, tone = "") => `<span class="mx-badge ${tone}">${A.esc(label)}</span>`
-  A.btn = (label, action, opts = {}) =>
-    `<button type="button" class="mx-btn ${opts.primary ? "primary" : ""} ${opts.icon && !label ? "icon" : ""}" data-action="${action}" ${opts.value !== undefined ? `data-value="${A.esc(opts.value)}"` : ""} ${opts.disabled ? "disabled" : ""} ${opts.tip ? `data-tip="${A.esc(opts.tip)}"` : ""} ${opts.label ? `aria-label="${A.esc(opts.label)}"` : ""}>${opts.icon ? A.icon(opts.icon) : ""}${A.esc(label)}</button>`
+  // A write button stays visible on a read-only store, disabled, with the reason as its tooltip.
+  A.btn = (label, action, opts = {}) => {
+    if (opts.write && A.m && !A.m.writable()) opts = { ...opts, disabled: true, tip: A.refusal("untrusted-store") }
+    return `<button type="button" class="mx-btn ${opts.primary ? "primary" : ""} ${opts.icon && !label ? "icon" : ""}" data-action="${action}" ${opts.value !== undefined ? `data-value="${A.esc(opts.value)}"` : ""} ${opts.disabled ? "disabled" : ""} ${opts.tip ? `data-tip="${A.esc(opts.tip)}"` : ""} ${opts.label ? `aria-label="${A.esc(opts.label)}"` : ""}>${opts.icon ? A.icon(opts.icon) : ""}${A.esc(label)}${opts.cap ? A.newdot(opts.cap) : ""}</button>`
+  }
   A.bar = (parts, cls = "") =>
     `<span class="at-bar ${cls}">${parts.filter((p) => p[1] > 0).map(([tone, value]) => `<i class="${tone}" style="flex:${value}"></i>`).join("")}</span>`
 

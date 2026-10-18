@@ -142,9 +142,15 @@
     return [...out].sort()
   }
 
+  // Files outside the scope that files inside it import (own `edges.dependencies`, one hop).
+  const uses = (path) => {
+    const inside = under(path)
+    return Object.entries(R.dependents).filter(([target, users]) => !inside({ file: target }) && users.some((u) => inside({ file: u }))).map(([t]) => t).sort()
+  }
+
   // What Orchestra actually serves: the committed Own snapshot (OWN-SNAPSHOT.json), not the live store.
   // Its one unit is a curated fixture, not exported from this store: owner atlas-foundation, one T1 invariant.
-  const snapshot = { revision: "1a235323", units: ["packages/genesis"], catalog: false, packs: { "packages/genesis": { summary: "Genesis owns deterministic bootstrap and governed fact seeding.", owner: "atlas-foundation", tier: "T1", invariants: [{ nodeId: "genesis:deterministic-bootstrap", tier: "T1", claim: "Genesis builds deterministic structural state before governed fact seeding.", freshness: "FRESH" }], advisory: 0, dependents: 0, tokenEstimate: 42, sourceFiles: 3 } } }
+  const snapshot = { revision: "1a235323", units: ["packages/genesis", ...(R.snapshotUnits ?? [])], catalog: !!R.catalogPresent, packs: { "packages/genesis": { summary: "Genesis owns deterministic bootstrap and governed fact seeding.", owner: "atlas-foundation", tier: "T1", invariants: [{ nodeId: "genesis:deterministic-bootstrap", tier: "T1", claim: "Genesis builds deterministic structural state before governed fact seeding.", freshness: "FRESH" }], advisory: 0, dependents: 0, tokenEstimate: 42, sourceFiles: 3 } } }
   // own-source.ts terrainOwner: the actors of the most specific policy scope that covers the unit path; "" when none does.
   const underScope = (path, scope) => scope === "" || path === scope || path.startsWith(`${scope}/`)
   const packOwner = (unitId) => {
@@ -234,5 +240,82 @@
     ].join("\n")
   }
 
-  A.m = { provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  /* ---------- Write path, as the code answers it ---------- */
+  // Writing as: ATLAS_ACTOR, else the git e-mail (adapter-io/src/compose.ts:170). The mock writes as the policy's curator.
+  const actor = "seat:orchestrator"
+  const writable = () => provenance() === "trusted"
+  // `atlas check` (tools/src/check.ts): shape → truth → authz → ratify, each with its reason and remedy.
+  // `regrounds` = the write is drafted against the current file, so the truth gate re-derives it at HEAD.
+  const checks = (x, opts = {}) => {
+    const tier = opts.tier ?? "T2"
+    const truth = opts.regrounds || !x.drift
+    const authz = (R.policy[x.scope] ?? []).includes(actor)
+    const token = opts.token ?? ""
+    const ratify = tier === "T0" ? token === "billy" : token !== ""
+    const gates = [
+      { gate: "shape", pass: true },
+      { gate: "truth", pass: truth, reason: "ungrounded", remedy: "re-derive against the current tree" },
+      { gate: "authz", pass: authz, reason: "unauthorized", remedy: `grant ${x.scope} in .atlas/policy.json` },
+      { gate: "ratify", pass: ratify, reason: "unratified", remedy: tier === "T0" ? "ATLAS_RATIFY_TOKEN=billy" : "set ATLAS_RATIFY_TOKEN" },
+    ]
+    // The gate chain stops at the first refusal; later gates are not reached.
+    const first = gates.findIndex((g) => !g.pass)
+    return { wouldEmit: first < 0, gates: gates.map((g, i) => ({ ...g, reached: first < 0 || i <= first })) }
+  }
+  // `atlas promote` (adapter-io/src/governed-promote.ts): every staging row is re-presented through emit.
+  const promoteRun = (token) => {
+    if (!writable()) return { read: false, refusal: "untrusted", candidates: 0, promoted: 0, refused: 0, rows: [] }
+    const staged = [...facts, ...candidates.filter((x) => !x.discarded)]
+    const rows = staged.map((x) => {
+      const c = checks(x, { token })
+      const failed = c.gates.find((g) => !g.pass)
+      return { x, nodeKey: x.key, settled: !failed, rejected: failed?.reason }
+    })
+    const refused = rows.filter((r) => !r.settled).length
+    return { read: true, candidates: rows.length, promoted: rows.length - refused, refused, rows }
+  }
+  // `atlas reconcile <mergeBase>`: facts whose anchor changed between the base and HEAD, classed by `doctor why`.
+  const reconcile = () => {
+    const drift = facts.filter((x) => state(x) === "drifted").map((x) => ({ fact: x, class: "semantic" }))
+    return { base: R.builtAt, drift, mechanical: [], semantic: drift, regroundedCount: 0, reauthorCount: drift.length, exitCode: drift.length ? 2 : 0 }
+  }
+  // `doctor why` / `doctor reground`: a whole-file anchor whose old bytes exist nowhere at HEAD is semantic ⇒ retire.
+  const why = (x) => (x.drift ? { class: "semantic", plan: "retire" } : undefined)
+
+  /* ---------- Health, from the store's own files ---------- */
+  const health = () => {
+    const langs = R.langs ?? {}
+    const configured = { ts: ["scip-typescript", "0.4.0"], py: ["scip-python", "0.6.6"] }
+    return {
+      provenance: provenance(),
+      cas: { ...R.casAudit, corrupt: 0, unreadable: 0, sound: (R.casAudit?.missing ?? 0) === 0 },
+      proofs: { sealedProven: R.sealed ?? 0, reProven: 0, broken: 0, unverifiable: 0, dangling: 0 },
+      index: { scip: !!R.scip, configured: Object.entries(langs).filter(([l]) => configured[l]).map(([l, n]) => ({ lang: l, tool: configured[l][0], version: configured[l][1], files: n })), holes: Object.entries(langs).filter(([l]) => !configured[l]).map(([l, n]) => ({ lang: l, files: n })) },
+      generations: R.generations ?? [],
+      hotSet: facts.length,
+    }
+  }
+
+  /* ---------- Activity: what agents read and wrote, from the session receipts ---------- */
+  const activity = () => {
+    const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie" }
+    const events = []
+    ;(A.spawns ?? []).forEach((t) => {
+      t.checkpoints.forEach((c) => events.push({ at: c.at, who: t.member, kind: "memory", ok: c.outcome === "admitted", unit: t.unit, text: c.outcome === "admitted" ? `${names[t.member]} saved a checkpoint` : `${names[t.member]}'s checkpoint was not saved`, refusal: c.refusal, reason: c.reason, ref: c.ref, example: t.example, task: t }))
+      ;(t.admissions ?? []).forEach((a) => events.push({ at: a.at, who: t.member, kind: "resume", ok: a.ok !== false, unit: t.unit, text: `${names[t.member]} was resumed with its checkpoint`, residency: a.residency, ref: a.ref, example: t.example, task: t }))
+      t.transcript.forEach((m) => m.parts.filter((p) => p.type === "tool" && p.tool === "atlas_context").forEach((p) => {
+        const input = (() => { try { return JSON.parse(p.input) } catch { return {} } })()
+        // A unit outside the published catalog is held, not read; the hold event below covers it.
+        if (input.action === "unit" && !snapshot.units.includes(input.unit)) return
+        events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: input.action, target: input.unit, text: input.action === "catalog" ? `${names[t.member]} read the unit catalog` : `${names[t.member]} read the briefing for ${input.unit}`, research: t.member === "jimmy", example: t.example, task: t })
+      }))
+      t.checkpoints.filter((c) => (c.entry.failedWith ?? []).some((f) => /AtlasContextHeld/.test(f))).forEach((c) => {
+        const reason = (c.entry.failedWith.find((f) => /AtlasContextHeld/.test(f)).match(/AtlasContextHeld: ([a-z-]+)/) ?? [])[1]
+        events.push({ at: c.at - 1, who: t.member, kind: "hold", ok: false, unit: t.unit, reason, text: `${names[t.member]} was held`, example: t.example, task: t })
+      })
+    })
+    return events.sort((a, b) => b.at - a.at)
+  }
+
+  A.m = { uses, actor, writable, checks, promoteRun, reconcile, why, health, activity, provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

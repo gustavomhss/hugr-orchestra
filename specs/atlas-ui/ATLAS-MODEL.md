@@ -264,6 +264,8 @@ O repositório standalone do Atlas, de onde vêm os dados do mock, **comita a pr
 
 ## 8. Do modelo para a interface
 
+> A arquitetura de telas atual está em [`DESIGN.md`](DESIGN.md) (v4): Overview, Knowledge, Review, Activity, Health, Settings e Memória. A tabela abaixo é o mapeamento original.
+
 | O Atlas tem… | A pessoa quer… | Lugar na interface |
 |---|---|---|
 | unidades Own (`own_<unit>`: crate / module / service / feature) + territórios | "o que se sabe sobre **este módulo ou serviço**, e de quem é" | **Conhecimento**: a lista de unidades com território, dono, tier, fatos, drift e dependentes. Não é uma árvore de arquivos: o Atlas serve conhecimento por unidade, e o fato só é acessado **dentro** do pack (decisão X1, `docs/roadmap/wave-plan.md:79`) |

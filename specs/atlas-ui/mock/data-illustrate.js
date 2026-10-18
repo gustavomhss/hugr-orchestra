@@ -45,6 +45,9 @@
   R.trackedReal = R.tracked
   R.tracked = { projection: false, cas: 0, staging: false, policy: true, memory: false, example: true }
   R.illustrated = true
+  // Units a stewarded project would publish to agents (example); the real snapshot holds packages/genesis only.
+  R.catalogPresent = true
+  R.snapshotUnits = ["packages/knowledge", "packages/retrieval", "packages/tools"]
 
   R.territories = [
     { name: "Identity & storage", owner: "backend", tier: "T0", globs: ["packages/kernel/**", "packages/persist/**", "packages/contracts/**"] },
@@ -84,14 +87,14 @@
        ck(65, { taskId: "WP-ATLAS-W1", attempted: ["Split WP-3 into boundary entry and server group", "Recorded plan revision 3"], failedWith: [], stoppedAt: "Both phases complete: revision 3 adopted by Maestro; nothing left in this unit.", lesson: "Land the boundary entry before any server group that reads through it." })],
       [say(0, "user", "Plan W1 of the Atlas chapter: the read projection. Anchor every unit on Own units."), tool(2, "atlas_context", "{\"action\":\"catalog\"}"), tool(4, "atlas_context", "{\"action\":\"unit\",\"unit\":\"packages/knowledge\"}"), say(16, "assistant", "Revision 2: five WPs, acceptance first, each anchored on an Own unit."), tool(17, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-ATLAS-W1\",…}}", { op: "emit", outcome: "admitted" })]),
     task("archie", "WP-DRIFT-Q", "Plan the drift review queue", 120,
-      [step("dispatch", 120, 0, 9, "Plan the drift review queue for Curation. Use the current catalog.", "Archie stopped: the Atlas source changed after its plan revision, so it held instead of planning on stale context.")],
-      [ck(128, { taskId: "WP-DRIFT-Q", attempted: ["Loaded own_knowledge", "Drafted queue ordering by commit"], failedWith: ["AtlasContextHeld: plan-grounding-stale — the Atlas source changed after this plan revision"], stoppedAt: "Held before recording a revision; needs a fresh catalog read.", lesson: "After a merge, read atlas_context catalog again before recording a revision." })],
-      [say(120, "user", "Plan the drift review queue for Curation."), tool(122, "atlas_context", "{\"action\":\"catalog\"}"), say(127, "assistant", "Held: plan-grounding-stale. I will not plan on a catalog that changed under me."), tool(128, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-DRIFT-Q\",…}}", { op: "emit", outcome: "admitted" })]),
+      [step("dispatch", 120, 0, 9, "Plan the drift review queue for Curation. Use the current catalog.", "Archie stopped: the unit it asked for is not in the published catalog, so Atlas held the read.")],
+      [ck(128, { taskId: "WP-DRIFT-Q", attempted: ["Read the unit catalog", "Asked for packages/curation"], failedWith: ["AtlasContextHeld: unit-missing-or-ambiguous — packages/curation is not a published unit"], stoppedAt: "Held before recording a revision; needs an exact unit ID.", lesson: "After a merge, read atlas_context catalog again before recording a revision." })],
+      [say(120, "user", "Plan the drift review queue for Curation."), tool(122, "atlas_context", "{\"action\":\"catalog\"}"), tool(124, "atlas_context", "{\"action\":\"unit\",\"unit\":\"packages/curation\"}"), say(127, "assistant", "Held: plan-grounding-stale. I will not plan on a catalog that changed under me."), tool(128, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-DRIFT-Q\",…}}", { op: "emit", outcome: "admitted" })]),
     task("jimmy", "SURVEY-OWN", "Survey how own composes a pack", 300,
       [step("dispatch", 300, 0, 24, "For Archie: find where atlas own composes a pack and every caller. Cite file:line; read only.", "Jimmy reported the composer in retrieval/src/own.ts, the paid order and four callers, each with file:line.")],
       [ck(301, { taskId: "SURVEY-OWN" }, "refused", "undetermined-kind", "MEM-5 kind derivation: no template matched the entry"),
        ck(323, { taskId: "SURVEY-OWN", attempted: ["grep createOwn across packages", "Read own.ts and own-source.ts"], failedWith: [], stoppedAt: "Both phases complete: composer, paid order and four callers reported.", lesson: "Grep for the composer before reading files one by one; cite file:line for every finding." })],
-      [say(300, "user", "Find where atlas own composes a pack and every caller."), tool(303, "grep", "createOwn"), tool(306, "read", "modules/atlas/packages/retrieval/src/own.ts"), say(322, "assistant", "The composer is createOwn (own.ts:161); it pays governing, gotchas, pointers, then advisory. Four callers.")]),
+      [say(300, "user", "Find where atlas own composes a pack and every caller."), tool(302, "atlas_context", "{\"action\":\"unit\",\"unit\":\"packages/retrieval\"}"), tool(303, "grep", "createOwn"), tool(306, "read", "modules/atlas/packages/retrieval/src/own.ts"), say(322, "assistant", "The composer is createOwn (own.ts:161); it pays governing, gotchas, pointers, then advisory. Four callers.")]),
     task("jimmy", "SURVEY-ADR", "List the ADRs that changed the write gates", 420,
       [step("dispatch", 420, 0, 12, "Read docs/adr and list the decisions that changed the emit gates. Phase 1 only: ADR-0001 to ADR-0008.", "Jimmy listed three ADRs with the gate each one changed and stopped at the phase boundary.")],
       [ck(431, { taskId: "SURVEY-ADR", attempted: ["Read ADR-0001…0008", "Listed 3 gate-changing decisions"], failedWith: [], stoppedAt: "Phase 1 done; ADR-0009 onwards not started.", lesson: "Quote the ADR number and section; never restate a decision from memory." })],

@@ -1,135 +1,178 @@
-// Curation (drift, candidates, ratify, mine), Memory, History, Settings, Agents, Chat and the HOLD state.
+// Review (everything that waits on a person), Activity (what agents got and gave), Health (is the store sound),
+// Settings (connection, territories, permissions, store), Agents, Chat and the HOLD state.
 ;(function (A) {
   const M = () => A.m
   const R = () => A.m.R
   const plural = (n, one, many = `${one}s`) => `${A.num(n)} ${n === 1 ? one : many}`
   const qs = (q) => (Object.keys(q).length ? `?${new URLSearchParams(q)}` : "")
   const clean = (q) => Object.fromEntries(Object.entries(q).filter(([, v]) => v !== undefined && v !== null && v !== ""))
-  const more = (total, shown, href) => (total > shown ? `<div class="at-more"><span>Showing ${shown} of ${total}</span>${A.btn(`Show ${Math.min(10, total - shown)} more`, "go", { value: href })}</div>` : "")
+  const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie", maestro: "Maestro" }
+  const time = (ms) => (ms ? `${new Date(ms).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "UTC" })} · ${new Date(ms).toISOString().slice(11, 16)} UTC` : "")
+  const tabs = (base, list, current) => `<div class="wf-tabs" role="tablist">${list.map(([id, label, glyph, c]) => `<button class="wf-tab" role="tab" aria-selected="${current === id}" data-action="go" data-value="${base}${id}">${A.icon(glyph)}${label}${c !== undefined ? `<span class="wf-count">${A.num(c)}</span>` : ""}</button>`).join("")}</div>`
+  const heading = (eyebrow, title, line, actions = "") => `<div class="mx-heading"><div><div class="mx-eyebrow">${eyebrow}</div><h1>${title}</h1><p>${line}</p></div>${actions ? `<div class="heading-actions">${actions}</div>` : ""}</div>`
 
-  /* ---------- Curation ---------- */
-  A.views.curation = (state) => {
+  /* ---------- Review: decide everything that waits on a person ---------- */
+  A.views.review = (state) => {
     const q = state.query
     const s = M().stats()
-    const tab = q.tab ?? "drift"
-    const n = Number(q.n ?? 10)
-    const href = (patch) => `#/curation${qs(clean({ ...q, fact: undefined, n: undefined, ...patch }))}`
-    const pendingRatify = M().live().filter((x) => x.proposedTier)
-    const tabs = [["drift", "Drifted", "drift", s.drifted], ["candidates", "Candidates", "sparkle", s.candidates], ["ratify", "Ratify", "shield", pendingRatify.length], ["mine", "Mine", "play"]]
-    const hunk = (x, h) => `<div class="at-code"><div class="at-code-head"><span>@@ ${A.esc(h.at)} @@</span></div><pre>${h.lines.map((l) => `<div class="ln ${l[0] === "+" ? "add" : l[0] === "-" ? "del" : ""}"><span></span><span>${A.esc(l.slice(1))}</span></div>`).join("")}</pre></div>`
-    const drift = () => {
-      const commit = q.commit
-      const area = q.area
-      const list = M().live().filter((x) => M().state(x) === "drifted").filter((x) => !commit || x.drift.commits.some(([sha]) => sha === commit)).filter((x) => !area || M().areaOf(x.file) === area)
-      const areas = [...new Set(M().live().filter((x) => M().state(x) === "drifted").map((x) => M().areaOf(x.file)))].sort()
-      return `<p class="at-lead">These facts are anchored to whole files that changed since they were derived. The old content exists nowhere at HEAD, so <code>doctor reground</code> classes all of them <b>semantic</b>, and <code>reconcile</code> exits 2 for any merge whose diff changes one. Read the claim against the change: <b>Rewrite</b> drafts it against the current file and emits it, which adds the new claim beside the old one (R8 would replace it); <b>Retire</b> drafts a superseding fact against the current file. Re-emitting it unchanged does not clear the drift.</p>
-        <div class="at-toolbar"><label class="at-select">${A.icon("territory")}<select data-nav="area" aria-label="Unit"><option value="">All units</option>${areas.map((a) => `<option ${area === a ? "selected" : ""}>${A.esc(a)}</option>`).join("")}</select></label>
-          <label class="at-select">${A.icon("commit")}<select data-nav="commit" aria-label="Commit"><option value="">Any commit</option>${M().codeChanges().map((c) => `<option value="${c.sha}" ${commit === c.sha ? "selected" : ""}>${A.esc(c.sha)} · ${A.esc(c.subject.slice(0, 48))} (${c.facts.length})</option>`).join("")}</select></label>
-          <span class="at-hint">${plural(list.length, "fact")} to check</span></div>
-        ${list.slice(0, n).map((x) => `<article class="at-card warm"><header>${A.chip("drifted")}${A.file(x.file)}<span class="grow"></span>${A.btn("Details", "open", { value: x.key })}</header>
-          <h3>${A.esc(x.claim)}</h3>
-          <div class="at-commits">${x.drift.commits.map(([sha, subj]) => `<div class="at-commit"><code class="at-sha">${A.esc(sha)}</code><span>${A.esc(subj)}</span></div>`).join("")}<small>${A.esc(x.drift.stat)}</small></div>
-          ${x.drift.hunks.slice(0, 1).map((h) => hunk(x, h)).join("")}
-          <footer><span class="grow"><span class="at-state bad" data-tip="reconcile against a merge base exits 2 when the PR changes this file">${A.icon("lock")}Semantic</span></span>${A.btn("Retire", "retire", { value: x.key })}${A.newcap("R8")}${A.btn("Rewrite claim", "edit", { value: x.key, primary: true })}</footer></article>`).join("") || `<div class="at-clear">${A.icon("checkc")}<strong>Nothing drifted</strong><p>Every fact matches the current code.</p></div>`}
-        ${more(list.length, Math.min(n, list.length), href({ n: n + 10 }))}`
+    const tab = q.tab ?? "changed"
+    const proposals = M().live().filter((x) => x.proposedTier)
+    const href = (patch) => `#/review${qs(clean({ ...q, fact: undefined, ...patch }))}`
+    const outcome = (x) => {
+      const r = A.state.promote?.rows.find((row) => row.nodeKey === x.key)
+      return r ? `<span class="at-outcome ${r.settled ? "good" : "bad"}">${r.settled ? "Accepted" : A.esc(A.refusal(r.rejected))}</span>` : ""
     }
-    const candidates = () => {
+    const changed = () => {
+      const list = M().live().filter((x) => M().state(x) === "drifted").filter((x) => !q.commit || x.drift.commits.some(([sha]) => sha === q.commit)).filter((x) => !q.unit || M().unitOf(x.file) === q.unit)
+      const units = [...new Set(M().live().filter((x) => M().state(x) === "drifted").map((x) => M().unitOf(x.file)))].sort()
+      return `<div class="at-toolbar"><span class="at-subline">The code under these facts changed. Read each against its diff.</span><span class="grow"></span>${A.btn("Merge check…", "reconcile", { icon: "branch" })}</div>
+        <div class="at-toolbar"><label class="at-select">${A.icon("stack")}<select data-nav="unit" aria-label="Unit"><option value="">All units</option>${units.map((u) => `<option ${q.unit === u ? "selected" : ""}>${A.esc(u)}</option>`).join("")}</select></label>
+          <label class="at-select">${A.icon("commit")}<select data-nav="commit" aria-label="Commit"><option value="">Any commit</option>${M().codeChanges().map((c) => `<option value="${c.sha}" ${q.commit === c.sha ? "selected" : ""}>${A.esc(c.sha)} · ${A.esc(c.subject.slice(0, 44))}</option>`).join("")}</select></label></div>
+        <section class="at-panel">${A.seven(list, "changed", (x) => A.factRow(x, state, { short: false, extra: `<span>${plural(x.drift.commits.length, "commit")}</span>` }), 25) || `<div class="at-clear">${A.icon("checkc")}<strong>Nothing changed</strong><p>Every fact matches its code.</p></div>`}</section>`
+    }
+    const mined = () => {
       const list = M().candidates.filter((x) => !x.promotedNow && !x.discarded)
-      return `<p class="at-lead">Mined by genesis and parked in staging. Agents never see staging. <code>atlas promote</code> takes no arguments: it re-presents <b>every</b> staging row through the emit door, already-promoted ones included, and each must pass the gates again. The batch is not atomic.</p>
-        <div class="at-gates">${[["Shape", "Tier, scope, family and grounding well formed", "good"], ["Truth", "Anchor re-derived FRESH at HEAD; a file changed since mining is refused", "good"], ["Authorization", "The actor must hold atlas:mined (seat:orchestrator); no scope move or tier downgrade", "good"], ["Ratification", "Promoted rows always need a ratify token", "warm"]].map(([g, d, t]) => `<div class="at-gate"><span class="at-state ${t}">${A.icon(t === "good" ? "checkc" : "lock")}${g}</span><small>${d}</small></div>`).join("")}</div>
-        <div class="at-toolbar"><span class="at-hint">${plural(list.length, "candidate")} not yet promoted · 660 staging rows in total</span><span class="grow"></span>${list.length ? A.btn("Promote all staged rows", "promote-all", { primary: true }) : ""}</div>
-        ${list.slice(0, n).map((x) => {
-          const why = R().reasoning[x.why] ?? ""
-          return `<article class="at-card"><header>${A.chip("pending")}${A.file(x.file)}<span class="grow"></span>${A.btn("Details", "open", { value: x.key })}</header>
-          <h3>${A.esc(x.claim)}</h3>
-          <details class="at-why-details"><summary>${A.icon("chev")}How genesis reached this</summary><div class="at-reasoning">${A.esc(why)}</div></details>
-          <footer><span class="grow">${A.tier(x.tier)}${A.family(x.family)}</span>${A.newcap("R2")}${A.btn("Leave in staging", "discard", { value: x.key })}${A.btn("Promote this one", "promote", { value: x.key })}</footer></article>`
-        }).join("") || `<div class="at-clear">${A.icon("checkc")}<strong>Staging is clear</strong><p>Every mined candidate has been decided.</p>${A.btn("Mine more", "go", { value: "#/curation?tab=mine" })}</div>`}
-        ${more(list.length, Math.min(n, list.length), href({ n: n + 10 }))}`
+      return `<div class="at-toolbar"><span class="at-subline">Suggested by genesis. Agents see none of it until you accept.</span><span class="grow"></span>${list.length ? A.btn("Accept all…", "promote-all", { primary: true, write: true }) : ""}</div>
+        ${A.state.promote ? `<div class="at-resultline">${A.icon(A.state.promote.refused ? "warning" : "checkc")}<span>Last run: ${A.state.promote.read ? `${A.num(A.state.promote.rows.filter((r) => r.settled && r.x.kind === "candidate").length)} new · ${A.num(A.state.promote.rows.filter((r) => !r.settled && r.x.kind === "candidate").length)} suggestions refused` : "refused: this store is in git"}</span>${A.btn("Details", "promote-result")}</div>` : ""}
+        <section class="at-panel">${A.seven(list, "mined", (x) => A.factRow(x, state, { extra: outcome(x) }), 25) || `<div class="at-clear">${A.icon("checkc")}<strong>Nothing waiting</strong><p>Every suggestion has been decided.</p>${A.btn("Find new facts…", "mine")}</div>`}</section>`
     }
     const ratify = () => {
-      const names = { archie: "Archie", lucy: "Lucy", backend: "Backend", jimmy: "Jimmy" }
       const kw = R().t0Keywords ?? []
       const t0 = M().territories().filter((t) => kw.some((k) => t.name.includes(k)))
-      const waiting = pendingRatify.map((x) => `<article class="at-card"><header>${A.chip(M().state(x))}${A.file(x.file)}<span class="grow"></span>${A.btn("Details", "open", { value: x.key })}</header><h3>${A.esc(x.claim)}</h3>
-        <p class="at-why">${A.icon("info")}${names[x.proposedBy] ?? x.proposedBy} proposes this as ${x.proposedTier}${x.slot ? ` · type <code>${A.esc(x.slot)}</code>` : ""}. Ratifying re-emits it at the higher tier: it enters the governing band of <code>${A.esc(M().unitOf(x.file))}</code>, and the raise replaces its claims with the ratified one.</p>
-        <footer><span class="grow">${A.tier(x.tier)} → ${A.tier(x.proposedTier)}</span>${A.btn("Reject", "reject-ratify", { value: x.key })}${A.btn("Ratify…", "ratify", { value: x.key, primary: true })}</footer></article>`).join("")
-      const intro = `<p class="at-lead">Ratifying re-emits a fact at a higher tier through <code>atlas-emit</code>. <b>T1</b> needs a ratify token; <b>T0</b> needs the ratifier token <code>billy</code>, and the constitution line of each bound member's header counts it. The store does not record who ratified.</p>`
-      const queue = waiting ? `<div class="at-section-title"><h3>Proposed by reviewers</h3>${A.newcap("R3")}</div>${waiting}` : `<div class="at-clear">${A.icon("shield")}<strong>Nothing proposed</strong><p>Open any advisory fact and choose Ratify.</p>${A.btn("Browse knowledge", "go", { value: "#/knowledge" })}</div>`
-      return `${intro}${queue}
-        <section class="at-panel" style="margin-block-start:16px"><header class="at-panel-head"><div><h3>T0 candidates</h3><small><code>atlas init</code> flags a territory whose name contains a keyword from <code>policy.json</code> <code>t0Heuristic.keywords</code>: here ${kw.map((k) => `<code>${A.esc(k)}</code>`).join(", ") || "none"}. A flag never assigns the tier.</small></div><span class="wf-count">${t0.length}</span></header>
-        ${t0.map((t) => `<div class="at-item" style="cursor:default">${A.icon("territory")}<div class="at-item-main"><div class="at-item-text">${A.esc(t.name)}</div></div>${A.tier(t.tier)}</div>`).join("") || '<div class="at-band-empty">No territory name contains one of these keywords.</div>'}</section>`
+      return `<div class="at-toolbar"><span class="at-subline">Facts proposed to govern how agents work. Open one to ratify it.</span></div>
+        ${proposals.length ? `<section class="at-panel">${proposals.map((x) => A.factRow(x, state, { extra: `<span>proposed by ${A.esc(names[x.proposedBy] ?? x.proposedBy)}</span>` })).join("")}</section>`
+          : `<div class="at-clear">${A.icon("shield")}<strong>Nothing proposed</strong><p>Open any hint and choose Ratify.</p></div>`}
+        <details class="at-acc" data-acc="review-core"><summary><span class="at-acc-ic">${A.icon("territory")}</span><span class="at-acc-t"><strong>Suggested core areas</strong><small>Territories whose name contains a core keyword</small></span><span class="at-acc-sum">${t0.length}</span>${A.icon("chev", "at-acc-chev")}</summary><div class="at-acc-body">
+          ${t0.map((t) => `<div class="at-linkrow static">${A.icon("territory")}<span>${A.esc(t.name)}</span><span class="grow"></span>${A.tier(t.tier)}</div>`).join("") || `<div class="at-band-empty">No territory name contains ${kw.map((k) => `“${A.esc(k)}”`).join(" or ")}.</div>`}
+          ${A.tech([["Atlas", `<code>atlas init</code> flags a territory whose name contains a keyword from <code>policy.json</code> <code>t0Heuristic.keywords</code>. A flag never sets the tier.`]])}</div></details>`
     }
-    const mine = () => `<p class="at-lead">${M().provenance() === "trusted" ? "" : "<b>Mining and promoting are refused on this store</b>: its projection and content store are committed to git. "}Genesis reads the structural index, ranks sites, and asks a model to propose one claim per site. Proposals land in staging, never directly in knowledge. The advisory arm is not truth-checked at mining time; the truth gate runs when the row is promoted.</p>
-      <section class="at-panel"><div class="at-panel-body at-form">
-        <div class="mx-field"><span>Scope</span><div class="at-fileline" style="cursor:default">${A.icon("territory")}<code>whole repository</code><span class="grow"></span><small>atlas mine ignores its path argument</small></div></div>
-        <div class="mx-field"><span>Arms</span><div class="wf-range"><button aria-pressed="true">All three</button><button aria-pressed="false">advisory</button><button aria-pressed="false">dependency</button><button aria-pressed="false">count</button><button aria-pressed="false">definition</button><button aria-pressed="false">semantic</button></div><small>The default runs advisory, dependency and count together; <code>ATLAS_MINE_SLOT</code> runs exactly one. Definition and semantic exist only that way.</small></div>
-        <div class="mx-field"><span>Sites</span><div class="wf-range"><button aria-pressed="true">Files</button><button aria-pressed="false">Files + symbols</button></div><small>Symbol and block units are added to the file sites, not substituted.</small></div>
-        <label class="mx-field"><span>Budget per arm (sites)</span><input type="number" value="200" min="1"><small>Default: up to 200 sites per arm, so up to 600 in a default run. Needs <code>.atlas/index.scip</code>; without it there are no sites.</small></label>
-        <div class="mx-field"><span>Model</span><div class="at-fileline" style="cursor:default">${A.icon("settings")}<code>$ATLAS_MODEL_CONFIG · $XDG_CONFIG_HOME/atlas/model.json · ~/.config/atlas/model.json</code></div><small>Must live outside the repository.</small></div>
-      </div><footer class="at-card-foot"><span class="grow">Results arrive in Candidates.</span>${A.btn("Start mining", "mine", { primary: true, icon: "play" })}</footer></section>`
     return {
-      crumbs: [["Atlas", "#/overview"], ["Curation"], [tabs.find((t) => t[0] === tab)[1]]],
+      crumbs: [["Atlas", "#/overview"], ["Review"]],
       html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas · Curation</div><h1>Curation</h1><p>The governed write path: decide what drifted, promote what was mined, ratify what should govern, and mine. Every write goes through an Atlas door under the declared actor and nothing is deleted. Orchestra's agents never read this store: they read a reviewed Own snapshot (R7).</p></div></div>
-      <div class="wf-tabs" role="tablist">${tabs.map(([id, label, glyph, c]) => `<button class="wf-tab" role="tab" aria-selected="${tab === id}" data-action="go" data-value="#/curation?tab=${id}">${A.icon(glyph)}${label}${c !== undefined ? `<span class="wf-count">${A.num(c)}</span>` : ""}</button>`).join("")}</div>
-      ${{ drift, candidates, ratify, mine }[tab]()}</div>`,
+      ${heading("Atlas", "Review", M().curationCount() ? `${plural(M().curationCount(), "thing")} wait for a decision.` : "Nothing waits for a decision.", `${A.btn("Find new facts…", "mine", { icon: "sparkle", write: true })}${A.btn("", "producers", { icon: "relations", label: "More producers", tip: "Derive links · Record code changes · Find hollow tests" })}`)}
+      ${tabs("#/review?tab=", [["changed", "Changed code", "drift", s.drifted], ["mined", "Mined", "sparkle", s.candidates], ["ratify", "To ratify", "shield", proposals.length]], tab)}
+      ${{ changed, mined, ratify }[tab]()}</div>`,
     }
   }
 
-  /* ---------- History ---------- */
-  A.views.history = () => {
-    const changes = M().codeChanges()
+  /* ---------- Activity: what Atlas gave agents and took from them ---------- */
+  A.eventRow = (e, compact = false) => {
+    const glyph = { read: "atlas", memory: "memory", resume: "refresh", hold: "lock", code: "commit" }[e.kind]
+    const tail = e.kind === "memory" && !e.ok ? `<span class="at-outcome bad">${A.esc(A.refusal(e.refusal))}</span>` : e.kind === "hold" ? `<span class="at-outcome">On hold</span>` : ""
+    return `<div class="at-event" data-action="event" data-value="${A.esc(e.id)}" tabindex="0" role="button"><span class="at-avatar sm">${e.who ? names[e.who][0] : A.icon(glyph)}</span>
+      <div class="at-event-main"><span>${A.esc(e.text)}${e.unit && e.kind !== "read" ? ` <small>· ${A.esc(e.unit)}</small>` : ""}</span>${compact ? "" : `<small>${time(e.at)}${e.example ? ' · <span class="at-pill">example</span>' : ""}</small>`}</div>${tail}</div>`
+  }
+  A.events = () => {
+    const list = M().activity().map((e, i) => ({ ...e, id: `e${i}` }))
+    const code = M().codeChanges().map((c, i) => ({ id: `c${i}`, kind: "code", ok: true, sha: c.sha, text: `Commit ${c.sha} changed ${plural(c.facts.length, "fact")}`, unit: c.subject }))
+    return [...list, ...code]
+  }
+  A.views.activity = (state) => {
+    const show = state.query.show ?? "all"
+    const all = A.events()
+    const kinds = { reads: ["read"], memory: ["memory", "resume"], holds: ["hold"], code: ["code"] }
+    const list = show === "all" ? all.filter((e) => e.kind !== "code") : all.filter((e) => kinds[show].includes(e.kind))
+    const count = (k) => all.filter((e) => kinds[k].includes(e.kind)).length
     return {
-      crumbs: [["Atlas", "#/overview"], ["History"]],
+      crumbs: [["Atlas", "#/overview"], ["Activity"]],
       html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas · History</div><h1>History</h1><p>How what agents know got here: the store's generations, the code changes that drifted knowledge, and memory writes.</p></div></div>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>Code changes since the build</h3><small>Commits since each fact was derived that changed its file</small></div><span class="wf-count">${changes.length}</span></header>
-        ${changes.map((c) => `<div class="at-attn" data-action="go" data-value="#/curation?tab=drift&commit=${c.sha}" tabindex="0"><code class="at-sha">${A.esc(c.sha)}</code><div><strong>${A.esc(c.subject)}</strong><small>${plural(c.facts.length, "fact")} drifted · ${[...new Set(c.facts.map((x) => M().areaOf(x.file)))].slice(0, 3).map(A.esc).join(", ")}</small></div>${A.icon("arrow")}</div>`).join("")}</section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>Store generations</h3><small>Every write publishes a new generation. This store keeps one past knowledge generation file and four staging ones; the content store keeps every version</small></div></header><div class="at-panel-body"><ul class="at-timeline">
-        <li><span class="at-tl-dot good">${A.icon("check")}</span><div class="at-tl-body"><strong>Knowledge · generation ${R().gen} (current)</strong><small>${A.num(M().stats().facts)} facts · built at <code>${R().builtAt}</code> · date from the file, not recorded by Atlas</small></div></li>
-        <li><span class="at-tl-dot blue">${A.icon("sparkle")}</span><div class="at-tl-body"><strong>596 of the staged facts are current knowledge</strong><small>promoted through the emit door by actor <code>seat:orchestrator</code> · scope <code>atlas:mined</code> · Atlas keeps no promotion event; this is inferred from the store</small></div></li>
-        <li><span class="at-tl-dot">${A.icon("history")}</span><div class="at-tl-body"><strong>Staging · generations 2626–${R().stagingGen}</strong><small>660 staging rows · the last four generations are kept</small></div></li>
-      </ul></div></section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>Memory writes</h3></div></header><div class="at-panel-body"><ul class="at-timeline">
-        <li><span class="at-tl-dot">${A.icon("memory")}</span><div class="at-tl-body"><a class="at-tl-link" href="#/memory/backend">Backend wrote checkpoints for T-LIVE-1…5</a><small>live continuity runs · Oct 11 UTC · refused writes are only in the session receipts</small></div></li></ul></div></section>
-      <p class="mx-note">${M().provenance() === "trusted" ? "Knowledge history lives in this machine's store; it is not in git." : "This repository commits the projection and the content store, so knowledge history also travels in git."} Memory travels with the repository only if the project tracks <code>.atlas/memory.jsonl</code>; Orchestra does not commit it.</p></div>`,
+      ${heading("Atlas", "Activity", "What agents read from Atlas, what they saved, and when they were held.")}
+      <div class="at-toolbar"><div class="wf-range">${[["all", "All"], ["reads", "Reads"], ["memory", "Memory"], ["holds", "Holds"], ["code", "Code"]].map(([id, l]) => `<button aria-pressed="${show === id}" data-action="go" data-value="#/activity?show=${id}">${l}${id === "all" ? "" : `<span class="wf-count">${count(id)}</span>`}</button>`).join("")}</div>${A.help("From the receipts Orchestra keeps on each tool call (atlasContext, atlasMemory, atlasResume). Atlas itself keeps no write log.")}</div>
+      <section class="at-panel">${A.seven(list, `act${show}`, (e) => (e.kind === "code" ? `<a class="at-event" href="#/review?tab=changed&commit=${e.sha}"><span class="at-avatar sm">${A.icon("commit")}</span><div class="at-event-main"><span>${A.esc(e.text)}</span><small>${A.esc(e.unit)}</small></div>${A.icon("arrow")}</a>` : A.eventRow(e)), 25) || '<div class="at-band-empty">Nothing recorded yet.</div>'}</section></div>`,
     }
   }
-
-  /* ---------- Settings ---------- */
-  A.views.settings = (state) => {
-    const tab = state.query.tab ?? "territories"
-    const tabs = [["territories", "Territories", "territory"], ["policy", "Write policy", "lock"], ["index", "Index", "tree"], ["store", "Store", "server"]]
+  // The event sheet: one receipt, as sentences, with the plumbing in Technical details.
+  const nextSteps = {
+    "provider-unconfigured": "Atlas is not configured for this project (maestro.atlas), so governed work cannot proceed here; the owner decides.",
+    "artifacts-invalid": "Own artifacts are stale against the current source or their snapshot and must be re-materialized by the owner or a maintainer before governed work can proceed.",
+    "plan-grounding-stale": "The Atlas source changed after this plan revision; call maestro_catalog_context again and record a new plan revision.",
+    "unit-unavailable": "Use exact unit IDs from maestro_catalog_context.",
+  }
+  A.eventSheet = (id) => {
+    const e = A.events().find((x) => x.id === id)
+    if (!e) return ""
+    const who = names[e.who]
+    const c = e.task?.checkpoints.find((k) => k.at === e.at)
     const body = {
-      territories: M().territories().length ? `<section class="at-panel"><header class="at-panel-head"><div><h3>Declared territories</h3><small>From TERRITORY-CATALOG.json, committed and edited by hand. Each gives units an owner and a tier; overlaps resolve deterministically.</small></div>${A.newcap("R4")}${A.btn("Declare territory", "territory", { icon: "plus" })}</header>
-        ${M().territories().map((t) => { const us = M().units().filter((u) => M().territoryOf(u.id) === t); return `<div class="at-item" style="cursor:default">${A.icon("territory")}<div class="at-item-main"><div class="at-item-text">${A.esc(t.name)}</div><div class="at-item-meta"><code>${t.globs.map(A.esc).join(" · ")}</code><span>${us.length} units · ${us.reduce((n, u) => n + u.facts, 0)} facts</span></div></div>${A.agent(t.owner)}${A.tier(t.tier)}</div>` }).join("")}</section>
-        ${(() => { const loose = M().units().filter((u) => !M().territoryOf(u.id)); return loose.length ? `<section class="at-panel"><header class="at-panel-head"><div><h3>Units with no territory</h3><small>Nobody owns these yet.</small></div></header>${loose.map((u) => `<div class="at-item" style="cursor:default">${A.icon("stack")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(u.id)}</code></div><div class="at-item-meta">${u.facts} facts</div></div>${A.btn("Declare…", "territory", { value: u.id })}</div>`).join("")}</section>` : "" })()}` : `<div class="at-callout">${A.icon("info")}<div><strong>No territories declared.</strong> Every path is uncovered, so no fact has an owner and the Awareness <code>terrain</code> facet stays empty. A territory gives a region an owner and a tier.</div>${A.btn("Declare territory", "territory", { primary: true })}</div>
-        <section class="at-panel"><header class="at-panel-head"><div><h3>Suggested from the units</h3><small>Units with the most facts. Declaring a territory gives one or more units an owner and a tier.</small></div></header>
-        ${M().areas().slice(0, 8).map((a) => `<div class="at-item" style="cursor:default">${A.icon("territory")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(a.id)}/**</code></div><div class="at-item-meta">${a.facts} facts · ${a.drifted} drifted · ${M().dependents(a.id).length} files outside depend on it</div></div>${A.btn("Declare…", "territory", { value: a.id })}</div>`).join("")}</section>`,
-      policy: `<section class="at-panel"><header class="at-panel-head"><div><h3>Who may write each scope</h3><small>From <code>.atlas/policy.json</code>, versioned with the repository. An unlisted scope is closed to everyone.</small></div></header>
-        ${Object.entries(R().policy).map(([scope, actors]) => `<div class="at-item" style="cursor:default">${A.icon("lock")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(scope)}</code></div><div class="at-item-meta">${scope === "atlas:mined" ? "Where genesis files mined facts; holding it lets the promote door write" : "Knowledge scope"}</div></div>${actors.map((a) => A.agent(a)).join("")}</div>`).join("")}</section>
-        <p class="mx-note">This policy governs knowledge writes only; memory writes never consult it. A missing or malformed file closes every scope. The writer's identity is whatever the environment declares (<code>ATLAS_ACTOR</code> or the git e-mail), not authenticated; truth is protected by the grounding gate, not by this list. It also carries <code>t0Heuristic.keywords</code> (${(R().t0Keywords ?? []).map((k) => `<code>${A.esc(k)}</code>`).join(", ")}), which <code>atlas init</code> matches against territory names, and no <code>authz.anchors</code> map, so no scope is bound to an anchor prefix.</p>`,
-      index: `<section class="at-panel"><div class="at-panel-body"><dl class="at-kv wide">
-        <dt>Built at</dt><dd><code>${R().builtAt}</code> <span class="at-pill warm">${A.icon("drift")}code is at ${R().head}</span></dd>
-        <dt>Spatial axis</dt><dd>repository → package → module → file${" "}<small>· anchors are file-level in this store</small></dd>
-        <dt>Dependency axis</dt><dd>${R().scip ? `<span class="at-state good">${A.icon("checkc")}on</span> from <code>.atlas/index.scip</code>` : '<span class="at-state">off — no index.scip</span>'}</dd>
-        <dt>Territory axis</dt><dd>${M().territories().length ? `${M().territories().length} territories <span class="at-pill">example</span>` : `<span class="at-state">${A.icon("minusc")}empty</span> no territories declared`}</dd>
-        <dt>Rebuild</dt><dd><code>scip-typescript index --output .atlas/index.scip</code><br><small>Atlas does not run the indexer itself; it reads the file it produces.</small></dd></dl></div></section>`,
-      store: `<section class="at-panel"><div class="at-panel-body"><dl class="at-kv wide">
-        <dt>Location</dt><dd><code>.atlas/</code> in the project root. This one is the standalone Atlas repository at <code>${R().head}</code>; Orchestra's own worktree has no <code>.atlas/</code></dd>
-        <dt>In git</dt><dd>${(() => { const t = R().tracked ?? {}; return [t.policy ? "the write policy" : "", t.projection ? "the projection" : "", t.cas ? `${A.num(t.cas)} content objects` : "", t.memory ? "memory.jsonl" : ""].filter(Boolean).join(", ") || "nothing" })()}${R().tracked?.example ? ' <span class="at-pill">example</span>' : ""}</dd>
-        <dt>Provenance</dt><dd>${{ trusted: `<span class="at-state good">${A.icon("checkc")}trusted</span> nothing durable is tracked by git, so reads and writes run normally`, "tracked-provable": `<span class="at-state warm">${A.icon("warning")}tracked</span> the projection or the content store is tracked by git: reads serve only sealed facts that re-prove (${R().sealed} sealed here) and every write is refused. Untrack <code>.atlas/projection*.json</code> and <code>.atlas/cas/</code> to curate.`, "tracked-staging": `<span class="at-state bad">${A.icon("xc")}refused</span> staging is tracked by git: every read and write refuses as <code>untrusted-store</code>.` }[M().provenance()]}</dd>
-        <dt>Knowledge</dt><dd>generation ${R().gen} · ${A.num(M().stats().facts)} facts · ${A.num(R().casObjects)} stored objects</dd>
-        <dt>Staging</dt><dd>generation ${R().stagingGen} · 660 rows (${M().stats().candidates} not promoted)</dd>
-        <dt>Bytes</dt><dd><code>doctor cas</code>: every object re-hashes to its name; it also counts orphans</dd>
-        <dt>Proofs</dt><dd><code>verify-store</code>: ${R().sealed} facts sealed <code>proven</code>, nothing to re-prove</dd>
-        <dt>Export</dt><dd>${A.btn("Export content store", "toast", { value: "Writes atlas-okf.json with the content store only (no memory.jsonl). Import works only into an empty target and does not rebuild current knowledge.", icon: "download" })}</dd></dl></div></section>`,
-    }[tab]
+      read: () => {
+        const snap = M().snapshot.packs[e.target]
+        return `<p class="at-lead">${e.action === "catalog" ? `${who} got the list of published units and territories.` : `${who} got the published briefing for <a class="mx-link" href="#/unit/${encodeURIComponent(e.target)}">${A.esc(e.target)}</a>: complete and up to date.`}</p>
+          ${snap ? snap.invariants.map((i) => `<div class="at-linkrow static">${A.tier(i.tier)}<span>${A.esc(i.claim)}</span></div>`).join("") : ""}
+          ${e.research ? `<p class="mx-note">${A.icon("sparkle")} Kept as a research source for ${who}'s findings.</p>` : ""}`
+      },
+      memory: () => (e.ok ? `<p class="at-lead">${who} saved where it stopped on <b>${A.esc(e.unit)}</b>.</p><div class="at-linkrow static"><span>${A.esc(c?.entry.stoppedAt ?? "")}</span></div>` : `<p class="at-lead">Not saved: ${A.esc(A.refusal(e.refusal))}.</p><p class="mx-note">${A.esc(e.reason ?? "")}</p>`),
+      resume: () => `<p class="at-lead">When ${who} was resumed on <b>${A.esc(e.unit)}</b>, Atlas handed back its latest saved checkpoint, once.</p>`,
+      hold: () => `<p class="at-lead">${who} was held: ${A.esc(A.refusal(e.reason))}.</p><dl class="at-kv"><dt>Next step</dt><dd>${A.esc(nextSteps[e.reason] ?? "Atlas suggests no step for this hold; the evidence below says what it saw.")}</dd><dt>Evidence</dt><dd>${A.esc((e.task?.checkpoints.find((k) => (k.entry.failedWith ?? []).length)?.entry.failedWith ?? [])[0] ?? "")}</dd></dl>`,
+    }[e.kind]()
+    const tech = A.tech([
+      ["Receipt", { read: "atlasContext", memory: "atlasMemory", resume: "atlasResume", hold: "atlasContext (held)" }[e.kind]],
+      e.kind === "memory" ? ["outcome · refusal", `${e.ok ? "admitted" : "refused"}${e.refusal ? ` · ${A.esc(e.refusal)}` : ""}`] : null,
+      e.kind === "hold" ? ["reason", `<code>${A.esc(e.reason)}</code>`] : null,
+      e.kind === "resume" ? ["residency", A.esc(e.residency ?? "admitted")] : null,
+      e.ref ? ["ref", A.hashv(typeof e.ref === "string" ? e.ref : e.ref.eventId)] : null,
+      ["binding", `member ${A.esc(e.who)} · session ${A.esc(e.task?.seatSession ?? "—")}`],
+    ])
+    return `<form method="dialog"><header class="mx-dialog-head"><div><h2>${A.esc(e.text)}</h2><p>${time(e.at)}${e.example ? " · example" : ""}</p></div></header><div class="mx-dialog-body">${body}${tech}</div>
+      <footer class="mx-dialog-foot">${e.task ? `<a class="mx-btn" href="#/memory/${e.who}/task/${encodeURIComponent(e.unit)}">Open task</a>` : ""}<span class="grow"></span><button class="mx-btn primary" value="ok">Done</button></footer></form>`
+  }
+
+  /* ---------- Health: is the store sound? ---------- */
+  A.views.health = () => {
+    const h = M().health()
+    const prov = { trusted: ["good", "Local: reads and writes work"], "tracked-provable": ["warm", "In git, read-only: Atlas serves only machine-proven facts"], "tracked-staging": ["bad", "In git, locked: Atlas refuses everything"] }[h.provenance]
+    const row = (id, tone, title, line, body) => `<details class="at-acc" data-acc="health-${id}"><summary><span class="at-sdot ${tone}"></span><span class="at-acc-t"><strong>${title}</strong><small>${line}</small></span>${A.icon("chev", "at-acc-chev")}</summary><div class="at-acc-body">${body}</div></details>`
+    const kv = (rows) => `<dl class="at-kv wide">${rows.map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join("")}</dl>`
+    const healthy = h.provenance === "trusted" && h.cas.sound
     return {
-      crumbs: [["Atlas", "#/overview"], ["Settings"], [tabs.find((t) => t[0] === tab)[1]]],
-      html: `<div class="at-page narrow"><div class="mx-heading"><div><div class="mx-eyebrow">Atlas · Settings</div><h1>Settings</h1><p>Who owns what, who may write, and where the index and the store stand.</p></div></div>
-      <div class="wf-tabs" role="tablist">${tabs.map(([id, label, glyph]) => `<button class="wf-tab" role="tab" aria-selected="${tab === id}" data-action="go" data-value="#/settings?tab=${id}">${A.icon(glyph)}${label}</button>`).join("")}</div>${body}</div>`,
+      crumbs: [["Atlas", "#/overview"], ["Health"]],
+      html: `<div class="at-page narrow">
+      ${heading("Atlas", "Health", healthy ? "The store is sound." : h.cas.sound ? "The files are sound, but this store is in git, so Atlas only reads it." : "Some stored objects are missing.")}
+      ${row("access", prov[0], "Store access", prov[1], `${kv([["Tracked by git", [R().tracked?.projection ? "projection" : "", R().tracked?.cas ? `${A.num(R().tracked.cas)} stored objects` : "", R().tracked?.policy ? "write policy" : ""].filter(Boolean).join(", ") || "nothing durable"], ["Machine-proven facts", `${h.proofs.sealedProven} of ${A.num(M().facts.length)}`]])}
+        ${h.provenance === "trusted" ? "" : `<p class="mx-note">To curate here, stop tracking <code>.atlas/projection*.json</code> and <code>.atlas/cas/</code>. Atlas's own diagnostics refuse to read this store; the numbers on this page come straight from its files.</p>`}`)}
+      ${row("cas", h.cas.sound ? "good" : "bad", "Stored objects", `${h.cas.sound ? "Sound" : "Not sound"} · ${A.num(h.cas.objects)} objects`, kv([["Used by current facts", A.num(h.cas.referenced)], ["Missing", h.cas.missing], ["Corrupt · unreadable", `${h.cas.corrupt} · ${h.cas.unreadable}`], ["Unused", `${A.num(h.cas.orphan)} ${A.help("Staging rows and the miner's reasoning. Objects are never deleted, so unused is harmless.")}`]]) + A.tech([["Command", "<code>atlas doctor cas</code>"]]))}
+      ${row("proofs", "good", "Proofs", h.proofs.sealedProven ? `${h.proofs.reProven} of ${h.proofs.sealedProven} re-proven` : "No machine-proven facts, nothing to re-check", kv([["Machine-proven", h.proofs.sealedProven], ["Re-proven · broken · unverifiable · dangling", `${h.proofs.reProven} · ${h.proofs.broken} · ${h.proofs.unverifiable} · ${h.proofs.dangling}`]]) + A.tech([["Command", "<code>atlas verify-store</code> · exits 2 when any proof does not replay"]]))}
+      ${row("index", h.index.scip ? "good" : "", "Code index", h.index.scip ? `Present · ${h.index.configured.map((c) => `${A.num(c.files)} .${c.lang}`).join(", ")}` : "Not built", `${h.index.configured.map((c) => `<div class="at-linkrow static">${A.icon("checkc")}<span>.${c.lang} · ${A.num(c.files)} files</span><span class="grow"></span><small>${c.tool} ${c.version}</small></div>`).join("")}
+        ${h.index.holes.map((c) => `<div class="at-linkrow static">${A.icon("minusc")}<span>.${c.lang} · ${A.num(c.files)} files</span><span class="grow"></span><small>not indexable</small></div>`).join("")}${A.tech([["Command", "<code>atlas doctor index</code>"], ["Rebuild", "<code>scip-typescript index --output .atlas/index.scip</code> · Atlas reads the file, it does not run the indexer"]])}`)}
+      <div class="at-section-gap"></div>
+      ${A.acc("health-versions", "history", "Versions", "Each write publishes a version; the last four are kept", `${h.generations.length} files`, h.generations.map((g) => `<div class="at-linkrow static">${A.icon("fact")}<code class="at-mono">${A.esc(g)}</code></div>`).join("") + `<p class="at-stew-intro">Atlas keeps no write log: no author, no time. Each fact keeps the commit it was accepted at.</p>`)}
+      ${A.acc("health-archive", "stack", "Archive", "Every version of every fact stays addressable", A.num(M().facts.length), `<p class="at-stew-intro">${A.num(M().facts.length)} current facts, none replaced by a newer version.</p>${A.tech([["Command", "<code>atlas doctor archive [scope]</code> · then <code>atlas node &lt;address&gt;</code>"]])}`)}
+      ${A.acc("health-hot", "bolt", "Hot set", "How many facts the store serves", A.num(h.hotSet), `<p class="at-stew-intro">${A.num(h.hotSet)} current facts. Compare against a budget with <code>atlas doctor hotset &lt;budget&gt;</code>.</p>`)}
+      ${A.acc("health-cal", "scale", "Calibration", "What agents actually used", "Not recorded", `<p class="at-stew-intro">Nothing in Atlas records which facts agents used yet, so injection budgets and off-Atlas reads show zero. ${A.help("atlas budget · atlas territories (threshold 0.3)")}</p>`)}
+      </div>`,
+    }
+  }
+
+  /* ---------- Settings: who is connected, who owns what, who may write ---------- */
+  A.views.settings = (state) => {
+    const tab = state.query.tab ?? "connection"
+    const illus = !!R().illustrated
+    const snap = M().snapshot
+    const connection = `<section class="at-panel"><div class="at-panel-body"><dl class="at-kv wide">
+        <dt>Orchestra</dt><dd>${illus ? `Connected to <code>modules/atlas</code> <span class="at-pill">example</span>` : `<span class="at-state">${A.icon("minusc")}Not configured</span> agents' Atlas reads hold until <code>maestro.atlas</code> is set`}</dd>
+        <dt>Members with memory</dt><dd>${["backend", "jimmy", "archie"].map(A.agent).join("")} <small>Maestro: defined, not bound</small></dd>
+        <dt>Unit catalog</dt><dd>${snap.catalog ? `Present <span class="at-pill">example</span>` : `<span class="at-state warm">${A.icon("warning")}Missing</span> reads would hold until <code>TERRITORY-CATALOG.json</code> is committed`}</dd></dl></div></section>
+      <section class="at-panel"><header class="at-panel-head"><div><h3>Published to agents</h3><small>Agents read these versions, not the live store</small></div>${A.btn("Republish", "republish", { cap: "R7" })}</header>
+        ${snap.units.map((u) => `<a class="at-linkrow" href="#/unit/${encodeURIComponent(u)}">${A.icon("stack")}<code class="at-mono">${A.esc(u)}</code><span class="grow"></span>${snap.packs[u] ? `<small>${snap.packs[u].tokenEstimate} characters · complete</small>` : '<span class="at-pill">example</span>'}</a>`).join("")}
+        ${A.tech([["Snapshot", `genesis-own-v1 · revision ${snap.revision} · OWN-SNAPSHOT.json`], ["Config", `<code>"maestro": { "atlas": { "projectID": "&lt;project id&gt;", "directory": "modules/atlas" } }</code>`], ["Served while", "the snapshot's source files are byte-identical and its revision is an ancestor of HEAD"]])}</section>`
+    const territories = M().territories().length
+      ? `<section class="at-panel"><header class="at-panel-head"><div><h3>Territories</h3><small>Each gives units an owner and a tier</small></div>${A.btn("Declare", "territory", { icon: "plus", cap: "R4" })}</header>
+        ${M().territories().map((t) => { const us = M().units().filter((u) => M().territoryOf(u.id) === t); return `<div class="at-linkrow static">${A.icon("territory")}<span>${A.esc(t.name)}</span><small>${plural(us.length, "unit")}</small><span class="grow"></span>${A.agent(t.owner)}${A.tier(t.tier)}</div>` }).join("")}
+        ${A.tech([["Globs", M().territories().map((t) => `${A.esc(t.name)}: <code>${t.globs.map(A.esc).join(" ")}</code>`).join("<br>")], ["File", "TERRITORY-CATALOG.json, committed and edited by hand"]])}</section>
+        ${(() => { const loose = M().units().filter((u) => !M().territoryOf(u.id)); return loose.length ? A.acc("set-loose", "stack", "Units with no territory", "Nobody owns these yet", `${loose.length}`, A.seven(loose, "loose", (u) => `<div class="at-linkrow static">${A.icon("stack")}<code class="at-mono">${A.esc(u.id)}</code><span class="grow"></span>${A.btn("Declare…", "territory", { value: u.id })}</div>`)) : "" })()}`
+      : `<div class="at-clear">${A.icon("territory")}<strong>No territories yet</strong><p>A territory gives a group of units an owner and a tier.</p>${A.btn("Declare territory", "territory", { primary: true, cap: "R4" })}</div>`
+    const permissions = `<section class="at-panel"><header class="at-panel-head"><div><h3>Who may write</h3><small>A group nobody holds is closed</small></div></header>
+        ${Object.entries(R().policy).map(([scope, actors]) => `<div class="at-linkrow static">${A.icon("lock")}<code class="at-mono">${A.esc(scope)}</code><small>${scope === "atlas:mined" ? "mined facts" : ""}</small><span class="grow"></span>${actors.map(A.agent).join("")}</div>`).join("")}
+        ${A.tech([["File", "<code>.atlas/policy.json</code>, edited by hand; a missing or broken file closes every group"], ["Writing as", `<code>ATLAS_ACTOR</code>, else the git e-mail; not authenticated`], ["Core keywords", (R().t0Keywords ?? []).map((k) => `<code>${A.esc(k)}</code>`).join(", ")], ["Anchor binding", "none: no write group is bound to an anchor prefix (authz.anchors)"]])}</section>`
+    const store = `<section class="at-panel"><div class="at-panel-body"><dl class="at-kv wide">
+        <dt>Location</dt><dd><code>.atlas/</code> of the standalone Atlas repository</dd>
+        <dt>Access</dt><dd>${M().provenance() === "trusted" ? "Local: reads and writes work" : `<a class="mx-link" href="#/health">In git, read-only</a>`}</dd>
+        <dt>Facts · mined</dt><dd>${A.num(M().facts.length)} · ${A.num(R().candidates.length)} waiting</dd></dl>
+        ${A.tech([["Move store", `${A.btn("Export", "toast", { value: "Writes atlas-okf.json with the stored objects only, not memory or the current version.", icon: "download" })} · import works only into an empty folder`], ["Versions", `projection ${R().gen} · staging ${R().stagingGen}`]])}</div></section>`
+    return {
+      crumbs: [["Atlas", "#/overview"], ["Settings"]],
+      html: `<div class="at-page narrow">${heading("Atlas", "Settings", "Who is connected, who owns what, and who may write.")}
+      ${tabs("#/settings?tab=", [["connection", "Connection", "server"], ["territories", "Territories", "territory"], ["permissions", "Permissions", "lock"], ["store", "Store", "stack"]], tab)}
+      ${{ connection, territories, permissions, store }[tab]}</div>`,
     }
   }
 
@@ -141,39 +184,30 @@
     return {
       crumbs: [["Agents", "#/agents/backend"], [name]],
       html: `<div class="at-page narrow"><div class="at-agent-head"><span class="at-avatar">${name[0]}</span><div><h1>${name}</h1><p>Agent profile (existing Agents chapter)</p></div></div>
-        <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("memory")}Memory</h3><small>${mem?.bound ? "Lives in Atlas, with the rest of what agents know" : "This agent keeps no Atlas memory in Orchestra"}</small></div>${mem?.bound ? A.btn("Open in Atlas", "go", { value: `#/memory/${id}`, primary: true, icon: "arrow" }) : ""}</header>
-        ${mem?.bound ? `<div class="at-panel-body"><div class="at-two"><div><div class="mx-eyebrow">Records</div><strong>${mem.tasks.length + mem.prs.length}</strong></div><div><div class="mx-eyebrow">Project rules in its header</div><strong>${M().header(id).injected.length} of 12</strong></div></div></div>` : ""}</section></div>`,
+        <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("memory")}Memory</h3><small>${mem?.bound ? "Lives in Atlas" : "No Atlas memory in Orchestra"}</small></div>${mem?.bound ? A.btn("Open in Atlas", "go", { value: `#/memory/${id}`, primary: true, icon: "arrow" }) : ""}</header>
+        ${mem?.bound ? `<div class="at-panel-body"><div class="at-two"><div><div class="mx-eyebrow">Tasks remembered</div><strong>${(A.spawns ?? []).filter((t) => t.member === id).length}</strong></div><div><div class="mx-eyebrow">Rules it carries</div><strong>${M().header(id).injected.length}</strong></div></div></div>` : ""}</section></div>`,
     }
   }
 
-  /* ---------- Chat: what the agent used from Atlas ---------- */
-  A.views.chat = (state) => {
-    const open = state.query.used === "1"
-    return {
-      flush: true,
-      crumbs: [["Chat"], ["Counter decrement"]],
-      html: `<div class="at-session"><div class="at-tabs-strip"><span class="at-sess-tab">${A.icon("chat")}Counter decrement <code>main</code></span></div>
+  /* ---------- Chat: one chip per turn opens what the agent got ---------- */
+  A.views.chat = () => ({
+    flush: true,
+    crumbs: [["Chat"], ["Counter decrement"]],
+    html: `<div class="at-session"><div class="at-tabs-strip"><span class="at-sess-tab">${A.icon("chat")}Counter decrement <code>main</code></span></div>
       <div class="at-transcript">
         <div class="at-turn user">Add decrement() to Counter, clamped at zero. Stop after phase 1.</div>
-        <div class="at-turn"><div class="at-turn-head">${A.agent("backend")}<span>example turn</span><span class="grow"></span><span class="at-pill" data-tip="The live runs never called atlas_context; this turn shows the receipt shapes the app would render.">example</span></div>
-          <div class="at-tool">${A.icon("atlas")}<code>atlas_context</code><span>unit</span><a class="at-chip" href="#/unit/packages%2Fgenesis">${A.icon("stack")}own · packages/genesis<span class="st">complete · FRESH</span></a></div>
-          <p>Phase 1 is done: <code class="at-mono">decrement()</code> lowers the value by one and never goes below zero. I stopped at the phase boundary as the packet asked.</p>
-          <div class="at-tool">${A.icon("memory")}<code>atlas_memory_emit</code><span>task T-LIVE-1</span><a class="at-chip memory" href="#/memory/backend">${A.icon("memory")}memory · admitted<span class="st">task T-LIVE-1</span></a></div>
-          <button class="at-used" data-action="go" data-value="#/chat${open ? "" : "?used=1"}" aria-expanded="${open}">${A.icon("atlas")}<span>Atlas in this turn</span>${A.icon("chev", open ? "flip" : "")}</button>
-          ${open ? `<div class="at-used-body"><dl class="at-kv wide"><dt>Header</dt><dd>added to every model request: Awareness, Orientation and Backend's rules</dd><dt>Read</dt><dd><code>atlasContext</code> receipt · unit <a class="mx-link" href="#/unit/packages%2Fgenesis">packages/genesis</a> · coverage complete, graph coverage, FRESH · content and receipt hashes</dd><dt>Wrote</dt><dd><code>atlasMemory</code> receipt · op emit · outcome admitted · ref eventId (admitted implies the secret scan passed)</dd></dl></div>` : ""}
-        </div></div>
+        <div class="at-turn"><div class="at-turn-head">${A.agent("backend")}<span class="grow"></span><a class="at-chip" href="#/activity?show=memory">${A.icon("atlas")}Used Atlas · 1</a></div>
+          <p>Phase 1 is done: <code class="at-mono">decrement()</code> lowers the value by one and never goes below zero. I stopped at the phase boundary as the packet asked.</p></div></div>
       <div class="at-composer">Ask anything, / for commands, @ for context…<div class="row"><span class="grow"></span><span>Claude Opus</span></div></div></div>`,
-    }
-  }
+  })
 
   /* ---------- HOLD: Atlas not connected to this project ---------- */
   A.views.held = () => ({
     crumbs: [["Atlas"]],
     html: `<div class="at-page narrow"><div class="at-held"><span class="mx-mark">${A.icon("atlas")}</span><h2>Atlas isn't connected to this project</h2>
-      <span class="at-pill warm">${A.icon("warning")}provider-unconfigured</span>
-      <p>Atlas is not configured for this project (<code class="at-mono">maestro.atlas</code>), so governed work cannot proceed here; the owner decides.</p>
+      <p>${A.esc(nextSteps["provider-unconfigured"])}</p>
       ${A.code(".orchestra/orchestra.jsonc", 1, ["{", "  \"maestro\": {", "    \"atlas\": { \"projectID\": \"<this project's id>\", \"directory\": \"modules/atlas\" }", "  }", "}"], { highlight: [3] })}
-      <p class="mx-note">The directory holds the committed <code>OWN-SNAPSHOT.json</code> and <code>TERRITORY-CATALOG.json</code>. The catalog does not exist yet, so a connected project would still hold until one is committed. Other holds you may meet: <code>artifacts-invalid</code> (snapshot source files changed), <code>anchor-source-drift</code> (a plan's pinned unit changed), <code>plan-grounding-stale</code>, <code>context-empty</code>.</p>
+      <p class="mx-note">The folder holds the published briefings and the unit catalog.</p>
       <div style="display:flex;gap:8px;justify-content:center">${A.btn("Copy", "copy", { icon: "copy", value: '"maestro": { "atlas": { "projectID": "<this project id>", "directory": "modules/atlas" } }' })}${A.btn("Connect", "state", { value: "ready", primary: true })}</div></div></div>`,
   })
 })(window.Atlas)

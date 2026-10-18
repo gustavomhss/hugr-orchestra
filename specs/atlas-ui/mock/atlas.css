@@ -801,3 +801,75 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-illus{display:flex;align-items:center;gap:10px;margin:0 auto 14px;max-inline-size:1080px;padding:8px 12px;border:1px dashed var(--mx-line);border-radius:8px;font-size:12.5px;color:var(--mx-dim)}
 .at-illus>span{flex:1}
 .at-callout.warm{border-color:var(--wf-warm-line)}
+
+/* ---------- v4: one job per screen (specs/atlas-ui/DESIGN.md) ---------- */
+.at-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin-block-end: 20px; }
+.at-tile { display: flex; flex-direction: column; gap: 6px; padding: 16px 18px; border: 1px solid var(--mx-line); border-radius: 12px; background: var(--mx-soft); color: inherit; text-decoration: none; transition: border-color .15s; }
+.at-tile:hover { border-color: var(--mx-dim); }
+.at-tile.attn { border-color: var(--wf-warm-line); }
+.at-tile-label { display: flex; align-items: center; justify-content: space-between; font-size: 11.5px; color: var(--mx-dim); }
+.at-tile-label .wf-ic { inline-size: 12px; block-size: 12px; opacity: .6; }
+.at-tile b { font-size: 26px; font-weight: 600; letter-spacing: -.01em; }
+.at-tile b small { font-size: 13px; font-weight: 400; color: var(--mx-dim); }
+.at-tile > small { font-size: 12px; color: var(--mx-dim); }
+@media (max-width: 760px) { .at-tiles { grid-template-columns: 1fr; } }
+.at-sdot { display: inline-block; inline-size: 7px; block-size: 7px; border-radius: 50%; background: var(--mx-dim); flex: none; }
+.at-sdot.good { background: var(--mx-good); }
+.at-sdot.warm { background: var(--mx-warm); }
+.at-sdot.bad { background: #e5484d; }
+.at-help { display: inline-grid; place-items: center; inline-size: 16px; block-size: 16px; margin-inline-start: 4px; padding: 0; border: 1px solid var(--mx-line); border-radius: 50%; background: none; color: var(--mx-dim); font-size: 10px; line-height: 1; cursor: help; vertical-align: middle; }
+.at-newdot { display: inline-block; inline-size: 6px; block-size: 6px; margin-inline-start: 6px; border-radius: 50%; background: var(--mx-warm); vertical-align: middle; }
+.at-hashv { font-size: 11.5px; color: var(--mx-dim); }
+.at-meta-file { color: var(--mx-dim); }
+.at-tier-chip.ex, .at-origin.ex { border-style: dashed; }
+.at-linkrow.static { cursor: default; }
+.at-subline { font-size: 12.5px; color: var(--mx-dim); }
+.at-section-gap { block-size: 14px; }
+.at-avatar.sm { inline-size: 26px; block-size: 26px; font-size: 11.5px; flex: none; }
+.at-avatar.sm .wf-ic { inline-size: 13px; block-size: 13px; }
+.at-event { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border-block-end: 1px solid var(--mx-line); color: inherit; text-decoration: none; cursor: pointer; }
+.at-event:last-child { border-block-end: 0; }
+.at-event:hover, .at-event:focus-visible { background: var(--mx-soft); }
+.at-event-main { flex: 1; display: flex; flex-direction: column; gap: 2px; min-inline-size: 0; font-size: 13px; }
+.at-event-main small { color: var(--mx-dim); font-size: 11.5px; }
+.at-outcome { font-size: 11.5px; color: var(--mx-dim); white-space: nowrap; }
+.at-outcome.good { color: var(--mx-good); }
+.at-outcome.bad { color: #e5484d; }
+.at-banner { display: flex; align-items: center; gap: 10px; margin: 0 auto 14px; max-inline-size: 1080px; padding: 9px 12px; border: 1px solid var(--wf-warm-line); border-radius: 10px; font-size: 12.5px; }
+.at-banner > span { flex: 1; }
+.at-banner .wf-ic { color: var(--mx-warm); }
+.context-footer a.warm { color: var(--mx-warm); }
+.at-checks-strip { display: flex; flex-wrap: wrap; gap: 6px; margin-block: 12px 4px; }
+.at-check { display: inline-flex; align-items: center; gap: 5px; padding: 4px 9px; border: 1px solid var(--mx-line); border-radius: 999px; font-size: 11.5px; color: var(--mx-dim); }
+.at-check .wf-ic { inline-size: 12px; block-size: 12px; }
+.at-check.good { color: var(--mx-good); }
+.at-check.bad { color: #e5484d; border-color: rgba(229, 72, 77, .4); }
+.at-check.idle { opacity: .55; }
+.at-result-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-block-end: 1px solid var(--mx-line); font-size: 13px; }
+.at-result-row.good .wf-ic { color: var(--mx-good); }
+.at-result-row.bad .wf-ic { color: #e5484d; }
+.at-result-group { border-block-end: 1px solid var(--mx-line); }
+.at-result-group > summary { display: flex; align-items: center; gap: 10px; padding: 10px 0; list-style: none; cursor: pointer; font-size: 13px; }
+.at-result-group > summary::-webkit-details-marker { display: none; }
+.at-result-group > summary .wf-ic:first-child { color: #e5484d; }
+.at-coverage { display: flex; gap: 2px; block-size: 10px; margin-block: 14px 8px; border-radius: 5px; overflow: hidden; }
+.at-coverage span { background: var(--mx-line); }
+.at-coverage .good { background: var(--mx-good); }
+.at-coverage .warm { background: var(--mx-warm); }
+.at-coverage .muted { background: var(--mx-soft); }
+.at-coverage-legend { display: flex; flex-wrap: wrap; gap: 14px; font-size: 12px; color: var(--mx-dim); }
+.at-coverage-legend b { color: var(--mx-text, inherit); font-weight: 600; }
+.ins-acc { border-block-start: 1px solid var(--mx-line); }
+.ins-acc > summary { display: flex; align-items: center; gap: 8px; padding: 11px 0; list-style: none; cursor: pointer; font-size: 12.5px; font-weight: 500; }
+.ins-acc > summary::-webkit-details-marker { display: none; }
+.ins-acc > summary .wf-ic { inline-size: 12px; block-size: 12px; transform: rotate(-90deg); transition: transform .15s; }
+.ins-acc[open] > summary .wf-ic { transform: none; }
+.ins-acc > summary .at-state { margin-inline-start: auto; }
+.ins-acc-body { padding-block-end: 12px; }
+.ins-acc-body h5 { margin: 10px 0 6px; font-size: 11px; font-weight: 500; color: var(--mx-dim); text-transform: uppercase; letter-spacing: .04em; }
+.ins-sub { margin: 0 0 10px; font-size: 12.5px; }
+.ins-meta { font-size: 12px; color: var(--mx-dim); }
+.ins-note { display: flex; align-items: center; gap: 8px; }
+.at-foot-note { margin-inline-end: auto; }
+.at-facets { margin-block: 6px 4px; }
+.at-band-head .wf-count { margin-inline-start: auto; }

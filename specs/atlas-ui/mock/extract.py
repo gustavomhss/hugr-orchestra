@@ -23,10 +23,16 @@ def entry(k, r, promoted):
         'subtree': obj['grounding']['entries'][0]['anchor']['subtreeHash'][:16],
         'obvious': (obj.get('obviousness') or {}).get('rank'), 'promoted': promoted,
         'why': ans[:12] if ans else None,
+        # The CAS fact's own fields (knowledge/src/types.ts GroundedFact): kind, authoring, stored freshness, grounding.
+        'kind': obj.get('kind'), 'authoring': obj.get('authoring'), 'storedFreshness': obj.get('freshness'),
+        'obviousBy': (obj.get('obviousness') or {}).get('by'),
+        'anchor': {k2: obj['grounding']['entries'][0]['anchor'][k2] for k2 in ('kind', 'qualifiedPath')},
+        'slot': r.get('slot'), 'seal': r.get('seal'), 'supersededBy': r.get('supersededBy'), 'sameAs': r.get('sameAs'),
+        'provenance': r.get('provenanceByClaim'),
     }
     old = git('rev-parse', f"{r['derivedAt']}:{f}").strip()
     new = git('rev-parse', f'HEAD:{f}').strip()
-    if promoted and old and new and old != new:
+    if old and new and old != new:
         diff = git('diff', '-U2', r['derivedAt'], 'HEAD', '--', f).splitlines()
         hunks, cur = [], None
         for line in diff:
@@ -70,6 +76,13 @@ data = {
     'tracked': (lambda t: {'projection': any(re.match(r'\.atlas/projection(\.\d+)?\.json$', x) for x in t), 'cas': sum(1 for x in t if x.startswith('.atlas/cas/')),
                            'staging': any(re.match(r'\.atlas/staging(\.\d+)?\.json$', x) for x in t), 'policy': '.atlas/policy.json' in t, 'memory': '.atlas/memory.jsonl' in t})(git('ls-files', '.atlas').splitlines()),
     'sealed': sum(1 for _, n in proj['current'] if n.get('seal') == 'proven'),
+    # doctor cas (adapter-io/src/doctor-source.ts:366-383): referenced = the projection's cas list only.
+    'casAudit': (lambda present, ref: {'objects': len(present), 'referenced': len(ref), 'missing': len(ref - present), 'orphan': len(present - ref)})(
+        {os.path.basename(x) for x in glob.glob(os.path.join(A, 'cas', '*', '*'))}, set(proj['cas'])),
+    'generations': sorted(os.path.basename(x) for x in glob.glob(os.path.join(A, '*.json')) if re.match(r'(projection|staging)(\.\d+)?\.json$', os.path.basename(x))),
+    'abstained': len(proj.get('abstained') or []),
+    # doctor index (adapter-io/src/scip.ts:203-223): tracked files per extension, ts and py have a pinned indexer.
+    'langs': collections.Counter(os.path.splitext(x)[1].lstrip('.') for x in git('ls-files').splitlines() if os.path.splitext(x)[1] in ('.ts', '.tsx', '.js', '.mjs', '.py', '.rs', '.go', '.sh')),
     'facts': facts, 'candidates': candidates, 'reasoning': reasoning,
     'dependents': {k: sorted(v) for k, v in deps.items()}, 'dependentCount': {k: len(v) for k, v in deps.items()},
 }
