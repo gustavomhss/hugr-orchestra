@@ -10,7 +10,7 @@ import { RelayWorkflowTransition } from "@orchestra/core/relay-workflow-transiti
 import { ArsenalCompletion } from "@/maestro/arsenal-completion"
 import { CodeReview } from "@/maestro/code-review"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
-import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requirements } from "../../../relay/test/arm-harness"
+import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requirements } from "../../../../modules/relay/test/arm-harness"
 
 // The continuation of a step held for a code review, on a real two-gate workflow arm with its HMAC ledger: the second
 // gate grades the final cold review. Only the code review is a stand-in; the arm, ledger and transition are real.
