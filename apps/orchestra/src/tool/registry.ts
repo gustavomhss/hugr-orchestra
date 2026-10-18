@@ -62,7 +62,6 @@ import { PluginSdkRuntime } from "@orchestra/core/plugin/sdk-runtime"
 import path from "path"
 import { pathToFileURL } from "url"
 import { Effect, Layer, Context, Schema } from "effect"
-import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Format } from "../format"
 import { InstanceState } from "@/effect/instance-state"
@@ -763,7 +762,9 @@ export const node = LayerNode.make({
     Skill.node,
     Session.node,
     SessionStore.node,
-    BackgroundJob.node, BackgroundProcess.node, SessionStatus.node,
+    BackgroundJob.node,
+    BackgroundProcess.node,
+    SessionStatus.node,
     Provider.node,
     LSP.node,
     Instruction.node,
