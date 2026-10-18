@@ -18,7 +18,7 @@
 //        bun run test:ci app <spec files...> --runner playwright --config <config> [--os ...]
 // Performance config also requires --benchmark-renderer current|legacy.
 // A Python package (requirements-dev.txt and no package.json) runs pytest: -t becomes pytest's -k expression and
-// --timeout does not apply. A package with both, such as packages/relay while its Python oracle remains, runs pytest
+// --timeout does not apply. A package with both, such as modules/relay while its Python oracle remains, runs pytest
 // only when every named test file is a .py file, and bun test otherwise.
 
 import { $ } from "bun"

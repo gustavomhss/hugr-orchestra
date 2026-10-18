@@ -4,7 +4,9 @@
     "script/test-omni-control.ts",
     ".github/actions/omni-binaries/action.yml",
     "script/module-registry.json",
-    "script/toolchain-registry.json"
+    "script/toolchain-registry.json",
+    "packages/*-specialist/skills/**",
+    "modules/specialists/*/skills/**"
   ],
   "globalEnv": ["CI", "ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER", "ORCHESTRA_OMNI_CONTROL"],
   "globalPassThroughEnv": ["CI", "HUGR_OMNI_ADDON", "HUGR_OMNI_SUPERVISOR", "ORCHESTRA_DISABLE_RIPGREP_DOWNLOAD"],
@@ -39,11 +41,11 @@
       "dependsOn": ["^transit"],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/omni/crates/**",
-        "$TURBO_ROOT$/packages/omni/Cargo.toml",
-        "$TURBO_ROOT$/packages/omni/Cargo.lock",
-        "$TURBO_ROOT$/packages/omni/rust-toolchain.toml",
-        "$TURBO_ROOT$/packages/omni/.cargo/**"
+        "$TURBO_ROOT$/native/omni/crates/**",
+        "$TURBO_ROOT$/native/omni/Cargo.toml",
+        "$TURBO_ROOT$/native/omni/Cargo.lock",
+        "$TURBO_ROOT$/native/omni/rust-toolchain.toml",
+        "$TURBO_ROOT$/native/omni/.cargo/**"
       ]
     },
     "orchestra#test": {
@@ -56,7 +58,7 @@
       // Core's tests read these out-of-package CI sources and execute the campaign observation helpers.
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/omni/campaign/**/*.ts",
+        "$TURBO_ROOT$/native/omni/campaign/**/*.ts",
         "$TURBO_ROOT$/script/test-ci-request.ts",
         "$TURBO_ROOT$/script/test-ci-desktop.ts",
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
@@ -71,7 +73,8 @@
       "env": ["PSModuleAnalysisCachePath"]
     },
     "@orchestra/app#test": {
-      "dependsOn": ["transit", "^build"],
+      // Extension: the shell-owned E2E harness consumes the separate web entry.
+      "dependsOn": ["transit", "^build", "@orchestra/web#transit"],
       "outputs": []
     },
     "@orchestra/ui#test": {
@@ -89,7 +92,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts",
         "$TURBO_ROOT$/packages/orchestra/src/maestro/**",
-        "$TURBO_ROOT$/packages/*-specialist/skills/**"
+        "$TURBO_ROOT$/packages/*-specialist/skills/**",
+        "$TURBO_ROOT$/modules/specialists/*/skills/**"
       ],
       "outputs": [],
       // The compiled-CLI suites run only on an Actions runner (GITHUB_ACTIONS=false plus RUNNER_OS) and hand each
@@ -102,6 +106,10 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/script/monolith-inventory.ts",
+        "$TURBO_ROOT$/script/omni-mirror.sh",
+        "$TURBO_ROOT$/script/atlas-baseline.mjs",
+        "$TURBO_ROOT$/foundation/atlas/scripts/git-source-root.mjs",
+        "$TURBO_ROOT$/modules/atlas/scripts/git-source-root.mjs",
         "$TURBO_ROOT$/script/module-registry.json",
         "$TURBO_ROOT$/script/test-ci-package.ts",
         "$TURBO_ROOT$/script/test-ci-location.ts",

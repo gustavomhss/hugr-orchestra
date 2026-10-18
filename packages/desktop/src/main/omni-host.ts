@@ -15,7 +15,7 @@ export const SUPERVISOR = `hugr-omni-supervisor${process.platform === "win32" ? 
 /**
  * A packaged app needs nothing: core's loader finds process.resourcesPath/omni by itself, and HUGR_OMNI_* (CI, a
  * developer) stays its explicit choice. A checkout run (electron-vite dev) injects resources/omni, which predev
- * stages: the bundled loader's own checkout fallback points inside out/, not at packages/omni.
+ * stages: the bundled loader's own checkout fallback points inside out/, not at native/omni.
  */
 export function setup() {
   if (!DesktopOmni.enabled() || app.isPackaged) return

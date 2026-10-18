@@ -12,7 +12,7 @@ import type { ElectronAPI, ServerReadyData } from "../src/preload/types"
 import { appID, desktop, productName } from "./lean-candidate-identity.fixture"
 import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 
-const appRequire = createRequire(path.resolve(desktop, "../app/package.json"))
+const appRequire = createRequire(path.resolve(desktop, "../app-shell/package.json"))
 export const expect = (appRequire("@playwright/test") as typeof import("@playwright/test")).expect
 
 export async function bounded<T>(label: string, task: Promise<T>, ms = 30000): Promise<T> {

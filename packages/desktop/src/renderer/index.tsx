@@ -24,7 +24,7 @@ import { createEffect, createMemo, createResource, createSignal, onCleanup, Show
 import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { t } from "./i18n"
-import { dict } from "../../../app/src/i18n/en"
+import { dict } from "../../../app-shell/src/i18n/en"
 import { openRendererPath } from "./open-path"
 import { listenForDeepLinks } from "./deep-links"
 import { initializationData, recoverRemoteServer } from "./initialization"
@@ -343,7 +343,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   const [recovery] = createResource(
     () => !sidecar.loading && !defaultServer.loading && sidecar.error !== undefined,
     async () => {
-      const { checkServerHealth } = await import("../../../app/src/utils/server-health")
+      const { checkServerHealth } = await import("../../../app-shell/src/utils/server-health")
       const remote = await recoverRemoteServer(
         await platform.storage?.("orchestra.global.dat").getItem("server") ?? null,
         defaultServer.latest,

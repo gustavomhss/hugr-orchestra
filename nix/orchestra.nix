@@ -55,8 +55,12 @@ stdenv.mkDerivation (finalAttrs: {
   configurePhase = ''
     runHook preConfigure
     cp -R ${finalAttrs.node_modules}/. .
-    chmod -R u+w node_modules packages/*/node_modules
-    patchShebangs node_modules packages/*/node_modules
+    test -d node_modules
+    for directory in node_modules packages/*/node_modules packages/*/*/node_modules apps/*/node_modules modules/*/node_modules modules/*/*/node_modules tooling/*/node_modules; do
+      test -d "$directory" || continue
+      chmod -R u+w "$directory"
+      patchShebangs "$directory"
+    done
     export BUN_INSTALL_CACHE_DIR=$(mktemp -d)
     # Same host-binding repair as the desktop: the CLI bundles tree-sitter bindings beside its binary.
     python3 -B ${./scripts/repair-host-prebuilds.py} "$PWD" '${stdenv.hostPlatform.system}' ${nodejs} \

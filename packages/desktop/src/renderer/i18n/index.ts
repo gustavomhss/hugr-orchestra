@@ -3,7 +3,7 @@ import {
   DESKTOP_NATIVE_LOCALES,
   detectDesktopNativeLocale,
   type DesktopNativeLocale,
-} from "../../../../app/src/i18n/desktop-native"
+} from "../../../../app-shell/src/i18n/desktop-native"
 
 import { dict as desktopEn } from "./en"
 import { dict as desktopZh } from "./zh"

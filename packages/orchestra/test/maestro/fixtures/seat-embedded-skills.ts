@@ -3,7 +3,7 @@ import { plugin } from "bun"
 import fs from "node:fs/promises"
 import path from "node:path"
 
-const source = path.resolve(import.meta.dir, "../../../../backend-specialist/skills")
+const source = path.resolve(import.meta.dir, "../../../../../modules/specialists/backend/skills")
 const { seatSkillsModule } = await import("../../../script/seat-skills")
 const contents = await seatSkillsModule()
 

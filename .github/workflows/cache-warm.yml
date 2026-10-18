@@ -50,10 +50,10 @@ jobs:
 
       # The CLI's native Windows artifact controls compile with `rustup run 1.98.0` (packages/core/src/
       # artifact-native-windows.ts). The omni artifact above skips cargo, so nothing else installs the toolchain
-      # pinned by packages/omni/rust-toolchain.toml on this leg.
+      # pinned by native/omni/rust-toolchain.toml on this leg.
       - name: Rust toolchain (rust-toolchain.toml)
         if: runner.os == 'Windows'
-        working-directory: packages/omni
+        working-directory: native/omni
         run: rustup show active-toolchain || rustup toolchain install
 
       # The only writer of the ripgrep cache that test.yml and test-ci.yml restore.
@@ -78,7 +78,7 @@ jobs:
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install chromium
 
       # The only writer of the Turbo cache that test.yml (unit-rest) and typecheck.yml restore.
@@ -97,11 +97,11 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: packages/relay/requirements-dev.txt
+          cache-dependency-path: modules/relay/requirements-dev.txt
 
       - name: Warm Relay pip cache
         if: runner.os == 'Linux'
-        run: python -m pip install -r packages/relay/requirements-dev.txt
+        run: python -m pip install -r modules/relay/requirements-dev.txt
 
       - name: Warm typecheck
         if: runner.os == 'Linux'
