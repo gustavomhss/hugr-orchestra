@@ -1,5 +1,6 @@
 // The omni positive control (D-L1), preloaded by the bunfig.toml of every package whose tests spawn through omni
-// (core, orchestra, maestro-arsenal, desktop). Unset now means on; explicit legacy rollback checks nothing.
+// (core, orchestra, maestro-arsenal, desktop, cli), and by app-shell's test:browser script. Unset now means on; explicit
+// legacy rollback checks nothing.
 //
 // A test declares that it must spawn through omni by calling expectSpawn(import.meta.path) from
 // packages/core/test/fixture/omni-expect.ts in its body. The afterEach below settles each declaring test with the omni
