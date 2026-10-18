@@ -5,12 +5,16 @@ import { normalizeProjectInfo } from "@/context/global-sync/utils"
 import { createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useGlobal } from "@/context/global"
+import { useLanguage } from "@/context/language"
+import { formatServerError } from "@/utils/server-errors"
+import { showToast } from "@/utils/toast"
 import { type LocalProject } from "@/context/layout"
 import { ServerConnection } from "@/context/server"
 
 export function createEditProjectModel(props: { project: LocalProject; server: ServerConnection.Any }) {
   const dialog = useDialog()
   const global = useGlobal()
+  const language = useLanguage()
   const serverCtx = createMemo(() => global.ensureServerCtx(props.server))
   const folderName = createMemo(() => getFilename(props.project.worktree))
   const defaultName = createMemo(() => props.project.name || folderName())
@@ -72,16 +76,15 @@ export function createEditProjectModel(props: { project: LocalProject; server: S
 
       if (props.project.id && props.project.id !== "global") {
         if ((await serverCtx().sdk.protocol) !== "v1") return
-        const project = await serverCtx()
-          .sdk.client.project.update({
-            projectID: props.project.id,
-            directory: props.project.worktree,
-            name,
-            icon: { color: store.color || "", override: store.iconOverride || "" },
-            commands: { start },
-          })
-          .then((result) => result.data)
-        if (!project) return
+        const result = await serverCtx().sdk.client.project.update({
+          projectID: props.project.id,
+          directory: props.project.worktree,
+          name,
+          icon: { color: store.color || "", override: store.iconOverride || "" },
+          commands: { start },
+        })
+        const project = result.data
+        if (!project) throw new Error(JSON.stringify(result.error))
         // const project = await serverCtx().sdk.api.project.update({
         //   projectID: props.project.id,
         //   name,
@@ -103,6 +106,12 @@ export function createEditProjectModel(props: { project: LocalProject; server: S
       })
       dialog.close()
     },
+    onError: (error) =>
+      showToast({
+        variant: "error",
+        title: language.t("common.requestFailed"),
+        description: formatServerError(error, language.t),
+      }),
   }))
 
   function submit(event: SubmitEvent) {

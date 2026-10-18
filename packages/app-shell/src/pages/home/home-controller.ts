@@ -1,9 +1,12 @@
 import { useGlobal } from "@/context/global"
+import { useLanguage } from "@/context/language"
 import { type HomeProjectSelection, useLayout } from "@/context/layout"
 import { ServerConnection, useServer } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
 import { toggleHomeProjectSelection } from "@/pages/layout/helpers"
+import { formatServerError } from "@/utils/server-errors"
+import { showToast } from "@/utils/toast"
 import { createEffect, createMemo } from "solid-js"
 
 export function createHomeController() {
@@ -12,6 +15,7 @@ export function createHomeController() {
   const server = useServer()
   const global = useGlobal()
   const tabs = useTabs()
+  const language = useLanguage()
   const selection = layout.home.selection
   const focusedServer = createMemo(
     () => global.servers.list().find((conn) => ServerConnection.key(conn) === selection().server) ?? server.current,
@@ -101,7 +105,13 @@ export function createHomeController() {
               return result.data ?? ctx.sdk.api.project.current({ location })
             })
             .then((project) => ctx.sync.child(item, { bootstrap: false })[1]("project", project.id))
-            .catch(() => undefined)
+            .catch((error) =>
+              showToast({
+                variant: "error",
+                title: language.t("common.requestFailed"),
+                description: formatServerError(error, language.t),
+              }),
+            )
           ctx.projects.open(item)
         })
         ctx.projects.touch(directory)
