@@ -12,6 +12,7 @@ const [state, setState] = createStore({
   error: undefined as undefined | { cause: unknown },
 })
 const calls: string[] = []
+const pushed: Array<(dispose: () => void) => JSX.Element> = []
 const bindings: Array<[string, unknown]> = []
 const selected = { type: "http" as const, http: { url: "http://server-b.test" } }
 const queryClient = new QueryClient()
@@ -39,7 +40,22 @@ const button = (props: { children?: JSX.Element; onClick?: (event: MouseEvent) =
 }
 const fixtures = {
   button: { Button: button, ButtonV2: button },
-  dialog: { useDialog: () => ({ show() {}, close() {}, push() {} }) },
+  dialog: {
+    useDialog: () => ({
+      show() {},
+      close() {},
+      push(element: (dispose: () => void) => JSX.Element) {
+        pushed.push(element)
+      },
+    }),
+  },
+  dialogV2: {
+    Dialog: container,
+    DialogHeader: container,
+    DialogTitle: container,
+    DialogBody: container,
+    DialogFooter: container,
+  },
   language: { useLanguage: () => ({ locale: () => "en", t: (key: string) => key }) },
   providers: {
     popularProviders: ["openrouter"],
@@ -141,6 +157,7 @@ Bun.plugin({
           .replaceAll('"@orchestra/ui/button"', '"provider-settings:button"')
           .replaceAll('"@orchestra/ui/v2/button-v2"', '"provider-settings:button"')
           .replaceAll('"@orchestra/ui/context/dialog"', '"provider-settings:dialog"')
+          .replaceAll('"@orchestra/ui/v2/dialog-v2"', '"provider-settings:dialogV2"')
           .replaceAll('"@orchestra/ui/provider-icon"', '"provider-settings:icon"')
           .replaceAll('"@orchestra/ui/tag"', '"provider-settings:tag"')
           .replaceAll('"@orchestra/ui/spinner"', '"provider-settings:spinner"')
@@ -215,21 +232,40 @@ test("legacy settings renders discovery loading/error/retry", () => {
   }
 })
 
-test("legacy settings disconnects V2 through credentials and preserves V1 auth removal", async () => {
+test("legacy settings disconnects V2 through credentials and preserves V1 auth removal, after asking", async () => {
   calls.length = 0
+  pushed.length = 0
   setState({ protocol: "v2", loading: false, error: undefined })
   const host = document.createElement("div")
   const dispose = render(() => createComponent(SettingsProviders, {}), host)
+  // The confirmation the controller pushes; its submit button is the Disconnect that removes the key.
+  const confirm = async () => {
+    const dialog = document.createElement("div")
+    const stop = render(() => pushed.at(-1)!(() => undefined), dialog)
+    try {
+      expect(dialog.textContent).toContain("orchestra.providers.disconnectDialog.title")
+      const submit = [...dialog.querySelectorAll("button")].find((node) => node.textContent === "common.disconnect")
+      expect(submit).toBeDefined()
+      submit!.click()
+      await new Promise((resolve) => setTimeout(resolve, 0))
+    } finally {
+      stop()
+    }
+  }
   try {
     const disconnect = [...host.querySelectorAll("button")].find((node) => node.textContent === "common.disconnect")
     expect(disconnect).toBeDefined()
     disconnect!.click()
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(calls).toEqual([])
+    await confirm()
     expect(calls).toEqual(["credential.remove", "refresh", "toast"])
     calls.length = 0
     setState("protocol", "v1")
     disconnect!.click()
     await new Promise((resolve) => setTimeout(resolve, 0))
+    expect(calls).toEqual([])
+    await confirm()
     expect(calls).toEqual(["auth.remove", "global.dispose", "toast"])
   } finally {
     dispose()

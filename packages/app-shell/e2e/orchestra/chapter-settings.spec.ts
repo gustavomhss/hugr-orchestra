@@ -441,11 +441,24 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
   await expect(view.getByText("This server does not let the app change its default model.")).toBeVisible()
   const disconnect = (id: string) =>
     view.locator(`article[data-provider="${id}"]`).getByRole("button", { name: "Disconnect" }).click()
+  const confirmDisconnect = async () => {
+    await page.getByRole("dialog").getByRole("button", { name: "Disconnect", exact: true }).click()
+    await expect(page.getByRole("dialog")).toHaveCount(0)
+  }
 
+  // Removing a key asks first; Cancel removes nothing.
+  await disconnect("openai")
+  const first = page.getByRole("dialog").filter({ hasText: "Disconnect OpenAI?" })
+  await expect(first).toContainText("This removes the stored key or sign-in for OpenAI.")
+  await first.getByRole("button", { name: "Cancel" }).click()
+  await expect(page.getByRole("dialog")).toHaveCount(0)
+  expect(removed).toEqual([])
   // The default key goes; the labelled key keeps its own card.
   await disconnect("openai")
+  await confirmDisconnect()
   await expect.poll(() => removed).toEqual(["/api/credential/cred-default"])
   await disconnect("openai#work")
+  await confirmDisconnect()
   await expect.poll(() => removed).toEqual(["/api/credential/cred-default", "/api/credential/work"])
 
   // Removing more than one credential asks first; Cancel removes nothing.

@@ -219,6 +219,19 @@ test("custom provider validation and config", () => {
   })
 })
 
+test("a custom provider name without Latin letters gets a stable derived id, and its key is passed along", () => {
+  const input = { name: "Мой сервер", endpoint: "http://x/v1", model: "m", key: " sk-1 " }
+  const result = customProvider({ ...input, existing: new Set() })
+  if ("error" in result) throw new Error("a name in another script must validate")
+  expect(result.id).toMatch(/^custom-[0-9a-z]+$/)
+  expect(result.key).toBe("sk-1")
+  expect(result.config.name).toBe("Мой сервер")
+  expect(customProvider({ ...input, existing: new Set() })).toEqual(result)
+  expect(customProvider({ ...input, existing: new Set([result.id]) })).toEqual({ error: "name" })
+  expect(customProvider({ ...input, name: "サーバー", existing: new Set() })).not.toEqual(result)
+  expect(customProvider({ ...input, name: "  ", existing: new Set() })).toEqual({ error: "name" })
+})
+
 test("OAuth prompts follow their conditions and default selects to the first option", () => {
   const prompts = [
     { type: "select" as const, key: "kind", options: [{ value: "cloud" }, { value: "self" }] },
@@ -268,4 +281,6 @@ test("error messages prefer the server's message", () => {
   expect(errorMessage(new Error("boom"), "Request failed")).toBe("boom")
   expect(errorMessage("plain", "Request failed")).toBe("plain")
   expect(errorMessage({ data: 1 }, "Request failed")).toBe("Request failed")
+  expect(errorMessage({ name: "ProviderAuthError", data: { message: "denied" } }, "Request failed")).toBe("denied")
+  expect(errorMessage({ data: { message: "" } }, "Request failed")).toBe("Request failed")
 })

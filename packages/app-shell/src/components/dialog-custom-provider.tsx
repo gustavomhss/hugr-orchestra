@@ -283,6 +283,9 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
                 </div>
                 <div class="flex-1">
                   <TextField
+                    // Header values are usually credentials (Authorization: Bearer ...), so they stay masked.
+                    type="password"
+                    autocomplete="off"
                     label={language.t("provider.custom.headers.value.label")}
                     hideLabel
                     placeholder={language.t("provider.custom.headers.value.placeholder")}

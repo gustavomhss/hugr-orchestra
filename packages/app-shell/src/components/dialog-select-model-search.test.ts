@@ -53,3 +53,17 @@ test("keyboard selection follows rendered provider groups, including search and 
   expect(navigation.keys()).toEqual(["manage"])
   expect(navigation.next("manage", 1)).toBe("manage")
 })
+
+test("keyboard selection ends with every footer action in order", () => {
+  const navigation = createModelSelectorNavigation(
+    () => [{ items: [{ id: "a" }] }],
+    (item) => item.id,
+    "connect",
+    "manage",
+  )
+  expect(navigation.keys()).toEqual(["a", "connect", "manage"])
+  expect(navigation.next("a", 1)).toBe("connect")
+  expect(navigation.next("connect", 1)).toBe("manage")
+  expect(navigation.next("manage", 1)).toBe("a")
+  expect(navigation.next("a", -1)).toBe("manage")
+})
