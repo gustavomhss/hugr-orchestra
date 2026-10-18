@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/maestro",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {},
+  "scripts": {
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@orchestra/atlas-boundary": "workspace:*",
+    "@orchestra/core": "workspace:*",
+    "@orchestra/llm": "workspace:*",
+    "@orchestra/maestro-arsenal": "workspace:*",
+    "@orchestra/schema": "workspace:*",
+    "drizzle-orm": "catalog:",
+    "effect": "catalog:",
+    "gray-matter": "4.0.3"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

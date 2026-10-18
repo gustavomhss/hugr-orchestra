@@ -19,6 +19,7 @@
   "dependencies": {
     "@effect/platform-node": "catalog:",
     "@orchestra/core": "workspace:*",
+    "@orchestra/maestro": "workspace:*",
     "@orchestra/sdk": "workspace:*",
     "@orchestra/server": "workspace:*",
     "@orchestra/tui": "workspace:*",

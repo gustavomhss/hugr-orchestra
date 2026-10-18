@@ -10,10 +10,11 @@
     "tooling": ["foundation", "library", "tooling"],
     "module": ["foundation", "native", "library"],
     "platform": ["foundation", "native", "library", "contract", "extension-api", "module:platformLibrary"],
-    "composition": ["foundation", "native", "library", "contract", "client", "extension-api", "module", "platform", "composition"],
+    "product": ["foundation", "native", "library", "contract", "extension-api", "module", "platform", "product"],
+    "composition": ["foundation", "native", "library", "contract", "client", "extension-api", "module", "platform", "product", "composition"],
     "ui": ["foundation", "contract", "client", "ui", "platform:browserSafe"],
     "terminal-ui": ["foundation", "contract", "client", "extension-api", "library", "platform", "ui"],
-    "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "composition", "ui", "terminal-ui"]
+    "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "product", "composition", "ui", "terminal-ui"]
   },
   "packages": {
     "schema": {
@@ -140,6 +141,46 @@
       "owner": "Atlas maintainer",
       "summary": "Generated bundles that expose Atlas to Orchestra.",
       "exportsPolicy": "none"
+    },
+    "app-dock": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "App Dock maintainer",
+      "summary": "App Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "janitor": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Janitor maintainer",
+      "summary": "Janitor scans the data directory for growth and reports through a host-supplied sink.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "continuity": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "continuity maintainer",
+      "summary": "Engine-neutral continuity helpers: transcript aliases, archive search, masking and request sources.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "engine-claude-code": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Claude Code engine maintainer",
+      "summary": "Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "maestro": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Maestro maintainer",
+      "summary": "Maestro coordination: seat roster and seats, governance records and the Arsenal native safety contribution.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
     },
     "core": {
       "layer": "platform",

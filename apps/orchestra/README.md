@@ -18,7 +18,7 @@ This project was created using `bun init` in bun v1.2.12. [Bun](https://bun.sh) 
 ## Module contract
 - Package: `orchestra` at `apps/orchestra` (alias `orchestra`)
 - Summary: The legacy-live Orchestra server and CLI that the desktop app starts as its default sidecar.
-- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `composition`, `ui`, `terminal-ui`
+- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `product`, `composition`, `ui`, `terminal-ui`
 - Status: `legacy`; successor: apps/cli and packages/server; live: default desktop sidecar (v1)
 - Owner: core platform maintainer
 - Public entry: explicit `exports` in package.json

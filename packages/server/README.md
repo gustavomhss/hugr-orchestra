@@ -52,7 +52,7 @@ invoked by the `test:httpapi` script from `apps/orchestra`.
 ## Module contract
 - Package: `@orchestra/server` at `packages/server` (alias `server`)
 - Summary: Adapts the typed Protocol API to Effect HTTP on top of Core services.
-- Layer: `composition`; may depend on: `foundation`, `native`, `library`, `contract`, `client`, `extension-api`, `module`, `platform`, `composition`
+- Layer: `composition`; may depend on: `foundation`, `native`, `library`, `contract`, `client`, `extension-api`, `module`, `platform`, `product`, `composition`
 - Status: `canonical`
 - Owner: server maintainer
 - Public entry: explicit `exports` in package.json
