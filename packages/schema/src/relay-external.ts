@@ -10,11 +10,8 @@ import { NonNegativeInt, PositiveInt } from "./schema"
 
 export const RUN_ID = /^[A-Za-z0-9_-]{1,64}$/
 
-// One run per LangGraph `thread_id`: the thread ID itself when it is already a valid run ID, else a stable hash.
-export function runIDFromThread(threadID: string) {
-  if (RUN_ID.test(threadID)) return threadID
-  return `t_${sha256(threadID).slice(0, 32)}`
-}
+// One run per LangGraph `thread_id`. The writer names the run folder: the thread ID when it matches `RUN_ID`, else
+// `t_` plus the first 32 hex characters of its SHA-256. Readers take the run ID from the folder name.
 
 // Run-scoped events use LangGraph's reserved node names, which no user node can take, and attempt 0.
 export const RUN_NODE = "__start__"
@@ -102,13 +99,13 @@ export type Run = {
 type Scoped = Extract<Body, { readonly attempt: number }>
 
 /**
- * Rebuilds the run from decoded ledger bodies, in ledger order. Undefined unless the first body is `run.start`.
+ * Rebuilds the run in folder `runID` from decoded ledger bodies, in ledger order. Undefined unless the first body is `run.start`.
  *
  * Status: `parked` while the last approval.request has no decision, else `completed` when the last body is
  * `sprint-complete`, `failed` when it is `escalate`, else `running`: a resume after a terminal event appends to the
  * same run and makes it live again.
  */
-export function runFromLedger(bodies: ReadonlyArray<Body>): Run | undefined {
+export function runFromLedger(runID: string, bodies: ReadonlyArray<Body>): Run | undefined {
   const start = bodies[0]
   if (start === undefined || start.event !== "run.start") return undefined
   const last = bodies.at(-1)!
@@ -135,7 +132,7 @@ export function runFromLedger(bodies: ReadonlyArray<Body>): Run | undefined {
   )
   const position = escalated?.node ?? scoped.at(-1)?.node
   return {
-    runID: runIDFromThread(start.thread_id),
+    runID,
     documentID: start.document_id ?? `external:${start.graph}`,
     version: start.document_version,
     status,
@@ -173,56 +170,3 @@ function stepOf(node: string, bodies: ReadonlyArray<Scoped>, escalated: boolean)
     note: decision?.note === "" ? undefined : decision?.note,
   }
 }
-
-// SHA-256 of the UTF-8 bytes, as hex. Synchronous and dependency-free, because this module is shared with the app.
-function sha256(text: string) {
-  const bytes = new TextEncoder().encode(text)
-  const length = Math.ceil((bytes.length + 9) / 64) * 64
-  const padded = new Uint8Array(length)
-  padded.set(bytes)
-  padded[bytes.length] = 0x80
-  const view = new DataView(padded.buffer)
-  view.setUint32(length - 8, Math.floor(bytes.length / 2 ** 29))
-  view.setUint32(length - 4, (bytes.length * 8) >>> 0)
-  const hash = Uint32Array.from(H0)
-  const words = new Uint32Array(64)
-  for (let block = 0; block < length; block += 64) {
-    for (let i = 0; i < 64; i++) {
-      if (i < 16) {
-        words[i] = view.getUint32(block + i * 4)
-        continue
-      }
-      const low = words[i - 15]!
-      const high = words[i - 2]!
-      const s0 = rotate(low, 7) ^ rotate(low, 18) ^ (low >>> 3)
-      const s1 = rotate(high, 17) ^ rotate(high, 19) ^ (high >>> 10)
-      words[i] = (words[i - 16]! + s0 + words[i - 7]! + s1) >>> 0
-    }
-    // [a, b, c, d, e, f, g, h]
-    const state = Array.from(hash)
-    for (let i = 0; i < 64; i++) {
-      const [a, b, c, , e, f, g, h] = state as [number, number, number, number, number, number, number, number]
-      const t1 = (h + (rotate(e, 6) ^ rotate(e, 11) ^ rotate(e, 25)) + ((e & f) ^ (~e & g)) + K[i]! + words[i]!) >>> 0
-      const t2 = ((rotate(a, 2) ^ rotate(a, 13) ^ rotate(a, 22)) + ((a & b) ^ (a & c) ^ (b & c))) >>> 0
-      state.pop()
-      state.unshift((t1 + t2) >>> 0)
-      // After the shift, index 4 holds the old d: the new e is d + t1.
-      state[4] = (state[4]! + t1) >>> 0
-    }
-    state.forEach((value, index) => (hash[index] = (hash[index]! + value) >>> 0))
-  }
-  return Array.from(hash, (word) => word.toString(16).padStart(8, "0")).join("")
-}
-
-function rotate(value: number, bits: number) {
-  return (value >>> bits) | (value << (32 - bits))
-}
-
-// FIPS 180-4 constants: the first 32 fraction bits of the square roots (H0) and cube roots (K) of the first primes.
-const PRIMES = Array.from({ length: 312 }, (_, index) => index).filter(
-  (candidate) =>
-    candidate > 1 && Array.from({ length: candidate - 2 }, (_, index) => index + 2).every((d) => candidate % d !== 0),
-)
-const fraction = (value: number) => Math.floor((value - Math.floor(value)) * 2 ** 32) >>> 0
-const H0 = PRIMES.slice(0, 8).map((prime) => fraction(Math.sqrt(prime)))
-const K = PRIMES.slice(0, 64).map((prime) => fraction(Math.cbrt(prime)))
