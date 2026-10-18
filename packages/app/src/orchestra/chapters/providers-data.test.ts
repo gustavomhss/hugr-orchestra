@@ -107,16 +107,24 @@ describe("fromV1", () => {
     models: { m: { id: "m", name: "M", limit: { context: 1000 } } },
   })
   const result = fromV1({
-    all: [provider("anthropic", "api"), provider("local", "config"), provider("env", "env"), provider("zen", "custom")],
+    all: [
+      provider("anthropic", "api"),
+      provider("local", "config"),
+      provider("env", "env"),
+      provider("zen", "custom"),
+      provider("keyed", "config"),
+    ],
     connected: [
       provider("anthropic", "api"),
       provider("local", "config"),
       provider("env", "env"),
       provider("zen", "custom"),
+      provider("keyed", "config"),
     ],
     config: {
       provider: {
         local: { npm: "@ai-sdk/openai-compatible", models: { m: {} } },
+        keyed: { name: "Keyed" },
         gone: { name: "Gone endpoint", npm: "@ai-sdk/openai-compatible", models: { "gone-model": { name: "Gone" } } },
       },
       disabled_providers: ["gone", "never-configured"],
@@ -129,6 +137,10 @@ describe("fromV1", () => {
     expect(card("local")).toMatchObject({ method: "custom", custom: true, disconnect: { type: "auth", custom: true } })
     expect(card("env")).toMatchObject({ method: "environment", disconnect: { type: "none" } })
     expect(card("zen")).toMatchObject({ method: "custom", custom: false })
+  })
+
+  test("a provider kept alive by its config entry has nothing to disconnect", () => {
+    expect(card("keyed")).toMatchObject({ method: "config", custom: false, disconnect: { type: "none" } })
   })
 
   test("a disabled configured provider stays listed as disconnected and can be enabled", () => {

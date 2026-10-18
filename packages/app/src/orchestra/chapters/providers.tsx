@@ -373,7 +373,9 @@ function ProvidersScreen(props: ChapterPageProps) {
                     title={
                       card.method === "environment"
                         ? language.t("settings.providers.connected.environmentDescription")
-                        : undefined
+                        : card.method === "config" && card.disconnect.type === "none"
+                          ? language.t("orchestra.providers.configDescription")
+                          : undefined
                     }
                     onClick={() => toggle(card)}
                   >

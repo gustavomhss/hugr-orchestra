@@ -72,6 +72,7 @@ import { MessageComment, TimelineRow, TimelineRowMap } from "./rows"
 import { TimelineDiffSummaryRow } from "./timeline-diff-summary-row"
 import { filterVirtualIndexes } from "./virtual-items"
 import { errorMessage } from "@/pages/layout/helpers"
+import { baseID } from "@/orchestra/chapters/providers-data"
 import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
@@ -913,6 +914,13 @@ export function MessageTimeline(props: {
     )
   }
 
+  const updateProviderKey = (providerID: string) =>
+    void import("@/components/dialog-connect-provider").then((x) => {
+      const controller = x.useProviderConnectController()
+      controller.select(baseID(providerID))
+      void dialog.show(() => <x.DialogConnectProvider controller={controller} directory={() => sdk().directory} />)
+    })
+
   const renderTimelineRow = (row: Accessor<TimelineRow.TimelineRow>, onSizeChange?: () => void) => {
     switch (row()._tag) {
       case "TurnGap":
@@ -1093,6 +1101,15 @@ export function MessageTimeline(props: {
               <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
                 <Card variant="error" class="error-card">
                   {errorRow().text}
+                  <Show when={errorRow().providerID}>
+                    {(providerID) => (
+                      <div class="mt-2">
+                        <Button size="small" variant="secondary" onClick={() => updateProviderKey(providerID())}>
+                          {language.t("orchestra.providers.connectDialog.updateKey")}
+                        </Button>
+                      </div>
+                    )}
+                  </Show>
                 </Card>
               </OrchestraTurn>
             </div>
