@@ -1,7 +1,7 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable } from "@orchestra/core/event/sql"
-import { SessionInputTable } from "@orchestra/core/session/sql"
+import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { createHash } from "node:crypto"
 import { eq } from "drizzle-orm"
@@ -28,7 +28,7 @@ import { recordValidation } from "../../src/maestro/validation-record"
 import { Git } from "../../src/git"
 import { Session } from "../../src/session/session"
 import type { SessionPrompt } from "../../src/session/prompt"
-import { MessageID, PartID } from "../../src/session/schema"
+import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { SessionRunState } from "../../src/session/run-state"
 import { SessionStatus } from "../../src/session/status"
 import { TaskTool, type TaskPromptOps } from "../../src/tool/task"
@@ -528,22 +528,46 @@ it.instance(
   { git: true },
 )
 
-it.instance(
-  "a reserved child with an admitted prompt and no messages still replays strictly",
-  () =>
+// Each record alone means a run on the reserved child started, so each one alone must keep strict replay.
+const started = {
+  "an admitted prompt": (child: { id: SessionID }) =>
     Effect.gen(function* () {
-      const setup = yield* authorized()
-      const child = yield* heldAfterReservation(setup)
       const database = yield* Database.Service
       yield* database.db.insert(SessionInputTable).values({ id: SessionMessage.ID.make(MessageID.ascending()), session_id: child.id,
         prompt: { text: "implement card" }, delivery: "steer", admitted_seq: 1 }).run().pipe(Effect.orDie)
-      const replay = yield* setup.def.execute(setup.params, setup.context()).pipe(Effect.exit)
-      expect(Exit.isFailure(replay)).toBe(true)
-      if (Exit.isFailure(replay)) expect(Cause.pretty(replay.cause)).toContain("reserved-child-incomplete")
-      expect(setup.prompts.count).toBe(0)
     }),
-  { git: true },
-)
+  "a V2 session message": (child: { id: SessionID }) =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const message = { type: "assistant" as const, id: SessionMessage.ID.make(MessageID.ascending()), agent: "backend",
+        model: { providerID: model.providerID, id: model.modelID }, time: { created: 1 }, content: [] }
+      yield* database.db.insert(SessionMessageTable).values({ id: message.id, session_id: child.id, type: "assistant", seq: 1,
+        time_created: 1, time_updated: 1, data: message }).run().pipe(Effect.orDie)
+    }),
+  "a legacy message": (child: { id: SessionID }) =>
+    Effect.gen(function* () {
+      const sessions = yield* Session.Service
+      yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: child.id, agent: "backend", model,
+        time: { created: Date.now() } })
+    }),
+}
+
+for (const [record, write] of Object.entries(started)) {
+  it.instance(
+    `a reserved child with ${record} still replays strictly`,
+    () =>
+      Effect.gen(function* () {
+        const setup = yield* authorized()
+        const child = yield* heldAfterReservation(setup)
+        yield* write(child)
+        const replay = yield* setup.def.execute(setup.params, setup.context()).pipe(Effect.exit)
+        expect(Exit.isFailure(replay)).toBe(true)
+        if (Exit.isFailure(replay)) expect(Cause.pretty(replay.cause)).toContain("reserved-child-incomplete")
+        expect(setup.prompts.count).toBe(0)
+      }),
+    { git: true },
+  )
+}
 
 it.instance("resumes exact native task session from task_id", () =>
   Effect.gen(function* () {

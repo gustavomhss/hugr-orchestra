@@ -488,9 +488,12 @@ export const TaskTool = Tool.define(
       yield* ctx.metadata({ title: params.description, metadata })
 
       // The reserved child exists before completion.beforeDispatch, so a dispatch held there leaves an authorized child
-      // that was never prompted, and replaying it would hold forever. Running it now is still the reservation's one
-      // dispatch: the same child, reserved permissions and authorization, serialized by the dispatch lock. Any message,
-      // admitted input or background job means a run started, and that child keeps the strict replay below.
+      // that was never prompted, and replaying it would hold forever. This applies to every authorized dispatch, not
+      // only workflow ones. Running it now is still the reservation's one dispatch: the same child, reserved permissions
+      // and authorization. The dispatch lock serializes callers in this process, and the background job record guards a
+      // run that is still starting or ran in the background. Any message, admitted input or job means a run started,
+      // and that child keeps the strict replay below. Residual risk: a restart empties the job map, so a run that died
+      // before writing any message or input runs again, and its session-start hooks could run twice.
       const neverPrompted = params.authorizationID !== undefined && reserved !== undefined &&
         (yield* MessageV2.stream(reserved.id)).length === 0 &&
         !(yield* background.get(reserved.id)) &&

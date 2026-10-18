@@ -55,7 +55,11 @@ export type HostCheck = (binding: Binding) => Effect.Effect<CheckOutcome, unknow
 export interface Host {
   /** Native authority resolves a stored token by actual dispatch identity. Never read model metadata. */
   readonly resolve: (input: Dispatch) => Effect.Effect<Binding | undefined, ToolSafety.Denied>
-  /** Whether the dispatching Session holds a stored arm at all. A cheap precheck before a dispatch spends anything. */
+  /**
+   * Whether the dispatching Session holds any stored arm. This cheap precheck before reservation only catches "no arm at
+   * all in this Session"; an arm for a different workflow passes it and is refused by beforeDispatch, whose empty reserved
+   * child the Task tool then runs fresh on the next dispatch.
+   */
   readonly armed?: (input: { readonly sessionID: string; readonly directory: string }) => Effect.Effect<boolean, ToolSafety.Denied>
   readonly checks: ReadonlyMap<string, HostCheck>
   /** The Relay service of the binding's Location, which holds the arm and its ledger. */
