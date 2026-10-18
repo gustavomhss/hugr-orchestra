@@ -6,7 +6,7 @@ The Claude Code engine adapter: SDK process lifetime, executable lookup, transcr
 
 The Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options. Owner: The Claude Code engine owner.
 
-Moves in with card C7 of plan 70-C' B1. The SDK pin must equal the one in the apps/orchestra manifest, because the executable lookup reads it from this manifest.
+Holds `src/sdk.ts` (the single spawn seam, `processLifetime`, which keeps the `claude_code` preset), `src/executable.ts`, `src/transcript.ts` and `src/host/{admission,join,options}.ts`. The sign-in (`host/provider.ts`, `login.ts`), the engine, the mirror and the rest of the host stay in apps/orchestra until they stop using V1 code. The SDK pin must equal the one in the apps/orchestra manifest, because the executable lookup reads it from this manifest.
 
 ## Public entry points and consumers
 
@@ -26,7 +26,7 @@ None of its own; the host owns persistence and process lifetime.
 
 ## Commands
 
-Tests run on GitHub Actions through `bun run test:ci engine-claude-code` from the repository root. Typecheck: `bun typecheck` in this directory.
+Tests (`test/preset-guard.test.ts`) run on GitHub Actions through `bun run test:ci engine-claude-code` from the repository root. Typecheck: `bun typecheck` in this directory.
 
 ## Contracts and verification limits
 

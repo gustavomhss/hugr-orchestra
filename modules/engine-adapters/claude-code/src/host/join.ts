@@ -6,7 +6,7 @@ export * as ClaudeHostJoin from "./join"
 // HOST's stream consumer feeds the stream side; the hooks read and write the rest. Ids always come from Claude Code:
 // nothing here infers or invents one, and any disagreement HOLDs the dispatch.
 import type { SDKTaskNotificationMessage } from "@anthropic-ai/claude-agent-sdk"
-import type { SessionID } from "@/session/schema"
+import type { SessionSchema } from "@orchestra/core/session/schema"
 
 export type Entry = {
   readonly toolUseID: string
@@ -15,7 +15,7 @@ export type Entry = {
   /** The seat id, for an Orchestra seat; absent for Claude Code's own subagent types. */
   seat?: string
   grantID?: string
-  child?: SessionID
+  child?: SessionSchema.ID
   hold?: string
 }
 

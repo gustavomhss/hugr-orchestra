@@ -15,14 +15,14 @@ import type {
   Options,
   SDKTaskNotificationMessage,
 } from "@anthropic-ai/claude-agent-sdk"
-import type { SessionID } from "@/session/schema"
+import type { SessionSchema } from "@orchestra/core/session/schema"
 
 /**
  * What HOST hands the plugin, MCP and hook builders: one Claude-hosted Orchestra session. Fields past `abort` are
  * optional additions to the fixed build-brief shape.
  */
 export type Context = {
-  sessionID: SessionID
+  sessionID: SessionSchema.ID
   directory: string
   worktree: string
   /** The main thread's seat id: `maestro`, or another seat when it is the main conversation. */
@@ -42,7 +42,7 @@ export type Join = {
   /** `system/task_notification`: the background delivery source (spike S12). */
   taskNotification: (frame: SDKTaskNotificationMessage) => void
   /** The child session the delegation hooks created for an Agent call. */
-  child?: (toolUseID: string) => SessionID | undefined
+  child?: (toolUseID: string) => SessionSchema.ID | undefined
 }
 
 /** The builders agents PLUGIN and HOOKS own (build brief, "Fixed interfaces"), injected so each side stays testable. */

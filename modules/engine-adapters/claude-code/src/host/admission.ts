@@ -1,6 +1,6 @@
 export * as ClaudeHostAdmission from "./admission"
 
-import type { SessionV1 } from "@orchestra/core/v1/session"
+import type { SessionV1 } from "../compat/core-v1-session"
 import type { SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { marker } from "@/continuity/alias"
 import { ClaudeCodeTranscript } from "../transcript"

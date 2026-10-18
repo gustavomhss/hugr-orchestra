@@ -10,11 +10,14 @@ import { readBoundarySource } from "./mode-boundary-source"
 // type import queries and direct import()/require() calls with strings or no-substitution templates. Comments/prose are inert;
 // interpolated templates, computed specifiers and aliased/wrapped loaders are outside this syntactic guard's declared reach.
 // Decoded separators and alias wildcard paths are normalized before checking final source-root containment.
+// The engine adapter's moved files live in the package @orchestra/engine-claude-code; its specifiers count as Claude
+// mode (`@orchestra/engine-claude-code/host/join` is `claude-code/host/join`), so moving a file never hides an edge.
 
 const ORCHESTRA = path.resolve(import.meta.dir, "../..")
 const SRC = path.join(ORCHESTRA, "src")
 const CLAUDE_MODE = "claude-code"
 const ENTRY = "claude-code/engine"
+const ENGINE_PACKAGE = "@orchestra/engine-claude-code"
 
 /** Reviewed runtime-audit adapters, scoped to the importing file and target module; never a host-directory allowance. */
 const ADAPTER_EDGES = [
@@ -47,8 +50,8 @@ const INTERFACE = [
   // The Claude host's widgets: the question dock (AskUserQuestion), the todo dock (TodoWrite) and the retry row.
   "question", "session/status", "session/todo",
   // Which owner messages a turn hands Claude Code (the real requests and task returns), and the engine pausing
-  // Orchestra's continuity on a session Claude Code compacts itself.
-  "continuity/alias", "continuity/request-source", "continuity/service",
+  // Orchestra's continuity on a session Claude Code compacts itself. (`continuity/alias` left with host/admission.)
+  "continuity/request-source", "continuity/service",
   // The host adapter (claude-code/host): seat definitions and skills for the generated plugin, Task's write-root
   // validation for task_grant, the skill playbooks, and the background process registry the `process` tool feeds.
   "maestro/seats", "maestro/seat-skill-root", "maestro/write-roots", "skill", "background/process",
@@ -98,6 +101,33 @@ test("the boundary rules catch a normal-mode import of a Claude-mode internal an
     "claude-code/host/x.ts imports session/llm, part of Orchestra's loop",
     "claude-code/y.ts imports worktree/foo, which is not in Claude mode's INTERFACE",
   ])
+})
+
+test("the engine package is Claude mode: a normal-mode import of it is flagged, Claude mode and reviewed adapters keep their edges", () => {
+  expect(violations([
+    { file: "session/probe.ts", text: 'import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"' },
+    { file: "tool/probe.ts", text: 'const lazy = () => import("@orchestra/engine-claude-code/host/provider")' },
+    { file: "session/root.ts", text: 'import "@orchestra/engine-claude-code"' },
+    { file: "session/ext.ts", text: 'export * from "@orchestra/engine-claude-code/sdk.ts"' },
+    { file: "session/fine.ts", text: 'import type { ClaudeCode } from "@/claude-code/engine"' },
+    { file: "session/other-package.ts", text: 'import "@orchestra/engine-claude-code-other/sdk"' },
+  ])).toEqual([
+    "session/probe.ts imports claude-code/host/options; normal mode may import only claude-code/engine",
+    "tool/probe.ts imports claude-code/host/provider; normal mode may import only claude-code/engine",
+    "session/root.ts imports claude-code; normal mode may import only claude-code/engine",
+    "session/ext.ts imports claude-code/sdk; normal mode may import only claude-code/engine",
+  ])
+  const catalog = "server/routes/instance/httpapi/handlers/catalog.ts"
+  expect(violations([{ file: catalog, text: 'import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"' }])).toEqual([])
+  expect(violations([{ file: catalog, text: 'import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"' }])).toEqual([
+    `${catalog} imports claude-code/host/options; normal mode may import only ${ENTRY}`,
+  ])
+  expect(violations([{ file: "session/unreviewed.ts", text: 'import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"' }])).toEqual([
+    `session/unreviewed.ts imports claude-code/sdk; normal mode may import only ${ENTRY}`,
+  ])
+  // Claude mode reaches its own package freely.
+  expect(violations([{ file: "claude-code/host/x.ts", text: 'import type { Join } from "@orchestra/engine-claude-code/host/join"' }])).toEqual([])
+  expect(imports({ file: "claude-code/host/x.ts", text: 'import "@orchestra/engine-claude-code/host/../host/join.ts"' })).toEqual(["claude-code/host/join"])
 })
 
 test("reviewed adapters allow only their exact module edges", () => {
@@ -342,11 +372,13 @@ function imports(item: File) {
     const specifier = literal.replaceAll("\\", "/")
     const alias = specifier.startsWith("@/")
     const relative = !alias && specifier.startsWith(".")
+    const engine = specifier === ENGINE_PACKAGE || specifier.startsWith(`${ENGINE_PACKAGE}/`)
     const argument = alias ? specifier.slice(2) : specifier
     const absolute = alias ? path.resolve(path.join(SRC, argument))
       : relative ? path.resolve(SRC, path.dirname(item.file), argument) : undefined
     const resolved = absolute === undefined ? undefined : path.relative(SRC, absolute).split(path.sep).join("/")
-    const target = resolved === undefined || resolved === ".." || resolved.startsWith("../") || path.isAbsolute(resolved) ? undefined
+    const target = engine ? engineTarget(specifier)
+      : resolved === undefined || resolved === ".." || resolved.startsWith("../") || path.isAbsolute(resolved) ? undefined
       : resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")
     if (item.control) rows.push({ literal, normalized: specifier, branch: alias ? "alias" : relative ? "relative" : "package", argument, absolute, resolved, target })
     return target === undefined ? [] : [target]
@@ -364,6 +396,12 @@ function imports(item: File) {
     })}`)
   }
   return targets
+}
+
+/** `@orchestra/engine-claude-code/<subpath>` names the module `claude-code/<subpath>`, as it did before the move. */
+function engineTarget(specifier: string) {
+  const module = path.posix.normalize(CLAUDE_MODE + specifier.slice(ENGINE_PACKAGE.length))
+  return inClaudeMode(module) ? module.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "") : undefined
 }
 
 function inClaudeMode(module: string) {

@@ -5,7 +5,7 @@ import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHash } from "node:crypto"
 import { createRequire } from "node:module"
-import pkg from "../../package.json"
+import pkg from "../package.json"
 
 declare const ORCHESTRA_COMPILED: boolean
 declare const ORCHESTRA_LIBC: string | undefined

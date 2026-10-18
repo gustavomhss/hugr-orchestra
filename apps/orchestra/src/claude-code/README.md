@@ -2,8 +2,8 @@
 
 ## Purpose and ownership
 
-- Claude Code engine adapter: `engine.ts`, `sdk.ts`, `executable.ts`, `host/`, `mirror.ts`, `permissions.ts`, `tools.ts`, `transcript.ts`.
-- Target: modules/engine-adapters/claude-code (a future path).
+- Claude Code engine adapter: `engine.ts`, `host/`, `login.ts`, `mirror.ts`, `permissions.ts`, `tools.ts`.
+- `sdk.ts`, `executable.ts`, `transcript.ts` and `host/{admission,join,options}.ts` moved to modules/engine-adapters/claude-code (`@orchestra/engine-claude-code`). `host/provider.ts` stays here because it uses the V1 sign-in.
 
 ## Public entry points and consumers
 
@@ -20,7 +20,7 @@
 ## Persistence, identity and lifetime
 
 - Durable mirror and transcript.
-- `sdk.ts` runs its guards before it reads the login or spawns anything.
+- `sdk.ts` (now in the module) runs its guards before it reads the login or spawns anything.
 
 ## Commands
 
@@ -28,5 +28,5 @@
 
 ## Contracts and verification limits
 
-- `apps/orchestra/src/claude-code/sdk.ts` is listed in `script/spawn-allowlist.json`.
+- `modules/engine-adapters/claude-code/src/sdk.ts` is listed in `script/spawn-allowlist.json`.
 - The engine query keeps the `claude_code` preset.
