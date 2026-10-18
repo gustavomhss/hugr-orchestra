@@ -36,6 +36,8 @@
 .actions-page .actions-dialog .ad-note > svg { margin-block-start: 2px; color: var(--actions-blue); }
 .actions-page .actions-dialog .ad-note strong { color: var(--actions-strong); font-size: 11px; font-weight: 500; }
 .actions-page .actions-dialog .ad-note p { margin: 4px 0 0; line-height: 1.65; }
+/* A plain muted line, like a field hint, for a group with nothing to fill in. */
+.actions-page .actions-dialog .ad-hint { margin: 0; color: var(--actions-dim); font-size: 11px; line-height: 1.6; }
 
 /* Footer: error on the start side, actions on the end side. */
 .actions-page .actions-dialog .ad-error { min-inline-size: 0; color: var(--actions-bad); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
