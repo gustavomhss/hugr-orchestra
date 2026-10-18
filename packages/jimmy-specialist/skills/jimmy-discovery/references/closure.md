@@ -22,7 +22,7 @@ Coverage distinguishes examined scope, deliberate exclusions and acquisition/ana
 
 ## Commit the basis
 
-Before composing the final answer, list the exact `file:line` ranges and URL passages you actually read and verified as its basis. Each cited claim maps to one of them through a retained locator; the host citation check flags a `file:line` or URL citation with no mapped source. Drop a range you did not verify rather than citing it from memory or a search hit.
+Before composing the final answer, list the exact `file:line` ranges and URL passages you actually read and verified as its basis. Each cited claim maps to one of them through a retained locator; the host's `Citation check: pass|fail ...` block flags a `path:line` or URL citation with no mapped source. Drop a range you did not verify rather than citing it from memory or a search hit.
 
 Keep located code in the answer. When the investigation found the implementing body, selector or consumer, name its `file:line` range in the answer itself; do not replace it with a summary of the search. Prefer precision over recall: a few verified ranges that support the answer beat a long list of plausible candidates. Put unverified candidates under limitations or next actions, labelled as such.
 
