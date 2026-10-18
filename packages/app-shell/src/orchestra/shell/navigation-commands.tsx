@@ -151,7 +151,6 @@ export function ShellNavigationCommands() {
       title: language.t("command.session.new"),
       category: language.t("command.category.session"),
       keybind: "mod+shift+s",
-      disabled: !connection() || !target().directory,
       onSelect: () => {
         const conn = connection()
         const directory = target().directory
