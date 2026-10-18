@@ -551,6 +551,7 @@ export const WORKFLOWS_COPY = {
     "The skill “{{skill}}” no longer exists, so Maestro can't run this step. Choose another skill, or No skill.",
   "orchestra.workflows.details.skillsError": "The skill list could not be loaded, so it may be incomplete.",
   "orchestra.workflows.details.skillsLoading": "Loading skills…",
+  "orchestra.workflows.details.skillsRetry": "Load skills again",
   "orchestra.workflows.details.skillLive":
     "Maestro reads the skill when a run starts. If you rename, delete or edit it after publishing, runs can be held until you publish again.",
   "orchestra.workflows.details.skillMode": "How to use the skill",
