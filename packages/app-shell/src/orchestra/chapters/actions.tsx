@@ -15,8 +15,17 @@ import { saveActionsResponse } from "../actions/save"
 import { canRequest } from "../actions/request-policy"
 import { settingsConnection } from "../actions/settings-evidence"
 import "./kit.css"
+import "../relay/relay.css"
 import "../actions/actions.css"
 import "../actions/actions-detail.css"
+import "../actions/actions-library.css"
+import "../actions/actions-graph.css"
+import "../actions/actions-run.css"
+import "../actions/actions-resources.css"
+import "../actions/actions-source.css"
+import "../actions/actions-dialogs.css"
+import "../actions/actions-settings.css"
+import "../actions/actions-shell.css"
 
 const Library = lazy(async () => {
   const { Library } = await import("../actions/library")
@@ -86,7 +95,7 @@ export default function Actions(props: ChapterPageProps) {
     createStore<{ navigation: ActionsPreference }>({ navigation: { route: { view: "library" } } }), platform,
   )
   const t: Translate = (key, params) => language.t(key, params)
-  return <section class="actions-page mx-page" data-component="orchestra-actions" aria-label={t("orchestra.actions.title")}
+  return <section class="actions-page mx-page wf-scope" data-component="orchestra-actions" aria-label={t("orchestra.actions.title")}
     style={{ display: "flex", "flex-direction": "column", overflow: "hidden" }}>
     <Show when={ready()} fallback={<Empty title={t("orchestra.actions.loading")} busy />}>
       <Workbench server={props.server} directory={props.directory} api={api} t={t}

@@ -1,9 +1,25 @@
 export * as ActionsCopy from "./actions"
 
 import { ActionsResourceCopy } from "./resources-copy"
+import { ActionsLibraryCopy } from "./actions-library-copy"
+import { ActionsGraphCopy } from "./actions-graph-copy"
+import { ActionsRunCopy } from "./actions-run-copy"
+import { ActionsResourcesCopy } from "./actions-resources-copy"
+import { ActionsSourceCopy } from "./actions-source-copy"
+import { ActionsDialogsCopy } from "./actions-dialogs-copy"
+import { ActionsSettingsCopy } from "./actions-settings-copy"
+import { ActionsShellCopy } from "./actions-shell-copy"
 
 export const dict = {
   ...ActionsResourceCopy.dict,
+  ...ActionsLibraryCopy.dict,
+  ...ActionsGraphCopy.dict,
+  ...ActionsRunCopy.dict,
+  ...ActionsResourcesCopy.dict,
+  ...ActionsSourceCopy.dict,
+  ...ActionsDialogsCopy.dict,
+  ...ActionsSettingsCopy.dict,
+  ...ActionsShellCopy.dict,
   "orchestra.actions.title": "Actions",
   "orchestra.actions.description": "Repository automation, from source configuration to execution.",
   "orchestra.actions.library": "Workflow library",
