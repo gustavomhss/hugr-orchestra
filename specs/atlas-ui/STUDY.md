@@ -325,7 +325,7 @@ Cada fase é uma fatia que pode ir para produção, com os gates do `specs/orche
 | D2 | A UI escreve no Atlas? | Não até a W3. Na W4, só pelas portas governadas, com ator e token explícitos; T0 só humano |
 | D3 | A entrada nova `knowledge-read` no boundary (é mudança no Atlas) | Sim. Sem ela não existe tela de Knowledge, só Own e Memória |
 | D4 | O estado real da Memória (README vs card da campanha 11) e quais seats aparecem | Corrigir o README e o `classes.md` antes; mostrar backend, jimmy e archie, como no runtime |
-| D5 | Quem desenha o mock e onde ele vive | Na sessão visual dedicada; o mock fica em `specs/atlas-ui/mock/` com hashes |
+| D5 | Quem desenha o mock e onde ele vive | O primeiro mock interativo já está em [`specs/atlas-ui/mock/`](mock/README.md), com todas as telas. Falta a aprovação visual do owner antes de congelar com hashes |
 | D6 | O nome do Steward na UI ("Steward" ou outro) e quem pode ratificar | Seguir `functional-surface.md` |
 
 ---
