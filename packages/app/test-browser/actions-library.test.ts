@@ -32,7 +32,8 @@ function fixture(provider: Actions.ProviderKind = "github") {
   }
   const host = document.createElement("div")
   document.body.append(host)
-  const dispose = render(() => createComponent(Library, { model, t: (key) => key, embedded: true }), host)
+  const dispose = render(() => createComponent(Library, { model, embedded: true,
+    t: (key, params) => params ? `${key}(${Object.entries(params).map(([name, value]) => `${name}=${value}`).join(",")})` : key }), host)
   return { host, state, setState, routes, workflow, [Symbol.dispose]() { dispose(); host.remove() } }
 }
 
@@ -66,7 +67,7 @@ test("observed active/disabled buttons filter cards locally and preserve unmatch
   filters()[2].click()
   expect(filters()[2].getAttribute("aria-pressed")).toBe("true")
   expect(view.host.querySelectorAll(".workflow-card")).toHaveLength(1)
-  expect(control(view.host, '.collection-section small[aria-label="orchestra.actions.library"]').textContent?.replace(/\s/g, "")).toBe("1/2")
+  expect(control(view.host, '.collection-section small[aria-label="orchestra.actions.library"]').textContent?.trim()).toBe("orchestra.actions.libraryCount(shown=1,loaded=2)")
   expect(control(view.host, ".workflow-card h3").textContent).toBe("Disabled build")
   const search = control<HTMLInputElement>(view.host, 'input[type="search"]')
   search.value = "missing-source"

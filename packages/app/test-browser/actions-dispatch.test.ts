@@ -4,6 +4,7 @@ import { createComponent } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { initial, type Dialog, type Model } from "../src/orchestra/actions/contract"
+import { DOMFormData } from "../happydom"
 import { solidDom } from "./solid-dom"
 
 const { Dialogs }: typeof import("../src/orchestra/actions/dialogs") = await import(solidDom("../src/orchestra/actions/dialogs", import.meta.dir))
@@ -24,6 +25,14 @@ function deferred<T>() {
 }
 
 function unexpected(): never { throw new Error("Unexpected model boundary") }
+
+// happydom.ts restores Bun's FormData, which cannot read a Happy DOM form; dialogs read the form synchronously on submit.
+function submit(host: Element) {
+  const native = globalThis.FormData
+  globalThis.FormData = DOMFormData
+  try { control<HTMLFormElement>(host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true })) }
+  finally { globalThis.FormData = native }
+}
 
 /** Render real dialogs; inject only native reads and command submission, never Solid or eligibility. */
 function fixture(options: { dialog?: Dialog; deferred?: boolean; provider?: Actions.ProviderKind; conclusion?: string
@@ -87,7 +96,7 @@ describe("Actions dispatch DOM", () => {
     expect(debug.checked).toBe(true)
     expect(target.value).toBe("1")
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(false)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([{ provider: "github", ref: "native-default", inputs: { debug: true, target: "windows" } }])
   }))
@@ -127,13 +136,13 @@ describe("Actions retry modes DOM", () => {
     expect(control<HTMLOptionElement>(mode, 'option[value="failed"]').disabled).toBe(false)
     expect(control<HTMLOptionElement>(mode, 'option[value="all"]').disabled).toBe(true)
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(false)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([{ provider: "github", mode: "failed" }])
     mode.value = "all"
     mode.dispatchEvent(new Event("change", { bubbles: true }))
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(true)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([{ provider: "github", mode: "failed" }])
     expect(scope.requests).toEqual([])
@@ -147,7 +156,7 @@ describe("Actions retry modes DOM", () => {
     expect(control<HTMLOptionElement>(mode, 'option[value="failed"]').disabled).toBe(true)
     expect(control<HTMLOptionElement>(mode, 'option[value="all"]').disabled).toBe(false)
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(false)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([{ provider: "github", mode: "all" }])
   }))
@@ -159,7 +168,7 @@ describe("Actions retry modes DOM", () => {
     scope.setState("capabilities", { status: "ready", value: [{ operation: "run.retryFailed", state: "unavailable", observedAt: 2 }] })
     expect(control<HTMLSelectElement>(scope.host, 'select[name="mode"]').value).toBe("failed")
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(true)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([])
   })
@@ -185,7 +194,7 @@ describe("Actions retry modes DOM", () => {
     scope.setState("capabilities", { status: "ready", value: [{ operation: "run.retry", state: "unavailable", observedAt: 2 }] })
     expect(control<HTMLOptionElement>(mode, 'option[value="failed"]').disabled).toBe(true)
     expect(control<HTMLButtonElement>(scope.host, 'button[type="submit"]').disabled).toBe(true)
-    control<HTMLFormElement>(scope.host, "form").dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }))
+    submit(scope.host)
     await Bun.sleep(0)
     expect(scope.submitted).toEqual([])
   })

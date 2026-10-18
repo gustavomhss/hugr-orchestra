@@ -5,6 +5,7 @@ import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { initial, type Filters, type Model, type State, type ViewProps } from "../src/orchestra/actions/contract"
 import { createResourceScopes } from "../src/orchestra/actions/resource-scopes"
+import { DOMFormData } from "../happydom"
 import { solidDom } from "./solid-dom"
 
 const { Resources }: typeof import("../src/orchestra/actions/resources") = await import(solidDom("../src/orchestra/actions/resources", import.meta.dir))
@@ -58,6 +59,14 @@ function mount(component: (props: ViewProps) => JSX.Element, scope: ReturnType<t
   document.body.append(host)
   const dispose = render(() => createComponent(component, { model: scope.model, t: (key) => key }), host)
   return { host, [Symbol.dispose]() { dispose(); host.remove() } }
+}
+
+// happydom.ts restores Bun's FormData, which cannot read a Happy DOM form; dialogs read the form synchronously on submit.
+function submit(form: HTMLFormElement) {
+  const native = globalThis.FormData
+  globalThis.FormData = DOMFormData
+  try { form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true })) }
+  finally { globalThis.FormData = native }
 }
 
 function control<T extends Element>(host: Element, selector: string): T {
@@ -160,7 +169,7 @@ describe("variable scope controls", () => {
     input.dispatchEvent(new Event("change", { bubbles: true }))
     input.value = "Repository"
     input.dispatchEvent(new Event("change", { bubbles: true }))
-    expect(control<HTMLOptionElement>(view.host, 'datalist option[value="Repository"]').label).toBe("Repository")
+    expect(control(view.host, 'datalist option[value="Repository"]').getAttribute("label")).toBe("Repository")
     input.value = ""
     input.dispatchEvent(new Event("change", { bubbles: true }))
     expect(scope.filters).toEqual([{ scope: "review/*" }, { scope: "*" }, { scope: "Repository" }, { scope: undefined }])
@@ -200,7 +209,7 @@ describe("variable scope controls", () => {
     const form = control<HTMLFormElement>(modal.host, "form")
     expect(form.checkValidity()).toBe(true)
     expect(control<HTMLButtonElement>(modal.host, 'button[type="submit"]').disabled).toBe(false)
-    form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true }))
+    submit(form)
     await Bun.sleep(0)
     expect(scope.submissions).toEqual([{ provider: "github", name: "TOKEN", type: "Secret", scope: `${known} exact`, value: "replacement" }])
   })
@@ -242,11 +251,11 @@ describe("variable scope controls", () => {
     using view = mount(ResourceDialogs, scope)
     const input = control<HTMLInputElement>(view.host, 'input[name="scope"]')
     expect(input.value).toBe("Repository")
-    expect(control<HTMLOptionElement>(view.host, 'datalist option[value="Repository"]').label).toBe("Repository")
+    expect(control(view.host, 'datalist option[value="Repository"]').getAttribute("label")).toBe("Repository")
     control<HTMLInputElement>(view.host, 'input[name="value"]').value = "replacement"
     const form = control<HTMLFormElement>(view.host, "form")
     expect(form.checkValidity()).toBe(true)
-    form.dispatchEvent(new SubmitEvent("submit", { bubbles: true, cancelable: true }))
+    submit(form)
     await Bun.sleep(0)
     expect(scope.submissions).toEqual([{ provider: "gitlab", name: "TOKEN", type: "Secret", scope: "Repository", value: "replacement", protected: false, masked: true }])
   })

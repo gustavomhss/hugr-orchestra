@@ -97,8 +97,10 @@ test.each(["native", "local"] as const)("%s policy Edit survives asynchronous hy
   expect(scope.model.state.resources.status).toBe("loading")
   expect(scope.model.state.dialog).toBeUndefined()
   expect(invoker.disabled).toBe(true)
-  // Simulate browser blur when hydration disables the focused invoker.
+  // Simulate browser focus fixup when hydration disables the focused invoker; Happy DOM ignores blur() on disabled controls.
+  invoker.disabled = false
   invoker.blur()
+  invoker.disabled = true
   await Bun.sleep(0)
   expect(document.activeElement).toBe(document.body)
   expect(dialogs.host.querySelector("dialog")).toBeNull()
