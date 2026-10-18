@@ -652,6 +652,7 @@ const layer: Layer.Layer<
               sessionEndOutput)
             .pipe(
               Effect.timeout(5000),
+              Effect.catch((err) => Effect.logError("session.end hook failed or timed out", { sessionID, err })),
               Effect.catchCauseIf(
                 (cause) => !Cause.hasInterruptsOnly(cause),
                 (cause) => Effect.logError("session.end hook failed or timed out", { sessionID, cause }),
