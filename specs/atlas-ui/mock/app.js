@@ -97,7 +97,7 @@
     const held = A.state.preview === "held"
     const st = M().stats()
     const count = (n, tone = "") => (held ? "" : `<span class="wf-count ${tone}">${A.num(n)}</span>`)
-    const member = s.route === "memory" ? s.params[0] ?? "backend" : null
+    const member = s.route === "memory" ? (s.params[0] ?? "backend").split("/")[0] : null
     host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>project atlas</small></div></header>
       <div class="context-group">
         ${link("#/overview", "Overview", "overview", s.route === "overview")}
@@ -182,8 +182,10 @@
       const scope = $("#mine-scope")?.value || "the whole repository"
       A.toast(`In the app this runs genesis on <code>${A.esc(scope)}</code>. Proposals land in Candidates.`, "sparkle")
     },
-    "promote-rule": () => dialog(ruleDialog()),
-    "rule-confirm": () => { $("#dialog").close(); A.toast("Saved as a project rule. It joins Backend's turn header from the next turn.", "shield") },
+    "promote-rule": (v) => dialog(ruleDialog(v)),
+    respawn: (v) => dialog(respawnDialog(...v.split("|"))),
+    "respawn-confirm": (v) => { $("#dialog").close(); A.toast(`Respawned on <code>${A.esc(v)}</code> with its latest checkpoint. The new invocation appears in the task timeline.`, "play") },
+    "rule-confirm": () => { $("#dialog").close(); A.toast("Saved as a stewardship rule. It rides in the turn header from the next turn.", "shield") },
     territory: (v) => dialog(territoryDialog(v ?? "")),
     "territory-confirm": () => { $("#dialog").close(); A.toast("Territory declared in the catalog. Facts under it now have an owner and a tier.", "territory") },
     palette: (v) => openPalette(v ?? ""),
@@ -219,8 +221,18 @@
       <label class="mx-field"><span>Note for the record</span><textarea placeholder="Why this should govern"></textarea></label></div>${foot("Through atlas-emit with your identity", "ratify-confirm", "Ratify", x.key)}</form>`
   const editDialog = (x) => `<form method="dialog">${head("Edit claim", `Anchored to <code>${A.esc(x.file)}</code>. Advisory facts are edited in place; the old bytes stay in the store and in git.`)}
     <div class="mx-dialog-body"><label class="mx-field"><span>Claim</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label><p class="mx-note">One sentence, checkable against the file. The truth gate re-derives the anchor before it is saved.</p></div>${foot("Through atlas-emit", "save", "Save", x.key)}</form>`
-  const ruleDialog = () => `<form method="dialog">${head("Promote lesson to a project rule", "Project rules are injected into every turn this member runs, so they are short, imperative and capped at 12.")}
-    <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea rows="2">Stop at the packet's phase boundary and record where you stopped.</textarea></label><label class="mx-field"><span>Applies to</span><input value="tasks with phased packets"></label></div>${foot("Saved to Backend's memory after the secret scan", "rule-confirm", "Save rule")}</form>`
+  const respawnDialog = (member, unit) => {
+    const t = (A.spawns ?? []).find((x) => x.unit === unit)
+    const c = t && [...t.checkpoints].reverse().find((x) => x.outcome === "admitted")
+    const name = member[0].toUpperCase() + member.slice(1)
+    return `<form method="dialog">${head(`Respawn ${name} on ${A.esc(unit)}`, `Maestro calls ${name} again on the same task. Atlas hands back the latest checkpoint once, before ${name} reads your packet.`)}
+    <div class="mx-dialog-body"><div class="at-given" style="margin:0 0 14px">${A.icon("memory")}<span>Checkpoint handed back: <b>${A.esc(c?.entry.stoppedAt ?? "none — the resume would be refused")}</b></span></div>
+    <label class="mx-field"><span>Packet</span><textarea rows="4">Continue this unit with the next phase your checkpoint names. When done, record an updated checkpoint.</textarea></label>
+    <div class="mx-fields"><label class="mx-field"><span>Write paths</span><input value="counter.ts"></label><label class="mx-field"><span>Model</span><select><option>Same as last run</option><option>Claude Opus</option><option>Claude Sonnet</option></select></label></div>
+    <p class="mx-note">Sent as <code>task</code> with <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>${t ? ` and task <code>${A.esc(t.taskRef)}</code>` : ""}.</p></div>${foot("Through Maestro", "respawn-confirm", "Respawn", unit)}</form>`
+  }
+  const ruleDialog = (lesson = "") => `<form method="dialog">${head("Promote lesson to a project rule", "Stewardship rules ride in every turn this member runs, so they are one imperative line, scoped, and capped at 12. Rewrite the lesson as an always/never.")}
+    <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea rows="3">${A.esc(lesson || "Stop at the packet's phase boundary and record where you stopped.")}</textarea></label><label class="mx-field"><span>Applies to</span><input value="tasks with phased packets"></label></div>${foot("Saved to Backend's memory after the secret scan", "rule-confirm", "Save rule")}</form>`
   const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives a region of the code an owner and a tier. Overlaps resolve deterministically.")}
     <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
     <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${foot("Written to the territory catalog", "territory-confirm", "Declare")}</form>`
@@ -367,8 +379,9 @@
       ["Curation · candidates", "#/curation?tab=candidates", "sparkle", "64 mined candidates in staging with genesis' reasoning, and the four gates."],
       ["Curation · ratify", "#/curation?tab=ratify", "shield", "Nothing waiting; facts flagged by the policy's T0 keywords."],
       ["Curation · mine", "#/curation?tab=mine", "play", "Run genesis on a scope: arms, sites, budget and cost."],
-      ["Memory · Backend", "#/memory/backend", "memory", "Turn header (awareness, orientation, rules) and the real task record."],
-      ["Memory · as injected", "#/memory/backend?raw=1", "code", "The exact header text the agent receives."],
+      ["Memory · Backend", "#/memory/backend", "memory", "Stewardship, lessons that could become rules, and the history of every task Backend was dispatched on."],
+      ["Task memory", "#/memory/backend/task/T-LIVE-2", "check", "One real task: latest checkpoint, every invocation, all checkpoints (refused too), files changed."],
+      ["Task transcript", "#/memory/backend/task/T-LIVE-2/transcript", "chat", "The respawnable seat session, with the checkpoint Atlas handed back and every memory write."],
       ["Memory · Maestro", "#/memory/maestro", "memory", "Defined by Atlas, not bound in Orchestra today."],
       ["History", "#/history", "history", "Code changes that drifted knowledge, store generations, memory writes."],
       ["Settings", "#/settings", "settings", "Territories, write policy, index and store."],

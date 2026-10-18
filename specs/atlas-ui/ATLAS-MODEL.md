@@ -172,6 +172,24 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 | **PR** | só sob demanda | `{prId, decisões[], resultados de review[], delta de conhecimento[]}` | ativa até o merge; depois arquivada |
 | **logbook** (só Maestro) | só sob demanda | uma entrada por PR: `entregue / decisões e porquê / trade-offs / riscos / pendências` | só cresce; uma decisão nova substitui outra **por link** |
 
+**Como o owner lê os dois tipos que mais importam** (2026-10-18):
+
+- **Memória de projeto é stewardship.** É curta, escopada e vai em todo turno: o que o engenheiro que está há anos naquele código sabe e mais ninguém sabe.
+- **Memória de task é a memória de um spawn.** Cada vez que um membro é chamado para uma unidade de trabalho, ficam guardados:
+  - a **sessão** dele: o transcript, que é respawnável;
+  - **cada invocação** daquela sessão: dispatch, resumes, continuações;
+  - os **checkpoints** que ele gravou: o que tentou, o que falhou, onde parou e a lição.
+
+  Ao respawnar a task com `memoryUnit`, o Atlas devolve o último checkpoint admitido.
+
+No código isso fecha assim:
+
+- cada registro de memória carrega a identidade da execução que o gravou (`executionSessionID`, `callID`, `assistantMessageID`, em `orch/maestro/atlas-memory.ts:108-111`);
+- `task` com `memoryUnit` injeta o fold na sessão retomada (`orch/maestro/atlas-resume.ts`);
+- o `@atlas/persist` define o metering por execução: modelo, tokens, ferramentas, tempo, retries, veredito e `transcriptSha` (`persist/src/types.ts:87-99`). Ele ainda não está ligado no Orchestra; hoje o transcript vive na sessão do Orchestra.
+
+As 5 execuções reais em `specs/backend-specialist/evidence/continuity-live-2026-10-10` (T-LIVE-1…5) são exatamente isso, e o mock as usa.
+
 **O cabeçalho de cada turno** (`orch/maestro/atlas-header.ts`): é a última parte de sistema de todo turno desses três agentes.
 
 - **Consciência** (*Awareness*), compartilhada e derivada do próprio Atlas: `mission`, `constitution` (vinda dos fatos T0), `terrain` (territórios), `ontology` (slot `definition`) e `taste` (vinda do `CONVENTIONS.md`). Teto de cerca de 400 tokens. **Hoje** três facetas estão sempre `UN-SEEDED`.
