@@ -1,7 +1,7 @@
 export * as ContinuityMasking from "./masking"
 
-import type { SessionV1 } from "@orchestra/core/v1/session"
-import { Token } from "@/util/token"
+import type { SessionV1 } from "./compat/core-v1-session"
+import { Token } from "@orchestra/core/util/token"
 
 /** Assistant steps, with everything after them, whose tool output always stays verbatim. */
 export const TAIL_STEPS = 5
