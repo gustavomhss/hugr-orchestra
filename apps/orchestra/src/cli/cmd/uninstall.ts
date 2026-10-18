@@ -133,7 +133,6 @@ async function showRemovalSummary(targets: RemovalTargets, method: Installation.
       pnpm: "pnpm uninstall -g @humangr/cli",
       bun: "bun remove -g @humangr/cli",
       yarn: "yarn global remove @humangr/cli",
-      brew: "brew uninstall orchestra",
       choco: "choco uninstall orchestra",
       scoop: "scoop uninstall orchestra",
     }
@@ -151,7 +150,6 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
       pnpm: ["pnpm", "uninstall", "-g", "@humangr/cli"],
       bun: ["bun", "remove", "-g", "@humangr/cli"],
       yarn: ["yarn", "global", "remove", "@humangr/cli"],
-      brew: ["brew", "uninstall", "orchestra"],
       choco: ["choco", "uninstall", "orchestra"],
       scoop: ["scoop", "uninstall", "orchestra"],
     }

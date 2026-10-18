@@ -29,6 +29,8 @@ The owner requested small stacked GitHub PRs with one qualification run on the c
 | 21 | `dist-brew-payload` | Homebrew checksum/install/upgrade, exact activation and retained-keg rollback |
 | 22 | `distribution-bundle` | Native Homebrew entrypoint, generic suite ledger and bundle wiring guard |
 
+The Homebrew rows (18, 20, 21, 22) record how this stack landed. The Homebrew and AUR channels were later dropped, and their recipes, fixtures and tests no longer exist (the Windows and AUR closure stack below is likewise history).
+
 Each PR targeted the previous branch; the first targeted `dev`. The final branch contained the complete delivery. Its historical `distribution-bundle` workflow ran static gates and seven package/host qualification rows, with native process controls and retained logs. Intermediate PRs did not trigger duplicate qualification runs. The bundle PR recorded the exact tested SHA and workflow URL.
 
 Review each delta independently and land bottom-up. Preserve commit ancestry when merging this stack into `dev`, then retarget the next PR to `dev`; deleting a parent before retargeting is not part of the landing procedure. An ancestry-rewriting landing requires rebuilding descendants and qualifying the new bundle.

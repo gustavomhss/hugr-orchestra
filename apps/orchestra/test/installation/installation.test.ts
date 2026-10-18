@@ -12,7 +12,7 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { AppProcess } from "@orchestra/core/process"
 import { testEffect } from "../lib/effect"
 
-const methods: Installation.Method[] = ["curl", "npm", "yarn", "pnpm", "bun", "brew", "scoop", "choco", "desktop", "unknown"]
+const methods: Installation.Method[] = ["curl", "npm", "yarn", "pnpm", "bun", "scoop", "choco", "desktop", "unknown"]
 
 // Records every process the Installation service spawns. Each spawn exits 0 with empty output.
 type Fake = {
@@ -102,14 +102,13 @@ describe("installation", () => {
   const commands = recordingLayer()
   testEffect(commands.layer).effect("upgrade() runs the package manager command for the method in the state directory", () =>
     Effect.gen(function* () {
-      for (const method of ["npm", "pnpm", "bun", "yarn", "brew"] as const)
+      for (const method of ["npm", "pnpm", "bun", "yarn"] as const)
         yield* Installation.use.upgrade(method, "9.9.9")
       expect(commands.spawns).toEqual([
         "npm install -g @humangr/cli@9.9.9",
         "pnpm add -g @humangr/cli@9.9.9",
         "bun add -g @humangr/cli@9.9.9",
         "yarn global add @humangr/cli@9.9.9",
-        "brew upgrade gustavomhss/tap/orchestra",
       ])
       expect(commands.directories.every((directory) => directory === Global.Path.state)).toBe(true)
     }),
@@ -134,7 +133,7 @@ describe("installation", () => {
       }
       expect((yield* Effect.flip(Installation.use.upgrade("curl", "9.9.9"))).stderr).toContain("install.sh")
       expect((yield* Effect.flip(Installation.use.upgrade("desktop", "9.9.9"))).stderr).toContain("desktop app")
-      expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain("paru -Syu orchestra-bin")
+      expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain("npm i -g @humangr/cli")
       expect(refused.spawns).toEqual([])
     }),
   )

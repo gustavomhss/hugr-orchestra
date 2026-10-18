@@ -14,7 +14,7 @@ import semver from "semver"
 import { InstallationChannel, InstallationVersion } from "@orchestra/core/installation/version"
 import { InstallationEvent } from "@orchestra/schema/installation-event"
 
-export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "brew" | "scoop" | "choco" | "desktop" | "unknown"
+export type Method = "curl" | "npm" | "yarn" | "pnpm" | "bun" | "scoop" | "choco" | "desktop" | "unknown"
 
 export type ReleaseType = "patch" | "minor" | "major"
 
@@ -62,7 +62,6 @@ export class UpgradeFailedError extends Schema.TaggedErrorClass<UpgradeFailedErr
 const GitHubRelease = Schema.Struct({ tag_name: Schema.String })
 
 export const PACKAGE = "@humangr/cli"
-export const FORMULA = "gustavomhss/tap/orchestra"
 
 // The desktop app ships its own copy of the CLI in Resources/cli; that copy is updated with the app.
 export function isDesktopBundle(execPath: string) {
@@ -124,7 +123,6 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
           { name: "yarn", command: () => text(["yarn", "global", "list"]) },
           { name: "pnpm", command: () => text(["pnpm", "list", "-g", "--depth=0"]) },
           { name: "bun", command: () => text(["bun", "pm", "ls", "-g"]) },
-          { name: "brew", command: () => text(["brew", "list", "--formula", "orchestra"]) },
           { name: "scoop", command: () => text(["scoop", "list", "orchestra"]) },
           { name: "choco", command: () => text(["choco", "list", "--limit-output", "orchestra"]) },
         ]
@@ -140,7 +138,7 @@ const layer: Layer.Layer<Service, never, HttpClient.HttpClient | AppProcess.Serv
         for (const check of checks) {
           const output = yield* check.command()
           const installedName =
-            check.name === "brew" || check.name === "choco" || check.name === "scoop" ? "orchestra" : PACKAGE
+            check.name === "choco" || check.name === "scoop" ? "orchestra" : PACKAGE
           if (output.includes(installedName)) {
             return check.name
           }
@@ -182,12 +180,11 @@ export function upgradeCommand(method: Method, target: string): string[] | strin
   if (method === "pnpm") return ["pnpm", "add", "-g", `${PACKAGE}@${target}`]
   if (method === "bun") return ["bun", "add", "-g", `${PACKAGE}@${target}`]
   if (method === "yarn") return ["yarn", "global", "add", `${PACKAGE}@${target}`]
-  if (method === "brew") return ["brew", "upgrade", FORMULA]
   if (method === "curl")
     return "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
   if (method === "desktop") return "This CLI belongs to the Orchestra desktop app. Update the desktop app instead."
   if (method === "scoop" || method === "choco") return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
-  return "Orchestra could not tell how it was installed. On Arch Linux run `paru -Syu orchestra-bin`; otherwise reinstall with npm i -g @humangr/cli."
+  return "Orchestra could not tell how it was installed. Reinstall with npm i -g @humangr/cli."
 }
 
 export const node = LayerNode.make({

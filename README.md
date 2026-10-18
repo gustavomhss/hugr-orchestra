@@ -26,10 +26,7 @@ An unsigned build makes the system ask before the first launch. On macOS, open S
 
 ```bash
 npm install -g @humangr/cli
-brew install gustavomhss/tap/orchestra
 ```
-
-Arch Linux users can install the AUR package `orchestra-bin`.
 
 Each release also attaches per-platform `.tar.gz` archives, `SHA256SUMS` and `install.sh`. Download an archive and its digest from `SHA256SUMS`, then run:
 
@@ -44,7 +41,7 @@ sh install.sh \
 
 `install.sh` supports macOS and glibc Linux on x64 and arm64. It does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for targets, updates and rollback.
 
-npm, Homebrew, AUR and `install.sh` installs never show a Gatekeeper or SmartScreen prompt, signed or not. A binary downloaded from the release page in a browser can.
+npm and `install.sh` installs never show a Gatekeeper or SmartScreen prompt, signed or not. A binary downloaded from the release page in a browser can.
 
 ### First run
 
@@ -52,7 +49,7 @@ Orchestra needs a model to work with. Connect a provider with your API key in th
 
 ### Upgrading
 
-For npm and Homebrew installs, run `orchestra upgrade`. The desktop app checks for new versions itself. The Windows and AppImage builds install them in place, and so do signed macOS builds. Unsigned macOS builds and the `.deb` and `.rpm` packages link to the new release instead: download its installer and install it over the old one.
+For npm installs, run `orchestra upgrade`. The desktop app checks for new versions itself. The Windows and AppImage builds install them in place, and so do signed macOS builds. Unsigned macOS builds and the `.deb` and `.rpm` packages link to the new release instead: download its installer and install it over the old one.
 
 ## Support
 
