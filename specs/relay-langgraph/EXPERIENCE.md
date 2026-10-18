@@ -1,6 +1,8 @@
 # Relay for LangGraph — experience design
 
-Status: draft v2 (2026-10-18), aligned with the reviewed [PLAN.md](PLAN.md). Not built. Names marked `(tbd)` are placeholders.
+Status: draft v2 (2026-10-18), aligned with the reviewed [PLAN.md](PLAN.md).
+
+This document is the full vision. The MVP scope is in PLAN.md v3: code door, terminal or `interrupt()` approval, and runs shown read-only in Executions. The app approval card, canvas export, discovery, middleware and CrewAI come later. Not built. Names marked `(tbd)` are placeholders.
 
 ## Promise
 

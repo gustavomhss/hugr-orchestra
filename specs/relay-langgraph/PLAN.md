@@ -1,124 +1,107 @@
 # Relay for LangGraph — MVP implementation plan
 
-Status: draft v2 (2026-10-18), revised after a cold adversarial review (verdict FIX-FIRST; all blockers addressed below). Companion to [EXPERIENCE.md](EXPERIENCE.md).
+Status: v3 (2026-10-18), the leanest version. Companion to [EXPERIENCE.md](EXPERIENCE.md). v2 was reviewed adversarially; v3 keeps every fix that still applies and cuts everything the selling point does not need.
 
-Owner decision: **Option A** — checks run inside the Python library in the user's process; Orchestra ingests and verifies. Defaults chosen for the review's open questions are listed under [Decisions](#decisions-taken-for-the-mvp); the owner can override any of them.
+Owner decision: **Option A** — checks run inside the Python library; Orchestra only reads and verifies.
 
-## Architecture
+## What the MVP proves
 
-```
-user's agent.py (LangGraph, local)                 Orchestra
-  └─ gated(builder, {...})                           ├─ server: GET /api/relay/external-run*   (read, rebuild from ledger, verify)
-       ├─ inserted gate + approval nodes             ├─ server: POST .../decision  (Origin-checked, principal recorded in Orchestra data dir)
-       ├─ runs cmd / judge checks                    ├─ watcher → relay.external.* event on /api/event
-       ├─ appends ledger (Relay chain format)        └─ app: Executions + receipt (exist), approval card
-       └─ writes <project>/.relay/runs/<thread_id>/
-```
+One line on an existing LangGraph graph gives gates that retry on failure, a human approval that never asks twice, and a hash-chained ledger that `relay verify` checks. Orchestra shows those runs in the Executions screen that already exists.
 
-The run folder carries runs out. Approvals made in the app are additionally recorded in Orchestra's own data directory with the approving principal, so the app can tell an app-approved decision from one the agent wrote itself. The existing 403 on `POST /api/relay/document/:id/check` stays.
+## Cut from v2 (later, if ever)
 
-## Decisions taken for the MVP
+- App approval card, decision write route, principal record, Origin check. Approval is terminal or `interrupt()` only, and the run is labelled self-reported.
+- Folder watcher and the new SSE event. The app already polls runs every 10 s.
+- Canvas export to LangGraph.
+- Deployed LangGraph servers. Local scripts and `langgraph dev` only.
+- `gate()` single-node form, middleware, callback-only ledger, CrewAI.
+- Keyed (HMAC) ledgers. Plain SHA-256 only.
+- Local viewer, `prune`, `runs` commands.
 
-1. **Approvals:** both terminal and app approvals are allowed. App approvals are recorded server-side with the principal (`packages/server/src/principal.ts`); the receipt shows "approved in Orchestra by `<user>`" only when the ledger decision matches that record, and "self-reported" otherwise.
-2. **Scope:** local scripts and `langgraph dev` only. Deployed or hosted LangGraph servers are out of the MVP: their run folders live in a container Orchestra cannot read.
-3. **Package location:** inside `modules/relay` (`modules/relay/lib/orchestra_relay/`, tests in `modules/relay/tests/`), so the existing pytest lane runs it. No new CI lane.
-4. **Where runs show:** the Workflows chapter Executions screen, badged "external". The visual treatment goes to the visual session.
+## Three pieces of work
 
-## Contract (frozen first)
+### 1. Contract (in flight, branch `relay-contract`)
 
-Run identity: **one run per LangGraph `thread_id`**. A resume is a new invoke on the same thread and appends to the same run.
+`packages/schema/src/relay-external.ts`:
 
-`<project>/.relay/runs/<runID>/` where `runID` matches `^[A-Za-z0-9_-]{1,64}$` (derived from `thread_id`; any other characters are hashed).
+- `runIDFromThread` and the run ID rule `^[A-Za-z0-9_-]{1,64}$`.
+- The ledger event bodies, each with an idempotency key `thread_id/node/attempt/kind`.
+- `runFromLedger`, which rebuilds the app's `RelayRun` from the ledger alone.
 
-- `ledger.jsonl` — the source of truth. Must pass `modules/relay/src/ledger/verify.ts` as written, which hashes the bytes on disk and never reserializes. The writer's obligations:
-  - every body has a nonempty string `event`
-  - `seq` starts at 0; `prev` starts at `GENESIS`
-  - `h` is the final member
-  - no duplicate keys, no `NaN`/`Infinity` (`json.dumps(..., allow_nan=False)`)
-  - append under the same mkdir `.chain.lock` protocol as `chain.ts` (parallel nodes on one thread append concurrently)
-  - finish with a terminal event the verifier knows: `sprint-complete` on success, `escalate` on failure or park (`verify.ts` `TERMINAL`)
-  - plain SHA-256 only in the MVP. The server has no user key and can only refuse keyed chains, so keyed ledgers wait for a key-sharing design.
-- Event bodies: `run.start`, `step.start`, `check.result`, `approval.request`, `approval.decision`, `step.end`, then `sprint-complete` or `escalate`. Each carries an idempotency key `thread_id/node/attempt/kind`. The writer scans the ledger for that key before appending and skips duplicates, so a resume never double-appends.
-- `run.json` — convenience snapshot only, written atomically (temp + rename). **The server never trusts it:** the displayed `RelayRun` is rebuilt from the ledger.
-- `decisions/<approvalSeq>.json` — written by the terminal prompt or by the server route. Consumed once, then recorded as `approval.decision` with `source: "terminal" | "orchestra"`.
+It also adds three valid goldens and one byte-flip mutant in `modules/relay/test/golden/external/`, plus one bun test.
 
-Schema in `packages/schema` next to `relay-authoring`. Goldens in `modules/relay/test/golden/external/`: valid ledgers, mutants (byte flip, CRLF, forked chain, duplicate key, NaN, missing terminal), and a fake "shipped in a cloned repo" ledger.
+### 2. Python library (`modules/relay/lib/orchestra_relay/`, tests in `modules/relay/tests/`)
 
-## Python library
+- `gated(builder, {"node": "cmd" | {check, judge, approve, retries}}, dev=False)`:
+  - Inserts a check node, and an approval node when asked, after each gated node.
+  - Rewires the gated node's static out-edges through them, with a bounded retry edge back.
+  - Keeps the user's function untouched.
+  - `dev=True` compiles with `InMemorySaver` when no checkpointer is set.
+- Ledger writer in the chain format:
+  - body + `gen`, `prev`, `seq`, `mac`, then `h` as the last member
+  - `json.dumps(..., separators=(",", ":"), allow_nan=False, ensure_ascii=False)`
+  - append under the same mkdir `.chain.lock`
+  - skip any entry whose idempotency key is already in the ledger
+  - end with `sprint-complete` or `escalate`
+- Runs go to `<project>/.relay/runs/<runID>/ledger.jsonl`. `.relay/` is added to `.gitignore` once, with a notice.
+- Checks:
+  - `cmd` runs a subprocess; the exit code decides.
+  - `judge` is advisory and records "no model configured" when there is none.
+  - `approve` uses `interrupt()` in its own node and replays a recorded decision on resume.
+- CLI:
+  - `relay verify [run]` uses the existing oracle `modules/relay/benchmark/verify_ledger.py`.
+  - `relay demo tamper` copies a run, flips one byte and shows the verify failure.
+- Terminal output as in EXPERIENCE.md.
+- `requirements-dev.txt` gets a pinned `langgraph`.
 
-- `gated(builder, {"node": gate_spec, ...})` is the primary one-liner. Before compile it inserts, after each gated node, a **check node** and, where `approve=True`, a separate **approval node**, and rewires that node's static out-edges through them. Retry is a conditional edge back to the gated node, bounded by the retry budget.
-- `gate(fn, ...)` exists for nodes **without static out-edges** only. `gated()` and `gate()` refuse, with an Elm-style error naming the edge, a node that would let a static edge run on unchecked output (LangGraph runs static edges even when a node returns `Command(goto=...)`).
-- Approval lives in its own node, so on resume LangGraph restarts only that node, not the user's function. The node replays a decision already in the ledger instead of asking again.
-- Wrapping keeps the user's signature (`functools.wraps`) so `config` / `runtime` / `store` injection still works; sync and async nodes are both supported. `thread_id` comes from the `config` argument, not context variables (context variables break for async on Python < 3.11). Compiled subgraphs as gated nodes are out of the MVP and refused with a clear error.
-- When no checkpointer is configured, `gated(..., dev=True)` compiles with `InMemorySaver` and says so once.
-- Judge: uses the model already configured in env; with none, `judge` gates record `advisory: no model configured`. Documented as different from Relay's own judge.
-- Writes `.relay/` into the project's `.gitignore` on first run (with a printed notice); ledgers can hold check output.
-- Zero runtime dependencies beyond `langgraph`. The verifier reuses the existing Python oracle `modules/relay/benchmark/verify_ledger.py` rather than a new one.
-- CLI: `relay verify`, `relay demo tamper`, `relay runs`, `relay view` (stdlib single-page viewer), `relay prune --older-than` (retention).
+Done when, all through the pytest lane:
 
-## Orchestra side
+- A gated failing check retries and then passes.
+- A static out-edge never runs on unchecked output.
+- Resuming an approval does not re-run the user's function, the check, or any ledger append.
+- Sync and async nodes, and nodes that take `config`, both work.
+- `relay verify` accepts its own ledgers and rejects the tamper demo.
+- The quickstart example runs.
+- The library writes one ledger into `modules/relay/test/golden/external/python/`, committed, for piece 3 to verify in TS.
 
-- **Routes** (new group, not reusing Maestro's run routes):
-  - `GET /api/relay/external-run`, `/:id`, `/:id/audit`, `/:id/ledger?after=` (paged)
-  - `POST /api/relay/external-run/:id/decision`
-  - Every route validates `runID` against the pattern, resolves the run folder with `lstat` and real-path containment inside the location's project, and refuses symlinks for the run folder and `decisions/`. The POST route checks `Origin` like `packages/server/src/handlers/pty.ts`, writes only the decision file, records the principal under `<data>/relay/<projectID>/external/`, and runs nothing.
-- **Audit wording:** external audits never show PASS. They show "chain intact, self-reported" (or "broken at entry N"), plus "approved in Orchestra by `<user>`" per decision when it matches the server record. A ledger shipped inside a cloned repo therefore cannot display as verified.
-- **App client:** extend `runs.ts` with the external routes. External `documentID` is `external:<graph>`; the receipt hides "open canvas" for those.
-- **Events:** a new `relay.external.updated` event declared in `packages/schema`, client regenerated. It does not reuse `relay.run.*` / `relay.gate.*`, which belong to Maestro's durable runs. `source.ts` refreshes on it; the awaiting count includes external runs with a pending approval.
-- **Watcher:** one per open location, capped, released when the location closes; debounced. Windows paths covered by the same `lstat`/containment code.
+### 3. Orchestra read side (`packages/protocol`, `packages/server`, `packages/core`, small `packages/app-shell` change)
 
-## Export (Relay document → LangGraph project)
+- `GET /api/relay/run`, `/run/:id`, `/run/:id/audit`, `/run/:id/ledger?after=`. These are the routes `runs.ts` already calls, served from `<location>/.relay/runs/` and rebuilt with `runFromLedger`.
+- Audit uses `verify.ts`. It never reports PASS for an external run, only "chain intact, self-reported" or "broken at entry N".
+- Path safety: run ID pattern, `lstat`, real-path containment inside the location, no symlinks.
+- Regenerate the client with `bun run generate`.
+- App:
+  - An "external" badge on runs whose `documentID` starts with `external:`.
+  - Hide "open canvas" for those runs.
+  - Visual polish goes to the visual session.
 
-- Reuse the existing `relay.document.export` route (`packages/protocol/src/groups/relay-document.ts`) with a `format=langgraph` variant rather than a new route.
-- Workflows are linear. Mapping:
-  - `startTrigger` → entry and initial state
-  - `execute` / `review` → **stub agent node** (a function the user fills in; Maestro Sessions with tools have no LangGraph equivalent) followed by its gate
-  - `gate` step → a check-only node with its instructions and checklist
-  - `inject` → state-update node; the digest goes in the ledger
-  - `human` → approval node
-  - phases → comments and node-name prefixes (subgraphs are out of the MVP)
-- Only `cmd` checks export. `judge` checks export as advisory with a comment; checks that use Maestro admission env (`base_ref`, `repo_root`, `wp_dir`) export with those as documented env vars the user sets.
-- The export writes files only. "Run it" launches through the existing PTY route (`cicd-runner.ts` path), which already goes through the sanctioned spawn surface; no new spawn site and no change to `script/spawn-allowlist.json`.
+Done when:
 
-## Work packages and waves
+- A bun test serves the committed Python ledger and the contract goldens through the routes, with the expected snapshot and audit wording.
+- Traversal, symlink and bad-ID requests are refused.
 
-| WP | What | Files |
-| --- | --- | --- |
-| 0 | Contract: schema, event bodies, idempotency keys, run ID rule, goldens | `packages/schema`, `modules/relay/test/golden/external` |
-| 1 | Python ledger writer + use of the existing oracle verifier | `modules/relay/lib/orchestra_relay/ledger.py` |
-| 2 | Python `gated()` / `gate()`, check + approval nodes, idempotency, dev checkpointer, terminal output, gitignore | `modules/relay/lib/orchestra_relay/` |
-| 3 | Python CLI (`verify`, `demo tamper`, `runs`, `view`, `prune`) | `modules/relay/lib/orchestra_relay/cli.py` |
-| 4 | Protocol: external-run group, decision route, `relay.external.updated` event, export `format=langgraph`; regenerate client | `packages/protocol`, `packages/schema`, `packages/client` (generated) |
-| 5 | Server + core: read routes rebuilding from ledger, audit wording, decision route, watcher | `packages/server`, `packages/core` |
-| 6 | App: external runs in Executions, approval card wiring, event refresh (visual parts → visual session) | `packages/app-shell/src/orchestra/relay/` |
-| 7 | Export generator | `packages/core` (generator only) |
-| 8 | Quickstart and examples | `modules/relay/lib/orchestra_relay/examples`, docs |
+## Order
 
-Waves (disjoint files within each wave):
+1. Contract lands.
+2. Python library and Orchestra read side run **in parallel**, in separate worktrees and branches (`relay-python`, `relay-read`). They touch disjoint files.
+3. Piece 3 needs the Python ledger fixture. Until piece 2 commits it, it tests against the contract goldens, then adds the Python fixture as one extra case.
 
-1. WP0.
-2. WP1 and WP4 (Python vs protocol; protocol and client generation serialized in WP4 alone).
-3. WP2, WP3, WP5 and WP7 (Python package vs server/core vs export generator; WP5 and WP7 touch different files in `packages/core`).
-4. WP6, then WP8.
+Two agents in total after the contract:
 
-## Gates per WP
+- The Python agent needs LangGraph judgment.
+- The read-side agent is plumbing over existing patterns.
 
-Tests run only through `bun run test:ci`; nothing heavy on this Mac. Typecheck via the `typecheck.yml` dispatch. Full suite once at the end of the epic.
+## Gates
 
-- **Cross-language checks without a mixed lane:** the pytest lane has no Bun and the Bun lane has no `langgraph`, so parity goes through committed fixtures. The Python tests write ledgers into `modules/relay/test/golden/external/python/`, and a Bun test verifies those files with `verify.ts`. The Bun side writes goldens that a pytest test verifies with `verify_ledger.py`. A fixture drift check fails if the committed Python output no longer matches what the Python writer produces.
-- **WP1:** both verifiers accept the valid goldens and reject every mutant, including the cloned-repo ledger's wording rule.
-- **WP2:** resume tests show zero repeated ledger appends, zero repeated prompts, and the user's function body not re-run on approval resume; a gated node with a static out-edge is refused by `gate()` and rewired by `gated()`; sync and async nodes, and nodes taking `config`/`runtime`.
-- **WP5:** path traversal, symlink, bad run ID and missing Origin are each refused with a test; external audits never return a PASS status.
-- **WP7:** an exported project with stub nodes runs its first run and the resulting ledger passes `verify.ts` (verified through committed fixtures).
-- **WP8:** every quickstart snippet runs in the pytest lane. The "under 2 minutes" target is measured once by hand on a clean machine and reported as a measurement, not gated.
+- Tests only through `bun run test:ci`; typecheck only through `typecheck.yml`. Nothing heavy on this Mac.
+- Each PR goes into `relay-langgraph`. The full suite runs once, on the final PR into `dev` (`epic` label).
+- The lead verifies each PR before merging:
+  - the file list
+  - one mutation probe
+  - the CI result
 
-## Before WP0
+## Honest limits (for the docs)
 
-- Confirm the pytest lane in `.github/workflows/test-ci.yml` can install `langgraph` from `modules/relay/requirements-dev.txt` (network and pip available); add `uv` only if the docs use it.
-- Confirm `check:godfile` budgets for the generator (WP7) and the server group (WP5).
-
-## Honest limits (to state in user docs)
-
-- The check runs in the agent's own process. The ledger shows what that process recorded and that nothing changed afterwards. It does not show that an independent party ran the check; that is a later verified mode.
-- Plain SHA-256 detects edits by anyone who does not recompute the chain. A process that controls the folder can rewrite the whole chain. Only decisions matched against Orchestra's server-side record are attributable to a person.
-- A git install clones the whole repository until the package is on PyPI (owner account needed), which slows first install.
+- The check runs in the agent's own process. The ledger shows what that process recorded and that nothing changed afterwards. It does not show an independent party ran the check.
+- Plain SHA-256 catches edits by anyone who does not recompute the chain. A process that controls the folder can rewrite it whole. Approvals are self-reported in the MVP.
+- Install is from git until the package is on PyPI (owner account).
