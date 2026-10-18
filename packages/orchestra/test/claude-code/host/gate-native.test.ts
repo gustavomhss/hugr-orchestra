@@ -495,4 +495,52 @@ describe("native gate real policy", () => {
       ["remind", "reminded", "write.after", "write", "src/app.ts"],
     ])
   }), { git: true }, 60_000)
+
+  // Claude Code's Edit and MultiEdit are Orchestra's `edit` for hooks: a Block on `edit` refuses them before the call, a
+  // path it does not name goes through, and each refusal is recorded under the `edit` operation.
+  it.instance("an installed Block hook on edit refuses Claude Code's Edit and MultiEdit and records the decision", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const bridge = yield* EventV2Bridge.Service
+    const database = yield* Database.Service
+    const binding = { data: Global.Path.data, projectID: f.session.projectID, principal: "user:test" }
+    yield* f.filesystem.ensureDir(MaestroArsenal.stateDirectory(Global.Path.data, f.session.projectID))
+    // Edit needs its target to exist.
+    yield* Effect.forEach(["secret", "src"], (name) => f.filesystem.ensureDir(path.join(f.directory, name)))
+    yield* Effect.forEach(["secret/key.txt", "src/app.ts"], (file) =>
+      f.filesystem.writeFileString(path.join(f.directory, file), "before"))
+    const step = (id: string, type: RelayHook.NodeType, parameters: Record<string, unknown>) =>
+      ({ id, name: id, type, position: [0, 0], parameters })
+    const snapshot = {
+      schema: "relay.hook.v1", name: "No secret edits", binding: "host-required", installed: false,
+      nodes: [
+        step("event", RelayHook.NodeType.trigger, { operation: "edit", timing: "before" }),
+        step("secret", RelayHook.NodeType.condition, { field: "path", pattern: "secret/**" }),
+        step("block", RelayHook.NodeType.block, { message: "Keep secrets out." }),
+      ],
+      connections: [{ from: "event", port: 0, to: "secret" }, { from: "secret", port: 0, to: "block" }],
+    }
+    yield* Effect.acquireRelease(
+      RelayHookInstall.install({ ...binding, document: snapshot.name, version: "v1", snapshot,
+        sha256: createHash("sha256").update(JSON.stringify(snapshot)).digest("hex") }),
+      (installed) => RelayHookInstall.uninstall({ ...binding, installID: installed.install.installID }).pipe(Effect.orDie, Effect.asVoid),
+    )
+    const decide = (name: string, input: Record<string, unknown>, id?: string) =>
+      f.decide(name, input, id).pipe(Effect.provideService(EventV2.Service, bridge))
+    const reason = "Blocked by hook 'No secret edits': Keep secrets out."
+    refused(yield* decide("Edit", { file_path: "secret/key.txt", old_string: "before", new_string: "after" }), reason)
+    refused(yield* decide("MultiEdit", { file_path: "secret/key.txt", edits: [{ old_string: "before", new_string: "after" }] }), reason)
+    expect(yield* decide("Edit", { file_path: "src/app.ts", old_string: "before", new_string: "after" }, "allowed-edit"))
+      .toEqual({ allow: true })
+    expect(yield* f.gate.settle("allowed-edit", true).pipe(Effect.provideService(EventV2.Service, bridge))).toEqual([])
+    // The refused calls changed nothing.
+    expect(yield* f.filesystem.readFileString(path.join(f.directory, "secret/key.txt"))).toBe("before")
+    const decisions = (yield* database.db.select().from(EventTable).all())
+      .filter((row) => row.type === EventV2.versionedType(RelayHook.Decided.type, 1))
+      .map((row) => Schema.decodeUnknownSync(RelayHook.Decided.data)(row.data))
+      .filter((decision) => decision.sessionID === f.session.id)
+    expect(decisions.map((item) => [item.action, item.outcome, item.trigger, item.tool, item.subject])).toEqual([
+      ["block", "blocked", "edit.before", "edit", "secret/key.txt"],
+      ["block", "blocked", "edit.before", "edit", "secret/key.txt"],
+    ])
+  }), { git: true }, 60_000)
 })
