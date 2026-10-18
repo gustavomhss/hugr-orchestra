@@ -38,9 +38,10 @@ export default [
           // The dep scanner does not follow `?worker&url` imports, so the markdown worker's
           // dependencies were only discovered when the first message rendered. Vite then
           // re-optimized and force-reloaded the open page mid-session (and mid-e2e-test).
-          // Anchored on @orchestra/ui so the same specs resolve from the app and desktop roots.
+          // The Vite roots (apps/web and desktop) depend on @orchestra/app, not on @orchestra/ui, so the
+          // chain starts there: a spec its root cannot resolve is skipped with only a warning.
           include: ["@shikijs/stream", "katex", "marked", "marked-shiki", "remend"].map(
-            (dependency) => `@orchestra/ui > ${dependency}`,
+            (dependency) => `@orchestra/app > @orchestra/ui > ${dependency}`,
           ),
         },
       }

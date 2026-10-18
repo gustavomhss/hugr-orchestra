@@ -1,5 +1,5 @@
 import { Navigate, useParams } from "@solidjs/router"
-import { createMemo, lazy, Show, type Component } from "solid-js"
+import { createMemo, lazy, Show, Suspense, type Component } from "solid-js"
 import { Dynamic } from "solid-js/web"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -74,38 +74,57 @@ export function OrchestraChapterRoute() {
               {language.t("orchestra.shell.wip.page")}
             </p>
           </Show>
-          <Show
-            when={owner()}
-            keyed
-            fallback={
-              <Show
-                when={serverWideChapters.includes(params.chapter) && selectedServer()}
-                keyed
-                fallback={<ChapterEmpty server={selectedServer()} />}
-              >
-                {(conn) => (
-                  <ServerSDKProvider server={() => conn}>
-                    <ServerSyncProvider server={() => conn}>
-                      <Dynamic component={page()} server={conn} directory="" />
-                    </ServerSyncProvider>
-                  </ServerSDKProvider>
-                )}
-              </Show>
-            }
-          >
-            {(owner) => (
-              <ServerSDKProvider server={() => owner.server}>
-                <ServerSyncProvider server={() => owner.server}>
-                  <SDKProvider directory={owner.directory}>
-                    <ModelsProvider directory={() => owner.directory}>
-                      <Dynamic component={page()} server={owner.server} directory={owner.directory} />
-                    </ModelsProvider>
-                  </SDKProvider>
-                </ServerSyncProvider>
-              </ServerSDKProvider>
-            )}
-          </Show>
+          {/* A new boundary: see ChapterPage. */}
+          <Suspense>
+            <Show
+              when={owner()}
+              keyed
+              fallback={
+                <Show
+                  when={serverWideChapters.includes(params.chapter) && selectedServer()}
+                  keyed
+                  fallback={<ChapterEmpty server={selectedServer()} />}
+                >
+                  {(conn) => (
+                    <ServerSDKProvider server={() => conn}>
+                      <ServerSyncProvider server={() => conn}>
+                        <ChapterPage page={page()} server={conn} directory="" />
+                      </ServerSyncProvider>
+                    </ServerSDKProvider>
+                  )}
+                </Show>
+              }
+            >
+              {(owner) => (
+                <ServerSDKProvider server={() => owner.server}>
+                  <ServerSyncProvider server={() => owner.server}>
+                    <SDKProvider directory={owner.directory}>
+                      <ModelsProvider directory={() => owner.directory}>
+                        <ChapterPage page={page()} server={owner.server} directory={owner.directory} />
+                      </ModelsProvider>
+                    </SDKProvider>
+                  </ServerSyncProvider>
+                </ServerSDKProvider>
+              )}
+            </Show>
+          </Suspense>
         </div>
+      )}
+    </Show>
+  )
+}
+
+// Each page gets its own new Suspense boundary. Under the shell's settled boundary, a page still loading
+// (its lazy chunk, a resource) holds the route transition open; a signal written outside the transition
+// meanwhile makes Solid build the page in both the current and the pending world, so it mounts twice and
+// fetches everything twice. A new boundary shows its (empty) fallback instead, and the transition commits.
+function ChapterPage(props: ChapterPageProps & { page: Component<ChapterPageProps> }) {
+  return (
+    <Show when={props.page} keyed>
+      {(page) => (
+        <Suspense>
+          <Dynamic component={page} server={props.server} directory={props.directory} />
+        </Suspense>
       )}
     </Show>
   )
