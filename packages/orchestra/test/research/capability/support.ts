@@ -5,6 +5,8 @@ import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { AppProcess } from "@orchestra/core/process"
+import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { ModelV2 } from "@orchestra/core/model"
@@ -36,6 +38,7 @@ const nodes = LayerNode.group([
   Agent.node, Permission.node, FSUtil.node, Database.node, SessionProjector.node, EventV2Bridge.node, Git.node,
   // The services ResearchRegistry.make reaches when a test initializes the engine tools itself.
   Config.node, Skill.node, Truncate.node, Instruction.node, AtlasKnowledge.node, filesystem, httpClient,
+  AppProcess.node, RipgrepBinary.node,
 ])
 
 /** The native loop with default flags. */
