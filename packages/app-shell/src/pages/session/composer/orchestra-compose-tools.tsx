@@ -12,7 +12,6 @@ export function OrchestraComposeTools(props: { controller: PromptInputV2Interact
   const queued = () => delivery.supported() && delivery.choice() === "queue"
   const hintID = createUniqueId()
   const deliveryHint = () => {
-    if (!delivery.supported()) return language.t("orchestra.chat.delivery.unsupported")
     return language.t(
       delivery.choice() === "queue" ? "orchestra.chat.delivery.queueHint" : "orchestra.chat.delivery.steerHint",
     )
@@ -30,21 +29,23 @@ export function OrchestraComposeTools(props: { controller: PromptInputV2Interact
           <path d="M4 2h5l3 3v9H4V2ZM9 2v3h3M6 8h4M6 11h3" />
         </svg>
       </button>
-      <button
-        type="button"
-        data-action="prompt-delivery"
-        data-delivery={queued() ? "queue" : "steer"}
-        aria-pressed={queued()}
-        aria-disabled={!delivery.supported() || undefined}
-        aria-describedby={hintID}
-        title={deliveryHint()}
-        onClick={() => delivery.toggle()}
-      >
-        {language.t(queued() ? "orchestra.chat.delivery.queue" : "orchestra.chat.delivery.steer")}
-      </button>
-      <span id={hintID} hidden>
-        {deliveryHint()}
-      </span>
+      {/* Steer/Queue only works on V2 servers; the bundled server is V1, where a click did nothing. */}
+      <Show when={delivery.supported()}>
+        <button
+          type="button"
+          data-action="prompt-delivery"
+          data-delivery={queued() ? "queue" : "steer"}
+          aria-pressed={queued()}
+          aria-describedby={hintID}
+          title={deliveryHint()}
+          onClick={() => delivery.toggle()}
+        >
+          {language.t(queued() ? "orchestra.chat.delivery.queue" : "orchestra.chat.delivery.steer")}
+        </button>
+        <span id={hintID} hidden>
+          {deliveryHint()}
+        </span>
+      </Show>
       <Show when={props.controller.view.submit.working?.()}>
         <button type="button" data-action="prompt-stop-run" onClick={() => props.controller.view.submit.onStop()}>
           {language.t("orchestra.chat.stop")}

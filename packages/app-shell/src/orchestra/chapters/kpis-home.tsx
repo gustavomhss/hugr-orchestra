@@ -1,4 +1,5 @@
 import { getFilename } from "@orchestra/core/util/path"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useNavigate } from "@solidjs/router"
 import { createMemo, Show, startTransition } from "solid-js"
 import { useLanguage } from "@/context/language"
@@ -44,6 +45,13 @@ export function OrchestraHome(props: { home: HomeController }) {
               </div>
             </header>
             <p class="home-status">{language.t("orchestra.home.empty")}</p>
+            <Show when={props.home.server.focused()}>
+              {(conn) => (
+                <ButtonV2 class="mt-3" variant="contrast" icon="plus" onClick={() => props.home.project.choose(conn())}>
+                  {language.t("command.project.open")}
+                </ButtonV2>
+              )}
+            </Show>
           </div>
         </section>
       }

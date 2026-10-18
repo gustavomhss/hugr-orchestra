@@ -4,6 +4,7 @@ import { createMemo, createResource, For, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { ModelsProvider } from "@/context/models"
+import { serverName } from "@/context/server"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { loadDefaultModel } from "@/context/global-sync/bootstrap"
@@ -38,7 +39,7 @@ import "./providers.css"
 
 export default function ProvidersPage(props: ChapterPageProps) {
   return (
-    <ModelsProvider directory={() => props.directory}>
+    <ModelsProvider directory={() => props.directory || null}>
       <ProvidersScreen {...props} />
     </ModelsProvider>
   )
@@ -52,15 +53,16 @@ function ProvidersScreen(props: ChapterPageProps) {
   const sdk = useServerSDK()
   const sync = useServerSync()
   const protocol = useServerProtocol()
-  const providers = useProviders(() => props.directory)
-  const child = sync().child(props.directory)[0]
+  // Without a project the page is server-wide: it reads the server catalog, not a project store.
+  const providers = useProviders(() => props.directory || null)
+  const child = props.directory ? sync().child(props.directory)[0] : undefined
   const location = { directory: props.directory }
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
     () => (protocol() === "v2" ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
     async (input) => {
       const api = input.client.api
-      const location = { directory: input.directory }
+      const location = input.directory ? { directory: input.directory } : undefined
       const [providerList, integrations, models, preferred] = await Promise.all([
         api.provider.list({ location }),
         api.integration.list({ location }),
@@ -74,7 +76,7 @@ function ProvidersScreen(props: ChapterPageProps) {
     },
   )
   onCleanup(
-    sdk().event.on(props.directory, (event) => {
+    sdk().event.on(props.directory || "global", (event) => {
       const type: string = event.type
       if (type === "integration.connection.updated" || type === "catalog.updated") void v2Actions.refetch()
     }),
@@ -113,11 +115,12 @@ function ProvidersScreen(props: ChapterPageProps) {
       const value = v2Data()
       return value ? fromV2(value) : undefined
     }
-    if (protocol() !== "v1" || !sync().ready || !child.provider_ready) return
+    if (protocol() !== "v1" || !sync().ready || (child && !child.provider_ready)) return
     return fromV1({ all: [...providers.all().values()], connected: providers.connected(), config: sync().data.config })
   })
   const failed = () => protocol() === "v2" && v2.state === "errored"
   const profile = createMemo(() => {
+    if (!props.directory) return serverName(props.server)
     const project = sync().data.project.find((item) => item.worktree === props.directory)
     return displayName(project ?? { worktree: props.directory })
   })
@@ -136,7 +139,7 @@ function ProvidersScreen(props: ChapterPageProps) {
   // directory config, which also reveals a project-level `model` that shadows the server-wide write.
   const route = createMemo(() => {
     if (state.route !== undefined) return state.route
-    const preferred = resolveDefaultModel(providers.defaultModel(), child.config.model)
+    const preferred = resolveDefaultModel(providers.defaultModel(), (child?.config ?? sync().data.config).model)
     return routes().find((card) => card.id === preferred?.providerID)?.id ?? ""
   })
   const serverRoute = createMemo(() => {
@@ -358,9 +361,12 @@ function ProvidersScreen(props: ChapterPageProps) {
                     <button type="button" class="mx-btn" onClick={() => openConnect(card.base, baseName(card))}>
                       {language.t("orchestra.providers.configure")}
                     </button>{" "}
-                    <button type="button" class="mx-btn" onClick={openModels}>
-                      {language.t("orchestra.providers.models")}
-                    </button>
+                    {/* The Models panel is scoped to a project, so it needs one. */}
+                    <Show when={props.directory}>
+                      <button type="button" class="mx-btn" onClick={openModels}>
+                        {language.t("orchestra.providers.models")}
+                      </button>
+                    </Show>
                   </div>
                   <button
                     type="button"
@@ -369,7 +375,9 @@ function ProvidersScreen(props: ChapterPageProps) {
                     title={
                       card.method === "environment"
                         ? language.t("settings.providers.connected.environmentDescription")
-                        : undefined
+                        : card.method === "config" && card.disconnect.type === "none"
+                          ? language.t("orchestra.providers.configDescription")
+                          : undefined
                     }
                     onClick={() => toggle(card)}
                   >
@@ -424,13 +432,13 @@ export function disconnectProvider(
   const run = async () => {
     const action = card.disconnect
     const disabled = input.sync.data.config.disabled_providers ?? []
-    const location = { directory: input.directory }
+    const location = input.directory ? { directory: input.directory } : undefined
     if (action.type === "credentials" && input.protocol === "v2") {
       await Promise.all(action.ids.map((credentialID) => input.sdk.api.credential.remove({ credentialID, location })))
       return
     }
     if (action.type === "credentials") {
-      const client = input.sdk.createClient({ directory: input.directory, throwOnError: true })
+      const client = input.sdk.createClient({ directory: input.directory || undefined, throwOnError: true })
       await Promise.all(action.ids.map((credentialID) => client.v2.credential.remove({ credentialID, location })))
       return
     }
@@ -440,7 +448,7 @@ export function disconnectProvider(
     }
     if (action.type !== "auth") return
     if (action.custom) {
-      const client = input.sdk.createClient({ directory: input.directory, throwOnError: true })
+      const client = input.sdk.createClient({ directory: input.directory || undefined, throwOnError: true })
       await client.auth.remove({ providerID: card.id }, { throwOnError: true })
       await input.sync.updateConfig({
         disabled_providers: disabled.includes(card.id) ? disabled : [...disabled, card.id],

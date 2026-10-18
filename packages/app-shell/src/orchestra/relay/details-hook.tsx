@@ -2,17 +2,22 @@ import { For, type JSX, Show } from "solid-js"
 import { decisionTime, type RelayDecision, type RelayNodeType } from "./client"
 import { Empty, NodeDetails, NodeNameField, Rows, Switchable } from "./details"
 import {
+  addRequirement,
   CONDITION,
+  conditionFields,
   type Flow,
   type FlowNode,
   inEdges,
+  isConditionField,
   nodeOf,
   type Outputs,
   outputsOf,
+  RECORDED,
+  recordOnly,
   TRIGGER,
   updateNode,
 } from "./graph"
-import { hookKey, isFileOperation, operationTimings } from "./catalog"
+import { eventSuggestions, hookKey, isFileOperation, operationTimings, toolSuggestions } from "./catalog"
 import { Ic, useRelayCopy } from "./ui"
 import { HookQueryStatus, type HookQueryState } from "./hook-status"
 
@@ -209,7 +214,7 @@ function Output(props: Props) {
             when={decider()?.id === props.node.id}
             fallback={<Rows rows={[[copy.t("orchestra.hooks.details.continued"), decider()?.name]]} />}
           >
-            <Show when={String(props.node.parameters.message ?? "")}>
+            <Show when={reachedAgent(decision().outcome) && String(props.node.parameters.message ?? "")}>
               <div class="wf-check">
                 <div class="wf-check-top">{copy.t("orchestra.hooks.details.agentSees")}</div>
                 <pre>{String(props.node.parameters.message ?? "")}</pre>
@@ -222,14 +227,39 @@ function Output(props: Props) {
   )
 }
 
+const PATTERN_HINTS = {
+  path: "orchestra.hooks.details.patternPath",
+  tool: "orchestra.hooks.details.patternTool",
+  command: "orchestra.hooks.details.patternCommand",
+  event: "orchestra.hooks.details.patternEvent",
+} as const
+
 function Params(props: Props) {
   const copy = useRelayCopy()
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
-  const message = () => {
-    if (props.node.type === "relay.hookAllow") return copy.t("orchestra.hooks.details.note")
-    if (props.node.type === "relay.hookRecord") return copy.t("orchestra.hooks.details.logLine")
-    return copy.t("orchestra.hooks.details.message")
+  // Allow and Record keep their note with the hook; every other action hands its message to the agent.
+  const note = () => props.node.type === "relay.hookAllow" || props.node.type === "relay.hookRecord"
+  const message = () => copy.t(note() ? "orchestra.hooks.details.note" : "orchestra.hooks.details.message")
+  const trigger = () => props.flow.nodes.find((node) => node.type === TRIGGER)
+  // An empty Record note is saved as RECORDED (the export needs text), which the field shows as empty.
+  const noteValue = () => {
+    const value = String(props.node.parameters.message ?? "")
+    return props.node.type === "relay.hookRecord" && value === RECORDED ? "" : value
+  }
+  const field = () => {
+    const value = props.node.parameters.field
+    return isConditionField(value) ? value : "path"
+  }
+  // Only the fields this trigger's event carries; one the hook already holds stays listed so it is not swapped silently.
+  const fields = () => {
+    const offered = conditionFields(trigger()?.parameters.operation)
+    return offered.includes(field()) ? offered : [field(), ...offered]
+  }
+  const suggestions = () => {
+    if (field() === "tool") return toolSuggestions(trigger()?.parameters.operation)
+    if (field() === "event") return eventSuggestions(trigger()?.parameters.operation, trigger()?.parameters.timing)
+    return []
   }
   return (
     <>
@@ -268,19 +298,22 @@ function Params(props: Props) {
               )}
             </For>
           </select>
-          <span class="mx-hint">{copy.t("orchestra.hooks.details.eventHint")}</span>
+          <span class="mx-hint">
+            {copy.t(
+              recordOnly(props.node.parameters.operation)
+                ? "orchestra.hooks.details.eventHintRecordOnly"
+                : "orchestra.hooks.details.eventHint",
+            )}
+          </span>
         </label>
       </Show>
       <Show when={props.node.type === CONDITION}>
         <div class="mx-fields">
           <label class="mx-field">
             <span>{copy.t("orchestra.hooks.details.field")}</span>
-            <select
-              value={String(props.node.parameters.field ?? "path")}
-              onChange={(event) => update({ field: event.currentTarget.value })}
-            >
-              <For each={["path", "tool", "command", "event"] as const}>
-                {(field) => <option value={field}>{copy.t(`orchestra.hooks.field.${field}`)}</option>}
+            <select value={field()} onChange={(event) => update({ field: event.currentTarget.value })}>
+              <For each={fields()}>
+                {(item) => <option value={item}>{copy.t(`orchestra.hooks.field.${item}`)}</option>}
               </For>
             </select>
           </label>
@@ -288,25 +321,39 @@ function Params(props: Props) {
             <span>{copy.t("orchestra.hooks.details.matches")}</span>
             <input
               value={String(props.node.parameters.pattern ?? "")}
-              placeholder={props.node.parameters.field === "path" ? "src/generated/**" : "git push *"}
+              placeholder={copy.t(`orchestra.hooks.details.placeholder.${field()}`)}
+              list={suggestions().length ? "wf-hook-suggestions" : undefined}
               onInput={(event) => update({ pattern: event.currentTarget.value })}
             />
-            <span class="mx-hint">
-              {copy.t(
-                props.node.parameters.field === "path"
-                  ? "orchestra.hooks.details.patternPath"
-                  : "orchestra.hooks.details.patternWildcard",
-              )}
-            </span>
+            <datalist id="wf-hook-suggestions">
+              <For each={suggestions()}>{(item) => <option value={item} />}</For>
+            </datalist>
+            <span class="mx-hint">{copy.t(PATTERN_HINTS[field()])}</span>
           </label>
         </div>
         <p class="mx-note" style={{ "margin-top": "0" }}>
           {copy.t("orchestra.hooks.details.ports")}
         </p>
-        <button type="button" class="mx-btn" onClick={() => props.onAddCondition(props.node.id)}>
-          <Ic name="plus" />
-          {copy.t("orchestra.hooks.details.addCondition")}
-        </button>
+        <div style={{ display: "flex", "flex-wrap": "wrap", gap: "8px" }}>
+          <button type="button" class="mx-btn" onClick={() => props.onAddCondition(props.node.id)}>
+            <Ic name="plus" />
+            {copy.t("orchestra.hooks.details.addCondition")}
+          </button>
+          <button
+            type="button"
+            class="mx-btn"
+            onClick={() => {
+              const added = addRequirement(props.flow, props.node.id, copy.t("orchestra.hooks.type.condition"))
+              if (!added) return
+              props.onChange(added.flow)
+              props.onNav(added.id)
+            }}
+          >
+            <Ic name="plus" />
+            {copy.t("orchestra.hooks.details.addRequirement")}
+          </button>
+        </div>
+        <p class="mx-note">{copy.t("orchestra.hooks.details.combine")}</p>
       </Show>
       <Show when={props.node.type !== TRIGGER && props.node.type !== CONDITION}>
         <Show when={props.node.type === "relay.hookVerify"}>
@@ -330,13 +377,25 @@ function Params(props: Props) {
           <textarea
             class="prose"
             style={{ "min-height": "110px" }}
-            value={String(props.node.parameters.message ?? "")}
+            value={noteValue()}
             onInput={(event) => update({ message: event.currentTarget.value })}
           />
+          <Show when={note()}>
+            <span class="mx-hint">{copy.t("orchestra.hooks.details.noteHint")}</span>
+          </Show>
+          <Show when={props.node.type === "relay.hookRemind" && trigger()?.parameters.operation !== "prompt"}>
+            <span class="mx-hint">{copy.t("orchestra.hooks.details.remindHint")}</span>
+          </Show>
         </label>
       </Show>
     </>
   )
+}
+
+// The agent reads the message only when it comes back as a reminder or as the text of a refusal, a failed check or a
+// repair. A pass, an approval, a record and an allow say nothing to it.
+function reachedAgent(outcome: RelayDecision["outcome"]) {
+  return ["reminded", "blocked", "rejected", "failed", "repair-required"].includes(outcome)
 }
 
 // Restrictive outcomes in red, waits for a human in warm ink, passes and records in green.

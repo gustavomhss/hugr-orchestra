@@ -1,3 +1,5 @@
+import { HookGlob } from "@orchestra/schema/hook-glob"
+import { HookMatch } from "@orchestra/schema/hook-match"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayKind } from "./client"
 
@@ -5,6 +7,8 @@ import type { RelayKind } from "./client"
 // never breaks a wire. Every function here is pure and returns a new flow.
 
 export const START = "relay.startTrigger"
+export const HUMAN = "relay.human"
+export const INJECT = "relay.inject"
 export const TRIGGER = "relay.hookEventTrigger"
 export const CONDITION = "relay.hookCondition"
 
@@ -34,11 +38,17 @@ export type Control = {
 
 export type Issue =
   | { code: "loose" | "branches" | "gate-empty" | "check-empty" | "checklist-invalid"; node: string }
+  | { code: "inject-empty" | "human-unsupported"; node: string }
+  | { code: "check-duplicate"; node: string; params: { id: string; other: string } }
+  | { code: "check-repeated"; node: string; params: { id: string } }
+  | { code: "phase-gap"; node: string; params: { phase: string } }
+  | { code: "skill-missing"; node: string; params: { skill: string } }
   | { code: "no-steps" | "no-trigger" | "no-action"; node?: string }
   | {
       code: "trigger-count" | "needs-before" | "pattern-empty" | "hook-loose" | "message-empty" | "check-command"
       node: string
     }
+  | { code: "record-only" | "field-unavailable" | "cycle" | "never-runs"; node: string }
   | { code: "server"; text: string }
 
 export const HOOK_OUTPUTS: Outputs = {
@@ -51,8 +61,9 @@ export function flowFromDocument(
   kind: RelayKind,
 ): Flow {
   const ids = new Map(document.nodes.map((node) => [node.name, node.id]))
+  // A stored document this app did not write may carry an output other than `main`, or none.
   const edges = Object.entries(document.connections).flatMap(([source, outputs]) =>
-    outputs.main.flatMap((channel, port) =>
+    (outputs.main ?? []).flatMap((channel, port) =>
       channel.flatMap((edge) => {
         const from = ids.get(source)
         const to = ids.get(edge.node)
@@ -91,26 +102,38 @@ export function documentFields(flow: Flow): {
   nodeGroups?: RelayAuthoring.NodeGroup[]
 } {
   const names = new Map(flow.nodes.map((node) => [node.id, node.name]))
-  const connections: Record<string, { main: RelayAuthoring.Edge[][] }> = {}
+  // A Map, not an object literal: a step named `__proto__` would otherwise set the prototype and lose its connection.
+  const outputs = new Map<string, RelayAuthoring.Edge[][]>()
   flow.edges.forEach((edge) => {
     const source = names.get(edge.from)
     const target = names.get(edge.to)
     if (!source || !target) return
-    const main = connections[source]?.main ?? []
+    const main = outputs.get(source) ?? []
     while (main.length <= edge.port) main.push([])
     main[edge.port].push({ node: target, type: "main", index: 0 })
-    connections[source] = { main }
+    outputs.set(source, main)
   })
+  const connections = Object.fromEntries([...outputs].map(([source, main]) => [source, { main }] as const))
   const nodes = flow.nodes.map((node) => ({
     id: node.id,
     name: node.name,
     type: node.type,
     position: [Math.round(node.x), Math.round(node.y)] as const,
-    parameters: node.parameters,
+    parameters: recordNote(flow, node),
     ...(node.typeVersion === undefined ? {} : { typeVersion: node.typeVersion }),
   }))
   if (flow.kind === "hook") return { nodes, connections }
   return { nodes, connections, nodeGroups: flow.phases.filter((phase) => phase.nodeIds.length) }
+}
+
+// Record's note is optional in the app, but the hook export needs text in every Record, so an empty one saves as this.
+// Nothing shows it: the note is not sent to the agent or stored in a decision.
+export const RECORDED = "Recorded"
+const RECORD = "relay.hookRecord"
+
+function recordNote(flow: Flow, node: FlowNode) {
+  if (flow.kind !== "hook" || node.type !== RECORD || node.parameters.message) return node.parameters
+  return { ...node.parameters, message: RECORDED }
 }
 
 export const isEntry = (node: FlowNode) => node.type === START || node.type === TRIGGER
@@ -169,13 +192,14 @@ export function retryBudget(flow: Flow) {
   return typeof value === "number" ? value : 3
 }
 
-export function issues(flow: Flow, diagnostics: string[] = []): Issue[] {
+// `skills` are the names the skill catalog lists, once it has loaded; a step that names another skill cannot run.
+export function issues(flow: Flow, diagnostics: string[] = [], skills?: string[]): Issue[] {
   const server = diagnostics.map((text): Issue => ({ code: "server", text }))
-  if (flow.kind === "workflow") return [...workflowIssues(flow), ...server]
+  if (flow.kind === "workflow") return [...workflowIssues(flow, skills), ...server]
   return [...hookIssues(flow), ...server]
 }
 
-function workflowIssues(flow: Flow): Issue[] {
+function workflowIssues(flow: Flow, skills: string[] | undefined): Issue[] {
   const inChain = new Set(chain(flow).map((node) => node.id))
   const loose = flow.nodes
     .filter((node) => !inChain.has(node.id))
@@ -194,23 +218,152 @@ function workflowIssues(flow: Flow): Issue[] {
         : []
     })
   const empty: Issue[] = steps(flow).length ? [] : [{ code: "no-steps" }]
-  return [...loose, ...branches, ...checks, ...empty]
+  // Maestro cannot run a human step; documents made before it left the panel may still hold one.
+  const unsupported = flow.nodes
+    .filter((node) => node.type === HUMAN)
+    .map((node): Issue => ({ code: "human-unsupported", node: node.id }))
+  // An inject with neither text nor a file delivers nothing and stops the run.
+  const contexts = flow.nodes
+    .filter(
+      (node) =>
+        node.type === INJECT && !String(node.parameters.text ?? "").trim() && !String(node.parameters.file ?? "").trim(),
+    )
+    .map((node): Issue => ({ code: "inject-empty", node: node.id }))
+  const gone = flow.nodes.flatMap((node): Issue[] => {
+    const skill = String(node.parameters.skill ?? "")
+    return skill && skills && !skills.includes(skill)
+      ? [{ code: "skill-missing", node: node.id, params: { skill } }]
+      : []
+  })
+  const order = [...chain(flow), ...flow.nodes.filter((node) => !inChain.has(node.id))]
+  return [
+    ...loose,
+    ...branches,
+    ...checks,
+    ...unsupported,
+    ...contexts,
+    ...gone,
+    ...duplicateChecks(order),
+    ...phaseGaps(flow),
+    ...empty,
+  ]
 }
+
+// Check IDs are unique across the whole workflow. The first step in sequence order keeps the ID; later ones are flagged.
+function duplicateChecks(order: FlowNode[]): Issue[] {
+  const first = new Map<string, FlowNode>()
+  return order.flatMap((node) =>
+    readChecklist(node).controls.flatMap((control): Issue[] => {
+      const owner = first.get(control.id)
+      if (!owner) {
+        first.set(control.id, node)
+        return []
+      }
+      if (owner.id === node.id) return [{ code: "check-repeated", node: node.id, params: { id: control.id } }]
+      return [{ code: "check-duplicate", node: node.id, params: { id: control.id, other: owner.name } }]
+    }),
+  )
+}
+
+// A phase must be one unbroken run of steps; the server refuses anything else. The issue sits on the step that breaks it.
+function phaseGaps(flow: Flow): Issue[] {
+  const order = chain(flow)
+  return flow.phases.flatMap((phase): Issue[] => {
+    const outsider = gap(order, phase)
+    return outsider ? [{ code: "phase-gap", node: outsider.id, params: { phase: phase.name } }] : []
+  })
+}
+
+// The first step between a phase's members that is not itself a member. Steps outside the sequence have their own issue.
+function gap(order: FlowNode[], phase: FlowPhase) {
+  const at = order.flatMap((node, index) => (phase.nodeIds.includes(node.id) ? [index] : []))
+  if (at.length < 2) return
+  return order.slice(at[0] + 1, at[at.length - 1]).find((node) => !phase.nodeIds.includes(node.id))
+}
+
+// The phases a step can join (or leave) without splitting one: its own phase, and any phase the step sits next to.
+export function phaseChoices(flow: Flow, id: string) {
+  const order = chain(flow)
+  const current = phaseOf(flow, id)
+  const fits = (phaseID: string) =>
+    setPhase(flow, id, phaseID).phases.every(
+      (phase) => (phase.id !== phaseID && phase.id !== current?.id) || !gap(order, phase),
+    )
+  return {
+    phases: flow.phases.filter((phase) => phase.id === current?.id || fits(phase.id)),
+    none: !current || fits(""),
+  }
+}
+
+// The phases with instructions that an edit leaves without a single step. A phase with no steps is not saved, so its
+// name and instructions would be gone after the next autosave.
+export function emptiedPhases(before: Flow, after: Flow) {
+  return before.phases.filter(
+    (phase) =>
+      phase.nodeIds.length &&
+      phase.description.trim() &&
+      after.phases.some((item) => item.id === phase.id && !item.nodeIds.length),
+  )
+}
+
+// Contract C1: `<node>_check_<n>`, n the smallest positive integer no check anywhere in the workflow uses yet.
+export function checkID(flow: Flow, nodeID: string) {
+  const taken = new Set(flow.nodes.flatMap((node) => readChecklist(node).controls.map((control) => control.id)))
+  return (
+    Array.from({ length: taken.size + 1 }, (_, index) => `${nodeID}_check_${index + 1}`).find((id) => !taken.has(id)) ??
+    `${nodeID}_check_${taken.size + 1}`
+  )
+}
+
+// Actions that tell the agent something or hold the call. After a session starts or stops there is nothing left to
+// hold or tell: the runtime records those events and drops what the hook decided.
+export const ENFORCING = ["relay.hookBlock", "relay.hookApprove", "relay.hookRemind", "relay.hookRepair"]
+export const recordOnly = (operation: unknown) => operation === "session-start" || operation === "session-idle"
+
+// The fields a condition can read for each trigger (relay/src/hook/evaluate.ts, core/tool-safety-hooks.ts): a shell
+// command carries a command and no path, the other file tools a path and no command, a session event only its name.
+// An operation this app does not know could carry anything.
+export type ConditionField = "path" | "tool" | "command" | "event"
+export const isConditionField = (value: unknown): value is ConditionField =>
+  value === "path" || value === "tool" || value === "command" || value === "event"
+const FIELDS: Record<string, ConditionField[]> = {
+  read: ["path", "tool", "event"],
+  edit: ["path", "tool", "event"],
+  write: ["path", "tool", "event"],
+  command: ["command", "tool", "event"],
+  tool: ["path", "tool", "command", "event"],
+  prompt: ["event"],
+  "session-start": ["event"],
+  "session-idle": ["event"],
+}
+export const conditionFields = (operation: unknown) =>
+  FIELDS[String(operation)] ?? (["path", "tool", "command", "event"] satisfies ConditionField[])
 
 function hookIssues(flow: Flow): Issue[] {
   const triggers = flow.nodes.filter((node) => node.type === TRIGGER)
   const timing = triggers[0]?.parameters.timing
+  const operation = triggers[0]?.parameters.operation
   const count: Issue[] = !triggers.length
     ? [{ code: "no-trigger" }]
     : triggers.slice(1).map((node) => ({ code: "trigger-count", node: node.id }))
   const reachable = reach(flow, triggers[0]?.id)
+  // Require repair denies the call, so what follows it on the same path never runs.
+  const running = reach(flow, triggers[0]?.id, "relay.hookRepair")
+  const fields = conditionFields(operation)
   const nodes = flow.nodes.flatMap((node): Issue[] => {
     if (node.type === TRIGGER) return []
+    const inert = recordOnly(operation) && ENFORCING.includes(node.type)
     const before =
-      (node.type === "relay.hookBlock" || node.type === "relay.hookApprove") && timing === "after"
+      !inert && (node.type === "relay.hookBlock" || node.type === "relay.hookApprove") && timing === "after"
         ? [{ code: "needs-before" as const, node: node.id }]
         : []
-    // The export needs a pattern, a command and a message (Allow's note may be empty), as the server compiles them.
+    const silent = inert ? [{ code: "record-only" as const, node: node.id }] : []
+    const field =
+      node.type === CONDITION && triggers.length && !fields.some((item) => item === (node.parameters.field ?? "path"))
+        ? [{ code: "field-unavailable" as const, node: node.id }]
+        : []
+    // The export needs a pattern, a command and a message (Allow's and Record's notes may be empty), as the server
+    // compiles them.
     const pattern =
       node.type === CONDITION && !String(node.parameters.pattern ?? "")
         ? [{ code: "pattern-empty" as const, node: node.id }]
@@ -220,26 +373,65 @@ function hookIssues(flow: Flow): Issue[] {
         ? [{ code: "check-command" as const, node: node.id }]
         : []
     const message =
-      node.type !== CONDITION && node.type !== "relay.hookAllow" && !String(node.parameters.message ?? "")
+      node.type !== CONDITION &&
+      node.type !== "relay.hookAllow" &&
+      node.type !== RECORD &&
+      !String(node.parameters.message ?? "")
         ? [{ code: "message-empty" as const, node: node.id }]
         : []
-    const loose = reachable.has(node.id) ? [] : [{ code: "hook-loose" as const, node: node.id }]
-    return [...before, ...pattern, ...check, ...message, ...loose]
+    const loose = !reachable.has(node.id)
+      ? [{ code: "hook-loose" as const, node: node.id }]
+      : running.has(node.id)
+        ? []
+        : [{ code: "never-runs" as const, node: node.id }]
+    return [...before, ...silent, ...field, ...pattern, ...check, ...message, ...loose]
   })
   const actions = flow.nodes.some((node) => node.type !== TRIGGER && node.type !== CONDITION)
   const action: Issue[] = actions ? [] : [{ code: "no-action", node: triggers[0]?.id }]
-  return [...count, ...nodes, ...action]
+  return [...count, ...nodes, ...loops(flow), ...action]
 }
 
-function reach(flow: Flow, from: string | undefined) {
+function reach(flow: Flow, from: string | undefined, stop?: string) {
   const seen = new Set<string>()
   const visit = (id: string | undefined) => {
     if (!id || seen.has(id)) return
     seen.add(id)
+    if (stop && nodeOf(flow, id)?.type === stop) return
     outEdges(flow, id).forEach((edge) => visit(edge.to))
   }
   visit(from)
   return seen
+}
+
+// The server refuses a hook that loops. The first node on a loop carries the issue; the next shows once it is fixed.
+function loops(flow: Flow): Issue[] {
+  const looped = flow.nodes.find((node) => outEdges(flow, node.id).some((edge) => reach(flow, edge.to).has(node.id)))
+  return looped ? [{ code: "cycle", node: looped.id }] : []
+}
+
+// "And also require": a condition between this one's Yes and what Yes led to, so both must match. Its No leads where
+// this one's No does, so No still means "not all of them". It starts below the graph, where nothing overlaps it.
+export function addRequirement(flow: Flow, id: string, name: string) {
+  const node = nodeOf(flow, id)
+  if (!node || node.type !== CONDITION) return
+  const fields = conditionFields(flow.nodes.find((item) => item.type === TRIGGER)?.parameters.operation)
+  const added: FlowNode = {
+    id: uniqueID(flow, "condition"),
+    name: uniqueName(flow, name),
+    type: CONDITION,
+    x: node.x,
+    y: Math.max(...flow.nodes.map((item) => item.y)) + 160,
+    parameters: { field: fields.find((field) => field !== node.parameters.field) ?? "event", pattern: "" },
+  }
+  const yes = flow.edges.find((edge) => edge.from === id && edge.port === 0)
+  const no = flow.edges.find((edge) => edge.from === id && edge.port === 1)
+  const edges = [
+    ...flow.edges.filter((edge) => edge !== yes),
+    { from: id, to: added.id, port: 0 },
+    ...(yes ? [{ from: added.id, to: yes.to, port: 0 }] : []),
+    ...(no ? [{ from: added.id, to: no.to, port: 1 }] : []),
+  ]
+  return { flow: { ...flow, nodes: [...flow.nodes, added], edges }, id: added.id }
 }
 
 export function issueNode(issue: Issue) {
@@ -283,7 +475,8 @@ export function removeNodes(flow: Flow, ids: string[]): Flow {
   }, flow)
 }
 
-// Inserts a node after `anchor` (on `port`), rewiring what used to follow. Workflow steps join the anchor's phase.
+// Inserts a node after `anchor` (on `port`), rewiring what used to follow. A workflow step joins a phase only when it
+// lands between two steps of that phase, so every phase stays one unbroken stretch of the sequence.
 export function insertNode(flow: Flow, node: FlowNode, anchor?: { id: string; port: number }): Flow {
   const added = { ...flow, nodes: [...flow.nodes, node] }
   if (!anchor) return added
@@ -291,8 +484,8 @@ export function insertNode(flow: Flow, node: FlowNode, anchor?: { id: string; po
   const edges = flow.edges.filter((edge) => edge !== next)
   const into = isEntry(node) ? [] : [{ from: anchor.id, to: node.id, port: anchor.port }]
   const onward = next && !isEntry(node) ? [{ from: node.id, to: next.to, port: 0 }] : []
-  const phase =
-    flow.kind === "workflow" ? (phaseOf(flow, anchor.id) ?? (next ? phaseOf(flow, next.to) : undefined)) : undefined
+  const before = flow.kind === "workflow" ? phaseOf(flow, anchor.id) : undefined
+  const phase = next && before?.nodeIds.includes(next.to) ? before : undefined
   return {
     ...added,
     edges: [...edges, ...into, ...onward],
@@ -345,7 +538,9 @@ export function updatePhase(flow: Flow, id: string, change: Partial<Pick<FlowPha
 // IDs and names are unique per document; new nodes take the first free suffix.
 export function uniqueID(flow: Flow, base: string) {
   const taken = new Set([...flow.nodes.map((node) => node.id), ...flow.phases.map((phase) => phase.id)])
-  const clean = base.replace(/[^A-Za-z0-9_.-]+/g, "_") || "step"
+  const replaced = base.replace(/[^A-Za-z0-9_.-]+/g, "_")
+  // A name in another script leaves only underscores; those are not an ID worth keeping.
+  const clean = /[A-Za-z0-9]/.test(replaced) ? replaced : "step"
   if (!taken.has(clean)) return clean
   const free = Array.from({ length: taken.size + 1 }, (_, index) => `${clean}_${index + 2}`).find(
     (id) => !taken.has(id),
@@ -364,12 +559,16 @@ export function uniqueName(flow: Flow, base: string) {
 
 /* ---------- hook test ---------- */
 
-/** A sample agent event: the trigger's operation and timing and the value the conditions read. */
+/**
+ * A sample agent call as the runtime reports it: the concrete operation (`edit`, `command`, `tool` for any other
+ * tool, or a session event), its timing, and the tool ID, path and command it carries.
+ */
 export type HookProbe = { operation: string; timing: string; path?: string; command?: string; tool?: string }
 
-// Walks the hook the way the engine plans it (relay/src/hook/evaluate.ts): a condition takes Yes or No, actions
-// run in order along their output, Block ends the branch, and a Run gate continues on Pass because its check is
-// not run here. Graph only; nothing is evaluated on the server.
+// Walks the hook the way the engine plans and enforces it (relay/src/hook/evaluate.ts, core/tool-safety-hooks.ts): a
+// condition takes Yes or No, actions run in order along their output, Block and Require repair end the walk because
+// their denial ends the call, and a Run gate continues on Pass because its check is not run here. Graph only; nothing
+// is evaluated on the server.
 export function walkHook(flow: Flow, probe: HookProbe) {
   const trigger = flow.nodes.find((node) => node.type === TRIGGER)
   if (!trigger) return { path: [], actions: [] }
@@ -378,7 +577,7 @@ export function walkHook(flow: Flow, probe: HookProbe) {
     if (!node || path.includes(id)) return path
     const port = node.type === CONDITION ? (conditionHolds(node.parameters, probe) ? 0 : 1) : 0
     const next = flow.edges.find((edge) => edge.from === id && edge.port === port)
-    if (!next || node.type === "relay.hookBlock") return [...path, id]
+    if (!next || node.type === "relay.hookBlock" || node.type === "relay.hookRepair") return [...path, id]
     return visit(next.to, [...path, id])
   }
   const path = visit(trigger.id, [])
@@ -389,10 +588,11 @@ export function walkHook(flow: Flow, probe: HookProbe) {
   return { path, actions }
 }
 
-// A condition on a field the event lacks (a path on a command, a tool on a session trigger) takes No.
+// A condition on a field the event lacks (a path on a command, a tool on a session trigger) takes No. Paths use the
+// engine's own glob (HookGlob), so a path pattern holds here exactly when it holds at runtime.
 export function conditionHolds(parameters: Record<string, unknown>, probe: HookProbe) {
   const pattern = String(parameters.pattern ?? "")
-  if (parameters.field === "path") return probe.path !== undefined && pathMatch(pattern, probe.path)
+  if (parameters.field === "path") return probe.path !== undefined && HookGlob.match(pattern, probe.path)
   if (parameters.field === "event") return wildcard(pattern, `${probe.operation}.${probe.timing}`)
   const value = parameters.field === "tool" ? probe.tool : probe.command
   return value !== undefined && wildcard(pattern, value)
@@ -400,46 +600,11 @@ export function conditionHolds(parameters: Record<string, unknown>, probe: HookP
 
 // Commands, tools and events use Orchestra's permission wildcard: `*` is any run (across `/` too), `?` one
 // character, everything else literal, including `|`. A pattern ending in " *" also matches without the argument.
+// As in the engine, a `\` on either side reads as `/`. It is the engine's own matcher (linear in pattern × value), not
+// a regex: a pattern with many `*` against a long command cannot freeze the window.
 export function wildcard(pattern: string, value: string) {
-  const test = (body: string) =>
-    new RegExp(
-      `^${body
-        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-        .replace(/\*/g, "[\\s\\S]*")
-        .replace(/\?/g, "[\\s\\S]")}$`,
-    ).test(value)
-  return test(pattern) || (pattern.endsWith(" *") && test(pattern.slice(0, -2)))
+  return HookMatch.matches("command", pattern, value)
 }
-
-// Paths use the engine's glob: `*` and `?` stay inside one segment, `**` crosses segments, `[a-z]` and `[!a]` are
-// classes, `{a,b}` are alternatives, `\` escapes, and each leading `!` negates. `|` is literal.
-export function pathMatch(pattern: string, path: string) {
-  const bangs = /^!*/.exec(pattern)![0].length
-  const tokens = pattern.slice(bangs).match(/\\[\s\S]|\*\*\/?|\*|\?|\[(?:\\.|[^\]])+\]|[{},]|[\s\S]/g) ?? []
-  const body = tokens.reduce(
-    (acc, token) => {
-      if (token === "{") return { out: `${acc.out}(?:`, depth: acc.depth + 1 }
-      if (token === "}" && acc.depth > 0) return { out: `${acc.out})`, depth: acc.depth - 1 }
-      if (token === "," && acc.depth > 0) return { out: `${acc.out}|`, depth: acc.depth }
-      return { out: acc.out + globToken(token), depth: acc.depth }
-    },
-    { out: "", depth: 0 },
-  )
-  if (body.depth > 0) return bangs % 2 === 1
-  return new RegExp(`^${body.out}$`).test(path) !== (bangs % 2 === 1)
-}
-
-function globToken(token: string) {
-  if (token.startsWith("\\")) return escape(token.slice(1))
-  if (token === "**/") return "(?:[\\s\\S]*/)?"
-  if (token === "**") return "[\\s\\S]*"
-  if (token === "*") return "[^/]*"
-  if (token === "?") return "[^/]"
-  if (token.startsWith("[") && token.length > 2) return `[${token.slice(1, -1).replace(/^[!^]/, "^")}]`
-  return escape(token)
-}
-
-const escape = (text: string) => text.replace(/[.+^${}()|[\]\\*?]/g, "\\$&")
 
 /* ---------- layout ---------- */
 
@@ -469,5 +634,9 @@ export function layoutWorkflow(flow: Flow): Flow {
   })
   const start = flow.nodes.find((node) => node.type === START)
   if (start) positions.set(start.id, [96, 132])
+  // Steps outside the sequence keep to a row of their own below the last phase row, so none ends up under a tidied one.
+  const loose = flow.nodes.filter((node) => node.type !== START && !positions.has(node.id))
+  const below = 60 + Math.ceil(segments.length / 2) * 240 + 72
+  loose.forEach((node, index) => positions.set(node.id, [240 + index * 136, below]))
   return moveNodes(flow, positions)
 }

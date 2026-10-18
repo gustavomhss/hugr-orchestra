@@ -282,7 +282,12 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         const index = store.findIndex(
           (tab) => tab.type === "session" && tab.server === input.server && tab.sessionId === input.sessionId,
         )
-        if (index !== -1) removeTab(index)
+        if (index !== -1) return removeTab(index)
+        // Sessions opened from a notification, task, cockpit or deep link never got a tab,
+        // so there is nothing to remove; leave the page for the last active tab or home.
+        const next = store.find((tab) => tabKey(tab) === recentKey()) ?? store.at(-1)
+        if (next) return navigateTab(next)
+        navigate("/")
       },
       removeServer(key: ServerConnection.Key) {
         updateClosed((stack) => stack.filter((entry) => entry.tab.server !== key))
