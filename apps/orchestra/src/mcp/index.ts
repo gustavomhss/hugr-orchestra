@@ -1,15 +1,13 @@
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { ConfigV1 } from "@orchestra/core/v1/config/config"
 import { serviceUse } from "@orchestra/core/effect/service-use"
-import { Client, type ClientOptions } from "@modelcontextprotocol/sdk/client/index.js"
+import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js"
 import { SSEClientTransport } from "@modelcontextprotocol/sdk/client/sse.js"
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
 import {
-  ListRootsRequestSchema,
   LoggingMessageNotificationSchema,
   type Tool as MCPToolDef,
   ToolListChangedNotificationSchema,
@@ -17,7 +15,6 @@ import {
 import { Config } from "@/config/config"
 import { ConfigMCPV1 } from "@orchestra/core/v1/config/mcp"
 import { NamedError } from "@orchestra/core/util/error"
-import { InstallationVersion } from "@orchestra/core/installation/version"
 import { withTimeout } from "@/util/timeout"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { McpOAuthPendingProvider, McpOAuthProvider, OAUTH_CALLBACK_PATH } from "./oauth-provider"
@@ -33,24 +30,12 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { createClient } from "./client"
 import { serverLog } from "./server-log"
 import { McpStdio, OmniStdioTransport } from "./stdio"
 import { Status } from "./status"
 
 const DEFAULT_TIMEOUT = 30_000
-const CLIENT_OPTIONS = {
-  capabilities: {
-    // https://github.com/anomalyco/opencode/issues/11948
-    // sampling: {},
-    // https://github.com/anomalyco/opencode/issues/23066
-    // elicitation: {},
-    // https://github.com/anomalyco/opencode/issues/2308
-    roots: {},
-    // https://github.com/anomalyco/opencode/issues/28567
-    // tasks: {},
-  },
-} satisfies ClientOptions
-
 export const Resource = Schema.Struct({
   name: Schema.String,
   uri: Schema.String,
@@ -75,14 +60,6 @@ export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("MCP
 }) {}
 
 type MCPClient = Client
-
-function createClient(directory: string) {
-  const client = new Client({ name: "orchestra", version: InstallationVersion }, CLIENT_OPTIONS)
-  client.setRequestHandler(ListRootsRequestSchema, () =>
-    Promise.resolve({ roots: [{ uri: pathToFileURL(directory).href }] }),
-  )
-  return client
-}
 
 export { Status }
 

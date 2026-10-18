@@ -201,10 +201,10 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await page.keyboard.press("Escape")
   await expect(page.getByRole("tab", { name: "Models" })).toHaveCount(0)
 
-  // Connect provider opens the same dialog on its picker: popular providers lead, the custom form follows.
+  // Connect provider opens the same dialog on its picker: Claude mode leads, then the custom form and popular providers.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
   await expect(connect.getByText("Connect provider", { exact: true })).toBeVisible()
-  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "anthropic")
+  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "_claude-mode")
   await connect.locator('[data-provider-id="_custom"]').click()
   await expect(connect.getByText("Custom provider", { exact: true })).toBeVisible()
   await connect.getByLabel("Provider ID", { exact: true }).fill("anthropic")
@@ -285,9 +285,9 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
   ).toMatchObject({ key: secret })
   await expectSecretGone(page)
 
-  // The picker lists every integration; a server that cannot save a custom provider is not offered one.
+  // The picker lists Claude mode and every integration; a server that cannot save a custom provider is not offered one.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
-  await expect(connect.locator("[data-provider-id]")).toHaveCount(42)
+  await expect(connect.locator("[data-provider-id]")).toHaveCount(43)
   await expect(connect.locator('[data-provider-id="_custom"]')).toHaveCount(0)
   await page.screenshot({ path: test.info().outputPath("v2-light.png") })
 })
@@ -306,7 +306,10 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await card.getByRole("button", { name: "Configure" }).click()
   await expect(dialog.getByText("Select login method for OpenAI.", { exact: true })).toBeVisible()
   await method("Sign in with a code").click()
-  await expect(dialog.getByRole("link", { name: "this link" })).toHaveAttribute("href", "https://auth.example.test/code")
+  await expect(dialog.getByRole("link", { name: "this link" })).toHaveAttribute(
+    "href",
+    "https://auth.example.test/code",
+  )
   await dialog.getByRole("button", { name: "Continue" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Authorization code is required")
   await dialog.getByLabel("Sign in with a code authorization code", { exact: true }).fill("code-123")
@@ -446,7 +449,10 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
         "orchestra.global.dat:server",
         JSON.stringify({ list: [], projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem(
+        "orchestra.global.dat:layout",
+        JSON.stringify({ home: { selection: { server, directory } } }),
+      )
     },
     { server, directory, scheme },
   )
