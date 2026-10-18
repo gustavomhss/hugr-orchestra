@@ -10,9 +10,9 @@ describe("ClientLiveness.shutdown", () => {
       new StreamMessageWriter(new PassThrough()),
     )
     const liveness = ClientLiveness.track(connection, {
-      stdin: null,
-      stdout: null,
-      stderr: null,
+      stdin: new PassThrough(),
+      stdout: new PassThrough(),
+      stderr: new PassThrough(),
       exitCode: null,
       signalCode: null,
       kill: () => {
