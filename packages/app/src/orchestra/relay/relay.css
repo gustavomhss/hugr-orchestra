@@ -592,6 +592,12 @@ html[data-color-scheme="light"] .wf-editor {
   font-size: 11.5px;
   white-space: nowrap;
 }
+/* A static hint in the head; it is not the save status, which e2e and assistive tech read from .wf-save. */
+.wf-note {
+  color: var(--mx-dim);
+  font-size: 11.5px;
+  white-space: nowrap;
+}
 .wf-save .wf-ic {
   inline-size: 13px;
   block-size: 13px;

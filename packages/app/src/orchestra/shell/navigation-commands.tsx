@@ -108,6 +108,8 @@ export function ShellNavigationCommands() {
       index === -1 ? entries.at(offset > 0 ? 0 : -1) : entries[(index + offset + entries.length) % entries.length]
     if (next) showProject(next.conn, next.project.worktree)
   }
+  // Shell fallback for routes without their own server context. Session and draft routes register the same keyed
+  // command inside their server providers; the newest registration wins while it is mounted.
   useSettingsCommand()
   command.register("orchestra.navigation", () => [
     {

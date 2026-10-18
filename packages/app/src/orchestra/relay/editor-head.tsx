@@ -179,7 +179,7 @@ export function EditorHead(props: {
             </span>
           }
         >
-          <span class="wf-save">{copy.t("orchestra.workflows.editor.maestroRuns")}</span>
+          <span class="wf-note">{copy.t("orchestra.workflows.editor.maestroRuns")}</span>
         </Show>
         <button
           type="button"
