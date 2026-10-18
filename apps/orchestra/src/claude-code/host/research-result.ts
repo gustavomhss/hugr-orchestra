@@ -48,17 +48,20 @@ export const close = Effect.fn("ClaudeHostResearchResult.close")(function* (
     admission: state ? state.closed ? "closed" as const : "open" as const : "unobserved" as const,
     ...(state ? { deadlineActive: state.deadlineActive } : {}),
     ...(reason ? { exhaustionCode: "budget_exhausted" as const, exhaustionReason: reason } : {}),
-    nativeBudget: {
-      tools: { limit: Research.Limits.toolCalls, admission: "pre-execution" as const },
-      retainedBytes: { limit: Research.Limits.capturedBytes, admission: "pre-retention" as const },
+    ...(state?.allowance ? { nativeBudget: {
+      tier: state.allowance.tier,
+      deadlineSeconds: state.allowance.deadlineSeconds,
+      tools: { limit: state.allowance.toolLimit, admission: "pre-execution" as const },
+      retainedBytes: { limit: state.allowance.byteLimit, admission: "pre-retention" as const },
       provider: {
         accounting: "observed-sdk-response-ids" as const,
-        maxTurns: Research.Limits.providerCalls,
+        limit: state.allowance.providerLimit,
+        maxTurns: Research.Tiers.deep.providerCalls,
         bound: "native-agentic-api-round-trips" as const,
         physicalPreProviderAdmission: "unavailable" as const,
         hiddenWork: "unmeasured" as const,
       },
-    },
+    } } : {}),
     nativeJoin: {
       status: !joined ? "missing" : !agrees ? "conflict" : joined.taskID ? "joined" : "pending",
       ...(agrees && joined.taskID ? { taskID: joined.taskID } : {}),

@@ -82,8 +82,8 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) },
   })
   // Native admission goes through the real hook and retained logical Task. Only SDK task identity is scripted.
-  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research") {
-    const admitted = yield* dispatch(callID)
+  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research", brief?: string) {
+    const admitted = yield* dispatch(callID, { prompt: brief })
     const child = join.child(callID)
     if (!child) throw new Error(`Research dispatch denied: ${JSON.stringify(admitted.output)}`)
     const taskID = `native-${callID}`
@@ -119,9 +119,9 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
   })
   const fire = (input: HookInput) => Effect.promise(() => hooks[input.hook_event_name]![0].hooks[0](input, undefined, { signal: abort.signal }))
   const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research",
-    input: { tool?: "Agent" | "Task"; subagentType?: string; background?: boolean } = {}) {
+    input: { tool?: "Agent" | "Task"; subagentType?: string; background?: boolean; prompt?: string } = {}) {
     const args = { subagent_type: input.subagentType ?? "orchestra:jimmy", description: "Investigate conditions",
-      prompt: "Find the applicability conditions.", run_in_background: input.background ?? false }
+      prompt: input.prompt ?? "Find the applicability conditions.", run_in_background: input.background ?? false }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: parent.id, type: "tool",
       tool: input.tool ?? "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } }, metadata: { providerExecuted: true } })
     mirrored.set(callID, part)

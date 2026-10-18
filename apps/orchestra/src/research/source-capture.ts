@@ -9,6 +9,9 @@ import { ResearchExecution } from "./allowance"
 import { Tool } from "@/tool/tool"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 
+// Native tools whose returned output is retained as admitted evidence, repository intelligence included.
+const RETAINED = ["read", "webfetch", "lsp", "websearch", "atlas_context", "repo_map", "repo_symbols", "repo_git_state"]
+
 const DISPLAY_NOTICE = "Native tool display only; this receipt does not prove original-source completeness, absence, or runtime behavior."
 
 // Issued by the native registry, never decoded from model arguments or plugin metadata.
@@ -21,7 +24,7 @@ export const make = Effect.gen(function* () {
   const execution = yield* ResearchExecution.Service
   const run = yield* ResearchTools.make
   const withCapture = <E, R>(ctx: Tool.Context, name: string, effect: Effect.Effect<Tool.ExecuteResult, E, R>, args: unknown = {}) => {
-    if (ctx.agentID !== "jimmy" || !ctx.callID || !["read", "webfetch", "lsp", "websearch", "atlas_context", "research_capture"].includes(name)) return effect
+    if (ctx.agentID !== "jimmy" || !ctx.callID || ![...RETAINED, "research_capture"].includes(name)) return effect
     return Effect.gen(function* () {
       if (yield* Current) return yield* effect
       const previous = yield* run(ctx, name, (binding, context) => records.beginAcquisition(binding, context,
@@ -62,7 +65,7 @@ export const make = Effect.gen(function* () {
     })
   }
   const retain = <M extends Tool.ExecuteResult["metadata"]>(ctx: Tool.Context, name: string, result: Tool.ExecuteResult<M>) => {
-    if (ctx.agentID !== "jimmy" || !ctx.callID || !["read", "webfetch", "lsp", "websearch", "atlas_context"].includes(name))
+    if (ctx.agentID !== "jimmy" || !ctx.callID || !RETAINED.includes(name))
       return Effect.succeed(result)
     const admitted = Schema.decodeUnknownOption(Research.SourceReceipt)(result.metadata.researchSource)
     if (admitted._tag === "Some") return Effect.succeed({
