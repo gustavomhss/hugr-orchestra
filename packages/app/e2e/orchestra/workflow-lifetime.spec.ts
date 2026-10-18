@@ -345,7 +345,7 @@ async function conflict(page: Page) {
 
 test("lifetime: conflict reload updates shared cache before clean editor is released", async ({ page }) => {
   await conflict(page)
-  await details(page).getByRole("button", { name: "Discard local changes and reload" }).click()
+  await details(page).getByRole("button", { name: "Discard mine", exact: true }).click()
   await expect(details(page).getByRole("textbox", { name: "Instructions", exact: true })).toHaveValue("Reloaded v2 instructions")
   await details(page).getByRole("button", { name: "Done", exact: true }).click()
   await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
@@ -359,7 +359,7 @@ test("lifetime: conflict reload updates shared cache before clean editor is rele
 
 test("lifetime: conflict reload keeps focus inside modal and next Escape closes it", async ({ page }) => {
   await conflict(page)
-  await details(page).getByRole("button", { name: "Discard local changes and reload" }).click()
+  await details(page).getByRole("button", { name: "Discard mine", exact: true }).click()
   await expect(details(page).locator('[data-save="saved"]')).toBeVisible()
   expect(await details(page).evaluate((element) => element.contains(document.activeElement))).toBe(true)
   await page.keyboard.press("Escape")

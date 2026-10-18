@@ -356,7 +356,7 @@ export function CanvasTab(props: Props) {
     }
   }
   const save = () => (
-    <Show when={!props.readOnly} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
+    <Show when={!props.route.view} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
     <SaveStatus
       save={props.save}
       saved={copy.t("orchestra.workflows.details.autosave", { version: props.document.versionCounter })}

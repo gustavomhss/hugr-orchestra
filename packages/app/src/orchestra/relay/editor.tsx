@@ -13,7 +13,7 @@ import { documentDiagnostics, type RelayDocument } from "./client"
 import type { RelayRun } from "./runs"
 import { createAction, DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
 import { EditorHead } from "./editor-head"
-import { openDraft, profileDrafts } from "./drafts"
+import { DraftScope, openDraft, profileDrafts } from "./drafts"
 import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
@@ -343,7 +343,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       if (selected().length) return setSelected([])
       return
     }
-    if (typing || props.route.node) return
+    // Undo and redo also work with the step dialog open, while no text field (with its own undo) has focus.
+    if (typing || (props.route.node && !(mod && /^[yz]$/i.test(event.key)))) return
     if (event.key === "?") return (event.preventDefault(), setDialog("keys"))
     if (props.route.tab !== "editor" || target?.closest(".wf-drawer") || mod) {
       if (mod && props.route.tab === "editor" && !target?.closest(".wf-drawer")) {
@@ -370,6 +371,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   onCleanup(() => window.removeEventListener("keydown", keydown))
 
   return (
+    <DraftScope draft={draft} go={props.go}>
     <div class="wf-editor" data-component="relay-editor" data-kind={kind}>
       <EditorHead
         kind={kind}
@@ -444,7 +446,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               document={base()}
               flow={props.route.view ? frozenFlow()! : flow()}
               frozen={frozenFlow()}
-              readOnly={!!props.route.view}
+              readOnly={!!props.route.view || save.state === "conflict"}
               outputs={outputs()}
               issues={props.route.view ? issues(frozenFlow()!, [...(frozen.data?.meta.relay?.diagnostics ?? [])]) : found()}
               selected={selected()}
@@ -537,5 +539,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         </Match>
       </Switch>
     </div>
+    </DraftScope>
   )
 }

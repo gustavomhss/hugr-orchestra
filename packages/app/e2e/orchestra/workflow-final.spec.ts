@@ -7,7 +7,7 @@ const details = (page: Page) => page.locator('[data-component="relay-node-detail
 const canvas = (page: Page) => page.locator('[data-component="relay-canvas"]')
 const located = (data: unknown) => ({ contentType: "application/json", body: JSON.stringify({ location: { directory: "/repo/orchestra-canonical" }, data }) })
 
-test("final fixes: reload leaves newer typing intact and conflicted", async ({ page }) => {
+test("final fixes: a conflict locks the step until it is resolved, and Discard mine reloads", async ({ page }) => {
   const state = await setupRelay(page)
   const doc = state.documents.find((document) => document.id === "relay-wp-execute")!
   const fresh = { ...structuredClone(doc), name: "Fetched v5 workflow", versionCounter: 5, versionId: "remote-v5", nodes: structuredClone(doc.nodes) }
@@ -23,20 +23,24 @@ test("final fixes: reload leaves newer typing intact and conflicted", async ({ p
   const instructions = details(page).getByRole("textbox", { name: "Instructions", exact: true })
   await instructions.fill("Before reload")
   await expect(details(page).locator('[data-save="conflict"]')).toBeVisible()
+  await expect(instructions).toBeDisabled()
+  await expect(details(page).getByRole("button", { name: "Keep mine", exact: true })).toBeVisible()
+  await expect(details(page).getByRole("button", { name: "Save mine as a copy", exact: true })).toBeVisible()
   const response = page.waitForResponse((reply) => reply.request().method() === "GET" && new URL(reply.url()).pathname === "/api/relay/document/relay-wp-execute")
-  await details(page).getByRole("button", { name: "Discard local changes and reload" }).click()
+  await details(page).getByRole("button", { name: "Discard mine", exact: true }).click()
   await arrived.promise
-  await instructions.fill("Typed while reload was pending")
+  await expect(instructions).toBeDisabled()
   pending.resolve()
   await (await response).finished()
+  await expect(details(page).locator('[data-save="saved"]')).toBeVisible()
+  await expect(instructions).toBeEnabled()
+  await expect(instructions).not.toHaveValue("Before reload")
   await page.keyboard.press("Escape")
   await page.getByRole("link", { name: "Back to Workflows", exact: true }).click()
   const row = page.locator('[data-document="relay-wp-execute"]')
   await expect(row).toContainText("Fetched v5 workflow")
   await row.click()
-  await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
-  await expect(instructions).toHaveValue("Typed while reload was pending")
-  await expect(details(page).locator('[data-save="conflict"]')).toBeVisible()
+  await expect(canvas(page)).toBeVisible()
 })
 
 test("final fixes: publish pending prevents dismissal", async ({ page }) => {
