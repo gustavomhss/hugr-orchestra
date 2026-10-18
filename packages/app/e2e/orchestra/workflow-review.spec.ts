@@ -17,7 +17,8 @@ test.afterEach(({ page }) => expect(errors.get(page)).toEqual([]))
 async function workflows(page: Page) {
   await page.goto("/orchestra/workflows", { waitUntil: "domcontentloaded" })
   await expect(page.locator('[data-mx-page="orchestra-workflows"] h1')).toHaveText("Workflows", { timeout: 60_000 })
-  await page.getByRole("listitem").filter({ hasText: "Relay · wp-execute" }).click()
+  // The seeded profiles are templates, not library rows, so the editor opens by its address.
+  await page.goto("/orchestra/workflows/relay-wp-execute", { waitUntil: "domcontentloaded" })
   await expect(canvas(page)).toBeVisible()
 }
 
@@ -39,8 +40,8 @@ test("cold review: pending save fails after navigation; returning restores exact
   await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
   await expect(page).toHaveURL(/\/workflows$/)
   pending.resolve()
-  await expect(page.getByText("Unsaved changes: Relay · wp-execute", { exact: false })).toBeVisible()
-  await page.getByRole("listitem").filter({ hasText: "Relay · wp-execute" }).click()
+  await expect(page.getByText("Could not save changes to Relay · wp-execute", { exact: false })).toBeVisible()
+  await page.getByRole("button", { name: "Open", exact: true }).click()
   await expect(editor(page).locator('[data-save="error"]')).toContainText("Disk full")
   await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
   await expect(details(page).getByRole("textbox", { name: "Instructions", exact: true })).toHaveValue("Keep these instructions after a late 503.")

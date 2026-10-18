@@ -13,7 +13,7 @@ import { setCrumbTrail } from "../crumbs"
 import type { RelayKind } from "./client"
 import { Editor } from "./editor"
 import { HookLibrary } from "./hook-library"
-import { WorkflowLibrary } from "./library"
+import { createLibraryView, WorkflowLibrary } from "./library"
 import { chapterOf, parseRelayRoute, type RelayRoute } from "./route"
 import { createRelaySource } from "./source"
 import { useRelayCopy } from "./ui"
@@ -42,23 +42,31 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
   // Closing a layer goes back when the layer was opened from that view, and replaces the entry otherwise, so
-  // Escape never leaves the page and back never reopens a closed layer.
-  const history = { previous: "", current: location.pathname }
+  // Escape never leaves the page and back never reopens a closed layer. `previous` is the entry below the current
+  // one: a replace swaps the current entry and leaves the one below alone, so add, pick, then Done still finds the
+  // editor underneath instead of stacking a second copy of it.
+  const history = { previous: "", current: location.pathname, replacing: undefined as string | undefined }
   createEffect(
     on(
       () => location.pathname,
       (path) => {
-        history.previous = history.current
+        if (history.replacing !== path) history.previous = history.current
+        history.replacing = undefined
         history.current = path
       },
       { defer: true },
     ),
   )
-  const go = (path: string, replace?: boolean) => navigate(path, { replace })
+  const go = (path: string, replace?: boolean) => {
+    if (replace && path !== history.current) history.replacing = path
+    return navigate(path, { replace })
+  }
   const close = (path: string) => {
     if (history.previous === path) return window.history.back()
-    navigate(path, { replace: true })
+    go(path, true)
   }
+  // Search and filter of the Workflows library outlive its view, so coming back from an editor finds them as left.
+  const libraryView = createLibraryView()
   createEffect(() => {
     const current = route()
     if (current.page === "library")
@@ -104,7 +112,14 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
         </Match>
         <Match when={route().page === "library"}>
           {props.kind === "workflow" ? (
-              <WorkflowLibrary source={source} route={library()!} profile={profile()} go={go} close={close} />
+              <WorkflowLibrary
+                source={source}
+                route={library()!}
+                profile={profile()}
+                view={libraryView}
+                go={go}
+                close={close}
+              />
             ) : (
               <HookLibrary source={source} route={library()!} profile={profile()} go={go} close={close} />
             )

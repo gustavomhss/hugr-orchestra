@@ -1,4 +1,4 @@
-import type { RelayDocument, RelayDocumentFields, RelayNodeType } from "./client"
+import { documentProfile, type RelayDocument, type RelayDocumentFields, type RelayNodeType } from "./client"
 import { CONDITION, documentFields, type Flow, START, TRIGGER } from "./graph"
 
 // Starting points for new documents. Workflow templates are the shipped Relay profiles the server seeded into the
@@ -45,14 +45,26 @@ export function blankWorkflow(name: string, startName: string): RelayDocumentFie
   }
 }
 
+// The name itself when no document has it yet, then `next(2)`, `next(3)`, ... until one is free.
+export function freeName(taken: Iterable<string>, name: string, next: (n: number) => string) {
+  const used = new Set([...taken].map((item) => item.trim().toLowerCase()))
+  // One more candidate than there are names in use, so one of them is always free.
+  return (
+    Array.from({ length: used.size + 1 }, (_, index) => (index === 0 ? name : next(index + 1))).find(
+      (candidate) => !used.has(candidate.trim().toLowerCase()),
+    ) ?? name
+  )
+}
+
 // A copy keeps the source's Relay metadata: the retained sprint fields, and the profile mark that run admission
 // reads, so a copy of a profile that cannot run yet cannot run either. A copy of a profile that can run is the
-// user's own workflow, so it drops the mark and never lists as a template.
+// user's own workflow, so it drops the mark and never lists as a template. It also drops the profile's sample
+// content (see `withoutSample`); a copy of the user's own workflow keeps everything.
 export function copyDocument(source: RelayDocument, name: string): RelayDocumentFields {
   return {
     name,
     description: source.description,
-    nodes: source.nodes,
+    nodes: documentProfile(source) === undefined ? source.nodes : source.nodes.map(withoutSample),
     connections: source.connections,
     nodeGroups: source.nodeGroups,
     tags: [],
@@ -60,6 +72,24 @@ export function copyDocument(source: RelayDocument, name: string): RelayDocument
       source.runnable && source.meta.relay
         ? { ...source.meta, relay: { ...source.meta.relay, profile: undefined } }
         : source.meta,
+  }
+}
+
+// A profile ships sample content that is not the user's: the demo task its inject step hands to the agent, its blurb
+// as the workflow objective, and instructions that name a skill or protocol the profile only carries by name. The
+// compile reads all of it from the nodes, so a template copy starts with them empty for the user to fill.
+function withoutSample(node: RelayDocument["nodes"][number]) {
+  if (node.type === START) return { ...node, parameters: { ...node.parameters, relayBrief: "" } }
+  const instructions = node.parameters.instructions
+  const unattached =
+    !node.parameters.skill && typeof instructions === "string" && /\b(skill|protocol)\b/i.test(instructions)
+  return {
+    ...node,
+    parameters: {
+      ...node.parameters,
+      ...(node.type === "relay.inject" ? { text: "" } : {}),
+      ...(unattached ? { instructions: "" } : {}),
+    },
   }
 }
 
