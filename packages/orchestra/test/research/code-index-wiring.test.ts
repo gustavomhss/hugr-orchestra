@@ -108,6 +108,8 @@ const setup = Effect.fn("CodeIndexWiringTest.setup")(function* () {
 })
 
 const failure = (exit: Exit.Exit<unknown, unknown>) => Exit.isFailure(exit) ? Cause.pretty(exit.cause) : ""
+// The registry appends the retained-evidence line to the tool's own JSON.
+const located = (output: string) => JSON.parse(output.split("\n\nRetained source evidence:")[0]) as CodeIndex.LocateResult
 
 describe("the wired code index", () => {
   it.instance("code_query answers real callers and code_locate a ranked range from the real build", () =>
@@ -120,9 +122,9 @@ describe("the wired code index", () => {
       if (process.platform !== "darwin" && process.platform !== "linux") {
         // The indexer only runs confined; this platform has no confinement for it, so the index is a named gap.
         expect(failure(yield* fixture.call("code_query", callers))).toContain("sandbox-platform-unsupported")
-        const located = yield* fixture.call("code_locate", { question: "which function doubles the relayed value?" })
-        if (Exit.isFailure(located)) throw new Error(Cause.pretty(located.cause))
-        const lexical = JSON.parse(located.value.output) as CodeIndex.LocateResult
+        const answer = yield* fixture.call("code_locate", { question: "which function doubles the relayed value?" })
+        if (Exit.isFailure(answer)) throw new Error(Cause.pretty(answer.cause))
+        const lexical = located(answer.value.output)
         expect(lexical.ranges.some((range) => range.path === "src/y.ts")).toBe(true)
         expect(lexical.basis.coverage.languagesMissing).toContain("ts")
         return yield* fixture.cleanup
@@ -140,9 +142,9 @@ describe("the wired code index", () => {
       expect(output).not.toContain("src/y.ts:1 ")
       expect(output).toContain("shards ts:.")
 
-      const located = yield* fixture.call("code_locate", { question: "which function doubles the relayed value?" })
-      if (Exit.isFailure(located)) throw new Error(Cause.pretty(located.cause))
-      const result = JSON.parse(located.value.output) as CodeIndex.LocateResult
+      const answer = yield* fixture.call("code_locate", { question: "which function doubles the relayed value?" })
+      if (Exit.isFailure(answer)) throw new Error(Cause.pretty(answer.cause))
+      const result = located(answer.value.output)
       expect(result.basis.basis.shards.map((shard) => shard.indexer)).toEqual(["scip-typescript"])
       // Without the index the hit would be a bare ±3-line window; the enclosing definition comes from the index.
       expect(result.ranges.slice(0, 3)).toEqual(expect.arrayContaining([
