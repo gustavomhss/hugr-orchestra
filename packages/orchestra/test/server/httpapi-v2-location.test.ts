@@ -109,9 +109,9 @@ describe("v2 location HttpApi", () => {
   test("honors the plain directory query like location[directory]", async () => {
     await using target = await tmpdir({ git: true })
     await using other = await tmpdir({ git: true })
-    const read = async (query: string) => {
+    const read = async (query: string, route = "/api/command") => {
       // The header places the default Location elsewhere, so only the query can select the target.
-      const response = await request(`/api/command${query}`, other.path)
+      const response = await request(`${route}${query}`, other.path)
       return {
         status: response.status,
         body: (await response.json()) as { location?: { directory: string; project: { id: string } } },
@@ -121,15 +121,18 @@ describe("v2 location HttpApi", () => {
     const plain = await read(`?directory=${encoded}`)
     const nested = await read(`?location[directory]=${encoded}`)
     const both = await read(`?directory=${encoded}&location[directory]=${encoded}`)
-    const conflict = await read(`?directory=${encoded}&location[directory]=${encodeURIComponent(other.path)}`)
+    const nestedWins = await read(`?directory=${encodeURIComponent(other.path)}&location[directory]=${encoded}`)
     const neither = await read("")
+    const skill = await read(`?directory=${encoded}`, "/api/skill")
 
     expect(plain.status).toBe(200)
     expect(plain.body.location?.directory).toBe(target.path)
     expect(plain.body.location?.project.id).toBe(nested.body.location?.project.id)
     expect(both.status).toBe(200)
     expect(both.body.location?.directory).toBe(target.path)
-    expect(conflict.status).toBe(400)
+    expect(nestedWins.status).toBe(200)
+    expect(nestedWins.body.location?.directory).toBe(target.path)
+    expect(skill.body.location?.directory).toBe(target.path)
     expect(neither.status).toBe(200)
     expect(neither.body.location?.directory).toBe(other.path)
   })
