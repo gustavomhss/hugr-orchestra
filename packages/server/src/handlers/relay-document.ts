@@ -3,6 +3,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
 import { Relay } from "@orchestra/core/relay"
 import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import path from "path"
 import { RelayForbiddenError } from "@orchestra/protocol/groups/relay-document"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
@@ -24,9 +25,18 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
           documents.use((store) =>
             Effect.gen(function* () {
               const scopes = yield* store.scopes()
-              return yield* Effect.forEach(yield* store.documents(), (document) =>
-                RelayDocuments.view(store, document, scopes),
+              // One stored document that no longer validates is left out, not a failed list for Workflows and Hooks.
+              const views = yield* Effect.forEach(yield* store.documents(), (document) =>
+                RelayDocuments.view(store, document, scopes).pipe(
+                  Effect.map((view) => [view]),
+                  Effect.catch((error) =>
+                    Effect.logWarning("relay document left out of the list", { id: document.id, error }).pipe(
+                      Effect.as([]),
+                    ),
+                  ),
+                ),
               )
+              return views.flat()
             }),
           ),
         ),
@@ -176,8 +186,10 @@ export const RelayPublishHandler = HttpApiBuilder.group(Api, "server.relay.publi
             const skills = RelayDocuments.skills(yield* SkillV2.Service)
             return yield* documents.use((store) =>
               Effect.gen(function* () {
-                // Python's publish: what does not compile is not published.
-                yield* RelayDocuments.compile(yield* store.get(ctx.params.documentID), skills)
+                const document = yield* store.get(ctx.params.documentID)
+                // Python's publish: what does not compile is not published. Nor is a workflow Maestro cannot run.
+                yield* RelayDocuments.compile(document, skills)
+                if (!AuthoringHook.isHook(document)) yield* RelayWorkflowBinding.admission(document, skills)
                 const published = yield* store.publish(
                   ctx.params.documentID,
                   ctx.payload.versionId,

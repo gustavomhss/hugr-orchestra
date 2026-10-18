@@ -5,6 +5,7 @@ import { isDeepStrictEqual } from "node:util"
 import { Context, Effect, FileSystem, Option, Schema } from "effect"
 import { and, asc, eq, sql } from "drizzle-orm"
 import { RelayArm } from "@orchestra/schema/relay-arm"
+import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Event } from "@orchestra/schema/event"
 import { ProjectID } from "@orchestra/schema/project-id"
@@ -62,6 +63,13 @@ export interface Host {
   readonly complete: (binding: RelayArm.WorkflowBinding) => Effect.Effect<void, RelayWorkflowBinding.Held>
 }
 export const NativeHost = Context.Reference<Host | undefined>("@orchestra/WorkflowBinding/Host", { defaultValue: () => undefined })
+
+/** Global acceptance a workflow Task requires: the last work package carries these host checks. */
+export const GLOBAL_ACCEPTANCE = ["package-verification", "cold-review"]
+
+export function accepts(sprint: RelaySprint.Sprint) {
+  return GLOBAL_ACCEPTANCE.every((name) => sprint.work_packages.at(-1)?.checklist?.some((control) => control.host_check === name))
+}
 
 export const beforeTask = Effect.fn("WorkflowBinding.beforeTask")(function* (input: Omit<Dispatch, "taskID" | "logicalTaskID">,
   phase: "dispatch" | "continuation" = "dispatch") {
@@ -166,8 +174,7 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
    const ready = yield* prepare(input.dispatch, existing ? "continuation" : "dispatch")
   const context = yield* Effect.context<Database.Service | Session.Service | EventV2Bridge.Service | FileSystem.FileSystem>()
   const controls = ready.materialized.sprint.work_packages.flatMap((wp) => wp.checklist ?? [])
-   if (!input.globalChecks.length || !["package-verification", "cold-review"].every((name) =>
-     ready.materialized.sprint.work_packages.at(-1)?.checklist?.some((control) => control.host_check === name)) ||
+   if (!input.globalChecks.length || !accepts(ready.materialized.sprint) ||
      input.globalChecks.some((check) =>
     !controls.some((control) => control.id === check.id && control.host_check === check.hostCheck)))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_GLOBAL_ACCEPTANCE_MISSING" })

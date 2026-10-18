@@ -36,7 +36,9 @@ const Parameters = Schema.Struct({
     dispatchKind: Schema.optional(Schema.Literals(["orchestra-task", "claude-code-agent"])),
   })),
   workflow: Schema.optional(Schema.Struct({ documentID: Schema.NonEmptyString,
-    parameters: Schema.Record(Schema.String, Schema.String), writePaths: Schema.Array(Schema.NonEmptyString) })),
+    parameters: Schema.Record(Schema.String, Schema.String), writePaths: Schema.Array(Schema.NonEmptyString) })).annotate({
+    description: "A published Relay workflow this plan runs: its id from `maestro_workflows` as `documentID`, its `parameters`, and the `writePaths` the workflow Task will pass, in the same order.",
+  }),
 })
 
 export const MaestroCatalogContextTool = Tool.define(
@@ -111,6 +113,9 @@ export const MaestroRecordPlanRevisionTool = Tool.define(
           const agent = yield* agents.get(ctx.agentID ?? ctx.agent)
           if (agent?.id !== "maestro" || agent.native !== true)
             return yield* Effect.fail(new Error("Plan revision requires Maestro"))
+          if (params.workflow && !params.upstream)
+            return yield* new RelayWorkflowBinding.Held({ reason: "UPSTREAM_ATTRIBUTION_MISSING",
+              detail: "A workflow plan is authored upstream: dispatch archie with task for the plan, then record this revision in this Session with upstream naming that Task." })
           const host = yield* WorkflowBinding.NativeHost
           if (params.workflow && !host) return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_NATIVE_HOST_UNBOUND" })
           // The dispatch parent is always this calling Session, never a payload field; name the Session that would pass.
