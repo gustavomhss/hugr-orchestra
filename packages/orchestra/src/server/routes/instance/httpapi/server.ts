@@ -4,7 +4,6 @@ import { HttpMiddleware, HttpRouter, HttpServer, HttpServerResponse } from "effe
 import * as Socket from "effect/unstable/socket/Socket"
 import { FSUtil } from "@orchestra/core/fs-util"
 import * as Observability from "@orchestra/core/observability"
-import { Account } from "@/account/account"
 import { Agent } from "@/agent/agent"
 import { Auth } from "@/auth"
 import { BackgroundJob } from "@/background/job"
@@ -227,7 +226,6 @@ const app = LayerNode.group([
   ResearchArtifacts.node,
   Auth.node,
   Credential.node,
-  Account.node,
   Config.node,
   Env.node,
   Git.node,

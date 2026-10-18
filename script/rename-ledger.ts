@@ -156,10 +156,6 @@ export const protectedStrings: Protected[] = [
     reason: "negative assertion against the inherited theme names, not against Orchestra",
   },
   {
-    pattern: /(?<=client_?id["'\s,:=]{1,6})opencode-(?:cli|desktop)\b/gi,
-    reason: "upstream console OAuth client id left in the dormant Account service, whose removal is an open follow-up",
-  },
-  {
     pattern: /\b(?:providerID|provider|id|router)\s*[!=]==?\s*(["'])opencode\1/g,
     reason: "comparison with the Zen provider id",
   },
