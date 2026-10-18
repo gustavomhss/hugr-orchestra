@@ -1,7 +1,7 @@
 export * as CodeIndexExtract from "./extract"
 
 import { createHash } from "node:crypto"
-import { mkdtemp, rm, writeFile } from "node:fs/promises"
+import { mkdtemp, realpath, rm, writeFile } from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { Effect } from "effect"
@@ -11,15 +11,15 @@ import { AppProcess } from "../../process"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { ResearchToolkit } from "../index"
 import { IDS } from "../manifest"
-import type { CodeIndexBuild } from "./build"
+import { CodeIndexBuild } from "./build"
 import { Callers } from "./callers"
 import { Enclosing } from "./enclosing"
 import { CodeIndexFilter } from "./filter"
 import type { CodeIndexQuery } from "./query"
 import { CodeIndexResolve } from "./resolve"
 import { Scip } from "./scip"
-import type { CodeIndexShard } from "./shard"
-import type { CodeIndexStore } from "./store"
+import { CodeIndexShard } from "./shard"
+import { CodeIndexStore } from "./store"
 import { CodeIndexTreeSitter } from "./tree-sitter"
 import { Role } from "./types"
 
@@ -39,7 +39,7 @@ import { Role } from "./types"
 export const make = Effect.gen(function* () {
   const proc = yield* AppProcess.Service
   return {
-    extract: ((input) => shard(input).pipe(Effect.provideService(AppProcess.Service, proc))) satisfies CodeIndexBuild.Extract,
+    extract: ((input) => extract(input).pipe(Effect.provideService(AppProcess.Service, proc))) satisfies CodeIndexBuild.Extract,
     overlay: ((input) => Effect.forEach(input.paths, (file) => outline(input.root, file), { concurrency: 8 })
       .pipe(Effect.map((files) => files.flatMap((file) => file ? [file] : [])))) satisfies CodeIndexQuery.Overlay,
   }
@@ -66,13 +66,62 @@ export const indexers = Effect.fn("CodeIndexExtract.indexers")(function* () {
     .map((language) => [language, { id: state.engine, version: state.version } satisfies CodeIndexShard.Indexer] as const)))
 })
 
-const shard = Effect.fn("CodeIndexExtract.shard")(function* (input: Parameters<CodeIndexBuild.Extract>[0]) {
+/**
+ * `ResearchToolkit.Index` over X3's planner and store, which `warm` and `prewarm` drive (J6.7): each shard of the
+ * worktree's HEAD with its key as id, and a build that extracts one shard with the executable and memory cap the
+ * toolkit hands it, writes it atomically and applies retention.
+ */
+export const toolkit = Effect.gen(function* () {
+  const proc = yield* AppProcess.Service
+  const failed = (error: { readonly message: string }) => new ResearchToolkit.ShardFailed({ reason: error.message })
+  const prepared = (worktree: string) => Effect.gen(function* () {
+    const root = yield* Effect.tryPromise({ try: () => realpath(worktree), catch: () => new ResearchToolkit.ShardFailed({ reason: "worktree-missing" }) })
+    const manifest = yield* ResearchToolkit.Manifest
+    const plan = yield* CodeIndexBuild.plan({
+      root, git: yield* CodeIndexShard.live(root), storeRoot: yield* ResearchToolkit.Root,
+      indexers: Object.fromEntries(Object.values(manifest).flatMap((pack) => pack?.fit.role === "indexer"
+        ? pack.fit.languages.map((language) => [language, { id: pack.id, version: pack.version }] as const) : [])),
+    }).pipe(Effect.mapError(failed))
+    return { root, plan }
+  }).pipe(Effect.provideService(AppProcess.Service, proc))
+  return {
+    plan: (worktree: string) => prepared(worktree).pipe(Effect.flatMap(({ plan }) => Effect.forEach(plan.shards, (planned) =>
+      CodeIndexStore.exists(plan.dir, planned.key).pipe(Effect.map((ready) => {
+        const engine = IDS.find((id) => id === planned.indexer.id)
+        // An unbuilt shard has no file_rank yet; its file count stands in for the project's aggregated rank.
+        return engine ? [{ id: planned.key, language: planned.shard.language, project: planned.shard.project,
+          rank: planned.shard.files.length, engine, state: ready ? "ready" as const : "absent" as const }] : []
+      }))).pipe(Effect.map((shards) => shards.flat())))),
+    build: (shard: ResearchToolkit.Shard, input: { readonly worktree: string; readonly executable: string; readonly memoryBytes: number }) =>
+      Effect.gen(function* () {
+        const ready = yield* prepared(input.worktree)
+        const plan = ready.plan
+        const planned = plan.shards.find((entry) => entry.key === shard.id)
+        if (!planned) return yield* new ResearchToolkit.ShardFailed({ reason: "shard-not-at-head" })
+        const content = yield* extract({ root: ready.root, commit: plan.commit, shard: planned.shard, indexer: planned.indexer },
+          { executable: input.executable, memoryBytes: input.memoryBytes }).pipe(Effect.mapError(failed))
+        yield* CodeIndexStore.write(plan.dir, { shardKey: planned.key, commit: plan.commit, indexer: planned.indexer.id,
+          version: planned.indexer.version }, content).pipe(Effect.mapError(failed))
+        const present = yield* Effect.forEach(plan.shards, (entry) => CodeIndexStore.exists(plan.dir, entry.key))
+        const caps = yield* ResearchToolkit.Caps
+        yield* CodeIndexStore.retain(plan.dir, {
+          commit: plan.commit, at: Date.now(),
+          shards: plan.shards.filter((_, index) => present[index]).map((entry) => ({ id: entry.shard.id, key: entry.key })),
+        }, { commits: caps.indexCommits, bytes: caps.indexBytes })
+      }).pipe(Effect.provideService(AppProcess.Service, proc)),
+  }
+})
+
+const extract = Effect.fn("CodeIndexExtract.extract")(function* (
+  input: Parameters<CodeIndexBuild.Extract>[0],
+  launch?: { readonly executable: string; readonly memoryBytes: number },
+) {
   const selected = CodeIndexFilter.select(input.shard.files)
   const read = yield* Effect.forEach(selected.files, (file) =>
     text(input.root, file.path).pipe(Effect.map((content) => ({ ...file, text: content }))), { concurrency: 16 })
   const sources = read.flatMap((file) => file.text === undefined ? [] : [{ path: file.path, grammar: file.grammar, text: file.text }])
   const outlines = yield* Effect.forEach(sources, (file) => CodeIndexTreeSitter.extract(file.path, file.text, file.grammar), { concurrency: 8 })
-  const dump = yield* scip(input)
+  const dump = yield* scip(input, launch)
   const resolver = yield* CodeIndexResolve.make(input.root)
   return assemble({
     sources, outlines, dump,
@@ -92,13 +141,18 @@ const shard = Effect.fn("CodeIndexExtract.shard")(function* (input: Parameters<C
  * (no network, writes only to its scratch and the dump), spawned through AppProcess under the D2 memory cap and the
  * per-shard timeout, with the project directory as cwd.
  */
-const scip = Effect.fn("CodeIndexExtract.scip")(function* (input: Parameters<CodeIndexBuild.Extract>[0]) {
+const scip = Effect.fn("CodeIndexExtract.scip")(function* (
+  input: Parameters<CodeIndexBuild.Extract>[0],
+  launch?: { readonly executable: string; readonly memoryBytes: number },
+) {
   const proc = yield* AppProcess.Service
   const caps = yield* ResearchToolkit.Caps
   const engine = IDS.find((id) => id === input.indexer.id)
   if (!engine) return yield* new Research.Error({ code: "index_unavailable", message: `toolkit-not-ready:unsupported:${input.indexer.id}:pack-not-shipped` })
-  const ready = yield* ResearchToolkit.ensure(engine).pipe(
-    Effect.mapError((error) => new Research.Error({ code: "index_unavailable", message: error.reason })))
+  // The toolkit's warm-up has already ensured the pack and names the cap; a query-started build ensures it here.
+  const ready = launch ?? (yield* ResearchToolkit.ensure(engine).pipe(
+    Effect.map((ensured) => ({ executable: ensured.executable, memoryBytes: caps.indexerBytes })),
+    Effect.mapError((error) => new Research.Error({ code: "index_unavailable", message: error.reason }))))
   const failed = (message: string) => new Research.Error({ code: "index_unavailable", message: `${engine}: ${message}` })
   return yield* Effect.gen(function* () {
     // The dump lives outside the worktree (JI-1); confine grants writes only to it and the run's own scratch.
@@ -115,7 +169,7 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (input: Parameters<Cod
       ChildProcess.make(launch.command, launch.args, {
         cwd: path.join(input.root, input.shard.project), env: launch.env, extendEnv: false, stdin: "ignore",
       }),
-      { timeout: caps.shardTimeoutMs, maxRssBytes: caps.indexerBytes, maxOutputBytes: 64 * 1024, maxErrorBytes: 64 * 1024 },
+      { timeout: caps.shardTimeoutMs, maxRssBytes: ready.memoryBytes, maxOutputBytes: 64 * 1024, maxErrorBytes: 64 * 1024 },
     ).pipe(Effect.mapError((cause) => failed(cause.message)))
     if (result.exitCode !== 0)
       return yield* failed(`exit ${result.exitCode}: ${(result.stderr.toString("utf8") || result.stdout.toString("utf8")).trim().slice(0, 500)}`)

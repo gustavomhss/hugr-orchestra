@@ -56,6 +56,7 @@ export const make = Effect.gen(function* () {
   const execution = yield* ResearchExecution.Service
   const capture = yield* ResearchSourceCapture.make
   const records = yield* ResearchRecords.Service
+  const warm = yield* CodeIndexTools.Warm
   // The dispatch's inquiry closed when its ledger holds the closed event (J5.5), re-entries and restarts included. A
   // resumed Task binds a new dispatch, whose ledger stream starts after its own allowance, so it starts open.
   const closed = (allowance: Research.Allowance) => records.dispatch(allowance).pipe(
@@ -71,6 +72,9 @@ export const make = Effect.gen(function* () {
     return false
   }
   return {
+    /** Starts the code index warm-up of a git worktree in the background, once the discovery seat is active (J6.7). */
+    prewarm: (agent: Agent.Info | undefined, worktree: string) =>
+      agent && discovery(agent) && worktree !== "/" ? warm(worktree) : Effect.void,
     /** The discovery tools, initialized as builtins. */
     init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire), Tool.init(query),
       Tool.init(locate), Tool.init(search), Tool.init(probe), Tool.init(inquiry)]),

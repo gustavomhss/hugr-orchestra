@@ -49,6 +49,23 @@ export const Manifest = Context.Reference<Readonly<Partial<Record<ResearchEngine
 /** The caps in force; the instance provides `research.limits.*` here, which may only lower `Limits`. */
 export const Caps = Context.Reference<typeof Limits>("@orchestra/ResearchToolkit/Caps", { defaultValue: () => Limits })
 
+/** `Caps` from config `research.limits.*`: each configured value lowers its owner cap and never raises it (D2). */
+export function caps(limits?: {
+  readonly indexer_bytes?: number
+  readonly probe_bytes?: number
+  readonly scratch_bytes?: number
+  readonly index_bytes?: number
+}): typeof Limits {
+  const lower = (cap: number, value?: number) => Math.min(cap, value ?? cap)
+  return Object.freeze({
+    ...Limits,
+    indexerBytes: lower(Limits.indexerBytes, limits?.indexer_bytes),
+    probeBytes: lower(Limits.probeBytes, limits?.probe_bytes),
+    scratchBytes: lower(Limits.scratchBytes, limits?.scratch_bytes),
+    indexBytes: lower(Limits.indexBytes, limits?.index_bytes),
+  })
+}
+
 /** One (language, project) shard of a worktree's index (J2.1), as the index store sees it at the worktree's commit. */
 export type Shard = {
   /** The shard key (J2.2); a new commit that changes the project's tree is a new id. */
