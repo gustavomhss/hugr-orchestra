@@ -1,5 +1,6 @@
 import { createEffect, createSignal } from "solid-js"
 import { Portal } from "solid-js/web"
+import { useLanguage } from "@/context/language"
 import { tabLabel, type Tab } from "./apps-panel-controller"
 
 // The menu opens with its inline-start corner at (x, y) in the viewport, flipped across that point on an
@@ -27,6 +28,7 @@ export function TabMenu(props: {
   onCloseOthers: () => void
   onCloseRight: () => void
 }) {
+  const language = useLanguage()
   let menu: HTMLDivElement | undefined
   const [place, setPlace] = createSignal<{ left: string; top: string }>()
   // Measured at the window's origin, where nothing narrows it, and placed before it paints.
@@ -52,7 +54,7 @@ export function TabMenu(props: {
         }}
         class="zen-tab-menu"
         role="menu"
-        aria-label={`Actions for ${tabLabel(props.tab)}`}
+        aria-label={language.t("orchestra.dock.menu.actions", { title: tabLabel(props.tab) })}
         style={place() ?? { left: "0px", top: "0px", visibility: "hidden" }}
         onKeyDown={(event) => {
           // At the end of the body, Tab would carry focus to the document's ends: it returns to the tab.
@@ -76,22 +78,22 @@ export function TabMenu(props: {
         }}
       >
         <button type="button" role="menuitem" disabled={!props.canDuplicate} onClick={props.onDuplicate}>
-          Duplicate
+          {language.t("orchestra.dock.menu.duplicate")}
         </button>
         <button type="button" role="menuitem" onClick={props.onTogglePin}>
-          {props.tab.pinned ? "Unpin" : "Pin"}
+          {props.tab.pinned ? language.t("orchestra.dock.menu.unpin") : language.t("orchestra.dock.menu.pin")}
         </button>
         <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
-          Reload
+          {language.t("orchestra.dock.page.reload")}
         </button>
         <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
-          Close
+          {language.t("orchestra.dock.menu.close")}
         </button>
         <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
-          Close others
+          {language.t("orchestra.dock.menu.closeOthers")}
         </button>
         <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
-          Close right
+          {language.t("orchestra.dock.menu.closeRight")}
         </button>
       </div>
     </Portal>
