@@ -30,13 +30,27 @@ export function isFirstLaunchOnboardingPending() {
   return pending
 }
 
-export async function finishFirstLaunchOnboarding(createDefaultProject: boolean) {
+// The renderer supplies the folder name in the person's language. It becomes one path segment, so anything that
+// could leave Documents or is not valid on every platform is dropped.
+function defaultProjectDirectory(name?: string) {
+  const clean = (name ?? "")
+    .replace(/[\\/:*?"<>|\p{Cc}]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/[. ]+$/, "")
+    .slice(0, 80)
+  return clean || DEFAULT_PROJECT_DIR
+}
+
+export async function finishFirstLaunchOnboarding(createDefaultProject: boolean, folderName?: string) {
   if (!isFirstLaunchOnboardingPending()) {
     writeLog("onboarding", "first launch onboarding already completed")
     return null
   }
 
-  const defaultProject = createDefaultProject ? join(app.getPath("documents"), DEFAULT_PROJECT_DIR) : null
+  const defaultProject = createDefaultProject
+    ? join(app.getPath("documents"), defaultProjectDirectory(folderName))
+    : null
   if (defaultProject) await mkdir(defaultProject, { recursive: true })
   const directory = defaultProject ? await realpath(defaultProject) : null
 
