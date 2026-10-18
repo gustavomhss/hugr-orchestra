@@ -220,7 +220,9 @@ function warmSessions(input: {
 
 // The directory list loads root Sessions only, and a parent finds a subagent's request by walking
 // that list from the parent down. A subagent blocked on a request emits nothing, so after a reload
-// the owning Session and every Session between it and its root must be indexed here.
+// the owning Session and every Session between it and its root must be indexed here. Only the
+// owner must resolve; an ancestor that cannot be read leaves the chain short instead of failing
+// the whole request load.
 function indexRequestSessions(input: {
   ids: string[]
   directory: string
@@ -235,12 +237,15 @@ function indexRequestSessions(input: {
     [...new Set(input.ids)]
       .filter((id) => !!id)
       .map((sessionID) =>
-        input.session.lineage.resolve(sessionID).then(() =>
-          lineage(sessionID)
-            .filter((session) => !!session.parentID && session.directory === input.directory)
-            .filter((session) => session.time.archived === undefined)
-            .forEach((session) => mergeSession(input.setStore, session)),
-        ),
+        input.session.lineage
+          .resolve(sessionID)
+          .catch(() => input.session.resolve(sessionID))
+          .then(() =>
+            lineage(sessionID)
+              .filter((session) => !!session.parentID && session.directory === input.directory)
+              .filter((session) => session.time.archived === undefined)
+              .forEach((session) => mergeSession(input.setStore, session)),
+          ),
       ),
   ).then(() => undefined)
 }
