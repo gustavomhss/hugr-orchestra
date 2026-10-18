@@ -32,6 +32,9 @@ const ServerApi = HttpApi.make("test-server-authorization").add(
       HttpApiEndpoint.get("probe", "/api/probe", {
         success: Schema.String,
       }),
+      HttpApiEndpoint.get("event", "/api/event", {
+        success: Schema.String,
+      }),
     )
     .middleware(ServerAuthorization),
 )
@@ -43,7 +46,7 @@ const handlers = HttpApiBuilder.group(Api, "test", (handlers) =>
 )
 
 const serverHandlers = HttpApiBuilder.group(ServerApi, "test.v2", (handlers) =>
-  handlers.handle("probe", () => Effect.succeed("ok")),
+  handlers.handle("probe", () => Effect.succeed("ok")).handle("event", () => Effect.succeed("ok")),
 )
 
 const apiLayer = HttpRouter.serve(
@@ -158,6 +161,18 @@ describe("HttpApi authorization middleware", () => {
       const response = yield* HttpClient.get("/probe?auth_token=not-base64")
 
       expect(response.status).toBe(401)
+    }),
+  )
+
+  itV2Secret.live("accepts v2 auth token query credentials only on header-less stream routes", () =>
+    Effect.gen(function* () {
+      const query = `?auth_token=${encodeURIComponent(token("orchestra", "secret"))}`
+      const [probe, event] = yield* Effect.all([HttpClient.get(`/api/probe${query}`), HttpClient.get(`/api/event${query}`)], {
+        concurrency: "unbounded",
+      })
+
+      expect(probe.status).toBe(401)
+      expect(event.status).toBe(200)
     }),
   )
 
