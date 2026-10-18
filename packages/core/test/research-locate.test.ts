@@ -81,14 +81,14 @@ describe("code_locate", () => {
   })
 
   test("drops a range whose hit no longer matches the current file and counts it", async () => {
-    const stale = { ...FILES, "src/check.ts": ["export function renamed(x: number) {", "  return x", "}"].join("\n") }
+    const stale: Record<string, string> = { ...FILES, "src/check.ts": ["export function renamed(x: number) {", "  return x", "}"].join("\n") }
     const result = await run({ terms: ["citationCheck"] }, sources({ read: (path) => Effect.succeed(stale[path]) }).value)
     expect(result.ranges.some((range) => range.path === "src/check.ts")).toBe(false)
     expect(result.basis.coverage.discarded).toBeGreaterThan(0)
   })
 
   test("drops a definition whose name is not on its declared line", async () => {
-    const moved = { ...FILES, "src/assemble.ts": ["", "", "", "export function assemble() {", "}"].join("\n") }
+    const moved: Record<string, string> = { ...FILES, "src/assemble.ts": ["", "", "", "export function assemble() {", "}"].join("\n") }
     const fake = sources({ read: (path) => Effect.succeed(moved[path]), search: () => Effect.succeed({ matches: [], basis: basis() }) })
     const result = await run({ symbols: ["assemble"] }, fake.value)
     expect(result.ranges.some((range) => range.symbol === "assemble")).toBe(false)
