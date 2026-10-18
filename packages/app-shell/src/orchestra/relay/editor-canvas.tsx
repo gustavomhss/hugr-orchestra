@@ -474,12 +474,14 @@ export function CanvasTab(props: Props) {
           <span class={`wf-dot ${current ? "good" : "warm"}`} />
           <span>
             {[
-              current
-                ? copy.t("orchestra.hooks.canvas.installed", {
-                    profile: props.profile,
-                    version: props.document.publishedCounter ?? "",
-                  })
-                : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
+              installed.unpublished
+                ? copy.t("orchestra.hooks.canvas.installedUnpublished", { profile: props.profile })
+                : current
+                  ? copy.t("orchestra.hooks.canvas.installed", {
+                      profile: props.profile,
+                      version: props.document.publishedCounter ?? "",
+                    })
+                  : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
               props.decision
                 ? `${copy.t(`orchestra.hooks.outcome.${props.decision.outcome}`)} ${copy.when(decisionTime(props.decision))}`
                 : props.decisionKnown !== false ? copy.t("orchestra.hooks.canvas.notFired") : undefined,

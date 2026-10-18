@@ -3,7 +3,7 @@ export * as RelayHookInstall from "./relay-hook-install"
 import path from "path"
 import { createHash, randomBytes, randomUUID } from "crypto"
 import { rmSync } from "fs"
-import { Clock, Effect, Option, Result, Schema } from "effect"
+import { Clock, Effect, Option, Result, Schema, Struct } from "effect"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
 import { RelayJson } from "@orchestra/relay/json"
@@ -123,8 +123,9 @@ export const update = Effect.fn("RelayHookInstall.update")(function* (
   const snapshot = yield* pin(input.snapshot, input.sha256)
   const installedAt = yield* Clock.currentTimeMillis
   return yield* replace(input, (current) => ({
+    // Only a published version can be pinned, so an update also ends an unpublished pause.
     install: {
-      ...current,
+      ...Struct.omit(current, ["unpublished"]),
       version: input.version,
       sha256: input.sha256,
       installedBy: input.principal,
@@ -153,6 +154,31 @@ export const uninstall = Effect.fn("RelayHookInstall.uninstall")(function* (
     return Effect.succeed({
       installs: installs.filter((item) => item !== current),
       changed: changed(current, "hook-uninstalled", input),
+    })
+  })
+})
+
+/**
+ * Marks every install of one document unpublished, or clears the mark, in one write. An unpublished install keeps its
+ * pin, order and enabled state but does not fire, as a pinned workflow run holds while its workflow is unpublished;
+ * a publish lets it fire its pinned version again. Only installs whose mark changes are receipted.
+ */
+export const setPublished = Effect.fn("RelayHookInstall.setPublished")(function* (
+  input: Binding & { readonly document: string; readonly published: boolean; readonly principal: string },
+) {
+  const pending = (install: RelayHook.Install) =>
+    install.document === input.document && !!install.unpublished === input.published
+  // A project with no install of this document is left as it is: no hooks.json is written where none was.
+  if (!(yield* read(input)).installs.some(pending)) return []
+  return yield* mutate(input, (installs) => {
+    const changes = installs.filter(pending)
+    const next = (install: RelayHook.Install): RelayHook.Install =>
+      input.published ? Struct.omit(install, ["unpublished"]) : { ...install, unpublished: true }
+    return Effect.succeed({
+      installs: installs.map((install) => (changes.includes(install) ? next(install) : install)),
+      changed: changes.map((install) =>
+        changed(next(install), input.published ? "hook-republished" : "hook-unpublished", input),
+      ),
     })
   })
 })

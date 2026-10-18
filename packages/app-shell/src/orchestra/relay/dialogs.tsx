@@ -92,7 +92,9 @@ export function PublishDialog(props: {
       const release = props.retain?.()
       return props.source.client.publish(props.document).then(async (published) => {
         await rememberDocument(props.source.queryClient(), props.source.key("documents"), published, props.active)
-        // Publishing does not touch an install; it keeps enforcing its pinned version until it is updated.
+        // Publishing keeps an install on its pinned version until it is updated; an install that was stopped by an
+        // unpublish fires again, so the installs are read again.
+        if (!workflow) props.source.invalidate("installs")
         if (props.install && follow())
           await props.source.client
             .update(props.install)

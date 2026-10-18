@@ -471,6 +471,57 @@ describe("RelayHookInstall lifecycle", () => {
       expect(yield* refusal(refused)).toEqual({ reason: "snapshot-invalid", message: BEFORE })
     }),
   )
+
+  it.effect("N-14: unpublishing marks a document's installs, publishing clears the mark, an update ends it", () =>
+    Effect.gen(function* () {
+      const binding = yield* fixture
+      const first = (yield* install(binding, guard())).install
+      const other = (yield* install(binding, guard(), "doc-other")).install
+      const mark = (published: boolean, document = "doc-generated") =>
+        RelayHookInstall.setPublished({ ...binding, document, published, principal: "user:bo" })
+
+      const unpublished = yield* mark(false)
+      expect(unpublished.map((change) => [change.install.installID, change.receipt.event])).toEqual([
+        [first.installID, "hook-unpublished"],
+      ])
+      expect((yield* RelayHookInstall.read(binding)).installs).toEqual([{ ...first, unpublished: true }, other])
+      // Marking again changes nothing and receipts nothing.
+      expect(yield* mark(false)).toEqual([])
+      // The pin, order and enabled state stay; pausing works as before.
+      const paused = yield* RelayHookInstall.setEnabled({
+        ...binding,
+        installID: first.installID,
+        enabled: false,
+        principal: "user:bo",
+      })
+      expect(paused.install).toEqual({ ...first, enabled: false, unpublished: true })
+
+      const republished = yield* mark(true)
+      expect(republished.map((change) => change.receipt.event)).toEqual(["hook-republished"])
+      expect((yield* RelayHookInstall.read(binding)).installs).toEqual([{ ...first, enabled: false }, other])
+      expect(yield* mark(true)).toEqual([])
+
+      yield* mark(false)
+      const updated = yield* RelayHookInstall.update({
+        ...binding,
+        installID: first.installID,
+        version: "v4",
+        principal: "user:bo",
+        ...published(guard()),
+      })
+      expect(updated.install.unpublished).toBeUndefined()
+    }),
+  )
+
+  it.effect("N-14: marking a document nobody installed writes no hooks.json", () =>
+    Effect.gen(function* () {
+      const binding = yield* fixture
+      expect(
+        yield* RelayHookInstall.setPublished({ ...binding, document: "doc-none", published: false, principal: "user:bo" }),
+      ).toEqual([])
+      expect(yield* absent(binding.file)).toBe(true)
+    }),
+  )
 })
 
 describe("RelayHookInstall hooks.json", () => {
