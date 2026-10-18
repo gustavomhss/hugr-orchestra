@@ -3,7 +3,7 @@ import { createEffect, createMemo, For, Match, Show, Switch, untrack } from "sol
 import { createStore } from "solid-js/store"
 import { Empty, Icon, Status } from "./components"
 import type { ErrorState, State, Translate, ViewProps } from "./contract"
-import { duration, stamp } from "./format"
+import { bytes, duration, relative } from "./format"
 import { artifactMetadata } from "./artifact-metadata"
 import { canRequest } from "./request-policy"
 
@@ -16,8 +16,6 @@ export function Logs(props: ViewProps) {
       && (state.route.attempt === undefined || item.attempt === undefined || item.attempt === state.route.attempt)).slice(0, 100) ?? [] : [])
   const job = createMemo(() => jobs().find((item) => item.id === state.route.jobID))
   const readable = createMemo(() => { const value = job(); return value !== undefined && logAvailable(state, value) })
-  const elapsed = createMemo(() => duration(job()?.startedAt && job()?.finishedAt
-    ? (Date.parse(job()?.finishedAt ?? "") - Date.parse(job()?.startedAt ?? "")) / 1000 : undefined))
   const lines = createMemo(() => state.log.status === "ready" && readable() && state.log.value
     ? (state.log.value ?? "").split("\n").map((text, index) => ({ text, number: index + 1 }))
       .filter((line) => line.text.toLowerCase().includes(view.query.toLowerCase())) : [])
@@ -56,17 +54,18 @@ export function Logs(props: ViewProps) {
           </aside>
           <section class="log-panel" aria-label={props.t("orchestra.actions.logs")}>
             <div class="log-toolbar">
-              <div><strong><bdi>{job()?.name ?? props.t("orchestra.actions.noLog")}</bdi></strong>
-                <small><bdi>{job()?.runner ?? props.t("orchestra.actions.unknown")}</bdi> · {elapsed()}</small></div>
-              <input type="search" class="mx-search" value={view.query} maxlength={512} placeholder={props.t("orchestra.actions.search")}
-                aria-label={props.t("orchestra.actions.search")} onInput={(event) => setView("query", event.currentTarget.value)} />
+              <div class="log-title"><strong><bdi>{job()?.name ?? props.t("orchestra.actions.noLog")}</bdi></strong>
+                <small><Show when={job()}>{(item) => <><bdi>{runnerLabel(item(), props.t)}</bdi><span aria-hidden="true"> · </span>
+                  <span>{jobDuration(item())}</span></>}</Show></small></div>
+              <input type="search" class="mx-search" value={view.query} maxlength={512} placeholder={props.t("orchestra.actions.searchLog")}
+                aria-label={props.t("orchestra.actions.searchLog")} onInput={(event) => setView("query", event.currentTarget.value)} />
               <button type="button" class="mx-btn" disabled={!readable() || state.log.status === "loading"}
                 onClick={() => { const item = job(); if (item) void props.model.previewLog(item.id) }}>
                 <Icon name="refresh" />{props.t("orchestra.actions.refresh")}</button>
               <button type="button" class="mx-btn" disabled={!readable()}
                 onClick={() => { const item = job(); if (item) void props.model.download({ kind: "jobLog", id: item.id,
                   runID: item.runID, attempt: state.route.attempt ?? item.attempt }) }}>
-                <Icon name="logs" />{props.t("orchestra.actions.download")}</button>
+                <Icon name="logs" />{props.t("orchestra.actions.downloadLog")}</button>
             </div>
             <div class="log-info">
               <span>{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.gitlab" : "orchestra.actions.github")}</span>
@@ -100,9 +99,7 @@ export function Logs(props: ViewProps) {
 export function Artifacts(props: ViewProps) {
   const state = props.model.state
   const run = createMemo(() => selectedRun(state))
-  const items = createMemo(() => state.artifacts.status === "ready" && run()
-    ? state.artifacts.value?.items.filter((item) => item.kind === "artifacts" && item.bindingID === state.binding?.id
-      && artifactOwner(item) === run()?.id).slice(0, 100) ?? [] : [])
+  const items = createMemo(() => { const value = run(); return value ? runArtifacts(state, value.id) : [] })
   return <section class="actions-detail detail-artifacts" aria-label={props.t("orchestra.actions.artifacts")}>
     <div class="detail-list-heading"><div><h2>{props.t("orchestra.actions.artifacts")}</h2><small>{props.t("orchestra.actions.artifacts.detail")}</small></div>
       <span class="mx-badge">{props.t("orchestra.actions.outputs", { count: items().length })}</span></div>
@@ -131,21 +128,20 @@ export function ArtifactRow(props: ViewProps & { item: Actions.Resource }) {
   const allowed = (operation: string) => writable() && canRequest(state, operation, props.item.scope)
   const size = () => {
     const value = metadata().sizeBytes
-    return typeof value === "number" && Number.isFinite(value)
-      ? new Intl.NumberFormat(undefined, { style: "unit", unit: "byte", unitDisplay: "short" }).format(value)
-      : props.t("orchestra.actions.unknown")
+    return typeof value === "number" && Number.isFinite(value) ? bytes(value) : props.t("orchestra.actions.unknown")
   }
   const expiry = () => {
     if (expired()) return props.t("orchestra.actions.retentionEnded")
     if (state.binding?.provider.kind === "gitlab" && metadata().expiresAt === null && available()) return props.t("orchestra.actions.kept")
     const value = metadata().expiresAt
-    return typeof value === "string" ? stamp(value) : props.t("orchestra.actions.unknown")
+    if (typeof value !== "string" || Number.isNaN(Date.parse(value))) return props.t("orchestra.actions.unknown")
+    // A past expiry the provider still reports as available reads as ended, never "Expires 3 days ago".
+    return Date.parse(value) > Date.now() ? props.t("orchestra.actions.expiresRelative", { when: relative(value) }) : props.t("orchestra.actions.retentionEnded")
   }
   return <div class="mx-row detail-artifact-row">
     <span class="mx-mark"><Icon name="box" /></span>
     <div class="mx-grow"><strong><bdi>{props.item.name}</bdi></strong>
-      <small>{props.t("orchestra.actions.runMetadata", { run: artifactOwner(props.item) ?? props.t("orchestra.actions.unknown"), size: size(), expiry: expiry() })}</small>
-      <small><code dir="ltr">{props.item.id}</code></small></div>
+      <small>{props.t("orchestra.actions.runMetadata", { run: artifactOwner(props.item) ?? props.t("orchestra.actions.unknown"), size: size(), expiry: expiry() })}</small></div>
     <span class="mx-badge" classList={{ good: available() }}>{props.t(expired() ? "orchestra.actions.expired" : available() ? "orchestra.actions.available" : "orchestra.actions.unavailable")}</span>
     <div class="detail-row-actions">
       <button type="button" class="mx-btn" disabled={!available()} onClick={() => void props.model.download({ kind: "artifact", id: props.item.id,
@@ -158,12 +154,27 @@ export function ArtifactRow(props: ViewProps & { item: Actions.Resource }) {
   </div>
 }
 
+/** Artifacts of one run, as listed in the Artifacts tab and counted in the run tabs. */
+export function runArtifacts(state: State, runID: string) {
+  return state.artifacts.status === "ready" ? state.artifacts.value?.items.filter((item) => item.kind === "artifacts"
+    && item.bindingID === state.binding?.id && artifactOwner(item) === runID).slice(0, 100) ?? [] : []
+}
+
+/** Runner labels name the runner a job asked for; the runner name is the fallback. */
+export function runnerLabel(job: Actions.Job, t: Translate) {
+  return job.runnerLabels?.length ? job.runnerLabels.join(" · ") : job.runner ?? t("orchestra.actions.unknown")
+}
+
+export function jobDuration(job: Actions.Job) {
+  return duration(job.startedAt && job.finishedAt ? (Date.parse(job.finishedAt) - Date.parse(job.startedAt)) / 1000 : undefined)
+}
+
 function selectedRun(state: State) {
   const value = state.run.value
   return state.run.status === "ready" && value && value.id === state.route.runID && value.bindingID === state.binding?.id ? value : undefined
 }
 
-function logAvailable(state: State, job: Actions.Job) {
+export function logAvailable(state: State, job: Actions.Job) {
   if (state.unsupported || state.capabilities.status !== "ready") return false
   if (state.capabilities.value?.some((item) => item.operation === "logs.read" && item.state === "unavailable")) return false
   const status = job.status?.toLowerCase() ?? ""
