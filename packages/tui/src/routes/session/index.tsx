@@ -34,7 +34,7 @@ import type {
   UserMessage,
   TextPart,
   ReasoningPart,
-} from "@orchestra/sdk/v2"
+} from "../../compat/sdk-v2"
 import { useLocal } from "../../context/local"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"

@@ -1,14 +1,14 @@
 import type { IntegrationDraft, IntegrationMethodRegistration } from "../effect/integration.js"
-import type { CredentialValue } from "@orchestra/sdk/v2/types"
+import type { CredentialValue } from "../../compat/sdk-v2-types.js"
 import type { Hooks } from "./registration.js"
 
 export type { IntegrationDraft, IntegrationMethodRegistration }
 
 export interface IntegrationHooks extends Hooks<{ transform: IntegrationDraft }> {
   readonly connection: {
-    readonly active: (integrationID: string) => Promise<import("@orchestra/sdk/v2/types").ConnectionInfo | undefined>
+    readonly active: (integrationID: string) => Promise<import("../../compat/sdk-v2-types.js").ConnectionInfo | undefined>
     readonly resolve: (
-      connection: import("@orchestra/sdk/v2/types").ConnectionInfo,
+      connection: import("../../compat/sdk-v2-types.js").ConnectionInfo,
     ) => Promise<CredentialValue | undefined>
   }
 }

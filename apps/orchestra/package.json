@@ -20,7 +20,7 @@
     "orchestra": "./bin/orchestra"
   },
   "exports": {
-    "./*": "./src/*.ts"
+    "./node": "./src/node.ts"
   },
   "devDependencies": {
     "@babel/core": "7.28.4",

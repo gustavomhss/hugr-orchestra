@@ -1,5 +1,5 @@
 import { For, Match, Show, Switch, createEffect, createMemo, createSignal } from "solid-js"
-import type { FileNode } from "@orchestra/sdk/v2"
+import type { FileNode } from "../../compat/sdk-v2"
 import { Icon } from "@orchestra/ui/icon"
 import { ScrollView } from "@orchestra/ui/scroll-view"
 import { Markdown } from "@orchestra/session-ui/markdown"

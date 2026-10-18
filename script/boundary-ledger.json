@@ -1,0 +1,2968 @@
+{
+  "entries": [
+    {
+      "rule": "R1",
+      "file": "apps/desktop/src/main/env.d.ts",
+      "specifier": "../../../orchestra/dist/types/src/node",
+      "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
+    },
+    {
+      "rule": "R1",
+      "file": "packages/core/src/compat/sdk-v2-types.ts",
+      "specifier": "@orchestra/sdk/v2/types",
+      "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/agent/agent.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/agent/agent.ts",
+      "specifier": "@/maestro/seat-skill-root",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/agent/agent.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/plugin/index.ts",
+      "specifier": "./app-dock",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/plugin/index.ts",
+      "specifier": "./linux-workspace",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/project/bootstrap.ts",
+      "specifier": "@/maestro/upstream-v2",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/research/allowance.ts",
+      "specifier": "@/maestro/logical-task",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/research/allowance.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/research/binding.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/catalog.ts",
+      "specifier": "@/claude-code/host/provider",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/catalog.ts",
+      "specifier": "@/claude-code/sdk",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/global.ts",
+      "specifier": "@/janitor/report-state",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
+      "specifier": "@/claude-code/executable",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
+      "specifier": "@/claude-code/host/options",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
+      "specifier": "@/claude-code/host/provider",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
+      "specifier": "@/claude-code/login",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
+      "specifier": "@/claude-code/sdk",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/session.ts",
+      "specifier": "@/continuity/service",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/session.ts",
+      "specifier": "@/maestro/write-roots",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@/claude-code/sdk",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@/continuity/service",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@/maestro/arsenal-bindings",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/server/server.ts",
+      "specifier": "@/janitor/bootstrap",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/compaction.ts",
+      "specifier": "@/maestro/atlas-resume-restore",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/llm/context-budget.ts",
+      "specifier": "@/continuity/masking",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/llm/context-budget.ts",
+      "specifier": "@/continuity/trigger",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/llm/request.ts",
+      "specifier": "@/maestro/atlas-header",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/native-tools.ts",
+      "specifier": "@/maestro/arsenal-bindings",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt-host.ts",
+      "specifier": "@/continuity/service",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt-host.ts",
+      "specifier": "@/maestro/write-roots",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "./prompt-continuity",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/claude-code/engine",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/continuity/alias",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/continuity/service",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/continuity/trigger",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/maestro/arsenal-bindings",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/maestro/arsenal-observations",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/maestro/atlas-knowledge",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@/maestro/atlas-resume-restore",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/task-prompt-ops.ts",
+      "specifier": "@/maestro/arsenal-bindings",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/tools.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@/maestro/backend-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@/maestro/logical-task",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@/maestro/session-authority",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@/maestro/upstream-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/skill/index.ts",
+      "specifier": "@/maestro/seat-skill-root",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/skill/index.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./atlas-context",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./atlas-memory",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./context-compact",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./context-recall",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-admission",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-approval",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-arsenal",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-authorization",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-context",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-plan",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-result-decision",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-review",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-validation",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "./maestro-workflows",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/continuity/archive",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/continuity/service",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/arsenal-bindings",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/arsenal-observations",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/atlas-knowledge",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/atlas-memory",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/invocation-binding",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/research-registry.ts",
+      "specifier": "./atlas-context",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/research-registry.ts",
+      "specifier": "@/maestro/atlas-memory",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/research-registry.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/research-repo.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/shell.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/shell/execution.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/shell/execution.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/shell/scan.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/skill.ts",
+      "specifier": "@/maestro/atlas-source",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/arsenal-completion",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/backend-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/backend-work",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/discovery-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/upstream-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-background.ts",
+      "specifier": "@/maestro/upstream-settlement",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@/maestro/backend-result",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@/maestro/logical-task",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@/maestro/session-authority",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@/maestro/upstream-settlement",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "../maestro/governed-task-reservation",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/arsenal-completion",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/atlas-resume",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/authorization",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/backend-work",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/dispatch",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/grounded-skills",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/logical-task",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/roster",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/seats",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/session-authority",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/workflow-binding",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R11",
+      "file": "apps/orchestra/src/tool/task.ts",
+      "specifier": "@/maestro/write-roots",
+      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
+    },
+    {
+      "rule": "R3",
+      "file": "apps/desktop/src/main/env.d.ts",
+      "specifier": "../../../orchestra/dist/types/src/node",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/app-shell/src/app.tsx",
+      "specifier": "@/pages/layout",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/config.ts",
+      "specifier": "./v1/config/config",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/config.ts",
+      "specifier": "./v1/config/migrate",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/config/plugin/agent.ts",
+      "specifier": "../../v1/config/agent",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/config/plugin/agent.ts",
+      "specifier": "../../v1/config/migrate",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/plugin/provider/opencode.ts",
+      "specifier": "../../v1/config/config",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/plugin/provider/opencode.ts",
+      "specifier": "../../v1/config/provider",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/plugin/provider/opencode.ts",
+      "specifier": "../../v1/config/provider-options",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/session.ts",
+      "specifier": "./v1/session",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/session/projector.ts",
+      "specifier": "../v1/prompt-admission",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/session/projector.ts",
+      "specifier": "../v1/session",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/session/sql.ts",
+      "specifier": "../v1/permission",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R3",
+      "file": "packages/core/src/session/sql.ts",
+      "specifier": "../v1/session",
+      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/scripts/app-dock-native-proof.ts",
+      "specifier": "@orchestra/plugin",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/scripts/app-dock-workspace-proof.ts",
+      "specifier": "@orchestra/plugin",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/scripts/linux-workspace-proof.ts",
+      "specifier": "@orchestra/plugin",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/src/main/app-dock-rpc-native.test.ts",
+      "specifier": "@orchestra/plugin",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/src/main/app-dock-rpc-workspace.fixture.ts",
+      "specifier": "@orchestra/plugin",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/desktop/test/lean-candidate-native.fixture.ts",
+      "specifier": "@orchestra/sdk/v2/client",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/storybook/.storybook/mocks/app/context/server-sdk.ts",
+      "specifier": "@opencode-ai/client/promise",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R4",
+      "file": "apps/storybook/.storybook/mocks/app/context/server-sync.ts",
+      "specifier": "@orchestra/sdk/v2/client",
+      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/script/packaged-skills.ts",
+      "specifier": "../../orchestra/src/maestro/seat-skill-content",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/script/packaged-skills.ts",
+      "specifier": "../../orchestra/src/maestro/seats",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/script/ripgrep-proof.ts",
+      "specifier": "../../desktop/src/main/cli-artifacts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/script/runtime-proof.ts",
+      "specifier": "../../desktop/src/main/cli-artifacts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/script/session-data-proof.ts",
+      "specifier": "../../desktop/src/main/cli-artifacts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/artifact-fs.test.ts",
+      "specifier": "../../desktop/src/main/cli-artifacts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-aur.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-aur.test.ts",
+      "specifier": "../../../script/distribution-deno",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-homebrew.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-musl.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-native.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-process.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-process.test.ts",
+      "specifier": "../../../packages/core/test/lib/effect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-provider.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-windows.test.ts",
+      "specifier": "../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/distribution-windows.test.ts",
+      "specifier": "../../../packages/core/test/fixture/windows-process-query",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/export-artifacts.test.ts",
+      "specifier": "../../desktop/src/main/cli-artifacts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/artifact-native-windows-controls.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-aur-guest.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-musl-guest.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native-process.ts",
+      "specifier": "../../../../packages/core/test/fixture/windows-process-query",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native-proof.ts",
+      "specifier": "../../../../packages/schema/src/location",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native-proof.ts",
+      "specifier": "../../../../packages/schema/src/schema",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native-proof.ts",
+      "specifier": "../../../../packages/schema/src/skill",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native.ts",
+      "specifier": "../../../orchestra/src/maestro/seat-skill-content",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-native.ts",
+      "specifier": "../../../orchestra/src/maestro/seats",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/agent",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/location",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/model",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/session-event",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/session-input",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
+      "specifier": "../../../../packages/schema/src/session-message",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider-tool-result.ts",
+      "specifier": "../../../../packages/schema/src/session-message",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-provider/tool-result.test.ts",
+      "specifier": "../../../../../packages/schema/src/session-message",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-windows-process.ts",
+      "specifier": "../../../../native/omni/campaign/windows-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/fixture/distribution-windows-process.ts",
+      "specifier": "../../../../packages/core/test/fixture/windows-process-query",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/packaged-skills-build.test.ts",
+      "specifier": "../../orchestra/src/maestro/seat-skill-content",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/cli/test/packaged-skills-build.test.ts",
+      "specifier": "../../orchestra/src/maestro/seats",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/electron-builder.candidate.config.test.ts",
+      "specifier": "../orchestra/script/lean-notices",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/electron.vite.config.ts",
+      "specifier": "../../packages/script/src/workspace-paths.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/scripts/app-dock-native-proof.ts",
+      "specifier": "../../orchestra/src/plugin/app-dock",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/scripts/app-dock-workspace-proof.ts",
+      "specifier": "../../orchestra/src/plugin/app-dock",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/scripts/lean-candidate.ts",
+      "specifier": "../../orchestra/script/lean-notices",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/scripts/linux-workspace-proof.ts",
+      "specifier": "../../orchestra/src/plugin/linux-workspace",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/scripts/stage-claude.ts",
+      "specifier": "../../orchestra/package.json",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/app-dock-rpc-native.test.ts",
+      "specifier": "../../../orchestra/src/plugin/app-dock",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/app-dock-rpc-workspace.fixture.ts",
+      "specifier": "../../../orchestra/src/plugin/app-dock",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/apps.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/env.d.ts",
+      "specifier": "../../../orchestra/dist/types/src/node",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
+      "specifier": "../../../../packages/client/src/index",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
+      "specifier": "../../../../packages/schema/src/research",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
+      "specifier": "../../../orchestra/test/lib/llm-server",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/jimmy-desktop-proof.test.ts",
+      "specifier": "../../../orchestra/test/lib/test-provider",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/omni-process.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/omni-process.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/omni-process.ts",
+      "specifier": "../../../../packages/core/src/flag/flag",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/response-download.native.test.ts",
+      "specifier": "../../../../packages/core/src/effect/layer-node",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/response-download.native.test.ts",
+      "specifier": "../../../../packages/core/src/process",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/response-download.native.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/response-download.native.test.ts",
+      "specifier": "../../../../packages/core/test/lib/effect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/main/windows.ts",
+      "specifier": "../../../../packages/ui/src/theme/themes/oc-2.json",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/renderer/i18n/index.ts",
+      "specifier": "../../../../../packages/app-shell/src/i18n/desktop-native",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/renderer/index.tsx",
+      "specifier": "../../../../packages/app-shell/src/i18n/en",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/renderer/index.tsx",
+      "specifier": "../../../../packages/app-shell/src/utils/server-health",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/src/renderer/initialization.ts",
+      "specifier": "../../../../packages/app-shell/src/context/server",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/lean-candidate-acceptance.fixture.ts",
+      "specifier": "../../../packages/schema/src/lean-dashboard",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/lean-candidate-native.fixture.ts",
+      "specifier": "../../../packages/schema/src/lean-metrics",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/lean-candidate-ui.fixture.ts",
+      "specifier": "../../../packages/schema/src/lean-dashboard",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/build.ts",
+      "specifier": "../../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/fixtures.ts",
+      "specifier": "../../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/inventory.ts",
+      "specifier": "../../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/inventory.ts",
+      "specifier": "../../../../native/omni/campaign/windows-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/matrix.ts",
+      "specifier": "../../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/matrix.ts",
+      "specifier": "../../../../native/omni/campaign/windows-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/desktop/test/omni-smoke/ripgrep.ts",
+      "specifier": "../../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/background/process.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/background/process.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/background/shell-adoption.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/deployed-assets.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/gate-native.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/lifecycle.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/plugin.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/process-sandbox.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/process-tool.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/session-usage.test.ts",
+      "specifier": "../../../../../packages/app-shell/src/components/session/session-context-metrics",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/usage.test.ts",
+      "specifier": "../../../../../packages/app-shell/src/components/session/session-context-metrics",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/usage.test.ts",
+      "specifier": "../../../../../packages/app-shell/src/utils/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/host/usage.test.ts",
+      "specifier": "../../../../../packages/app-shell/src/utils/session-message",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/login.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/claude-code/runtime-version.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/cli/tui/runtime-import-compiled.test.ts",
+      "specifier": "../../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/lsp/omni-restart.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/lsp/omni-tree.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/maestro/workflow-continuation.test.ts",
+      "specifier": "../../../../modules/relay/test/arm-harness",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/mcp/omni-stdio.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/mcp/omni-stdio.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-delivery-campaign.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v8-windows.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/matrix-build.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v3-supervisor.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v4-lsp.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v5-mcp.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-functional-matrix.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v6-terminal.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-natural-exit.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-natural-exit.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v10-natural-exit.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v1-background.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/omni-windows-lifecycle.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v2-kill.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/plugin/sdk-admission.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/sdk-registry",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/plugin/sdk-final-matrix.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/sdk-registry",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/plugin/sdk-final-matrix.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/tmpdir",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/research/fixtures/packaged-proof.ts",
+      "specifier": "../../../../../packages/client/src/index",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/server/agent-execution.test.ts",
+      "specifier": "../../../../packages/app-shell/src/hooks/model-execution",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/server/httpapi-session-settings.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/session/v1-prompt-rollback.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/projection-state",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/util/process-omni.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/util/process-omni.test.ts",
+      "specifier": "../../../../packages/core/test/fixture/process-tree",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/orchestra/test/util/process.node-smoke.mjs",
+      "specifier": "../../../../packages/core/test/fixture/process-tree.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "apps/storybook/.storybook/mocks/app/context/platform.ts",
+      "specifier": "../../../../../../packages/app-shell/src/context/platform",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/e2e/regression/janitor-pocket.spec.ts",
+      "specifier": "../../../../apps/desktop/src/renderer/env",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/src/utils/sound.ts",
+      "specifier": "../../../ui/src/assets/audio/*.aac",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/deep-link-ingress.test.ts",
+      "specifier": "../../../apps/desktop/src/renderer/deep-links",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/desktop-zoom.test.ts",
+      "specifier": "../../../apps/desktop/src/renderer/webview-zoom",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
+      "specifier": "../../../apps/orchestra/src/util/process",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
+      "specifier": "../../core/src/omni",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-chapter-route.test.ts",
+      "specifier": "../../core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test-helper.ts",
+      "specifier": "../../../apps/orchestra/src/session/lean-project",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
+      "specifier": "../../session-ui/src/components/message-part",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-native-product.test.ts",
+      "specifier": "../../session-ui/src/context/data",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-tool-preservation.test.ts",
+      "specifier": "../../session-ui/src/components/message-part",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/lean-tool-preservation.test.ts",
+      "specifier": "../../session-ui/src/context/data",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/prompt-attachments.test.ts",
+      "specifier": "../../session-ui/src/v2/components/prompt-input/attachments",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/prompt-attachments.test.ts",
+      "specifier": "../../session-ui/src/v2/components/prompt-input/types",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
+      "specifier": "../../../apps/orchestra/src/util/process",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
+      "specifier": "../../core/src/omni",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/app-shell/test-browser/session-regressions.test.ts",
+      "specifier": "../../core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/client/test/actions-transfer-download.test.ts",
+      "specifier": "../../schema/src/actions",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/client/test/actions-transfer-fixture.ts",
+      "specifier": "../../schema/src/actions",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/client/test/actions-transfer-upload.test.ts",
+      "specifier": "../../schema/src/actions",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/src/plugin/sdk-package.ts",
+      "specifier": "../../../plugin/package.json",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/distribution-bundle-deno.test.ts",
+      "specifier": "../../../script/distribution-deno",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/distribution-bundle-workflow.test.ts",
+      "specifier": "../../../script/test-ci-request",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/fixture/sdk-registry.ts",
+      "specifier": "../../../plugin/package.json",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/godfile.test.ts",
+      "specifier": "../../../script/godfile",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/monolith-inventory-source.test.ts",
+      "specifier": "../../../script/monolith-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/monolith-inventory.test.ts",
+      "specifier": "../../../script/monolith-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-broker-sharing.test.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-broker-sharing.test.ts",
+      "specifier": "../../../native/omni/campaign/windows-inventory.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-inventory.test.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-inventory.test.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-inventory.test.ts",
+      "specifier": "../../../native/omni/campaign/v8-windows.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-inventory.test.ts",
+      "specifier": "../../../native/omni/campaign/windows-inventory.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-recorder.test.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-campaign-recorder.test.ts",
+      "specifier": "../../../native/omni/campaign/windows-inventory.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-expect-guard.test.ts",
+      "specifier": "../../../script/test-ci-request",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-fixture-identity.hosted.ts",
+      "specifier": "../../../native/omni/campaign/delivery-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-fixture-identity.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-fixture-identity.hosted.ts",
+      "specifier": "../../../native/omni/campaign/protocol-fixtures.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-fixture-identity.hosted.ts",
+      "specifier": "../../../native/omni/campaign/windows-inventory.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-macos-overhead.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-macos-overhead.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v7-overhead",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-overhead.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-overhead.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v7-attribution.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/omni-overhead.hosted.ts",
+      "specifier": "../../../native/omni/campaign/v7-overhead.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/recorder-turbo.hosted.ts",
+      "specifier": "../../../native/omni/campaign/lib",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/relay-workflow-binding.test.ts",
+      "specifier": "../../../modules/relay/test/arm-harness",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/relay-workflow-evaluator.test.ts",
+      "specifier": "../../../modules/relay/test/arm-harness",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/rename-guard.test.ts",
+      "specifier": "../../../script/rename-ledger",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../protocol/src/groups/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../protocol/src/middleware/schema-error",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../server/src/auth",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../server/src/handlers/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../server/src/middleware/authorization",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../server/src/middleware/schema-error",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/session-archive-http.test.ts",
+      "specifier": "../../server/src/middleware/session-location",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/test-ci-desktop.test.ts",
+      "specifier": "../../../script/test-ci-desktop",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/test-ci-desktop.test.ts",
+      "specifier": "../../../script/test-ci-upload",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/test-ci-request.test.ts",
+      "specifier": "../../../script/test-ci-request",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/test-ci-upload.test.ts",
+      "specifier": "../../../script/test-ci-upload",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../protocol/src/groups/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../protocol/src/middleware/schema-error",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../server/src/auth",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../server/src/handlers/session",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../server/src/middleware/authorization",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../server/src/middleware/schema-error",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/core/test/tool-task-http.test.ts",
+      "specifier": "../../server/src/middleware/session-location",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/src/index.test.ts",
+      "specifier": "../../../apps/orchestra/package.json",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/archive-inventory.test.ts",
+      "specifier": "../../../script/archive-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/check-spawn-imports.test.ts",
+      "specifier": "../../../script/check-spawn-imports.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/control-ledger.test.ts",
+      "specifier": "../../../nix/scripts/control-ledger.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/module-boundaries.test.ts",
+      "specifier": "../../../script/check-module-boundaries",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/module-boundaries.test.ts",
+      "specifier": "../../../script/module-architecture",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/module-resolver.test.ts",
+      "specifier": "../../../script/monolith-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/module-resolver.test.ts",
+      "specifier": "../../core/test/fixture/monolith-inventory",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/recovery-bundle.test.ts",
+      "specifier": "../../../script/archive-inventory.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/recovery-bundle.test.ts",
+      "specifier": "../../../script/recovery-bundle.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/resource-paths.test.ts",
+      "specifier": "../../../apps/desktop/scripts/resource-paths.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-bootstrap.test.ts",
+      "specifier": "../../../script/test-ci-location.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-bootstrap.test.ts",
+      "specifier": "../../core/test/fixture/tmpdir",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-location.test.ts",
+      "specifier": "../../../script/test-ci-request.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-package.test.ts",
+      "specifier": "../../../script/test-ci-package.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-package.test.ts",
+      "specifier": "../../../script/test-ci-request.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/test-ci-paths.test.ts",
+      "specifier": "../../../script/test-ci-paths.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/script/test/workspace-config.test.ts",
+      "specifier": "../../../nix/scripts/workspace-config.ts",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http-fixture.ts",
+      "specifier": "../../client/src/generated/index",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http-fixture.ts",
+      "specifier": "../../core/test/actions/assembly-fixture",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http.test.ts",
+      "specifier": "../../../script/test-guard",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http.test.ts",
+      "specifier": "../../../script/test-omni-control",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http.test.ts",
+      "specifier": "../../core/test/actions/assembly-fixture",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-http.test.ts",
+      "specifier": "../../core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-resource-query.test.ts",
+      "specifier": "../../../script/test-guard",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-resource-query.test.ts",
+      "specifier": "../../../script/test-omni-control",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/server/test/actions-resource-query.test.ts",
+      "specifier": "../../core/test/fixture/omni-expect",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/session-ui/src/components/lean-tool-metrics.test.ts",
+      "specifier": "../../../schema/src/lean-metrics",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "packages/session-ui/src/components/lean-tool-metrics.tsx",
+      "specifier": "../../../schema/src/lean-metrics",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
+      "file": "tooling/httpapi-codegen/test/capability-contract.test.ts",
+      "specifier": "../../../packages/schema/src/capability",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R6b",
+      "file": "apps/orchestra/specs/v2/api.ts",
+      "specifier": "@orchestra/core",
+      "reason": "D11: the specifier does not resolve under the package exports"
+    },
+    {
+      "rule": "R6b",
+      "file": "apps/orchestra/specs/v2/api.ts",
+      "specifier": "@orchestra/core/tools",
+      "reason": "D11: the specifier does not resolve under the package exports"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/cli/src/commands/handlers/serve.ts",
+      "specifier": "@orchestra/core/permission/saved",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/desktop/src/main/cli-artifacts.ts",
+      "specifier": "@orchestra/core/ripgrep/bundle",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/desktop/src/main/cli-install.ts",
+      "specifier": "@orchestra/core/ripgrep/bundle",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/desktop/src/main/wsl/artifact.ts",
+      "specifier": "@orchestra/core/ripgrep/release",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/agent/agent.ts",
+      "specifier": "@orchestra/core/agent/prompt",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/claude-code/host/delegation.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/claude-code/host/delegation.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/claude-code/host/session.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/cli/cmd/import.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/cli/cmd/stats.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/cli/cmd/toolkit.ts",
+      "specifier": "@orchestra/core/backend-toolkit/manifest",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/cli/cmd/toolkit.ts",
+      "specifier": "@orchestra/core/backend-toolkit/target",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/config/markdown.ts",
+      "specifier": "@orchestra/core/config/markdown",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/continuity/service.ts",
+      "specifier": "@orchestra/core/project/checkpoint",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/control-plane/workspace.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/control-plane/workspace.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-node-builder-v1.ts",
+      "specifier": "@orchestra/core/session/execution",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-node-builder-v1.ts",
+      "specifier": "@orchestra/core/session/execution/local",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-runtime.ts",
+      "specifier": "@orchestra/core/session/execution",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-runtime.ts",
+      "specifier": "@orchestra/core/session/execution/local",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-runtime.ts",
+      "specifier": "@orchestra/core/session/projector",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-runtime.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/effect/app-runtime.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/event-v2-bridge.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/event-v2-bridge.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/admission-record.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/approval-record.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
+      "specifier": "@orchestra/core/session/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "specifier": "@orchestra/core/session/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/atlas-knowledge.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/atlas-source.ts",
+      "specifier": "@orchestra/core/config/markdown",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/authorization.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/code-review.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/context-record.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/dispatch.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/governed-task-reservation.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/governed-task-reservation.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/invocation-binding.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/logical-task.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/logical-task.ts",
+      "specifier": "@orchestra/core/session/info",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/logical-task.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/plan-revision.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/seat-skill-content.ts",
+      "specifier": "@orchestra/core/config/markdown",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/session-authority.ts",
+      "specifier": "@orchestra/core/session/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-provenance.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/info",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/message-updater",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/upstream-settlement.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/validation-record.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/validation-record.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/validation-record.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/work-result-decision.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/work-result-decision.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/workflow-binding.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/workflow-binding.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/workflow-host.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/plugin/loader.ts",
+      "specifier": "@orchestra/core/plugin/sdk-runtime",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/plugin/tui/runtime-modules.ts",
+      "specifier": "@orchestra/core/plugin/sdk-runtime",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/project/project.ts",
+      "specifier": "@orchestra/core/project/checkpoint.sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/project/project.ts",
+      "specifier": "@orchestra/core/project/directories",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/project/project.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/project/project.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/project/vcs.ts",
+      "specifier": "@orchestra/core/filesystem/watcher",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/groups/pty.ts",
+      "specifier": "@orchestra/core/pty/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/groups/pty.ts",
+      "specifier": "@orchestra/core/pty/ticket",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/instance.ts",
+      "specifier": "@orchestra/core/skill/file",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/pty.ts",
+      "specifier": "@orchestra/core/pty/protocol",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/pty.ts",
+      "specifier": "@orchestra/core/pty/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/pty.ts",
+      "specifier": "@orchestra/core/pty/ticket",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/sync.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/permission/saved",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/project/copy",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/pty/ticket",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/session/execution",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/session/execution/local",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/session/projector",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/server/shared/fence.ts",
+      "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/activity.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/compaction.ts",
+      "specifier": "@orchestra/core/session/compaction",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/lean-project.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/message-v2.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/processor.ts",
+      "specifier": "@orchestra/core/session/message-updater",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@orchestra/core/session/runner/max-steps",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/prompt.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/session.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/session.ts",
+      "specifier": "@orchestra/core/session/execution/local",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/session.ts",
+      "specifier": "@orchestra/core/session/message-updater",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/session.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/task-prompt-ops.ts",
+      "specifier": "@orchestra/core/session/execution",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/task-prompt-ops.ts",
+      "specifier": "@orchestra/core/session/schema",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/todo.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/tools.ts",
+      "specifier": "@orchestra/core/session/message-updater",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@orchestra/core/session/info",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@orchestra/core/session/message-updater",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/skill/index.ts",
+      "specifier": "@orchestra/core/skill/file",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/storage/schema.ts",
+      "specifier": "@orchestra/core/account/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/storage/schema.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/storage/schema.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/apply_patch.ts",
+      "specifier": "@orchestra/core/filesystem/watcher",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/context-recall.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/edit.ts",
+      "specifier": "@orchestra/core/filesystem/watcher",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/maestro-validation.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@orchestra/core/plugin/sdk-runtime",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/registry.ts",
+      "specifier": "@orchestra/core/session/store",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/shell.ts",
+      "specifier": "@orchestra/core/backend-toolkit/project-version",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@orchestra/core/session/event",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@orchestra/core/session/info",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/task-work-observation.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/tool/write.ts",
+      "specifier": "@orchestra/core/filesystem/watcher",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/worktree/index.ts",
+      "specifier": "@orchestra/core/project/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/sdk-next/src/orchestra.ts",
+      "specifier": "@orchestra/core/permission/saved",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/agent.ts",
+      "specifier": "@orchestra/core/config/agent-file",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/message.ts",
+      "specifier": "@orchestra/core/session/message",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/permission.ts",
+      "specifier": "@orchestra/core/permission/saved",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/project-copy.ts",
+      "specifier": "@orchestra/core/project/copy",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/pty.ts",
+      "specifier": "@orchestra/core/pty/protocol",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/pty.ts",
+      "specifier": "@orchestra/core/pty/ticket",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/research-artifact.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/session.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/handlers/skill.ts",
+      "specifier": "@orchestra/core/skill/file",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/middleware/session-location.ts",
+      "specifier": "@orchestra/core/session/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/routes.ts",
+      "specifier": "@orchestra/core/permission/saved",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/routes.ts",
+      "specifier": "@orchestra/core/pty/ticket",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/routes.ts",
+      "specifier": "@orchestra/core/session/execution",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/routes.ts",
+      "specifier": "@orchestra/core/session/execution/local",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "packages/server/src/routes.ts",
+      "specifier": "@orchestra/core/session/subagent-models",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    }
+  ]
+}

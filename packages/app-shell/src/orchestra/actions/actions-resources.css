@@ -1,0 +1,48 @@
+/* Actions resources, artifacts and caches, matched to the approved Actions mock (resources.css). */
+/* Resources mount straight in .actions-main: take the same centered, padded column as the library and run views. */
+.actions-page .actions-resources.resources-layout { inline-size: 100%; max-inline-size: 1320px; margin-inline: auto; padding: 28px 24px 42px; }
+.actions-page .actions-resources.resources-layout > .ar-surface { min-inline-size: 0; }
+/* The artifacts section reuses .actions-detail; inside the resources column it must not add a second padding. */
+.actions-page .actions-resources .detail-artifacts { max-inline-size: none; padding: 0; }
+.actions-page .actions-resources .ar-head { box-shadow: var(--mx-highlight, none); }
+.actions-page .actions-resources .ar-head h2 { margin: 0; color: var(--actions-strong); letter-spacing: -.02em; }
+.actions-page .actions-resources .ar-head p { margin: 5px 0 0; line-height: 1.6; }
+.actions-page .actions-resources .ar-head > .mx-btn { min-block-size: 34px; align-self: center; }
+.actions-page .actions-resources .ar-surface .mx-btn .wf-ic { inline-size: 16px; block-size: 16px; }
+.actions-page .actions-resources .ar-note > svg { flex: none; margin-block-start: 2px; color: var(--actions-blue); }
+.actions-page .actions-resources .ar-note strong { font-size: 11px; font-weight: 500; }
+.actions-page .actions-resources .ar-schedules > .ar-note { margin-block: 16px 0; }
+.actions-page .actions-resources .ar-row:hover { background: var(--actions-soft); }
+.actions-page .actions-resources .ar-row-meta { line-height: 1.55; }
+.actions-page .actions-resources .ar-row-meta .mx-badge { max-inline-size: 100%; }
+.actions-page .actions-resources .ar-row-meta > :is(strong, small) { display: block; }
+.actions-page .actions-resources .ar-row-meta > small { margin-block-start: 6px; font-size: 11px; }
+.actions-page .actions-resources .ar-redacted .wf-ic { inline-size: 13px; block-size: 13px; }
+.actions-page .actions-resources .ar-operations [data-action^="delete"]:hover:not(:disabled) { color: var(--actions-bad); border-color: var(--actions-bad); }
+.actions-page .actions-resources .ar-surface > .actions-empty { padding: 34px 18px; border-radius: 9px; }
+
+/* Cache keys can be long hashes: one line; hover, focus or tap shows the full key. */
+.actions-page .actions-resources .ar-caches .ar-identity strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
+.actions-page .actions-resources .ar-caches .ar-identity strong:is(:hover, :focus) { white-space: normal; overflow-wrap: anywhere; }
+
+/* Provider failure keeps the surface header and offers the page refresh. */
+.actions-page .actions-resources .ar-state > p + p { margin-block-start: 6px; }
+.actions-page .actions-resources .ar-state > .mx-btn { display: inline-flex; align-items: center; gap: 7px; margin-block-start: 16px; }
+
+/* Variables scope filter sits under the surface header. */
+.actions-page .actions-resources .ad-scope-field { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; margin-block-end: 16px; }
+.actions-page .actions-resources .ad-scope-field .mx-field { flex-direction: row; align-items: center; gap: 10px; margin: 0; }
+.actions-page .actions-resources .ad-scope-field .mx-field > span { flex: none; font-size: 11px; }
+.actions-page .actions-resources .ad-scope-field :is(input, select) { inline-size: min(280px, 100%); block-size: 34px; padding: 0 10px; border-radius: 8px; font-size: 12px; }
+.actions-page .actions-resources .ad-scope-field small { color: var(--actions-dim); font-size: 11px; }
+
+@media (max-width: 1100px) {
+  .actions-page .actions-resources .ar-table { --ar-actions: 160px; }
+  .actions-page .actions-resources .ar-environments .ar-table { --ar-actions: 180px; }
+  .actions-page .actions-resources .ar-schedules .ar-table { --ar-actions: 210px; }
+}
+@media (max-width: 620px) {
+  .actions-page .actions-resources.resources-layout { padding-inline: 12px; }
+  .actions-page .actions-resources .ad-scope-field .mx-field { flex: 1; }
+  .actions-page .actions-resources .ad-scope-field :is(input, select) { inline-size: 100%; }
+}

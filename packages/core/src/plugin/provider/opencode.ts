@@ -1,7 +1,7 @@
 import { Effect, Schema, Semaphore, Stream } from "effect"
 import type { Scope } from "effect"
 import { define } from "@orchestra/plugin/v2/effect/plugin"
-import type { CredentialValue } from "@orchestra/sdk/v2/types"
+import type { CredentialValue } from "../../compat/sdk-v2-types"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { EventV2 } from "../../event"
 import { Integration } from "../../integration"

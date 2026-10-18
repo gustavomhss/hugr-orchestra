@@ -100,7 +100,7 @@ export const protectedStrings: Protected[] = [
     // app and session-ui depend on upstream's published @opencode-ai/client 1.17.13, vendored as a tarball that cannot
     // be rebuilt from this tree. It keeps its published name and exports until it is replaced by the workspace client.
     pattern: /@opencode-ai\/client\b|opencode-ai-client-1\.17\.13-v2\.tgz/g,
-    paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$/,
+    paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$|^script\/(?:module-architecture|boundary-ledger)\.json$/,
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {

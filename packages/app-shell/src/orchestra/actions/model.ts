@@ -192,13 +192,15 @@ export function createActionsModel(input: {
       await load("capabilities", JSON.stringify(target), state.capabilities, (data) => update({ capabilities: data }),
         (signal) => input.api.capabilities(target, signal))
     if (!handle.current()) return
+    // The context rail lists the workflow catalog on every entry view, so a reload or deep link reads it too.
+    const catalog = () => state.workflows.status === "ready" ? Promise.resolve() : page("workflows", target)
     if (route.view === "settings") {
-      await load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))
+      await Promise.all([catalog(), load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))])
       return
     }
-    if (route.view === "resources") { await page("resources", target); return }
+    if (route.view === "resources") { await Promise.all([catalog(), page("resources", target)]); return }
     if (route.view === "library") { await Promise.all([page("workflows", target), page("runs", target)]); return }
-    if (route.view === "runs") { await page("runs", target); return }
+    if (route.view === "runs") { await Promise.all([catalog(), page("runs", target)]); return }
     if (route.runID) {
       const runID = route.runID
       await load("run", JSON.stringify([target, runID]), state.run, (data) => update({ run: data }), async (signal) => {
@@ -208,19 +210,31 @@ export function createActionsModel(input: {
       })
       if (!handle.current() || state.run.status !== "ready") return
     }
-    const tab = route.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
+    // A link may name only the run: complete workflow, path and commit from the loaded run in place, since a
+    // navigate() would clear() the run it just read.
+    // A GitHub run's workflow path comes from the catalog, so read it before completing the route.
+    if (route.runID && !route.path && state.binding?.provider.kind === "github" && state.workflows.status !== "ready") {
+      await page("workflows", target)
+      if (!handle.current()) return
+    }
+    const selection = route.runID ? selectedRoute(state, route) : route
+    if (JSON.stringify(selection) !== JSON.stringify(route)) { update({ route: selection }); persist() }
+    const tab = selection.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
     if (route.view === "workflow") {
       if (state.workflows.status !== "ready") await page("workflows", target)
       if (!handle.current()) return
     }
     if (tab === "artifacts") { await page("artifacts", target); return }
     if (tab === "source" || tab === "graph") {
-      if (!route.path && state.workflows.status !== "ready") await page("workflows", target)
+      // Without a ref, configuration source resolves the workflow's native default ref from the catalog.
+      if ((!selection.path || (!selection.runID && !selection.ref)) && state.workflows.status !== "ready") await page("workflows", target)
       if (handle.current() && tab === "graph" && route.runID) await page("jobs", target)
-      if (handle.current()) await source(target, route, tab === "graph")
+      if (handle.current()) await source(target, selection, tab === "graph")
       return
     }
     await page("jobs", target)
+    // The run's graph joins each job to its definition, so the Jobs tab can show declared needs (mock jobs view).
+    if (handle.current() && tab === "jobs" && route.runID && selection.path) await source(target, selection, true)
     if (handle.current() && tab === "logs" && route.jobID) await previewLog(route.jobID)
   }, (error) => update({ commandError: actionsError(error) }))
   const refresh = () => Promise.all([view(true), commands.refreshReceipt(true)]).then(() => undefined)
@@ -270,6 +284,8 @@ export function createActionsModel(input: {
     commands.dispose()
   }
   if (getOwner()) onCleanup(dispose)
+  // Publish the wanted binding before the first read, so URL synchronization can tell a stale one from one in flight.
+  persist()
   void view(false)
   if (pending?.operationID) void commands.refreshReceipt()
   return {
@@ -313,7 +329,10 @@ export function createActionsModel(input: {
       owner.reset()
       clear()
       wanted = id
-      update({ binding: state.bindings.value?.find((item) => item.id === id), filters: { ...unwrap(state.filters), scope: undefined }, commandError: undefined, route: { view: "library" } })
+      const binding = state.bindings.value?.find((item) => item.id === id)
+      // Run status filters are provider-native (GitHub `failure`, GitLab `failed`); never carry one across providers.
+      const status = binding?.provider.kind === state.binding?.provider.kind ? state.filters.status : ""
+      update({ binding, filters: { ...unwrap(state.filters), scope: undefined, status }, commandError: undefined, route: { view: "library" } })
       persist()
       void view(false)
     },

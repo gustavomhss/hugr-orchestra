@@ -20,7 +20,7 @@ export type Filters = { query: string; status: string; ref: string; event: strin
 export type Dialog =
   | { kind: "connect" }
   | { kind: "dispatch"; workflowID: string }
-  | { kind: "retry"; runID: string }
+  | { kind: "retry"; runID: string; mode?: "failed" | "all" }
   | { kind: "cancel"; runID: string }
   | { kind: "remove"; runID: string }
   | { kind: "jobPlay"; jobID: string }
