@@ -1,6 +1,5 @@
 import { describe, expect } from "bun:test"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
@@ -171,29 +170,24 @@ describe("native research vertical slice", () => {
     yield* fs.writeFileString(path.join(fixture.directory, ".env"), "UNRECOGNIZED_SECRET=private")
     yield* fs.symlink(path.join(fixture.directory, ".env"), path.join(fixture.directory, "alias.txt"))
     expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "file", path: "alias.txt" }).pipe(Effect.exit))).toBe(true)
-    expect(Exit.isFailure(yield* fixture.run("lsp", { operation: "documentSymbol", filePath: "alias.txt", line: 1, character: 1 }).pipe(Effect.exit))).toBe(true)
     const attempts = yield* fixture.run("research_view", { action: "attempts" })
     const decoded = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ attempts: Schema.Array(Research.AttemptReceipt) })))(attempts.output)
     expect(decoded.attempts.some((attempt) => attempt.outcome === "captured")).toBe(true)
-    expect(decoded.attempts.filter((attempt) => attempt.outcome === "unavailable")).toHaveLength(4)
+    expect(decoded.attempts.filter((attempt) => attempt.outcome === "unavailable")).toHaveLength(3)
     expect(fixture.tools.some((tool) => ["bash", "edit", "task", "arsenal_execute"].includes(tool.id))).toBe(false)
     yield* fixture.sessions.remove(fixture.authority.id)
   }))
 
-  it.instance("webfetch retains received HTML before conversion; dedicated capture shares acquisition and failure ledger", () => Effect.gen(function* () {
+  it.instance("URL capture retains received HTML before conversion and records failed acquisition", () => Effect.gen(function* () {
     const fixture = yield* setup()
     const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ port: 0, fetch: (request) =>
       new URL(request.url).pathname === "/missing" ? new Response("Missing", { status: 404 })
         : new Response("<h1>Only version 1</h1><script>untrusted()</script>", { headers: { "content-type": "text/html" } }),
     })), (server) => Effect.sync(() => server.stop(true)))
-    const result = yield* fixture.run("webfetch", { url: server.url.href, format: "markdown" })
-    expect(result.output).toContain("# Only version 1")
-    const converted = source(result)
-    expect(converted.transformation).toBe("webfetch-markdown-v1")
-    expect(converted.derivedFrom).toBeDefined()
     const dedicated = source(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }))
     expect(dedicated.transformation).toBe("webfetch-text-v1")
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: new URL("/missing", server.url).href, format: "text" }).pipe(Effect.exit))).toBe(true)
+    expect(dedicated.derivedFrom).toBeDefined()
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: new URL("/missing", server.url).href, format: "text" }).pipe(Effect.exit))).toBe(true)
     const attempts = yield* fixture.run("research_view", { action: "attempts" })
     expect(attempts.output).toContain('"outcome":"unavailable"')
     yield* fixture.sessions.remove(fixture.authority.id)
@@ -217,12 +211,12 @@ describe("native research vertical slice", () => {
       state.calls++
       return state.calls === 1 ? new Response("historical response", { headers: { "content-type": "text/plain" } }) : new Response("Missing", { status: 404 })
     } })), (server) => Effect.sync(() => server.stop(true)))
-    const fetched = source(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "exact-fetch"))
-    const cached = yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "exact-fetch")
+    const fetched = source(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "exact-fetch"))
+    const cached = yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "exact-fetch")
     expect(source(cached)).toEqual(fetched)
     expect(state.calls).toBe(1)
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
     expect(state.calls).toBe(2)
     const binding = yield* ResearchBinding.resolve(fixture.child.id, fixture.child.projectID)
     const corpus = yield* records.view(binding, { action: "corpus" })
@@ -375,36 +369,4 @@ describe("native research vertical slice", () => {
     expect(corpus.sources.filter((value) => value.ref.representation === "text")).toHaveLength(1)
     yield* fixture.sessions.remove(fixture.authority.id)
   }))
-
-  for (const fails of [false, true]) it.instance(`native TypeScript alias resolution and semantic failure coverage; RPC failure=${fails}`, () => Effect.gen(function* () {
-    const fixture = yield* setup()
-    const fs = yield* FSUtil.Service
-    const records = yield* ResearchRecords.Service
-    yield* fs.makeDirectory(path.join(fixture.directory, "src"))
-    yield* fs.writeFileString(path.join(fixture.directory, "tsconfig.json"), JSON.stringify({ compilerOptions: {
-      target: "ES2022", module: "ESNext", moduleResolution: "Bundler", baseUrl: ".", paths: { "@runtime/current": ["src/barrel.ts"] },
-    }, include: ["src/*.ts"] }))
-    yield* fs.writeFileString(path.join(fixture.directory, "src/base.ts"), "export function active() { return 'selected' }\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/unused.ts"), "export function active() { return 'unused' }\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/barrel.ts"), "export { active } from './base'\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/consumer.ts"), "import { active } from '@runtime/current'\nexport const selected = active()\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/symbols.ts"), Array.from({ length: 120 }, (_, index) => `export const sym${index} = ${index}`).join("\n"))
-    const result = yield* fixture.run("lsp", { operation: "goToDefinition", filePath: "src/consumer.ts", line: 2, character: 25 }).pipe(Effect.exit)
-    if (fails) {
-      expect(Exit.isFailure(result) && Cause.pretty(result.cause)).toContain("failed acquisition is not an empty semantic result")
-      const binding = yield* ResearchBinding.resolve(fixture.child.id, fixture.child.projectID)
-      const attempts = yield* records.view(binding, { action: "attempts" })
-      expect("attempts" in attempts && attempts.attempts).toMatchObject([{ outcome: "unavailable", returned: false }])
-      yield* fixture.sessions.remove(fixture.authority.id)
-      return
-    }
-    if (Exit.isFailure(result)) return yield* Effect.failCause(result.cause)
-    const locations = Schema.decodeUnknownSync(Schema.Array(Schema.Struct({ uri: Schema.String })))(result.value.metadata.result)
-    expect(locations.map((value) => value.uri)).toEqual([pathToFileURL(path.join(fixture.directory, "src/base.ts")).href])
-    expect(source(result.value).complete).toBe(true)
-    const symbols = yield* fixture.run("lsp", { operation: "workspaceSymbol", filePath: "src/consumer.ts", line: 1, character: 1, query: "sym" })
-    expect(source(symbols).complete).toBe(false)
-    expect(symbols.metadata.semanticCoverage).toMatchObject({ state: "partial", omitted: 20 })
-    yield* fixture.sessions.remove(fixture.authority.id)
-  }), { config: { lsp: { semantic: { command: [process.execPath, path.join(import.meta.dir, "fixtures/semantic-server.ts"), ...(fails ? ["--fail-queries"] : [])], extensions: [".ts"] } } } })
 })

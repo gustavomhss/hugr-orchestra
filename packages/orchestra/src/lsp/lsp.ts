@@ -15,7 +15,6 @@ import { containsPath } from "@/project/instance-context"
 import { NonNegativeInt } from "@orchestra/core/schema"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { LspEvent } from "@orchestra/schema/lsp-event"
-import { CancellationTokenSource } from "vscode-jsonrpc"
 
 export const Event = LspEvent
 
@@ -111,32 +110,15 @@ const filterExperimentalServers = (servers: Record<string, LSPServer.Info>, flag
 
 type LocInput = { file: string; line: number; character: number }
 
-export type DiscoveryQuery = LocInput & {
-  operation: "goToDefinition" | "findReferences" | "hover" | "documentSymbol" | "workspaceSymbol" | "goToImplementation" | "prepareCallHierarchy" | "incomingCalls" | "outgoingCalls"
-  query?: string
-}
-export type DiscoveryResult = {
-  result: unknown[]
-  coverage: {
-    state: "complete" | "partial" | "unavailable"
-    scope: "read-only-active-or-explicit-configured-servers"
-    omitted: number
-    servers: { id: string; root: string; state: "complete" | "partial" | "unavailable"; reason?: string; documentVersion?: number }[]
-  }
-}
-class DiscoveryQueryError extends Schema.TaggedErrorClass<DiscoveryQueryError>()("LspDiscoveryQueryError", { reason: Schema.String }) {}
-
 interface State {
   closing: boolean
   clients: LSPClient.Info[]
   servers: Record<string, LSPServer.Info>
   broken: Set<string>
   spawning: Map<string, Promise<LSPClient.Info | undefined>>
-  configured: Set<string>
 }
 
 export interface Interface {
-  readonly discoveryQuery: (input: DiscoveryQuery) => Effect.Effect<DiscoveryResult>
   readonly init: () => Effect.Effect<void>
   readonly status: () => Effect.Effect<Status[]>
   readonly hasClients: (file: string) => Effect.Effect<boolean>
@@ -167,7 +149,6 @@ const layer = Layer.effect(
         const cfg = yield* config.get()
 
         const servers: Record<string, LSPServer.Info> = {}
-        const configured = new Set<string>()
 
         if (!cfg.lsp) {
           yield* Effect.logInfo("all LSPs are disabled")
@@ -200,7 +181,6 @@ const layer = Layer.effect(
                   initialization: item.initialization,
                 }),
               }
-              configured.add(name)
             }
           }
 
@@ -217,7 +197,6 @@ const layer = Layer.effect(
           servers,
           broken: new Set(),
           spawning: new Map(),
-          configured,
         }
 
         yield* Effect.addFinalizer(() => Effect.promise(() => LSPOwnership.close(s)))
@@ -226,7 +205,7 @@ const layer = Layer.effect(
       }),
     )
 
-    const getClients = Effect.fnUntraced(function* (file: string, readOnly = false) {
+    const getClients = Effect.fnUntraced(function* (file: string) {
       const ctx = yield* InstanceState.context
       if (!containsPath(file, ctx)) return [] as LSPClient.Info[]
       const s = yield* InstanceState.get(state)
@@ -238,7 +217,6 @@ const layer = Layer.effect(
         await LSPOwnership.prune(s)
         if (s.closing) return { result, updated }
         for (const server of Object.values(s.servers)) {
-          if (readOnly && !s.configured.has(server.id) && !s.clients.some((client) => client.serverID === server.id)) continue
           if (server.extensions.length && !server.extensions.includes(extension)) continue
 
           const root = await server.root(file, ctx)
@@ -251,9 +229,6 @@ const layer = Layer.effect(
             result.push(match)
             continue
           }
-
-          // Discovery never activates an implicit installer. Owner-configured commands and existing clients are usable.
-          if (readOnly && !s.configured.has(server.id)) continue
 
           const inflight = s.spawning.get(root + server.id)
           if (inflight) {
@@ -468,63 +443,7 @@ const layer = Layer.effect(
       return yield* callHierarchyRequest(input, "callHierarchy/outgoingCalls")
     })
 
-    const discoveryQuery = Effect.fn("LSP.discoveryQuery")(function* (input: DiscoveryQuery): Effect.fn.Return<DiscoveryResult> {
-      const instance = yield* InstanceState.context
-      const s = yield* InstanceState.get(state)
-      const expected = yield* Effect.forEach(Object.values(s.servers).filter((server) =>
-        (s.configured.has(server.id) || s.clients.some((client) => client.serverID === server.id)) &&
-        (!server.extensions.length || server.extensions.includes(path.extname(input.file)))),
-        (server) => Effect.tryPromise({ try: () => server.root(input.file, instance), catch: () => new DiscoveryQueryError({ reason: "root_unavailable" }) }).pipe(
-          Effect.map((root) => ({ id: server.id, root })),
-          Effect.catch(() => Effect.succeed({ id: server.id, root: undefined, failed: true })),
-        ))
-      const clients = yield* getClients(input.file, true)
-      const request = (client: LSPClient.Info, method: string, params: Record<string, unknown>) => Effect.acquireUseRelease(
-        Effect.sync(() => new CancellationTokenSource()),
-        (token) => Effect.tryPromise({ try: (signal) => {
-          const abort = () => token.cancel()
-          signal.addEventListener("abort", abort, { once: true })
-          return client.connection.sendRequest<unknown>(method, params, token.token).finally(() => signal.removeEventListener("abort", abort))
-        }, catch: () => new DiscoveryQueryError({ reason: "request_failed" }) }).pipe(
-          Effect.timeoutOrElse({ duration: "20 seconds", orElse: () => Effect.fail(new DiscoveryQueryError({ reason: "query_timeout" })) }),
-        ),
-        (token) => Effect.sync(() => token.dispose()),
-      )
-      const results = yield* Effect.forEach(clients, (client) => Effect.gen(function* () {
-        const documentVersion = yield* Effect.tryPromise({ try: () => client.notify.open({ path: input.file }),
-          catch: () => new DiscoveryQueryError({ reason: "document_open_failed" }) })
-        const params = { textDocument: { uri: pathToFileURL(input.file).href }, position: { line: input.line, character: input.character } }
-        const method = {
-          goToDefinition: "textDocument/definition", findReferences: "textDocument/references", hover: "textDocument/hover",
-          documentSymbol: "textDocument/documentSymbol", workspaceSymbol: "workspace/symbol", goToImplementation: "textDocument/implementation",
-          prepareCallHierarchy: "textDocument/prepareCallHierarchy", incomingCalls: "textDocument/prepareCallHierarchy", outgoingCalls: "textDocument/prepareCallHierarchy",
-        }[input.operation]
-        const raw = yield* request(client, method, input.operation === "workspaceSymbol" ? { query: input.query ?? "" }
-          : input.operation === "findReferences" ? { ...params, context: { includeDeclaration: true } } : params)
-        const items = raw === null ? [] : Array.isArray(raw) ? raw : [raw]
-        const hierarchy = input.operation === "incomingCalls" || input.operation === "outgoingCalls"
-        const values = hierarchy ? (yield* Effect.forEach(items.slice(0, 16), (item) => request(client,
-          input.operation === "incomingCalls" ? "callHierarchy/incomingCalls" : "callHierarchy/outgoingCalls", { item }), { concurrency: 4 }))
-          .flatMap((value) => value === null ? [] : Array.isArray(value) ? value : [value]) : items
-        const omitted = Math.max(0, values.length - 100) + (hierarchy ? Math.max(0, items.length - 16) : 0)
-        return { result: values.slice(0, 100), omitted, server: { id: client.serverID, root: client.root,
-          state: omitted ? "partial" as const : "complete" as const, documentVersion } }
-      }).pipe(Effect.catch((error) => Effect.succeed({ result: [], omitted: 0,
-        server: { id: client.serverID, root: client.root, state: "unavailable" as const, reason: error.reason } }))), { concurrency: 4 })
-      const missing = expected.flatMap((server) => server.root === undefined && !("failed" in server) ? []
-        : clients.some((client) => client.serverID === server.id && client.root === server.root) ? []
-        : [{ id: server.id, root: server.root ?? instance.directory, state: "unavailable" as const,
-          reason: "failed" in server ? "root_unavailable" : "client_unavailable" }])
-      const servers = [...results.map((value) => value.server), ...missing]
-      return { result: results.flatMap((value) => value.result), coverage: {
-        state: !servers.length || servers.every((server) => server.state === "unavailable") ? "unavailable"
-          : servers.every((server) => server.state === "complete") ? "complete" : "partial",
-        scope: "read-only-active-or-explicit-configured-servers", omitted: results.reduce((total, value) => total + value.omitted, 0), servers,
-      } }
-    })
-
     return Service.of({
-      discoveryQuery,
       init,
       status,
       hasClients,
