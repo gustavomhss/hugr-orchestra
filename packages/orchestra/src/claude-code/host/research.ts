@@ -1,6 +1,6 @@
 export * as ClaudeHostResearch from "./research"
 
-import { Cause, Context, Effect, Exit, Fiber, Schema, Scope } from "effect"
+import { Cause, Context, Duration, Effect, Exit, Fiber, Schema, Scope } from "effect"
 import type { Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { Research } from "@orchestra/schema/research"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
@@ -88,6 +88,17 @@ export const nativeStop = (live: {
     })
   })
 
+/**
+ * Claude Code's Agent input has no field for Orchestra's effort tier, so the dispatcher states it as the brief's first
+ * line, `effort: quick|focused|deep`. No such line means quick; any other value is refused (undefined).
+ */
+export function effort(prompt: unknown) {
+  const line = /^effort:(.*)$/i.exec(typeof prompt === "string" ? prompt.split("\n", 1)[0].trim() : "")
+  if (!line) return "quick" as const
+  const tier = line[1].trim()
+  return Schema.is(Research.Depth)(tier) ? tier : undefined
+}
+
 /** One query's issued native dispatch frames; model input cannot supply research attribution. */
 export const make = Effect.gen(function* () {
   const execution = yield* ResearchExecution.Service
@@ -145,7 +156,7 @@ export const make = Effect.gen(function* () {
       )
 
   return {
-    enter: (sessionID: SessionID, callID: string) =>
+    enter: (sessionID: SessionID, callID: string, tier?: Research.Depth) =>
       Effect.suspend(() => {
         if (query.closed || terminal.has(sessionID)) return Effect.fail(closed(sessionID))
         const existing = frames.get(sessionID)
@@ -181,7 +192,7 @@ export const make = Effect.gen(function* () {
             aborts.set(sessionID, abort)
             deadlines.set(
               sessionID,
-              yield* Effect.sleep("600 seconds").pipe(
+              yield* Effect.sleep(Duration.seconds(frame.allowance.deadlineSeconds)).pipe(
                 Effect.andThen(
                   Effect.suspend(() => {
                     if (query.closed || terminal.has(sessionID)) return Effect.void
@@ -192,7 +203,7 @@ export const make = Effect.gen(function* () {
                         new Research.Error({
                           code: "budget_exhausted",
                           message:
-                            "budget_exhausted: Research dispatch deadline exhausted (600 seconds); retained work remains available",
+                            `budget_exhausted: Research dispatch deadline exhausted (${frame.allowance.deadlineSeconds} seconds); retained work remains available`,
                         }),
                       )
                     abort.abort()
@@ -238,6 +249,7 @@ export const make = Effect.gen(function* () {
               ),
             )
           }),
+          { tier },
         )
       }),
     /** Parent terminal metadata may consume this reason without interrupting the parent Query. */
@@ -254,6 +266,7 @@ export const make = Effect.gen(function* () {
       Effect.sync(() => ({
         closed: query.closed || terminal.has(sessionID),
         deadlineActive: deadlines.has(sessionID),
+        allowance: frames.get(sessionID)?.allowance,
         nativeStop: stops.get(sessionID) ?? { status: "not_requested" as const },
       })),
     settle: (sessionID: SessionID) =>

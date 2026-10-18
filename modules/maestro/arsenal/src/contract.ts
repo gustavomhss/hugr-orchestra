@@ -9,6 +9,15 @@ export interface ArsenalContext {
   projectID: string
   authorize(request: { readonly effect: Effect; readonly paths: readonly string[]; readonly commands: readonly string[] }): Promise<void>
 }
+/** A host refusal of one read resource. Acquisitions that walk many entries record it as a named coverage gap. */
+export class ReadDenied extends Error {
+  readonly path: string
+  constructor(path: string) {
+    super(`READ_DENIED: ${path}`)
+    this.name = "ReadDenied"
+    this.path = path
+  }
+}
 export interface ToolTextResult {
   content: { type: "text"; text: string }[]
   isError?: boolean
