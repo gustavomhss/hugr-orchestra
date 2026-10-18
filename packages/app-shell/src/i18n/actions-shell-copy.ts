@@ -10,6 +10,4 @@ export const dict = {
   "orchestra.actions.shell.allRuns": "All runs",
   "orchestra.actions.shell.findWorkflow": "Find a workflow…",
   "orchestra.actions.shell.off": "off",
-  "orchestra.actions.shell.disable": "Disable",
-  "orchestra.actions.shell.enable": "Enable",
 } as const

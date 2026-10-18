@@ -98,14 +98,21 @@ export function synchronizeNavigation(input: {
   scope: string
   query: () => Query
   write: (query: ReturnType<typeof navigationQuery> & { actionsScope: string }, replace: boolean) => void
+  /** The persisted binding the model resolves first; when it no longer exists the model selects none. */
+  wanted?: Actions.BindingID
 }) {
   const cursor: { written: string; route: string; initialized: boolean; selection?: ActionsPreference } = { written: "", route: "", initialized: false }
   const snapshot = (): ActionsPreference => ({ bindingID: input.model.state.binding?.id,
     route: { ...input.model.state.route }, filters: { ...input.model.state.filters } })
   // Wait until the model has resolved its binding: acting on the query while that first read is in flight re-enters
-  // selectBinding/navigate, whose clear() resets the slot the in-flight read was about to fill.
-  const settled = () => input.model.state.bindings.status === "ready"
-    && (input.model.state.binding !== undefined || !input.model.state.bindings.value?.length)
+  // selectBinding/navigate, whose clear() resets the slot the in-flight read was about to fill. The read is resolved
+  // once a binding is selected, or when none will be: a failed read, no bindings, or a stale persisted binding.
+  const settled = () => {
+    const state = input.model.state
+    if (state.bindings.status === "error") return true
+    if (state.bindings.status !== "ready") return false
+    return state.binding !== undefined || !state.bindings.value?.some((item) => item.id === (input.wanted ?? item.id))
+  }
   // Writing waits for the first read of the query, so an initial link is applied before the selection overwrites it.
   const [synced, setSynced] = createSignal(false)
   createEffect(() => {

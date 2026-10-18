@@ -129,12 +129,14 @@ export function OrchestraSidebar(props: {
         (ctx && target.directory ? profileProject(ctx, target.directory) : undefined),
     }
   })
-  // A chapter opens the selected directory even before it is an opened (listed or bootstrapped) project, so name it
-  // by its folder rather than asking to choose a project that is already selected.
+  // Actions opens the selected directory through its own API and never bootstraps it, so a directory that is not an
+  // opened project is named by its folder rather than asking to choose a project that is already selected.
   const profileName = () => {
     const target = profile()
+    const route = layout.route()
     if (target.project) return displayName(target.project)
-    if (target.directory && layout.route().type === "chapter") return displayName({ worktree: target.directory })
+    if (target.directory && route.type === "chapter" && ["actions", "cicd"].includes(route.chapter))
+      return displayName({ worktree: target.directory })
   }
   const selected = createMemo(() => {
     const target = profile()

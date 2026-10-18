@@ -28,7 +28,7 @@ function fixture(query: Record<string, string>, preferences?: ActionsPreferences
   const api = createActionsAPI({ server: { type: "http", http: { url: "http://localhost:4096" } }, fetch, directory })
   const dispose = createRoot((dispose) => {
     const model = createActionsModel({ api, save: async () => undefined, preferences })
-    synchronizeNavigation({ model, scope: "scope", query: () => query, write: (value) => writes.push(value) })
+    synchronizeNavigation({ model, scope: "scope", query: () => query, write: (value) => writes.push(value), wanted: preferences?.bindingID })
     mounted.model = model
     return dispose
   })
@@ -60,4 +60,17 @@ test("an unscoped link applies only when its binding belongs to this directory",
   await settle(() => foreign.writes.length > 0)
   expect(foreign.mounted.model?.state.route.view).toBe("library")
   expect(foreign.writes.at(-1)).toMatchObject({ actionsView: "library", actionsBinding: "ab_a", actionsScope: "scope" })
+})
+
+test("a stale persisted binding still lets a deep link apply and the URL be written", async () => {
+  const stale = { bindingID: Actions.BindingID.make("ab_removed"), route: { view: "library" as const } }
+  using linked = fixture({ actionsBinding: "ab_b", actionsView: "resources", actionsResource: "caches" }, stale)
+  await settle(() => linked.mounted.model?.state.resources.status === "ready")
+  expect(linked.mounted.model?.state.binding?.id).toBe(Actions.BindingID.make("ab_b"))
+  expect(linked.mounted.model?.state.resources.value?.items.map((item) => item.id)).toEqual(["cache-1"])
+  expect(linked.mounted.model?.state.route).toMatchObject({ view: "resources", resourceKind: "caches" })
+  using unlinked = fixture({}, stale)
+  await settle(() => unlinked.writes.length > 0)
+  expect(unlinked.mounted.model?.state.binding).toBeUndefined()
+  expect(unlinked.writes.at(-1)).toMatchObject({ actionsView: "library", actionsScope: "scope" })
 })
