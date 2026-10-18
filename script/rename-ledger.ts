@@ -106,7 +106,7 @@ export const protectedStrings: Protected[] = [
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {
-    pattern: /"@opencode-ai\/client": "file:\.\.\/app\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
+    pattern: /"@opencode-ai\/client": "file:\.\.\/app-shell\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
     paths: /^packages\/orchestra\/package\.json$/,
     reason: "Orchestra's HTTP compatibility proofs depend on the exact published client name and vendored tarball",
   },
@@ -212,32 +212,32 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /(?<=catalog\.all\.get\()"opencode"/g,
-    paths: /^packages\/app\/src\/context\/global-sync\/provider-bootstrap\.test\.ts$/,
+    paths: /^packages\/app-shell\/src\/context\/global-sync\/provider-bootstrap\.test\.ts$/,
     reason: "Zen provider map lookups after normalization through the vendored promise client",
   },
   {
     pattern: /\bcatalog\("opencode"\)/g,
-    paths: /^packages\/app\/src\/context\/server-provider-refresh\.test\.ts$/,
+    paths: /^packages\/app-shell\/src\/context\/server-provider-refresh\.test\.ts$/,
     reason: "Zen provider id in the pre-auth catalog refresh fixture",
   },
   {
     pattern: /"opencode\/zen-free"/g,
-    paths: /^packages\/app\/src\/hooks\/model-execution\.test\.ts$/,
+    paths: /^packages\/app-shell\/src\/hooks\/model-execution\.test\.ts$/,
     reason: "Zen provider/model wire reference retained among API execution choices",
   },
   {
     pattern: /\bprovider\("opencode"\)|\bmodel\("opencode", "zen-free"\)/g,
-    paths: /^packages\/app\/src\/testing\/model-execution-fixture\.ts$/,
+    paths: /^packages\/app-shell\/src\/testing\/model-execution-fixture\.ts$/,
     reason: "Zen provider and free-model wire ids in the mixed-engine normalization fixture",
   },
   {
     pattern: /\bprovider\("opencode"|"opencode\/free"/g,
-    paths: /^packages\/app\/test-browser\/model-catalog\.test\.ts$/,
+    paths: /^packages\/app-shell\/test-browser\/model-catalog\.test\.ts$/,
     reason: "Zen provider/model wire ids used to prove older free models remain selectable",
   },
   {
     pattern: /\bproviders: \["opencode"\]/g,
-    paths: /^packages\/app\/test-browser\/provider-resource\.test\.ts$/,
+    paths: /^packages\/app-shell\/test-browser\/provider-resource\.test\.ts$/,
     reason: "Zen provider id in the catalog returned before and after an auth refresh failure",
   },
   {

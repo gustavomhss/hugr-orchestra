@@ -95,7 +95,7 @@ function check(input: unknown) {
   expect(by.bun.with).toEqual({ "bun-version": "1.3.14", "bun-download-url":
     "https://github.com/oven-sh/bun/releases/download/bun-v1.3.14/bun-darwin-x64-baseline.zip" })
   expect(by.cache.with).toEqual({ path: "${{ runner.temp }}/lean-candidate-bun-cache", key:
-    "lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'modules/**/package.json', 'tooling/*/package.json', 'patches/**') }}" })
+    "lean-candidate-${{ runner.os }}-${{ runner.arch }}-bun-1.3.14-${{ hashFiles('bun.lock', 'package.json', 'packages/*/package.json', 'apps/*/package.json', 'modules/**/package.json', 'tooling/*/package.json', 'patches/**') }}" })
   expect(by.go.with).toEqual({ "go-version": "1.24", cache: false })
   expect(by.install.env).toEqual({ BUN_INSTALL_CACHE_DIR: "${{ runner.temp }}/lean-candidate-bun-cache" })
   // In-repo composite action at the exact candidate checkout; it never saves the shared omni cache.

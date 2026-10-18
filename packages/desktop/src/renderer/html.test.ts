@@ -38,7 +38,7 @@ describe("electron renderer html", () => {
         const content = await html(name)
         const icons = [...content.matchAll(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]*>/g)].map((m) => m[0])
         expect(icons).toEqual(['<link rel="icon" type="image/svg+xml" href="./orchestra/hugr-symbol-primary.svg" />'])
-        expect(existsSync(join(root, "../app/public/orchestra/hugr-symbol-primary.svg"))).toBe(true)
+        expect(existsSync(join(root, "../app-shell/public/orchestra/hugr-symbol-primary.svg"))).toBe(true)
         expect(content).not.toContain("social-share")
       })
 

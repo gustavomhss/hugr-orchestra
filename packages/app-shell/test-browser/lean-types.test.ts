@@ -38,7 +38,7 @@ test("actual app and every Lean browser test file typecheck in one program", asy
 }, 600000)
 
 test("combined Schema/Core/Orchestra/app/session-ui/ui types in CI", async () => {
-  for (const pkg of ["schema", "core", "orchestra", "app", "session-ui", "ui"])
+  for (const pkg of ["schema", "core", "orchestra", "app-shell", "session-ui", "ui"])
     await typecheck(["typecheck"], path.resolve(app, "..", pkg))
 }, 600000)
 
