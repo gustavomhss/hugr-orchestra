@@ -1,7 +1,7 @@
 import { afterEach, expect } from "bun:test"
 import path from "node:path"
 import { mkdir, rm } from "node:fs/promises"
-import { and, eq } from "drizzle-orm"
+import { and, eq, inArray } from "drizzle-orm"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
@@ -331,6 +331,94 @@ it.instance("an arm bound to a child that ran refuses another authorization's ch
     const retried = yield* f.call({ authorizationID: next })
     expect(Exit.isSuccess(retried)).toBe(true)
     expect(f.prompts.count).toBe(2)
+  }), { git: true })
+
+// A dispatch bound the arm, then its child held before the model (see above). Returns that child and readies the tree
+// and the stand-ins for the next dispatch, which runs and passes.
+const heldBeforeModel = Effect.fn("TaskWorkflowResumeTest.heldBeforeModel")(function* () {
+  const f = yield* fixture({ hook: true, persisted: true })
+  const sessions = yield* Session.Service
+  expect(Exit.isFailure(yield* f.call())).toBe(true)
+  const unrun = (yield* sessions.children(f.chat.id))[0]
+  if (!unrun) throw new Error("missing reserved child")
+  expect((yield* WorkflowBinding.read(unrun.id))?.token).toBe(token)
+  f.hook.value = false
+  yield* f.revert()
+  f.reviewed.value = true
+  return { ...f, unrun }
+})
+
+// The WorkflowRebound records of the token that name `child` as the Session that took the arm.
+const rebounds = (child: string) => Effect.gen(function* () {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, child),
+    eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)))).all().pipe(Effect.orDie)
+  return rows.map((row) => row.data)
+})
+
+it.instance("an arm bound to a child that is still running is not moved until that run ends", () =>
+  Effect.gen(function* () {
+    const f = yield* heldBeforeModel()
+    const background = yield* BackgroundJob.Service
+    // The old child's run is under way and has written no output yet.
+    yield* background.start({ id: f.unrun.id, type: "task", run: Effect.never })
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_running")
+    const refused = yield* f.call({ authorizationID: next })
+    expect(Exit.isFailure(refused)).toBe(true)
+    if (Exit.isFailure(refused)) expect(Cause.pretty(refused.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
+    expect(f.prompts.count).toBe(0)
+    const child = SessionID.make(Dispatch.childSessionID(next))
+    expect(yield* WorkflowBinding.read(child)).toBeUndefined()
+    expect(yield* rebounds(child)).toEqual([])
+
+    // Once that run ends, the same authorization's child takes the arm.
+    yield* background.cancel(f.unrun.id)
+    expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
+    expect(f.prompts.count).toBe(1)
+    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ from: f.unrun.id, token })])
+  }), { git: true })
+
+// Reproduces a crash right after Relay moved the arm to `child`: the move and the child's binding were never recorded.
+const strandedMove = Effect.fn("TaskWorkflowResumeTest.strandedMove")(function* (
+  f: Effect.Success<ReturnType<typeof heldBeforeModel>>, authorizationID: string,
+) {
+  const held = yield* f.call({ authorizationID }, { abort: true })
+  expect(Exit.isFailure(held)).toBe(true)
+  const child = SessionID.make(Dispatch.childSessionID(authorizationID))
+  expect(yield* rebounds(child)).toHaveLength(1)
+  const database = yield* Database.Service
+  yield* database.db.delete(EventTable).where(and(eq(EventTable.aggregate_id, child), inArray(EventTable.type, [
+    EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1),
+    EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1)]))).run().pipe(Effect.orDie)
+  expect(yield* WorkflowBinding.read(child)).toBeUndefined()
+  expect(f.prompts.count).toBe(0)
+  return child
+})
+
+it.instance("a retry of the same authorization after a crash between the move and its record finishes the record", () =>
+  Effect.gen(function* () {
+    const f = yield* heldBeforeModel()
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_crash")
+    const child = yield* strandedMove(f, next)
+    // The retry reaches the same child, finds the arm already its own, records the move once and runs.
+    expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
+    expect(f.prompts.count).toBe(1)
+    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ executionSessionID: child, from: f.unrun.id, token })])
+    expect((yield* WorkflowBinding.read(child))?.token).toBe(token)
+    expect((yield* f.relay.audit(token)).result).toBe("PASS")
+  }), { git: true })
+
+it.instance("another authorization after such a crash records the stranded move before it moves the arm on", () =>
+  Effect.gen(function* () {
+    const f = yield* heldBeforeModel()
+    const stranded = yield* strandedMove(f, yield* f.authorize("evt_maestro_authorization_workflow_crash"))
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_after_crash")
+    expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
+    expect(f.prompts.count).toBe(1)
+    const child = SessionID.make(Dispatch.childSessionID(next))
+    expect(yield* rebounds(stranded)).toEqual([expect.objectContaining({ from: f.unrun.id, token })])
+    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ from: stranded, token })])
+    expect((yield* f.relay.audit(token)).result).toBe("PASS")
   }), { git: true })
 
 const unheld = {

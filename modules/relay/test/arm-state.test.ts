@@ -699,6 +699,7 @@ describe("rebind", () => {
     const armsDir = await created()
     expect(await run(armsDir, ArmCreate.rebind({ ...arm("ses_b"), from: "ses_a" }))).toBe("rebound")
     expect(await readFile(path.join(armsDir, "arm-1", "agent_id"), "utf8")).toBe("ses_b")
+    expect(Option.getOrUndefined(await run(armsDir, ArmCreate.holder("arm-1")))).toBe("ses_b")
     expect(await readFile(path.join(armsDir, "arm-1", "meta.json"), "utf8")).toBe(JSON.stringify(arm("ses_b").meta))
     expect((await readdir(path.join(armsDir, "arm-1"))).sort()).toEqual(["agent_id", "meta.json", "sprint.json"])
     expect(await run(armsDir, ArmCreate.rebind({ ...arm("ses_b"), from: "ses_a" }))).toBe("unchanged")

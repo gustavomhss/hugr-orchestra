@@ -131,6 +131,10 @@ export const rebind = (
     }))
   })
 
+// The Session holding an arm (`agent_id` as create and rebind write it), None when the arm records none.
+export const holder = (token: RelayArm.Token): Effect.Effect<Option.Option<string>, ArmState.StateError, ArmState.Store> =>
+  ArmState.dir(token).pipe(Effect.flatMap((arm) => ArmState.read(arm, RelayArm.Files.agentID)))
+
 // The meta without the execution Session a rebind may move.
 function movable(meta: RelayArm.Meta) {
   return { ...meta, session_id: undefined,
