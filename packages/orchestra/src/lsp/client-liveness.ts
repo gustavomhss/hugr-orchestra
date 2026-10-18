@@ -29,7 +29,9 @@ export function track(connection: MessageConnection, process: LSPServer.Handle["
         state.connected = false
         connection.end()
         connection.dispose()
-        await Process.stop(process)
+        // A failed stop still leaves the client dead; caching that rejection would make every prune fail and keep
+        // the dead client owned forever.
+        await Process.stop(process).catch(() => undefined)
       })()
       return state.shutdown
     },

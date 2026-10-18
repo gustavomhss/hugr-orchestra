@@ -11,6 +11,10 @@ export type SelectedModel = {
   modelID: ModelV2.ID
 }
 
+// Known part metadata is a cache of the server's parts (a miss refetches the message), and every update copies it.
+// Keep the most recently updated parts only.
+export const MAX_KNOWN_PARTS = 512
+
 export type KnownMessagePartMetadata = {
   messageId: string
   partId: string
@@ -160,10 +164,18 @@ const layer = Layer.effect(
         toolCallId: input.toolCallId,
         metadata: input.metadata,
       }
-      return update(input.sessionId, (session) => ({
-        ...session,
-        knownParts: new Map(session.knownParts).set(partMetadataKey(input), metadata),
-      })).pipe(Effect.as(metadata))
+      return update(input.sessionId, (session) => {
+        const key = partMetadataKey(input)
+        const knownParts = new Map(session.knownParts)
+        // Re-inserting moves the part to the newest end, so the cap drops the least recently updated parts.
+        knownParts.delete(key)
+        knownParts.set(key, metadata)
+        for (const oldest of knownParts.keys()) {
+          if (knownParts.size <= MAX_KNOWN_PARTS) break
+          knownParts.delete(oldest)
+        }
+        return { ...session, knownParts }
+      }).pipe(Effect.as(metadata))
     })
 
     return Service.of({
