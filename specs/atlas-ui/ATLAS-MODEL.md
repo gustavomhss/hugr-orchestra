@@ -176,7 +176,7 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 
 - **Memória de projeto** é curta, escopada e vai em todo turno: o que o engenheiro que está há anos naquele código sabe e mais ninguém sabe. Na interface ela tem duas abas:
   - **Propostas:** as lições que o membro escreveu nos checkpoints;
-  - **Indexadas:** as regras que vão em todo turno. Mostra o total de tokens contra o teto: o Atlas conta palavras (`memory/src/rules.ts`), com teto de 500 por membro, 800 para o Maestro, e 12 slots.
+  - **Indexadas:** as regras que vão em todo turno, com o total de tokens que somam. É só a contagem, sem teto exibido. O Atlas conta palavras (`memory/src/rules.ts`).
 
   Uma regra entra com frecency 1, cai pela metade a cada onda sem uso e é arquivada abaixo de 0,1.
 - **Memory log:** uma entrada por task ou PR. A memória de task é a memória de um spawn. Cada vez que um membro é chamado para uma unidade de trabalho, ficam guardados:

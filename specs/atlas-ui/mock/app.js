@@ -223,8 +223,6 @@
       const scope = $("#rule-scope").value.trim() || "*"
       const pm = A.projectMemory(member)
       const count = rule.split(/\s+/).filter(Boolean).length
-      if (pm.indexed.length >= pm.slots) return A.toast("Refused: all 12 slots are taken. Archive a rule first.", "xc")
-      if (pm.used + count > pm.cap) return A.toast(`Refused <code>over-cap</code>: ${pm.used + count} of ${pm.cap} tokens. Shorten the rule or archive another.`, "xc")
       $("#dialog").close()
       const m = M().memory[member]
       const entry = { rule, scope, from: lesson, unit: unit || "manual", frecency: 1 }
@@ -281,7 +279,7 @@
   }
   const ruleDialog = (member = "backend", lesson = "", unit = "") => `<form method="dialog">${head("Index a project-memory rule", "Rules ride in every turn, so write one imperative line: an always or a never, with where it applies.")}
     <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea id="rule-text" rows="3">${A.esc(lesson)}</textarea></label><label class="mx-field"><span>Applies to</span><input id="rule-scope" placeholder="a path glob, a tool or a phase — * for everywhere" value="${lesson ? "tasks with phased packets" : ""}"></label>
-    <p class="mx-note">Counted as words, like Atlas does. It starts with frecency 1, halves every wave it goes unused, and is archived below 0.10.</p></div>${foot("Through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
+    <p class="mx-note">It starts with frecency 1, halves every wave it goes unused, and is archived below 0.10.</p></div>${foot("Through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
   const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives a region of the code an owner and a tier. Overlaps resolve deterministically.")}
     <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
     <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${foot("Written to the territory catalog", "territory-confirm", "Declare")}</form>`

@@ -38,7 +38,7 @@
     <span class="grow"></span>${bound ? `<span class="at-pill good">${A.icon("checkc")}Memory on</span>` : `<span class="at-pill">${A.icon("minusc")}Memory not bound</span>`}${actions}</div>`
 
   /* ---------- Member page: Project memory + Memory log ---------- */
-  // Atlas counts project-memory tokens as whitespace words (memory/src/rules.ts `tok`); caps: 500 member, 800 orchestrator.
+  // Project-memory tokens are counted the way Atlas counts them: whitespace words (memory/src/rules.ts `tok`).
   const words = (text) => (text.trim() ? text.trim().split(/\s+/).length : 0)
   A.projectMemory = (member) => {
     const m = M().memory[member]
@@ -49,14 +49,14 @@
     const proposals = lessons(member).filter((l) => !m.dismissed.has(l.lesson) && !indexedText.has(l.lesson))
     const used = m.indexed.reduce((n, r) => n + words(r.rule), 0)
     const shared = M().awareness.filter((x) => x.state === "seeded").reduce((n, x) => n + words(x.text), 0)
-    return { indexed: m.indexed, archived: m.archived, proposals, used, cap: member === "maestro" ? 800 : 500, slots: 12, shared }
+    return { indexed: m.indexed, archived: m.archived, proposals, used, shared }
   }
 
   const memberPage = (state, member) => {
     const [name, role] = members[member]
     const bound = M().memory[member].bound
     const crumbs = [["Atlas", "#/overview"], ["Memory", "#/memory/backend"], [name]]
-    if (!bound) return { crumbs, html: `<div class="at-page narrow">${head(name, role, false)}<div class="at-clear">${A.icon("memory")}<strong>Maestro's memory is defined but not bound</strong><p>Atlas gives the orchestrator project memory (up to 800 tokens), a memory log of its tasks and PRs, and a logbook: one entry per PR with what shipped, the decisions and why, trade-offs, risks and open threads. Orchestra binds memory only for Backend, Jimmy and Archie today.</p></div></div>` }
+    if (!bound) return { crumbs, html: `<div class="at-page narrow">${head(name, role, false)}<div class="at-clear">${A.icon("memory")}<strong>Maestro's memory is defined but not bound</strong><p>Atlas gives the orchestrator project memory, a memory log of its tasks and PRs, and a logbook: one entry per PR with what shipped, the decisions and why, trade-offs, risks and open threads. Orchestra binds memory only for Backend, Jimmy and Archie today.</p></div></div>` }
     const ts = tasksOf(member)
     const st = A.memoryStats(member)
     const pm = A.projectMemory(member)
@@ -68,15 +68,14 @@
     const href = (patch) => `#/memory/${member}?${new URLSearchParams(Object.fromEntries(Object.entries({ pm: tab, status: filter, ...patch }).filter(([, v]) => v)))}`
 
     const kpis = `<div class="at-kpis three">
-      ${kpi("Project memory", `${pm.used}<small> / ${pm.cap} tokens</small>`, `${pm.indexed.length} of ${pm.slots} rules indexed${pm.proposals.length ? ` · ${pm.proposals.length} proposals` : ""}`)}
+      ${kpi("Project memory", `${pm.used}<small> tokens</small>`, `${pm.indexed.length} ${pm.indexed.length === 1 ? "rule" : "rules"} indexed${pm.proposals.length ? ` · ${pm.proposals.length} proposals` : ""}`)}
       ${kpi("Memory log", st.tasks, ts.length ? `${dot("good", by("Done"), "done")}${dot("warm", by("Paused"), "paused")}${dot("bad", by("Blocked"), "blocked")}` : "no entries yet")}
       ${kpi("Checkpoints", saved, st.checkpoints ? `${st.refused} refused · ${st.invocations} calls` : "—", st.refused ? "warn" : "")}</div>`
 
     const rule = (r, i) => `<div class="at-rule-row"><span class="rank">${i + 1}</span><div class="grow"><div>${A.esc(r.rule)}</div><small>${A.esc(r.scope)} · from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(r.unit)}">${A.esc(r.unit)}</a></small></div>
       <span class="at-frec" data-tip="Frecency ${r.frecency.toFixed(2)}. Each cited use refreshes it; it halves every wave unused and the rule is archived below 0.10."><i style="inline-size:${Math.min(100, r.frecency * 100)}%"></i></span><span class="at-tok">${words(r.rule)} tok</span>${A.btn("", "archive-rule", { value: `${member}|${i}`, icon: "download", label: "Archive", tip: "Archive (leaves every turn, kept in the log)" })}</div>`
-    const indexed = `<div class="at-tokens"><div><b>${pm.used}</b><span> / ${pm.cap} tokens</span><small>${pm.indexed.length} of ${pm.slots} rules · counted as words, like Atlas does</small></div>
-        <div class="at-tokbar"><i style="inline-size:${Math.min(100, (pm.used / pm.cap) * 100)}%"></i></div>
-        <small class="at-tok-note">Every turn also carries the shared header (Awareness ${pm.shared} tokens, Orientation 0), so ${name} reads <b>${pm.used + pm.shared} tokens</b> of memory per turn.</small></div>
+    const indexed = `<div class="at-tokens"><div><b>${pm.used}</b><span> tokens</span><small>${pm.indexed.length} ${pm.indexed.length === 1 ? "rule" : "rules"} indexed</small></div>
+        <small class="at-tok-note">Plus the shared header every member carries (Awareness ${pm.shared} tokens, Orientation 0): <b>${pm.used + pm.shared} tokens</b> of memory in each of ${name}'s turns.</small></div>
       ${pm.indexed.length ? pm.indexed.map(rule).join("") : `<div class="at-band-empty">Nothing indexed yet. ${pm.proposals.length ? `Index a proposal to give ${name} its first rule.` : ""}</div>`}
       ${pm.archived.length ? `<details class="at-sub-acc"><summary>${A.icon("chev")}<span>Archived</span><span class="wf-count">${pm.archived.length}</span></summary>${pm.archived.map((r) => `<div class="at-rule-row muted"><span class="rank">·</span><div class="grow"><div>${A.esc(r.rule)}</div><small>left every turn · kept in the log</small></div>${A.btn("Restore", "restore-rule", { value: `${member}|${r.rule}` })}</div>`).join("")}</details>` : ""}`
     const proposals = pm.proposals.length
@@ -104,7 +103,7 @@
     return {
       crumbs,
       html: `<div class="at-page narrow">${head(name, role, true)}${kpis}
-        ${acc(`${member}-project`, "shield", "Project memory", `What ${name} carries into every turn`, `${pm.used} / ${pm.cap} tokens`, project, true)}
+        ${acc(`${member}-project`, "shield", "Project memory", `What ${name} carries into every turn`, `${pm.used} tokens`, project, true)}
         ${acc(`${member}-log`, "history", "Memory log", "One entry per task or PR it worked on", ts.length ? `${st.tasks} entries · last ${day(last)}` : "empty", log, true)}</div>`,
     }
   }
