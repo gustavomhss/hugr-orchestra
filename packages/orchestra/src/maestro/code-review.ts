@@ -17,6 +17,8 @@ import { Git } from "@/git"
 export const REQUIRED = "WORKFLOW_CODE_REVIEW_REQUIRED"
 /** The graded failure of the final cold-review check while the workers' result has a FIX_FIRST or REJECT receipt. */
 export const NOT_APPROVED = "WORKFLOW_CODE_REVIEW_NOT_APPROVED"
+/** The hold of a settlement whose result is still the tree a FIX_FIRST already graded: no retry is spent. */
+export const UNADDRESSED = "WORKFLOW_CODE_REVIEW_UNADDRESSED"
 
 /**
  * The workers' result as the code-stage review sees it. Workers never commit (their sandbox denies `.git`), so the
@@ -198,7 +200,7 @@ export function renderFindings(findings: ReadonlyArray<{ path: string; line: num
     .slice(0, FINDINGS_MAX_COUNT)
     .map(
       (finding) =>
-        `- ${JSON.stringify(clip(finding.path, FINDING_PATH_MAX_CHARS))}:${finding.line} ${JSON.stringify(clip(finding.message, FINDING_FIELD_MAX_CHARS))}`,
+        `- ${quote(clip(finding.path, FINDING_PATH_MAX_CHARS))}:${finding.line} ${quote(clip(finding.message, FINDING_FIELD_MAX_CHARS))}`,
     )
   const shown = lines.reduce<{ lines: string[]; bytes: number; full: boolean }>(
     (acc, line) => {
@@ -214,6 +216,11 @@ export function renderFindings(findings: ReadonlyArray<{ path: string; line: num
     ...shown,
     ...(omitted > 0 ? [`${omitted} more findings omitted`] : []),
   ]
+}
+
+// JSON.stringify leaves NEL and the Unicode line and paragraph separators raw; a reader may break lines on them.
+function quote(value: string) {
+  return JSON.stringify(value).replace(/[\u0085\u2028\u2029]/g, (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`)
 }
 
 function clip(value: string, max: number) {

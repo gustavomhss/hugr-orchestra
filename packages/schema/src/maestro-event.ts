@@ -624,8 +624,9 @@ export namespace Task {
   })
   export type WorkflowReviewHeld = typeof WorkflowReviewHeld.Type
 
-  // A code review that did not approve graded a held step on the authorized resume, so the attempt at `expected` carries
-  // that review's recorded findings in its step text. Durable only, not public.
+  // A code review that did not approve graded the held reply `assistantMessageID` on the authorized resume, leaving the
+  // step at `expected`. The newest such record of a step names the review whose findings ride every later attempt of it
+  // until a new review decides. Durable only, not public.
   export const WorkflowReviewFindings = Event.define({
     type: "maestro.task.workflow_review_findings",
     durable: { version: 1, aggregate: "executionSessionID" },
@@ -633,6 +634,7 @@ export namespace Task {
       executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
       token: RelayArm.Token,
       reviewID: Schema.NonEmptyString,
+      assistantMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
       expected: RelayArm.WorkflowPosition,
     },
   })
