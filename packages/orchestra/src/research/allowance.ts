@@ -25,7 +25,7 @@ const expired = new WeakSet<Research.Allowance>()
 export type EnterOptions = {
   readonly tier?: Research.Depth
   /** Interrupts the child dispatch when the bound tier's deadline fires. */
-  readonly onDeadline?: Effect.Effect<void, unknown>
+  readonly onDeadline?: (reason: Research.Error) => Effect.Effect<void, unknown>
 }
 
 export interface Interface {
@@ -93,7 +93,7 @@ const layer = Layer.effect(
       issued.add(current)
       const timer = yield* Effect.sleep(Duration.seconds(allowance.deadlineSeconds)).pipe(
         Effect.andThen(Effect.sync(() => expired.add(current.allowance))),
-        Effect.andThen(options.onDeadline ?? Effect.void),
+        Effect.andThen(Effect.suspend(() => options.onDeadline?.(deadline(current.allowance)) ?? Effect.void)),
         Effect.catchCause(() => Effect.void),
         Effect.forkChild,
       )

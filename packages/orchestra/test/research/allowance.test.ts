@@ -244,7 +244,7 @@ describe("native research dispatch attribution", () => {
       yield* execution.tool(fixture.execution.id, "before-deadline", "read", Effect.void)
       yield* Deferred.await(interrupted)
       return "returned after interruption"
-    }), { tier: "focused", onDeadline: Deferred.succeed(interrupted, undefined).pipe(Effect.asVoid) }).pipe(Effect.exit, Effect.forkChild)
+    }), { tier: "focused", onDeadline: () => Deferred.succeed(interrupted, undefined).pipe(Effect.asVoid) }).pipe(Effect.exit, Effect.forkChild)
     const frame = yield* Deferred.await(captured)
     yield* TestClock.adjust("1199 seconds")
     expect(yield* Deferred.isDone(interrupted)).toBe(false)
@@ -265,7 +265,7 @@ describe("native research dispatch attribution", () => {
     const execution = yield* ResearchExecution.Service
     const fired = yield* Deferred.make<void>()
     const frame = yield* execution.enter(fixture.execution.id, "settled-dispatch", ResearchExecution.Current,
-      { onDeadline: Deferred.succeed(fired, undefined).pipe(Effect.asVoid) })
+      { onDeadline: () => Deferred.succeed(fired, undefined).pipe(Effect.asVoid) })
     if (!frame) return yield* Effect.die("Missing host frame")
     yield* TestClock.adjust("601 seconds")
     expect(yield* Deferred.isDone(fired)).toBe(false)
