@@ -8,6 +8,7 @@ export const SHELL_COPY = {
   "orchestra.shell.server.restart": "Restart app",
   "orchestra.shell.error.retry": "Try again",
   "orchestra.shell.error.home": "Go to Home",
+  "orchestra.shell.update.download": "Download {{version}}",
   "orchestra.shell.logs.exportFailed": "Could not export the logs",
   "orchestra.shell.picker.failed": "Could not open the folder picker",
   "orchestra.shell.link.failed": "Could not open the link",

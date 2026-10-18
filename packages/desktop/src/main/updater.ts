@@ -1,14 +1,17 @@
 import { app, dialog } from "electron"
 import pkg from "electron-updater"
-import { UPDATER_ENABLED } from "./constants"
+import { MAC_SIGNED, UPDATER_ENABLED } from "./constants"
 import { createUpdaterController, type UpdaterReadyRecord } from "./updater-controller"
 import { getLogger } from "./logging"
 import { getStore } from "./store"
-import { setAppQuitting } from "./windows"
+import { openExternalURL, setAppQuitting } from "./windows"
 import { nativeT } from "./native-translations"
 
 const { autoUpdater } = pkg
 const key = "ready"
+// electron-updater replaces only a signed macOS app, an NSIS install and an AppImage ($APPIMAGE is set inside one).
+// A deb, an rpm or an unsigned macOS build announces the update with its release page instead.
+const notify = (process.platform === "darwin" && !MAC_SIGNED) || (process.platform === "linux" && !process.env.APPIMAGE)
 
 export function setupAutoUpdater(stop: () => Promise<void>) {
   const logger = getLogger()
@@ -20,6 +23,7 @@ export function setupAutoUpdater(stop: () => Promise<void>) {
   autoUpdater.autoInstallOnAppQuit = false
   logger.log("auto updater configured", {
     channel: autoUpdater.channel,
+    notify,
     allowPrerelease: autoUpdater.allowPrerelease,
     allowDowngrade: autoUpdater.allowDowngrade,
     currentVersion: app.getVersion(),
@@ -28,10 +32,19 @@ export function setupAutoUpdater(stop: () => Promise<void>) {
   const store = getStore("orchestra.updater")
   return createUpdaterController({
     enabled: UPDATER_ENABLED,
+    // Each release keeps its installers in desktop-v<version> (.github/workflows/release-desktop.yml).
+    releasePage: notify
+      ? (version) =>
+          `https://github.com/gustavomhss/hugr-orchestra/releases/tag/desktop-v${encodeURIComponent(version)}`
+      : undefined,
     currentVersion: app.getVersion(),
     backend: {
       checkForUpdates: () => autoUpdater.checkForUpdates(),
-      downloadUpdate: () => autoUpdater.downloadUpdate(),
+      downloadUpdate: (onProgress) => {
+        const listener = (progress: { percent: number }) => onProgress(progress.percent)
+        autoUpdater.on("download-progress", listener)
+        return autoUpdater.downloadUpdate().finally(() => autoUpdater.off("download-progress", listener))
+      },
       quitAndInstall: () => {
         // quitAndInstall closes all windows before emitting before-quit, so
         // flag the quit first to keep window ids persisted for restore.
@@ -80,6 +93,8 @@ export async function showUpdaterDialog(controller: ReturnType<typeof setupAutoU
     })
     return
   }
+  // No native copy exists for an announced update; the release page is the answer to "Check for Updates".
+  if (state.status === "available") return openExternalURL(state.url)
   if (state.status !== "ready") return
 
   const response = await dialog.showMessageBox({

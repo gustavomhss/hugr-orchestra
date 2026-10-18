@@ -504,10 +504,13 @@ export const SettingsGeneralV2: Component<{
       <SettingsListV2>
         <SettingsRowV2
           title={language.t("settings.updates.row.check.title")}
-          description={language.t("settings.updates.row.check.description")}
+          description={language.t(
+            updater.action().description ?? "settings.updates.row.check.description",
+            updater.action().params,
+          )}
         >
           <ButtonV2 size="normal" variant="neutral" disabled={!updater.action().run} onClick={() => updater.run()}>
-            {language.t(updater.action().label)}
+            {language.t(updater.action().label, updater.action().params)}
           </ButtonV2>
         </SettingsRowV2>
       </SettingsListV2>
@@ -559,7 +562,7 @@ export const SettingsGeneralV2: Component<{
 
         <SoundsSection controller={sounds} />
 
-        <Show when={desktop()}>
+        <Show when={desktop() && updater.visible()}>
           <UpdatesSection />
         </Show>
 

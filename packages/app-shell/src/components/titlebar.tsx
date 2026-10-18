@@ -59,6 +59,7 @@ const macTrafficLightsBaseWidth = 84
 export type TitlebarUpdate = {
   version: () => string | undefined
   installing: () => boolean
+  ariaLabel: () => string
   install: () => void
 }
 
@@ -154,7 +155,7 @@ export function Titlebar(props: {
       visible: version !== undefined || installing,
       installing,
       label: language.t("titlebar.update"),
-      ariaLabel: language.t("toast.update.action.installRestart"),
+      ariaLabel: props.update?.ariaLabel() ?? language.t("toast.update.action.installRestart"),
       title: version ? language.t("titlebar.updateVersion", { version }) : undefined,
       onInstall: () => props.update?.install(),
     }
