@@ -14,7 +14,6 @@ export function libraryPresentation(state: State, filters: Pick<Filters, "query"
     page,
     workflows: visibleWorkflows(page, { query: filters.query, status: "" })
       .filter((item) => !filters.status || workflowState(item.state).filter === filters.status),
-    statuses: [...new Set(page.map((item) => workflowState(item.state).filter))],
     recent: runs.slice(0, 3),
     latest: runs.reduce((result, run) => {
       if (!result.has(run.workflowID)) result.set(run.workflowID, run)
@@ -27,8 +26,33 @@ export function libraryPresentation(state: State, filters: Pick<Filters, "query"
   }
 }
 
+// Fixed like the approved mock: every option stays visible even when no loaded workflow has that state.
+export const workflowFilters = [
+  { value: "", label: "orchestra.actions.all" },
+  { value: "active", label: "orchestra.actions.active" },
+  { value: "disabled", label: "orchestra.actions.disabled" },
+] as const
+
+/** Run filter values are native statuses: the model sends the selected value unchanged to the provider run list. */
+export function runFilters(kind?: Actions.ProviderKind) {
+  const gitlab = kind === "gitlab"
+  return [
+    { value: "", label: "orchestra.actions.all" },
+    { value: gitlab ? "failed" : "failure", label: "orchestra.actions.failed" },
+    { value: gitlab ? "running" : "in_progress", label: "orchestra.actions.running" },
+    { value: gitlab ? "manual" : "waiting", label: gitlab ? "orchestra.actions.manual" : "orchestra.actions.needsApproval" },
+    { value: gitlab ? "pending" : "queued", label: "orchestra.actions.queued" },
+    { value: "success", label: "orchestra.actions.passed" },
+  ] as const
+}
+
+/** A stored status that is not an option of the current list (e.g. after a provider switch) counts as All. */
+export function selectedFilter(filters: readonly { value: string }[], status: string) {
+  return filters.some((item) => item.value === status) ? status : ""
+}
+
 export function workflowState(state: string): { filter: string; label?: Parameters<Translate>[0]; tone: string } {
-  if (state === "active" || state === "configured") return { filter: "active", label: "orchestra.actions.enabled", tone: "good" }
+  if (state === "active" || state === "configured") return { filter: "active", label: "orchestra.actions.active", tone: "good" }
   if (["disabled", "disabled_manually", "disabled_inactivity", "disabled_fork"].includes(state)) {
     return { filter: "disabled", label: "orchestra.actions.disabled", tone: "" }
   }
