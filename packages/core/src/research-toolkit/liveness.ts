@@ -61,7 +61,7 @@ export const check = (urls: readonly string[], options: Options = {}) => Effect.
     for (let url = queue.shift(); url !== undefined; url = queue.shift()) {
       const outcome = await probe(url, options.privateNetwork === true)
       const status = outcome.status === "DEAD" && !seen.has(normal(url)) ? "LIKELY_HALLUCINATED" : outcome.status
-      results.set(url, { ...outcome, status })
+      results.set(url, { url, ...outcome, status })
     }
   })
   await Promise.all(workers)
