@@ -36,6 +36,7 @@ export type Event =
   | EventSessionNextAgentSwitched
   | EventSessionNextModelSwitched
   | EventSessionNextSubagentModelsChanged
+  | EventSessionNextArchiveChanged
   | EventSessionNextMoved
   | EventSessionNextPrompted
   | EventSessionNextPromptAdmitted
@@ -918,6 +919,15 @@ export type GlobalEvent = {
           timestamp: number
           sessionID: string
           policy: SessionSubagentModelsPolicy
+        }
+      }
+    | {
+        id: string
+        type: "session.next.archive.changed"
+        properties: {
+          timestamp: number
+          sessionID: string
+          archived: number
         }
       }
     | {
@@ -2098,6 +2108,7 @@ export type GlobalEvent = {
     | SyncEventSessionNextAgentSwitched
     | SyncEventSessionNextModelSwitched
     | SyncEventSessionNextSubagentModelsChanged
+    | SyncEventSessionNextArchiveChanged
     | SyncEventSessionNextMoved
     | SyncEventSessionNextPrompted
     | SyncEventSessionNextPromptAdmitted
@@ -3342,6 +3353,23 @@ export type ProviderAuthError1 = {
   }
 }
 
+export type ClaudeCodeAccount = {
+  signedIn: boolean
+  email?: string
+  subscription?: string
+}
+
+export type ClaudeCodeLogin = {
+  url: string
+}
+
+export type ClaudeCodeLoginError = {
+  name: "ClaudeCodeLoginFailed"
+  data: {
+    message: string
+  }
+}
+
 export type SessionActivitySession = {
   id: string
   title: string
@@ -3572,14 +3600,14 @@ export type InvalidCursorError = {
   message: string
 }
 
-export type SessionActive = {
-  type: "running"
-}
-
 export type SessionNotFoundError = {
   _tag: "SessionNotFoundError"
   sessionID: string
   message: string
+}
+
+export type SessionActive = {
+  type: "running"
 }
 
 export type PromptInput = {
@@ -3599,6 +3627,7 @@ export type SessionDurableEvent =
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
   | SessionNextSubagentModelsChanged
+  | SessionNextArchiveChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -3728,6 +3757,7 @@ export type V2Event =
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
   | SessionNextSubagentModelsChanged
+  | SessionNextArchiveChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -4628,6 +4658,22 @@ export type SyncEventSessionNextSubagentModelsChanged = {
       timestamp: number
       sessionID: string
       policy: SessionSubagentModelsPolicy
+    }
+  }
+}
+
+export type SyncEventSessionNextArchiveChanged = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "session.next.archive.changed.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      timestamp: number
+      sessionID: string
+      archived: number
     }
   }
 }
@@ -6064,6 +6110,25 @@ export type SessionNextSubagentModelsChanged = {
     timestamp: number
     sessionID: string
     policy: SessionSubagentModelsPolicy
+  }
+}
+
+export type SessionNextArchiveChanged = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "session.next.archive.changed"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    timestamp: number
+    sessionID: string
+    archived: number
   }
 }
 
@@ -9130,6 +9195,16 @@ export type EventSessionNextSubagentModelsChanged = {
     timestamp: number
     sessionID: string
     policy: SessionSubagentModelsPolicy
+  }
+}
+
+export type EventSessionNextArchiveChanged = {
+  id: string
+  type: "session.next.archive.changed"
+  properties: {
+    timestamp: number
+    sessionID: string
+    archived: number
   }
 }
 
@@ -13055,6 +13130,95 @@ export type ProviderOauthCallbackResponses = {
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
 
+export type ProviderClaudeCodeAccountData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/account"
+}
+
+export type ProviderClaudeCodeAccountErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeAccountError = ProviderClaudeCodeAccountErrors[keyof ProviderClaudeCodeAccountErrors]
+
+export type ProviderClaudeCodeAccountResponses = {
+  /**
+   * Claude Code sign-in status
+   */
+  200: ClaudeCodeAccount
+}
+
+export type ProviderClaudeCodeAccountResponse =
+  ProviderClaudeCodeAccountResponses[keyof ProviderClaudeCodeAccountResponses]
+
+export type ProviderClaudeCodeLoginData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login"
+}
+
+export type ProviderClaudeCodeLoginErrors = {
+  /**
+   * ClaudeCodeLoginError | InvalidRequestError
+   */
+  400: ClaudeCodeLoginError | InvalidRequestError
+}
+
+export type ProviderClaudeCodeLoginError = ProviderClaudeCodeLoginErrors[keyof ProviderClaudeCodeLoginErrors]
+
+export type ProviderClaudeCodeLoginResponses = {
+  /**
+   * Fallback sign-in URL
+   */
+  200: ClaudeCodeLogin
+}
+
+export type ProviderClaudeCodeLoginResponse = ProviderClaudeCodeLoginResponses[keyof ProviderClaudeCodeLoginResponses]
+
+export type ProviderClaudeCodeLoginCodeData = {
+  body?: {
+    code: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login/code"
+}
+
+export type ProviderClaudeCodeLoginCodeErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeLoginCodeError =
+  ProviderClaudeCodeLoginCodeErrors[keyof ProviderClaudeCodeLoginCodeErrors]
+
+export type ProviderClaudeCodeLoginCodeResponses = {
+  /**
+   * Whether a running sign-in received the code
+   */
+  200: boolean
+}
+
+export type ProviderClaudeCodeLoginCodeResponse =
+  ProviderClaudeCodeLoginCodeResponses[keyof ProviderClaudeCodeLoginCodeResponses]
+
 export type SessionListData = {
   body?: never
   path?: never
@@ -15066,6 +15230,7 @@ export type V2SessionListData = {
     limit?: number
     order?: "asc" | "desc"
     search?: string
+    includeArchived?: "true" | "false"
     directory?: string
     project?: string
     subpath?: string
@@ -15120,6 +15285,10 @@ export type V2SessionCreateErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
 }
 
 export type V2SessionCreateError = V2SessionCreateErrors[keyof V2SessionCreateErrors]
@@ -15204,6 +15373,43 @@ export type V2SessionGetResponses = {
 }
 
 export type V2SessionGetResponse = V2SessionGetResponses[keyof V2SessionGetResponses]
+
+export type V2SessionArchiveData = {
+  body: {
+    archived: boolean
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/archive"
+}
+
+export type V2SessionArchiveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionArchiveError = V2SessionArchiveErrors[keyof V2SessionArchiveErrors]
+
+export type V2SessionArchiveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionArchiveResponse = V2SessionArchiveResponses[keyof V2SessionArchiveResponses]
 
 export type V2SessionGetSubagentModelsData = {
   body?: never
@@ -16176,6 +16382,125 @@ export type V2IntegrationConnectOauthResponses = {
 
 export type V2IntegrationConnectOauthResponse =
   V2IntegrationConnectOauthResponses[keyof V2IntegrationConnectOauthResponses]
+
+export type V2IntegrationOauthCancelData = {
+  body?: never
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}"
+}
+
+export type V2IntegrationOauthCancelErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthCancelError = V2IntegrationOauthCancelErrors[keyof V2IntegrationOauthCancelErrors]
+
+export type V2IntegrationOauthCancelResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2IntegrationOauthCancelResponse =
+  V2IntegrationOauthCancelResponses[keyof V2IntegrationOauthCancelResponses]
+
+export type V2IntegrationOauthStatusData = {
+  body?: never
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}"
+}
+
+export type V2IntegrationOauthStatusErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthStatusError = V2IntegrationOauthStatusErrors[keyof V2IntegrationOauthStatusErrors]
+
+export type V2IntegrationOauthStatusResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: IntegrationAttemptStatus
+  }
+}
+
+export type V2IntegrationOauthStatusResponse =
+  V2IntegrationOauthStatusResponses[keyof V2IntegrationOauthStatusResponses]
+
+export type V2IntegrationOauthCompleteData = {
+  body: {
+    code?: string
+  }
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}/complete"
+}
+
+export type V2IntegrationOauthCompleteErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthCompleteError = V2IntegrationOauthCompleteErrors[keyof V2IntegrationOauthCompleteErrors]
+
+export type V2IntegrationOauthCompleteResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2IntegrationOauthCompleteResponse =
+  V2IntegrationOauthCompleteResponses[keyof V2IntegrationOauthCompleteResponses]
 
 export type V2IntegrationAttemptCancelData = {
   body?: never

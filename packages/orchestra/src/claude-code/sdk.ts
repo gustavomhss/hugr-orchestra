@@ -22,8 +22,12 @@ export function billingRejection(detail: string) {
   return `Anthropic returned: ${detail}`
 }
 
-/** What the owner sees when Claude Code reports it is not signed in. Orchestra never signs in on the owner's behalf. */
-export const SIGNED_OUT = "Claude Code is not signed in. Run `claude auth login` in a terminal, then send your message again."
+/**
+ * What the owner sees when Claude Code reports it is not signed in. Orchestra never signs in on the owner's behalf: the
+ * app's Sign in starts Claude Code's own `claude auth login` (claude-code/login.ts), which stores the login itself.
+ */
+export const SIGNED_OUT =
+  "Claude Code is not signed in. Sign in to Claude in Settings › Claude mode, or run `claude auth login`, then send your message again."
 
 /** True when Claude Code's documented SDK output says the request failed authentication. */
 export function signedOut(message: SDKMessage) {

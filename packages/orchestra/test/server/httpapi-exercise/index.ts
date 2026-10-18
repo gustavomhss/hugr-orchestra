@@ -37,6 +37,7 @@ import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
+import { providerScenarios } from "./provider"
 import { scheduleScenarios } from "./schedule"
 import { projectScenarios } from "./project"
 import { skillScenarios } from "./skill"
@@ -183,24 +184,7 @@ const scenarios: Scenario[] = [
       headers: ctx.headers(),
     }))
     .status(204, undefined, "status"),
-  http.protected.get("/provider", "provider.list").json(),
-  http.protected.get("/provider/auth", "provider.auth").json(),
-  http.protected
-    .post("/provider/{providerID}/oauth/authorize", "provider.oauth.authorize")
-    .at((ctx) => ({
-      path: route("/provider/{providerID}/oauth/authorize", { providerID: "httpapi" }),
-      headers: ctx.headers(),
-      body: { method: "bad" },
-    }))
-    .status(400),
-  http.protected
-    .post("/provider/{providerID}/oauth/callback", "provider.oauth.callback")
-    .at((ctx) => ({
-      path: route("/provider/{providerID}/oauth/callback", { providerID: "httpapi" }),
-      headers: ctx.headers(),
-      body: { method: "bad" },
-    }))
-    .status(400),
+  ...providerScenarios,
   http.protected.get("/permission", "permission.list").json(200, array),
   http.protected
     .post("/permission/{requestID}/reply", "permission.reply.invalid")
