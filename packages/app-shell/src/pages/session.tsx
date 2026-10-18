@@ -1747,9 +1747,7 @@ export default function Page() {
           if (!keep) prompt.set(value)
         },
         request: () => halt(input.sessionID).then(() => session.revert.stage(input)),
-        complete: () => {
-          if (keep) draftKept()
-        },
+        complete: () => keep && draftKept(),
         rollback: () => roll(input.sessionID, last, target),
         fail,
       })
@@ -1784,9 +1782,7 @@ export default function Page() {
           !next
             ? halt(sessionID).then(() => session.revert.clear({ sessionID }))
             : halt(sessionID).then(() => session.revert.stage({ sessionID, messageID: next.id }).then(() => undefined)),
-        complete: () => {
-          if (keep && next) draftKept()
-        },
+        complete: () => keep && next && draftKept(),
         rollback: () => roll(sessionID, last, target),
         fail,
       })
