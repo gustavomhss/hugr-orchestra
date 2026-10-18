@@ -116,7 +116,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.create.blankBody": "A trigger and nothing else.",
   "orchestra.hooks.preset.protect-generated": "Protect generated files",
   "orchestra.hooks.preset.protect-generated.body":
-    "Refuse edits and overwrites under a generated path and say how to regenerate.",
+    "Refuse edits, overwrites and shell commands under a generated path and say how to regenerate.",
   "orchestra.hooks.preset.ask-shell": "Ask before risky commands",
   "orchestra.hooks.preset.ask-shell.body": "Pause commands that change shared state until a human approves.",
   "orchestra.hooks.preset.check-stop": "Check at session stop",
@@ -126,6 +126,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.preset.remind-edit.body":
     "Add a short note to the result of each edit, so the agent reads it right after the edit.",
   "orchestra.hooks.preset.pathMatches": "Path matches",
+  "orchestra.hooks.preset.commandMatches": "Shell command names the path",
   "orchestra.hooks.preset.isEdit": "Edits a file",
   "orchestra.hooks.preset.isWrite": "Creates or overwrites a file",
   "orchestra.hooks.preset.pushMatches": "Push command",
@@ -190,6 +191,8 @@ export const HOOKS_COPY = {
     "{{name}} reads a value this event does not carry, so it always takes No. Pick another field.",
   "orchestra.workflows.issue.cycle": "{{name}} leads back to a step before it. Hooks cannot loop.",
   "orchestra.workflows.issue.never-runs": "{{name}} never runs: it comes after Require repair, which ends the call.",
+  "orchestra.workflows.issue.path-backslash":
+    "{{name}} has a \\ in its path pattern, so it never matches: paths use / between folders, like src/generated/**.",
 
   "orchestra.hooks.canvas.add": "Add node (N)",
   "orchestra.hooks.canvas.addNode": "Add node",
@@ -226,7 +229,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.details.matches": "Matches",
   "orchestra.hooks.details.ports": "Yes continues from the upper port, No from the lower one.",
   "orchestra.hooks.details.patternPath":
-    "Relative to the project folder, like src/app.ts. * and ? stay inside a folder, ** crosses folders, {a,b} is either. A | is matched literally: for another pattern, use “Or match another pattern”.",
+    "Relative to the project folder, like src/app.ts. * and ? stay inside a folder, ** crosses folders, {a,b} is either. A | is matched literally: for another pattern, use “Or match another pattern”. Only file tools (read, edit, write, apply_patch) carry a path; a shell command carries none, so match it with a Command condition.",
   "orchestra.hooks.details.patternCommand":
     "The whole command must match: “git push *” misses “cd app && git push”, while “*git push*” catches both. * matches any text and ? one character. A | is matched literally: for another pattern, use “Or match another pattern”.",
   "orchestra.hooks.details.patternTool":
@@ -243,8 +246,17 @@ export const HOOKS_COPY = {
     "Or: either pattern is enough. And also: both must match, and No means at least one did not.",
   "orchestra.hooks.details.commandHash": "Command hash",
   "orchestra.hooks.details.command": "Command",
-  "orchestra.hooks.details.passFail": "Exit 0 continues on Pass; anything else on Fail.",
+  "orchestra.hooks.details.commandHint":
+    "Runs in the session's folder. Checks run one at a time and stop after 60 s. A check that cannot run or runs out of time asks you to approve the call, or adds a warning to its result on an After event.",
+  "orchestra.hooks.details.commandEnv":
+    "The check can read RELAY_HOOK_PATH (the call's file paths, one per line), RELAY_HOOK_COMMAND (a shell command) and RELAY_HOOK_TOOL (the tool's name).",
+  "orchestra.hooks.details.commandOneLine":
+    "The command is one line, so the pasted lines were not added. Join commands with &&, like bun test && bun run lint.",
+  "orchestra.hooks.details.passFail":
+    "Exit 0 continues on Pass; anything else on Fail. If nothing is connected to Fail, a failing check refuses the call, or fails its result on an After event.",
   "orchestra.hooks.details.message": "Message to the agent",
+  "orchestra.hooks.details.approverMessage": "Shown to the approver",
+  "orchestra.hooks.details.approverHint": "The agent reads it only if the person declines.",
   "orchestra.hooks.details.note": "Note (optional)",
   "orchestra.hooks.details.noteHint": "Kept with the hook, for whoever reads it. The agent does not see it.",
   "orchestra.hooks.details.remindHint":

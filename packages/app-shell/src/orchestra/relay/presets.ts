@@ -12,6 +12,7 @@ export type PresetKey =
   | "trigger.before.command"
   | "trigger.sessionIdle"
   | "preset.pathMatches"
+  | "preset.commandMatches"
   | "preset.isEdit"
   | "preset.isWrite"
   | "preset.pushMatches"
@@ -112,7 +113,8 @@ type Preset = {
 const PRESETS: Preset[] = [
   {
     // "Before any tool", not "Before edit file": Write replaces a whole file and is its own operation, and apply_patch
-    // is an edit and a write at once. A tool trigger also sees reads, so the two Event conditions keep them out.
+    // is an edit and a write at once. A tool trigger also sees reads, so the two Event conditions keep them out. A shell
+    // command carries no path, so the path's No branch checks the command for it instead.
     id: "protect-generated",
     operations: ["tool"],
     nodes: [
@@ -149,6 +151,14 @@ const PRESETS: Preset[] = [
         parameters: { field: "event", pattern: "write.before" },
       },
       {
+        id: "shell",
+        text: "preset.commandMatches",
+        type: CONDITION,
+        x: 320,
+        y: 360,
+        parameters: { field: "command", pattern: "*src/generated/*" },
+      },
+      {
         id: "block",
         text: "preset.blockChange",
         type: "relay.hookBlock",
@@ -161,9 +171,11 @@ const PRESETS: Preset[] = [
     edges: [
       ["event", "match", 0],
       ["match", "edit", 0],
+      ["match", "shell", 1],
       ["edit", "block", 0],
       ["edit", "write", 1],
       ["write", "block", 0],
+      ["shell", "block", 0],
     ],
   },
   {

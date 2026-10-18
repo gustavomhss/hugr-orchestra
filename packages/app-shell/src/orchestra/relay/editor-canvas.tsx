@@ -561,16 +561,16 @@ export function CanvasTab(props: Props) {
       }
       onSelect={props.select}
       onChange={props.edit}
-      onReject={(reason, detail) =>
-        showToast(
-          reason === "phase"
-            ? {
-                title: copy.t("orchestra.workflows.canvas.phaseBlocked", { phase: detail ?? "" }),
-                description: copy.t("orchestra.workflows.canvas.phaseBlockedBody"),
-              }
-            : { title: copy.t("orchestra.workflows.canvas.entryNoInput") },
-        )
-      }
+      onReject={(reason, detail) => {
+        if (reason === "phase")
+          return showToast({
+            title: copy.t("orchestra.workflows.canvas.phaseBlocked", { phase: detail ?? "" }),
+            description: copy.t("orchestra.workflows.canvas.phaseBlockedBody"),
+          })
+        if (reason === "empty") return showToast({ title: copy.t("orchestra.workflows.canvas.wireEmpty") })
+        if (reason === "self") return showToast({ title: copy.t("orchestra.workflows.canvas.wireSelf") })
+        showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })
+      }}
       onOpen={open}
       onAdd={startAdd}
       onDelete={remove}

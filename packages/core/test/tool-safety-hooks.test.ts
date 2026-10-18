@@ -2,7 +2,7 @@ import { describe, expect } from "bun:test"
 import path from "path"
 import { createHash, randomUUID } from "crypto"
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
-import { Deferred, Effect, Fiber, Layer, Schema, Scope, Stream } from "effect"
+import { Cause, Deferred, Effect, Exit, Fiber, Layer, Schema, Scope, Stream } from "effect"
 import { RelayHook } from "@orchestra/schema/relay-hook"
 import { Config } from "../src/config"
 import { AppNodeBuilder } from "../src/effect/app-node-builder"
@@ -243,6 +243,9 @@ describe("ToolSafety hooks on the V2 registry path", () => {
       Effect.gen(function* () {
         const dirs = yield* fixture
         const message = "Hook 'Confirm releases' asks for approval: Releases need you."
+        // After a person says no, the model reads a refusal, not the card's request.
+        const declined =
+          "A person declined this call, so it did not run. Do not retry it another way. Hook 'Confirm releases': Releases need you."
         yield* harness(dirs, () =>
           install(
             dirs,
@@ -259,7 +262,7 @@ describe("ToolSafety hooks on the V2 registry path", () => {
                   value: "ran",
                 })
                 expect(yield* h.call("bash", { command: "./release.sh v2" }, () => Effect.fail(rejected))).toEqual(
-                  hold("approval-native-rejected", message),
+                  hold("approval-native-rejected", declined),
                 )
                 expect(yield* h.call("bash", { command: "./release.sh v3" })).toEqual(
                   hold("relay-hook-approve-native-binding-missing", message),
@@ -333,7 +336,7 @@ describe("ToolSafety hooks on the V2 registry path", () => {
           Effect.gen(function* () {
             expect(yield* h.call("write", { filePath: "approved.ts" }, () => Effect.void)).toEqual(written)
             expect(yield* h.call("write", { filePath: "rejected.ts" }, () => Effect.fail(rejected))).toEqual(
-              hold("approval-native-rejected", ask),
+              hold("approval-native-rejected", `A person declined this call, so it did not run. Do not retry it another way. ${ask}`),
             )
             expect(yield* h.call("write", { filePath: "unasked.ts" })).toEqual(
               hold("relay-hook-approve-native-binding-missing", ask),
@@ -464,6 +467,19 @@ describe("ToolSafety hooks on the V2 registry path", () => {
             "tool.before reminded",
             "write.after reminded",
           ])
+          // A call that throws (V1 tools die with their errors) still hands its notes over, in the error's message.
+          const safety = yield* ToolSafety.make
+          const fs = yield* FSUtil.Service
+          const stateDirectory = MaestroArsenal.stateDirectory(dirs.data, projectID)
+          const load = ToolSafetyProfile.makeLoader(fs, { directory: dirs.work, stateDirectory, projectID })
+          const call = { tool: "write", args: { filePath: "b.ts" }, sessionID: h.sessionID, callID: "thrown", projectID }
+          const thrown = yield* safety
+            .run({ ...call, directory: dirs.work }, Effect.die(new Error("Boom.")), () => Effect.void)
+            .pipe(Effect.provideService(ToolSafety.RuntimeProfileLoader, load), Effect.exit)
+          const defect = Exit.isFailure(thrown) ? Cause.squash(thrown.cause) : undefined
+          expect(defect instanceof Error && defect.message).toBe(
+            "Boom.\n\nHook 'Style': Keep functions small.\nHook 'Docs': Update the docs.",
+          )
         }),
       )
     }),

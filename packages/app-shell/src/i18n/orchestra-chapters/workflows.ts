@@ -21,6 +21,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.xlink":
     "For a rule that applies to every session, such as blocking edits to generated files, use Hooks.",
   "orchestra.workflows.unsupported": "This server does not support workflows yet.",
+  "orchestra.workflows.checkAgain": "Check again",
   "orchestra.workflows.loading": "Loading workflows…",
   "orchestra.workflows.error": "Could not load workflows. {{reason}}",
   "orchestra.workflows.refreshFailed": "Could not refresh the list. Showing what was loaded earlier.",
@@ -373,6 +374,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.canvas.newPhase": "Phase {{n}}",
   "orchestra.workflows.canvas.startStays": "Start holds the goal and the fixes allowed per step, so it stays.",
   "orchestra.workflows.canvas.entryNoInput": "Start and triggers take no incoming connection.",
+  "orchestra.workflows.canvas.wireEmpty": "Nothing was connected. Let go of the wire over the step it should lead to.",
+  "orchestra.workflows.canvas.wireSelf": "A step cannot connect to itself.",
   "orchestra.workflows.canvas.phaseBlocked": "It can't join “{{phase}}” from there",
   "orchestra.workflows.canvas.phaseBlockedBody":
     "A phase is one unbroken stretch of the sequence. Connect the step next to the phase first, or choose its phase in the step's details.",
