@@ -50,6 +50,10 @@ Orchestra needs a model to work with. Connect a provider with your API key in th
 
 For npm and Homebrew installs, run `orchestra upgrade`. The desktop app does not update itself yet: download the new installer and install it over the old one.
 
+## Support
+
+Report bugs and ask questions in [GitHub Issues](https://github.com/gustavomhss/hugr-orchestra/issues).
+
 ## Run from source
 
 You need Bun 1.3.14, the version pinned in `package.json`.

@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "homepage": "https://github.com/gustavomhss/hugr-orchestra",
+  "bugs": "https://github.com/gustavomhss/hugr-orchestra/issues",
   "author": {
     "name": "Orchestra"
   },
