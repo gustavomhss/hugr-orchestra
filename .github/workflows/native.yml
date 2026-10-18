@@ -22,7 +22,7 @@ jobs:
     timeout-minutes: 45
     defaults:
       run:
-        working-directory: packages/desktop
+        working-directory: apps/desktop
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -30,7 +30,7 @@ jobs:
       # Refs without the native suites (they live with the Linux workspace) skip every step.
       - name: Build a11y test image
         id: image
-        if: hashFiles('packages/desktop/test/native/Dockerfile') != ''
+        if: hashFiles('apps/desktop/test/native/Dockerfile') != ''
         run: docker build --provenance=false --tag orchestra-a11y-test:ci test/native
 
       # Every suite runs in a fresh container without network, as the image's own UID, with the package
@@ -113,7 +113,7 @@ jobs:
     timeout-minutes: 45
     defaults:
       run:
-        working-directory: packages/desktop
+        working-directory: apps/desktop
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1

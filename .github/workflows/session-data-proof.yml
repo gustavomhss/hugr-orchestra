@@ -4,7 +4,7 @@ name: session-data-proof
 on:
   push:
     branches: [session-data-proof]
-    paths: [.github/workflows/session-data-proof.yml, packages/cli/script/session-data-proof.ts]
+    paths: [.github/workflows/session-data-proof.yml, apps/cli/script/session-data-proof.ts]
   workflow_dispatch:
 
 permissions:
@@ -67,7 +67,7 @@ jobs:
       - name: Require stale-snapshot control to detect candidate write loss
         run: |
           $ErrorActionPreference = 'Stop'
-          $output = & bun packages/cli/script/session-data-proof.ts --predecessor predecessor --candidate candidate --provenance provenance.json --report negative.json --control stale-snapshot --control-report stale-control.json 2>&1
+          $output = & bun apps/cli/script/session-data-proof.ts --predecessor predecessor --candidate candidate --provenance provenance.json --report negative.json --control stale-snapshot --control-report stale-control.json 2>&1
           $code = $LASTEXITCODE
           $output | Write-Output
           if ($code -eq 0 -or ($output -join "`n") -notmatch 'STALE_SNAPSHOT_CONTROL_DETECTED') { throw 'STALE_SNAPSHOT_CONTROL_DID_NOT_DETECT_WRITE_LOSS' }
@@ -78,7 +78,7 @@ jobs:
           exit 0
       - name: Execute preserved-build upgrade and return
         run: |
-          bun packages/cli/script/session-data-proof.ts --predecessor predecessor --candidate candidate --provenance provenance.json --report session-data-proof.json
+          bun apps/cli/script/session-data-proof.ts --predecessor predecessor --candidate candidate --provenance provenance.json --report session-data-proof.json
           if ($LASTEXITCODE -ne 0) { throw 'SESSION_DATA_PROOF_FAILED' }
           if (!(Test-Path -LiteralPath session-data-proof.json -PathType Leaf)) { throw 'SESSION_DATA_REPORT_MISSING' }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02

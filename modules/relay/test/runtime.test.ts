@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { readdirSync, readFileSync } from "node:fs"
 import path from "node:path"
 
-// The desktop server runs the engine under Node (packages/desktop/src/main/server.ts), so engine sources, and core's
+// The desktop server runs the engine under Node (apps/desktop/src/main/server.ts), so engine sources, and core's
 // relay modules, use Node builtins only. This scan catches the direct spellings of a Bun runtime API: a member of the
 // Bun global, a `bun:` module, the `bun` module and the import.meta fields only Bun defines. It reads raw text,
 // comments included, so prose such as "Bun.Glob" is reported too. A spelling it does not know (a computed property, an

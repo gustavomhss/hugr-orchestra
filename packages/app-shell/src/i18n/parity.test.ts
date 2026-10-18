@@ -92,8 +92,8 @@ const domains = [
   },
   {
     name: "desktop",
-    source: "../../../desktop/src/renderer/i18n/en.ts",
-    target: (locale: string) => `../../../desktop/src/renderer/i18n/${locale}.ts`,
+    source: "../../../../apps/desktop/src/renderer/i18n/en.ts",
+    target: (locale: string) => `../../../../apps/desktop/src/renderer/i18n/${locale}.ts`,
     locales: desktopLocales,
   },
   // Kept last: plural parity covers domains.slice(0, 2) (app, ui).

@@ -13,7 +13,7 @@ Desktop imports the shared application from this package; the private
   and server URL behavior; Desktop supplies native integrations through its
   renderer and preload API.
 - Keep Electron main-process APIs, Node-only adapters, IPC implementation,
-  and packaging in `packages/desktop`. Shared UI must not import those host
+  and packaging in `apps/desktop`. Shared UI must not import those host
   implementation details.
 - Keep static public assets under `public/` (including `/orchestra/` assets),
   locale dictionaries and language behavior in `src/i18n` and

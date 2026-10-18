@@ -14,7 +14,7 @@ on:
   workflow_dispatch:
   pull_request:
     paths:
-      - "packages/orchestra/script/**"
+      - "apps/orchestra/script/**"
       - "packages/omni/**"
       - "native/omni/**"
       - ".github/workflows/omni-cli-smoke.yml"
@@ -66,13 +66,13 @@ jobs:
           echo "OMNI_ARTIFACTS=$dir" >> "$GITHUB_ENV"
 
       - name: Build the CLI (--single)
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         run: |
           bun script/build.ts --single --skip-install --skip-embed-web-ui
           ls -l dist/*/bin
 
       - name: Crash smoke
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         run: |
           mkdir -p .omni-cli-smoke
           # Run by the shipped binary as Bun: load omni through the core loader, start a 3-process nonce tree, hold it.
@@ -81,7 +81,7 @@ jobs:
           import path from "node:path"
           import { Omni } from "@orchestra/core/omni"
           import { Flag } from "@orchestra/core/flag/flag"
-          import { tree } from "../../core/test/fixture/process-tree.ts"
+          import { tree } from "../../../packages/core/test/fixture/process-tree.ts"
 
           const shipped = path.dirname(realpathSync(process.execPath))
           if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "on") throw new Error("unset CLI flag did not select Omni")
@@ -102,7 +102,7 @@ jobs:
           import { mkdtempSync, readdirSync, symlinkSync } from "node:fs"
           import os from "node:os"
           import path from "node:path"
-          import { alive, gone, reap, sweep } from "../../core/test/fixture/process-tree.ts"
+          import { alive, gone, reap, sweep } from "../../../packages/core/test/fixture/process-tree.ts"
 
           const fail = (message: string) => {
             console.error(`::error::${message}`)
@@ -153,7 +153,7 @@ jobs:
 
       # The shipped binary finds the addon and the supervisor next to itself, with no HUGR_OMNI_* to help it.
       - name: debug omni (in-bundle import)
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         run: |
           bin=$(find dist -path '*/bin/orchestra' -o -path '*/bin/orchestra.exe' | head -1)
           [ -n "$bin" ] || { echo "::error::no built orchestra binary under dist"; exit 1; }
