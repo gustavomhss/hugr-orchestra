@@ -119,7 +119,8 @@ describe("host citation check", () => {
         { source: retained.ref, locator: { kind: "quote", exact: "only version 2" } },
         { source: borrowed.ref, locator: { kind: "lines", start: 1, end: 1 } },
       ] }
-    const prose = "Proof at observed.txt:3 and missing.ts:10-12; observed.txt:2 holds."
+    // The read also retains the complete received file from byte 0, so only lines past its end are uncaptured.
+    const prose = "Proof at observed.txt:9 and missing.ts:10-12; observed.txt:2 holds."
     const result = yield* fixture.assemble(prose, card)
     expect(result.citationCheck?.verdict).toBe("fail")
     expect(result.citationCheck?.checked).toEqual({ evidence: 3, prose: 4, findings: 1, documents: 0 })
@@ -131,7 +132,7 @@ describe("host citation check", () => {
       "quote not found in retained representation",
       "source not retained by this dispatch",
     ])
-    expect(result.citationCheck?.issues).toContainEqual({ citation: "observed.txt:3", reason: "line outside captured range (captured 2-2)" })
+    expect(result.citationCheck?.issues).toContainEqual({ citation: "observed.txt:9", reason: "line outside captured range (captured 2-2)" })
     expect(result.citationCheck?.issues).toContainEqual({ citation: "missing.ts:10-12", reason: "no retained source for this path in this dispatch" })
     expect(result.citationCheck?.issues).toContainEqual({ citation: "https://example.com/missing#top", reason: "no retained source for this URL in this dispatch" })
     expect(result).toMatchObject({ referencesChecked: true, discovery: card })
@@ -139,7 +140,7 @@ describe("host citation check", () => {
     expect(result.risks[0]).toBe("Citation check failed: 6 unverified citation(s); the answer has unverified citations.")
     const report = DiscoveryResult.report(prose, result)
     expect(report).toStartWith("Citation check: fail; checked evidence=3 prose=4 findings=1 documents=0; unverified=6\n- ")
-    expect(report).toContain("- observed.txt:3: line outside captured range (captured 2-2)\n")
+    expect(report).toContain("- observed.txt:9: line outside captured range (captured 2-2)\n")
     expect(report).toContain("Answer has unverified citations:")
     expect(report).toContain(`\n> ${JSON.stringify(result.qualifications)}\n`)
     expect(report.endsWith(`\n> ${JSON.stringify(prose)}`)).toBe(true)
