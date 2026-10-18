@@ -109,6 +109,21 @@ describe("capture", () => {
     expect(captureKeybind(key("Tab", { ctrlKey: true }), false)).toBe("mod+tab")
   })
 
+  test("refuses bare Enter and Space and the text-editing combinations every field relies on", () => {
+    for (const value of ["Enter", " "]) {
+      expect(captureKeybind(key(value), true)).toBeUndefined()
+      expect(captureKeybind(key(value, { shiftKey: true }), false)).toBeUndefined()
+    }
+    expect(captureKeybind(key("Enter", { metaKey: true }), true)).toBe("mod+enter")
+    for (const value of ["a", "c", "v", "x", "z"]) {
+      expect(captureKeybind(key(value, { metaKey: true }), true)).toBeUndefined()
+      expect(captureKeybind(key(value.toUpperCase(), { ctrlKey: true }), false)).toBeUndefined()
+    }
+    expect(captureKeybind(key("Z", { metaKey: true, shiftKey: true }), true)).toBeUndefined()
+    expect(captureKeybind(key("C", { metaKey: true, shiftKey: true }), true)).toBe("mod+shift+c")
+    expect(captureKeybind(key("c", { ctrlKey: true }), true)).toBe("ctrl+c")
+  })
+
   test("a bare Backspace or Delete unassigns; a modified one is a combination", () => {
     expect(captureKeybind(key("Backspace"), true)).toBe("none")
     expect(captureKeybind(key("Delete"), false)).toBe("none")
