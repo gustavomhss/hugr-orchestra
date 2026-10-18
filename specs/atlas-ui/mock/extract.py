@@ -67,7 +67,7 @@ data = {
     't0Keywords': json.load(open(os.path.join(A, 'policy.json')))['t0Heuristic']['keywords'],
     'scip': os.path.exists(os.path.join(A, 'index.scip')),
     'facts': facts, 'candidates': candidates, 'reasoning': reasoning,
-    'dependents': {k: sorted(v)[:12] for k, v in deps.items()}, 'dependentCount': {k: len(v) for k, v in deps.items()},
+    'dependents': {k: sorted(v) for k, v in deps.items()}, 'dependentCount': {k: len(v) for k, v in deps.items()},
 }
 with open(OUT, 'w') as f:
     f.write('// Generated from the real Atlas-on-Atlas store (~/Documents/HuGR/atlas/.atlas) by extract.py.\n')

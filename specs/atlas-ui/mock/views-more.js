@@ -14,7 +14,8 @@
     const tab = q.tab ?? "drift"
     const n = Number(q.n ?? 10)
     const href = (patch) => `#/curation${qs(clean({ ...q, fact: undefined, n: undefined, ...patch }))}`
-    const tabs = [["drift", "Drifted", "drift", s.drifted], ["candidates", "Candidates", "sparkle", s.candidates], ["ratify", "Ratify", "shield", 0], ["mine", "Mine", "play"]]
+    const pendingRatify = M().live().filter((x) => x.proposedTier)
+    const tabs = [["drift", "Drifted", "drift", s.drifted], ["candidates", "Candidates", "sparkle", s.candidates], ["ratify", "Ratify", "shield", pendingRatify.length], ["mine", "Mine", "play"]]
     const hunk = (x, h) => `<div class="at-code"><div class="at-code-head"><span>@@ ${A.esc(h.at)} @@</span></div><pre>${h.lines.map((l) => `<div class="ln ${l[0] === "+" ? "add" : l[0] === "-" ? "del" : ""}"><span></span><span>${A.esc(l.slice(1))}</span></div>`).join("")}</pre></div>`
     const drift = () => {
       const commit = q.commit
@@ -22,7 +23,7 @@
       const list = M().live().filter((x) => M().state(x) === "drifted").filter((x) => !commit || x.drift.commits.some(([sha]) => sha === commit)).filter((x) => !area || M().areaOf(x.file) === area)
       const areas = [...new Set(M().live().filter((x) => M().state(x) === "drifted").map((x) => M().areaOf(x.file)))].sort()
       return `<p class="at-lead">These facts are anchored to whole files, and those files changed since the index was built at <code class="at-mono">${R().builtAt}</code>. A changed file does not mean a wrong fact: read the claim against the change. <b>Still holds</b> re-anchors it to the current code; <b>Retire</b> marks it superseded (it stays in the store).</p>
-        <div class="at-toolbar"><label class="at-select">${A.icon("territory")}<select data-nav="area" aria-label="Area"><option value="">All areas</option>${areas.map((a) => `<option ${area === a ? "selected" : ""}>${A.esc(a)}</option>`).join("")}</select></label>
+        <div class="at-toolbar"><label class="at-select">${A.icon("territory")}<select data-nav="area" aria-label="Unit"><option value="">All units</option>${areas.map((a) => `<option ${area === a ? "selected" : ""}>${A.esc(a)}</option>`).join("")}</select></label>
           <label class="at-select">${A.icon("commit")}<select data-nav="commit" aria-label="Commit"><option value="">Any commit</option>${M().codeChanges().map((c) => `<option value="${c.sha}" ${commit === c.sha ? "selected" : ""}>${A.esc(c.sha)} · ${A.esc(c.subject.slice(0, 48))} (${c.facts.length})</option>`).join("")}</select></label>
           <span class="at-hint">${plural(list.length, "fact")} to check</span></div>
         ${list.slice(0, n).map((x) => `<article class="at-card warm"><header>${A.chip("drifted")}${A.file(x.file)}<span class="grow"></span>${A.btn("Details", "open", { value: x.key })}</header>
@@ -49,6 +50,11 @@
     const ratify = () => {
       const words = R().t0Keywords
       const flagged = M().live().filter((x) => !M().governing(x) && words.some((w) => x.claim.toLowerCase().includes(w)))
+      const names = { archie: "Archie", lucy: "Lucy", backend: "Backend", jimmy: "Jimmy" }
+      const waiting = pendingRatify.map((x) => `<article class="at-card"><header>${A.chip(M().state(x))}${A.file(x.file)}<span class="grow"></span>${A.btn("Details", "open", { value: x.key })}</header><h3>${A.esc(x.claim)}</h3>
+        <p class="at-why">${A.icon("info")}${names[x.proposedBy] ?? x.proposedBy} proposes this as ${x.proposedTier}${x.slot ? ` · type <code>${A.esc(x.slot)}</code>` : ""}. Ratified, it moves into the governing band of <code>${A.esc(M().unitOf(x.file))}</code> and every agent working there follows it.</p>
+        <footer><span class="grow">${A.tier(x.tier)} → ${A.tier(x.proposedTier)}</span>${A.btn("Reject", "reject-ratify", { value: x.key })}${A.btn("Ratify…", "ratify", { value: x.key, primary: true })}</footer></article>`).join("")
+      if (waiting) return waiting
       return `<div class="at-clear">${A.icon("shield")}<strong>Nothing is waiting for ratification</strong><p>Ratifying moves an advisory fact into the governing band. <b>T1</b> needs a ratify token; <b>T0</b> must be right, so only a person ratifies it, with Billy supplying the security input.</p>${A.btn("Browse advisory facts", "go", { value: "#/knowledge?band=advisory" })}</div>
         <section class="at-panel" style="margin-block-start:16px"><header class="at-panel-head"><div><h3>Flagged by the write policy</h3><small>Advisory facts whose claim mentions ${words.map((w) => `<code>${A.esc(w)}</code>`).join(" or ")} — the policy's T0 keywords. A flag never promotes anything.</small></div><span class="wf-count">${flagged.length}</span></header>
         ${flagged.slice(0, 12).map((x) => `<div class="at-item" data-action="open" data-value="${x.key}" tabindex="0">${A.chip(M().state(x))}<div class="at-item-main"><div class="at-item-text clamp">${A.esc(x.claim)}</div><div class="at-item-meta">${A.file(x.file)}</div></div>${A.btn("Ratify…", "ratify", { value: x.key })}</div>`).join("") || '<div class="at-band-empty">No advisory fact mentions those keywords.</div>'}</section>`
@@ -131,8 +137,10 @@
     const tab = state.query.tab ?? "territories"
     const tabs = [["territories", "Territories", "territory"], ["policy", "Write policy", "lock"], ["index", "Index", "tree"], ["store", "Store", "server"]]
     const body = {
-      territories: `<div class="at-callout">${A.icon("info")}<div><strong>No territories declared.</strong> Every path is uncovered, so no fact has an owner and the Awareness <code>terrain</code> facet stays empty. A territory gives a region an owner and a tier.</div>${A.btn("Declare territory", "territory", { primary: true })}</div>
-        <section class="at-panel"><header class="at-panel-head"><div><h3>Suggested from where knowledge lives</h3><small>Areas with the most facts. Declaring one writes it to the territory catalog.</small></div></header>
+      territories: M().territories().length ? `<section class="at-panel"><header class="at-panel-head"><div><h3>Declared territories</h3><small>From the territory catalog. Each gives units an owner and a tier; overlaps resolve deterministically.</small></div>${A.btn("Declare territory", "territory", { icon: "plus" })}</header>
+        ${M().territories().map((t) => { const us = M().units().filter((u) => M().territoryOf(u.id) === t); return `<div class="at-item" style="cursor:default">${A.icon("territory")}<div class="at-item-main"><div class="at-item-text">${A.esc(t.name)}</div><div class="at-item-meta"><code>${t.globs.map(A.esc).join(" · ")}</code><span>${us.length} units · ${us.reduce((n, u) => n + u.facts, 0)} facts</span></div></div>${A.agent(t.owner)}${A.tier(t.tier)}</div>` }).join("")}</section>
+        ${(() => { const loose = M().units().filter((u) => !M().territoryOf(u.id)); return loose.length ? `<section class="at-panel"><header class="at-panel-head"><div><h3>Units with no territory</h3><small>Nobody owns these yet.</small></div></header>${loose.map((u) => `<div class="at-item" style="cursor:default">${A.icon("stack")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(u.id)}</code></div><div class="at-item-meta">${u.facts} facts</div></div>${A.btn("Declare…", "territory", { value: u.id })}</div>`).join("")}</section>` : "" })()}` : `<div class="at-callout">${A.icon("info")}<div><strong>No territories declared.</strong> Every path is uncovered, so no fact has an owner and the Awareness <code>terrain</code> facet stays empty. A territory gives a region an owner and a tier.</div>${A.btn("Declare territory", "territory", { primary: true })}</div>
+        <section class="at-panel"><header class="at-panel-head"><div><h3>Suggested from the units</h3><small>Units with the most facts. Declaring a territory gives one or more units an owner and a tier.</small></div></header>
         ${M().areas().slice(0, 8).map((a) => `<div class="at-item" style="cursor:default">${A.icon("territory")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(a.id)}/**</code></div><div class="at-item-meta">${a.facts} facts · ${a.drifted} drifted · ${M().dependents(a.id).length} files outside depend on it</div></div>${A.btn("Declare…", "territory", { value: a.id })}</div>`).join("")}</section>`,
       policy: `<section class="at-panel"><header class="at-panel-head"><div><h3>Who may write each scope</h3><small>From <code>.atlas/policy.json</code>, versioned with the repository. An unlisted scope is closed to everyone.</small></div></header>
         ${Object.entries(R().policy).map(([scope, actors]) => `<div class="at-item" style="cursor:default">${A.icon("lock")}<div class="at-item-main"><div class="at-item-text"><code class="at-mono">${A.esc(scope)}</code></div><div class="at-item-meta">Mined facts land here; holding it lets the promote door write</div></div>${actors.map((a) => A.agent(a)).join("")}</div>`).join("")}</section>
@@ -182,11 +190,11 @@
       <div class="at-transcript">
         <div class="at-turn user">Add decrement() to Counter, clamped at zero. Stop after phase 1.</div>
         <div class="at-turn"><div class="at-turn-head">${A.agent("backend")}<span>Oct 10</span></div>
-          <div class="at-tool">${A.icon("atlas")}<code>atlas_context</code><span>unit</span><a class="at-chip" href="#/map?path=packages%2Fgenesis">${A.icon("stack")}own · packages/genesis<span class="st">complete · fresh</span></a></div>
+          <div class="at-tool">${A.icon("atlas")}<code>atlas_context</code><span>unit</span><a class="at-chip" href="#/unit/packages%2Fgenesis">${A.icon("stack")}own · packages/genesis<span class="st">complete · fresh</span></a></div>
           <p>Phase 1 is done: <code class="at-mono">decrement()</code> lowers the value by one and never goes below zero. I stopped at the phase boundary as the packet asked.</p>
           <div class="at-tool">${A.icon("memory")}<code>atlas_memory_emit</code><span>task T-LIVE-1</span><a class="at-chip memory" href="#/memory/backend">${A.icon("memory")}memory · admitted<span class="st">scanned</span></a></div>
           <button class="at-used" data-action="go" data-value="#/chat${open ? "" : "?used=1"}" aria-expanded="${open}">${A.icon("atlas")}<span>Atlas in this turn</span>${A.icon("chev", open ? "flip" : "")}</button>
-          ${open ? `<div class="at-used-body"><dl class="at-kv wide"><dt>Header</dt><dd>Awareness (1 of 5 facets seeded) · Orientation empty · 0 project rules</dd><dt>Read</dt><dd>own briefing of <a class="mx-link" href="#/map?path=packages%2Fgenesis">packages/genesis</a> · complete, fresh, 42 tokens</dd><dt>Wrote</dt><dd>task memory T-LIVE-1 · admitted after the secret scan</dd></dl></div>` : ""}
+          ${open ? `<div class="at-used-body"><dl class="at-kv wide"><dt>Header</dt><dd>Awareness (1 of 5 facets seeded) · Orientation empty · 0 project rules</dd><dt>Read</dt><dd>own briefing of <a class="mx-link" href="#/unit/packages%2Fgenesis">packages/genesis</a> · complete, fresh, 42 tokens</dd><dt>Wrote</dt><dd>task memory T-LIVE-1 · admitted after the secret scan</dd></dl></div>` : ""}
         </div></div>
       <div class="at-composer">Ask anything, / for commands, @ for context…<div class="row">${A.icon("atlas")}<span>@atlas to add a scope briefing to the context</span><span class="grow"></span><span>Claude Opus</span></div></div></div>`,
     }

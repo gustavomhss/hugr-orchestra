@@ -96,15 +96,17 @@
         <span class="at-task-main"><span class="at-task-title"><span class="at-kindtag">task</span><code>${A.esc(t.unit)}</code>${A.esc(title.slice(0, 76))}</span><small class="clamp1">${A.esc(c?.entry.stoppedAt ?? "No checkpoint")}</small></span>
         <span class="at-task-meta"><span>${inv} calls</span><span>${day(t.steps[0].start)}</span></span>${A.icon("arrow")}</a>`
     }).join("")
-    const log = ts.length
-      ? `<div class="at-acc-tools"><div class="wf-range">${[["", "All", ts.length], ["Done", "Done", by("Done")], ["Paused", "Paused", by("Paused")], ["Blocked", "Blocked", by("Blocked")]].map(([v, l, n]) => `<button aria-pressed="${filter === v}" data-action="go" data-value="${href({ status: v })}">${l}<span class="wf-count">${n}</span></button>`).join("")}</div><span class="grow"></span><span class="at-hint">Read only when ${name} asks for them; never injected</span></div>${taskRows || '<div class="at-band-empty">No entries with this status.</div>'}`
+    const prs = M().memory[member].prs ?? []
+    const prRows = prs.map((p) => `<details class="at-ckpt pr"><summary><span class="at-kindtag">PR</span><code class="at-mono">${A.esc(p.prId)}</code><span class="grow">${A.esc(p.title)}</span><small>${p.decisions.length} decisions</small></summary><div class="at-panel-body"><dl class="at-kv wide"><dt>Decisions</dt><dd>${p.decisions.map(A.esc).join("<br>")}</dd><dt>Review</dt><dd>${p.reviewOutcomes.map(A.esc).join("<br>")}</dd><dt>Knowledge delta</dt><dd>${p.knowledgeDelta.map(A.esc).join("<br>")}</dd></dl></div></details>`).join("")
+    const log = ts.length || prs.length
+      ? `<div class="at-acc-tools"><div class="wf-range">${[["", "All", ts.length], ["Done", "Done", by("Done")], ["Paused", "Paused", by("Paused")], ["Blocked", "Blocked", by("Blocked")]].map(([v, l, n]) => `<button aria-pressed="${filter === v}" data-action="go" data-value="${href({ status: v })}">${l}<span class="wf-count">${n}</span></button>`).join("")}</div><span class="grow"></span><span class="at-hint">Read only when ${name} asks for them; never injected</span></div>${taskRows || (ts.length ? '<div class="at-band-empty">No entries with this status.</div>' : "")}${prRows}`
       : `<div class="at-band-empty">No entries yet. Each task or PR ${name} works on adds one here.</div>`
 
     return {
       crumbs,
       html: `<div class="at-page narrow">${head(name, role, true)}${kpis}
         ${acc(`${member}-project`, "shield", "Project memory", `What ${name} carries into every turn`, `${pm.used} tokens`, project, true)}
-        ${acc(`${member}-log`, "history", "Memory log", "One entry per task or PR it worked on", ts.length ? `${st.tasks} entries · last ${day(last)}` : "empty", log, true)}</div>`,
+        ${acc(`${member}-log`, "history", "Memory log", "One entry per task or PR it worked on", ts.length || prs.length ? `${st.tasks} tasks${prs.length ? ` · ${prs.length} PR` : ""}${ts.length ? ` · last ${day(last)}` : ""}` : "empty", log, true)}</div>`,
     }
   }
 

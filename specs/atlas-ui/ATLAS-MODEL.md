@@ -257,9 +257,9 @@ As 5 execuções reais em `specs/backend-specialist/evidence/continuity-live-202
 
 | O Atlas tem… | A pessoa quer… | Lugar na interface |
 |---|---|---|
-| mapa espacial + territórios | "o que se sabe sobre **esta parte** do código, e de quem é" | **Mapa**: árvore do código com território, dono, tier e quanto se sabe e quanto mudou em cada nó |
-| briefing `own` por escopo | "o que um agente recebe quando entra aqui" | painel **Briefing** de qualquer nó do mapa: bandas separadas, o que ficou de fora, quem depende |
-| fatos (slot, família, tier, estado, proveniência) | ler, filtrar e confiar | **Conhecimento**: lista com os filtros reais (tipo de afirmação, família, tier/banda, estado, território, origem minerada ou emitida) e o **detalhe do fato** |
+| unidades Own (`own_<unit>`: crate / module / service / feature) + territórios | "o que se sabe sobre **este módulo ou serviço**, e de quem é" | **Conhecimento**: a lista de unidades com território, dono, tier, fatos, drift e dependentes. Não é uma árvore de arquivos: o Atlas serve conhecimento por unidade, e o fato só é acessado **dentro** do pack (decisão X1, `docs/roadmap/wave-plan.md:79`) |
+| briefing `own` da unidade | "o que um agente recebe quando entra aqui" | **página da unidade**: o pack (banda governante, banda advisory, o que ficou de fora), os fatos agrupados por **tipo** (os 13 slots em 4 grupos: contrato, propriedade, orientação, estrutura, mais "sem tipo"), quem depende e os escopos mais finos, até um arquivo |
+| fatos (slot, família, tier, estado, proveniência) | ler, classificar e confiar | o **detalhe do fato**, a partir da unidade ou da busca: tipo (com "Classificar…", que reemite via `draft` e `emit`), unidade, âncora, proveniência e ratificação |
 | raciocínio do minerador (`answerRef`) | "por que a máquina afirmou isso" | no detalhe: **"Como foi deduzido"** |
 | staging do genesis + promote | revisar o que foi minerado e decidir | **Curadoria › Candidatos**: com raciocínio, resultado previsto de cada portão (dry-run do `check`), promover ou descartar |
 | drift mecânico/semântico + reconcile | saber o que apodreceu e consertar | **Curadoria › Mudou no código**: antes e depois, reancorar ou aposentar; o semântico marcado como bloqueante de merge |

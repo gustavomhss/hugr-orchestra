@@ -14,24 +14,41 @@
   const live = () => [...facts, ...candidates.filter((x) => x.promotedNow)].filter((x) => !x.retired)
   const governing = (x) => x.tier === "T0" || x.tier === "T1"
 
-  // Areas: the package, doc or harness folder a file sits in (the spatial axis, one level down).
-  const areaOf = (file) => {
+  // Own units: the grain Atlas serves knowledge at (`own_<unit>`, level crate | module | service | feature,
+  // retrieval/src/own-snapshot.ts). In this TypeScript repo a unit is a package; docs and harness folders
+  // carry mined facts too, so they are units of their own, and top-level files share one root unit.
+  const unitOf = (file) => {
     const parts = file.split("/")
-    return ["packages", "docs", "harness"].includes(parts[0]) && parts.length > 2 ? `${parts[0]}/${parts[1]}` : parts.length > 1 ? parts[0] : "(root)"
+    return ["packages", "docs", "harness"].includes(parts[0]) && parts.length > 2 ? `${parts[0]}/${parts[1]}` : "(root)"
   }
-  const areas = () => {
+  const unitGroup = (id) => (id.startsWith("packages/") ? "code" : id.startsWith("docs/") ? "docs" : id.startsWith("harness/") ? "harness" : "root")
+  // The closed predicate-slot vocabulary (knowledge/src/types.ts, 13 members), grouped for reading.
+  const SLOT_GROUPS = [
+    ["Contract", "the interface and what it promises", ["contract", "precondition", "postcondition", "sideeffect", "ownership"]],
+    ["Property", "what must always hold", ["invariant", "perf-bound", "security-property", "count"]],
+    ["Guidance", "what to know before touching it", ["gotcha", "rationale"]],
+    ["Structure", "how it relates and what words mean", ["dependency", "definition"]],
+  ]
+  const SLOT_MEANING = { invariant: "a property that must always hold", contract: "the interface / signature agreement", precondition: "what must hold on entry", postcondition: "what is guaranteed on exit", sideeffect: "observable effects (IO / mutation)", ownership: "owner / lifetime / concurrency ownership", "perf-bound": "complexity / latency / allocation bound", "security-property": "authz / crypto / taint property", gotcha: "a non-obvious pitfall / footgun", rationale: "why it is built this way", dependency: "a required relationship / ordering", count: "a witnessed lower-bound count over a structural set", definition: "a term / ontology definition" }
+  const units = () => {
     const map = new Map()
     for (const x of live()) {
-      const id = areaOf(x.file)
-      const a = map.get(id) ?? { id, facts: 0, drifted: 0, governing: 0, files: new Set() }
-      a.facts++
-      if (state(x) === "drifted") a.drifted++
-      if (governing(x)) a.governing++
-      a.files.add(x.file)
-      map.set(id, a)
+      const id = unitOf(x.file)
+      const u = map.get(id) ?? { id, group: unitGroup(id), level: unitGroup(id) === "code" ? "module" : unitGroup(id) === "root" ? "repo" : "folder", facts: 0, drifted: 0, governing: 0, unclassified: 0, files: new Set() }
+      u.facts++
+      if (state(x) === "drifted") u.drifted++
+      if (governing(x)) u.governing++
+      if (!x.slot) u.unclassified++
+      u.files.add(x.file)
+      map.set(id, u)
     }
     return [...map.values()].sort((a, b) => b.facts - a.facts)
   }
+  // Territories (contracts/src/territory.ts): name, owner, tier, globs. A unit belongs to the first whose glob covers it.
+  const territories = () => R.territories ?? []
+  const territoryOf = (unitId) => territories().find((t) => t.globs.some((g) => g === `${unitId}/**` || (g.endsWith("/**") && unitId.startsWith(g.slice(0, -3)))))
+  const areaOf = unitOf
+  const areas = units
 
   // The spatial tree: every directory and file that has knowledge or candidates under it.
   const tree = () => {
@@ -107,7 +124,7 @@
       files: new Set(l.map((x) => x.file)).size,
     }
   }
-  const curationCount = () => stats().candidates + stats().drifted
+  const curationCount = () => stats().candidates + stats().drifted + live().filter((x) => x.proposedTier).length
 
   // Commits since the build that touched anchored files, newest first, with the facts they drifted.
   const codeChanges = () => {
@@ -133,7 +150,13 @@
     archie: { bound: true, tasks: [], prs: [], rules: [] },
     maestro: { bound: false, tasks: [], prs: [], rules: [], logbook: [] },
   }
-  const awareness = [
+  const ill = A.illustrations ?? {}
+  Object.keys(memory).forEach((id) => {
+    memory[id].indexed = (ill.indexed?.[id] ?? []).map((r) => ({ ...r, from: r.rule }))
+    memory[id].archived = [...(ill.archived?.[id] ?? [])]
+    memory[id].prs = ill.prs?.[id] ?? []
+  })
+  const awareness = R.awareness ?? [
     { facet: "mission", state: "UN-SEEDED", source: "No source wired yet" },
     { facet: "constitution", state: "UN-SEEDED", source: "Built from T0 facts; there are none yet" },
     { facet: "terrain", state: "UN-SEEDED", source: "Built from territories; none declared" },
@@ -141,5 +164,5 @@
     { facet: "taste", state: "seeded", source: "CONVENTIONS.md", text: "A claim carries its derivation, or it does not ship. Refusing beats guessing. A gate must be able to fail. Mutation-probe anything load-bearing. One file, one seam." },
   ]
 
-  A.m = { R, facts, candidates, byKey, live, state, governing, areaOf, areas, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  A.m = { territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

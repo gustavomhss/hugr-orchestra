@@ -13,7 +13,7 @@
     ["plugins", "Plugins", "code"], ["hooks", "Hooks", "hooks"], ["actions", "Actions", "bolt"], ["schedule", "Schedule", "clock"],
     ["env", ".env", "lock"], ["dock", "Dock", "dock"], ["workspaces", "Workspaces", "server"],
   ]
-  const atlasRoutes = ["overview", "map", "knowledge", "fact", "curation", "memory", "history", "settings", "gallery"]
+  const atlasRoutes = ["overview", "knowledge", "unit", "fact", "curation", "memory", "history", "settings", "gallery"]
   const routes = [...atlasRoutes, "agents", "chat"]
 
   /* ---------- Routing ---------- */
@@ -21,6 +21,8 @@
     const raw = location.hash.replace(/^#\/?/, "") || "overview"
     const [path, search = ""] = raw.split("?")
     const [route, ...rest] = path.split("/")
+    // The old file map now lives on unit pages.
+    if (route === "map") return { route: "unit", params: [new URLSearchParams(search).get("path") || "packages/knowledge"], query: {}, raw }
     return { route: routes.includes(route) ? route : "overview", params: rest.length ? [decodeURIComponent(rest.join("/"))] : [], query: Object.fromEntries(new URLSearchParams(search)), raw }
   }
   const withQuery = (patch) => {
@@ -107,8 +109,7 @@
     host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>project atlas</small></div></header>
       <div class="context-group">
         ${link("#/overview", "Overview", "overview", s.route === "overview")}
-        ${link("#/map", "Map", "territory", s.route === "map")}
-        ${link("#/knowledge", "Knowledge", "fact", s.route === "knowledge" || s.route === "fact", count(st.facts))}
+        ${link("#/knowledge", "Knowledge", "stack", ["knowledge", "unit", "fact"].includes(s.route), count(M().units().length))}
         ${link("#/curation", "Curation", "inbox", s.route === "curation", count(M().curationCount(), "warm"))}
       </div>
       <div class="context-group"><div class="context-label">MEMORY</div>
@@ -173,10 +174,19 @@
       change(keys, { promotedNow: true }, `${keys.length} candidates promoted. 596 already-promoted rows were re-checked and left unchanged.`)
     },
     ratify: (v) => dialog(ratifyDialog(M().byKey[v])),
+    classify: (v) => dialog(classifyDialog(M().byKey[v])),
+    "reject-ratify": (v) => change(v, { proposedTier: undefined }, "Rejected. The fact stays advisory; the proposer sees your decision.", "minusc"),
+    data: (v) => { try { localStorage.setItem("atlas-data", v) } catch {} ; location.reload() },
+    "classify-confirm": (v) => {
+      const slot = $('input[name="slot"]:checked')?.value
+      if (!slot) return A.toast("Pick a type first.", "info")
+      $("#dialog").close()
+      change(v, { slot }, `Classified as <code>${slot}</code> through the draft and emit doors. The fact moves under its type.`, "fact")
+    },
     "ratify-confirm": (v) => {
       const tier = $('input[name="tier"]:checked')?.value ?? "T1"
       $("#dialog").close()
-      change(v, { tier }, tier === "T0" ? "Ratified as T0. It now governs every agent in this scope." : "Ratified as T1. It moved to the governing band.", "shield")
+      change(v, { tier, proposedTier: undefined, ratifiedBy: tier === "T0" ? "you" : "maestro" }, tier === "T0" ? "Ratified as T0. It now governs every agent in this scope." : "Ratified as T1. It moved to the governing band.", "shield")
     },
     edit: (v) => dialog(editDialog(M().byKey[v])),
     save: (v) => {
@@ -265,6 +275,9 @@
       <div class="at-radio"><label><input type="radio" name="tier" value="T1" checked><span><b>T1 · load-bearing</b><small>Moves to the governing band. Needs a ratify token.</small></span></label>
       <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Becomes part of the constitution every agent reads. Only a person ratifies; Billy supplies the security input.</small></span></label></div>
       <label class="mx-field"><span>Note for the record</span><textarea placeholder="Why this should govern"></textarea></label></div>${foot("Through atlas-emit with your identity", "ratify-confirm", "Ratify", x.key)}</form>`
+  const classifyDialog = (x) => `<form method="dialog">${head("Classify", `${A.esc(x.claim)}`)}
+    <div class="mx-dialog-body at-slotpick">${M().SLOT_GROUPS.map(([g, meaning, slots]) => `<div class="at-slotgroup"><strong>${g}</strong><small>${meaning}</small>${slots.map((sl) => `<label><input type="radio" name="slot" value="${sl}" ${x.slot === sl ? "checked" : ""}><code>${sl}</code><span>${A.esc(M().SLOT_MEANING[sl])}</span></label>`).join("")}</div>`).join("")}</div>
+    ${foot("A slot is part of the fact's identity: Atlas re-emits it through atlas-draft and atlas-emit", "classify-confirm", "Classify", x.key)}</form>`
   const editDialog = (x) => `<form method="dialog">${head("Edit claim", `Anchored to <code>${A.esc(x.file)}</code>. Advisory facts are edited in place; the old bytes stay in the store and in git.`)}
     <div class="mx-dialog-body"><label class="mx-field"><span>Claim</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label><p class="mx-note">One sentence, checkable against the file. The truth gate re-derives the anchor before it is saved.</p></div>${foot("Through atlas-emit", "save", "Save", x.key)}</form>`
   const respawnDialog = (member, unit) => {
@@ -311,6 +324,7 @@
   })
   document.addEventListener("change", (event) => {
     if (event.target.id === "preview-state") return setPreview(event.target.value)
+    if (event.target.id === "preview-data") return actions.data(event.target.value)
     const nav = event.target.dataset.nav
     if (nav) A.go(withQuery({ [nav]: event.target.value || null, n: null, fact: null }))
   })
@@ -322,7 +336,7 @@
 
   /* ---------- Keyboard ---------- */
   let chord = false
-  const chords = { o: "#/overview", m: "#/map", k: "#/knowledge", u: "#/curation", y: "#/memory/backend", h: "#/history", s: "#/settings", c: "#/chat" }
+  const chords = { o: "#/overview", k: "#/knowledge", u: "#/curation", y: "#/memory/backend", h: "#/history", s: "#/settings", c: "#/chat" }
   document.addEventListener("keydown", (event) => {
     const typing = event.target.matches("input, textarea, select")
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -359,11 +373,11 @@
   let found = []
   let index = 0
   const everything = (words) => {
-    const pages = [["Overview", "#/overview", "overview"], ["Map", "#/map", "territory"], ["Knowledge", "#/knowledge", "fact"], ["Curation · drifted", "#/curation?tab=drift", "drift"], ["Curation · candidates", "#/curation?tab=candidates", "sparkle"], ["Curation · ratify", "#/curation?tab=ratify", "shield"], ["Curation · mine", "#/curation?tab=mine", "play"], ["History", "#/history", "history"], ["Settings · territories", "#/settings", "territory"], ["Settings · write policy", "#/settings?tab=policy", "lock"]]
+    const pages = [["Overview", "#/overview", "overview"], ["Knowledge", "#/knowledge", "stack"], ["Curation · drifted", "#/curation?tab=drift", "drift"], ["Curation · candidates", "#/curation?tab=candidates", "sparkle"], ["Curation · ratify", "#/curation?tab=ratify", "shield"], ["Curation · mine", "#/curation?tab=mine", "play"], ["History", "#/history", "history"], ["Settings · territories", "#/settings", "territory"], ["Settings · write policy", "#/settings?tab=policy", "lock"]]
       .map(([label, href, glyph]) => ({ group: "Go to", label, hint: "", glyph, run: () => A.go(href) }))
-    const areas = M().areas().map((a) => ({ group: "Areas", label: a.id, hint: `${a.facts} facts`, glyph: "territory", run: () => A.go(`#/map?path=${encodeURIComponent(a.id)}`) }))
-    const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/map?path=${encodeURIComponent(f)}`) }))
-    const facts = M().live().map((x) => ({ group: "Facts", label: x.claim, hint: x.file.split("/").at(-1), glyph: "fact", run: () => (["knowledge", "map", "curation"].includes(A.state.route) ? actions.open(x.key) : A.go(`#/knowledge?fact=${x.key}`)) }))
+    const areas = M().units().map((u) => ({ group: "Units", label: u.id, hint: `${u.facts} facts`, glyph: "stack", run: () => A.go(`#/unit/${encodeURIComponent(u.id)}`) }))
+    const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/unit/${encodeURIComponent(f)}`) }))
+    const facts = M().live().map((x) => ({ group: "Facts", label: x.claim, hint: x.file.split("/").at(-1), glyph: "fact", run: () => (["knowledge", "unit", "curation"].includes(A.state.route) ? actions.open(x.key) : A.go(`#/unit/${encodeURIComponent(M().unitOf(x.file))}?fact=${x.key}`)) }))
     const memory = [["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["maestro", "Maestro"]].map(([id, n]) => ({ group: "Memory", label: `${n}'s memory`, hint: "", glyph: "memory", run: () => A.go(`#/memory/${id}`) }))
     const acts = [["Switch light / dark", "eye", actions.theme], ["Keyboard shortcuts", "keyboard", actions.shortcuts]].map(([label, glyph, run]) => ({ group: "Actions", label, hint: "", glyph, run }))
     const match = (x) => words.every((w) => `${x.label} ${x.hint} ${x.group}`.toLowerCase().includes(w))
@@ -416,11 +430,10 @@
     const drifted = M().live().find((x) => x.drift).key
     const screens = [
       ["Overview", "#/overview", "overview", "Counts, freshness, what waits for a decision, where knowledge lives, code changes that drifted it."],
-      ["Map · repository", "#/map", "territory", "The code as Atlas indexes it, with the briefing an agent receives at the root."],
-      ["Map · a package", "#/map?path=packages%2Fknowledge", "pin", "Briefing for one package: bands, budget, what did not fit, dependents, deeper scopes."],
-      ["Map · a file", "#/map?path=packages%2Fknowledge%2Fsrc%2Ftypes.ts", "fact", "A single file with its facts and the files that import it."],
-      ["Knowledge", "#/knowledge", "fact", "All 596 facts with band, state and area filters."],
-      ["Fact panel", `#/knowledge?fact=${first}`, "eye", "Anchor, how genesis derived it, provenance, dependents, other facts on the file."],
+      ["Knowledge · units", "#/knowledge", "stack", "Every Own unit with its facts, drift and dependents; search across all facts."],
+      ["A unit", "#/unit/packages%2Fknowledge", "stack", "The pack an agent receives, facts grouped by type (slot), dependents and finer scopes."],
+      ["A file inside a unit", "#/unit/packages%2Fknowledge%2Fsrc%2Ftypes.ts", "fact", "The same view scoped down to one file."],
+      ["Fact panel", `#/unit/packages%2Fcontracts?fact=${first}`, "eye", "Anchor, how genesis derived it, provenance, dependents, other facts on the file."],
       ["Drifted fact", `#/fact/${drifted}`, "drift", "A real drift: the commits and the diff since the fact was derived."],
       ["Curation · drifted", "#/curation", "drift", "63 real drifts to check against their change, filterable by commit and area."],
       ["Curation · candidates", "#/curation?tab=candidates", "sparkle", "64 mined candidates in staging with genesis' reasoning, and the four gates."],
@@ -444,6 +457,7 @@
     }
   }
 
+  $("#preview-data").value = A.illustrated ? "illustrated" : "real"
   window.addEventListener("hashchange", () => render())
   render()
 })(window.Atlas)
