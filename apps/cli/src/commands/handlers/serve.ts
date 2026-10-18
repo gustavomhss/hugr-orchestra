@@ -38,7 +38,7 @@ function listen(hostname: string, port: Option.Option<number>, password: string)
 
 function bind(hostname: string, port: number, password: string) {
   return Layer.build(
-    HttpRouter.serve(createRoutes(password), { disableListenLog: true, disableLogger: true }).pipe(
+    HttpRouter.serve(createRoutes({ password }), { disableListenLog: true, disableLogger: true }).pipe(
       Layer.provideMerge(NodeHttpServer.layer(() => createServer(), { port, host: hostname })),
       Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node]))),
     ),

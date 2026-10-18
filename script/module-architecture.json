@@ -217,6 +217,7 @@
         { "path": "src/database", "kind": "collection" },
         { "path": "src/effect", "kind": "collection" },
         { "path": "src/flag", "kind": "collection" },
+        { "path": "src/host", "kind": "collection" },
         { "path": "src/id", "kind": "collection" },
         { "path": "src/installation", "kind": "collection" },
         { "path": "src/oauth", "kind": "collection" },
@@ -281,6 +282,8 @@
           "patterns": [
             "src/effect/",
             "src/global.ts",
+            "src/host.ts",
+            "src/host/",
             "src/id/",
             "src/installation/",
             "src/observability/",

@@ -1,10 +1,10 @@
 export * as CatalogAvailability from "./catalog-availability"
 
 import { Context, Effect } from "effect"
-import type { Catalog } from "@orchestra/core/catalog"
-import type { Location } from "@orchestra/core/location"
-import type { ProviderV2 } from "@orchestra/core/provider"
-import type { ModelV2 } from "@orchestra/core/model"
+import type { Catalog } from "../catalog"
+import type { Location } from "../location"
+import type { ProviderV2 } from "../provider"
+import type { ModelV2 } from "../model"
 
 /** Applications can expose execution-host availability without creating an API credential or connection. */
 export const AdditionalProviders = Context.Reference<

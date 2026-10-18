@@ -111,7 +111,7 @@ import { buildLocationServiceMap, LocationServiceMap } from "@orchestra/core/loc
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
 import { layer as locationLayer } from "@orchestra/server/location"
 import { sessionLocationLayer } from "@orchestra/server/middleware/session-location"
-import { PtyEnvironment } from "@orchestra/server/pty-environment"
+import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { schemaErrorLayer as v2SchemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { workspaceHandlers } from "./handlers/workspace"
 import { instanceContextLayer } from "./middleware/instance-context"

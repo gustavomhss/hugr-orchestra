@@ -27,7 +27,7 @@ and the HTTP-facing authoring orchestration.
 
 `src/routes.ts` owns the HTTP layer assembly: application service nodes, API
 handlers, auth, schema-error handling, and location middleware. It exports
-`createRoutes(password?)`, `createEmbeddedRoutes()`, the default `routes` layer,
+`createRoutes({ password?, host? })`, `createEmbeddedRoutes({ host? })`, the default `routes` layer,
 and `webHandler()` for Fetch-compatible hosting. The package export map exposes
 these modules by name, for example `@orchestra/server/routes`.
 
@@ -35,6 +35,12 @@ Orchestra composes the API and handlers into its broader existing listener and
 route tree. The CLI also uses `createRoutes()` for its standalone server, while
 `sdk-next` uses `createEmbeddedRoutes()` for in-process requests. These are
 coexisting compositions; this package does not retire Orchestra's listener.
+
+Product modules reach these routes only through `Host.Contribution` values from
+`packages/core/src/host.ts`; `Host.merge` rejects any contribution that would own the
+Session execution, Session, Location map or scheduled-task nodes, so each process keeps
+one coordinator. The host references (`packages/core/src/host/`) live in core so product
+modules can implement them.
 
 ## Verification locations
 

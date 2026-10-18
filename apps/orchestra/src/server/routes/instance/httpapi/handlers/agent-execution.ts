@@ -1,6 +1,6 @@
 export * as HostAgentExecution from "./agent-execution"
 
-import { AgentExecution } from "@orchestra/server/agent-execution"
+import { AgentExecution } from "@orchestra/core/host/agent-execution"
 import type { AgentV2 } from "@orchestra/core/agent"
 import { Location } from "@orchestra/core/location"
 import { Effect, Layer } from "effect"

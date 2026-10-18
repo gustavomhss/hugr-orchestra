@@ -1,7 +1,7 @@
 export * as AgentExecution from "./agent-execution"
 
 import type { Agent } from "@orchestra/schema/agent"
-import type { Location } from "@orchestra/core/location"
+import type { Location } from "../location"
 import { Context, Effect } from "effect"
 
 /** Hosts may annotate their actual execution engine without changing the Core agent registry. */

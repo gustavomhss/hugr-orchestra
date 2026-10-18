@@ -1,7 +1,7 @@
 export * as HostCatalog from "./catalog"
 
 import { Context, Effect, Layer } from "effect"
-import { CatalogAvailability } from "@orchestra/server/catalog-availability"
+import { CatalogAvailability } from "@orchestra/core/host/catalog-availability"
 import type { Catalog } from "@orchestra/core/catalog"
 import { Location } from "@orchestra/core/location"
 import { ProviderV2 } from "@orchestra/core/provider"
