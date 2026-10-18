@@ -91,11 +91,6 @@
 
 /* Resource/settings density and dialog integration aliases. */
 .actions-page .resources-layout { display: flex; min-inline-size: 0; gap: 20px; }
-.actions-page .resource-nav { display: flex; flex-direction: column; gap: 4px; inline-size: 170px; flex: none; }
-.actions-page .resource-nav button { padding: 9px 11px; border: 0; border-radius: 6px; background: transparent; color: var(--actions-dim); text-align: start; }
-.actions-page .resource-nav button[aria-current="page"] { background: var(--mx-enabled, var(--actions-soft)); color: var(--actions-strong); }
-.actions-page .resource-body { min-inline-size: 0; flex: 1; }
-.actions-page .actions-resources .resource-nav { flex-direction: row; inline-size: max-content; max-inline-size: 100%; overflow-x: auto; }
 .actions-page .actions-resources.resources-layout { flex-direction: column; gap: 18px; min-block-size: 430px; }
 .actions-page .ar-head { display: flex; align-items: flex-start; gap: 12px; padding: 18px; margin-block-end: 16px; border: 1px solid var(--actions-line); border-radius: 9px; background: var(--actions-raised); }
 .actions-page .ar-head-copy { min-inline-size: 0; flex: 1; }
@@ -122,7 +117,6 @@
 .actions-page .capability { display: flex; justify-content: space-between; gap: 12px; padding-block: 10px; border-block-end: 1px solid var(--actions-line); }
 .actions-page .actions-dialog { position: fixed; inset-block: 0; inset-inline: 0; margin: auto; inline-size: min(600px, calc(100vw - 32px)); max-block-size: calc(100dvh - 48px); padding: 0; overflow: hidden; border: 1px solid var(--actions-line); border-radius: 9px; background: var(--actions-modal); color: var(--actions-strong); }
 .actions-page .actions-dialog:not([open]) { display: none; }
-.actions-page .actions-dialog::backdrop { background: var(--mx-backdrop, rgba(3, 9, 16, .55)); }
 .actions-page .actions-dialog form { display: flex; flex-direction: column; inline-size: 100%; min-block-size: 0; max-block-size: calc(100dvh - 50px); margin: 0; }
 .actions-page .actions-dialog-fields, .actions-page .actions-dialog form > fieldset { min-inline-size: 0; min-block-size: 0; margin: 0; padding: 0; border: 0; }
 .actions-page .actions-dialog form > fieldset { display: flex; flex-direction: column; flex: 1; }
@@ -228,8 +222,6 @@
 .actions-page .context-reference { color: var(--actions-blue); }
 .actions-page .context-job > .wf-dot { inline-size: 6px; block-size: 6px; }
 .actions-page .context-footer a { display: inline-flex; align-items: center; gap: 7px; color: var(--actions-blue); font-size: 10.5px; }
-.actions-page .actions-resources .resource-nav { gap: 2px; padding: 3px; }
-.actions-page .actions-resources .resource-nav button { block-size: 30px; flex: none; font-size: 11px; }
 .actions-page .actions-resources .ar-head h2 { font: 600 16px/1.35 var(--mx-emphasis, sans-serif); }
 .actions-page .actions-resources .ar-summary { margin-block-start: 10px; font-size: 11px; line-height: 1.5; }
 .actions-page .actions-resources .ar-mark { inline-size: 34px; block-size: 34px; border-radius: 8px; }

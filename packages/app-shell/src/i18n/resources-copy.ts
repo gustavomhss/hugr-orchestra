@@ -9,7 +9,6 @@ export const dict = {
   "orchestra.actions.expired": "Expired",
   "orchestra.actions.retentionEnded": "Retention ended",
   "orchestra.actions.kept": "Kept",
-  "orchestra.actions.expiresIn": "Expires in {{expiry}}",
   "orchestra.actions.runMetadata": "Run #{{run}} · {{size}} · {{expiry}}",
   "orchestra.actions.environments.detail": "Deployment targets, protection rules and required reviewers.",
   "orchestra.actions.environments.summary": "{{count}} environments · Project scope",

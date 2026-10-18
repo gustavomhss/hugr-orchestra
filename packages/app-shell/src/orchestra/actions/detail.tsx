@@ -8,6 +8,7 @@ import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
 import { canRequest } from "./request-policy"
 import { jobDuration, logAvailable, runArtifacts, runnerLabel } from "./output-views"
+import { join } from "./matrix"
 
 export function WorkflowDetail(props: ViewProps) {
   const workflow = createMemo(() => {
@@ -216,8 +217,9 @@ function definition(state: State, job: Actions.Job) {
   const run = state.run.status === "ready" ? state.run.value : undefined
   const binding = state.binding
   const workflow = state.workflows.value?.items.find((item) => item.id === run?.workflowID && item.bindingID === binding?.id)
-  if (!(job.definitionID && graph?.state === "complete" && run && binding && workflow && job.runID === run.id && run.id === state.route.runID && job.bindingID === binding.id && run.bindingID === binding.id && graph.source.bindingID === binding.id && graph.source.path === workflow.path && graph.source.commit && graph.source.commit === run.commit && graph.source.ref === run.commit)) return undefined
-  return graph.jobs.find((item) => item.id === job.definitionID)
+  if (!(graph?.state === "complete" && run && binding && workflow && job.runID === run.id && run.id === state.route.runID && job.bindingID === binding.id && run.bindingID === binding.id && graph.source.bindingID === binding.id && graph.source.path === workflow.path && graph.source.commit && graph.source.commit === run.commit && graph.source.ref === run.commit)) return undefined
+  const id = [...join(new Map(graph.jobs.map((item) => [item.id, item])), [job], binding.provider.kind === "github").keys()][0]
+  return graph.jobs.find((item) => item.id === id)
 }
 
 function SourcePanel(props: { props: ViewProps }) {

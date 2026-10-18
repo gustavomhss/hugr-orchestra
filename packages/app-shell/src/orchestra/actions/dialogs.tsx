@@ -70,7 +70,7 @@ export function Dialogs(props: ViewProps) {
     }
       const connectPending = form.pending && form.owner === owner && owner.kind === "connect"
       // A retry opened from a specific button asks for its mode; an unavailable request falls back below.
-      const requested = owner.kind === "retry" && "mode" in owner && (owner.mode === "failed" || owner.mode === "all") ? owner.mode : undefined
+      const requested = owner.kind === "retry" ? owner.mode : undefined
       setForm({
         owner,
         bindingID: selected?.id,
