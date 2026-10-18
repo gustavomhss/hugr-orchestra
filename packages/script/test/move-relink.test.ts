@@ -30,6 +30,21 @@ const moves = [
   { from: "apps/app/src/old/e.ts", to: "apps/app/src/new/e.ts" },
 ]
 
+// A card's own edit, written for the post-move location.
+const cardEdit = 'import { facade } from "./compat/facade"\nexport const c = facade\n'
+const userSource = [
+  'import { a } from "./feature/a"',
+  'export type { B } from "@/feature/b"',
+  'export const lazy = () => import("./feature/a")',
+  'export type Mod = typeof import("./feature/b")',
+  'export const required = require("./feature/b")',
+  'import { log } from "@/util/log"',
+  'export const fixture = "apps/app/src/feature/a.ts"',
+  'import { e } from "@/old/e"',
+  "export const all = [a, log, e]",
+  "",
+].join("\r\n")
+
 const files: Record<string, string> = {
   ".gitignore": "node_modules/\n",
   "package.json": json({ name: "fixture", private: true, workspaces: ["apps/*", "packages/*", "modules/*"] }),
@@ -72,22 +87,10 @@ const files: Record<string, string> = {
     "",
   ].join("\n"),
   "apps/app/src/feature/b.ts": "export const b = 2\nexport type B = number\n",
-  // A card's own edit, written for the post-move location.
-  "apps/app/src/feature/c.ts": 'import { facade } from "./compat/facade"\nexport const c = facade\n',
+  "apps/app/src/feature/c.ts": cardEdit,
   "apps/app/src/tool/dir.ts": 'import { thing } from "@fx/core/thing"\nexport const dir = thing\n',
   "apps/app/src/tool/use.ts": 'import { dir } from "./dir"\nexport const use = dir\n',
-  "apps/app/src/user.ts": [
-    'import { a } from "./feature/a"',
-    'export type { B } from "@/feature/b"',
-    'export const lazy = () => import("./feature/a")',
-    'export type Mod = typeof import("./feature/b")',
-    'export const required = require("./feature/b")',
-    'import { log } from "@/util/log"',
-    'export const fixture = "apps/app/src/feature/a.ts"',
-    'import { e } from "@/old/e"',
-    "export const all = [a, log, e]",
-    "",
-  ].join("\r\n"),
+  "apps/app/src/user.ts": userSource,
   "apps/app/test/user.test.ts": 'const source = "src/feature/b"\nexport const dir = "apps/app/src/feature/"\n',
   "apps/app/src/kit/index.ts": "export const kit = 1\n",
   // Moves inside its package: its own alias import becomes relative, an unmoved importer keeps its alias.
@@ -176,7 +179,7 @@ describe("move-relink", () => {
       "apps/app/test/user.test.ts:1 src/feature/b",
       "apps/app/test/user.test.ts:2 apps/app/src/feature",
     ])
-    expect(read(root, "apps/app/src/user.ts")).toBe(files["apps/app/src/user.ts"])
+    expect(read(root, "apps/app/src/user.ts")).toBe(userSource)
   })
 
   test("apply rewrites every import position, keeps CRLF and is idempotent", () => {
@@ -193,7 +196,7 @@ describe("move-relink", () => {
     ])
     expect(read(root, "modules/dest/src/a.ts")).toContain('import { b as again } from "./b"')
     expect(read(root, "modules/dest/src/a.ts")).toContain('import PROMPT from "./prompt/p.txt"')
-    expect(read(root, "modules/dest/src/c.ts")).toBe(files["apps/app/src/feature/c.ts"])
+    expect(read(root, "modules/dest/src/c.ts")).toBe(cardEdit)
     expect(read(root, "packages/core/src/tool/dir.ts")).toContain('from "../thing"')
     expect(read(root, "modules/dest/src/a.ts")).toContain('from "@fx/core/legacy/other"')
     expect(read(root, "apps/app/src/new/e.ts")).toContain('from "../util/log"')
@@ -226,7 +229,7 @@ describe("move-relink", () => {
     const result = relink(root, [map], true)
     expect(result.code).toBe(1)
     expect(result.unresolved).toEqual(["UNRESOLVED modules/dest/src/c.ts:1 ./missing"])
-    expect(read(root, "apps/app/src/user.ts")).toBe(files["apps/app/src/user.ts"])
+    expect(read(root, "apps/app/src/user.ts")).toBe(userSource)
   })
 
   test("malformed maps and unfinished moves are named failures", () => {
