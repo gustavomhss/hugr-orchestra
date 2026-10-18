@@ -1,7 +1,7 @@
 import { Integration } from "@orchestra/schema/integration"
 import { Option, Schema } from "effect"
 
-// Pure projection of server provider data into the mock's provider cards, popular rows and picker rows.
+// Pure projection of server provider data into the mock's provider cards and popular rows.
 
 export type ProviderModel = { id: string; name: string }
 export type ProviderMethod = "apiKey" | "environment" | "config" | "custom" | "credential"
@@ -161,12 +161,6 @@ export function popularEntries(catalog: CatalogEntry[], cards: ProviderCard[], o
   return order.flatMap((id) => catalog.find((item) => item.id === id && !listed.has(id)) ?? [])
 }
 
-export function pickerEntries(catalog: CatalogEntry[], order: string[]) {
-  const featured = order.flatMap((id) => catalog.find((item) => item.id === id) ?? [])
-  const rest = catalog.filter((item) => !order.includes(item.id)).sort((a, b) => a.name.localeCompare(b.name))
-  return [...featured, ...rest]
-}
-
 export function matches(parts: Array<string | undefined>, query: string) {
   const needle = query.trim().toLowerCase()
   if (!needle) return true
@@ -178,47 +172,6 @@ export function routeModel(card: ProviderCard, preferred: string | undefined) {
   return card.models[0]?.id
 }
 
-export function customProvider(input: {
-  name: string
-  endpoint: string
-  model: string
-  key?: string
-  existing: Set<string>
-}) {
-  const id = customProviderID(input.name.trim())
-  const endpoint = input.endpoint.trim()
-  const model = input.model.trim()
-  const key = input.key?.trim()
-  if (!id || input.existing.has(id)) return { error: "name" as const }
-  if (!/^https?:\/\//.test(endpoint) || !URL.canParse(endpoint)) return { error: "endpoint" as const }
-  if (!model) return { error: "model" as const }
-  return {
-    id,
-    ...(key ? { key } : {}),
-    config: {
-      npm: OPENAI_COMPATIBLE,
-      name: input.name.trim(),
-      options: { baseURL: endpoint },
-      models: { [model]: { name: model } },
-    },
-  }
-}
-
-// A name without Latin letters (Cyrillic, CJK, Arabic...) has no readable slug, so its id is derived from the
-// name itself: the same name always gets the same id, and a second provider with that name is still refused.
-function customProviderID(name: string) {
-  const slug = name
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-|-$/g, "")
-  if (slug || !/[\p{L}\p{N}]/u.test(name)) return slug
-  const hash = Array.from(name).reduce(
-    (value, char) => Math.imul(value ^ (char.codePointAt(0) ?? 0), 16777619) >>> 0,
-    2166136261,
-  )
-  return `custom-${hash.toString(36)}`
-}
-
 const decodeMethods = Schema.decodeUnknownOption(Schema.Array(Integration.Method))
 
 // The integration reply is untrusted: malformed sign-in methods fail its read, so the connect dialog falls back
@@ -227,28 +180,6 @@ export function connectableIntegration<T extends { methods: unknown }>(value: T 
   if (!value || Option.isNone(decodeMethods(value.methods)))
     throw new Error("The server returned a malformed integration.")
   return value
-}
-
-type Prompt = {
-  type: "text" | "select"
-  key: string
-  options?: ReadonlyArray<{ value: string }>
-  when?: { key: string; op: "eq" | "neq"; value: string }
-}
-
-// OAuth prompts appear in order; a prompt shows only when its condition holds for the answers above it.
-// An unanswered select defaults to its first option, as the native select displays it.
-export function visiblePrompts<T extends Prompt>(prompts: ReadonlyArray<T>, answers: Record<string, string>) {
-  return prompts.reduce(
-    (result, prompt) => {
-      const actual = prompt.when ? result.values[prompt.when.key] : undefined
-      if (prompt.when && actual === undefined) return result
-      if (prompt.when && (prompt.when.op === "eq") !== (actual === prompt.when.value)) return result
-      const value = answers[prompt.key] ?? (prompt.type === "select" ? (prompt.options?.[0]?.value ?? "") : "")
-      return { shown: [...result.shown, prompt], values: { ...result.values, [prompt.key]: value } }
-    },
-    { shown: [] as T[], values: {} as Record<string, string> },
-  )
 }
 
 function credentialOf(id: string) {

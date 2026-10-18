@@ -240,35 +240,33 @@ test("providers choose the route for new turns and models toggle their composer 
   const view = page.locator('[data-mx-page="settings"]')
   await expect(view.getByRole("button", { name: "Connect provider", exact: true })).toBeVisible()
   await expect(view.locator(".settings-sec > h3").first()).toHaveText("Providers")
-  const cards = view.locator("article.mx-card[data-provider]")
+  // The Providers chapter's list: the same cards, actions and route as the chapter page.
+  const cards = view.locator("article.mx-card[data-provider-id]")
   await expect(cards).toHaveCount(2)
-  const openai = cards.filter({ hasText: "OpenAI" })
+  const openai = view.locator('article.mx-card[data-provider-id="openai"]')
   await expect(openai.locator(".mx-badge")).toHaveText(["Connected", "API key"])
   await expect(openai.getByRole("button")).toHaveText(["Configure", "Models", "Disconnect"])
-  await expect(view.locator('.mx-table [data-provider="anthropic"]')).toContainText("Anthropic")
-  await expect(view.locator('.mx-table [data-provider="anthropic"]').getByRole("button")).toHaveText("Connect")
+  const popular = view.locator('[data-providers-popular] [data-provider-id="anthropic"]')
+  await expect(popular).toContainText("Anthropic")
+  await expect(popular.getByRole("button")).toHaveText("Connect")
 
+  // A route takes the provider's own default model.
   const route = view.getByRole("combobox", { name: "Route for new turns" })
   await expect(route).toHaveValue("openai")
   await route.selectOption("openrouter")
-  await expect.poll(() => state.patches).toEqual([{ model: "openrouter/gpt-5" }])
-  await expect(route).toHaveValue("openrouter")
+  await expect.poll(() => state.patches).toEqual([{ model: "openrouter/claude-sonnet-4" }])
 
   await openai.getByRole("button", { name: "Models", exact: true }).click()
   await expect(page).toHaveURL(/section=models/)
   const row = view.locator('[data-model="openai/gpt-5"]')
   await expect(row.locator("strong")).toHaveText("GPT-5")
   await expect(row.locator("small")).toHaveText("OpenAI · Context 400K")
-  // The route picked above is the default model; another row can take over.
-  await expect(view.locator('[data-model="openrouter/gpt-5"] .mx-badge')).toHaveText("Default")
-  await view
-    .locator('[data-model="openrouter/claude-sonnet-4"]')
-    .getByRole("button", { name: /as the default model/ })
-    .click()
+  // Any visible model can become the default.
+  await view.locator('[data-model="openrouter/gpt-5"]').getByRole("button", { name: /as the default model/ }).click()
   await expect
     .poll(() => state.patches)
-    .toEqual([{ model: "openrouter/gpt-5" }, { model: "openrouter/claude-sonnet-4" }])
-  await expect(view.locator('[data-model="openrouter/claude-sonnet-4"] .mx-badge')).toHaveText("Default")
+    .toEqual([{ model: "openrouter/claude-sonnet-4" }, { model: "openrouter/gpt-5" }])
+  await expect(view.locator('[data-model="openrouter/gpt-5"] .mx-badge')).toHaveText("Default")
   const toggle = row.getByRole("switch", { name: "Enable GPT-5" })
   await expect(toggle).toHaveAttribute("aria-checked", "true")
   await toggle.click()
@@ -327,15 +325,18 @@ test("agents, MCP servers and shortcuts use the profile's real data and actions"
   await expect(toggle).toHaveAttribute("aria-checked", "false")
 
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "Shortcuts" }).click()
+  // The Shortcuts chapter's editor: Edit opens its dialog, and Escape closes only that dialog.
   await expect(view.getByRole("button", { name: "Reset to defaults" })).toBeVisible()
-  const palette = view.locator('[data-keybind-row="command.palette"]')
+  const palette = view.locator('[data-shortcut-id="command.palette"]')
   await expect(palette.locator("strong")).toHaveText("Command palette")
-  const binding = (await palette.locator("kbd").textContent()) ?? ""
+  const binding = (await palette.locator("kbd").first().textContent()) ?? ""
   expect(binding).toMatch(/K$/)
-  await palette.getByRole("button", { name: "Edit Command palette" }).click()
-  await expect(palette.locator("kbd")).toHaveText("Press keys")
+  await palette.getByRole("button", { name: "Edit Command palette shortcut" }).click()
+  const edit = page.getByRole("dialog")
+  await expect(edit.getByRole("textbox", { name: "Key combination" })).toBeFocused()
   await page.keyboard.press("Escape")
-  await expect(palette.locator("kbd")).toHaveText(binding)
+  await expect(edit).toHaveCount(0)
+  await expect(palette.locator("kbd").first()).toHaveText(binding)
 })
 
 test("v2: Disconnect removes stored credentials, confirms removing several, explains what it cannot remove", async ({
@@ -438,9 +439,11 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
 
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "Providers" }).click()
   const view = page.locator('[data-mx-page="settings"]')
-  await expect(view.getByText("This server does not let the app change its default model.")).toBeVisible()
+  await expect(view.locator("[data-providers-route-server]")).toHaveText(
+    "This server routes new turns to OpenAI from its own configuration.",
+  )
   const disconnect = (id: string) =>
-    view.locator(`article[data-provider="${id}"]`).getByRole("button", { name: "Disconnect" }).click()
+    view.locator(`article[data-provider-id="${id}"]`).getByRole("button", { name: "Disconnect" }).click()
   const confirmDisconnect = async () => {
     await page.getByRole("dialog").getByRole("button", { name: "Disconnect", exact: true }).click()
     await expect(page.getByRole("dialog")).toHaveCount(0)
@@ -461,21 +464,16 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
   await confirmDisconnect()
   await expect.poll(() => removed).toEqual(["/api/credential/cred-default", "/api/credential/work"])
 
-  // Removing more than one credential asks first; Cancel removes nothing.
+  // One confirmed Disconnect removes every credential behind the card.
   await disconnect("anthropic")
-  const confirm = page.getByRole("dialog").filter({ hasText: "Remove 2 credentials for Anthropic?" })
-  await expect(confirm).toContainText("default, me@example.com")
-  await confirm.getByRole("button", { name: "Cancel" }).click()
-  await expect(confirm).toHaveCount(0)
-  expect(removed).toHaveLength(2)
-  await disconnect("anthropic")
-  await page.getByRole("dialog").getByRole("button", { name: "Remove", exact: true }).click()
+  await expect(page.getByRole("dialog").filter({ hasText: "Disconnect Anthropic?" })).toBeVisible()
+  await confirmDisconnect()
   await expect.poll(() => removed.slice(2).sort()).toEqual(["/api/credential/a-default", "/api/credential/a-oauth"])
 
-  // An environment-only provider is explained, not reported as a failed request.
-  await disconnect("deepseek")
-  await expect(page.getByText("DeepSeek stays connected")).toBeVisible()
-  await expect(page.getByText("DEEPSEEK_API_KEY", { exact: false })).toBeVisible()
+  // An environment-only provider cannot be disconnected from the app, and says why.
+  const deepseek = view.locator('article[data-provider-id="deepseek"]').getByRole("button", { name: "Disconnect" })
+  await expect(deepseek).toBeDisabled()
+  await expect(deepseek).toHaveAttribute("title", "Connected from your environment variables")
   await expect(page.getByText("Request failed")).toHaveCount(0)
   expect(removed).toHaveLength(4)
   expect(legacyAuth).toEqual([])

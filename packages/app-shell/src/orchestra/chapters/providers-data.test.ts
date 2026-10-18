@@ -3,16 +3,13 @@ import {
   authorizationURL,
   baseID,
   connectableIntegration,
-  customProvider,
   errorMessage,
   fromV1,
   fromV2,
   matches,
   noteKey,
-  pickerEntries,
   popularEntries,
   routeModel,
-  visiblePrompts,
 } from "./providers-data"
 
 const model = (providerID: string, id: string, status = "active") => ({
@@ -165,12 +162,6 @@ test("popular rows follow the featured order and skip listed providers", () => {
     "opencode",
     "google",
   ])
-  expect(pickerEntries(catalog, ["opencode", "anthropic"]).map((item) => item.id)).toEqual([
-    "opencode",
-    "anthropic",
-    "google",
-    "zeta",
-  ])
 })
 
 test("helpers", () => {
@@ -197,56 +188,6 @@ test("only web links are accepted as OAuth authorization targets", () => {
   expect(authorizationURL("javascript:alert(1)")).toBeUndefined()
   expect(authorizationURL("data:text/html,hi")).toBeUndefined()
   expect(authorizationURL("not a url")).toBeUndefined()
-})
-
-test("custom provider validation and config", () => {
-  const existing = new Set(["taken"])
-  expect(customProvider({ name: " !! ", endpoint: "http://x", model: "m", existing })).toEqual({ error: "name" })
-  expect(customProvider({ name: "Taken", endpoint: "http://x", model: "m", existing })).toEqual({ error: "name" })
-  expect(customProvider({ name: "Local", endpoint: "ftp://x", model: "m", existing })).toEqual({ error: "endpoint" })
-  expect(customProvider({ name: "Local", endpoint: "http://", model: "m", existing })).toEqual({ error: "endpoint" })
-  expect(customProvider({ name: "Local", endpoint: "http://x/v1", model: " ", existing })).toEqual({ error: "model" })
-  expect(
-    customProvider({ name: "My Local LLM", endpoint: " http://localhost:8080/v1 ", model: "qwen", existing }),
-  ).toEqual({
-    id: "my-local-llm",
-    config: {
-      npm: "@ai-sdk/openai-compatible",
-      name: "My Local LLM",
-      options: { baseURL: "http://localhost:8080/v1" },
-      models: { qwen: { name: "qwen" } },
-    },
-  })
-})
-
-test("a custom provider name without Latin letters gets a stable derived id, and its key is passed along", () => {
-  const input = { name: "Мой сервер", endpoint: "http://x/v1", model: "m", key: " sk-1 " }
-  const result = customProvider({ ...input, existing: new Set() })
-  if ("error" in result) throw new Error("a name in another script must validate")
-  expect(result.id).toMatch(/^custom-[0-9a-z]+$/)
-  expect(result.key).toBe("sk-1")
-  expect(result.config.name).toBe("Мой сервер")
-  expect(customProvider({ ...input, existing: new Set() })).toEqual(result)
-  expect(customProvider({ ...input, existing: new Set([result.id]) })).toEqual({ error: "name" })
-  expect(customProvider({ ...input, name: "サーバー", existing: new Set() })).not.toEqual(result)
-  expect(customProvider({ ...input, name: "  ", existing: new Set() })).toEqual({ error: "name" })
-})
-
-test("OAuth prompts follow their conditions and default selects to the first option", () => {
-  const prompts = [
-    { type: "select" as const, key: "kind", options: [{ value: "cloud" }, { value: "self" }] },
-    { type: "text" as const, key: "host", when: { key: "kind", op: "eq" as const, value: "self" } },
-    { type: "text" as const, key: "region", when: { key: "kind", op: "neq" as const, value: "self" } },
-    { type: "text" as const, key: "orphan", when: { key: "missing", op: "eq" as const, value: "x" } },
-  ]
-  expect(visiblePrompts(prompts, {})).toEqual({
-    shown: [prompts[0], prompts[2]],
-    values: { kind: "cloud", region: "" },
-  })
-  expect(visiblePrompts(prompts, { kind: "self", host: "h" })).toEqual({
-    shown: [prompts[0], prompts[1]],
-    values: { kind: "self", host: "h" },
-  })
 })
 
 test("the connect dialog reads only an integration whose sign-in methods are well formed", () => {

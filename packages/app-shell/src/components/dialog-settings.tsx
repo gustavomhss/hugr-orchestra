@@ -1,20 +1,23 @@
-import { Component, createSignal, startTransition } from "solid-js"
+import { Component, createSignal, Show, startTransition } from "solid-js"
 import { Dialog } from "@orchestra/ui/dialog"
 import { Tabs } from "@orchestra/ui/tabs"
 import { Icon } from "@orchestra/ui/icon"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
+import { useServer } from "@/context/server"
+import { ProviderList } from "@/orchestra/chapters/providers-list"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { SettingsGeneral } from "./settings-general"
-import { SettingsKeybinds } from "./settings-keybinds"
-import { SettingsProviders } from "./settings-providers"
 import { SettingsModels } from "./settings-models"
 import { SettingsServers } from "./settings-servers"
+import { SettingsSec } from "./settings-v2/view/settings-sec"
+import { ShortcutsSection } from "./settings-v2/view/shortcuts-section"
 
 export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
   const language = useLanguage()
   const platform = usePlatform()
   const dialog = useDialog()
+  const server = useServer()
   const [tab, setTab] = createSignal(props.defaultValue ?? "general")
 
   const showProviders = () => {
@@ -77,13 +80,24 @@ export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
           <SettingsGeneral />
         </Tabs.Content>
         <Tabs.Content value="shortcuts" class="no-scrollbar">
-          <SettingsKeybinds />
+          <ShortcutsSection />
         </Tabs.Content>
         <Tabs.Content value="servers" class="no-scrollbar">
           <SettingsServers />
         </Tabs.Content>
         <Tabs.Content value="providers" class="no-scrollbar">
-          <SettingsProviders onBack={showProviders} />
+          {/* The same provider list as the Providers chapter, server-wide like this dialog. */}
+          <Show when={server.current}>
+            {(current) => (
+              <ProviderList server={current()} directory="" onBack={showProviders}>
+                {(list) => (
+                  <SettingsSec title={language.t("settings.providers.title")} action={list.connect}>
+                    {list.body}
+                  </SettingsSec>
+                )}
+              </ProviderList>
+            )}
+          </Show>
         </Tabs.Content>
         <Tabs.Content value="models" class="no-scrollbar">
           <SettingsModels />

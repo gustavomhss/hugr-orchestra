@@ -2,23 +2,9 @@ import { Dialog } from "@kobalte/core/dialog"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { iconNames } from "@orchestra/ui/icons/provider"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
-import { children, createMemo, For, type JSX, onCleanup, onMount, Show } from "solid-js"
+import { Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import { ExternalLink } from "@/components/external-link"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
-import { useServerSDK } from "@/context/server-sdk"
-import { createProviderResource } from "@/hooks/provider-catalog"
-import { showToast } from "@/utils/toast"
-import {
-  authorizationURL,
-  type CatalogEntry,
-  connectableIntegration,
-  errorMessage,
-  matches,
-  noteKey,
-  visiblePrompts,
-} from "./providers-data"
 
 // The mock's provider mark: the real brand when the sprite has it, the neutral model mark otherwise.
 export function ProviderBrand(props: { id: string }) {
@@ -42,26 +28,27 @@ export function ProviderBrand(props: { id: string }) {
   )
 }
 
-// Mock `modal()`: header with title, subtitle and close; body with one alert line; Cancel plus an optional submit.
-function MxDialog(props: {
+// Mock `modal()` as a question: header with title, subtitle and close; one alert line; Cancel and the action.
+export function ProviderConfirmDialog(props: {
   title: string
   description: string
-  error?: string
-  submit?: string
-  busy?: boolean
-  bodyClass?: string
-  onSubmit?: () => void
-  children?: JSX.Element
+  submit: string
+  onConfirm: () => Promise<string | undefined>
 }) {
   const language = useLanguage()
-  const body = children(() => props.children)
+  const dialog = useDialog()
+  const [state, setState] = createStore({ busy: false, error: undefined as string | undefined })
   return (
     <Dialog.Content class="mx-dialog providers-dialog" data-component="orchestra-providers-dialog">
       <form
         autocomplete="off"
-        onSubmit={(event) => {
+        onSubmit={async (event) => {
           event.preventDefault()
-          props.onSubmit?.()
+          if (state.busy) return
+          setState({ busy: true, error: undefined })
+          const error = await props.onConfirm()
+          setState({ busy: false, error })
+          if (!error) dialog.close()
         }}
       >
         <header class="mx-dialog-head">
@@ -75,14 +62,11 @@ function MxDialog(props: {
             </svg>
           </Dialog.CloseButton>
         </header>
-        <Show when={body() || props.error}>
-          <div class={props.bodyClass ? `mx-dialog-body ${props.bodyClass}` : "mx-dialog-body"}>
-            <Show when={props.error}>
-              <p class="mx-error" role="alert">
-                {props.error}
-              </p>
-            </Show>
-            {body()}
+        <Show when={state.error}>
+          <div class="mx-dialog-body">
+            <p class="mx-error" role="alert">
+              {state.error}
+            </p>
           </div>
         </Show>
         <footer class="mx-dialog-foot">
@@ -90,444 +74,11 @@ function MxDialog(props: {
           <Dialog.CloseButton type="button" class="mx-btn" aria-label={language.t("common.cancel")}>
             {language.t("common.cancel")}
           </Dialog.CloseButton>
-          <Show when={props.submit}>
-            <button class="mx-btn primary" type="submit" disabled={props.busy}>
-              {props.submit}
-            </button>
-          </Show>
+          <button class="mx-btn primary" type="submit" disabled={state.busy}>
+            {props.submit}
+          </button>
         </footer>
       </form>
     </Dialog.Content>
   )
-}
-
-export function ProviderPickerDialog(props: {
-  entries: CatalogEntry[]
-  onConnect: (entry: CatalogEntry) => void
-  onCustom: () => void
-}) {
-  const language = useLanguage()
-  const [state, setState] = createStore({ search: "" })
-  let search: HTMLInputElement | undefined
-  // The catalog has 70+ providers on v1. Kobalte focuses the close button first, so focus the search afterwards.
-  onMount(() => requestAnimationFrame(() => search?.focus()))
-  const entries = createMemo(() =>
-    props.entries.filter((entry) => matches([entry.name, entry.id, summary(entry, language.t)], state.search)),
-  )
-  return (
-    <MxDialog
-      title={language.t("orchestra.providers.connect")}
-      description={language.t("orchestra.providers.picker.description")}
-      bodyClass="providers-picker"
-    >
-      <input
-        ref={search}
-        class="mx-search"
-        placeholder={language.t("orchestra.providers.search")}
-        aria-label={language.t("orchestra.providers.searchLabel")}
-        autocomplete="off"
-        spellcheck={false}
-        value={state.search}
-        onInput={(event) => setState("search", event.currentTarget.value)}
-      />
-      <Show when={entries().length || !state.search.trim()}>
-        <div class="mx-table">
-          <For each={entries()}>
-            {(entry) => (
-              <div class="mx-row" data-provider-id={entry.id}>
-                <ProviderBrand id={entry.id} />
-                <div class="mx-grow">
-                  <strong>{entry.name}</strong>
-                  <Show when={summary(entry, language.t)}>{(text) => <small>{text()}</small>}</Show>
-                </div>
-                <button type="button" class="mx-btn" onClick={() => props.onConnect(entry)}>
-                  {language.t("common.connect")}
-                </button>
-              </div>
-            )}
-          </For>
-        </div>
-      </Show>
-      <Show when={!entries().length && state.search.trim()}>
-        <div class="mx-empty" role="status">
-          {language.t("orchestra.providers.noMatches")}
-        </div>
-      </Show>
-      <p class="mx-note">
-        <button type="button" class="mx-btn" onClick={props.onCustom}>
-          {language.t("dialog.provider.custom.label")}
-        </button>
-      </p>
-    </MxDialog>
-  )
-}
-
-export function ProviderConnectDialog(props: {
-  id: string
-  name: string
-  directory: string
-  onConnected: () => Promise<void>
-}) {
-  const language = useLanguage()
-  const dialog = useDialog()
-  const sdk = useServerSDK()
-  const platform = usePlatform()
-  // Without a project the connection is server-wide, so no directory scope is sent.
-  const location = props.directory ? { directory: props.directory } : undefined
-  const integration = createProviderResource(
-    () => ({ id: props.id, location, client: sdk(), server: sdk().scope }),
-    (input) =>
-      input.client.api.integration
-        .get({ integrationID: input.id, location: input.location })
-        .then((result) => connectableIntegration(result.data)),
-  )
-  const loading = integration.loading
-  const methods = createMemo(() => {
-    const values = (integration.data()?.methods ?? []).flatMap((method) =>
-      method.type === "key" || method.type === "oauth" ? [method] : [],
-    )
-    return values.length ? values : [{ type: "key" as const }]
-  })
-  const [state, setState] = createStore({
-    method: 0,
-    key: "",
-    code: "",
-    answers: {} as Record<string, string>,
-    error: undefined as string | undefined,
-    busy: false,
-    connected: false,
-    attempt: undefined as undefined | { attemptID: string; url: string; instructions: string; mode: "auto" | "code" },
-  })
-  const method = () => methods()[state.method] ?? methods()[0]
-  const prompts = createMemo(() => {
-    const current = method()
-    return visiblePrompts(current.type === "oauth" ? (current.prompts ?? []) : [], state.answers)
-  })
-  const alive = { value: true, timer: undefined as ReturnType<typeof setTimeout> | undefined }
-  onCleanup(() => {
-    alive.value = false
-    if (alive.timer) clearTimeout(alive.timer)
-  })
-
-  const fail = (error: unknown) =>
-    setState({ busy: false, error: errorMessage(error, language.t("common.requestFailed")) })
-  // A failed or expired automatic sign-in cannot be resumed; return to the method form so it can start again.
-  const restart = (error: unknown) => {
-    fail(error)
-    setState("attempt", undefined)
-  }
-  const finish = async () => {
-    setState({ connected: true, key: "", code: "", busy: true, error: undefined })
-    await props.onConnected().then(() => {
-      if (alive.value) dialog.close()
-    }, fail)
-  }
-  const poll = (attemptID: string, failures = 0) => {
-    void sdk()
-      .api.integration.oauth.status({ integrationID: props.id, attemptID, location })
-      .then((result) => {
-        if (!alive.value) return
-        if (result.data.status === "complete") return finish()
-        if (result.data.status === "failed")
-          return restart(result.data.message || language.t("orchestra.providers.oauth.failed"))
-        if (result.data.status === "expired") return restart(language.t("orchestra.providers.oauth.expired"))
-        alive.timer = setTimeout(() => poll(attemptID), 1_000)
-      })
-      .catch((error) => {
-        if (!alive.value) return
-        // One dropped request must not end a sign-in the person is still completing in the browser.
-        if (failures < 2) {
-          alive.timer = setTimeout(() => poll(attemptID, failures + 1), 1_000)
-          return
-        }
-        restart(errorMessage(error, language.t("orchestra.providers.oauth.failed")))
-      })
-  }
-
-  const submit = async () => {
-    if (integration.error()) return integration.retry()
-    const current = method()
-    if (state.connected && !state.busy) return finish()
-    // Automatic sign-in completes by polling; Enter in its read-only code field must not submit an empty code.
-    if (state.busy || state.attempt?.mode === "auto") return
-    if (current.type === "key" && !state.key.trim()) {
-      setState("error", language.t("orchestra.providers.connectDialog.keyRequired"))
-      return
-    }
-    if (state.attempt?.mode === "code" && !state.code.trim()) {
-      setState("error", language.t("orchestra.providers.connectDialog.codeRequired"))
-      return
-    }
-    setState({ busy: true, error: undefined })
-    if (current.type === "key") {
-      await sdk()
-        .api.integration.connect.key({ integrationID: props.id, location, key: state.key.trim() })
-        .then(() => {
-          // The server only stores the key; the provider checks it on the first request.
-          showToast({
-            variant: "success",
-            icon: "circle-check",
-            title: language.t("orchestra.providers.connectDialog.keySaved.title", { provider: props.name }),
-            description: language.t("orchestra.providers.connectDialog.keySaved.description"),
-          })
-          return finish()
-        }, fail)
-      return
-    }
-    const attempt = state.attempt
-    if (attempt) {
-      await sdk()
-        .api.integration.oauth.complete({
-          integrationID: props.id,
-          attemptID: attempt.attemptID,
-          code: state.code,
-          location,
-        })
-        .then(finish, fail)
-      return
-    }
-    await sdk()
-      .api.integration.oauth.connect({
-        integrationID: props.id,
-        methodID: current.id,
-        inputs: prompts().values,
-        location,
-      })
-      .then((result) => {
-        if (!alive.value) return
-        const url = authorizationURL(result.data.url)
-        if (!url) return fail(language.t("orchestra.providers.connectDialog.badLink"))
-        // The Orchestra console recognizes the desktop shell by its own OAuth client.
-        if (props.id === "opencode" && platform.platform === "desktop")
-          url.searchParams.set("client_id", "opencode-desktop")
-        setState({ busy: false, attempt: { ...result.data, url: url.href } })
-        if (result.data.mode === "auto") poll(result.data.attemptID)
-      }, fail)
-  }
-
-  return (
-    <MxDialog
-      title={language.t("provider.connect.title", { provider: props.name })}
-      description={language.t("orchestra.providers.connectDialog.description")}
-      error={
-        integration.error() ? errorMessage(integration.error()?.cause, language.t("common.requestFailed")) : state.error
-      }
-      busy={state.busy || loading()}
-      submit={
-        state.connected || integration.error()
-          ? language.t("orchestra.providers.retry")
-          : state.attempt?.mode === "auto"
-            ? undefined
-            : language.t("orchestra.providers.connectDialog.submit")
-      }
-      onSubmit={() => void submit()}
-    >
-      <label class="mx-field">
-        <span>{language.t("orchestra.providers.connectDialog.method")}</span>
-        <select
-          name="method"
-          disabled={loading() || !!integration.error() || state.busy || state.connected || !!state.attempt}
-          onChange={(event) =>
-            setState({ method: Number(event.currentTarget.value), error: undefined, attempt: undefined, code: "" })
-          }
-        >
-          <For each={methods()}>
-            {(item, index) => (
-              <option value={String(index())} selected={index() === state.method}>
-                {item.type === "oauth" ? item.label : language.t("provider.connect.method.apiKey")}
-              </option>
-            )}
-          </For>
-        </select>
-      </label>
-      <Show when={method().type === "key"}>
-        <label class="mx-field">
-          <span>{language.t("orchestra.providers.connectDialog.key")}</span>
-          <input
-            name="credential"
-            type="password"
-            autocomplete="off"
-            spellcheck={false}
-            value={state.key}
-            onInput={(event) => setState({ key: event.currentTarget.value, error: undefined })}
-          />
-        </label>
-      </Show>
-      <Show when={method().type === "oauth" && !state.attempt}>
-        <For each={prompts().shown}>
-          {(prompt) => (
-            <label class="mx-field">
-              <span>{prompt.message}</span>
-              <Show
-                when={prompt.type === "select" ? prompt : undefined}
-                fallback={
-                  <input
-                    name={prompt.key}
-                    required
-                    placeholder={prompt.type === "text" ? prompt.placeholder : undefined}
-                    value={state.answers[prompt.key] ?? ""}
-                    onInput={(event) => setState("answers", prompt.key, event.currentTarget.value)}
-                  />
-                }
-              >
-                {(select) => (
-                  <select
-                    name={select().key}
-                    onChange={(event) => setState("answers", select().key, event.currentTarget.value)}
-                  >
-                    <For each={select().options}>
-                      {(option) => (
-                        <option value={option.value} selected={option.value === prompts().values[select().key]}>
-                          {option.label}
-                        </option>
-                      )}
-                    </For>
-                  </select>
-                )}
-              </Show>
-            </label>
-          )}
-        </For>
-      </Show>
-      <Show when={state.attempt}>
-        {(attempt) => (
-          <>
-            <p class="mx-note providers-authorize">
-              <ExternalLink href={attempt().url} class="mx-link">
-                {language.t("orchestra.providers.connectDialog.authorize")}
-              </ExternalLink>
-            </p>
-            <Show
-              when={attempt().mode === "code"}
-              fallback={
-                <>
-                  <label class="mx-field">
-                    <span>{language.t("orchestra.providers.connectDialog.confirmation")}</span>
-                    <input readOnly value={confirmation(attempt().instructions)} />
-                  </label>
-                  <p class="mx-note" role="status">
-                    {language.t("orchestra.providers.connectDialog.waiting")}
-                  </p>
-                </>
-              }
-            >
-              <label class="mx-field">
-                <span>{language.t("orchestra.providers.connectDialog.code")}</span>
-                <input
-                  name="code"
-                  autocomplete="off"
-                  spellcheck={false}
-                  value={state.code}
-                  onInput={(event) => setState({ code: event.currentTarget.value, error: undefined })}
-                />
-              </label>
-            </Show>
-          </>
-        )}
-      </Show>
-    </MxDialog>
-  )
-}
-
-export function CustomProviderDialog(props: {
-  unavailable?: string
-  onSubmit: (input: { name: string; endpoint: string; model: string; key: string }) => Promise<string | undefined>
-}) {
-  const language = useLanguage()
-  const dialog = useDialog()
-  const [state, setState] = createStore({
-    name: "",
-    endpoint: "http://localhost:8080/v1",
-    model: "",
-    key: "",
-    error: props.unavailable,
-    busy: false,
-  })
-  const field = (name: "name" | "endpoint" | "model", label: string) => (
-    <label class="mx-field">
-      <span>{label}</span>
-      <input
-        name={name}
-        required
-        disabled={!!props.unavailable}
-        value={state[name]}
-        onInput={(event) => setState({ [name]: event.currentTarget.value, error: undefined })}
-      />
-    </label>
-  )
-  return (
-    <MxDialog
-      title={language.t("provider.custom.title")}
-      description={language.t("orchestra.providers.custom.description")}
-      error={state.error}
-      busy={state.busy || !!props.unavailable}
-      submit={language.t("orchestra.providers.connectDialog.submit")}
-      onSubmit={async () => {
-        if (state.busy || props.unavailable) return
-        setState("busy", true)
-        const error = await props.onSubmit({
-          name: state.name,
-          endpoint: state.endpoint,
-          model: state.model,
-          key: state.key,
-        })
-        setState({ busy: false, error })
-        if (!error) dialog.close()
-      }}
-    >
-      {field("name", language.t("orchestra.providers.custom.name"))}
-      {field("endpoint", language.t("orchestra.providers.custom.endpoint"))}
-      {field("model", language.t("orchestra.providers.custom.model"))}
-      <label class="mx-field">
-        <span>{language.t("orchestra.providers.custom.key")}</span>
-        <input
-          name="credential"
-          type="password"
-          autocomplete="off"
-          spellcheck={false}
-          disabled={!!props.unavailable}
-          value={state.key}
-          onInput={(event) => setState({ key: event.currentTarget.value, error: undefined })}
-        />
-      </label>
-    </MxDialog>
-  )
-}
-
-export function ProviderConfirmDialog(props: {
-  title: string
-  description: string
-  submit: string
-  onConfirm: () => Promise<string | undefined>
-}) {
-  const dialog = useDialog()
-  const [state, setState] = createStore({ busy: false, error: undefined as string | undefined })
-  return (
-    <MxDialog
-      title={props.title}
-      description={props.description}
-      error={state.error}
-      busy={state.busy}
-      submit={props.submit}
-      onSubmit={async () => {
-        if (state.busy) return
-        setState({ busy: true, error: undefined })
-        const error = await props.onConfirm()
-        setState({ busy: false, error })
-        if (!error) dialog.close()
-      }}
-    />
-  )
-}
-
-function summary(entry: CatalogEntry, t: ReturnType<typeof useLanguage>["t"]) {
-  const note = noteKey(entry.id)
-  if (note) return t(note)
-  return entry.methods
-    .map((method) => (method.type === "oauth" ? method.label : t("provider.connect.method.apiKey")))
-    .join(" · ")
-}
-
-function confirmation(instructions: string) {
-  return instructions.includes(":") ? (instructions.split(":").pop()?.trim() ?? instructions) : instructions
 }
