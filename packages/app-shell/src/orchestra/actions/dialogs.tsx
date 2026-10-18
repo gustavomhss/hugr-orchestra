@@ -1,11 +1,11 @@
-import { createEffect, createMemo, For, on, onCleanup, Show } from "solid-js"
+import { createEffect, createMemo, createUniqueId, For, on, onCleanup, Show } from "solid-js"
 import { createStore, type SetStoreFunction } from "solid-js/store"
 import type { Actions } from "@orchestra/schema/actions"
 import { Icon } from "@orchestra/ui/icon"
 import type { Dialog, ViewProps } from "./contract"
 import { actionsError } from "./api"
 import { canRequestAction } from "./action-eligibility"
-import { createDispatchData, dispatchDefaultRef, dispatchSelection, sameDispatchSelection, type DispatchData } from "./dispatch-data"
+import { createDispatchData, dispatchDefaultRef, dispatchRefs, dispatchSelection, sameDispatchSelection, type DispatchData } from "./dispatch-data"
 import { Input, isResourceDialog, isSourceDialog, parseInputs, sourceAction, sourceAllowed, sourcePayload, sourceTitle, SourceFields } from "./source-dialogs"
 
 type FormState = {
@@ -147,7 +147,9 @@ export function Dialogs(props: ViewProps) {
       if (!value) return null
       return <form autocomplete="off" onSubmit={submit}>
         <header class="mx-dialog-head dialog-head">
-          <div><h2 id="actions-dialog-title">{title(props.t, value, form.provider)}</h2><p id="actions-dialog-detail">{props.t("orchestra.actions.description")}</p></div>
+          <Show when={value.kind === "dispatch"}><span class="mx-mark ad-mark"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2.5"/><path d="m7 9.5 3 2.5-3 2.5M12.5 15.5H17"/></svg></span></Show>
+          <div><Show when={value.kind !== "connect" && binding()}>{(selected) => <div class="ad-eyebrow">{props.t("orchestra.actions.projectScope", { provider: props.t(selected().provider.kind === "github" ? "orchestra.actions.github" : "orchestra.actions.gitlab") })}</div>}</Show>
+            <h2 id="actions-dialog-title">{title(props.t, value, form.provider, workflowName(props.model.state, value))}</h2><p id="actions-dialog-detail">{props.t(value.kind === "dispatch" ? (form.provider === "gitlab" ? "orchestra.actions.dispatchDetail.gitlab" : "orchestra.actions.dispatchDetail.github") : "orchestra.actions.description")}</p></div>
           <button type="button" class="mx-btn icon" disabled={form.pending || props.model.state.submitting} aria-label={props.t("orchestra.actions.close")} onClick={close}><Icon name="close" aria-hidden="true" /></button>
         </header>
         <fieldset class="actions-dialog-fields" disabled={form.pending || props.model.state.submitting || (isSourceDialog(value) && !sourceAllowed(value, props))}>
@@ -165,7 +167,7 @@ export function Dialogs(props: ViewProps) {
 function DialogFields(props: { props: ViewProps; value: Dialog; form: FormState; setForm: SetStoreFunction<FormState>; dispatchData: DispatchData }) {
   const t = props.props.t
   if (props.value.kind === "connect") return <ConnectFields form={props.form} setForm={props.setForm} t={t} />
-  if (props.value.kind === "dispatch") return <DispatchFields form={props.form} setForm={props.setForm} data={props.dispatchData} t={t} />
+  if (props.value.kind === "dispatch") return <DispatchFields form={props.form} setForm={props.setForm} data={props.dispatchData} refs={dispatchRefs(props.props.model.state, props.value.workflowID)} t={t} />
   if (isSourceDialog(props.value)) return <SourceFields value={props.value} view={props.props} form={props.form} />
   if (props.value.kind === "cancel" || props.value.kind === "remove") return <p class="ad-note">{t(props.value.kind === "cancel" ? "orchestra.actions.confirmCancel" : "orchestra.actions.confirmRemove")}</p>
   if (props.value.kind === "retry") return <RetryFields form={props.form} setForm={props.setForm} view={props.props} />
@@ -198,15 +200,23 @@ function ConnectFields(props: { form: FormState; setForm: SetStoreFunction<FormS
   </>
 }
 
-function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; data: DispatchData; t: ViewProps["t"] }) {
+function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<FormState>; data: DispatchData; refs: readonly string[]; t: ViewProps["t"] }) {
+  const listID = createUniqueId()
+  const hintID = createUniqueId()
   return <>
-    <label class="mx-field"><span>{props.t("orchestra.actions.ref")}</span><input name="ref" autofocus dir="ltr" required value={props.form.ref} onInput={(event) => props.setForm("ref", event.currentTarget.value)} /></label>
+    <fieldset class="ad-group"><legend>{props.t("orchestra.actions.executionTarget")}</legend><div class="ad-group-body">
+      {/* No native branch listing exists; refs this project already reported are offered as suggestions. */}
+      <label class="mx-field"><span>{props.t("orchestra.actions.branchOrTag")}<span class="ad-required" aria-hidden="true">*</span></span>
+        <input name="ref" autofocus dir="ltr" required spellcheck={false} list={listID} aria-describedby={hintID} value={props.form.ref} onInput={(event) => props.setForm("ref", event.currentTarget.value)} />
+        <datalist id={listID}><For each={props.refs}>{(ref) => <option value={ref} />}</For></datalist>
+        <small id={hintID}>{props.t("orchestra.actions.branchOrTagHint")}</small></label>
+    </div></fieldset>
     <Show when={props.data.status === "loading"}><p class="ad-note" role="status">{props.t("orchestra.actions.loading")}</p></Show>
     <Show when={props.data.error}>{(error) => <p class="mx-error" role="alert">{props.t(error().message)}</p>}</Show>
     <Show when={props.data.status === "idle"}><p class="ad-note">{props.t("orchestra.actions.noSource")}</p></Show>
     <Show when={props.data.status === "ready"}>
       <Show when={props.data.definitions} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
-        {(definition) => <fieldset class="ad-group"><legend>{props.t("orchestra.actions.inputs")}</legend><div class="ad-group-body"><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></div></fieldset>}
+        {(definition) => <Show when={definition().length}><fieldset class="ad-group"><legend>{props.t("orchestra.actions.runInputs")}</legend><div class="ad-group-body"><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></div></fieldset></Show>}
       </Show>
     </Show>
      <Show when={props.form.provider === "gitlab"}>
@@ -219,6 +229,7 @@ function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<Form
          </div>
        </fieldset>
      </Show>
+    <aside class="info-card ad-note"><svg class="wf-ic" viewBox="0 0 16 16" aria-hidden="true"><path d="M4.5 2.5v11l9-5.5z"/></svg><div><strong>{props.t("orchestra.actions.newExecution")}</strong><p>{props.t("orchestra.actions.newExecution.detail")}</p></div></aside>
   </>
 }
 
@@ -285,9 +296,14 @@ function defaultRef(bindingID: Actions.BindingID | undefined, state: ViewProps["
   if (bindingID && run && run.bindingID === bindingID && run.ref) return run.ref
   return ""
 }
-function title(t: ViewProps["t"], value: Dialog, provider: Actions.ProviderKind) {
+function workflowName(state: ViewProps["model"]["state"], value: Dialog) {
+  if (value.kind !== "dispatch") return undefined
+  return state.workflows.value?.items.find((item) => item.bindingID === state.binding?.id && item.id === value.workflowID)?.name?.trim() || undefined
+}
+function title(t: ViewProps["t"], value: Dialog, provider: Actions.ProviderKind, name: string | undefined) {
   if (value.kind === "connect") return t("orchestra.actions.connect")
   if (isSourceDialog(value)) return sourceTitle(t, value, provider)
+  if (value.kind === "dispatch" && provider === "github" && name) return t("orchestra.actions.dispatchWorkflow", { name })
   if (value.kind === "dispatch") return t(provider === "gitlab" ? "orchestra.actions.dispatchPipeline" : "orchestra.actions.dispatch")
   if (value.kind === "retry") return t("orchestra.actions.retry")
   if (value.kind === "cancel") return t("orchestra.actions.stop")

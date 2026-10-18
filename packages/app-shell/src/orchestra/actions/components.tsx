@@ -46,7 +46,7 @@ export function Status(props: { status?: string | null; conclusion?: string | nu
     if (status === "completed") return conclusion || status
     return status || conclusion
   }
-  const labels: Record<string, Parameters<Translate>[0]> = { queued: "orchestra.actions.queued", pending: "orchestra.actions.queued", running: "orchestra.actions.running", in_progress: "orchestra.actions.running", preparing: "orchestra.actions.running", waiting_for_resource: "orchestra.actions.waiting", scheduled: "orchestra.actions.queued", created: "orchestra.actions.queued", waiting: "orchestra.actions.waiting", manual: "orchestra.actions.waiting", success: "orchestra.actions.passed", passed: "orchestra.actions.passed", failure: "orchestra.actions.failed", failed: "orchestra.actions.failed", error: "orchestra.actions.failed", startup_failure: "orchestra.actions.failed", timed_out: "orchestra.actions.failed", timeout: "orchestra.actions.failed", timedout: "orchestra.actions.failed", action_required: "orchestra.actions.waiting", canceled: "orchestra.actions.canceled", cancelled: "orchestra.actions.canceled", skipped: "orchestra.actions.skipped", idle: "orchestra.actions.idle" }
+  const labels: Record<string, Parameters<Translate>[0]> = { queued: "orchestra.actions.queued", pending: "orchestra.actions.queued", running: "orchestra.actions.running", in_progress: "orchestra.actions.running", preparing: "orchestra.actions.running", waiting_for_resource: "orchestra.actions.waiting", scheduled: "orchestra.actions.queued", created: "orchestra.actions.queued", waiting: "orchestra.actions.waiting", manual: "orchestra.actions.waiting", success: "orchestra.actions.passed", passed: "orchestra.actions.passed", failure: "orchestra.actions.failed", failed: "orchestra.actions.failed", error: "orchestra.actions.failed", startup_failure: "orchestra.actions.failed", timed_out: "orchestra.actions.failed", timeout: "orchestra.actions.failed", timedout: "orchestra.actions.failed", action_required: "orchestra.actions.waiting", canceled: "orchestra.actions.canceled", cancelled: "orchestra.actions.canceled", skipped: "orchestra.actions.skipped" }
   const selectedRaw = () => {
     const status = normalizedStatus()
     if (status === "completed") return rawConclusion() || rawStatus()
@@ -63,7 +63,8 @@ export function Status(props: { status?: string | null; conclusion?: string | nu
     if (["queued", "pending", "running", "in_progress", "preparing", "waiting_for_resource", "scheduled", "created", "waiting", "manual", "action_required"].includes(current ?? "")) return "warm"
     return "neutral"
   }
-  return <span class={`actions-status ${kind()}`} role="status" title={key() ? undefined : props.t("orchestra.actions.unknown")}><i aria-hidden="true"/><bdi>{key() ? props.t(key()!) : selectedRaw() || props.t("orchestra.actions.unknown")}</bdi></span>
+  // `idle` is a load-slot state, not a provider status: there is nothing to report yet.
+  return <Show when={selected() !== "idle"}><span class={`actions-status ${kind()}`} role="status" title={key() ? undefined : props.t("orchestra.actions.unknown")}><i aria-hidden="true"/><bdi>{key() ? props.t(key()!) : selectedRaw() || props.t("orchestra.actions.unknown")}</bdi></span></Show>
 }
 
 export function Empty(props: { title: string; detail?: string; busy?: boolean; error?: string }) {
