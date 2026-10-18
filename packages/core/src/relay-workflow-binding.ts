@@ -31,6 +31,8 @@ export interface PublicationPort {
   ) => Effect.Effect<A, E | Held>
   readonly skills: AuthoringGraph.SkillResolver
   readonly knowledge?: (reference: AtlasKnowledge.Reference, authorSessionID: string) => Effect.Effect<AtlasKnowledge.Anchor, Held>
+  /** Host-check controls every workflow plan must end on; materialization appends them to the last work package. */
+  readonly acceptance?: readonly RelaySprint.Control[]
 }
 
 export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (input: {
@@ -90,7 +92,9 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
     const knowledge = validateKnowledge({ sprint: sprint.value, knowledge: resolved,
       projectID: input.projectID, authorSessionID: author })
     if (knowledge instanceof Held) return yield* knowledge
-    const bytes = Buffer.from(JSON.stringify(compiled.sprint), "utf8")
+    // The required acceptance is part of the materialized bytes, so the plan revision the owner approves carries it.
+    const materialized = attach(compiled.sprint, input.port.acceptance)
+    const bytes = Buffer.from(JSON.stringify(materialized), "utf8")
     // Draft saves rewrite the document row but never a version, so only unpublishing, or for a new binding a
     // republish, during acquisition changes what is bound.
     const after = yield* store.get(live.id)
@@ -112,7 +116,7 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
       writePaths: input.writePaths,
       ...(knowledge.length ? { knowledge } : {}),
     })
-    return { definition, sprint: compiled.sprint, bytes }
+    return { definition, sprint: materialized, bytes }
   })).pipe(Effect.mapError((error) => error instanceof Held
     ? error : new Held({ reason: "WORKFLOW_PUBLICATION_ACQUISITION" })))
 })
@@ -165,6 +169,7 @@ export const catalog = Effect.fn("RelayWorkflowBinding.catalog")(function* (port
       const admitted = published
         ? yield* store.version(live.id, published).pipe(
           Effect.flatMap((version) => admission(version, port.skills)),
+          Effect.map((sprint) => attach(sprint, port.acceptance)),
           Effect.result,
         )
         : undefined
@@ -179,6 +184,20 @@ export const catalog = Effect.fn("RelayWorkflowBinding.catalog")(function* (port
     }))
   }))
 })
+
+/**
+ * The sprint with each required acceptance control appended to its last work package. A control is left out when that
+ * step already runs its host check or the sprint already uses its id, so a plan that carries them stays byte-identical.
+ */
+export function attach(sprint: RelaySprint.Sprint, acceptance: readonly RelaySprint.Control[] = []): RelaySprint.Sprint {
+  const last = sprint.work_packages.at(-1)
+  const ids = new Set(sprint.work_packages.flatMap((wp) => wp.checklist ?? []).map((control) => control.id))
+  const missing = acceptance.filter((control) => !ids.has(control.id) &&
+    !last?.checklist?.some((existing) => existing.host_check === control.host_check))
+  if (!last || !missing.length) return sprint
+  return { ...sprint, work_packages: [...sprint.work_packages.slice(0, -1),
+    { ...last, checklist: [...(last.checklist ?? []), ...missing] }] }
+}
 
 export function knowledgeReferences(sprint: RelaySprint.Sprint) {
   return [...new Set([...(sprint.knowledge ?? []), ...sprint.work_packages.flatMap((wp) => wp.knowledge ?? [])])]
