@@ -240,12 +240,25 @@ for (const scheme of ["dark", "light"]) {
     const edited =
       fixture.replace(`${secret}#hash`, `${secret}-edited`).replace("REMOVE=discard\r\n", "") + '\r\nADDED="local"\r\n'
     expect(await bytes(page)).toEqual(Buffer.from(edited))
-    // View file previews exactly the bytes Download writes, then closes without leaving values on the page.
+    // View file previews the file with every value masked, then closes without leaving values on the page.
     await chapter.getByRole("button", { name: "View file", exact: true }).click()
     await expect(dialog.getByRole("heading", { name: ".env", exact: true })).toBeVisible()
     await expect(dialog).toContainText("\u2068Env A\u2069 · current preview")
-    // Exact text, not whitespace-normalized: every line break of the file is shown.
-    await expect(dialog.locator("pre")).toHaveJSProperty("textContent", edited.replaceAll("\r\n", "\n"))
+    // Values are masked; everything else is exact text, not whitespace-normalized: every line break is shown.
+    const mask = "\u2022".repeat(12)
+    await expect(dialog.locator("pre")).toHaveJSProperty(
+      "textContent",
+      [
+        "# local only",
+        "",
+        `export TOKEN=${mask}`,
+        `MULTI=${mask}`,
+        "opaque directive",
+        `LAST=${mask}`,
+        `ADDED=${mask}`,
+      ].join("\n") + "\n",
+    )
+    await expect(dialog.locator("pre")).not.toContainText(secret)
     await expect(dialog.getByRole("button", { name: "Save", exact: true })).toHaveCount(0)
     await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
     await expect(dialog).toHaveCount(0)

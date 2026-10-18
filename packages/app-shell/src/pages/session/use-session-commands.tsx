@@ -12,6 +12,7 @@ import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
 import { useTerminal } from "@/context/terminal"
 import { showToast } from "@/utils/toast"
+import { formatServerError } from "@/utils/server-errors"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { findLast } from "@orchestra/core/util/array"
 import { createSidePanelTabs } from "@/pages/session/helpers"
@@ -72,6 +73,13 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     await input.request()
     input.updatePrompt(input.prompt)
     input.owner.run(input.updateViewport)
+  }
+  const fail = (err: unknown) => {
+    showToast({
+      variant: "error",
+      title: language.t("common.requestFailed"),
+      description: formatServerError(err, language.t),
+    })
   }
 
   const info = () => {
@@ -264,7 +272,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     const parts = sync().data.part[message.id]
 
     if (sync().data.session_working(sessionID)) {
-      await session.interrupt({ sessionID }).catch(() => {})
+      await session.interrupt({ sessionID })
     }
 
     await runCommand({
@@ -381,7 +389,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       description: language.t("command.session.undo.description"),
       slash: "undo",
       disabled: !params.id || visibleUserMessages().length === 0,
-      onSelect: undo,
+      onSelect: () => undo().catch(fail),
     }),
     sessionCommand({
       id: "session.redo",
@@ -389,7 +397,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       description: language.t("command.session.redo.description"),
       slash: "redo",
       disabled: !params.id || !info()?.revert?.messageID,
-      onSelect: redo,
+      onSelect: () => redo().catch(fail),
     }),
     sessionCommand({
       id: "session.compact",
@@ -397,7 +405,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       description: language.t("command.session.compact.description"),
       slash: "compact",
       disabled: !params.id || visibleUserMessages().length === 0,
-      onSelect: compact,
+      onSelect: () => compact().catch(fail),
     }),
     sessionCommand({
       id: "session.fork",

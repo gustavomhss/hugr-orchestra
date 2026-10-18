@@ -56,7 +56,7 @@ const SettingsProvidersContent: Component<{ onBack?: () => void }> = (props) => 
                       when={controller.canDisconnect(item)}
                       fallback={
                         <span class="text-14-regular text-text-base opacity-0 group-hover:opacity-100 transition-opacity duration-200 pr-3 cursor-default">
-                          {language.t("settings.providers.connected.environmentDescription")}
+                          {controller.disconnectHint(item)}
                         </span>
                       }
                     >

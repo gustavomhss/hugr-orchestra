@@ -163,10 +163,10 @@ test("V2 archive sends the supported request and disables unsupported servers wi
   ])
 })
 
-test("late V1 archive removes only its originating server's same-ID tab", async ({ page }) => {
+// V1 cannot clear time.archived, so the app does not offer Archive there: it could never be undone.
+test("V1 server does not offer an irreversible Archive", async ({ page }) => {
   const shared = { ...sessionA, id: "shared-session", directory: "/shared/repo", title: "Shared session" }
   const started: string[] = []
-  const release = Promise.withResolvers<void>()
   await mockOrchestraServer(page, {
     directory: shared.directory,
     project: {
@@ -183,29 +183,16 @@ test("late V1 archive removes only its originating server's same-ID tab", async 
   await page.route(`**/session/${shared.id}*`, async (route) => {
     if (route.request().method() !== "PATCH") return route.fallback()
     started.push(new URL(route.request().url()).origin)
-    await release.promise
     return json(route, { ...shared, time: { ...shared.time, archived: Date.now() } })
   })
   await installReviewTabs(page, [shared.id, shared.id])
   await page.goto(`/server/${base64Encode(reviewServerB)}/session/${shared.id}`)
   await page.getByRole("button", { name: "More options", exact: true }).click()
-  const archive = page.locator('[data-action="session-archive"]')
-  await expect(archive).not.toHaveAttribute("aria-disabled", "true")
-  await archive.click()
-  await expect.poll(() => started).toEqual([reviewServerB])
-  await page.locator('[data-slot="orchestra-profile"]').click()
-  await page
-    .locator('[data-component="orchestra-profile-picker"]')
-    .getByRole("group", { name: "127.0.0.1:4096", exact: true })
-    .getByRole("menuitemradio", { name: "repo", exact: true })
-    .click()
-  const href = `/server/${base64Encode(serverA)}/session/${shared.id}`
-  await expect(page).toHaveURL(new RegExp(`${href}$`))
-  release.resolve()
-  await expect
-    .poll(() => page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]")))
-    .toEqual([{ type: "session", server: serverA, sessionId: shared.id }])
-  await expect(page).toHaveURL(new RegExp(`${href}$`))
+  await expect(page.locator('[data-action="session-archive"]')).toHaveAttribute("aria-disabled", "true")
+  await page.keyboard.press("Escape")
+  await page.keyboard.press("Control+Shift+Backspace")
+  await page.waitForTimeout(300)
+  expect(started).toEqual([])
 })
 
 async function mockReviewServers(
