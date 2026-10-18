@@ -770,24 +770,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/distribution-aur.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-aur.test.ts",
-      "specifier": "../../../script/distribution-deno",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-homebrew.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/test/distribution-musl.test.ts",
       "specifier": "../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -837,12 +819,6 @@
     {
       "rule": "R5",
       "file": "apps/cli/test/fixture/artifact-native-windows-controls.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-aur-guest.test.ts",
       "specifier": "../../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },

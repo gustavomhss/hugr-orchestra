@@ -68,7 +68,7 @@ export function fatHeader(arch = cpu, wide = false) {
 
 export function sourceFiles(version: string): Files {
   return {
-    "package.json": JSON.stringify({ name: `@hugr/cli-${target}`, version, os: [os], cpu: [cpu] }),
+    "package.json": JSON.stringify({ name: `@humangr/cli-${target}`, version, os: [os], cpu: [cpu] }),
     "bin/orchestra": `#!/bin/sh
 set -eu
 file=$0

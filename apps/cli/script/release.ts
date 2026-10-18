@@ -4,11 +4,10 @@ import { basename, join, resolve } from "node:path"
 import { parseArgs } from "node:util"
 import { archiveDistribution, prepareDistribution, verifyDistribution } from "./distribution-payload"
 import { prepareNpmDistribution } from "./distribution-npm"
-import { distributionRecipes } from "./distribution-recipes"
 
 // Release producer. `payload` turns one native build into a verified payload and archive.
-// `assemble` turns every target's payload and archive into npm packages, Homebrew/AUR
-// recipes and SHA256SUMS. It publishes nothing: the release workflow owns registries,
+// `assemble` turns every target's payload and archive into npm packages
+// and SHA256SUMS. It publishes nothing: the release workflow owns registries,
 // the GitHub release and every credential.
 const usage = `Usage:
   release.ts payload --version X.Y.Z --target <target> --out <dir> [--dist apps/cli/dist]
@@ -66,14 +65,6 @@ if (positionals[0] === "assemble") {
   const extra = (await readdir(archiveRoot)).filter((name) => !archives.some((archive) => archive.name === name))
   if (extra.length) throw new Error(`Archives without a verified payload: ${extra.join(", ")}`)
   await prepareNpmDistribution({ payloads, out: join(out, "npm") })
-  const recipes = distributionRecipes({
-    version,
-    assets: archives
-      .filter((archive) => ["darwin-arm64", "darwin-x64-baseline", "linux-arm64", "linux-x64-baseline"].includes(archive.target))
-      .map((archive) => ({ target: archive.target, url: `${baseURL}/${archive.name}`, sha256: archive.sha256 })),
-  })
-  await Bun.write(join(out, "homebrew/Formula/orchestra.rb"), recipes.homebrew)
-  await Bun.write(join(out, "aur/PKGBUILD"), recipes.aur)
   await Bun.write(join(out, "SHA256SUMS"), archives.map((archive) => `${archive.sha256}  ${archive.name}\n`).join(""))
   console.log(JSON.stringify({ version, targets: archives.map((archive) => archive.target) }))
   process.exit(0)
