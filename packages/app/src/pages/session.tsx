@@ -1738,12 +1738,9 @@ export default function Page() {
     setFollowup("edit", id, undefined)
   }
 
+  // A failed interrupt rejects so the revert rolls back and toasts instead of staging over a running turn.
   const halt = (sessionID: string) =>
-    busy(sessionID)
-      ? sdk()
-          .api.session.interrupt({ sessionID })
-          .catch(() => {})
-      : Promise.resolve()
+    busy(sessionID) ? sdk().api.session.interrupt({ sessionID }) : Promise.resolve()
 
   const revertMutation = useMutation(() => ({
     mutationFn: async (input: { sessionID: string; messageID: string }) => {
