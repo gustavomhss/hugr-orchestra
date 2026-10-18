@@ -624,6 +624,20 @@ export namespace Task {
   })
   export type WorkflowReviewHeld = typeof WorkflowReviewHeld.Type
 
+  // A code review that did not approve graded a held step on the authorized resume, so the attempt at `expected` carries
+  // that review's recorded findings in its step text. Durable only, not public.
+  export const WorkflowReviewFindings = Event.define({
+    type: "maestro.task.workflow_review_findings",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      reviewID: Schema.NonEmptyString,
+      expected: RelayArm.WorkflowPosition,
+    },
+  })
+  export type WorkflowReviewFindings = typeof WorkflowReviewFindings.Type
+
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
   export const Bound = Event.define({
@@ -698,4 +712,4 @@ export const Definitions = Event.inventory(
 )
 
 /** Maestro events stored and replayed by the host but never part of the public event surface. */
-export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld)
+export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld, Task.WorkflowReviewFindings)

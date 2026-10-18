@@ -30,7 +30,8 @@ import type { ArsenalCompletion } from "./arsenal-completion"
 import { canonicalMemberId } from "./roster"
 import { readAuthorization } from "./authorization"
 import { childSessionID } from "./dispatch"
-import { readValidation } from "./validation-record"
+import { readReview, readValidation } from "./validation-record"
+import { CodeReview } from "./code-review"
 
 // Selection is a reference, never model-supplied binding/attribution/approval. The host acquires every bound byte.
 export const Selection = Schema.Struct({ documentID: Schema.NonEmptyString, planRevisionID: Event.ID,
@@ -245,6 +246,13 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
       executionSessionID: ready.binding.executionSessionID, token: input.token,
       assistantMessageID: settlement.assistantMessageID, expected: settlement.expected,
     }).pipe(Effect.provide(context)),
+    readReview: (id: string) => readReview(id).pipe(Effect.provide(context)),
+    recordReviewFindings: (reviewID: string, expected: RelayArm.WorkflowPosition) => recordReviewFindings({
+      executionSessionID: ready.binding.executionSessionID, token: input.token, reviewID, expected,
+    }).pipe(Effect.provide(context)),
+    stepFindings: (view: RelayArm.WorkflowPosition) => stepFindings({
+      executionSessionID: ready.binding.executionSessionID, token: input.token, view,
+    }).pipe(Effect.provide(context)),
     revalidate: () => prepare(input.dispatch, "continuation").pipe(Effect.flatMap((current) =>
       isDeepStrictEqual(current.binding, ready.binding) ? Effect.void
         : Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" }))),
@@ -307,9 +315,10 @@ export function continuesHeldStep(input: {
 }
 
 /**
- * The Task tool's read of `continuesHeldStep` for an authorized workflow resume of its reserved child. Continuing reuses
- * that child, its reservation and its arm: the approved prompt runs the workflow loop again, which settles the current
- * step through the same host and so runs its cold review again. Every other resume keeps the strict replay.
+ * The Task tool's read of `continuesHeldStep` for an authorized workflow resume of its reserved child: the held
+ * settlement (the newest reply at the current position) when it continues, otherwise undefined. Continuing reuses that
+ * child, its reservation and its arm: the approved prompt runs the workflow loop again, which settles the current step
+ * through the same host and so runs its cold review again. Every other resume keeps the strict replay.
  */
 export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(function* (input: {
   readonly reservedID: SessionID
@@ -318,10 +327,14 @@ export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(func
   readonly phase: "dispatch" | "continuation"
   readonly job?: { readonly status: string }
 }) {
-  return continuesHeldStep({ ...input, bound: yield* read(input.reservedID), held: yield* reviewHolds(input.reservedID),
-    // Newest first. MessageV2.stream reads the legacy message table only: a child run by the V2 runner has no reply
-    // there, so (c) fails and it keeps the strict replay.
-    lastAssistantID: (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id })
+  // Newest first. MessageV2.stream reads the legacy message table only: a child run by the V2 runner has no reply there,
+  // so (c) fails and it keeps the strict replay.
+  const lastAssistantID = (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id
+  const view = input.view
+  if (!view || !lastAssistantID || !continuesHeldStep({ ...input, bound: yield* read(input.reservedID),
+    held: yield* reviewHolds(input.reservedID), lastAssistantID })) return undefined
+  return { assistantMessageID: SessionMessage.ID.make(lastAssistantID),
+    expected: { position: view.position, attempt: view.attempt, ledgerSeq: view.ledgerSeq } } satisfies RelayArm.WorkflowSettlement
 })
 
 /**
@@ -349,6 +362,46 @@ export const reviewHolds = Effect.fn("WorkflowBinding.reviewHolds")(function* (e
     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewHeld.type, 1))))
     .orderBy(desc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
   return rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewHeld.data)(row.data)))
+})
+
+/**
+ * Records that a code review which did not approve graded a held step, so the attempt at `expected` carries that review's
+ * findings. The record is keyed by the attempt, so one attempt carries at most one review.
+ */
+export const recordReviewFindings = Effect.fn("WorkflowBinding.recordReviewFindings")(function* (
+  data: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewFindings.data>,
+) {
+  const id = reviewFindingsID({ ...data, view: data.expected })
+  const database = yield* Database.Service
+  const stored = database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+  if (yield* stored) return
+  const events = yield* EventV2Bridge.Service
+  yield* events.publish(MaestroEvent.Task.WorkflowReviewFindings, data, { id }).pipe(Effect.catchCause((cause) =>
+    stored.pipe(Effect.flatMap((row) => row ? Effect.void : Effect.failCause(cause)))))
+})
+
+/**
+ * The text an attempt's step carries after its instructions when a code review that did not approve graded the attempt
+ * before it: a fixed host sentence, then the review's recorded findings read from the durable receipt and quoted as data
+ * (CodeReview.renderFindings), never the reviewer's free text. Undefined for any other attempt.
+ */
+export const stepFindings = Effect.fn("WorkflowBinding.stepFindings")(function* (input: {
+  readonly executionSessionID: string
+  readonly token: string
+  readonly view: RelayArm.WorkflowPosition
+}) {
+  const database = yield* Database.Service
+  const row = yield* database.db.select().from(EventTable).where(eq(EventTable.id, reviewFindingsID(input))).get().pipe(Effect.orDie)
+  if (row?.type !== EventV2.versionedType(MaestroEvent.Task.WorkflowReviewFindings.type, 1)) return undefined
+  const record = Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewFindings.data)(row.data)
+  if (Option.isNone(record) || record.value.executionSessionID !== input.executionSessionID || record.value.token !== input.token)
+    return undefined
+  const review = yield* readReview(record.value.reviewID)
+  if (!review || review.stage !== "code" || review.verdict === "APPROVE") return undefined
+  return [
+    `Orchestra's code review of your previous attempt at this step is ${review.verdict} (${review.id}). Fix the defects its findings describe in this attempt, inside the approved writePaths, and leave the result uncommitted; the new result is reviewed again.`,
+    ...CodeReview.renderFindings(review.findings),
+  ].join("\n")
 })
 
 export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessionID: string) {
@@ -426,6 +479,11 @@ export const approvedTask = Effect.fn("WorkflowBinding.approvedTask")(function* 
 function reviewHeldID(data: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>) {
   return EventV2.ID.make(`evt_maestro_workflow_review_held_${createHash("sha256").update(JSON.stringify([data.executionSessionID,
     data.token, data.assistantMessageID, data.expected.position, data.expected.attempt, data.expected.ledgerSeq])).digest("hex")}`)
+}
+
+function reviewFindingsID(input: { executionSessionID: string; token: string; view: RelayArm.WorkflowPosition }) {
+  return EventV2.ID.make(`evt_maestro_workflow_review_findings_${createHash("sha256").update(JSON.stringify([input.executionSessionID,
+    input.token, input.view.position, input.view.attempt, input.view.ledgerSeq])).digest("hex")}`)
 }
 
 function eventID(executionSessionID: string) {

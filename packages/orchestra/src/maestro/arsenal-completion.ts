@@ -365,7 +365,11 @@ export const make = Effect.gen(function* () {
         const view = yield* current.relay.currentStep(ready.token, ready.binding).pipe(
           Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_STATE_ACQUISITION" })),
         )
-        return { token: ready.token, binding: ready.binding, view }
+        // The findings of a code review that graded the previous attempt ride after the step's own instructions, so
+        // both the native and the Claude Code step text carry them; the approved Task prompt never changes.
+        const findings = yield* ready.stepFindings(view)
+        return { token: ready.token, binding: ready.binding,
+          view: findings ? { ...view, instructions: [view.instructions, findings].filter(Boolean).join("\n\n") } : view }
       }),
       settle: (position, settlement) => Effect.gen(function* () {
         if (position.token !== ready.token || !isDeepStrictEqual(position.binding, ready.binding))
@@ -407,6 +411,26 @@ export const make = Effect.gen(function* () {
       Effect.mapError(() => new ToolSafety.Denied({ reason: "WORKFLOW_STATE_ACQUISITION" })),
     )
   }
+  // Grades a resumed step held for a code review before its child runs again (gradeReviewedHold). `settlement` is the
+  // held reply at the current position, as WorkflowBinding.resumesHeldStep returned it.
+  const gradeHeld = (receipt: Receipt | undefined, settlement: RelayArm.WorkflowSettlement) => {
+    const current = receipt ? receipts.get(receipt) : undefined
+    const sessionHost = workflowSessionHost(receipt)
+    if (!current?.workflow || !sessionHost) return Effect.void
+    const ready = current.workflow
+    const view = current.relay.currentStep(ready.token, ready.binding)
+    return gradeReviewedHold({
+      coldReview: current.checks.get("cold-review"),
+      binding: current.binding,
+      verdict: (receiptID) => ready.readReview(receiptID).pipe(Effect.map((review) => review?.verdict)),
+      settle: view.pipe(Effect.flatMap((step) => sessionHost.settle({ token: ready.token, binding: ready.binding, view: step },
+        settlement))),
+      next: view,
+      record: ready.recordReviewFindings,
+    }).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held
+      ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
+      : new ToolSafety.Denied({ reason: "WORKFLOW_SETTLEMENT_ACQUISITION" })))
+  }
   // Binds the workflow arm to the receipt's child (WorkflowBinding.adopt's `bind`). The Task tool runs it after every
   // hold, right before it prompts the child, so a dispatch held earlier leaves the arm free for the next dispatch.
   const bindWorkflow = (receipt: Receipt | undefined) => {
@@ -414,7 +438,7 @@ export const make = Effect.gen(function* () {
     return current?.workflow ? current.workflow.bind.pipe(Effect.mapError(bindingDenied)) : Effect.void
   }
   return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost, workflowView,
-    bindWorkflow }
+    gradeHeld, bindWorkflow }
 })
 
 function bindingDenied(error: unknown) {
@@ -464,6 +488,42 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
       checklist: gate.checks.map((check) => ({ id: check.id, host_check: check.hostCheck })),
     })),
   }
+}
+
+/**
+ * The authorized resume of a step held for a code review, before its child runs again. A FIX_FIRST of the workers'
+ * result grades the held reply now, so the gate fails and spends one retry of its budget, once per review round; the
+ * attempt that follows is recorded to carry that review's findings in its step text (WorkflowBinding.stepFindings), and
+ * the workers fix them in it. A REJECT holds without grading: a rejected result needs a new plan round, not another
+ * attempt at the approved one. Any other cold-review outcome (no review, or an APPROVE) grades nothing here; the child's
+ * next settlement does, as before. A spent budget holds with the same reason the child's own settlement would.
+ */
+export function gradeReviewedHold<E1, R1, E2, R2, E3, R3, E4, R4>(input: {
+  readonly coldReview: HostCheck | undefined
+  readonly binding: Binding
+  readonly verdict: (receiptID: string) => Effect.Effect<string | undefined, E1, R1>
+  readonly settle: Effect.Effect<RelayArm.Evaluation, E2, R2>
+  readonly next: Effect.Effect<RelayArm.WorkflowPosition, E3, R3>
+  readonly record: (receiptID: string, expected: RelayArm.WorkflowPosition) => Effect.Effect<void, E4, R4>
+}) {
+  return Effect.gen(function* () {
+    if (!input.coldReview) return
+    const exit = yield* Effect.exit(input.coldReview(input.binding))
+    const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+    if (!(error instanceof RelayWorkflowBinding.Held) || error.reason !== CodeReview.NOT_APPROVED || !error.receiptID) return
+    const receiptID = error.receiptID
+    const verdict = yield* input.verdict(receiptID)
+    if (verdict === "REJECT")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_REJECTED",
+        detail: `The code review ${receiptID} rejected the workers' result. Nothing ran and no retry was spent; report its findings to the owner, because fixing them needs a new plan round.` })
+    if (verdict !== "FIX_FIRST") return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    const evaluation = yield* input.settle
+    // The tree changed to an approved result between the two reads: the step moved on and nothing carries findings.
+    if (evaluation.outcome === "advance" || evaluation.outcome === "complete") return
+    if (evaluation.outcome !== "gate-fail")
+      return yield* new RelayWorkflowBinding.Held({ reason: `WORKFLOW_TRANSITION_${evaluation.outcome.toUpperCase().replaceAll("-", "_")}` })
+    yield* input.record(receiptID, yield* input.next)
+  })
 }
 
 /**

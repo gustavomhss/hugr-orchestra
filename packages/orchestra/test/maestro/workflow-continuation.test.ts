@@ -40,12 +40,13 @@ async function fixture() {
   return { env, binding }
 }
 
-// The host's armed provider, as in core's evaluator test, with the cold-review control bound to a passing callback: the
-// pre-settle check in settleWorkflow is what holds or admits the grade.
-function transition(env: Env, binding: RelayArm.WorkflowBinding, settlement: RelayArm.WorkflowSettlement) {
+// The host's armed provider, as in core's evaluator test, with the cold-review control bound to a callback that passes
+// unless `review` is "fail" (a FIX_FIRST receipt): the pre-settle check in settleWorkflow is what holds or admits the grade.
+function transition(env: Env, binding: RelayArm.WorkflowBinding, settlement: RelayArm.WorkflowSettlement,
+  review: "pass" | "fail" = "pass") {
   const input: RelayWorkflowTransition.Input = { token, binding, settlement, revalidate: () => Effect.void,
     hostChecks: new Map([["cold-review", (check: RelayArm.HostCheckInput) => Effect.succeed({ name: check.check.id,
-      status: "pass" as const, provenance: { source: "host-check" as const, projectID: "project", sessionID: "ses_owner",
+      status: review, provenance: { source: "host-check" as const, projectID: "project", sessionID: "ses_owner",
         eventID: "event-review" } })]]) }
   return run(env, Effect.gen(function* () {
     const ports = yield* Effect.context<Requirements>()
@@ -140,4 +141,66 @@ test("an authorized continuation settles only the held step, spends nothing on t
   expect(WorkflowBinding.continuesHeldStep({ reservedID: binding.executionSessionID, resumedID: binding.executionSessionID,
     bound: { executionSessionID: binding.executionSessionID, token }, view: await current(env, binding), held: records,
     lastAssistantID: "msg_second_reviewed", phase: "continuation" })).toBe(false)
+})
+
+test("a FIX_FIRST resume spends one retry per review round on the real arm, and a spent budget holds", async () => {
+  const { env, binding } = await fixture()
+  await transition(env, binding, settlementAt("msg_first", { position: "first", attempt: 0, ledgerSeq: -1 }))
+  const held = await current(env, binding)
+  expect(held).toMatchObject({ wp: "second", state: "active", attempt: 0 })
+  const ledger = await read(path.join(env.arm, "ledger.jsonl"))
+
+  // One resume of a step held at `view`: the cold review names a not-approved receipt whose verdict is `verdict`, and the
+  // held reply is graded through the real transition, where the cold-review control fails.
+  // Keyed by the attempt, as the durable record is (WorkflowBinding.recordReviewFindings).
+  const records = new Map<number, { receiptID: string; expected: RelayArm.WorkflowPosition }>()
+  const grade = (reply: string, view: RelayArm.WorkflowPosition, verdict: "FIX_FIRST" | "REJECT") => Effect.runPromise(
+    ArsenalCompletion.gradeReviewedHold({
+      coldReview: () => Effect.fail(new RelayWorkflowBinding.Held({ reason: CodeReview.NOT_APPROVED, receiptID: `evt_review_${reply}` })),
+      binding: { sessionID: "ses_owner", taskID: "ses_worker", callID: "call", directory: env.work, projectID: "project",
+        planID: "evt_revision", token, stateDirectory: "", ownedPaths: [] },
+      verdict: () => Effect.succeed(verdict),
+      settle: Effect.promise(() => transition(env, binding, settlementAt(reply, view), "fail")).pipe(
+        Effect.flatMap((result) => Result.isSuccess(result) ? Effect.succeed(result.success) : Effect.fail(result.failure))),
+      next: Effect.promise(() => current(env, binding)),
+      record: (receiptID, expected) => Effect.sync(() => {
+        records.set(expected.attempt, { receiptID,
+          expected: { position: expected.position, attempt: expected.attempt, ledgerSeq: expected.ledgerSeq } })
+      }),
+    }).pipe(Effect.result))
+
+  // REJECT grades nothing: the arm and its ledger are untouched and no attempt carries findings.
+  const rejected = await grade("msg_second", held, "REJECT")
+  expect(Result.isFailure(rejected) && rejected.failure).toMatchObject({ reason: "WORKFLOW_CODE_REVIEW_REJECTED" })
+  expect(await read(path.join(env.arm, "ledger.jsonl"))).toBe(ledger)
+  expect(await current(env, binding)).toEqual(held)
+  expect([...records.values()]).toEqual([])
+
+  // FIX_FIRST grades the held reply once: the same step moves to its next attempt, which alone is recorded to carry the
+  // findings. The arm still reads with the approved binding (its writePaths included): nothing re-bound the dispatch.
+  expect(Result.isSuccess(await grade("msg_second", held, "FIX_FIRST"))).toBe(true)
+  const retried = await current(env, binding)
+  expect(retried).toMatchObject({ wp: "second", position: held.position, attempt: 1, state: "active",
+    instructions: "Implement the fix" })
+  expect(retried.ledgerSeq).toBeGreaterThan(held.ledgerSeq)
+  expect([...records.values()]).toEqual([{ receiptID: "evt_review_msg_second",
+    expected: { position: held.position, attempt: 1, ledgerSeq: retried.ledgerSeq } }])
+  // Grading the same held reply again replays its saved disposition and spends nothing more.
+  expect(Result.isSuccess(await grade("msg_second", held, "FIX_FIRST"))).toBe(true)
+  expect(await current(env, binding)).toEqual(retried)
+  expect(records.size).toBe(1)
+
+  // Each later round (a new reply held at the new attempt, then a FIX_FIRST of it) spends exactly one more retry until
+  // the budget of 3 is spent; the next round parks the arm and holds, recording nothing.
+  expect(Result.isSuccess(await grade("msg_round_2", retried, "FIX_FIRST"))).toBe(true)
+  const third = await current(env, binding)
+  expect(third.attempt).toBe(2)
+  expect(Result.isSuccess(await grade("msg_round_3", third, "FIX_FIRST"))).toBe(true)
+  const last = await current(env, binding)
+  expect(last.attempt).toBe(3)
+  const spent = await grade("msg_round_4", last, "FIX_FIRST")
+  expect(Result.isFailure(spent) && spent.failure).toMatchObject({ reason: "WORKFLOW_TRANSITION_ESCALATE" })
+  expect(await current(env, binding)).toMatchObject({ state: "awaiting-human" })
+  expect([...records.keys()]).toEqual([1, 2, 3])
+  expect((await dispositions(env)).filter((entry) => entry === "second:gate-fail")).toHaveLength(3)
 })

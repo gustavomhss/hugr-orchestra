@@ -597,6 +597,7 @@ export const TaskTool = Tool.define(
             Effect.provideService(Session.Service, sessions),
           )
         }
+        if (continues) yield* completion.gradeHeld(completionReceipt, continues) // grades a FIX_FIRST once (gradeReviewedHold)
         // A brief names other agents as plain text. As an @mention, an agent part would tell the child to
         // delegate to that agent and skip its own task permission prompt.
         const parts = (yield* ops.resolvePromptParts(params.prompt)).filter((part) => part.type !== "agent")
