@@ -146,7 +146,8 @@ export function ProviderConnectDialog(props: {
   const dialog = useDialog()
   const sdk = useServerSDK()
   const platform = usePlatform()
-  const location = { directory: props.directory }
+  // Without a project the connection is server-wide, so no directory scope is sent.
+  const location = props.directory ? { directory: props.directory } : undefined
   const integration = createProviderResource(
     () => ({ id: props.id, location, client: sdk(), server: sdk().scope }),
     (input) =>

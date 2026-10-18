@@ -23,4 +23,6 @@ export const SHELL_COPY = {
   "orchestra.shell.wip.page": "WIP · revisit before production",
   "orchestra.shell.profile.agents.one": "{{count}} agent",
   "orchestra.shell.profile.agents.other": "{{count}} agents",
+  "orchestra.shell.project.close": "Close project",
+  "orchestra.shell.project.editUnsupported": "This server does not support editing projects.",
 }
