@@ -3,8 +3,8 @@ import { expect, test } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
-import { appRuntime } from "../../omni/campaign/delivery-fixtures.ts"
-import { buildHosts, run } from "../../omni/campaign/v10-natural-exit.ts"
+import { appRuntime } from "../../../native/omni/campaign/delivery-fixtures.ts"
+import { buildHosts, run } from "../../../native/omni/campaign/v10-natural-exit.ts"
 
 test("V10 real AppRuntime LSP/MCP disposal releases Bun and built Node event loops", async () => {
   expect(process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER).toBe("strict")

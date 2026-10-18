@@ -3,7 +3,7 @@ import { createHash } from "node:crypto"
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs"
 import { createRequire } from "node:module"
 import path from "node:path"
-import { ROOT, win } from "../../../omni/campaign/lib"
+import { ROOT, win } from "../../../../native/omni/campaign/lib"
 
 export const logs = path.join(ROOT, "packages/desktop/.omni-desktop-evidence")
 export const digest = (file: string) => createHash("sha256").update(readFileSync(file)).digest("hex")
@@ -27,12 +27,12 @@ export async function build() {
   const dirty = git("status", "--porcelain", "--untracked-files=no")
   if (sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || dirty) throw new Error(`desktop source pin/clean checkout mismatch: ${sourceSHA}; ${dirty}`)
   if (git("merge-base", base, sourceSHA) !== base) throw new Error("desktop baseline not ancestor of exact checkout")
-  const files = git("ls-files", "-z").split("\0").filter((file) => /^(packages\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
-  if (!files.includes("packages/orchestra/script/build-node.ts") || !files.includes("packages/omni/Cargo.lock")) throw new Error("source manifest incomplete")
+  const files = git("ls-files", "-z").split("\0").filter((file) => /^(apps\/|packages\/|modules\/|native\/|tooling\/|assets\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
+  if (!files.includes("packages/orchestra/script/build-node.ts") || !files.includes("native/omni/Cargo.lock") || !files.includes("modules/capability-assets/src/catalog.ts")) throw new Error("source manifest incomplete")
   const sourceHashes = Object.fromEntries(files.map((file) => [file, digest(path.join(ROOT, file))]))
   const addon = process.env.HUGR_OMNI_ADDON
   const supervisor = process.env.HUGR_OMNI_SUPERVISOR
-  if (!addon || !supervisor || [addon, supervisor].some((file) => !existsSync(file) || !path.resolve(file).startsWith(path.join(ROOT, "packages/omni/target/release") + path.sep))) throw new Error("desktop needs exact-source release native artifacts")
+  if (!addon || !supervisor || [addon, supervisor].some((file) => !existsSync(file) || !path.resolve(file).startsWith(path.join(ROOT, "native/omni/target/release") + path.sep))) throw new Error("desktop needs exact-source release native artifacts")
   const platform = win ? "win32-x64-msvc" : `${process.platform}-${process.arch}${process.platform === "linux" ? "-gnu" : ""}`
   const native = path.join(logs, "native", platform)
   mkdirSync(native, { recursive: true })

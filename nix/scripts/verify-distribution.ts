@@ -121,7 +121,7 @@ async function image(file: string, code = "NATIVE_IMAGE_MISMATCH") {
 }
 
 // Both shipped omni files must be real, native and live: the supervisor runs on this host, and the product loader
-// (packages/omni/bindings/node/index.js, which calls process.dlopen) loads the addon inside the given runtime.
+// (native/omni/bindings/node/index.js, which calls process.dlopen) loads the addon inside the given runtime.
 async function omni(directory: string, runtime: string, env: Record<string, string>) {
   const addon = join(directory, "hugr_omni.node")
   const supervisor = join(directory, "hugr-omni-supervisor")

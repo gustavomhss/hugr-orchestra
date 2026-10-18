@@ -89,7 +89,7 @@ export function requireArmTime(timing: ReturnType<typeof admitArm>, now = Date.n
 }
 
 export async function pinNativeAssets(candidate: string, packet: Packet) {
-  const root = await canonical(join(candidate, "packages/archie-specialist/skills"), true)
+  const root = await canonical(join(candidate, "modules/specialists/archie/skills"), true)
   const visit = async (dir: string): Promise<string[]> => (await Promise.all((await readdir(dir, { withFileTypes: true })).map(async (entry) => {
     const path = join(dir, entry.name)
     if (entry.isDirectory()) return visit(await canonical(path, true))

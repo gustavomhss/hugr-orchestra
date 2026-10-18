@@ -1,0 +1,37 @@
+{
+  "format": 1,
+  "owner": "visual-handoff",
+  "disposition": "retain-recovery",
+  "scope": "specs/orchestra-visual/handoff",
+  "source": {
+    "revision": "e87fd95799cba0220abf5c86b203bc8d82b29732",
+    "tree": "31bd7ae54025dfd0bd47a720427c2cd05dc8b3ed"
+  },
+  "storage": {
+    "root": "owner-approved HuGR/orchestra-recovery",
+    "bundle": "visual-handoff-e87fd95799cb",
+    "receipt": "visual-handoff-e87fd95799cb.receipt.json",
+    "retention": "until owner closes the rollback window"
+  },
+  "manifestSha256": "b81b3eaec6ea820a3bc950f8242c3c616887e61429803e3100ec5ae8592b628d",
+  "members": 57,
+  "bytes": 227881816,
+  "verification": {
+    "restoredMemberList": "exact equality with independently enumerated immutable Git tree",
+    "restoredBytesAndModes": "all members compared with source Git blobs and file modes",
+    "missingMember": "RECOVERY_INPUT_MISSING; no output created",
+    "corruptMember": "RECOVERY_BLOB_INVALID; no output created",
+    "historicalArchive": {
+      "bytes": 207658700,
+      "sha256": "27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48",
+      "method": "restored original restore-evidence.ts reconstructed all ordered parts; full output hash compared"
+    },
+    "host": { "platform": "darwin", "arch": "x64", "bun": "1.3.14" }
+  },
+  "readers": [
+    "specs/orchestra-visual/handoff/restore-evidence.ts",
+    "specs/orchestra-visual/handoff/evidence-snapshot.json",
+    "specs/orchestra-visual/handoff/README.md"
+  ],
+  "sourceRemoval": "not performed; reader retargeting and tar-member restoration remain a separate cleanup slice"
+}

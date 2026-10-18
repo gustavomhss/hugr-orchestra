@@ -1,4 +1,4 @@
-import type { Platform } from "../../../../../app/src/context/platform"
+import type { Platform } from "../../../../../app-shell/src/context/platform"
 
 const value: Platform = {
   platform: "web",

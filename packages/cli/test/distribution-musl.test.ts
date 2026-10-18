@@ -101,7 +101,7 @@ export async function runMuslQualification() {
   await successful(["git", "bundle", "create", join(state.directory, "source.bundle"), "HEAD"], sourceBox, 120_000)
   const bundleSha256 = sha256(await readFile(join(state.directory, "source.bundle")))
   await copyFile(process.execPath, join(state.directory, "controls/glibc-bun"))
-  await copyFile(join(repo, "packages/omni/target/release/libhugr_omni_node.so"), join(state.directory, "controls/glibc-addon.node"))
+  await copyFile(join(repo, "native/omni/target/release/libhugr_omni_node.so"), join(state.directory, "controls/glibc-addon.node"))
   const controls = await Promise.all(["glibc-bun", "glibc-addon.node"].map(async (file) =>
     ({ file, sha256: sha256(await readFile(join(state.directory!, "controls", file))) })))
   await Bun.write(join(state.directory, "input.json"), JSON.stringify({ target: guest.target, sourceSHA, treeHash, bundleSha256,

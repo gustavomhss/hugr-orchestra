@@ -40,7 +40,13 @@ def main():
     require({file.name for file in msgpackr.glob("*.node")} == expected, "UNEXPECTED_MSGPACKR_VARIANT")
     removed = [musl] + ([msgpackr] if arch == "arm64" else [])
     aliases = []
-    trees = [modules] + [path for path in (root / "packages").glob("*/node_modules") if path.is_dir()]
+    trees = [modules] + [
+        path
+        # The same workspace roots nix/orchestra.nix and nix/desktop.nix walk after copying node_modules.
+        for pattern in ("packages/*", "apps/*", "modules/*", "modules/*/*", "tooling/*")
+        for path in root.glob(f"{pattern}/node_modules")
+        if path.is_dir()
+    ]
     for tree in trees:
         require(tree.resolve().is_relative_to(root), "DEPENDENCY_TREE_ESCAPE")
         for directory, dirs, files in os.walk(tree, followlinks=False):

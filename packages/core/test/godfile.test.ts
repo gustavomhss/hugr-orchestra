@@ -35,6 +35,21 @@ afterEach(() => {
 })
 
 describe("godfile", () => {
+  test("relocated host boundary stays governed while Atlas keeps its own LOC gate", () => {
+    const cwd = mkdtempSync(join(tmpdir(), "godfile-boundary-"))
+    repos.push(cwd)
+    git(cwd, "init", "-q")
+    mkdirSync(join(cwd, "modules/atlas/packages/kernel/src"), { recursive: true })
+    writeFileSync(join(cwd, "modules/atlas/packages/kernel/src/large.ts"), lines(HARD_LIMIT_LOC + 1))
+    git(cwd, "add", "--", "modules/atlas/packages/kernel/src/large.ts")
+    git(cwd, "-c", "user.email=fixture@example.invalid", "-c", "user.name=Fixture", "commit", "-qm", "Atlas baseline")
+    mkdirSync(join(cwd, "modules/atlas/boundary/src"), { recursive: true })
+    writeFileSync(join(cwd, "modules/atlas/boundary/src/large.ts"), lines(HARD_LIMIT_LOC + 1))
+    const report = runGodfileGate({ cwd, baseRef: "HEAD" })
+    expect(report.errors).toEqual([expect.stringContaining("modules/atlas/boundary/src/large.ts")])
+    expect(report.warnings.some((finding) => finding.file.includes("packages/kernel"))).toBeFalse()
+  })
+
   test("counts physical non-blank lines", () => {
     expect(countLoc("one\n\n two\r\n  \nthree")).toBe(3)
   })
