@@ -66,6 +66,10 @@ export const baseProfiles = Object.freeze({
     research_record: "allow",
     research_view: "allow",
     research_capture: "allow",
+    // Read-only repository intelligence from the Maestro Arsenal (tool/research-repo.ts); no other Arsenal capability.
+    repo_map: "allow",
+    repo_symbols: "allow",
+    repo_git_state: "allow",
     atlas_context: "allow",
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),

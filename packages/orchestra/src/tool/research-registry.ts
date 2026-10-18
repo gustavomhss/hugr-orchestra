@@ -13,10 +13,13 @@ import { ResearchSourceCapture } from "@/research/source-capture"
 import { AtlasContextTool } from "./atlas-context"
 import { ResearchCaptureTool } from "./research-capture"
 import { ResearchRecordTool } from "./research-record"
+import { ResearchRepoTools } from "./research-repo"
 import { ResearchViewTool } from "./research-view"
 import { Tool } from "./tool"
 
-const IDS: readonly string[] = [AtlasContextTool.id, ResearchRecordTool.id, ResearchViewTool.id, ResearchCaptureTool.id]
+/** The read-only repository intelligence the seat gets from the Maestro Arsenal (research-repo.ts). */
+export const REPO: readonly string[] = [ResearchRepoTools.RepoMapTool.id, ResearchRepoTools.RepoSymbolsTool.id, ResearchRepoTools.RepoGitStateTool.id]
+const IDS: readonly string[] = [AtlasContextTool.id, ResearchRecordTool.id, ResearchViewTool.id, ResearchCaptureTool.id, ...REPO]
 
 export const nodes = [ResearchRecords.node, ResearchExecution.node] as const
 
@@ -25,11 +28,14 @@ export const make = Effect.gen(function* () {
   const record = yield* ResearchRecordTool
   const view = yield* ResearchViewTool
   const acquire = yield* ResearchCaptureTool
+  const map = yield* ResearchRepoTools.RepoMapTool
+  const symbols = yield* ResearchRepoTools.RepoSymbolsTool
+  const git = yield* ResearchRepoTools.RepoGitStateTool
   const execution = yield* ResearchExecution.Service
   const capture = yield* ResearchSourceCapture.make
   return {
     /** The discovery tools, initialized as builtins. */
-    init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire)]),
+    init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire), Tool.init(map), Tool.init(symbols), Tool.init(git)]),
     /** One builtin call; Claude host tool-use IDs also key the PreToolUse debit, so execution reconciles it. */
     charge: <E, R>(definition: Tool.Def, args: unknown, context: Tool.Context,
       run: (effect: Effect.Effect<Tool.ExecuteResult>) => Effect.Effect<Tool.ExecuteResult, E, R>) =>

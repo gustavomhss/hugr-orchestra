@@ -46,7 +46,8 @@ export type Input = {
  * per-subagent tool scoping; the built-ins stay on for the session.
  */
 export const CAPTURE: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  jimmy: ["research_capture", "research_view", "research_record", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "skill"],
+  jimmy: ["research_capture", "research_view", "research_record", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "skill",
+    "repo_map", "repo_symbols", "repo_git_state"],
 })
 
 /**

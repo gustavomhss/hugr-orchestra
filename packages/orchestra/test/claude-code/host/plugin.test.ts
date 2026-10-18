@@ -52,7 +52,7 @@ const tools = Object.fromEntries(
       "grep",
       ...(seat.profile === "execution" ? ["bash", "edit", "write", "apply_patch", ClaudeHostProcess.ID] : []),
       ...(seat.skills.length ? ["skill"] : []),
-      ...(seat.workResult === "discovery-work-result-v1" ? ["research_capture", "research_view", "research_record", "atlas_context"] : []),
+      ...(seat.workResult === "discovery-work-result-v1" ? ["research_capture", "research_view", "research_record", "atlas_context", "repo_map", "repo_symbols", "repo_git_state"] : []),
       ...(seat.atlasMemory ? ["atlas_memory_recall", "atlas_memory_emit"] : []),
       ...(seat.id === "lucy" ? ["maestro_record_review"] : []),
       ...(seat.id === "archie"
