@@ -147,7 +147,7 @@ if (cmd === "bun" && (argv[0] === "test" || key === "download")) {
     await Promise.all(["bun", "cargo", "unzip", "chmod", "deno"].map(async (cmd) => {
       const file = cmd === "deno" ? deno : path.join(box.dir, "fake-bin", cmd)
       await Bun.write(file, `#!/usr/bin/env bash\n"$BUNDLE_REAL_BUN" "$BUNDLE_BOUNDARY_CHILD" ${cmd} "$@" || exit $?\n` + (cmd === "bun" ?
-        'if [[ "$1" == "../core/test/distribution-bundle-gates.ts" || ( "$1" == "script/distribution-deno.ts" && "${2:-}" == "--verify-version" ) ]]; then exec "$BUNDLE_REAL_BUN" "$@"; fi\n' : ""))
+        'if [[ "$1" == "../../packages/core/test/distribution-bundle-gates.ts" || ( "$1" == "script/distribution-deno.ts" && "${2:-}" == "--verify-version" ) ]]; then exec "$BUNDLE_REAL_BUN" "$@"; fi\n' : ""))
       await chmod(file, 0o755)
     }))
   })

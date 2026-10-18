@@ -243,8 +243,8 @@ jobs:
         working-directory: modules/maestro/arsenal
         run: |
           set -euo pipefail
-          mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../distribution-logs/parser-abi.log
+          mkdir -p ../../../distribution-logs
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../../distribution-logs/parser-abi.log
       - name: Prove localized proof oracles
         if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest' && matrix.cpu == 'X64'
         working-directory: packages/cli
