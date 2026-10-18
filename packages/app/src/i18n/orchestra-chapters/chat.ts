@@ -14,6 +14,8 @@ export const CHAT_COPY = {
   "orchestra.chat.menu.export": "Export session",
   "orchestra.chat.menu.archive": "Archive session",
   "orchestra.chat.menu.delete": "Delete session",
+  "orchestra.chat.archived.loading": "Loading archived sessions…",
+  "orchestra.chat.archived.restored": "Session restored",
   "orchestra.chat.models.all": "All models",
   "orchestra.chat.models.count": "{{count}} models",
   "orchestra.chat.model.noProvider": "No provider is connected yet. Connect one to choose a model.",
