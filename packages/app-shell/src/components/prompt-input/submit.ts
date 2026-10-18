@@ -14,7 +14,7 @@ import { agentKey } from "@/context/agent-identity"
 import { usePermission } from "@/context/permission"
 import { type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
-import { useServerSDK } from "@/context/server-sdk"
+import { useServerSDK, type ServerSDK } from "@/context/server-sdk"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
 import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
@@ -442,6 +442,27 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionID: session.id, api, serverState,
       } : undefined,
     })
+    // A first send that fails leaves the Session this draft created behind, empty, in the sidebar. Delete it when the
+    // server confirms it holds no messages. When that cannot be confirmed, keep it and label it so the user can delete
+    // it. The draft itself (text, context, subagent models, worktree) stays as it was for the next try.
+    const settleEmptySession = async () => {
+      const created = admission.session
+      if (!isNewSession || !created || admission.request?.admitted) return
+      const empty = await sessionHasNoMessages(server, created.id, sessionDirectory).catch(() => undefined)
+      if (empty === false) return
+      const removed = empty === true &&
+        (await api.remove({ sessionID: created.id, directory: sessionDirectory }).then(() => true, () => false))
+      if (!removed) return seed(serverState, sessionDirectory, { ...created, title: language.t("orchestra.chat.send.emptySession") })
+      const [, setStore] = serverState.child(sessionDirectory)
+      setStore("session", (list: Session[]) => list.filter((item) => item.id !== created.id))
+      // The next try creates a new Session, so nothing tied to the deleted one may carry over.
+      admission.session = undefined
+      admission.request = undefined
+      admission.policyWritten = undefined
+      admission.legacyOverrideAcknowledged = undefined
+      admission.acknowledgedPolicy = undefined
+      admission.failedWrite = undefined
+    }
     const policy = createSubmissionPolicy({
       key: rulesKey, sessionID: session.id, protocol: server.protocol,
       management: server.sessionManagement, admission, current: ownsSource,
@@ -449,11 +470,13 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       failedMessage: language.t("common.requestFailed"),
       legacyWrite: (permission) => server.client.session.update({ sessionID: session.id, directory: sessionDirectory, permission }),
     })
-    const policyError = (err: unknown) => {
-      if (!controller.signal.aborted && ownsSource()) showToast({
+    const policyError = async (err: unknown) => {
+      if (controller.signal.aborted) return false as const
+      if (ownsSource()) showToast({
         title: language.t("common.requestFailed"),
         description: sessionManagementUnsupported(err) ? language.t("session.subagentModels.unsupported") : errorMessage(err),
       })
+      await settleEmptySession()
       return false as const
     }
     const receipt = { revision: undefined as number | undefined }
@@ -574,13 +597,14 @@ export function createPromptSubmit(input: PromptSubmitInput) {
           clearInput()
           return !controller.signal.aborted && ownsSource()
         },
-      }).catch((err) => {
+      }).catch(async (err) => {
         if (controller.signal.aborted) return false
         if (ownsSource()) showToast({
           title: language.t("prompt.toast.shellSendFailed.title"),
           description: errorMessage(err),
         })
         restoreInput()
+        await settleEmptySession()
         return false
       })
       if (sent !== false) await promote()
@@ -624,7 +648,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         if (sent && queued && ownsSource()) showToast({ title: language.t("orchestra.chat.delivery.queued") })
         return sent
       })
-      .catch((err) => {
+      .catch(async (err) => {
         if (controller.signal.aborted) return false
         if (ownsSource() && (isCommand || sessionDirectory === projectDirectory) && !queued) {
           syncState.set("session_status", session.id, { type: "idle" })
@@ -635,6 +659,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         })
         removeOptimisticMessage()
         restoreInput()
+        await settleEmptySession()
         return false
       })
   }
@@ -673,6 +698,18 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       })
     },
   }
+}
+
+// Reads one message of the Session from the server. A request that fails or takes too long rejects, which callers
+// treat as "cannot confirm".
+async function sessionHasNoMessages(server: ServerSDK, sessionID: string, directory: string) {
+  const signal = AbortSignal.timeout(5_000)
+  if ((await server.protocol) === "v1") {
+    const result = await server.client.session.messages({ sessionID, directory, limit: 1 }, { signal })
+    return (result.data ?? []).length === 0
+  }
+  const page = await server.currentApi.message.list({ sessionID, limit: 1, order: "desc" }, { signal })
+  return page.data.length === 0
 }
 
 function trackPendingPrompt(scope: ServerScope, sessionID: string, job: PendingPrompt) {

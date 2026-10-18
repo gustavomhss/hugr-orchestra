@@ -20,6 +20,7 @@ export const CHAT_COPY = {
   "orchestra.chat.terminal.createFailed": "Could not open a terminal",
   "orchestra.chat.terminal.closeFailed": "Could not close the terminal. It may still be running on the server.",
   "orchestra.chat.send.blockedByHook": "Blocked by hook “{{name}}”: {{message}}",
+  "orchestra.chat.send.emptySession": "Empty session",
   "orchestra.chat.placeholder": "Message Orchestra…",
   "orchestra.chat.menu.rename": "Rename session",
   "orchestra.chat.menu.export": "Export session",

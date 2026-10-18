@@ -96,8 +96,12 @@ export const interrupts: string[] = []
 export const preparations: PromiseWithResolvers<void>[] = []
 export const statusWrites: { sessionID: string; type: string }[] = []
 export const sdkReads: { scope: string; directory: string }[] = []
+export const removedSessions: string[] = []
 
 export const state = {
+  // How many messages the server reports for a Session; undefined makes the read fail, as an unreachable server would.
+  messageCount: undefined as number | undefined,
+  removeFailure: false,
   serverSessionSyncs: 0,
   params: {} as { id?: string },
   search: {} as { draftId?: string },
@@ -216,11 +220,20 @@ export const clientFor = (directory: string) => {
       interrupt: async (input: { sessionID: string }) => {
         interrupts.push(input.sessionID)
       },
+      remove: async (input: { sessionID: string }) => {
+        removedSessions.push(input.sessionID)
+        if (state.removeFailure) throw new Error("delete failed")
+      },
     },
   }
   return {
     api,
     session: {
+      delete: (input: { sessionID: string }) => api.session.remove(input),
+      messages: async () => {
+        if (state.messageCount === undefined) throw new Error("server unreachable")
+        return { data: Array.from({ length: state.messageCount }, (_, index) => ({ info: { id: `message-${index}` } })) }
+      },
       create: async (input: { directory?: string }) => ({
         data: {
           ...(await api.session.create({ location: { directory: input.directory ?? directory } })),
@@ -267,7 +280,16 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
   return {
     scope, get protocol() { return Promise.resolve(state.protocol === "v1" ? "v1" as const : "v2" as const) },
     protocolKind: () => state.protocol,
-    client, currentApi: { ...current, session: { ...current.session, ...client.api.session } } as unknown as ServerApi,
+    client, currentApi: {
+      ...current,
+      session: { ...current.session, ...client.api.session },
+      message: {
+        list: async () => {
+          if (state.messageCount === undefined) throw new Error("server unreachable")
+          return { data: Array.from({ length: state.messageCount }, (_, index) => ({ id: `message-${index}` })), cursor: {} }
+        },
+      },
+    } as unknown as ServerApi,
     createClient: (options: { directory?: string }) => clientFor(options.directory ?? "/repo/main"),
     sessionManagement: {
       setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
@@ -559,6 +581,9 @@ beforeEach(() => {
   preparations.length = 0
   statusWrites.length = 0
   sdkReads.length = 0
+  removedSessions.length = 0
+  state.messageCount = undefined
+  state.removeFailure = false
   state.waiting = 0
   state.waitersReady = Promise.withResolvers<void>()
   state.serverSessionSyncs = 0
