@@ -6,7 +6,7 @@ import { useFile, selectionFromLines, type FileSelection, type SelectedLineRange
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { usePermission } from "@/context/permission"
-import { usePrompt } from "@/context/prompt"
+import { isPromptEqual, usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
 import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
@@ -87,6 +87,19 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (!id) return
     return sync().session.get(id)
   }
+  // Text the user typed must survive undo and redo. A prompt still equal to the reverted message
+  // was put there by the last undo and may be replaced.
+  const typedPrompt = (promptSession: ReturnType<typeof prompt.capture>, revertID: string | undefined) => {
+    if (!promptSession.dirty()) return false
+    if (!revertID) return true
+    const reverted = extractPromptFromParts(sync().data.part[revertID] ?? [], { directory: sdk().directory })
+    return !isPromptEqual(promptSession.current(), reverted)
+  }
+  const draftKept = () =>
+    showToast({
+      title: language.t("orchestra.chat.revert.draftKept.title"),
+      description: language.t("orchestra.chat.revert.draftKept.description"),
+    })
   const hasReview = () => !!params.id
   const normalizeTab = (tab: string) => {
     if (!tab.startsWith("file://")) return tab
@@ -270,6 +283,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     const message = messages[boundary - 1]
     if (!message) return
     const parts = sync().data.part[message.id]
+    const keep = typedPrompt(promptSession, revert)
 
     if (sync().data.session_working(sessionID)) {
       await session.interrupt({ sessionID })
@@ -280,7 +294,9 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       prompt: promptSession,
       request: () => session.revert.stage({ sessionID, messageID: message.id }),
       updatePrompt: (promptSession) => {
-        if (parts) promptSession.set(extractPromptFromParts(parts, { directory }))
+        if (!parts) return
+        if (keep) return draftKept()
+        promptSession.set(extractPromptFromParts(parts, { directory }))
       },
       updateViewport: () => setActiveMessage(messages[boundary - 2]),
     })
@@ -296,6 +312,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
 
     const revertMessageID = info()?.revert?.messageID
     if (!revertMessageID) return
+    const keep = typedPrompt(promptSession, revertMessageID)
 
     const boundary = messages.findIndex((message) => message.id === revertMessageID)
     if (boundary < 0) return
@@ -305,7 +322,9 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
         owner,
         prompt: promptSession,
         request: () => session.revert.clear({ sessionID }),
-        updatePrompt: (promptSession) => promptSession.reset(),
+        updatePrompt: (promptSession) => {
+          if (!keep) promptSession.reset()
+        },
         updateViewport: () => setActiveMessage(messages.at(-1)),
       })
       return

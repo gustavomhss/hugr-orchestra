@@ -207,7 +207,13 @@ function keyDown(
     return changed({ ...state, popover: { type: "closed" }, focus: "editor" }, [{ type: "focus.editor" }], true)
   }
   if (event.key === "Tab" || (event.key === "Enter" && !event.composing)) {
-    if (!state.popover.activeID) return unchanged(state, true)
+    if (!state.popover.activeID) {
+      // An editor popover with no match must not trap Enter: close it and let the editor submit the typed text.
+      if (event.key === "Enter" && state.popover.type !== "command-menu" && event.ids.length === 0) {
+        return changed({ ...state, popover: { type: "closed" } })
+      }
+      return unchanged(state, true)
+    }
     return unchanged(state, true, [{ type: "suggestion.select", id: state.popover.activeID }])
   }
   const direction =
