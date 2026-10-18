@@ -77,7 +77,7 @@ it.instance("host captures private ResearchRecords for qualified research handof
     if (!pre || !post) throw new Error("Host did not wire research callbacks")
     const base = { session_id: frame.session_id, transcript_path: "/tmp/scripted-research-scope", cwd: fixture.chat.directory }
     const signal = new AbortController().signal
-    const task = { subagent_type: "orchestra:jimmy", description: "Investigate conditions",
+    const task = { subagent_type: "orchestra:jimmy-quick", description: "Investigate conditions",
       prompt: "Find the applicability conditions.", run_in_background: false }
     yield { type: "assistant", ...frame, uuid: "scope-agent-frame", message: { id: "msg_scope_agent", content: [
       { type: "tool_use", id: "scope-agent", name: "Agent", input: task },
@@ -90,7 +90,7 @@ it.instance("host captures private ResearchRecords for qualified research handof
       message: { id: "msg_scope_record", content: [
         { type: "tool_use", id: "scope-record", name: "mcp__orchestra__research_record", input: finding },
       ], stop_reason: "tool_use", usage: {} } }
-    const admitted = await pre({ ...base, hook_event_name: "PreToolUse", agent_id: "scope-task", agent_type: "orchestra:jimmy",
+    const admitted = await pre({ ...base, hook_event_name: "PreToolUse", agent_id: "scope-task", agent_type: "orchestra:jimmy-quick",
       tool_name: "mcp__orchestra__research_record", tool_use_id: "scope-record", tool_input: finding }, "scope-record", { signal })
     expect(admitted).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
     const accepted = "hookSpecificOutput" in admitted && admitted.hookSpecificOutput?.hookEventName === "PreToolUse"

@@ -15,6 +15,8 @@ import type {
   Options,
   SDKTaskNotificationMessage,
 } from "@anthropic-ai/claude-agent-sdk"
+import { Research } from "@orchestra/schema/research"
+import { ResearchSeatTools } from "@/research/seat-tools"
 import type { SessionID } from "@/session/schema"
 
 /**
@@ -126,6 +128,16 @@ export function environment(env: Record<string, string | undefined>): Record<str
   return { ...Object.fromEntries(Object.entries(env).filter(([key]) => key !== "CLAUDE_CODE_ENTRYPOINT")), ...ENV_FLAGS }
 }
 
+// The research seat's tier is the agent Maestro names (J1.4); its web domains travel in a task grant (J1.9).
+function research() {
+  // The plugin agent names ClaudeHostPlugin.agents builds; options stays free of the plugin builder's imports.
+  const [quick, focused, deep] = Research.Depth.literals.map((tier) => `\`orchestra:${ResearchSeatTools.SEAT}-${tier}\``)
+  return `- Dispatch \`${ResearchSeatTools.SEAT}\` at the tier the question needs: ${quick} for one narrow lookup, ${focused} for ` +
+    `a question across a few modules, ${deep} for a broad or high-stakes investigation. The tier sets its turn, tool and ` +
+    `time budget. To limit its web search to known domains, first call \`mcp__orchestra__task_grant\` with seat ` +
+    `"${ResearchSeatTools.SEAT}", writePaths [] and allowedDomains, then put \`grantID: <id>\` on its own line in the brief.`
+}
+
 /** The text appended to Claude Code's preset for the main thread's seat. */
 export function append(seat: string, seats: Record<string, string>) {
   if (seat === "maestro") return maestro(seats)
@@ -156,6 +168,7 @@ function maestro(seats: Record<string, string>) {
         ? [`- Run ${foreground.map((name) => `\`${name}\``).join(" and ")} in the foreground, never with ` +
           "`run_in_background`: you need their result in this turn, and Orchestra refuses a background dispatch of them."]
         : []),
+      ...(names.some((name) => seats[name] === ResearchSeatTools.SEAT) ? [research()] : []),
       "- Read a seat's report before you rely on it, and check its claims against the repository when they matter.",
     ].join("\n"),
     "## Orchestra's tools",

@@ -10,6 +10,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
@@ -53,7 +54,7 @@ export const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 export const base = { session_id: "native-host", transcript_path: "/tmp/unused", cwd: "/tmp" } satisfies BaseHookInput
 export const ref = { providerID: ProviderV2.ID.make("anthropic"), modelID: ModelV2.ID.make("claude-test") }
 
-export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: { research?: false } = {}) {
+export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: { research?: false; capture?: false } = {}) {
   const sessions = yield* Session.Service
   const agents = yield* Agent.Service
   const registry = yield* ToolRegistry.Service
@@ -76,14 +77,15 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
   const abort = new AbortController()
   yield* Effect.addFinalizer(() => Effect.sync(() => abort.abort()))
   const hooks = ClaudeHostHooks.create({ sessionID: parent.id, directory: parent.directory, worktree: parent.directory,
-    agent: "maestro", abort, join, granted, research: input.research === false ? undefined : research,
+    agent: "maestro", abort, join, granted,
+    research: input.research === false ? undefined : input.capture === false ? { ...research, capture: undefined } : research,
     run: <A, R>(effect: Effect.Effect<A, unknown, R>) => Effect.runPromiseWith(context)(effect as Effect.Effect<A, unknown>),
     parts: { tool: (callID) => mirrored.get(callID), complete: (part) => sessions.updatePart(part).pipe(
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) },
   })
   // Native admission goes through the real hook and retained logical Task. Only SDK task identity is scripted.
-  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research", brief?: string) {
-    const admitted = yield* dispatch(callID, { prompt: brief })
+  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research", tier: Research.Depth = "quick", prompt?: string) {
+    const admitted = yield* dispatch(callID, { subagentType: `orchestra:jimmy-${tier}`, prompt })
     const child = join.child(callID)
     if (!child) throw new Error(`Research dispatch denied: ${JSON.stringify(admitted.output)}`)
     const taskID = `native-${callID}`
@@ -120,7 +122,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
   const fire = (input: HookInput) => Effect.promise(() => hooks[input.hook_event_name]![0].hooks[0](input, undefined, { signal: abort.signal }))
   const dispatch = Effect.fn("ClaudeResearchFixture.dispatch")(function* (callID = "toolu_research",
     input: { tool?: "Agent" | "Task"; subagentType?: string; background?: boolean; prompt?: string } = {}) {
-    const args = { subagent_type: input.subagentType ?? "orchestra:jimmy", description: "Investigate conditions",
+    const args = { subagent_type: input.subagentType ?? "orchestra:jimmy-quick", description: "Investigate conditions",
       prompt: input.prompt ?? "Find the applicability conditions.", run_in_background: input.background ?? false }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: parent.id, type: "tool",
       tool: input.tool ?? "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } }, metadata: { providerExecuted: true } })

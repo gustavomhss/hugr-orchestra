@@ -164,10 +164,12 @@ it.instance(
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
         const ids = Object.keys(Seats.all).toSorted()
         expect(ids.length).toBeGreaterThanOrEqual(8)
-        expect(built.seats).toEqual(Object.fromEntries(ids.map((id) => [`orchestra:${id}`, id])))
+        // The research seat has one agent per tier (J1.4); every other seat has one agent named by its id.
+        const agents = ids.flatMap((id) => ClaudeHostPlugin.agents(id).map((agent) => ({ id, name: agent.name })))
+        expect(built.seats).toEqual(Object.fromEntries(agents.map((agent) => [`orchestra:${agent.name}`, agent.id])))
         expect(built.sdkAgents).toEqual({})
         const written = await files(built.path)
-        expect(written.filter((file) => file.startsWith("agents/"))).toEqual(ids.map((id) => `agents/${id}.md`))
+        expect(written.filter((file) => file.startsWith("agents/"))).toEqual(agents.map((agent) => `agents/${agent.name}.md`).toSorted())
         expect(JSON.parse(await Bun.file(path.join(built.path, ".claude-plugin/plugin.json")).text()).name).toBe(
           "orchestra",
         )
@@ -185,12 +187,12 @@ it.instance(
         // Skill reference files travel with their SKILL.md.
         expect(written.filter((file) => file.startsWith("skills/backend-implement/")).length).toBeGreaterThan(1)
 
-        for (const seat of seats) {
-          const text = await Bun.file(path.join(built.path, `agents/${seat.id}.md`)).text()
+        for (const [seat, agent] of seats.flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
+          const text = await Bun.file(path.join(built.path, `agents/${agent.name}.md`)).text()
           const head = frontmatter(text)
-          expect(head.name).toBe(seat.id!)
+          expect(head.name).toBe(agent.name)
           expect(JSON.parse(head.skills)).toEqual(Seats.find(seat.id)?.skills)
-          expect(JSON.parse(head.description)).toBe(seat.description!)
+          expect(JSON.parse(head.description)).toStartWith(seat.description!.trim())
           expect(JSON.parse(head.model)).toBe("inherit")
           expect(head.disallowedTools).toBeUndefined()
           expect(text).toContain(seat.prompt!.split("\n")[0])
@@ -538,8 +540,9 @@ it.instance(
   60_000,
 )
 
-test("jimmy reads sources only through the research capture tools", () => {
+test("jimmy gets its descriptor's tools and native search, never WebFetch, LSP or repository intelligence", () => {
   const listed = ClaudeHostPlugin.tools("jimmy", [
+    "repo_map",
     "read",
     "grep",
     "glob",
@@ -550,12 +553,16 @@ test("jimmy reads sources only through the research capture tools", () => {
     "research_capture", "research_record", "research_view", "skill",
   ])
   expect(listed).toEqual([
+    "Glob",
+    "Grep",
+    "Read",
     "Skill",
+    "WebSearch",
+    "mcp__orchestra__context_recall",
     "mcp__orchestra__research_capture",
     "mcp__orchestra__research_record",
     "mcp__orchestra__research_view",
   ])
-  expect(ClaudeHostPlugin.CAPTURE.jimmy).toContain("research_capture")
 })
 
 it.instance(

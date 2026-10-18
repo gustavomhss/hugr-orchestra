@@ -1,11 +1,16 @@
 export * as ClaudeHostResearch from "./research"
 
-import { Cause, Context, Duration, Effect, Exit, Fiber, Schema, Scope } from "effect"
+import { Cause, Context, Duration, Effect, Exit, Fiber, Option, Schema, Scope } from "effect"
 import type { Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { Research } from "@orchestra/schema/research"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
+import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchExecution } from "@/research/allowance"
-import type { SessionID } from "@/session/schema"
+import { ResearchTools } from "@/research/binding"
+import { ResearchSeatTools } from "@/research/seat-tools"
+import { MessageID, type SessionID } from "@/session/schema"
+import type { Tool } from "@/tool/tool"
 import { ClaudeCodeTools } from "../tools"
 import type { ClaudeHostJoin } from "./join"
 
@@ -59,7 +64,7 @@ export const nativeStop = (live: {
           reason: "join_missing",
           message: "NATIVE_RESEARCH_STOP_JOIN_MISSING: no admitted child join",
         })
-      if (joined.hold || joined.child !== sessionID || joined.seat !== "jimmy")
+      if (joined.hold || joined.child !== sessionID || joined.seat !== ResearchSeatTools.SEAT)
         return yield* new NativeStopError({
           sessionID,
           dispatchCallID,
@@ -88,16 +93,50 @@ export const nativeStop = (live: {
     })
   })
 
-/**
- * Claude Code's Agent input has no field for Orchestra's effort tier, so the dispatcher states it as the brief's first
- * line, `effort: quick|focused|deep`. No such line means quick; any other value is refused (undefined).
- */
-export function effort(prompt: unknown) {
-  const line = /^effort:(.*)$/i.exec(typeof prompt === "string" ? prompt.split("\n", 1)[0].trim() : "")
-  if (!line) return "quick" as const
-  const tier = line[1].trim()
-  return Schema.is(Research.Depth)(tier) ? tier : undefined
+/** A native built-in call of the research seat whose output PostToolUse retains (J1.7). */
+export type Captured = {
+  readonly sessionID: SessionID
+  readonly callID: string
+  /** Claude Code's tool name: one of ResearchSeatTools.CAPTURED. */
+  readonly tool: string
+  readonly response: unknown
+  /** The mirrored call's part: the invocation Research binding verifies. */
+  readonly part: { readonly messageID: string; readonly tool: string }
 }
+
+const ReadOutput = Schema.Struct({ type: Schema.Literal("text"), file: Schema.Struct({
+  filePath: Schema.String, content: Schema.String, numLines: Schema.Int, startLine: Schema.Int, totalLines: Schema.Int }) })
+const GrepOutput = Schema.Struct({ filenames: Schema.Array(Schema.String), content: Schema.optional(Schema.String),
+  appliedLimit: Schema.optional(Schema.Number) })
+const GlobOutput = Schema.Struct({ filenames: Schema.Array(Schema.String), truncated: Schema.Boolean })
+const WebSearchOutput = Schema.Struct({ query: Schema.String, results: Schema.Array(Schema.Unknown) })
+
+/**
+ * The retained representation of a native built-in's structured `tool_response` (SDK 0.3.289, recorded in
+ * jimmy-capture.test.ts). Read keeps original-file lines; Grep, Glob and WebSearch are tool output. Any other shape is
+ * refused, so the caller withholds the output instead of retaining a guess.
+ */
+export function retained(input: Pick<Captured, "sessionID" | "callID" | "tool" | "response">) {
+  const uri = `native:${input.sessionID}/${input.callID}/${input.tool}`
+  const output = (content: string, complete: boolean, json = false) => ({ source: { origin: { kind: "tool-output", uri },
+    representation: json ? "structured-json" : "text", mediaType: json ? "application/json" : "text/plain", content, complete,
+  } satisfies ResearchRecords.CaptureInput, lines: undefined })
+  if (input.tool === "Read") return Schema.decodeUnknownOption(ReadOutput)(input.response).pipe(Option.map((read) => ({
+    source: { origin: { kind: "file", uri: read.file.filePath }, representation: "text", mediaType: "text/plain",
+      content: read.file.content, complete: read.file.numLines === read.file.totalLines } satisfies ResearchRecords.CaptureInput,
+    lines: { start: read.file.startLine, end: read.file.startLine + Math.max(read.file.numLines, 1) - 1 },
+  })))
+  if (input.tool === "Grep") return Schema.decodeUnknownOption(GrepOutput)(input.response).pipe(Option.map((grep) =>
+    output(grep.content ?? grep.filenames.join("\n"), grep.appliedLimit === undefined)))
+  if (input.tool === "Glob") return Schema.decodeUnknownOption(GlobOutput)(input.response).pipe(Option.map((glob) =>
+    output(glob.filenames.join("\n"), !glob.truncated)))
+  if (input.tool === "WebSearch") return Schema.decodeUnknownOption(WebSearchOutput)(input.response).pipe(Option.map((search) =>
+    output(JSON.stringify(search), true, true)))
+  return Option.none()
+}
+
+/** The ledger reason of a native Read whose span this dispatch already retained with the same bytes. */
+export const DUPLICATE = "duplicate_read"
 
 /** One query's issued native dispatch frames; model input cannot supply research attribution. */
 export const make = Effect.gen(function* () {
@@ -112,6 +151,9 @@ export const make = Effect.gen(function* () {
   const aborts = new Map<SessionID, AbortController>()
   const terminal = new Set<SessionID>()
   const stops = new Map<SessionID, StopStatus>()
+  // Per dispatch: the retained ref of each native Read span by its bytes' digest, and whether its inquiry closed.
+  const spans = new Map<SessionID, Map<string, { readonly digest: string; readonly ref: Research.SourceRef }>>()
+  const concluded = new Set<SessionID>()
   const query = { closed: false }
   const close = yield* Effect.cached(
     Scope.close(scope, Exit.void).pipe(Effect.andThen(Effect.sync(() => deadlines.clear()))),
@@ -283,6 +325,40 @@ export const make = Effect.gen(function* () {
       aborts.forEach((abort) => abort.abort())
       return close
     }).pipe(Effect.uninterruptible),
+    /**
+     * Retain a native built-in's output for the dispatch (J1.7). A Read of a span already retained with the same bytes
+     * is recorded as a duplicate attempt against the earlier ref instead of a second copy, so rereads are counted.
+     */
+    capture: (input: Captured) =>
+      attributed(input.sessionID, Effect.gen(function* () {
+        const records = yield* ResearchRecords.Service
+        const found = retained(input)
+        if (Option.isNone(found))
+          return yield* new Research.Error({ code: "unsupported", message: `${input.tool} returned an output shape Orchestra cannot retain` })
+        const source = found.value.source
+        const lines = found.value.lines
+        const context = { sessionID: input.sessionID, messageID: MessageID.make(input.part.messageID), callID: input.callID,
+          agent: ResearchSeatTools.SEAT, agentID: ResearchSeatTools.SEAT, abort: new AbortController().signal, messages: [],
+          metadata: () => Effect.void, ask: () => Effect.void } satisfies Tool.Context
+        const key = lines ? `${source.origin.uri}#${lines.start}-${lines.end}` : undefined
+        const digest = ResearchLedger.digest(source.content)
+        const prior = key ? spans.get(input.sessionID)?.get(key) : undefined
+        if (prior?.digest === digest) {
+          yield* ResearchTools.run(context, input.part.tool, (binding, invocation) => records.attempt(binding, invocation, {
+            outcome: "captured", stage: "retention", reason: DUPLICATE, source: prior.ref, returned: true }), false)
+          return { ref: prior.ref, duplicate: true }
+        }
+        const capture = { ...source, ...(lines ? { observed: { byteStart: yield* offset(source.origin.uri, lines.start),
+          lineStart: lines.start, lineEnd: lines.end } } : {}) }
+        const receipt = yield* ResearchTools.run(context, input.part.tool, (binding, invocation) => execution.captureBytes(
+          input.sessionID, `${input.part.messageID}:${input.callID}:${capture.representation}`, Buffer.byteLength(capture.content, "utf8"),
+          records.capture(binding, invocation, capture)), false)
+        if (key) spans.set(input.sessionID, (spans.get(input.sessionID) ?? new Map()).set(key, { digest, ref: receipt.ref }))
+        return { ref: receipt.ref, duplicate: false }
+      })).pipe(named(input.sessionID)),
+    /** The dispatch's inquiry closed (J5.5): every later call of the seat is refused. */
+    conclude: (sessionID: SessionID) => Effect.sync(() => { concluded.add(sessionID) }),
+    concluded: (sessionID: SessionID) => Effect.sync(() => concluded.has(sessionID)),
     tool: (sessionID: SessionID, callID: string, name: string) =>
       attributed(
         sessionID,
@@ -328,3 +404,17 @@ export const make = Effect.gen(function* () {
 })
 
 export type Runtime = Effect.Success<typeof make>
+
+// The byte offset of a 1-based line in the file as it is now; Read reports lines only.
+function offset(file: string, line: number) {
+  if (line <= 1) return Effect.succeed(0)
+  return Effect.tryPromise({
+    try: () => Bun.file(file).bytes(),
+    catch: () => new Research.Error({ code: "source_unavailable", message: `${file} could not be read to locate line ${line}` }),
+  }).pipe(Effect.flatMap((bytes) => {
+    // Each step finds the next line feed; the scan stops at the line, so it never reads past it.
+    const start = Array.from({ length: line - 1 }).reduce<number>((from) => from < 0 ? from : (bytes.indexOf(10, from) + 1 || -1), 0)
+    return start > 0 ? Effect.succeed(start)
+      : Effect.fail(new Research.Error({ code: "source_unavailable", message: `${file} has fewer than ${line} lines now` }))
+  }))
+}
