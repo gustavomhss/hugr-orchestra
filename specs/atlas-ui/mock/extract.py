@@ -66,6 +66,10 @@ data = {
     'policy': json.load(open(os.path.join(A, 'policy.json')))['authz']['scopes'],
     't0Keywords': json.load(open(os.path.join(A, 'policy.json')))['t0Heuristic']['keywords'],
     'scip': os.path.exists(os.path.join(A, 'index.scip')),
+    # adapter-io/src/store-provenance.ts: which durable store files git tracks decides what reads may serve.
+    'tracked': (lambda t: {'projection': any(re.match(r'\.atlas/projection(\.\d+)?\.json$', x) for x in t), 'cas': sum(1 for x in t if x.startswith('.atlas/cas/')),
+                           'staging': any(re.match(r'\.atlas/staging(\.\d+)?\.json$', x) for x in t), 'policy': '.atlas/policy.json' in t, 'memory': '.atlas/memory.jsonl' in t})(git('ls-files', '.atlas').splitlines()),
+    'sealed': sum(1 for _, n in proj['current'] if n.get('seal') == 'proven'),
     'facts': facts, 'candidates': candidates, 'reasoning': reasoning,
     'dependents': {k: sorted(v) for k, v in deps.items()}, 'dependentCount': {k: len(v) for k, v in deps.items()},
 }

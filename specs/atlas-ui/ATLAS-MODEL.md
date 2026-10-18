@@ -119,7 +119,7 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 
 - **Genesis** (`cli/src/mine.ts`):
   - roda até três braços (advisory, dependency e count) sobre arquivos, ou símbolos com `ATLAS_FRONTIER=symbol`;
-  - tem custo medido de cerca de US$ 0,10 por site e usa o modelo configurado pelo operador;
+  - usa o modelo configurado pelo operador (o custo por site não tem fonte medida);
   - grava só no staging, sempre como T2 com escopo `atlas:mined`, e guarda o raciocínio;
   - nunca escreve na projection.
 - **Promote:** reenvia cada linha do staging pelo mesmo portão do emit e **não pula ratificação**. Exige um token de ratificação e que o ator esteja autorizado. O staging não é marcado depois de promovido: as linhas continuam lá.
@@ -147,14 +147,16 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 - **`own <escopo>`:** o **briefing do escopo**, isto é, o que um agente recebe ao entrar ali. Ele traz:
   - papel e dono;
   - invariantes, cuidados (*gotchas*) e advisory;
-  - `dependent` (quem depende: o raio de impacto, até 8);
-  - `finer` (subescopos, até 16);
+  - `dependent` (quem depende: fatos no fecho reverso transitivo do SCIP, fora do escopo, em ordem de nodeKey, até 8);
+  - `finer` (todos os filhos no eixo espacial, em ordem de nome, até 16);
   - `pull-reachable`: o que não coube; aparece nomeado, nunca descartado em silêncio.
 
-  O teto é de cerca de 1500 tokens. Não chama LLM, e a mesma entrada sempre dá os mesmos bytes.
+  O teto é de **1500 caracteres** de afirmação, pagos nesta ordem (`retrieval/src/own.ts:167-232`): governantes e *gotchas* (preenchimento guloso: o que não cabe é nomeado e os seguintes ainda podem caber); até 12 **ponteiros** `own_<folha>`, um por subescopo, com custo igual ao tamanho do nome; e o advisory por último, com sub-teto de 750, parando no primeiro que não cabe. Fatos com drift entram com o próprio frescor. Não chama LLM, e a mesma entrada sempre dá os mesmos bytes.
 - **No Orchestra, hoje:**
   - o Maestro e os agentes lêem um **snapshot Own pré-construído** (`OWN-SNAPSHOT.json`, que hoje tem 1 unidade) mais um **catálogo de territórios** (`TERRITORY-CATALOG.json`, que não existe no repo), pela ferramenta `atlas_context` (ações `catalog`, `unit` e `anchor`);
-  - se faltar qualquer coisa, a ferramenta **para (HOLD)** com um de cerca de 30 motivos nomeados. Hoje o motivo é `provider-unconfigured`.
+  - o snapshot **não sai do store vivo**: `scripts/materialize-own-snapshot.mjs` materializa um JSON revisado e recusa entrada vinda de `.atlas/`. A unidade de hoje (`packages/genesis`) é um fixture curado, com dono `atlas-foundation` e 1 invariante T1 que o store não tem;
+  - o host serve o snapshot só enquanto os arquivos-fonte dele (`sourceBlobs`) estão byte a byte iguais e a revisão é ancestral do HEAD; senão, para com `artifacts-invalid`;
+  - se faltar qualquer coisa, a ferramenta **para (HOLD)** com um de cerca de 40 motivos nomeados. Hoje o motivo é `provider-unconfigured`; configurado, ainda pararia, porque o catálogo não existe.
 - **Âncoras do Archie:** um plano carrega de 1 a 8 unidades Own congeladas (com hashes). O Relay revalida as âncoras ao montar o workflow (`anchor-source-drift` se mudaram) e injeta o conteúdo como "dado não confiável" em cada passo.
 
 ---
@@ -167,7 +169,7 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 
 | Tipo | Acesso | Conteúdo | Ciclo |
 |---|---|---|---|
-| **projeto (regras)** | **injetado em todo turno** | `{regra imperativa de uma linha, escopo, âncora?}` | as 12 primeiras por *frecency*; decai pelo desuso (no código, a idade conta linhas novas no log; com 4 ou mais linhas depois, a regra sai); vai para o arquivo, nunca é apagada |
+| **projeto (regras)** | **injetado em todo turno** | `{regra imperativa de uma linha, escopo, âncora?}` | as 12 primeiras por *frecency*; decai por posição no log (a idade conta os registros gravados depois dela no `memory.jsonl`, de qualquer membro, checkpoints incluídos; com 4 ou mais, a regra sai do cabeçalho); vai para o arquivo, nunca é apagada |
 | **tarefa** | só sob demanda | `{taskId, tentado[], falhou com[], parou em, lição}` | ativa até a tarefa fechar; depois arquivada |
 | **PR** | só sob demanda | `{prId, decisões[], resultados de review[], delta de conhecimento[]}` | ativa até o merge; depois arquivada |
 | **logbook** (só Maestro) | só sob demanda | uma entrada por PR: `entregue / decisões e porquê / trade-offs / riscos / pendências` | só cresce; uma decisão nova substitui outra **por link** |
@@ -178,7 +180,7 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
   - **Propostas:** as lições que o membro escreveu nos checkpoints;
   - **Indexadas:** as regras que vão em todo turno, com o total de tokens que somam. É só a contagem, sem teto exibido. O Atlas conta palavras (`memory/src/rules.ts`).
 
-  Uma regra entra com frecency 1, cai pela metade a cada onda sem uso e é arquivada abaixo de 0,1.
+  Uma regra entra com frecency 1 e cai pela metade a cada registro que **qualquer** membro grava depois dela; abaixo de 0,1 sai do cabeçalho. Na prática o repositório inteiro carrega no máximo 4 regras ao mesmo tempo, e um checkpoint de outro membro envelhece as regras de todos. Reenviar a regra idêntica é deduplicado e não renova; regravá-la com outro escopo a traz para a frente. A regra guarda `{rule, scope, grounding?, frecency}`: não guarda a task de origem.
 - **Memory log:** uma entrada por task ou PR. A memória de task é a memória de um spawn. Cada vez que um membro é chamado para uma unidade de trabalho, ficam guardados:
   - a **sessão** dele: o transcript, que é respawnável;
   - **cada invocação** daquela sessão: dispatch, resumes, continuações;
@@ -196,7 +198,8 @@ As 5 execuções reais em `specs/backend-specialist/evidence/continuity-live-202
 
 **O cabeçalho de cada turno** (`orch/maestro/atlas-header.ts`): é a última parte de sistema de todo turno desses três agentes.
 
-- **Consciência** (*Awareness*), compartilhada e derivada do próprio Atlas: `mission`, `constitution` (vinda dos fatos T0), `terrain` (territórios), `ontology` (slot `definition`) e `taste` (vinda do `CONVENTIONS.md`). Teto de cerca de 400 tokens. **Hoje** três facetas estão sempre `UN-SEEDED`.
+- **Consciência** (*Awareness*), compartilhada e derivada do próprio Atlas: `mission`, `constitution` (vinda dos fatos T0), `terrain` (territórios), `ontology` (slot `definition`) e `taste` (vinda do `CONVENTIONS.md`). Teto de cerca de 400 tokens. Só a **linha de topo** de cada faceta é injetada: `taste: CONVENTIONS.md@sha` e `constitution: N ratified T0 invariant(s)`, não o texto. **Hoje** `mission`, `terrain` e `ontology` estão sempre `UN-SEEDED`. **No Orchestra** as cinco saem `unseeded`, porque o cabeçalho lê a raiz do worktree de execução, que não tem `CONVENTIONS.md` nem projection.
+- **Formato** (`orch/maestro/atlas-header.ts:38-58`): `<atlas-header member rules rule-words>`, `Awareness:` com `- faceta: unseeded` ou `- faceta (estado): linha`, `Orientation: none recorded`, `Project rules:` com `- [escopo] regra`.
 - **Orientação**, compartilhada e derivada: `goal / last / current / state`. **Hoje** nada escreve `orientation.jsonl`, então ela vem vazia.
 - **Regras:** as do próprio membro, até 12.
 
@@ -222,15 +225,21 @@ As 5 execuções reais em `specs/backend-specialist/evidence/continuity-live-202
 
 | Arquivo | O que é | Git |
 |---|---|---|
-| `cas/<2hex>/<hash>` | objetos imutáveis: fatos (JSON) e raciocínios do minerador (texto, já sem segredos) | não versionado |
-| `projection.json` (+ 4 gerações) | **o conhecimento vigente**: uma linha por nodeKey, com família, slot, tier, escopo, âncora, afirmações, equivalências, `derivedAt`, `supersededBy`, mais as abstenções | não versionado |
+| `cas/<2hex>/<hash>` | objetos imutáveis: fatos (JSON) e raciocínios do minerador (texto, já sem segredos) | não versionado (se for, ver a tensão abaixo) |
+| `projection.json` (+ gerações) | **o conhecimento vigente**: uma linha por nodeKey, com família, slot, tier, escopo, âncora, afirmações, equivalências, `derivedAt`, `supersededBy`, mais as abstenções | não versionado (se for, ver a tensão abaixo) |
 | `staging.json` (+ gerações) | **candidatos** do genesis, com `answerRef` | não versionado |
-| `policy.json` | quem escreve cada escopo, palavras que sinalizam T0; editado à mão | **versionado** |
+| `policy.json` | quem escreve cada escopo (`authz.scopes`, e opcionalmente `authz.anchors`, que amarra prefixo de âncora a escopo) e as palavras T0 (`t0Heuristic.keywords`, casadas como substring do **nome** do território pelo `atlas init`); editado à mão | **versionado** |
 | `index.scip` | índice SCIP, gerado por fora | não versionado |
 | `memory.jsonl` / `orientation.jsonl` | log de memória dos membros / log de orientação | **versionados** (merge por união) |
 | `OWN-SNAPSHOT.json`, `TERRITORY-CATALOG.json`, `.orchestra/skills/own/…` | o que o Orchestra lê hoje: snapshot Own e catálogo de territórios | versionados (fora de `.atlas/`) |
 
-**Uma tensão real que a interface precisa respeitar.** A documentação diz "git-native, viaja com o repo". No código, **o conhecimento** (projection e CAS) **não pode ser versionado pelo git**: se estiver rastreado, a leitura e a escrita são recusadas. Só a memória, a política e o snapshot Own viajam com o repo. O driver de merge OR-set existe mas não é instalado por nada. Exportar grava só o CAS, e importar não reconstrói a projection.
+**Uma tensão real que a interface precisa respeitar.** A documentação diz "git-native, viaja com o repo". No código (`adapter-io/src/store-provenance.ts`, `read-access.ts`), o que o git rastreia em `.atlas/` decide o que o Atlas serve:
+
+- **nada durável rastreado** (`trusted`): leitura e escrita normais;
+- **projection ou CAS rastreados** (`tracked-provable`): a leitura serve só fatos selados `proven` cuja prova se refaz no HEAD, e toda escrita é recusada;
+- **staging rastreado** (`tracked-staging`): tudo recusado como `untrusted-store`.
+
+O repositório standalone do Atlas, de onde vêm os dados do mock, **comita a projection e os 1.320 objetos do CAS** (commit `2211f3046`). Nenhum dos 596 fatos é selado, então o Atlas atual serviria **zero** deles e recusaria promote, retire e qualquer emit ali. O mock mostra isso no modo "Real store only". Só a memória, a política e o snapshot Own viajam com o repo sem esse custo. O driver de merge OR-set existe mas não é instalado por nada. Exportar grava só o CAS, e importar não reconstrói a projection.
 
 ---
 
@@ -263,7 +272,7 @@ As 5 execuções reais em `specs/backend-specialist/evidence/continuity-live-202
 | raciocínio do minerador (`answerRef`) | "por que a máquina afirmou isso" | no detalhe: **"Como foi deduzido"** |
 | staging do genesis + promote | revisar o que foi minerado e decidir | **Curadoria › Candidatos**: com raciocínio, resultado previsto de cada portão (dry-run do `check`), promover ou descartar |
 | drift mecânico/semântico + reconcile | saber o que apodreceu e consertar | **Curadoria › Mudou no código**: antes e depois, reancorar ou aposentar; o semântico marcado como bloqueante de merge |
-| ratificação (T0 humano, T1) | promover algo a regra | **Curadoria › Ratificar**: com o portão `ratify` e a identidade de quem ratifica |
+| ratificação (T0 humano, T1) | promover algo a regra | **Curadoria › Ratificar**: com o portão `ratify`; o store não guarda quem ratificou |
 | sameAs / subsumes | juntar duplicatas, ver hierarquia | no detalhe do fato, mais uma ação em Curadoria |
 | genesis (escopo, orçamento, custo) | minerar uma área nova | **Curadoria › Minerar**: escolher o escopo, ver o orçamento e o custo estimado |
 | memória por membro, cabeçalho | ver o que cada agente carrega e decidir o que esquecer | **Memória**: por membro, com cabeçalho (Consciência e Orientação compartilhadas; regras próprias com frecency), consultáveis (tarefa, PR, logbook) e arquivadas |

@@ -34,12 +34,17 @@
   // secret-handling facts become T0, ratified by a person with Billy's security input.
   const core = ["packages/kernel", "packages/knowledge", "packages/grounding", "packages/retrieval", "packages/memory", "packages/index", "packages/persist", "packages/tools"]
   core.forEach((unit) => R.facts.filter((x) => x.file.startsWith(`${unit}/`) && !x.drift && ["invariant", "contract", "postcondition", "precondition"].includes(x.slot)).slice(0, 2)
-    .forEach((x) => Object.assign(x, { tier: "T1", ratifiedBy: "maestro", example: true })))
+    .forEach((x) => Object.assign(x, { tier: "T1", example: true })))
   R.facts.filter((x) => x.slot === "security-property" && !x.drift && /persist|adapter-io|memory/.test(x.file)).slice(0, 3)
-    .forEach((x) => Object.assign(x, { tier: "T0", ratifiedBy: "you", securityBy: "billy", example: true }))
+    .forEach((x) => Object.assign(x, { tier: "T0", example: true }))
   // Waiting for a decision: proposed for the governing band by a reviewer.
   R.facts.filter((x) => x.tier === "T2" && !x.drift && ["invariant", "ownership"].includes(x.slot) && /genesis|cli/.test(x.file)).slice(0, 4)
     .forEach((x, i) => Object.assign(x, { proposedTier: "T1", proposedBy: i % 2 ? "lucy" : "archie", example: true }))
+
+  // A working Atlas keeps its projection and CAS out of git; the real store here commits them (tracked-provable).
+  R.trackedReal = R.tracked
+  R.tracked = { projection: false, cas: 0, staging: false, policy: true, memory: false, example: true }
+  R.illustrated = true
 
   R.territories = [
     { name: "Identity & storage", owner: "backend", tier: "T0", globs: ["packages/kernel/**", "packages/persist/**", "packages/contracts/**"] },
@@ -50,12 +55,14 @@
     { name: "Verification", owner: "lucy", tier: "T2", globs: ["packages/e2e/**", "packages/e2e-blackbox/**", "harness/**"] },
     { name: "Documentation", owner: "rosie", tier: "T2", globs: ["docs/**"] },
   ]
+  // The header injects each facet's top line only (memory/src/awareness.ts topTier): a pointer, not the prose.
+  const t0n = R.facts.filter((x) => x.tier === "T0").length
   R.awareness = [
     { facet: "mission", state: "UN-SEEDED", source: "no source wired in Atlas" },
-    { facet: "constitution", state: "seeded", source: `${R.facts.filter((x) => x.tier === "T0").length} T0 facts`, text: R.facts.filter((x) => x.tier === "T0").map((x) => x.claim.split(/[.;—]/)[0]).join(" · ") },
+    { facet: "constitution", state: "seeded", source: `the ${t0n} T0 facts in the projection`, text: `constitution: ${t0n} ratified T0 invariant(s)` },
     { facet: "terrain", state: "UN-SEEDED", source: "no source wired in Atlas (territories do not feed it)" },
     { facet: "ontology", state: "UN-SEEDED", source: "no source wired in Atlas (definition facts do not feed it)" },
-    { facet: "taste", state: "seeded", source: "CONVENTIONS.md", text: "A claim carries its derivation, or it does not ship. Refusing beats guessing. A gate must be able to fail. Mutation-probe anything load-bearing. One file, one seam." },
+    { facet: "taste", state: "seeded", source: "CONVENTIONS.md at the worktree root", text: "taste: CONVENTIONS.md@sha" },
   ]
 
   // Memory for the other bound members, shaped exactly like the live runs (task units, calls, checkpoints).
@@ -78,34 +85,40 @@
       [say(0, "user", "Plan W1 of the Atlas chapter: the read projection. Anchor every unit on Own units."), tool(2, "atlas_context", "{\"action\":\"catalog\"}"), tool(4, "atlas_context", "{\"action\":\"unit\",\"unit\":\"packages/knowledge\"}"), say(16, "assistant", "Revision 2: five WPs, acceptance first, each anchored on an Own unit."), tool(17, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-ATLAS-W1\",…}}", { op: "emit", outcome: "admitted" })]),
     task("archie", "WP-DRIFT-Q", "Plan the drift review queue", 120,
       [step("dispatch", 120, 0, 9, "Plan the drift review queue for Curation. Use the current catalog.", "Archie stopped: the Atlas source changed after its plan revision, so it held instead of planning on stale context.")],
-      [ck(128, { taskId: "WP-DRIFT-Q", attempted: ["Loaded own_knowledge", "Drafted queue ordering by commit"], failedWith: ["AtlasContextHeld: plan-grounding-stale — the Atlas source changed after this plan revision"], stoppedAt: "Held before recording a revision; needs a fresh catalog read.", lesson: "After a merge, call maestro_catalog_context again before recording a revision." })],
-      [say(120, "user", "Plan the drift review queue for Curation."), tool(122, "maestro_catalog_context", "{}"), say(127, "assistant", "Held: plan-grounding-stale. I will not plan on a catalog that changed under me."), tool(128, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-DRIFT-Q\",…}}", { op: "emit", outcome: "admitted" })]),
-    task("jimmy", "MINE-RETRIEVAL", "Mine packages/retrieval", 300,
-      [step("dispatch", 300, 0, 24, "Mine packages/retrieval with the advisory and dependency arms, symbol sites, budget 60.", "Jimmy staged 34 candidates and abstained on 6 sites with a dynamic scope.")],
-      [ck(301, { taskId: "MINE-RETRIEVAL" }, "refused", "undetermined-kind", "MEM-5 kind derivation: no template matched the entry"),
-       ck(323, { taskId: "MINE-RETRIEVAL", attempted: ["Ran advisory and dependency arms over 40 symbol sites"], failedWith: [], stoppedAt: "Both phases complete: 34 candidates staged, 6 abstained (scope-dynamic).", lesson: "Abstain when a folder loads code at runtime; never guess an absence." })],
-      [say(300, "user", "Mine packages/retrieval with the advisory and dependency arms."), tool(305, "bash", "atlas mine packages/retrieval"), say(322, "assistant", "34 candidates staged; 6 sites abstained because the scope loads code at runtime.")]),
-    task("jimmy", "DEF-ADR", "Turn docs/adr into definitions", 420,
-      [step("dispatch", 420, 0, 12, "Read docs/adr and propose definition facts for the ontology facet. Phase 1 only: ADR-0001 to ADR-0008.", "Jimmy proposed 9 definitions from the first eight ADRs and stopped at the phase boundary.")],
-      [ck(431, { taskId: "DEF-ADR", attempted: ["Proposed 9 definition facts from ADR-0001…0008"], failedWith: [], stoppedAt: "Phase 1 done; ADR-0009 onwards not started.", lesson: "One definition per ADR term; link it to the ADR rather than restating it." })],
-      [say(420, "user", "Propose definition facts from docs/adr, phase 1 only."), say(430, "assistant", "Nine definitions proposed; stopping at ADR-0008 as the packet asks.")]),
+      [ck(128, { taskId: "WP-DRIFT-Q", attempted: ["Loaded own_knowledge", "Drafted queue ordering by commit"], failedWith: ["AtlasContextHeld: plan-grounding-stale — the Atlas source changed after this plan revision"], stoppedAt: "Held before recording a revision; needs a fresh catalog read.", lesson: "After a merge, read atlas_context catalog again before recording a revision." })],
+      [say(120, "user", "Plan the drift review queue for Curation."), tool(122, "atlas_context", "{\"action\":\"catalog\"}"), say(127, "assistant", "Held: plan-grounding-stale. I will not plan on a catalog that changed under me."), tool(128, "atlas_memory_emit", "{\"entry\":{\"taskId\":\"WP-DRIFT-Q\",…}}", { op: "emit", outcome: "admitted" })]),
+    task("jimmy", "SURVEY-OWN", "Survey how own composes a pack", 300,
+      [step("dispatch", 300, 0, 24, "For Archie: find where atlas own composes a pack and every caller. Cite file:line; read only.", "Jimmy reported the composer in retrieval/src/own.ts, the paid order and four callers, each with file:line.")],
+      [ck(301, { taskId: "SURVEY-OWN" }, "refused", "undetermined-kind", "MEM-5 kind derivation: no template matched the entry"),
+       ck(323, { taskId: "SURVEY-OWN", attempted: ["grep createOwn across packages", "Read own.ts and own-source.ts"], failedWith: [], stoppedAt: "Both phases complete: composer, paid order and four callers reported.", lesson: "Grep for the composer before reading files one by one; cite file:line for every finding." })],
+      [say(300, "user", "Find where atlas own composes a pack and every caller."), tool(303, "grep", "createOwn"), tool(306, "read", "modules/atlas/packages/retrieval/src/own.ts"), say(322, "assistant", "The composer is createOwn (own.ts:161); it pays governing, gotchas, pointers, then advisory. Four callers.")]),
+    task("jimmy", "SURVEY-ADR", "List the ADRs that changed the write gates", 420,
+      [step("dispatch", 420, 0, 12, "Read docs/adr and list the decisions that changed the emit gates. Phase 1 only: ADR-0001 to ADR-0008.", "Jimmy listed three ADRs with the gate each one changed and stopped at the phase boundary.")],
+      [ck(431, { taskId: "SURVEY-ADR", attempted: ["Read ADR-0001…0008", "Listed 3 gate-changing decisions"], failedWith: [], stoppedAt: "Phase 1 done; ADR-0009 onwards not started.", lesson: "Quote the ADR number and section; never restate a decision from memory." })],
+      [say(420, "user", "List the ADRs that changed the write gates, phase 1 only."), tool(422, "glob", "docs/adr/*.md"), say(430, "assistant", "Three ADRs changed the gates; stopping at ADR-0008 as the packet asks.")]),
   )
 
   A.illustrations = {
-    indexed: {
-      backend: [
-        { rule: "Stop at the packet's phase boundary and checkpoint exactly where you stopped.", scope: "phased packets", unit: "T-LIVE-2", frecency: 1 },
-        { rule: "Never write outside the dispatch writePaths; report the hold instead of retrying another path.", scope: "edit tools", unit: "T-LIVE-3", frecency: 0.5 },
-        { rule: "Match the file's existing style before adding methods: no semicolons, no explicit return types.", scope: "counter.ts", unit: "T-LIVE-4", frecency: 0.25 },
-      ],
+    // Every project rule, in or out of the header. `age` = records appended to memory.jsonl after it, by any
+    // member (tasks included): effective frecency is 0.5^age, so the log keeps at most four rules above 0.10.
+    rules: {
       archie: [
-        { rule: "Anchor every work package on an Own unit, never on a raw file path.", scope: "plans", unit: "WP-ATLAS-W1", frecency: 1 },
-        { rule: "After a merge, call maestro_catalog_context again before recording a revision.", scope: "plan revisions", unit: "WP-DRIFT-Q", frecency: 0.5 },
-        { rule: "Drop a unit rather than carry more than eight into one plan.", scope: "plans", unit: "WP-ATLAS-W1", frecency: 0.5 },
+        { rule: "Anchor every work package on an Own unit, never on a raw file path.", scope: "plans", grounding: "PR #658", age: 0 },
+        { rule: "After a merge, read atlas_context catalog again before recording a revision.", scope: "plan revisions", age: 3 },
+        { rule: "Drop a unit rather than carry more than eight into one plan.", scope: "plans", age: 5 },
       ],
-      jimmy: [{ rule: "Abstain when a folder loads code at runtime; never guess an absence.", scope: "mining", unit: "MINE-RETRIEVAL", frecency: 1 }],
+      backend: [
+        { rule: "Stop at the packet's phase boundary and checkpoint exactly where you stopped.", scope: "phased packets", age: 1 },
+        { rule: "Never write outside the dispatch writePaths; report the hold instead of retrying another path.", scope: "edit tools", grounding: "packages/orchestra/src/tool/task.ts", age: 4 },
+        { rule: "Match the file's existing style before adding methods: no semicolons, no explicit return types.", scope: "counter.ts", age: 6 },
+        { rule: "Prefer Bun.file over fs for every read.", scope: "*", age: 9 },
+      ],
+      jimmy: [{ rule: "Cite file:line for every finding; never report from memory.", scope: "surveys", age: 2 }],
     },
-    archived: { backend: [{ rule: "Prefer Bun.file over fs for every read.", scope: "*", unit: "manual", frecency: 0.05 }] },
+    // Plans whose steps froze Own units by hash (maestro/atlas-knowledge.ts): a changed unit makes them hold.
+    pinned: [
+      { plan: "WP-ATLAS-W1", member: "archie", revision: 3, units: ["packages/knowledge", "packages/retrieval", "packages/tools"] },
+    ],
     prs: {
       archie: [{ prId: "#658", title: "Anchor Atlas knowledge for Archie and Relay", decisions: ["Cap a plan at 8 Own units", "Freeze unit bodies into the anchor by hash"], reviewOutcomes: ["Approved after the Windows time-budget fix"], knowledgeDelta: [{ change: "emitted", unit: "packages/retrieval", facts: 6 }, { change: "superseded", unit: "packages/knowledge", facts: 1 }] }],
       backend: [{ prId: "#664", title: "Accept JSON-text anchor arguments", decisions: ["Parse at the tool boundary, keep the schema strict"], reviewOutcomes: ["Approved, no changes"], knowledgeDelta: [{ change: "none", unit: "—", facts: 0 }] }],

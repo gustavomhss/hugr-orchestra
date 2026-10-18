@@ -78,7 +78,7 @@ window.Atlas = window.Atlas || {}
   // Atlas vocabulary, shown as glyph + word with a one-line explanation on hover.
   const states = {
     fresh: ["good", "checkc", "Fresh", "The anchored code still hashes the same as when the fact was derived."],
-    drifted: ["warm", "drift", "Drifted", "Semantic drift: the anchored content no longer exists anywhere, so reconcile blocks the merge until the claim is rewritten or retired."],
+    drifted: ["warm", "drift", "Drifted", "The anchored file changed since the fact was derived and its old content exists nowhere at HEAD (semantic). reconcile exits 2 for a merge that changes it."],
     retired: ["", "minusc", "Superseded", "Retired through emit (authoring SUPERSEDED). Reads do not filter it yet, so agents still receive it (R6)."],
     pending: ["blue", "clock", "In staging", "Mined, not promoted yet. Agents never see staging."],
   }
@@ -95,7 +95,7 @@ window.Atlas = window.Atlas || {}
     : `<span class="at-origin" data-tip="Emitted directly by an agent or a person.">${A.icon("fact")}Emitted</span>`)
   A.family = (f) => `<span class="at-origin" data-tip="${{ advisory: "Advisory: a grounded claim with no executable check.", predicate: "Predicate: carries a check with a HOLDS / BROKEN / NA verdict.", relation: "Relation: a proven edge between two units.", negation: "Negation: nothing in a scope calls a target.", transition: "Transition: what changed between two commits.", "test-vacuity": "Test vacuity: a test that cannot fail." }[f] ?? f}">${A.esc(f)}</span>`
   A.agent = (id) => {
-    const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie", maestro: "Maestro", "seat:orchestrator": "Maestro", you: "You" }
+    const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie", maestro: "Maestro", "seat:orchestrator": "seat:orchestrator", you: "You" }
     const name = names[id] ?? id
     return `<span class="at-seat"><i>${A.esc(name[0])}</i>${A.esc(name)}</span>`
   }
@@ -112,7 +112,8 @@ window.Atlas = window.Atlas || {}
     R4: "Declare a territory from the app. Today the catalog is a committed JSON edited by hand.",
     R5: "Resume a task from the app. Today only Maestro can call task with task_id and memoryUnit; transcript replay is not wired.",
     R6: "Retiring withdraws a fact from what agents read. Today it is tagged SUPERSEDED but still served.",
-    R7: "Rebuild the Own snapshot from the app, so live changes reach agents. Today a maintainer re-materializes it.",
+    R7: "Rebuild the Own snapshot from the app, so live changes reach agents. Today a maintainer re-materializes it from a reviewed snapshot JSON, never from the live store.",
+    R8: "Replace a fact's claim. Today a same-tier rewrite adds the new claim to the set and the old one stays served; only a tier raise replaces claims.",
   }
   A.newcap = (id) => `<span class="at-newcap" data-tip="Requires a new capability · ${id}: ${A.esc(A.REQS[id])}">${A.icon("sparkle")}New capability · ${id}</span>`
 

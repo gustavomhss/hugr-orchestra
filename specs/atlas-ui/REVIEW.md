@@ -96,3 +96,54 @@ Os achados se dividem em dois tipos:
 **Decisão do owner (2026-10-18):** corrigir o grupo A; manter B1, B3, B4, B5 e B6 marcados como capacidade nova, e somar R6 (aposentar tira da leitura) e R7 (reconstruir o snapshot). Ver [`REQUIREMENTS.md`](REQUIREMENTS.md). B2 virou lista só de leitura; B7 saiu.
 
 **Recomendação original:** corrigir todo o grupo A agora. No grupo B, manter só o que você quer como produto (B1, B3 e B6 parecem centrais), marcando na tela "requer capacidade nova", e registrar cada um como requisito para o Atlas ou o Orchestra. O que você não quiser sai do mock.
+
+---
+
+## Segunda rodada (2026-10-18, adversarial)
+
+Três revisores sem contexto compararam o mock já corrigido (`2d48ef2f4f`) com o código: um conferiu a regressão de cada item A, outro caçou conflitos em todas as telas e o terceiro listou o que o Atlas guarda ou faz e a interface omite. Os achados graves foram reconferidos no código antes de corrigir.
+
+### Onde este review errou
+
+- **A14 (palavras T0):** o `atlas init` não usa `T0_KEYWORDS` de `tier.ts`. Ele usa `policy.json` `t0Heuristic.keywords` como **substring do nome** do território (`adapter-io/src/compose.ts:97`). Neste store as palavras são `invariant` e `security-property`.
+- **A2 (orçamento):** "para no primeiro que não cabe" vale só para o advisory. Governantes e gotchas são gulosos. E faltava a seção de **ponteiros** (até 12 `own_<folha>`, custo = tamanho do nome) entre gotchas e advisory (`retrieval/src/own.ts:190-199`).
+- **Portões (baixa):** existe `shape` como portão 0. A cadeia é shape → truth → authz → ratify (`adapter-io/src/governed-emit-gates.ts:72`); âncora e incumbente são subpassos do authz.
+- **A6 (renovar regra):** reenviar a regra **idêntica** é deduplicado. Regravá-la com outro escopo é um registro novo e a renova.
+
+### Corrigido no mock
+
+| Achado | Verdade | Fonte |
+|---|---|---|
+| "O conhecimento não está no git" | O repo standalone do Atlas comita a projection e 1.320 objetos do CAS. O store fica `tracked-provable`: a leitura serve só fatos selados que se reprovam (0 de 596) e toda escrita é recusada. | `adapter-io/src/store-provenance.ts`, `read-access.ts`; commit `2211f3046` |
+| Snapshot Own "reconstruído do store" | O snapshot é um JSON revisado; a unidade `packages/genesis` é um fixture (dono `atlas-foundation`, 1 invariante T1 que o store não tem). O host valida `sourceBlobs` byte a byte. | `scripts/materialize-own-snapshot.mjs`, `OWN-SNAPSHOT.json`, `orch/maestro/atlas-source.ts:89-128` |
+| "Reescrever deixa o fato fresco com a afirmação nova" | No mesmo tier as afirmações se unem; a antiga continua servida. Virou **R8**. | `knowledge/src/write/upsert.ts:332-336` |
+| Consciência com o texto do `CONVENTIONS.md` e dos T0 | Só a linha de topo entra: `taste: CONVENTIONS.md@sha`, `constitution: N ratified T0 invariant(s)`. No Orchestra as cinco facetas saem `unseeded` (a raiz do worktree não tem fonte). | `memory/src/awareness.ts:117`, `adapter-io/src/awareness-store.ts:69,96` |
+| Frecency ilustrada (várias regras em 1,0) | A idade é a posição no log inteiro: só o registro mais novo vale 1, e o repositório carrega no máximo 4 regras. Uma regra não guarda a task de origem. | `adapter-io/src/memory-read.ts:139-181`, `memory/src/types.ts:56-60` |
+| Dono do pack "seat:orchestrator" | `terrainOwner` pega o escopo de política que cobre o caminho; `atlas:mined` não cobre nenhum, então o dono é vazio. | `adapter-io/src/own-source.ts:154-160` |
+| Dependentes diretos, ordenados por tier | Fecho reverso transitivo, semeado pelas âncoras dos fatos do escopo, ordem de nodeKey. | `adapter-io/src/own-source.ts:183-209` |
+| `finer` por contagem de fatos | Todos os filhos, em ordem de nome. | `adapter-io/src/own-source.ts:324-329` |
+| Classificar herda o tier | Um draft começa sempre em T2. | `tools/src/draft.ts` (`DRAFT_TIER`) |
+| "Bloqueia o merge" em todo drift | `reconcile <base>` só olha âncoras mudadas entre a base e o HEAD. Drift advisory deveria virar STALE (não bloqueia), mas esse roteamento não existe. | `adapter-io/src/git-drift.ts`, `contracts/src/status.ts:6-8` |
+| Promote "recontou os 596" | Os 63 com drift são recusados `ungrounded`; os demais são deduplicados. | `adapter-io/src/governed-emit.ts:198-202` |
+| Tasks do Jimmy com `bash`/`atlas mine`, Archie com `maestro_catalog_context` | Jimmy tem perfil de revisão (read, glob, grep, memória); Archie usa `atlas_context`. | `orch/maestro/roster.ts:50-120` |
+| `builtAt` = "índice construído em" | É o HEAD carimbado ao publicar a geração. | `adapter-io/src/freshness-watermark.ts:10` |
+| Modo ilustrado sem marca na tela | Banner em toda tela do Atlas e marca `example` por item. | |
+| Configuração `"directory": ".atlas"` no HOLD | O diretório guarda o snapshot e o catálogo (ex.: `modules/atlas`); sem catálogo comitado o host ainda pararia. | `orch/maestro/atlas-source.ts:77-80` |
+| Outros | Cabeçalho real exibido por membro; "Pinned by plans" na unidade; política com `t0Heuristic` e sem `authz.anchors`; `doctor cas` e `verify-store` separados; obviedade marcada "não calculada" (o predicado é fixo em `false`). | |
+
+### Lacunas que ficam para a próxima iteração
+
+Coisas reais que um steward usaria e o mock ainda não mostra. Nenhuma contradiz o que está na tela.
+
+| Lacuna | Onde caberia | Fonte |
+|---|---|---|
+| Resultado do promote por linha, com motivo de recusa (`unratified`, `ungrounded`, `unauthorized`, `contended`) e a previsão de portões do `check` | Curadoria › Candidatos | `docs/reference/commands/promote.md`, `check` |
+| Linhagem de substituição (`supersededBy`) e o arquivo (`doctor archive`, `node`) | Detalhe do fato › Proveniência; Histórico › Arquivo | `knowledge/src/write/router.ts:46` |
+| Classe do drift por fato (`doctor why`: mecânico/semântico) e "aceitar reground" para o mecânico, que aparece com âncoras de símbolo | Curadoria › Drifted | `docs/reference/commands/doctor.md` |
+| Selo (`proven`/`justified`), testemunha e "reverificar" | Detalhe do fato | `verify-fact`, `verify-store` |
+| Última execução do genesis: cobertura (semeado, abstido, não visitado), custo, token de retomada | Curadoria › Minerar | `genesis/src/coverage.ts:103-166` |
+| Famílias além de advisory (relações, negações e abstenções, transições, testes vazios) e `derive-relations` | Página da unidade › "Estrutura provada" | CLI `relations`, `negations`… |
+| Equivalências `sameAs` e pares retratados; `subsumes` | Detalhe do fato | |
+| Delta de conhecimento por PR e comparação entre gerações | Histórico | UC-G13, UC-G27 |
+| Calibração (`budget`, taxa off-atlas de `territories`): hoje zero honesto, sem escritor | Settings › Índice | `docs/reference/commands/budget.md` |
+| Planejadores `anchors`, `slots`, `draft` dentro dos diálogos de Reescrever e Classificar | Diálogos | |

@@ -51,7 +51,9 @@
       const scroller = () => main.querySelector(".at-map-main") ?? main
       const keep = force ? scroller().scrollTop : 0
       const treeKeep = main.querySelector(".at-tree-pane")?.scrollTop ?? 0
-      main.innerHTML = view.html
+      // Illustrated mode adds example data on top of the real store; say so on every Atlas screen.
+      const banner = atlas && M().R.illustrated && !view.flush ? `<div class="at-illus">${A.icon("info")}<span><b>Illustrated.</b> Items marked <span class="at-pill">example</span> are invented to show a store after some stewardship: slots, ratifications, territories, Awareness, rules, and Archie's and Jimmy's tasks.</span><button class="mx-link" data-action="data" data-value="real">Show the real store only</button></div>` : ""
+      main.innerHTML = banner + view.html
       main.classList.toggle("flush", !!view.flush)
       // Remember which sections the viewer opened or closed (per section id, this browser only).
       main.querySelectorAll("details[data-acc]").forEach((d) => {
@@ -163,18 +165,20 @@
     copy: (v) => copy(v, "Copied"),
     toast: (v) => A.toast(A.esc(v), "info"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },
-    retire: (v) => change(v, { retired: true }, "Tagged SUPERSEDED through emit. Reads do not filter it yet, so agents still receive it (R6).", "minusc"),
-    promote: (v) => change(v, { promotedNow: true }, "Promoted through the emit door (R2: single-row promote is a new capability). It is in the store; agents in Orchestra get it after the Own snapshot is rebuilt."),
+    retire: (v) => M().provenance() !== "trusted" ? A.toast("Refused: this store is tracked by git, so every write is refused.", "xc") : change(v, { retired: true }, "Drafted a superseding fact against the current file and emitted it (authoring SUPERSEDED). Reads do not filter it yet, so agents still receive it (R6).", "minusc"),
+    promote: (v) => M().provenance() !== "trusted" ? A.toast("Refused: this store is tracked by git, so every write is refused.", "xc") : change(v, { promotedNow: true }, "Promoted through the emit door, if its file is unchanged since mining (R2: single-row promote is a new capability). Orchestra's agents read the reviewed Own snapshot, not this store."),
     discard: (v) => change(v, { discarded: true }, "Left in staging. It is hidden here and stays in the staging file.", "minusc"),
     "promote-all": () => dialog(promoteAll()),
     "promote-all-confirm": () => {
       $("#dialog").close()
+      if (M().provenance() !== "trusted") return A.toast("Refused: this store is tracked by git, so promote refuses every row.", "xc")
       const keys = M().candidates.filter((x) => !x.promotedNow && !x.discarded).map((x) => x.key)
-      change(keys, { promotedNow: true }, `Promote settled every staging row: ${keys.length} new facts, and the 596 already promoted were re-emitted and counted again. Agents get them after the Own snapshot is rebuilt.`)
+      const stale = M().facts.filter((x) => M().state(x) === "drifted").length
+      change(keys, { promotedNow: true }, `Promote re-presented every staging row: ${keys.length} new facts emitted, ${A.num(M().facts.length - stale)} already-promoted rows deduplicated, ${stale} refused <code>ungrounded</code> because their files changed. Rows are refused one by one; the batch is not atomic.`)
     },
     ratify: (v) => dialog(ratifyDialog(M().byKey[v])),
     classify: (v) => dialog(classifyDialog(M().byKey[v])),
-    "reject-ratify": (v) => change(v, { proposedTier: undefined }, "Rejected. The fact stays advisory; the proposer sees your decision.", "minusc"),
+    "reject-ratify": (v) => change(v, { proposedTier: undefined }, "Rejected (R3). The fact stays advisory; Atlas has no proposal state to record the decision in today.", "minusc"),
     data: (v) => { try { localStorage.setItem("atlas-data", v) } catch {} ; location.reload() },
     "classify-confirm": (v) => {
       const slot = $('input[name="slot"]:checked')?.value
@@ -182,24 +186,27 @@
       $("#dialog").close()
       const x = M().byKey[v]
       if (M().state(x) === "drifted") return A.toast("Refused by the truth gate: the anchor is not FRESH. Rewrite the claim first.", "xc")
-      const copy = { ...x, key: `${x.key.slice(0, 56)}${slot.slice(0, 8).padEnd(8, "0")}`, slot, example: true }
+      // nodeKey = hash(anchor ‖ slot): a new identity. Shown as a marked placeholder, not a computed hash.
+      const copy = { ...x, key: `new-${slot}-${x.key.slice(0, 12)}`, slot, tier: "T2", proposedTier: undefined, example: true }
       M().facts.push(copy)
       M().byKey[copy.key] = copy
       undo = () => { M().facts.splice(M().facts.indexOf(copy), 1); delete M().byKey[copy.key] }
-      A.toast(`Wrote a new fact at (anchor, <code>${slot}</code>). The unclassified one is still served until you retire it.${undoLink}`, "fact")
+      A.toast(`Wrote a new T2 fact at (anchor, <code>${slot}</code>); a draft always starts at T2, so ratify it again if it should govern. The unclassified fact stays served, and retiring it does not withdraw it yet (R6).${undoLink}`, "fact")
       render(true)
     },
     "ratify-confirm": (v) => {
       const tier = $('input[name="tier"]:checked')?.value ?? "T1"
       $("#dialog").close()
-      change(v, { tier, proposedTier: undefined }, tier === "T0" ? "Re-emitted as T0 with the ratifier token billy. It is now in every agent's constitution." : "Re-emitted as T1. It moved to the governing band; its claims were replaced by the ratified one.", "shield")
+      change(v, { tier, proposedTier: undefined }, tier === "T0" ? "Re-emitted as T0 with the ratifier token billy. Its claims were replaced by the ratified one, and the constitution line in each bound member's header now counts it." : "Re-emitted as T1. It moved to the governing band; its claims were replaced by the ratified one.", "shield")
     },
     edit: (v) => dialog(editDialog(M().byKey[v])),
     save: (v) => {
       const claim = $("#edit-text").value.trim()
       $("#dialog").close()
       const x = M().byKey[v]
-      change(v, { claim, regrounded: true }, M().state(x) === "drifted" ? "Rewritten against the current file and emitted with a new grounding. The fact is fresh again." : "Emitted. At the same tier the new claim joins the fact's claim set; prior bytes stay in the content store.")
+      if (claim === x.claim) return A.toast("Unchanged claim: re-emitting it is deduplicated and leaves the fact as it is.", "info")
+      // Same tier ⇒ the claim set is a union (knowledge/src/write/upsert.ts): the old claim stays and is still served.
+      change(v, { claim: `${x.claim}; ${claim}`, regrounded: true }, M().state(x) === "drifted" ? "Emitted with a grounding at HEAD, so the fact is fresh again, but at the same tier the new claim joins the old one and both are served (R8)." : "Emitted. At the same tier the new claim joins the fact's claim set; the old one stays (R8).")
     },
     mine: () => {
       const scope = $("#mine-scope")?.value || "the whole repository"
@@ -222,10 +229,14 @@
       const count = rule.split(/\s+/).filter(Boolean).length
       $("#dialog").close()
       const m = M().memory[member]
-      const entry = { rule, scope, from: lesson, unit: unit || "manual", frecency: 1 }
-      m.indexed.push(entry)
-      undo = () => m.indexed.splice(m.indexed.indexOf(entry), 1)
-      A.toast(`Indexed · ${count} tokens. It rides in every turn from the next one; secret-scanned before it was saved.${undoLink}`, "shield")
+      const entry = { rule, scope, from: lesson, age: 0 }
+      const all = Object.values(M().memory).flatMap((x) => x.rules)
+      const ages = all.map((r) => r.age)
+      M().appendRecord()
+      m.rules.push(entry)
+      undo = () => { m.rules.splice(m.rules.indexOf(entry), 1); all.forEach((r, i) => (r.age = ages[i])) }
+      if (pm.lifetime + count > (member === "maestro" ? 800 : 500)) return A.toast(`Refused: over-cap. ${A.esc(member)} has written ${pm.lifetime} tokens of rules in its lifetime; this one would pass ${member === "maestro" ? 800 : 500}.`, "xc"), undo()
+      A.toast(`Indexed · ${count} tokens. It rides in every request from the next one; every other rule in the repository just aged one record.${undoLink}`, "shield")
       history.replaceState(null, "", withQuery({ pm: "indexed" }))
       render(true)
     },
@@ -260,12 +271,12 @@
   }
   const ratifyDialog = (x) => `<form method="dialog">${head("Ratify", A.esc(x.claim))}<div class="mx-dialog-body">
       <div class="at-radio"><label><input type="radio" name="tier" value="T1" checked><span><b>T1 · load-bearing</b><small>Moves to the governing band. Needs a ratify token.</small></span></label>
-      <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Feeds the constitution every agent reads. Needs the ratifier token <code>billy</code>.</small></span></label></div>
+      <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Counted in the constitution line of each bound member's header. Needs the ratifier token <code>billy</code>.</small></span></label></div>
       <p class="ins-note warm">Raising the tier replaces the fact's claim set with this one claim. The store does not record who ratified.</p></div>${foot("Re-emitted through atlas-emit", "ratify-confirm", "Ratify", x.key)}</form>`
   const classifyDialog = (x) => `<form method="dialog">${head("Classify", `${A.esc(x.claim)}`)}
     <div class="mx-dialog-body at-slotpick">${M().SLOT_GROUPS.map(([g, meaning, slots]) => `<div class="at-slotgroup"><strong>${g}</strong><small>${meaning}</small>${slots.map((sl) => `<label><input type="radio" name="slot" value="${sl}" ${x.slot === sl ? "checked" : ""}><code>${sl}</code><span>${A.esc(M().SLOT_MEANING[sl])}</span></label>`).join("")}</div>`).join("")}</div>
-    ${foot("The slot is part of the nodeKey: this writes a new fact (draft, then emit); the old one stays until retired", "classify-confirm", "Classify", x.key)}</form>`
-  const editDialog = (x) => `<form method="dialog">${head(M().state(x) === "drifted" ? "Rewrite claim" : "Edit claim", M().state(x) === "drifted" ? `The file changed. Write the claim as it holds now: it is drafted against the current <code>${A.esc(x.file)}</code> and emitted with a new grounding.` : `At the same tier the new claim joins the fact's claim set. If it cites other symbols, the anchor moves and it becomes a new fact.`)}
+    ${foot("The slot is part of the nodeKey: this writes a new T2 fact (draft, then emit); the old one stays served", "classify-confirm", "Classify", x.key)}</form>`
+  const editDialog = (x) => `<form method="dialog">${head(M().state(x) === "drifted" ? "Rewrite claim" : "Edit claim", M().state(x) === "drifted" ? `The file changed. Write the claim as it holds now: it is drafted against the current <code>${A.esc(x.file)}</code> and emitted with a new grounding. At the same tier it joins the old claim, which stays served (R8).` : `At the same tier the new claim joins the fact's claim set. If it cites other symbols, the anchor moves and it becomes a new fact.`)}
     <div class="mx-dialog-body"><label class="mx-field"><span>Claim</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label><p class="mx-note">One sentence, checkable against the file. The truth gate re-derives the anchor before it is saved.</p></div>${foot("Through atlas-emit", "save", "Save", x.key)}</form>`
   const respawnDialog = (member, unit) => {
     const t = (A.spawns ?? []).find((x) => x.unit === unit)
@@ -274,12 +285,12 @@
     return `<form method="dialog">${head(`Resume ${name} on ${A.esc(unit)}`, `Maestro resumes ${name}'s session on this task. Atlas adds the latest admitted checkpoint once, before ${name} reads the packet.`)}
     <div class="mx-dialog-body"><div class="at-given" style="margin:0 0 14px">${A.icon("memory")}<span>Checkpoint handed back: <b>${A.esc(c?.entry.stoppedAt ?? "none — the resume would be refused")}</b></span></div>
     <label class="mx-field"><span>Packet</span><textarea rows="4">Continue this unit with the next phase your checkpoint names. When done, record an updated checkpoint.</textarea></label>
-    <div class="mx-fields"><label class="mx-field"><span>Write paths</span><input value="counter.ts"></label><label class="mx-field"><span>Model</span><select><option>Same as last run</option><option>Claude Opus</option><option>Claude Sonnet</option></select></label></div>
-    <p class="mx-note">Maestro calls <code>task</code> with <code>task_id</code>${t ? ` <code>${A.esc(t.taskRef)}</code>` : ""} and <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>. In a fresh session with no receipt, Atlas hands back the unit's single checkpoint or refuses as <code>ambiguous</code> when there are several.</p>${A.newcap("R5")}</div>${foot("Through Maestro", "respawn-confirm", "Ask Maestro to resume", unit)}</form>`
+    <div class="mx-fields"><label class="mx-field"><span>Write paths</span><input value="${A.esc(t?.writePaths?.join(", ") ?? "")}" placeholder="as in the last dispatch"></label><label class="mx-field"><span>Model</span><select><option>Same as last run</option><option>Claude Opus</option><option>Claude Sonnet</option></select></label></div>
+    <p class="mx-note">Maestro calls <code>task</code> with <code>task_id</code>${t?.taskRef ? ` <code>${A.esc(t.taskRef)}</code>` : " (the seat session)"} and <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>. In a fresh session with no receipt, Atlas hands back the unit's single checkpoint or refuses as <code>ambiguous</code> when there are several.</p>${A.newcap("R5")}</div>${foot("Through Maestro", "respawn-confirm", "Ask Maestro to resume", unit)}</form>`
   }
   const ruleDialog = (member = "backend", lesson = "", unit = "") => `<form method="dialog">${head("Index a project-memory rule", "Rules ride in every turn, so write one imperative line: an always or a never, with where it applies.")}
     <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea id="rule-text" rows="3">${A.esc(lesson)}</textarea></label><label class="mx-field"><span>Applies to</span><input id="rule-scope" placeholder="a path glob, a tool or a phase — * for everywhere" value="${lesson ? "tasks with phased packets" : ""}"></label>
-    <p class="mx-note">A rule enters with frecency 1. Every later record in memory.jsonl, by any member, halves it; after four more records it falls below 0.10 and leaves the header. Re-sending the same rule does not renew it.</p>${A.newcap("R1")}</div>${foot("Written as the member through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
+    <p class="mx-note">A rule enters with frecency 1. Every later record in memory.jsonl, by any member and checkpoints included, halves it; after four more records it falls below 0.10 and leaves the header. Re-sending it unchanged is deduplicated; writing it again with a new scope renews it.</p>${A.newcap("R1")}</div>${foot("Written as the member through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
   const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives units an owner and a tier; the tier is ratified by a person. Today the catalog is TERRITORY-CATALOG.json, committed and edited by hand.")}
     <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
     <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${A.newcap("R4")}${foot("Written to TERRITORY-CATALOG.json", "territory-confirm", "Declare")}</form>`
@@ -404,11 +415,11 @@
     if (event.key === "Enter") { event.preventDefault(); return run(index) }
   }
 
-  const shortcuts = () => `<form method="dialog">${head("Keyboard shortcuts", "You can change these in Settings › Shortcuts.")}
+  const shortcuts = () => `<form method="dialog">${head("Keyboard shortcuts", "")}
     <div class="mx-dialog-body"><div class="at-keys">
       <h5>Anywhere</h5><div>Search<span><kbd>⌘</kbd><kbd>K</kbd></span></div><div>Search this list<span><kbd>/</kbd></span></div><div>Shortcuts<span><kbd>?</kbd></span></div><div>Close the fact panel<span><kbd>esc</kbd></span></div>
       <h5>Lists</h5><div>Next<span><kbd>j</kbd></span></div><div>Previous<span><kbd>k</kbd></span></div><div>Open<span><kbd>↵</kbd></span></div><div></div>
-      <h5>Go to</h5>${Object.entries({ o: "Overview", m: "Map", k: "Knowledge", u: "Curation", y: "Memory", h: "History", s: "Settings", c: "Chat" }).map(([k, l]) => `<div>${l}<span><kbd>g</kbd><kbd>${k}</kbd></span></div>`).join("")}
+      <h5>Go to</h5>${Object.entries({ o: "Overview", k: "Knowledge", u: "Curation", y: "Memory", h: "History", s: "Settings", c: "Chat" }).map(([k, l]) => `<div>${l}<span><kbd>g</kbd><kbd>${k}</kbd></span></div>`).join("")}
     </div></div><footer class="mx-dialog-foot"><button class="mx-btn primary" value="ok">Done</button></footer></form>`
 
   /* ---------- Gallery ---------- */
@@ -437,7 +448,7 @@
     ]
     return {
       crumbs: [["Atlas", "#/overview"], ["All screens"]],
-      html: `<div class="at-page"><div class="mx-heading"><div><div class="mx-eyebrow">Design preview · real store</div><h1>All screens</h1><p>Every fact, candidate, reasoning, drift and dependent here comes from the real Atlas store over its own code. Use State at the top for “building” and “not connected”. Curation actions work and can be undone.</p></div></div>
+      html: `<div class="at-page"><div class="mx-heading"><div><div class="mx-eyebrow">Design preview</div><h1>All screens</h1><p>Facts, candidates, reasoning and drift come from the standalone Atlas repository's store over its own code; dependents are approximated from imports. Illustrated mode adds marked examples on top. Use State at the top for “building” and “not connected”. Curation actions are simulated and can be undone.</p></div></div>
       <div class="at-gallery">${screens.map(([title, href, glyph, text]) => `<a class="at-gcard" href="${href}"><header><span class="mx-mark">${A.icon(glyph)}</span><strong>${title}</strong></header><p>${text}</p></a>`).join("")}
       <a class="at-gcard" href="#" data-action="palette"><header><span class="mx-mark">${A.icon("search")}</span><strong>Search</strong></header><p>⌘K across facts, files, areas, memory and pages.</p></a>
       <a class="at-gcard" href="#" data-action="state" data-value="held"><header><span class="mx-mark">${A.icon("warning")}</span><strong>Not connected</strong></header><p>The HOLD an Orchestra project without Atlas config gets.</p></a></div></div>`,

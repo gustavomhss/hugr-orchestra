@@ -86,8 +86,12 @@
   }
   const under = (path) => (x) => !path || x.file === path || x.file.startsWith(`${path}/`)
 
-  // The scope briefing an agent receives on entering a path (`atlas own`): bands kept apart, an advisory
-  // sub-cap, what did not fit named as pull-reachable, dependents capped, finer scopes capped.
+  // What `atlas own <path>` composes (retrieval/src/own.ts createOwn), in its paid order: governing rows and
+  // gotchas greedy-fill the 1,500-character budget (a row that does not fit is named, later smaller rows can
+  // still fit); then one pointer per finer scope (`own_<leaf>`, at most 12, cost = name length, name order);
+  // the advisory band last, under its 750 sub-cap, stopping at the first row that does not fit. Drifted facts
+  // are not filtered out: they travel with their freshness.
+  const MANIFEST_CAP = 12
   const briefing = (path) => {
     const here = live().filter(under(path))
     const byKey = (a, b) => (a.tier === b.tier ? a.key.localeCompare(b.key) : a.tier.localeCompare(b.tier))
@@ -96,11 +100,16 @@
     const sent = []
     const pull = []
     let used = 0
-    // Governing rows and gotchas are paid first; whatever does not fit is named, never dropped silently.
     for (const x of [...inv, ...gotchas]) {
       if (used + x.claim.length <= OWN_CAP) { sent.push(x); used += x.claim.length } else pull.push(x)
     }
-    // The advisory band is paid last, under its own sub-cap, and stops at the first row that does not fit.
+    const node = findNode(path)
+    const finer = node ? [...node.children.values()].sort((a, b) => a.path.localeCompare(b.path)) : []
+    const pointers = []
+    for (const c of finer) {
+      const name = `own_${c.name}`
+      if (pointers.length < MANIFEST_CAP && used + name.length <= OWN_CAP) { pointers.push({ name, path: c.path }); used += name.length }
+    }
     const advBudget = Math.min(OWN_ADVISORY_CAP, OWN_CAP - used)
     const adv = []
     let advUsed = 0
@@ -108,29 +117,45 @@
     for (const x of here.filter((y) => !governing(y)).sort(byKey)) {
       if (!stopped && advUsed + x.claim.length <= advBudget) { adv.push(x); advUsed += x.claim.length } else { stopped = true; pull.push(x) }
     }
-    const node = findNode(path)
-    const finer = node ? [...node.children.values()].sort((a, b) => b.facts - a.facts) : []
     const depFiles = dependents(path)
-    const depFacts = live().filter((x) => depFiles.includes(x.file)).sort(byKey)
-    return { here, inv: inv.filter((x) => sent.includes(x)), gotchas: gotchas.filter((x) => sent.includes(x)), gov: inv.concat(gotchas).filter((x) => sent.includes(x)), adv, pull, used: used + advUsed, advUsed, cap: OWN_CAP, advCap: OWN_ADVISORY_CAP,
+    // own `dependent` rows: facts anchored outside the scope, in nodeKey order only, first 8.
+    const depFacts = live().filter((x) => depFiles.includes(x.file)).sort((a, b) => a.key.localeCompare(b.key))
+    return { here, inv: inv.filter((x) => sent.includes(x)), gotchas: gotchas.filter((x) => sent.includes(x)), gov: inv.concat(gotchas).filter((x) => sent.includes(x)), adv, pull, pointers, pointerTotal: finer.length, used: used + advUsed, advUsed, cap: OWN_CAP, advCap: OWN_ADVISORY_CAP,
       finer: finer.slice(0, FINER_CAP), finerTotal: finer.length, depFiles, depFacts: depFacts.slice(0, EDGE_CAP), depFactsTotal: depFacts.length, deps: depFiles.slice(0, EDGE_CAP), depsTotal: depFiles.length }
   }
 
-  // Files outside the scope that import files inside it: the stand-in for the SCIP reverse closure. Atlas
-  // reports the FACTS anchored on those files (own `dependent` rows), capped at 8.
+  // The reverse dependency closure, transitive (adapter-io/src/own-source.ts relationSetFor): every file outside
+  // the scope that reaches the anchor of a fact inside it. Atlas walks index.scip; here imports stand in for it.
   const dependents = (path) => {
     const inside = under(path)
     const out = new Set()
-    Object.entries(R.dependents).forEach(([target, users]) => {
-      if (!inside({ file: target })) return
-      users.filter((u) => !inside({ file: u })).forEach((u) => out.add(u))
-    })
+    const queue = [...new Set(live().filter(inside).map((x) => x.file))]
+    const seen = new Set(queue)
+    while (queue.length) {
+      for (const u of R.dependents[queue.shift()] ?? []) {
+        if (seen.has(u)) continue
+        seen.add(u)
+        queue.push(u)
+        if (!inside({ file: u })) out.add(u)
+      }
+    }
     return [...out].sort()
   }
 
   // What Orchestra actually serves: the committed Own snapshot (OWN-SNAPSHOT.json), not the live store.
-  const snapshot = { revision: "1a235323", units: ["packages/genesis"], catalog: false }
+  // Its one unit is a curated fixture, not exported from this store: owner atlas-foundation, one T1 invariant.
+  const snapshot = { revision: "1a235323", units: ["packages/genesis"], catalog: false, packs: { "packages/genesis": { summary: "Genesis owns deterministic bootstrap and governed fact seeding.", owner: "atlas-foundation", tier: "T1", invariants: [{ nodeId: "genesis:deterministic-bootstrap", tier: "T1", claim: "Genesis builds deterministic structural state before governed fact seeding.", freshness: "FRESH" }], advisory: 0, dependents: 0, tokenEstimate: 42, sourceFiles: 3 } } }
+  // own-source.ts terrainOwner: the actors of the most specific policy scope that covers the unit path; "" when none does.
+  const underScope = (path, scope) => scope === "" || path === scope || path.startsWith(`${scope}/`)
+  const packOwner = (unitId) => {
+    const key = Object.keys(R.policy).filter((k) => underScope(unitId, k)).sort((a, b) => b.length - a.length)[0]
+    return key === undefined ? [] : [...R.policy[key]].sort()
+  }
+  const dependentFacts = (path) => { const files = dependents(path); return live().filter((x) => files.includes(x.file)).length }
 
+  // adapter-io/src/store-provenance.ts + read-access.ts: a store whose projection or CAS is tracked by git is
+  // `tracked-provable` (reads serve only sealed facts that re-prove; writes refuse); tracked staging refuses all.
+  const provenance = () => (R.tracked?.staging ? "tracked-staging" : R.tracked?.projection || R.tracked?.cas ? "tracked-provable" : "trusted")
   const stats = () => {
     const l = live()
     return {
@@ -172,17 +197,42 @@
   }
   const ill = A.illustrations ?? {}
   Object.keys(memory).forEach((id) => {
-    memory[id].indexed = (ill.indexed?.[id] ?? []).map((r) => ({ ...r, from: r.rule }))
-    memory[id].archived = [...(ill.archived?.[id] ?? [])]
+    memory[id].rules = (ill.rules?.[id] ?? []).map((r) => ({ ...r, from: r.rule }))
     memory[id].prs = ill.prs?.[id] ?? []
   })
+  // adapter-io/src/memory-read.ts: effective frecency = 1 × 0.5^age, age counted in records of the WHOLE log;
+  // a rule below 0.10 leaves the header even with free slots, and at most 12 ride (memory/src/rules.ts).
+  const frecency = (r) => Math.pow(0.5, r.age)
+  const header = (member) => {
+    const ranked = [...memory[member].rules].sort((a, b) => frecency(b) - frecency(a) || a.rule.localeCompare(b.rule))
+    const injected = ranked.filter((r) => frecency(r) >= 0.1).slice(0, 12)
+    return { injected, evicted: ranked.filter((r) => !injected.includes(r)) }
+  }
+  // A new record (rule or checkpoint, any member) ages every rule in the repository by one.
+  const appendRecord = () => Object.values(memory).forEach((m) => m.rules.forEach((r) => r.age++))
+  // In Orchestra the header reads the execution worktree's root, which has no CONVENTIONS.md and no .atlas
+  // projection, so all five facets render `unseeded` (maestro/atlas-header.ts, adapter-io/src/awareness-store.ts).
   const awareness = R.awareness ?? [
-    { facet: "mission", state: "UN-SEEDED", source: "No source wired yet" },
-    { facet: "constitution", state: "UN-SEEDED", source: "From T0 facts; there are none" },
-    { facet: "terrain", state: "UN-SEEDED", source: "No source wired in Atlas" },
-    { facet: "ontology", state: "UN-SEEDED", source: "No source wired in Atlas" },
-    { facet: "taste", state: "seeded", source: "CONVENTIONS.md", text: "A claim carries its derivation, or it does not ship. Refusing beats guessing. A gate must be able to fail. Mutation-probe anything load-bearing. One file, one seam." },
+    { facet: "mission", state: "UN-SEEDED", source: "no source wired in Atlas" },
+    { facet: "constitution", state: "UN-SEEDED", source: "no T0 fact in a projection at the worktree root" },
+    { facet: "terrain", state: "UN-SEEDED", source: "no source wired in Atlas" },
+    { facet: "ontology", state: "UN-SEEDED", source: "no source wired in Atlas" },
+    { facet: "taste", state: "UN-SEEDED", source: "no CONVENTIONS.md at the worktree root" },
   ]
+  // The exact header block Orchestra adds to every provider request for a bound member (maestro/atlas-header.ts).
+  const words = (text) => (text.trim() ? text.trim().split(/\s+/).length : 0)
+  const headerText = (member) => {
+    const rules = header(member).injected
+    return [
+      `<atlas-header member="${member}" rules="${rules.length}" rule-words="${rules.reduce((n, r) => n + words(r.rule), 0)}">`,
+      "Awareness:",
+      ...awareness.map((f) => (f.state === "UN-SEEDED" ? `- ${f.facet}: unseeded` : `- ${f.facet} (${f.state}): ${f.text}`)),
+      "Orientation: none recorded",
+      rules.length ? "Project rules:" : "Project rules: none recorded",
+      ...rules.map((r) => `- [${r.scope}] ${r.rule}`),
+      "</atlas-header>",
+    ].join("\n")
+  }
 
-  A.m = { snapshot, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  A.m = { provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

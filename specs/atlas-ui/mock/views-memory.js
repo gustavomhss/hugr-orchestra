@@ -42,14 +42,14 @@
   const words = (text) => (text.trim() ? text.trim().split(/\s+/).length : 0)
   A.projectMemory = (member) => {
     const m = M().memory[member]
-    m.indexed ??= []
-    m.archived ??= []
     m.dismissed ??= new Set()
-    const indexedText = new Set(m.indexed.map((r) => r.from))
-    const proposals = lessons(member).filter((l) => !m.dismissed.has(l.lesson) && !indexedText.has(l.lesson))
-    const used = m.indexed.reduce((n, r) => n + words(r.rule), 0)
-    const shared = M().awareness.filter((x) => x.state === "seeded").reduce((n, x) => n + words(x.text), 0)
-    return { indexed: m.indexed, archived: m.archived, proposals, used, shared }
+    const written = new Set(m.rules.map((r) => r.from))
+    const proposals = lessons(member).filter((l) => !m.dismissed.has(l.lesson) && !written.has(l.lesson))
+    const slab = M().header(member)
+    const used = slab.injected.reduce((n, r) => n + words(r.rule), 0)
+    const lifetime = m.rules.reduce((n, r) => n + words(r.rule), 0)
+    const text = M().headerText(member)
+    return { indexed: slab.injected, archived: slab.evicted, proposals, used, lifetime, text, shared: words(text) - used }
   }
 
   const memberPage = (state, member) => {
@@ -72,13 +72,14 @@
       ${kpi("Memory log", st.tasks, ts.length ? `${dot("good", by("Done"), "done")}${dot("warm", by("Paused"), "paused")}${dot("bad", by("Blocked"), "blocked")}` : "no entries yet")}
       ${kpi("Checkpoints", saved, st.checkpoints ? `${st.refused} refused · ${st.invocations} calls` : "—", st.refused ? "warn" : "")}</div>`
 
-    const rule = (r, i) => `<div class="at-rule-row"><span class="rank">${i + 1}</span><div class="grow"><div>${A.esc(r.rule)}</div><small>${A.esc(r.scope)} · from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(r.unit)}">${A.esc(r.unit)}</a></small></div>
-      <span class="at-frec" data-tip="Frecency ${r.frecency.toFixed(2)}: 1 when written, halved by every later record in memory.jsonl from any member. Below 0.10 it leaves the header (after about four more records). Re-sending the same rule does not renew it."><i style="inline-size:${Math.min(100, r.frecency * 100)}%"></i></span><span class="at-tok">${words(r.rule)} tok</span></div>`
+    const rule = (r, i) => `<div class="at-rule-row"><span class="rank">${i + 1}</span><div class="grow"><div>${A.esc(r.rule)}</div><small><code>[${A.esc(r.scope)}]</code>${r.grounding ? ` · grounded on <code>${A.esc(r.grounding)}</code>` : ""}${r.age !== undefined && M().R.illustrated ? ' <span class="at-pill">example</span>' : ""}</small></div>
+      <span class="at-frec" data-tip="Frecency ${M().frecency(r).toFixed(2)}: 1 when written, halved by each of the ${r.age} records appended since, by any member, checkpoints included. Below 0.10 it leaves the header. Re-sending it unchanged is deduplicated and does not renew it; writing it again with a new scope moves it to the front."><i style="inline-size:${Math.min(100, M().frecency(r) * 100)}%"></i></span><span class="at-tok">${words(r.rule)} tok</span></div>`
     const indexed = `<div class="at-tokens"><div><b>${pm.used}</b><span> tokens</span><small>${pm.indexed.length} ${pm.indexed.length === 1 ? "rule" : "rules"} indexed</small></div>
-        <small class="at-tok-note">Plus the shared header every member carries (Awareness ${pm.shared} tokens, Orientation 0): <b>${pm.used + pm.shared} tokens</b> of memory in each of ${name}'s turns.</small></div>
+        <small class="at-tok-note">Plus the header lines every member carries (Awareness and Orientation, ${pm.shared} tokens): <b>${pm.used + pm.shared} tokens</b> in each of ${name}'s provider requests. Atlas counts a token as one whitespace-separated word.</small></div>
       ${pm.indexed.length ? pm.indexed.map(rule).join("") : `<div class="at-band-empty">Nothing indexed yet. ${pm.proposals.length ? `Index a proposal to give ${name} its first rule.` : ""}</div>`}
-      ${pm.archived.length ? `<details class="at-sub-acc"><summary>${A.icon("chev")}<span>Out of the header</span><span class="wf-count">${pm.archived.length}</span></summary>${pm.archived.map((r) => `<div class="at-rule-row muted"><span class="rank">·</span><div class="grow"><div>${A.esc(r.rule)}</div><small>frecency ${r.frecency.toFixed(2)}, below 0.10 · still in memory.jsonl · computed on read, nothing to restore</small></div></div>`).join("")}</details>` : ""}
-      <p class="at-foot-id">Atlas counts every rule ${name} ever wrote, in or out of the header, and refuses new ones past 500 words (800 for Maestro).</p>`
+      ${pm.archived.length ? `<details class="at-sub-acc"><summary>${A.icon("chev")}<span>Out of the header</span><span class="wf-count">${pm.archived.length}</span></summary>${pm.archived.map((r) => `<div class="at-rule-row muted"><span class="rank">·</span><div class="grow"><div>${A.esc(r.rule)}</div><small>frecency ${M().frecency(r).toFixed(3)} after ${r.age} later records · still in memory.jsonl · computed on read, nothing to restore</small></div></div>`).join("")}</details>` : ""}
+      <details class="at-sub-acc" data-acc="${member}-header"><summary>${A.icon("chev")}<span>What goes into every request</span><span class="wf-count">${pm.used + pm.shared} tokens</span></summary><pre class="at-raw">${A.esc(pm.text)}</pre><p class="mx-note">Rendered by Orchestra from the execution worktree's root and added as a system part of every provider request ${name} makes. Facets carry only their top line.</p></details>
+      <p class="at-foot-id">Every record anyone appends to <code>memory.jsonl</code> halves every rule, so the whole repository keeps at most four rules above 0.10, and at most 12 per member. Atlas counts every rule ${name} ever wrote (${pm.lifetime} tokens so far) and refuses new ones past 500 tokens (800 for Maestro).</p>`
     const proposals = pm.proposals.length
       ? `<p class="at-stew-intro">Lessons ${name} wrote in its task checkpoints. Indexing one turns it into a rule it carries into every turn.</p>${pm.proposals.map((l) => `<div class="at-rule-row"><span class="rank">${A.icon("sparkle")}</span><div class="grow"><div>${A.esc(l.lesson)}</div><small>${words(l.lesson)} tokens · from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(l.unit)}">${A.esc(l.unit)}</a></small></div>${A.btn("Dismiss", "dismiss-proposal", { value: `${member}|${l.lesson}` })}${A.btn("Index…", "promote-rule", { value: `${member}|${l.lesson}|${l.unit}`, primary: true })}</div>`).join("")}`
       : `<div class="at-band-empty">No proposals. New lessons from ${name}'s tasks will show up here.</div>`
