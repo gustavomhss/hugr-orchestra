@@ -1,6 +1,6 @@
 import { afterEach, expect } from "bun:test"
 import path from "node:path"
-import { mkdir } from "node:fs/promises"
+import { mkdir, rm } from "node:fs/promises"
 import { and, eq } from "drizzle-orm"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
@@ -32,6 +32,7 @@ import { Git } from "../../src/git"
 import { ArsenalCompletion } from "../../src/maestro/arsenal-completion"
 import { authorizationTaskIntentHash } from "../../src/maestro/authorization"
 import { CodeReview } from "../../src/maestro/code-review"
+import { Dispatch } from "../../src/maestro/dispatch"
 import { recordContext } from "../../src/maestro/context-record"
 import { LogicalTask } from "../../src/maestro/logical-task"
 import { workflowRevisionBody } from "../../src/maestro/plan-revision"
@@ -93,14 +94,15 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
     contextHash: context.contextHash, projectID: chat.projectID, workCardID: "card_workflow_resume", workCard: "# Card\n",
     routedMemberID: "backend", validatorID: "maestro", validatorVersion: "validation-v1",
     checks: [{ id: "typecheck", status: "PASS", detail: "clean" }] })
-  const authorizationID = EventV2.ID.make("evt_maestro_authorization_workflow_resume")
-  yield* events.publish(MaestroEvent.Authorization.Granted, {
+  // Each authorization of the same validated card reserves its own child.
+  const authorize = (id: string) => events.publish(MaestroEvent.Authorization.Granted, {
     sessionID: chat.id, projectID: chat.projectID, approvalMessageID: "msg_approval", validationRecordID: validation.id,
     workCardHash: validation.workCardHash, routedMemberID: validation.routedMemberID, rosterHash: validation.rosterHash,
     grantHash: validation.grantHash, reviewPolicyHash: validation.reviewPolicyHash, actor: validation.actor,
     reviewerID: "lucy", taskIntentHash: authorizationTaskIntentHash({ subagentType: "backend", prompt: "implement card" }),
     methodVersion: "authorization-v1",
-  }, { id: authorizationID })
+  }, { id: EventV2.ID.make(id) }).pipe(Effect.as(id))
+  const authorizationID = yield* authorize("evt_maestro_authorization_workflow_resume")
 
   // One published workflow step whose final checks are the build and the cold review, outside the project directory.
   const projectID = ProjectID.make(chat.projectID)
@@ -132,6 +134,7 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
     approve: () => Effect.void, complete: () => Effect.void }
 
   // The armed completion contract and its native host; `reviewed` is whether a code-stage APPROVE covers the tree.
+  // `resolve` always answers the same token, as re-arming an identical contract does (the token is content-addressed).
   const reviewed = { value: false }
   const state = yield* tmpdirScoped()
   yield* Effect.promise(() => mkdir(path.join(state, chat.projectID, "completion"), { recursive: true }))
@@ -185,19 +188,26 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
 
   const params = { description: "implement card", prompt: "implement card", subagent_type: "backend", authorizationID,
     workflow, writePaths: ["src"] }
-  // Each call is its own Task tool call of Maestro's turn, as the workflow approval reads it back.
-  const call = (extra: { task_id?: string } = {}) => Effect.gen(function* () {
-    const callID = `call_${PartID.ascending()}`
-    const input = { ...params, ...extra }
-    yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: assistant.id, type: "tool",
-      tool: "task", callID, state: { status: "running", input, time: { start: Date.now() } } })
-    return yield* def.execute(input, { sessionID: chat.id, messageID: assistant.id, callID, agent: "maestro",
-      agentID: "maestro", abort: new AbortController().signal, extra: { promptOps: ops }, messages: [],
-      metadata: () => Effect.void, ask: () => Effect.void }).pipe(Effect.provideService(WorkflowBinding.NativeHost, workflowHost),
-      Effect.exit)
-  })
+  // Each call is its own Task tool call of Maestro's turn, as the workflow approval reads it back. `abort` cancels the
+  // call at its first metadata update, which comes after completion.beforeDispatch and before the child is prompted.
+  const call = (extra: { task_id?: string; authorizationID?: string } = {}, options: { abort?: boolean } = {}) =>
+    Effect.gen(function* () {
+      const callID = `call_${PartID.ascending()}`
+      const input = { ...params, ...extra }
+      const controller = new AbortController()
+      yield* sessions.updatePart({ id: PartID.ascending(), sessionID: chat.id, messageID: assistant.id, type: "tool",
+        tool: "task", callID, state: { status: "running", input, time: { start: Date.now() } } })
+      return yield* def.execute(input, { sessionID: chat.id, messageID: assistant.id, callID, agent: "maestro",
+        agentID: "maestro", abort: controller.signal, extra: { promptOps: ops }, messages: [],
+        metadata: () => Effect.sync(() => {
+          if (options.abort) controller.abort()
+        }), ask: () => Effect.void })
+        .pipe(Effect.provideService(WorkflowBinding.NativeHost, workflowHost), Effect.exit)
+    })
 
-  return { chat, prompts, reviewed, call }
+  // Puts the tree back to the one the authorizations approved, as a reverted worker edit does.
+  const revert = () => Effect.promise(() => rm(path.join(chat.directory, "src", "card.ts"), { force: true }))
+  return { chat, prompts, reviewed, call, authorize, revert }
 })
 
 // The first dispatch: the reply settles, the cold review finds no code review, and the Task returns the hold.
@@ -239,6 +249,50 @@ it.instance("an authorized dispatch that is not a continuation still requires th
     expect(Exit.isFailure(exit)).toBe(true)
     if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain("MaestroDispatchRejected: context-not-current")
     expect(f.prompts.count).toBe(0)
+  }), { git: true })
+
+// Live-03: a dispatch held after beforeDispatch bound the arm to a child that never ran, so the next authorization's
+// dispatch failed WORKFLOW_ARM_BINDING_MISMATCH and re-arming the same contract returned the same, still-bound token.
+it.instance("a workflow dispatch held before its child is prompted leaves the arm free for the next authorization", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture()
+    const sessions = yield* Session.Service
+    const held = yield* f.call({}, { abort: true })
+    expect(Exit.isFailure(held)).toBe(true)
+    if (Exit.isFailure(held)) expect(Cause.pretty(held.cause)).toContain("Task cancelled")
+    const unrun = (yield* sessions.children(f.chat.id))[0]
+    if (!unrun) throw new Error("missing reserved child")
+    expect(f.prompts.count).toBe(0)
+    expect(yield* WorkflowBinding.read(unrun.id)).toBeUndefined()
+
+    // The identical contract re-armed resolves the same token; the next authorization's child binds it and runs.
+    f.reviewed.value = true
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_rearm")
+    const ran = yield* f.call({ authorizationID: next })
+    expect(Exit.isSuccess(ran)).toBe(true)
+    expect(f.prompts.count).toBe(1)
+    expect((yield* WorkflowBinding.read(SessionID.make(Dispatch.childSessionID(next))))?.token).toBe(token)
+  }), { git: true })
+
+it.instance("an arm bound to a child that ran still refuses another authorization's child before it is prompted", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture()
+    const sessions = yield* Session.Service
+    // The first child runs and holds for the code review, so the arm is bound to a child that actually ran.
+    expect(Exit.isFailure(yield* f.call())).toBe(true)
+    expect(f.prompts.count).toBe(1)
+    const ran = (yield* sessions.children(f.chat.id))[0]
+    if (!ran) throw new Error("missing reserved child")
+    expect((yield* WorkflowBinding.read(ran.id))?.token).toBe(token)
+
+    yield* f.revert()
+    f.reviewed.value = true
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_other")
+    const refused = yield* f.call({ authorizationID: next })
+    expect(Exit.isFailure(refused)).toBe(true)
+    if (Exit.isFailure(refused)) expect(Cause.pretty(refused.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
+    expect(f.prompts.count).toBe(1)
+    expect(yield* WorkflowBinding.read(SessionID.make(Dispatch.childSessionID(next)))).toBeUndefined()
   }), { git: true })
 
 const unheld = {

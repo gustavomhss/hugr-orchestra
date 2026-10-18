@@ -193,12 +193,20 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_CHECK_UNBOUND" })
   if (existing && (!isDeepStrictEqual(existing.binding, ready.binding) || existing.token !== input.token))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
-  if (!existing) yield* input.relay.create({ token: input.token, sprint: ready.materialized.sprint,
-    agentID: ready.binding.executionSessionID,
-    meta: { workdir: input.dispatch.directory, token: input.token,
-      project_id: input.dispatch.projectID, session_id: ready.binding.executionSessionID, workflow: ready.binding },
-  }).pipe(Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })))
-  if (!existing) {
+  const unparked = input.relay.currentStep(input.token, ready.binding).pipe(Effect.flatMap((view) =>
+    view.state === "awaiting-human" && !view.pending
+      ? Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_PARKED" })) : Effect.void))
+  if (existing) yield* unparked
+  // The arm and the durable binding are written by `bind` alone, which the Task tool runs right before it prompts the
+  // child. Both are write-once per child, so binding at dispatch would tie the arm to a child that a later hold never
+  // runs, and the next authorization's child would then fail WORKFLOW_ARM_BINDING_MISMATCH on the same token.
+  const bind = Effect.gen(function* () {
+    if (existing) return
+    yield* input.relay.create({ token: input.token, sprint: ready.materialized.sprint,
+      agentID: ready.binding.executionSessionID,
+      meta: { workdir: input.dispatch.directory, token: input.token,
+        project_id: input.dispatch.projectID, session_id: ready.binding.executionSessionID, workflow: ready.binding },
+    }).pipe(Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })))
     const events = yield* EventV2Bridge.Service
     yield* events.publish(MaestroEvent.Task.WorkflowBound, { executionSessionID: ready.binding.executionSessionID,
       token: input.token, binding: ready.binding, authorityMessageID: SessionMessage.ID.make(input.dispatch.assistantMessageID),
@@ -210,11 +218,9 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
       })),
     )
-  }
-  const view = yield* input.relay.currentStep(input.token, ready.binding)
-  if (view.state === "awaiting-human" && !view.pending)
-    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_PARKED" })
-  return { ...ready, token: input.token, relay: input.relay, dispatch: input.dispatch, view,
+    yield* unparked
+  }).pipe(Effect.provide(context))
+  return { ...ready, token: input.token, relay: input.relay, dispatch: input.dispatch, bound: existing !== undefined, bind,
     verifySettlement: (assistantMessageID: string) => Effect.gen(function* () {
       const database = yield* Database.Service
       const modern = yield* database.db.select().from(SessionMessageTable).where(eq(SessionMessageTable.id,
