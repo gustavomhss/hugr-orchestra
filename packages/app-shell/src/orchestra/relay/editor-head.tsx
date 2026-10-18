@@ -326,6 +326,8 @@ export function SaveStatus(props: {
       class="wf-save"
       classList={{ bad: props.save.state === "error" || props.save.state === "conflict" }}
       role="status"
+      // Autosave cycles saving/saved constantly; only a failure is worth announcing.
+      aria-live={props.save.state === "error" || props.save.state === "conflict" ? "polite" : "off"}
       data-save={props.save.state}
       data-reason={props.save.reason}
     >

@@ -30,6 +30,11 @@ export function DialogHelp() {
           Press {commandShortcut()} to see all available actions and commands in any context.
         </text>
       </box>
+      <box paddingBottom={1} gap={1}>
+        <text fg={theme.textMuted}>
+          Type /connect to add an AI provider. Ctrl+C clears the prompt when it has text and exits when it is empty.
+        </text>
+      </box>
       <box flexDirection="row" justifyContent="flex-end" paddingBottom={1}>
         <box paddingLeft={3} paddingRight={3} backgroundColor={theme.primary} onMouseUp={() => dialog.clear()}>
           <text fg={theme.selectedListItemText}>ok</text>

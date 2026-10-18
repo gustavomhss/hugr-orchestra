@@ -23,6 +23,7 @@ export const CHAT_COPY = {
   "orchestra.chat.send.emptySession": "Empty session",
   "orchestra.chat.send.openProviders": "Connect a provider",
   "orchestra.chat.providerTip": "Connect a provider to start",
+  "orchestra.chat.noConnection.description": "Chat needs a connected provider before it can start.",
   "orchestra.chat.placeholder": "Message Orchestra…",
   "orchestra.chat.menu.rename": "Rename session",
   "orchestra.chat.menu.export": "Export session",

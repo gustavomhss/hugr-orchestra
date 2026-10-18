@@ -546,14 +546,6 @@ export const SettingsGeneralV2: Component<{
       </div>
 
       <div class="settings-v2-tab-body">
-        <Show when={settings.general.layoutTransitionAvailable()}>
-          <InterfaceSection />
-        </Show>
-
-        <Show when={settings.general.newInterfaceNoticeVisible()}>
-          <InterfaceNoticeSection />
-        </Show>
-
         <GeneralSection />
 
         <AppearanceSection controller={appearance} />
@@ -569,6 +561,14 @@ export const SettingsGeneralV2: Component<{
         <DisplaySection />
 
         <AdvancedSection />
+
+        <Show when={settings.general.layoutTransitionAvailable()}>
+          <InterfaceSection />
+        </Show>
+
+        <Show when={settings.general.newInterfaceNoticeVisible()}>
+          <InterfaceNoticeSection />
+        </Show>
       </div>
     </>
   )

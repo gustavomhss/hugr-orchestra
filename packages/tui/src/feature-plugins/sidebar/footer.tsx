@@ -54,7 +54,7 @@ function View(props: { api: TuiPluginApi; sessionID: string }) {
               </text>
             </box>
             <text fg={theme().textMuted}>
-              Connect from 75+ providers to use other models, including Claude, GPT, Gemini etc
+              Free models are ready to use. Connect a provider to use others, such as Claude, GPT or Gemini
             </text>
             <box flexDirection="row" gap={1} justifyContent="space-between">
               <text fg={theme().text}>Connect provider</text>

@@ -21,7 +21,7 @@ export const SHELL_COPY = {
   // The folder the desktop app creates in Documents on first launch.
   "orchestra.shell.onboarding.defaultProject": "Default Project",
   "orchestra.shell.settings.repository":
-    "Select a repository profile to manage this section. General, Servers, and Shortcuts are available without a repository.",
+    "Open a project to manage this section. General, Servers, and Shortcuts work without one.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
   "orchestra.shell.crumb.home": "home",
   "orchestra.shell.crumb.session": "session",
