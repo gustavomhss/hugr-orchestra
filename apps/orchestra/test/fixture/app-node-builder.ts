@@ -6,7 +6,7 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
-import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { InstanceStore } from "@/project/instance-store"
 import { testInstanceStoreLayer } from "./fixture"
 
@@ -20,7 +20,7 @@ export function build<A, E, R extends LayerNode.Tag | undefined>(
     LayerNode.group([root, SessionV2.node, SessionExecution.node, SessionSubagentModels.node]),
     [
       [SessionExecution.node, SessionExecutionLocal.node],
-      ...ArsenalBindings.nativeRegistryReplacements,
+      ...ArsenalNative.nativeRegistryReplacements,
       ...replacements,
       [InstanceStore.node, testInstanceStoreLayer],
     ],

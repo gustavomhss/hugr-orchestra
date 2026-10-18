@@ -15,7 +15,7 @@ import path from "node:path"
 import { createServer } from "node:net"
 import { pathToFileURL } from "node:url"
 import { Plugin } from "../../src/plugin"
-import { ArsenalBindings } from "../../src/maestro/arsenal-bindings"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { ListenerContext } from "../../src/server/listener-context"
 import { Server } from "../../src/server/server"
 import { Session } from "../../src/session/session"
@@ -40,7 +40,7 @@ const fixture = Effect.gen(function* () {
   const database = [Database.node, Database.layerFromPath(path.join(directory, "listeners.db"))] as const
   // Hoisting must resolve each global by one identity when its Database dependency is replaced.
   const globals = globalIdentities(locationServices).filter(([node]) => node.name !== Database.node.name)
-  const replacements: LayerNode.Replacement[] = ArsenalBindings.nativeRegistryReplacements
+  const replacements: LayerNode.Replacement[] = ArsenalNative.nativeRegistryReplacements
   const added = [database, ...globals]
   yield* Effect.acquireRelease(
     Effect.sync(() => replacements.push(...added)),

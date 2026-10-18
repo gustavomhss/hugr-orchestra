@@ -697,5 +697,3 @@ export const make = Effect.gen(function* () {
 
 export const classifyOutcome = ArsenalOutcome.classifyOutcome
 export const makeApprovalHost = ArsenalApproval.makeApprovalHost
-export const nativeSafetyNode = ArsenalApproval.nativeSafetyNode
-export const nativeRegistryReplacements = ArsenalApproval.nativeRegistryReplacements

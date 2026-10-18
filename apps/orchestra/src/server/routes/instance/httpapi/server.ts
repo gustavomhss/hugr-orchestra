@@ -109,6 +109,7 @@ import { tuiHandlers } from "./handlers/tui"
 import { handlers } from "@orchestra/server/handlers"
 import { buildLocationServiceMap, LocationServiceMap } from "@orchestra/core/location-services"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { layer as locationLayer } from "@orchestra/server/location"
 import { sessionLocationLayer } from "@orchestra/server/middleware/session-location"
 import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
@@ -283,7 +284,7 @@ const app = LayerNode.group([
 export function createRoutes(
   corsOptions?: CorsOptions,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
-  const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
+  const locationServiceMapV2 = buildLocationServiceMap(ArsenalNative.nativeRegistryReplacements)
   // One root owns native Session execution, scheduled drains, legacy bootstrap,
   // and every Location map captured by either protocol's constructors.
   const services = AppNodeBuilderV1.build(
