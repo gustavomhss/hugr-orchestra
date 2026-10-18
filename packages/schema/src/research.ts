@@ -212,6 +212,12 @@ export type RecordInput = typeof RecordInput.Type
 
 const GitRevision = Schema.String.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\s\S])/))
 const historyFields = { kind: Schema.Literal("history"), path: text(8192), revision: optional(GitRevision) }
+/** J5.15: resolve one ref to its full commit hash; status reads HEAD, branch and dirty paths. */
+export const HistoryResolve = struct("Research.HistoryResolve", {
+  kind: Schema.Literal("history"), operation: Schema.Literal("resolve"),
+  ref: Schema.String.check(Schema.isPattern(/^(?!-)[A-Za-z0-9._/~^@{}-]{1,256}(?![\s\S])/)),
+})
+export const HistoryStatus = struct("Research.HistoryStatus", { kind: Schema.Literal("history"), operation: Schema.Literal("status") })
 export const HistoryInput = Schema.Union([
   struct("Research.HistoryLog", { ...historyFields, operation: Schema.Literal("log"), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))) }),
   struct("Research.HistoryShow", { ...historyFields, operation: Schema.Literal("show") }),
@@ -225,14 +231,10 @@ export const HistoryInput = Schema.Union([
     kind: Schema.Literal("history"), operation: Schema.Literal("search"), revision: optional(GitRevision),
     message: optional(text(256)), path: optional(text(8192)), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   }),
+  HistoryResolve,
+  HistoryStatus,
 ])
 export type HistoryInput = typeof HistoryInput.Type
-/** J5.15 operations. E3 adds both to HistoryInput when history.ts serves them; until then no tool admits them. */
-export const HistoryResolve = struct("Research.HistoryResolve", {
-  kind: Schema.Literal("history"), operation: Schema.Literal("resolve"),
-  ref: Schema.String.check(Schema.isPattern(/^(?!-)[A-Za-z0-9._/~^@{}-]{1,256}(?![\s\S])/)),
-})
-export const HistoryStatus = struct("Research.HistoryStatus", { kind: Schema.Literal("history"), operation: Schema.Literal("status") })
 
 export const CaptureInput = Schema.Union([
   struct("Research.FileCapture", {
