@@ -5,7 +5,11 @@ export * as ResearchInquiry from "./inquiry"
 import { Effect } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
+import type { ResearchRecords } from "@orchestra/core/research/records"
+import type { Liveness } from "@orchestra/core/research-toolkit/liveness"
+import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ResearchExecution } from "./allowance"
+import { InquiryCheck } from "./inquiry-check"
 
 export type Phase = "none" | "open" | "investigating" | "checked" | "closed"
 export type Subquestion = { readonly ref: Research.RecordRef; readonly question: string; claims: Research.RecordRef[]; gap?: string }
@@ -113,44 +117,112 @@ export function evidence(item: Research.Evidence): Research.EvidenceRef {
   return { source: item.source, locator: { kind: "json", pointer: item.pointer } }
 }
 
+/** What the check reads beyond the ledger fold; the inquiry tool binds them to its dispatch (J5.6, J5.9-J5.11). */
+export type Deps = {
+  readonly records: ResearchRecords.Interface
+  readonly binding: Research.Binding
+  /** The dispatch's domain list (J1.9); undefined is unrestricted. */
+  readonly domains: readonly string[] | undefined
+  readonly searches: readonly InquiryCheck.Search[]
+  readonly links: (urls: readonly string[], options: Liveness.Options) => Effect.Effect<readonly Liveness.Result[]>
+  readonly real?: (target: string) => Effect.Effect<string>
+}
+
 /**
- * The structural rules of the check (J5.6): R2 non-vacuity, R3 locators, R7 coverage and R8 hypotheses. `verify`
- * re-resolves one evidence locator against the retained bytes. A partial or blocked close turns failures into limitations.
+ * R1-R11 (InquiryCheck.run) over the folded state, with the retained bytes, the record verifier and URL liveness. A
+ * mid-run check has no close and is held to the answered bar; a close is checked on its own sufficiency and answer.
  */
-export const check = Effect.fn("ResearchInquiry.check")(function* (state: State, sufficiency: Research.Sufficiency,
-  verify: (ref: Research.EvidenceRef) => Effect.Effect<void, Research.Error>) {
-  const issues: Array<Research.CheckResult["issues"][number]> = []
-  const claims = state.claims.filter((claim) => !claim.dropped)
-  const answered = sufficiency === "answered"
-  // R2: an answered inquiry has at least one claim with evidence; zero claims never pass (J5.8).
-  const evidenced = claims.filter((claim) => claim.evidence.length > 0)
-  if (answered && !evidenced.length) issues.push({ rule: "R2", reason: "no claim with evidence: an answered inquiry needs at least one" })
-  // R3: every cited locator still resolves in its retained source.
-  const cited = [...claims.flatMap((claim) => [...claim.evidence, ...claim.contrary].map((ref) => ({ ref: claim.ref, evidence: ref }))),
-    ...state.hypotheses.filter((item) => item.status !== "open" && item.status !== "dropped")
-      .flatMap((item) => item.evidence.map((ref) => ({ ref: item.ref, evidence: ref })))]
-  const located = yield* Effect.forEach(cited, (item) => verify(item.evidence).pipe(Effect.result))
-  located.forEach((result, index) => {
-    if (result._tag === "Failure") issues.push({ rule: "R3", ref: cited[index].ref, reason: `${result.failure.code}: ${result.failure.message}` })
+export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
+  close: Pick<Extract<Research.InquiryInput, { action: "close" }>, "sufficiency" | "answer"> | undefined, deps: Deps) {
+  const records = deps.records
+  const binding = deps.binding
+  const read = (ref: Research.SourceRef) => drain(records, binding, { action: "source", ref })
+  // URLs the dispatch's retained web searches returned, in loop (websearch) and Claude mode (WebSearch) alike.
+  const results = yield* Effect.forEach(state.sources.filter((source) => source.origin.kind === "tool-output" &&
+    /\/websearch$/i.test(source.origin.uri)), (source) => read(source.ref).pipe(Effect.orElseSucceed(() => "")))
+  const seenUrls = results.flatMap((text) => InquiryCheck.extract(text).flatMap((item) => item.kind === "url" ? [item.target] : []))
+  const pages = state.sources.filter((source) => source.origin.kind === "url")
+  const seen = [...seenUrls, ...pages.map((source) => source.origin.uri)]
+  const captured = pages.filter((source) => source.complete).map((source) => ({ url: source.origin.uri, capturedAt: source.capturedAt }))
+  const subquestions = new Map(state.subquestions.map((sub) => [sub.ref.id, sub.ref]))
+  return yield* InquiryCheck.run({
+    binding,
+    ...(close ? { sufficiency: close.sufficiency } : {}),
+    answer: close?.answer ?? "",
+    allowedDomains: deps.domains ? [...deps.domains] : "unrestricted",
+    sources: state.sources,
+    attempts: yield* attempts(records, binding),
+    subquestions: state.subquestions.map((sub) => ({ ref: sub.ref, question: sub.question })),
+    claims: state.claims.flatMap((claim) => {
+      const subquestion = subquestions.get(claim.subquestion)
+      if (claim.dropped || !subquestion || !isNature(claim.nature)) return []
+      const scope = claim.conditions.includes("scope:universal") ? "universal" as const
+        : claim.conditions.includes("scope:existential") ? "existential" as const : undefined
+      return [{ ref: claim.ref, subquestion, proposition: claim.proposition, nature: claim.nature, ...(scope ? { scope } : {}),
+        conditions: claim.conditions, evidence: claim.evidence.map(cited), contrary: claim.contrary.map(cited) }]
+    }),
+    hypotheses: state.hypotheses.flatMap((item) => item.status === "dropped" ? []
+      : [{ ref: item.ref, proposition: item.proposition, status: item.status, evidence: item.evidence.map(cited) }]),
+    searches: deps.searches,
+    seenUrls,
+    read,
+    verify: (ref) => records.verifyEvidence(binding, ref),
+    liveness: (urls) => urls.length ? deps.links(urls.slice(0, 256), { seen, captured }).pipe(Effect.map((list) => list.map((item) =>
+      ({ url: item.url, status: item.status, ...(item.httpStatus !== undefined ? { httpStatus: item.httpStatus } : {}) })))) : Effect.succeed([]),
+    ...(deps.real ? { real: deps.real } : {}),
   })
-  // R7: every subquestion has an answering claim; a declared gap is honest coverage only short of answered.
-  const subs = state.subquestions.map((sub) => ({ sub, covered: claims.some((claim) => claim.subquestion === sub.ref.id) }))
-  subs.filter((item) => !item.covered && (answered || !item.sub.gap)).forEach((item) => issues.push({ rule: "R7", ref: item.sub.ref,
-    reason: item.sub.gap ? `subquestion has a declared gap (${item.sub.gap}), so the inquiry is not answered` : "subquestion has no answering claim" }))
-  // R8: no open hypothesis in an answered inquiry; a decided one carries evidence.
-  const hypotheses = state.hypotheses.filter((item) => item.status !== "dropped")
-  hypotheses.filter((item) => (item.status === "open" && answered) || (item.status !== "open" && !item.evidence.length))
-    .forEach((item) => issues.push({ rule: "R8", ref: item.ref,
-      reason: item.status === "open" ? "hypothesis is still open" : `hypothesis ${item.status} without evidence` }))
-  const count = (rule: Research.CheckResult["issues"][number]["rule"]) => issues.filter((issue) => issue.rule === rule).length
-  const rules = [
-    { id: "R2" as const, checked: claims.length, failed: count("R2") },
-    { id: "R3" as const, checked: cited.length, failed: count("R3") },
-    { id: "R7" as const, checked: subs.length, failed: count("R7") },
-    { id: "R8" as const, checked: hypotheses.length, failed: count("R8") },
-  ]
-  return { verdict: issues.length ? "fail" as const : "pass" as const, rules, issues: issues.slice(0, 256), urls: [] }
 })
+
+/**
+ * The code_search and code_query calls of the execution Session, as R5 and R6 read them: what each covered (its
+ * pattern, name and paths) and whether its coverage was complete. Tool names may carry an MCP prefix in Claude mode.
+ */
+export function searches(messages: readonly SessionV1.WithParts[]): InquiryCheck.Search[] {
+  return messages.flatMap((message) => message.parts).flatMap((part) => {
+    if (part.type !== "tool" || part.state.status !== "completed") return []
+    const tool = part.tool.split("__").at(-1)
+    if (tool !== "code_search" && tool !== "code_query") return []
+    const input = part.state.input
+    const scope = [input.pattern, input.name, input.path, input.symbol, ...(Array.isArray(input.paths) ? input.paths : [])]
+      .filter((entry): entry is string => typeof entry === "string" && entry.trim() !== "")
+    const output = part.state.output
+    const complete = tool === "code_search" ? /\bcomplete=true\b/.test(output)
+      : /\| docs \d+ \|/.test(output) && !/ (?:INCOMPLETE|TRUNCATED)\b/.test(output)
+    return [{ tool, complete, scope }]
+  })
+}
+
+function isNature(nature: string): nature is InquiryCheck.Claim["nature"] {
+  return nature === "extraction" || nature === "observation" || nature === "inference"
+}
+
+/** A retained locator as the seat cited it; lines of either basis are checked in original coordinates. */
+function cited(ref: Research.EvidenceRef): Research.Evidence {
+  if (ref.locator.kind === "lines") return { source: ref.source, lines: { start: ref.locator.start, end: ref.locator.end } }
+  if (ref.locator.kind === "quote") return { source: ref.source, quote: ref.locator.exact }
+  return { source: ref.source, pointer: ref.locator.pointer }
+}
+
+function attempts(records: ResearchRecords.Interface, binding: Research.Binding, cursor?: string): Effect.Effect<Research.AttemptReceipt[], Research.Error> {
+  return records.view(binding, { action: "attempts", limit: 100, ...(cursor ? { cursor } : {}) }).pipe(Effect.flatMap((page) => {
+    if (!("attempts" in page)) return Effect.succeed([])
+    if (!page.cursor) return Effect.succeed([...page.attempts])
+    return attempts(records, binding, page.cursor).pipe(Effect.map((rest) => [...page.attempts, ...rest]))
+  }))
+}
+
+/** Every page of a retained source or document, joined. */
+export function drain(
+  records: ResearchRecords.Interface,
+  binding: Research.Binding,
+  input: { action: "source"; ref: Research.SourceRef; cursor?: string } | { action: "document"; ref: Research.DocumentRef; cursor?: string },
+): Effect.Effect<string, Research.Error> {
+  return records.view(binding, input).pipe(Effect.flatMap((page) => {
+    if (!("text" in page)) return Effect.fail(new Research.Error({ code: "source_unavailable", message: "Retained research page is not text" }))
+    if (!page.cursor) return Effect.succeed(page.text)
+    return drain(records, binding, { ...input, cursor: page.cursor }).pipe(Effect.map((rest) => page.text + rest))
+  }))
+}
 
 /** Why the inquiry cannot close now, or undefined. The host refuses to close over an uncovered subquestion (efficiency.md). */
 export function refusal(state: State, sufficiency: Research.Sufficiency) {
@@ -167,11 +239,13 @@ export function refusal(state: State, sufficiency: Research.Sufficiency) {
 
 /** The card the host assembles on close (J5.12); the model never writes card JSON. */
 export function card(state: State, input: { readonly allowance: Research.Allowance; readonly close: Extract<Research.InquiryInput, { action: "close" }>
-  readonly check: Research.CheckResult; readonly domains: readonly string[] | undefined }): Research.CardV2 {
+  readonly outcome: InquiryCheck.Outcome; readonly domains: readonly string[] | undefined }): Research.CardV2 {
+  const check = input.outcome.result
   const claims = state.claims.filter((claim) => !claim.dropped)
   const gaps = state.subquestions.flatMap((sub) => sub.gap ? [`gap ${sub.ref.id}: ${sub.gap}`] : [])
   const dropped = state.hypotheses.flatMap((item) => item.status === "dropped" ? [`hypothesis ${item.ref.id} dropped: ${item.reason ?? ""}`] : [])
-  const failures = input.close.sufficiency === "answered" ? [] : input.check.issues.map((issue) => `${issue.rule}: ${issue.reason}`)
+  // Short of answered, the closing check's failures become limitations (J5.2).
+  const failures = input.close.sufficiency === "answered" ? [] : check.issues.map((issue) => `${issue.rule}: ${issue.reason}`)
   return {
     schema: "jimmy-card-v2",
     answer: input.close.answer,
@@ -188,13 +262,13 @@ export function card(state: State, input: { readonly allowance: Research.Allowan
     sources: { total: state.sources.length, shown: state.sources.slice(0, 50).map((source) => ({ ref: source.ref,
       origin: source.origin.kind, uri: source.origin.uri })) },
     searches: state.searches,
-    web: { domains: input.domains ? [...input.domains] : "unrestricted", urls: [] },
+    web: { domains: input.domains ? [...input.domains] : "unrestricted", urls: check.urls },
     coverage: { examined: state.subquestions.filter((sub) => !sub.gap).map((sub) => sub.ref.id), excluded: [],
-      failures: [...gaps, ...failures].slice(0, 256) },
-    limitations: [...(input.close.limitations ?? []), ...failures, ...dropped].slice(0, 256),
+      failures: [...gaps, ...input.outcome.coverageFailures, ...failures].slice(0, 256) },
+    limitations: [...(input.close.limitations ?? []), ...failures, ...dropped, ...input.outcome.limitations].slice(0, 256),
     nextActions: [...(input.close.nextActions ?? [])].slice(0, 32),
     documentRefs: [],
-    check: input.check,
+    check,
   }
 }
 

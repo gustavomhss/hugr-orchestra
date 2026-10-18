@@ -9,7 +9,6 @@ import type { ArsenalCompletion } from "./arsenal-completion"
 import { Seats, type Seat } from "./seats"
 import type { Research } from "@orchestra/schema/research"
 import type { ResearchQualifications } from "@/research/qualifications"
-import type { ResearchCitationCheck } from "@/research/citation-check"
 import { UpstreamResult } from "./upstream-result"
 import { OUTCOME_KEY, readOutcome, type Outcome } from "../plugin/hugr-composer/outcome"
 
@@ -71,13 +70,13 @@ export type WorkerEvidence = {
 
 export type WorkResult = {
   schema: string
-  discovery?: Research.Card
+  discovery?: Research.CardV2
   referencesChecked?: boolean
   documents?: readonly Research.DocumentReceipt[]
   corpus?: Research.Corpus
   qualifications?: ResearchQualifications.Summary
-  // Host claim check of the card's quotes, prose citations and findings against this dispatch's retained research.
-  citationCheck?: ResearchCitationCheck.Result
+  // Ranked worktree-relative line ranges the answer cites and the closing check verified (localisation answers).
+  locations?: ReadonlyArray<{ readonly path: string; readonly start: number; readonly end: number }>
   // Host fact: the logical task (F2.11), never the child Session ID. Absent when no binding exists.
   taskId?: string
   memberId?: string

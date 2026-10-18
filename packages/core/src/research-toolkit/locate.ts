@@ -18,6 +18,22 @@ export type Sources = {
   readonly retain: (snapshot: string) => Effect.Effect<Research.SourceRef, Research.Error>
 }
 
+/** First line of the retained snapshot; every range follows as `==> path:start-end` and `<line>: <text>` rows. */
+export const SNAPSHOT = "code_locate ranges, original 1-based lines"
+
+/**
+ * The ranges a retained code_locate snapshot holds, with each original line's offset among the snapshot's lines, or
+ * undefined when the text is not a snapshot. Readers map snapshot evidence back to the worktree file it came from.
+ */
+export function blocks(text: string) {
+  const rows = text.split(/\r\n|\n|\r/)
+  if (rows[0] !== SNAPSHOT) return undefined
+  return rows.flatMap((row, index) => {
+    const head = /^==> (.+):(\d+)-(\d+)$/.exec(row)
+    return head ? [{ path: head[1], start: Number(head[2]), end: Number(head[3]), row: index + 1 }] : []
+  })
+}
+
 export const MAX_SEARCHES = 32
 export const DEFAULT_LIMIT = 12
 const RRF_K = 60
@@ -80,7 +96,7 @@ export const run = Effect.fn("Locate.run")(function* (input: CodeIndex.LocateInp
     perFile.set(unit.path, count)
     return count <= PER_FILE
   }).slice(0, limit)
-  const evidence = yield* sources.retain(["code_locate ranges, original 1-based lines", ...kept.map((unit) => [`==> ${unit.path}:${unit.startLine}-${unit.endLine}`,
+  const evidence = yield* sources.retain([SNAPSHOT, ...kept.map((unit) => [`==> ${unit.path}:${unit.startLine}-${unit.endLine}`,
     ...(files.get(unit.path) ?? []).slice(unit.startLine - 1, unit.endLine).map((text, index) => `${unit.startLine + index}: ${text}`)].join("\n"))]
     .join("\n\n"))
   return {
