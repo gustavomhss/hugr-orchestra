@@ -38,21 +38,24 @@ export function explicitExports(workspace: Workspace, alias: string) {
   if (JSON.stringify(member.manifest, null, 2) + "\n" !== member.manifestText) fail(`EXPORTS_MANIFEST_NOT_CANONICAL:${member.path}/package.json`)
   const old = exportsObject(member.manifest.exports)
   const assets = new Set(member.spec.assetWildcards ?? [])
-  const code = new Set(Object.keys(old).filter((key) => key.includes("*") && !assets.has(key)))
+  // A closed map has no wildcard left, so the registry keeps the former code wildcards (`sourceWildcards`) to resolve
+  // a subpath that gains its first consumer; keys already in the map win.
+  const before = { ...(member.spec.sourceWildcards ?? {}), ...old }
+  const code = new Set(Object.keys(before).filter((key) => key.includes("*") && !assets.has(key)))
   const tracked = new Set(workspace.files)
   const reaches = (subpath: string) => {
-    const hit = resolveExport(old, subpath)
+    const hit = resolveExport(before, subpath)
     return hit && code.has(hit.key) && tracked.has(path.posix.join(member.path, hit.target)) ? hit : undefined
   }
   const demanded = literals(workspace, member).filter((subpath) => reaches(subpath))
-  const full = member.spec.exportsPolicy !== "full" ? [] : [...code].flatMap((key) => inverse(workspace, member.path, key, old[key]))
+  const full = member.spec.exportsPolicy !== "full" ? [] : [...code].flatMap((key) => inverse(workspace, member.path, key, before[key]))
   const derived = [...new Set([...demanded, ...full.filter((subpath) => reaches(subpath))])].filter((key) => !(key in old)).sort()
   const next = Object.fromEntries([
     ...Object.entries(old).filter(([key]) => !code.has(key)),
     ...derived.map((key) => [key, reaches(key)?.target ?? fail(`EXPORTS_RESOLUTION_CHANGED:${key}`)]),
   ])
   ;[...demanded, ...derived].forEach((subpath) => {
-    if (resolveExport(next, subpath)?.target !== resolveExport(old, subpath)?.target) fail(`EXPORTS_RESOLUTION_CHANGED:${subpath}`)
+    if (resolveExport(next, subpath)?.target !== resolveExport(before, subpath)?.target) fail(`EXPORTS_RESOLUTION_CHANGED:${subpath}`)
   })
   return { member, next, derived: derived.length }
 }
