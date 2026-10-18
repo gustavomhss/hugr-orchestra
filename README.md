@@ -6,11 +6,11 @@ The app combines an Electron host (`apps/desktop`), a shared Solid UI (`packages
 
 ## Install
 
-The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. macOS installers and binaries are signed and notarized, and Windows binaries are signed.
+The first public release is pending. No version is tagged yet, so the downloads and package names below do not exist until it ships. The first releases may ship before code signing is set up; the notes of each release say whether it is signed.
 
 ### Desktop app
 
-Download the installer for your system from the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page. Files are named `orchestra-desktop-<os>-<arch>.<ext>`:
+Download the installer for your system from the `desktop-v<version>` release on the [GitHub Releases](https://github.com/gustavomhss/hugr-orchestra/releases) page. Files are named `orchestra-desktop-<os>-<arch>.<ext>`:
 
 | System  | File                                                                        |
 | ------- | --------------------------------------------------------------------------- |
@@ -19,6 +19,8 @@ Download the installer for your system from the [GitHub Releases](https://github
 | Linux   | `orchestra-desktop-linux-x86_64.AppImage`, plus `.deb` and `.rpm` packages of the same build |
 
 The `.deb` and `.rpm` follow each package format's own architecture name (`amd64` and `x86_64`), so their file names differ slightly from the AppImage.
+
+An unsigned build makes the system ask before the first launch. On macOS, open System Settings > Privacy & Security and choose Open Anyway. On Windows, choose More info > Run anyway on the SmartScreen prompt. Linux installers carry no signature check.
 
 ### Command line
 
@@ -40,7 +42,9 @@ sh install.sh \
   --sha256 <digest>
 ```
 
-`install.sh` supports macOS and glibc Linux on x64 and arm64. It does not edit shell configuration. See the [distribution guide](packages/cli/distribution/README.md) for targets, updates and rollback.
+`install.sh` supports macOS and glibc Linux on x64 and arm64. It does not edit shell configuration. See the [distribution guide](apps/cli/distribution/README.md) for targets, updates and rollback.
+
+npm, Homebrew, AUR and `install.sh` installs never show a Gatekeeper or SmartScreen prompt, signed or not. A binary downloaded from the release page in a browser can.
 
 ### First run
 
@@ -48,7 +52,7 @@ Orchestra needs a model to work with. Connect a provider with your API key in th
 
 ### Upgrading
 
-For npm and Homebrew installs, run `orchestra upgrade`. The desktop app does not update itself yet: download the new installer and install it over the old one.
+For npm and Homebrew installs, run `orchestra upgrade`. The desktop app checks for new versions itself. The Windows and AppImage builds install them in place, and so do signed macOS builds. Unsigned macOS builds and the `.deb` and `.rpm` packages link to the new release instead: download its installer and install it over the old one.
 
 ## Support
 
