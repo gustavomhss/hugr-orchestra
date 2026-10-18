@@ -105,6 +105,14 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const name = () => draft.state.name
   const save = draft.state.save
   const edit = (next: Flow) => { if (!props.route.view) draft.edit(next) }
+  // The selection may name nodes that the step removed.
+  const travel = (step: () => void) => {
+    if (props.route.view) return
+    step()
+    setSelected((ids) => ids.filter((id) => flow().nodes.some((node) => node.id === id)))
+  }
+  const undo = () => travel(draft.undo)
+  const redo = () => travel(draft.redo)
   const rename = (next: string) => { if (!props.route.view) draft.rename(next) }
   const flush = draft.flush
   const reload = draft.reload
@@ -252,6 +260,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     },
     { label: copy.t("orchestra.workflows.keys.title"), icon: "keys", run: () => setDialog("keys") },
     ...(!props.route.view ? [
+    { label: copy.t("orchestra.workflows.menu.undo"), disabled: props.route.tab !== "editor" || !draft.canUndo(), run: undo },
+    { label: copy.t("orchestra.workflows.menu.redo"), disabled: props.route.tab !== "editor" || !draft.canRedo(), run: redo },
     ...(kind === "workflow"
       ? [
           {
@@ -334,9 +344,15 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (typing || props.route.node) return
     if (event.key === "?") return (event.preventDefault(), setDialog("keys"))
     if (props.route.tab !== "editor" || target?.closest(".wf-drawer") || mod) {
-      if (mod && event.key.toLowerCase() === "a" && props.route.tab === "editor" && !target?.closest(".wf-drawer")) {
-        event.preventDefault()
-        setSelected(flow().nodes.map((node) => node.id))
+      if (mod && props.route.tab === "editor" && !target?.closest(".wf-drawer")) {
+        const letter = event.key.toLowerCase()
+        if (letter === "a") {
+          event.preventDefault()
+          setSelected(flow().nodes.map((node) => node.id))
+        }
+        // Text fields returned above, so they keep their own native undo.
+        if (letter === "z" && !event.altKey) return (event.preventDefault(), event.shiftKey ? redo() : undo())
+        if (letter === "y" && event.ctrlKey && !event.altKey) return (event.preventDefault(), redo())
       }
       return
     }

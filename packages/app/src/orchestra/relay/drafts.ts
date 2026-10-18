@@ -1,5 +1,5 @@
 import type { QueryClient } from "@tanstack/solid-query"
-import { createStore } from "solid-js/store"
+import { createStore, unwrap } from "solid-js/store"
 import { createRoot } from "solid-js"
 import { RelayError, type RelayDocument, type RelayKind } from "./client"
 import { rememberDocument } from "./cache"
@@ -9,6 +9,9 @@ import type { RelaySource } from "./source"
 
 // Keep only active editors and unsaved drafts. A full profile refuses another editor rather than evicting work.
 export const DRAFT_LIMIT = 20
+// Undo steps kept per draft. Edits closer together than BURST_MS share one step: a text field reports every keystroke.
+export const HISTORY_LIMIT = 50
+export const BURST_MS = 500
 const servers = new WeakMap<QueryClient, Map<string, Map<string, Draft>>>()
 type Draft = ReturnType<typeof makeDraft>
 type Source = Pick<RelaySource, "client" | "queryClient" | "key" | "invalidate">
@@ -57,7 +60,12 @@ function makeDraft(source: Source, initial: RelayDocument, kind: RelayKind, remo
     flow: flowFromDocument(initial, kind),
     name: initial.name,
     save: { state: "saved", dirty: false, error: "" } as SaveState,
+    // Step counts only, so the editor can enable Undo and Redo; the snapshots stay out of the store.
+    history: { undo: 0, redo: 0 },
   }), null)
+  const past: Flow[] = []
+  const future: Flow[] = []
+  let lastEdit = 0
   let owners = 0
   let discarded = false
   let listening = false
@@ -69,10 +77,19 @@ function makeDraft(source: Source, initial: RelayDocument, kind: RelayKind, remo
     event.preventDefault()
     event.returnValue = ""
   }
+  const listen = () => {
+    if (listening || typeof window === "undefined") return
+    window.addEventListener("beforeunload", beforeUnload)
+    listening = true
+  }
   const unlisten = () => {
     if (!listening) return
     window.removeEventListener("beforeunload", beforeUnload)
     listening = false
+  }
+  // A failed or conflicted draft nobody is editing stays in memory for the library banner, but must not block leaving the page.
+  const abandoned = () => {
+    if (!owners && (state.save.state === "error" || state.save.state === "conflict")) unlisten()
   }
   const clean = () => {
     if (state.save.dirty || state.save.state !== "saved") return
@@ -95,15 +112,17 @@ function makeDraft(source: Source, initial: RelayDocument, kind: RelayKind, remo
           dirty: true,
           error: result.error instanceof Error ? result.error.message : String(result.error),
         })
+        abandoned()
         return
       }
       const latest = await rememberDocument(source.queryClient(), source.key("documents"), result.document, () => !discarded)
       if (discarded || !latest) return
-      if (!state.save.dirty) return replace(latest)
+      if (!state.save.dirty) return replace(latest, latest.versionId === result.document.versionId)
       setState("base", result.document)
       if (latest.versionId !== result.document.versionId) {
         // Edits made during this request were based on its version, not the newer remote graph.
         setState("save", { state: "conflict", dirty: true, error: "" })
+        abandoned()
         return
       }
       setState("save", "state", "saved")
@@ -121,35 +140,64 @@ function makeDraft(source: Source, initial: RelayDocument, kind: RelayKind, remo
   }
   const changed = () => {
     revision++
-    if (!listening && typeof window !== "undefined") {
-      window.addEventListener("beforeunload", beforeUnload)
-      listening = true
-    }
+    listen()
     setState("save", { dirty: true, state: state.save.state === "error" ? "saved" : state.save.state })
     clearTimeout(timer)
     timer = setTimeout(() => void flush(), 600)
   }
-  const replace = (document: RelayDocument) => {
+  // `ours` marks the echo of this draft's own save. Any other replacement is a graph someone else wrote, and undoing across it would revert them.
+  const replace = (document: RelayDocument, ours = false) => {
     setState({ base: document, flow: flowFromDocument(document, kind), name: document.name })
     setState("save", { state: "saved", dirty: false, error: "" })
+    if (!ours) {
+      past.length = 0
+      future.length = 0
+      lastEdit = 0
+      setState("history", { undo: 0, redo: 0 })
+    }
     clean()
+  }
+  // The store merges a new flow into its current object in place, so a snapshot has to be a copy. The arrays inside are replaced, never mutated.
+  const remember = (stack: Flow[]) => {
+    stack.push({ ...unwrap(state.flow) })
+    if (stack.length > HISTORY_LIMIT) stack.shift()
+  }
+  const travel = (from: Flow[], to: Flow[]) => {
+    const target = from.pop()
+    if (!target) return
+    remember(to)
+    lastEdit = 0
+    setState("flow", target)
+    setState("history", { undo: past.length, redo: future.length })
+    changed()
   }
   return {
     state,
     acquire() {
       owners++
+      if (state.save.dirty) listen()
     },
     release() {
       owners--
       clearTimeout(timer)
       // A failed write waits for explicit retry on return, not another unmount attempt.
       if (state.save.state !== "error") void flush()
+      abandoned()
       clean()
     },
     edit(flow: Flow) {
+      const now = Date.now()
+      if (now - lastEdit > BURST_MS) remember(past)
+      lastEdit = now
+      future.length = 0
       setState("flow", flow)
+      setState("history", { undo: past.length, redo: 0 })
       changed()
     },
+    undo: () => travel(past, future),
+    redo: () => travel(future, past),
+    canUndo: () => state.history.undo > 0,
+    canRedo: () => state.history.redo > 0,
     rename(name: string) {
       setState("name", name)
       changed()

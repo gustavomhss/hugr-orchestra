@@ -194,6 +194,30 @@ export function DeleteDialog(props: {
   )
 }
 
+export function RemoveNodesDialog(props: { count: number; onConfirm: () => void; onClose: () => void }) {
+  const copy = useRelayCopy()
+  return (
+    <RelayDialog
+      title={copy.t("orchestra.workflows.removeNodes.title", { count: props.count })}
+      onClose={props.onClose}
+      onSubmit={() => (props.onConfirm(), props.onClose())}
+      foot={
+        <Foot
+          busy={false}
+          danger
+          cancel={copy.t("orchestra.workflows.dialog.cancel")}
+          submit={copy.t("orchestra.workflows.delete.confirm")}
+          onCancel={props.onClose}
+        />
+      }
+    >
+      <p class="mx-note" style={{ margin: 0 }}>
+        {copy.t("orchestra.workflows.removeNodes.body")}
+      </p>
+    </RelayDialog>
+  )
+}
+
 const SHORTCUTS = [
   "palette",
   "back",
@@ -203,6 +227,8 @@ const SHORTCUTS = [
   "delete",
   "nav",
   "selectAll",
+  "undo",
+  "redo",
   "fit",
   "zoom",
   "reset",

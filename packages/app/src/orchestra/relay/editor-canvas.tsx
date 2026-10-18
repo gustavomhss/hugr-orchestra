@@ -4,6 +4,7 @@ import { useServerSDK } from "@/context/server-sdk"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
 import { Canvas, type CanvasApi, type NodeOverlay } from "./canvas"
+import { RemoveNodesDialog } from "./dialogs"
 import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
 import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
 import type { RelayRun } from "./runs"
@@ -69,6 +70,7 @@ export function CanvasTab(props: Props) {
   const serverSDK = useServerSDK()
   const [anchor, setAnchor] = createSignal<{ id: string; port: number }>()
   const [focusPhase, setFocusPhase] = createSignal<string>()
+  const [confirming, setConfirming] = createSignal<{ ids: string[]; count: number }>()
   let api: CanvasApi | undefined
   const workflow = () => props.kind === "workflow"
   const types = () => props.source.nodeTypes.data?.[props.kind]
@@ -207,6 +209,15 @@ export function CanvasTab(props: Props) {
     props.edit(next)
     props.select([])
   }
+  // Removing several nodes with one key is the step that wipes a graph, so it asks first. One node is undoable.
+  const removeSelected = (ids: string[]) => {
+    const count = ids.filter((id) => {
+      const node = nodeOf(props.flow, id)
+      return node && node.type !== START
+    }).length
+    if (count > 1 && !props.readOnly) return setConfirming({ ids, count })
+    remove(ids)
+  }
   const onEdge = (edge: FlowEdge, action: "insert" | "remove") => {
     if (props.readOnly) return
     if (action === "remove") return props.edit(removeEdge(props.flow, edge))
@@ -221,7 +232,7 @@ export function CanvasTab(props: Props) {
     const last = props.selected.at(-1)
     if ((event.key === "Enter" || event.key === "F2") && last) return (event.preventDefault(), open(last))
     if ((event.key === "Delete" || event.key === "Backspace") && props.selected.length)
-      return (event.preventDefault(), remove(props.selected))
+      return (event.preventDefault(), removeSelected(props.selected))
     const forward = event.key === "ArrowRight" || event.key === "ArrowDown"
     if (!forward && event.key !== "ArrowLeft" && event.key !== "ArrowUp") return
     event.preventDefault()
@@ -434,6 +445,15 @@ export function CanvasTab(props: Props) {
         props.api(value)
       }}
     >
+      <Show when={confirming()}>
+        {(pending) => (
+          <RemoveNodesDialog
+            count={pending().count}
+            onConfirm={() => remove(pending().ids)}
+            onClose={() => setConfirming(undefined)}
+          />
+        )}
+      </Show>
       <Show when={props.route.add && !props.readOnly}>
         <AddPanel
           title={copy.t(workflow() ? "orchestra.workflows.add.title" : "orchestra.hooks.add.title")}
