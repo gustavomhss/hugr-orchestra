@@ -6,15 +6,18 @@ import { type Flow, type FlowNode, updateNode } from "./graph"
 import { Ic, NodeGlyph, useRelayCopy } from "./ui"
 
 // Node details: a three-column layer over the canvas (input, parameters, output) with previous and next.
+// With `runs` off there is no run data to show, so the parameters stand alone, followed by an optional summary.
 // The editor owns its URL; Escape and the close buttons return to the canvas.
 export function NodeDetails(props: {
   node: FlowNode
   kind: string
   previous?: FlowNode
   next?: FlowNode
+  runs?: boolean
   input: JSX.Element
   params: JSX.Element
   output: JSX.Element
+  summary?: JSX.Element
   save: JSX.Element
   actions?: JSX.Element
   readOnly?: boolean
@@ -32,7 +35,7 @@ export function NodeDetails(props: {
       <div class="wf-modal-layer">
       <Dialog.Overlay class="wf-modal-backdrop" />
       <Dialog.Content
-        class="mx-dialog wf-ndv"
+        class={props.runs === false ? "mx-dialog wf-ndv single" : "mx-dialog wf-ndv"}
         aria-labelledby={title}
         data-component="relay-node-details"
         onEscapeKeyDown={(event) => {
@@ -101,23 +104,30 @@ export function NodeDetails(props: {
             </button>
           </div>
         </header>
-        <div class="wf-ndv-switcher wf-range" role="group" aria-label={copy.t("orchestra.workflows.details.view")}>
-          <For each={["params", "input", "output"] as const}>{(pane) => (
-            <button type="button" aria-pressed={view.pane === pane} onClick={() => setView("pane", pane)}>
-              {copy.t(`orchestra.workflows.details.${pane}`)}
-            </button>
-          )}</For>
-        </div>
+        <Show when={props.runs !== false}>
+          <div class="wf-ndv-switcher wf-range" role="group" aria-label={copy.t("orchestra.workflows.details.view")}>
+            <For each={["params", "input", "output"] as const}>{(pane) => (
+              <button type="button" aria-pressed={view.pane === pane} onClick={() => setView("pane", pane)}>
+                {copy.t(`orchestra.workflows.details.${pane}`)}
+              </button>
+            )}</For>
+          </div>
+        </Show>
         <div class="wf-ndv-body">
-          <div class="wf-ndv-col" data-active={view.pane === "input"} role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
-            {props.input}
-          </div>
-          <div class="wf-ndv-col mid" data-active={view.pane === "params"} role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
+          <Show when={props.runs !== false}>
+            <div class="wf-ndv-col" data-active={view.pane === "input"} role="region" aria-label={copy.t("orchestra.workflows.details.input")}>
+              {props.input}
+            </div>
+          </Show>
+          <div class="wf-ndv-col mid" data-active={props.runs === false || view.pane === "params"} role="region" aria-label={copy.t("orchestra.workflows.details.params")}>
             <fieldset class="wf-params" disabled={props.readOnly}>{props.params}</fieldset>
+            <Show when={props.summary}>{(summary) => <div class="wf-ndv-summary">{summary()}</div>}</Show>
           </div>
-          <div class="wf-ndv-col" data-active={view.pane === "output"} role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
-            {props.output}
-          </div>
+          <Show when={props.runs !== false}>
+            <div class="wf-ndv-col" data-active={view.pane === "output"} role="region" aria-label={copy.t("orchestra.workflows.details.output")}>
+              {props.output}
+            </div>
+          </Show>
         </div>
         <footer class="mx-dialog-foot">
           {props.save}

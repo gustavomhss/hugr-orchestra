@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import {
   chain,
+  checkID,
   CONDITION,
   connect,
   documentFields,
@@ -9,6 +10,7 @@ import {
   insertNode,
   issues,
   layoutWorkflow,
+  phaseChoices,
   readChecklist,
   removeNodes,
   START,
@@ -156,6 +158,87 @@ describe("issues", () => {
         parameters: { checklist: [{ id: "a", cmd: "true" }] },
       }).controls,
     ).toHaveLength(1)
+  })
+})
+
+describe("step configuration", () => {
+  type Group = { id: string; name: string; description: string; nodeIds: string[] }
+  const linear = (checklists: Record<string, string> = {}, nodeGroups: Group[] = []): Flow =>
+    flowFromDocument(
+      {
+        nodes: [
+          node("start", START),
+          ...["a", "b", "c", "d"].map((id) => node(id, "relay.execute", { checklist: checklists[id] ?? "[]" })),
+        ],
+        connections: { START: link("A"), A: link("B"), B: link("C"), C: link("D") },
+        nodeGroups,
+      },
+      "workflow",
+    )
+  const retype = (flow: Flow, id: string, type: string, parameters: Record<string, unknown> = {}): Flow => ({
+    ...flow,
+    nodes: flow.nodes.map((item) => (item.id === id ? { ...item, type, parameters } : item)),
+  })
+  const check = (id: string) => `[{"id":"${id}","cmd":"true"}]`
+
+  test("a plain chain of steps has no issues", () => {
+    expect(issues(linear())).toEqual([])
+  })
+
+  test("a context step needs text or a file", () => {
+    const flow = linear()
+    expect(issues(retype(flow, "b", "relay.inject"))).toEqual([{ code: "inject-empty", node: "b" }])
+    expect(issues(retype(flow, "b", "relay.inject", { text: "  ", file: " " }))).toEqual([
+      { code: "inject-empty", node: "b" },
+    ])
+    expect(issues(retype(flow, "b", "relay.inject", { text: "Read the spec." }))).toEqual([])
+    expect(issues(retype(flow, "b", "relay.inject", { file: "docs/brief.md" }))).toEqual([])
+  })
+
+  test("a human approval step in an existing document blocks publishing", () => {
+    expect(issues(retype(linear(), "c", "relay.human"))).toEqual([{ code: "human-unsupported", node: "c" }])
+  })
+
+  test("a check ID used twice is flagged on the later step, naming the first", () => {
+    const flow = linear({ a: check("x"), c: check("x") })
+    expect(issues(flow)).toEqual([{ code: "check-duplicate", node: "c", params: { id: "x", other: "A" } }])
+    const twice = linear({ b: `[{"id":"y","cmd":"true"},{"id":"y","cmd":"true"}]` })
+    expect(issues(twice)).toEqual([{ code: "check-repeated", node: "b", params: { id: "y" } }])
+    expect(issues(linear({ a: check("x"), c: check("z") }))).toEqual([])
+  })
+
+  test("new check IDs are <node>_check_<n> with n free anywhere in the workflow", () => {
+    const flow = linear({ a: `[{"id":"a_check_1","cmd":"true"},{"id":"a_check_3","cmd":"true"}]`, c: check("b_check_1") })
+    expect(checkID(flow, "a")).toBe("a_check_2")
+    expect(checkID(flow, "b")).toBe("b_check_2")
+    expect(checkID(flow, "d")).toBe("d_check_1")
+  })
+
+  test("a phase split by a step outside it is flagged on that step", () => {
+    const group = (nodeIds: string[]): Group[] => [{ id: "p", name: "Plan", description: "", nodeIds }]
+    expect(issues(linear({}, group(["a", "c"])))).toEqual([{ code: "phase-gap", node: "b", params: { phase: "Plan" } }])
+    expect(issues(linear({}, group(["a", "b"])))).toEqual([])
+    expect(issues(linear({}, group(["b", "c", "d"])))).toEqual([])
+    expect(issues(linear({}, group(["c"])))).toEqual([])
+  })
+
+  test("a step is only offered the phases it can join or leave without splitting one", () => {
+    const wide = linear({}, [
+      { id: "p1", name: "One", description: "", nodeIds: ["a", "b", "c"] },
+      { id: "p2", name: "Two", description: "", nodeIds: [] },
+    ])
+    const ids = (flow: Flow, step: string) => phaseChoices(flow, step).phases.map((phase) => phase.id)
+    // The middle of a phase cannot leave it, nor move to another phase.
+    expect(ids(wide, "b")).toEqual(["p1"])
+    expect(phaseChoices(wide, "b").none).toBe(false)
+    // An end of a phase can leave, and the step after it can join.
+    expect(ids(wide, "a")).toEqual(["p1", "p2"])
+    expect(phaseChoices(wide, "a").none).toBe(true)
+    expect(ids(wide, "d")).toEqual(["p1", "p2"])
+    const apart = linear({}, [{ id: "p2", name: "Two", description: "", nodeIds: ["d"] }])
+    // Step a would join Two across b and c.
+    expect(ids(apart, "a")).toEqual([])
+    expect(ids(apart, "c")).toEqual(["p2"])
   })
 })
 

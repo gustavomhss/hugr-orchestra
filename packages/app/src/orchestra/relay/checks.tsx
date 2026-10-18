@@ -1,10 +1,18 @@
 import { Index, Show } from "solid-js"
+import { createStore } from "solid-js/store"
 import type { Control } from "./graph"
 import { Ic, useRelayCopy } from "./ui"
 
-// The criteria a step must meet to advance. Commands always block; a judge is advisory unless blocking.
-export function CheckList(props: { controls: Control[]; onChange: (controls: Control[]) => void }) {
+// The criteria a step must meet to advance. Commands always block; an AI check is advisory unless blocking.
+// `newID` names a new check; it must be unique across the whole workflow, not just this step.
+export function CheckList(props: {
+  controls: Control[]
+  newID: () => string
+  onChange: (controls: Control[]) => void
+}) {
   const copy = useRelayCopy()
+  // The text of the kind a check was switched away from, so switching back does not lose it.
+  const [kept, setKept] = createStore<Record<string, { cmd?: string; judge?: string }>>({})
   const update = (index: number, change: Partial<Control>, drop?: "cmd" | "judge") =>
     props.onChange(
       props.controls.map((control, at) => {
@@ -14,6 +22,11 @@ export function CheckList(props: { controls: Control[]; onChange: (controls: Con
         return next
       }),
     )
+  const switchTo = (index: number, kind: "cmd" | "judge") => {
+    const control = props.controls[index]
+    setKept(control.id, kind === "cmd" ? { judge: control.judge ?? "" } : { cmd: control.cmd ?? "" })
+    update(index, { [kind]: kept[control.id]?.[kind] ?? "" }, kind === "cmd" ? "judge" : "cmd")
+  }
   return (
     <>
       <div class="wf-ctl-list">
@@ -28,22 +41,14 @@ export function CheckList(props: { controls: Control[]; onChange: (controls: Con
                   <input
                     value={control().id}
                     aria-label={copy.t("orchestra.workflows.check.id")}
-                    placeholder="check_id"
+                    placeholder={copy.t("orchestra.workflows.check.idPlaceholder")}
                     onChange={(event) => update(index, { id: event.currentTarget.value.trim() || control().id })}
                   />
                   <div class="wf-seg" role="group" aria-label={copy.t("orchestra.workflows.check.type")}>
-                    <button
-                      type="button"
-                      aria-pressed={!judge()}
-                      onClick={() => judge() && update(index, { cmd: "" }, "judge")}
-                    >
+                    <button type="button" aria-pressed={!judge()} onClick={() => judge() && switchTo(index, "cmd")}>
                       {copy.t("orchestra.workflows.check.command")}
                     </button>
-                    <button
-                      type="button"
-                      aria-pressed={judge()}
-                      onClick={() => !judge() && update(index, { judge: "" }, "cmd")}
-                    >
+                    <button type="button" aria-pressed={judge()} onClick={() => !judge() && switchTo(index, "judge")}>
                       {copy.t("orchestra.workflows.check.judge")}
                     </button>
                   </div>
@@ -142,13 +147,7 @@ export function CheckList(props: { controls: Control[]; onChange: (controls: Con
       <button
         type="button"
         class="mx-btn"
-        onClick={() => {
-          const taken = new Set(props.controls.map((control) => control.id))
-          const id =
-            Array.from({ length: taken.size + 1 }, (_, at) => `check_${at + 1}`).find((item) => !taken.has(item)) ??
-            `check_${Date.now()}`
-          props.onChange([...props.controls, { id, cmd: "" }])
-        }}
+        onClick={() => props.onChange([...props.controls, { id: props.newID(), cmd: "" }])}
       >
         <Ic name="plus" />
         {copy.t("orchestra.workflows.check.add")}

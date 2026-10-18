@@ -5,6 +5,8 @@ import type { RelayKind } from "./client"
 // never breaks a wire. Every function here is pure and returns a new flow.
 
 export const START = "relay.startTrigger"
+export const HUMAN = "relay.human"
+export const INJECT = "relay.inject"
 export const TRIGGER = "relay.hookEventTrigger"
 export const CONDITION = "relay.hookCondition"
 
@@ -34,6 +36,10 @@ export type Control = {
 
 export type Issue =
   | { code: "loose" | "branches" | "gate-empty" | "check-empty" | "checklist-invalid"; node: string }
+  | { code: "inject-empty" | "human-unsupported"; node: string }
+  | { code: "check-duplicate"; node: string; params: { id: string; other: string } }
+  | { code: "check-repeated"; node: string; params: { id: string } }
+  | { code: "phase-gap"; node: string; params: { phase: string } }
   | { code: "no-steps" | "no-trigger" | "no-action"; node?: string }
   | {
       code: "trigger-count" | "needs-before" | "pattern-empty" | "hook-loose" | "message-empty" | "check-command"
@@ -194,7 +200,83 @@ function workflowIssues(flow: Flow): Issue[] {
         : []
     })
   const empty: Issue[] = steps(flow).length ? [] : [{ code: "no-steps" }]
-  return [...loose, ...branches, ...checks, ...empty]
+  // Maestro cannot run a human step; documents made before it left the panel may still hold one.
+  const unsupported = flow.nodes
+    .filter((node) => node.type === HUMAN)
+    .map((node): Issue => ({ code: "human-unsupported", node: node.id }))
+  // An inject with neither text nor a file delivers nothing and stops the run.
+  const contexts = flow.nodes
+    .filter(
+      (node) =>
+        node.type === INJECT && !String(node.parameters.text ?? "").trim() && !String(node.parameters.file ?? "").trim(),
+    )
+    .map((node): Issue => ({ code: "inject-empty", node: node.id }))
+  const order = [...chain(flow), ...flow.nodes.filter((node) => !inChain.has(node.id))]
+  return [
+    ...loose,
+    ...branches,
+    ...checks,
+    ...unsupported,
+    ...contexts,
+    ...duplicateChecks(order),
+    ...phaseGaps(flow),
+    ...empty,
+  ]
+}
+
+// Check IDs are unique across the whole workflow. The first step in sequence order keeps the ID; later ones are flagged.
+function duplicateChecks(order: FlowNode[]): Issue[] {
+  const first = new Map<string, FlowNode>()
+  return order.flatMap((node) =>
+    readChecklist(node).controls.flatMap((control): Issue[] => {
+      const owner = first.get(control.id)
+      if (!owner) {
+        first.set(control.id, node)
+        return []
+      }
+      if (owner.id === node.id) return [{ code: "check-repeated", node: node.id, params: { id: control.id } }]
+      return [{ code: "check-duplicate", node: node.id, params: { id: control.id, other: owner.name } }]
+    }),
+  )
+}
+
+// A phase must be one unbroken run of steps; the server refuses anything else. The issue sits on the step that breaks it.
+function phaseGaps(flow: Flow): Issue[] {
+  const order = chain(flow)
+  return flow.phases.flatMap((phase): Issue[] => {
+    const outsider = gap(order, phase)
+    return outsider ? [{ code: "phase-gap", node: outsider.id, params: { phase: phase.name } }] : []
+  })
+}
+
+// The first step between a phase's members that is not itself a member. Steps outside the sequence have their own issue.
+function gap(order: FlowNode[], phase: FlowPhase) {
+  const at = order.flatMap((node, index) => (phase.nodeIds.includes(node.id) ? [index] : []))
+  if (at.length < 2) return
+  return order.slice(at[0] + 1, at[at.length - 1]).find((node) => !phase.nodeIds.includes(node.id))
+}
+
+// The phases a step can join (or leave) without splitting one: its own phase, and any phase the step sits next to.
+export function phaseChoices(flow: Flow, id: string) {
+  const order = chain(flow)
+  const current = phaseOf(flow, id)
+  const fits = (phaseID: string) =>
+    setPhase(flow, id, phaseID).phases.every(
+      (phase) => (phase.id !== phaseID && phase.id !== current?.id) || !gap(order, phase),
+    )
+  return {
+    phases: flow.phases.filter((phase) => phase.id === current?.id || fits(phase.id)),
+    none: !current || fits(""),
+  }
+}
+
+// Contract C1: `<node>_check_<n>`, n the smallest positive integer no check anywhere in the workflow uses yet.
+export function checkID(flow: Flow, nodeID: string) {
+  const taken = new Set(flow.nodes.flatMap((node) => readChecklist(node).controls.map((control) => control.id)))
+  return (
+    Array.from({ length: taken.size + 1 }, (_, index) => `${nodeID}_check_${index + 1}`).find((id) => !taken.has(id)) ??
+    `${nodeID}_check_${taken.size + 1}`
+  )
 }
 
 function hookIssues(flow: Flow): Issue[] {

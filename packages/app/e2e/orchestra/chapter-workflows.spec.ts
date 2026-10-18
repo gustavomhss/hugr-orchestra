@@ -118,7 +118,10 @@ test("canvas: inspect a step, walk to its neighbour and close only the top layer
   await expect(page).toHaveURL(/\/relay-wp-execute\/node\/green\.implement$/)
   const details = page.locator('[data-component="relay-node-details"]')
   await expect(details.locator("h2")).toHaveText("Implement minimally")
-  await expect(details.getByRole("region", { name: "Output" })).toContainText("No output for this step yet.")
+  // Runs are hidden, so the step dialog is the Parameters column alone.
+  await expect(details.getByRole("region", { name: "Parameters" })).toBeVisible()
+  await expect(details.getByRole("region", { name: "Output" })).toHaveCount(0)
+  await expect(details.getByRole("region", { name: "Input" })).toHaveCount(0)
   await details.getByRole("button", { name: "Next: Green gate" }).click()
   await expect(page).toHaveURL(/\/node\/green\.gate$/)
   await expect(details.locator("h2")).toHaveText("Green gate")
@@ -148,9 +151,9 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
   await expect(panel).toHaveCount(0)
 
   await canvas(page).getByRole("button", { name: "Add step (N)" }).click()
-  await panel.getByRole("option", { name: /Run task/ }).click()
+  await panel.getByRole("option", { name: /Agent step/ }).click()
   const details = page.locator('[data-component="relay-node-details"]')
-  await expect(details.locator("h2")).toHaveText("New task")
+  await expect(details.locator("h2")).toHaveText("Agent step")
   const saved = page.waitForRequest(
     (request) => request.method() === "PATCH" && request.url().includes("/api/relay/document/relay-wp-execute"),
   )

@@ -221,5 +221,5 @@ export function TemplateCard(props: {
 export function issueText(copy: ReturnType<typeof useRelayCopy>, flow: Flow, issue: Issue) {
   if (issue.code === "server") return issue.text
   const name = "node" in issue ? (nodeOf(flow, issue.node)?.name ?? "") : ""
-  return copy.t(`orchestra.workflows.issue.${issue.code}`, { name })
+  return copy.t(`orchestra.workflows.issue.${issue.code}`, { name, ...("params" in issue ? issue.params : {}) })
 }

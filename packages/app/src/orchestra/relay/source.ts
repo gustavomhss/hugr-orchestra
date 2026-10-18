@@ -28,7 +28,7 @@ export function runClient(server: ServerConnection.Any, directory: string, fetch
 
 // Workflow runs are hidden for launch: the server has no run routes yet (WP17), so nothing asks for them, polls them
 // or counts them. Turn this on with the Executions views when the routes ship.
-const runsEnabled = false
+export const runsEnabled = false
 
 export type RelaySource = ReturnType<typeof createRelaySource>
 
