@@ -12,6 +12,7 @@ import { popularProviders, useProviders } from "@/hooks/use-providers"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { displayName } from "@/pages/layout/helpers"
 import { showToast } from "@/utils/toast"
+import { ClaudeModeSection } from "./claude-mode"
 import { MxBadge, MxPage } from "./kit"
 import {
   type CatalogEntry,
@@ -324,6 +325,7 @@ function ProvidersScreen(props: ChapterPageProps) {
             </p>
           </div>
         </Show>
+        <ClaudeModeSection />
         <Show when={!cards().length && state.search.trim()}>
           <div class="mx-empty" role="status">
             {language.t("orchestra.providers.noMatches")}
