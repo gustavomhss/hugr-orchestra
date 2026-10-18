@@ -113,7 +113,7 @@ export function create(live: Live, ctx: ClaudeHostOptions.Context, services: {
       const promptOps = live.promptOps ? yield* live.promptOps() : undefined
       return {
         sessionID: part.sessionID, messageID: part.messageID, callID: part.callID, agent: agent.name, agentID: agent.id,
-        abort: call.signal, messages, extra: { claudeCode: true, ...(promptOps ? { promptOps } : {}) },
+        abort: call.signal, messages, extra: { claudeCode: true, callKey: part.callID, ...(promptOps ? { promptOps } : {}) },
         metadata: (value) => Effect.gen(function* () {
           if (call.signal?.aborted) return
           const current = tool(part.callID)

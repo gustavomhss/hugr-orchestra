@@ -110,7 +110,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
         type: "tool", tool: name, state: { status: "running", input, time: { start } } })
       const result = yield* research.execute(child, tool.execute(args, {
         sessionID: child, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
-        permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
+        permission: seat.permission, extra: { claudeCode: true, callKey: toolUseID }, abort: abort.signal, messages: [],
         ask: () => Effect.void, metadata: () => Effect.void,
       } satisfies Tool.Context))
       yield* sessions.updatePart({ ...part, state: { status: "completed", input, output: result.output, title: result.title,
@@ -147,7 +147,7 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
         type: "tool", tool: name, state: { status: "running", input: {}, time: { start: Date.now() } } })
       const result = yield* research.execute(child.id, tool.execute(args, {
         sessionID: child.id, messageID: message.id, callID: toolUseID, agent: seat.name, agentID: "jimmy",
-        permission: seat.permission, extra: { claudeCode: true }, abort: abort.signal, messages: [],
+        permission: seat.permission, extra: { claudeCode: true, callKey: toolUseID }, abort: abort.signal, messages: [],
         ask: () => Effect.void, metadata: () => Effect.void,
       } satisfies Tool.Context))
       yield* sessions.updatePart({ ...part, state: { status: "completed", input: {}, output: result.output, title: result.title,

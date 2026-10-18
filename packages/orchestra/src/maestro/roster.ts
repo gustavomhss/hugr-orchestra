@@ -4,6 +4,7 @@ import { Seats, type Seat } from "./seats"
 import { validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
 import { TRUNCATION_DIR } from "../tool/truncation-dir"
+import { ResearchSeatTools } from "../research/seat-tools"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({
@@ -53,26 +54,18 @@ export const baseProfiles = Object.freeze({
     maestro_record_review: "allow",
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   } as const),
+  // The research seat's tools come from its one descriptor (research/seat-tools.ts). Its skills and Atlas Memory doors
+  // are seat grants (seatProfile), so the base leaves them out.
   discovery: Object.freeze({
-    "*": "deny",
+    "*": "deny" as const,
+    ...Object.fromEntries([...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
+      .filter((id) => id !== "skill" && id !== "atlas_memory_recall" && id !== "atlas_memory_emit")
+      .map((id) => [id, "allow" as const])),
     read: envRead("deny"),
-    glob: "allow",
-    grep: "allow",
-    lsp: "allow",
-    webfetch: "allow",
-    websearch: "allow",
-    context_recall: "allow",
-    context_compact: "allow",
-    research_record: "allow",
-    research_view: "allow",
-    research_capture: "allow",
-    // Read-only repository intelligence from the Maestro Arsenal (tool/research-repo.ts); no other Arsenal capability.
-    repo_map: "allow",
-    repo_symbols: "allow",
-    repo_git_state: "allow",
-    atlas_context: "allow",
+    // research_capture kind url fetches under webfetch's permission; the webfetch tool itself is not the seat's.
+    webfetch: "allow" as const,
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
-  } as const),
+  }),
 } as const)
 
 type NativeProfile = Readonly<Record<string, "allow" | "deny" | Readonly<Record<string, "allow" | "deny">>>>

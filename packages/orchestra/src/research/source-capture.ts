@@ -1,5 +1,6 @@
 export * as ResearchSourceCapture from "./source-capture"
 
+import path from "path"
 import { Cause, Context, Effect, Exit, Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -8,9 +9,11 @@ import { ResearchTools } from "./binding"
 import { ResearchExecution } from "./allowance"
 import { Tool } from "@/tool/tool"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { InstanceState } from "@/effect/instance-state"
+import { SeatSkillRoot } from "@/maestro/seat-skill-root"
+import { ResearchSeatTools } from "./seat-tools"
 
-// Native tools whose returned output is retained as admitted evidence, repository intelligence included.
-const RETAINED = ["read", "webfetch", "lsp", "websearch", "atlas_context", "repo_map", "repo_symbols", "repo_git_state"]
+const RETAINED: readonly string[] = ResearchSeatTools.RETAINED
 
 const DISPLAY_NOTICE = "Native tool display only; this receipt does not prove original-source completeness, absence, or runtime behavior."
 
@@ -24,15 +27,15 @@ export const make = Effect.gen(function* () {
   const execution = yield* ResearchExecution.Service
   const run = yield* ResearchTools.make
   const withCapture = <E, R>(ctx: Tool.Context, name: string, effect: Effect.Effect<Tool.ExecuteResult, E, R>, args: unknown = {}) => {
-    if (ctx.agentID !== "jimmy" || !ctx.callID || ![...RETAINED, "research_capture"].includes(name)) return effect
+    if (ctx.agentID !== ResearchSeatTools.SEAT || !ctx.callID || ![...RETAINED, "research_capture"].includes(name)) return effect
     return Effect.gen(function* () {
-      if (yield* Current) return yield* effect
+      if ((yield* Current) || (yield* skillRead(name, args))) return yield* effect
       const previous = yield* run(ctx, name, (binding, context) => records.beginAcquisition(binding, context,
         ResearchLedger.digest(ResearchLedger.canonical([name, args])),
       ), false).pipe(Effect.orDie)
       if (previous?.source) {
         const ref = previous.source
-        yield* ctx.ask({ permission: "research_view", patterns: ["jimmy"], always: [], metadata: { replay: true } })
+        yield* ctx.ask({ permission: "research_view", patterns: [ResearchSeatTools.SEAT], always: [], metadata: { replay: true } })
         const page = yield* run(ctx, name, (binding) => records.view(binding, { action: "source", ref }), false).pipe(Effect.orDie)
         if (!("receipt" in page) || !("origin" in page.receipt))
           return yield* Effect.die(new Research.Error({ code: "source_unavailable", message: "Historical acquisition is not a retained source" }))
@@ -64,13 +67,16 @@ export const make = Effect.gen(function* () {
       }))
     })
   }
-  const retain = <M extends Tool.ExecuteResult["metadata"]>(ctx: Tool.Context, name: string, result: Tool.ExecuteResult<M>) => {
-    if (ctx.agentID !== "jimmy" || !ctx.callID || !RETAINED.includes(name))
+  const retain = <M extends Tool.ExecuteResult["metadata"]>(ctx: Tool.Context, name: string, result: Tool.ExecuteResult<M>, args: unknown = {}) => {
+    if (ctx.agentID !== ResearchSeatTools.SEAT || !ctx.callID || !RETAINED.includes(name))
       return Effect.succeed(result)
+    return skillRead(name, args).pipe(Effect.flatMap((skill) => skill ? Effect.succeed(result) : retained(ctx, name, result)))
+  }
+  const retained = <M extends Tool.ExecuteResult["metadata"]>(ctx: Tool.Context, name: string, result: Tool.ExecuteResult<M>) => {
     const admitted = Schema.decodeUnknownOption(Research.SourceReceipt)(result.metadata.researchSource)
     if (admitted._tag === "Some") return Effect.succeed({
       ...result,
-      output: `${result.output}\n\nRetained source evidence: ${JSON.stringify(admitted.value.ref)}\nLocators address retained representation from line 1; original coordinates are recorded separately.${admitted.value.origin.kind === "tool-output" ? `\n${DISPLAY_NOTICE}` : ""}`,
+      output: `${result.output}\n\nRetained source evidence: ${JSON.stringify(admitted.value.ref)}${admitted.value.origin.kind === "tool-output" ? `\n${DISPLAY_NOTICE}` : ""}`,
     })
     return Effect.gen(function* () {
       const capture = yield* Current
@@ -89,4 +95,13 @@ export const make = Effect.gen(function* () {
     }).pipe(Effect.orDie)
   }
   return { withCapture, retain }
+})
+
+// The seat's own reference skill is method, not a source: reading it is never retained as evidence (J1.8).
+const skillRead = Effect.fnUntraced(function* (name: string, args: unknown) {
+  const root = SeatSkillRoot.roots[ResearchSeatTools.SEAT]
+  if (name !== "read" || !root || typeof args !== "object" || args === null || !("filePath" in args) || typeof args.filePath !== "string")
+    return false
+  const relative = path.relative(root, path.resolve((yield* InstanceState.context).directory, args.filePath))
+  return relative === "" || (!relative.startsWith("..") && !path.isAbsolute(relative))
 })

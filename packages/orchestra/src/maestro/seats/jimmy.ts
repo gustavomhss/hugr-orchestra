@@ -16,4 +16,5 @@ export default define({
   strictResume: true,
   atlasMemory: true,
   toolkit: false,
+  research: true,
 })

@@ -226,7 +226,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
     const messageID = part?.messageID ?? MessageID.ascending()
     return {
       sessionID: actor.sessionID, messageID, callID: toolUseID, agent: actor.seat, agentID: actor.seat, abort: input.abort,
-      messages: [], extra: { claudeCode: true }, metadata: () => Effect.void,
+      messages: [], extra: { claudeCode: true, callKey: toolUseID }, metadata: () => Effect.void,
       ask: (request) => Effect.gen(function* () {
         const windows = process.platform === "win32" && request.permission === "external_directory"
         // Expand lexical 8.3 names without following junctions. Original lexical and physical checks remain;
