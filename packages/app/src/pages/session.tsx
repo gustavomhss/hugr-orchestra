@@ -1974,7 +1974,13 @@ export default function Page() {
 
   const sessionErrorFallback = (error: unknown, reset: () => void) => {
     createEffect(on(sessionKey, reset, { defer: true }))
-    return <SessionErrorFallback error={error} sessionID={params.id} />
+    return (
+      <SessionErrorFallback
+        error={error}
+        sessionID={params.id}
+        serverKey={params.serverKey ? requireServerKey(params.serverKey) : undefined}
+      />
+    )
   }
 
   const sessionPanelContent = () => (
