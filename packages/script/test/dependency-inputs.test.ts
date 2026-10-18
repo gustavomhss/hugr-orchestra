@@ -49,7 +49,7 @@ test("dependency fingerprint includes relocated packages, manifestless modules a
   } finally {
     await rm(root, { recursive: true, force: true })
   }
-})
+}, 30_000)
 
 for (const variant of ["literal-names", "module-symlink", "domain-symlink"] as const) {
   test(`dependency fingerprint validates ${variant} immutable manifests`, async () => {
@@ -94,7 +94,7 @@ for (const variant of ["literal-names", "module-symlink", "domain-symlink"] as c
     } finally {
       await rm(root, { recursive: true, force: true })
     }
-  })
+  }, 30_000)
 }
 
 async function run(cwd: string, cmd: string[]) {

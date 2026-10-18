@@ -30,7 +30,7 @@ export async function artifactNative(): Promise<ArtifactNative> {
 // Requires a stable, exclusively build-owned namespace and cooperating producers.
 // Nofollow handles anchor objects/reads, not immutable pathnames. No guarantee
 // against a hostile actor already authorized to mutate the namespace or bytes.
-// Owner decision and declared exception: specs/runtime-closure/PRODUCER-BOUNDARY.md.
+// Owner decision and declared exception: docs/specs/runtime-closure/PRODUCER-BOUNDARY.md.
 export async function admitArtifacts(input: { dist: string; out: string; targets: string[] }) {
   requireArtifactHost(process.platform, process.arch)
   if (process.platform === "win32") {

@@ -10,7 +10,7 @@ type Tree = Map<string, { bytes: Buffer; executable: boolean } | null>
 
 // Stable producer-owned source, staging and publication namespace only. Captured
 // bytes/identity checks do not protect against authorized concurrent rewrites.
-// Shares specs/runtime-closure/PRODUCER-BOUNDARY.md, including owned-path cleanup.
+// Shares docs/specs/runtime-closure/PRODUCER-BOUNDARY.md, including owned-path cleanup.
 export async function prepareNpmDistribution(input: { payloads: string[]; out: string }) {
   if (!input.payloads.length) throw new Error("At least one verified payload is required")
   if ([...input.payloads, input.out].some((path) => !path || path.includes("\0") || path.split(/[\\/]/).includes("..")))

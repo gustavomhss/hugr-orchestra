@@ -10,7 +10,7 @@
 > smoke/builds now; prepare runnable validation and measurement capture only”.
 
 Inspection baseline: `ca74f6d0fe08b394fa56efc30d1f333b008dd3e8`, branch
-`nix-closure`. Authority: `specs/orchestra-visual/RELAY-NEXT.md`, W5 and External
+`nix-closure`. Authority: `docs/specs/orchestra-visual/RELAY-NEXT.md`, W5 and External
 ownership. Maestro's `runtime-closure` checkpoint `51933f244f` plus dirty metadata
 is **not** an accepted final input. This document does not certify a Nix closure.
 

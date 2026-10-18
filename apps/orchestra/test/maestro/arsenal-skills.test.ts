@@ -94,9 +94,9 @@ describe("Maestro Arsenal playbooks", () => {
   )
 
   // REPAIR + STRENGTHENING: full-file SHA-256 pins replace obsolete sentence sentries.
-  // Source: specs/upstream-specialist/maestro-planning-handoff.md, independently reviewed replacements;
-  // native API clarification: specs/upstream-specialist/maestro-transfer-gate.md.
-  // Naming-only refreeze: specs/upstream-specialist/NAMING-CORRECTION.md; prior hashes are historical receipts.
+  // Source: docs/specs/upstream-specialist/maestro-planning-handoff.md, independently reviewed replacements;
+  // native API clarification: docs/specs/upstream-specialist/maestro-transfer-gate.md.
+  // Naming-only refreeze: docs/specs/upstream-specialist/NAMING-CORRECTION.md; prior hashes are historical receipts.
   // REPAIR: authoring observation delegates to the actual Task boundary; no model-side inspection API is promised.
   // Update pins only with reviewed procedure changes. Artifact drift protection does not grade prose or prove
   // semantic correctness, model compliance or runtime enforcement.
