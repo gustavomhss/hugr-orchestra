@@ -138,6 +138,15 @@ export function ShellNavigationCommands() {
       onSelect: () => cycleProject(1),
     },
     {
+      id: "home.go",
+      title: language.t("orchestra.shell.goHome"),
+      category: language.t("command.category.view"),
+      keybind: "mod+shift+h",
+      onSelect: () => {
+        if (layout.route().type !== "home") tabs.toggleHome({ home: false })
+      },
+    },
+    {
       id: "session.new",
       title: language.t("command.session.new"),
       category: language.t("command.category.session"),

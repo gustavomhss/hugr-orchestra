@@ -1,6 +1,7 @@
 import type { QueryClient } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, For, on, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useNavigate } from "@solidjs/router"
 import { useLanguage } from "@/context/language"
 import type { ServerSDK } from "@/context/server-sdk"
@@ -58,6 +59,7 @@ export function KpiDashboard(props: {
   running: (sessionID: string) => boolean
   openSession: (sessionID: string) => void
   openProviders: () => void
+  newSession: () => void
 }) {
   const language = useLanguage()
   const navigate = useNavigate()
@@ -548,6 +550,9 @@ export function KpiDashboard(props: {
             <div class="home-rows">
               <Show when={exportable() && sessions().length === 0}>
                 <p class="home-empty">{language.t("orchestra.home.sessionsEmpty")}</p>
+                <ButtonV2 variant="contrast" icon="plus" onClick={props.newSession}>
+                  {language.t("orchestra.home.startSession")}
+                </ButtonV2>
               </Show>
               <For each={sessions()}>
                 {(session) => (
