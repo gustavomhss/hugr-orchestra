@@ -24,7 +24,6 @@ export const SHELL_COPY = {
     "Open a project to manage this section. General, Servers, and Shortcuts work without one.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
   "orchestra.shell.crumb.home": "home",
-  "orchestra.shell.crumb.session": "session",
   "orchestra.shell.crumb.agents": "agents",
   "orchestra.shell.crumb.dock": "dock",
   "orchestra.shell.crumb.workspaces": "workspaces",

@@ -41,20 +41,20 @@ test("the sidebar opens the routed view with the mock's masthead, sections and d
   await expect(view.locator("h1")).toHaveText(/^Control what\s*the agents may do\.$/)
   const nav = page.getByRole("navigation", { name: "Settings sections" }).getByRole("button")
   await expect(nav).toHaveText([
-    "Permissions",
+    "General",
+    "Shortcuts",
+    "Servers",
     "Providers",
     "Models",
+    "Permissions",
     "Agents",
     "MCP",
-    "Shortcuts",
-    "General",
-    "Servers",
   ])
-  await expect(nav.filter({ hasText: "Permissions" })).toHaveAttribute("aria-current", "page")
+  await expect(nav.filter({ hasText: "General" })).toHaveAttribute("aria-current", "page")
   await nav.filter({ hasText: "Models" }).click()
   await expect(page).toHaveURL(/section=models/)
   await expect(nav.filter({ hasText: "Models" })).toHaveAttribute("aria-current", "page")
-  await expect(nav.filter({ hasText: "Permissions" })).not.toHaveAttribute("aria-current", "page")
+  await expect(nav.filter({ hasText: "General" })).not.toHaveAttribute("aria-current", "page")
   await page.goto("/orchestra/settings?section=general", { waitUntil: "domcontentloaded" })
   await expect(view.locator('[data-action="settings-palette"]')).toBeVisible()
   await expect(view.locator('[data-action="settings-language"]')).toBeVisible()
@@ -170,7 +170,7 @@ test("tool permissions follow the server's rule order, save in place, roll back 
 }) => {
   const state = fixture()
   await setup(page, state)
-  await page.goto("/orchestra/settings", { waitUntil: "domcontentloaded" })
+  await page.goto("/orchestra/settings?section=permissions", { waitUntil: "domcontentloaded" })
   await expect(page.locator(".perm-tool")).toHaveCount(14)
   await expect(page.getByText("Server-wide defaults for every agent and repository.", { exact: false })).toBeVisible()
   const group = (tool: string) => page.getByRole("radiogroup", { name: tool, exact: true })
@@ -425,7 +425,7 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
     if (url.pathname === "/api/model/default") return json(route, { location, data: v2Model("openai", "gpt-5") })
     return route.fallback()
   })
-  await page.goto("/orchestra/settings", { waitUntil: "domcontentloaded" })
+  await page.goto("/orchestra/settings?section=permissions", { waitUntil: "domcontentloaded" })
   const note = page.getByText("This server does not share its tool defaults", { exact: false })
   await expect(note).toBeVisible()
   // The note sits above the table it explains, and the read-only groups are marked disabled.
