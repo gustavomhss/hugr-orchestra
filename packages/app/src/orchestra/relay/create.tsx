@@ -10,15 +10,15 @@ import { blankWorkflow, copyDocument } from "./presets"
 import type { RelaySource } from "./source"
 import { RelayDialog, useRelayCopy } from "./ui"
 
-// Templates are the shipped Relay profiles the server seeded: the ones that can run first, then by name.
+// Templates are the shipped Relay profiles the server seeded that can run, by name. A profile that still needs
+// tools that are not available is not offered at all.
 export const templates = (documents: RelayDocument[]) =>
   documents
-    .filter((document) => documentProfile(document) !== undefined)
-    .toSorted((a, b) => Number(b.runnable) - Number(a.runnable) || a.name.localeCompare(b.name))
+    .filter((document) => documentProfile(document) !== undefined && document.runnable)
+    .toSorted((a, b) => a.name.localeCompare(b.name))
 
-// The first runnable profile is the default; a profile without one starts blank.
-export const templateID = (documents: RelayDocument[]) =>
-  templates(documents).find((document) => document.runnable)?.id ?? "blank"
+// The first template is the default; a profile without one starts blank.
+export const templateID = (documents: RelayDocument[]) => templates(documents)[0]?.id ?? "blank"
 
 export function CreateWorkflowDialog(props: {
   source: RelaySource

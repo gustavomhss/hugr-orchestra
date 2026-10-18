@@ -114,23 +114,21 @@ async function delayCreate(page: Page) {
   return { pending, arrived }
 }
 
-for (const entry of ["retained library new", "retained editor history", "retained library roundtrip", "normal clone"]) {
+// The editor Executions tab is hidden while workflow runs are, so no editor layer is left to retain here.
+for (const entry of ["retained library new", "retained library roundtrip", "normal clone"]) {
   test(`lifetime: clone completion respects ${entry}`, async ({ page }) => {
     const state = await setupRelay(page)
     const delayed = await delayCreate(page)
-    const inEditor = entry.includes("editor")
-    const origin = `/orchestra/workflows${inEditor ? `/${workflow}` : ""}`
+    const origin = "/orchestra/workflows"
     const settled = await authoringSettlement(page, "navigation", origin)
     await page.goto(origin, { waitUntil: "domcontentloaded" })
-    const surface = page.locator(inEditor ? '[data-component="relay-editor"]' : '[data-mx-page="orchestra-workflows"]')
+    const surface = page.locator('[data-mx-page="orchestra-workflows"]')
     await expect(surface).toBeVisible()
     const owner = await surface.elementHandle()
-    if (inEditor) await editor(page).getByRole("button", { name: "More actions", exact: true }).click()
-    if (!inEditor) await page.locator(`[data-document="${workflow}"]`).locator('button[aria-haspopup="menu"]').click()
+    await page.locator(`[data-document="${workflow}"]`).locator('button[aria-haspopup="menu"]').click()
     const response = page.waitForResponse((reply) => reply.request().method() === "POST" && new URL(reply.url()).pathname === "/api/relay/document")
     await page.getByRole("menuitem", { name: "Duplicate", exact: true }).click()
     await delayed.arrived.promise
-    if (inEditor) await editor(page).getByRole("tab", { name: /^Executions/ }).click()
     if (entry.includes("library")) {
       await page.getByRole("button", { name: "New workflow", exact: true }).click()
       await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true }).fill("Selected route draft")
@@ -139,7 +137,7 @@ for (const entry of ["retained library new", "retained editor history", "retaine
       await page.goBack()
       await expect(page.getByRole("dialog", { name: "New workflow", exact: true })).toHaveCount(0)
     }
-    const chosen = entry === "retained library new" ? `${origin}/new` : inEditor ? `${origin}/executions` : origin
+    const chosen = entry === "retained library new" ? `${origin}/new` : origin
     await expect(page).toHaveURL(new RegExp(`${chosen}$`))
     expect(await owner!.evaluate((element) => element.isConnected)).toBe(true)
     expect(settled.completed()).toBe(false)
@@ -159,7 +157,6 @@ for (const entry of ["retained library new", "retained editor history", "retaine
       await expect(page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Selected route draft")
       await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("button", { name: "Cancel", exact: true }).click()
     }
-    if (inEditor) await editor(page).getByRole("link", { name: "Back to Workflows", exact: true }).click()
     await expect(page.locator(`[data-document="${created.id}"]`)).toContainText(String(created.name))
     expect(state.writes.filter((write) => write.method === "POST")).toHaveLength(1)
   })

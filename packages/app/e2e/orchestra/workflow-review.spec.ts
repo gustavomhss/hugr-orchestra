@@ -129,7 +129,8 @@ test("cold review: unknown hook installations show loading/error/retry and never
   await expect(name).toHaveValue("Block generated files")
 })
 
-test("cold review: run history uses immutable graph and unavailable history never falls back to draft", async ({ page }) => {
+// Skipped while workflow runs are hidden (run URLs open the plain canvas); restore it with the Executions views.
+test.skip("cold review: run history uses immutable graph and unavailable history never falls back to draft", async ({ page }) => {
   const state = await setupRelay(page)
   const current = state.documents.find((document) => document.id === "relay-wp-execute")!
   const nodes = structuredClone(current.nodes) as { id: string; parameters: { instructions: string } }[]

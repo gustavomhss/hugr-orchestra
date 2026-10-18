@@ -7,9 +7,9 @@ import { rememberDocument } from "./cache"
 import { CreateWorkflowDialog, templateID, templates } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
 import { profileDrafts } from "./drafts"
-import { badgeTone, liveRuns, newestFirst, RUN_TONE, runHandle, span } from "./format"
+import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
-import { phaseNames, RunBadge, RunState, stateLabel, TemplateCard, VersionBadges } from "./parts"
+import { phaseNames, RunBadge, stateLabel, TemplateCard, VersionBadges } from "./parts"
 import { copyDocument } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
 import type { RelayRun, RelayRunStatus } from "./runs"
@@ -35,8 +35,6 @@ export function WorkflowLibrary(props: Props) {
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "workflow")])),
   )
-  const runs = () => props.source.runs.data ?? []
-  const lastRun = (id: string) => newestFirst(runs().filter((run) => run.documentID === id))[0]
   const shown = createMemo(() => {
     const text = query().trim().toLowerCase()
     return props.source.list().filter((document) => {
@@ -46,9 +44,6 @@ export function WorkflowLibrary(props: Props) {
       return !text || `${document.name} ${document.description}`.toLowerCase().includes(text)
     })
   })
-  const live = createMemo(() => liveRuns(runs()).filter((run) => flows().has(run.documentID)))
-  const waiting = () => live().filter((run) => run.status === "parked").length
-  const running = () => live().filter((run) => run.status === "running").length
   const duplicate = (document: RelayDocument) =>
     duplication.run(async (current) => {
       const created = await props.source.client
@@ -71,11 +66,6 @@ export function WorkflowLibrary(props: Props) {
       label: copy.t("orchestra.workflows.menu.open"),
       icon: "open",
       run: () => props.go(relayPath.editor("workflow", document.id)),
-    },
-    {
-      label: copy.t("orchestra.workflows.menu.executions"),
-      icon: "history",
-      run: () => props.go(relayPath.history("workflow", document.id)),
     },
     {
       label: copy.t("orchestra.workflows.menu.duplicate"),
@@ -110,30 +100,6 @@ export function WorkflowLibrary(props: Props) {
         </button>
       }
     >
-      <div class="wf-tabs" role="tablist" aria-label={copy.t("orchestra.workflows.tabs")}>
-        <button
-          type="button"
-          class="wf-tab"
-          role="tab"
-          aria-selected={props.route.tab === "list"}
-          onClick={() => props.go(relayPath.library("workflow"))}
-        >
-          {copy.t("orchestra.workflows.tab.list")}
-          <span class="wf-count">{props.source.list().length}</span>
-        </button>
-        <button
-          type="button"
-          class="wf-tab"
-          role="tab"
-          aria-selected={props.route.tab === "runs"}
-          onClick={() => props.go(relayPath.runs("workflow"))}
-        >
-          {copy.t("orchestra.workflows.tab.runs")}
-          <Show when={props.source.runsState() === "ready"}>
-            <span class="wf-count">{runs().filter((run) => flows().has(run.documentID)).length}</span>
-          </Show>
-        </button>
-      </div>
       <For each={profileDrafts(props.source).filter((draft) => draft.state.flow.kind === "workflow" && (draft.state.save.dirty || draft.state.save.state === "saving"))}>
         {(draft) => <p class="mx-note" role="status">
           {copy.t("orchestra.workflows.drafts.retained", { name: draft.state.name })}
@@ -156,31 +122,7 @@ export function WorkflowLibrary(props: Props) {
             {copy.t("orchestra.workflows.retry")}
           </button>
         </Match>
-        <Match when={props.route.tab === "runs" && props.source.runsState() !== "ready"}>
-          <RunsUnavailable source={props.source} />
-        </Match>
-        <Match when={props.route.tab === "runs"}>
-          <AllRuns
-            runs={runs().filter((run) => flows().has(run.documentID))}
-            flows={flows()}
-            source={props.source}
-            go={props.go}
-          />
-        </Match>
         <Match when={true}>
-          <Show when={live().length}>
-            <div class="wf-sub">
-              <h3 class="mx-section">{copy.t("orchestra.workflows.live.title")}</h3>
-              <span class="mx-meta">
-                {copy.t("orchestra.workflows.live.meta", { waiting: waiting(), running: running() })}
-              </span>
-            </div>
-            <div class="mx-table wf-attn">
-              <For each={live()}>
-                {(run) => <LiveRow run={run} flows={flows()} source={props.source} go={props.go} />}
-              </For>
-            </div>
-          </Show>
           <Show
             when={props.source.list().length}
             fallback={
@@ -218,7 +160,7 @@ export function WorkflowLibrary(props: Props) {
               <span />
               <span>{copy.t("orchestra.workflows.head.workflow")}</span>
               <span>{copy.t("orchestra.workflows.head.version")}</span>
-              <span>{copy.t("orchestra.workflows.head.last")}</span>
+              <span>{copy.t("orchestra.workflows.head.updated")}</span>
               <span />
             </div>
             <Show when={shown().length} fallback={<p class="mx-empty">{copy.t("orchestra.workflows.noMatches")}</p>}>
@@ -263,18 +205,11 @@ export function WorkflowLibrary(props: Props) {
                           <VersionBadges document={document} />
                         </div>
                         <div>
-                          <RunState run={lastRun(document.id)} flow={flow()} />
+                          <span class="wf-state">
+                            <small>{copy.when(document.updated)}</small>
+                          </span>
                         </div>
                         <div class="wf-actions" onClick={(event) => event.stopPropagation()}>
-                          <button
-                            type="button"
-                            class="mx-btn icon"
-                            aria-label={copy.t("orchestra.workflows.row.run", { name: document.name })}
-                            title={copy.t("orchestra.workflows.maestroOnly")}
-                            disabled
-                          >
-                            <Ic name="play" />
-                          </button>
                           <button
                             type="button"
                             class="mx-btn icon"
@@ -340,6 +275,7 @@ export function WorkflowLibrary(props: Props) {
   )
 }
 
+// LiveRow and AllRuns wait for the run routes (WP17): the library does not render them while runs are hidden.
 function LiveRow(props: { run: RelayRun; flows: Map<string, Flow>; source: RelaySource; go: (path: string) => void }) {
   const copy = useRelayCopy()
   const document = () => props.source.list().find((item) => item.id === props.run.documentID)

@@ -48,7 +48,8 @@ export function blankWorkflow(name: string, startName: string): RelayDocumentFie
 }
 
 // A copy keeps the source's Relay metadata: the retained sprint fields, and the profile mark that run admission
-// reads, so a copy of a profile that cannot run yet cannot run either.
+// reads, so a copy of a profile that cannot run yet cannot run either. A copy of a profile that can run is the
+// user's own workflow, so it drops the mark and never lists as a template.
 export function copyDocument(source: RelayDocument, name: string): RelayDocumentFields {
   return {
     name,
@@ -57,7 +58,10 @@ export function copyDocument(source: RelayDocument, name: string): RelayDocument
     connections: source.connections,
     nodeGroups: source.nodeGroups,
     tags: [],
-    meta: source.meta,
+    meta:
+      source.runnable && source.meta.relay
+        ? { ...source.meta, relay: { ...source.meta.relay, profile: undefined } }
+        : source.meta,
   }
 }
 

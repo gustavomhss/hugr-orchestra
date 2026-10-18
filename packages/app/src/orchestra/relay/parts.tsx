@@ -161,20 +161,17 @@ export function TemplateCard(props: {
   const copy = useRelayCopy()
   const document = () => props.documents.find((item) => item.id === props.id)
   const flow = () => props.flows.get(props.id)
-  // Profiles whose Relay tools are not ported yet can be read in the library, but not started from here.
-  const blocked = () => document()?.runnable === false
   return (
     <button
       type="button"
       class="mx-card wf-tpl"
       role={props.radio ? "radio" : undefined}
       aria-checked={props.radio ? !!props.selected : undefined}
-      aria-disabled={blocked() || props.disabled ? "true" : undefined}
+      aria-disabled={props.disabled ? "true" : undefined}
       disabled={props.disabled}
-      tabindex={props.radio ? ((props.selected || props.tabstop) && !blocked() ? 0 : -1) : undefined}
-      title={blocked() ? copy.t("orchestra.workflows.template.toolsMissingTitle") : undefined}
+      tabindex={props.radio ? (props.selected || props.tabstop ? 0 : -1) : undefined}
       data-template={props.id}
-      onClick={() => !blocked() && !props.disabled && props.onPick(props.id)}
+      onClick={() => !props.disabled && props.onPick(props.id)}
     >
       <div class="mx-card-top">
         <span class="mx-mark">
@@ -215,9 +212,6 @@ export function TemplateCard(props: {
               </span>
             </>
           )}
-        </Show>
-        <Show when={blocked()}>
-          <span class="mx-badge warm">{copy.t("orchestra.workflows.template.toolsMissing")}</span>
         </Show>
       </div>
     </button>

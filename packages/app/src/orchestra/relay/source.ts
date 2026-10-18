@@ -26,6 +26,10 @@ export function runClient(server: ServerConnection.Any, directory: string, fetch
   })
 }
 
+// Workflow runs are hidden for launch: the server has no run routes yet (WP17), so nothing asks for them, polls them
+// or counts them. Turn this on with the Executions views when the routes ship.
+const runsEnabled = false
+
 export type RelaySource = ReturnType<typeof createRelaySource>
 
 export function createRelaySource(input: { server: ServerConnection.Any; directory: string; kind: RelayKind }) {
@@ -57,7 +61,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const runs = useQuery(
     () => ({
       queryKey: key("runs"),
-      queryFn: input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
+      queryFn: runsEnabled && input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
       retry: false,
       refetchInterval: (query: { state: { data?: RelayRun[] } }) =>
         query.state.data?.some((run) => run.status === "running") ? 10_000 : false,
@@ -126,7 +130,7 @@ export function useAwaitingRuns(target: () => { server: ServerConnection.Any; di
   const query = useQuery(
     () => {
       const current = target()
-      if (!current) return { queryKey: ["orchestra-relay-awaiting"], queryFn: skipToken }
+      if (!runsEnabled || !current) return { queryKey: ["orchestra-relay-awaiting"], queryFn: skipToken }
       const ctx = global.ensureServerCtx(current.server)
       const client = runClient(current.server, current.directory, platform.fetch)
       return {
@@ -143,7 +147,7 @@ export function useAwaitingRuns(target: () => { server: ServerConnection.Any; di
   )
   createEffect(() => {
     const current = target()
-    if (!current) return
+    if (!runsEnabled || !current) return
     const ctx = global.ensureServerCtx(current.server)
     onCleanup(
       ctx.sdk.event.on(current.directory, (event) => {

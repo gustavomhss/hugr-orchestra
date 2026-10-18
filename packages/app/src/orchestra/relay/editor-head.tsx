@@ -6,15 +6,15 @@ import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
 export type SaveState = { state: "saved" | "saving" | "error" | "conflict"; dirty: boolean; error: string }
 
-// Editor header: back and crumb on the left, Editor / Executions in the middle, autosave, Publish and Run
-// (or Test and Install for hooks) on the right.
+// Editor header: back and crumb on the left, Editor / Activity in the middle (hooks only), autosave and Publish on
+// the right, then Test and Install for hooks or a note that Maestro runs workflows.
 export function EditorHead(props: {
   kind: RelayKind
   document: RelayDocument
   name: string
   readOnly?: boolean
   tab: "editor" | "runs"
-  // Hidden while the server has no run routes.
+  // Hooks only: the decisions behind the Activity tab.
   runCount: number | undefined
   // An install exists, so the toggle works even after an unpublish.
   installExists?: boolean
@@ -100,27 +100,30 @@ export function EditorHead(props: {
           <Show when={!props.readOnly}><HeadBadge document={props.document} /></Show>
         </span>
       </div>
-      <div class="wf-range" role="tablist" aria-label={copy.t("orchestra.workflows.editor.view")}>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={props.tab === "editor"}
-          onClick={() => props.go(relayPath.editor(props.kind, props.document.id))}
-        >
-          {copy.t("orchestra.workflows.editor.editor")}
-        </button>
-        <button
-          type="button"
-          role="tab"
-          aria-selected={props.tab === "runs"}
-          onClick={() => props.go(relayPath.history(props.kind, props.document.id))}
-        >
-          {copy.t(workflow() ? "orchestra.workflows.tab.runs" : "orchestra.hooks.tab.activity")}
-          <Show when={props.runCount !== undefined}>
-            <span class="wf-count">{props.runCount}</span>
-          </Show>
-        </button>
-      </div>
+      {/* Workflow executions are hidden while the server has no run routes; the empty cell keeps the header centred. */}
+      <Show when={!workflow()} fallback={<span />}>
+        <div class="wf-range" role="tablist" aria-label={copy.t("orchestra.workflows.editor.view")}>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={props.tab === "editor"}
+            onClick={() => props.go(relayPath.editor(props.kind, props.document.id))}
+          >
+            {copy.t("orchestra.workflows.editor.editor")}
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={props.tab === "runs"}
+            onClick={() => props.go(relayPath.history(props.kind, props.document.id))}
+          >
+            {copy.t("orchestra.hooks.tab.activity")}
+            <Show when={props.runCount !== undefined}>
+              <span class="wf-count">{props.runCount}</span>
+            </Show>
+          </button>
+        </div>
+      </Show>
       <div class="wf-head-right">
         <Show when={!props.readOnly} fallback={<span class="wf-save">{copy.t("orchestra.workflows.history.readOnly")}</span>}>
           <SaveStatus save={props.save} onRetry={props.onRetry} onReload={props.onReload} />
@@ -176,15 +179,7 @@ export function EditorHead(props: {
             </span>
           }
         >
-          <button
-            type="button"
-            class="mx-btn primary"
-            title={copy.t("orchestra.workflows.maestroOnly")}
-            disabled
-          >
-            <Ic name="play" />
-            {copy.t("orchestra.workflows.editor.run")}
-          </button>
+          <span class="wf-save">{copy.t("orchestra.workflows.editor.maestroRuns")}</span>
         </Show>
         <button
           type="button"
