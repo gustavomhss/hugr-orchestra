@@ -133,6 +133,9 @@ export async function openChapter(page: Page) {
 export async function chooseProfile(page: Page, name: string) {
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
+  // A chapter opened before the profile card shows the choice mounts against the previous profile and again once
+  // the choice lands, which doubles every request its mount makes.
+  await expect(page.locator('[data-slot="orchestra-profile"]')).toContainText(name)
 }
 
 export async function setup(

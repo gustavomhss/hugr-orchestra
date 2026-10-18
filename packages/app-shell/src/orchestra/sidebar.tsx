@@ -527,7 +527,13 @@ export function OrchestraSidebar(props: {
                               disabled={
                                 !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
                               }
-                              onSelect={() => afterProfileClose(() => selectProject(group.conn, project()))}
+                              onSelect={() => {
+                                // Only what moves focus or opens tabs waits for the menu to unmount. The profile
+                                // applies now: a chapter opened while the menu closes would otherwise mount
+                                // against the previous profile and mount again when the selection lands.
+                                layout.home.setSelection({ server: group.key, directory: worktree })
+                                afterProfileClose(() => selectProject(group.conn, project()))
+                              }}
                             >
                               <DropdownMenu.ItemLabel class="orchestra-profile-item-name">
                                 <bdi>{displayName(project())}</bdi>
