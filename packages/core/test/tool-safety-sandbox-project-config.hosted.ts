@@ -4,7 +4,7 @@
 // real seatbelt profile; on Linux CI this relaxes the runner's AppArmor user-namespace restriction for bubblewrap and
 // installs the sandbox's system dependencies when absent, and the product fetches its pinned srt itself.
 import { expect } from "bun:test"
-import { lstatSync } from "node:fs"
+import { existsSync, lstatSync, statSync } from "node:fs"
 import path from "node:path"
 import { Effect, Schedule } from "effect"
 import { ChildProcess } from "effect/unstable/process"
@@ -157,5 +157,27 @@ live("a session opened in a subdirectory is covered: ancestors up to the write r
     expect(yield* p.fs.readFileString(path.join(p.root, "orchestra.json"))).toBe("orig")
     expect(["apps/orchestra.jsonc", "packages/app/orchestra.json", "packages/app/.orchestra", ".orchestra", "tui.json"].filter(p.present)).toEqual([])
     expect((yield* p.run("echo ok > ../sibling.txt && echo ok > here.txt", { directory: sub })).exitCode).toBe(0)
+  }), 240_000,
+)
+
+// A governed backend's grant names files. Its jail used to refuse to start (sandbox-project-config-acquisition).
+live("a file write root runs confined: the granted file is writable, a write outside it is refused", () =>
+  Effect.gen(function* () {
+    const p = yield* project
+    const file = path.join(p.root, "src", "x.ts")
+    yield* p.fs.makeDirectory(path.dirname(file))
+    yield* p.fs.writeFileString(file, "orig")
+    const profile = { requireSandbox: true, writeRoots: [file], sandbox: { enabled: true, unconfinedFallback: false } } satisfies ToolSafety.Profile
+    expect((yield* p.run("echo ok > src/x.ts", { profile })).exitCode).toBe(0)
+    expect(yield* p.fs.readFileString(file)).toBe("ok\n")
+    for (const attack of ["echo pwn > src/y.ts", "echo pwn > outside.txt", "echo pwn > orchestra.json", "mkdir src/.orchestra"])
+      expect({ attack, exitCode: (yield* p.run(attack, { profile })).exitCode }).not.toEqual({ attack, exitCode: 0 })
+    expect(["src/y.ts", "outside.txt", "orchestra.json", "src/.orchestra"].filter(p.present)).toEqual([])
+    // Swap the granted file for a directory and plant config in it. Seatbelt's grant allows the rm and mkdir, so the
+    // literal guard refuses the write; on Linux the file is its own bind mount and the rm itself fails (EBUSY).
+    const swap = yield* p.run("rm src/x.ts && mkdir src/x.ts && echo pwn > src/x.ts/orchestra.json", { profile })
+    expect(swap.exitCode).not.toBe(0)
+    expect(names.filter((name) => existsSync(path.join(file, name)))).toEqual([])
+    if (process.platform === "linux") expect(statSync(file).isFile()).toBe(true)
   }), 240_000,
 )
