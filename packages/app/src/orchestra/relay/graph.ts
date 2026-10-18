@@ -46,6 +46,7 @@ export type Issue =
       code: "trigger-count" | "needs-before" | "pattern-empty" | "hook-loose" | "message-empty" | "check-command"
       node: string
     }
+  | { code: "record-only" | "field-unavailable" | "cycle" | "never-runs"; node: string }
   | { code: "server"; text: string }
 
 export const HOOK_OUTPUTS: Outputs = {
@@ -113,11 +114,21 @@ export function documentFields(flow: Flow): {
     name: node.name,
     type: node.type,
     position: [Math.round(node.x), Math.round(node.y)] as const,
-    parameters: node.parameters,
+    parameters: recordNote(flow, node),
     ...(node.typeVersion === undefined ? {} : { typeVersion: node.typeVersion }),
   }))
   if (flow.kind === "hook") return { nodes, connections }
   return { nodes, connections, nodeGroups: flow.phases.filter((phase) => phase.nodeIds.length) }
+}
+
+// Record's note is optional in the app, but the hook export needs text in every Record, so an empty one saves as this.
+// Nothing shows it: the note is not sent to the agent or stored in a decision.
+export const RECORDED = "Recorded"
+const RECORD = "relay.hookRecord"
+
+function recordNote(flow: Flow, node: FlowNode) {
+  if (flow.kind !== "hook" || node.type !== RECORD || node.parameters.message) return node.parameters
+  return { ...node.parameters, message: RECORDED }
 }
 
 export const isEntry = (node: FlowNode) => node.type === START || node.type === TRIGGER
@@ -280,20 +291,55 @@ export function checkID(flow: Flow, nodeID: string) {
   )
 }
 
+// Actions that tell the agent something or hold the call. After a session starts or stops there is nothing left to
+// hold or tell: the runtime records those events and drops what the hook decided.
+export const ENFORCING = ["relay.hookBlock", "relay.hookApprove", "relay.hookRemind", "relay.hookRepair"]
+export const recordOnly = (operation: unknown) => operation === "session-start" || operation === "session-idle"
+
+// The fields a condition can read for each trigger (relay/src/hook/evaluate.ts, core/tool-safety-hooks.ts): a shell
+// command carries a command and no path, the other file tools a path and no command, a session event only its name.
+// An operation this app does not know could carry anything.
+export type ConditionField = "path" | "tool" | "command" | "event"
+export const isConditionField = (value: unknown): value is ConditionField =>
+  value === "path" || value === "tool" || value === "command" || value === "event"
+const FIELDS: Record<string, ConditionField[]> = {
+  read: ["path", "tool", "event"],
+  edit: ["path", "tool", "event"],
+  write: ["path", "tool", "event"],
+  command: ["command", "tool", "event"],
+  tool: ["path", "tool", "command", "event"],
+  prompt: ["event"],
+  "session-start": ["event"],
+  "session-idle": ["event"],
+}
+export const conditionFields = (operation: unknown) =>
+  FIELDS[String(operation)] ?? (["path", "tool", "command", "event"] satisfies ConditionField[])
+
 function hookIssues(flow: Flow): Issue[] {
   const triggers = flow.nodes.filter((node) => node.type === TRIGGER)
   const timing = triggers[0]?.parameters.timing
+  const operation = triggers[0]?.parameters.operation
   const count: Issue[] = !triggers.length
     ? [{ code: "no-trigger" }]
     : triggers.slice(1).map((node) => ({ code: "trigger-count", node: node.id }))
   const reachable = reach(flow, triggers[0]?.id)
+  // Require repair denies the call, so what follows it on the same path never runs.
+  const running = reach(flow, triggers[0]?.id, "relay.hookRepair")
+  const fields = conditionFields(operation)
   const nodes = flow.nodes.flatMap((node): Issue[] => {
     if (node.type === TRIGGER) return []
+    const inert = recordOnly(operation) && ENFORCING.includes(node.type)
     const before =
-      (node.type === "relay.hookBlock" || node.type === "relay.hookApprove") && timing === "after"
+      !inert && (node.type === "relay.hookBlock" || node.type === "relay.hookApprove") && timing === "after"
         ? [{ code: "needs-before" as const, node: node.id }]
         : []
-    // The export needs a pattern, a command and a message (Allow's note may be empty), as the server compiles them.
+    const silent = inert ? [{ code: "record-only" as const, node: node.id }] : []
+    const field =
+      node.type === CONDITION && triggers.length && !fields.some((item) => item === (node.parameters.field ?? "path"))
+        ? [{ code: "field-unavailable" as const, node: node.id }]
+        : []
+    // The export needs a pattern, a command and a message (Allow's and Record's notes may be empty), as the server
+    // compiles them.
     const pattern =
       node.type === CONDITION && !String(node.parameters.pattern ?? "")
         ? [{ code: "pattern-empty" as const, node: node.id }]
@@ -303,26 +349,65 @@ function hookIssues(flow: Flow): Issue[] {
         ? [{ code: "check-command" as const, node: node.id }]
         : []
     const message =
-      node.type !== CONDITION && node.type !== "relay.hookAllow" && !String(node.parameters.message ?? "")
+      node.type !== CONDITION &&
+      node.type !== "relay.hookAllow" &&
+      node.type !== RECORD &&
+      !String(node.parameters.message ?? "")
         ? [{ code: "message-empty" as const, node: node.id }]
         : []
-    const loose = reachable.has(node.id) ? [] : [{ code: "hook-loose" as const, node: node.id }]
-    return [...before, ...pattern, ...check, ...message, ...loose]
+    const loose = !reachable.has(node.id)
+      ? [{ code: "hook-loose" as const, node: node.id }]
+      : running.has(node.id)
+        ? []
+        : [{ code: "never-runs" as const, node: node.id }]
+    return [...before, ...silent, ...field, ...pattern, ...check, ...message, ...loose]
   })
   const actions = flow.nodes.some((node) => node.type !== TRIGGER && node.type !== CONDITION)
   const action: Issue[] = actions ? [] : [{ code: "no-action", node: triggers[0]?.id }]
-  return [...count, ...nodes, ...action]
+  return [...count, ...nodes, ...loops(flow), ...action]
 }
 
-function reach(flow: Flow, from: string | undefined) {
+function reach(flow: Flow, from: string | undefined, stop?: string) {
   const seen = new Set<string>()
   const visit = (id: string | undefined) => {
     if (!id || seen.has(id)) return
     seen.add(id)
+    if (stop && nodeOf(flow, id)?.type === stop) return
     outEdges(flow, id).forEach((edge) => visit(edge.to))
   }
   visit(from)
   return seen
+}
+
+// The server refuses a hook that loops. The first node on a loop carries the issue; the next shows once it is fixed.
+function loops(flow: Flow): Issue[] {
+  const looped = flow.nodes.find((node) => outEdges(flow, node.id).some((edge) => reach(flow, edge.to).has(node.id)))
+  return looped ? [{ code: "cycle", node: looped.id }] : []
+}
+
+// "And also require": a condition between this one's Yes and what Yes led to, so both must match. Its No leads where
+// this one's No does, so No still means "not all of them". It starts below the graph, where nothing overlaps it.
+export function addRequirement(flow: Flow, id: string, name: string) {
+  const node = nodeOf(flow, id)
+  if (!node || node.type !== CONDITION) return
+  const fields = conditionFields(flow.nodes.find((item) => item.type === TRIGGER)?.parameters.operation)
+  const added: FlowNode = {
+    id: uniqueID(flow, "condition"),
+    name: uniqueName(flow, name),
+    type: CONDITION,
+    x: node.x,
+    y: Math.max(...flow.nodes.map((item) => item.y)) + 160,
+    parameters: { field: fields.find((field) => field !== node.parameters.field) ?? "event", pattern: "" },
+  }
+  const yes = flow.edges.find((edge) => edge.from === id && edge.port === 0)
+  const no = flow.edges.find((edge) => edge.from === id && edge.port === 1)
+  const edges = [
+    ...flow.edges.filter((edge) => edge !== yes),
+    { from: id, to: added.id, port: 0 },
+    ...(yes ? [{ from: added.id, to: yes.to, port: 0 }] : []),
+    ...(no ? [{ from: added.id, to: no.to, port: 1 }] : []),
+  ]
+  return { flow: { ...flow, nodes: [...flow.nodes, added], edges }, id: added.id }
 }
 
 export function issueNode(issue: Issue) {
