@@ -446,7 +446,7 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
         return Effect.die(new Research.Error({ code: "inquiry_state", message: `${input.type} already happened in this dispatch` }))
       return Effect.void
     }), Effect.orDie)
-    const publish = input.type === "research.inquiry.opened"
+    const publish: Effect.Effect<unknown, unknown> = input.type === "research.inquiry.opened"
       ? events.publish(ResearchEvent.InquiryOpened, { ...shared, question: input.question, subquestions: input.subquestions }, { id, persist: true, commit })
       : input.type === "research.inquiry.checked"
         ? events.publish(ResearchEvent.InquiryChecked, { ...shared, check: input.check }, { id, persist: true, commit })
