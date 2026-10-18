@@ -137,11 +137,15 @@ export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
   const records = deps.records
   const binding = deps.binding
   const read = (ref: Research.SourceRef) => drain(records, binding, { action: "source", ref })
+  // R1 owns sources by binding: a resumed dispatch of the same Task may cite what an earlier one retained.
+  const corpus = yield* records.view(binding, { action: "corpus" })
+  const owned = [...new Map([...state.sources, ...("sources" in corpus ? corpus.sources : [])]
+    .map((source) => [ResearchLedger.canonical(source.ref), source])).values()]
   // URLs the dispatch's retained web searches returned, in loop (websearch) and Claude mode (WebSearch) alike.
   const results = yield* Effect.forEach(state.sources.filter((source) => source.origin.kind === "tool-output" &&
     /\/websearch$/i.test(source.origin.uri)), (source) => read(source.ref).pipe(Effect.orElseSucceed(() => "")))
   const seenUrls = results.flatMap((text) => InquiryCheck.extract(text).flatMap((item) => item.kind === "url" ? [item.target] : []))
-  const pages = state.sources.filter((source) => source.origin.kind === "url")
+  const pages = owned.filter((source) => source.origin.kind === "url")
   const seen = [...seenUrls, ...pages.map((source) => source.origin.uri)]
   const captured = pages.filter((source) => source.complete).map((source) => ({ url: source.origin.uri, capturedAt: source.capturedAt }))
   const subquestions = new Map<string, Research.RecordRef>(state.subquestions.map((sub) => [sub.ref.id, sub.ref]))
@@ -150,7 +154,7 @@ export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
     ...(close ? { sufficiency: close.sufficiency } : {}),
     answer: close?.answer ?? "",
     allowedDomains: deps.domains ? [...deps.domains] : "unrestricted",
-    sources: state.sources,
+    sources: owned,
     attempts: yield* attempts(records, binding),
     subquestions: state.subquestions.map((sub) => ({ ref: sub.ref, question: sub.question })),
     claims: state.claims.flatMap((claim) => {
@@ -239,7 +243,9 @@ export function refusal(state: State, sufficiency: Research.Sufficiency) {
 
 /** The card the host assembles on close (J5.12); the model never writes card JSON. */
 export function card(state: State, input: { readonly allowance: Research.Allowance; readonly close: Extract<Research.InquiryInput, { action: "close" }>
-  readonly outcome: InquiryCheck.Outcome; readonly domains: readonly string[] | undefined }): Research.CardV2 {
+  readonly outcome: InquiryCheck.Outcome; readonly domains: readonly string[] | undefined
+  /** Documents this Task published; the parent qualifies their findings too. */
+  readonly documents: readonly Research.DocumentRef[] }): Research.CardV2 {
   const check = input.outcome.result
   const claims = state.claims.filter((claim) => !claim.dropped)
   const gaps = state.subquestions.flatMap((sub) => sub.gap ? [`gap ${sub.ref.id}: ${sub.gap}`] : [])
@@ -267,7 +273,7 @@ export function card(state: State, input: { readonly allowance: Research.Allowan
       failures: [...gaps, ...input.outcome.coverageFailures, ...failures].slice(0, 256) },
     limitations: [...(input.close.limitations ?? []), ...failures, ...dropped, ...input.outcome.limitations].slice(0, 256),
     nextActions: [...(input.close.nextActions ?? [])].slice(0, 32),
-    documentRefs: [],
+    documentRefs: [...input.documents],
     check,
   }
 }
