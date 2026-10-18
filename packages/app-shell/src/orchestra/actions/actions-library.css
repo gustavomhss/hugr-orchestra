@@ -1,1 +1,42 @@
 /* Actions library, run history filters, tabs and cards, matched to the approved Actions mock. */
+
+/* Pinned Actual Orchestra CI reference: a full-width button styled as the mock's card link. */
+.actions-page .actions-collection .collection-reference { inline-size: 100%; flex-wrap: nowrap; color: var(--actions-strong); font: inherit; text-align: start; cursor: pointer; }
+.actions-page .actions-collection .collection-reference:hover { border-color: var(--actions-blue); }
+.actions-page .actions-collection .collection-reference:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
+.actions-page .collection-reference-copy strong { display: block; font: 600 12.5px/1.5 var(--mx-emphasis, sans-serif); overflow-wrap: anywhere; }
+.actions-page .collection-reference-copy small { margin-block-start: 3px; line-height: 1.6; }
+.actions-page .collection-reference-context { flex: none; font-size: 12px; }
+.actions-page .collection-reference-context > .actions-icon { color: var(--actions-blue); }
+
+/* Search and segmented status filter share one row; the field keeps room for its placeholder. */
+.actions-page .actions-collection .collection-toolbar { gap: 14px; }
+.actions-page .actions-collection .collection-toolbar .search-wrap { flex: 1 1 260px; min-inline-size: 190px; max-inline-size: 430px; }
+.actions-page .actions-collection .collection-filters { gap: 12px; margin-block: 0 22px; }
+.actions-page .actions-collection .collection-filters label { color: var(--actions-dim); font-size: 11px; }
+.actions-page .actions-collection .collection-filters select { min-inline-size: 105px; margin-inline-start: 5px; padding: 6px 8px; border: 1px solid var(--actions-line); border-radius: 6px; color: var(--actions-strong); background: var(--actions-raised); }
+.actions-page .actions-collection .collection-filters > span { margin-inline-start: auto; color: var(--actions-dim); font-size: 11px; }
+
+/* Workflow cards. */
+.actions-page .workflow-card .collection-updated { display: block; margin-block: 10px 12px; color: var(--actions-dim); font-size: 11px; }
+.actions-page .workflow-card .collection-triggers { margin-block-start: 12px; }
+.actions-page .actions-collection .collection-path:hover { color: var(--actions-blue); }
+.actions-page .actions-collection .collection-preview-empty { line-height: 1.7; }
+.actions-page .collection-last-run { inline-size: 100%; color: var(--actions-dim); }
+.actions-page .collection-last small { display: block; margin-block-start: 5px; font-size: 11px; }
+.actions-page .collection-last > strong { font-size: 12px; font-weight: 500; }
+.actions-page .workflow-card .mx-card-foot > div { display: flex; gap: 6px; }
+
+/* Run table: header and rows share fixed tracks so the columns line up. */
+.actions-page .collection-run-list .run-head,
+.actions-page .actions-collection .mx-table > .run-row { grid-template-columns: minmax(210px, 1fr) minmax(150px, .65fr) 120px 100px; gap: 16px; }
+.actions-page .collection-run-list .run-head { padding: 0 16px 10px; font-size: 9.5px; }
+.actions-page .actions-collection .mx-table > .run-row { inline-size: 100%; border: 0; border-block-start: 1px solid var(--actions-line); cursor: pointer; }
+.actions-page .actions-collection .mx-table > .run-row:first-child { border-block-start: 0; }
+.actions-page .actions-collection .mx-table > .run-row:hover { background: var(--actions-soft); }
+.actions-page .actions-collection .mx-table > .run-row:focus-visible { outline-offset: -3px; }
+.actions-page .run-row strong { font: 600 12px/1.5 var(--mx-emphasis, sans-serif); }
+.actions-page .run-row small { font-size: 11px; line-height: 1.5; }
+.actions-page .run-row .ref { display: flex; align-items: center; gap: 6px; min-inline-size: 0; font: 11.5px/1.5 var(--mx-sans, sans-serif); }
+.actions-page .run-row .ref .actions-icon { flex: none; inline-size: 12px; block-size: 12px; color: var(--actions-warm); }
+.actions-page .collection-run-time strong { display: block; font: 11.5px/1.5 var(--mx-sans, sans-serif); }
