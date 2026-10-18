@@ -7,7 +7,12 @@ test("actual Lean Orchestra and SDK package typechecks run in CI", async () => {
   if (!process.env.GITHUB_RUN_ID) throw new Error("Package typechecks require CI")
   const spec = OpenApi.fromApi(PublicApi) as { components?: { schemas?: Record<string, { properties?: Record<string, unknown> }> } }
   for (const [name, fields] of [["LeanProfileSavings", ["calls", "tokenCalls"]], ["LeanProfileExecution", ["time"]]] as const) {
-    for (const field of fields) console.log(`LEAN_NUMERIC_OPENAPI ${name}.${field} ${JSON.stringify(spec.components?.schemas?.[name]?.properties?.[field])}`)
+    for (const field of fields) {
+      const property = spec.components?.schemas?.[name]?.properties?.[field]
+      console.log(`LEAN_NUMERIC_OPENAPI ${name}.${field} ${JSON.stringify(property)}`)
+      // The evidence line alone printed "undefined" for a lost field and passed.
+      if (property === undefined) throw new Error(`${name}.${field} missing from the public OpenAPI`)
+    }
   }
   console.log(`LEAN_NONNEGATIVE_OPENAPI ${JSON.stringify(spec.components?.schemas?.NonNegativeInt)}`)
   for (const directory of ["orchestra", "sdk/js"]) {
