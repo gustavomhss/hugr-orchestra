@@ -17,7 +17,6 @@ import { createMediaQuery } from "@solid-primitives/media"
 import { useMutation } from "@tanstack/solid-query"
 import { createVirtualizer, defaultRangeExtractor, elementScroll, type VirtualItem } from "@tanstack/solid-virtual"
 import { Button } from "@orchestra/ui/button"
-import { Card } from "@orchestra/ui/card"
 import {
   ContextToolGroup,
   Message,
@@ -70,9 +69,9 @@ import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, TimelineRow, TimelineRowMap } from "./rows"
 import { TimelineDiffSummaryRow } from "./timeline-diff-summary-row"
+import { TimelineErrorCard } from "./timeline-error-row"
 import { filterVirtualIndexes } from "./virtual-items"
 import { errorMessage } from "@/pages/layout/helpers"
-import { baseID } from "@/orchestra/chapters/providers-data"
 import { agentLabel, OrchestraTurn } from "./orchestra-turn"
 import { SessionHeadActions } from "./session-head-actions"
 import type { ExecutionEvidenceInput } from "../orchestra-evidence"
@@ -914,13 +913,6 @@ export function MessageTimeline(props: {
     )
   }
 
-  const updateProviderKey = (providerID: string) =>
-    void import("@/components/dialog-connect-provider").then((x) => {
-      const controller = x.useProviderConnectController()
-      controller.select(baseID(providerID))
-      void dialog.show(() => <x.DialogConnectProvider controller={controller} directory={() => sdk().directory} />)
-    })
-
   const renderTimelineRow = (row: Accessor<TimelineRow.TimelineRow>, onSizeChange?: () => void) => {
     switch (row()._tag) {
       case "TurnGap":
@@ -1099,18 +1091,7 @@ export function MessageTimeline(props: {
           <TimelineRowFrame row={errorRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
               <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
-                <Card variant="error" class="error-card">
-                  {errorRow().text}
-                  <Show when={errorRow().providerID}>
-                    {(providerID) => (
-                      <div class="mt-2">
-                        <Button size="small" variant="secondary" onClick={() => updateProviderKey(providerID())}>
-                          {language.t("orchestra.providers.connectDialog.updateKey")}
-                        </Button>
-                      </div>
-                    )}
-                  </Show>
-                </Card>
+                <TimelineErrorCard text={errorRow().text} providerID={errorRow().providerID} />
               </OrchestraTurn>
             </div>
           </TimelineRowFrame>
