@@ -712,3 +712,27 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-foot-id code { font: 10px var(--mx-mono); }
 @media (max-width: 1279px) { .at-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 760px) { .at-kpis, .at-kpis.three, .at-slabs { grid-template-columns: minmax(0, 1fr); } .at-task { flex-wrap: wrap; } .at-acc-sum { display: none; } }
+
+/* Project memory */
+.at-tokens { display: grid; gap: 8px; padding: 16px 18px; border-block-end: 1px solid var(--mx-line); }
+.at-tokens > div:first-child { display: flex; align-items: baseline; gap: 6px; flex-wrap: wrap; }
+.at-tokens b { font: 600 26px/1 var(--mx-emphasis); letter-spacing: -.03em; font-variant-numeric: tabular-nums; }
+.at-tokens span { color: var(--mx-dim); font-size: 13px; }
+.at-tokens small { margin-inline-start: auto; font-size: 10.5px; }
+.at-tokbar { block-size: 6px; border-radius: 3px; background: var(--mx-soft); overflow: hidden; }
+.at-tokbar i { display: block; block-size: 100%; border-radius: 3px; background: var(--mx-warm); }
+.at-tok-note { margin: 0 !important; font-size: 11px; color: var(--mx-dim); }
+.at-tok-note b { font: 500 11px var(--mx-sans); color: var(--mx-strong); letter-spacing: 0; }
+.at-rule-row { display: flex; align-items: center; gap: 12px; padding: 12px 18px; border-block-start: 1px solid var(--mx-line); font-size: 12px; line-height: 1.55; }
+.at-tokens + .at-rule-row, .at-stew-intro + .at-rule-row { border-block-start: 0; }
+.at-rule-row .rank { inline-size: 18px; flex: none; color: var(--mx-dim); font: 10px var(--mx-mono); text-align: center; }
+.at-rule-row .rank .wf-ic { inline-size: 13px; block-size: 13px; color: var(--mx-blue); }
+.at-rule-row .grow { flex: 1; min-inline-size: 0; }
+.at-rule-row small { display: block; margin-block-start: 3px; font-size: 10.5px; }
+.at-rule-row.muted .grow > div { color: var(--mx-dim); }
+.at-frec { inline-size: 56px; block-size: 4px; flex: none; border-radius: 2px; background: var(--mx-soft); overflow: hidden; }
+.at-frec i { display: block; block-size: 100%; background: var(--mx-warm); }
+.at-tok { flex: none; inline-size: 52px; text-align: end; color: var(--mx-dim); font: 10px var(--mx-mono); }
+.at-stew-intro { padding-block-end: 10px !important; }
+.at-kindtag { flex: none; padding: 0 5px; border: 1px solid var(--mx-line); border-radius: 4px; color: var(--mx-dim); font: 9px var(--mx-mono); text-transform: uppercase; letter-spacing: .05em; }
+#rule-text { font: 13px/1.6 var(--mx-sans); }

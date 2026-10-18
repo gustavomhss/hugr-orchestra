@@ -188,10 +188,52 @@
       const scope = $("#mine-scope")?.value || "the whole repository"
       A.toast(`In the app this runs genesis on <code>${A.esc(scope)}</code>. Proposals land in Candidates.`, "sparkle")
     },
-    "promote-rule": (v) => dialog(ruleDialog(v)),
+    "promote-rule": (v) => dialog(ruleDialog(...(v ?? "backend||").split("|"))),
+    "dismiss-proposal": (v) => {
+      const [member, lesson] = v.split("|")
+      const m = M().memory[member]
+      m.dismissed.add(lesson)
+      undo = () => m.dismissed.delete(lesson)
+      A.toast(`Dismissed. The lesson stays in its task checkpoint.${undoLink}`, "minusc")
+      render(true)
+    },
+    "archive-rule": (v) => {
+      const [member, i] = v.split("|")
+      const m = M().memory[member]
+      const [r] = m.indexed.splice(Number(i), 1)
+      m.archived.push(r)
+      undo = () => { m.archived.splice(m.archived.indexOf(r), 1); m.indexed.splice(Number(i), 0, r) }
+      A.toast(`Archived. It no longer rides in every turn; it stays in memory.jsonl.${undoLink}`, "download")
+      render(true)
+    },
+    "restore-rule": (v) => {
+      const [member, text] = v.split("|")
+      const m = M().memory[member]
+      const r = m.archived.find((x) => x.rule === text)
+      m.archived.splice(m.archived.indexOf(r), 1)
+      m.indexed.push({ ...r, frecency: 1 })
+      A.toast("Restored to the indexed set.", "check")
+      render(true)
+    },
     respawn: (v) => dialog(respawnDialog(...v.split("|"))),
     "respawn-confirm": (v) => { $("#dialog").close(); A.toast(`Respawned on <code>${A.esc(v)}</code> with its latest checkpoint. The new invocation appears in the task timeline.`, "play") },
-    "rule-confirm": () => { $("#dialog").close(); A.toast("Saved as a stewardship rule. It rides in the turn header from the next turn.", "shield") },
+    "rule-confirm": (v) => {
+      const [member, lesson, unit] = v.split("|")
+      const rule = $("#rule-text").value.trim()
+      const scope = $("#rule-scope").value.trim() || "*"
+      const pm = A.projectMemory(member)
+      const count = rule.split(/\s+/).filter(Boolean).length
+      if (pm.indexed.length >= pm.slots) return A.toast("Refused: all 12 slots are taken. Archive a rule first.", "xc")
+      if (pm.used + count > pm.cap) return A.toast(`Refused <code>over-cap</code>: ${pm.used + count} of ${pm.cap} tokens. Shorten the rule or archive another.`, "xc")
+      $("#dialog").close()
+      const m = M().memory[member]
+      const entry = { rule, scope, from: lesson, unit: unit || "manual", frecency: 1 }
+      m.indexed.push(entry)
+      undo = () => m.indexed.splice(m.indexed.indexOf(entry), 1)
+      A.toast(`Indexed · ${count} tokens. It rides in every turn from the next one; secret-scanned before it was saved.${undoLink}`, "shield")
+      history.replaceState(null, "", withQuery({ pm: "indexed" }))
+      render(true)
+    },
     territory: (v) => dialog(territoryDialog(v ?? "")),
     "territory-confirm": () => { $("#dialog").close(); A.toast("Territory declared in the catalog. Facts under it now have an owner and a tier.", "territory") },
     palette: (v) => openPalette(v ?? ""),
@@ -237,8 +279,9 @@
     <div class="mx-fields"><label class="mx-field"><span>Write paths</span><input value="counter.ts"></label><label class="mx-field"><span>Model</span><select><option>Same as last run</option><option>Claude Opus</option><option>Claude Sonnet</option></select></label></div>
     <p class="mx-note">Sent as <code>task</code> with <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>${t ? ` and task <code>${A.esc(t.taskRef)}</code>` : ""}.</p></div>${foot("Through Maestro", "respawn-confirm", "Respawn", unit)}</form>`
   }
-  const ruleDialog = (lesson = "") => `<form method="dialog">${head("Promote lesson to a project rule", "Stewardship rules ride in every turn this member runs, so they are one imperative line, scoped, and capped at 12. Rewrite the lesson as an always/never.")}
-    <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea rows="3">${A.esc(lesson || "Stop at the packet's phase boundary and record where you stopped.")}</textarea></label><label class="mx-field"><span>Applies to</span><input value="tasks with phased packets"></label></div>${foot("Saved to Backend's memory after the secret scan", "rule-confirm", "Save rule")}</form>`
+  const ruleDialog = (member = "backend", lesson = "", unit = "") => `<form method="dialog">${head("Index a project-memory rule", "Rules ride in every turn, so write one imperative line: an always or a never, with where it applies.")}
+    <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea id="rule-text" rows="3">${A.esc(lesson)}</textarea></label><label class="mx-field"><span>Applies to</span><input id="rule-scope" placeholder="a path glob, a tool or a phase — * for everywhere" value="${lesson ? "tasks with phased packets" : ""}"></label>
+    <p class="mx-note">Counted as words, like Atlas does. It starts with frecency 1, halves every wave it goes unused, and is archived below 0.10.</p></div>${foot("Through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
   const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives a region of the code an owner and a tier. Overlaps resolve deterministically.")}
     <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
     <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${foot("Written to the territory catalog", "territory-confirm", "Declare")}</form>`
@@ -385,7 +428,7 @@
       ["Curation · candidates", "#/curation?tab=candidates", "sparkle", "64 mined candidates in staging with genesis' reasoning, and the four gates."],
       ["Curation · ratify", "#/curation?tab=ratify", "shield", "Nothing waiting; facts flagged by the policy's T0 keywords."],
       ["Curation · mine", "#/curation?tab=mine", "play", "Run genesis on a scope: arms, sites, budget and cost."],
-      ["Memory · Backend", "#/memory/backend", "memory", "Stewardship, lessons that could become rules, and the history of every task Backend was dispatched on."],
+      ["Memory · Backend", "#/memory/backend", "memory", "Project memory (proposals and indexed rules with their token total) and the memory log of every task."],
       ["Task memory", "#/memory/backend/task/T-LIVE-2", "check", "One real task: latest checkpoint, every invocation, all checkpoints (refused too), files changed."],
       ["Task transcript", "#/memory/backend/task/T-LIVE-2/transcript", "chat", "The respawnable seat session, with the checkpoint Atlas handed back and every memory write."],
       ["Memory · Maestro", "#/memory/maestro", "memory", "Defined by Atlas, not bound in Orchestra today."],
