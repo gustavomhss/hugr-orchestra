@@ -31,6 +31,7 @@ import { Skill } from "@/skill"
 import { ResearchRegistry } from "@/tool/research-registry"
 import { ToolRegistry } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
+import { AppProcess } from "@orchestra/core/process"
 import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import { Truncate } from "@/tool/truncate"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
@@ -41,7 +42,7 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   Agent.node, Config.node, Git.node, Session.node, SessionProjector.node, Database.node, Permission.node, FSUtil.node,
   Skill.node, Truncate.node, filesystem, httpClient, Instruction.node, AtlasKnowledge.node,
   EventV2Bridge.node, ResearchExecution.node, ResearchRecords.node,
-  RipgrepBinary.node, ToolRegistry.node,
+  AppProcess.node, RipgrepBinary.node, ToolRegistry.node,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true, disableExternalSkills: true })]]))
 
 const model = { providerID: ProviderV2.ID.make("openai"), modelID: ModelV2.ID.make("gpt-test") }
