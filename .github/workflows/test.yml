@@ -411,6 +411,10 @@ jobs:
         if: matrix.part == 'packages'
         run: bun run check:spawn-imports
 
+      - name: Run module-boundary gate
+        if: matrix.part == 'packages'
+        run: bun run check:boundaries
+
       # Every pinned ripgrep digest, not only the runners' platforms, against upstream's .sha256 files.
       - name: Run ripgrep pin gate
         if: matrix.part == 'packages'

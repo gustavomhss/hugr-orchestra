@@ -79,7 +79,8 @@ function inverse(workspace: Workspace, packagePath: string, key: string, value: 
   // A NUL placeholder for the wildcard shows where the matched text lands in the target.
   const target = resolveExport({ [key]: value }, key.replace("*", "\0"))?.target
   if (!target) return []
-  const [head, tail] = target.split("\0")
+  const head = target.slice(0, target.indexOf("\0"))
+  const tail = target.slice(target.indexOf("\0") + 1)
   const prefix = path.posix.join(packagePath, head)
   const star = key.indexOf("*")
   return workspace.files

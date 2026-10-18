@@ -46,12 +46,12 @@ export function loadWorkspace(root: string) {
   const read = (file: string) => readFileSync(path.join(root, file), "utf8")
   const registry = (JSON.parse(read("script/module-registry.json")) as { modules: { alias: string; name: string; path: string }[] }).modules
   const architecture = decodeArchitecture(JSON.parse(read("script/module-architecture.json")))
-  const members: Member[] = registry
-    .filter((entry) => architecture.packages[entry.alias] !== undefined)
-    .map((entry) => {
-      const manifestText = read(`${entry.path}/package.json`)
-      return { ...entry, spec: architecture.packages[entry.alias], manifest: JSON.parse(manifestText) as Manifest, manifestText }
-    })
+  const members: Member[] = registry.flatMap((entry) => {
+    const spec = architecture.packages[entry.alias]
+    if (spec === undefined) return []
+    const manifestText = read(`${entry.path}/package.json`)
+    return [{ ...entry, spec, manifest: JSON.parse(manifestText) as Manifest, manifestText }]
+  })
   const byLength = [...members].sort((a, b) => b.path.length - a.path.length)
   return {
     root,
@@ -122,7 +122,8 @@ export function ownerOf(file: string, domains: Record<string, Domain>) {
 export function patternRank(pattern: string, file: string) {
   if (pattern.endsWith("/")) return file.startsWith(pattern) ? pattern.length : 0
   if (!pattern.includes("*")) return pattern === file ? 20_000 : 0
-  const [head, tail] = pattern.split("*")
+  const head = pattern.slice(0, pattern.indexOf("*"))
+  const tail = pattern.slice(pattern.indexOf("*") + 1)
   return file.startsWith(head) && file.endsWith(tail) && !file.slice(head.length, file.length - tail.length).includes("/") ? 10_000 : 0
 }
 

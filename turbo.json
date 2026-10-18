@@ -131,7 +131,11 @@
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/script/test-guard.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
-        "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts"
+        "$TURBO_ROOT$/packages/core/test/fixture/tmpdir.ts",
+        "$TURBO_ROOT$/script/check-module-boundaries.ts",
+        "$TURBO_ROOT$/script/module-architecture.ts",
+        "$TURBO_ROOT$/script/module-architecture.json",
+        "$TURBO_ROOT$/script/boundary-ledger.json"
       ],
       "outputs": []
     },
