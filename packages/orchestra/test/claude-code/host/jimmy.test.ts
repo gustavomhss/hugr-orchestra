@@ -140,7 +140,7 @@ ClaudeResearchFixture.it.instance("native byte reservation refuses retention bey
   const dispatch = yield* fixture.nativeDispatch()
   const execution = yield* ResearchExecution.Service
   yield* fixture.research.execute(dispatch.child,
-    execution.captureBytes(dispatch.child, "prior-captures", Research.Limits.capturedBytes - 1, Effect.void))
+    execution.captureBytes(dispatch.child, "prior-captures", Research.Tiers.quick.capturedBytes - 1, Effect.void))
   yield* Effect.promise(() => Bun.write(path.join(fixture.parent.directory, "over-cap.txt"), "over byte budget"))
   expect(yield* dispatch.pre("mcp__orchestra__research_capture", "over-cap", { kind: "file", path: "over-cap.txt" }))
     .toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
@@ -150,13 +150,13 @@ ClaudeResearchFixture.it.instance("native byte reservation refuses retention bey
   expect(yield* dispatch.post("mcp__orchestra__research_capture", "over-cap"))
     .toMatchObject({ continue: false, stopReason: expect.stringContaining("budget_exhausted") })
   expect((yield* ClaudeResearchFixture.charges(dispatch.child)).filter((entry) => entry.kind === "bytes")
-    .reduce((total, entry) => total + entry.amount, 0)).toBe(Research.Limits.capturedBytes - 1)
+    .reduce((total, entry) => total + entry.amount, 0)).toBe(Research.Tiers.quick.capturedBytes - 1)
   const records = yield* ResearchRecords.Service
   const binding = yield* ResearchBinding.resolve(dispatch.child, fixture.parent.projectID)
   expect(yield* records.view(binding, { action: "corpus" })).toMatchObject({ sources: [] })
 }), 30_000)
 
-ClaudeResearchFixture.it.instance("plugin and SDK maxTurns match the native allowance, without proving physical pre-provider admission", () => Effect.gen(function* () {
+ClaudeResearchFixture.it.instance("plugin and SDK maxTurns carry the deep ceiling while a dispatch keeps its bound tier limit", () => Effect.gen(function* () {
   const fixture = yield* ClaudeResearchFixture.setup()
   const dispatch = yield* fixture.nativeDispatch()
   const limit = yield* fixture.research.execute(dispatch.child,
@@ -165,9 +165,9 @@ ClaudeResearchFixture.it.instance("plugin and SDK maxTurns match the native allo
   const input = { seats: [fixture.seat], tools: { jimmy: fixture.tools.map((tool) => tool.id) }, root: path.join(fixture.parent.directory, "plugin") }
   const plugin = yield* Effect.promise(() => ClaudeHostPlugin.build(input))
   expect(yield* Effect.promise(() => Bun.file(path.join(plugin.path, "agents/jimmy.md")).text()))
-    .toMatch(/^---\n[^]*\nmaxTurns: 24\n---\n/)
+    .toMatch(/^---\n[^]*\nmaxTurns: 96\n---\n/)
   const sdk = yield* Effect.promise(() => ClaudeHostPlugin.build({ ...input, sdk: { jimmy: {} } }))
-  expect(limit).toBe(sdk.sdkAgents["orchestra:jimmy"].maxTurns)
+  expect(sdk.sdkAgents["orchestra:jimmy"].maxTurns).toBe(Research.Tiers.deep.providerCalls)
   expect(yield* ClaudeResearchFixture.charges(dispatch.child)).toEqual([])
 }), 30_000)
 

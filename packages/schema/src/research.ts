@@ -1,6 +1,6 @@
 export * as Research from "./research"
 
-import { Schema } from "effect"
+import { Effect, Schema } from "effect"
 import { Capability } from "./capability"
 import { Project } from "./project"
 import { SessionID } from "./session-id"
@@ -28,6 +28,7 @@ export const RecordID = Schema.Union([QuestionID, FindingID, RelationID])
 export const Digest = Schema.String.check(Schema.isPattern(/^[0-9a-f]{64}(?![\s\S])/))
 export const Profile = Schema.Literals(["locate", "understand", "investigate", "evaluate", "research"])
 export const Depth = Schema.Literals(["quick", "focused", "deep"])
+export type Depth = typeof Depth.Type
 export const Modality = Schema.Literals(["exploratory", "analytical", "comparative", "evidence", "applied", "opportunities"])
 export const Genre = Schema.Literals(["answer", "map", "explanation", "comparison", "evidence-review", "opportunity"])
 export const Representation = Schema.Literals(["received", "text", "markdown", "html", "structured-json"])
@@ -37,9 +38,13 @@ export const Limits = Object.freeze({
   eventBytes: 64 * 1024,
   documentBytes: 256 * 1024,
   pageBytes: 16 * 1024,
-  providerCalls: 24,
-  toolCalls: 64,
-  capturedBytes: 64 * 1024 * 1024,
+})
+
+/** Owner-approved dispatch allowance per effort tier. Provider calls include context maintenance. */
+export const Tiers = Object.freeze({
+  quick: Object.freeze({ providerCalls: 24, toolCalls: 64, capturedBytes: 64 * 1024 * 1024, deadlineSeconds: 600 }),
+  focused: Object.freeze({ providerCalls: 48, toolCalls: 128, capturedBytes: 128 * 1024 * 1024, deadlineSeconds: 1200 }),
+  deep: Object.freeze({ providerCalls: 96, toolCalls: 256, capturedBytes: 256 * 1024 * 1024, deadlineSeconds: 2400 }),
 })
 
 export const Binding = struct("Research.Binding", {
@@ -277,9 +282,12 @@ export class Error extends Schema.TaggedErrorClass<Error>()("Research.Error", {
 export const Allowance = struct("Research.Allowance", {
   binding: Binding,
   dispatchCallID: text(256),
+  // Version 1 bindings admitted before tiers existed were all quick; decoding them keeps that allowance.
+  tier: Depth.pipe(Schema.withDecodingDefaultKey(Effect.succeed("quick" as const))),
   providerLimit: PositiveInt,
   toolLimit: PositiveInt,
   byteLimit: PositiveInt,
+  deadlineSeconds: PositiveInt.pipe(Schema.withDecodingDefaultKey(Effect.succeed(Tiers.quick.deadlineSeconds))),
 })
 export type Allowance = typeof Allowance.Type
 

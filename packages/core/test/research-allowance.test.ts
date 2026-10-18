@@ -136,4 +136,72 @@ describe("native ResearchAllowance", () => {
       expect(yield* ledger(native.executionSessionID)).toHaveLength(26)
     }).pipe(Effect.provide(layer()))
   }))
+
+  it.live("each effort tier binds its owner-approved limits and deadline; absent tier is quick", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const expected = {
+      quick: [24, 64, 64 * 1024 * 1024, 600],
+      focused: [48, 128, 128 * 1024 * 1024, 1200],
+      deep: [96, 256, 256 * 1024 * 1024, 2400],
+    }
+    for (const tier of ["quick", "focused", "deep"] as const) {
+      const native = binding()
+      const allowance = yield* service.bind(native, "dispatch", tier)
+      expect([allowance.tier, allowance.providerLimit, allowance.toolLimit, allowance.byteLimit, allowance.deadlineSeconds])
+        .toEqual([tier, ...expected[tier]])
+      const rows = yield* ledger(native.executionSessionID)
+      expect(Schema.decodeUnknownSync(ResearchEvent.AllowanceBound.data)(rows[0].data).allowance).toEqual(allowance)
+    }
+    const absent = yield* service.bind(binding(), "dispatch")
+    expect([absent.tier, absent.providerLimit, absent.toolLimit, absent.byteLimit, absent.deadlineSeconds]).toEqual(["quick", ...expected.quick])
+  }))
+
+  it.live("an unknown tier is refused before any binding row", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    for (const tier of ["max", "toString", ""]) {
+      const native = binding()
+      // @ts-expect-error a caller outside the typed Task surface may still pass an unknown tier
+      expect(error(yield* Effect.exit(service.bind(native, "dispatch", tier)))?.code).toBe("unsupported")
+      expect(yield* ledger(native.executionSessionID)).toHaveLength(0)
+    }
+  }))
+
+  it.live("an admitted tier cannot be raised by re-binding or by a widened allowance", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const native = binding()
+    const quick = yield* service.bind(native, "dispatch", "quick")
+    expect(error(yield* Effect.exit(service.bind(native, "dispatch", "deep")))?.code).toBe("binding_mismatch")
+    const deep = { ...quick, tier: "deep" as const, providerLimit: 96, toolLimit: 256, byteLimit: 256 * 1024 * 1024, deadlineSeconds: 2400 }
+    expect(error(yield* Effect.exit(service.charge(deep, "provider", "escalate")))?.code).toBe("binding_mismatch")
+    expect(yield* service.bind(native, "dispatch")).toEqual(quick)
+    expect(yield* ledger(native.executionSessionID)).toHaveLength(1)
+  }))
+
+  for (const tier of ["focused", "deep"] as const) it.live(`${tier} provider and tool charges exhaust at the ${tier} limit`, () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const allowance = yield* service.bind(binding(), "dispatch", tier)
+    for (const kind of ["provider", "tool"] as const) {
+      const limit = kind === "provider" ? Research.Tiers[tier].providerCalls : Research.Tiers[tier].toolCalls
+      const results = yield* Effect.forEach(Array.from({ length: limit + 2 }, (_, index) => index),
+        (index) => Effect.exit(service.charge(allowance, kind, `${kind}:${index}`)), { concurrency: 8 })
+      expect(results.filter(Exit.isSuccess)).toHaveLength(limit)
+      expect(results.filter(Exit.isFailure).map((exit) => error(exit)?.code)).toEqual(["budget_exhausted", "budget_exhausted"])
+    }
+    yield* service.reserveBytes(allowance, "bytes:full", Research.Tiers[tier].capturedBytes)
+    expect(error(yield* Effect.exit(service.reserveBytes(allowance, "bytes:over", 1)))?.code).toBe("budget_exhausted")
+  }))
+
+  it.live("a version 1 binding admitted before tiers decodes as quick and re-binds unchanged", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const database = yield* Database.Service
+    const native = binding()
+    const allowance = yield* service.bind(native, "dispatch")
+    const row = (yield* ledger(native.executionSessionID))[0]
+    const legacy = structuredClone(row.data) as { allowance: Record<string, unknown> }
+    delete legacy.allowance.tier
+    delete legacy.allowance.deadlineSeconds
+    yield* database.db.update(EventTable).set({ data: legacy }).where(eq(EventTable.id, row.id)).run().pipe(Effect.orDie)
+    expect(yield* service.bind(native, "dispatch")).toEqual(allowance)
+    yield* service.charge(allowance, "provider", "legacy:1")
+  }))
 })

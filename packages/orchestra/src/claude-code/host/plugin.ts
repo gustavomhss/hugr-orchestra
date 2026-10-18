@@ -117,7 +117,9 @@ function definition(agent: Agent.Info, seat: string, granted: readonly string[])
       .filter(Boolean).join("\n\n") + "\n",
     tools: allowed,
     skills: Seats.find(seat)?.skills.slice(),
-    ...(seat === "jimmy" ? { maxTurns: Research.Limits.providerCalls } : {}),
+    // The SDK's Agent input has no per-call maxTurns, so the static definition carries the deepest tier's ceiling.
+    // The host's ledger stops each dispatch at its own bound tier (ClaudeHostResearch observe and PreToolUse holds).
+    ...(seat === "jimmy" ? { maxTurns: Research.Tiers.deep.providerCalls } : {}),
     model: agent.model?.providerID === "anthropic" ? agent.model.modelID : "inherit",
   } satisfies AgentDefinition
 }
