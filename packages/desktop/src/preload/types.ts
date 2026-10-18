@@ -3,6 +3,7 @@ import type { WslServersPlatform } from "@orchestra/app/wsl/types"
 import type { UpdaterState } from "@orchestra/app/updater"
 import type { DesktopNativeBundle } from "@orchestra/app/i18n/desktop-native"
 import type { NativeTitlebarFrame } from "@orchestra/app/native-titlebar"
+import type { ResponseDownloadAPI } from "./response-download"
 export type {
   WslDistroProbe,
   WslInstalledDistro,
@@ -181,6 +182,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   janitor: JanitorAPI
 
   getWindowID: () => Promise<string>
+  onBeforeUnload: (handler: () => Promise<void>) => () => void
   onMenuCommand: (cb: (id: string) => void) => () => void
   onDeepLink: (cb: (urls: string[]) => void) => () => void
 
@@ -199,6 +201,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   releasePickedFiles: (token: string) => Promise<void>
   getPathForFile: (file: File) => string
   saveFilePicker: (opts?: { title?: string; defaultPath?: string }) => Promise<string | null>
+  responseDownload: ResponseDownloadAPI
   openExternal: (url: string) => void
   openLocalFile: (url: string) => void
   openPath: (path: string, app?: string) => Promise<import("../main/apps").OpenPathResult>

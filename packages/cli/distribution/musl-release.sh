@@ -35,7 +35,7 @@ git -C /build/source checkout --quiet --detach "$head"
 cd /build/source
 bun install --frozen-lockfile --ignore-scripts
 bun --eval 'import { linuxRuntimeLibc } from "./packages/script/src/tree-sitter-prebuilds.ts"; if (linuxRuntimeLibc().kind !== "musl" || process.versions.bun !== "1.3.14") throw new Error("MUSL_RELEASE_BUN_ABI_MISMATCH")'
-(cd packages/omni && HUGR_BUILD_EXISTING_MUSL_GUEST=1 HUGR_PROOF_HEAD="$head" node scripts/build-artifacts.mjs "linux-$(node -p process.arch)-musl" --out /build/omni-artifacts)
+(cd native/omni && HUGR_BUILD_EXISTING_MUSL_GUEST=1 HUGR_PROOF_HEAD="$head" node scripts/build-artifacts.mjs "linux-$(node -p process.arch)-musl" --out /build/omni-artifacts)
 bun --eval 'import { exportTreeSitter, requireTreeSitterBundle } from "./packages/script/src/tree-sitter-prebuilds.ts"; const parsers = exportTreeSitter({ root: "/build/source", os: "linux", arch: process.arch, abi: "musl", out: "/build/parser-artifacts" }); requireTreeSitterBundle(parsers.exported, { os: "linux", arch: process.arch, abi: "musl" })'
 cd packages/cli
 ORCHESTRA_VERSION="$version" ORCHESTRA_CHANNEL=latest MODELS_DEV_API_JSON="$models" \

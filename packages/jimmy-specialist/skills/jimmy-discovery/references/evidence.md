@@ -34,6 +34,6 @@ A valid citation map only establishes reference resolution. Check whether each c
 
 ## Bound negatives
 
-Before “none”, “all”, “only” or “no references”, define the examined universe, detector operation, revision/config, exclusions and failures. Demonstrate a known positive witness of the same kind in that universe. Failure to retrieve the witness makes the negative inconclusive. Success demonstrates sensitivity for that control, not completeness everywhere.
+Before “none”, “all”, “only” or “no references”, define the examined universe, detector operation, revision/config, exclusions and failures. Demonstrate a known positive witness of the same kind in that universe. Failure to retrieve the witness makes the negative inconclusive. Success demonstrates sensitivity for that control, not completeness everywhere. [Calibration](calibration.md) names the traps.
 
 Top-K results, an empty LSP result, missing trace spans and failed fetches do not establish absence. Say what was not found in the examined scope and what remains unexamined. Stop rather than manufacturing confidence percentages or source quotas; [closure](closure.md) defines truthful sufficiency.

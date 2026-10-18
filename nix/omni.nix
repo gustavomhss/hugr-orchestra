@@ -13,7 +13,7 @@ let
   source = manifest.rust.sources.${stdenv.hostPlatform.system} or (throw
     "Unsupported Rust toolchain system: ${stdenv.hostPlatform.system}"
   );
-  # The locked Nixpkgs ships rustc 1.94; packages/omni pins 1.98.0. Install the
+  # The locked Nixpkgs ships rustc 1.94; native/omni pins 1.98.0. Install the
   # official standalone dist archive through Nixpkgs' own prebuilt-bootstrap
   # recipe (rustc + rust-std + cargo), which is also how Nixpkgs builds cargo.
   toolchain = callPackage (path + "/pkgs/development/compilers/rust/binary.nix") {
@@ -23,7 +23,7 @@ let
     versionType = "bootstrap";
   };
   rustPlatform = makeRustPlatform { inherit (toolchain) rustc cargo; };
-  root = ../packages/omni;
+  root = ../native/omni;
   addon = "libhugr_omni_node${stdenv.hostPlatform.extensions.sharedLibrary}";
 in
 assert lib.assertMsg (source.target == stdenv.hostPlatform.rust.rustcTarget)

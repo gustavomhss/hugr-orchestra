@@ -9,7 +9,7 @@ import { LedgerChain } from "@orchestra/relay/ledger/chain"
 import { RelayWorkflowBinding } from "../src/relay-workflow-binding"
 import { RelayWorkflowTransition } from "../src/relay-workflow-transition"
 import { RelayWorkflowEvaluator } from "../src/relay-workflow-evaluator"
-import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requirements } from "../../relay/test/arm-harness"
+import { cleanup, entries, read, repo, run, scratch, write, type Env, type Requirements } from "../../../modules/relay/test/arm-harness"
 
 // Prepared for the combined validation batch. Actual shell/git ports, HMAC ledger, filesystem faults; no mock grader.
 afterAll(cleanup)

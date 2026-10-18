@@ -17,8 +17,8 @@ export async function typecheckCandidateProof(scratchParent = path.resolve(impor
     const config = path.join(scratch, "tsconfig.json")
     await Bun.write(config, JSON.stringify({ extends: path.join(desktop, "tsconfig.json"),
       compilerOptions: { types: ["vite/client", "bun", "node", "electron"], tsBuildInfoFile: path.join(scratch, "proof.tsbuildinfo"),
-        paths: { "@playwright/test": [path.resolve(desktop, "../app/node_modules/@playwright/test/index.d.ts")] } },
-      references: [{ path: path.resolve(desktop, "../app") }],
+        paths: { "@playwright/test": [path.resolve(desktop, "../app-shell/node_modules/@playwright/test/index.d.ts")] } },
+      references: [{ path: path.resolve(desktop, "../app-shell") }],
       // Bun globals belong to proof files. Production renderer uses the unchanged desktop config.
       include: [path.join(import.meta.dir, "lean-candidate-*.ts")],
     }))

@@ -52,10 +52,23 @@ it.live("every Bun test package loads the shared guard", () => Effect.gen(functi
   }), { timeout: "15 seconds" })
   expect(listing.exitCode).toBe(0)
   // Discover test packages independently: deleting a bunfig must fail, rather than disappear from this check.
-  const configs = [...new Set(listing.stdout.toString().split("\0")
-    .filter((file) => /^packages\/.*\.(test|spec)\.(ts|tsx|js|jsx)$/.test(file))
-    .map((file) => file.startsWith("packages/sdk/js/") ? "packages/sdk/js/bunfig.toml"
-      : `${file.split("/").slice(0, 2).join("/")}/bunfig.toml`))]
+  const files = listing.stdout.toString().split("\0").filter(Boolean)
+  const manifests = new Set(files.filter((file) => file.endsWith("/package.json")).map((file) => path.posix.dirname(file)))
+  const configs = [...new Set(files
+    .filter((file) => /^(packages|modules|tooling)\/.*\.(test|spec)\.(ts|tsx|js|jsx)$/.test(file))
+    // Atlas's own packages are its npm/Vitest toolchain domain, not Bun test packages; its boundary is.
+    .filter((file) => !file.startsWith("modules/atlas/packages/"))
+    .map((file) => {
+      const parts = file.split("/")
+      const owner = parts.map((_, index) => parts.slice(0, index).join("/")).findLast((directory) => manifests.has(directory))
+      if (!owner) throw new Error(`BUN_TEST_PACKAGE_MISSING:${file}`)
+      return `${owner}/bunfig.toml`
+    }))]
+  expect(configs).toContain("modules/capability-assets/bunfig.toml")
+  expect(configs).toContain("modules/relay/bunfig.toml")
+  expect(configs).toContain("modules/maestro/arsenal/bunfig.toml")
+  expect(configs).toContain("tooling/httpapi-codegen/bunfig.toml")
+  expect(configs).toContain("tooling/http-recorder/bunfig.toml")
   expect(configs.length).toBeGreaterThan(10)
   yield* Effect.promise(() => Promise.all(configs.map(async (file) => {
     const config = TOML.parse(await Bun.file(path.join(root, file)).text()) as { test?: { preload?: string[] } }

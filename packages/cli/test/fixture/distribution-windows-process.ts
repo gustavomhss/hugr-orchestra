@@ -4,7 +4,7 @@ import { open, realpath, type FileHandle } from "node:fs/promises"
 import { finished } from "node:stream/promises"
 import { Schema } from "effect"
 import { WindowsProcessQuery } from "../../../core/test/fixture/windows-process-query"
-import { WindowsInventory } from "../../../omni/campaign/windows-inventory"
+import { WindowsInventory } from "../../../../native/omni/campaign/windows-inventory"
 
 const Identity = Schema.Struct({
   pid: Schema.Int.check(Schema.isGreaterThan(0)),
@@ -71,7 +71,7 @@ export async function windowsIdentity(pid: number): Promise<WindowsIdentity | un
   const query = WindowsInventory.CIM.replace(column, "Select-Object ExecutablePath,ProcessId,")
   const rows = Schema.decodeUnknownSync(Schema.UnknownFromJsonString.pipe(Schema.decodeTo(Schema.Array(Identity))))(
     await WindowsProcessQuery.invoke(READER,
-      new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href, [process.pid, pid], 15_000,
+      new URL("../../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href, [process.pid, pid], 15_000,
       `[Console]::OutputEncoding=[Text.UTF8Encoding]::new($false); ${query}`),
   )
   const host = rows.find((row) => row.pid === process.pid)

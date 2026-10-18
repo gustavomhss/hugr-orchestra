@@ -27,7 +27,87 @@
         "turbo": "2.10.2",
       },
     },
-    "packages/app": {
+    "apps/web": {
+      "name": "@orchestra/web",
+      "version": "1.18.27",
+      "dependencies": {
+        "@orchestra/app": "workspace:*",
+        "@sentry/solid": "catalog:",
+        "solid-js": "catalog:",
+      },
+      "devDependencies": {
+        "@sentry/vite-plugin": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "typescript": "catalog:",
+        "vite": "catalog:",
+      },
+    },
+    "modules/atlas/boundary": {
+      "name": "@orchestra/atlas-boundary",
+      "version": "0.0.0",
+      "devDependencies": {
+        "@noble/hashes": "1.8.0",
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "dts-bundle-generator": "9.5.1",
+      },
+    },
+    "modules/capability-assets": {
+      "name": "@orchestra/capability-assets",
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "modules/maestro/arsenal": {
+      "name": "@orchestra/maestro-arsenal",
+      "version": "0.0.0",
+      "dependencies": {
+        "@modelcontextprotocol/sdk": "1.29.0",
+        "@orchestra/schema": "workspace:*",
+        "hugr-omni": "workspace:*",
+        "tree-sitter": "0.25.0",
+        "tree-sitter-python": "0.25.0",
+        "tree-sitter-typescript": "0.23.2",
+        "typescript": "catalog:",
+      },
+      "devDependencies": {
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "modules/relay": {
+      "name": "@orchestra/relay",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/schema": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "native/omni/bindings/node": {
+      "name": "hugr-omni",
+      "version": "0.1.0",
+      "optionalDependencies": {
+        "hugr-omni-darwin-arm64": "0.1.0",
+        "hugr-omni-darwin-x64": "0.1.0",
+        "hugr-omni-linux-arm64-gnu": "0.1.0",
+        "hugr-omni-linux-arm64-musl": "0.1.0",
+        "hugr-omni-linux-x64-gnu": "0.1.0",
+        "hugr-omni-linux-x64-musl": "0.1.0",
+        "hugr-omni-win32-arm64-msvc": "0.1.0",
+        "hugr-omni-win32-x64-msvc": "0.1.0",
+      },
+    },
+    "packages/app-shell": {
       "name": "@orchestra/app",
       "version": "1.18.27",
       "dependencies": {
@@ -94,25 +174,6 @@
         "vite": "catalog:",
         "vite-plugin-icons-spritesheet": "3.0.1",
         "vite-plugin-solid": "catalog:",
-      },
-    },
-    "packages/atlas-boundary": {
-      "name": "@orchestra/atlas-boundary",
-      "version": "0.0.0",
-      "devDependencies": {
-        "@noble/hashes": "1.8.0",
-        "@tsconfig/bun": "catalog:",
-        "@types/bun": "catalog:",
-        "@types/node": "catalog:",
-        "@typescript/native-preview": "catalog:",
-        "dts-bundle-generator": "9.5.1",
-      },
-    },
-    "packages/capability-assets": {
-      "name": "@orchestra/capability-assets",
-      "devDependencies": {
-        "@types/bun": "catalog:",
-        "@typescript/native-preview": "catalog:",
       },
     },
     "packages/cli": {
@@ -243,6 +304,7 @@
         "ignore": "7.0.5",
         "immer": "11.1.4",
         "jsonc-parser": "3.3.1",
+        "libsodium-wrappers": "0.7.15",
         "marked": "catalog:",
         "mime-types": "3.0.2",
         "minimatch": "10.2.5",
@@ -252,6 +314,7 @@
         "venice-ai-sdk-provider": "2.1.1",
         "which": "6.0.1",
         "xdg-basedir": "5.1.0",
+        "yaml": "2.8.2",
         "zod": "catalog:",
       },
       "devDependencies": {
@@ -361,37 +424,6 @@
         "@typescript/native-preview": "catalog:",
       },
     },
-    "packages/http-recorder": {
-      "name": "@orchestra/http-recorder",
-      "version": "1.18.27",
-      "dependencies": {
-        "@effect/platform-node": "4.0.0-beta.83",
-        "@effect/platform-node-shared": "4.0.0-beta.83",
-      },
-      "devDependencies": {
-        "@tsconfig/node22": "catalog:",
-        "@types/bun": "catalog:",
-        "@types/node": "catalog:",
-        "@typescript/native-preview": "catalog:",
-        "effect": "catalog:",
-        "typescript": "catalog:",
-      },
-      "peerDependencies": {
-        "effect": "4.0.0-beta.83",
-      },
-    },
-    "packages/httpapi-codegen": {
-      "name": "@orchestra/httpapi-codegen",
-      "dependencies": {
-        "effect": "catalog:",
-        "prettier": "3.6.2",
-      },
-      "devDependencies": {
-        "@tsconfig/bun": "catalog:",
-        "@types/bun": "catalog:",
-        "@typescript/native-preview": "catalog:",
-      },
-    },
     "packages/llm": {
       "name": "@orchestra/llm",
       "version": "1.18.27",
@@ -409,38 +441,6 @@
         "@tsconfig/bun": "catalog:",
         "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
-      },
-    },
-    "packages/maestro-arsenal": {
-      "name": "@orchestra/maestro-arsenal",
-      "version": "0.0.0",
-      "dependencies": {
-        "@modelcontextprotocol/sdk": "1.29.0",
-        "@orchestra/schema": "workspace:*",
-        "hugr-omni": "workspace:*",
-        "tree-sitter": "0.25.0",
-        "tree-sitter-python": "0.25.0",
-        "tree-sitter-typescript": "0.23.2",
-        "typescript": "catalog:",
-      },
-      "devDependencies": {
-        "@types/bun": "catalog:",
-        "@types/node": "catalog:",
-        "@typescript/native-preview": "catalog:",
-      },
-    },
-    "packages/omni/bindings/node": {
-      "name": "hugr-omni",
-      "version": "0.1.0",
-      "optionalDependencies": {
-        "hugr-omni-darwin-arm64": "0.1.0",
-        "hugr-omni-darwin-x64": "0.1.0",
-        "hugr-omni-linux-arm64-gnu": "0.1.0",
-        "hugr-omni-linux-arm64-musl": "0.1.0",
-        "hugr-omni-linux-x64-gnu": "0.1.0",
-        "hugr-omni-linux-x64-musl": "0.1.0",
-        "hugr-omni-win32-arm64-msvc": "0.1.0",
-        "hugr-omni-win32-x64-msvc": "0.1.0",
       },
     },
     "packages/orchestra": {
@@ -558,7 +558,7 @@
       "devDependencies": {
         "@babel/core": "7.28.4",
         "@octokit/webhooks-types": "7.6.1",
-        "@opencode-ai/client": "file:../app/vendor/opencode-ai-client-1.17.13-v2.tgz",
+        "@opencode-ai/client": "file:../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
         "@orchestra/core": "workspace:*",
         "@orchestra/http-recorder": "workspace:*",
         "@orchestra/script": "workspace:*",
@@ -611,19 +611,6 @@
     },
     "packages/protocol": {
       "name": "@orchestra/protocol",
-      "dependencies": {
-        "@orchestra/schema": "workspace:*",
-        "effect": "catalog:",
-      },
-      "devDependencies": {
-        "@tsconfig/bun": "catalog:",
-        "@types/bun": "catalog:",
-        "@typescript/native-preview": "catalog:",
-      },
-    },
-    "packages/relay": {
-      "name": "@orchestra/relay",
-      "version": "0.0.0",
       "dependencies": {
         "@orchestra/schema": "workspace:*",
         "effect": "catalog:",
@@ -710,7 +697,7 @@
       "dependencies": {
         "@kobalte/core": "catalog:",
         "@noble/hashes": "1.8.0",
-        "@opencode-ai/client": "file:../app/vendor/opencode-ai-client-1.17.13-v2.tgz",
+        "@opencode-ai/client": "file:../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
         "@orchestra/core": "workspace:*",
         "@orchestra/schema": "workspace:*",
         "@orchestra/sdk": "workspace:*",
@@ -847,6 +834,37 @@
       "peerDependencies": {
         "@solidjs/meta": "^0.29.0",
         "solid-js": "^1.9.0",
+      },
+    },
+    "tooling/http-recorder": {
+      "name": "@orchestra/http-recorder",
+      "version": "1.18.27",
+      "dependencies": {
+        "@effect/platform-node": "4.0.0-beta.83",
+        "@effect/platform-node-shared": "4.0.0-beta.83",
+      },
+      "devDependencies": {
+        "@tsconfig/node22": "catalog:",
+        "@types/bun": "catalog:",
+        "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+        "effect": "catalog:",
+        "typescript": "catalog:",
+      },
+      "peerDependencies": {
+        "effect": "4.0.0-beta.83",
+      },
+    },
+    "tooling/httpapi-codegen": {
+      "name": "@orchestra/httpapi-codegen",
+      "dependencies": {
+        "effect": "catalog:",
+        "prettier": "3.6.2",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
       },
     },
   },
@@ -1550,11 +1568,11 @@
 
     "@opentui/solid": ["@opentui/solid@0.4.5", "", { "dependencies": { "@babel/core": "7.28.0", "@babel/preset-typescript": "7.27.1", "@opentui/core": "0.4.5", "babel-plugin-module-resolver": "5.0.2", "babel-preset-solid": "1.9.12", "entities": "7.0.1", "s-js": "^0.4.9" }, "peerDependencies": { "solid-js": "1.9.12" } }, "sha512-B0RSkXnrtPVfEJOX+Hj+axjLJ3lzbG1BZw5I7Pvb9OPp48Vzg2cW2a3cSa86/q48ndLt647i/XwFPIw/jqnI5g=="],
 
-    "@orchestra/app": ["@orchestra/app@workspace:packages/app"],
+    "@orchestra/app": ["@orchestra/app@workspace:packages/app-shell"],
 
-    "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:packages/atlas-boundary"],
+    "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:modules/atlas/boundary"],
 
-    "@orchestra/capability-assets": ["@orchestra/capability-assets@workspace:packages/capability-assets"],
+    "@orchestra/capability-assets": ["@orchestra/capability-assets@workspace:modules/capability-assets"],
 
     "@orchestra/cli": ["@orchestra/cli@workspace:packages/cli"],
 
@@ -1570,19 +1588,19 @@
 
     "@orchestra/effect-sqlite-node": ["@orchestra/effect-sqlite-node@workspace:packages/effect-sqlite-node"],
 
-    "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:packages/http-recorder"],
+    "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:tooling/http-recorder"],
 
-    "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:packages/httpapi-codegen"],
+    "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:tooling/httpapi-codegen"],
 
     "@orchestra/llm": ["@orchestra/llm@workspace:packages/llm"],
 
-    "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:packages/maestro-arsenal"],
+    "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:modules/maestro/arsenal"],
 
     "@orchestra/plugin": ["@orchestra/plugin@workspace:packages/plugin"],
 
     "@orchestra/protocol": ["@orchestra/protocol@workspace:packages/protocol"],
 
-    "@orchestra/relay": ["@orchestra/relay@workspace:packages/relay"],
+    "@orchestra/relay": ["@orchestra/relay@workspace:modules/relay"],
 
     "@orchestra/schema": ["@orchestra/schema@workspace:packages/schema"],
 
@@ -1601,6 +1619,8 @@
     "@orchestra/tui": ["@orchestra/tui@workspace:packages/tui"],
 
     "@orchestra/ui": ["@orchestra/ui@workspace:packages/ui"],
+
+    "@orchestra/web": ["@orchestra/web@workspace:apps/web"],
 
     "@oslojs/asn1": ["@oslojs/asn1@1.0.0", "", { "dependencies": { "@oslojs/binary": "1.0.0" } }, "sha512-zw/wn0sj0j0QKbIXfIlnEcTviaCzYOY3V5rAyjR6YtOByFtJiT574+8p9Wlach0lZH9fddD4yb9laEAIl4vXQA=="],
 
@@ -2910,7 +2930,7 @@
 
     "hugr-lean": ["hugr-lean@./vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz", { "bin": { "hugr-lean": "dist/cli/index.js" } }, "sha512-mN7VGI6MBXiswd5ye0zJZML5loxhdrL3/HJbzvvXT8Cv6kMTyYsR7YorNYk6REdwEE4E4BfiwnuzZljOCDlkew=="],
 
-    "hugr-omni": ["hugr-omni@workspace:packages/omni/bindings/node"],
+    "hugr-omni": ["hugr-omni@workspace:native/omni/bindings/node"],
 
     "human-signals": ["human-signals@5.0.0", "", {}, "sha512-AXcZb6vzzrFAUE61HnN4mpLqd/cSIwNQjtNWR0euPm6y0iqx3G4gOXaIDdtdDwZmhwe82LA6+zinmW4UBWVePQ=="],
 
@@ -3057,6 +3077,10 @@
     "lazy-val": ["lazy-val@1.0.5", "", {}, "sha512-0/BnGCCfyUMkBpeDgWihanIAF9JmZhHBgUhEqzvf+adhNGLoP6TaiI5oF8oyb3I45P+PcnrqihSf01M0l0G5+Q=="],
 
     "lazystream": ["lazystream@1.0.1", "", { "dependencies": { "readable-stream": "^2.0.5" } }, "sha512-b94GiNHQNy6JNTrt5w6zNyffMrNkXZb3KTkCZJb2V1xaEGCk093vkZ2jk3tpaeP33/OiXC+WvK9AxUebnf5nbw=="],
+
+    "libsodium": ["libsodium@0.7.16", "", {}, "sha512-3HrzSPuzm6Yt9aTYCDxYEG8x8/6C0+ag655Y7rhhWZM9PT4NpdnbqlzXhGZlDnkgR6MeSTnOt/VIyHLs9aSf+Q=="],
+
+    "libsodium-wrappers": ["libsodium-wrappers@0.7.15", "", { "dependencies": { "libsodium": "^0.7.15" } }, "sha512-E4anqJQwcfiC6+Yrl01C1m8p99wEhLmJSs0VQqST66SbQXXBoaJY0pF4BNjRYa/sOQAxx6lXAaAFIlx+15tXJQ=="],
 
     "light-my-request": ["light-my-request@6.6.0", "", { "dependencies": { "cookie": "^1.0.1", "process-warning": "^4.0.0", "set-cookie-parser": "^2.6.0" } }, "sha512-CHYbu8RtboSIoVsHZ6Ye4cj4Aw/yg2oAFimlF7mNvfDV192LR7nDiKtSIfCuLT7KokPSTn/9kfVLm5OGN0A28A=="],
 
@@ -3906,7 +3930,7 @@
 
     "yallist": ["yallist@5.0.0", "", {}, "sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw=="],
 
-    "yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
+    "yaml": ["yaml@2.8.2", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A=="],
 
     "yargs": ["yargs@18.0.0", "", { "dependencies": { "cliui": "^9.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "string-width": "^7.2.0", "y18n": "^5.0.5", "yargs-parser": "^22.0.0" } }, "sha512-4UEqdc2RYGHZc7Doyqkrqiln3p9X2DZVxaGbwhn2pi7MrRagKaOcIKe8L3OxYcbhXLgLFUS3zAYuQjKBQgmuNg=="],
 
@@ -4132,7 +4156,7 @@
 
     "@orchestra/script/semver": ["semver@7.8.5", "", { "bin": { "semver": "bin/semver.js" } }, "sha512-Y7/KDsb8LjooZpwaqGyulO6DQlksgCncchHGk+sZIY4SBvUocMBEFH5Ur1fI4dV+Jvl0w6cjvucaIi40puRioA=="],
 
-    "@orchestra/session-ui/@opencode-ai/client": ["@opencode-ai/client@../app/vendor/opencode-ai-client-1.17.13-v2.tgz", {}, "sha512-332kgNifvpQOF9e3UA+pIa5xPrMhLaQkUiNiO+meS0Ba9HjSE6hfsWnEojMkD0DPSLqPP6rCF1dDoF7U0Y0OCQ=="],
+    "@orchestra/session-ui/@opencode-ai/client": ["@opencode-ai/client@../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz", {}, "sha512-332kgNifvpQOF9e3UA+pIa5xPrMhLaQkUiNiO+meS0Ba9HjSE6hfsWnEojMkD0DPSLqPP6rCF1dDoF7U0Y0OCQ=="],
 
     "@orchestra/session-ui/@solid-primitives/resize-observer": ["@solid-primitives/resize-observer@2.1.3", "", { "dependencies": { "@solid-primitives/event-listener": "^2.4.3", "@solid-primitives/rootless": "^1.5.2", "@solid-primitives/static-store": "^0.1.2", "@solid-primitives/utils": "^6.3.2" }, "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-zBLje5E06TgOg93S7rGPldmhDnouNGhvfZVKOp+oG2XU8snA+GoCSSCz1M+jpNAg5Ek2EakU5UVQqL152WmdXQ=="],
 
@@ -4280,6 +4304,8 @@
 
     "effect/@standard-schema/spec": ["@standard-schema/spec@1.1.0", "", {}, "sha512-l2aFy5jALhniG5HgqrD6jXLi/rUWrKvqN/qJx6yoJsgKhblVd+iqqU4RCXavm/jPityDo5TCvKMnpjKnOriy0w=="],
 
+    "effect/yaml": ["yaml@2.9.0", "", { "bin": { "yaml": "bin.mjs" } }, "sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA=="],
+
     "electron-builder/chalk": ["chalk@4.1.2", "", { "dependencies": { "ansi-styles": "^4.1.0", "supports-color": "^7.1.0" } }, "sha512-oKnbhFyRIXpUuez8iBMmyEa4nbj4IOQyuhc/wy9kY7/WVPcwIO9VA668Pu8RkO7+0G76SLROeyw9CpQ061i4mA=="],
 
     "electron-builder/yargs": ["yargs@17.7.2", "", { "dependencies": { "cliui": "^8.0.1", "escalade": "^3.1.1", "get-caller-file": "^2.0.5", "require-directory": "^2.1.1", "string-width": "^4.2.3", "y18n": "^5.0.5", "yargs-parser": "^21.1.1" } }, "sha512-7dSzzRQ++CKnNI/krKnYRV7JKKPUXMEh61soaHKg9mrWEhzFWhFnxPxGl+69cD1Ou63C13NUPCnmIcrvqCuM6w=="],
@@ -4358,7 +4384,7 @@
 
     "orchestra/@ai-sdk/cerebras": ["@ai-sdk/cerebras@2.0.60", "", { "dependencies": { "@ai-sdk/openai-compatible": "2.0.54", "@ai-sdk/provider": "3.0.12", "@ai-sdk/provider-utils": "4.0.33" }, "peerDependencies": { "zod": "^3.25.76 || ^4.1.8" } }, "sha512-Rnok3cThg6awBwaDSyiZpgRpbV7pqxGYrA89LODCo5cuEHeP2h0AM0lLHP7zIkclAdXfOm4wldKi/S2T/DGCOw=="],
 
-    "orchestra/@opencode-ai/client": ["@opencode-ai/client@../app/vendor/opencode-ai-client-1.17.13-v2.tgz", {}, "sha512-332kgNifvpQOF9e3UA+pIa5xPrMhLaQkUiNiO+meS0Ba9HjSE6hfsWnEojMkD0DPSLqPP6rCF1dDoF7U0Y0OCQ=="],
+    "orchestra/@opencode-ai/client": ["@opencode-ai/client@../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz", {}, "sha512-332kgNifvpQOF9e3UA+pIa5xPrMhLaQkUiNiO+meS0Ba9HjSE6hfsWnEojMkD0DPSLqPP6rCF1dDoF7U0Y0OCQ=="],
 
     "orchestra/@solid-primitives/scheduled": ["@solid-primitives/scheduled@1.5.2", "", { "peerDependencies": { "solid-js": "^1.6.12" } }, "sha512-/j2igE0xyNaHhj6kMfcUQn5rAVSTLbAX+CDEBm25hSNBmNiHLu2lM7Usj2kJJ5j36D67bE8wR1hBNA8hjtvsQA=="],
 

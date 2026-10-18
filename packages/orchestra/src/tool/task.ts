@@ -33,6 +33,7 @@ import { LogicalTask } from "@/maestro/logical-task"
 import { SessionAuthority } from "@/maestro/session-authority"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Research } from "@orchestra/schema/research"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -100,6 +101,10 @@ const BaseParameterFields = {
   writePaths: WriteRoots.Param,
   workflow: Schema.optional(WorkflowBinding.Selection),
   memoryUnit: AtlasResume.Param,
+  effort: Schema.optional(Research.Depth).annotate({
+    description:
+      "jimmy only: the research effort tier, fixed for this dispatch. quick (default), focused or deep; each step doubles its provider-call, tool, byte and time allowance. Ignored for other teammates.",
+  }),
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -471,6 +476,8 @@ export const TaskTool = Tool.define(
       const metadata = { parentSessionId: ctx.sessionID, sessionId: nextSession.id, model,
         ...(runInBackground ? { background: true } : {}) }
       const completionEvidence: { value?: TaskBackground.Metadata["completion"] } = {}
+      // Set when jimmy's tier deadline cancels the child, so the cancelled settlement keeps the named reason.
+      const researchDeadline: { reason?: string } = {}
       const observation = TaskWorkObservation.make({ database, events, ctx,
         childSessionID: nextSession.id, taskID: shownID, metadata })
       const work = SeatWork.track({
@@ -633,7 +640,12 @@ export const TaskTool = Tool.define(
         )
         // A native research dispatch runs under its allowance; the discovery seat never runs without one.
         const result = yield* completion.withWorkflow(completionReceipt, Option.isSome(research)
-          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted)
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted,
+            { tier: params.effort, onDeadline: (error) => Effect.gen(function* () {
+              researchDeadline.reason = `budget_exhausted: ${error.message}`
+              yield* work.hostEnded("interrupted", researchDeadline.reason).pipe(Effect.provideService(Database.Service, database))
+              yield* ops.cancel(nextSession.id)
+            }) })
           : nextID === "jimmy"
             ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
             : prompted)
@@ -720,8 +732,8 @@ export const TaskTool = Tool.define(
               return yield* Effect.fail(new Error(failure))
             }
             if (result?.status === "cancelled") {
-              yield* work.hostEnded("interrupted", "Task cancelled")
-              return yield* Effect.fail(new Error("Task cancelled"))
+              yield* work.hostEnded("interrupted", researchDeadline.reason ?? "Task cancelled")
+              return yield* Effect.fail(new Error(researchDeadline.reason ?? "Task cancelled"))
             }
             return {
               title: params.description,

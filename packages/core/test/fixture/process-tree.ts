@@ -148,7 +148,7 @@ export function tree(depth = 2) {
   if (process.platform === "win32") {
     writeFileSync(path.join(dir, "identity.mjs"), WINDOWS_READER)
     writeFileSync(path.join(dir, "identity.mjs.config"), JSON.stringify({ node: WindowsProcessQuery.nodeExecutable(),
-      decoder: new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href }))
+      decoder: new URL("../../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href }))
   }
   return {
     nonce,
@@ -251,7 +251,7 @@ async function windowsQuery(nonce: string, pids?: number[]) {
     const remaining = Math.min(15000, deadline - performance.now())
     if (remaining <= 0) throw new Error("fixture inventory query deadline expired")
     const reply = await WindowsProcessQuery.invoke(WINDOWS_READER,
-      new URL("../../../omni/campaign/windows-inventory.ts", import.meta.url).href,
+      new URL("../../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href,
       pids ?? { nonce }, remaining)
       .then((value) => ({ value }), (error: unknown) => ({ error }))
     if (performance.now() >= deadline) throw new Error("fixture inventory query deadline expired")

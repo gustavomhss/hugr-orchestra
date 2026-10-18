@@ -26,10 +26,7 @@ export const collect = Effect.fn("ResearchQualifications.collect")(function* (
     return yield* new Research.Error({ code: "reference_invalid", message: "Qualification reference is not a finding" })
   const findings = yield* Effect.forEach(unique, (ref) => Effect.gen(function* () {
     // Explicit-ID views allow project-wide reuse; handoff requires this Task's own exact admission.
-    const admitted = (yield* ResearchLedger.entries(binding, ref.id, true)).find((entry) =>
-      entry.type === "research.record.committed" && entry.data.record.kind === "finding" &&
-      entry.data.record.id === ref.id && entry.data.record.revision === ref.revision &&
-      ResearchLedger.canonical(entry.data.binding) === ResearchLedger.canonical(binding))
+    const admitted = (yield* ResearchLedger.entries(binding, ref.id, true)).find((entry) => ownFinding(entry, binding, ref))
     if (!admitted || admitted.type !== "research.record.committed")
       return yield* new Research.Error({ code: "reference_invalid", message: "Qualification finding is not admitted by this Task" })
     const value = yield* records.view(binding, { action: "record", ref })
@@ -46,3 +43,11 @@ export const collect = Effect.fn("ResearchQualifications.collect")(function* (
 })
 
 export * as ResearchQualifications from "./qualifications"
+
+/** Handoff ownership: this Task's own exact finding admission, never a project-wide explicit-ID reuse. */
+export function ownFinding(entry: ResearchLedger.Entry, binding: Research.Binding, ref: Research.RecordRef):
+  entry is Extract<ResearchLedger.Entry, { type: "research.record.committed" }> {
+  return entry.type === "research.record.committed" && entry.data.record.kind === "finding" &&
+    entry.data.record.id === ref.id && entry.data.record.revision === ref.revision &&
+    ResearchLedger.canonical(entry.data.binding) === ResearchLedger.canonical(binding)
+}

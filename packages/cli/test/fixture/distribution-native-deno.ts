@@ -52,7 +52,7 @@ export async function denoInstalledProbe(
     return [member, { path, state: "present", sha256: createHash("sha256").update(await readFile(path)).digest("hex") }]
   })))
   const directory = await mkdtemp(join(await realpath(box.cwd), ".installed-deno-"))
-  const adapter = await readFile(resolve(import.meta.dirname, "../../../omni/bindings/node/index.js"))
+  const adapter = await readFile(resolve(import.meta.dirname, "../../../../native/omni/bindings/node/index.js"))
   const adapterSha256 = createHash("sha256").update(adapter).digest("hex")
   const env = Object.fromEntries(Object.entries(box.env).filter(([key, value]) => value !== undefined && [
     "PATH", "LANG", "LC_ALL", "LC_CTYPE", "TZ", "SYSTEMROOT", "SYSTEMDRIVE", "WINDIR", "COMSPEC", "PATHEXT",

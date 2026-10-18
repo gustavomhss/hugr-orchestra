@@ -118,7 +118,7 @@ export const boundaryFixture = () => Effect.gen(function* () {
   const trace = path.join(box.dir, "commands.jsonl")
   const deno = path.join(box.dir, "deno runtime", "deno")
   yield* Effect.promise(async () => {
-    await Promise.all(["cli", "script", "desktop", "omni", "schema", "maestro-arsenal"].map((pkg) => mkdir(path.join(box.dir, "packages", pkg))))
+    await Promise.all(["packages/cli", "packages/script", "packages/desktop", "native/omni", "packages/schema", "modules/maestro/arsenal"].map((dir) => mkdir(path.join(box.dir, dir), { recursive: true })))
     await mkdir(path.dirname(deno))
     await copyFile(path.join(root, "script/distribution-deno.ts"), path.join(box.dir, "script/distribution-deno.ts"))
     await mkdir(path.join(box.dir, "packages/core/test"), { recursive: true })
@@ -149,7 +149,7 @@ if (cmd === "bun" && (argv[0] === "test" || key === "download")) {
     await Promise.all(["bun", "cargo", "unzip", "chmod", "deno"].map(async (cmd) => {
       const file = cmd === "deno" ? deno : path.join(box.dir, "fake-bin", cmd)
       await Bun.write(file, `#!/usr/bin/env bash\n"$BUNDLE_REAL_BUN" "$BUNDLE_BOUNDARY_CHILD" ${cmd} "$@" || exit $?\n` + (cmd === "bun" ?
-        'if [[ "$1" == "../core/test/distribution-bundle-gates.ts" || ( "$1" == "script/distribution-deno.ts" && "${2:-}" == "--verify-version" ) ]]; then exec "$BUNDLE_REAL_BUN" "$@"; fi\n' : ""))
+        'if [[ "$1" == "../../packages/core/test/distribution-bundle-gates.ts" || ( "$1" == "script/distribution-deno.ts" && "${2:-}" == "--verify-version" ) ]]; then exec "$BUNDLE_REAL_BUN" "$@"; fi\n' : ""))
       await chmod(file, 0o755)
     }))
   })

@@ -24,13 +24,14 @@ import { createEffect, createMemo, createResource, createSignal, onCleanup, Show
 import { render } from "solid-js/web"
 import pkg from "../../package.json"
 import { t } from "./i18n"
-import { dict } from "../../../app/src/i18n/en"
+import { dict } from "../../../app-shell/src/i18n/en"
 import { openRendererPath } from "./open-path"
 import { listenForDeepLinks } from "./deep-links"
 import { initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
+import { createResponseDownloader } from "./response-download"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
 import { useTheme } from "@orchestra/ui/theme/context"
@@ -101,6 +102,13 @@ function DesktopMemoryRouter(props: BaseRouterProps & { windowID: string }) {
 
 const createPlatform = (windowState: DesktopWindowState): Platform => {
   const attachmentPaths = new WeakMap<File, string>()
+  const downloads = createResponseDownloader(window.api.responseDownload)
+  const cancelDownloads = () => downloads.dispose()
+  window.addEventListener("pagehide", cancelDownloads)
+  onCleanup(() => {
+    window.removeEventListener("pagehide", cancelDownloads)
+    downloads.dispose()
+  })
   const os = (() => {
     const ua = navigator.userAgent
     if (ua.includes("Mac")) return "macos"
@@ -197,6 +205,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       })
     },
 
+    downloadResponse: downloads.downloadResponse,
+
     openExternal(url: string) {
       window.api.openExternal(url)
     },
@@ -232,12 +242,18 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 
     setForceFocus: (enabled) => window.api.setForceFocus(enabled),
 
-    recordFatalRendererError: (error) => window.api.recordFatalRendererError(error),
+    // Only ErrorPage records through the platform. Restart must not reopen the URL that crashed into it.
+    recordFatalRendererError: (error) => {
+      setLastActiveUrl(windowState.id ?? "browser", "/")
+      return window.api.recordFatalRendererError(error)
+    },
 
     restart: async () => {
       await window.api.killSidecar().catch(() => undefined)
       window.api.relaunch()
     },
+
+    onBeforeUnload: (handler) => window.api.onBeforeUnload(handler),
 
     notify: async (title, description, onClick) => {
       const focused = await window.api.getWindowFocused().catch(() => document.hasFocus())
@@ -333,14 +349,14 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
   const [recovery] = createResource(
     () => !sidecar.loading && !defaultServer.loading && sidecar.error !== undefined,
     async () => {
-      const { checkServerHealth } = await import("../../../app/src/utils/server-health")
+      const { checkServerHealth } = await import("../../../app-shell/src/utils/server-health")
       const remote = await recoverRemoteServer(
         await platform.storage?.("orchestra.global.dat").getItem("server") ?? null,
         defaultServer.latest,
         (http) => checkServerHealth(http, platform.fetch ?? fetch).then((result) => result.healthy),
       )
       if (remote) {
-        void platform.recordFatalRendererError?.({
+        void window.api.recordFatalRendererError({
           error: sidecar.error instanceof Error ? sidecar.error.stack ?? sidecar.error.message : String(sidecar.error),
           url: location.href, platform: "desktop", os: platform.os, version: pkg.version,
         })

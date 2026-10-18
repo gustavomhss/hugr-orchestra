@@ -26,6 +26,13 @@ import { Skill } from "@/skill"
 import { MaestroRecordContextTool } from "@/tool/maestro-context"
 import { MaestroRecordPlanRevisionTool } from "@/tool/maestro-plan"
 import { MaestroRecordValidationTool } from "@/tool/maestro-validation"
+import { MaestroWorkflowsTool } from "@/tool/maestro-workflows"
+import { WorkflowBinding } from "@/maestro/workflow-binding"
+import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
+import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
+import { AuthoringStore } from "@orchestra/relay/authoring/store"
+import { ProjectID } from "@orchestra/schema/project-id"
+import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { Truncate } from "@/tool/truncate"
 import { disposeAllInstances, requireInstance, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -368,5 +375,101 @@ describe("Maestro native output bindings", () => {
       }),
     { git: true },
     300_000,
+  )
+
+  it.instance(
+    "the workflow catalog lists what a workflow Task can run and resolves a name with the reason it cannot",
+    () =>
+      Effect.scoped(
+        Effect.gen(function* () {
+          const test = yield* TestInstance
+          const sessions = yield* Session.Service
+          const session = yield* sessions.create({ title: "workflow catalog", agent: "maestro" })
+          const store = yield* AuthoringStore.open(path.join(test.directory, "relay-authoring"), session.projectID)
+          const publish = (name: string, last: ReadonlyArray<RelaySprint.Control>) =>
+            AuthoringGraph.project(name, {
+              work_packages: [
+                { id: "implement", instructions: "Implement.", checklist: [{ id: "implement-check", cmd: "true" }] },
+                { id: "finish", instructions: "Finish.", checklist: last },
+              ],
+            }).pipe(
+              Effect.flatMap((body) => store.save({ body })),
+              Effect.tap((saved) => store.publish(saved.id, saved.versionId)),
+            )
+          const accepted = yield* publish("Accepted", [
+            { id: "verify", host_check: "package-verification" },
+            { id: "cold", host_check: "cold-review" },
+          ])
+          const plain = yield* publish("Plain", [{ id: "plain-check", cmd: "true" }])
+          yield* store.save({ body: { name: "Draft only" } })
+          const bare: RelayWorkflowBinding.PublicationPort = {
+            projectID: ProjectID.make(session.projectID),
+            use: (read) => read(store),
+            skills: () => Effect.fail(new AuthoringGraph.Refusal({ status: 404, code: "skill-unavailable", message: "No skill" })),
+          }
+          // The native host attaches the global acceptance checks to every workflow plan it materializes.
+          const port: RelayWorkflowBinding.PublicationPort = { ...bare, acceptance: WorkflowBinding.ACCEPTANCE_CONTROLS }
+          const unreached = () => Effect.die(new Error("the catalog only reads publications"))
+          const serving = (publication: RelayWorkflowBinding.PublicationPort): WorkflowBinding.Host => ({
+            publication: () => Effect.succeed(publication),
+            verifyUpstream: unreached,
+            approve: unreached,
+            complete: unreached,
+          })
+          const host = serving(port)
+          const tool = yield* MaestroWorkflowsTool
+          const definition = yield* tool.init()
+          const caller = {
+            sessionID: session.id,
+            messageID: MessageID.ascending(),
+            agent: "maestro",
+            agentID: "maestro",
+            abort: AbortSignal.any([]),
+            messages: [],
+            metadata: () => Effect.void,
+            ask: () => Effect.void,
+          }
+          const run = (params: { workflow?: string }, native = host) =>
+            definition.execute(params, caller).pipe(
+              Effect.provideService(WorkflowBinding.NativeHost, native),
+              Effect.map((result) => JSON.parse(result.output)),
+            )
+          const listed = yield* run({})
+          // An editor-built workflow runs: its plan ends on the attached checks, which Maestro arms by these ids.
+          expect(listed.workflows.toSorted((left: { name: string }, right: { name: string }) =>
+            left.name.localeCompare(right.name))).toEqual([
+            { id: accepted.id, name: "Accepted", description: "", publishedVersionID: accepted.versionId, acceptance: [
+              { id: "verify", hostCheck: "package-verification" }, { id: "cold", hostCheck: "cold-review" },
+            ] },
+            { id: plain.id, name: "Plain", description: "", publishedVersionID: plain.versionId, acceptance: [
+              { id: "package-verification", hostCheck: "package-verification" }, { id: "cold-review", hostCheck: "cold-review" },
+            ] },
+          ])
+          expect(listed.unavailable).toBeUndefined()
+          // Without the attachment the binding still refuses it, and the catalog says why.
+          const resolved = yield* run({ workflow: " plain " }, serving(bare))
+          expect(resolved.workflows).toEqual([])
+          expect(resolved.unavailable).toEqual([
+            { id: plain.id, name: "Plain", reason: expect.stringContaining("WORKFLOW_GLOBAL_ACCEPTANCE_MISSING") },
+          ])
+          expect((yield* run({ workflow: " plain " })).workflows.map((item: { id: string }) => item.id)).toEqual([plain.id])
+          expect((yield* run({ workflow: accepted.id })).workflows.map((item: { id: string }) => item.id)).toEqual([accepted.id])
+
+          // Planning with it without upstream names the archie dispatch it needs, before any publication is read.
+          const planTool = yield* MaestroRecordPlanRevisionTool
+          const plan = yield* planTool.init()
+          const field = { value: "Run the accepted workflow", source: "stakeholder" as const }
+          const unattributed = yield* Effect.exit(plan.execute({ admissionMessageID: caller.messageID,
+            methodVersion: "draft-plan-v3", goal: field, acceptance: [field], scope: [field], units: ["module/backend"],
+            constraints: [], reviewRequirement: field, assumptions: [], risks: [],
+            workflow: { documentID: accepted.id, parameters: {}, writePaths: ["src"] } }, caller))
+          expect(Exit.isFailure(unattributed)).toBe(true)
+          if (Exit.isFailure(unattributed))
+            expect(Cause.pretty(unattributed.cause)).toContain(
+              "Tool safety HOLD: UPSTREAM_ATTRIBUTION_MISSING. A workflow plan is authored upstream: dispatch archie",
+            )
+        }),
+      ),
+    { git: true },
   )
 })

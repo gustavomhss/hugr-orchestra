@@ -1,0 +1,179 @@
+import { expect, test } from "bun:test"
+import { createRequire } from "node:module"
+import path from "node:path"
+import { createComponent } from "solid-js"
+import { render } from "solid-js/web"
+import { QueryClient } from "@tanstack/solid-query"
+import { flowFromDocument, issues } from "@/orchestra/relay/graph"
+import type { RelaySource } from "@/orchestra/relay/source"
+
+// Bun compiles JSX for React, and test files share one module registry: earlier files (prompt-*, command-palette and
+// others) already loaded @orchestra/ui's helper.tsx that way, and a loaded module never reaches a plugin registered
+// later. Load this test's whole first-party graph under its own ?relay-policy specifier, compiling .tsx with Solid's
+// Babel preset. The .ts modules join the graph because barrels such as @orchestra/ui/context import .tsx contexts, and
+// the suffix differs from the ?solid that other files' plugins match.
+const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
+Bun.plugin({
+  name: "solid-relay-policy",
+  setup(build) {
+    build.onLoad({ filter: /\.tsx?\?relay-policy$/ }, async (args) => {
+      const file = args.path.replace(/\?relay-policy$/, "")
+      const source = await Bun.file(file).text()
+      const code = file.endsWith(".tsx")
+        ? (
+            await solid("@babel/core").transformAsync(source, {
+              filename: file,
+              presets: [[solid("babel-preset-solid"), { generate: "dom" }]],
+              parserOpts: { plugins: ["jsx", "typescript"] },
+              configFile: false,
+              babelrc: false,
+            })
+          ).code
+        : source
+      const contents = code.replace(
+        /(from\s+)(["'])([^"']+)\2/g,
+        (match: string, lead: string, _quote: string, spec: string) => {
+          const resolved = Bun.resolveSync(spec, path.dirname(file))
+          // JSON-quote the path: Windows paths carry backslashes that a raw string literal would read as escapes.
+          return /\.tsx?$/.test(resolved) && !resolved.includes("node_modules")
+            ? `${lead}${JSON.stringify(`${resolved}?relay-policy`)}`
+            : match
+        },
+      )
+      return { contents, loader: "ts" }
+    })
+  },
+})
+const load = (specifier: string) => import(`${Bun.resolveSync(specifier, import.meta.dir)}?relay-policy`)
+const { PlatformProvider }: typeof import("@/context/platform") = await load("@/context/platform")
+const { createSdkForServer }: typeof import("@/utils/server") = await load("@/utils/server")
+const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await load(
+  "@/orchestra/relay/client",
+)
+const { createRunClient, decodeRun }: typeof import("@/orchestra/relay/runs") = await load("@/orchestra/relay/runs")
+const { LanguageProvider }: typeof import("@/context/language") = await load("@/context/language")
+const { EditorHead }: typeof import("@/orchestra/relay/editor-head") = await load("@/orchestra/relay/editor-head")
+const { Receipt }: typeof import("@/orchestra/relay/receipt") = await load("@/orchestra/relay/receipt")
+
+test("Relay UI cannot POST start, release or check; authoring and recorded GETs survive", async () => {
+  const requests: Request[] = []
+  const directory = "/repo"
+  const server = { url: "http://localhost:4096" }
+  const doc = decodeDocument({
+    id: "d", name: "Workflow", nodes: [], connections: {}, tags: [], meta: {}, isArchived: false, active: false,
+    activeVersionId: "v1", activeVersion: null, versionId: "v1", versionCounter: 1, checksum: "c",
+    createdAt: "2026-10-07T00:00:00Z", updatedAt: "2026-10-07T00:00:00Z", runnable: true,
+  })
+  const run = decodeRun({ runID: "r1", documentID: "d", status: "parked", steps: [], failing: ["shell", "judge"] })[0]
+  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
+    const request = new Request(input, init)
+    requests.push(request)
+    const path = new URL(request.url).pathname
+    return Response.json({ location: { directory }, data: path.endsWith("/audit")
+      ? { status: "pass", rows: [{ label: "Recorded", value: "hash" }] }
+      : path.endsWith("/ledger") ? [] : path.includes("/run") ? run : doc })
+  }, { preconnect: fetch.preconnect })
+  const client = createRelayClient({ sdk: createSdkForServer({ server, directory, fetch: fetcher }), directory })
+  const runClient = createRunClient({ server, directory, fetch: fetcher })
+  const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })
+  const source = { client, runClient, queryClient: () => queryClient, key: (...parts: string[]) => parts,
+    invalidate: () => undefined } as RelaySource
+  const flow = flowFromDocument(doc, "workflow")
+  const host = document.createElement("div")
+  document.body.append(host)
+  const dispose = render(() => createComponent(PlatformProvider, {
+    value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
+    get children() { return createComponent(LanguageProvider, { locale: "en", get children() { return [
+      createComponent(EditorHead, {
+        kind: "workflow", document: doc, name: doc.name, tab: "editor", runCount: 1,
+        save: { state: "saved", dirty: false, error: "" }, issues: [], canPublish: true, menu: [],
+        go() {}, onIssue() {}, onTest() {}, onInstall() {}, onReload() {},
+        onRename: (name) => void client.save(doc, { name }), onPublish: () => void client.publish(doc),
+      }),
+      createComponent(Receipt, { run, document: doc, flow, source, onOpenStep() {}, onCanvas() {}, onSession() {} }),
+    ] } }) },
+  }), host)
+  try {
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const buttons = () => [...host.querySelectorAll<HTMLButtonElement>("button")]
+    // The editor head renders no Run control while the server has no run routes, so nothing there can start a run.
+    expect(buttons().some((button) => button.textContent === "Run")).toBe(false)
+    // Also drive a restored legacy release form: absence alone cannot hide a live callback.
+    const reason = host.querySelector("textarea")
+    if (reason) {
+      reason.value = "Fixed"
+      reason.dispatchEvent(new Event("input", { bubbles: true }))
+    }
+    buttons().filter((button) => /Release|Refresh recorded audit/.test(button.textContent ?? "")).forEach((button) => button.click())
+    const name = host.querySelector<HTMLInputElement>(".wf-name")!
+    name.value = "Renamed"
+    name.dispatchEvent(new Event("change", { bubbles: true }))
+    buttons().find((button) => button.textContent === "Publish")!.click()
+    const before = requests.length
+    expect(issues(flow).some((issue) => issue.code === "no-steps")).toBe(true)
+    expect(requests.length).toBe(before)
+    await runClient.run("r1")
+    await runClient.ledger("r1")
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toContainEqual(["PATCH", "/api/relay/document/d"])
+    expect(requests.map((request) => [request.method, new URL(request.url).pathname])).toContainEqual(["POST", "/api/relay/document/d/publish"])
+    expect(requests.filter((request) => new URL(request.url).pathname.includes("/run")).map((request) => request.method)).toEqual(["GET", "GET", "GET", "GET"])
+    expect(requests.filter((request) => request.method === "POST").map((request) => new URL(request.url).pathname)).toEqual(["/api/relay/document/d/publish"])
+    expect(host.textContent).toContain("Recorded")
+  } finally {
+    dispose()
+    queryClient.clear()
+    host.remove()
+  }
+})
+
+test("the editor head says why Publish is off, publishes a pending rename and offers Use in chat", async () => {
+  const doc = decodeDocument({
+    id: "d", name: "Workflow", nodes: [], connections: {}, tags: [], meta: {}, isArchived: false, active: true,
+    activeVersionId: "v1", activeVersion: null, versionId: "v2", versionCounter: 2, checksum: "c",
+    createdAt: "2026-10-07T00:00:00Z", updatedAt: "2026-10-07T00:00:00Z", runnable: true,
+  })
+  const calls: string[] = []
+  const show = (input: { canPublish: boolean; save: { state: "saved" | "saving"; dirty: boolean; error: string } }) => {
+    const host = document.createElement("div")
+    document.body.append(host)
+    const dispose = render(() => createComponent(PlatformProvider, {
+      value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
+      get children() { return createComponent(LanguageProvider, { locale: "en", get children() {
+        return createComponent(EditorHead, {
+          kind: "workflow", document: doc, name: doc.name, tab: "editor", runCount: undefined, issues: [], menu: [],
+          go() {}, onIssue() {}, onTest() {}, onInstall() {}, onReload() {},
+          onRename: (name) => void calls.push(`rename ${name}`), onPublish: () => void calls.push("publish"),
+          onUseInChat: () => void calls.push("chat"),
+          ...input,
+        })
+      } }) },
+    }), host)
+    return { host, dispose: () => (dispose(), host.remove()) }
+  }
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 100))
+  const button = (host: HTMLElement, label: string) =>
+    [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === label)!
+
+  const saving = show({ canPublish: false, save: { state: "saving", dirty: false, error: "" } })
+  await settle()
+  expect(saving.host.querySelector(".wf-publish-reason")?.textContent).toBe("Waiting for the save to finish")
+  expect(button(saving.host, "Publish").disabled).toBe(true)
+  expect(button(saving.host, "Publish").classList.contains("primary")).toBe(false)
+  saving.dispose()
+
+  const ready = show({ canPublish: true, save: { state: "saved", dirty: false, error: "" } })
+  await settle()
+  expect(ready.host.querySelector(".wf-publish-reason")).toBeNull()
+  expect(button(ready.host, "Publish").classList.contains("primary")).toBe(true)
+  button(ready.host, "Use in chat").click()
+  expect(calls).toEqual(["chat"])
+
+  // Pressing Publish blurs the name field, which would switch Publish off before the click: the rename goes with it.
+  const name = ready.host.querySelector<HTMLInputElement>(".wf-name")!
+  name.focus()
+  name.value = "Renamed"
+  button(ready.host, "Publish").dispatchEvent(new Event("pointerdown", { bubbles: true }))
+  expect(calls).toEqual(["chat", "rename Renamed", "publish"])
+  ready.dispose()
+})

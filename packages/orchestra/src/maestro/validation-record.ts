@@ -180,6 +180,8 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["d5ea1eb8112a6e6dcf67a28bc78e8f9298ca15f9fecad67d4b31018405730346", ROSTER_V2],
   // Before the archie seat anchored Atlas knowledge to assignments and work packages (dev 1d69eb7c7).
   ["2651606b1bc8c46808086482c7b71297733573306096b641a6e24c7efe78382f", ROSTER_V2],
+  // Before jimmy took its effort tier from the caller, retrieved in parallel and committed its verified file:line basis.
+  ["21de782c4f626aa289a129f2147ace8bb82ef786fc02d6c7b629169a6f95cb05", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
@@ -551,7 +553,7 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
         maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
       })
     : undefined
-  if (code && "reason" in code) return yield* new ReviewRejectedError({ reason: code.reason })
+  if (code?.reason !== undefined) return yield* new ReviewRejectedError({ reason: code.reason })
   const reviewed =
     code ?? (yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root))
   const artifact = reviewed.artifact

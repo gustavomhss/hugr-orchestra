@@ -1,6 +1,6 @@
 name: omni-artifacts
 
-# hugr-omni's shipped binaries for the eight platforms: each job runs packages/omni/scripts/build-artifacts.mjs (the
+# hugr-omni's shipped binaries for the eight platforms: each job runs native/omni/scripts/build-artifacts.mjs (the
 # script the mirror's release.yml also calls) on that platform's own OS and CPU and uploads `omni-<id>`, a directory
 # with hugr_omni.node and hugr-omni-supervisor[.exe]. With `pack`, it also packs the npm packages and proves a clean
 # install (bindings/node/npm/{pack,verify}.mjs), as release.yml does, and uploads `npm-<id>`. Called by other
@@ -57,7 +57,7 @@ jobs:
     defaults:
       run:
         shell: bash
-        working-directory: packages/omni
+        working-directory: native/omni
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -88,7 +88,7 @@ jobs:
         if: matrix.build != 'alpine'
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: packages/omni -> target
+          workspaces: native/omni -> target
           key: release-${{ matrix.id }}
           save-if: false
 
@@ -113,7 +113,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: omni-${{ matrix.id }}
-          path: packages/omni/dist/omni/${{ matrix.id }}/
+          path: native/omni/dist/omni/${{ matrix.id }}/
           if-no-files-found: error
 
       # pack.mjs replaces its output directory: dist/npm, so dist/omni stays.
@@ -140,6 +140,6 @@ jobs:
         with:
           name: npm-${{ matrix.id }}
           path: |
-            packages/omni/dist/npm/tarballs/*.tgz
-            packages/omni/dist/npm/proofs/*.json
+            native/omni/dist/npm/tarballs/*.tgz
+            native/omni/dist/npm/proofs/*.json
           if-no-files-found: error

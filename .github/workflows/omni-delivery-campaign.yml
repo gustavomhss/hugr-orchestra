@@ -12,6 +12,13 @@ on:
       - "packages/omni/Cargo.lock"
       - "packages/omni/rust-toolchain.toml"
       - "packages/omni/.cargo/**"
+      - "native/omni/campaign/**"
+      - "native/omni/crates/**"
+      - "native/omni/bindings/node/**"
+      - "native/omni/Cargo.toml"
+      - "native/omni/Cargo.lock"
+      - "native/omni/rust-toolchain.toml"
+      - "native/omni/.cargo/**"
       - ".github/actions/omni-binaries/**"
       - ".github/actions/setup-bun/**"
       - "bun.lock"
@@ -54,7 +61,7 @@ jobs:
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
       - name: Initialize evidence
-        run: mkdir -p packages/omni/campaign/logs
+        run: mkdir -p native/omni/campaign/logs
       - uses: ./.github/actions/setup-bun
       - uses: ./.github/actions/omni-binaries
       - name: Build the real shipped CLI
@@ -63,7 +70,7 @@ jobs:
         run: |
           # --single takes the exact checkout binaries restored or built by omni-binaries.
           unset OMNI_ARTIFACTS
-          bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../omni/campaign/logs/build.log
+          bun script/build.ts --single --skip-install --skip-embed-web-ui 2>&1 | tee ../../native/omni/campaign/logs/build.log
       - name: Wait for the build's load to settle
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         run: |
@@ -81,28 +88,28 @@ jobs:
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
         env:
           ORCHESTRA_LOCAL_TESTS: "1"
-        run: bun packages/omni/campaign/v9-broken-artifacts.ts --quiet --mutation --diagnose
+        run: bun native/omni/campaign/v9-broken-artifacts.ts --quiet --mutation --diagnose
       - name: V8 Windows command lines and complete ConPTY close
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os == 'Windows' }}
         env:
           ORCHESTRA_LOCAL_TESTS: "1"
-        run: bun packages/omni/campaign/v8-windows.ts
+        run: bun native/omni/campaign/v8-windows.ts
       - name: V7 interleaved real caller overhead
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
         env:
           ORCHESTRA_LOCAL_TESTS: "1"
-        run: bun packages/omni/campaign/v7-overhead.ts --quiet ${{ runner.os == 'macOS' && '--idle-ms=20' || '' }} ${{ github.event_name == 'pull_request' && '--busy-unrun-ok' || '' }}
+        run: bun native/omni/campaign/v7-overhead.ts --quiet ${{ runner.os == 'macOS' && '--idle-ms=20' || '' }} ${{ github.event_name == 'pull_request' && '--busy-unrun-ok' || '' }}
       - name: Record exact scope
         if: always()
         env:
           BUILD_OUTCOME: ${{ steps.build.outcome }}
         run: |
-          node -e 'require("node:fs").writeFileSync("packages/omni/campaign/logs/scope.json", JSON.stringify({ os: process.platform, build: process.env.BUILD_OUTCOME, coverage: { V7: process.platform === "win32" ? "unrun" : "see-verdict", V8: process.platform === "win32" ? "see-verdict" : "not-applicable", V9: "see-verdict" }, wp10Complete: false }))'
+          node -e 'require("node:fs").writeFileSync("native/omni/campaign/logs/scope.json", JSON.stringify({ os: process.platform, build: process.env.BUILD_OUTCOME, coverage: { V7: process.platform === "win32" ? "unrun" : "see-verdict", V8: process.platform === "win32" ? "see-verdict" : "not-applicable", V9: "see-verdict" }, wp10Complete: false }))'
       - name: Preserve evidence, including red and unrun cells
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: omni-delivery-${{ matrix.os }}
-          path: packages/omni/campaign/logs/
+          path: native/omni/campaign/logs/
           if-no-files-found: error
           retention-days: 7
