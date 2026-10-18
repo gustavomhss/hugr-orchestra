@@ -20,7 +20,7 @@ export type Claim = {
 }
 export type State = {
   phase: Phase
-  question?: Research.QuestionRecord
+  question?: Extract<Research.Record, { kind: "question" }>
   subquestions: Subquestion[]
   hypotheses: Hypothesis[]
   claims: Claim[]
@@ -76,7 +76,7 @@ export function fold(steps: readonly ResearchLedger.Step[]): State {
   return state
 }
 
-function link(state: State, records: Map<string, Research.Record>, relation: Research.RelationRecord) {
+function link(state: State, records: Map<string, Research.Record>, relation: Extract<Research.Record, { kind: "relation" }>) {
   const from = records.get(relation.from.id)
   const sub = state.subquestions.find((item) => item.ref.id === relation.to.id)
   const hypothesis = state.hypotheses.find((item) => item.ref.id === relation.to.id)
