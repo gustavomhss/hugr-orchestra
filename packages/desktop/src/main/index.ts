@@ -453,7 +453,6 @@ const main = Effect.gen(function* () {
       }),
     )
     server = listener
-    yield* Deferred.succeed(serverReady, { url, username: "orchestra", password })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -466,13 +465,14 @@ const main = Effect.gen(function* () {
           logger.error("sidecar health check failed", e.toString())
         }),
       ),
+      // Windows open before the sidecar is up, so the renderer splash waits on this handshake. It is released once
+      // health settles, whatever the outcome, which is when windows used to open.
+      Effect.ensuring(Deferred.succeed(serverReady, { url, username: "orchestra", password })),
     )
     yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
 
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
-
-  yield* Fiber.await(loadingTask)
 
   app.on("window-all-closed", () => {
     if (process.platform === "darwin") return
@@ -483,8 +483,12 @@ const main = Effect.gen(function* () {
     restoreMainWindows()
   })
 
+  // The renderer shows its splash and waits for the sidecar through awaitInitialization.
   const windows = restoreMainWindows()
   if (windows.length) createMenu(menuDeps)
+
+  // Returning would interrupt the sidecar boot, which is a child fiber of this one.
+  yield* Fiber.await(loadingTask)
 })
 
 Effect.runFork(main)
