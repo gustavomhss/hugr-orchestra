@@ -354,28 +354,8 @@ export const make = Effect.gen(function* () {
   // Hook services missing from a call's context are looked up where ToolSafety was built.
   const ambient = yield* Effect.context<never>()
 
-  const canonical = Effect.fnUntraced(function* (target: string): Effect.fn.Return<string, Denied> {
-    if (!fs) return yield* new Denied({ reason: "filesystem-acquisition" })
-    return yield* fs.realPath(target).pipe(
-      Effect.catchReason("PlatformError", "NotFound", () =>
-        Effect.gen(function* () {
-          const parent = path.dirname(target)
-          if (parent === target) return yield* new Denied({ reason: "path-acquisition-missing-root" })
-          const anchor = yield* canonical(parent)
-          const info = yield* fs.stat(anchor).pipe(
-            Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
-            Effect.mapError(() => new Denied({ reason: "path-acquisition-stat" })),
-          )
-          if (info && info.type !== "Directory") return yield* new Denied({ reason: "path-acquisition-non-directory" })
-          // A dangling symlink is not missing: a write through it creates the file where it points.
-          const link = yield* fs.readLink(target).pipe(Effect.orElseSucceed(() => undefined))
-          if (link !== undefined) return yield* canonical(path.resolve(anchor, link))
-          return path.join(anchor, path.basename(target))
-        }),
-      ),
-      Effect.mapError((error) => (error instanceof Denied ? error : new Denied({ reason: "path-acquisition" }))),
-    )
-  })
+  const canonical = (target: string): Effect.Effect<string, Denied> =>
+    fs ? physical(fs, target) : Effect.fail(new Denied({ reason: "filesystem-acquisition" }))
 
   const before = Effect.fn("ToolSafety.before")(function* (input: Invocation) {
     const args = record(input.args)
@@ -612,6 +592,51 @@ export const beforeInvocation = (input: Invocation) =>
     const profile = loader ? yield* loader() : yield* RuntimeProfile
     yield* safety.before(input).pipe(Effect.provideService(RuntimeProfile, profile))
   }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
+
+/**
+ * `beforeInvocation`, then the installed hooks' `before`, over one profile snapshot, for a host whose call's before and
+ * after are separate callbacks (Claude Code's PreToolUse and PostToolUse). Hand what it returns to
+ * ToolSafetyHooks.settle once the call has ended; undefined when no install is enabled.
+ */
+export const beforeHooked = (input: Invocation) =>
+  Effect.gen(function* () {
+    const safety = yield* make
+    const fs = yield* FSUtil.Service
+    const loader = yield* RuntimeProfileLoader
+    const loaded = loader ? yield* loader() : yield* RuntimeProfile
+    yield* safety.before(input).pipe(Effect.provideService(RuntimeProfile, loaded))
+    if (!loaded?.hooks) return undefined
+    return yield* ToolSafetyHooks.before({
+      installs: loaded.hooks,
+      call: input,
+      profile: native(loaded),
+      resolve: (target) => physical(fs, target),
+      ambient: yield* Effect.context<never>(),
+    })
+  }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
+
+// The physical path of a target that may not exist yet: its nearest existing ancestor's, then the rest as written.
+const physical = Effect.fnUntraced(function* (fs: FSUtil.Interface, target: string): Effect.fn.Return<string, Denied> {
+  return yield* fs.realPath(target).pipe(
+    Effect.catchReason("PlatformError", "NotFound", () =>
+      Effect.gen(function* () {
+        const parent = path.dirname(target)
+        if (parent === target) return yield* new Denied({ reason: "path-acquisition-missing-root" })
+        const anchor = yield* physical(fs, parent)
+        const info = yield* fs.stat(anchor).pipe(
+          Effect.catchReason("PlatformError", "NotFound", () => Effect.succeed(undefined)),
+          Effect.mapError(() => new Denied({ reason: "path-acquisition-stat" })),
+        )
+        if (info && info.type !== "Directory") return yield* new Denied({ reason: "path-acquisition-non-directory" })
+        // A dangling symlink is not missing: a write through it creates the file where it points.
+        const link = yield* fs.readLink(target).pipe(Effect.orElseSucceed(() => undefined))
+        if (link !== undefined) return yield* physical(fs, path.resolve(anchor, link))
+        return path.join(anchor, path.basename(target))
+      }),
+    ),
+    Effect.mapError((error) => (error instanceof Denied ? error : new Denied({ reason: "path-acquisition" }))),
+  )
+})
 
 /** Recognized credential shapes only. Encodings, binary attachments and unknown providers are not confinement. */
 function inspectValue(value: unknown, state = { seen: new Set<object>(), nodes: 0 }, depth = 0): string | undefined {

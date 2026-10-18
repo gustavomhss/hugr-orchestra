@@ -22,6 +22,7 @@ import { Tool } from "../src/tool/tool"
 import { ToolOutputStore } from "../src/tool-output-store"
 import { ToolSafety } from "../src/tool-safety"
 import { ToolSafetyProfile } from "../src/tool-safety-profile"
+import { ToolSafetyHooks } from "../src/tool-safety-hooks"
 import { tmpdir } from "./fixture/tmpdir"
 import { testEffect } from "./lib/effect"
 import { toolIdentity } from "./lib/tool"
@@ -681,6 +682,60 @@ describe("ToolSafety hooks on the V2 registry path", () => {
             expect(yield* h.call("bash", { command: "ls" })).toEqual(hold("profile-invalid"))
           }
           expect(h.ran).toEqual([])
+        }),
+      )
+    }),
+  )
+
+  it.live("a host with separate before and after callbacks (Claude Code) splits one call's hooks around its effect", () =>
+    Effect.gen(function* () {
+      const dirs = yield* fixture
+      yield* harness(dirs, (h) =>
+        Effect.gen(function* () {
+          yield* install(
+            dirs,
+            hook("Guard", "write.before", [
+              node("secret", RelayHook.NodeType.condition, { field: "path", pattern: "secret/**" }),
+              node("block", RelayHook.NodeType.block, { message: "Keep secrets out." }),
+            ]),
+          )
+          yield* install(
+            dirs,
+            single("Changelog", "write.after", RelayHook.NodeType.remind, { message: "Update the changelog." }),
+          )
+          const load = ToolSafetyProfile.makeLoader(yield* FSUtil.Service, {
+            directory: dirs.work,
+            stateDirectory: MaestroArsenal.stateDirectory(dirs.data, projectID),
+            projectID,
+          })
+          const before = (filePath: string) =>
+            ToolSafety.beforeHooked({
+              tool: "write",
+              args: { filePath },
+              sessionID: h.sessionID,
+              callID: randomUUID(),
+              directory: dirs.work,
+              projectID,
+              projectDirectory: dirs.work,
+            }).pipe(
+              Effect.provideService(ToolSafety.RuntimeProfileLoader, load),
+              Effect.provideService(ToolSafetyHooks.Placement, {
+                location: { directory: AbsolutePath.make(dirs.work) },
+                relay: Effect.succeed(undefined),
+              }),
+            )
+          expect((yield* before("secret/key.txt").pipe(Effect.flip)).message).toBe(
+            hold("relay-hook-block", "Blocked by hook 'Guard': Keep secrets out.").value,
+          )
+          const hooked = yield* before("src/app.ts")
+          if (!hooked) throw new Error("the enabled installs left no hook state")
+          // A call that did not succeed runs no `after` hooks; one that did returns their notes for the host to deliver.
+          expect(yield* ToolSafetyHooks.settle(hooked, false)).toEqual([])
+          expect(yield* ToolSafetyHooks.settle(hooked, true)).toEqual(["Hook 'Changelog': Update the changelog."])
+          expect((yield* h.decisions(2)).map((item) => [item.action, item.outcome, item.trigger, item.subject])).toEqual([
+            ["block", "blocked", "write.before", "secret/key.txt"],
+            ["remind", "reminded", "write.after", "src/app.ts"],
+          ])
         }),
       )
     }),

@@ -19,11 +19,29 @@ import { Permission } from "@/permission"
 import { SessionPrompt } from "@/session/prompt"
 import { MessageID } from "@/session/schema"
 import { Session } from "@/session/session"
+import { InstanceState } from "@/effect/instance-state"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 import { TestLLMServer } from "../lib/llm-server"
 
 const it = testEffect(Layer.merge(AppLayer, TestLLMServer.layer))
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
+// Production bootstrap reads config before the test body, so install the provider first.
+const testModel = (directory: string) => Effect.gen(function* () {
+  const llm = yield* TestLLMServer
+  yield* Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
+    permission: { "*": "allow" },
+    agent: { maestro: { permission: { "*": "allow" } } },
+    provider: { test: {
+      name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
+      models: { "test-model": {
+        id: "test-model", name: "Test", attachment: false, reasoning: false, temperature: false,
+        tool_call: true, release_date: "2025-01-01", limit: { context: 100000, output: 10000 },
+        cost: { input: 0, output: 0 }, options: {},
+      } },
+      options: { apiKey: "test-key", baseURL: llm.url },
+    } },
+  })))
+})
 
 it.instance("installed V1 prompt approval awaits real Asked queue; once/always/reject/interrupt preserve admission boundary", () =>
   Effect.gen(function* () {
@@ -126,23 +144,7 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
         if (index === 4) expect(JSON.stringify(yield* llm.inputs)).toContain(`Prompt ${index}`)
       }),
     )
-  }), { git: true, init: (directory) => Effect.gen(function* () {
-    const llm = yield* TestLLMServer
-    // Production bootstrap reads config before the test body, so install the provider first.
-    yield* Effect.promise(() => Bun.write(path.join(directory, "orchestra.json"), JSON.stringify({
-      permission: { "*": "allow" },
-      agent: { maestro: { permission: { "*": "allow" } } },
-      provider: { test: {
-        name: "Test", id: "test", env: [], npm: "@ai-sdk/openai-compatible",
-        models: { "test-model": {
-          id: "test-model", name: "Test", attachment: false, reasoning: false, temperature: false,
-          tool_call: true, release_date: "2025-01-01", limit: { context: 100000, output: 10000 },
-          cost: { input: 0, output: 0 }, options: {},
-        } },
-        options: { apiKey: "test-key", baseURL: llm.url },
-      } },
-    })))
-  }) },
+  }), { git: true, init: testModel },
 )
 
 it.instance("V1 no-call exception rejects every invalid prompt tuple and placement before native Asked", () =>
@@ -193,4 +195,53 @@ it.instance("V1 no-call exception rejects every invalid prompt tuple and placeme
     yield* Fiber.join(pending)
     expect(yield* permissions.list()).toEqual([])
   }), { git: true },
+)
+
+// The desktop's V1 Sessions fire installed `session-start` and `session-idle` hooks and record them as V2 does.
+it.instance("V1 Sessions record installed session-start and session-idle hooks, which never undo the Session", () =>
+  Effect.gen(function* () {
+    const llm = yield* TestLLMServer
+    const sessions = yield* Session.Service
+    const prompts = yield* SessionPrompt.Service
+    const database = yield* Database.Service
+    const binding = { data: Global.Path.data, projectID: (yield* InstanceState.context).project.id, principal: "user:test" }
+    const snapshot = (name: string, operation: string, steps: ReadonlyArray<readonly [string, RelayHook.NodeType]>) => ({
+      schema: "relay.hook.v1", name, binding: "host-required", installed: false,
+      nodes: [
+        { id: "event", name: "Event", type: RelayHook.NodeType.trigger, position: [0, 0],
+          parameters: { operation, timing: "after" } },
+        ...steps.map(([id, type], index) => ({ id, name: id, type, position: [index + 1, 0],
+          parameters: { message: `${name} ${id}.` } })),
+      ],
+      connections: steps.map(([id], index) => ({ from: index === 0 ? "event" : steps[index - 1]![0], port: 0, to: id })),
+    })
+    yield* Effect.forEach([
+      snapshot("Start", "session-start", [["note", RelayHook.NodeType.record], ["fix", RelayHook.NodeType.repair]]),
+      snapshot("Stop", "session-idle", [["note", RelayHook.NodeType.record]]),
+    ], (item) => Effect.acquireRelease(
+      RelayHookInstall.install({ ...binding, document: item.name, version: "v1", snapshot: item,
+        sha256: createHash("sha256").update(JSON.stringify(item)).digest("hex") }),
+      (installed) => RelayHookInstall.uninstall({ ...binding, installID: installed.install.installID }).pipe(Effect.orDie, Effect.asVoid),
+    ), { discard: true })
+    // They run beside the Session, so their decisions arrive after it.
+    const decisions = (sessionID: string, count: number) => pollWithTimeout(
+      database.db.select().from(EventTable).all().pipe(Effect.map((rows) => {
+        const found = rows.filter((row) => row.type === "relay.hook.decided.1")
+          .map((row) => Schema.decodeUnknownSync(RelayHook.Decided.data)(row.data))
+          .filter((decision) => decision.sessionID === sessionID)
+          .map((decision) => [decision.nodeID, decision.action, decision.outcome, decision.trigger])
+        return found.length >= count ? found : undefined
+      })), "Session hook decisions were not recorded", "20 seconds")
+    const session = yield* sessions.create({ agent: "maestro", title: "Session hooks" })
+    expect(yield* decisions(session.id, 2)).toEqual([
+      ["note", "record", "recorded", "session-start.after"],
+      ["fix", "repair", "repair-required", "session-start.after"],
+    ])
+    // The Repair has nothing to refuse after the event: the Session stays.
+    expect((yield* sessions.get(session.id)).id).toBe(session.id)
+    yield* llm.text("Done.")
+    yield* prompts.prompt({ sessionID: session.id, messageID: MessageID.ascending(), model,
+      parts: [{ type: "text", text: "Hello" }] })
+    expect((yield* decisions(session.id, 3)).slice(2)).toEqual([["note", "record", "recorded", "session-idle.after"]])
+  }), { git: true, init: testModel }, 60_000,
 )
