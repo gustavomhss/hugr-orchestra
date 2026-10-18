@@ -561,6 +561,7 @@ export function Markdown(
       copyCleanup = setupCodeCopy(container, () => ({
         copy: i18n.t("ui.message.copy"),
         copied: i18n.t("ui.message.copied"),
+        failed: i18n.t("ui.message.copyFailed"),
       }))
   })
 
