@@ -120,6 +120,10 @@ test("an invalid scope or nonce fails the run before a test starts", async () =>
   const bad = await control({ "plain.test.ts": plain }, { ...declared, ORCHESTRA_OMNI_CONTROL_NONCE: "fake" })
   expect(bad.output).toContain("ORCHESTRA_OMNI_CONTROL_NONCE is not 32 lowercase hex digits")
   expect(bad.code).not.toBe(0)
+  // A typo reads as legacy in core's flag parser, which would turn the control off; it fails instead.
+  const typo = await control({ "plain.test.ts": plain }, { ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strick" })
+  expect(typo.output).toContain('ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER="strick" is not 0, 1 or strict')
+  expect(typo.code).not.toBe(0)
 }, 60_000)
 
 test("legacy rollback checks nothing and says so", async () => {

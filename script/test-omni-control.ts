@@ -26,6 +26,10 @@ import { afterAll, afterEach } from "bun:test"
 import path from "node:path"
 
 const raw = process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER
+// core's flag parser reads an invalid value (a typo such as "strick") as legacy with only a warning, which would turn
+// this control off. A run must name a state the parser knows.
+if (raw !== undefined && !["", "0", "1", "strict"].includes(raw))
+  throw new Error(`omni positive control: ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=${JSON.stringify(raw)} is not 0, 1 or strict.`)
 const scope = process.env.ORCHESTRA_OMNI_CONTROL ?? "suite"
 if (scope !== "suite" && scope !== "declared")
   throw new Error(`omni positive control: ORCHESTRA_OMNI_CONTROL=${JSON.stringify(scope)} is not suite or declared.`)
