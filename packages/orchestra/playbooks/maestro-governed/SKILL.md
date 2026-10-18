@@ -62,14 +62,18 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 12. In the same turn, `maestro_grant_authorization` with `validationRecordID` and `approvalMessageID`; its output is the
     `authorizationID`. Any newer user message makes the approval stale.
 13. In the same turn, `task` with `subagent_type`, `prompt` and `model` byte-identical to the approved intent, plus
-    `authorizationID`. One authorization allows one dispatch.
+    `authorizationID` (and, for a workflow, the approved `workflow` and `writePaths`). One authorization allows one
+    dispatch; every resume or retry of it passes this same input unchanged.
 14. Workers leave their result uncommitted. When the last work package settles, the gate that grades `cold-review`
     holds with `WORKFLOW_CODE_REVIEW_REQUIRED` before grading, so no retry is spent, and the Task returns to you. Call
     `maestro_request_review` with the same `validationRecordID`, card, `reviewMethodVersion` and `stage: "code"`; it
     reviews the working-tree result from the plan-reviewed `HEAD`. On `APPROVE`, resume the workflow Task with its
-    `task_id` and a prompt that says the code review approved and nothing more may change; the check then passes. On
-    `FIX_FIRST` or `REJECT`, resume it with the findings; the workers fix, the gate holds again, and you review the new
-    result. Never commit the workers' result before the workflow completes. Then verify with `maestro-verify`.
+    `task_id` and exactly the approved dispatch input: `prompt` byte for byte, `subagent_type`, `model`,
+    `authorizationID`, `workflow` and `writePaths`. Any change to that input breaks the approval
+    (`WORKFLOW_APPROVAL_BINDING_MISMATCH`). The check then passes. On `FIX_FIRST` or `REJECT`, nothing carries the
+    findings to the workers: the prompt cannot change, and a resume only grades the failure and spends a retry. Do not
+    resume. Report the findings to the owner; fixing them needs a new plan round (Fix-and-review loop). Never commit the
+    workers' result before the workflow completes. Then verify with `maestro-verify`.
 
 If a synthetic user message (a background-task result or the compaction "Continue...") lands after a presentation,
 present again with a new `methodVersion`.
