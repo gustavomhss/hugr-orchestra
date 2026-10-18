@@ -1,4 +1,5 @@
 import { HookGlob } from "@orchestra/schema/hook-glob"
+import { HookMatch } from "@orchestra/schema/hook-match"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayKind } from "./client"
 
@@ -574,18 +575,10 @@ export function conditionHolds(parameters: Record<string, unknown>, probe: HookP
 
 // Commands, tools and events use Orchestra's permission wildcard: `*` is any run (across `/` too), `?` one
 // character, everything else literal, including `|`. A pattern ending in " *" also matches without the argument.
-// As in the engine, a `\` on either side reads as `/`.
+// As in the engine, a `\` on either side reads as `/`. It is the engine's own matcher (linear in pattern × value), not
+// a regex: a pattern with many `*` against a long command cannot freeze the window.
 export function wildcard(pattern: string, value: string) {
-  const subject = value.replaceAll("\\", "/")
-  const test = (body: string) =>
-    new RegExp(
-      `^${body
-        .replaceAll("\\", "/")
-        .replace(/[.+^${}()|[\]]/g, "\\$&")
-        .replace(/\*/g, "[\\s\\S]*")
-        .replace(/\?/g, "[\\s\\S]")}$`,
-    ).test(subject)
-  return test(pattern) || (pattern.endsWith(" *") && test(pattern.slice(0, -2)))
+  return HookMatch.matches("command", pattern, value)
 }
 
 /* ---------- layout ---------- */

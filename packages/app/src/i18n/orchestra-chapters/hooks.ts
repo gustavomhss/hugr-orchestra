@@ -37,6 +37,15 @@ export const HOOKS_COPY = {
   "orchestra.hooks.notInstalled": "Not installed",
   "orchestra.hooks.off": "Off",
   "orchestra.hooks.installFailed": "Could not change the install",
+  "orchestra.hooks.installFailed.overflow":
+    "Installed hooks are too large for the 512 KB limit. Shorten the long messages in your hooks, or uninstall one you no longer need.",
+  "orchestra.hooks.installFailed.installed": "This hook is already installed. The list has been refreshed.",
+  "orchestra.hooks.installFailed.missing": "This install no longer exists. The list has been refreshed.",
+  "orchestra.hooks.receipt.install": "Installed; its audit receipt could not be written",
+  "orchestra.hooks.receipt.update": "Updated; its audit receipt could not be written",
+  "orchestra.hooks.receipt.pause": "Paused; its audit receipt could not be written",
+  "orchestra.hooks.receipt.uninstall": "Uninstalled; its audit receipt could not be written",
+  "orchestra.hooks.receipt.body": "The change is saved and in effect. Only its entry in the audit log is missing.",
   "orchestra.hooks.publishFirst": "Publish before installing",
   "orchestra.hooks.publish.description":
     "Publishing makes this version available to install. An installed copy keeps enforcing its current version until it is updated.",
@@ -85,7 +94,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.activity.emptyOff": "Install the published hook to record the events it handles.",
   "orchestra.hooks.activity.loading": "Reading activity…",
   "orchestra.hooks.activity.unreadable": "Could not read the activity of {{names}}. The other hooks are shown.",
-  "orchestra.hooks.activity.note": "Each row is one event this hook handled in {{profile}}.",
+  "orchestra.hooks.activity.note": "Each row is one action a hook took in {{profile}}.",
   "orchestra.hooks.activity.open": "Open hook",
   "orchestra.hooks.activity.openSession": "Open session",
   "orchestra.hooks.activity.commandHidden": "Shell command — text not stored",
@@ -100,7 +109,8 @@ export const HOOKS_COPY = {
   "orchestra.hooks.activity.noMatches": "No events match these filters.",
 
   "orchestra.hooks.create.title": "New hook",
-  "orchestra.hooks.create.description": "Pick the event it listens for. You add conditions and actions on the canvas.",
+  "orchestra.hooks.create.description":
+    "Pick a template. You choose the event in the trigger's details and add conditions and actions on the canvas.",
   "orchestra.hooks.create.defaultName": "New hook",
   "orchestra.hooks.create.blank": "Blank hook",
   "orchestra.hooks.create.blankBody": "A trigger and nothing else.",

@@ -1,11 +1,11 @@
 import { createEffect, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js"
 import type { Location } from "@solidjs/router"
 import { formatKeybind } from "@/context/command"
-import { showToast } from "@/utils/toast"
 import type { RelayDocument } from "./client"
 import { deleteDocument } from "./drafts"
 import { rememberDocument } from "./cache"
 import { checkCount, type Flow, retryBudget, steps } from "./graph"
+import { installNotice } from "./hook-install"
 import { phaseNames } from "./parts"
 import type { RelaySource } from "./source"
 import { RelayDialog, useRelayCopy } from "./ui"
@@ -94,11 +94,10 @@ export function PublishDialog(props: {
         await rememberDocument(props.source.queryClient(), props.source.key("documents"), published, props.active)
         // Publishing does not touch an install; it keeps enforcing its pinned version until it is updated.
         if (props.install && follow())
-          await props.source.client.update(props.install).then(
-            () => props.source.invalidate("installs"),
-            (error: unknown) =>
-              void showToast({ title: copy.t("orchestra.hooks.installFailed"), description: failure(error) }),
-          )
+          await props.source.client
+            .update(props.install)
+            .catch((error: unknown) => void installNotice(copy, "update", error))
+            .finally(() => props.source.invalidate("installs"))
         props.onClose()
         props.onPublished?.(published)
       }).finally(() => release?.())

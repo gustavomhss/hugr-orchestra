@@ -529,4 +529,14 @@ describe("hook test walk", () => {
     expect(wildcard("edit.before", "editxbefore")).toBe(false)
     expect(wildcard("cd app/src *", "cd app\\src && ls")).toBe(true)
   })
+
+  // The engine's own matcher (@orchestra/schema HookMatch) is linear; a backtracking regex needs over a minute here.
+  test("many stars against a long command stay linear", () => {
+    const command = `${"ab".repeat(50_000)}d`
+    const started = performance.now()
+    expect(wildcard("*a*b*c*a*b*c*d", command)).toBe(false)
+    const probe = { operation: "command", timing: "before", command }
+    expect(conditionHolds({ field: "command", pattern: "*a*b*a*b*d" }, probe)).toBe(true)
+    expect(performance.now() - started).toBeLessThan(2_000)
+  })
 })

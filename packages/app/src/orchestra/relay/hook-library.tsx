@@ -2,15 +2,15 @@ import { skipToken, useQuery } from "@tanstack/solid-query"
 import { useLocation } from "@solidjs/router"
 import { createEffect, createMemo, createSignal, For, Match, on, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
-import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
 import { decisionTime, documentDiagnostics, RelayError, type RelayDocument, type RelayInstall } from "./client"
-import { createAction, DeleteDialog, failure } from "./dialogs"
+import { createAction, DeleteDialog } from "./dialogs"
 import { profileDrafts } from "./drafts"
 import { rememberDocument } from "./cache"
 import { type Flow, flowFromDocument, issues, nodeOf, TRIGGER } from "./graph"
 import { ActivityRows } from "./hook-activity"
 import { OrderDialog, UninstallDialog } from "./hook-dialogs"
+import { type InstallChange, installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
 import { Chain, VersionBadges } from "./parts"
 import { hookDocument, type HookPresetID, hookPresets, presetChain, type PresetKey } from "./presets"
@@ -46,7 +46,7 @@ export function HookLibrary(props: Props) {
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
   const [remove, setRemove] = createSignal<RelayDocument>()
   const [preset, setPreset] = createSignal<HookPresetID | "blank">("blank")
-  const [busy, setBusy] = createSignal<string>()
+  const [busy, setBusy] = createSignal(false)
   // `unreadable` holds the installs whose ledger the last activity read could not parse.
   const [layer, setLayer] = createStore({
     uninstall: undefined as { install: RelayInstall; name: string } | undefined,
@@ -98,25 +98,27 @@ export function HookLibrary(props: Props) {
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "hook")])),
   )
-  // One change at a time: a switch, an update, or a publish that installs.
-  const change = async (document: RelayDocument, run: () => Promise<unknown>) => {
+  // One change at a time across the list: a switch, an update, or a publish that installs. Every row stays locked
+  // until the refreshed install list lands, so the next click acts on what is really installed.
+  const change = async (kind: InstallChange, run: () => Promise<unknown>) => {
     if (busy() || !props.source.installs.isSuccess) return
-    setBusy(document.id)
-    const result = await run().then(
+    setBusy(true)
+    const failed = await run().then(
       () => undefined,
-      (error: unknown) => failure(error),
+      (error: unknown) => ({ error }),
     )
-    setBusy(undefined)
-    props.source.invalidate("installs")
-    if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
+    await refreshInstalls(props.source)
+    setBusy(false)
+    if (failed) installNotice(copy, kind, failed.error)
   }
-  const toggle = (document: RelayDocument, next: boolean) =>
-    change(document, () => {
-      const current = installOf(document.id)
-      return current ? props.source.client.enable(current.installID, next) : props.source.client.install(document.id)
-    })
+  const toggle = (document: RelayDocument, next: boolean) => {
+    const current = installOf(document.id)
+    return change(current && !next ? "pause" : "install", () =>
+      current ? props.source.client.enable(current.installID, next) : props.source.client.install(document.id),
+    )
+  }
   const publishAndInstall = (document: RelayDocument) =>
-    change(document, async () => {
+    change("install", async () => {
       const published = await props.source.client.publish(document)
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), published)
       await props.source.client.install(document.id)
@@ -397,7 +399,7 @@ export function HookLibrary(props: Props) {
                             name: document.name,
                             profile: props.profile,
                           })}
-                          disabled={unpublished() || busy() === document.id}
+                          disabled={unpublished() || busy()}
                           onClick={() => void toggle(document, !enabled())}
                         />
                         <span>
@@ -411,9 +413,9 @@ export function HookLibrary(props: Props) {
                                 source={props.source}
                                 document={document}
                                 install={current()}
-                                busy={busy() === document.id}
+                                busy={busy()}
                                 onUpdate={() =>
-                                  void change(document, () => props.source.client.update(current().installID))
+                                  void change("update", () => props.source.client.update(current().installID))
                                 }
                               />
                             )}
@@ -425,7 +427,7 @@ export function HookLibrary(props: Props) {
                                 type="button"
                                 class="mx-btn primary"
                                 aria-label={copy.t("orchestra.hooks.row.publishInstallLabel", { name: document.name })}
-                                disabled={busy() === document.id}
+                                disabled={busy()}
                                 onClick={() => void publishAndInstall(document)}
                               >
                                 {copy.t("orchestra.hooks.row.publishInstall")}
