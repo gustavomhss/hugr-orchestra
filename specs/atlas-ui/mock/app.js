@@ -171,16 +171,16 @@
   const sheet = {
     ratify: (x) => `<form method="dialog">${head("Ratify", A.esc(x.claim))}<div class="mx-dialog-body">
       <div class="at-radio"><label><input type="radio" name="tier" value="T1" checked><span><b>Ratified</b><small>Joins the unit's ratified facts, sent before hints.</small></span></label>
-      <label><input type="radio" name="tier" value="T0"><span><b>Core</b><small>Must be right. Only a person ratifies it.</small></span></label></div>
+      <label><input type="radio" name="tier" value="T0"><span><b>Core</b><small>Must be right. Needs the ratifier name; Atlas doesn't verify who typed it.</small></span></label></div>
       ${writingAs()}${checksStrip(M().checks(x, { tier: "T1" }))}<p class="mx-note">Ratifying keeps only this sentence. Who approved is not recorded.</p>${lockedNote()}</div>${foot("", "ratify-confirm", "Ratify", x.key)}</form>`,
     edit: (x) => {
       const drifted = M().state(x) === "drifted"
       return `<form method="dialog">${head(drifted ? "Rewrite" : "Edit", drifted ? "Write the sentence as it holds for the current code." : "Write the sentence as it should read.")}<div class="mx-dialog-body">
       <label class="mx-field"><span>Sentence</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label>
-      ${writingAs()}${checksStrip(M().checks(x, { regrounds: true }))}<p class="mx-note">At the same tier the new sentence is added beside the old one, and both are sent.</p>${lockedNote()}</div>${foot(A.newcap("R8"), "save", "Save", x.key)}</form>`
+      ${writingAs()}${checksStrip(M().checks(x, { regrounds: true, draft: true }))}<p class="mx-note">At the same tier the new sentence is added beside the old one, and both are sent.</p>${lockedNote()}</div>${foot(A.newcap("R8"), "save", "Save", x.key)}</form>`
     },
     classify: (x) => `<form method="dialog">${head("Classify", A.esc(x.claim))}<div class="mx-dialog-body at-slotpick">${M().SLOT_GROUPS.map(([g, meaning, slots]) => `<div class="at-slotgroup"><strong>${g}</strong><small>${meaning}</small>${slots.map((sl) => `<label><input type="radio" name="slot" value="${sl}"><code>${sl}</code><span>${A.esc(M().SLOT_MEANING[sl])}</span></label>`).join("")}</div>`).join("")}
-      ${writingAs()}${checksStrip(M().checks(x, { regrounds: false }))}<p class="mx-note">The kind is part of a fact's identity, so this writes a new hint; the unsorted one stays sent.</p>${lockedNote()}</div>${foot("", "classify-confirm", "Classify", x.key)}</form>`,
+      ${writingAs()}${checksStrip(M().checks(x, { regrounds: true, draft: true }))}<p class="mx-note">The kind is part of a fact's identity, so this writes a new hint; the unsorted one stays sent.</p>${lockedNote()}</div>${foot("", "classify-confirm", "Classify", x.key)}</form>`,
     promoteAll: () => {
       const n = M().candidates.filter((x) => !x.promotedNow && !x.discarded).length
       return `<form method="dialog">${head("Accept all", `${A.num(n)} suggestions, plus every fact already accepted, are re-checked one by one.`)}<div class="mx-dialog-body">
@@ -221,7 +221,7 @@
       ${A.tech([["Command output", "<code>genesis: seeded 41 candidate fact(s); ratified 0</code><br><code>cost: llmCalls 56 · budgetSpent 200</code><br><code>coverage: 200 planned, 200 recorded</code>"]])}</div>
       <footer class="mx-dialog-foot"><span class="at-pill">example</span><span class="grow"></span><button class="mx-btn" value="ok">Close</button><a class="mx-btn primary" href="#/review?tab=mined">Review suggestions</a></footer></form>`,
     producers: () => `<form method="dialog">${head("More ways to find facts", "Each reads the code index and writes proven facts.")}<div class="mx-dialog-body">
-      ${[["derive", "Derive links", "Depends-on and calls edges proven from the code index."], ["transition", "Record a code change", "What changed in one unit between two commits."], ["vacuity", "Find hollow tests", "Tests that cannot fail."]].map(([id, title, text]) => `<div class="at-linkrow static">${A.icon("relations")}<span><b>${title}</b><br><small>${text}</small></span><span class="grow"></span>${A.btn("Run", "produce", { value: id, disabled: !M().writable() })}</div>`).join("")}
+      ${[["derive", "Derive links", "Depends-on edges proven from the code index."], ["transition", "Record a code change", "What changed in one unit between two commits."], ["vacuity", "Find hollow tests", "Tests that cannot fail."]].map(([id, title, text]) => `<div class="at-linkrow static">${A.icon("relations")}<span><b>${title}</b><br><small>${text}</small></span><span class="grow"></span>${A.btn("Run", "produce", { value: id, disabled: !M().writable() })}</div>`).join("")}
       ${M().writable() ? "" : `<p class="mx-note">${A.refusal("untrusted-store")}.</p>`}
       ${A.tech([["Commands", "<code>atlas derive-relations</code> · <code>atlas transition &lt;unit&gt; &lt;before&gt; &lt;after&gt;</code> · <code>atlas test-vacuity .</code>"], ["Measured on this store", "derive-relations resolved 6,193 edges and every one was refused for its write group (commit 2211f3046)"]])}</div>
       <footer class="mx-dialog-foot"><span class="grow"></span><button class="mx-btn primary" value="ok">Done</button></footer></form>`,
@@ -229,10 +229,10 @@
       const t = (A.spawns ?? []).find((x) => x.unit === unit)
       const saved = (t?.checkpoints ?? []).filter((c) => c.outcome === "admitted")
       const name = member[0].toUpperCase() + member.slice(1)
-      return `<form method="dialog">${head(`Resume ${name}`, `Atlas hands back one saved checkpoint, once, before ${name} reads the packet.`)}<div class="mx-dialog-body">
-      <div class="mx-field"><span>Checkpoint</span>${saved.length ? `<div class="at-linkrow static">${A.icon("memory")}<span>${A.esc(saved.at(-1).entry.stoppedAt)}</span></div><p class="mx-note">Atlas picks the latest checkpoint this session saved. ${name} is told work may have continued after it.</p>` : `<div class="ins-note">${A.icon("xc")}<span>Would be refused: ${A.refusal("no-own-fold")}. Maestro would report it as a blocker.</span></div>`}</div>
+      return `<form method="dialog">${head(`Resume ${name}`, `Atlas hands back one saved checkpoint, once, in the same message as the packet.`)}<div class="mx-dialog-body">
+      <div class="mx-field"><span>Checkpoint</span>${saved.length ? `<div class="at-linkrow static">${A.icon("memory")}<span>${A.esc(saved.at(-1).entry.stoppedAt)}</span></div><p class="mx-note">Orchestra sends the latest checkpoint this session saved, and Atlas checks it. ${name} is told work may have continued after it.</p>` : `<div class="ins-note">${A.icon("xc")}<span>Would be refused: ${A.refusal("no-own-fold")}. ${name} is told to return a packet blocker if the work depends on it.</span></div>`}</div>
       <label class="mx-field"><span>Packet</span><textarea rows="3">Continue with the next phase your checkpoint names. Save a new checkpoint when you stop.</textarea></label>
-      ${A.tech([["Call", `Maestro: <code>task</code> with <code>task_id</code> and <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>`], ["Choice", "Maestro passes no ref: the checkpoint comes from the session's latest admitted receipt; with none and several records, Atlas refuses as ambiguous"], ["After compaction", "the host restores the same checkpoint once (residency restored)"]])}</div>${foot(A.newcap("R5"), "respawn-confirm", "Resume", unit)}</form>`
+      ${A.tech([["Call", `Maestro: <code>task</code> with <code>task_id</code> and <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>`], ["Choice", "Maestro passes no ref: Orchestra takes the session's latest admitted receipt; with none, Atlas uses the only record or refuses as ambiguous"], ["After compaction", "the host restores the same checkpoint once (residency restored)"]])}</div>${foot(A.newcap("R5"), "respawn-confirm", "Resume", unit)}</form>`
     },
     rule: (member = "backend", lesson = "", unit = "") => `<form method="dialog">${head("Index a rule", "One imperative line, an always or a never, with where it applies.")}<div class="mx-dialog-body">
       <label class="mx-field"><span>Rule</span><textarea id="rule-text" rows="3">${A.esc(lesson)}</textarea></label><label class="mx-field"><span>Applies to</span><input id="rule-scope" placeholder="a path, a tool or a phase · * for everywhere" value="${lesson ? "tasks with phased packets" : ""}"></label>
@@ -241,48 +241,50 @@
       <label class="mx-field"><span>Covers</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>Hint · default</option><option>Ratified</option><option>Core · a person ratifies</option></select></label>
       ${A.tech([["File", "TERRITORY-CATALOG.json, committed and edited by hand today"]])}</div>${foot(A.newcap("R4"), "territory-confirm", "Declare")}</form>`,
     link: (x) => `<form method="dialog">${head("Link as the same fact", A.esc(x.claim))}<div class="mx-dialog-body"><label class="mx-field"><span>The other fact</span><input placeholder="Search by sentence or file"></label>
-      <p class="mx-note">Both facts stay; reads show them as the same. A link you undo can never be made again.</p>${writingAs()}${lockedNote()}${A.tech([["Command", "<code>atlas link &lt;a&gt; &lt;b&gt;</code> · <code>--retract</code> to undo"], ["Needs", "write access to every group in the linked set, and the ratifier name if any is core"]])}</div>${foot("", "toast", "Link", "Pick the other fact first.")}</form>`,
+      <p class="mx-note">Both facts stay; reads show them as the same. A link you undo can never be made again.</p>${writingAs()}${lockedNote()}${A.tech([["Command", "<code>atlas link &lt;a&gt; &lt;b&gt;</code> · <code>--retract</code> to undo"], ["Needs", "write access to every group in the linked set, an approval key always, and the ratifier name if any is core"]])}</div>${foot("", "toast", "Link", "Pick the other fact first.")}</form>`,
     // A new fact from scratch: anchors → slot → claim → draft → check → emit (tools/src/draft.ts, check.ts).
     addFact: (path) => {
       const files = [...new Set(M().live().filter((x) => x.file === path || x.file.startsWith(`${path}/`)).map((x) => x.file))].sort()
-      const draft = { file: files[0] ?? path, scope: path.split("/")[0] || "(root)", tier: "T2" }
+      const draft = { file: files[0] ?? path, tier: "T2" }
       return `<form method="dialog">${head("Add a fact", "One sentence that is true about this code today.")}<div class="mx-dialog-body">
       <div class="mx-fields"><label class="mx-field"><span>About</span><select id="fact-anchor">${files.map((f) => `<option value="${A.esc(f)}">${A.esc(f.slice(path.length + 1) || f)}</option>`).join("")}</select></label>
       <label class="mx-field"><span>Kind</span><select id="fact-slot">${M().SLOT_GROUPS.map(([g, , slots]) => `<optgroup label="${g}">${slots.map((sl) => `<option value="${sl}">${A.esc(M().SLOT_MEANING[sl])}</option>`).join("")}</optgroup>`).join("")}</select></label></div>
       <label class="mx-field"><span>Sentence</span><textarea id="fact-text" rows="3" placeholder="e.g. Every write goes through the four checks before it is stored."></textarea></label>
       <div class="at-result-row">${A.icon("fact")}<span>Creates a new fact · needs an approval key</span>${A.help("atlas draft previews CREATE or UPDATE. A fact written by hand always takes the full approval route.")}</div>
-      ${writingAs()}${checksStrip(M().checks(draft, { regrounds: true }))}${lockedNote()}
-      ${A.tech([["Commands", "<code>atlas anchors &lt;path&gt;</code> · <code>atlas slots</code> · <code>atlas draft &lt;anchor&gt; &lt;slot&gt; &lt;claim&gt;</code> · <code>atlas check</code> · <code>atlas emit --at &lt;rev&gt;</code>"], ["Write group", `<code>${A.esc(draft.scope)}</code>, from the path; policy must grant it`], ["Not indexable", "files Atlas has no indexer for can't be chosen (anchors holes)"]])}</div>${foot("", "add-fact-confirm", "Add", path)}</form>`
+      ${writingAs()}${checksStrip(M().checks(draft, { regrounds: true, draft: true }))}${lockedNote()}
+      ${A.tech([["Commands", "<code>atlas anchors &lt;path&gt;</code> · <code>atlas slots</code> · <code>atlas draft &lt;anchor&gt; &lt;slot&gt; &lt;claim&gt;</code> · <code>atlas check</code> · <code>atlas emit --at &lt;rev&gt;</code>"], ["Write group", `<code>${A.esc(path.split("/")[0])}</code>, defaulted from the path; policy must grant it`], ["Anchors", "files with no grammar can be anchored only as whole files"]])}</div>${foot("", "add-fact-confirm", "Add", path)}</form>`
     },
     // `atlas verify-fact <kind> <target> --scope` — proven, refuted (negation only) or couldn't decide.
     verify: (scope = "") => `<form method="dialog">${head("Check a claim", "Ask the code index whether a claim is provable. Nothing is saved.")}<div class="mx-dialog-body">
-      <label class="mx-field"><span>Claim</span><select id="vf-kind"><option value="dependency">Something in the scope uses the target</option><option value="count">The target is used at least N times in the scope</option><option value="definition">The target is defined in the scope</option><option value="negation">Nothing in the scope calls the target</option></select></label>
-      <div class="mx-fields"><label class="mx-field"><span>Target</span><input id="vf-target" placeholder="a symbol or file, e.g. createOwn"></label><label class="mx-field"><span>Scope</span><input id="vf-scope" value="${A.esc(scope.split("/").slice(0, 2).join("/"))}"></label></div>
+      <label class="mx-field"><span>Claim</span><select id="vf-kind"><option value="dependency">Something in the scope uses the target</option><option value="count">The target has at least N callers in the scope</option><option value="definition">The target is defined in the scope</option><option value="negation">Nothing in the scope calls the target</option></select></label>
+      <div class="mx-fields"><label class="mx-field"><span>Target</span><input id="vf-target" placeholder="a code-index symbol, e.g. createOwn"></label><label class="mx-field"><span>Scope</span><input id="vf-scope" value="${A.esc(scope.split("/").slice(0, 2).join("/"))}"></label></div>
       <div id="vf-result"></div>
       ${A.tech([["Command", "<code>atlas verify-fact &lt;kind&gt; &lt;target&gt; --scope &lt;s&gt; [--world] [--min] [--exact]</code>"], ["Answers", "proven · refuted (only for “nothing calls”) · abstain with a reason; all exit 0"]])}</div>
       <footer class="mx-dialog-foot"><span class="grow"></span><button class="mx-btn" value="cancel">Close</button><button class="mx-btn primary" type="button" data-action="verify-run">Check</button></footer></form>`,
     // Republishing: scripts/materialize-own-snapshot.mjs checks, in this order, before it writes anything.
     publish: () => {
       const ok = !!R().illustrated
-      const pre = [["Built from a commit in this branch", ok, "source-revision-not-ancestor"], ["Its source files are unchanged", ok, "artifacts-invalid"], ["Briefing files not edited by hand", true, "skill-bytes-changed"], ["Every unit complete", ok, "unit-coverage-incomplete"]]
+      const pre = [["Not read from .atlas", true, "inputs and anchors under .atlas are refused"], ["Built from a commit in this branch", ok, "sourceRevision must be an ancestor of HEAD"], ["Every anchor is a plain file", true, "anchors must be regular files"], ["Source files unchanged since then", ok, "anchor blobs must match at the revision and now"]]
       return `<form method="dialog">${head("Republish briefings", "Agents read a reviewed, published copy, not the live store.")}<div class="mx-dialog-body">
       <div class="at-checks-strip">${pre.map(([l, pass, code]) => `<span class="at-check ${pass ? "good" : "bad"}" data-tip="${code}">${A.icon(pass ? "checkc" : "xc")}${l}</span>`).join("")}</div>
       <div class="ins-note">${A.icon("info")}<span>Atlas has no command that writes the reviewed snapshot from the live store, so a maintainer prepares it by hand today.</span></div>
-      ${A.tech([["Script", "<code>node scripts/materialize-own-snapshot.mjs &lt;reviewed-snapshot.json&gt;</code>"], ["Writes", "OWN-SNAPSHOT.json · .orchestra/skills/own/** · OWN-COVERAGE.json"], ["Refuses", "inputs under .atlas · a revision not in HEAD's history · an anchor blob that differs at the revision or now"], ["Producer", "exportOwnSnapshot exists in retrieval but nothing calls it"]])}</div>${foot(A.newcap("R7"), "toast", "Republish", "Republishing from the app is a new capability (R7).")}</form>`
+      ${A.tech([["Script", "<code>node scripts/materialize-own-snapshot.mjs &lt;reviewed-snapshot.json&gt;</code>"], ["Writes", "OWN-SNAPSHOT.json and .orchestra/skills/own/** (coverage included), replaced whole"], ["Refuses", "inputs under .atlas · a revision not in HEAD's history · an anchor blob that differs at the revision or now"], ["Producer", "nothing builds the reviewed snapshot JSON from the live store"], ["When agents read", "Orchestra re-checks the revision, the source files and the briefing files byte for byte"]])}</div>${foot(A.newcap("R7"), "toast", "Republish", "Republishing from the app is a new capability (R7).")}</form>`
     },
     // `atlas init <path>` → {territories, blastRadius, t0Candidates}: a suggestion, never written.
+    // `atlas init <path>` → {territories, blastRadius, t0Candidates}: one blast radius for the whole path, never written.
     suggest: () => {
       const kw = R().t0Keywords ?? []
-      const rows = M().units().filter((u) => u.group === "code").map((u) => ({ u, blast: M().dependentFacts(u.id), core: kw.some((k) => u.id.includes(k)) })).sort((a, z) => z.blast - a.blast)
-      return `<form method="dialog">${head("Suggest territories", "One per package, ranked by how much depends on it.")}<div class="mx-dialog-body">
-      ${rows.slice(0, 10).map((r) => `<div class="at-linkrow static">${A.icon("territory")}<code class="at-mono">${A.esc(r.u.id)}</code><span class="grow"></span><small>${A.num(r.blast)} facts depend on it</small>${r.core ? '<span class="at-tier-chip">Core?</span>' : ""}</div>`).join("")}
-      <p class="mx-note">A suggestion only: nothing is written. Declare the ones you want.</p>
-      ${A.tech([["Command", "<code>atlas init &lt;path&gt;</code> · blastRadius per territory · t0Candidates from <code>t0Heuristic.keywords</code>"], ["Side effect", "adds <code>.atlas/*</code> and <code>!.atlas/policy.json</code> to .gitignore"]])}</div>
+      const rows = M().units().filter((u) => u.group === "code").map((u) => ({ u, core: kw.some((k) => u.id.includes(k)) }))
+      const blast = new Set(Object.values(R().dependents).flat()).size
+      return `<form method="dialog">${head("Suggest territories", "One per package. A suggestion only: nothing is written.")}<div class="mx-dialog-body">
+      <div class="at-result-row">${A.icon("graph")}<span>${A.num(blast)} files depend on something in this repository</span>${A.help("blastRadius: what depends on the path, from the code index.")}</div>
+      ${rows.map((r) => `<div class="at-linkrow static">${A.icon("territory")}<code class="at-mono">${A.esc(r.u.id)}</code><span class="grow"></span>${r.core ? '<span class="at-tier-chip" data-tip="Its name has a core keyword; the tier is never set for you">Core?</span>' : ""}</div>`).join("")}
+      ${A.tech([["Command", "<code>atlas init &lt;path&gt;</code> → territories · blastRadius · t0Candidates (from <code>t0Heuristic.keywords</code>)"], ["Side effect", "adds <code>.atlas/*</code> and <code>!.atlas/policy.json</code> to .gitignore"]])}</div>
       <footer class="mx-dialog-foot"><span class="grow"></span><button class="mx-btn primary" value="ok">Done</button></footer></form>`
     },
-    importStore: () => `<form method="dialog">${head("Import a store", "Bring facts from another repository's export.")}<div class="mx-dialog-body">
+    importStore: () => `<form method="dialog">${head("Import a store", "Load another repository's export into a folder with no Atlas store.")}<div class="mx-dialog-body">
       <label class="mx-field"><span>Bundle</span><input placeholder="atlas-okf.json"></label><label class="mx-field"><span>Into</span><input placeholder="an empty folder"></label>
-      <p class="mx-note">Only into an empty folder. The bundle holds stored objects, not memory and not which version is current.</p>
+      <p class="mx-note">The target must have no <code>.atlas/</code>. Imported facts are stored but not served until they are written again through the checks.</p>
       ${A.tech([["Command", "<code>atlas import &lt;bundle&gt; &lt;target&gt;</code>"]])}</div>${foot("", "toast", "Import", "Not run in this preview.")}</form>`,
     hotset: () => `<form method="dialog">${head("Hot set budget", "Does the store serve more facts than you want agents to carry?")}<div class="mx-dialog-body">
       <label class="mx-field"><span>Budget</span><input id="hot-budget" type="number" value="500" min="1"></label><div id="hot-result"></div>
@@ -311,7 +313,7 @@
     toast: (v) => A.toast(A.esc(v), "info"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },
     event: (v) => dialog(A.eventSheet(v)),
-    retire: (v) => locked() || change(v, { retired: true }, "Retired. Still sent to agents (R6).", "minusc"),
+    retire: (v) => locked() || (M().state(M().byKey[v]) === "drifted" ? A.toast(`Refused: ${A.refusal("ungrounded")}. Rewrite it instead.`, "xc") : change(v, { retired: true }, "Retired. Still sent to agents (R6).", "minusc")),
     promote: (v) => {
       if (locked()) return
       const c = M().checks(M().byKey[v], { token: "key" })
@@ -341,7 +343,7 @@
       const claim = $("#fact-text").value.trim()
       if (!claim) return A.toast("Write the sentence first.", "info")
       if (locked()) return
-      const c = M().checks({ file: $("#fact-anchor").value, scope: v.split("/")[0] || "(root)" }, { regrounds: true, token: $("#token")?.value ?? "" })
+      const c = M().checks({ file: $("#fact-anchor").value, tier: "T2" }, { regrounds: true, draft: true, token: $("#token")?.value ?? "" })
       if (!c.wouldEmit) return A.toast(`Refused: ${A.refusal(c.gates.find((g) => !g.pass).reason)}.`, "xc")
       $("#dialog").close()
       A.toast("Added as a hint.", "fact")
@@ -352,9 +354,8 @@
       const scope = $("#vf-scope").value.trim()
       const kind = $("#vf-kind").value
       if (!target || !scope) return A.toast("Fill in the target and the scope.", "info")
-      // Only dependency can be answered from this preview's import data; the rest would need the live oracle.
-      const users = Object.entries(M().R.dependents).filter(([f]) => f.includes(target)).flatMap(([, u]) => u).filter((u) => u.startsWith(scope))
-      const [tone, glyph, text] = kind === "dependency" ? (users.length ? ["good", "checkc", `Proven: ${plural(users.length, "file")} in ${scope} use it.`] : ["", "minusc", "Couldn't decide: no use found, and absence isn't proof across packages."]) : ["", "minusc", "Not run in this preview; Atlas answers proven, refuted or couldn't decide."]
+      // The preview has no code index to ask; it shows what each answer would say.
+      const [tone, glyph, text] = ["", "minusc", `Not run in this preview. Atlas answers proven, couldn't decide${kind === "negation" ? ", or refuted" : ""}.`]
       $("#vf-result").innerHTML = `<div class="at-result-row ${tone}">${A.icon(glyph)}<span>${A.esc(text)}</span></div>`
     },
     suggest: () => dialog(sheet.suggest()),
@@ -363,6 +364,7 @@
     "hotset-run": () => {
       const budget = Number($("#hot-budget").value)
       const size = M().health().hotSet
+      if (M().provenance() !== "trusted") return ($("#hot-result").innerHTML = `<div class="at-result-row">${A.icon("lock")}<span>Refused: Atlas won't count a store in git.</span></div>`)
       $("#hot-result").innerHTML = `<div class="at-result-row ${size > budget ? "bad" : "good"}">${A.icon(size > budget ? "warning" : "checkc")}<span>${A.num(size)} facts served · ${size > budget ? `${A.num(size - budget)} over` : "within budget"}</span></div>`
     },
     "link-fact": (v) => dialog(sheet.link(M().byKey[v])),
@@ -376,7 +378,8 @@
       $("#dialog").close()
       if (locked()) return
       const x = M().byKey[v]
-      if (M().state(x) === "drifted") return A.toast(`Refused: ${A.refusal("ungrounded")}.`, "xc")
+      const cc = M().checks(x, { regrounds: true, draft: true, token: $("#token")?.value ?? "" })
+      if (!cc.wouldEmit) return A.toast(`Refused: ${A.refusal(cc.gates.find((g) => !g.pass).reason)}.`, "xc")
       // nodeKey = hash(anchor ‖ slot): a new identity, drafted at T2. The key here is a marked placeholder.
       const copyFact = { ...x, key: `new-${slot}-${x.key.slice(0, 12)}`, slot, tier: "T2", proposedTier: undefined, example: true }
       M().facts.push(copyFact)
@@ -401,7 +404,8 @@
       const x = M().byKey[v]
       if (locked()) return
       if (claim === x.claim) return A.toast("Nothing changed.", "info")
-      if (!M().checks(x, { regrounds: true, token }).wouldEmit) return A.toast(`Refused: ${A.refusal("unratified")}.`, "xc")
+      const ec = M().checks(x, { regrounds: true, draft: true, token })
+      if (!ec.wouldEmit) return A.toast(`Refused: ${A.refusal(ec.gates.find((g) => !g.pass).reason)}.`, "xc")
       $("#dialog").close()
       // Same tier ⇒ the claim set is a union (knowledge/src/write/upsert.ts): the old sentence stays and is sent.
       change(v, { claim: `${x.claim}; ${claim}`, regrounded: true }, "Saved. Both sentences are sent (R8).")
@@ -426,7 +430,7 @@
       const m = M().memory[member]
       $("#dialog").close()
       // An identical rule is reconciled, not rewritten, and gets no younger (tool/atlas-memory.ts).
-      if (m.rules.some((r) => r.rule === rule && r.scope === scope)) return A.toast("Already saved; nothing new was written.", "info")
+      if (m.rules.some((r) => r.rule === rule && r.scope === scope && !r.grounding)) return A.toast("Already saved; nothing new was written.", "info")
       // The 500-word cap counts every rule this member ever wrote (adapter-io/src/memory-emit.ts); shown only when hit.
       if (pm.lifetime + count > 500) return A.toast(`Not saved: ${A.refusal("over-cap")}.`, "xc")
       M().appendRecord()
@@ -463,7 +467,8 @@
     const x = key && M().byKey[key]
     if (!x || !$("#checks")) return
     const tier = form.querySelector('input[name="tier"]:checked')?.value ?? "T1"
-    $("#checks").outerHTML = checksStrip(M().checks(x, { tier, token: event.target.value, regrounds: !!form.querySelector("#edit-text") }))
+    const drafted = !!form.querySelector("#edit-text, .at-slotpick")
+    $("#checks").outerHTML = checksStrip(M().checks(x, { tier, token: event.target.value, regrounds: drafted, draft: drafted }))
   })
 
   const step = (delta) => {

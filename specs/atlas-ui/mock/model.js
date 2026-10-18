@@ -243,13 +243,17 @@
   const checks = (x, opts = {}) => {
     const tier = opts.tier ?? "T2"
     const truth = opts.regrounds || !x.drift
-    const authz = (R.policy[x.scope] ?? []).includes(actor)
+    // A write through `atlas draft` declares the path's first segment as its group (tools/src/draft.ts scopeOf) and
+    // is always T2, so drafting over a ratified fact is a downgrade.
+    const scope = opts.draft ? x.file.split("/")[0] : x.scope
+    const downgrade = opts.draft && (x.tier ?? "T2") !== "T2" && tier === "T2"
+    const authz = !downgrade && (R.policy[scope] ?? []).includes(actor)
     const token = opts.token ?? ""
     const ratify = tier === "T0" ? token === "billy" : token !== ""
     const gates = [
       { gate: "shape", pass: true },
       { gate: "truth", pass: truth, reason: "ungrounded", remedy: "re-derive against the current tree" },
-      { gate: "authz", pass: authz, reason: "unauthorized", remedy: `grant ${x.scope} in .atlas/policy.json` },
+      { gate: "authz", pass: authz, reason: downgrade ? "governance-downgrade" : "unauthorized", remedy: downgrade ? "raise the tier, or edit through ratify" : `grant ${scope} in .atlas/policy.json` },
       { gate: "ratify", pass: ratify, reason: "unratified", remedy: tier === "T0" ? "ATLAS_RATIFY_TOKEN=billy" : "set ATLAS_RATIFY_TOKEN" },
     ]
     // The gate chain stops at the first refusal; later gates are not reached.
@@ -278,8 +282,10 @@
 
   /* ---------- Health, from the store's own files ---------- */
   const health = () => {
-    const langs = R.langs ?? {}
     const configured = { ts: ["scip-typescript", "0.4.0"], py: ["scip-python", "0.6.6"] }
+    // adapter-io/src/indexer-report.ts EXT_LANG: extensions fold into languages; unknown ones are never a hole.
+    const EXT = { ts: "ts", tsx: "ts", mts: "ts", cts: "ts", js: "ts", jsx: "ts", mjs: "ts", cjs: "ts", py: "py", pyi: "py", go: "go", java: "java", rs: "rust", rb: "rb" }
+    const langs = Object.entries(R.langs ?? {}).reduce((o, [ext, n]) => (EXT[ext] ? { ...o, [EXT[ext]]: (o[EXT[ext]] ?? 0) + n } : o), {})
     return {
       provenance: provenance(),
       cas: { ...R.casAudit, corrupt: 0, unreadable: 0, sound: (R.casAudit?.missing ?? 0) === 0 },
@@ -301,7 +307,7 @@
         const input = (() => { try { return JSON.parse(p.input) } catch { return {} } })()
         // A unit outside the published catalog is held, not read; the hold event below covers it.
         if (input.action === "unit" && !snapshot.units.includes(input.unit)) return
-        if (input.action === "anchor") return events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: "anchor", target: input.reference, units: input.units, text: `${names[t.member]} froze ${input.units.length} units for ${input.reference}`, example: t.example, task: t })
+        if (input.action === "anchor") return events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: "anchor", target: input.target.id, units: input.units, text: `${names[t.member]} froze ${input.units.length} units for ${input.target.id}`, example: t.example, task: t })
         events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: input.action, target: input.unit, text: input.action === "catalog" ? `${names[t.member]} read the unit catalog` : `${names[t.member]} read the briefing for ${input.unit}`, research: t.member === "jimmy", example: t.example, task: t })
       }))
       t.checkpoints.filter((c) => (c.entry.failedWith ?? []).some((f) => /AtlasContextHeld/.test(f))).forEach((c) => {

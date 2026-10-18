@@ -174,3 +174,37 @@ Add a fact (anchors → slots → draft → check), Check a claim (`verify-fact`
 ### Deixado de fora de propósito
 
 Capacidades construídas só na biblioteca (sem CLI/MCP) e conceitos só de docs: lista em `DESIGN.md` › Fora de propósito.
+
+## Quarta rodada: revisão fria (2026-10-18)
+
+Três revisores sem contexto (conhecimento, memória, health/settings/activity) leram o mock contra o código. Cada achado foi conferido antes de virar mudança.
+
+**Corrigido (confirmado no código):**
+- **HOLD/config:** o exemplo precisa de `sourceDirectory`, porque sem ele os arquivos do snapshot não são achados. O catálogo ainda não existe em `modules/atlas` e é gerado por `publishTerritoryCatalog`; uma edição à mão quebra o hash de versão (`orch/maestro/atlas-source.ts:76`, `retrieval/src/host-context.ts:75`).
+- **Retire de um fato alterado:** é recusado `ungrounded`, porque o truth gate re-deriva a âncora antiga. O botão sai, e a frase sugere reescrever (`adapter-io/src/doctor-source.ts:177`, `governed-emit-gates.ts:202`).
+- **Edit, Classify e Add fact via `draft`:**
+  - o grupo é o primeiro segmento do caminho (`packages`), então o "Allowed" fica vermelho com esta política;
+  - sobre um fato Ratified ou Core, a escrita é `governance-downgrade`;
+  - Classify re-ancora no HEAD (`tools/src/draft.ts:198`, `governed-emit-reasons.ts:37`).
+- **Derive links:** só prova `depends-on`; SCIP não tem papel de chamada (`adapter-io/src/relation-derive.ts:40`).
+- **Índice:** `.mjs`/`.js` contam como TypeScript (EXT_LANG); uma extensão desconhecida nunca vira lacuna.
+- **Republish:**
+  - lista as pré-condições reais do script (`.atlas`, ancestral, arquivo regular, blobs);
+  - `skill-bytes-changed` é checado na leitura, não no script;
+  - o script chama `exportOwnSnapshot`.
+- **`init`:** um único blast radius para o caminho, não um por território.
+- **Import:** o alvo só precisa não ter `.atlas/`. Os fatos importados não são servidos até passarem pelos checks.
+- **Hot set:** é recusado num store em git.
+- **Âncoras do Archie:**
+  - a entrada é `target {kind, id}`;
+  - o limite de 8 unidades e 128 KiB vale por âncora;
+  - o drift é checado ao publicar o workflow.
+- **Resume:**
+  - o Orchestra escolhe o checkpoint a partir do recibo e o Atlas confere;
+  - o checkpoint vai na mesma mensagem do packet;
+  - quem reporta é o próprio seat (blocker `packet` ou `atlas`);
+  - depois de uma compactação, ele é reenviado uma vez.
+- **Logbook:** os limites de seção existem só na biblioteca; a porta de escrita checa apenas o template.
+- **Frases:** `canonical-form violation`, `closed-slot-violation`, `ambiguous`, `over-cap`, `scanner-unavailable`, `no-own-fold`; Core "Atlas não verifica quem digitou"; Link pede sempre uma chave; `seq` é sempre 0.
+
+**Rejeitado:** "um hint escrito à mão dispensa a chave". O `draft` marca a proveniência `trusted: false` (`tools/src/draft.ts:94`), e o fast path exige `trusted` (`knowledge/src/ratify/fastpath.ts:148`). Toda escrita feita pela UI passa pelo `draft`, então sempre pede a chave.

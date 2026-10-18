@@ -102,7 +102,7 @@
   )
 
   // Archie freezes the units a plan step depends on (atlas_context anchor): body hashes Relay checks before each step.
-  A.spawns.find((t) => t.unit === "WP-ATLAS-W1").transcript.splice(4, 0, tool(16, "atlas_context", "{\"action\":\"anchor\",\"reference\":\"WP-ATLAS-W1/WP-2\",\"units\":[\"packages/knowledge\",\"packages/retrieval\"]}"))
+  A.spawns.find((t) => t.unit === "WP-ATLAS-W1").transcript.splice(4, 0, tool(16, "atlas_context", "{\"action\":\"anchor\",\"target\":{\"kind\":\"work-package\",\"id\":\"WP-ATLAS-W1/WP-2\"},\"units\":[\"packages/knowledge\",\"packages/retrieval\"]}"))
 
   A.illustrations = {
     // Every project rule, in or out of the header. `age` = records appended to memory.jsonl after it, by any
@@ -128,7 +128,7 @@
     // Proven facts a working store would hold (relations, negations with an abstention, a transition, a hollow test).
     structure: {
       "packages/knowledge": {
-        links: [{ kind: "depends-on", a: "packages/knowledge", b: "packages/contracts" }, { kind: "calls", a: "write/upsert.ts#upsert", b: "kernel/src/hash.ts#blake3" }],
+        links: [{ kind: "depends-on", a: "packages/knowledge", b: "packages/contracts" }, { kind: "depends-on", a: "packages/knowledge/src/write/upsert.ts", b: "packages/kernel/src/hash.ts" }],
         never: [{ scope: "packages/knowledge/src", target: "node:fs" }],
         abstained: [{ scope: "packages/knowledge", target: "process.env", reason: "scope-dynamic" }],
         changes: [{ unit: "packages/knowledge/src/write", before: "2211f30", after: "80355ab" }],

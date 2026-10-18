@@ -86,10 +86,10 @@ window.Atlas = window.Atlas || {}
     const [tone, glyph, label, tip] = states[value] ?? states.fresh
     return `<span class="at-state ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
   }
-  const tierWord = { T0: ["Core", "T0 · must be right; only a person ratifies (ratifier name billy)"], T1: ["Ratified", "T1 · load-bearing; ratified with an approval key"], T2: ["Hint", "T2 · advisory; mined or written, nobody ratified it"] }
+  const tierWord = { T0: ["Core", "T0 · must be right; needs the ratifier name billy, which Atlas does not authenticate"], T1: ["Ratified", "T1 · load-bearing; ratified with an approval key"], T2: ["Hint", "T2 · advisory; mined or written, nobody ratified it"] }
   A.tier = (t) => `<span class="at-tier-chip" data-tip="${tierWord[t]?.[1] ?? t}">${tierWord[t]?.[0] ?? A.esc(t)}</span>`
   A.band = (x) => A.tier(x.tier)
-  const familyWord = { advisory: ["Stated", "advisory · a grounded sentence with no executable check"], predicate: ["Tested", "predicate · carries the check status it was written with (HOLDS, BROKEN or NA); Atlas does not re-run it"], relation: ["Link", "relation · a proven edge: depends-on or calls"], negation: ["Never calls", "negation · nothing in a scope calls a target"], transition: ["Code change", "transition · what changed between two commits"], "test-vacuity": ["Hollow test", "test-vacuity · a test that cannot fail"] }
+  const familyWord = { advisory: ["Stated", "advisory · a grounded sentence with no executable check"], predicate: ["Tested", "predicate · carries the check status it was written with (HOLDS, BROKEN or NA); Atlas does not re-run it"], relation: ["Link", "relation · a proven depends-on edge (calls exists as a kind; nothing proves it today)"], negation: ["Never calls", "negation · nothing in a scope calls a target"], transition: ["Code change", "transition · what changed between two commits"], "test-vacuity": ["Hollow test", "test-vacuity · a test that cannot fail"] }
   A.family = (f) => `<span class="at-origin" data-tip="${familyWord[f]?.[1] ?? f}">${familyWord[f]?.[0] ?? A.esc(f)}</span>`
   A.familyWord = (f) => familyWord[f]?.[0] ?? f
   A.origin = (x) => (x.scope === "atlas:mined" ? "Mined" : "Written")
@@ -103,12 +103,12 @@ window.Atlas = window.Atlas || {}
   A.REFUSALS = {
     ungrounded: "The code changed since then", unauthorized: "You can't write to this group", unratified: "Needs an approval key",
     contended: "Changed by someone else meanwhile", "untrusted-store": "This store is in git, so Atlas refuses writes", untrusted: "This store is in git, so Atlas refuses writes",
-    "closed-slot-violation": "This kind isn't allowed here", "canonical-form violation": "Wording doesn't fit the template", "scanner-blocked": "Looks like it contains a secret",
-    "scanner-unavailable": "No secret scanner is installed", ambiguous: "Several checkpoints, pick one", "undetermined-kind": "It doesn't match a memory template",
+    "closed-slot-violation": "Not one of Atlas's 13 kinds", "governance-downgrade": "Would lower a ratified fact to a hint", "governance-relocation": "Would move the fact to another write group", "canonical-form violation": "It holds a value Atlas can't store, like a decimal", "scanner-blocked": "Looks like it contains a secret",
+    "scanner-unavailable": "No secret scanner could run", ambiguous: "Several checkpoints, and none was named", "undetermined-kind": "It doesn't match a memory template",
     "template-invalid": "A field is missing or has the wrong type", "unit-missing-or-ambiguous": "That unit isn't in the published catalog",
-    "over-cap": "This member has used up its 500 lifetime rule words", "store-partial": "Some memory lines couldn't be read", "store-unavailable": "Memory couldn't be read",
+    "over-cap": "This rule would take the member past its 500 lifetime rule words", "store-partial": "Some memory lines couldn't be read", "store-unavailable": "Memory couldn't be read",
     "kind-conflation": "It mixes two memory kinds", unowned: "No member owns this write", "logbook-unauthorized": "Only orch may write the logbook", "logbook-duplicate": "This PR already has a logbook entry",
-    "no-own-fold": "No saved checkpoint for this task", "record-not-found": "That checkpoint isn't in memory", "foreign-owner": "That checkpoint belongs to another member", "unit-mismatch": "That checkpoint is for another task",
+    "no-own-fold": "No saved checkpoint for this task or PR", "record-not-found": "That checkpoint isn't in memory", "foreign-owner": "That checkpoint belongs to another member", "unit-mismatch": "That checkpoint is for another task",
     "provider-unconfigured": "Atlas isn't connected to this project", "provider-project-mismatch": "Atlas is connected to another project", "artifacts-invalid": "The published briefings no longer match the code",
     "source-revision-not-ancestor": "The briefings were built from another branch", "context-dirty": "The working tree has uncommitted files", "plan-grounding-stale": "The plan was made on older briefings",
     "grounded-plan-required": "The plan names no published units", "territory-unavailable": "That territory isn't in the catalog", "unit-unavailable": "That unit isn't in the published catalog",

@@ -131,7 +131,7 @@
     const ex = '<span class="at-pill">example</span>'
     const sRow = (glyph, text, tail = "") => `<div class="at-linkrow static">${A.icon(glyph)}<span>${text}</span><span class="grow"></span>${tail}${ex}</div>`
     const structure = [
-      ["links", "Links", "atlas relations · depends-on and calls edges proven from the code index", (ps.links ?? []).map((l) => sRow("relations", `<code class="at-mono">${A.esc(l.a)}</code> ${l.kind === "calls" ? "calls" : "depends on"} <code class="at-mono">${A.esc(l.b)}</code>`, '<span class="at-state good">Machine-proven</span>'))],
+      ["links", "Links", "atlas relations · depends-on edges proven from the code index", (ps.links ?? []).map((l) => sRow("relations", `<code class="at-mono">${A.esc(l.a)}</code> depends on <code class="at-mono">${A.esc(l.b)}</code>`, '<span class="at-state good">Machine-proven</span>'))],
       ["never", "Never calls", "atlas negations · nothing in the scope calls a target", [...(ps.never ?? []).map((n) => sRow("minusc", `Nothing in <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>`)),
         ...(ps.abstained ?? []).map((n) => sRow("info", `Couldn't decide whether <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>: ${abstainWord[n.reason] ?? A.esc(n.reason)}`))]],
       ["changes", "Code changes", "atlas transitions · what changed in a unit between two commits", (ps.changes ?? []).map((c) => sRow("commit", `<code class="at-mono">${A.esc(c.unit)}</code> changed between <code class="at-sha">${A.esc(c.before)}</code> and <code class="at-sha">${A.esc(c.after)}</code>`))],
@@ -143,7 +143,7 @@
     // Connections: what depends on it (own `edges.dependents`). Atlas has no forward closure, so "what it uses" is
     // always empty in the pack (adapter-io/src/own-source.ts) and the UI says so instead of computing it.
     const usedFacts = M().live().filter((x) => b.depFiles.includes(x.file)).sort((a, z) => a.key.localeCompare(z.key))
-    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit, from the code index. The briefing sends the first 8 of their facts.")}</div>
+    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit, from the code index. The briefing sends the keys of the first 8 of their facts.")}</div>
       ${usedFacts.length ? A.seven(usedFacts, "used", (x) => factRow(x, state)) : '<div class="at-band-empty">Nothing outside depends on it.</div>'}
       <div class="at-linkrow static muted">${A.icon("minusc")}<span>What it uses</span>${A.help("Atlas's index only answers what depends on a unit, so the briefing's dependencies band is always empty.")}<span class="grow"></span><small>Not recorded</small></div>`
 
@@ -162,7 +162,7 @@
       ["advisoryDropped", b.pull.filter((x) => !M().governing(x)).length],
       ["Pointers", b.pointers.length ? `${b.pointers.length} of ${b.pointerTotal} · pull <code>atlas own &lt;child&gt;</code> · hits 0` : "none"],
       ["refresh · complement", `<code>poke:own_${A.esc(leaf)}</code> · <code>relate:${A.esc(path)}</code>`],
-      ["Query pack", `<code>atlas query ${A.esc(path)}</code> · the same rows in two bands, stale false`],
+      ["Query pack", `<code>atlas query ${A.esc(path)}</code> · two bands of up to 2,000 characters each; stale when any fact changed`],
       ["Anchors", `<code>atlas anchors ${A.esc(path)}</code> · file units at ${A.esc(R().head)}`],
     ])
 
@@ -204,12 +204,12 @@
     const index = order.indexOf(key)
     const sec = (id, title, body, open = false) => `<details class="ins-acc" data-acc="fact-${id}" ${open ? "open" : ""}><summary>${A.icon("chev")}<span>${title}</span></summary><div class="ins-acc-body">${body}</div></details>`
     const hunk = (h) => `<div class="at-code"><div class="at-code-head"><span>@@ ${A.esc(h.at)} @@</span></div><pre>${h.lines.map((l) => `<div class="ln ${l[0] === "+" ? "add" : l[0] === "-" ? "del" : ""}"><span></span><span>${A.esc(l.slice(1))}</span></div>`).join("")}</pre></div>`
-    const changed = x.drift && !x.regrounded ? sec("changed", `What changed <span class="at-state warm" data-tip="doctor why: semantic. The old content exists nowhere at HEAD.">Content gone</span>`, `<p class="ins-sub">The file changed in ${plural(x.drift.commits.length, "commit")} (${A.esc(x.drift.stat)}). Atlas suggests: <b>${staged ? "leave it" : "Retire"}</b>, or rewrite the sentence for the current code.</p>
+    const changed = x.drift && !x.regrounded ? sec("changed", `What changed <span class="at-state warm" data-tip="doctor why: semantic. The old content exists nowhere at HEAD.">Content gone</span>`, `<p class="ins-sub">The file changed in ${plural(x.drift.commits.length, "commit")} (${A.esc(x.drift.stat)}). ${staged ? "Leave it in Mined." : `Atlas suggests retiring it, but a retire still points at the old code and is refused today, so rewrite the sentence for the current code ${A.help("doctor reground plans a retire; the truth gate re-derives the old anchor and refuses it as ungrounded (R6).")}`}</p>
       ${x.drift.commits.map(([sha, subj]) => `<div class="at-commit"><code class="at-sha">${A.esc(sha)}</code><span>${A.esc(subj)}</span></div>`).join("")}${x.drift.hunks.slice(0, 1).map(hunk).join("")}`, true) : ""
     const history = `<ul class="at-timeline">
       <li><span class="at-tl-dot blue">${A.icon("sparkle")}</span><div class="at-tl-body"><strong>Mined</strong><small>by genesis, from the whole file</small></div></li>
       ${staged ? `<li><span class="at-tl-dot">${A.icon("clock")}</span><div class="at-tl-body"><strong>Waiting in Mined</strong><small>not accepted yet</small></div></li>`
-        : `<li><span class="at-tl-dot good">${A.icon("check")}</span><div class="at-tl-body"><strong>Accepted</strong><small>at commit <code class="at-sha">${A.esc(x.derivedAt)}</code></small></div></li>`}
+        : `<li><span class="at-tl-dot good">${A.icon("check")}</span><div class="at-tl-body"><strong>Accepted</strong><small>derived at commit <code class="at-sha">${A.esc(x.derivedAt)}</code></small></div></li>`}
       ${x.tier !== "T2" ? `<li><span class="at-tl-dot good">${A.icon("shield")}</span><div class="at-tl-body"><strong>${x.tier === "T0" ? "Made core" : "Ratified"}</strong><small>who approved is not recorded</small></div></li>` : x.proposedTier ? `<li><span class="at-tl-dot warm">${A.icon("clock")}</span><div class="at-tl-body"><strong>Proposed for ${x.proposedTier === "T0" ? "Core" : "Ratified"}</strong><small>by ${A.esc(x.proposedBy)} · example</small></div></li>` : ""}
       <li><span class="at-tl-dot">${A.icon("minusc")}</span><div class="at-tl-body"><strong>No proof</strong><small>a stated sentence; nothing machine-checks it</small></div></li>
       ${x.retired ? `<li><span class="at-tl-dot">${A.icon("minusc")}</span><div class="at-tl-body"><strong>Replaced</strong><small>still sent to agents (R6)</small></div></li>` : ""}
@@ -242,7 +242,7 @@
     if (page) return body
     const actions = staged
       ? `${A.btn("Keep for later", "discard", { value: x.key, write: true, cap: "R2" })}${A.btn("Accept", "promote", { value: x.key, write: true, primary: true, cap: "R2" })}`
-      : st === "drifted" ? `${A.btn("Retire", "retire", { value: x.key, write: true })}${A.btn("Rewrite", "edit", { value: x.key, write: true, primary: true, cap: "R8" })}`
+      : st === "drifted" ? `${A.btn("Rewrite", "edit", { value: x.key, write: true, primary: true, cap: "R8" })}`
       : st === "retired" ? `<span class="at-hint">Replaced · still sent (R6)</span>`
       : `${A.btn("Edit", "edit", { value: x.key, write: true })}${x.slot ? "" : A.btn("Classify", "classify", { value: x.key, write: true })}${A.btn("Retire", "retire", { value: x.key, write: true })}${M().governing(x) ? "" : A.btn("Ratify…", "ratify", { value: x.key, write: true, primary: true })}`
     return `<header class="ins-head"><span class="ins-kind">${A.icon("fact")}<span>${A.esc(M().unitOf(x.file))}</span></span>
