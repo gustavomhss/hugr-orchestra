@@ -178,7 +178,7 @@ export function gracefulEvidence(target: "tui" | "serve", host: Awaited<ReturnTy
     events.every((event) => event.event === "cli.shutdown" && event.level === "DEBUG" && ["SIGINT", "SIGBREAK"].includes(event.signal) && Number.isFinite(event.elapsedMs)) &&
     events[0]!.status === "started" && events[1]!.status === "disposed"
   return { input, exit: host.state.exit, expectedExitCode, events, pass,
-    ...(!pass ? { blocker: "Windows Ctrl+C did not prove runtime disposal; owner required: packages/orchestra/src/cli/effect-cmd.ts (SIGINT/SIGBREAK shutdown handler)" } : {}) }
+    ...(!pass ? { blocker: "Windows Ctrl+C did not prove runtime disposal; owner required: apps/orchestra/src/cli/effect-cmd.ts (SIGINT/SIGBREAK shutdown handler)" } : {}) }
 }
 
 /** Exact pinned host must still own the console before injecting input. No signals or stop calls here. */

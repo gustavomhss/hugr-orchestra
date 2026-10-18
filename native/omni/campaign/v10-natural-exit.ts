@@ -25,7 +25,7 @@ export async function buildHosts() {
   for (const name of ["@lydell/node-pty", "jsonc-parser"]) {
     const link = path.join(dir, "node_modules", name)
     mkdirSync(path.dirname(link), { recursive: true })
-    symlinkSync(packageRoot(Bun.resolveSync(name, path.join(ROOT, name === "jsonc-parser" ? "packages/orchestra" : "packages/core")), name), link, process.platform === "win32" ? "junction" : "dir")
+    symlinkSync(packageRoot(Bun.resolveSync(name, path.join(ROOT, name === "jsonc-parser" ? "apps/orchestra" : "packages/core")), name), link, process.platform === "win32" ? "junction" : "dir")
   }
   const entry = path.join(dir, "entry.ts")
   const source = (file: string) => JSON.stringify(path.join(ROOT, file).replaceAll("\\", "/"))
@@ -33,16 +33,16 @@ export async function buildHosts() {
 import { Effect, ManagedRuntime } from "effect"
 import path from "node:path"
 import { ChildProcess } from "effect/unstable/process"
-import { AppRuntime } from ${source("packages/orchestra/src/effect/app-runtime.ts")}
-import { Server } from ${source("packages/orchestra/src/server/server.ts")}
-import { InstanceStore } from ${source("packages/orchestra/src/project/instance-store.ts")}
-import { InstanceRef } from ${source("packages/orchestra/src/effect/instance-ref.ts")}
+import { AppRuntime } from ${source("apps/orchestra/src/effect/app-runtime.ts")}
+import { Server } from ${source("apps/orchestra/src/server/server.ts")}
+import { InstanceStore } from ${source("apps/orchestra/src/project/instance-store.ts")}
+import { InstanceRef } from ${source("apps/orchestra/src/effect/instance-ref.ts")}
 import { FSUtil } from ${source("packages/core/src/fs-util.ts")}
 import { AppProcess } from ${source("packages/core/src/process.ts")}
-import { AppNodeBuilderV1 } from ${source("packages/orchestra/src/effect/app-node-builder-v1.ts")}
+import { AppNodeBuilderV1 } from ${source("apps/orchestra/src/effect/app-node-builder-v1.ts")}
 import { Omni } from ${source("packages/core/src/omni.ts")}
-import { LSP } from ${source("packages/orchestra/src/lsp/lsp.ts")}
-import { MCP } from ${source("packages/orchestra/src/mcp/index.ts")}
+import { LSP } from ${source("apps/orchestra/src/lsp/lsp.ts")}
+import { MCP } from ${source("apps/orchestra/src/mcp/index.ts")}
 import { naturalHost } from ${source("native/omni/campaign/natural-host.ts")}
 
 // Retain completed native objects/output through host lifetime. Neither GC nor unref is part of disposal.
@@ -83,7 +83,7 @@ await naturalHost({
   },
 })
 `)
-  const { seatSkillsFiles } = await import("../../../packages/orchestra/script/seat-skills.ts")
+  const { seatSkillsFiles } = await import("../../../apps/orchestra/script/seat-skills.ts")
   const skills = await seatSkillsFiles()
   const inputs: Record<string, string> = {}
   Object.entries(skills).forEach(([file, text]) => { inputs[file] = createHash("sha256").update(text).digest("hex") })
@@ -98,7 +98,7 @@ await naturalHost({
           if (!args.path.includes(`${path.sep}packages${path.sep}`) || args.path.includes(`${path.sep}node_modules${path.sep}`)) return undefined
           const text = await Bun.file(args.path).text()
           inputs[path.relative(ROOT, args.path).replaceAll("\\", "/")] = createHash("sha256").update(text).digest("hex")
-          if (!/[\\/]packages[\\/](orchestra|core)[\\/]src[\\/].*\.ts$/.test(args.path) || !/\bimport\.meta\.dir\b(?!name)/.test(text)) return undefined
+          if (!/[\\/](?:apps[\\/]orchestra|packages[\\/]core)[\\/]src[\\/].*\.ts$/.test(args.path) || !/\bimport\.meta\.dir\b(?!name)/.test(text)) return undefined
           return { contents: text.replace(/\bimport\.meta\.dir\b(?!name)/g, "import.meta.dirname"), loader: "ts" }
         })
       } }],
@@ -112,7 +112,7 @@ await naturalHost({
     if (/["'][\w./-]+\.gen\.ts["']/.test(text)) throw new Error("Unresolved generated module in natural bundle")
     return { target, file: bundle.path, sha256: createHash("sha256").update(text).digest("hex") }
   }))
-  const boundary = ["packages/orchestra/script/build-node.ts", "packages/orchestra/script/seat-skills.ts", "packages/orchestra/src/node.ts", "native/omni/campaign/natural-host.ts"]
+  const boundary = ["apps/orchestra/script/build-node.ts", "apps/orchestra/script/seat-skills.ts", "apps/orchestra/src/node.ts", "native/omni/campaign/natural-host.ts"]
   boundary.forEach((file) => { inputs[file] = createHash("sha256").update(readFileSync(path.join(ROOT, file))).digest("hex") })
   const publicEntry = readFileSync(path.join(ORCHESTRA, "src/node.ts"), "utf8")
   if (/export.*AppRuntime/.test(publicEntry)) throw new Error("Public Node exports changed: reassess fixture necessity")

@@ -63,17 +63,17 @@ describe("translate app", () => {
     expect(targetFiles("fr")).toEqual([
       "packages/app-shell/src/i18n/fr.ts",
       "packages/ui/src/i18n/fr.ts",
-      "packages/desktop/src/renderer/i18n/fr.ts",
+      "apps/desktop/src/renderer/i18n/fr.ts",
     ])
     expect(targetFiles("tr")).toEqual([
       "packages/app-shell/src/i18n/tr.ts",
       "packages/ui/src/i18n/tr.ts",
-      "packages/desktop/src/renderer/i18n/tr.ts",
+      "apps/desktop/src/renderer/i18n/tr.ts",
     ])
     expect(targetFiles("dv")).toEqual([
       "packages/app-shell/src/i18n/dv.ts",
       "packages/ui/src/i18n/dv.ts",
-      "packages/desktop/src/renderer/i18n/dv.ts",
+      "apps/desktop/src/renderer/i18n/dv.ts",
     ])
   })
 

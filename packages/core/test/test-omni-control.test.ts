@@ -136,8 +136,8 @@ const mentions: Record<string, string> = {
   ".github/workflows/test-ci.yml": "the Run tests step sets the scope from the request (pinned below)",
   "turbo.json": "globalEnv keys cached turbo results by the scope (pinned below)",
   ".github/workflows/distribution-bundle.yml": "native qualification requires suite-wide spawns; focused ABI steps declare (pinned below)",
-  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": "strict owned guest runs its declaring test (pinned below)",
-  "packages/cli/test/fixture/distribution-musl/bootstrap.sh": "strict owned musl guest runs its declaring test (pinned below)",
+  "apps/cli/test/fixture/distribution-aur/bootstrap.sh": "strict owned guest runs its declaring test (pinned below)",
+  "apps/cli/test/fixture/distribution-musl/bootstrap.sh": "strict owned musl guest runs its declaring test (pinned below)",
   "packages/core/test/distribution-bundle-workflow.test.ts": "pins the native workflow's positive suite value and declared steps",
   "packages/core/test/fixture/distribution-bundle.ts": "records the scope a bundle run saw in its evidence",
   "packages/core/test/test-omni-control.test.ts": "this guard and its fixtures",
@@ -147,11 +147,11 @@ const mentions: Record<string, string> = {
 const ALLOWED_ASSIGNMENTS = {
   ".github/workflows/test-ci.yml": { ORCHESTRA_OMNI_CONTROL: "${{ steps.request.outputs.omni_control }}" },
   ".github/workflows/distribution-bundle.yml": { ORCHESTRA_OMNI_CONTROL: "suite" },
-  "packages/cli/test/fixture/distribution-aur/bootstrap.sh": {
+  "apps/cli/test/fixture/distribution-aur/bootstrap.sh": {
     ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict",
     ORCHESTRA_OMNI_CONTROL: "declared",
   },
-  "packages/cli/test/fixture/distribution-musl/bootstrap.sh": {
+  "apps/cli/test/fixture/distribution-musl/bootstrap.sh": {
     ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "strict",
     ORCHESTRA_OMNI_CONTROL: "declared",
   },
@@ -162,7 +162,7 @@ const DECLARED_STEPS = [
   "Prove native POSIX ABI", "Prove source ABI producers", "Prove Desktop ABI consumer",
   "Prove Schema ELF ABI", "Prove packaged parser ABI", "Prove localized proof oracles",
 ]
-const aurGuest = "packages/cli/test/fixture/distribution-aur-guest.test.ts"
+const aurGuest = "apps/cli/test/fixture/distribution-aur-guest.test.ts"
 
 test("only the ledgered files mention the control's scope variable, and test-ci.yml sets it only from the request", () => {
   const listing = Bun.spawnSync(["git", "ls-files", "-z"], { cwd: root })
@@ -197,8 +197,8 @@ test("native scope and strict-mode mutations of real source fail by exact path",
   const guest = readFileSync(path.join(root, aurGuest), "utf8")
   inspectNativeAssignments(sources, guest)
   const workflow = ".github/workflows/distribution-bundle.yml"
-  const bootstrap = "packages/cli/test/fixture/distribution-aur/bootstrap.sh"
-  const musl = "packages/cli/test/fixture/distribution-musl/bootstrap.sh"
+  const bootstrap = "apps/cli/test/fixture/distribution-aur/bootstrap.sh"
+  const musl = "apps/cli/test/fixture/distribution-musl/bootstrap.sh"
   const mutations = [
     ...["declared", "off", "0", "1"].map((value) => [workflow, "ORCHESTRA_OMNI_CONTROL: suite", `ORCHESTRA_OMNI_CONTROL: ${value}`, "OMNI_BUNDLE_SCOPE"]),
     ...["suite", "off", "0", "1"].map((value) => [bootstrap, "ORCHESTRA_OMNI_CONTROL=declared", `ORCHESTRA_OMNI_CONTROL=${value}`, "OMNI_AUR_ASSIGNMENTS"]),
@@ -280,7 +280,7 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
       sources[workflow].match(scopeVariable)?.length === DECLARED_STEPS.length + 1,
     `OMNI_BUNDLE_STEP_SCOPE: ${workflow}`,
   )
-  const musl = "packages/cli/test/fixture/distribution-musl/bootstrap.sh"
+  const musl = "apps/cli/test/fixture/distribution-musl/bootstrap.sh"
   requireScope(
     /^[ \t]*ORCHESTRA_MUSL_GUEST=owned ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=strict ORCHESTRA_OMNI_CONTROL=declared \\\r?$/m.test(sources[musl]) &&
       sources[musl].match(scopeVariable)?.length === 1 &&
@@ -297,7 +297,7 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
     ].join(" "),
     `OMNI_MUSL_COMMAND: ${musl}`,
   )
-  const bootstrap = "packages/cli/test/fixture/distribution-aur/bootstrap.sh"
+  const bootstrap = "apps/cli/test/fixture/distribution-aur/bootstrap.sh"
   // The fixture's closed literal env invocation is pinned; this is not a general shell dataflow scanner.
   const invocations = sources[bootstrap].match(/^exec \/usr\/bin\/env(?:[^\n]*\\\r?\n)*[^\n]*/gm) ?? []
   requireScope(invocations.length === 1, `OMNI_AUR_COMMAND: ${bootstrap}`)
@@ -336,7 +336,7 @@ function inspectNativeAssignments(sources: Record<string, string>, guest: string
   const source = ts.createSourceFile(aurGuest, guest, ts.ScriptTarget.Latest, true)
   requireScope(source.statements.some((node) => {
     if (!ts.isImportDeclaration(node) || node.importClause?.isTypeOnly || !ts.isStringLiteral(node.moduleSpecifier) ||
-      node.moduleSpecifier.text !== "../../../core/test/fixture/omni-expect") return false
+      node.moduleSpecifier.text !== "../../../../packages/core/test/fixture/omni-expect") return false
     const bindings = node.importClause?.namedBindings
     return bindings && ts.isNamedImports(bindings) && bindings.elements.some((binding) =>
       binding.name.text === "expectSpawn" && !binding.propertyName && !binding.isTypeOnly)

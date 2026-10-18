@@ -127,7 +127,7 @@ stdenv.mkDerivation (finalAttrs: {
   buildPhase = ''
     runHook preBuild
 
-    cd packages/desktop
+    cd apps/desktop
 
     # electron-vite SSR bundling reached Node's 2 GiB V8 heap limit.
     # Give this build a bounded heap; packaged runtime settings are unchanged.

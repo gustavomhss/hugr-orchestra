@@ -32,13 +32,13 @@ const ledger: Record<string, string> = {
     "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
     "unit tests of the loader, the counters (which it takes back) and the verdict; its process-tree case spawns through node:child_process on purpose",
-  "packages/desktop/src/main/omni-appcontainer.test.ts":
+  "apps/desktop/src/main/omni-appcontainer.test.ts":
     "builds the AppContainer command for the supervisor and asserts its arguments; it spawns nothing",
 }
 
 function guard(base: string, tracked: string[], exceptions: Record<string, string>) {
   const problems: string[] = []
-  const packages = tracked.filter((file) => /^packages\/[^/]+\/bunfig\.toml$/.test(file))
+  const packages = tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/bunfig\.toml$/.test(file))
     .filter((file) => preloadsControl(TOML.parse(readFileSync(path.join(base, file), "utf8")) as { test?: { preload?: unknown } }))
     .map((file) => path.posix.dirname(file) + "/")
   if (packages.length === 0) return { problems: ["no package preloads script/test-omni-control.ts"], flagged: [], checked: 0 }
@@ -55,15 +55,15 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     call.arguments.length > 0 && ts.isStringLiteral(call.arguments[0]!) && call.arguments[0].text === "spawns"
   const counter = "packages/core/src/omni.ts"
   if (!set.has(counter)) return { problems: [`${counter} is not tracked`], flagged: [], checked: 0 }
-  const surface = new Set([counter, ...tracked.filter((file) => /^packages\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
+  const surface = new Set([counter, ...tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
     !/\.test\.tsx?$/.test(file) && readFileSync(path.join(base, file), "utf8").includes("Omni.count(") && calls(file, counts))])
   if (surface.size === 1) problems.push("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   const resolve = (from: string, specifier: string) => {
     const pkg = from.split("/").slice(0, 2).join("/")
     const stem = specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier)
       : specifier.startsWith("@orchestra/core/") ? `packages/core/src/${specifier.slice("@orchestra/core/".length)}`
-        : pkg === "packages/orchestra" && specifier.startsWith("@/") ? `packages/orchestra/src/${specifier.slice(2)}`
-          : pkg === "packages/orchestra" && specifier.startsWith("@test/") ? `packages/orchestra/test/${specifier.slice(6)}`
+        : pkg === "apps/orchestra" && specifier.startsWith("@/") ? `apps/orchestra/src/${specifier.slice(2)}`
+          : pkg === "apps/orchestra" && specifier.startsWith("@test/") ? `apps/orchestra/test/${specifier.slice(6)}`
             : undefined
     if (stem === undefined) return undefined
     return [stem, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`].find((candidate) => set.has(candidate))
@@ -117,8 +117,8 @@ test("every test file that drives omni's spawn surface declares its spawning tes
   expect(result.checked).toBeGreaterThan(100)
   // The files this PR declares are seen as driving the surface: the reading engages the real tree.
   expect(result.flagged).toEqual(expect.arrayContaining([
-    "packages/core/test/tcp-proxy.test.ts", "packages/orchestra/test/util/process-omni.test.ts",
-    "packages/desktop/src/main/omni-process.test.ts", "packages/orchestra/test/mcp/omni-stdio.test.ts",
+    "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts",
+    "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts",
   ]))
 })
 

@@ -38,7 +38,7 @@ export function secretForms(values: readonly string[]) {
 }
 type JsonDecoder = (text: string) => { value: unknown } | undefined
 export async function evidenceDecoder(candidate: string): Promise<JsonDecoder> {
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
   return (text) => {
     const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
     return Option.isSome(parsed) ? { value: parsed.value } : undefined
@@ -96,7 +96,7 @@ export async function pinNativeAssets(candidate: string, packet: Packet) {
     requireFact(entry.isFile(), "PAIR_NATIVE_ASSET_LINK_OR_TYPE_REFUSED")
     return [await canonical(path)]
   }))).flat()
-  const paths = [...await visit(root), await canonical(join(candidate, "packages/orchestra/src/agent/prompt/archie.txt"))].sort()
+  const paths = [...await visit(root), await canonical(join(candidate, "apps/orchestra/src/agent/prompt/archie.txt"))].sort()
   requireFact(paths.length > 1, "PAIR_NATIVE_ASSETS_EMPTY")
   const pins = await Promise.all(paths.map(async (path) => {
     const suffix = "/" + relative(candidate, path).replaceAll("\\", "/")
@@ -166,8 +166,8 @@ export function requireSameSessionResume(stages: readonly { sessionID: string; c
 // or to the arm root, since the packet's handoff asks for `project/proposal.md`. It must still resolve to that exact file.
 // Direct mode has no Task, so no logical task ID: the work result is the native assembler's (BackendResult.assemble).
 export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string, base: string) {
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
-  const { UpstreamResult } = await import(join(candidate, "packages/orchestra/src/maestro/upstream-result.ts"))
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
+  const { UpstreamResult } = await import(join(candidate, "apps/orchestra/src/maestro/upstream-result.ts"))
   const decoded = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"),
     card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.NonEmptyString }), outcome: Schema.Literal("done"), terminal: Schema.Struct({ reason: Schema.Literal("ended"), hostDetail: Schema.optional(Schema.Unknown) }),
     blockers: Schema.Array(Schema.Unknown), artifacts: Schema.Array(Schema.Struct({ kind: Schema.String, path: Schema.optional(Schema.String) })), risks: Schema.Array(Schema.String), nextActions: Schema.Array(Schema.String),
@@ -185,7 +185,7 @@ export async function requireSuccessfulAuthoring(candidate: string, work: unknow
   return decoded.value
 }
 export async function requireStoredPrompt(candidate: string, db: Database, sessionID: string, messageID: string, assignment: string) {
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
   const row = Schema.decodeUnknownOption(Schema.Struct({ data: Schema.String }))(db.query("SELECT data FROM message WHERE session_id=? AND id=?").get(sessionID, messageID))
   requireFact(Option.isSome(row), "PAIR_STORED_CHILD_PROMPT_MISSING")
   const info = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(row.value.data)
@@ -246,7 +246,7 @@ function utf8(bytes: Uint8Array) {
 
 // Exported so refusal probes execute this verifier rather than a second implementation.
 export async function verifyPacket(candidate: string, packetPath: string) {
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
   function decode<S extends Schema.Decoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
     const result = Schema.decodeUnknownOption(schema)(value, { onExcessProperty: "error" })
     requireFact(Option.isSome(result), code)
@@ -341,7 +341,7 @@ async function unchanged(packet: Packet) {
 async function launch(entry: string, candidate: string, env: Record<string, string | undefined>, arm: "E" | "P", totalDeadlineAt: number, budget = armBudgetMs) {
   requireFact(["darwin", "linux"].includes(process.platform), "PAIR_OWNED_GROUP_HOST_UNSUPPORTED")
   const timing = admitArm(arm, Date.now(), totalDeadlineAt, budget)
-  const child = spawn(process.execPath, [entry], { cwd: join(candidate, "packages/orchestra"), env: { ...env, PAIR_ARM_STARTED_AT: String(timing.startedAt), PAIR_ARM_BUDGET_MS: String(timing.budgetMs), PAIR_TOTAL_DEADLINE_AT: String(timing.totalDeadlineAt) }, detached: true, stdio: ["ignore", "pipe", "pipe"] })
+  const child = spawn(process.execPath, [entry], { cwd: join(candidate, "apps/orchestra"), env: { ...env, PAIR_ARM_STARTED_AT: String(timing.startedAt), PAIR_ARM_BUDGET_MS: String(timing.budgetMs), PAIR_TOTAL_DEADLINE_AT: String(timing.totalDeadlineAt) }, detached: true, stdio: ["ignore", "pipe", "pipe"] })
   const state: { bytes: number; failure?: string; exit?: number | null; signal?: string | null; live?: boolean; groupGone?: boolean; closedAt?: number } = { bytes: 0 }
   const startedAt = timing.startedAt
   const chunks: Buffer[][] = [[], []]
@@ -420,7 +420,7 @@ async function main() {
     && !packetPath.startsWith(output + "/") && ![packet.global, ...packet.sources, ...packet.stages.map((stage) => stage.request), ...packet.nonModelArtifacts].some((item) => item.path.startsWith(output + "/")), "PAIR_OUTPUT_INPUT_OVERLAP")
   requireFact(parent === dirname(output), "PAIR_OUTPUT_PARENT_ALIAS")
   const runtimeHashes = await Promise.all(runtimeFiles.map(async (file) => {
-    const path = await canonical(join(candidate, "packages/orchestra/src", file))
+    const path = await canonical(join(candidate, "apps/orchestra/src", file))
     return { path, sha256: sha256(await read(path)) }
   }))
   const git = Bun.spawn(["git", "--no-optional-locks", "-C", candidate, "rev-parse", "HEAD"], { stdout: "pipe", stderr: "ignore" })
@@ -461,7 +461,7 @@ async function main() {
       return { arm, entry }
     }))
     if (args["prepare-only"]) { console.log(JSON.stringify({ code: "PAIR_PREPARED_NO_MODEL", output })); return }
-    const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+    const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
     const env: Record<string, string | undefined> = Object.fromEntries(["HOME", "XDG_DATA_HOME", "XDG_STATE_HOME", "XDG_CACHE_HOME", "XDG_CONFIG_HOME", "TMPDIR"].map((key) => [key, join(output, key.toLowerCase())]))
     await Promise.all(Object.values(env).filter((path): path is string => typeof path === "string").map((path) => mkdir(path, { mode: 0o700 })))
     Object.assign(env, { PATH: process.env.PATH, ORCHESTRA_DB: join(output, "session.db"), ORCHESTRA_CONFIG: join(output, "config.json"),
@@ -513,7 +513,7 @@ async function main() {
 async function verifyDatabase(candidate: string, output: string, packet: Packet, secrets: string[], totalDeadlineAt: number) {
   const db = new Database(join(output, "session.db"), { readonly: true, strict: true })
   const decodeJson = await evidenceDecoder(candidate)
-  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "packages/orchestra/package.json")).resolve("effect"))
+  const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
   function decode<S extends Schema.Decoder<unknown>>(schema: S, value: unknown, code: string): S["Type"] {
     const result = Schema.decodeUnknownOption(schema)(value)
     requireFact(Option.isSome(result), code)
