@@ -327,7 +327,9 @@ describe("orchestra run (non-interactive subprocess)", () => {
         expect(explicitlyDenied.stdout).toContain("continued after explicit denial")
         expect(yield* Effect.promise(() => Bun.file(`${home}/explicitly-denied`).exists())).toBe(false)
       }),
-    60_000,
+    // Three full subprocess runs, each a cold CLI start plus a tool turn and its continuation. Hosted
+    // Windows runners have taken 7 to 20 s per run, so 60 s left no headroom; no assertion changes.
+    120_000,
   )
 
   cliIt.serial(
