@@ -118,7 +118,7 @@ test("an authorized continuation settles only the held step, spends nothing on t
   const hold = await settle("msg_second", false)
   expect(Result.isFailure(hold) && hold.failure).toMatchObject({ reason: CodeReview.REQUIRED })
   await unchanged()
-  expect(resume("msg_second")).toBe(true)
+  expect(resume("msg_second")).toBe("held")
 
   // The continued reply after a review of an older tree: the cold review runs again before any grade and holds again.
   const stale = await settle("msg_second_continued", false)
@@ -203,4 +203,47 @@ test("a FIX_FIRST resume spends one retry per review round on the real arm, and 
   expect(await current(env, binding)).toMatchObject({ state: "awaiting-human" })
   expect([...records.keys()]).toEqual([1, 2, 3])
   expect((await dispositions(env)).filter((entry) => entry === "second:gate-fail")).toHaveLength(3)
+})
+
+test("a settlement on the tree a FIX_FIRST already graded holds as unaddressed and spends nothing", async () => {
+  const { env, binding } = await fixture()
+  await transition(env, binding, settlementAt("msg_first", { position: "first", attempt: 0, ledgerSeq: -1 }))
+  const held = await current(env, binding)
+  const owner = { sessionID: "ses_owner", taskID: "ses_worker", callID: "call", directory: env.work, projectID: "project",
+    planID: "evt_revision", token, stateDirectory: "", ownedPaths: [] }
+  const notApproved = (receiptID: string) => () =>
+    Effect.fail(new RelayWorkflowBinding.Held({ reason: CodeReview.NOT_APPROVED, receiptID }))
+  // The resume grades the held reply for the FIX_FIRST: attempt 1 now carries its findings.
+  const graded = await Effect.runPromise(ArsenalCompletion.gradeReviewedHold({
+    coldReview: notApproved("evt_review_fix_first"), binding: owner, verdict: () => Effect.succeed("FIX_FIRST"),
+    settle: Effect.promise(() => transition(env, binding, settlementAt("msg_second", held), "fail")).pipe(
+      Effect.flatMap((result) => Result.isSuccess(result) ? Effect.succeed(result.success) : Effect.fail(result.failure))),
+    next: Effect.promise(() => current(env, binding)), record: () => Effect.void,
+  }).pipe(Effect.result))
+  expect(Result.isSuccess(graded)).toBe(true)
+  const retried = await current(env, binding)
+  expect(retried.attempt).toBe(1)
+  const ledger = await read(path.join(env.arm, "ledger.jsonl"))
+
+  // The workers' next reply left the reviewed tree as it was: the same receipt is never graded again by a settlement.
+  const holds: string[] = []
+  const settle = (reply: string, receiptID: string) => Effect.runPromise(ArsenalCompletion.settleWorkflow({
+    checklist: [review], coldReview: notApproved(receiptID), binding: owner,
+    held: Effect.sync(() => {
+      holds.push(reply)
+    }),
+    graded: Effect.succeed("evt_review_fix_first"),
+    transition: Effect.promise(() => transition(env, binding, settlementAt(reply, retried), "fail")),
+  }).pipe(Effect.result))
+  const unaddressed = await settle("msg_unchanged", "evt_review_fix_first")
+  expect(Result.isFailure(unaddressed) && unaddressed.failure).toMatchObject({ reason: CodeReview.UNADDRESSED,
+    receiptID: "evt_review_fix_first" })
+  expect(holds).toEqual(["msg_unchanged"])
+  expect(await read(path.join(env.arm, "ledger.jsonl"))).toBe(ledger)
+  expect(await current(env, binding)).toEqual(retried)
+
+  // A receipt no resume graded yet (a new review of a new tree) is graded as usual and spends one retry.
+  expect(Result.isSuccess(await settle("msg_changed", "evt_review_other"))).toBe(true)
+  expect((await current(env, binding)).attempt).toBe(2)
+  expect(holds).toEqual(["msg_unchanged"])
 })

@@ -71,9 +71,12 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
     Task with its `task_id` and exactly the approved dispatch input: `prompt` byte for byte, `subagent_type`, `model`,
     `authorizationID`, `workflow` and `writePaths`. Any change to that input breaks the approval
     (`WORKFLOW_APPROVAL_BINDING_MISMATCH`); never add the findings to it. On `APPROVE` the check then passes. On
-    `FIX_FIRST` the host grades the held step, which spends one retry, and the workers' next attempt carries the
-    recorded findings; the gate holds again on the new result, so review it again. A spent retry budget parks the arm.
-    On `REJECT`, do not resume (it holds with `WORKFLOW_CODE_REVIEW_REJECTED`): report the findings to the owner; fixing
+    `FIX_FIRST` the host grades the held step, which spends one retry, and every later attempt carries the recorded
+    findings; the gate holds again on the new result, so review it again. If the workers leave the reviewed tree
+    unchanged, it holds with `WORKFLOW_CODE_REVIEW_UNADDRESSED` and spends nothing; the next resume grades it again.
+    When the retry budget is spent, the resume holds with `WORKFLOW_TRANSITION_ESCALATE` and the arm is
+    `awaiting-human`: stop, report the gate, the last findings and the hold to the owner, and do not resume, retry or
+    request a release. On `REJECT`, do not resume (it holds with `WORKFLOW_CODE_REVIEW_REJECTED`): report the findings to the owner; fixing
     them needs a new plan round (Fix-and-review loop). Never commit the workers' result before the workflow completes.
     Then verify with `maestro-verify`.
 
