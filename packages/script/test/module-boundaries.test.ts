@@ -279,7 +279,7 @@ describe("module-boundary gate", () => {
   test("R12 fails on an uncovered file, an ambiguous file and a stale pattern", () => {
     const root = fixture((tree) => {
       tree.files["packages/core/src/orphan.ts"] = "export const orphan = 1\n"
-      Object.assign(tree.architecture.packages.core.domains ?? {}, { twin: { kind: "platform", patterns: ["src/relay.ts", "src/gone/"] } })
+      Object.assign(tree.architecture.packages.core?.domains ?? {}, { twin: { kind: "platform", patterns: ["src/relay.ts", "src/gone/"] } })
     })
     expect(found(root).filter((item) => item.rule === "R12").map((item) => `${item.file} ${item.message}`)).toEqual([
       "packages/core/src/orphan.ts no domain owns this file",
