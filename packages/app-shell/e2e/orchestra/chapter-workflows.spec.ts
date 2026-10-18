@@ -51,10 +51,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(rows.locator("strong")).toHaveText(["Relay · tdd_feature"])
 
     await expect(view.getByRole("tab", { name: /Executions/ })).toHaveCount(0)
-    // A bookmarked executions URL opens the library.
+    // The executions URL opens all executions, which lists external runs; with none it says so.
     await page.goto("/orchestra/workflows/executions", { waitUntil: "domcontentloaded" })
     await expect(view.locator("h1")).toHaveText("Workflows")
-    await expect(view.getByRole("listitem").locator("strong")).toHaveText(["Relay · tdd_feature", "Relay · design"])
+    await expect(view.getByText("No runs yet", { exact: true })).toBeVisible()
   })
 }
 
