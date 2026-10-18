@@ -34,7 +34,7 @@ import {
   type SidecarListener,
 } from "./server"
 import { setupAutoUpdater, showUpdaterDialog } from "./updater"
-import { safeWebContentsURL } from "./window-state"
+import { revealWindow, safeWebContentsURL } from "./window-state"
 import {
   getLastFocusedWindow,
   registerRendererProtocol,
@@ -87,6 +87,7 @@ const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
 let server: SidecarListener | null = null
+const startup = { windowsRestored: false }
 
 const deepLinks = createDeepLinkDelivery(process.argv, (target, urls) => {
   const win = BrowserWindow.getAllWindows().find((window) => window.webContents.id === target)
@@ -250,11 +251,12 @@ const main = Effect.gen(function* () {
       logger.log("deep link received via second-instance", { urls })
       emitDeepLinks(urls)
     }
-    const win = getLastFocusedWindow()
-    if (win) {
-      win.show()
-      win.focus()
-    }
+    const win = getLastFocusedWindow() ?? BrowserWindow.getAllWindows()[0]
+    if (win) return revealWindow(win)
+    // macOS keeps running with no window; reopen one so the launch (and any
+    // queued deep link) lands somewhere. Before startup restores its windows,
+    // startup will open them itself.
+    if (startup.windowsRestored) restoreMainWindows()
   })
 
   app.on("open-url", (event: Event, url: string) => {
@@ -479,11 +481,15 @@ const main = Effect.gen(function* () {
     app.quit()
   })
   app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length > 0) return
-    restoreMainWindows()
+    const open = BrowserWindow.getAllWindows()
+    if (open.length === 0) return void restoreMainWindows()
+    // Electron tells AppKit not to reopen when no window is visible, so a dock
+    // click with every window minimized would otherwise do nothing.
+    if (open.every((win) => win.isMinimized())) revealWindow(getLastFocusedWindow() ?? open[0])
   })
 
   const windows = restoreMainWindows()
+  startup.windowsRestored = true
   if (windows.length) createMenu(menuDeps)
 })
 

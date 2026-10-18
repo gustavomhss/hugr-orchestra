@@ -21,9 +21,14 @@ export function createWindowRegistry<W>(persistence: {
       quitting = value
     },
     register(id: string, window: W) {
-      windows.set(id, window)
       const ids = persisted()
-      if (!ids.includes(id)) persistence.write([...ids, id])
+      // A new window opened while none is open (macOS keeps running after the
+      // last close) replaces the ids kept for restore. Keeping them would
+      // reopen those closed windows next launch and never clean their files.
+      const stale = windows.size === 0 && !ids.includes(id) ? ids : []
+      windows.set(id, window)
+      if (!ids.includes(id)) persistence.write(stale.length ? [id] : [...ids, id])
+      stale.forEach((item) => persistence.cleanup(item))
     },
     focused(id: string) {
       lastFocusedID = id
