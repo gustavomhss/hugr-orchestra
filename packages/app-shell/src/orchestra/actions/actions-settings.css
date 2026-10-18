@@ -1,4 +1,5 @@
 /* Actions connection settings and schedules, matched to the approved Actions mock. */
+.actions-page .ar-settings .ar-head h1 { margin: 0; font: 600 16px/1.35 var(--mx-emphasis, sans-serif); }
 .actions-page .ar-settings .settings-grid { align-items: stretch; }
 .actions-page .ar-settings .ar-setting-card { display: flex; flex-direction: column; }
 .actions-page .ar-settings .ar-setting-card .mx-card-top { flex-wrap: wrap; gap: 10px; }

@@ -173,7 +173,7 @@ export function Settings(props: ViewProps) {
     <div class="mx-inner">
       <header class="ar-head">
         <span class="mx-mark ar-mark"><Mark name="command" /></span>
-        <div class="ar-head-copy"><h2>{props.t("orchestra.actions.projectSettings")}</h2><p>{props.t("orchestra.actions.settings.detail")}</p>
+        <div class="ar-head-copy"><h1>{props.t("orchestra.actions.projectSettings")}</h1><p>{props.t("orchestra.actions.settings.detail")}</p>
           <Show when={selected()}>{(binding) => <div class="ar-summary">{props.t("orchestra.actions.settings.summary", { provider: providerLabel(binding()) })}</div>}</Show></div>
       </header>
       <Show when={props.model.state.unsupported}><p class="mx-error" role="alert">{props.t("orchestra.actions.unsupported")}</p></Show>
@@ -184,7 +184,7 @@ export function Settings(props: ViewProps) {
           <Show when={props.model.state.bindings.status === "loading"}><p class="mx-note">{props.t("orchestra.actions.loading")}</p></Show>
           <Show when={props.model.state.bindings.status === "error"}><p class="mx-error" role="alert">{props.t(props.model.state.bindings.error?.message ?? "orchestra.actions.unavailable")}</p></Show>
           <Show when={props.model.state.bindings.status === "ready" && bindings().length === 0}><p class="mx-empty">{props.t("orchestra.actions.noConnection")}</p></Show>
-          <Show when={bindings().length > 1}>
+          <Show when={bindings().length > 0}>
             <label class="mx-field"><span>{props.t("orchestra.actions.provider")}</span><select disabled={view.pending || props.model.state.submitting} value={selected()?.id ?? ""} onChange={select}>
               <option value="">{props.t("orchestra.actions.default")}</option>
               <For each={bindings()}>{(binding) => <option value={binding.id}>{providerLabel(binding)} · {binding.projectPath} · {binding.provider.hostname}{bindings().some((other) => other.id !== binding.id && other.projectPath === binding.projectPath && other.provider.hostname === binding.provider.hostname) ? ` (${binding.remote})` : ""}</option>}</For>
@@ -195,7 +195,7 @@ export function Settings(props: ViewProps) {
               <dt>{props.t("orchestra.actions.provider")}</dt><dd>{providerLabel(binding())}</dd>
               <dt>{props.t("orchestra.actions.settings.host")}</dt><dd><bdi dir="ltr">{binding().provider.hostname}</bdi></dd>
               <dt>{props.t("orchestra.actions.project")}</dt><dd><bdi dir="ltr">{binding().projectPath}</bdi></dd>
-              <dt>{props.t("orchestra.actions.signIn")}</dt><dd>{props.t("orchestra.actions.settings.signInValue", { cli: binding().provider.kind === "github" ? "gh" : "glab" })}</dd>
+              <dt>{props.t("orchestra.actions.signIn")}</dt><dd>{connection().state === "available" ? props.t("orchestra.actions.settings.signInValue", { cli: binding().provider.kind === "github" ? "gh" : "glab" }) : props.t("orchestra.actions.unknown")}</dd>
               <dt>{props.t("orchestra.actions.access")}</dt><dd>{props.t(access())}</dd>
             </dl>
             <details class="settings-details"><summary>{props.t("orchestra.actions.settings.connectionDetails")}</summary>

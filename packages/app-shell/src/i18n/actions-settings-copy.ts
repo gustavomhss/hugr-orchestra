@@ -24,8 +24,6 @@ export const dict = {
   "orchestra.actions.settings.evidence": "Provider evidence",
   "orchestra.actions.settings.policy": "Retention & execution policy",
   "orchestra.actions.settings.days": "days",
-  "orchestra.actions.settings.localExecution": "Local policy",
-  "orchestra.actions.settings.providerExecution": "Provider policy",
   "orchestra.actions.settings.editLocal": "Configure local policy",
   "orchestra.actions.settings.editNative": "Configure provider policy",
 } as const

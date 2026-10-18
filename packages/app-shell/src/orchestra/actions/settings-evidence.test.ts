@@ -122,6 +122,9 @@ test("connection badge requires observed reads and errors override cached succes
   expect(settingsConnection(scope.state)).toEqual({ state: "unknown", label: "orchestra.actions.unknown" })
   scope.state.capabilities = { status: "error", error: { kind: "transport_failed", message: "orchestra.actions.unavailable" } }
   expect(settingsConnection(scope.state)).toEqual({ state: "unavailable", label: "orchestra.actions.unavailable" })
+  scope.state.capabilities = { status: "ready", value: [] }
+  scope.state.resources = { status: "error", error: { kind: "not_authenticated", message: "orchestra.actions.providerSignInRequired" } }
+  expect(settingsConnection(scope.state)).toEqual({ state: "unavailable", label: "orchestra.actions.providerSignInRequired" })
   scope.state.commandError = { kind: "server_auth", message: "orchestra.actions.serverAuthFailed" }
   expect(settingsConnection(scope.state).label).toBe("orchestra.actions.serverAuthFailed")
 })

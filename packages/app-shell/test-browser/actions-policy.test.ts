@@ -251,7 +251,7 @@ test("project-settings identity includes target and binding revision; stale loca
   using view = mount(ResourceDialogs, scope)
   await Bun.sleep(0)
   const old = control<HTMLDialogElement>(view.host, "dialog")
-  expect(control<HTMLElement>(old, "h2").textContent).toBe("orchestra.actions.localPolicy")
+  expect(control<HTMLElement>(old, "h2").textContent).toBe("orchestra.actions.settings.policy")
   expect(control<HTMLInputElement>(old, '[name="retention"]').value).toBe("17")
   control<HTMLInputElement>(old, '[name="retention"]').value = "999"
   scope.model.dialog({ kind: "project-settings", target: "native" })

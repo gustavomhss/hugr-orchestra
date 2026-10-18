@@ -7,6 +7,7 @@ import { GitHubNative } from "../github/native"
 import { ActionsGitLabNative } from "../gitlab/native"
 import { GitLabCommandInputs } from "../gitlab/commands/inputs"
 import { GitLabCommandNative } from "../gitlab/commands/native"
+import { ActionsResponse } from "../transport/response"
 import { ActionsResourceNative } from "./native"
 import { ActionsScheduleYaml } from "./schedule-yaml"
 
@@ -238,18 +239,11 @@ const githubList = Effect.fn("ActionsSchedules.githubList")(function* (services:
   const response = yield* ActionsResourceNative.get(services, binding, `${repo.path}/commits/${encodeURIComponent(repo.native.default_branch)}`)
   const commit = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.decode(binding, Schema.Struct({ sha: GitHubNative.SHA }), response.data).sha)
   const page = yield* ActionsResourceNative.before(binding, services.reader.workflows(binding, { ...(input.cursor === undefined ? {} : { cursor: input.cursor }), limit: input.limit ?? 20 }))
-  // The native list keeps workflows whose file left the default branch (deleted
-  // or branch-only) and GitHub-managed `dynamic/...` workflows. Neither has a
-  // default-branch YAML schedule and reading their source fails, so only files
-  // present in `.github/workflows` at the default-branch commit are read.
-  const listing = yield* ActionsResourceNative.get(services, binding, `${repo.path}/contents/.github/workflows`, { ref: commit }).pipe(
-    Effect.catch((error) => error.kind === "not_found" ? Effect.succeed(undefined) : Effect.fail(error)))
-  const files = listing === undefined ? new Set<string>() : yield* ActionsResourceNative.checked(binding, () => new Set(ActionsResourceNative
-    .decode(binding, Schema.Array(Schema.Struct({ type: Schema.String, path: Schema.String })), listing.data)
-    .filter((entry) => entry.type === "file").map((entry) => entry.path)))
+  const files = page.items.length === 0 ? new Set<string>() : yield* workflowFiles(services, binding, repo.path, commit)
   const selected = page.items.filter((workflow) => (input.resourceID === undefined || workflow.id === input.resourceID) && files.has(workflow.path))
-  // One unreadable workflow must not hide the schedules of the others: it is
-  // reported as its own item carrying the failure kind instead of failing the page.
+  // One unreadable workflow source must not hide the schedules of the others: it
+  // is reported as its own item. Auth, permission, rate-limit and transport
+  // failures still fail the page.
   const items = yield* Effect.forEach(selected, (workflow) => Effect.gen(function* () {
     if (workflow.bindingID !== binding.id || !/^\.github\/workflows\/[^/]+\.ya?ml$/.test(workflow.path))
       return yield* ActionsResourceNative.error(binding, "source_unresolved", "Native schedule workflow path/ownership was not proved")
@@ -264,14 +258,40 @@ const githubList = Effect.fn("ActionsSchedules.githubList")(function* (services:
         resourceVersion: ActionsResourceNative.version({ workflowID: workflow.id, sourceVersion: source.version, state: workflow.state }),
         cron: schedules.map((item) => item.cron).join(" · "), schedules, zone: "UTC", ref: repo.native.default_branch ?? "",
         enabled: workflow.state === "active", origin: "Workflow YAML", editMode: "source", bestEffort: true } }
-  }).pipe(Effect.catch((error) => Effect.succeed({ id: workflow.id, bindingID: binding.id, kind: "schedules" as const, name: workflow.name ?? workflow.path,
-    scope: ActionsResourceNative.scope(binding), status: "Unreadable",
-    data: { nativeID: workflow.id, workflowID: workflow.id, path: workflow.path, commit, ref: repo.native.default_branch ?? "", zone: "UTC", enabled: false,
+  }).pipe(Effect.catchIf((error) => unreadable.includes(error.kind), (error) => Effect.succeed({ id: workflow.id, bindingID: binding.id, kind: "schedules" as const,
+    name: workflow.name ?? workflow.path, scope: ActionsResourceNative.scope(binding),
+    data: { nativeID: workflow.id, workflowID: workflow.id, path: workflow.path, commit, ref: repo.native.default_branch ?? "", zone: "UTC",
       origin: "Workflow YAML", editMode: "source", bestEffort: true, unreadable: true, problem: error.message, problemKind: error.kind } }))),
   { concurrency: 4 })
   // Cursor advances native workflows, including workflows with no schedules;
   // native workflow totals are not misrepresented as schedule totals.
   return { items: items.filter((item) => item !== undefined), capturedAt: Date.now(), ...(page.next === undefined ? {} : { next: page.next }) }
+})
+
+// Failures that describe one workflow source, not the provider connection.
+const unreadable: readonly Actions.ErrorKind[] = ["source_unresolved", "source_conflict", "metadata_truncated", "invalid_input", "not_found"]
+
+// The native list keeps workflows whose file left the default branch (deleted
+// or branch-only) and GitHub-managed `dynamic/...` workflows. Neither has a
+// default-branch YAML schedule and reading their source fails, so only files
+// present in `.github/workflows` at the default-branch commit are read.
+// https://docs.github.com/en/rest/repos/contents#get-repository-content
+const workflowFiles = Effect.fn("ActionsSchedules.workflowFiles")(function* (services: Services, binding: Actions.Binding, repo: string, commit: string) {
+  // Keep the transport's rejection evidence: only a definite 404 proves the directory is absent.
+  const response = yield* ActionsResourceNative.before(binding, services.transport.request(binding, { method: "GET", path: `${repo}/contents/.github/workflows`, query: { ref: commit } }).pipe(
+    Effect.catchIf((cause) => cause.kind === "not_found" && cause.disposition === "definitely_rejected", () => Effect.succeed(undefined)),
+  ))
+  if (!response || response.status === 404) return new Set<string>()
+  if (response.status !== 200) {
+    const failure = ActionsResponse.failure(binding.provider, 1, Buffer.alloc(0), response.status, { ...response.headers }, true)
+    return yield* ActionsResourceNative.error(binding, failure.kind, "Workflow directory listing was rejected")
+  }
+  return yield* ActionsResourceNative.checked(binding, () => {
+    const entries = ActionsResourceNative.decode(binding, Schema.Array(Schema.Struct({ type: Schema.String, path: Schema.String })), response.data)
+    // The contents API stops at 1,000 directory entries without saying so.
+    if (entries.length >= 1000) throw ActionsResourceNative.error(binding, "metadata_truncated", "Workflow directory listing reached the native contents limit")
+    return new Set(entries.filter((entry) => entry.type === "file").map((entry) => entry.path))
+  })
 })
 
 const githubEdit = Effect.fn("ActionsSchedules.githubEdit")(function* (services: Services, binding: Actions.Binding, intent: Actions.OperationIntent, payload: ActionsContract.Json) {
