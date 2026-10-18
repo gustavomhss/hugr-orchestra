@@ -1397,7 +1397,19 @@ export default function LegacyLayout(props: ParentProps) {
     })
     const dismiss = () => dismissToast(progress)
 
-    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(() => [])
+    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch((err) => {
+      showToast({
+        title: language.t("workspace.reset.failed.title"),
+        description: errorMessage(err, language.t("common.requestFailed")),
+      })
+      return undefined
+    })
+
+    if (!sessions) {
+      setBusy(directory, false)
+      dismiss()
+      return
+    }
 
     clearWorkspaceTerminals(
       directory,
