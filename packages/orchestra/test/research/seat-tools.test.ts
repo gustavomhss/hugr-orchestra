@@ -97,7 +97,8 @@ describe("the seat's one tool descriptor", () => {
     expect(action("read", ".env")).toBe("deny")
     for (const name of Seats.all.jimmy.skills) expect(action("skill", name)).toBe("allow")
     expect(action("skill", "other-skill")).toBe("deny")
-    for (const id of [...RETIRED, ...PENDING.filter((id) => !(ResearchSeatTools.OWN as readonly string[]).includes(id))])
+    // research_capture kind url fetches under the webfetch permission; the registry test proves the tool stays hidden.
+    for (const id of [...RETIRED.filter((id) => id !== "webfetch"), ...PENDING.filter((id) => !(ResearchSeatTools.OWN as readonly string[]).includes(id))])
       expect([id, action(id)]).toEqual([id, "deny"])
   })
 
@@ -111,7 +112,7 @@ describe("the seat's one tool descriptor", () => {
     expect(Seats.all.jimmy.research).toBe(true)
     expect(Object.values(Seats.all).filter((seat) => seat.research).map((seat) => seat.id)).toEqual([ResearchSeatTools.SEAT])
     expect(() => define({ ...Seats.all.lucy, research: true }))
-      .toThrow(`The research engine supports only the ${ResearchSeatTools.SEAT} seat: lucy`)
+      .toThrow("The research engine supports only the jimmy seat: lucy")
   })
 })
 

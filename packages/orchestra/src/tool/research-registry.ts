@@ -28,6 +28,9 @@ import { Tool } from "./tool"
 export const IDS: readonly string[] = [AtlasContextTool, ResearchRecordTool, ResearchViewTool, ResearchCaptureTool,
   CodeQueryTool, CodeLocateTool, CodeSearchTool, ProbeRunTool, InquiryTool].map((tool) => tool.id)
 
+// What the seat may see on the loop: its descriptor, never a tool its permissions merely reach through another tool.
+const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
+
 export const nodes = [ResearchRecords.node, ResearchExecution.node] as const
 
 // Dispatches whose inquiry closed, by execution Session and dispatch call: every later tool call of that dispatch is
@@ -97,5 +100,6 @@ export function hidden(agent: Agent.Info, id: string, plugin: boolean) {
   if (!plugin && id === AtlasContextTool.id) return !AtlasMemory.supports(agent)
   if (plugin && agent.id === ResearchSeatTools.SEAT) return true
   if (!discovery(agent)) return IDS.includes(id)
+  if (!SEEN.includes(id)) return true
   return Permission.disabled([id], Permission.fromConfig(nativeProfiles[ResearchSeatTools.SEAT])).has(id)
 }

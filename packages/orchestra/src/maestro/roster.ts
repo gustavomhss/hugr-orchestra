@@ -62,6 +62,8 @@ export const baseProfiles = Object.freeze({
       .filter((id) => id !== "skill" && id !== "atlas_memory_recall" && id !== "atlas_memory_emit")
       .map((id) => [id, "allow" as const])),
     read: envRead("deny"),
+    // research_capture kind url fetches under webfetch's permission; the webfetch tool itself is not the seat's.
+    webfetch: "allow" as const,
     external_directory: Object.freeze({ "*": "deny", [path.join(TRUNCATION_DIR, "*")]: "allow" } as const),
   }),
 } as const)

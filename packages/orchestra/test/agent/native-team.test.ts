@@ -119,7 +119,7 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(evaluate(agent, "glob")).toBe("allow")
       expect(evaluate(agent, "grep")).toBe("allow")
       expect(evaluate(agent, "task")).toBe("deny")
-      expect(evaluate(agent, "webfetch")).toBe("deny")
+      expect(evaluate(agent, "webfetch")).toBe(seat.id === "jimmy" ? "allow" : "deny")
       expect(evaluate(agent, "websearch")).toBe(seat.id === "jimmy" ? "allow" : "deny")
       expect(evaluate(agent, "skill")).toBe("deny")
       expect(evaluate(agent, "external_directory")).toBe("deny")
@@ -137,7 +137,7 @@ it.instance("registers native team specialists with fixed profiles", () =>
           expect(Permission.evaluate("skill", name, agent.permission).action).toBe("allow")
         for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit"])
           expect(evaluate(agent, tool)).toBe("allow")
-        for (const tool of ["lsp", "webfetch", "repo_map", "repo_symbols", "repo_git_state", "code_query", "code_locate", "code_search", "probe_run", "inquiry"])
+        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state", "code_query", "code_locate", "code_search", "probe_run", "inquiry"])
           expect(evaluate(agent, tool)).toBe("deny")
         for (const tool of ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"])
           expect(evaluate(agent, tool)).toBe("deny")
@@ -212,6 +212,7 @@ it.instance("backend alone gets backend skills; native memory seats get Atlas gr
       read: envRead,
       glob: "allow",
       grep: "allow",
+      webfetch: "allow",
       websearch: "allow",
       context_recall: "allow",
       context_compact: "allow",
