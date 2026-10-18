@@ -70,7 +70,7 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
-          if printf '%s\n' "$changed" | grep -Eq '^(foundation/atlas/|\.github/workflows/test\.yml$)'; then
+          if printf '%s\n' "$changed" | grep -Eq '^((foundation|modules)/atlas/|\.github/workflows/test\.yml$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -85,7 +85,7 @@ jobs:
     if: github.event_name != 'pull_request' || needs.atlas-scope.outputs.changed == 'true'
     defaults:
       run:
-        working-directory: foundation/atlas
+        working-directory: modules/atlas
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
@@ -97,9 +97,9 @@ jobs:
         with:
           node-version: "24"
           cache: npm
-          cache-dependency-path: foundation/atlas/package-lock.json
+          cache-dependency-path: modules/atlas/package-lock.json
 
-      # foundation/atlas/.github/workflows/ci.yml documents Atlas's standalone
+      # modules/atlas/.github/workflows/ci.yml documents Atlas's standalone
       # contract. This host-level job makes that contract reachable in this repo.
       - name: Install Atlas dependencies
         run: npm ci
@@ -110,15 +110,7 @@ jobs:
       - name: Set Atlas EARS baseline
         env:
           BASE_SHA: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.sha }}
-        run: |
-          if TREE=$(git rev-parse "$BASE_SHA:foundation/atlas" 2>/dev/null); then
-            echo "Using Atlas tree from $BASE_SHA"
-          else
-            TREE=$(git mktree </dev/null)
-            echo "Atlas absent at $BASE_SHA; using empty baseline tree"
-          fi
-          ATLAS_BASE=$(git -c user.name=atlas-ci -c user.email=atlas-ci@example.invalid commit-tree "$TREE" -m "Atlas CI baseline")
-          echo "EARS_COAMEND_BASE=$ATLAS_BASE" >> "$GITHUB_ENV"
+        run: node ../../script/atlas-baseline.mjs "$BASE_SHA"
 
       - name: Run Atlas guards
         run: |
@@ -139,6 +131,9 @@ jobs:
       - name: Test Own snapshot materializer
         run: node --test scripts/materialize-own-snapshot.test.mjs
 
+      - name: Test Atlas historical source roots
+        run: node --test scripts/git-source-root.test.mjs scripts/own-history.test.mjs
+
       - name: Test Own snapshot gate
         run: npm test -- harness/gates/own-snapshot-guard.test.mjs
 
@@ -149,7 +144,7 @@ jobs:
           BASE="${{ github.event.pull_request.base.sha }}"
           HEAD="${{ github.event.pull_request.head.sha }}"
           CHANGED=$(git diff --name-only "$BASE" "$HEAD")
-          if echo "$CHANGED" | grep -qE '^(foundation/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
+          if echo "$CHANGED" | grep -qE '^((foundation|modules)/atlas/(packages/|harness/|\.github/)|\.github/workflows/test\.yml)'; then
             echo "touches_code=true" >> "$GITHUB_OUTPUT"
           else
             echo "touches_code=false" >> "$GITHUB_OUTPUT"
@@ -336,6 +331,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: ${{ (matrix.part == 'packages' || matrix.part == 'rest') && '0' || '1' }}
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -360,10 +357,10 @@ jobs:
 
       # The CLI's native Windows artifact controls compile with `rustup run 1.98.0` (packages/core/src/
       # artifact-native-windows.ts). The same-run omni artifact above skips cargo, so nothing else installs the
-      # toolchain pinned by packages/omni/rust-toolchain.toml on this lane.
+      # toolchain pinned by native/omni/rust-toolchain.toml on this lane.
       - name: Rust toolchain (rust-toolchain.toml)
         if: runner.os == 'Windows' && matrix.part == 'rest'
-        working-directory: packages/omni
+        working-directory: native/omni
         run: rustup show active-toolchain || rustup toolchain install
 
       - name: Configure git identity
@@ -388,7 +385,7 @@ jobs:
       # Extension: installed Atlas code must match its canonical producer before any consumer proof.
       - name: Check generated Atlas boundary
         if: matrix.part == 'packages'
-        working-directory: packages/atlas-boundary
+        working-directory: modules/atlas/boundary
         run: bun run check:generated
 
       - name: Fetch target branch for godfile
@@ -456,25 +453,25 @@ jobs:
         working-directory: packages/orchestra
         run: bun run test:httpapi
 
-      # packages/relay is Python. Its steps run even when an earlier step failed, so one failure does not
+      # Relay's retained Python oracle runs even when an earlier step failed, so one failure does not
       # hide the other. Benchmark runtime tests nest real pytest campaigns and stay manual:
-      # `python -m pytest tests/test_benchmark_runtime.py` from packages/relay.
+      # `python -m pytest tests/test_benchmark_runtime.py` from modules/relay.
       - name: Setup Python for Relay
         if: ${{ !cancelled() && matrix.part == 'gates' }}
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6.3.0
         with:
           python-version: "3.12"
           cache: pip
-          cache-dependency-path: packages/relay/requirements-dev.txt
+          cache-dependency-path: modules/relay/requirements-dev.txt
 
       - name: Install Relay test dependencies
         if: ${{ !cancelled() && matrix.part == 'gates' }}
-        run: python -m pip install -r packages/relay/requirements-dev.txt
+        run: python -m pip install -r modules/relay/requirements-dev.txt
 
       - name: Test Relay
         if: ${{ !cancelled() && matrix.part == 'gates' }}
         timeout-minutes: 10
-        working-directory: packages/relay
+        working-directory: modules/relay
         # tests/test_docs.py already runs the doc structure guard on the real tree; only the index check is extra.
         run: |
           python -m pytest tests -q -p no:cacheprovider --ignore=tests/test_benchmark_runtime.py
@@ -522,7 +519,7 @@ jobs:
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
 
-      # e2e drives the app package; its Turbo hash covers the app plus every workspace dependency.
+      # e2e drives the app shell package; its Turbo hash covers the shell plus every workspace dependency.
       - name: Check for a previous pass
         if: ${{ !inputs.cold }}
         id: previous
@@ -574,17 +571,17 @@ jobs:
 
       - name: Install Playwright system dependencies
         if: runner.os == 'Linux' && steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install-deps chromium
 
       - name: Install Playwright browsers
         if: steps.playwright-cache.outputs.cache-hit != 'true' && steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         run: bunx playwright install chromium
 
       - name: Run app e2e tests
         if: steps.previous.outputs.hit != 'true'
-        working-directory: packages/app
+        working-directory: packages/app-shell
         # Specs are split by measured time (script/e2e-shard.ts), not file count; the assignment fails the step
         # if the script fails instead of falling back to every spec.
         run: |
@@ -605,8 +602,8 @@ jobs:
           if-no-files-found: ignore
           retention-days: 7
           path: |
-            packages/app/e2e/test-results
-            packages/app/e2e/playwright-report
+            packages/app-shell/e2e/test-results
+            packages/app-shell/e2e/playwright-report
 
       - name: Record the pass
         if: steps.previous.outputs.hit != 'true' && steps.previous.outputs.key != ''

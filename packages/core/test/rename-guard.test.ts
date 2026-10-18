@@ -26,6 +26,19 @@ async function scanned() {
 }
 
 describe("rename guard", () => {
+  test("shell relocation preserves upstream and fixture protections without exempting product copy", () => {
+    for (const directory of ["packages/app", "packages/app-shell"]) {
+      expect(kept(`${directory}/src/i18n/branding.test.ts`)).toBe(true)
+      expect(oldNames(`${directory}/src/context/sdk.ts`, 'import { OpenCodeClient } from "@opencode-ai/client"')).toEqual([])
+      expect(oldNames(`${directory}/e2e/orchestra/chapter-workspaces.spec.ts`, '"opencode/legacy"')).toEqual([])
+      expect(oldNames(`${directory}/src/context/sdk.ts`, 'const name = "OpenCode"')).toEqual([
+        `${directory}/src/context/sdk.ts:1: const name = "OpenCode"`,
+      ])
+    }
+    expect(kept("packages/app-other/src/i18n/branding.test.ts")).toBe(false)
+    expect(oldNames("packages/app-other/src/context/sdk.ts", "OpenCodeClient")).toHaveLength(1)
+  })
+
   test("no tracked file or path names opencode outside the rename ledger", async () => {
     const files = await scanned()
     // A broken listing would scan nothing and pass.

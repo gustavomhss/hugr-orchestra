@@ -38,7 +38,7 @@ describe("electron renderer html", () => {
         const content = await html(name)
         const icons = [...content.matchAll(/<link[^>]+rel=["'](?:shortcut )?icon["'][^>]*>/g)].map((m) => m[0])
         expect(icons).toEqual(['<link rel="icon" type="image/svg+xml" href="./orchestra/hugr-symbol-primary.svg" />'])
-        expect(existsSync(join(root, "../app/public/orchestra/hugr-symbol-primary.svg"))).toBe(true)
+        expect(existsSync(join(root, "../app-shell/public/orchestra/hugr-symbol-primary.svg"))).toBe(true)
         expect(content).not.toContain("social-share")
       })
 
@@ -69,7 +69,7 @@ describe("electron vite publicDir", () => {
     const [output, error, status] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
     expect({ status, error }).toEqual({ status: 0, error: "" })
     const configured = JSON.parse(output) as { publicDir: string }
-    expect(configured.publicDir).toBe(realpathSync(resolve(root, "../app/public")))
+    expect(configured.publicDir).toBe(realpathSync(resolve(root, "../app-shell/public")))
     expect(lstatSync(configured.publicDir).isDirectory()).toBe(true)
     expect(lstatSync(join(configured.publicDir, "oc-theme-preload.js")).isFile()).toBe(true)
   }, 15_000)

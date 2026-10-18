@@ -1,4 +1,4 @@
-import type { ServerConnection } from "../../../app/src/context/server"
+import type { ServerConnection } from "../../../app-shell/src/context/server"
 
 export function initializationData<A>(state: (() => A | undefined) & { error: unknown }, remoteHealthy = false) {
   if (state.error !== undefined) {

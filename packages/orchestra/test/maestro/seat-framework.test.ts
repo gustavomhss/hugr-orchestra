@@ -78,7 +78,7 @@ describe("native seat framework", () => {
       atlasMemory: true,
       toolkit: false,
     })
-    expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../archie-specialist/skills"))
+    expect(Seats.skillSource(upstream.id)).toBe(path.resolve(import.meta.dirname, "../../../../modules/specialists/archie/skills"))
     expect(upstream.prompt).toContain("Load archie-plan for authoring and archie-work-package")
     expect(define(upstream)).toBe(upstream)
     expect(() => define({ ...upstream, toolkit: true })).toThrow("The backend toolkit supports only the backend seat: archie")

@@ -109,7 +109,7 @@ for (const arm of [job.arm]) {
     const toolIDs = yield* registry.ids()
     fact(archie.native === true && archie.mode === "subagent" && Seats.find("archie")?.profileKey === "upstream" && Seats.find("archie")?.strictResume === true, "PAIR_NATIVE_ABI_MISMATCH")
     fact(archie.engine === job.claude.engine && archie.model?.providerID + "/" + archie.model?.modelID === model, "PAIR_CLAUDE_ENGINE_BINDING_MISMATCH")
-    fact(SeatSkillRoot.roots.archie === job.candidate + "/packages/archie-specialist/skills", "PAIR_NATIVE_SKILL_ROOT_UNPINNED")
+    fact(SeatSkillRoot.roots.archie === job.candidate + "/modules/specialists/archie/skills", "PAIR_NATIVE_SKILL_ROOT_UNPINNED")
     return { agents, sessions, prompts, registry, archie, toolIDs }
   }))
   const base = await realpath(placement.worktree === "/" ? placement.directory : placement.worktree)

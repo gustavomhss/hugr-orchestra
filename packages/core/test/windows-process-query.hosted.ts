@@ -6,7 +6,7 @@ import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { WindowsProcessQuery } from "./fixture/windows-process-query"
 
-const decoder = new URL("../../omni/campaign/windows-inventory.ts", import.meta.url).href
+const decoder = new URL("../../../native/omni/campaign/windows-inventory.ts", import.meta.url).href
 beforeAll(() => { expect(process.env.CI).toBeTruthy() })
 
 test("real native Node receives request and config; files survive until close", async () => {

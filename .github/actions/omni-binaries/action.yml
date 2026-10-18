@@ -19,7 +19,7 @@ runs:
       uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
       with:
         name: ${{ inputs.artifact }}
-        path: packages/omni/target/release
+        path: native/omni/target/release
 
     - name: Restore omni binaries
       if: inputs.artifact == ''
@@ -27,16 +27,16 @@ runs:
       uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
-          packages/omni/target/release/*hugr_omni_node.*
-          packages/omni/target/release/hugr-omni-supervisor*
-        key: omni-bin-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('packages/omni/crates/**', 'packages/omni/Cargo.toml', 'packages/omni/Cargo.lock', 'packages/omni/rust-toolchain.toml', 'packages/omni/.cargo/**', 'packages/omni/bindings/node/src/**', 'packages/omni/bindings/node/Cargo.toml', 'packages/omni/bindings/node/build.rs') }}
+          native/omni/target/release/*hugr_omni_node.*
+          native/omni/target/release/hugr-omni-supervisor*
+        key: omni-bin-v2-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('native/omni/crates/**', 'native/omni/Cargo.toml', 'native/omni/Cargo.lock', 'native/omni/rust-toolchain.toml', 'native/omni/.cargo/**', 'native/omni/bindings/node/src/**', 'native/omni/bindings/node/Cargo.toml', 'native/omni/bindings/node/build.rs') }}
 
     - name: Build omni binaries (cache miss)
       if: inputs.artifact == '' && steps.restore.outputs.cache-hit != 'true'
       shell: bash
-      working-directory: packages/omni
+      working-directory: native/omni
       run: |
-        # The toolchain pinned by packages/omni/rust-toolchain.toml.
+        # The toolchain pinned by native/omni/rust-toolchain.toml.
         rustup show active-toolchain || rustup toolchain install
         cargo build --release -p hugr-omni-node -p omni-supervisor
 
@@ -45,14 +45,14 @@ runs:
       uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
       with:
         path: |
-          packages/omni/target/release/*hugr_omni_node.*
-          packages/omni/target/release/hugr-omni-supervisor*
+          native/omni/target/release/*hugr_omni_node.*
+          native/omni/target/release/hugr-omni-supervisor*
         key: ${{ steps.restore.outputs.cache-primary-key }}
 
     - name: Export omni paths
       shell: bash
       run: |
-        dir="$GITHUB_WORKSPACE/packages/omni/target/release"
+        dir="$GITHUB_WORKSPACE/native/omni/target/release"
         case "$RUNNER_OS" in
           Linux) addon=libhugr_omni_node.so; supervisor=hugr-omni-supervisor ;;
           macOS) addon=libhugr_omni_node.dylib; supervisor=hugr-omni-supervisor ;;
