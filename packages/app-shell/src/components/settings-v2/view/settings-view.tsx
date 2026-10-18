@@ -4,13 +4,14 @@ import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
 import { reconcile, unwrap } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useModels } from "@/context/models"
-import type { ServerConnection } from "@/context/server"
+import { serverName, type ServerConnection } from "@/context/server"
 import { useServerProtocol } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { popularProviders } from "@/hooks/use-providers"
-import { MxToggle } from "@/orchestra/chapters/kit"
+import { MxBadge, MxToggle } from "@/orchestra/chapters/kit"
 import { resolveModelLogo } from "@/orchestra/model-logo-resolver"
 import { showToast } from "@/utils/toast"
+import { createDefaultModelController } from "../default-model"
 import { SettingsGeneralV2 } from "../general"
 import { SettingsServersV2 } from "../servers"
 import { AgentsSection, McpSection } from "./capabilities-section"
@@ -82,6 +83,11 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
             </For>
           </nav>
           <div class="settings-body" data-section={section()}>
+            <Show when={section() === "providers" || section() === "models"}>
+              <p class="settings-field-note settings-scope">
+                {language.t("orchestra.settings.scope.server", { server: serverName(props.server) })}
+              </p>
+            </Show>
             <Switch>
               <Match when={section() === "permissions"}>
                 <PermissionsSection />
@@ -90,7 +96,7 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
                 <ProvidersSection directory={props.directory} onModels={() => open("models")} />
               </Match>
               <Match when={section() === "models"}>
-                <ModelsSection directory={props.directory} />
+                <ModelsSection directory={props.directory} onConnect={() => open("providers")} />
               </Match>
               <Match when={section() === "agents"}>
                 <AgentsSection server={props.server} directory={props.directory} />
@@ -256,10 +262,11 @@ function PermissionSegment(props: {
 }
 
 // Visibility lives in the app-wide model store (the ancestor ModelsProvider), the same one every composer reads.
-function ModelsSection(props: { directory: string }) {
+function ModelsSection(props: { directory: string; onConnect: () => void }) {
   const language = useLanguage()
   const serverSync = useServerSync()
   const models = useModels()
+  const defaults = createDefaultModelController(() => props.directory)
   const [query, setQuery] = createSignal("")
   const all = createMemo(() =>
     models
@@ -297,6 +304,12 @@ function ModelsSection(props: { directory: string }) {
                 ? "orchestra.settings.models.empty"
                 : "orchestra.settings.models.loading",
             )}
+            <Show when={serverSync().child(props.directory)[0].provider_ready}>
+              <br />
+              <button type="button" class="mx-btn" onClick={props.onConnect}>
+                {language.t("orchestra.settings.providers.connect")}
+              </button>
+            </Show>
           </div>
         }
       >
@@ -335,6 +348,23 @@ function ModelsSection(props: { directory: string }) {
                           : item.provider.name}
                       </small>
                     </div>
+                    <Show
+                      when={defaults.isDefault(key)}
+                      fallback={
+                        <Show when={defaults.writable() && models.visible(key)}>
+                          <button
+                            type="button"
+                            class="mx-btn"
+                            aria-label={language.t("orchestra.settings.models.makeDefaultLabel", { model: item.name })}
+                            onClick={() => defaults.set(key)}
+                          >
+                            {language.t("orchestra.settings.models.makeDefault")}
+                          </button>
+                        </Show>
+                      }
+                    >
+                      <MxBadge tone="good">{language.t("orchestra.settings.models.default")}</MxBadge>
+                    </Show>
                     <MxToggle
                       checked={models.visible(key)}
                       label={language.t("orchestra.settings.models.enable", { model: item.name })}

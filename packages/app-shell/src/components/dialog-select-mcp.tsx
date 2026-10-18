@@ -10,7 +10,7 @@ const statusLabels = {
   connected: "mcp.status.connected",
   failed: "mcp.status.failed",
   needs_auth: "mcp.status.needs_auth",
-  needs_client_registration: "mcp.status.needs_client_registration",
+  needs_client_registration: "orchestra.settings.mcp.status.needsRegistration",
   disabled: "mcp.status.disabled",
 } as const
 

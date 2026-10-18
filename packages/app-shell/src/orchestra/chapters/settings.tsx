@@ -35,6 +35,7 @@ export default function SettingsPage(props: ChapterPageProps) {
                   {(item) => (
                     <button
                       type="button"
+                      classList={{ on: (params.section ?? "general") === item }}
                       aria-current={(params.section ?? "general") === item ? "page" : undefined}
                       onClick={() => setParams({ section: item }, { replace: true })}
                     >

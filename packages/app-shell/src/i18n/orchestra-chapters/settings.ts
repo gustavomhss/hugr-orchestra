@@ -53,6 +53,14 @@ export const SETTINGS_COPY = {
   "orchestra.settings.models.enable": "Enable {{model}}",
   "orchestra.settings.models.empty": "No models yet. Connect a provider to choose its models.",
   "orchestra.settings.models.loading": "Loading models…",
+  "orchestra.settings.models.default": "Default",
+  "orchestra.settings.models.makeDefault": "Set as default",
+  "orchestra.settings.models.makeDefaultLabel": "Use {{model}} as the default model",
+  "orchestra.settings.models.done": "Done",
+  "orchestra.settings.scope.server": "Changes here apply to {{server}}.",
+  "orchestra.settings.servers.remove.title": "Delete {{server}}?",
+  "orchestra.settings.servers.remove.description":
+    "This removes the saved connection, its password and the tabs open on it from this app.",
   "orchestra.settings.agents.description": "Configure this profile's agents.",
   "orchestra.settings.agents.create": "Create agent",
   "orchestra.settings.agents.loading": "Loading agents…",
@@ -79,4 +87,8 @@ export const SETTINGS_COPY = {
   "orchestra.settings.shortcuts.edit": "Edit {{name}}",
   "orchestra.settings.general.shellError": "Could not load the shells on this server.",
   "orchestra.settings.general.shellRetry": "Try again",
+  "orchestra.settings.general.autoAccept.description":
+    "Approve permission requests automatically in this session only. Other sessions are not affected.",
+  "orchestra.settings.general.autoAccept.unavailable":
+    "Open a session to turn this on. It applies to that session only.",
 }

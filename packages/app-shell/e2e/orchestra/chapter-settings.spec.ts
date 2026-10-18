@@ -259,6 +259,16 @@ test("providers choose the route for new turns and models toggle their composer 
   const row = view.locator('[data-model="openai/gpt-5"]')
   await expect(row.locator("strong")).toHaveText("GPT-5")
   await expect(row.locator("small")).toHaveText("OpenAI · Context 400K")
+  // The route picked above is the default model; another row can take over.
+  await expect(view.locator('[data-model="openrouter/gpt-5"] .mx-badge')).toHaveText("Default")
+  await view
+    .locator('[data-model="openrouter/claude-sonnet-4"]')
+    .getByRole("button", { name: /as the default model/ })
+    .click()
+  await expect
+    .poll(() => state.patches)
+    .toEqual([{ model: "openrouter/gpt-5" }, { model: "openrouter/claude-sonnet-4" }])
+  await expect(view.locator('[data-model="openrouter/claude-sonnet-4"] .mx-badge')).toHaveText("Default")
   const toggle = row.getByRole("switch", { name: "Enable GPT-5" })
   await expect(toggle).toHaveAttribute("aria-checked", "true")
   await toggle.click()

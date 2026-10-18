@@ -73,7 +73,11 @@ const PermissionScopeSetting: Component<{ controller: PermissionScopeController 
   return (
     <SettingsRowV2
       title={language.t("command.permissions.autoaccept.enable")}
-      description={language.t("toast.permissions.autoaccept.on.description")}
+      description={language.t(
+        props.controller.enabled()
+          ? "orchestra.settings.general.autoAccept.description"
+          : "orchestra.settings.general.autoAccept.unavailable",
+      )}
     >
       <div data-action="settings-auto-accept-permissions">
         <Switch

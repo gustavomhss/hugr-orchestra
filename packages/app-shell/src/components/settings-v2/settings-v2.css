@@ -202,6 +202,23 @@
   color: var(--v2-text-text-faint);
 }
 
+.settings-v2-nav-footer > [data-component="button-v2"] {
+  align-self: flex-start;
+}
+
+.settings-v2-scope-note {
+  padding: 24px 40px 0;
+  font-size: 12px;
+  font-weight: 440;
+  line-height: 1;
+  color: var(--v2-text-text-faint);
+  user-select: none;
+}
+
+.settings-v2-scope-note + .settings-v2-tab-header {
+  padding-top: 16px;
+}
+
 .settings-v2-legacy-panel {
   height: 100%;
   overflow: hidden;
@@ -486,6 +503,10 @@
 
 .settings-v2-models-status-filter {
   color: var(--v2-text-text-base);
+}
+
+.settings-v2-models-status > [data-component="button-v2"] {
+  margin-top: 12px;
 }
 
 .settings-v2-shortcuts .settings-v2-section {
