@@ -69,7 +69,7 @@ Scope: V facet only, read-only. No row closes on this audit; a PASS here would s
 need its R/I/M/L facets.
 
 **Mock authority.** `_worktrees/actions-campaign/artifacts/actions-mock` no longer
-existed. The 20 source files were recovered from the OpenCode session database at
+existed. The 20 source files were recovered from an earlier session database at
 their last complete read (2026-10-14). Recovered `resources.css` and
 `collections.css` are byte-identical to the surviving 2026-10-11 copies. Only 8 of 20
 gallery PNGs were recoverable (workflows, dispatch-dialog, logs, variables,

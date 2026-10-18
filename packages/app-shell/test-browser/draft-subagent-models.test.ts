@@ -70,7 +70,7 @@ test("inherit tombstones keep monotonic revisions across inherited-policy ABA un
   expect(pendingSnapshot(key)).toEqual({ revision: 0, policy: { mode: "inherit" } })
 })
 
-test("subagent models picked on a draft are saved with it, come back after a reload, and go when the draft goes", () => {
+test("subagent models picked on a draft are saved with it, come back after a reload, and go when the draft goes", async () => {
   const platform: Platform = {
     platform: "web",
     openExternal: () => undefined,
@@ -87,13 +87,25 @@ test("subagent models picked on a draft are saved with it, come back after a rel
     return dispose
   })
 
+  // Storage can answer asynchronously (it does on the Windows lane), so wait for each load and save to settle.
+  const settle = async (done: () => boolean) => {
+    for (const _ of Array.from({ length: 100 })) {
+      if (done()) return
+      await new Promise((resolve) => setTimeout(resolve, 10))
+    }
+  }
+  const tick = () => new Promise((resolve) => setTimeout(resolve, 50))
+
   const first = open()
+  await tick()
   togglePending(key, "provider", "model/with/slashes", true)
+  await tick()
   first()
   clearPending(key, pendingSnapshot(key).revision)
   expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
 
   const reloaded = open()
+  await settle(() => pendingPolicy(key).mode === "allowlist")
   expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model/with/slashes" }] })
   expect(pendingSnapshot(key).revision).toBeGreaterThan(0)
   reloaded()

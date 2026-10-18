@@ -116,7 +116,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       servers: { list: () => servers.map((server) => server.connection) },
       ensureServerCtx: (connection: ServerConnection.Any) => servers.find((server) => server.connection === connection)!,
     }) }))
-    mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ home: { selection: () => selection } }) }))
+    mock.module(solidDom("../src/context/layout", import.meta.dir), () => ({ useLayout: () => ({ ready: () => true, home: { selection: () => selection } }) }))
     mock.module(solidDom("../src/context/server", import.meta.dir), () => ({ ServerConnection, useServer: () => ({
       get current() { return servers.find((server) => ServerConnection.key(server.connection) === selection.server)?.connection },
     }) }))
