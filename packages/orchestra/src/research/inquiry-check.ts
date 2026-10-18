@@ -220,7 +220,7 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     const own = citation.kind === "url" ? undefined : yield* targets(citation.target)
     const rematched = spans.filter((span) => citation.kind === "url"
       ? span.receipt.origin.kind === "url" && Liveness.normal(span.receipt.origin.uri) === Liveness.normal(citation.target)
-      : span.receipt.origin.kind === "file" && own!.has(normal(span.receipt.origin.uri)))
+      : span.receipt.origin.kind === "file" && own!.has(normal(path.resolve(span.receipt.origin.uri))))
     if (!lined) return rematched.length ? undefined : fail("R9", "no evidence for this path", at)
     if (!rematched.length) return fail("R9", "no evidence for this path or URL", at)
     if (!rematched.some((span) => span.start <= citation.start! && citation.end! <= span.end))
