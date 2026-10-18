@@ -1397,50 +1397,34 @@ export default function LegacyLayout(props: ParentProps) {
     })
     const dismiss = () => dismissToast(progress)
 
-    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch((err) => {
+    const failed = (err: unknown) => {
       showToast({
         title: language.t("workspace.reset.failed.title"),
         description: errorMessage(err, language.t("common.requestFailed")),
       })
-      return undefined
-    })
-
-    if (!sessions) {
-      setBusy(directory, false)
-      dismiss()
-      return
+      return false as const
     }
-
-    clearWorkspaceTerminals(
-      directory,
-      sessions.map((s) => s.id),
-      platform,
-      serverSDK().scope,
-    )
+    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(failed)
+    clearWorkspaceTerminals(directory, (sessions || []).map((s) => s.id), platform, serverSDK().scope)
     await serverSDK()
       .client.instance.dispose({ directory })
       .catch(() => undefined)
 
-    const result = await serverSDK()
-      .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
-      .then((x) => x.data)
-      .catch((err) => {
-        showToast({
-          title: language.t("workspace.reset.failed.title"),
-          description: errorMessage(err, language.t("common.requestFailed")),
-        })
-        return false
-      })
+    const result =
+      sessions &&
+      (await serverSDK()
+        .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
+        .then((x) => x.data)
+        .catch(failed))
 
     if (!result) {
       setBusy(directory, false)
       dismiss()
       return
     }
-
     if ((await serverSDK().protocol) === "v1")
       await Promise.all(
-        sessions
+        (sessions || [])
           .filter((session) => session.time.archived === undefined)
           .map((session) =>
             serverSDK()
@@ -1452,10 +1436,8 @@ export default function LegacyLayout(props: ParentProps) {
               .catch(() => undefined),
           ),
       )
-
     setBusy(directory, false)
     dismiss()
-
     showToast({
       title: language.t("workspace.reset.success.title"),
       description: language.t("workspace.reset.success.description"),
