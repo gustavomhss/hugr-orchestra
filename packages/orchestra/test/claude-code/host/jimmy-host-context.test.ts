@@ -152,7 +152,7 @@ ClaudeEngineFixture.it.instance("production host qualifies Jimmy's own retained 
     taskId: logical.taskId, memberId: "jimmy", executionSessionId: child.id, authoritySessionId: parent.id,
     qualifications: qualified })
   // The capture retains the received bytes and their line projection; the claim cites the projection.
-  expect(part.state.metadata.workResult.discovery?.sources.shown.map((source) => source.ref)).toContainEqual(result.source.ref)
+  expect(Schema.decodeUnknownSync(Research.CardV2)(part.state.metadata.workResult.discovery).sources.shown.map((source) => source.ref)).toContainEqual(result.source.ref)
   expect(part.state.output).toStartWith("Inquiry check: pass; rules ")
   const lines = part.state.output.split("\n")
   const packet = lines.findIndex((line) => line.startsWith("Retained finding qualifications"))
