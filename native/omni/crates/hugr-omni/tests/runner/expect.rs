@@ -65,6 +65,7 @@ pub fn exit_fields(e: &Exit) -> Fields {
         Reason::Killed => "killed",
         Reason::Timeout => "timeout",
         Reason::Aborted => "aborted",
+        Reason::MemoryExceeded => "memory_exceeded",
     };
     Fields::from([
         ("exitCode", Got::Num(e.code.map(f64::from))),
