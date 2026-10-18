@@ -487,7 +487,7 @@ function Params(props: Props) {
                 <span class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
                   {copy.t("orchestra.workflows.details.skillsError")}{" "}
                   <button type="button" class="mx-link" onClick={props.skills.retry}>
-                    {copy.t("orchestra.workflows.retry")}
+                    {copy.t("orchestra.workflows.details.skillsRetry")}
                   </button>
                 </span>
               </Show>

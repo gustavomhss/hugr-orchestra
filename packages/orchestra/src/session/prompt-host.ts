@@ -1,6 +1,7 @@
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyPlacement } from "@orchestra/core/tool-safety-placement"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -8,7 +9,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
 import { Global } from "@orchestra/core/global"
 import type { PromptContext } from "@orchestra/schema/prompt-context"
-import { Context, Effect, Exit, Layer, Option, Schema, Scope } from "effect"
+import { Context, Effect, Exit, Layer, Option, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
 import { WriteRoots } from "@/maestro/write-roots"
 import type { SessionContinuity } from "@/continuity/service"
@@ -238,34 +239,9 @@ export const record = Effect.fn("PromptHost.record")(function* (
       .pipe(
         Effect.provideService(ToolSafety.RuntimeProfileLoader, load),
         Effect.provideService(ToolSafety.NativeHost, undefined),
-        Effect.provideService(ToolSafetyHooks.Placement, placement(locations, session, scope)),
+        Effect.provideService(ToolSafetyHooks.Placement, ToolSafetyPlacement.make(locations, session, scope)),
       )
   }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
 }, Effect.scoped)
-
-/**
- * Where a V1 host's hook decisions belong (ToolSafetyHooks.Placement): the Session's Location, whose Relay service is
- * opened in `scope` only once an enabled hook is in play, for its checks and receipts.
- */
-export function placement(
-  locations: Context.Service.Shape<typeof LocationServiceMap.Service> | undefined,
-  session: Pick<Session.Info, "directory" | "workspaceID">,
-  scope: Scope.Scope,
-) {
-  const location = {
-    directory: AbsolutePath.make(session.directory),
-    ...(session.workspaceID ? { workspaceID: session.workspaceID } : {}),
-  }
-  return {
-    location,
-    relay: Effect.gen(function* () {
-      if (!locations) return undefined
-      const { Relay } = yield* Effect.promise(() => import("@orchestra/core/relay"))
-      const services = yield* Layer.buildWithScope(locations.get(location), scope).pipe(Effect.exit)
-      if (Exit.isFailure(services)) return undefined
-      return Option.getOrUndefined(Context.getOption(services.value, Relay.Service))
-    }),
-  }
-}
 
 export * as PromptHost from "./prompt-host"

@@ -112,7 +112,8 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
                 ...fields,
                 versionId: document.versionId,
                 expectedChecksum: document.checksum,
-                force: options.force,
+                // Sent only to overwrite: an ordinary save keeps the update body it always had.
+                ...(options.force ? { force: true } : {}),
               }),
             },
             off,

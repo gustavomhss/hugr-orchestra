@@ -264,7 +264,7 @@ test("lifetime: shortcut popup blocks editor and command keys from button focus 
   await expect(canvas(page).getByRole("button", { name: "Keyboard shortcuts (?)", exact: true })).toBeFocused()
   await page.keyboard.press("n")
   await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${workflow}/add$`))
-  await expect(page.locator(".wf-drawer").getByRole("textbox")).toBeEditable()
+  await expect(page.locator(".wf-drawer").getByRole("combobox")).toBeEditable()
   await page.keyboard.press("Escape")
   await expect(page.locator(".wf-drawer")).toHaveCount(0)
   await page.keyboard.press("ControlOrMeta+k")
