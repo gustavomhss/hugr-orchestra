@@ -11,10 +11,10 @@ import type {
   SessionStatus,
   Todo,
   VcsInfo,
-} from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
+} from "@/compat/sdk-v2-client"
+import type { FileDiffInfo } from "@/compat/vendored-client-promise"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
-import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "@/compat/vendored-client-promise"
 import type { Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
 import type { AppSession } from "@/utils/session"

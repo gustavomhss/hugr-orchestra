@@ -8,7 +8,7 @@ import type {
   QuestionRequest,
   ReferenceInfo,
   Session,
-} from "@orchestra/sdk/v2/client"
+} from "@/compat/sdk-v2-client"
 import type {
   AgentListInput,
   AgentListOutput,
@@ -22,7 +22,7 @@ import type {
   ReferenceListInput,
   ReferenceListOutput,
   SessionApi,
-} from "@opencode-ai/client/promise"
+} from "@/compat/vendored-client-promise"
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
 import { retry } from "@orchestra/core/util/retry"

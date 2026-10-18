@@ -5,7 +5,7 @@ import type {
   Project,
   ProviderAuthResponse,
   SessionStatus,
-} from "@orchestra/sdk/v2/client"
+} from "@/compat/sdk-v2-client"
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
 import { type Accessor, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
@@ -35,7 +35,7 @@ import { retry } from "@orchestra/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { SessionActiveOutput } from "@opencode-ai/client/promise"
+import type { SessionActiveOutput } from "@/compat/vendored-client-promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
