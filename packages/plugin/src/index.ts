@@ -9,8 +9,8 @@ import type {
   Message,
   Part,
   Config as SDKConfig,
-} from "@orchestra/sdk"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "@orchestra/sdk/v2"
+} from "./compat/sdk"
+import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/sdk-v2"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"

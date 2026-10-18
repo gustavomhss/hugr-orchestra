@@ -15,7 +15,7 @@ import type {
   SessionStatus,
   TextPart,
   Config as SdkConfig,
-} from "@orchestra/sdk/v2"
+} from "./compat/sdk-v2"
 import type { CliRenderer, KeyEvent, RGBA, Renderable, SlotMode } from "@opentui/core"
 import type { Binding, Keymap } from "@opentui/keymap"
 import {
