@@ -1,4 +1,5 @@
 """orchestra_relay ledger: verify CLI, tamper demo, quickstart, and the committed golden ledger for the TS side."""
+import itertools
 import os
 from pathlib import Path
 import subprocess
@@ -12,6 +13,7 @@ import pytest
 
 RELAY = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(RELAY / "lib"))
+import orchestra_relay
 from orchestra_relay import gated
 from orchestra_relay.__main__ import main
 
@@ -44,6 +46,7 @@ def run(tmp_path, monkeypatch):
     monkeypatch.chdir(tmp_path)
     monkeypatch.delenv("OPENAI_API_KEY", raising=False)
     monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    monkeypatch.setattr(orchestra_relay, "clock", itertools.count(1_700_000_000_000, 1000).__next__)
     return golden_run(tmp_path)
 
 

@@ -107,9 +107,11 @@ def test_recorded_decision_is_replayed_without_asking_again(project):
     graph = gated(build(calls), {"write": {"check": PASS, "approve": True}}).compile(checkpointer=InMemorySaver())
     graph.invoke({"n": 0}, config("replay"))
     # The process recorded the decision and died before LangGraph saved the node's result.
+    request = next(json.loads(line) for line in ledger(project, "replay").read_text().splitlines()
+                   if '"approval.request"' in line)
     orchestra_relay._append(ledger(project, "replay"), {
         "event": "approval.decision", "key": "replay/write/1/approval.decision", "node": "write", "attempt": 1,
-        "decision": "approve", "note": "", "source": "terminal"})
+        "request_seq": request["seq"], "decision": "approve", "note": "", "source": "terminal"})
     result = graph.invoke(None, config("replay"))
     assert "__interrupt__" not in result
     assert calls == ["write", "ship"] and checks(project) == 1

@@ -16,6 +16,11 @@ __version__ = "0.1.0"
 VERIFY = Path(__file__).with_name("verify_ledger.py")
 
 
+# Epoch milliseconds stamped as `at` on every ledger entry; tests replace it for a deterministic ledger.
+def clock():
+    return int(time.time() * 1000)
+
+
 class RelayError(Exception):
     pass
 
@@ -78,7 +83,7 @@ def _gate(builder, root, graph, node, gate):
 
     def run_check(state, config):
         thread, ledger = _ledger(root, config)
-        _append(ledger, {"event": "run.start", "key": f"{thread}/-/0/run.start", "thread_id": thread,
+        _append(ledger, {"event": "run.start", "key": f"{thread}/__start__/0/run.start", "thread_id": thread,
                          "graph": graph["name"], "library_version": __version__})
         entries = _read(ledger)
         starts = sum(e["event"] == "step.start" and e.get("node") == node for e in entries)
@@ -90,23 +95,23 @@ def _gate(builder, root, graph, node, gate):
         for kind, spec in (("cmd", gate.get("check")), ("judge", gate.get("judge"))):
             if spec is None:
                 continue
-            recorded = next((e for e in entries if e.get("key") == f"{key}/{kind}"), None)
+            recorded = next((e for e in entries if e.get("key") == f"{key}/check.result:{spec}"), None)
             verdict, output = (recorded["verdict"], recorded["output"]) if recorded else _evaluate(kind, spec, root)
-            _append(ledger, {"event": "check.result", "key": f"{key}/{kind}", "node": node, "attempt": attempt,
-                             "id": spec, "kind": kind, "verdict": verdict, "output": output})
+            _append(ledger, {"event": "check.result", "key": f"{key}/check.result:{spec}", "node": node,
+                             "attempt": attempt, "id": spec, "kind": kind, "verdict": verdict, "output": output})
             failed = failed or verdict == "fail"
             label = f"check {spec}" if kind == "cmd" else f'judge "{spec}"'
             note = "  → retrying" if verdict == "fail" and attempt < retries else ""
             _say(node, label, f"{verdict.upper()}  (attempt {attempt}/{retries}){note}")
         if failed:
             _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "status": "failed"})
+                             "outcome": "fail"})
             if attempt >= retries:
-                _escalate(ledger, key, node, attempt, f'check failed {attempt} of {retries} times on node "{node}"')
+                _escalate(ledger, thread, node, f'check failed {attempt} of {retries} times on node "{node}"')
             return None
         if not gate.get("approve"):
             _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "status": "passed"})
+                             "outcome": "pass"})
         return None
 
     def run_approve(state, config):
@@ -116,23 +121,26 @@ def _gate(builder, root, graph, node, gate):
         _append(ledger, {"event": "approval.request", "key": f"{key}/approval.request", "node": node,
                          "attempt": attempt})
         # A decision already on the ledger is replayed, so a re-run of this node never asks twice.
-        recorded = next((e for e in _read(ledger) if e.get("key") == f"{key}/approval.decision"), None)
+        entries = _read(ledger)
+        recorded = next((e for e in entries if e.get("key") == f"{key}/approval.decision"), None)
         if recorded is None:
             _say(node, "approval", "WAITING")
             answer = interrupt({"node": node, "attempt": attempt, "ledger": str(ledger)})
             decision = answer.get("decision") if isinstance(answer, dict) else answer
             recorded = {"event": "approval.decision", "key": f"{key}/approval.decision", "node": node,
-                        "attempt": attempt, "decision": "approve" if decision == "approve" else "reject",
+                        "attempt": attempt,
+                        "request_seq": next(e["seq"] for e in entries if e["key"] == f"{key}/approval.request"),
+                        "decision": "approve" if decision == "approve" else "reject",
                         "note": str(answer.get("note", "")) if isinstance(answer, dict) else "", "source": "terminal"}
             _append(ledger, recorded)
         _say(node, "approval", "APPROVED" if recorded["decision"] == "approve" else "REJECTED")
         if recorded["decision"] == "approve":
             _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "status": "passed"})
+                             "outcome": "pass"})
             return None
         _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                         "status": "escalated"})
-        _escalate(ledger, key, node, attempt, f'approval rejected on node "{node}"')
+                         "outcome": "fail"})
+        _escalate(ledger, thread, node, f'approval rejected on node "{node}"')
         return None
 
     # The route is read back from the ledger: the node's last entry says passed, retry, escalated or awaiting approval.
@@ -141,7 +149,7 @@ def _gate(builder, root, graph, node, gate):
         if last["event"] == "escalate":
             return END
         if last["event"] == "step.end":
-            return targets if last["status"] == "passed" else node
+            return targets if last["outcome"] == "pass" else node
         return approve
 
     builder.add_node(check, run_check)
@@ -165,16 +173,16 @@ def _evaluate(kind, spec, root):
 
 def _finish(root, graph, config):
     thread, ledger = _ledger(root, config)
-    _append(ledger, {"event": "run.start", "key": f"{thread}/-/0/run.start", "thread_id": thread,
+    _append(ledger, {"event": "run.start", "key": f"{thread}/__start__/0/run.start", "thread_id": thread,
                      "graph": graph["name"], "library_version": __version__})
     if not any(e["event"] in ("sprint-complete", "escalate") for e in _read(ledger)):
-        _append(ledger, {"event": "sprint-complete", "key": f"{thread}/-/0/sprint-complete"})
+        _append(ledger, {"event": "sprint-complete", "key": f"{thread}/__end__/0/sprint-complete"})
         _summary(ledger)
     return None
 
 
-def _escalate(ledger, key, node, attempt, reason):
-    _append(ledger, {"event": "escalate", "key": f"{key}/escalate", "node": node, "attempt": attempt, "reason": reason})
+def _escalate(ledger, thread, node, reason):
+    _append(ledger, {"event": "escalate", "key": f"{thread}/__end__/0/escalate", "reason": reason, "node": node})
     _summary(ledger)
 
 
@@ -228,7 +236,8 @@ def _append(ledger, body):
         last = entries[-1] if entries else {}
         # chain.ts writes JSON.stringify strings plus an escaped DEL; json.dumps leaves DEL raw.
         written = json.dumps(
-            {**body, "gen": 0, "prev": last.get("h", "GENESIS"), "seq": last.get("seq", -1) + 1, "mac": "sha256"},
+            {"event": body["event"], "key": body["key"], "at": clock(), **body,
+             "gen": 0, "prev": last.get("h", "GENESIS"), "seq": last.get("seq", -1) + 1, "mac": "sha256"},
             separators=(",", ":"), ensure_ascii=False, allow_nan=False,
         ).replace("\x7f", "\\u007f")
         with ledger.open("a", encoding="utf-8", newline="\n") as f:
