@@ -16,7 +16,7 @@
 
 ```
 Overview · Knowledge · Review [n] · Activity · Health (•) · Settings
-MEMORY  Backend · Jimmy · Archie · Maestro (off)
+MEMORY  Backend · Jimmy · Archie · Maestro (off)   (nomes = `agent.<id>.name` do usuário, por id)
 rodapé: "Local store" | "Store in git · read-only" (âmbar → Health)
 ```
 
@@ -31,7 +31,7 @@ rodapé: "Local store" | "Store in git · read-only" (âmbar → Health)
 | **Health** | Provar que o store está são, ou dizer por quê | frase + 6 linhas: Store access · Stored objects · Proofs · Code index · Memory · Secret scanner | painéis de cada linha; Versions · Archive · Hot set (folha com orçamento) · Calibration | Command output; comando para reconstruir o índice |
 | **Settings** | Quem está conectado, quem é dono, quem escreve | abas Connection · Territories · Permissions · Store | Published to agents (Served/Held, folha Republish com as pré-condições do script), Suggest territories (`init`, blast radius), What agents can use (agente × ferramenta), Import | JSON de `maestro.atlas`; Move store (export/import) |
 | **Member** | O que ele carrega em toda requisição, e o que lembra de cada task | linha "Saved in this worktree, shared by the team, merged with the branch" + KPIs + Project memory (Proposals / Indexed, total de tokens) + Memory log (últimas 5) | Out of the header ("Pushed out by N later saves") · Sent with every request (facetas: Not set up yet / Nothing writes this yet) · PRs · Logbook (Maestro) | texto bruto do `<atlas-header>` e as duas formas degradadas |
-| **Task** | Onde parou e como retomar | KPIs + Where it stopped | Calls · Checkpoint history (Saved · Already saved · Not saved · Couldn't reach memory · Unconfirmed) · Files changed · Transcript; Resume sem escolha de checkpoint (o Atlas escolhe) | sessão, eventos do log |
+| **Task** | Onde parou e como retomar | KPIs + Where it stopped | Calls · Checkpoint history (Saved · Already saved · Not saved · Couldn't reach memory · Unconfirmed) · Files changed · Transcript; Resume sem escolha de checkpoint (o Orchestra usa o último recibo da sessão; escolher na mão é R5) | sessão, eventos do log |
 
 ## Glossário (UI → Atlas)
 
@@ -64,7 +64,7 @@ rodapé: "Local store" | "Store in git · read-only" (âmbar → Health)
 | Not set up yet · Nothing writes this yet | UN-SEEDED com fonte (constitution, taste) · UN-SEEDED sem fonte (mission, terrain, ontology, orientation) |
 | Check a claim · Couldn't decide | verify-fact · abstain |
 | Add a fact | anchors → slots → draft → check → emit |
-| Froze units for a plan · Out of date (plano) | atlas_context anchor · plan-grounding-stale |
+| Froze units for a plan · Out of date (plano congelado) | atlas_context anchor · anchor-source-drift (`WORKFLOW_KNOWLEDGE_*`); `plan-grounding-stale` é só da revisão de plano do Maestro |
 | Served · Held | snapshot servido · AtlasContextHeld |
 | What agents can use | perfis de seat (`roster.ts`) |
 
@@ -82,4 +82,4 @@ rodapé: "Local store" | "Store in git · read-only" (âmbar → Health)
 
 ## Fora de propósito
 
-`query --by trigger` (sem produtor); retomar o token do genesis (nenhum comando aceita); o roteamento DEDUP/CREATE/UPDATE/SUPERSEDE depois da escrita (não é devolvido); quem ratificou e horário de escrita (não guardados); o cabeçalho "como foi enviado" (não persistido: a prévia diz "Rebuilt now"); horário de eventos do log (só `seq`); próximo passo para os ~31 holds sem texto ("No suggested step" e a evidência). Construído só na biblioteca, sem comando: restaurar regra (`respawnRule`), correção de logbook por link, mine com escopo, portão de segredo para fatos, avaliação viva de Tested, push por escopo, limite global de injeção, "changes together", cobertura de área core, entrevista em lote, comparar versões, trailers de commit. Só em docs: Regions, docs com drift, criptografia por seat, nível "validated".
+`query --by trigger` (sem produtor); retomar o token do genesis (nenhum comando aceita); o roteamento DEDUP/CREATE/UPDATE/SUPERSEDE depois da escrita (não é devolvido); quem ratificou e horário de escrita (não guardados); o cabeçalho "como foi enviado" (não persistido: a prévia diz "Rebuilt now"); horário de eventos do log (só `seq`); próximo passo para os ~40+ holds sem texto ("No suggested step" e a evidência). Construído só na biblioteca, sem comando: restaurar regra (`respawnRule`), correção de logbook por link, mine com escopo, portão de segredo para fatos, avaliação viva de Tested, push por escopo, limite global de injeção, "changes together", cobertura de área core, entrevista em lote, comparar versões, trailers de commit. Só em docs: Regions, docs com drift, criptografia por seat, nível "validated".

@@ -107,7 +107,9 @@
     const publishLine = published
       ? `<div class="at-snapline good">${A.icon("checkc")}<span>Agents get the published version${snap ? ` (${plural(snap.invariants.length, "ratified fact")}, ${snap.advisory} hints)` : ""}, not the live one below.</span>${A.help(`Own snapshot, revision ${M().snapshot.revision}. Served only while its source files are byte-identical; otherwise reads hold as artifacts-invalid.`)}${A.btn("Republish", "republish", { value: path, cap: "R7" })}</div>`
       : `<div class="at-snapline">${A.icon("info")}<span>Not published: agents get nothing for this unit yet.</span>${A.btn("Publish", "republish", { value: path, cap: "R7" })}</div>`
-    const briefing = `${publishLine}
+    // A store in git serves only re-proven sealed facts, so `own` sends nothing from it (compose.ts createOwnLeg over read access).
+    const blind = M().provenance() !== "trusted"
+    const briefing = path === "(root)" ? `<div class="at-band-empty">Atlas has no unit for top-level files; their facts are listed under Facts by kind.</div>` : `${publishLine}${blind ? `<div class="ins-note">${A.icon("lock")}<span>From this store agents get an empty briefing. Below is what it would send if the store were local.</span></div>` : ""}
       ${band("gov", "Ratified", "Governing band (T0, T1), paid first out of 1,500 characters.", b.inv, "Nothing ratified here yet.")}
       ${b.gotchas.length ? band("gotcha", "Watch out", "Gotcha band: ratified gotcha and rationale facts.", b.gotchas, "") : ""}
       ${b.pointers.length ? `<section class="at-band"><header class="at-band-head"><h3>Go deeper</h3>${A.help("Manifest pointers own_<leaf>, at most 12: names only; the agent pulls them.")}<span class="wf-count">${b.pointers.length}</span></header>${b.pointers.map((p) => `<a class="at-linkrow" href="${unitHref(p.path)}">${A.icon("folder")}<code class="at-mono">${A.esc(p.path.slice(path.length + 1) || p.name)}</code></a>`).join("")}</section>` : ""}
@@ -143,14 +145,14 @@
     // Connections: what depends on it (own `edges.dependents`). Atlas has no forward closure, so "what it uses" is
     // always empty in the pack (adapter-io/src/own-source.ts) and the UI says so instead of computing it.
     const usedFacts = M().live().filter((x) => b.depFiles.includes(x.file)).sort((a, z) => a.key.localeCompare(z.key))
-    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit, from the code index. The briefing sends the keys of the first 8 of their facts.")}</div>
+    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit directly or indirectly, from the code index. The briefing sends the keys of the first 8 of their facts.")}</div>
       ${usedFacts.length ? A.seven(usedFacts, "used", (x) => factRow(x, state)) : '<div class="at-band-empty">Nothing outside depends on it.</div>'}
       <div class="at-linkrow static muted">${A.icon("minusc")}<span>What it uses</span>${A.help("Atlas's index only answers what depends on a unit, so the briefing's dependencies band is always empty.")}<span class="grow"></span><small>Not recorded</small></div>`
 
     const finer = node ? [...node.children.values()].sort((x, y) => x.path.localeCompare(y.path)) : []
     const finerBody = finer.length ? A.seven(finer, "finer", (c) => `<a class="at-linkrow" href="${unitHref(c.path)}">${A.icon(c.file ? "fact" : "folder")}<code class="at-mono">${A.esc(c.name)}</code><span class="grow"></span>${c.drifted ? `<span class="at-sdot warm"></span>` : ""}<small>${plural(c.facts, "fact")}</small></a>`) : `<div class="at-band-empty">Nothing finer: this is a single file.</div>`
     const pins = (A.illustrations?.pinned ?? []).filter((p) => p.units.includes(path))
-    const pinsBody = pins.map((p) => `<a class="at-linkrow" href="#/memory/${p.member}/task/${encodeURIComponent(p.plan)}">${A.icon("lock")}<span>${A.esc(p.plan)} · revision ${p.revision}</span><span class="grow"></span>${p.stale ? `<span class="at-state warm" data-tip="plan-grounding-stale · the snapshot changed after this revision">${A.icon("drift")}Out of date</span>` : `<span class="at-state good">${A.icon("checkc")}Current</span>`}<span class="at-pill">example</span></a>`).join("") + `<p class="at-stew-intro">If this unit changes, these plan steps hold until the plan is recorded again.</p>`
+    const pinsBody = pins.map((p) => `<a class="at-linkrow" href="#/memory/${p.member}/task/${encodeURIComponent(p.plan)}">${A.icon("lock")}<span>${A.esc(p.plan)} · revision ${p.revision}</span><span class="grow"></span>${p.stale ? `<span class="at-state warm" data-tip="anchor-source-drift · a frozen unit changed after this revision">${A.icon("drift")}Out of date</span>` : `<span class="at-state good">${A.icon("checkc")}Current</span>`}<span class="at-pill">example</span></a>`).join("") + `<p class="at-stew-intro">If this unit changes, these plan steps hold until the plan is recorded again.</p>`
 
     const owner = M().packOwner(path === "(root)" ? "" : unitId)
     const tech = A.tech([
@@ -177,7 +179,7 @@
       <div class="at-kpis">
         ${kpi("Facts", here.length, `${here.filter((x) => M().governing(x)).length} ratified`)}
         ${kpi("Up to date", `${pct(fresh, here.length)}%`, here.length - fresh ? `${here.length - fresh} changed` : "nothing changed", here.length - fresh ? "warn" : "")}
-        ${kpi("In the briefing", sent, `${A.num(b.used)} of 1,500 characters`)}
+        ${kpi("In the briefing", blind || path === "(root)" ? 0 : sent, blind ? "store in git: nothing sent" : `${A.num(b.used)} of 1,500 characters`)}
         ${kpi("Depends on it", b.depFactsTotal, b.depFactsTotal ? "facts elsewhere" : "nothing outside")}</div>
       ${acc("unit-brief", "stack", "Briefing", "What an agent gets for this unit", plural(sent, "fact"), briefing, true)}
       ${acc("unit-kinds", "fact", "Facts by kind", "Every fact here, by the kind of claim it makes", `${here.length}`, kindsBody)}

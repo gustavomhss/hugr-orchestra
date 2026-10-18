@@ -208,3 +208,37 @@ Três revisores sem contexto (conhecimento, memória, health/settings/activity) 
 - **Frases:** `canonical-form violation`, `closed-slot-violation`, `ambiguous`, `over-cap`, `scanner-unavailable`, `no-own-fold`; Core "Atlas não verifica quem digitou"; Link pede sempre uma chave; `seq` é sempre 0.
 
 **Rejeitado:** "um hint escrito à mão dispensa a chave". O `draft` marca a proveniência `trusted: false` (`tools/src/draft.ts:94`), e o fast path exige `trusted` (`knowledge/src/ratify/fastpath.ts:148`). Toda escrita feita pela UI passa pelo `draft`, então sempre pede a chave.
+
+## Quinta rodada: revisão fria por ângulo (2026-10-18)
+
+Três revisores sem contexto, cada um com um ângulo novo: fidelidade dos números, fluxos de ação de ponta a ponta, e telas do Orchestra mais as afirmações dos docs.
+
+**Corrigido (confirmado no código):**
+- **CI:** `data-real.js` trazia o nome de exibição padrão do seat de backend e quebraria `specialist-name-guard.test.ts`. O `extract.py` agora lê o rótulo de `roster.ts` e troca pelo id.
+- **Briefing num store em git:** o `own` lê só fatos selados re-provados, então manda vazio. A tela avisa e o KPI mostra 0 (`adapter-io/src/compose.ts:517`).
+- **Merge check num store em git:** o reconcile lê uma projeção vazia e sai 0. A tela diz que o resultado não informa nada, em vez de "bloquearia" (`compose.ts:557`).
+- **Accept all:**
+  - a linha de staging é T2, então sobre um fato T1 ou T0 ela é `governance-downgrade`;
+  - as linhas "kept" continuam sendo reapresentadas, porque o staging não tem delete (`governed-emit-incumbent.ts:204`, `governed-promote.ts:36`).
+- **Ordem do authz:** primeiro o ator no escopo (`unauthorized`), depois o downgrade.
+- **Retire:** um fato Ratified ou Core precisa de chave (`billy` para Core); o botão não recebe chave e mostra a recusa.
+- **Undo:** só para escolhas que existem apenas na interface. O Atlas não tem delete nem rebaixamento de tier.
+- **Ponteiros do briefing:** todos os filhos rastreados no eixo espacial (`own-source.ts:331`). Os importadores incluem testes e `.mjs`. `(root)` não tem briefing.
+- **Chat:** o usuário fala só com o Maestro. O chip fica na chamada `task` do backend (`agent/agent.ts:289`).
+- **Task real:** o packet era a instrução ao Maestro, e o resultado e o modelo são do Maestro.
+- **Activity:** o evento de resume pode ser uma recusa, e os recalls (`outcome: read`) entram como eventos.
+- **Archie:**
+  - a fala dele no transcript usa o hold real `unit-missing-or-ambiguous`;
+  - plano congelado desatualizado é `anchor-source-drift` (`WORKFLOW_KNOWLEDGE_*`);
+  - `plan-grounding-stale` é só da revisão de plano do Maestro.
+- **Folhas:** amostra do mine (`budgetSpent` conta sites, frase real de cobertura), hot set (`over` é booleano), texto do init (`.gitignore`), rótulo do Ratify ao escolher Core, rodapé "locked" para `tracked-staging`.
+- **Docs:**
+  - a identidade da execução fica só no recibo, não no registro;
+  - o Maestro lê por `maestro_catalog_context`;
+  - o script de republicação chama `exportOwnSnapshot`;
+  - são 50+ motivos de hold;
+  - os campos dos recibos e da âncora foram completados;
+  - os nomes de exibição vêm de `agent.<id>.name`;
+  - o resume é escolhido pelo Orchestra, e a escolha manual é R5.
+
+**Rejeitado de novo:** "um hint escrito à mão passa sem chave". Dois revisores repetiram a afirmação. O emit passa `{...node}` para o ratify, e o nó do `draft` carrega `provenance.trusted: false` (`tools/src/draft.ts:94`, `adapter-io/src/governed-emit.ts:214`), então o fast path não se aplica.

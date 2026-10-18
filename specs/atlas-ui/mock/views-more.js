@@ -102,13 +102,13 @@
     const body = {
       read: () => {
         const snap = M().snapshot.packs[e.target]
-        if (e.action === "anchor") return `<p class="at-lead">${who} froze ${plural(e.units.length, "unit")} for plan step <b>${A.esc(e.target)}</b>. Relay checks they haven't changed when the workflow is published.</p>${e.units.map((u) => `<a class="at-linkrow" href="#/unit/${encodeURIComponent(u)}">${A.icon("lock")}<code class="at-mono">${A.esc(u)}</code></a>`).join("")}<p class="mx-note">Up to 8 units and 128 KiB per anchor. If one changed, publishing holds with “${A.esc(A.refusal("anchor-source-drift"))}”; each step re-checks the frozen bytes.</p>`
+        if (e.action === "anchor") return `<p class="at-lead">${who} froze ${plural(e.units.length, "unit")} for plan step <b>${A.esc(e.target)}</b>. Relay checks they haven't changed when the workflow is published.</p>${e.units.map((u) => `<a class="at-linkrow" href="#/unit/${encodeURIComponent(u)}">${A.icon("lock")}<code class="at-mono">${A.esc(u)}</code></a>`).join("")}<p class="mx-note">Up to 8 units and 128 KiB per anchor. If one changed, publishing holds with “${A.esc(A.refusal("anchor-source-drift"))}” (WORKFLOW_KNOWLEDGE_anchor-source-drift); each step re-checks the frozen bytes.</p>`
         return `<p class="at-lead">${e.action === "catalog" ? `${who} got the list of published units and territories.` : `${who} got the published briefing for <a class="mx-link" href="#/unit/${encodeURIComponent(e.target)}">${A.esc(e.target)}</a>: complete and up to date.`}</p>
           ${snap ? snap.invariants.map((i) => `<div class="at-linkrow static">${A.tier(i.tier)}<span>${A.esc(i.claim)}</span></div>`).join("") : ""}
           ${e.research ? `<p class="mx-note">${A.icon("sparkle")} Kept as a research source for ${who}'s findings.</p>` : ""}`
       },
-      memory: () => (e.ok ? `<p class="at-lead">${who} saved where it stopped on <b>${A.esc(e.unit)}</b>.</p><div class="at-linkrow static"><span>${A.esc(c?.entry.stoppedAt ?? "")}</span></div><p class="mx-note">Reported to Maestro with the work result.</p>` : e.outcome === "uncertain" ? `<p class="at-lead">Unconfirmed: the save may or may not have landed.</p><p class="mx-note">Sending the identical checkpoint again is safe; Atlas recognises it.</p>` : `<p class="at-lead">Not saved: ${A.esc(A.refusal(e.refusal))}.</p><p class="mx-note">${A.esc(e.reason ?? "")}</p>`),
-      resume: () => `<p class="at-lead">When ${who} was resumed on <b>${A.esc(e.unit)}</b>, Atlas handed back its latest saved checkpoint, once.</p>`,
+      memory: () => (e.recall ? `<p class="at-lead">${who} read back its own memory for <b>${A.esc(e.unit)}</b>, by exact id.</p>` : e.ok ? `<p class="at-lead">${who} saved where it stopped on <b>${A.esc(e.unit)}</b>.</p><div class="at-linkrow static"><span>${A.esc(c?.entry.stoppedAt ?? "")}</span></div><p class="mx-note">Reported to Maestro with the work result.</p>` : e.outcome === "uncertain" ? `<p class="at-lead">Unconfirmed: the save may or may not have landed.</p><p class="mx-note">Sending the identical checkpoint again is safe; Atlas recognises it.</p>` : `<p class="at-lead">Not saved: ${A.esc(A.refusal(e.refusal))}.</p><p class="mx-note">${A.esc(e.reason ?? "")}</p>`),
+      resume: () => (e.ok ? `<p class="at-lead">When ${who} was resumed on <b>${A.esc(e.unit)}</b>, Atlas handed back its latest saved checkpoint, once.</p>` : `<p class="at-lead">Resumed with no checkpoint: ${A.esc(A.refusal(e.refusal))}.</p><p class="mx-note">${who} was told to return a ${["store-partial", "store-unavailable"].includes(e.refusal) ? "atlas" : "packet"} blocker if the work depends on it.</p>`),
       hold: () => `<p class="at-lead">${who} was held: ${A.esc(A.refusal(e.reason))}.</p><dl class="at-kv"><dt>Next step</dt><dd>${A.esc(nextSteps[e.reason] ?? "Atlas suggests no step for this hold; the evidence below says what it saw.")}</dd><dt>Evidence</dt><dd>${A.esc((e.task?.checkpoints.find((k) => (k.entry.failedWith ?? []).length)?.entry.failedWith ?? [])[0] ?? "")}</dd></dl>`,
     }[e.kind]()
     const tech = A.tech([
@@ -213,8 +213,9 @@
     html: `<div class="at-session"><div class="at-tabs-strip"><span class="at-sess-tab">${A.icon("chat")}Counter decrement <code>main</code></span></div>
       <div class="at-transcript">
         <div class="at-turn user">Add decrement() to Counter, clamped at zero. Stop after phase 1.</div>
-        <div class="at-turn"><div class="at-turn-head">${A.agent("backend")}<span class="grow"></span><a class="at-chip" href="#/activity?show=memory">${A.icon("atlas")}Used Atlas · 1</a></div>
-          <p>Phase 1 is done: <code class="at-mono">decrement()</code> lowers the value by one and never goes below zero. I stopped at the phase boundary as the packet asked.</p></div></div>
+        <div class="at-turn"><div class="at-turn-head">${A.agent("maestro")}</div>
+          <div class="at-tx-tool completed">${A.icon("code")}<code>task</code><span class="at-tx-in">${A.agent("backend")} · T-LIVE-1</span><a class="at-chip" href="#/memory/backend/task/T-LIVE-1">${A.icon("atlas")}Used Atlas · 1</a></div>
+          <p>Phase 1 is done: the backend specialist added <code class="at-mono">decrement()</code>, which never goes below zero, and saved a checkpoint where it stopped.</p></div></div>
       <div class="at-composer">Ask anything, / for commands, @ for context…<div class="row"><span class="grow"></span><span>Claude Opus</span></div></div></div>`,
   })
 

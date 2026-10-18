@@ -153,11 +153,11 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 
   O teto é de **1500 caracteres** de afirmação, pagos nesta ordem (`retrieval/src/own.ts:167-232`): governantes e *gotchas* (preenchimento guloso: o que não cabe é nomeado e os seguintes ainda podem caber); até 12 **ponteiros** `own_<folha>`, um por subescopo, com custo igual ao tamanho do nome; e o advisory por último, com sub-teto de 750, parando no primeiro que não cabe. Fatos com drift entram com o próprio frescor. Não chama LLM, e a mesma entrada sempre dá os mesmos bytes.
 - **No Orchestra, hoje:**
-  - o Maestro e os agentes lêem um **snapshot Own pré-construído** (`OWN-SNAPSHOT.json`, que hoje tem 1 unidade) mais um **catálogo de territórios** (`TERRITORY-CATALOG.json`, que não existe no repo), pela ferramenta `atlas_context` (ações `catalog`, `unit` e `anchor`);
+  - backend, jimmy e archie lêem um **snapshot Own pré-construído** (`OWN-SNAPSHOT.json`, que hoje tem 1 unidade) mais um **catálogo de territórios** (`TERRITORY-CATALOG.json`, que não existe no repo), pela ferramenta `atlas_context` (ações `catalog`, `unit` e, só para o Archie, `anchor`); o Maestro lê o catálogo por `maestro_catalog_context`;
   - o snapshot **não sai do store vivo**: `scripts/materialize-own-snapshot.mjs` materializa um JSON revisado e recusa entrada vinda de `.atlas/`. A unidade de hoje (`packages/genesis`) é um fixture curado, com dono `atlas-foundation` e 1 invariante T1 que o store não tem;
   - o host serve o snapshot só enquanto os arquivos-fonte dele (`sourceBlobs`) estão byte a byte iguais e a revisão é ancestral do HEAD; senão, para com `artifacts-invalid`;
-  - se faltar qualquer coisa, a ferramenta **para (HOLD)** com um de cerca de 40 motivos nomeados. Hoje o motivo é `provider-unconfigured`; configurado, ainda pararia, porque o catálogo não existe.
-- **Âncoras do Archie:** um plano carrega de 1 a 8 unidades Own congeladas (com hashes). O Relay revalida as âncoras ao montar o workflow (`anchor-source-drift` se mudaram) e injeta o conteúdo como "dado não confiável" em cada passo.
+  - se faltar qualquer coisa, a ferramenta **para (HOLD)** com um de mais de 50 motivos nomeados. Hoje o motivo é `provider-unconfigured`; configurado, ainda pararia, porque o catálogo não existe.
+- **Âncoras do Archie:** um plano carrega de 1 a 8 unidades Own congeladas (com hashes). O Relay revalida as âncoras ao publicar o workflow (`WORKFLOW_KNOWLEDGE_anchor-source-drift` se mudaram) e cada passo reconfere os bytes congelados e injeta o conteúdo como "dado não confiável" em cada passo.
 
 ---
 
@@ -181,16 +181,13 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
   - **Indexadas:** as regras que vão em todo turno, com o total de tokens que somam. É só a contagem, sem teto exibido. O Atlas conta palavras (`memory/src/rules.ts`).
 
   Uma regra entra com frecency 1 e cai pela metade a cada registro que **qualquer** membro grava depois dela; abaixo de 0,1 sai do cabeçalho. Na prática o repositório inteiro carrega no máximo 4 regras ao mesmo tempo, e um checkpoint de outro membro envelhece as regras de todos. Reenviar a regra idêntica é deduplicado e não renova; regravá-la com outro escopo a traz para a frente. A regra guarda `{rule, scope, grounding?, frecency}`: não guarda a task de origem.
-- **Memory log:** uma entrada por task ou PR. A memória de task é a memória de um spawn. Cada vez que um membro é chamado para uma unidade de trabalho, ficam guardados:
-  - a **sessão** dele: o transcript, que é respawnável;
-  - **cada invocação** daquela sessão: dispatch, resumes, continuações;
-  - os **checkpoints** que ele gravou: o que tentou, o que falhou, onde parou e a lição.
+- **Memory log:** uma entrada por task ou PR. O Atlas guarda só os **checkpoints** que o membro gravou (o que tentou, o que falhou, onde parou e a lição), como registros `{id, seq, contentHash, payload}`. A **sessão** e as **chamadas** (dispatch, resumes, continuações) vivem no Orchestra; a tela junta os dois.
 
   Ao respawnar a task com `memoryUnit`, o Atlas devolve o último checkpoint admitido.
 
 No código isso fecha assim:
 
-- cada registro de memória carrega a identidade da execução que o gravou (`executionSessionID`, `callID`, `assistantMessageID`, em `orch/maestro/atlas-memory.ts:108-111`);
+- a identidade da execução que gravou (`sessionID`, `callID`, `assistantMessageID`) fica só no recibo `atlasMemory` do Orchestra, nunca no registro (`boundary/src/generated/native-memory.d.ts:399`);
 - `task` com `memoryUnit` injeta o fold na sessão retomada (`orch/maestro/atlas-resume.ts`);
 - o `@atlas/persist` define o metering por execução: modelo, tokens, ferramentas, tempo, retries, veredito e `transcriptSha` (`persist/src/types.ts:87-99`). Ele ainda não está ligado no Orchestra; hoje o transcript vive na sessão do Orchestra.
 

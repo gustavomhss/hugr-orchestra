@@ -1,5 +1,5 @@
 # Extracts the real Atlas-on-Atlas store into a JS data file for the design preview.
-import json, os, re, subprocess, sys, glob, collections
+import json, os, re, subprocess, sys, glob, collections, functools
 REPO = os.path.expanduser('~/Documents/HuGR/atlas')
 OUT = sys.argv[1]
 A = os.path.join(REPO, '.atlas')
@@ -49,12 +49,15 @@ for k, r in proj['current']:
     facts.append(entry(k, r, True))
 promoted = {k for k, _ in proj['current']}
 candidates = [entry(k, r, False) for k, r in stag['current'] if k not in promoted]
-# Dependents from import statements (stand-in for the SCIP dependency axis).
-src = [p for p in git('ls-files', 'packages').splitlines() if p.endswith('.ts') and '/src/' in p]
+# Dependents from import statements (stand-in for the SCIP dependency axis). scip-typescript indexes every tracked
+# .ts/.mjs file, tests included, so all of them count as importers; targets are .ts files.
+tracked = git('ls-files').splitlines()
+src = [p for p in tracked if p.startswith('packages/') and p.endswith('.ts')]
+importers = [p for p in tracked if p.startswith('packages/') and p.endswith(('.ts', '.mjs'))]
 pkgindex = {p.split('/')[1]: p for p in src if p.endswith('/src/index.ts')}
 deps = collections.defaultdict(set)
 imp = re.compile(r"""from\s+['"]([^'"]+)['"]""")
-for p in src:
+for p in importers:
     try: text = open(os.path.join(REPO, p)).read()
     except Exception: continue
     for m in imp.findall(text):
@@ -85,11 +88,17 @@ data = {
     'langs': collections.Counter(os.path.splitext(x)[1].lstrip('.') for x in git('ls-files').splitlines() if os.path.splitext(x)[1] in ('.ts', '.tsx', '.js', '.mjs', '.py', '.rs', '.go', '.sh')),
     'facts': facts, 'candidates': candidates, 'reasoning': reasoning,
     'dependents': {k: sorted(v) for k, v in deps.items()}, 'dependentCount': {k: len(v) for k, v in deps.items()},
+    # own's manifest pointers are every child of the scope in the spatial index (adapter-io/src/own-source.ts:331).
+    'children': (lambda kids: {d: sorted(n) for d, n in kids.items()})(functools.reduce(lambda acc, x: [acc[os.path.dirname(x[:i]) or '.'].add(os.path.basename(x[:i])) for i in [j for j, c in enumerate(x) if c == '/'] + [len(x)]] and acc, tracked, collections.defaultdict(set))),
 }
+# AGENTS.md: the backend seat's default display name may appear only in roster.ts; facts mined from the standalone
+# repository mention it, so the label is read from roster.ts and replaced by the seat id.
+label = re.search(r'BACKEND_DEFAULT_LABEL = "([^"]+)"', open(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../packages/orchestra/src/maestro/roster.ts')).read()).group(1)
+scrub = lambda text: re.sub(label, lambda m: 'Backend' if m.group(0)[0].isupper() else 'backend', text, flags=re.I)
 with open(OUT, 'w') as f:
     f.write('// Generated from the real Atlas-on-Atlas store (~/Documents/HuGR/atlas/.atlas) by extract.py.\n')
     f.write('// Drift is the real git diff since each fact was derived; dependents come from import statements.\n')
     f.write('window.Atlas = window.Atlas || {}\nwindow.Atlas.real = ')
-    json.dump(data, f, ensure_ascii=False, separators=(',', ':'))
+    f.write(scrub(json.dumps(data, ensure_ascii=False, separators=(',', ':'))))
     f.write('\n')
 print('facts', len(facts), 'drifted', sum(1 for x in facts if 'drift' in x), 'candidates', len(candidates), 'reasoning', len(reasoning), 'deps', len(deps), 'bytes', os.path.getsize(OUT))

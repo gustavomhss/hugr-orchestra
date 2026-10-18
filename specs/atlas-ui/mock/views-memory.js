@@ -132,10 +132,10 @@
       const made = t.checkpoints.filter((x) => inStep(s, x.at))
       const given = t.admissions.filter((x) => inStep(s, x.at))
       return `<li class="at-step ${s.kind}"><span class="at-step-dot">${A.icon(stepGlyph[s.kind] ?? "dot")}</span><div class="at-step-body">
-        <div class="at-step-head"><strong>${stepName[s.kind] ?? s.kind}</strong><small>${day(s.start)} ${time(s.start)} · ${dur(secs(s.start, s.end))}${s.model ? ` · ${A.esc(s.model.split("/").at(-1))}` : ""}</small></div>
+        <div class="at-step-head"><strong>${stepName[s.kind] ?? s.kind}</strong><small>${day(s.start)} ${time(s.start)} · ${dur(secs(s.start, s.end))}${s.model ? ` · ${t.example ? "" : "Maestro on "}${A.esc(s.model.split("/").at(-1))}` : ""}</small></div>
         ${given.map((g) => `<div class="at-given">${A.icon("memory")}Atlas handed back checkpoint <code>${A.esc((g.ref?.eventId ?? "").slice(0, 12))}…</code></div>`).join("")}
-        ${s.kind === "compact" ? `<p class="at-step-text">Compaction was requested. If it applied, the checkpoint handed back on resume can fall out of view; the host then restores it once (wired, not yet observed in a live run).</p>` : `<p class="at-step-text clamp2">${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim())}</p>
-        <details class="at-sub-acc inline"><summary>${A.icon("chev")}<span>Packet from Maestro</span></summary><div class="at-reasoning">${A.esc(s.packet)}</div></details>`}
+        ${s.kind === "compact" ? `<p class="at-step-text">Compaction was requested. If it applied, the checkpoint handed back on resume can fall out of view; the host then restores it once (wired, not yet observed in a live run).</p>` : `<p class="at-step-text clamp2">${t.example ? "" : "<b>Maestro's report:</b> "}${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim())}</p>
+        <details class="at-sub-acc inline"><summary>${A.icon("chev")}<span>${t.example ? "Packet from Maestro" : "Instruction to Maestro"}</span></summary><div class="at-reasoning">${A.esc(s.packet)}</div></details>`}
         ${made.map((x) => `<div class="at-made ${x.outcome}">${A.outcome(x)}${x.outcome === "refused" ? ` ${A.esc(A.refusal(x.refusal))}` : ""}</div>`).join("")}
       </div></li>` }).join("")}</ol>`
     const all = t.checkpoints.map((x) => `<details class="at-ckpt ${x.outcome}"><summary>${A.outcome(x)}<span class="grow">${A.esc(x.entry.stoppedAt ?? x.reason)}</span>${x === c ? '<span class="at-pill warm">latest</span>' : ""}<small>${time(at(x.at))}</small></summary><div class="at-panel-body">${x.outcome === "admitted" ? fold(x.entry) : `<p class="at-step-text">${A.esc(A.refusal(x.refusal))}.</p>${A.tech([["Refusal", `<code>${A.esc(x.refusal)}</code> · ${A.esc(x.reason)}`]])}`}</div></details>`).join("")
@@ -147,7 +147,7 @@
       <div class="at-kpis">
         ${kpi("Status", `<span class="at-state ${tone}">${A.icon(glyph)}${label}</span>`, c ? "from its latest checkpoint" : "no checkpoint")}
         ${kpi("Calls", inv, `${(tokens(t) / 1000).toFixed(0)}k tokens`)}
-        ${kpi("Time", dur(total), `${day(t.steps[0].start)} · ${t.steps[0].model ? A.esc(t.steps[0].model.split("/").at(-1)) : ""}`)}
+        ${kpi("Time", dur(total), `${day(t.steps[0].start)}${t.steps[0].model ? ` · ${t.example ? "" : "Maestro on "}${A.esc(t.steps[0].model.split("/").at(-1))}` : ""}`)}
         ${kpi("Checkpoints", t.checkpoints.length - refused, refused ? `${refused} refused` : "none refused", refused ? "warn" : "")}</div>
       ${acc(`task-latest`, "memory", "Where it stopped", `The latest admitted checkpoint: what a resume hands back`, c ? A.esc((c.entry.stoppedAt ?? "").slice(0, 60)) + "…" : "no checkpoint", c ? fold(c.entry) : '<div class="at-band-empty">No saved checkpoint, so a resume would be refused.</div>', true)}
       ${acc(`task-calls`, "history", "Calls", "Each time Maestro called it", `${inv} calls · ${dur(total)}`, steps, true)}

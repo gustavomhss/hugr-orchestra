@@ -104,7 +104,8 @@
       if (used + x.claim.length <= OWN_CAP) { sent.push(x); used += x.claim.length } else pull.push(x)
     }
     const node = findNode(path)
-    const finer = node ? [...node.children.values()].sort((a, b) => a.path.localeCompare(b.path)) : []
+    // Pointers name every child in the spatial index (tracked files), not only folders that hold facts.
+    const finer = (R.children?.[path || "."] ?? (node ? [...node.children.values()].map((c) => c.name) : [])).map((name) => ({ name, path: path ? `${path}/${name}` : name }))
     const pointers = []
     for (const c of finer) {
       const name = `own_${c.name}`
@@ -171,7 +172,7 @@
   }
   const curationCount = () => stats().candidates + stats().drifted + live().filter((x) => x.proposedTier).length
 
-  // Commits since the build that touched anchored files, newest first, with the facts they drifted.
+  // Commits since the build that touched anchored files, most facts first (up to three commits kept per fact).
   const codeChanges = () => {
     const map = new Map()
     facts.filter((x) => x.drift).forEach((x) => x.drift.commits.forEach(([sha, subject]) => {
@@ -246,14 +247,16 @@
     // A write through `atlas draft` declares the path's first segment as its group (tools/src/draft.ts scopeOf) and
     // is always T2, so drafting over a ratified fact is a downgrade.
     const scope = opts.draft ? x.file.split("/")[0] : x.scope
-    const downgrade = opts.draft && (x.tier ?? "T2") !== "T2" && tier === "T2"
-    const authz = !downgrade && (R.policy[scope] ?? []).includes(actor)
+    // A T2 write over a stricter incumbent is a downgrade (draft and promote both write T2); the actor-in-scope check runs first.
+    const downgrade = (opts.draft || opts.promote) && (x.tier ?? "T2") !== "T2" && tier === "T2"
+    const inScope = (R.policy[scope] ?? []).includes(actor)
+    const authz = inScope && !downgrade
     const token = opts.token ?? ""
     const ratify = tier === "T0" ? token === "billy" : token !== ""
     const gates = [
       { gate: "shape", pass: true },
       { gate: "truth", pass: truth, reason: "ungrounded", remedy: "re-derive against the current tree" },
-      { gate: "authz", pass: authz, reason: downgrade ? "governance-downgrade" : "unauthorized", remedy: downgrade ? "raise the tier, or edit through ratify" : `grant ${scope} in .atlas/policy.json` },
+      { gate: "authz", pass: authz, reason: inScope ? "governance-downgrade" : "unauthorized", remedy: inScope ? "raise the tier, or edit through ratify" : `grant ${scope} in .atlas/policy.json` },
       { gate: "ratify", pass: ratify, reason: "unratified", remedy: tier === "T0" ? "ATLAS_RATIFY_TOKEN=billy" : "set ATLAS_RATIFY_TOKEN" },
     ]
     // The gate chain stops at the first refusal; later gates are not reached.
@@ -263,9 +266,10 @@
   // `atlas promote` (adapter-io/src/governed-promote.ts): every staging row is re-presented through emit.
   const promoteRun = (token) => {
     if (!writable()) return { read: false, refusal: "untrusted", candidates: 0, promoted: 0, refused: 0, rows: [] }
-    const staged = [...facts, ...candidates.filter((x) => !x.discarded)]
+    // Staging has no delete: rows kept for later are still re-presented (R2), each as the T2 bytes it was mined as.
+    const staged = [...facts, ...candidates]
     const rows = staged.map((x) => {
-      const c = checks(x, { token })
+      const c = checks(x, { token, promote: true })
       const failed = c.gates.find((g) => !g.pass)
       return { x, nodeKey: x.key, settled: !failed, rejected: failed?.reason }
     })
@@ -274,6 +278,8 @@
   }
   // `atlas reconcile <mergeBase>`: facts whose anchor changed between the base and HEAD, classed by `doctor why`.
   const reconcile = () => {
+    // On a store in git the write-gated projection blanks, so reconcile reads no facts and exits 0 (compose.ts:557).
+    if (provenance() !== "trusted") return { base: R.builtAt, drift: [], mechanical: [], semantic: [], regroundedCount: 0, reauthorCount: 0, exitCode: 0, blind: true }
     const drift = facts.filter((x) => state(x) === "drifted").map((x) => ({ fact: x, class: "semantic" }))
     return { base: R.builtAt, drift, mechanical: [], semantic: drift, regroundedCount: 0, reauthorCount: drift.length, exitCode: drift.length ? 2 : 0 }
   }
@@ -302,7 +308,8 @@
     const events = []
     ;(A.spawns ?? []).forEach((t) => {
       t.checkpoints.forEach((c) => events.push({ at: c.at, who: t.member, kind: "memory", ok: c.outcome === "admitted", outcome: c.outcome, unit: t.unit, text: c.outcome === "admitted" ? `${names[t.member]} saved a checkpoint` : `${names[t.member]}'s checkpoint was not saved`, refusal: c.refusal, reason: c.reason, ref: c.ref, example: t.example, task: t }))
-      ;(t.admissions ?? []).forEach((a) => events.push({ at: a.at, who: t.member, kind: "resume", ok: a.ok !== false, unit: t.unit, text: `${names[t.member]} was resumed with its checkpoint`, residency: a.residency, ref: a.ref, example: t.example, task: t }))
+      ;(t.admissions ?? []).forEach((a) => events.push({ at: a.at, who: t.member, kind: "resume", ok: a.ok !== false, refusal: a.refusal, unit: t.unit, text: a.ok === false ? `${names[t.member]}'s resume found no checkpoint` : `${names[t.member]} was resumed with its checkpoint`, residency: a.residency, ref: a.ref, example: t.example, task: t }))
+      t.transcript.forEach((m) => m.parts.filter((p) => p.type === "tool" && p.tool === "atlas_memory_recall").forEach(() => events.push({ at: m.at, who: t.member, kind: "memory", ok: true, outcome: "read", recall: true, unit: t.unit, text: `${names[t.member]} recalled its task memory`, example: t.example, task: t })))
       t.transcript.forEach((m) => m.parts.filter((p) => p.type === "tool" && p.tool === "atlas_context").forEach((p) => {
         const input = (() => { try { return JSON.parse(p.input) } catch { return {} } })()
         // A unit outside the published catalog is held, not read; the hold event below covers it.
