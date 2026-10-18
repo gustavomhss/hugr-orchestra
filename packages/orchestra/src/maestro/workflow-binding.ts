@@ -218,6 +218,10 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
         return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" })
     }).pipe(Effect.provide(context), Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
       : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ASSISTANT_NOT_SETTLED" }))),
+    recordReviewHeld: (settlement: RelayArm.WorkflowSettlement) => recordReviewHeld({
+      executionSessionID: ready.binding.executionSessionID, token: input.token,
+      assistantMessageID: settlement.assistantMessageID, expected: settlement.expected,
+    }).pipe(Effect.provide(context)),
     revalidate: () => prepare(input.dispatch, "continuation").pipe(Effect.flatMap((current) =>
       isDeepStrictEqual(current.binding, ready.binding) ? Effect.void
         : Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" }))),
@@ -241,6 +245,79 @@ export function phaseFor(input: {
     input.bound.executionSessionID !== input.resumed.id) return "dispatch" as const
   return "continuation" as const
 }
+
+/**
+ * An authorized resume continues the reserved child's current workflow step, instead of replaying the child, only when
+ * all of these hold; any other resume replays strictly:
+ * (a) the resumed child is the one this authorization reserved, and it carries the workflow binding;
+ * (b) the arm is active: not complete, not parked or escalated, and holds no pending settlement;
+ * (c) the child's newest reply settled the current step and held for a code review before the arm graded it, so the
+ *     durable hold record still names the current position, attempt and ledger sequence: no ledger entry was spent;
+ * (d) the call passed the workflow approval in the continuation phase (the exact approved Task input).
+ * The continuation settles the current step again through the same host, which re-runs the cold review against the
+ * working tree; a tree that changed after the review needs a review again.
+ */
+export function continuesHeldStep(input: {
+  readonly reservedID?: string
+  readonly resumedID?: string
+  readonly bound?: { readonly executionSessionID: string; readonly token: string }
+  readonly view?: RelayArm.WorkflowPosition & { readonly state: RelayArm.State; readonly pending?: unknown }
+  readonly held: readonly Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>[]
+  readonly lastAssistantID?: string
+  readonly phase: "dispatch" | "continuation"
+}) {
+  const bound = input.bound
+  if (!input.reservedID || !bound || input.resumedID !== input.reservedID || bound.executionSessionID !== input.reservedID)
+    return false
+  const view = input.view
+  if (!view || view.pending !== undefined || view.state !== "active") return false
+  const last = input.lastAssistantID
+  if (!last || !input.held.some((record) => record.executionSessionID === bound.executionSessionID &&
+    record.token === bound.token && record.assistantMessageID === last && record.expected.position === view.position &&
+    record.expected.attempt === view.attempt && record.expected.ledgerSeq === view.ledgerSeq))
+    return false
+  return input.phase === "continuation"
+}
+
+/**
+ * The Task tool's read of `continuesHeldStep` for an authorized workflow resume of its reserved child. Continuing reuses
+ * that child, its reservation and its arm: the approved prompt runs the workflow loop again, which settles the current
+ * step through the same host and so runs its cold review again. Every other resume keeps the strict replay.
+ */
+export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(function* (input: {
+  readonly reservedID: SessionID
+  readonly resumedID?: string
+  readonly view?: RelayArm.WorkflowPosition & { readonly state: RelayArm.State; readonly pending?: unknown }
+  readonly phase: "dispatch" | "continuation"
+}) {
+  return continuesHeldStep({ ...input, bound: yield* read(input.reservedID), held: yield* reviewHolds(input.reservedID),
+    // Newest first.
+    lastAssistantID: (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id })
+})
+
+/**
+ * Records that one settlement held for a code review before the arm graded it. The record is keyed by the reply and
+ * its expected position, so settling the same reply at the same position again records nothing new.
+ */
+export const recordReviewHeld = Effect.fn("WorkflowBinding.recordReviewHeld")(function* (
+  data: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>,
+) {
+  const id = reviewHeldID(data)
+  const database = yield* Database.Service
+  if (yield* database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie))
+    return
+  const events = yield* EventV2Bridge.Service
+  yield* events.publish(MaestroEvent.Task.WorkflowReviewHeld, data, { id })
+})
+
+/** The code-review holds recorded for one workflow-bound execution Session, oldest first. */
+export const reviewHolds = Effect.fn("WorkflowBinding.reviewHolds")(function* (executionSessionID: string) {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, executionSessionID),
+    eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewHeld.type, 1))))
+    .orderBy(asc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
+  return rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewHeld.data)(row.data)))
+})
 
 export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessionID: string) {
   const database = yield* Database.Service
@@ -313,6 +390,11 @@ export const approvedTask = Effect.fn("WorkflowBinding.approvedTask")(function* 
   Effect.mapError((error) => error instanceof ToolSafety.Denied ? error : new ToolSafety.Denied({
     reason: error instanceof RelayWorkflowBinding.Held ? error.reason : "completion-native-task-call-missing",
   }))))
+
+function reviewHeldID(data: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>) {
+  return EventV2.ID.make(`evt_maestro_workflow_review_held_${createHash("sha256").update(JSON.stringify([data.executionSessionID,
+    data.token, data.assistantMessageID, data.expected.position, data.expected.attempt, data.expected.ledgerSeq])).digest("hex")}`)
+}
 
 function eventID(executionSessionID: string) {
   return EventV2.ID.make(`evt_maestro_workflow_bound_${createHash("sha256").update(executionSessionID).digest("hex")}`)

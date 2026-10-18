@@ -506,7 +506,10 @@ export const TaskTool = Tool.define(
           .where(eq(SessionInputTable.session_id, reserved.id)).get().pipe(Effect.orDie)) &&
         !(yield* database.db.select({ id: SessionMessageTable.id }).from(SessionMessageTable)
           .where(eq(SessionMessageTable.session_id, reserved.id)).get().pipe(Effect.orDie))
-      if (governedChildID && reserved && !neverPrompted) {
+      // A resume of a step held for code review re-prompts the same child to settle it again (WorkflowBinding.resumesHeldStep).
+      const continues = params.workflow && reserved && !neverPrompted && (yield* WorkflowBinding.resumesHeldStep({
+        reservedID: reserved.id, resumedID: resumed?.id, phase: workflowPhase, view: yield* completion.workflowView(completionReceipt) }))
+      if (governedChildID && reserved && !neverPrompted && !continues) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
         const strictReplay = requireCompletedReplay || completionReceipt !== undefined

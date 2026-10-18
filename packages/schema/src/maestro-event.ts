@@ -610,6 +610,20 @@ export namespace Task {
   })
   export type WorkflowBound = typeof WorkflowBound.Type
 
+  // One workflow settlement that held for a code review before the arm graded it, so it spent no ledger entry. The
+  // authorized resume of the Task reads it to continue that step instead of replaying. Durable only, not public.
+  export const WorkflowReviewHeld = Event.define({
+    type: "maestro.task.workflow_review_held",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      assistantMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      expected: RelayArm.WorkflowPosition,
+    },
+  })
+  export type WorkflowReviewHeld = typeof WorkflowReviewHeld.Type
+
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
   export const Bound = Event.define({
@@ -682,3 +696,6 @@ export const Definitions = Event.inventory(
   Task.WorkflowBound,
   WorkResult.Decided,
 )
+
+/** Maestro events stored and replayed by the host but never part of the public event surface. */
+export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld)

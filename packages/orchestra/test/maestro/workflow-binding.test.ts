@@ -10,13 +10,14 @@ import { SessionV1 } from "@orchestra/core/v1/session"
 import { Event } from "@orchestra/schema/event"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { RelayArm } from "@orchestra/schema/relay-arm"
+import { SessionMessage } from "@orchestra/schema/session-message"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { workflowRevisionBody } from "../../src/maestro/plan-revision"
 import { WorkflowBinding } from "../../src/maestro/workflow-binding"
 import { Dispatch } from "../../src/maestro/dispatch"
 import { testEffect } from "../lib/effect"
-import { MessageID, PartID } from "../../src/session/schema"
+import { MessageID, PartID, SessionID } from "../../src/session/schema"
 import { Session } from "../../src/session/session"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 
@@ -122,4 +123,75 @@ describe("workflow Task approval phase", () => {
   test("a binding recorded for another execution Session is a dispatch", () => {
     expect(WorkflowBinding.phaseFor({ ...resume, bound: { executionSessionID: "ses_other" } })).toBe("dispatch")
   })
+})
+
+// An authorized resume continues the held step only when every condition holds. Each condition false alone keeps the
+// strict replay, so removing any one condition from WorkflowBinding.continuesHeldStep fails its test below.
+describe("authorized resume of a step held for a code review", () => {
+  const reserved = SessionID.make(Dispatch.childSessionID("evt_maestro_authorization_held"))
+  const other = SessionID.make(Dispatch.childSessionID("evt_maestro_authorization_other"))
+  const reply = SessionMessage.ID.make("msg_held_reply")
+  const at = { position: "second", attempt: 0, ledgerSeq: 4 }
+  const record = { executionSessionID: reserved, token: "arm_held", assistantMessageID: reply, expected: at }
+  const resume = {
+    reservedID: reserved, resumedID: reserved, bound: { executionSessionID: reserved, token: "arm_held" },
+    view: { ...at, state: "active" as const }, held: [record], lastAssistantID: reply as string,
+    phase: "continuation" as const,
+  }
+
+  test("a resume of the reserved bound child whose current step held for review continues", () => {
+    expect(WorkflowBinding.continuesHeldStep(resume)).toBe(true)
+  })
+
+  test("(a) a resumed child the authorization did not reserve replays", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, resumedID: other })).toBe(false)
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, resumedID: undefined })).toBe(false)
+  })
+
+  test("(a) a reserved child without its workflow binding replays", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, bound: undefined })).toBe(false)
+    // The hold names the same other Session, so only the reservation check can refuse it.
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, bound: { executionSessionID: other, token: "arm_held" },
+      held: [{ ...record, executionSessionID: other }] })).toBe(false)
+  })
+
+  test("(b) a complete, parked or escalated arm, or one with a pending settlement, replays", () => {
+    const states = ["complete", "awaiting-human", "escalated"] as const
+    states.forEach((state) =>
+      expect(WorkflowBinding.continuesHeldStep({ ...resume, view: { ...resume.view, state } })).toBe(false))
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, view: { ...resume.view, pending: {} } })).toBe(false)
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, view: undefined })).toBe(false)
+  })
+
+  test("(c) a step with no recorded review hold replays", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, held: [] })).toBe(false)
+  })
+
+  test("(c) a hold recorded before a ledger entry, a retry or a move of the step replays", () => {
+    const spent = [{ ...at, ledgerSeq: 3 }, { ...at, attempt: 1 }, { ...at, position: "first" }]
+    spent.forEach((expected) =>
+      expect(WorkflowBinding.continuesHeldStep({ ...resume, held: [{ ...record, expected }] })).toBe(false))
+  })
+
+  test("(c) a hold of an older reply, of another arm or of another child replays", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, lastAssistantID: "msg_newer_reply" })).toBe(false)
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, lastAssistantID: undefined })).toBe(false)
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, held: [{ ...record, token: "arm_other" }] })).toBe(false)
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, held: [{ ...record, executionSessionID: other }] })).toBe(false)
+  })
+
+  test("(d) a call that passed only the dispatch-phase approval replays", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, phase: "dispatch" })).toBe(false)
+  })
+
+  it.instance("the hold record is durable, read back for its own child only, and recorded once per reply and position", () =>
+    Effect.gen(function* () {
+      yield* WorkflowBinding.recordReviewHeld(record)
+      yield* WorkflowBinding.recordReviewHeld(record)
+      expect(yield* WorkflowBinding.reviewHolds(reserved)).toEqual([record])
+      expect(yield* WorkflowBinding.reviewHolds(other)).toEqual([])
+      const retried = { ...record, expected: { ...at, attempt: 1 } }
+      yield* WorkflowBinding.recordReviewHeld(retried)
+      expect(yield* WorkflowBinding.reviewHolds(reserved)).toEqual([record, retried])
+    }))
 })

@@ -378,6 +378,7 @@ export const make = Effect.gen(function* () {
           checklist: ready.materialized.sprint.work_packages[position.view.index]?.checklist,
           coldReview: current.checks.get("cold-review"),
           binding: current.binding,
+          held: ready.recordReviewHeld(settlement),
           transition: current.relay.transition({
             token: ready.token, binding: ready.binding, settlement,
             agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,
@@ -400,7 +401,15 @@ export const make = Effect.gen(function* () {
       Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
     ) : Effect.void
   }
-  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
+  // The workflow arm's current step for a bound receipt, read fresh; undefined for any other dispatch.
+  const workflowView = (receipt: Receipt | undefined) => {
+    const current = receipt ? receipts.get(receipt) : undefined
+    if (!current?.workflow) return Effect.succeed(undefined)
+    return current.relay.currentStep(current.workflow.token, current.workflow.binding).pipe(
+      Effect.mapError(() => new ToolSafety.Denied({ reason: "WORKFLOW_STATE_ACQUISITION" })),
+    )
+  }
+  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost, workflowView }
 })
 
 // The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.
@@ -450,19 +459,24 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
  * One workflow settlement. A gate that grades the final cold review asks for the code review first: while the
  * workers' result has no code receipt at all, only Maestro can request one, so the hold returns the Task to Maestro
  * before the arm grades, without touching the arm or spending the gate's retry budget. Every other outcome, including
- * a FIX_FIRST or REJECT receipt and a stale or missing binding, is graded as usual.
+ * a FIX_FIRST or REJECT receipt and a stale or missing binding, is graded as usual. `held` durably records the hold
+ * before it returns; that record is what lets the authorized resume continue this step (WorkflowBinding.continuesHeldStep).
  */
-export function settleWorkflow<A, E, R>(input: {
+export function settleWorkflow<A, E, R, E2, R2>(input: {
   readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | null | undefined
   readonly coldReview: HostCheck | undefined
   readonly binding: Binding
+  readonly held: Effect.Effect<void, E2, R2>
   readonly transition: Effect.Effect<A, E, R>
 }) {
   return Effect.gen(function* () {
     if (input.coldReview && input.checklist?.some((control) => control.host_check === "cold-review")) {
       const exit = yield* Effect.exit(input.coldReview(input.binding))
       const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
-      if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) return yield* Effect.fail(error)
+      if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) {
+        yield* input.held
+        return yield* Effect.fail(error)
+      }
     }
     return yield* input.transition
   })
