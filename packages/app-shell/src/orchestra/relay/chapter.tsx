@@ -108,6 +108,15 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
             <p class="mx-empty" role="status" data-slot="relay-unsupported">
               {copy.t(props.kind === "workflow" ? "orchestra.workflows.unsupported" : "orchestra.hooks.unsupported")}
             </p>
+            {/* A proxy or a restarting server can answer like a server without Relay; asking again needs no remount. */}
+            <button
+              type="button"
+              class="mx-btn"
+              disabled={source.documents.isFetching}
+              onClick={() => void source.documents.refetch()}
+            >
+              {copy.t("orchestra.workflows.checkAgain")}
+            </button>
           </MxPage>
         </Match>
         <Match when={route().page === "library"}>
