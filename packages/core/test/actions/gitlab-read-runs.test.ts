@@ -29,11 +29,19 @@ it.effect("GitLab runs retain native filters/status/source/IDs and paginate with
     .toEqual([{ ...query, page: 1 }, { ...query, page: 2 }])
 }))
 
+it.effect("GitLab unnamed pipeline keeps its fallback name without claiming a native title", Effect.gen(function* () {
+  const fixture = GitLabReadFixture.make([{ path: "projects/21/pipelines/287", data:
+    Object.fromEntries(Object.entries({ ...GitLabReadFixture.pipeline, name: null }).filter((entry) => entry[0] !== "iid")) }])
+  const run = yield* fixture.adapter.run(binding, "287")
+  expect(run).not.toHaveProperty("title")
+  expect(run).not.toHaveProperty("number")
+}))
+
 it.effect("GitLab pipeline detail carries native actor/times/duration without claiming config history or attempts", Effect.gen(function* () {
   const fixture = GitLabReadFixture.make([{ path: "projects/21/pipelines/287", data: GitLabReadFixture.pipeline }],
     { ...GitLabReadFixture.project, ci_config_path: "new-config.yml" })
   const run = yield* fixture.adapter.run(binding, "287")
-  expect(run).toMatchObject({ id: "287", name: "Build pipeline", status: "success", conclusion: "success", actor: "root", duration: 34,
+  expect(run).toMatchObject({ id: "287", name: "Build pipeline", title: "Build pipeline", number: 144, status: "success", conclusion: "success", actor: "root", duration: 34,
     createdAt: GitLabReadFixture.pipeline.created_at, startedAt: GitLabReadFixture.pipeline.started_at, finishedAt: GitLabReadFixture.pipeline.finished_at,
     updatedAt: GitLabReadFixture.pipeline.updated_at, repositoryID: "21",
     workflowID: "gitlab:project:21:pipeline", url: GitLabReadFixture.pipeline.web_url })

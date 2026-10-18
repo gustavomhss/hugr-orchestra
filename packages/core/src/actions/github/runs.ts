@@ -7,7 +7,7 @@ import { GitHubNative } from "./native"
 
 const Run = Schema.Struct({
   id: GitHubNative.ID, workflow_id: GitHubNative.ID, repository: GitHubNative.Repository,
-  name: Schema.NullOr(Schema.String), head_branch: Schema.NullOr(Schema.String), head_sha: GitHubNative.SHA,
+  name: Schema.NullOr(Schema.String), display_title: Schema.optionalKey(Schema.String), run_number: Schema.optionalKey(GitHubNative.Positive), head_branch: Schema.NullOr(Schema.String), head_sha: GitHubNative.SHA,
   event: Schema.NonEmptyString, status: Schema.NullOr(Schema.String), conclusion: Schema.optionalKey(Schema.NullOr(Schema.String)),
   run_attempt: Schema.optionalKey(GitHubNative.Positive), actor: Schema.optionalKey(Schema.NullOr(Schema.Struct({ login: Schema.NonEmptyString }))),
   triggering_actor: Schema.optionalKey(Schema.NullOr(Schema.Struct({ login: Schema.NonEmptyString }))),
@@ -62,7 +62,10 @@ export const at = Effect.fn("ActionsGitHubRead.runAt")(function* (transport: Act
 function project(binding: Actions.Binding, data: typeof Run.Type): Actions.Run {
   if (String(data.repository.id) !== binding.projectID)
     throw GitHubNative.error(binding, "binding_stale", "GitHub run repository ID does not match the binding")
-  // Native updated_at is not an authoritative completion time.
+  // Native updated_at is not an authoritative completion time, so it never becomes finishedAt; once a run is
+  // completed it is the last native stamp, which is what the GitHub UI and CLI use for run duration.
+  const duration = data.status === "completed" && data.updated_at !== undefined && data.run_started_at !== undefined
+    ? Math.round((Date.parse(data.updated_at) - Date.parse(data.run_started_at)) / 1000) : undefined
   return { id: String(data.id), bindingID: binding.id, workflowID: String(data.workflow_id), name: data.name,
     ref: data.head_branch, commit: data.head_sha, event: data.event, status: data.status,
     repositoryID: String(data.repository.id), createdAt: data.created_at, url: data.html_url,
@@ -71,6 +74,9 @@ function project(binding: Actions.Binding, data: typeof Run.Type): Actions.Run {
     ...(data.updated_at === undefined ? {} : { updatedAt: data.updated_at }),
     ...(data.conclusion === undefined ? {} : { conclusion: data.conclusion }),
     ...(data.run_attempt === undefined ? {} : { attempt: data.run_attempt }),
+    ...(data.display_title === undefined ? {} : { title: data.display_title }),
+    ...(data.run_number === undefined ? {} : { number: data.run_number }),
+    ...(duration === undefined || !Number.isFinite(duration) || duration < 0 ? {} : { duration }),
     ...(data.run_started_at === undefined ? {} : { startedAt: data.run_started_at }) }
 }
 
