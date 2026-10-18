@@ -73,7 +73,11 @@ const PermissionScopeSetting: Component<{ controller: PermissionScopeController 
   return (
     <SettingsRowV2
       title={language.t("command.permissions.autoaccept.enable")}
-      description={language.t("toast.permissions.autoaccept.on.description")}
+      description={language.t(
+        props.controller.enabled()
+          ? "orchestra.settings.general.autoAccept.description"
+          : "orchestra.settings.general.autoAccept.unavailable",
+      )}
     >
       <div data-action="settings-auto-accept-permissions">
         <Switch
@@ -500,10 +504,13 @@ export const SettingsGeneralV2: Component<{
       <SettingsListV2>
         <SettingsRowV2
           title={language.t("settings.updates.row.check.title")}
-          description={language.t("settings.updates.row.check.description")}
+          description={language.t(
+            updater.action().description ?? "settings.updates.row.check.description",
+            updater.action().params,
+          )}
         >
           <ButtonV2 size="normal" variant="neutral" disabled={!updater.action().run} onClick={() => updater.run()}>
-            {language.t(updater.action().label)}
+            {language.t(updater.action().label, updater.action().params)}
           </ButtonV2>
         </SettingsRowV2>
       </SettingsListV2>
@@ -555,7 +562,7 @@ export const SettingsGeneralV2: Component<{
 
         <SoundsSection controller={sounds} />
 
-        <Show when={desktop()}>
+        <Show when={desktop() && updater.visible()}>
           <UpdatesSection />
         </Show>
 

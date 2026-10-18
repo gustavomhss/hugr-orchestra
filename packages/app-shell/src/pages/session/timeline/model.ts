@@ -16,7 +16,7 @@ export function createTimelineModel(input: {
   let refreshFrame: number | undefined
   let refreshTimer: number | undefined
 
-  const [resource] = createResource(
+  const [resource, { refetch }] = createResource(
     () => input.sessionID(),
     (id) => {
       clearRefresh()
@@ -82,6 +82,7 @@ export function createTimelineModel(input: {
     messages,
     ready,
     resource,
+    refetch,
     userMessages,
     visibleUserMessages,
   }

@@ -19,3 +19,7 @@ test("keeps non-chapter shapes on their existing routes", () => {
   expect(currentRoute("/", "")).toEqual({ type: "home" })
   expect(currentRoute("/new-session", "?draftId=d1")).toEqual({ type: "draft", draftID: "d1" })
 })
+
+test("keeps a malformed server key on Home instead of throwing", () => {
+  expect(currentRoute("/server/not-base64/session/s1", "")).toEqual({ type: "home" })
+})

@@ -1,7 +1,10 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { ServerConnection } from "@/context/server"
+import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
+import { errorMessage } from "@/pages/layout/helpers"
+import { showToast } from "@/utils/toast"
 import { lazy } from "solid-js"
 import { DialogSelectDirectory } from "./dialog-select-directory"
 import { directoryPickerKind } from "./directory-picker-policy"
@@ -21,10 +24,19 @@ export function useDirectoryPicker() {
   const platform = usePlatform()
   const settings = useSettings()
   const dialog = useDialog()
+  const language = useLanguage()
 
   return (input: DirectoryPickerInput) => {
     if (directoryPickerKind(platform.platform, input.server) === "native" && platform.platform === "desktop") {
-      void platform.openDirectoryPickerDialog({ title: input.title, multiple: input.multiple }).then(input.onSelect)
+      void platform
+        .openDirectoryPickerDialog({ title: input.title, multiple: input.multiple })
+        .then(input.onSelect, (error: unknown) =>
+          showToast({
+            variant: "error",
+            title: language.t("orchestra.shell.picker.failed"),
+            description: errorMessage(error, language.t("common.requestFailed")),
+          }),
+        )
       return
     }
 

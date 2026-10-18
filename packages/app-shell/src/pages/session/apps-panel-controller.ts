@@ -1,5 +1,6 @@
 import { batch } from "solid-js"
 import { createStore } from "solid-js/store"
+import type { useLanguage } from "@/context/language"
 import { pathKey } from "@/utils/path-key"
 import type { AppDockLinuxAPI, LinuxOpenResult, LinuxWindow } from "../../app-dock-linux"
 import { createAppDockOverlayWatch } from "./apps-panel-overlay"
@@ -140,14 +141,16 @@ export function appDockProfile(server: string, directory: string) {
   return `repo-${hash.toString(36)}`
 }
 
-export function createAppDockController(api: AppDockAPI | undefined) {
+type Translate = ReturnType<typeof useLanguage>["t"]
+// Plain state outside the component tree, so the view passes its translator in instead of reading the context here.
+export function createAppDockController(api: AppDockAPI | undefined, t: Translate) {
   const dock = api && required.every((name) => typeof api[name] === "function") ? api : undefined
   const [state, setState] = createStore({
     // The requested owner: a repository profile ID, or "" to follow the manifest's active profile
     // the way the Apps panel always did outside Orchestra.
     owner: undefined as string | undefined,
     profile: undefined as string | undefined,
-    profiles: [{ id: "default", name: "Personal" }] as Profile[],
+    profiles: [{ id: "default", name: t("orchestra.dock.profile.personal") }] as Profile[],
     status: "idle" as "idle" | "loading" | "ready" | "failed",
     url: home,
     tabs: [] as Tab[],
@@ -204,7 +207,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
         current = await dock.appDockGetManifest()
         applyManifest(current)
       }
-      setState("error", "App Dock changed in another window")
+      setState("error", t("orchestra.dock.error.changed"))
     }
     manifestWrite = manifestWrite.then(run).catch((cause) => setState("error", message(cause, String(cause))))
     return manifestWrite
@@ -230,7 +233,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   }
 
   const fail =
-    (current: number, fallback = "Could not open App Dock") =>
+    (current: number, fallback = t("orchestra.dock.error.open")) =>
     (cause: unknown) => {
       if (current === generation) setState("error", message(cause, fallback))
     }
@@ -263,7 +266,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
     )
     if (current !== generation) return
     if ("cause" in result) {
-      setState({ status: "failed", error: message(result.cause, "Could not load App Dock") })
+      setState({ status: "failed", error: message(result.cause, t("orchestra.dock.error.load")) })
       return
     }
     const first = result.tabs[0]
@@ -390,7 +393,10 @@ export function createAppDockController(api: AppDockAPI | undefined) {
         const failed = event.payload.identity
         if (!state.tabs.some((tab) => sameTab(tab, failed)) || !sameTab(failed, state.active)) return
         setState({
-          error: event.payload.code === "blocked" ? "Navigation blocked" : "Navigation failed",
+          error:
+            event.payload.code === "blocked"
+              ? t("orchestra.dock.navigation.blocked")
+              : t("orchestra.dock.navigation.failed"),
           navigationError: { ...identity(failed), url: event.payload.url },
         })
         return
@@ -427,7 +433,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
   const placement = (tab: Tab | (TabIdentity & { url: string })) =>
     isLinux(tab.url) ? { mode: "linux" as const } : { mode: "browser" as const, lastBrowser: identity(tab) }
 
-  const open = async (url: string, fallback = "Could not open App Dock") => {
+  const open = async (url: string, fallback = t("orchestra.dock.error.open")) => {
     const profile = state.profile
     if (!dock || !host || !profile || state.status !== "ready") return
     bumpLinux()
@@ -563,7 +569,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       void saveTabs(tabs)
     },
     openNewTab: () => open(home),
-    duplicate: (tab: Tab) => open(tab.url, "Could not duplicate tab"),
+    duplicate: (tab: Tab) => open(tab.url, t("orchestra.dock.tab.duplicateFailed")),
     openLibraryItem(entry: Bookmark) {
       setState("url", entry.url)
       return open(entry.url)
@@ -632,7 +638,7 @@ export function createAppDockController(api: AppDockAPI | undefined) {
       const tab = activeTab()
       if (!dock || !tab?.crashed || state.recovering) return
       setState("recovering", identity(tab))
-      await dock.appDockRecoverTab(tab.tabID).catch(fail(generation, "Could not recover tab"))
+      await dock.appDockRecoverTab(tab.tabID).catch(fail(generation, t("orchestra.dock.tab.recoverFailed")))
       setState("recovering", undefined)
     },
     toggleBookmark() {
@@ -713,4 +719,5 @@ export type AppDockController = ReturnType<typeof createAppDockController>
 
 let controller: AppDockController | undefined
 // One controller per renderer, and so per window: every Dock view attaches to the same live tabs.
-export const appDockController = () => (controller ??= createAppDockController(window.api as AppDockAPI | undefined))
+export const appDockController = (t: Translate) =>
+  (controller ??= createAppDockController(window.api as AppDockAPI | undefined, t))

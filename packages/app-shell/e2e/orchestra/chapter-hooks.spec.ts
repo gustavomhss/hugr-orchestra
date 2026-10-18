@@ -73,6 +73,35 @@ test("install sends the document only; the server pins the published version", a
   expect(state.installs.find((item) => item.document === "typecheck-stop")?.version).toBe("typecheck-stop-v1")
 })
 
+test("outside git the page refuses new hooks and offers to remove the ones installed earlier", async ({ page }) => {
+  const state = await setupRelay(page)
+  // Every folder outside git resolves to the one global project those folders share.
+  await page.route("**/api/project/current**", (route) => route.fulfill({ json: { id: "global", directory: "/" } }))
+  await page.goto("/orchestra/hooks")
+  const view = page.locator('[data-mx-page="orchestra-hooks"]')
+  await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
+    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+  )
+  await expect(view.locator(".hk-scope")).not.toContainText("Applies to every agent session")
+  await expect(view.getByRole("button", { name: "New hook", exact: true })).toBeDisabled()
+  await expect(view.locator('[data-template="ask-shell"]')).toBeDisabled()
+  const row = (name: string) => view.getByRole("listitem").filter({ hasText: name })
+  await expect(row("Typecheck when a session stops").getByRole("switch")).toBeDisabled()
+  // An earlier install can still be paused.
+  await expect(row("Protect generated files").getByRole("switch")).toBeEnabled()
+  await view
+    .locator('[data-slot="relay-shared-installs"]')
+    .getByRole("button", { name: "Uninstall Protect generated files" })
+    .click()
+  await page
+    .getByRole("dialog", { name: "Uninstall Protect generated files?" })
+    .getByRole("button", { name: "Uninstall", exact: true })
+    .click()
+  await expect
+    .poll(() => state.writes.map((write) => `${write.method} ${write.path}`))
+    .toEqual(["DELETE /api/relay/hook/inst-protect"])
+})
+
 test("a damaged hooks file shows the repair banner, and the reset refreshes the installs", async ({ page }) => {
   await setupRelay(page)
   let damaged = true

@@ -103,6 +103,7 @@ const publicEventTypes = [
   "tui.toast.show",
   "tui.session.select",
   "mcp.tools.changed",
+  "mcp.status.changed",
   "mcp.browser.open.failed",
   "command.executed",
   "project.updated",
@@ -125,7 +126,7 @@ const publicEventTypes = [
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
     expect(EventManifest.ServerDefinitions.length).toBe(88)
-    expect(EventManifest.Definitions.length).toBe(118)
+    expect(EventManifest.Definitions.length).toBe(119)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,

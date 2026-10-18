@@ -2,11 +2,12 @@ import { TextField } from "@orchestra/ui/text-field"
 import * as Sentry from "@sentry/solid"
 import { HugrSplash } from "@/orchestra/brand"
 import { Button } from "@orchestra/ui/button"
-import { Component, createSignal, onMount, Show } from "solid-js"
+import { Component, createSignal, Match, onMount, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { errorDescriptionKey } from "./error-description"
+import { updaterVisible } from "@/components/updater-action"
 
 export type InitError = {
   name: string
@@ -263,6 +264,13 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
     return state.version
   }
 
+  // A build that cannot install the update itself (unsigned macOS, deb, rpm) links to its release page.
+  const availableUpdate = () => {
+    const state = platform.updater?.state()
+    if (state?.status !== "available") return
+    return state
+  }
+
   async function exportDebugLogs() {
     const exportLogs = platform.exportDebugLogs
     if (!exportLogs) return
@@ -303,7 +311,7 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
               {language.t("error.page.action.exportLogs")}
             </Button>
           </Show>
-          <Show when={Sentry.isEnabled}>
+          <Show when={Sentry.isEnabled()}>
             {(_) => {
               const [reported, setReported] = createSignal(false)
               return (
@@ -320,9 +328,8 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
               )
             }}
           </Show>
-          <Show when={platform.updater}>
-            <Show
-              when={updateVersion()}
+          <Show when={updaterVisible(platform.updater?.state())}>
+            <Switch
               fallback={
                 <Button
                   size="large"
@@ -332,16 +339,27 @@ export const ErrorPage: Component<ErrorPageProps> = (props) => {
                 >
                   {platform.updater?.state().status === "checking"
                     ? language.t("error.page.action.checking")
-                    : language.t("error.page.action.checkUpdates")}
+                    : platform.updater?.state().status === "downloading"
+                      ? language.t("settings.updates.action.downloading")
+                      : language.t("error.page.action.checkUpdates")}
                 </Button>
               }
             >
-              {(version) => (
-                <Button size="large" onClick={installUpdate}>
-                  {language.t("error.page.action.updateTo", { version: version() })}
-                </Button>
-              )}
-            </Show>
+              <Match when={updateVersion()}>
+                {(version) => (
+                  <Button size="large" onClick={installUpdate}>
+                    {language.t("error.page.action.updateTo", { version: version() })}
+                  </Button>
+                )}
+              </Match>
+              <Match when={availableUpdate()}>
+                {(update) => (
+                  <Button size="large" onClick={() => platform.openExternal(update().url)}>
+                    {language.t("orchestra.shell.update.download", { version: update().version })}
+                  </Button>
+                )}
+              </Match>
+            </Switch>
           </Show>
         </div>
         <Show when={store.actionError}>

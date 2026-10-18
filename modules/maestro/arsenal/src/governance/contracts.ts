@@ -145,7 +145,8 @@ export interface CompletionContract {
   readonly sessionID: string
   readonly label: string
   readonly retryBudget?: number
-  readonly chain: readonly { readonly id: string; readonly instructions?: string; readonly checks: readonly { readonly id: string; readonly hostCheck: string }[] }[]
+  // Absent on a workflow Task's arm: the host arms the approved plan's own controls. An ordinary Task's arm needs it.
+  readonly chain?: readonly { readonly id: string; readonly instructions?: string; readonly checks: readonly { readonly id: string; readonly hostCheck: string }[] }[]
 }
 export const completionSchema = objectSchema({
   sessionID: idSchema, label: stringSchema, retryBudget: { type: "integer", minimum: 0, maximum: 32 },
@@ -153,7 +154,7 @@ export const completionSchema = objectSchema({
     id: idSchema, instructions: stringSchema,
     checks: { type: "array", minItems: 1, maxItems: 64, items: objectSchema({ id: idSchema, hostCheck: idSchema }) },
   }, ["id", "checks"]) },
-}, ["sessionID", "label", "chain"])
+}, ["sessionID", "label"])
 export const LEDGER_RECORDS = 256
 export interface WpLedgerRecord {
   wpId: string

@@ -148,9 +148,10 @@ export const make = Effect.gen(function* () {
     )
     if (stateValue.projectID !== binding.projectID || stateValue.contract.sessionID !== binding.sessionID)
       return yield* new ToolSafety.Denied({ reason: "completion-project-or-session-mismatch" })
-    const checks = stateValue.contract.chain.flatMap((gate) => gate.checks)
+    const chain = stateValue.contract.chain ?? []
+    const checks = chain.flatMap((gate) => gate.checks)
     if (checks.length > 1000 || new Set(checks.map((check) => check.id)).size !== checks.length ||
-      new Set(stateValue.contract.chain.map((gate) => gate.id)).size !== stateValue.contract.chain.length)
+      new Set(chain.map((gate) => gate.id)).size !== chain.length)
       return yield* new ToolSafety.Denied({ reason: "completion-callback-cap-or-duplicate" })
     return { contract: stateValue.contract, fingerprint: createHash("sha256").update(JSON.stringify(stateValue)).digest("hex") }
   })).pipe(Effect.mapError((error) => error instanceof ToolSafety.Denied ? error : new ToolSafety.Denied({ reason: "completion-state-acquisition" })))
@@ -210,14 +211,17 @@ export const make = Effect.gen(function* () {
       return yield* new ToolSafety.Denied({ reason: "completion-dispatch-binding-mismatch" })
     const loaded = yield* load(binding)
     const checks = new Map(host.checks)
-    if (loaded.contract.chain.some((gate) => gate.checks.some((check) => !checks.has(check.hostCheck))))
+    // A workflow Task's arm only names the token: the host arms the approved plan's own controls (WorkflowBinding.adopt)
+    // and never reads checks from the contract. An ordinary Task's arm is its chain of checks.
+    if (!input.workflow && !loaded.contract.chain?.length)
+      return yield* new ToolSafety.Denied({ reason: "completion-contract-chain-missing", detail: CHAIN_REQUIRED })
+    if (!input.workflow && loaded.contract.chain?.some((gate) => gate.checks.some((check) => !checks.has(check.hostCheck))))
       return yield* new ToolSafety.Denied({ reason: "completion-host-check-unbound" })
     const baseRevision = yield* head(binding.directory)
     const relay = yield* host.relay(binding)
     if (input.workflow) {
       const workflow = yield* WorkflowBinding.adopt({ token: binding.token, relay,
-        dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
-        globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
+        dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection }, availableChecks: new Set(checks.keys()),
       }).pipe(Effect.provideService(FileSystem.FileSystem, fs),
         Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held
           ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
@@ -441,7 +445,8 @@ export const make = Effect.gen(function* () {
 })
 
 // The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.
-const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm (contract.sessionID is this Session), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."
+const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm, with a contract of only sessionID (this Session) and a label naming this Task, without chain (the host arms the approved plan's own checks), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."
+const CHAIN_REQUIRED = "The newest arm in this Session has no chain, which only a workflow Task's arm may omit. Arm this Task's checks in contract.chain, then dispatch it again."
 
 /** `Host.relay` over the process's Location map: the Relay service of the placement's own Location. */
 export const locationRelay = (get: (ref: Location.Ref) => Layer.Layer<Relay.Service, unknown>) =>
@@ -475,7 +480,7 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
   return {
     brief: contract.label,
     retry_budget: contract.retryBudget ?? 3,
-    work_packages: contract.chain.map((gate) => ({
+    work_packages: (contract.chain ?? []).map((gate) => ({
       id: gate.id,
       ...(gate.instructions === undefined ? {} : { instructions: gate.instructions }),
       checklist: gate.checks.map((check) => ({ id: check.id, host_check: check.hostCheck })),

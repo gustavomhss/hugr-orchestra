@@ -134,6 +134,25 @@ test("a prompt a hook refused returns to the composer with the hook named, and t
   expect(statusWrites.at(-1)).toEqual({ sessionID: "session-1", type: "idle" })
 })
 
+test("leaving the Session while a send waits returns the cleared prompt to the composer it came from", async () => {
+  state.params.id = "session-1"
+  // Hold the send in its request preparation. A worktree barrier would leave /repo/main ready for the rest of the
+  // suite, since a ready worktree cannot become pending again.
+  const waiting = deferred()
+  const delayed = deferred()
+  state.behaviorHook = async () => waiting.resolve()
+  preparations.push(delayed)
+  const real = createPromptState({ prompt: "keep this" })
+  const sending = createPromptSubmit({ ...submitInput(), prompt: real }).handleSubmit(new Event("submit"))
+  await waiting.promise
+  expect(real.current()[0]).toMatchObject({ content: "" })
+  state.params.id = "session-2"
+  delayed.resolve()
+  expect(await sending).toBe(false)
+  expect(promptInputs).toEqual([])
+  expect(real.current()[0]).toMatchObject({ content: "keep this" })
+})
+
 test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences failed writes without clearing", async (pathway) => {
   state.params.id = "session-1"
   commands.push({ name: "review" })

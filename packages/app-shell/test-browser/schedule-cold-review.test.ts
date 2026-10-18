@@ -57,6 +57,23 @@ for (const status of [404, 405, 501, 200]) {
   })
 }
 
+test("a failed read keeps the tasks already loaded and refresh recovers", async () => {
+  const f = fixture()
+  const remote = { id: "remote", name: "Original", prompt: "Work", cadence: "daily", next: Date.now() + 86_400_000, timezone: "UTC", minute: 600, enabled: true, runs: 0 }
+  try {
+    f.reply.list = { status: 200, data: { data: [remote] } }
+    await f.source.refresh?.()
+    expect(f.source.status()).toBe("ready")
+    f.reply.list = { status: 503, data: { message: "down" } }
+    await f.source.refresh?.()
+    expect(f.source.status()).toBe("error")
+    expect(f.source.tasks().map((task) => task.id)).toEqual(["remote"])
+    f.reply.list = { status: 200, data: { data: [remote] } }
+    await f.source.refresh?.()
+    expect(f.source.status()).toBe("ready")
+  } finally { f.dispose() }
+})
+
 test("cold review: metadata-only schedule save omits timing fields and preserves the remote timezone contract", async () => {
   const f = fixture()
   const next = Date.UTC(2031, 0, 15, 9, 30, 23, 456)

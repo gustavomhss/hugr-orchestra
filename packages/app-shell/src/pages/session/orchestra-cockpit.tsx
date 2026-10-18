@@ -1,5 +1,6 @@
 import { Show, createMemo, createSignal } from "solid-js"
 import { useNavigate } from "@solidjs/router"
+import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
 import { sessionHref } from "@/utils/session-route"
@@ -61,7 +62,8 @@ export function OrchestraTaskFeed(props: { tasks: TasksData; onShowBrowser: () =
   const { sessionKey } = useSessionLayout()
   const navigate = useNavigate()
   const serverSDK = useServerSDK()
-  const dock = appDockController()
+  const language = useLanguage()
+  const dock = appDockController(language.t)
   const snapshot = createMemo(() => dockSnapshot(dock.state, dock.available))
   const openTask = (task: TasksItem) => {
     const items = props.tasks.items()

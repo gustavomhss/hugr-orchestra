@@ -1,13 +1,19 @@
 #!/usr/bin/env bun
 
-import { $ } from "bun"
+// Merges each build's latest*.yml (LATEST_YML_DIR/latest-yml-<rust target>/) into the update feed that
+// .github/workflows/release-desktop.yml publishes in the desktop-latest release, and writes it to LATEST_YML_OUT. Every
+// payload a feed names must be in LATEST_PAYLOAD_DIR with the size and sha512 the feed records, and every feed must
+// carry ORCHESTRA_VERSION, so a published feed never points at a missing or different file.
 import path from "path"
 
 const dir = process.env.LATEST_YML_DIR!
 if (!dir) throw new Error("LATEST_YML_DIR is required")
 
-const repo = process.env.GH_REPO
-if (!repo) throw new Error("GH_REPO is required")
+const out = process.env.LATEST_YML_OUT
+if (!out) throw new Error("LATEST_YML_OUT is required")
+
+const payloads = process.env.LATEST_PAYLOAD_DIR
+if (!payloads) throw new Error("LATEST_PAYLOAD_DIR is required")
 
 const version = process.env.ORCHESTRA_VERSION
 if (!version) throw new Error("ORCHESTRA_VERSION is required")
@@ -110,15 +116,23 @@ if (macX64 || macArm64) {
   })
 }
 
-// Upload to release
-const tag = `v${version}`
-const tmp = process.env.RUNNER_TEMP ?? "/tmp"
+if (Object.keys(output).length === 0) throw new Error(`No latest*.yml found under ${dir}`)
 
-for (const [filename, content] of Object.entries(output)) {
-  const filepath = path.join(tmp, filename)
-  await Bun.write(filepath, content)
-  await $`gh release upload ${tag} ${filepath} --clobber --repo ${repo}`
-  console.log(`uploaded ${filename}`)
+await Promise.all(
+  Object.entries(output).map(async ([filename, content]) => {
+    const feed = parse(content)
+    if (feed.version !== version) throw new Error(`${filename} carries version ${feed.version}, expected ${version}`)
+    await Promise.all(feed.files.map((file) => verifyPayload(filename, file)))
+    await Bun.write(path.join(out, filename), content)
+    console.log(`wrote ${filename}: ${feed.files.map((file) => file.url).join(", ")}`)
+  }),
+)
+
+async function verifyPayload(feed: string, file: FileEntry) {
+  const payload = Bun.file(path.join(payloads!, file.url))
+  if (!(await payload.exists())) throw new Error(`${feed} names ${file.url}, which no build produced`)
+  const hasher = new Bun.CryptoHasher("sha512")
+  for await (const chunk of payload.stream()) hasher.update(chunk)
+  if (payload.size !== file.size || hasher.digest("base64") !== file.sha512)
+    throw new Error(`${file.url} differs from the size or sha512 in ${feed}`)
 }
-
-console.log("finalized latest yml files")

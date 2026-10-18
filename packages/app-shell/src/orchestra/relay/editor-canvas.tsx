@@ -53,6 +53,7 @@ type Props = EditorProps & {
   document: RelayDocument
   flow: Flow
   frozen?: Flow
+  description: string
   readOnly?: boolean
   outputs: Outputs
   issues: Issue[]
@@ -68,6 +69,7 @@ type Props = EditorProps & {
   test: { path: string[]; result: string; label: string } | undefined
   save: SaveState
   edit: (flow: Flow) => void
+  describe: (description: string) => void
   select: (ids: string[]) => void
   api: (api: CanvasApi) => void
   keys: (handler: (event: KeyboardEvent) => void) => void
@@ -561,16 +563,16 @@ export function CanvasTab(props: Props) {
       }
       onSelect={props.select}
       onChange={props.edit}
-      onReject={(reason, detail) =>
-        showToast(
-          reason === "phase"
-            ? {
-                title: copy.t("orchestra.workflows.canvas.phaseBlocked", { phase: detail ?? "" }),
-                description: copy.t("orchestra.workflows.canvas.phaseBlockedBody"),
-              }
-            : { title: copy.t("orchestra.workflows.canvas.entryNoInput") },
-        )
-      }
+      onReject={(reason, detail) => {
+        if (reason === "phase")
+          return showToast({
+            title: copy.t("orchestra.workflows.canvas.phaseBlocked", { phase: detail ?? "" }),
+            description: copy.t("orchestra.workflows.canvas.phaseBlockedBody"),
+          })
+        if (reason === "empty") return showToast({ title: copy.t("orchestra.workflows.canvas.wireEmpty") })
+        if (reason === "self") return showToast({ title: copy.t("orchestra.workflows.canvas.wireSelf") })
+        showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })
+      }}
       onOpen={open}
       onAdd={startAdd}
       onDelete={remove}
@@ -670,8 +672,10 @@ export function CanvasTab(props: Props) {
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
               skills={props.skills}
               focusPhase={focusPhase()}
+              description={props.description}
               save={save()}
               onChange={props.edit}
+              onDescribe={props.describe}
               onNav={(id) => props.go(relayPath.node("workflow", props.document.id, id, props.route.view), true)}
               onClose={() => {
                 setFocusPhase(undefined)
