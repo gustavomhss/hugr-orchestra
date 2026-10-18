@@ -1,8 +1,9 @@
 import { getFilename } from "@orchestra/core/util/path"
 import { For, Show } from "solid-js"
 import { showToast } from "@/utils/toast"
-import type { RelayInstall } from "./client"
+import { RelayError, type RelayInstall } from "./client"
 import { createAction } from "./dialogs"
+import { installNotice, refreshInstalls } from "./hook-install"
 import type { RelaySource } from "./source"
 import { Ic, RelayDialog, useRelayCopy } from "./ui"
 
@@ -45,9 +46,19 @@ export function UninstallDialog(props: {
 }) {
   const copy = useRelayCopy()
   const action = createAction()
+  // Removed either way: an install that is already gone has nothing left to uninstall, and a failed audit receipt
+  // does not undo the removal, so a retry would only answer "no such install".
+  const removed = (error: unknown) => {
+    const code = error instanceof RelayError ? error.code : undefined
+    if (code === "receipt-unrecorded") return installNotice(copy, "uninstall", error)
+    if (code !== "install-missing") throw error
+  }
   const uninstall = () =>
     action.run(async () => {
-      await props.source.client.uninstall(props.install.installID).finally(() => props.source.invalidate("installs"))
+      await props.source.client
+        .uninstall(props.install.installID)
+        .catch(removed)
+        .finally(() => refreshInstalls(props.source))
       props.onClose()
     })
   return (

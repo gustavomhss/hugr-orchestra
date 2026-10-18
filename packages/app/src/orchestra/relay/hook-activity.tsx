@@ -12,6 +12,13 @@ import { NodeGlyph, RelayDialog, useRelayCopy } from "./ui"
 // The subject of a command or a prompt is its sha256, never its text.
 const HASH = /^[0-9a-f]{64}$/
 
+// A path or a tool name is written by the agent, so it can carry characters that change what it reads as: a
+// right-to-left override (U+202E) makes "photo" + override + "gpj.exe" display as "photoexe.jpg", and a zero-width
+// space makes two names look the same. Controls and these invisible and bidirectional characters show as escapes
+// (U+202E as \u{202e}) instead of acting.
+const HIDDEN = /[\p{Cc}\u{61c}\u{200b}\u{200e}\u{200f}\u{2028}-\u{202e}\u{2060}\u{2066}-\u{2069}\u{feff}]/gu
+const visible = (text: string) => text.replace(HIDDEN, (char) => `\\u{${char.codePointAt(0)!.toString(16)}}`)
+
 // Every event the installed hooks handled, newest first. Rows come only from recorded decisions. "Allowed" only says
 // that nothing restrictive fired, so those rows stay hidden until asked for.
 export function ActivityRows(props: {
@@ -42,9 +49,8 @@ export function ActivityRows(props: {
     if (HASH.test(decision.subject) && event === "prompt") return copy.t("orchestra.hooks.activity.promptHidden")
     if (HASH.test(decision.subject) && (event === "command" || event === "tool"))
       return copy.t("orchestra.hooks.activity.commandHidden")
-    return (
-      decision.subject.replaceAll("\n", ", ") || decision.tool || triggerName(copy, event, timing(decision.trigger))
-    )
+    const subject = visible(decision.subject.replaceAll("\n", ", ")) || visible(decision.tool ?? "")
+    return subject ? <bdi dir="ltr">{subject}</bdi> : triggerName(copy, event, timing(decision.trigger))
   }
   // The chapter belongs to the selected server, so its sessions open there.
   const openSession = (sessionID: string) => navigate(sessionHref(layout.home.selection().server, sessionID))
@@ -118,13 +124,16 @@ export function ActivityRows(props: {
                 <div class="mx-grow">
                   <strong style={{ font: "11.5px var(--mx-mono)" }}>{title(decision)}</strong>
                   <small>
-                    {[
-                      triggerName(copy, operation(decision.trigger), timing(decision.trigger)),
-                      decision.tool,
-                      props.hookName?.(decision.install),
-                    ]
-                      .filter(Boolean)
-                      .join(" · ")}
+                    {triggerName(copy, operation(decision.trigger), timing(decision.trigger))}
+                    <Show when={decision.tool}>
+                      {(tool) => (
+                        <>
+                          {" · "}
+                          <bdi dir="ltr">{visible(tool())}</bdi>
+                        </>
+                      )}
+                    </Show>
+                    <Show when={props.hookName?.(decision.install)}>{(name) => ` · ${name()}`}</Show>
                   </small>
                 </div>
                 <div>

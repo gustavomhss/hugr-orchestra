@@ -21,6 +21,7 @@ import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { HookActivity, TestDialog } from "./hook-activity"
+import { installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
 import { runVersion } from "./history"
 import { issueText } from "./parts"
@@ -296,25 +297,26 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (install() || !props.source.installs.isSuccess) return
     setInstall(true)
     const current = installed()
-    const result = await (
+    const failed = await (
       current ? props.source.client.enable(current.installID, next) : props.source.client.install(props.id)
     ).then(
       () => undefined,
-      (error: unknown) => failure(error),
+      (error: unknown) => ({ error }),
     )
+    // The switch stays locked until the refreshed list lands; a click before then would install again.
+    await refreshInstalls(props.source)
     setInstall(false)
-    props.source.invalidate("installs")
-    if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
+    if (failed) installNotice(copy, current && !next ? "pause" : "install", failed.error)
   }
 
   const repin = async (installID: string) => {
     if (!props.source.installs.isSuccess) return
-    const result = await props.source.client.update(installID).then(
+    const failed = await props.source.client.update(installID).then(
       () => undefined,
-      (error: unknown) => failure(error),
+      (error: unknown) => ({ error }),
     )
     props.source.invalidate("installs")
-    if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
+    if (failed) installNotice(copy, "update", failed.error)
   }
 
   // The chat opens as a draft in this project with the workflow named in the prompt; the owner finishes the sentence.
