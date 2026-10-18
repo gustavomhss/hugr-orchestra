@@ -96,10 +96,8 @@ test("Relay UI cannot POST start, release or check; authoring and recorded GETs 
   try {
     await new Promise((resolve) => setTimeout(resolve, 100))
     const buttons = () => [...host.querySelectorAll<HTMLButtonElement>("button")]
-    const start = buttons().find((button) => button.textContent === "Run")!
-    expect(start).toBeDefined()
-    expect(start.disabled).toBe(true)
-    start.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    // The editor head renders no Run control while the server has no run routes, so nothing there can start a run.
+    expect(buttons().some((button) => button.textContent === "Run")).toBe(false)
     // Also drive a restored legacy release form: absence alone cannot hide a live callback.
     const reason = host.querySelector("textarea")
     if (reason) {
