@@ -38,3 +38,5 @@
 /* Run jobs in the context sidebar: one line per definition, matrix execution count as a badge (mock real-ci). */
 .actions-page .context-count { flex: none; min-inline-size: 16px; padding: 1px 5px; border-radius: 4px; background: var(--actions-soft); color: var(--actions-dim); font-size: 9.5px; text-align: center; font-variant-numeric: tabular-nums; }
 .actions-page .context-jobs .actions-nav-item > span:first-of-type { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+/* Buttons shrink to their content by default; context items fill the rail so labels truncate only when they must. */
+.actions-page .actions-context .actions-nav-item { inline-size: 100%; text-align: start; }

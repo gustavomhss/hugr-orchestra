@@ -21,9 +21,11 @@ export function shortSHA(value?: string): string {
 // Decimal units match the provider UIs (GitHub and GitLab report 1 KB as 1000 bytes).
 export function bytes(value?: number, locale?: string): string {
   if (value === undefined || !Number.isFinite(value) || value < 0) return "—"
+  // Intl's short "byte" unit reads "272 byte"; provider UIs use B.
+  if (value < 1e3) return `${new Intl.NumberFormat(locale ?? appLocale()).format(value)} B`
   const [unit, size] = value >= 1e9 ? ["gigabyte", value / 1e9] as const : value >= 1e6 ? ["megabyte", value / 1e6] as const
-    : value >= 1e3 ? ["kilobyte", value / 1e3] as const : ["byte", value] as const
-  return new Intl.NumberFormat(locale ?? appLocale(), { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: size < 10 && unit !== "byte" ? 1 : 0 }).format(size)
+    : ["kilobyte", value / 1e3] as const
+  return new Intl.NumberFormat(locale ?? appLocale(), { style: "unit", unit, unitDisplay: "short", maximumFractionDigits: size < 10 ? 1 : 0 }).format(size)
 }
 
 // "in 29 days", "8 minutes ago", "yesterday"; the largest whole unit that fits. Weeks are skipped, as in the

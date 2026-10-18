@@ -106,6 +106,13 @@ export function Artifacts(props: ViewProps) {
 
 export function ArtifactRow(props: ViewProps & { item: Actions.Resource }) {
   const state = props.model.state
+  // The provider numbers runs (#193) only on the run itself; other artifacts keep their native run id.
+  const owner = () => {
+    const id = artifactOwner(props.item)
+    const run = state.run.value
+    if (id === undefined) return props.t("orchestra.actions.unknown")
+    return run?.id === id && run.number !== undefined ? `#${run.number}` : id
+  }
   const data = () => record(props.item.data)
   const metadata = createMemo(() => artifactMetadata(props.item))
   const available = () => metadata().available
@@ -128,7 +135,7 @@ export function ArtifactRow(props: ViewProps & { item: Actions.Resource }) {
   return <div class="mx-row detail-artifact-row">
     <span class="mx-mark"><Icon name="box" /></span>
     <div class="mx-grow"><strong><bdi>{props.item.name}</bdi></strong>
-      <small>{props.t("orchestra.actions.runMetadata", { run: artifactOwner(props.item) ?? props.t("orchestra.actions.unknown"), size: size(), expiry: expiry() })}</small></div>
+      <small>{props.t("orchestra.actions.runMetadata", { run: owner(), size: size(), expiry: expiry() })}</small></div>
     <span class="mx-badge" classList={{ good: available() }}>{props.t(expired() ? "orchestra.actions.expired" : available() ? "orchestra.actions.available" : "orchestra.actions.unavailable")}</span>
     <div class="detail-row-actions">
       <button type="button" class="mx-btn" disabled={!available()} onClick={() => void props.model.download({ kind: "artifact", id: props.item.id,

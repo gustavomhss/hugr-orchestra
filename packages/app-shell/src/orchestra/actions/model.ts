@@ -231,6 +231,8 @@ export function createActionsModel(input: {
       return
     }
     await page("jobs", target)
+    // The run's graph joins each job to its definition, so the Jobs tab can show declared needs (mock jobs view).
+    if (handle.current() && tab === "jobs" && route.runID && selection.path) await source(target, selection, true)
     if (handle.current() && tab === "logs" && route.jobID) await previewLog(route.jobID)
   }, (error) => update({ commandError: actionsError(error) }))
   const refresh = () => Promise.all([view(true), commands.refreshReceipt(true)]).then(() => undefined)

@@ -170,7 +170,9 @@
 
 /* Mock-compatible finishing details. */
 .actions-page button:disabled { cursor: default; opacity: .45; }
-.actions-page :is(.actions-btn, .mx-btn):not(:disabled):hover { border-color: var(--actions-blue); background: var(--actions-raised); }
+.actions-page :is(.actions-btn, .mx-btn):not(.primary, :disabled):hover { border-color: var(--actions-blue); background: var(--actions-raised); }
+/* Primary keeps its fill on hover; the raised surface is near-white in light mode and would hide the white label. */
+.actions-page :is(.actions-btn, .mx-btn).primary:not(:disabled):hover { border-color: var(--actions-blue); filter: brightness(1.08); }
 .actions-page .actions-nav-item { flex: none; }
 .actions-page .actions-nav-item > span { min-inline-size: 0; flex: 1; }
 .actions-page .actions-nav-item.selected { border-color: var(--actions-line); }
