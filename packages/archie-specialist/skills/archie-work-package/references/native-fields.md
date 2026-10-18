@@ -19,7 +19,7 @@ Exact keys of `RelaySprint.Sprint` (source: `packages/schema/src/relay-sprint.ts
 - `kind`: one of `execute`, `gate`, `review`, `inject`, `human`. `human` is accepted but unsupported by the arm.
 - `instructions`: string; objective, exact read/write scope, inputs, outputs, criteria deltas.
 - `self_check`: array of strings; not evidence.
-- `knowledge`: array of at most 8 unique 64-character lowercase hex strings, never objects. Each is the `reference` hash returned by the `atlas_context` unit read (anchor) for the chosen unit.
+- `knowledge`: array of at most 8 unique 64-character lowercase hex strings, never objects. Each is the `reference` returned by `atlas_context` with `{"action":"anchor", target, units}`; one anchor can cover up to 8 units. Unit reads return other 64-hex hashes (`contentHash`, `receiptHash`, `bodyHash`, `sourceIdentity`) that decode but will not bind; never use those.
 - `checklist`: array of Control objects, or null. Missing, null and `[]` all mean no controls.
 - `dod`: legacy commands (`id`, `cmd`); ignored by the arm. Do not author.
 - `file`: `inject` payload path relative to the workdir; wins over `text`.
@@ -27,13 +27,13 @@ Exact keys of `RelaySprint.Sprint` (source: `packages/schema/src/relay-sprint.ts
 
 ## Control keys
 
-A control grades by one of `assert`, `cmd`, `judge` or `host_check`.
+A control grades by exactly one of `cmd`, `judge` or `host_check`. An assert-only control fails.
 
 - `id`: required nonempty string without NUL.
-- `assert`: string or null; assertion text.
+- `assert`: string or null; display text only, never grades (defaults to the `id`).
 - `cmd`: string or null; bash command whose exit code grades the control.
 - `judge`: string or null; criterion graded by a reviewer.
-- `blocking`: boolean; a failing blocking control stops the WP.
+- `blocking`: boolean; only governs `judge` controls. A failing `cmd` always fails.
 - `diff`: boolean; the control sees the diff.
 - `context`: string or array of strings; extra material for a judge.
 - `paths`: array of strings; scope for a judge.
@@ -57,7 +57,7 @@ Global acceptance host checks sit on the last WP's checklist.
       "instructions": "Objective: add export. Read: src/cli.ts. Write: src/export.ts, src/cli.ts.",
       "knowledge": ["0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"],
       "checklist": [
-        { "id": "export-test", "cmd": "bun run test:ci pkg test/export.test.ts", "blocking": true }
+        { "id": "export-test", "cmd": "bun run test:ci pkg test/export.test.ts" }
       ]
     },
     {
@@ -66,8 +66,8 @@ Global acceptance host checks sit on the last WP's checklist.
       "kind": "gate",
       "instructions": "Run the global acceptance checks.",
       "checklist": [
-        { "id": "package-verification", "host_check": "package-verification", "blocking": true },
-        { "id": "cold-review", "host_check": "cold-review", "blocking": true }
+        { "id": "package-verification", "host_check": "package-verification" },
+        { "id": "cold-review", "host_check": "cold-review" }
       ]
     }
   ]
