@@ -69,7 +69,7 @@ function isRecord(value: unknown): value is JsonSchema {
 export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
 export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
 export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
-export const themeSchemaSource = path.resolve(import.meta.dir, "../../ui/src/theme/desktop-theme.schema.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
 
 export const configSchemaText = () => JSON.stringify(generateEffect(ConfigV1.Info), null, 2)
 export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
