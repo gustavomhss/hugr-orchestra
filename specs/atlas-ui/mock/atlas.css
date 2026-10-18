@@ -900,3 +900,10 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-grid .wf-ic.good { color: var(--mx-good); }
 .at-grid tbody th { inline-size: 38%; }
 @media (max-width: 640px) { .at-grid th, .at-grid td { padding: 6px 4px; } }
+
+/* v6: Health as an Overview section */
+.at-health { margin-block: 14px; scroll-margin-block-start: 16px; }
+.at-health-dots { display: inline-flex; gap: 5px; align-items: center; }
+.at-hrow > summary { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.at-hrow > summary small { color: var(--mx-dim); }
+.at-hrow-body { padding: 4px 0 10px 28px; }

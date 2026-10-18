@@ -48,6 +48,7 @@
         ${tile("#/knowledge", "Knowledge", `${A.num(s.facts)}<small> facts</small>`, `${pct(s.fresh, s.facts)}% up to date · ${s.governing} ratified`)}
         ${tile("#/activity", "Agents", `${M().snapshot.units.length}<small> ${M().snapshot.units.length === 1 ? "unit" : "units"} published</small>`, reads.length ? `last read: ${A.esc(reads[0].text)}` : "No reads recorded yet")}
       </div>
+      ${A.healthSection(state.query.show === "health").html}
       <div class="at-cols">
         <section class="at-panel"><header class="at-panel-head"><h3>Busiest units</h3><a class="mx-link" href="#/knowledge">All units</a></header>
           ${M().units().slice(0, 5).map((u) => `<a class="at-linkrow" href="${unitHref(u.id)}">${dot(u)}<span>${A.esc(u.id.split("/").slice(1).join("/") || u.id)}</span><small>${A.esc(u.id.includes("/") ? u.id.split("/")[0] : "")}</small><span class="grow"></span><small>${plural(u.facts, "fact")}</small></a>`).join("")}</section>

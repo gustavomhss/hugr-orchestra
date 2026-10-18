@@ -13,7 +13,7 @@
     ["plugins", "Plugins", "code"], ["hooks", "Hooks", "hooks"], ["actions", "Actions", "bolt"], ["schedule", "Schedule", "clock"],
     ["env", ".env", "lock"], ["dock", "Dock", "dock"], ["workspaces", "Workspaces", "server"],
   ]
-  const atlasRoutes = ["overview", "knowledge", "unit", "fact", "review", "activity", "health", "memory", "settings", "gallery"]
+  const atlasRoutes = ["overview", "knowledge", "unit", "fact", "review", "activity", "memory", "settings", "gallery"]
   const routes = [...atlasRoutes, "agents", "chat"]
 
   /* ---------- Routing ---------- */
@@ -23,6 +23,8 @@
     const [route, ...rest] = path.split("/")
     // The old file map now lives on unit pages.
     if (route === "map") return { route: "unit", params: [new URLSearchParams(search).get("path") || "packages/knowledge"], query: {}, raw }
+    // Health is a section of Overview now.
+    if (route === "health") { location.replace("#/overview?show=health"); return { route: "overview", params: [], query: { show: "health" }, raw: "overview?show=health" } }
     // Old names: Curation is Review, History is Activity.
     if (route === "curation" || route === "history") { location.replace(`#/${route === "curation" ? "review" : "activity"}`); return { route: route === "curation" ? "review" : "activity", params: [], query: {}, raw } }
     return { route: routes.includes(route) ? route : "overview", params: rest.length ? [decodeURIComponent(rest.join("/"))] : [], query: Object.fromEntries(new URLSearchParams(search)), raw }
@@ -55,7 +57,7 @@
       const treeKeep = main.querySelector(".at-tree-pane")?.scrollTop ?? 0
       // Illustrated mode adds example data on top of the real store; say so on every Atlas screen.
       const dismissed = (() => { try { return sessionStorage.getItem("atlas-banner") === "0" } catch { return false } })()
-      const storeBanner = atlas && A.state.preview === "ready" && M().provenance() !== "trusted" && !dismissed ? `<div class="at-banner warm">${A.icon("lock")}<span>This store is in git, so Atlas sends agents only machine-proven facts: 0 of ${A.num(M().facts.length)} today. Changes are read-only.</span><a class="mx-link" href="#/health">Why</a><button class="mx-btn icon" data-action="dismiss-banner" aria-label="Dismiss">${A.icon("close")}</button></div>` : ""
+      const storeBanner = atlas && A.state.preview === "ready" && M().provenance() !== "trusted" && !dismissed ? `<div class="at-banner warm">${A.icon("lock")}<span>This store is in git, so Atlas sends agents only machine-proven facts: 0 of ${A.num(M().facts.length)} today. Changes are read-only.</span><a class="mx-link" href="#/overview?show=health">Why</a><button class="mx-btn icon" data-action="dismiss-banner" aria-label="Dismiss">${A.icon("close")}</button></div>` : ""
       const illus = atlas && M().R.illustrated && !view.flush ? `<div class="at-illus">${A.icon("info")}<span><b>Illustrated.</b> Items marked example are invented.</span><button class="mx-link" data-action="data" data-value="real">Real store only</button></div>` : ""
       const banner = storeBanner + illus
       main.innerHTML = banner + view.html
@@ -71,6 +73,7 @@
         tree.scrollTop = treeKeep
         tree.querySelector(".selected")?.scrollIntoView({ block: "nearest" })
       }
+      if (s.query.show === "health") setTimeout(() => main.querySelector("#health")?.scrollIntoView({ block: "start" }), 0)
       if (focused) {
         const input = $("#list-search")
         input.focus()
@@ -116,17 +119,16 @@
     const healthOk = M().health().cas.sound && M().provenance() === "trusted"
     host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>project atlas</small></div></header>
       <div class="context-group">
-        ${link("#/overview", "Overview", "overview", s.route === "overview")}
+        ${link("#/overview", "Overview", "overview", s.route === "overview", healthOk || held ? "" : '<span class="at-sdot warm" data-tip="A health check needs attention"></span>')}
         ${link("#/knowledge", "Knowledge", "stack", ["knowledge", "unit", "fact"].includes(s.route))}
         ${link("#/review", "Review", "inbox", s.route === "review", count(M().curationCount(), "warm"))}
         ${link("#/activity", "Activity", "history", s.route === "activity")}
-        ${link("#/health", "Health", "health", s.route === "health", healthOk || held ? "" : '<span class="at-sdot warm"></span>')}
         ${link("#/settings", "Settings", "settings", s.route === "settings")}
       </div>
       <div class="context-group"><div class="context-label">MEMORY</div>
         ${[["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["maestro", "Maestro"]].map(([id, n]) => link(`#/memory/${id}`, n, "memory", member === id, M().memory[id].bound ? "" : '<span class="context-hint">off</span>')).join("")}
       </div>
-      <footer class="context-footer">${held ? "<span>Not connected</span>" : M().provenance() === "trusted" ? `<span>${A.icon("server")} Local store</span>` : `<a class="warm" href="#/health">${A.icon("lock")} Store in git · ${M().provenance() === "tracked-staging" ? "locked" : "read-only"}</a>`}<a href="#/gallery">${A.icon("eye")}All screens</a></footer></aside>`
+      <footer class="context-footer">${held ? "<span>Not connected</span>" : M().provenance() === "trusted" ? `<span>${A.icon("server")} Local store</span>` : `<a class="warm" href="#/overview?show=health">${A.icon("lock")} Store in git · ${M().provenance() === "tracked-staging" ? "locked" : "read-only"}</a>`}<a href="#/gallery">${A.icon("eye")}All screens</a></footer></aside>`
   }
 
   const renderPanel = (s) => {
@@ -528,7 +530,7 @@
 
   /* ---------- Keyboard ---------- */
   let chord = false
-  const chords = { o: "#/overview", k: "#/knowledge", r: "#/review", a: "#/activity", h: "#/health", y: "#/memory/backend", s: "#/settings", c: "#/chat" }
+  const chords = { o: "#/overview", k: "#/knowledge", r: "#/review", a: "#/activity", h: "#/overview?show=health", y: "#/memory/backend", s: "#/settings", c: "#/chat" }
   document.addEventListener("keydown", (event) => {
     const typing = event.target.matches("input, textarea, select")
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -565,7 +567,7 @@
   let found = []
   let index = 0
   const everything = (words) => {
-    const pages = [["Overview", "#/overview", "overview"], ["Knowledge", "#/knowledge", "stack"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
+    const pages = [["Overview", "#/overview", "overview"], ["Knowledge", "#/knowledge", "stack"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/overview?show=health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
       .map(([label, href, glyph]) => ({ group: "Go to", label, hint: "", glyph, run: () => A.go(href) }))
     const areas = M().units().map((u) => ({ group: "Units", label: u.id, hint: `${u.facts} facts`, glyph: "stack", run: () => A.go(`#/unit/${encodeURIComponent(u.id)}`) }))
     const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/unit/${encodeURIComponent(f)}`) }))
@@ -630,7 +632,7 @@
       ["Review · mined", "#/review?tab=mined", "sparkle", "Suggestions from genesis; accept all with a result per row."],
       ["Review · to ratify", "#/review?tab=ratify", "shield", "Proposals to govern, and suggested core areas."],
       ["Activity", "#/activity", "history", "What agents read, saved and were held on, event by event."],
-      ["Health", "#/health", "health", "Store access, stored objects, proofs, code index."],
+      ["Overview · health", "#/overview?show=health", "health", "Six checks on Overview; maintainer diagnostics in Settings › Store."],
       ["Settings", "#/settings", "settings", "Connection, territories, permissions, store."],
       ["Memory · Backend", "#/memory/backend", "memory", "Project memory and the memory log."],
       ["Task", "#/memory/backend/task/T-LIVE-2", "check", "Where it stopped and how to resume."],
