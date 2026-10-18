@@ -91,7 +91,9 @@ describe("host citation check", () => {
     const card: Research.Card = { ...base, answer: "Only version 1 (observed.txt:2-3).",
       findingRefs: [{ id: finding.id, revision: finding.revision }],
       evidenceRefs: [{ source: retained.ref, locator: { kind: "quote", exact: "only version 1 is supported" } }] }
-    const result = yield* fixture.assemble("See observed.txt:3 for the support line.", card)
+    // Host and port pairs are not file citations, so they cannot flip an otherwise mapped card to fail.
+    const hosts = "Services: host.com:443, localhost:8080, 127.0.0.1:5432 and example.com:80."
+    const result = yield* fixture.assemble(`See observed.txt:3 for the support line. ${hosts}\n${fence}\nconnect example.com:80\n${fence}`, card)
     expect(result.citationCheck).toEqual({ verdict: "pass", checked: { evidence: 1, prose: 2, findings: 1, documents: 0 }, issues: [], omitted: 0 })
     expect(result).toMatchObject({ referencesChecked: true, outcome: "done", discovery: card })
     const report = DiscoveryResult.report("See observed.txt:3 for the support line.", result)
@@ -120,26 +122,34 @@ describe("host citation check", () => {
         { source: borrowed.ref, locator: { kind: "lines", start: 1, end: 1 } },
       ] }
     // The read also retains the complete received file from byte 0, so only lines past its end are uncaptured.
-    const prose = "Proof at observed.txt:9 and missing.ts:10-12; observed.txt:2 holds."
+    const prose = `Proof at observed.txt:9 and missing.ts:10-12; observed.txt:2 holds. Also src/a.ts:10, README.md:3-5 and host.com:443.
+${fence}sh
+open src/b.ts:4 with config.json:2 on localhost:8080
+${fence}`
     const result = yield* fixture.assemble(prose, card)
     expect(result.citationCheck?.verdict).toBe("fail")
-    expect(result.citationCheck?.checked).toEqual({ evidence: 3, prose: 4, findings: 1, documents: 0 })
+    expect(result.citationCheck?.checked).toEqual({ evidence: 3, prose: 7, findings: 1, documents: 0 })
     expect(result.citationCheck?.issues.map((issue) => issue.reason).toSorted()).toEqual([
       "finding cites evidence not retained by this dispatch",
       "line outside captured range (captured 2-2)",
       "no retained source for this URL in this dispatch",
       "no retained source for this path in this dispatch",
+      "no retained source for this path in this dispatch",
+      "no retained source for this path in this dispatch",
+      "no retained source for this path in this dispatch",
       "quote not found in retained representation",
       "source not retained by this dispatch",
     ])
     expect(result.citationCheck?.issues).toContainEqual({ citation: "observed.txt:9", reason: "line outside captured range (captured 2-2)" })
-    expect(result.citationCheck?.issues).toContainEqual({ citation: "missing.ts:10-12", reason: "no retained source for this path in this dispatch" })
+    expect(result.citationCheck?.issues.map((issue) => issue.citation)).toEqual(expect.arrayContaining(
+      ["missing.ts:10-12", "src/a.ts:10", "README.md:3-5", "src/b.ts:4"]))
+    expect(result.citationCheck?.issues.map((issue) => issue.citation).filter((citation) => /host|localhost|config\.json/.test(citation))).toEqual([])
     expect(result.citationCheck?.issues).toContainEqual({ citation: "https://example.com/missing#top", reason: "no retained source for this URL in this dispatch" })
     expect(result).toMatchObject({ referencesChecked: true, discovery: card })
     expect(result.outcome).toBeUndefined()
-    expect(result.risks[0]).toBe("Citation check failed: 6 unverified citation(s); the answer has unverified citations.")
+    expect(result.risks[0]).toBe("Citation check failed: 9 unverified citation(s); the answer has unverified citations.")
     const report = DiscoveryResult.report(prose, result)
-    expect(report).toStartWith("Citation check: fail; checked evidence=3 prose=4 findings=1 documents=0; unverified=6\n- ")
+    expect(report).toStartWith("Citation check: fail; checked evidence=3 prose=7 findings=1 documents=0; unverified=9\n- ")
     expect(report).toContain("- observed.txt:9: line outside captured range (captured 2-2)\n")
     expect(report).toContain("Answer has unverified citations:")
     expect(report).toContain(`\n> ${JSON.stringify(result.qualifications)}\n`)

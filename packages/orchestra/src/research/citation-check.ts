@@ -16,8 +16,12 @@ export type Result = {
 }
 
 const URL_PATTERN = /https?:\/\/[^\s<>()[\]{}"'`]+/g
-// A file name with an extension, then `:line` or `:start-end`. URLs are removed before this runs.
-const PATH_PATTERN = /(?<![\w@~./\\:-])((?:[A-Za-z]:)?[\w@~./\\-]*\.[A-Za-z][\w-]*):(\d+)(?:-(\d+))?(?!\d)/g
+// A path, then `:line` or `:start-end`. URLs are removed and candidates filtered by `file` before use.
+const PATH_PATTERN = /(?<![\w@~./\\:-])((?:[A-Za-z]:)?[\w@~./\\-]+):(\d+)(?:-(\d+))?(?!\d)/g
+const FENCE_PATTERN = /(```|~~~)[\s\S]*?\1/g
+// Top-level domains that are not common file extensions; `name.<tld>:<n>` without a slash is a host and port.
+const HOSTS = new Set(["com", "org", "net", "io", "dev", "ai", "co", "edu", "gov", "info", "biz", "me", "us", "uk", "eu", "de",
+  "local", "localhost", "internal", "lan", "cloud", "site", "xyz", "tech", "online", "example", "test", "invalid"])
 
 /** Unavailable retained research fails closed: the parent sees unverified citations, never a silent pass. */
 export const unavailable: Result = { verdict: "fail", checked: { evidence: 0, prose: 0, findings: 0, documents: 0 }, omitted: 0,
@@ -137,10 +141,23 @@ export function format(result: Result) {
 }
 
 function extract(text: string) {
-  const urls = [...text.matchAll(URL_PATTERN)].map((match) => match[0].replace(/[.,;:!?]+$/, ""))
-  const paths = [...text.replace(URL_PATTERN, " ").matchAll(PATH_PATTERN)]
+  const prose = text.replace(FENCE_PATTERN, "\n")
+  // Code fences hold commands and configs; only an unmistakable path (one with a directory) cites there.
+  const fenced = [...text.matchAll(FENCE_PATTERN)].flatMap((match) => paths(match[0])).filter((citation) => /[/\\]/.test(citation))
+  return [...[...prose.matchAll(URL_PATTERN)].map((match) => match[0].replace(/[.,;:!?]+$/, "")), ...paths(prose), ...fenced]
+}
+
+function paths(text: string) {
+  return [...text.replace(URL_PATTERN, " ").matchAll(PATH_PATTERN)].filter((match) => file(match[1]))
     .map((match) => `${match[1]}:${match[2]}${match[3] ? `-${match[3]}` : ""}`)
-  return [...urls, ...paths]
+}
+
+/** A file citation has a directory or a file extension, and is not a hostname or IP address followed by a port. */
+function file(candidate: string) {
+  if (/[/\\]/.test(candidate)) return true
+  // No letter extension also covers bare hosts and IPv4 addresses (`localhost:8080`, `127.0.0.1:5432`).
+  const extension = /\.([A-Za-z][\w-]*)$/.exec(candidate)?.[1]
+  return extension !== undefined && !HOSTS.has(extension.toLowerCase())
 }
 
 function tolerate(ref: Research.EvidenceRef, error: Research.Error, text: Effect.Effect<string, Research.Error>) {
