@@ -773,7 +773,7 @@ function continues(lead: number, offset: number, byte: number) {
   return byte >= 0x80 && byte <= 0xbf
 }
 
-// TS-only (PARITY-EXCEPTIONS): the native workflow host signs one `workflow-disposition` record after the Relay
+// TS-only (PARITY-EXCEPTIONS W7-6): the native workflow host signs one `workflow-disposition` record after the Relay
 // event it settled. A trailing disposition whose `sourceSeq` names the entry right before it reports that entry's
 // event, so a workflow that completed reads as complete; any other trailing record still reads as truncated.
 function finalEvent(entries: ReadonlyArray<Entry>) {
