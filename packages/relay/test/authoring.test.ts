@@ -312,7 +312,7 @@ describe("W7-3: the compiled plan is a Relay sprint", () => {
 describe("W7-5: a control with no check is refused", () => {
   const sprint = (control: Record<string, unknown>) => ({ work_packages: [{ id: "wp1", title: "A", checklist: [control] }] })
   const compiled = (control: Record<string, unknown>) =>
-    settle(AuthoringGraph.compile(Effect.runSync(AuthoringGraph.project("Plan", sprint(control) as RelaySprint.Sprint))))
+    settle(AuthoringGraph.compile(Effect.runSync(AuthoringGraph.project("Plan", sprint(control) as unknown as RelaySprint.Sprint))))
 
   test("a control with only an id and a kind names itself and its WP", () => {
     const result = compiled({ id: "wp1-test", kind: "command", command: "bun test" })
