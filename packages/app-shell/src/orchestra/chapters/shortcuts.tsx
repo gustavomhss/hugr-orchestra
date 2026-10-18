@@ -30,7 +30,7 @@ export default function ShortcutsPage(props: ChapterPageProps) {
     <MxPage
       id="orchestra-shortcuts"
       // The kit's eyebrow is text; FSI/PDI isolate the profile name exactly as <bdi> does.
-      eyebrow={language.t("orchestra.shortcuts.eyebrow", { profile: `⁨${profile()}⁩` })}
+      eyebrow={language.t("orchestra.shortcuts.eyebrow", { profile: `\u2068${profile()}\u2069` })}
       title={language.t("orchestra.shortcuts.title")}
       description={language.t("orchestra.shortcuts.description")}
       action={<ShortcutsReset />}

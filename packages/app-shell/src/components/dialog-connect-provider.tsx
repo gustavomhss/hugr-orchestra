@@ -772,7 +772,7 @@ function ProviderConnection(props: {
         .api.integration.connect.key({
           integrationID: props.provider,
           location: location(),
-          key: apiKey,
+          key: apiKey.trim(),
           label: label || undefined,
         })
         .then(() => {
@@ -997,7 +997,7 @@ function ProviderConnection(props: {
     })
 
     onMount(() => {
-      const poll = async () => {
+      const poll = async (failures = 0) => {
         const authorization = store.authorization
         if (!authorization || !alive.value || !polling.active) return
         const result = await serverSDK()
@@ -1009,6 +1009,11 @@ function ProviderConnection(props: {
           .then((value) => ({ ok: true as const, status: value.data }))
           .catch((error) => ({ ok: false as const, error }))
         if (!alive.value || !polling.active) return
+        // One dropped request must not end a sign-in the person is still completing in the browser.
+        if (!result.ok && failures < 2) {
+          timer.current = setTimeout(() => poll(failures + 1), 1_000)
+          return
+        }
         if (!result.ok) {
           dispatch({
             type: "auth.error",
@@ -1031,7 +1036,7 @@ function ProviderConnection(props: {
           dispatch({ type: "auth.error", error: language.t("orchestra.providers.oauth.expired") })
           return
         }
-        timer.current = setTimeout(poll, 1_000)
+        timer.current = setTimeout(() => poll(), 1_000)
       }
       void poll()
     })

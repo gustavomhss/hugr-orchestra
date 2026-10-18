@@ -1,5 +1,5 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { createMemo, createResource, For, type JSX, onCleanup, Show } from "solid-js"
+import { createMemo, createResource, createUniqueId, For, type JSX, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DialogConnectProvider, useProviderConnectController } from "@/components/dialog-connect-provider"
 import { useProviderDialogScope } from "@/components/settings-v2/provider-dialog-scope"
@@ -48,6 +48,8 @@ export function ProviderList(props: {
   const child = props.directory ? sync().child(props.directory)[0] : undefined
   const scope = useProviderDialogScope(() => props.directory || null)
   const connector = useProviderConnectController({ onBack: props.onBack })
+  // The chapter and the Settings Providers tab can be mounted together, so the note's id must be unique.
+  const routeScope = createUniqueId()
   // V2 lists only available providers and has no default-model route on every server, so read the raw catalog here.
   const [v2, v2Actions] = createResource(
     () => (protocol() === "v2" ? { directory: props.directory, client: sdk(), server: sdk().scope } : undefined),
@@ -273,7 +275,7 @@ export function ProviderList(props: {
                 <select
                   data-providers-route
                   disabled={state.route !== undefined}
-                  aria-describedby="orchestra-providers-route-scope"
+                  aria-describedby={routeScope}
                   onChange={(event) => void chooseRoute(event.currentTarget.value)}
                 >
                   {/* Selection lives on the options: a select value set before its option exists is lost. */}
@@ -289,7 +291,7 @@ export function ProviderList(props: {
                   </For>
                 </select>
               </label>
-              <p id="orchestra-providers-route-scope" class="mx-note">
+              <p id={routeScope} class="mx-note">
                 {language.t("orchestra.providers.route.scope")}
               </p>
             </div>

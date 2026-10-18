@@ -1,4 +1,4 @@
-import { Component, createSignal, Show, startTransition } from "solid-js"
+import { Component, createSignal, onCleanup, onMount, Show, startTransition } from "solid-js"
 import { Dialog } from "@orchestra/ui/dialog"
 import { Tabs } from "@orchestra/ui/tabs"
 import { Icon } from "@orchestra/ui/icon"
@@ -12,6 +12,10 @@ import { SettingsModels } from "./settings-models"
 import { SettingsServers } from "./settings-servers"
 import { SettingsSec } from "./settings-v2/view/settings-sec"
 import { ShortcutsSection } from "./settings-v2/view/shortcuts-section"
+import "./settings-v2/settings-v2.css"
+
+// Open legacy dialogs; Back to Providers mounts the next one before the old one cleans up.
+let kitHosts = 0
 
 export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
   const language = useLanguage()
@@ -19,6 +23,17 @@ export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
   const dialog = useDialog()
   const server = useServer()
   const [tab, setTab] = createSignal(props.defaultValue ?? "general")
+
+  // The Providers and Shortcuts tabs render the chapter list and editor, whose kit tokens body carries
+  // only in the new layout; data-mx-kit lends them to this dialog and the dialogs it stacks.
+  onMount(() => {
+    kitHosts++
+    document.body.dataset.mxKit = ""
+  })
+  onCleanup(() => {
+    kitHosts--
+    if (kitHosts === 0) delete document.body.dataset.mxKit
+  })
 
   const showProviders = () => {
     void dialog.show(() => <DialogSettings defaultValue="providers" />)
@@ -80,7 +95,9 @@ export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
           <SettingsGeneral />
         </Tabs.Content>
         <Tabs.Content value="shortcuts" class="no-scrollbar">
-          <ShortcutsSection />
+          <div class="settings-v2-tab-body settings-v2-kit">
+            <ShortcutsSection />
+          </div>
         </Tabs.Content>
         <Tabs.Content value="servers" class="no-scrollbar">
           <SettingsServers />
@@ -91,9 +108,11 @@ export const DialogSettings: Component<{ defaultValue?: string }> = (props) => {
             {(current) => (
               <ProviderList server={current()} directory="" onBack={showProviders}>
                 {(list) => (
-                  <SettingsSec title={language.t("settings.providers.title")} action={list.connect}>
-                    {list.body}
-                  </SettingsSec>
+                  <div class="settings-v2-tab-body settings-v2-kit">
+                    <SettingsSec title={language.t("settings.providers.title")} action={list.connect}>
+                      {list.body}
+                    </SettingsSec>
+                  </div>
                 )}
               </ProviderList>
             )}
