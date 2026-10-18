@@ -17,6 +17,7 @@ import { ToolSafety } from "./tool-safety"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
+// A host whose before and after are separate callbacks (Claude Code) uses ToolSafety.beforeHooked and `settle`.
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
 // nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
 // but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
@@ -97,14 +98,18 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
 })
 
 /**
- * The `after` hooks of a call whose effect settled, then every note appended to its result. A failed check or a Repair
- * turns the result into a denial; the effect itself is not undone.
+ * The `after` hooks of a call whose effect settled, then every note of the call in order, for a host that hands them to
+ * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial; the effect itself is not undone.
  */
-export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
+export const settle = (hooked: Hooked, succeeded: boolean) =>
   Effect.gen(function* () {
     const notes = succeeded ? yield* enforce(hooked.scope, "after") : []
-    return annotate(value, [...hooked.notes, ...notes])
+    return [...hooked.notes, ...notes]
   })
+
+/** `settle`, with every note appended to the call's result. */
+export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
+  settle(hooked, succeeded).pipe(Effect.map((notes) => annotate(value, notes)))
 
 // The services a decision needs: the call's own context first, then ToolSafety's construction context, then a host's
 // Placement outside any Location.
