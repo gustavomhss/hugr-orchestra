@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://raw.githubusercontent.com/gustavomhss/hugr-orchestra/dev/schema/theme.json",
   "title": "Orchestra Desktop Theme",
   "description": "A theme definition for the Orchestra desktop application",
   "type": "object",
