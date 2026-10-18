@@ -1,9 +1,12 @@
 import { For, onCleanup, onMount } from "solid-js"
+import { popupAt } from "./geometry"
+import { swallowRepeats } from "./ui"
 
 export type NodeMenuItem = { label: string; title?: string; danger?: boolean; disabled?: boolean; run: () => void }
 
 // The right-click menu of a node. A press outside or Escape closes it; Escape stops here so the layer below stays
-// open. `onClose(true)` asks the canvas to take focus back.
+// open. `onClose(true)` asks the canvas to take focus back. It opens at the pointer, flips above it when there is no
+// room below, and closes when focus moves out of it.
 export function NodeMenu(props: {
   label: string
   x: number
@@ -14,6 +17,10 @@ export function NodeMenu(props: {
 }) {
   let menu!: HTMLDivElement
   onMount(() => {
+    const box = menu.getBoundingClientRect()
+    const at = popupAt({ x: props.x, top: props.y, bottom: props.y }, { w: box.width, h: box.height }, props.area, 0)
+    menu.style.left = `${at.x}px`
+    menu.style.top = `${at.y}px`
     const press = (event: PointerEvent) => {
       if (event.target instanceof Node && menu.contains(event.target)) return
       props.onClose()
@@ -38,10 +45,7 @@ export function NodeMenu(props: {
       class="wf-ctx"
       role="menu"
       aria-label={props.label}
-      style={{
-        left: `${Math.max(8, Math.min(props.x, props.area.w - 200))}px`,
-        top: `${Math.max(8, Math.min(props.y, props.area.h - 170))}px`,
-      }}
+      style={{ left: `${props.x}px`, top: `${props.y}px` }}
       onKeyDown={(event) => {
         // The editor's own keys (Enter opens the selected node) must not act on a focused menu item.
         event.stopPropagation()
@@ -50,6 +54,10 @@ export function NodeMenu(props: {
         const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")]
         const current = items.findIndex((item) => item === document.activeElement)
         items.at((current + (event.key === "ArrowDown" ? 1 : -1)) % items.length)?.focus()
+      }}
+      onFocusOut={(event) => {
+        const to = event.relatedTarget
+        if (to instanceof Node && !menu.contains(to)) props.onClose()
       }}
     >
       <For each={props.items}>
@@ -61,6 +69,7 @@ export function NodeMenu(props: {
             title={item.title}
             disabled={item.disabled}
             onClick={() => {
+              swallowRepeats()
               props.onClose(true)
               item.run()
             }}

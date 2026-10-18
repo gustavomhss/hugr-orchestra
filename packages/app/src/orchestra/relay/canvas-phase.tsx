@@ -27,6 +27,7 @@ export function PhaseHead(props: {
       >
         <input
           class="wf-group-name"
+          dir="auto"
           aria-label={props.renameLabel}
           // Set once: a save that rebuilds the flow must not overwrite what is being typed.
           ref={(input) => {
