@@ -92,7 +92,7 @@ import { promptPlaceholder } from "./prompt-input/placeholder"
 import { createPromptInputTransientState } from "./prompt-input/transient-state"
 import { showToast } from "@/utils/toast"
 import { ImagePreview } from "@orchestra/ui/image-preview"
-import type { ReferenceInfo } from "@orchestra/sdk/v2/client"
+import type { ReferenceInfo } from "@/compat/sdk-v2-client"
 import { agentKey } from "@/context/agent-identity"
 
 export { createPromptInputHistory }
