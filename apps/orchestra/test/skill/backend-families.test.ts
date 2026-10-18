@@ -4,7 +4,7 @@ import path from "path"
 import semver from "semver"
 import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest"
 
-// Family layout of the backend specialist's shared references (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
+// Family layout of the backend specialist's shared references (docs/specs/backend-specialist/contracts/f5-f6-toolkit-skills.md,
 // F6.4), the per-reference word cap S-1b, the frozen family tuples, the engine recipe pins (F6.11) and the recipe index. Discovery, link
 // resolution and depth-2 reachability are covered by backend-skills.test.ts; this file checks what that one cannot see:
 // which family a reference belongs to and which versions it may name.

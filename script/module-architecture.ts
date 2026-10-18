@@ -10,7 +10,7 @@ export type Module = { path: string; kind: "cohesive" | "collection"; entries?: 
 export type Package = {
   layer: string; status: "canonical" | "legacy" | "unused"; owner: string; summary: string
   exportsPolicy: "full" | "demanded" | "none"; successor?: string; live?: string; entries?: string[]
-  assetWildcards?: string[]; browserSafe?: string[]; platformLibrary?: boolean; aliases?: Record<string, string>
+  assetWildcards?: string[]; sourceWildcards?: Record<string, string>; browserSafe?: string[]; platformLibrary?: boolean; aliases?: Record<string, string>
   modules?: Module[]; domains?: Record<string, Domain>
 }
 export type Legacy = {
@@ -259,6 +259,8 @@ export function decodeArchitecture(value: unknown): Architecture {
     oneOf(spec.status, ["canonical", "legacy", "unused"], `packages.${alias}.status`)
     oneOf(spec.exportsPolicy, ["full", "demanded", "none"], `packages.${alias}.exportsPolicy`)
     ;["entries", "assetWildcards", "browserSafe"].forEach((field) => spec[field] === undefined || strings(spec[field], `packages.${alias}.${field}`))
+    if (spec.sourceWildcards !== undefined)
+      strings(Object.entries(object(spec.sourceWildcards, `packages.${alias}.sourceWildcards`)).flat(), `packages.${alias}.sourceWildcards`)
     Object.entries(spec.domains === undefined ? {} : object(spec.domains, `packages.${alias}.domains`)).forEach(([id, domain]) =>
       strings(object(domain, `packages.${alias}.domains.${id}`).patterns, `packages.${alias}.domains.${id}.patterns`),
     )

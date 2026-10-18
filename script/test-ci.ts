@@ -323,16 +323,16 @@ async function report(view: RunView) {
     const shown = job.conclusion === "success" ? lines.slice(-12) : lines.slice(-400)
     console.log(`\n=== ${job.name}: ${job.conclusion} ===\n${shown.join("\n")}`)
     if (!control) continue
-    // The control's verdict is required apart from the job's result: a job without exactly one verdict carrying its
-    // nonce fails this report even when every test passed.
+    // The control's verdict is required apart from the job's result: a job without exactly one passing verdict carrying
+    // its nonce fails this report even when every test passed.
     try {
       console.log(`test-ci: ${job.name} ${controlVerdict(job, log)}`)
     } catch (error) {
       missing = true
-      console.log(`test-ci: ${job.name} omni positive control: MISSING (${(error as Error).message})`)
+      console.log(`test-ci: ${job.name} omni positive control: REJECTED (${(error as Error).message})`)
     }
   }
-  console.log(`\ntest-ci: ${view.conclusion}${missing ? " (omni positive control verdict missing)" : ""}`)
+  console.log(`\ntest-ci: ${view.conclusion}${missing ? " (omni positive control verdict missing or not passing)" : ""}`)
   return missing || view.conclusion !== "success" || tests.some((job) => job.conclusion !== "success")
 }
 

@@ -36,6 +36,7 @@ import { mcpScenarios } from "./mcp"
 import { relayScenarios } from "./relay"
 import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
+import { providerScenarios } from "./provider"
 import { scheduleScenarios } from "./schedule"
 import { projectScenarios } from "./project"
 import { skillScenarios } from "./skill"
@@ -160,24 +161,7 @@ const scenarios: Scenario[] = [
       headers: ctx.headers(),
     }))
     .status(204, undefined, "status"),
-  http.protected.get("/provider", "provider.list").json(),
-  http.protected.get("/provider/auth", "provider.auth").json(),
-  http.protected
-    .post("/provider/{providerID}/oauth/authorize", "provider.oauth.authorize")
-    .at((ctx) => ({
-      path: route("/provider/{providerID}/oauth/authorize", { providerID: "httpapi" }),
-      headers: ctx.headers(),
-      body: { method: "bad" },
-    }))
-    .status(400),
-  http.protected
-    .post("/provider/{providerID}/oauth/callback", "provider.oauth.callback")
-    .at((ctx) => ({
-      path: route("/provider/{providerID}/oauth/callback", { providerID: "httpapi" }),
-      headers: ctx.headers(),
-      body: { method: "bad" },
-    }))
-    .status(400),
+  ...providerScenarios,
   http.protected.get("/permission", "permission.list").json(200, array),
   http.protected
     .post("/permission/{requestID}/reply", "permission.reply.invalid")
@@ -320,16 +304,6 @@ const scenarios: Scenario[] = [
     .get("/pty/{ptyID}/connect", "pty.connect")
     .at((ctx) => ({ path: route("/pty/{ptyID}/connect", { ptyID: "pty_httpapi_missing" }), headers: ctx.headers() }))
     .status(404, undefined, "none"),
-  http.protected.get("/experimental/console", "experimental.console.get").json(),
-  http.protected.get("/experimental/console/orgs", "experimental.console.listOrgs").json(),
-  http.protected
-    .post("/experimental/console/switch", "experimental.console.switchOrg")
-    .at((ctx) => ({
-      path: "/experimental/console/switch",
-      headers: ctx.headers(),
-      body: { accountID: "httpapi-account", orgID: "httpapi-org" },
-    }))
-    .status(400, undefined, "none"),
   http.protected.get("/experimental/workspace/adapter", "experimental.workspace.adapter.list").json(200, array),
   http.protected.get("/experimental/workspace", "experimental.workspace.list").json(200, array),
   http.protected.get("/experimental/workspace/status", "experimental.workspace.status").json(200, array),

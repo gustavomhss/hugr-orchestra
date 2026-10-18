@@ -264,9 +264,11 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const currentAgent = local.agent.current()
     const variant = modelSelection.variant.current()
     if (!currentModel || !currentAgent) {
+      // On a first run there is no model to choose yet; the toast leads to where one is connected.
       showToast({
         title: language.t("prompt.toast.modelRequired.title"),
         description: language.t("prompt.toast.modelRequired.description"),
+        actions: [{ label: language.t("orchestra.chat.send.openProviders"), onClick: () => navigate("/orchestra/providers") }],
       })
       return
     }

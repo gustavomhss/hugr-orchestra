@@ -3,7 +3,7 @@ export * as WorkflowBinding from "./workflow-binding"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Context, Effect, FileSystem, Option, Schema } from "effect"
-import { and, asc, desc, eq, sql } from "drizzle-orm"
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import type { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -27,10 +27,14 @@ import { readWorkflowRevision } from "./plan-revision"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import type { Agent } from "@/agent/agent"
 import type { ArsenalCompletion } from "./arsenal-completion"
+import { GovernedTaskReservation } from "./governed-task-reservation"
+import { BackgroundJob } from "@/background/job"
+import { SessionStatus } from "@/session/status"
 import { canonicalMemberId } from "./roster"
 import { readAuthorization } from "./authorization"
 import { childSessionID } from "./dispatch"
-import { readValidation } from "./validation-record"
+import { readReview, readValidation } from "./validation-record"
+import { CodeReview } from "./code-review"
 
 // Selection is a reference, never model-supplied binding/attribution/approval. The host acquires every bound byte.
 export const Selection = Schema.Struct({ documentID: Schema.NonEmptyString, planRevisionID: Event.ID,
@@ -191,11 +195,18 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_HOST_CHECK_UNBOUND" })
   if (existing && (!isDeepStrictEqual(existing.binding, ready.binding) || existing.token !== input.token))
     return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
-  if (!existing) yield* input.relay.create({ token: input.token, sprint: ready.materialized.sprint,
-    agentID: ready.binding.executionSessionID,
+  const arm = { token: input.token, sprint: ready.materialized.sprint, agentID: ready.binding.executionSessionID,
     meta: { workdir: input.dispatch.directory, token: input.token,
-      project_id: input.dispatch.projectID, session_id: ready.binding.executionSessionID, workflow: ready.binding },
-  }).pipe(Effect.mapError(() => new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })))
+      project_id: input.dispatch.projectID, session_id: ready.binding.executionSessionID, workflow: ready.binding } }
+  // An arm already bound to another child moves here only when that child never ran (moveArm); a child that ran keeps
+  // it, and this dispatch holds before the Task tool consumes anything.
+  if (!existing) yield* input.relay.create(arm).pipe(
+    Effect.catchIf((error) => error._tag === "ArmCreate.Conflict", () => Effect.succeed("conflict" as const)),
+    Effect.flatMap((created) => created === "created" ? Effect.void
+      : moveArm({ ...input, arm, conflict: created === "conflict" })),
+    Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
+      : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })),
+  )
   if (!existing) {
     const events = yield* EventV2Bridge.Service
     yield* events.publish(MaestroEvent.Task.WorkflowBound, { executionSessionID: ready.binding.executionSessionID,
@@ -237,12 +248,125 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
       executionSessionID: ready.binding.executionSessionID, token: input.token,
       assistantMessageID: settlement.assistantMessageID, expected: settlement.expected,
     }).pipe(Effect.provide(context)),
+    readReview: (id: string) => readReview(id).pipe(Effect.provide(context)),
+    recordReviewFindings: (reviewID: string, settlement: RelayArm.WorkflowSettlement, expected: RelayArm.WorkflowPosition) =>
+      recordReviewFindings({ executionSessionID: ready.binding.executionSessionID, token: input.token, reviewID,
+        assistantMessageID: settlement.assistantMessageID, expected }).pipe(Effect.provide(context)),
+    gradedReview: (position: string) => latestFindings({ executionSessionID: ready.binding.executionSessionID,
+      token: input.token, position }).pipe(Effect.map((record) => record?.reviewID), Effect.provide(context)),
+    stepFindings: (position: string) => stepFindings({
+      executionSessionID: ready.binding.executionSessionID, token: input.token, position,
+    }).pipe(Effect.provide(context)),
     revalidate: () => prepare(input.dispatch, "continuation").pipe(Effect.flatMap((current) =>
       isDeepStrictEqual(current.binding, ready.binding) ? Effect.void
         : Effect.fail(new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" }))),
       Effect.provide(context), Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
         : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_BINDING_ACQUISITION" }))),
   }
+})
+
+/**
+ * Moves the arm to `input.arm`'s child when the child it is bound to never ran. A dispatch can hold after its binding
+ * and before its child's first provider turn (a pre-model check, a crash), leaving the content-addressed arm bound to
+ * a child that did nothing; the identical re-arm returns the same token, so only a move frees it.
+ *
+ * The guarantee is the holder check at every turn, not this one: every provider turn of a bound child reads its step
+ * first (RelayWorkflowSession.current), and RelayWorkflowCurrentStep.read refuses a child that is not the arm's holder,
+ * so a child the arm moved away from, in any process or on any later wake, never calls the model again on it.
+ * ranProviderTurn is only the best-effort courtesy of not taking the arm from a child that produced output or runs in
+ * this process now: no reply of that child carries a finish or any part (the prompt loop persists an empty reply before
+ * the pre-model check, so a reply's existence proves nothing), no code-review hold was recorded for it, and Activity
+ * says it is not running. Relay then moves the arm only if it graded nothing and is held by that child (ArmCreate.rebind).
+ *
+ * Moves only go forward: a child moved from never takes the arm again. Each move is recorded as WorkflowRebound on the
+ * child that took the arm; the old child's WorkflowBound stays. The arm's `agent_id` is the holder, and `records` reads
+ * the holder Orchestra recorded. They differ only when a move stopped between Relay and its record, so every dispatch
+ * that reaches here records that move first, as its `recoveredBy`. A retry of the same authorization reaches the same
+ * child (Dispatch.childSessionID), finds the arm already its own (`create` is unchanged) and only records it; another
+ * authorization records it, then moves the arm on.
+ */
+const moveArm = Effect.fn("WorkflowBinding.moveArm")(function* (input: {
+  readonly token: RelayArm.Token
+  readonly relay: Relay.Interface
+  readonly dispatch: Dispatch
+  readonly arm: Omit<Parameters<Relay.Interface["rebind"]>[0], "from">
+  readonly conflict: boolean
+}) {
+  const held = Option.getOrUndefined(yield* input.relay.holder(input.token))
+  const recorded = yield* records(input.token)
+  if (held && recorded.holder && held !== recorded.holder && !recorded.movedFrom.has(held))
+    yield* recordMove({ ...input, from: recorded.holder, to: held, recovered: true })
+  if (!input.conflict) return
+  if (!held || held === input.arm.agentID || recorded.movedFrom.has(input.arm.agentID))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
+  if (yield* ranProviderTurn(held))
+    return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_ARM_BINDING_MISMATCH",
+      detail: `This arm is bound to Task session ${held}, which ran or is running. Arm a new contract for this Task.` })
+  yield* input.relay.rebind({ ...input.arm, from: held })
+  yield* recordMove({ ...input, from: held, to: input.arm.agentID, recovered: false })
+})
+
+/**
+ * Whether an execution Session runs in this process right now. The Task tool provides it from the child's background
+ * job and Session status; without it every child counts as running, so no arm moves.
+ */
+export const Activity = Context.Reference<(executionSessionID: string) => Effect.Effect<boolean>>(
+  "@orchestra/WorkflowBinding/Activity", { defaultValue: () => () => Effect.succeed(true) })
+
+/**
+ * The token's bindings and moves. Since a child moved from never takes the arm again, the holder Orchestra recorded is
+ * the single child bound or moved to that was never moved from; anything else is no recorded holder.
+ */
+const records = Effect.fn("WorkflowBinding.records")(function* (token: string) {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select({ data: EventTable.data }).from(EventTable).where(and(
+    inArray(EventTable.type, [EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1),
+      EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)]),
+    sql`json_extract(${EventTable.data}, '$.token') = ${token}`,
+  )).all().pipe(Effect.orDie)
+  const decoded = rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(Schema.Struct({
+    executionSessionID: Schema.String, from: Schema.optional(Schema.String) }))(row.data)))
+  const movedFrom = new Set(decoded.flatMap((record) => record.from === undefined ? [] : [record.from]))
+  const holders = [...new Set(decoded.map((record) => record.executionSessionID))].filter((id) => !movedFrom.has(id))
+  return { holder: holders.length === 1 ? holders[0] : undefined, movedFrom }
+})
+
+// `recovered`: this call records a move it did not make, so it is named as the recorder, not as the mover.
+const recordMove = Effect.fn("WorkflowBinding.recordMove")(function* (input: {
+  readonly token: RelayArm.Token
+  readonly dispatch: Dispatch
+  readonly from: string
+  readonly to: string
+  readonly recovered: boolean
+}) {
+  const database = yield* Database.Service
+  const id = EventV2.ID.make(`evt_maestro_workflow_rebound_${createHash("sha256")
+    .update(JSON.stringify([input.token, input.from, input.to])).digest("hex")}`)
+  const stored = database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+  if (yield* stored) return
+  const authority = { authorityMessageID: SessionMessage.ID.make(input.dispatch.assistantMessageID),
+    authorityCallID: input.dispatch.callID }
+  const events = yield* EventV2Bridge.Service
+  yield* events.publish(MaestroEvent.Task.WorkflowRebound, { executionSessionID: SessionID.make(input.to),
+    from: SessionID.make(input.from), token: input.token, ...(input.recovered ? { recoveredBy: authority } : authority) },
+  { id }).pipe(Effect.catchCause((cause) => stored.pipe(Effect.flatMap((found) => found ? Effect.void : Effect.failCause(cause)))))
+})
+
+const ranProviderTurn = Effect.fn("WorkflowBinding.ranProviderTurn")(function* (executionSessionID: string) {
+  const running = yield* Activity
+  if (yield* running(executionSessionID)) return true
+  if ((yield* reviewHolds(executionSessionID)).length > 0) return true
+  if ((yield* MessageV2.stream(SessionID.make(executionSessionID))).some((message) =>
+    message.info.role === "assistant" && (message.info.finish !== undefined || message.parts.length > 0))) return true
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(SessionMessageTable).where(and(
+    eq(SessionMessageTable.session_id, SessionID.make(executionSessionID)), eq(SessionMessageTable.type, "assistant"),
+  )).all().pipe(Effect.orDie)
+  // An undecodable reply counts as a run: the move must never be the guess.
+  return rows.some((row) => Option.match(Schema.decodeUnknownOption(SessionMessage.Message)({ ...row.data, id: row.id, type: row.type }), {
+    onNone: () => true,
+    onSome: (message) => message.type !== "assistant" || message.finish !== undefined || message.content.length > 0,
+  }))
 })
 
 /**
@@ -267,7 +391,9 @@ export function phaseFor(input: {
  * (a) the resumed child is the one this authorization reserved, and it carries the workflow binding;
  * (b) the arm is active: not complete, not parked or escalated, and holds no pending settlement;
  * (c) the child's newest reply settled the current step and held for a code review before the arm graded it, so the
- *     durable hold record still names the current position, attempt and ledger sequence: no ledger entry was spent;
+ *     durable hold record still names the current position, attempt and ledger sequence: no ledger entry was spent
+ *     ("held"); or the authorized resume already graded that reply for a FIX_FIRST and the child has not replied since,
+ *     so the findings record names the current position, attempt and ledger sequence ("graded": run, do not grade);
  * (d) the call passed the workflow approval in the continuation phase (the exact approved Task input);
  * (e) no run of the child is still going: its background job, if any, is not running. The held run's own job ended in
  *     an error, so only a running job (a continuation already under way) refuses; a second prompt would extend it.
@@ -280,6 +406,7 @@ export function continuesHeldStep(input: {
   readonly bound?: { readonly executionSessionID: string; readonly token: string }
   readonly view?: RelayArm.WorkflowPosition & { readonly state: RelayArm.State; readonly pending?: unknown }
   readonly held: readonly Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>[]
+  readonly graded?: readonly Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewFindings.data>[]
   readonly lastAssistantID?: string
   readonly phase: "dispatch" | "continuation"
   readonly job?: { readonly status: string }
@@ -291,17 +418,22 @@ export function continuesHeldStep(input: {
   const view = input.view
   if (!view || view.pending !== undefined || view.state !== "active") return false
   const last = input.lastAssistantID
-  if (!last || !input.held.some((record) => record.executionSessionID === bound.executionSessionID &&
+  const current = (record: { executionSessionID: string; token: string; assistantMessageID: string;
+    expected: RelayArm.WorkflowPosition }) => record.executionSessionID === bound.executionSessionID &&
     record.token === bound.token && record.assistantMessageID === last && record.expected.position === view.position &&
-    record.expected.attempt === view.attempt && record.expected.ledgerSeq === view.ledgerSeq))
-    return false
-  return input.phase === "continuation"
+    record.expected.attempt === view.attempt && record.expected.ledgerSeq === view.ledgerSeq
+  const matched = !last ? undefined : input.held.some(current) ? "held" as const
+    : (input.graded ?? []).some(current) ? "graded" as const : undefined
+  if (!matched || input.phase !== "continuation") return false
+  return matched
 }
 
 /**
- * The Task tool's read of `continuesHeldStep` for an authorized workflow resume of its reserved child. Continuing reuses
- * that child, its reservation and its arm: the approved prompt runs the workflow loop again, which settles the current
- * step through the same host and so runs its cold review again. Every other resume keeps the strict replay.
+ * The Task tool's read of `continuesHeldStep` for an authorized workflow resume of its reserved child: when it
+ * continues, the held settlement (the newest reply at the current position) and whether a resume already graded it;
+ * otherwise undefined. Continuing reuses that child, its reservation and its arm: the approved prompt runs the workflow
+ * loop again, which settles the current step through the same host and so runs its cold review again. Every other
+ * resume keeps the strict replay.
  */
 export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(function* (input: {
   readonly reservedID: SessionID
@@ -310,10 +442,15 @@ export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(func
   readonly phase: "dispatch" | "continuation"
   readonly job?: { readonly status: string }
 }) {
-  return continuesHeldStep({ ...input, bound: yield* read(input.reservedID), held: yield* reviewHolds(input.reservedID),
-    // Newest first. MessageV2.stream reads the legacy message table only: a child run by the V2 runner has no reply
-    // there, so (c) fails and it keeps the strict replay.
-    lastAssistantID: (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id })
+  // Newest first. MessageV2.stream reads the legacy message table only: a child run by the V2 runner has no reply there,
+  // so (c) fails and it keeps the strict replay.
+  const lastAssistantID = (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id
+  const view = input.view
+  const matched = view && lastAssistantID ? continuesHeldStep({ ...input, bound: yield* read(input.reservedID),
+    held: yield* reviewHolds(input.reservedID), graded: yield* findingsRecords(input.reservedID), lastAssistantID }) : false
+  if (!matched || !view || !lastAssistantID) return undefined
+  return { graded: matched === "graded", settlement: { assistantMessageID: SessionMessage.ID.make(lastAssistantID),
+    expected: { position: view.position, attempt: view.attempt, ledgerSeq: view.ledgerSeq } } satisfies RelayArm.WorkflowSettlement }
 })
 
 /**
@@ -341,6 +478,62 @@ export const reviewHolds = Effect.fn("WorkflowBinding.reviewHolds")(function* (e
     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewHeld.type, 1))))
     .orderBy(desc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
   return rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewHeld.data)(row.data)))
+})
+
+/**
+ * Records that a code review which did not approve graded a held reply, leaving the step at `expected`. Keyed by that
+ * position, so grading the same reply again (a replayed disposition) records nothing new.
+ */
+export const recordReviewFindings = Effect.fn("WorkflowBinding.recordReviewFindings")(function* (
+  data: Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewFindings.data>,
+) {
+  const id = reviewFindingsID({ ...data, view: data.expected })
+  const database = yield* Database.Service
+  const stored = database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+  if (yield* stored) return
+  const events = yield* EventV2Bridge.Service
+  yield* events.publish(MaestroEvent.Task.WorkflowReviewFindings, data, { id }).pipe(Effect.catchCause((cause) =>
+    stored.pipe(Effect.flatMap((row) => row ? Effect.void : Effect.failCause(cause)))))
+})
+
+/** The review-findings records of one workflow-bound execution Session, newest first (at most 1024). */
+export const findingsRecords = Effect.fn("WorkflowBinding.findingsRecords")(function* (executionSessionID: string) {
+  const database = yield* Database.Service
+  const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, executionSessionID),
+    eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewFindings.type, 1))))
+    .orderBy(desc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
+  return rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewFindings.data)(row.data)))
+})
+
+/** The newest grade of this arm's step at `position` by a review that did not approve, if any. */
+const latestFindings = Effect.fn("WorkflowBinding.latestFindings")(function* (input: {
+  readonly executionSessionID: string
+  readonly token: string
+  readonly position: string
+}) {
+  return (yield* findingsRecords(input.executionSessionID)).find((record) =>
+    record.token === input.token && record.expected.position === input.position)
+})
+
+/**
+ * The text every attempt of a step carries after its instructions once a code review that did not approve graded it:
+ * a fixed host sentence, then the newest such review's recorded findings read from the durable receipt and quoted as data
+ * (CodeReview.renderFindings), never the reviewer's free text. They ride each later attempt, also one whose result left
+ * the reviewed tree unchanged, until a new review decides. Undefined for a step no such review graded.
+ */
+export const stepFindings = Effect.fn("WorkflowBinding.stepFindings")(function* (input: {
+  readonly executionSessionID: string
+  readonly token: string
+  readonly position: string
+}) {
+  const record = yield* latestFindings(input)
+  if (!record) return undefined
+  const review = yield* readReview(record.reviewID)
+  if (!review || review.stage !== "code" || review.verdict === "APPROVE") return undefined
+  return [
+    `Orchestra's code review of an earlier attempt at this step is ${review.verdict} (${review.id}). Fix the defects its findings describe in this attempt, inside the approved writePaths, and leave the result uncommitted; the new result is reviewed again.`,
+    ...CodeReview.renderFindings(review.findings),
+  ].join("\n")
 })
 
 export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessionID: string) {
@@ -420,6 +613,89 @@ function reviewHeldID(data: Schema.Schema.Type<typeof MaestroEvent.Task.Workflow
     data.token, data.assistantMessageID, data.expected.position, data.expected.attempt, data.expected.ledgerSeq])).digest("hex")}`)
 }
 
+function reviewFindingsID(input: { executionSessionID: string; token: string; view: RelayArm.WorkflowPosition }) {
+  return EventV2.ID.make(`evt_maestro_workflow_review_findings_${createHash("sha256").update(JSON.stringify([input.executionSessionID,
+    input.token, input.view.position, input.view.attempt, input.view.ledgerSeq])).digest("hex")}`)
+}
+
 function eventID(executionSessionID: string) {
   return EventV2.ID.make(`evt_maestro_workflow_bound_${createHash("sha256").update(executionSessionID).digest("hex")}`)
 }
+
+// The Task tool's workflow dispatch and held-step decisions, kept here so task.ts reads as one flow.
+
+type Completion = Effect.Success<typeof ArsenalCompletion.make>
+
+/**
+ * The workflow checks of a Task call before an authorized dispatch reserves its child: a workflow needs an approval
+ * binding, and an unarmed workflow holds before the reservation. A resume of the authorization's own bound child reads
+ * the owner decision already observed (the continuation phase); any other call is a dispatch and needs the owner's
+ * immediate approve. A call without a workflow is a dispatch with nothing to prepare.
+ */
+export const prepareTask = Effect.fn("WorkflowBinding.prepareTask")(function* (input: {
+  readonly completion: Completion
+  readonly workflow?: Selection
+  readonly governed: boolean
+  readonly authorizationID?: string
+  readonly resumed?: { readonly id: string; readonly parentID?: string }
+  readonly sessionID: string
+  readonly assistantMessageID: string
+  readonly callID: string
+  readonly directory: string
+  readonly projectID: string
+  readonly writePaths: readonly string[]
+  readonly subagentType: string
+  readonly prompt: string
+  readonly model?: string
+}) {
+  const workflow = input.workflow
+  if (!workflow) return { phase: "dispatch" as const, ready: undefined }
+  if (!input.governed && !input.authorizationID)
+    return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+  yield* input.completion.beforeReserve({ sessionID: input.sessionID, directory: input.directory })
+  const phase = phaseFor({ parentSessionID: input.sessionID, authorizationID: input.authorizationID,
+    resumed: input.resumed, bound: input.resumed ? yield* read(input.resumed.id) : undefined })
+  const ready = yield* beforeTask({ sessionID: input.sessionID, assistantMessageID: input.assistantMessageID,
+    callID: input.callID, directory: input.directory, projectID: input.projectID, writePaths: input.writePaths,
+    subagentType: input.subagentType, prompt: input.prompt, model: input.model, workflow }, phase).pipe(Effect.orDie)
+  return { phase, ready }
+})
+
+/** Activity in this process: a child runs while its Task job runs or its Session is busy or retrying. */
+export function taskActivity(background: BackgroundJob.Interface, status: SessionStatus.Interface) {
+  return (executionSessionID: string) => Effect.gen(function* () {
+    if ((yield* background.get(executionSessionID))?.status === "running") return true
+    return (yield* status.get(SessionID.make(executionSessionID))).type !== "idle"
+  })
+}
+
+/**
+ * How an authorized call treats the child its authorization reserved.
+ *
+ * `neverPrompted`: an authorized call whose reserved child was never prompted (GovernedTaskReservation.unprompted)
+ * and has no background job runs it now as the reservation's one dispatch. This applies to every authorized dispatch,
+ * not only workflow ones; any message, admitted input or job means a run started, and that child keeps the strict replay.
+ *
+ * `continues`: a resume of a step held for code review re-prompts the same child to settle it again
+ * (resumesHeldStep), with the held settlement and whether a resume already graded it.
+ */
+export const reservedChild = Effect.fn("WorkflowBinding.reservedChild")(function* (input: {
+  readonly database: Database.Interface
+  readonly background: BackgroundJob.Interface
+  readonly completion: Completion
+  readonly receipt: ArsenalCompletion.Receipt | undefined
+  readonly reservedID?: SessionID
+  readonly authorizationID?: string
+  readonly workflow: boolean
+  readonly resumedID?: string
+  readonly phase: "dispatch" | "continuation"
+}) {
+  const reservedID = input.reservedID
+  const neverPrompted = input.authorizationID !== undefined && reservedID !== undefined &&
+    !(yield* input.background.get(reservedID)) &&
+    (yield* GovernedTaskReservation.unprompted(reservedID).pipe(Effect.provideService(Database.Service, input.database)))
+  const continues = input.workflow && reservedID && !neverPrompted ? yield* resumesHeldStep({
+    reservedID, resumedID: input.resumedID, phase: input.phase, job: yield* input.background.get(reservedID),
+    view: yield* input.completion.workflowView(input.receipt) }) : undefined
+  return { neverPrompted, continues }
+})

@@ -28,7 +28,7 @@ export function TabMenu(props: {
   onCloseOthers: () => void
   onCloseRight: () => void
 }) {
-  const language = useLanguage()
+  const t = useLanguage().t
   let menu: HTMLDivElement | undefined
   const [place, setPlace] = createSignal<{ left: string; top: string }>()
   // Measured at the window's origin, where nothing narrows it, and placed before it paints.
@@ -54,7 +54,7 @@ export function TabMenu(props: {
         }}
         class="zen-tab-menu"
         role="menu"
-        aria-label={language.t("orchestra.dock.menu.actions", { title: tabLabel(props.tab) })}
+        aria-label={t("appDock.browser.tab.menu", { tab: tabLabel(props.tab) })}
         style={place() ?? { left: "0px", top: "0px", visibility: "hidden" }}
         onKeyDown={(event) => {
           // At the end of the body, Tab would carry focus to the document's ends: it returns to the tab.
@@ -78,22 +78,22 @@ export function TabMenu(props: {
         }}
       >
         <button type="button" role="menuitem" disabled={!props.canDuplicate} onClick={props.onDuplicate}>
-          {language.t("orchestra.dock.menu.duplicate")}
+          {t("appDock.browser.tab.duplicate")}
         </button>
         <button type="button" role="menuitem" onClick={props.onTogglePin}>
-          {props.tab.pinned ? language.t("orchestra.dock.menu.unpin") : language.t("orchestra.dock.menu.pin")}
+          {t(props.tab.pinned ? "appDock.browser.tab.unpin" : "appDock.browser.tab.pin")}
         </button>
         <button type="button" role="menuitem" disabled={!props.canReload} onClick={props.onReload}>
-          {language.t("orchestra.dock.page.reload")}
+          {t("appDock.browser.reload")}
         </button>
         <button type="button" role="menuitem" disabled={!props.canClose} onClick={props.onClose}>
-          {language.t("orchestra.dock.menu.close")}
+          {t("appDock.browser.tab.close")}
         </button>
         <button type="button" role="menuitem" disabled={!props.hasOthers} onClick={props.onCloseOthers}>
-          {language.t("orchestra.dock.menu.closeOthers")}
+          {t("appDock.browser.tab.closeOthers")}
         </button>
         <button type="button" role="menuitem" disabled={!props.hasRight} onClick={props.onCloseRight}>
-          {language.t("orchestra.dock.menu.closeRight")}
+          {t("appDock.browser.tab.closeRight")}
         </button>
       </div>
     </Portal>

@@ -2,7 +2,6 @@ import { PermissionV1 } from "@orchestra/core/v1/permission"
 import type { Auth } from "@/auth"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import type { RuntimeFlags } from "@/effect/runtime-flags"
-import { InstanceState } from "@/effect/instance-state"
 import { Permission } from "@/permission"
 import type { Agent } from "@/agent/agent"
 import type { MessageV2 } from "../message-v2"
@@ -11,7 +10,6 @@ import { ProviderTransform } from "@/provider/transform"
 import { SystemPrompt } from "../system"
 import { AtlasHeader } from "@/maestro/atlas-header"
 import { InstallationVersion } from "@orchestra/core/installation/version"
-import { InstallationHeaders } from "@orchestra/core/installation/headers"
 import { Effect, Record } from "effect"
 import { jsonSchema, tool as aiTool, type ModelMessage, type Tool } from "ai"
 import type { Plugin } from "@/plugin"
@@ -176,10 +174,6 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
     })
   }
 
-  const orchestraProjectID = input.model.providerID.startsWith("opencode")
-    ? (yield* InstanceState.context).project.id
-    : undefined
-
   // Final role lock: both runtimes consume these same prepared values.
   if (maintenance && trusted) {
     system.splice(0, system.length, role ?? "")
@@ -195,32 +189,14 @@ export const prepare = Effect.fn("LLMRequestPrep.prepare")(function* (request: P
     tools: maintenance ? {} : Object.fromEntries(Object.entries(tools).toSorted(([a], [b]) => a.localeCompare(b))),
     params,
     messageTransformOptions: trusted?.options ?? initial.options,
-    headers: InstallationHeaders.forFreeModel(
-      input.model.providerID,
-      [
-        input.model.cost,
-        ...(input.model.cost.tiers ?? []),
-        ...(input.model.cost.experimentalOver200K ? [input.model.cost.experimentalOver200K] : []),
-      ],
-      {
-        ...(input.model.providerID.startsWith("opencode")
-          ? {
-              ...(orchestraProjectID ? { "x-opencode-project": orchestraProjectID } : {}),
-              "x-opencode-session": input.sessionID,
-              "x-opencode-request": input.user.id,
-              "x-opencode-client": input.flags.client,
-              "User-Agent": USER_AGENT,
-            }
-          : {
-              "x-session-affinity": input.sessionID,
-              "X-Session-Id": input.sessionID,
-              "User-Agent": USER_AGENT,
-            }),
-        ...(input.parentSessionID ? { "x-parent-session-id": input.parentSessionID } : {}),
-        ...input.model.headers,
-        ...headers,
-      },
-    ),
+    headers: {
+      "x-session-affinity": input.sessionID,
+      "X-Session-Id": input.sessionID,
+      "User-Agent": USER_AGENT,
+      ...(input.parentSessionID ? { "x-parent-session-id": input.parentSessionID } : {}),
+      ...input.model.headers,
+      ...headers,
+    },
   }
 })
 

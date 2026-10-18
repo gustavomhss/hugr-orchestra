@@ -31,16 +31,18 @@ import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
-import { usePlatform } from "@/context/platform"
 import { useSettings } from "@/context/settings"
 import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { createProviderResource } from "@/hooks/provider-catalog"
 import { formatServerError } from "@/utils/server-errors"
 import { authorizationURL, connectableIntegration } from "@/orchestra/chapters/providers-data"
+import { useClaudeMode } from "@/orchestra/use-claude-mode"
 import { CustomProviderForm } from "./dialog-custom-provider"
 import { createProviderConnectionState, formatError, type ConnectMethod } from "./provider-connection"
 
 const CUSTOM_ID = "_custom"
+// Not a provider: the first picker row enables Claude mode (Maestro on the user's Claude subscription).
+const CLAUDE_MODE_ID = "_claude-mode"
 
 export function useProviderConnectController(options: { onBack?: () => void } = {}) {
   const [store, setStore] = createStore({ selected: undefined as string | undefined })
@@ -170,6 +172,7 @@ function ProviderPicker(props: {
   const providers = useProviderDiscovery(props.directory)
   const protocol = useServerProtocol()
   const language = useLanguage()
+  const claudeMode = useClaudeMode(() => props.directory?.())
   const popularGroup = () => language.t("dialog.provider.group.popular")
   const otherGroup = () => language.t("dialog.provider.group.other")
   const customLabel = () => language.t("settings.providers.tag.custom")
@@ -194,11 +197,17 @@ function ProviderPicker(props: {
         items={() => {
           language.locale()
           // Only v1 servers can save a custom provider.
-          return [...(protocol() === "v1" ? [{ id: CUSTOM_ID, name: customLabel() }] : []), ...providers.all()]
+          return [
+            { id: CLAUDE_MODE_ID, name: language.t("orchestra.providers.claudeMode.use") },
+            ...(protocol() === "v1" ? [{ id: CUSTOM_ID, name: customLabel() }] : []),
+            ...providers.all(),
+          ]
         }}
         filterKeys={["id", "name"]}
-        groupBy={(x) => (popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
+        groupBy={(x) => (x.id === CLAUDE_MODE_ID || popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
         sortBy={(a, b) => {
+          if (a.id === CLAUDE_MODE_ID) return -1
+          if (b.id === CLAUDE_MODE_ID) return 1
           if (a.id === CUSTOM_ID) return -1
           if (b.id === CUSTOM_ID) return 1
           if (popularProviders.includes(a.id) && popularProviders.includes(b.id))
@@ -213,12 +222,13 @@ function ProviderPicker(props: {
         }}
         onSelect={(x) => {
           if (!x) return
+          if (x.id === CLAUDE_MODE_ID) return void claudeMode()
           props.onSelect(x.id)
         }}
       >
         {(i) => (
           <div class="px-1.25 w-full flex items-center gap-x-3">
-            <ProviderIcon data-slot="list-item-extra-icon" id={i.id} />
+            <ProviderIcon data-slot="list-item-extra-icon" id={i.id === CLAUDE_MODE_ID ? "anthropic" : i.id} />
             <span>{i.name}</span>
             <Show when={i.id === CUSTOM_ID}>
               <Tag>{language.t("settings.providers.tag.custom")}</Tag>
@@ -239,18 +249,23 @@ function ProviderPickerV2(props: {
   const providers = useProviderDiscovery(props.directory)
   const protocol = useServerProtocol()
   const language = useLanguage()
+  const claudeMode = useClaudeMode(() => props.directory?.())
   const [store, setStore] = createStore({
     filter: "",
     active: undefined as string | undefined,
     connecting: undefined as string | undefined,
   })
-  const featured = ["anthropic", "openai", "google", "openrouter", "vercel"]
+  const featured = [CLAUDE_MODE_ID, "anthropic", "openai", "google", "openrouter", "vercel"]
   const custom = () => ({ id: CUSTOM_ID, name: language.t("dialog.provider.custom.label") })
   const all = createMemo(() => {
     language.locale()
     const query = store.filter.trim().toLowerCase()
     // Only v1 servers can save a custom provider.
-    const values = [...(protocol() === "v1" ? [custom()] : []), ...providers.all()]
+    const values = [
+      { id: CLAUDE_MODE_ID, name: language.t("orchestra.providers.claudeMode.use") },
+      ...(protocol() === "v1" ? [custom()] : []),
+      ...providers.all(),
+    ]
     if (!query) return values
     return values.filter((provider) => `${provider.id} ${provider.name}`.toLowerCase().includes(query))
   })
@@ -275,6 +290,7 @@ function ProviderPickerV2(props: {
   onMount(() => search?.focus({ preventScroll: true }))
 
   const connect = (provider: string) => {
+    if (provider === CLAUDE_MODE_ID) return void claudeMode()
     props.onPrepare?.()
     props.onSelect(provider)
   }
@@ -343,7 +359,10 @@ function ProviderPickerV2(props: {
                         aria-busy={store.connecting === provider.id}
                         onClick={() => connect(provider.id)}
                       >
-                        <ProviderIcon id={provider.id} class="size-4 shrink-0 text-v2-icon-icon-base" />
+                        <ProviderIcon
+                          id={provider.id === CLAUDE_MODE_ID ? "anthropic" : provider.id}
+                          class="size-4 shrink-0 text-v2-icon-icon-base"
+                        />
                         <span class="min-w-0 truncate font-[530] text-v2-text-text-base">{provider.name}</span>
                         <Show when={provider.id === CUSTOM_ID}>
                           <span class="flex h-4 shrink-0 items-center rounded-xs border-[0.5px] border-v2-border-border-base bg-v2-background-bg-layer-03 px-1 text-[11px] font-[530] leading-none tracking-[0.05px] text-v2-text-text-muted">
@@ -384,7 +403,6 @@ function ProviderConnection(props: {
   const dialog = useDialog()
   const serverSDK = useServerSDK()
   const language = useLanguage()
-  const platform = usePlatform()
   const settings = useSettings()
   const newLayout = settings.general.newLayoutDesigns
   const providers = useProviders(props.directory)
@@ -468,8 +486,6 @@ function ProviderConnection(props: {
             dispatch({ type: "auth.error", error: language.t("orchestra.providers.connectDialog.badLink") })
             return
           }
-          if (props.provider === "opencode" && platform.platform === "desktop")
-            url.searchParams.set("client_id", "opencode-desktop")
           dispatch({ type: "auth.complete", authorization: { ...x.data, url: url.href } })
         })
         .catch((e) => {

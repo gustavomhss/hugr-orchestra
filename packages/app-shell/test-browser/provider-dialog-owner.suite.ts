@@ -181,7 +181,7 @@ const fixtures = {
     }),
   },
   tabs: { useTabs: () => ({ store: [] }) },
-  router: { useParams: () => ({}) },
+  router: { useParams: () => ({}), useNavigate: () => () => undefined },
   toast: { showToast: () => undefined },
   unused: {
     SettingsGeneralV2: () => undefined,
@@ -200,6 +200,8 @@ const imports: Record<string, string> = {
   "@/utils/persist": subject("../src/utils/persist.ts"),
   "@/hooks/use-providers": subject("../src/hooks/use-providers.ts"),
   "@/components/dialog-connect-provider": subject("../src/components/dialog-connect-provider.tsx"),
+  "@/orchestra/use-claude-mode": subject("../src/orchestra/use-claude-mode.ts"),
+  "./claude-mode": subject("../src/orchestra/chapters/claude-mode.tsx"),
   "./dialog-custom-provider": subject("../src/components/dialog-custom-provider.tsx"),
   "@/components/settings-v2/provider-dialog-scope": subject("../src/components/settings-v2/provider-dialog-scope.tsx"),
   "@/orchestra/chapters/providers-list": subject("../src/orchestra/chapters/providers-list.tsx"),
@@ -245,7 +247,9 @@ Bun.plugin({
       })
       if (!file.endsWith(".tsx")) return { contents: source, loader: "ts" }
       const result = await compiler("@babel/core").transformAsync(
-        file.endsWith("dialog-connect-provider.tsx") ? `import { FormData } from "owner-fixture:forms"\n${source}` : source,
+        file.endsWith("dialog-connect-provider.tsx")
+          ? `import { FormData } from "owner-fixture:forms"\n${source}`
+          : source,
         {
           filename: file,
           presets: [[compiler("babel-preset-solid"), { generate: "dom" }]],

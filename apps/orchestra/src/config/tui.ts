@@ -5,20 +5,20 @@ import { mergeDeep, unique } from "remeda"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Cause, Context, Effect, Layer } from "effect"
-import { ConfigParse } from "@/config/parse"
-import * as ConfigPaths from "@/config/paths"
-import { migrateTuiConfig } from "./tui-migrate"
-import { resolveHostAttentionSoundPaths } from "./tui-host-attention"
+import { ConfigParse } from "./parse"
+import { ConfigPaths } from "./paths"
+import { TuiMigrate } from "./tui-migrate"
+import { TuiHostAttention } from "./tui-host-attention"
 import { Flag } from "@orchestra/core/flag/flag"
 import { isRecord } from "@orchestra/tui/util/record"
 import { Global } from "@orchestra/core/global"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { CurrentWorkingDirectory } from "./tui-cwd"
-import { ConfigPlugin } from "@/config/plugin"
+import { TuiCwd } from "./tui-cwd"
+import { ConfigPlugin } from "./plugin"
 import { TuiKeybind } from "@orchestra/tui/config/keybind"
 import { makeRuntime } from "@orchestra/core/effect/runtime"
 import { Filesystem } from "@/util/filesystem"
-import { ConfigVariable } from "@/config/variable"
+import { ConfigVariable } from "./variable"
 import { FormatError, FormatUnknownError } from "@/cli/error"
 import { TuiConfig } from "@orchestra/tui/config"
 
@@ -110,7 +110,7 @@ const loadState = Effect.fn("TuiConfig.loadState")(function* (ctx: { directory: 
             ...parsed,
             attention: {
               ...parsed.attention,
-              sounds: resolveHostAttentionSoundPaths(path.dirname(configFilepath), parsed.attention.sounds),
+              sounds: TuiHostAttention.resolveSoundPaths(path.dirname(configFilepath), parsed.attention.sounds),
             },
           }
         : parsed
@@ -169,7 +169,7 @@ const loadState = Effect.fn("TuiConfig.loadState")(function* (ctx: { directory: 
   // Every config dir we may read from: global config dir, any `.orchestra`
   // folders between cwd and home, and ORCHESTRA_CONFIG_DIR.
   const directories = yield* ConfigPaths.directories(ctx.directory)
-  yield* Effect.promise(() => migrateTuiConfig({ directories, cwd: ctx.directory }))
+  yield* Effect.promise(() => TuiMigrate.migrate({ directories, cwd: ctx.directory }))
 
   const projectFiles = Flag.ORCHESTRA_DISABLE_PROJECT_CONFIG ? [] : yield* ConfigPaths.files("tui", ctx.directory)
 
@@ -224,7 +224,7 @@ const loadState = Effect.fn("TuiConfig.loadState")(function* (ctx: { directory: 
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
-    const directory = yield* CurrentWorkingDirectory
+    const directory = yield* TuiCwd.CurrentWorkingDirectory
     const data = yield* loadState({ directory })
 
     const get = Effect.fn("TuiConfig.get")(() => Effect.succeed(data.config))

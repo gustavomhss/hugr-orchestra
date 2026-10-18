@@ -353,7 +353,7 @@ export interface Hooks {
 
   /**
    * Fires once when a session is created, before any tool calls.
-   * Plugin may add to `output.metadata` (reserved keys blocked).
+   * Plugin may add to `output.metadata`; keys the creator already set are kept.
    */
   "session.start"?: (
     input: {

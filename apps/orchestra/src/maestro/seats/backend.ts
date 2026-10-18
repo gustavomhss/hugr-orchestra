@@ -1,7 +1,7 @@
 import PROMPT from "../../agent/prompt/backend.txt"
 import { define } from "./seat"
 
-// The reference seat (specs/backend-specialist). Its default label is BACKEND_DEFAULT_LABEL in maestro/roster.ts.
+// The reference seat (docs/specs/backend-specialist). Its default label is BACKEND_DEFAULT_LABEL in maestro/roster.ts.
 export default define({
   id: "backend",
   role: "backend execution",

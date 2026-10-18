@@ -206,6 +206,10 @@ describe("tool parameters", () => {
     test("rejects missing questions", () => {
       expect(accepts(Question, {})).toBe(false)
     })
+    test("rejects an empty questions array", () => {
+      expect(accepts(Question, { questions: [] })).toBe(false)
+      expect(toJsonSchema(Question).properties?.questions).toMatchObject({ minItems: 1 })
+    })
   })
 
   describe("read", () => {
@@ -284,11 +288,27 @@ describe("tool parameters", () => {
         format: "markdown",
       })
     })
+    test("bounds timeout to 1..120 seconds", () => {
+      for (const timeout of [1, 30, 120]) expect(accepts(WebFetch, { url: "https://example.com", timeout })).toBe(true)
+      for (const timeout of [0, -5, 121, Number.NaN])
+        expect(accepts(WebFetch, { url: "https://example.com", timeout })).toBe(false)
+      expect(toJsonSchema(WebFetch).properties?.timeout).toMatchObject({ minimum: 1, maximum: 120 })
+    })
   })
 
   describe("websearch", () => {
     test("accepts query", () => {
       expect(parse(WebSearch, { query: "orchestra" }).query).toBe("orchestra")
+    })
+    test("bounds numResults and contextMaxCharacters", () => {
+      expect(accepts(WebSearch, { query: "q", numResults: 20, contextMaxCharacters: 50_000 })).toBe(true)
+      for (const numResults of [0, 21, 2.5]) expect(accepts(WebSearch, { query: "q", numResults })).toBe(false)
+      for (const contextMaxCharacters of [0, 50_001, 1.5])
+        expect(accepts(WebSearch, { query: "q", contextMaxCharacters })).toBe(false)
+      expect(toJsonSchema(WebSearch).properties).toMatchObject({
+        numResults: { type: "integer", minimum: 1, maximum: 20 },
+        contextMaxCharacters: { type: "integer", minimum: 1, maximum: 50_000 },
+      })
     })
   })
 

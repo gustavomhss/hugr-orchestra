@@ -7,6 +7,7 @@ import { type Component, Show } from "solid-js"
 import { useLocal } from "@/context/local"
 import { popularProviders, useProviders } from "@/hooks/use-providers"
 import { useLanguage } from "@/context/language"
+import { useClaudeMode } from "@/orchestra/use-claude-mode"
 import { decode64 } from "@/utils/base64"
 
 // Shown instead of the model list while no provider is connected: nothing is available without one.
@@ -16,6 +17,7 @@ export const DialogSelectModelUnpaid: Component = () => {
   const directory = () => decode64(local.slug())
   const providers = useProviders(directory)
   const language = useLanguage()
+  const claudeMode = useClaudeMode(directory)
 
   const openProviders = (provider?: string) => {
     void import("./dialog-connect-provider").then((x) => {
@@ -37,6 +39,15 @@ export const DialogSelectModelUnpaid: Component = () => {
         {language.t("orchestra.chat.model.noProvider")}
       </p>
       <div class="px-1.5 pb-1.5">
+        <Button
+          variant="primary"
+          size="large"
+          class="mb-1.5 w-full"
+          data-action="claude-mode"
+          onClick={() => void claudeMode()}
+        >
+          {language.t("orchestra.providers.claudeMode.use")}
+        </Button>
         <div class="w-full rounded-sm border border-border-weak-base bg-surface-raised-base">
           <div class="w-full flex flex-col items-start gap-4 px-1.5 pt-4 pb-4">
             <div class="px-2 text-14-medium text-text-base">{language.t("dialog.model.unpaid.addMore.title")}</div>

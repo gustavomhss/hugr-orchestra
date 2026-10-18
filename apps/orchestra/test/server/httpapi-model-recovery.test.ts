@@ -28,7 +28,8 @@ const config = {
 
 afterAll(() => fixture.dispose())
 
-test("fresh Location HTTP catalog exposes free Zen; key exposes paid; HTTP removal restores free", async () => {
+// Zen's free tier rejects every client but its own, so without a key Zen offers nothing, not even free models.
+test("fresh Location HTTP catalog exposes no Zen without a key; key exposes paid; HTTP removal exposes none again", async () => {
   await using tmp = await tmpdir({ git: true, config })
   const consoleServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => Response.json({ config: {} }) })
   const credentials = ManagedRuntime.make(LayerNode.compile(Credential.node), { memoMap: fixture.memoMap })
@@ -57,13 +58,12 @@ test("fresh Location HTTP catalog exposes free Zen; key exposes paid; HTTP remov
     const initial = await models()
     const initialDefault = await preferred()
     const providers = await request("/api/provider")
-    expect(initial.find((model) => model.id === "ux-free")?.request.body.apiKey).toBe("public")
-    expect(initial.some((model) => model.id === "ux-paid")).toBe(false)
-    expect(initialDefault?.id).not.toBe("ux-paid")
+    expect(initial.some((model) => model.providerID === "opencode")).toBe(false)
+    expect(initialDefault).toBeNull()
     expect(providers.status).toBe(200)
-    expect(((await providers.json()) as { data: Array<{ id: string }> }).data.map((provider) => provider.id)).toContain(
-      "opencode",
-    )
+    expect(
+      ((await providers.json()) as { data: Array<{ id: string }> }).data.map((provider) => provider.id),
+    ).not.toContain("opencode")
 
     // Seed a synthetic credential through the real Core service, without initiating Console network I/O.
     const credential = await credentials.runPromise(
@@ -84,11 +84,8 @@ test("fresh Location HTTP catalog exposes free Zen; key exposes paid; HTTP remov
     expect(paid.some((model) => model.id === "ux-paid")).toBe(true)
     expect(paidDefault?.id).toBe("ux-paid")
     expect((await request(`/api/credential/${credential.id}`, { method: "DELETE" })).status).toBe(204)
-    const free = await models()
-    const freeDefault = await preferred()
-    expect(free.some((model) => model.id === "ux-free")).toBe(true)
-    expect(free.some((model) => model.id === "ux-paid")).toBe(false)
-    expect(freeDefault?.id).not.toBe("ux-paid")
+    expect((await models()).some((model) => model.providerID === "opencode")).toBe(false)
+    expect(await preferred()).toBeNull()
   } finally {
     await consoleServer.stop(true)
     await credentials.dispose()

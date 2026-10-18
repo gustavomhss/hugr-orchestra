@@ -56,6 +56,39 @@ for (const [label, account, expected] of [
     }),
   )
 
+for (const [label, info, expected] of [
+  [
+    "a signed-in subscription",
+    { email: "owner@example.com", subscriptionType: "max", tokenSource: "claude.ai", apiProvider: "firstParty" },
+    { signedIn: true, email: "owner@example.com", subscription: "max" },
+  ],
+  ["a signed-out binary", { email: "stale@example.com", tokenSource: "none", apiKeySource: "none" }, { signedIn: false }],
+] as const)
+  ClaudeEngineFixture.it.instance(`the account the app shows reports ${label} without credential sources`, () =>
+    Effect.gen(function* () {
+      ClaudeEngineFixture.reset()
+      ClaudeEngineFixture.state.construct = () =>
+        Object.assign((async function* () {})(), {
+          accountInfo: async (): Promise<AccountInfo> => info,
+          close: () => {},
+        }) as unknown as Query
+      const account = yield* ClaudeHostProvider.account.pipe(Effect.provideService(ClaudeCodeSDK.Environment, {}))
+      expect(account).toEqual(expected)
+      expect(ClaudeEngineFixture.state.inputs).toEqual([])
+    }),
+  )
+
+ClaudeEngineFixture.it.instance("an unavailable Claude Code executable reads as signed out", () =>
+  Effect.gen(function* () {
+    ClaudeEngineFixture.reset()
+    const account = yield* ClaudeHostProvider.account.pipe(
+      Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_EXECUTABLE: "relative/claude" }),
+    )
+    expect(account).toEqual({ signedIn: false })
+    expect(ClaudeEngineFixture.state.queries).toEqual([])
+  }),
+)
+
 ClaudeEngineFixture.it.instance("the provider status check queries a signed-out account without the retired flag or a model prompt", () =>
   Effect.gen(function* () {
     ClaudeEngineFixture.reset()

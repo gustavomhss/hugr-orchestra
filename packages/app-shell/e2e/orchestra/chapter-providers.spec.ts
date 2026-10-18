@@ -12,6 +12,8 @@ type Mock = {
   failModelWrite?: boolean
   auto?: "pending" | "failed" | "complete"
   fillers?: number
+  engine?: string
+  claude?: { signedIn: boolean; loginError?: string }
 }
 
 const v1Model = (providerID: string, id: string) => ({
@@ -199,10 +201,10 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await page.keyboard.press("Escape")
   await expect(page.getByRole("tab", { name: "Models" })).toHaveCount(0)
 
-  // Connect provider opens the same dialog on its picker: popular providers lead, the custom form follows.
+  // Connect provider opens the same dialog on its picker: Claude mode leads, then the custom form and popular providers.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
   await expect(connect.getByText("Connect provider", { exact: true })).toBeVisible()
-  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "anthropic")
+  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "_claude-mode")
   await connect.locator('[data-provider-id="_custom"]').click()
   await expect(connect.getByText("Custom provider", { exact: true })).toBeVisible()
   await connect.getByLabel("Provider ID", { exact: true }).fill("anthropic")
@@ -283,9 +285,9 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
   ).toMatchObject({ key: secret })
   await expectSecretGone(page)
 
-  // The picker lists every integration; a server that cannot save a custom provider is not offered one.
+  // The picker lists Claude mode and every integration; a server that cannot save a custom provider is not offered one.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
-  await expect(connect.locator("[data-provider-id]")).toHaveCount(42)
+  await expect(connect.locator("[data-provider-id]")).toHaveCount(43)
   await expect(connect.locator('[data-provider-id="_custom"]')).toHaveCount(0)
   await page.screenshot({ path: test.info().outputPath("v2-light.png") })
 })
@@ -304,7 +306,10 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await card.getByRole("button", { name: "Configure" }).click()
   await expect(dialog.getByText("Select login method for OpenAI.", { exact: true })).toBeVisible()
   await method("Sign in with a code").click()
-  await expect(dialog.getByRole("link", { name: "this link" })).toHaveAttribute("href", "https://auth.example.test/code")
+  await expect(dialog.getByRole("link", { name: "this link" })).toHaveAttribute(
+    "href",
+    "https://auth.example.test/code",
+  )
   await dialog.getByRole("button", { name: "Continue" }).click()
   await expect(dialog.getByRole("alert")).toHaveText("Authorization code is required")
   await dialog.getByLabel("Sign in with a code authorization code", { exact: true }).fill("code-123")
@@ -349,6 +354,61 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await expect(dialog.locator("a")).toHaveCount(0)
 })
 
+test("v1: Claude mode engine write and sign-in states", async ({ page }) => {
+  const mock: Mock = { calls: [], claude: { signedIn: false } }
+  await setup(page, "v1", mock)
+  await openProviders(page)
+  const section = page.locator("[data-providers-claude-mode]")
+  await expect(section.getByRole("heading", { name: "Claude mode" })).toBeVisible()
+  const engine = section.getByRole("combobox", { name: "Maestro engine" })
+  await expect(engine).toHaveValue("orchestra")
+  await engine.selectOption("claude-code")
+  await expect.poll(() => patches(mock).at(-1)).toEqual({ agent: { maestro: { engine: "claude-code" } } })
+  await expect(engine).toHaveValue("claude-code")
+  await expect(engine).toBeEnabled()
+
+  // Claude Code opens the browser itself, so the app must not open the fallback URL on its own.
+  await page.evaluate(() => {
+    const opened: string[] = []
+    Object.assign(window, { opened })
+    window.open = (url) => {
+      opened.push(String(url))
+      return null
+    }
+  })
+  const opened = () => page.evaluate(() => (window as unknown as { opened: string[] }).opened)
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  await expect(section.getByRole("status")).toHaveText("Waiting for your browser…")
+  expect(mock.calls.filter((call) => call.path === "/provider/claude-code/login")).toHaveLength(1)
+  expect(await opened()).toEqual([])
+  await section.getByRole("button", { name: "Browser didn't open? Open the sign-in page" }).click()
+  await expect.poll(opened).toEqual(["https://claude.example.test/login"])
+
+  await section.getByRole("button", { name: "Cancel" }).click()
+  await expect(section.getByRole("status")).toHaveCount(0)
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  const submit = section.getByRole("button", { name: "Submit code" })
+  await expect(submit).toBeDisabled()
+  await section.getByLabel("Paste the code from the sign-in page").fill(" abc#state ")
+  await submit.click()
+  await expect(section.getByText("Signed in as me@example.com · Max")).toBeVisible()
+  expect(mock.calls.find((call) => call.path === "/provider/claude-code/login/code")?.body).toEqual({
+    code: "abc#state",
+  })
+  await expect(section.getByRole("button", { name: "Sign in to Claude" })).toHaveCount(0)
+  await expect(section.getByRole("status")).toHaveCount(0)
+})
+
+test("v1: Claude mode shows the sign-in failure message", async ({ page }) => {
+  const mock: Mock = { calls: [], claude: { signedIn: false, loginError: "Managed settings block sign-in." } }
+  await setup(page, "v1", mock)
+  await openProviders(page)
+  const section = page.locator("[data-providers-claude-mode]")
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  await expect(section.getByRole("alert")).toHaveText("Sign-in failed: Managed settings block sign-in.")
+  await expect(section.getByRole("button", { name: "Sign in to Claude" })).toBeVisible()
+})
+
 function body(call: Call) {
   return call.body as { methodID?: string; inputs?: Record<string, string> }
 }
@@ -389,7 +449,10 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
         "orchestra.global.dat:server",
         JSON.stringify({ list: [], projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem(
+        "orchestra.global.dat:layout",
+        JSON.stringify({ home: { selection: { server, directory } } }),
+      )
     },
     { server, directory, scheme },
   )
@@ -426,13 +489,28 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (path === "/global/health") return json(route, { healthy: true }, protocol === "v1" ? 200 : 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
+    const stored = { ...config, ...(mock.engine ? { agent: { maestro: { engine: mock.engine } } } : {}) }
     if (path === "/global/config" && method === "PATCH") {
       const patch = JSON.parse(raw ?? "{}")
       if (mock.failModelWrite && "model" in patch) return json(route, { message: "write refused" }, 500)
-      return json(route, { ...config, ...patch })
+      if (patch.agent) mock.engine = patch.agent.maestro.engine
+      return json(route, { ...stored, ...patch })
     }
-    if (path === "/global/config") return json(route, config)
-    if (path === "/config") return json(route, { ...config, model: "anthropic/claude" })
+    if (path === "/global/config") return json(route, stored)
+    if (path === "/config") return json(route, { ...stored, model: "anthropic/claude" })
+    if (path === "/provider/claude-code/account" && mock.claude)
+      return json(
+        route,
+        mock.claude.signedIn ? { signedIn: true, email: "me@example.com", subscription: "Max" } : { signedIn: false },
+      )
+    if (path === "/provider/claude-code/login" && mock.claude)
+      return mock.claude.loginError
+        ? json(route, { name: "ClaudeCodeLoginFailed", data: { message: mock.claude.loginError } }, 400)
+        : json(route, { url: "https://claude.example.test/login" })
+    if (path === "/provider/claude-code/login/code" && mock.claude) {
+      mock.claude.signedIn = true
+      return json(route, true)
+    }
     if (path === "/provider")
       return json(route, {
         all: [

@@ -39,11 +39,6 @@ import type {
   EventTuiToastShow,
   ExperimentalCapabilitiesGetErrors,
   ExperimentalCapabilitiesGetResponses,
-  ExperimentalConsoleGetErrors,
-  ExperimentalConsoleGetResponses,
-  ExperimentalConsoleListOrgsErrors,
-  ExperimentalConsoleListOrgsResponses,
-  ExperimentalConsoleSwitchOrgResponses,
   ExperimentalControlPlaneMoveSessionErrors,
   ExperimentalControlPlaneMoveSessionResponses,
   ExperimentalProjectCopyGenerateNameErrors,
@@ -168,6 +163,12 @@ import type {
   PromptInput,
   ProviderAuthErrors,
   ProviderAuthResponses,
+  ProviderClaudeCodeAccountErrors,
+  ProviderClaudeCodeAccountResponses,
+  ProviderClaudeCodeLoginCodeErrors,
+  ProviderClaudeCodeLoginCodeResponses,
+  ProviderClaudeCodeLoginErrors,
+  ProviderClaudeCodeLoginResponses,
   ProviderListErrors,
   ProviderListResponses,
   ProviderOauthAuthorizeErrors,
@@ -342,6 +343,12 @@ import type {
   V2IntegrationGetResponses,
   V2IntegrationListErrors,
   V2IntegrationListResponses,
+  V2IntegrationOauthCancelErrors,
+  V2IntegrationOauthCancelResponses,
+  V2IntegrationOauthCompleteErrors,
+  V2IntegrationOauthCompleteResponses,
+  V2IntegrationOauthStatusErrors,
+  V2IntegrationOauthStatusResponses,
   V2LocationGetErrors,
   V2LocationGetResponses,
   V2ModelDefaultErrors,
@@ -450,6 +457,8 @@ import type {
   V2ScheduleUpdateResponses,
   V2SessionActiveErrors,
   V2SessionActiveResponses,
+  V2SessionArchiveErrors,
+  V2SessionArchiveResponses,
   V2SessionCompactErrors,
   V2SessionCompactResponses,
   V2SessionContextErrors,
@@ -883,115 +892,6 @@ export class Capabilities extends HeyApiClient {
       url: "/experimental/capabilities",
       ...options,
       ...params,
-    })
-  }
-}
-
-export class Console extends HeyApiClient {
-  /**
-   * Get active Console provider metadata
-   *
-   * Get the active Console org name and the set of provider IDs managed by that Console org.
-   */
-  public get<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<
-      ExperimentalConsoleGetResponses,
-      ExperimentalConsoleGetErrors,
-      ThrowOnError
-    >({
-      url: "/experimental/console",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * List switchable Console orgs
-   *
-   * Get the available Console orgs across logged-in accounts, including the current active org.
-   */
-  public listOrgs<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      workspace?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<
-      ExperimentalConsoleListOrgsResponses,
-      ExperimentalConsoleListOrgsErrors,
-      ThrowOnError
-    >({
-      url: "/experimental/console/orgs",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Switch active Console org
-   *
-   * Persist a new active Console account/org selection for the current local Orchestra state.
-   */
-  public switchOrg<ThrowOnError extends boolean = false>(
-    parameters?: {
-      directory?: string
-      workspace?: string
-      accountID?: string
-      orgID?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "directory" },
-            { in: "query", key: "workspace" },
-            { in: "body", key: "accountID" },
-            { in: "body", key: "orgID" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<ExperimentalConsoleSwitchOrgResponses, unknown, ThrowOnError>({
-      url: "/experimental/console/switch",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
     })
   }
 }
@@ -1443,11 +1343,6 @@ export class Experimental extends HeyApiClient {
   private _capabilities?: Capabilities
   get capabilities(): Capabilities {
     return (this._capabilities ??= new Capabilities({ client: this.client }))
-  }
-
-  private _console?: Console
-  get console(): Console {
-    return (this._console ??= new Console({ client: this.client }))
   }
 
   private _session?: Session
@@ -3798,6 +3693,117 @@ export class Oauth extends HeyApiClient {
   }
 }
 
+export class ClaudeCode extends HeyApiClient {
+  /**
+   * Get Claude Code account
+   *
+   * Whether the Claude Code binary Claude mode runs is signed in, with the account email and subscription. No credential is returned.
+   */
+  public account<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProviderClaudeCodeAccountResponses,
+      ProviderClaudeCodeAccountErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/account",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start Claude Code sign-in
+   *
+   * Run `claude auth login --claudeai` with the binary Claude mode runs. Claude Code opens the browser itself; the returned URL is its manual fallback, whose page shows a code to send to provider.claudeCode.loginCode. Sign-in continues in the background; provider.claudeCode.account reports the result.
+   */
+  public login<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProviderClaudeCodeLoginResponses,
+      ProviderClaudeCodeLoginErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/login",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Send Claude Code sign-in code
+   *
+   * Hand the code shown by the fallback sign-in page to the running Claude Code sign-in.
+   */
+  public loginCode<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      code?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "code" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProviderClaudeCodeLoginCodeResponses,
+      ProviderClaudeCodeLoginCodeErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/login/code",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Provider extends HeyApiClient {
   /**
    * List providers
@@ -3862,6 +3868,11 @@ export class Provider extends HeyApiClient {
   private _oauth?: Oauth
   get oauth(): Oauth {
     return (this._oauth ??= new Oauth({ client: this.client }))
+  }
+
+  private _claudeCode?: ClaudeCode
+  get claudeCode(): ClaudeCode {
+    return (this._claudeCode ??= new ClaudeCode({ client: this.client }))
   }
 }
 
@@ -6057,6 +6068,7 @@ export class Session3 extends HeyApiClient {
       limit?: number
       order?: "asc" | "desc"
       search?: string
+      includeArchived?: "true" | "false"
       directory?: string
       project?: string
       subpath?: string
@@ -6073,6 +6085,7 @@ export class Session3 extends HeyApiClient {
             { in: "query", key: "limit" },
             { in: "query", key: "order" },
             { in: "query", key: "search" },
+            { in: "query", key: "includeArchived" },
             { in: "query", key: "directory" },
             { in: "query", key: "project" },
             { in: "query", key: "subpath" },
@@ -6155,6 +6168,41 @@ export class Session3 extends HeyApiClient {
       url: "/api/session/{sessionID}",
       ...options,
       ...params,
+    })
+  }
+
+  /**
+   * Archive or restore session
+   *
+   * Change session visibility without stopping execution or removing session history.
+   */
+  public archive<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      archived?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "archived" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionArchiveResponses, V2SessionArchiveErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/archive",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 
@@ -6794,6 +6842,132 @@ export class Connect extends HeyApiClient {
   }
 }
 
+export class Oauth2 extends HeyApiClient {
+  /**
+   * Cancel integration OAuth connection
+   *
+   * Compatibility route for cancelling an OAuth attempt owned by this integration.
+   */
+  public cancel<ThrowOnError extends boolean = false>(
+    parameters: {
+      integrationID: string
+      attemptID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "integrationID" },
+            { in: "path", key: "attemptID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      V2IntegrationOauthCancelResponses,
+      V2IntegrationOauthCancelErrors,
+      ThrowOnError
+    >({
+      url: "/api/integration/{integrationID}/connect/oauth/{attemptID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get integration OAuth status
+   *
+   * Compatibility route for polling an OAuth attempt owned by this integration.
+   */
+  public status<ThrowOnError extends boolean = false>(
+    parameters: {
+      integrationID: string
+      attemptID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "integrationID" },
+            { in: "path", key: "attemptID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      V2IntegrationOauthStatusResponses,
+      V2IntegrationOauthStatusErrors,
+      ThrowOnError
+    >({
+      url: "/api/integration/{integrationID}/connect/oauth/{attemptID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Complete integration OAuth connection
+   *
+   * Compatibility route for completing an OAuth attempt owned by this integration.
+   */
+  public complete<ThrowOnError extends boolean = false>(
+    parameters: {
+      integrationID: string
+      attemptID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      code?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "integrationID" },
+            { in: "path", key: "attemptID" },
+            { in: "query", key: "location" },
+            { in: "body", key: "code" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      V2IntegrationOauthCompleteResponses,
+      V2IntegrationOauthCompleteErrors,
+      ThrowOnError
+    >({
+      url: "/api/integration/{integrationID}/connect/oauth/{attemptID}/complete",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Attempt extends HeyApiClient {
   /**
    * Cancel OAuth connection
@@ -6973,6 +7147,11 @@ export class Integration extends HeyApiClient {
   private _connect?: Connect
   get connect(): Connect {
     return (this._connect ??= new Connect({ client: this.client }))
+  }
+
+  private _oauth?: Oauth2
+  get oauth(): Oauth2 {
+    return (this._oauth ??= new Oauth2({ client: this.client }))
   }
 
   private _attempt?: Attempt
@@ -7912,7 +8091,7 @@ export class Document extends HeyApiClient {
   /**
    * Delete Relay document
    *
-   * Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.
+   * Remove a document from the authoring library. Installed hooks for this document in the current profile are retired before deletion; immutable versions and recorded results are retained.
    */
   public remove<ThrowOnError extends boolean = false>(
     parameters: {

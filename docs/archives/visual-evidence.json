@@ -25,9 +25,9 @@
     }
   },
   "readers": [
-    "specs/orchestra-visual/VERIFICATION.md",
-    "specs/orchestra-visual/COVERAGE.md",
-    "specs/orchestra-visual/DELIVERY.md"
+    "docs/specs/orchestra-visual/VERIFICATION.md",
+    "docs/specs/orchestra-visual/COVERAGE.md",
+    "docs/specs/orchestra-visual/DELIVERY.md"
   ],
   "sourceRemoval": "removed from the tree after the restore check"
 }

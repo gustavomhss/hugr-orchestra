@@ -149,26 +149,25 @@ it.instance("default integration key connects its base provider without reload",
   }),
 )
 
-it.instance("anonymous zen models resolve under the public sentinel without credential", () =>
+it.instance("getLanguage rebuilds the language after the integration key rotates", () =>
   Effect.gen(function* () {
-    // The fixture catalog lists active zero-cost Zen models; no auth is stored.
-    const provider = yield* Provider.use.getProvider(ProviderV2.ID.opencode)
-    expect(provider.key).toBe("public")
-    expect(
-      Object.values(provider.models).some((model) => model.status !== "deprecated" && model.cost.input === 0),
-    ).toBe(true)
-    expect(Provider.hasAnonymousModel(provider)).toBe(true)
+    const credentials = yield* Credential.Service
+    const provider = yield* Provider.Service
+    yield* credentials.create({
+      integrationID: Integration.ID.make("anthropic"),
+      value: Credential.Key.make({ type: "key", key: "test-anthropic-key" }),
+    })
+    const model = yield* provider.getModel(ProviderV2.ID.anthropic, ModelV2.ID.make("claude-sonnet-4-6"))
+    const first = yield* provider.getLanguage(model)
+    // Same key: the cached language is reused.
+    expect(yield* provider.getLanguage(model)).toBe(first)
+    yield* credentials.create({
+      integrationID: Integration.ID.make("anthropic"),
+      value: Credential.Key.make({ type: "key", key: "test-anthropic-key-rotated" }),
+    })
+    // Rotated key: a language bound to the revoked key must not be served from the cache.
+    expect(yield* provider.getLanguage(model)).not.toBe(first)
   }),
-)
-
-it.instance(
-  "disabled zen provider does not resolve anonymously",
-  Effect.gen(function* () {
-    expect(yield* Provider.use.getProvider(ProviderV2.ID.opencode).pipe(Effect.flip)).toBeInstanceOf(
-      Provider.NoProvidersError,
-    )
-  }),
-  { config: { disabled_providers: ["opencode"] } },
 )
 
 it.instance(
@@ -1332,9 +1331,8 @@ it.instance(
   Effect.gen(function* () {
     const providers = yield* list
     expect(providers[ProviderV2.ID.make("nvidia")].options.headers).toEqual({
-      "HTTP-Referer": "https://opencode.ai/",
-      "X-Title": "opencode",
-      "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+      "X-Title": "Orchestra",
+      "X-BILLING-INVOKE-ORIGIN": "Orchestra",
     })
   }),
   { config: { provider: { nvidia: { options: { apiKey: "test-api-key" } } } } },
@@ -1345,9 +1343,8 @@ it.instance(
   Effect.gen(function* () {
     const providers = yield* list
     expect(providers[ProviderV2.ID.make("nvidia")].options.headers).toEqual({
-      "HTTP-Referer": "https://opencode.ai/",
-      "X-Title": "opencode",
-      "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+      "X-Title": "Orchestra",
+      "X-BILLING-INVOKE-ORIGIN": "Orchestra",
     })
   }),
   { config: { provider: { nvidia: { options: { apiKey: "test-api-key", baseURL: "http://localhost:8000/v1" } } } } },

@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, spyOn, test } from "bun:test"
 import path from "path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Effect } from "effect"
+import { Effect, Exit } from "effect"
 import { LSP } from "@/lsp/lsp"
 import * as LSPServer from "@/lsp/server"
 import { TestInstance } from "../fixture/fixture"
@@ -118,6 +118,34 @@ describe("LSP service lifecycle", () => {
         expect(Array.isArray(result)).toBe(true)
       }),
     ),
+  )
+
+  // A spawn whose client cannot start and whose process cannot be stopped rejects the scheduling task. The caller sees
+  // that rejection; no derived promise may reject unhandled (bun fails the run on one).
+  it.instance(
+    "a rejected spawn reaches the caller without an orphaned rejection",
+    () =>
+      LSP.Service.use((lsp) =>
+        Effect.gen(function* () {
+          spawnSpy.mockResolvedValue({
+            process: {
+              stdin: null,
+              stdout: null,
+              stderr: null,
+              exitCode: null,
+              signalCode: null,
+              kill: () => {
+                throw new Error("kill refused")
+              },
+              exited: new Promise<number>(() => {}),
+            },
+          })
+          const exit = yield* lsp.touchFile(path.join((yield* TestInstance).directory, "test.ts")).pipe(Effect.exit)
+          expect(spawnSpy).toHaveBeenCalled()
+          expect(Exit.isFailure(exit)).toBe(true)
+        }),
+      ),
+    { config: { lsp: true } },
   )
 
   it.instance("multiple init() calls are idempotent", () =>

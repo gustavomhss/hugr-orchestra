@@ -27,3 +27,17 @@ export function safeWindowURL(win: WindowURLState) {
     return destroyedWindowURL
   }
 }
+
+type RevealableWindow = {
+  isMinimized(): boolean
+  restore(): void
+  show(): void
+  focus(): void
+}
+
+// show() does not un-minimize a window on every platform, so restore it first.
+export function revealWindow(win: RevealableWindow) {
+  if (win.isMinimized()) win.restore()
+  win.show()
+  win.focus()
+}

@@ -8,7 +8,6 @@ import { OmniAdoption } from "@orchestra/core/omni-adoption"
 import { Effect, Exit, Layer } from "effect"
 import { HttpRouter } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
-import { Account } from "../../src/account/account"
 import { Auth } from "../../src/auth"
 import { BackgroundProcess } from "@/background/process"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -28,7 +27,6 @@ import { SessionRunState } from "@/session/run-state"
 import { Session } from "@/session/session"
 import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 import { alive, gone, reap, sweep, tree } from "../../../../packages/core/test/fixture/process-tree"
-import { AccountTest } from "../fake/account"
 import { AuthTest } from "../fake/auth"
 import { NpmTest } from "../fake/npm"
 import { TestInstance } from "../fixture/fixture"
@@ -40,7 +38,6 @@ const it = testEffect(
     LayerNode.group([BackgroundProcess.node, Session.node, SessionProjector.node, SessionRunState.node]),
     [
       [Auth.node, AuthTest.empty],
-      [Account.node, AccountTest.empty],
       [Npm.node, NpmTest.noop],
       [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
     ],

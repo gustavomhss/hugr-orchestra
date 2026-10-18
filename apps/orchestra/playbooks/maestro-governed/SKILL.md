@@ -67,13 +67,18 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 14. Workers leave their result uncommitted. When the last work package settles, the gate that grades `cold-review`
     holds with `WORKFLOW_CODE_REVIEW_REQUIRED` before grading, so no retry is spent, and the Task returns to you. Call
     `maestro_request_review` with the same `validationRecordID`, card, `reviewMethodVersion` and `stage: "code"`; it
-    reviews the working-tree result from the plan-reviewed `HEAD`. On `APPROVE`, resume the workflow Task with its
-    `task_id` and exactly the approved dispatch input: `prompt` byte for byte, `subagent_type`, `model`,
+    reviews the working-tree result from the plan-reviewed `HEAD`. On `APPROVE` or `FIX_FIRST`, resume the workflow
+    Task with its `task_id` and exactly the approved dispatch input: `prompt` byte for byte, `subagent_type`, `model`,
     `authorizationID`, `workflow` and `writePaths`. Any change to that input breaks the approval
-    (`WORKFLOW_APPROVAL_BINDING_MISMATCH`). The check then passes. On `FIX_FIRST` or `REJECT`, nothing carries the
-    findings to the workers: the prompt cannot change, and a resume only grades the failure and spends a retry. Do not
-    resume. Report the findings to the owner; fixing them needs a new plan round (Fix-and-review loop). Never commit the
-    workers' result before the workflow completes. Then verify with `maestro-verify`.
+    (`WORKFLOW_APPROVAL_BINDING_MISMATCH`); never add the findings to it. On `APPROVE` the check then passes. On
+    `FIX_FIRST` the host grades the held step, which spends one retry, and every later attempt carries the recorded
+    findings; the gate holds again on the new result, so review it again. If the workers leave the reviewed tree
+    unchanged, it holds with `WORKFLOW_CODE_REVIEW_UNADDRESSED` and spends nothing; the next resume grades it again.
+    When the retry budget is spent, the resume holds with `WORKFLOW_TRANSITION_ESCALATE` and the arm is
+    `awaiting-human`: stop, report the gate, the last findings and the hold to the owner, and do not resume, retry or
+    request a release. On `REJECT`, do not resume (it holds with `WORKFLOW_CODE_REVIEW_REJECTED`): report the findings to the owner; fixing
+    them needs a new plan round (Fix-and-review loop). Never commit the workers' result before the workflow completes.
+    Then verify with `maestro-verify`.
 
 If a synthetic user message (a background-task result or the compaction "Continue...") lands after a presentation,
 present again with a new `methodVersion`.
@@ -104,7 +109,8 @@ Rejections and HOLDs state their cause and the next step: follow it once and nev
 
 Success: an authorized task ran with the exact approved intent, its result was verified, and the report names every
 record reached. HOLD: a precondition or tool returned HOLD; report the exact reason and who can resolve it, then stop.
-FIX: the cold review (`lucy`) returned `FIX_FIRST` or `REJECT`; run the fix-and-review loop. FAIL: verification of
+FIX: the plan-stage cold review (`lucy`) returned `FIX_FIRST` or `REJECT`, or the code-stage one returned `REJECT`; run
+the fix-and-review loop (a code-stage `FIX_FIRST` resumes as in step 14). FAIL: verification of
 the returned work failed; report the findings. Never: guessed or placeholder IDs, PASS for an unrun check, approval
 from other words, edits between context and task, or calling the flow complete before the dispatched work is verified.
 

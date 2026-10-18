@@ -8,7 +8,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Global } from "@orchestra/core/global"
 import { Config } from "@/config/config"
 import { ConfigPlugin } from "@/config/plugin"
-import { CurrentWorkingDirectory } from "@/config/tui-cwd"
+import { TuiCwd } from "@/config/tui-cwd"
 import { TuiConfig } from "../../src/config/tui"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -70,7 +70,7 @@ const withPlatform = <A, E, R>(platform: typeof process.platform, self: Effect.E
   )
 
 const tuiLayer = (directory: string) =>
-  AppNodeBuilder.build(TuiConfig.node).pipe(Layer.provide(Layer.succeed(CurrentWorkingDirectory, directory)))
+  AppNodeBuilder.build(TuiConfig.node).pipe(Layer.provide(Layer.succeed(TuiCwd.CurrentWorkingDirectory, directory)))
 
 const getTuiConfig = (directory: string) =>
   TuiConfig.Service.use((svc) => svc.get()).pipe(Effect.provide(tuiLayer(directory)))

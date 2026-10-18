@@ -12,14 +12,16 @@ import { MessageV2 } from "@/session/message-v2"
 import { Archive } from "./archive"
 import { child } from "./alias"
 import { Token } from "@/util/token"
-import { Cause, Context, Deferred, Effect, Layer, Scope, Semaphore, Stream } from "effect"
+import { Cause, Context, Deferred, Effect, Layer, Scope, Stream } from "effect"
+import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
+import { EventV2Bridge } from "@/event-v2-bridge"
 import { isDeepStrictEqual } from "node:util"
 import { create } from "./context"
 import { completeSnapshot, measure, run, type ParentRequest, type Pass } from "./fork"
 import { completeIndex, fingerprint, hasArtifact, isCurrent, type ContinuityContext } from "./model"
 import { hardLimit, isSafe, settings, shouldStart, tokenCount } from "./trigger"
 import { ContinuityMasking, estimate, urgent } from "./masking"
-import type { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionV1 } from "@orchestra/core/v1/session"
 import type { MemoryArtifact, MemorySnapshot, Prepared } from "./memory-types"
 import { ContinuityAdmission } from "./admission"
 import { RequestSource } from "./request-source"
@@ -94,11 +96,12 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const checkpoints = yield* ProjectCheckpoint.Service
     const research = yield* ResearchExecution.Service
+    const events = yield* EventV2Bridge.Service
     const enabled = config.get().pipe(Effect.map((value) => settings(value)), Effect.orElseSucceed(() => settings({})))
     const state = yield* InstanceState.make(() => Effect.gen(function* () {
       const scope = yield* Scope.Scope
       return { sessions: new Map<SessionID, Entry>(), contexts: create(), scope, requests: new Map(), masks: new Map(), overheads: new Map(),
-        loads: new Map(), backends: new Map(), epochs: new Map(), backendGates: new Map() }
+        loads: new Map(), backends: new Map(), epochs: new Map(), backendGates: KeyedMutex.makeUnsafe<SessionID>() }
     }))
 
     const resolve = (current: State, sessionID: SessionID, providerID: Provider.Model["providerID"], modelID: Provider.Model["id"]) => Effect.gen(function* () {
@@ -135,11 +138,7 @@ const layer = Layer.effect(
         else current.backends.set(sessionID, previous)
       }))
     }, Effect.uninterruptible)
-    const gate = (current: State, sessionID: SessionID) => {
-      const gate = current.backendGates.get(sessionID) ?? Semaphore.makeUnsafe(1)
-      current.backendGates.set(sessionID, gate)
-      return gate
-    }
+    const gate = (current: State, sessionID: SessionID) => ({ withPermit: current.backendGates.withLock(sessionID) })
     const configure: Interface["configure"] = Effect.fn("SessionContinuity.configure")(function* (input) {
       const current = yield* InstanceState.get(state)
       const token = yield* gate(current, input.sessionID).withPermit(Effect.sync(() => {
@@ -317,6 +316,20 @@ const layer = Layer.effect(
       current.masks.delete(sessionID)
       yield* unload(current, sessionID)
     })
+
+    // Every removal path (child sessions, workspaces, delegation) publishes session.deleted; listeners run in the
+    // publisher's fiber, so the removed session's instance state is the one forgotten.
+    const off = yield* events.listen((event) => {
+      const data: unknown = event.data
+      if (event.type !== SessionV1.Event.Deleted.type) return Effect.void
+      if (typeof data !== "object" || data === null || !("sessionID" in data)) return Effect.void
+      if (typeof data.sessionID !== "string") return Effect.void
+      const sessionID = SessionID.make(data.sessionID)
+      return forget(sessionID).pipe(
+        Effect.catchCause((cause) => Effect.logWarning("could not forget the continuity state of a removed session", { sessionID, cause })),
+      )
+    })
+    yield* Effect.addFinalizer(() => off)
 
     /** Stub the selected tool results of the stored history, publishing first what the archive has not seen. */
     const stubs = (current: State, sessionID: SessionID, stored: SessionV1.WithParts[],
@@ -737,5 +750,5 @@ export const node = LayerNode.make({
   service: Service,
   layer,
    deps: [Session.node, BackgroundJob.node, Provider.node, LLM.node, Archive.node, Config.node, ProjectCheckpoint.node,
-    ResearchExecution.node],
+    ResearchExecution.node, EventV2Bridge.node],
 })

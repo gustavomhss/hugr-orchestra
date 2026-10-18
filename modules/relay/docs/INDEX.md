@@ -5,7 +5,7 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-18T22:15:24Z
+- **Generated:** 2026-10-18T22:16:33Z
 - **Files:** 75
 - **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `610ab38817143237ece8ca41c4b76067179b22348b79b8db1916a1cb5d8fedab`
 

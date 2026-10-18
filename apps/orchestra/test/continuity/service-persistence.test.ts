@@ -52,6 +52,19 @@ for (const action of ["invalidate", "forget"] as const) it.instance(`${action} d
   expect(yield* restarted(sessionID, history)).toEqual({ messages: history, system: [] })
 }), 30_000)
 
+it.instance("removing a session through Session.remove forgets its persisted memory", () => Effect.gen(function* () {
+  const plan = yield* held(FIRST)
+  const sessionID = yield* Effect.gen(function* () {
+    yield* SessionContinuity.Service
+    const sessionID = yield* seed()
+    yield* applyFirst(sessionID, plan)
+    expect(existsSync(memoryFile(sessionID))).toBe(true)
+    yield* (yield* Session.Service).remove(sessionID)
+    return sessionID
+  }).pipe(Effect.provide(environment([plan])))
+  expect(existsSync(memoryFile(sessionID))).toBe(false)
+}), 30_000)
+
 const tampered = {
   corrupt: () => "{\"version\":1,",
   foreign: (stored: any) => JSON.stringify({ ...stored, sessionID: "ses_foreign" }),

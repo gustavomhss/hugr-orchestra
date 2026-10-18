@@ -12,10 +12,8 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { Config } from "@/config/config"
 import { ConfigParse } from "@/config/parse"
 import { Auth } from "@/auth"
-import { Account } from "@/account/account"
 import { Env } from "@/env"
 import { AuthTest } from "../fake/auth"
-import { AccountTest } from "../fake/account"
 import { NpmTest } from "../fake/npm"
 import { tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -23,7 +21,6 @@ import { testEffect } from "../lib/effect"
 const it = testEffect(
   LayerNode.compile(LayerNode.group([Config.node, FSUtil.node, Env.node, CrossSpawnSpawner.node]), [
     [Auth.node, AuthTest.empty],
-    [Account.node, AccountTest.empty],
     [Npm.node, NpmTest.noop],
     [
       httpClient,

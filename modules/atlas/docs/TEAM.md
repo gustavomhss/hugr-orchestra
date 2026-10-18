@@ -9,7 +9,7 @@ Current identity contract: upstream routes as `archie`, profile `upstream`, asse
 `packages/archie-specialist`, config `agent.archie.name`. This supersedes the earlier label-only naming
 rule; no active old-ID alias is defined. Source status and candidate pins in the following paragraph
 describe pre-correction implementation evidence, not qualification of the renamed runtime. See
-[NAMING-CORRECTION.md](../../../specs/upstream-specialist/NAMING-CORRECTION.md).
+[NAMING-CORRECTION.md](../../../docs/specs/upstream-specialist/NAMING-CORRECTION.md).
 
 The unified upstream ownership below is the owner's target contract. Native upstream registration, the
 `upstream` profile projection, central config/environment name resolution, packaged skills/assets and the
@@ -22,7 +22,7 @@ real qualification remains pending. This document installs none of those binding
 reviewer is removed from the candidate native roster;
 historical references are not new seats or aliases of the unified specialist. This map grants no runtime
 capability; charter and roster lists are not semantic execution enforcement. See the
-[Maestro/runtime handoff](../../../specs/upstream-specialist/maestro-planning-handoff.md) for source pins,
+[Maestro/runtime handoff](../../../docs/specs/upstream-specialist/maestro-planning-handoff.md) for source pins,
 exact transfer text and remaining ownership boundaries.
 
 ## 1. The phase map

@@ -49,7 +49,6 @@ import { DialogHelp } from "./ui/dialog-help"
 import { DialogAgent } from "./component/dialog-agent"
 import { DialogSessionList } from "./component/dialog-session-list"
 import { DialogWorkspaceList } from "./component/dialog-workspace-list"
-import { DialogConsoleOrg } from "./component/dialog-console-org"
 import { ThemeProvider, useTheme } from "./context/theme"
 import { Home } from "./routes/home"
 import { Session } from "./routes/session"
@@ -116,7 +115,6 @@ const appBindingCommands = [
   "variant.cycle",
   "variant.list",
   "provider.connect",
-  "console.org.switch",
   "orchestra.status",
   "orchestra.debug",
   "theme.switch",
@@ -443,9 +441,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     renderer.clearSelection()
   }
   const [terminalTitleEnabled, setTerminalTitleEnabled] = createSignal(kv.get("terminal_title_enabled", true))
-  const [pasteSummaryEnabled, setPasteSummaryEnabled] = createSignal(
-    kv.get("paste_summary_enabled", !sync.data.config.experimental?.disable_paste_summary),
-  )
+  // Read through kv on every call, like the prompt does, so the palette title never drifts from the paste behavior.
+  const pasteSummaryEnabled = () =>
+    kv.get("paste_summary_enabled", !sync.data.config.experimental?.disable_paste_summary)
 
   // Update terminal window title based on current route and session
   createEffect(() => {
@@ -743,21 +741,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         },
         category: "Provider",
       },
-      ...(sync.data.console_state.switchableOrgCount > 1
-        ? [
-            {
-              name: "console.org.switch",
-              title: "Switch org",
-              suggested: Boolean(sync.data.console_state.activeOrgName),
-              slashName: "org",
-              slashAliases: ["orgs", "switch-org"],
-              run: () => {
-                dialog.replace(() => <DialogConsoleOrg />)
-              },
-              category: "Provider",
-            },
-          ]
-        : []),
       {
         name: "orchestra.status",
         title: "View status",
@@ -912,11 +895,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: pasteSummaryEnabled() ? "Disable paste summary" : "Enable paste summary",
         category: "System",
         run: () => {
-          setPasteSummaryEnabled((prev) => {
-            const next = !prev
-            kv.set("paste_summary_enabled", next)
-            return next
-          })
+          kv.set("paste_summary_enabled", !pasteSummaryEnabled())
           dialog.clear()
         },
       },

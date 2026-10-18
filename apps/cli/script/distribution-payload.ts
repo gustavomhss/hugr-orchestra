@@ -16,7 +16,7 @@ export type DistributionManifest = {
 type Captured = Map<string, { bytes: Buffer; executable: boolean }>
 
 // Shares the stable, exclusively producer-owned namespace boundary documented in
-// specs/runtime-closure/PRODUCER-BOUNDARY.md, including owned-path cleanup.
+// docs/specs/runtime-closure/PRODUCER-BOUNDARY.md, including owned-path cleanup.
 export async function prepareDistribution(input: { dist: string; out: string; version: string; target: string }): Promise<DistributionManifest> {
   requireTarget(input.target, input.version)
   if (process.platform === "win32") {

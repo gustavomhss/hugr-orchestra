@@ -7,10 +7,10 @@
     "uncertainty": "The spec associates retained benchmark evidence with the harness; v4.ts reads BENCH_DIR scratch evidence. Direct readership of each retained evidence file remains unverified."
   },
   {
-    "path": "specs/backend-specialist/research",
+    "path": "docs/specs/backend-specialist/research",
     "disposition": "review-history",
     "owner": "backend",
-    "readers": ["specs/backend-specialist/session-handoff.md", "specs/backend-specialist/contracts/f4-work-result.md"]
+    "readers": ["docs/specs/backend-specialist/session-handoff.md", "docs/specs/backend-specialist/contracts/f4-work-result.md"]
   },
   {
     "path": "packages/jimmy-specialist",

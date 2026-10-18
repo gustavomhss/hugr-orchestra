@@ -3,12 +3,13 @@
 import { Config } from "@/config/config"
 import { ConfigV1 } from "@orchestra/core/v1/config/config"
 import { TuiConfig } from "@orchestra/tui/config"
+import path from "node:path"
 import { Schema } from "effect"
 
 type JsonSchema = Record<string, unknown>
 const MODEL_REF = "https://models.dev/model-schema.json#/$defs/Model"
 
-function generateEffect(schema: Schema.Top) {
+export function generateEffect(schema: Schema.Top) {
   const document = Schema.toJsonSchemaDocument(schema)
   const normalized = normalize({
     $schema: "https://json-schema.org/draft/2020-12/schema",
@@ -65,13 +66,20 @@ function isRecord(value: unknown): value is JsonSchema {
   return typeof value === "object" && value !== null && !Array.isArray(value)
 }
 
-const configFile = process.argv[2]
-const tuiFile = process.argv[3]
+export const configSchemaFile = path.resolve(import.meta.dir, "../../../schema/config.json")
+export const tuiSchemaFile = path.resolve(import.meta.dir, "../../../schema/tui.json")
+export const themeSchemaFile = path.resolve(import.meta.dir, "../../../schema/theme.json")
+export const themeSchemaSource = path.resolve(import.meta.dir, "../../../packages/ui/src/theme/desktop-theme.schema.json")
 
-console.log(configFile)
-await Bun.write(configFile, JSON.stringify(generateEffect(ConfigV1.Info), null, 2))
+export const configSchemaText = () => JSON.stringify(generateEffect(ConfigV1.Info), null, 2)
+export const tuiSchemaText = () => JSON.stringify(generateEffect(TuiConfig.Info), null, 2)
 
-if (tuiFile) {
-  console.log(tuiFile)
-  await Bun.write(tuiFile, JSON.stringify(generateEffect(TuiConfig.Info), null, 2))
+// schema/ is what editors fetch through the $schema URLs; the theme schema is hand-written in packages/ui and mirrored verbatim.
+if (import.meta.main) {
+  await Bun.write(configSchemaFile, configSchemaText())
+  await Bun.write(tuiSchemaFile, tuiSchemaText())
+  await Bun.write(themeSchemaFile, Bun.file(themeSchemaSource))
+  console.log(configSchemaFile)
+  console.log(tuiSchemaFile)
+  console.log(themeSchemaFile)
 }

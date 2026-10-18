@@ -21,14 +21,16 @@
       "status": "canonical",
       "owner": "contract maintainer",
       "summary": "Browser-safe, serializable wire and storage schemas shared across Orchestra.",
-      "exportsPolicy": "full"
+      "exportsPolicy": "full",
+      "sourceWildcards": {"./*": "./src/*.ts"}
     },
     "protocol": {
       "layer": "contract",
       "status": "canonical",
       "owner": "contract maintainer",
       "summary": "The public Effect HttpApi contract for the Orchestra instance routes under /api.",
-      "exportsPolicy": "full"
+      "exportsPolicy": "full",
+      "sourceWildcards": {"./*": "./src/*.ts"}
     },
     "client": {
       "layer": "client",
@@ -114,6 +116,7 @@
       "owner": "Relay maintainer",
       "summary": "Relay evaluates ordered work-package checklists at agent stop boundaries.",
       "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
       "platformLibrary": true
     },
     "maestro-arsenal": {
@@ -144,6 +147,7 @@
       "owner": "core platform maintainer",
       "summary": "Reusable platform and domain services for the application and server layers, including the V2 Session core.",
       "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
       "browserSafe": ["src/util/path.ts", "src/util/encode.ts", "src/util/binary.ts", "src/util/retry.ts", "src/util/task-tool.ts", "src/util/array.ts"],
       "modules": [
         { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
@@ -332,7 +336,8 @@
       "status": "canonical",
       "owner": "server maintainer",
       "summary": "Adapts the typed Protocol API to Effect HTTP on top of Core services.",
-      "exportsPolicy": "demanded"
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
     },
     "sdk-next": {
       "layer": "composition",
@@ -347,6 +352,7 @@
       "owner": "UI maintainer",
       "summary": "Solid component library with themes, i18n, fonts, audio and Tailwind styles.",
       "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/components/*.tsx", "./i18n/*": "./src/i18n/*.ts", "./context/*": "./src/context/*.tsx", "./theme/*": "./src/theme/*.ts", "./v2/*": "./src/v2/components/*.tsx"},
       "assetWildcards": ["./fonts/*", "./audio/*", "./v2/*.css", "./v2/styles/*"]
     },
     "session-ui": {
@@ -355,6 +361,7 @@
       "owner": "UI maintainer",
       "summary": "Solid components that render Sessions: messages, parts, diffs and review.",
       "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/components/*.tsx", "./pierre/*": "./src/pierre/*.ts", "./context/*": "./src/context/*.tsx", "./v2/*": "./src/v2/components/*.tsx"},
       "assetWildcards": ["./v2/*.css"]
     },
     "app": {
@@ -381,6 +388,7 @@
       "owner": "core platform maintainer",
       "summary": "The legacy-live Orchestra server and CLI that the desktop app starts as its default sidecar.",
       "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
       "entries": ["node"],
       "aliases": { "@/": "src/", "@test/": "test/" },
       "domains": {
@@ -416,7 +424,7 @@
           "target": "core config, permission and instruction",
           "patterns": ["src/config/", "src/permission/", "src/question/", "src/command/", "src/skill/", "src/env/"]
         },
-        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/account/", "src/auth/"] },
+        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/auth/"] },
         "project": { "kind": "platform-legacy", "target": "core project", "patterns": ["src/project/", "src/git/", "src/worktree/", "src/snapshot/"] },
         "provider": { "kind": "platform-legacy", "target": "core provider and plugin-host plus llm", "patterns": ["src/provider/", "src/plugin/"] },
         "tool": { "kind": "platform-legacy", "target": "core tool", "patterns": ["src/tool/"] },

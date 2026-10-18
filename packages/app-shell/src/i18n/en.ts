@@ -1,9 +1,11 @@
 import { dict as leanEn } from "./lean/en"
 import { DESKTOP_NATIVE_ENGLISH } from "./desktop-native"
+import { APP_DOCK_BROWSER_ENGLISH } from "./app-dock-browser"
 
 export const dict = {
   ...leanEn,
   ...DESKTOP_NATIVE_ENGLISH,
+  ...APP_DOCK_BROWSER_ENGLISH,
   "command.category.suggested": "Suggested",
   "command.category.view": "View",
   "command.category.project": "Project",

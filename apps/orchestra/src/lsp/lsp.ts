@@ -263,14 +263,19 @@ const layer = Layer.effect(
             continue
           }
 
-          const task = LSPOwnership.schedule(s, { server, root, key: root + server.id, ctx, flags })
-          s.spawning.set(root + server.id, task)
-
-          task.finally(() => {
+          // The cleanup is part of the awaited task, so a rejected spawn leaves no orphaned rejection behind.
+          const task: Promise<LSPClient.Info | undefined> = LSPOwnership.schedule(s, {
+            server,
+            root,
+            key: root + server.id,
+            ctx,
+            flags,
+          }).finally(() => {
             if (s.spawning.get(root + server.id) === task) {
               s.spawning.delete(root + server.id)
             }
           })
+          s.spawning.set(root + server.id, task)
 
           const client = await task
           if (!client) continue

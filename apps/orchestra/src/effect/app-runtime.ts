@@ -5,7 +5,6 @@ import * as Observability from "@orchestra/core/observability"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Database } from "@orchestra/core/database/database"
 import { Auth } from "@/auth"
-import { Account } from "@/account/account"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { Ripgrep } from "@orchestra/core/ripgrep"
@@ -71,7 +70,6 @@ export const AppLayer = AppNodeBuilderV1.build(
     Ripgrep.node,
     Database.node,
     Auth.node,
-    Account.node,
     Config.node,
     Git.node,
     Storage.node,

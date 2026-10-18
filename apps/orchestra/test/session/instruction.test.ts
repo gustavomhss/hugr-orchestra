@@ -32,9 +32,13 @@ const it = testEffect(
 
 const configLayer = Layer.succeed(Config.Service, TestConfig.make())
 
-const instructionLayer = (global: Partial<Global.Interface>, flags: Partial<RuntimeFlags.Info> = {}) =>
+const instructionLayer = (
+  global: Partial<Global.Interface>,
+  flags: Partial<RuntimeFlags.Info> = {},
+  config: Layer.Layer<Config.Service> = configLayer,
+) =>
   AppNodeBuilder.build(Instruction.node, [
-    [Config.node, configLayer],
+    [Config.node, config],
     [Global.node, Global.layerWith(global)],
     [RuntimeFlags.node, RuntimeFlags.layer(flags)],
   ])
@@ -206,7 +210,32 @@ describe("Instruction.resolve", () => {
     ),
   )
 
-  test.todo("fetches remote instructions from config URLs via HttpClient", () => {})
+})
+
+describe("Instruction.system remote", () => {
+  it.live("fetches remote instructions from config URLs via HttpClient and drops failed ones", () =>
+    Effect.gen(function* () {
+      const home = yield* tmpWithFiles({})
+      const project = yield* tmpWithFiles({})
+      const server = Bun.serve({
+        hostname: "127.0.0.1",
+        port: 0,
+        fetch: (request) =>
+          new URL(request.url).pathname === "/rules.md"
+            ? new Response("# Remote Rules")
+            : new Response("missing", { status: 404 }),
+      })
+      yield* Effect.addFinalizer(() => Effect.promise(() => server.stop(true)))
+      const found = `http://127.0.0.1:${server.port}/rules.md`
+      const missing = `http://127.0.0.1:${server.port}/missing.md`
+      const config = TestConfig.layer({ get: () => Effect.succeed({ instructions: [found, missing] }) })
+
+      yield* Effect.gen(function* () {
+        const svc = yield* Instruction.Service
+        expect(yield* svc.system()).toEqual([`Instructions from: ${found}\n# Remote Rules`])
+      }).pipe(provideInstance(project), Effect.provide(instructionLayer({ home, config: home }, {}, config)))
+    }),
+  )
 })
 
 describe("Instruction.system", () => {

@@ -1,7 +1,7 @@
 import path from "path"
 
 /**
- * A native team seat built on the seat framework (specs/seat-framework/README.md). One file per seat under `seats/`,
+ * A native team seat built on the seat framework (docs/specs/seat-framework/README.md). One file per seat under `seats/`,
  * listed once in `seats/index.ts`; `script/seat.ts add` writes both. The display label is not here: every roster
  * member's default label lives in maestro/roster.ts.
  */
