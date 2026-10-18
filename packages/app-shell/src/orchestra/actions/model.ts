@@ -275,6 +275,8 @@ export function createActionsModel(input: {
     commands.dispose()
   }
   if (getOwner()) onCleanup(dispose)
+  // Publish the wanted binding before the first read, so URL synchronization can tell a stale one from one in flight.
+  persist()
   void view(false)
   if (pending?.operationID) void commands.refreshReceipt()
   return {

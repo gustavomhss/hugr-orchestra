@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
-import { createRoot } from "solid-js"
+import { createRoot, createSignal } from "solid-js"
 import { createActionsAPI } from "../src/orchestra/actions/api"
 import { readNavigation, synchronizeNavigation } from "../src/orchestra/actions/entry-routing"
 import { createActionsModel, type ActionsPreferences } from "../src/orchestra/actions/model"
@@ -14,10 +14,13 @@ const page = (items: readonly unknown[]) => ({ items, capturedAt: 1 })
 /** Fake only native HTTP; the model, its request owner and the URL synchronizer's Solid effects stay real. */
 function fixture(query: Record<string, string>, preferences?: ActionsPreferences) {
   const writes: Record<string, string | undefined>[] = []
+  const removed = new Set<string>()
   const fetch = Object.assign(async (value: string | URL | Request, init?: RequestInit) => {
-    const url = new URL(new Request(value, init).url)
+    const request = new Request(value, init)
+    const url = new URL(request.url)
     const id = url.pathname.includes("ab_b") ? "ab_b" : "ab_a"
-    if (url.pathname === "/api/actions/binding") return located([binding("ab_a"), binding("ab_b")])
+    if (request.method === "DELETE") { removed.add(id); return located(null) }
+    if (url.pathname === "/api/actions/binding") return located([binding("ab_a"), binding("ab_b")].filter((item) => !removed.has(item.id)))
     if (url.pathname.endsWith("/capabilities")) return located([])
     if (url.pathname.startsWith("/api/actions/resource/")) return located(page([{ id: "cache-1", kind: "caches", bindingID: id, name: "cache", data: {} }]))
     if (url.pathname.startsWith("/api/actions/workflow/")) return located(page([]))
@@ -27,8 +30,10 @@ function fixture(query: Record<string, string>, preferences?: ActionsPreferences
   const mounted: { model?: ReturnType<typeof createActionsModel> } = {}
   const api = createActionsAPI({ server: { type: "http", http: { url: "http://localhost:4096" } }, fetch, directory })
   const dispose = createRoot((dispose) => {
-    const model = createActionsModel({ api, save: async () => undefined, preferences })
-    synchronizeNavigation({ model, scope: "scope", query: () => query, write: (value) => writes.push(value), wanted: preferences?.bindingID })
+    // Like the chapter, wanted reads what the model last persisted.
+    const [wanted, setWanted] = createSignal(preferences?.bindingID)
+    const model = createActionsModel({ api, save: async () => undefined, preferences: { ...preferences, save: (value) => setWanted(value.bindingID) } })
+    synchronizeNavigation({ model, scope: "scope", query: () => query, write: (value) => writes.push(value), wanted })
     mounted.model = model
     return dispose
   })
@@ -73,4 +78,15 @@ test("a stale persisted binding still lets a deep link apply and the URL be writ
   await settle(() => unlinked.writes.length > 0)
   expect(unlinked.mounted.model?.state.binding).toBeUndefined()
   expect(unlinked.writes.at(-1)).toMatchObject({ actionsView: "library", actionsScope: "scope" })
+})
+
+test("removing a binding selected after mount still lets the URL follow the selection", async () => {
+  using view = fixture({}, { bindingID: Actions.BindingID.make("ab_a"), route: { view: "library" } })
+  await settle(() => view.mounted.model?.state.workflows.status === "ready")
+  view.mounted.model?.selectBinding(Actions.BindingID.make("ab_b"))
+  await settle(() => view.writes.at(-1)?.actionsBinding === "ab_b")
+  await view.mounted.model?.removeBinding()
+  await settle(() => view.writes.at(-1)?.actionsView === "settings")
+  expect(view.mounted.model?.state.binding).toBeUndefined()
+  expect(view.writes.at(-1)).toMatchObject({ actionsView: "settings", actionsBinding: undefined, actionsScope: "scope" })
 })

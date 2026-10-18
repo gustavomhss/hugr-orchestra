@@ -101,7 +101,7 @@ export default function Actions(props: ChapterPageProps) {
     <Show when={ready()} fallback={<Empty title={t("orchestra.actions.loading")} busy />}>
       <Workbench server={props.server} directory={props.directory} api={api} t={t}
         preferences={query.actionsScope === api.preferenceKey ? readNavigation(query) ?? preferences.navigation : preferences.navigation}
-        remember={(value) => setPreferences("navigation", navigationPreferences(value))}
+        remember={(value) => setPreferences("navigation", navigationPreferences(value))} wanted={() => preferences.navigation.bindingID}
         save={(response) => saveActionsResponse(response, platform)} query={() => query}
         write={(value, replace) => setQuery(value, { replace, scroll: false })} />
     </Show>
@@ -113,12 +113,13 @@ function Workbench(props: ChapterPageProps & {
   t: Translate
   preferences: ActionsPreference
   remember: (value: ActionsPreference) => void
+  wanted: () => ActionsPreference["bindingID"]
   save: (response: Response) => Promise<void>
   query: Parameters<typeof synchronizeNavigation>[0]["query"]
   write: Parameters<typeof synchronizeNavigation>[0]["write"]
 }) {
-  const preferred = navigationPreferences(props.preferences)
-  const native = createActionsModel({ api: props.api, save: props.save, preferences: { ...preferred, save: props.remember } })
+  const native = createActionsModel({ api: props.api, save: props.save,
+    preferences: { ...navigationPreferences(props.preferences), save: props.remember } })
   onCleanup(native.dispose)
   const model: Model = { ...native, get sourceDiscardBlocked() { return native.sourceDiscardBlocked },
     navigate: (route) => native.navigate(selectedRoute(native.state, route)) }
@@ -145,7 +146,7 @@ function Workbench(props: ChapterPageProps & {
   const contextual = () => ["workflow", "run", "job", "source"].includes(state.route.view) || state.route.view === "runs" && Boolean(state.route.workflowID)
   const loading = () => <Empty title={props.t("orchestra.actions.loading")} busy />
 
-  synchronizeNavigation({ model, scope: props.api.preferenceKey, query: props.query, write: props.write, wanted: preferred.bindingID })
+  synchronizeNavigation({ model, scope: props.api.preferenceKey, query: props.query, write: props.write, wanted: props.wanted })
   // The titlebar names the chapter ("Orchestra / Actions"); the trail adds the current selection like the mock.
   createEffect(() => {
     const resource = resourceLinks.find((item) => item[0] === (state.route.resourceKind ?? "artifacts"))

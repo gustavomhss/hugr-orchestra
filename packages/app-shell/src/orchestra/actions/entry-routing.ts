@@ -98,8 +98,8 @@ export function synchronizeNavigation(input: {
   scope: string
   query: () => Query
   write: (query: ReturnType<typeof navigationQuery> & { actionsScope: string }, replace: boolean) => void
-  /** The persisted binding the model resolves first; when it no longer exists the model selects none. */
-  wanted?: Actions.BindingID
+  /** The binding the model last persisted as wanted; when it no longer exists the model selects none. */
+  wanted?: () => Actions.BindingID | undefined
 }) {
   const cursor: { written: string; route: string; initialized: boolean; selection?: ActionsPreference } = { written: "", route: "", initialized: false }
   const snapshot = (): ActionsPreference => ({ bindingID: input.model.state.binding?.id,
@@ -111,7 +111,8 @@ export function synchronizeNavigation(input: {
     const state = input.model.state
     if (state.bindings.status === "error") return true
     if (state.bindings.status !== "ready") return false
-    return state.binding !== undefined || !state.bindings.value?.some((item) => item.id === (input.wanted ?? item.id))
+    const wanted = input.wanted?.()
+    return state.binding !== undefined || !state.bindings.value?.some((item) => item.id === (wanted ?? item.id))
   }
   // Writing waits for the first read of the query, so an initial link is applied before the selection overwrites it.
   const [synced, setSynced] = createSignal(false)
