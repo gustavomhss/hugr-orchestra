@@ -9,6 +9,7 @@ const document = "/api/relay/document/{documentID}"
 const missing = { documentID: "httpapi-missing" }
 const hook = "/api/relay/hook/{installID}"
 const absent = { installID: "h-httpapi-missing" }
+const missingRun = { runID: "httpapi-missing" }
 
 function refusal(tag: string, code: string) {
   return (body: unknown) => {
@@ -158,4 +159,17 @@ export const relayScenarios: Scenario[] = [
     .post("/api/relay/hook/repair", "v2.relay.hook.repair")
     .at((ctx) => ({ path: "/api/relay/hook/repair", headers: ctx.headers(), body: { confirm: true } }))
     .json(409, refusal("RelayConflictError", "repair-not-needed"), "status"),
+  http.protected.get("/api/relay/run", "v2.relay.run.list").json(200, locationData(array)),
+  http.protected
+    .get("/api/relay/run/{runID}", "v2.relay.run.get")
+    .at((ctx) => ({ path: route("/api/relay/run/{runID}", missingRun), headers: ctx.headers() }))
+    .json(404, refusal("RelayNotFoundError", "run-missing"), "status"),
+  http.protected
+    .get("/api/relay/run/{runID}/audit", "v2.relay.run.audit")
+    .at((ctx) => ({ path: route("/api/relay/run/{runID}/audit", missingRun), headers: ctx.headers() }))
+    .json(404, refusal("RelayNotFoundError", "run-missing"), "status"),
+  http.protected
+    .get("/api/relay/run/{runID}/ledger", "v2.relay.run.ledger")
+    .at((ctx) => ({ path: route("/api/relay/run/{runID}/ledger", missingRun), headers: ctx.headers() }))
+    .json(404, refusal("RelayNotFoundError", "run-missing"), "status"),
 ]
