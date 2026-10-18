@@ -11,9 +11,9 @@ const MATRIX_PATH = /^matrix((?:\.[A-Za-z_][\w-]*)+)$/
 // GitHub runs at most 256 jobs per matrix; larger expansions are treated as unknown.
 const MATRIX_LIMIT = 256
 
-// Display name for a definition: a name template with unresolved expressions falls back to the job key.
+// Graph nodes are labelled by the job key, as in the approved mock; `name:` templates may hold expressions.
 export function label(job: Actions.GraphJob) {
-  return job.name.includes("${{") ? job.id : job.name
+  return job.id
 }
 
 // Stage or runner text without unresolved expressions.

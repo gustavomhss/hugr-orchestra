@@ -90,7 +90,7 @@ describe("matrix presentation", () => {
 
   test("labels never show unresolved expressions", () => {
     expect(label(reference.get("omni")!)).toBe("omni")
-    expect(label(reference.get("atlas-scope")!)).toBe("atlas scope")
+    expect(label(reference.get("atlas-scope")!)).toBe("atlas-scope")
     expect(placement(reference.get("omni")!)).toBeUndefined()
   })
 
