@@ -4,8 +4,8 @@ import path from "path"
 import { Exit, Schema } from "effect"
 import { Glob } from "@orchestra/core/util/glob"
 import { ConfigAgentV1 } from "@orchestra/core/v1/config/agent"
-import { configEntryNameFromPath } from "./entry-name"
-import * as ConfigMarkdown from "./markdown"
+import { ConfigEntryName } from "./entry-name"
+import { ConfigMarkdown } from "./markdown"
 import { ConfigParse } from "./parse"
 
 export async function load(dir: string) {
@@ -19,7 +19,7 @@ export async function load(dir: string) {
     const md = await ConfigMarkdown.parse(item).catch(() => undefined)
     if (!md) continue
 
-    const name = configEntryNameFromPath(path.relative(dir, item), ["agent/", "agents/"])
+    const name = ConfigEntryName.fromPath(path.relative(dir, item), ["agent/", "agents/"])
 
     // A file without a body overrides other fields only; it keeps the agent's built-in prompt.
     const prompt = md.content.trim()
@@ -46,7 +46,7 @@ export async function loadMode(dir: string) {
 
     const prompt = md.content.trim()
     const config = {
-      name: configEntryNameFromPath(path.relative(dir, item), ["mode/", "modes/"]),
+      name: ConfigEntryName.fromPath(path.relative(dir, item), ["mode/", "modes/"]),
       ...md.data,
       ...(prompt ? { prompt } : {}),
     }

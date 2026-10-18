@@ -1,3 +1,5 @@
+export * as Config from "./config"
+
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { httpClient } from "@orchestra/core/effect/app-node-platform"
 import { serviceUse } from "@orchestra/core/effect/service-use"
@@ -595,4 +597,3 @@ export const node = LayerNode.make({
   deps: [FSUtil.node, Auth.node, httpClient],
 })
 
-export * as Config from "./config"

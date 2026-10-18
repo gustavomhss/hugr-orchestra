@@ -1,3 +1,5 @@
+export * as ConfigMarkdown from "./markdown"
+
 import { Filesystem } from "@/util/filesystem"
 import { FrontmatterError } from "@orchestra/core/v1/config/error"
 import { ConfigMarkdown as ConfigMarkdownCore } from "@orchestra/core/config/markdown"
@@ -33,4 +35,3 @@ export async function parse(filePath: string) {
   }
 }
 
-export * as ConfigMarkdown from "./markdown"

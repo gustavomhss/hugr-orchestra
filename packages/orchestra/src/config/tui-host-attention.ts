@@ -1,9 +1,11 @@
+export * as TuiHostAttention from "./tui-host-attention"
+
 import { TuiConfig } from "@orchestra/tui/config"
 import { isRecord } from "@orchestra/tui/util/record"
 import { Filesystem } from "@/util/filesystem"
 import { Schema } from "effect"
 
-export function resolveHostAttentionSoundPaths(
+export function resolveSoundPaths(
   root: string,
   sounds: unknown,
   options?: { trim?: boolean },

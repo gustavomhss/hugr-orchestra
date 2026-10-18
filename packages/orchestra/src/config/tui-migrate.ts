@@ -1,3 +1,5 @@
+export * as TuiMigrate from "./tui-migrate"
+
 import path from "path"
 import { type ParseError as JsoncParseError, applyEdits, modify, parse as parseJsonc } from "jsonc-parser"
 import { unique } from "remeda"
@@ -6,7 +8,7 @@ import { TuiConfig } from "@orchestra/tui/config"
 import { Flag } from "@orchestra/core/flag/flag"
 import { Global } from "@orchestra/core/global"
 import { Filesystem } from "@/util/filesystem"
-import * as ConfigPaths from "@/config/paths"
+import { ConfigPaths } from "./paths"
 
 const decodeTheme = Schema.decodeUnknownOption(Schema.String)
 const decodeRecord = Schema.decodeUnknownOption(Schema.Record(Schema.String, Schema.Unknown))
@@ -24,7 +26,7 @@ interface MigrateInput {
  * into dedicated tui.json files. Migration is performed per-directory and
  * skips only locations where a tui.json already exists.
  */
-export async function migrateTuiConfig(input: MigrateInput) {
+export async function migrate(input: MigrateInput) {
   const orchestra = await orchestraFiles(input)
   for (const file of orchestra) {
     const source = await Filesystem.readText(file).catch(() => undefined)
