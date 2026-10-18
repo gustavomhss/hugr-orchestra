@@ -123,8 +123,8 @@ describe("CodeSearch", () => {
   )
 
   test("builds the argv from the host: -e carries the pattern, globs come only from paths", () => {
-    const args = CodeSearch.argv({ pattern: "--glob=x", paths: ["src/**"] })
-    expect(args.slice(args.indexOf("-e"))).toEqual(["-e", "--glob=x", "--", "."])
+    const args = CodeSearch.argv({ pattern: "-x", paths: ["src/**"] })
+    expect(args.slice(args.indexOf("-e"))).toEqual(["-e", "-x", "--", "."])
     expect(args.filter((arg) => arg.startsWith("--glob="))).toEqual(["--glob=!**/.git/**", "--glob=src/**"])
   })
 })
