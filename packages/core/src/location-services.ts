@@ -1,5 +1,6 @@
 import { Context, Effect, Layer, LayerMap } from "effect"
 import { AgentV2 } from "./agent"
+import { Actions } from "./actions"
 import { AISDK } from "./aisdk"
 import { BehaviorV2 } from "./behavior"
 import { Catalog } from "./catalog"
@@ -58,6 +59,7 @@ export const locationServices = LayerNode.group([
   ProjectCopy.node,
   ProjectCopy.refreshNode,
   PullRequest.node,
+  Actions.node,
   FileSystemSearch.node,
   FileSystem.node,
   Watcher.node,

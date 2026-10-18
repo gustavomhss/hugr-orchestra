@@ -31,6 +31,7 @@ import { initializationData, recoverRemoteServer } from "./initialization"
 import { DesktopFirstLaunchOnboarding } from "./onboarding"
 import { resetZoom, setPinchZoomEnabled, webviewZoom, zoomIn, zoomOut } from "./webview-zoom"
 import { windowFullscreen } from "./window-fullscreen"
+import { createResponseDownloader } from "./response-download"
 import { availableStartupServer, readyWslConnections } from "./wsl/connections"
 import "./styles.css"
 import { useTheme } from "@orchestra/ui/theme/context"
@@ -101,6 +102,13 @@ function DesktopMemoryRouter(props: BaseRouterProps & { windowID: string }) {
 
 const createPlatform = (windowState: DesktopWindowState): Platform => {
   const attachmentPaths = new WeakMap<File, string>()
+  const downloads = createResponseDownloader(window.api.responseDownload)
+  const cancelDownloads = () => downloads.dispose()
+  window.addEventListener("pagehide", cancelDownloads)
+  onCleanup(() => {
+    window.removeEventListener("pagehide", cancelDownloads)
+    downloads.dispose()
+  })
   const os = (() => {
     const ua = navigator.userAgent
     if (ua.includes("Mac")) return "macos"
@@ -196,6 +204,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
         defaultPath: opts?.defaultPath,
       })
     },
+
+    downloadResponse: downloads.downloadResponse,
 
     openExternal(url: string) {
       window.api.openExternal(url)

@@ -126,13 +126,34 @@ export async function mockPty(page: Page, protocol: "v1" | "v2") {
 export async function openChapter(page: Page) {
   await page.goto("/")
   await chooseProfile(page, "Server A repository")
-  await page.locator(".orchestra-nav").getByRole("button", { name: "CI/CD", exact: true }).click()
-  await expect(page).toHaveURL(/\/orchestra\/cicd$/)
+  await page.locator(".orchestra-nav").getByRole("button", { name: "Actions", exact: true }).click()
+  await openLocalPipelines(page, serverA)
+}
+
+export async function openLocalPipelines(page: Page, server: string) {
+  const local = page
+    .getByRole("complementary", { name: "Actions", exact: true })
+    .getByRole("button", { name: "Local pipelines", exact: true })
+  await local.click()
+  await expect(local).toHaveAttribute("aria-current", "page")
+  await expect(page).toHaveURL(
+    (url) =>
+      url.pathname === "/orchestra/cicd" &&
+      url.searchParams.get("actionsView") === "local" &&
+      url.searchParams.get("actionsScope") === JSON.stringify([server, directory]),
+  )
+  await expect(page.getByRole("button", { name: "New pipeline", exact: true })).toBeEnabled()
 }
 
 export async function chooseProfile(page: Page, name: string) {
   await page.locator('[data-slot="orchestra-profile"]').click()
   await page.getByRole("menuitemradio", { name, exact: true }).click()
+  // The picker applies the selection only after its menu closes. Wait for it, or the next click can
+  // land on the previous profile's Actions page before the chapter remounts for the new one.
+  await expect(page.locator("#orchestra-profile-name")).toHaveText(name)
+  // Actions navigation is persisted per profile; a newly selected profile starts in the native library.
+  if (new URL(page.url()).pathname === "/orchestra/cicd")
+    await openLocalPipelines(page, name === "Server A repository" ? serverA : serverB)
 }
 
 export async function setup(
@@ -184,6 +205,11 @@ export async function setup(
     const url = new URL(route.request().url())
     if (url.origin !== serverA && url.origin !== serverB) return route.fallback()
     const path = url.pathname
+    // These legacy servers expose filesystem workflows and PTYs, not native Actions bindings.
+    if (path === "/api/actions/binding" && route.request().method() === "GET") {
+      expect(url.searchParams.get("location[directory]")).toBe(directory)
+      return json(route, {}, 404)
+    }
     if (path === "/api/provider")
       return json(route, { location: { directory }, data: [{ id: "opencode", name: "Orchestra", settings: {} }] })
     if (path === "/api/model") return json(route, { location: { directory }, data: [model] })
@@ -279,7 +305,7 @@ export async function setup(
   })
   await page.addInitScript(
     ({ serverB, scheme, directory }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({
