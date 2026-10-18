@@ -35,6 +35,10 @@ describe("code-index filter", () => {
     ])
   })
 
+  test("shouldRead keeps the transplanted lockfile and binary skips", () => {
+    expect(["bun.lock", "a/logo.png", "a/README.md"].map(CodeIndexFilter.shouldRead)).toEqual([false, false, true])
+  })
+
   test("a grammar set narrows the selection", () => {
     expect(CodeIndexFilter.select(["a.ts", "b.py"], new Set(["python"])).files).toEqual([{ path: "b.py", grammar: "python" }])
   })

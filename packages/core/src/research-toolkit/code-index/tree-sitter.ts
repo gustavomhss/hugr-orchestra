@@ -1,15 +1,17 @@
 export * as CodeIndexTreeSitter from "./tree-sitter"
 
 import { fileURLToPath } from "url"
-import { Effect, Schema } from "effect"
+import { Effect } from "effect"
 import type { Language, Node, Parser, Query } from "web-tree-sitter"
 import { lazy } from "../../util/lazy"
 import type { Grammar } from "./filter"
 
-// The structural layer (J2.5), transplanted from Arsenal onboard/extract.ts (TechLead a68e7af, HuGR Labs,
-// Apache-2.0): 1-based lines per symbol and per import, and partial trees never certify coverage. Definitions come
-// from the grammars' own upstream tags.scm queries; EXTRA adds what those omit (type aliases, enums, plain
-// constants, properties, namespaces). Parsing is web-tree-sitter wasm, loaded as in O/tool/shell/scan.ts.
+// The structural layer (J2.5), transplanted from the HuGR techlead onboard/extract.ts (a68e7af, MIT) by way of
+// Arsenal onboard/extract.ts: 1-based lines per symbol and per import, the TS and Python import walks, and the
+// graceful fallback, which here names its reason instead of returning an empty success. Changes: web-tree-sitter wasm
+// (loaded as in O/tool/shell/scan.ts) instead of the native addon; definitions from the grammars' upstream tags.scm
+// plus EXTRA for the techlead declaration kinds tags.scm omits (type, enum, const) and for members; closed ranges and
+// containers; re-exports, dynamic imports and require; a byte cap reported as a reason.
 
 /** Per-file byte cap; a larger file is skipped with this reason instead of being parsed. */
 export const MAX_BYTES = 2 * 1024 * 1024
@@ -40,29 +42,32 @@ export type Extract = {
   readonly lines: number
   readonly definitions: ReadonlyArray<Definition>
   readonly imports: ReadonlyArray<Import>
-  readonly coverage: { readonly complete: boolean; readonly reason?: "partial-parse" | "too-large" }
+  readonly coverage: {
+    readonly complete: boolean
+    readonly reason?: "partial-parse" | "too-large" | "parser-unavailable"
+    readonly detail?: string
+  }
 }
-
-export class Unavailable extends Schema.TaggedErrorClass<Unavailable>()("CodeIndexTreeSitterUnavailable", {
-  message: Schema.String,
-}) {}
 
 export const extract = Effect.fn("CodeIndexTreeSitter.extract")(function* (path: string, source: string, grammar: Grammar) {
   const lines = source.length === 0 ? 0 : source.split("\n").length - (source.endsWith("\n") ? 1 : 0)
   if (Buffer.byteLength(source) > MAX_BYTES)
     return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "too-large" } } satisfies Extract
-  const loaded = yield* Effect.tryPromise({
-    try: () => grammars(),
-    catch: (cause) => new Unavailable({ message: cause instanceof Error ? cause.message : String(cause) }),
-  })
-  const entry = loaded[grammar]
+  // The wasm runtime and grammar load are the genuinely fallible boundary; the pipeline survives them with a reason.
+  const loaded = yield* Effect.promise(() => grammars().then(
+    (value) => ({ value }),
+    (cause: unknown) => ({ detail: cause instanceof Error ? cause.message : String(cause) }),
+  ))
+  if (!("value" in loaded))
+    return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "parser-unavailable", detail: loaded.detail } } satisfies Extract
+  const entry = loaded.value[grammar]
   const tree = entry.parser.parse(source)
   if (!tree) return { path, lines, definitions: [], imports: [], coverage: { complete: false, reason: "partial-parse" } } satisfies Extract
   const result = {
     path,
     lines,
     definitions: definitions(entry.tags, tree.rootNode, grammar),
-    imports: grammar === "python" ? pythonImports(entry.imports, tree.rootNode) : scriptImports(entry.imports, tree.rootNode),
+    imports: entry.calls ? scriptImports(entry.calls, tree.rootNode) : pythonImports(tree.rootNode),
     coverage: tree.rootNode.hasError ? { complete: false, reason: "partial-parse" } : { complete: true },
   } satisfies Extract
   tree.delete()
@@ -85,18 +90,11 @@ const EXTRA = {
 `,
 }
 
-const IMPORTS = {
-  script: `
-(import_statement source: (string (string_fragment) @specifier)) @import
-(export_statement source: (string (string_fragment) @specifier)) @reexport
+// Static imports and re-exports are top-level statements (the techlead walk); calls can sit anywhere.
+const CALL_IMPORTS = `
 (call_expression function: (import) arguments: (arguments . (string (string_fragment) @specifier))) @dynamic
 (call_expression function: (identifier) @fn arguments: (arguments . (string (string_fragment) @specifier)) (#eq? @fn "require")) @require
-`,
-  python: `
-(import_statement) @import
-(import_from_statement) @from
-`,
-}
+`
 
 // A function-valued declarator is a definition anywhere; any other declarator only at module or namespace scope, so
 // locals inside bodies do not flood the outline.
@@ -189,38 +187,61 @@ function localExports(root: Node) {
   return names
 }
 
-function scriptImports(query: Query, root: Node) {
-  return query.matches(root).flatMap((match): Import[] => {
+function scriptImports(calls: Query, root: Node) {
+  const statements = root.namedChildren.flatMap((node): Import[] => {
+    if (node?.type !== "import_statement" && node?.type !== "export_statement") return []
+    const source = node.childForFieldName("source") ?? node.namedChildren.find((child) => child?.type === "string")
+    if (!source) return []
+    const form = node.type === "import_statement" ? "static" : "reexport"
+    return [{ specifier: stripQuotes(source.text), line: node.startPosition.row + 1, form, names: importNames(node) }]
+  })
+  const dynamic = calls.matches(root).flatMap((match): Import[] => {
     const specifier = match.captures.find((capture) => capture.name === "specifier")
-    const statement = match.captures.find((capture) => ["import", "reexport", "dynamic", "require"].includes(capture.name))
-    if (!specifier || !statement) return []
-    const form = statement.name === "import" ? "static" : (statement.name as Import["form"])
-    return [{ specifier: specifier.node.text, line: statement.node.startPosition.row + 1, form, names: importNames(statement.node) }]
+    const call = match.captures.find((capture) => capture.name === "dynamic" || capture.name === "require")
+    if (!specifier || !call) return []
+    return [{ specifier: specifier.node.text, line: call.node.startPosition.row + 1, form: call.name as "dynamic" | "require", names: [] }]
+  })
+  return [...statements, ...dynamic].toSorted((a, b) => a.line - b.line)
+}
+
+// Default, namespace and named bindings of an import clause; for `export ... from`, the exported names.
+function importNames(node: Node) {
+  const clause = node.namedChildren.find((child) => child?.type === "import_clause" || child?.type === "export_clause" || child?.type === "namespace_export")
+  if (!clause) return []
+  if (clause.type === "namespace_export") return clause.namedChildren.flatMap((child) => (child?.type === "identifier" ? [child.text] : []))
+  return clause.namedChildren.flatMap((child) => {
+    if (!child) return []
+    if (child.type === "identifier") return [child.text]
+    if (child.type === "namespace_import") return child.namedChildren.flatMap((id) => (id?.type === "identifier" ? [id.text] : []))
+    if (child.type === "export_specifier") return child.childForFieldName("name")?.text ?? []
+    return child.namedChildren.flatMap((spec) => (spec?.type === "import_specifier" ? (spec.childForFieldName("name")?.text ?? []) : []))
   })
 }
 
-function importNames(node: Node) {
-  if (node.type === "call_expression") return []
-  const namespace = node.descendantsOfType(["namespace_import", "namespace_export"]).flatMap((item) => item?.namedChildren.find((child) => child?.type === "identifier")?.text ?? [])
-  const named = node.descendantsOfType(["import_specifier", "export_specifier"]).flatMap((item) => item?.childForFieldName("name")?.text ?? [])
-  const clause = node.namedChildren.find((child) => child?.type === "import_clause")
-  const fallback = clause?.namedChildren.filter((child) => child?.type === "identifier").map((child) => child!.text) ?? []
-  return [...fallback, ...namespace, ...named]
+function stripQuotes(text: string) {
+  return text.replace(/^['"`]|['"`]$/g, "")
 }
 
-function pythonImports(query: Query, root: Node) {
-  return query.matches(root).flatMap((match): Import[] => {
-    const node = match.captures[0]?.node
+function pythonImports(root: Node) {
+  return root.namedChildren.flatMap((node): Import[] => {
     if (!node) return []
     const line = node.startPosition.row + 1
-    const module = node.childForFieldName("module_name")
-    const names = node.namedChildren.flatMap((child) => {
-      if (!child || child.id === module?.id) return []
-      if (child.type === "aliased_import") return child.childForFieldName("name")?.text ?? []
-      return ["dotted_name", "identifier"].includes(child.type) ? [child.text] : []
+    if (node.type === "import_from_statement") {
+      const module = node.childForFieldName("module_name")
+      const names = node.namedChildren.flatMap((child) => {
+        if (!child || child.id === module?.id) return []
+        if (child.type === "aliased_import") return child.childForFieldName("name")?.text ?? []
+        return child.type === "dotted_name" || child.type === "identifier" ? [child.text] : []
+      })
+      return module ? [{ specifier: module.text, line, form: "static", names }] : []
+    }
+    if (node.type !== "import_statement") return []
+    // `import a, b.c as d`: one import per module, with no names.
+    return node.namedChildren.flatMap((child) => {
+      if (!child) return []
+      const module = child.type === "aliased_import" ? child.childForFieldName("name") : child.type === "dotted_name" ? child : undefined
+      return module ? [{ specifier: module.text, line, form: "static" as const, names: [] }] : []
     })
-    if (node.type === "import_statement") return names.map((name) => ({ specifier: name, line, form: "static" as const, names: [] }))
-    return module ? [{ specifier: module.text, line, form: "static" as const, names }] : []
   })
 }
 
@@ -243,15 +264,15 @@ const grammars = lazy(async () => {
   const treePath = resolveWasm(treeWasm)
   await Parser.init({ locateFile: () => treePath })
   const [typescript, tsx, python] = await Promise.all([typescriptWasm, tsxWasm, pythonWasm].map((asset) => Language.load(resolveWasm(asset))))
-  const entry = (language: Language, tags: string, imports: string) => {
+  const entry = (language: Language, tags: string, calls?: string) => {
     const parser: Parser = new Parser()
     parser.setLanguage(language)
-    return { parser, tags: new Query(language, tags), imports: new Query(language, imports) }
+    return { parser, tags: new Query(language, tags), calls: calls ? new Query(language, calls) : undefined }
   }
   const scriptTags = `${typescriptTags}\n${javascriptTags}\n${EXTRA.script}`
   return {
-    typescript: entry(typescript, scriptTags, IMPORTS.script),
-    tsx: entry(tsx, scriptTags, IMPORTS.script),
-    python: entry(python, `${pythonTags}\n${EXTRA.python}`, IMPORTS.python),
+    typescript: entry(typescript, scriptTags, CALL_IMPORTS),
+    tsx: entry(tsx, scriptTags, CALL_IMPORTS),
+    python: entry(python, `${pythonTags}\n${EXTRA.python}`),
   }
 })
