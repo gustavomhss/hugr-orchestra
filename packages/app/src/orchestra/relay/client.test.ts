@@ -149,6 +149,22 @@ describe("authoring routes through the generated client", () => {
     expect([decision.decision, decision.node, decision.session, decision.seq]).toEqual(["d1", "block", "ses_1", 7])
     expect(decisionTime(decision)).toBe(1_791_300_000_000)
   })
+
+  test("repair states its confirmation, and order names every install in the new sequence", async () => {
+    const api = server((request) =>
+      new URL(request.url).pathname.endsWith("/repair")
+        ? located({ backup: "/data/hooks.json.corrupt-1-ab", installs: [] })
+        : located({ installs: [{ installID: "b", order: 0 }, { installID: "a", order: 1 }] }),
+    )
+    const repaired = await api.client.repair()
+    expect([api.requests[0].method, new URL(api.requests[0].url).pathname]).toEqual(["POST", "/api/relay/hook/repair"])
+    expect(await api.requests[0].json()).toEqual({ confirm: true })
+    expect([repaired.backup, repaired.installs]).toEqual(["/data/hooks.json.corrupt-1-ab", []])
+    const installs = await api.client.order(["b", "a"])
+    expect([api.requests[1].method, new URL(api.requests[1].url).pathname]).toEqual(["PATCH", "/api/relay/hook/order"])
+    expect(await api.requests[1].json()).toEqual({ installIDs: ["b", "a"] })
+    expect(installs.map((item) => item.installID)).toEqual(["b", "a"])
+  })
 })
 
 describe("documents", () => {

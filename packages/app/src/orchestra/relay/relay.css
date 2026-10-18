@@ -482,6 +482,131 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   margin-block-start: 22px;
 }
 
+/* ---------- Hook library ---------- */
+.hk-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.hk-scope {
+  margin: 0 0 16px;
+  color: var(--mx-dim);
+  font-size: 12px;
+  line-height: 1.6;
+}
+/* The state column carries the install state, the last decision, and an update or publish action, so it wraps. */
+.wf-lhead.hk,
+.wf-lrow.hk {
+  grid-template-columns: 32px minmax(0, 1fr) 168px minmax(230px, 300px) 74px;
+}
+.wf-state.hk-state {
+  align-items: flex-start;
+  white-space: normal;
+}
+.hk-state .mx-toggle {
+  flex: none;
+  margin-block-start: 1px;
+}
+.hk-state > span {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+}
+.hk-state small {
+  display: block;
+  margin: 0;
+}
+.hk-state small.hk-stale {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  color: var(--mx-strong);
+}
+.hk-state .mx-btn {
+  min-block-size: 24px;
+  padding-inline: 8px;
+}
+@media (max-width: 1000px) {
+  .wf-lhead.hk {
+    display: none;
+  }
+  .wf-lrow.hk {
+    grid-template-columns: 32px minmax(0, 1fr) auto;
+  }
+  .wf-lrow.hk > .wf-badges,
+  .wf-lrow.hk > .hk-state {
+    grid-column: 2 / -1;
+  }
+  .wf-lrow.hk > .wf-actions {
+    grid-column: 3;
+    grid-row: 1;
+  }
+}
+.hk-damaged {
+  display: grid;
+  gap: 6px;
+  margin: 0 0 16px;
+  padding: 12px 14px;
+  border: 1px solid color-mix(in srgb, var(--mx-bad) 55%, transparent);
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--mx-bad) 10%, transparent);
+  color: var(--mx-bad);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.hk-damaged p,
+.hk-damaged small {
+  margin: 0;
+}
+.hk-damaged small {
+  color: var(--mx-dim);
+  font-size: 11px;
+}
+.hk-damaged-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-block-start: 4px;
+}
+.hk-order {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.hk-order li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 7px 8px 7px 12px;
+  border: 1px solid var(--mx-line);
+  border-radius: 8px;
+  background: var(--mx-soft);
+}
+.hk-order-n {
+  color: var(--mx-dim);
+  font: 11px var(--mx-mono);
+}
+.hk-order-name {
+  flex: 1;
+  min-inline-size: 0;
+  overflow: hidden;
+  color: var(--mx-strong);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.hk-order .hk-up {
+  transform: rotate(-90deg);
+}
+.hk-order .hk-down {
+  transform: rotate(90deg);
+}
+
 /* ---------- Editor frame ---------- */
 .wf-editor {
   position: relative;
