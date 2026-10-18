@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
-const renderer = resolve(import.meta.dirname, "../../../desktop/src/renderer/index.tsx")
+const renderer = resolve(import.meta.dirname, "../../../../apps/desktop/src/renderer/index.tsx")
 // Vite's /@fs/ prefix needs forward slashes and a leading slash before Windows drive letters.
 const rendererURL = `/@fs/${renderer.replaceAll("\\", "/").replace(/^\//, "")}`
 

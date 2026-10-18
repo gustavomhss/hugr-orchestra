@@ -39,11 +39,11 @@ coexisting compositions; this package does not retire Orchestra's listener.
 ## Verification locations
 
 From this directory, `bun run typecheck` runs this package's `tsgo --noEmit`
-check. The consuming packages have their own typechecks in `packages/orchestra`,
-`packages/cli`, and `packages/sdk-next`.
+check. The consuming packages have their own typechecks in `apps/orchestra`,
+`apps/cli`, and `packages/sdk-next`.
 
-HTTP contract coverage lives in `packages/orchestra/test/server/`, including
+HTTP contract coverage lives in `apps/orchestra/test/server/`, including
 `httpapi-authorization.test.ts`, `httpapi-v2-location.test.ts`,
 `httpapi-schema-error-body.test.ts`, and `httpapi-sdk.test.ts`. The broader
-HTTP contract exerciser is `packages/orchestra/script/httpapi-exercise.ts`,
-invoked by the `test:httpapi` script from `packages/orchestra`.
+HTTP contract exerciser is `apps/orchestra/script/httpapi-exercise.ts`,
+invoked by the `test:httpapi` script from `apps/orchestra`.

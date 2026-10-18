@@ -12,7 +12,7 @@ const EXTERNAL_NAMES: Record<string, Record<string, string>> = {}
 const sources = {
   app: (locale: string) => `./${locale}.ts`,
   ui: (locale: string) => `../../../ui/src/i18n/${locale}.ts`,
-  desktop: (locale: string) => `../../../desktop/src/renderer/i18n/${locale}.ts`,
+  desktop: (locale: string) => `../../../../apps/desktop/src/renderer/i18n/${locale}.ts`,
 }
 
 describe("product name in copy", () => {

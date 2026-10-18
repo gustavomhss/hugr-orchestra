@@ -15,7 +15,7 @@ import { which } from "../util/which"
 import { EffectFlock } from "../util/effect-flock"
 import { RipgrepRelease } from "./release"
 
-// true in the compiled CLI (packages/cli/script/build.ts): its packaged rg sits in ripgrep/ beside the binary.
+// true in the compiled CLI (apps/cli/script/build.ts): its packaged rg sits in ripgrep/ beside the binary.
 declare const ORCHESTRA_RIPGREP_BESIDE_BINARY: boolean | undefined
 
 /**

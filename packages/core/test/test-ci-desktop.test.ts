@@ -25,15 +25,15 @@ afterEach(async () => {
 async function fixture(args: string[]) {
   const cwd = await mkdtemp(path.join(tmpdir(), "test-ci-desktop-"))
   dirs.push(cwd)
-  await Promise.all(["script", "packages/desktop/src/main", "test-ci-evidence"].map((dir) => mkdir(path.join(cwd, dir), { recursive: true })))
+  await Promise.all(["script", "apps/desktop/src/main", "test-ci-evidence"].map((dir) => mkdir(path.join(cwd, dir), { recursive: true })))
   await Bun.write(path.join(cwd, "script/test-ci-desktop.ts"), Bun.file(path.join(root, "script/test-ci-desktop.ts")))
-  await Bun.write(path.join(cwd, "packages/desktop/bunfig.toml"), '[test]\npathIgnorePatterns = ["src/main/ignored.test.ts"]\n')
+  await Bun.write(path.join(cwd, "apps/desktop/bunfig.toml"), '[test]\npathIgnorePatterns = ["src/main/ignored.test.ts"]\n')
   await Promise.all([proof, ordinary, extra, "src/main/ignored.test.ts", "src/main/helper.ts", ".hidden/hidden.test.ts", "node_modules/hidden.test.ts"].map((file) =>
-    Bun.write(path.join(cwd, "packages/desktop", file), `import { test } from "bun:test"\nconsole.log(${JSON.stringify(`SELECTED ${file}`)})\ntest("fixture selected", () => {})\n`)))
-  const request = { package: "desktop", directory: "packages/desktop", runner: "bun", args: [...testPaths("desktop", args,
+    Bun.write(path.join(cwd, "apps/desktop", file), `import { test } from "bun:test"\nconsole.log(${JSON.stringify(`SELECTED ${file}`)})\ntest("fixture selected", () => {})\n`)))
+  const request = { package: "desktop", directory: "apps/desktop", runner: "bun", args: [...testPaths("desktop", args,
     (file) => [proof, ordinary, extra, "src/main/helper.ts"].includes(file.replace(/^\.\//, ""))), "--timeout", "120000"] }
   await Bun.write(path.join(cwd, ".ci-run.json"), JSON.stringify(request))
-  return { cwd, request, desktop: path.join(cwd, "packages/desktop") }
+  return { cwd, request, desktop: path.join(cwd, "apps/desktop") }
 }
 
 function run(step: typeof selection, cwd: string) {
@@ -110,7 +110,7 @@ test("proof platforms opt in on every selection; elsewhere only a request naming
   }
   // The real tree: a whole-package or directory run off the proof's platforms leaves it skipped, a named one fails there.
   const real = (args: string[], host: { platform: string; arch: string }) =>
-    desktopProof({ package: "desktop", runner: "bun", args: [...args, "--timeout", "120000"] }, path.join(root, "packages/desktop"), host)
+    desktopProof({ package: "desktop", runner: "bun", args: [...args, "--timeout", "120000"] }, path.join(root, "apps/desktop"), host)
   for (const host of hosts) {
     for (const args of [[], ["src/main"], ["./src/main"], ["-t", "Jimmy"]]) expect(real(args, host)).toBe(host.supported)
     for (const args of [[`./${proof}`], ["jimmy-desktop-proof"], ["./src/main/app-dock-native.test.ts", `./${proof}`]])
@@ -218,7 +218,7 @@ test("proof opt-in is issued only by selected provisioning after successful inst
 test("real desktop tree selects proof for exact/directory/filter/package requests", () => {
   for (const args of [[`./${proof}`], ["src/main"], ["jimmy-desktop-proof"], []])
     expect(desktopSelection({ package: "desktop", runner: "bun", args: [...args, "--timeout", "120000"] },
-      path.join(root, "packages/desktop"))).toContain(proof)
+      path.join(root, "apps/desktop"))).toContain(proof)
 })
 
 test("ambiguous file-changing options fail by name instead of skipping proof", async () => {

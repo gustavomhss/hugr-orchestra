@@ -8,7 +8,7 @@ test("CLI rejects invalid target before loading the version snapshot", async () 
   const directory = await mkdtemp(path.join(tmpdir(), "cli-preflight-"))
   try {
     await Promise.all(["build.ts", "targets.ts"].map(async (file) => {
-      await Bun.write(path.join(directory, file), await Bun.file(path.resolve(import.meta.dir, "../../cli/script", file)).arrayBuffer())
+      await Bun.write(path.join(directory, file), await Bun.file(path.resolve(import.meta.dir, "../../../apps/cli/script", file)).arrayBuffer())
     }))
     await mkdir(path.join(directory, "node_modules/@orchestra"), { recursive: true })
     await symlink(path.resolve(import.meta.dir, ".."), path.join(directory, "node_modules/@orchestra/script"), "junction")

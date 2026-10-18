@@ -1,7 +1,7 @@
 import { expect, mock, test } from "bun:test"
 import { createServer } from "node:http"
 import path from "node:path"
-import { Process } from "../../orchestra/src/util/process"
+import { Process } from "../../../apps/orchestra/src/util/process"
 import { Omni } from "../../core/src/omni"
 import { expectSpawn } from "../../core/test/fixture/omni-expect"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"

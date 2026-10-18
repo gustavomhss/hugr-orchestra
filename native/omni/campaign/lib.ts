@@ -28,11 +28,11 @@ export type { Identity, Row } from "./process-rows.ts"
 export { client, decodeUnixTable, fakeLLM, hasNonce, isolated, matches, provider, sleep, until }
 
 export const ROOT = path.resolve(import.meta.dirname, "../../..")
-export const ORCHESTRA = path.join(ROOT, "packages/orchestra")
+export const ORCHESTRA = path.join(ROOT, "apps/orchestra")
 export const LOGS = path.join(import.meta.dirname, "logs")
 export const win = process.platform === "win32"
 
-/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under packages/orchestra/dist. */
+/** The compiled CLI: OMNI_CAMPAIGN_CLI, else the one target under apps/orchestra/dist. */
 export function cli() {
   if (process.env.OMNI_CAMPAIGN_CLI) return process.env.OMNI_CAMPAIGN_CLI
   const dist = path.join(ORCHESTRA, "dist")

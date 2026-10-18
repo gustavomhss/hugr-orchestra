@@ -1,5 +1,5 @@
 {
-  "extends": "../../packages/orchestra/tsconfig.json",
+  "extends": "../../apps/orchestra/tsconfig.json",
   "include": [
     "archie-host-acceptance.ts",
     "archie-host-evidence.ts",
@@ -7,6 +7,6 @@
     "archie-host-plan.ts",
     "archie-host-process.ts",
     "archie-host-s14.ts",
-    "../../packages/orchestra/src/*.d.ts"
+    "../../apps/orchestra/src/*.d.ts"
   ]
 }

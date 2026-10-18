@@ -1,4 +1,4 @@
-// The omni build step that both compiled CLIs share (packages/orchestra and packages/cli): which omni build each
+// The omni build step that both compiled CLIs share (apps/orchestra and apps/cli): which omni build each
 // target ships, where its addon and supervisor come from, and the copy next to the binary.
 import fs from "fs"
 import path from "path"

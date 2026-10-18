@@ -7,9 +7,9 @@ on:
   pull_request:
     branches: [omni-closeout]
     paths:
-      - "packages/desktop/test/omni-smoke/**"
-      - "packages/desktop/src/main/omni-smoke.ts"
-      - "packages/desktop/src/main/server.ts"
+      - "apps/desktop/test/omni-smoke/**"
+      - "apps/desktop/src/main/omni-smoke.ts"
+      - "apps/desktop/src/main/server.ts"
       - ".github/workflows/omni-desktop-smoke.yml"
 
 concurrency:
@@ -78,18 +78,18 @@ jobs:
           ORCHESTRA_CHANNEL: beta
         run: |
           set -euo pipefail
-          ORCHESTRA_VERSION="$(bun -p 'require("./packages/orchestra/package.json").version')"
+          ORCHESTRA_VERSION="$(bun -p 'require("./apps/orchestra/package.json").version')"
           export ORCHESTRA_VERSION
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
           for target in $targets; do
-            bun packages/cli/script/build.ts --skip-install --target "$target"
+            bun apps/cli/script/build.ts --skip-install --target "$target"
           done
-          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
+          bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
             --target windows-x64-baseline --target linux-arm64 --target linux-x64-baseline
           # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each WSL guest's
           # omni pair in omni-<target>/ (scripts/cli-staging.ts reads them there).
           for target in $targets; do
-            bin="packages/cli/dist/cli-$target/bin"
+            bin="apps/cli/dist/cli-$target/bin"
             cp -R "$bin/tree-sitter" "windows-cli/tree-sitter-$target"
             cp -R "$bin/ripgrep" "windows-cli/ripgrep-$target"
             if [[ "$target" == linux-* ]]; then
@@ -127,8 +127,8 @@ jobs:
 
       - name: Initialize exact source evidence
         run: |
-          mkdir -p packages/desktop/.omni-desktop-evidence
-          git rev-parse HEAD > packages/desktop/.omni-desktop-evidence/source-sha.txt
+          mkdir -p apps/desktop/.omni-desktop-evidence
+          git rev-parse HEAD > apps/desktop/.omni-desktop-evidence/source-sha.txt
 
       - name: Setup Bun
         uses: ./.github/actions/setup-bun
@@ -153,17 +153,17 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y --no-install-recommends xvfb
 
       - name: Typecheck scoped smoke hook and driver
-        working-directory: packages/desktop/test/omni-smoke
+        working-directory: apps/desktop/test/omni-smoke
         run: bun typecheck
 
       - name: Build actual unsigned app and verify packaged Node/native bytes
         id: build
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: bun test/omni-smoke/build.ts
 
       - name: Actual packaged Desktop V2/V10, mutants then restored
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: |
           # App must discover its own Resources/omni. Environment cannot rescue packaging.
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
@@ -174,12 +174,12 @@ jobs:
       # each with its mutant (test/omni-smoke/ripgrep.ts).
       - name: Packaged ripgrep, used by the packaged CLI and never downloaded, mutants then restored
         if: ${{ !cancelled() && steps.build.outcome == 'success' }}
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: bun test/omni-smoke/ripgrep.ts
 
       - name: Distributables keep the executable bits of the CLI, its rg and omni
         if: ${{ !cancelled() && steps.build.outcome == 'success' && runner.os != 'Windows' }}
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: bun test/omni-smoke/distributables.ts
 
       - name: Preserve actual proof, red cells and source/artifact pins
@@ -187,7 +187,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: omni-desktop-${{ matrix.os }}-${{ github.event.pull_request.head.sha || github.sha }}
-          path: packages/desktop/.omni-desktop-evidence/
+          path: apps/desktop/.omni-desktop-evidence/
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 7

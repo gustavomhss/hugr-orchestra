@@ -101,14 +101,14 @@ jobs:
       - uses: ./.github/actions/ripgrep
       - uses: ./.github/actions/omni-binaries
       - name: Require the matching native host
-        working-directory: packages/cli
+        working-directory: apps/cli
         run: bun script/runtime-proof.ts --target "$TARGET" --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: models-dev-snapshot
           path: ${{ runner.temp }}/models-dev
       - name: Build the native CLI
-        working-directory: packages/cli
+        working-directory: apps/cli
         env:
           ORCHESTRA_VERSION: ${{ inputs.version }}
           ORCHESTRA_CHANNEL: latest
@@ -119,7 +119,7 @@ jobs:
           set -euo pipefail
           exe=orchestra
           [[ "$TARGET" != windows-* ]] || exe=orchestra.exe
-          reported=$("packages/cli/dist/cli-$TARGET/bin/$exe" --version | tr -d '\r')
+          reported=$("apps/cli/dist/cli-$TARGET/bin/$exe" --version | tr -d '\r')
           [ "$reported" = "$VERSION" ] || { echo "RELEASE_BUILT_VERSION_MISMATCH: $reported" >&2; exit 1; }
       - name: Prepare the verified payload and archive
         run: |
@@ -128,7 +128,7 @@ jobs:
             ORCHESTRA_ARTIFACT_DARWIN_SDK="$(xcrun --sdk macosx --show-sdk-path)"
             export ORCHESTRA_ARTIFACT_DARWIN_SDK
           fi
-          bun packages/cli/script/release.ts payload --version "$VERSION" --target "$TARGET" --out "$RUNNER_TEMP/release"
+          bun apps/cli/script/release.ts payload --version "$VERSION" --target "$TARGET" --out "$RUNNER_TEMP/release"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: release-archive-${{ matrix.target }}
@@ -171,7 +171,7 @@ jobs:
           docker run --rm --mount "type=bind,source=$GITHUB_WORKSPACE,target=/source,readonly" \
             --mount "type=bind,source=$RUNNER_TEMP/release,target=/out" \
             --mount "type=bind,source=$RUNNER_TEMP/models-dev,target=/models,readonly" \
-            "$IMAGE" sh /source/packages/cli/distribution/musl-release.sh "$CPU" "$VERSION" /source /out /models/models-api.json
+            "$IMAGE" sh /source/apps/cli/distribution/musl-release.sh "$CPU" "$VERSION" /source /out /models/models-api.json
           sudo chown -R "$(id -u):$(id -g)" "$RUNNER_TEMP/release"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
@@ -202,10 +202,10 @@ jobs:
             mkdir -p "$RUNNER_TEMP/payloads/$target"
             tar -xzf "$archive" -C "$RUNNER_TEMP/payloads/$target"
           done
-          bun packages/cli/script/release.ts assemble --version "$VERSION" \
+          bun apps/cli/script/release.ts assemble --version "$VERSION" \
             --payloads "$RUNNER_TEMP/payloads" --archives "$RUNNER_TEMP/archives" \
             --base-url "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION" --out "$RUNNER_TEMP/assembled"
-          cp "$RUNNER_TEMP"/archives/*.tar.gz packages/cli/distribution/install.sh "$RUNNER_TEMP/assembled/"
+          cp "$RUNNER_TEMP"/archives/*.tar.gz apps/cli/distribution/install.sh "$RUNNER_TEMP/assembled/"
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020
         with:
           node-version: "22"
