@@ -1,6 +1,6 @@
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { useServerManagementController } from "@/components/dialog-select-server"
-import { useSettingsCommand } from "@/components/settings-dialog"
+import { useSettingsDialog } from "@/components/settings-dialog"
 import { DialogServerV2 } from "@/components/settings-v2/dialog-server-v2"
 import { type LocalProject } from "@/context/layout"
 import { useLanguage } from "@/context/language"
@@ -21,7 +21,7 @@ export function createHomeProjectsController(home: HomeController) {
   const dialog = useDialog()
   const language = useLanguage()
   const notification = useNotification()
-  const openSettings = useSettingsCommand()
+  const openSettings = useSettingsDialog()
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),

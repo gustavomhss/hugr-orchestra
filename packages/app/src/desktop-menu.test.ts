@@ -12,6 +12,15 @@ describe("desktop menu", () => {
     expect(items.every((item) => item.type === "item" && item.command === "logs.export" && !item.action)).toBe(true)
   })
 
+  test("offers no Toggle Sidebar item: the Orchestra sidebar state is local to the shell layout and has no command", () => {
+    const commands = DESKTOP_MENU.flatMap((menu) => menu.items ?? []).flatMap((item) =>
+      item.type === "item" && item.command ? [item.command] : [],
+    )
+
+    expect(commands).not.toContain("sidebar.toggle")
+    expect(commands).toContain("project.open")
+  })
+
   test("provides translated labels for role-backed entries", () => {
     const windowMenu = DESKTOP_MENU.find((menu) => menu.role === "windowMenu")
     const roleItems = DESKTOP_MENU.flatMap((menu) => menu.items ?? []).filter(
