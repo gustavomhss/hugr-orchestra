@@ -128,7 +128,7 @@
       <div class="context-group"><div class="context-label">THE ENGINE</div>
         ${link("#/genesis", "Genesis", "sparkle", s.route === "genesis")}
         ${link("#/architecture", "Architecture", "stack", s.route === "architecture")}
-        ${link("#/own", "Own protocol", "territory", s.route === "own")}
+        ${link("#/own", "Ownership", "territory", s.route === "own")}
         ${link("#/how", "Follow one fact", "fact", s.route === "how")}
       </div>
       <div class="context-group"><div class="context-label">MEMORY</div>
@@ -581,7 +581,7 @@
   let found = []
   let index = 0
   const everything = (words) => {
-    const pages = [["Home", "#/overview", "home"], ["Explore · graph", "#/explore", "graph"], ["Explore · map", "#/explore?view=map", "stack"], ["Explore · list", "#/explore?view=list", "list"], ["Genesis", "#/genesis", "sparkle"], ["Architecture", "#/architecture", "stack"], ["Own protocol", "#/own", "territory"], ["Follow one fact", "#/how", "fact"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/overview?show=health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
+    const pages = [["Home", "#/overview", "home"], ["Explore · graph", "#/explore", "graph"], ["Explore · map", "#/explore?view=map", "stack"], ["Explore · list", "#/explore?view=list", "list"], ["Genesis", "#/genesis", "sparkle"], ["Architecture", "#/architecture", "stack"], ["Ownership", "#/own", "territory"], ["Follow one fact", "#/how", "fact"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/overview?show=health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
       .map(([label, href, glyph]) => ({ group: "Go to", label, hint: "", glyph, run: () => A.go(href) }))
     const areas = M().units().map((u) => ({ group: "Units", label: u.id, hint: `${u.facts} facts`, glyph: "stack", run: () => A.go(`#/unit/${encodeURIComponent(u.id)}`) }))
     const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/unit/${encodeURIComponent(f)}`) }))
@@ -642,7 +642,7 @@
       ["Explore · map", "#/explore?view=map", "stack", "The units as a map: area is knowledge, colour is how much still holds."],
       ["Genesis", "#/genesis", "sparkle", "How Atlas learns a repository: the pipeline, a real claim with its reasoning, the configuration."],
       ["Architecture", "#/architecture", "stack", "Open knowledge (OKF): the layers, a write and a read step by step, the files on disk, identity, the portable bundle."],
-      ["Own protocol", "#/own", "territory", "How each unit becomes one verified briefing, who owns what, and how one changed byte holds the work."],
+      ["Ownership", "#/own", "territory", "One owner per module: what it knows, how it stays true, and how one changed byte holds the work."],
       ["Follow one fact", "#/how", "fact", "One real fact from mining to an agent, through the store."],
       ["A unit", "#/unit/packages%2Fknowledge", "stack", "The briefing an agent gets, watched being built, the file map, facts by kind."],
       ["A fact", `#/unit/packages%2Fcontracts?fact=${first}`, "eye", "Can I trust this sentence, and where did it come from."],

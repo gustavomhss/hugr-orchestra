@@ -89,7 +89,8 @@
     return `<div class="at-ch-intro"><p>Everything Atlas keeps is a plain file under <code>.atlas/</code>. No database, no server.</p></div>
       <div class="at-store2"><div class="at-store2-list">${files.map(([n, size, git]) => `<a class="at-disk-file ${n === f[0] ? "sel" : ""}" href="#/architecture?ch=store&file=${encodeURIComponent(n)}"><code>${A.esc(n)}</code><small>${A.esc(size)}</small><span class="at-disk-git ${git}">${git === "git" ? "travels in git" : git === "never" ? "never in git" : "stays local"}</span></a>`).join("")}</div>
         <div class="at-store2-detail"><h3><code>${A.esc(f[0])}</code></h3><p>${f[3]}</p><dl class="at-kv wide"><dt>Size</dt><dd>${A.esc(f[1])}</dd><dt>Written by</dt><dd>${f[4]}</dd><dt>Read by</dt><dd>${f[5]}</dd><dt>Shape</dt><dd><code>${A.esc(f[6])}</code></dd></dl>
-          <p class="muted">In this repository the store's projection and objects are committed, which is why it reads as read-only. In Orchestra's copy they stay local and only policy.json and memory travel.</p></div></div>`
+          <p class="muted">In this repository the store's projection and objects are committed, which is why it reads as read-only. In Orchestra's copy they stay local and only policy.json and memory travel.</p></div></div>
+      ${A.travelSection()}`
   }
 
   /* ---------- Identity ---------- */

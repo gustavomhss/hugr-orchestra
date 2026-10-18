@@ -60,6 +60,7 @@
           <div class="mx-eyebrow">Atlas · project atlas ${need ? `<a class="at-needs" href="#/review">${A.num(need)} need you</a>` : ""}</div>
           <h1>Atlas knows <em>${A.num(s.facts)} things</em> about this code.</h1>
           <p>Each one is pinned to the exact code it describes and re-checked whenever that code moves. <b>${A.num(s.fresh)}</b> still hold. <b class="warm">${A.num(s.drifted)}</b> stopped matching their code, and Atlas noticed.</p>
+          <p class="at-hero-git">${A.icon("branch")} Versioned in git with the code: it changes in pull requests and comes back on any clone. <a class="mx-link" href="#/overview" onclick="event.preventDefault();document.getElementById('travel').scrollIntoView({behavior:'smooth'})">How</a></p>
           ${trusted ? "" : `<p class="at-hero-warn">${A.icon("lock")} This store is in git, so agents get none of it yet. <a class="mx-link" href="#/overview?show=health">Why</a></p>`}
           <div class="at-hero-actions">${A.btn("Explore the map", "go", { value: "#/explore", primary: true, icon: "graph" })}${A.btn("How Atlas learns", "go", { value: "#/genesis", icon: "sparkle" })}${A.btn("Follow one fact", "go", { value: "#/how", icon: "fact" })}</div>
         </div>
@@ -89,10 +90,24 @@
           <span class="at-story-foot">${agents.some((a) => a.example) ? '<span class="at-pill">example</span>' : ""} Activity ${A.icon("arrow")}</span>
         </a>
       </section>
+      ${A.travelSection()}
       ${health.html}
       </div>`,
     }
   }
+  // How Atlas travels (modules/atlas/.gitignore): the reviewed config and the append-only logs are committed with the
+  // code, the owners live in .orchestra/skills/own, and the store bytes are local state any clone rebuilds.
+  A.travelSection = () => `<section class="at-panel at-arch-block at-travel" id="travel"><header class="at-panel-head"><div><h3>${A.icon("branch")}It travels with your repo</h3><small>Atlas lives in git next to the code. A pull request changes it, a merge brings it along, and any machine that clones the repository gets it back.</small></div></header>
+    <div class="at-travel-flow">
+      <div class="at-travel-col"><div class="at-travel-k good">${A.icon("branch")}Committed, pushed to the remote</div>
+        ${[["memory.jsonl", "What every agent saved. Append-only, one line per memory: two branches merge as a union, and duplicates fold by content id."], ["orientation.jsonl", "Where the project stands, identical for every member."], ["policy.json", "Who may write what. Reviewed in pull requests like code."], [".orchestra/skills/own/", "The owners, one skill per module, with their coverage list."]].map(([f, d]) => `<div class="at-travel-row"><code>${f}</code><p>${d}</p></div>`).join("")}</div>
+      <div class="at-travel-mid"><div class="at-travel-node">${A.icon("branch")}<b>origin</b><small>branch · PR · merge</small></div><div class="at-travel-arrow">${A.icon("arrow")}</div><div class="at-travel-node">${A.icon("download")}<b>any clone</b><small>a teammate, CI, a new laptop</small></div></div>
+      <div class="at-travel-col"><div class="at-travel-k">${A.icon("refresh")}Rebuilt on each machine</div>
+        ${[["cas/ · projection", "The facts and their versions. Content-addressed, so the same claim gets the same name on every machine."], ["index.scip", "The code index, regenerated from the code at that commit."], ["staging", "Suggestions waiting for review. Genesis mines them again; they are never committed, so nothing half-reviewed leaks into history."]].map(([f, d]) => `<div class="at-travel-row"><code>${f}</code><p>${d}</p></div>`).join("")}</div>
+    </div>
+    <div class="at-travel-steps">${[["Open a PR", "Memories, policy and owners change in the same diff as the code they describe."], ["Merge", "Logs union line by line; owners whose code changed hold until refreshed."], ["Clone anywhere", "Run Genesis: the index and store come back from the code; memory and owners are already there."]].map(([t, d], i) => `<div><span>${i + 1}</span><b>${t}</b><p>${d}</p></div>`).join("")}</div>
+    <p class="mx-note">To move a whole store in one piece, <code>atlas export</code> writes an <code>atlas-okf.json</code> bundle that imports into an empty store, all or nothing. ${A.help("modules/atlas/.gitignore: .atlas/* is ignored except memory.jsonl, orientation.jsonl and policy.json; staging is denied at any depth.")}</p></section>`
+
   const pickEmpty = `<div class="at-pick-empty">${A.icon("graph")}<span>Each circle is a unit Atlas serves knowledge for. Arrows point to what it depends on.</span></div>`
   const pick = (id) => {
     const u = M().units().find((x) => x.id === id)
