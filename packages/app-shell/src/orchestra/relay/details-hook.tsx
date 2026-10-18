@@ -74,6 +74,7 @@ type Props = {
   testResult?: string
   issues: string[]
   save: JSX.Element
+  readOnly?: boolean
   onChange: (flow: Flow) => void
   onNav: (id: string) => void
   onClose: () => void
@@ -102,6 +103,7 @@ export function HookDetails(props: Props) {
       </>}
       output={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Output {...props} /></Show>}
       save={props.save}
+      readOnly={props.readOnly}
       actions={
         <button type="button" class="mx-btn" onClick={props.onTest}>
           <Ic name="test" />
@@ -156,7 +158,7 @@ function Input(props: Props) {
                     ? "orchestra.hooks.details.commandHash"
                     : "orchestra.hooks.details.target",
                 ),
-                decision().subject,
+                decision().subject ? `\u2068${decision().subject}\u2069` : undefined,
               ],
               [copy.t("orchestra.hooks.details.session"), decision().session],
               [
