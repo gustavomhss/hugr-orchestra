@@ -50,10 +50,10 @@ jobs:
 
       # The CLI's native Windows artifact controls compile with `rustup run 1.98.0` (packages/core/src/
       # artifact-native-windows.ts). The omni artifact above skips cargo, so nothing else installs the toolchain
-      # pinned by packages/omni/rust-toolchain.toml on this leg.
+      # pinned by native/omni/rust-toolchain.toml on this leg.
       - name: Rust toolchain (rust-toolchain.toml)
         if: runner.os == 'Windows'
-        working-directory: packages/omni
+        working-directory: native/omni
         run: rustup show active-toolchain || rustup toolchain install
 
       # The only writer of the ripgrep cache that test.yml and test-ci.yml restore.
