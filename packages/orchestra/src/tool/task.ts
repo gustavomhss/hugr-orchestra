@@ -615,7 +615,11 @@ export const TaskTool = Tool.define(
         )
         // A native research dispatch runs under its allowance; the discovery seat never runs without one.
         const result = yield* completion.withWorkflow(completionReceipt, Option.isSome(research)
-          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted, params.effort)
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted,
+            { tier: params.effort, onDeadline: ops.cancel(nextSession.id) }).pipe(Effect.tapError((error) =>
+              error instanceof Research.Error && error.code === "budget_exhausted"
+                ? work.hostEnded("interrupted", `budget_exhausted: ${error.message}`).pipe(Effect.provideService(Database.Service, database))
+                : Effect.void))
           : nextID === "jimmy"
             ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
             : prompted)

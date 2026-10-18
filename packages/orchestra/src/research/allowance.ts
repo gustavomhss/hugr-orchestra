@@ -1,6 +1,6 @@
 export * as ResearchExecution from "./allowance"
 
-import { Context, Effect, Layer, Schema } from "effect"
+import { Context, Duration, Effect, Fiber, Layer, Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -19,10 +19,21 @@ export type Frame = { readonly allowance: Research.Allowance; readonly purpose?:
 // Exported only for native deferred maintenance to retain its initiating dispatch. A model input cannot issue a frame.
 export const Current = Context.Reference<Frame | undefined>("@orchestra/ResearchExecution/Current", { defaultValue: () => undefined })
 const issued = new WeakSet<Frame>()
+// Allowances whose native dispatch deadline fired; their frames admit no further research work.
+const expired = new WeakSet<Research.Allowance>()
+
+export type EnterOptions = {
+  readonly tier?: Research.Depth
+  /** Interrupts the child dispatch when the bound tier's deadline fires. */
+  readonly onDeadline?: Effect.Effect<void, unknown>
+}
 
 export interface Interface {
-  /** The dispatching caller's tier (default quick) binds once per dispatch; nothing inside the dispatch can change it. */
-  readonly enter: <A, E, R>(sessionID: string, dispatchCallID: string, effect: Effect.Effect<A, E, R>, tier?: Research.Depth) => Effect.Effect<A, E | Research.Error, R>
+  /**
+   * The dispatching caller's tier (default quick) binds once per dispatch; nothing inside the dispatch can change it.
+   * The tier's deadline runs while `effect` runs: on expiry it interrupts the dispatch and settles it as budget_exhausted.
+   */
+  readonly enter: <A, E, R>(sessionID: string, dispatchCallID: string, effect: Effect.Effect<A, E, R>, options?: EnterOptions) => Effect.Effect<A, E | Research.Error, R>
   readonly withAttribution: <A, E, R>(sessionID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly provider: <A, E, R>(input: LLM.StreamInput, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly tool: <A, E, R>(sessionID: string, callID: string, toolID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
@@ -65,21 +76,31 @@ const layer = Layer.effect(
       const current = yield* Current
       if (current && !issued.has(current))
         return yield* new Research.Error({ code: "binding_mismatch", message: "Research attribution frame was not issued by the native host" })
+      if (current && expired.has(current.allowance)) return yield* deadline(current.allowance)
       if (current?.allowance.binding.executionSessionID === sessionID) return current
       const binding = yield* placement(sessionID)
       if (binding) return yield* new Research.Error({ code: "binding_missing", message: "Discovery execution requires its actual parent dispatch allowance" })
       return undefined
     })
 
-    const enter: Interface["enter"] = (sessionID, dispatchCallID, effect, tier) => Effect.gen(function* () {
+    const enter: Interface["enter"] = (sessionID, dispatchCallID, effect, options = {}) => Effect.gen(function* () {
       const binding = yield* placement(sessionID)
       if (!binding) return yield* effect
       if (!dispatchCallID.trim())
         return yield* new Research.Error({ code: "binding_missing", message: "Discovery dispatch call identity is missing" })
-      const allowance = yield* allowances.bind(binding, dispatchCallID, tier)
+      const allowance = yield* allowances.bind(binding, dispatchCallID, options.tier)
       const current: Frame = Object.freeze({ allowance: Object.freeze({ ...allowance, binding: Object.freeze({ ...allowance.binding }) }) })
       issued.add(current)
-      return yield* effect.pipe(Effect.provideService(Current, current))
+      const timer = yield* Effect.sleep(Duration.seconds(allowance.deadlineSeconds)).pipe(
+        Effect.andThen(Effect.sync(() => expired.add(current.allowance))),
+        Effect.andThen(options.onDeadline ?? Effect.void),
+        Effect.catchCause(() => Effect.void),
+        Effect.forkChild,
+      )
+      const exit = yield* effect.pipe(Effect.provideService(Current, current), Effect.exit, Effect.ensuring(Fiber.interrupt(timer)))
+      // Expiry wins over whatever the interrupted dispatch returned; its retained ledger and records stay readable.
+      if (expired.has(current.allowance)) return yield* deadline(current.allowance)
+      return yield* exit
     })
 
     const withAttribution: Interface["withAttribution"] = (sessionID, effect) => Effect.gen(function* () {
@@ -97,6 +118,7 @@ const layer = Layer.effect(
       const parent = current?.allowance.binding.executionSessionID
       const attributable = current && (input.sessionID === parent ||
         (input.purpose === "context-maintenance" && input.parentSessionID === parent)) ? current : undefined
+      if (attributable && expired.has(attributable.allowance)) return yield* deadline(attributable.allowance)
       if (attributable) {
         // The host mints one operation identity per actual invocation, not per user message/model-authored field.
         // Re-running a provider request is new work; re-entering the same Task dispatch never resets its ledger.
@@ -132,5 +154,10 @@ const layer = Layer.effect(
     return Service.of({ enter, withAttribution, provider, tool, captureBytes })
   }),
 )
+
+function deadline(allowance: Research.Allowance) {
+  return new Research.Error({ code: "budget_exhausted",
+    message: `Research dispatch deadline exhausted (${allowance.deadlineSeconds} seconds); retained work remains available` })
+}
 
 export const node = LayerNode.make({ service: Service, layer, deps: [Session.node, Database.node, ResearchAllowance.node] })

@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
-import { Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Fiber, Schema } from "effect"
+import { TestClock } from "effect/testing"
 import { EventV2 } from "@orchestra/core/event"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
@@ -39,3 +40,21 @@ it.instance("native Task binds jimmy's requested effort tier, quick when absent,
   expect(Exit.isFailure(refused.exit)).toBe(true)
   expect(bound).toHaveLength(3)
 }), 90_000)
+
+it.instance("native Task deadline interrupts the child through Task cancellation and settles budget_exhausted with retained work", () => Effect.gen(function* () {
+  const fixture = yield* NativeResearchTask.setup()
+  yield* Effect.addFinalizer(() => Effect.gen(function* () {
+    yield* fixture.prompt.cancel(fixture.parent.id)
+    yield* Effect.forEach(yield* fixture.sessions.children(fixture.parent.id), (child) => fixture.prompt.cancel(child.id))
+    yield* fixture.sessions.remove(fixture.parent.id)
+  }).pipe(Effect.orDie))
+  yield* fixture.remote.hang
+  const called = yield* fixture.call({ description: "Deadline discovery", prompt: "Research until stopped.", subagent_type: "jimmy" },
+    "deadline-discovery").pipe(Effect.forkChild)
+  yield* fixture.remote.wait(1)
+  yield* TestClock.adjust("600 seconds")
+  const done = yield* Fiber.join(called)
+  expect(Exit.isFailure(done.exit) && Cause.pretty(done.exit.cause)).toContain("budget_exhausted")
+  expect(done.metadata.workResult).toMatchObject({ terminal: { reason: "interrupted",
+    hostDetail: expect.stringContaining("deadline exhausted (600 seconds); retained work remains available") } })
+}).pipe(Effect.provide(TestClock.layer())), 90_000)

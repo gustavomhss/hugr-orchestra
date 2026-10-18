@@ -249,7 +249,7 @@ export const make = Effect.gen(function* () {
               ),
             )
           }),
-          tier,
+          { tier },
         )
       }),
     /** Parent terminal metadata may consume this reason without interrupting the parent Query. */
