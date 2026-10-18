@@ -99,6 +99,14 @@ impl Command {
         self
     }
 
+    /// Memory cap for the whole tree: its resident set (RSS, summed over every live process of the tree) is sampled
+    /// every 250 ms, and above `bytes` the tree is killed at once and the reason is `MemoryExceeded`. No cap by default;
+    /// a cap of 0 kills the tree at the first sample.
+    pub fn max_rss_bytes(&mut self, bytes: u64) -> &mut Self {
+        self.req.max_rss_bytes = Some(bytes);
+        self
+    }
+
     /// How long the tree gets to wind down when stopped (default 2 s; contract §5).
     pub fn grace(&mut self, grace: Duration) -> &mut Self {
         self.req.grace = grace;

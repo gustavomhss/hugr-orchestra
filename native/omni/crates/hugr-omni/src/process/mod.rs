@@ -8,6 +8,7 @@ mod child;
 mod deadline;
 mod exit;
 mod life;
+mod memory;
 mod run;
 #[cfg(test)]
 mod tests;

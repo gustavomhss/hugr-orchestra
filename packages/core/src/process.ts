@@ -30,6 +30,11 @@ export interface RunOptions {
   readonly maxErrorBytes?: number
   readonly signal?: AbortSignal
   readonly timeout?: Duration.Input
+  /**
+   * Memory cap for the whole process tree in resident bytes. Under omni the tree is killed above it and the call fails
+   * with `OmniSpawner.MemoryExceeded` as the cause; the legacy spawner does not enforce it.
+   */
+  readonly maxRssBytes?: number
   readonly stdin?: string | Uint8Array | Stream.Stream<Uint8Array, PlatformError>
 }
 
@@ -160,7 +165,9 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
           }))) : stream
       const collect = Effect.scoped(
         Effect.gen(function* () {
-          const handle = yield* spawner.spawn(command)
+          const handle = yield* spawner
+            .spawn(command)
+            .pipe(Effect.provideService(OmniSpawner.MemoryCap, options?.maxRssBytes))
           if (options?.combineOutput) {
             const [output, exitCode] = yield* Effect.all(
               [collectStream(inspected(handle.all), options.maxOutputBytes), handle.exitCode],
@@ -218,6 +225,7 @@ export const layerWith = (mode: typeof Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER)
         combineOutput: options?.combineOutput,
         signal: options?.signal,
         timeout: options?.timeout,
+        maxRssBytes: options?.maxRssBytes,
         stdin: typeof stdin === "string" || stdin instanceof Uint8Array ? stdin : undefined,
       }).pipe(
         Effect.map((result) =>

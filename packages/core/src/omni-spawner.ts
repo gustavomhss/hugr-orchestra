@@ -45,6 +45,22 @@ export const GapPolicy = Context.Reference<"fail" | "marker">("@orchestra/OmniSp
   defaultValue: () => "fail",
 })
 
+/**
+ * The memory cap of the next omni spawn, in bytes of resident memory summed over the whole process tree (omni samples it
+ * every 250 ms and kills the tree above it). Read at spawn, like GapPolicy. Not enforced by the legacy spawner.
+ */
+export const MemoryCap = Context.Reference<number | undefined>("@orchestra/OmniSpawner/MemoryCap", {
+  defaultValue: () => undefined,
+})
+
+/** What a tree that went over its MemoryCap fails with: distinct from a timeout and from an exit code. */
+export class MemoryExceeded extends Error {
+  override readonly name = "MemoryExceeded"
+  constructor(readonly maxRssBytes: number | undefined) {
+    super(`Memory exceeded: the process tree went over ${maxRssBytes} bytes of resident memory and was killed`)
+  }
+}
+
 export type Binding = Awaited<ReturnType<typeof Omni.load>>
 type Spawn = (
   command: ChildProcess.Command,
@@ -123,6 +139,7 @@ const start = Effect.fnUntraced(function* (
   const opts = command.options
   const run = program(command)
   const policy = yield* GapPolicy
+  const maxRssBytes = yield* MemoryCap
   const adoptable = yield* Effect.serviceOption(OmniAdoption.Service)
   const context = yield* Effect.context()
   const stdinCfg = stdinConfig(opts)
@@ -130,10 +147,17 @@ const start = Effect.fnUntraced(function* (
   const exit = Deferred.makeUnsafe<readonly [number | null, string | null], PlatformError.PlatformError>()
   const log = (effect: Effect.Effect<void>) => void Effect.runForkWith(context)(effect)
   // Set from omni's promises, which may settle before this generator resumes.
-  const state: { root?: { exitCode: number | null; signal: string | null }; ended: boolean } = { ended: false }
+  const state: { root?: { exitCode: number | null; signal: string | null; reason: string }; ended: boolean } = {
+    ended: false,
+  }
   const settle = () => {
-    if (state.root && state.ended)
-      Deferred.doneUnsafe(exit, Exit.succeed([state.root.exitCode, state.root.signal] as const))
+    if (!state.root || !state.ended) return
+    if (state.root.reason === "memory_exceeded")
+      return Deferred.doneUnsafe(
+        exit,
+        Exit.fail(toPlatformError("exitCode", new MemoryExceeded(maxRssBytes), command)),
+      )
+    Deferred.doneUnsafe(exit, Exit.succeed([state.root.exitCode, state.root.signal] as const))
   }
 
   const [child, output] = yield* Effect.acquireRelease(
@@ -146,6 +170,7 @@ const start = Effect.fnUntraced(function* (
           inheritEnv: false,
           text: false,
           backpressure: true,
+          maxRssBytes,
           stdin: kind(stdinCfg.stream) === "ignore" ? "closed" : "pipe",
         })
         // Claimed now, synchronously, so no output is ever kept under omni's no-consumer budget.
@@ -280,6 +305,7 @@ export const collect = Effect.fnUntraced(function* (
     signal?: AbortSignal
     timeout?: Duration.Input
     stdin?: string | Uint8Array
+    maxRssBytes?: number
   },
 ) {
   const run = program(command)
@@ -298,11 +324,13 @@ export const collect = Effect.fnUntraced(function* (
         mergeStderr: options.combineOutput,
         maxOutputBytes: Number.MAX_SAFE_INTEGER,
         timeoutMs: millis(options.timeout),
+        maxRssBytes: options.maxRssBytes,
         signal: signal ? AbortSignal.any([interrupt, signal]) : interrupt,
       }),
     catch: (err) => fromOmni("run", err, command),
   })
   if (result.reason === "timeout") return yield* Effect.fail(new Error("Timed out"))
+  if (result.reason === "memory_exceeded") return yield* Effect.fail(new MemoryExceeded(options.maxRssBytes))
   if (result.exitCode === null)
     return yield* Effect.fail(
       toPlatformError(

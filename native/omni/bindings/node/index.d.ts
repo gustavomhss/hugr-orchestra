@@ -60,6 +60,11 @@ export interface CommonOptions {
   inheritEnv?: boolean;
   /** Whole-run deadline; on expiry the tree is stopped and `reason` is `"timeout"`. */
   timeoutMs?: number;
+  /**
+   * Memory cap for the whole tree: the resident memory (RSS) of every live process of the tree is summed every 250 ms,
+   * and above this many bytes the tree is killed at once and `reason` is `"memory_exceeded"`. No cap by default.
+   */
+  maxRssBytes?: number;
   /** Default 2000: how long the tree gets to wind down when stopped. */
   graceMs?: number;
   /** Cancellation: the tree is stopped and `reason` is `"aborted"`. */
@@ -139,7 +144,7 @@ export interface Exit {
   exitCode: number | null;
   /** Unix signal name; always `null` on Windows. */
   signal: string | null;
-  reason: "exit" | "signal" | "killed" | "timeout" | "aborted";
+  reason: "exit" | "signal" | "killed" | "timeout" | "aborted" | "memory_exceeded";
   /** `reason === "exit" && exitCode === 0`. */
   success: boolean;
 }

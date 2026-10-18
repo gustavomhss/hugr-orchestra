@@ -33,7 +33,7 @@ enum Cause {
     Open,
     /// The root's exit was observed before the library acted: the root's own status is the reason.
     Root,
-    /// The library acted first, for this reason (`Killed`, `Timeout` or `Aborted`).
+    /// The library acted first, for this reason (`Killed`, `Timeout`, `Aborted` or `MemoryExceeded`).
     Acted(Reason),
 }
 
