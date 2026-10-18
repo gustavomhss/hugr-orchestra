@@ -139,6 +139,8 @@ export class Denied extends Schema.TaggedErrorClass<Denied>()("ToolSafety.Denied
   reason: Schema.String,
   /** Words for the model after the reason, such as the message of the hook that denied the call. */
   detail: Schema.optional(Schema.String),
+  /** The Relay hook that refused, with its own words, so a person can be told which hook said no and why. */
+  hook: Schema.optional(Schema.Struct({ name: Schema.String, message: Schema.String })),
 }) {
   /** Keep the first line exactly `Tool safety HOLD: <reason>`; tests match it. */
   override get message() {

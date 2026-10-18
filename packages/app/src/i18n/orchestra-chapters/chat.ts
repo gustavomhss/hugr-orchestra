@@ -10,6 +10,7 @@ export const CHAT_COPY = {
   "orchestra.chat.contextFiles": "Add files to context",
   "orchestra.chat.stop": "Stop",
   "orchestra.chat.stop.failed": "Could not stop the session. It may still be running on the server.",
+  "orchestra.chat.send.blockedByHook": "Blocked by hook “{{name}}”: {{message}}",
   "orchestra.chat.placeholder": "Message Orchestra…",
   "orchestra.chat.menu.rename": "Rename session",
   "orchestra.chat.menu.export": "Export session",
