@@ -241,6 +241,14 @@ html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-
   color: var(--orchestra-sidebar-icon);
   fill: currentColor;
 }
+[data-orchestra-palette="graphite"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+[data-orchestra-palette="graphite"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
 [data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }

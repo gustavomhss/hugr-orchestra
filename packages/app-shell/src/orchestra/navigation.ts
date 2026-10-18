@@ -43,8 +43,8 @@ export function isWip(id: string) {
 }
 
 export function breadcrumbLabel(route: LayoutRoute) {
-  if (route.type === "home") return "orchestra.shell.crumb.home"
-  if (route.type !== "chapter") return "orchestra.shell.crumb.session"
+  // Session and draft pages sit under Home: "home / <project> / <session title>".
+  if (route.type !== "chapter") return "orchestra.shell.crumb.home"
   if (Object.hasOwn(crumbs, route.chapter)) return crumbs[route.chapter as keyof typeof crumbs]
   return navigation.find((item) => item.id === route.chapter)?.label ?? "orchestra.shell.crumb.home"
 }

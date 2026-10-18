@@ -629,6 +629,27 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   line-height: normal;
 }
 
+/* Links in the breadcrumb ("home / project / session title") keep the crumb's own type; the bar itself ignores
+   the pointer so the titlebar stays draggable around them. */
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  pointer-events: auto;
+  max-inline-size: 100%;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: inherit;
+  font: inherit;
+  text-overflow: ellipsis;
+  overflow: hidden;
+  white-space: nowrap;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+.orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
+
 /* The reference's 520 resolves to Inter Medium plus synthetic bold; Blink synthesizes bold for web
    fonts only at 600 or more against a lighter face, so ask the Medium-only face for 600. */
 .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-titlebar-breadcrumb"] > :first-child {
