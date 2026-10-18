@@ -14,7 +14,7 @@ import {
   type Tool,
 } from "@modelcontextprotocol/sdk/types.js"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Effect, Exit, Fiber } from "effect"
 import type { MCP as MCPNS } from "../../src/mcp/index"
 import { MCP } from "../../src/mcp/index"
 import { McpOAuthCallback } from "../../src/mcp/oauth-callback"
@@ -36,6 +36,8 @@ interface LifecycleServerState {
   resourcePages?: Record<string, Page<{ name: string; uri: string; description?: string }>>
   resourceTemplatePages?: Record<string, Page<{ name: string; uriTemplate: string; description?: string }>>
   listToolsError?: string
+  listToolsGate?: Promise<void>
+  listToolsCalls: number
   requestDelay?: number
   roots?: Array<{ uri: string; name?: string }>
   requests: string[]
@@ -53,6 +55,7 @@ function lifecycleServer(input?: { capabilities?: ServerCapabilities; instructio
         resourceTemplates: [],
         requests: [],
         aborted: 0,
+        listToolsCalls: 0,
       }
 
       const makeProtocol = async () => {
@@ -66,10 +69,12 @@ function lifecycleServer(input?: { capabilities?: ServerCapabilities; instructio
         })
 
         if (capabilities.tools) {
-          protocol.setRequestHandler(ListToolsRequestSchema, (request) => {
+          protocol.setRequestHandler(ListToolsRequestSchema, async (request) => {
+            state.listToolsCalls++
+            if (state.listToolsGate) await state.listToolsGate
             if (state.listToolsError) throw new Error(state.listToolsError)
             const page = state.toolPages?.[request.params?.cursor ?? "initial"]
-            return Promise.resolve({ tools: page?.items ?? state.tools, nextCursor: page?.nextCursor })
+            return { tools: page?.items ?? state.tools, nextCursor: page?.nextCursor }
           })
         }
         if (capabilities.prompts) {
@@ -324,6 +329,31 @@ it.instance("disconnect removes protocol data and reconnect establishes a new se
     yield* mcp.connect("reconnect-server")
     expect((yield* mcp.status())["reconnect-server"]?.status).toBe("connected")
     expect(Object.keys(yield* mcp.tools())).toEqual(["reconnect-server_test_tool"])
+  }),
+)
+
+it.instance("disconnect during an in-flight connect is not undone when the connect finishes", () =>
+  Effect.gen(function* () {
+    const server = yield* lifecycleServer()
+    const gate = Promise.withResolvers<void>()
+    server.state.listToolsGate = gate.promise
+    const mcp = yield* MCP.Service
+    const connecting = yield* mcp.add("race-server", remote(server.url)).pipe(Effect.forkChild)
+    yield* pollWithTimeout(
+      Effect.sync(() => (server.state.listToolsCalls > 0 ? true : undefined)),
+      "connect did not reach tool discovery",
+    )
+
+    yield* mcp.disconnect("race-server")
+    gate.resolve()
+    yield* Fiber.join(connecting)
+
+    expect((yield* mcp.status())["race-server"]?.status).toBe("disabled")
+    expect(Object.keys(yield* mcp.tools())).toEqual([])
+    yield* pollWithTimeout(
+      Effect.sync(() => (server.state.aborted > 0 ? server.state.aborted : undefined)),
+      "stale protocol session was not closed",
+    )
   }),
 )
 

@@ -1,7 +1,8 @@
 export * as McpProjectConfig from "./project-config"
 
 import path from "path"
-import { Effect, Schema, Semaphore } from "effect"
+import { Effect, Schema } from "effect"
+import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import { applyEdits, modify, parse, parseTree, type ParseError, printParseErrorCode } from "jsonc-parser"
 import { FSUtil } from "@orchestra/core/fs-util"
 import type { ConfigMCPV1 } from "@orchestra/core/v1/config/mcp"
@@ -29,7 +30,8 @@ const exclusive = {
   local: ["command", "cwd", "environment"],
   remote: ["url", "headers", "oauth"],
 } as const
-const locks = new Map<string, Semaphore.Semaphore>()
+// One writer per profile directory; a directory's lock is dropped once no writer holds or waits for it.
+export const writers = KeyedMutex.makeUnsafe<string>()
 
 // The profile-scoped files `orchestra mcp add` writes, in load order (a later file wins).
 export function files(directory: string) {
@@ -117,10 +119,7 @@ export const remove = Effect.fn("McpProjectConfig.remove")(function* (directory:
 
 // One writer per profile directory so concurrent saves cannot interleave read-modify-write.
 function exclusiveTo<A, E, R>(directory: string, effect: Effect.Effect<A, E, R>) {
-  const key = path.resolve(directory)
-  const lock = locks.get(key) ?? Semaphore.makeUnsafe(1)
-  locks.set(key, lock)
-  return lock.withPermits(1)(effect)
+  return writers.withLock(path.resolve(directory))(effect)
 }
 
 const read = Effect.fnUntraced(function* (directory: string) {
