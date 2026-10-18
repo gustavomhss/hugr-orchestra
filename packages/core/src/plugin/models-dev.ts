@@ -1,17 +1,13 @@
+import type { PluginContext } from "@orchestra/plugin/v2/effect"
 import { define } from "./internal"
 import { Effect, Stream } from "effect"
-import type { Types } from "effect"
 import { EventV2 } from "../event"
 import { ModelsDev } from "../models-dev"
-import type { ModelV2 } from "../model"
 import { ProviderV2 } from "../provider"
 
-// The plugin context still types catalog drafts with its own wire shape, whose request and variant bodies are
-// open-ended (`unknown`) where the schema says JSON. Keep that widening here until the plugin types move to schema.
-type Draft = Omit<Types.DeepMutable<typeof ModelV2.Info.Encoded>, "request" | "variants"> & {
-  request: { headers: Record<string, string>; body: Record<string, unknown> }
-  variants: Array<{ id: string; headers: Record<string, string>; body: Record<string, unknown> }>
-}
+// The draft is whatever the plugin context hands out: its model shape is owned by the plugin contract.
+type CatalogDraft = Parameters<Parameters<PluginContext["catalog"]["transform"]>[0]>[0]
+type Draft = Parameters<Parameters<CatalogDraft["model"]["update"]>[2]>[0]
 type Cost = Draft["cost"]
 
 function released(date: string) {
