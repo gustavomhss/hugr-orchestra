@@ -1,6 +1,6 @@
 import { Global } from "@orchestra/core/global"
 import { InstallationVersion } from "@orchestra/core/installation/version"
-import { createOrchestraClient } from "@orchestra/sdk/v2/client"
+import { createOrchestraClient } from "../compat/sdk-v2-client"
 import { ServerAuth } from "@orchestra/server/auth"
 import { Context, Effect, FileSystem, Layer, Option, Schedule, Schema, Scope } from "effect"
 import { HttpServer } from "effect/unstable/http"
