@@ -778,8 +778,9 @@ function continues(lead: number, offset: number, byte: number) {
 // event, so a workflow that completed reads as complete; any other trailing record still reads as truncated.
 function finalEvent(entries: ReadonlyArray<Entry>) {
   const last = entries.at(-1)
+  if (!last) return null
   const before = entries.at(-2)
-  const settled = last && before && get(last, "event") === "workflow-disposition" &&
+  const settled = before !== undefined && get(last, "event") === "workflow-disposition" &&
     get(last, "sourceSeq") === get(before, "seq") && typeof get(before, "seq") === "number"
   const event = get(settled ? before : last, "event")
   return typeof event === "string" ? event : null
