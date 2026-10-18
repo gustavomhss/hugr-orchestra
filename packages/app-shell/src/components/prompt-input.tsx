@@ -145,6 +145,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   let scrollRef!: HTMLDivElement
   let slashPopoverRef!: HTMLDivElement
   let restoreEndOnFocus = true
+  let focusRestoreFrame = 0
   let savedCursor: number | null = null
 
   const mirror = { input: false }
@@ -528,7 +529,9 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
   const handleFocus = () => {
     if (!restoreEndOnFocus) return
     restoreEndOnFocus = false
-    requestAnimationFrame(() => {
+    // The browser parks the caret at the start after focus, so the saved cursor is restored a frame later. A key
+    // pressed within that frame already moved the caret (handleKeyDown cancels this frame); restoring would undo it.
+    focusRestoreFrame = requestAnimationFrame(() => {
       if (document.activeElement !== editorRef) return
       setCursorPosition(editorRef, prompt.cursor() ?? promptLength(prompt.current()))
       queueScroll()
@@ -1233,6 +1236,7 @@ export const PromptInput: Component<PromptInputProps> = (props) => {
     })
 
   const handleKeyDown = (event: KeyboardEvent) => {
+    cancelAnimationFrame(focusRestoreFrame)
     if ((event.metaKey || event.ctrlKey) && !event.altKey && !event.shiftKey && event.key.toLowerCase() === "u") {
       event.preventDefault()
       if (store.mode !== "normal") return
