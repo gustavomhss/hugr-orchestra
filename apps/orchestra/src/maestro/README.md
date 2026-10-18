@@ -30,4 +30,4 @@
 
 ## Contracts and verification limits
 
-- Seats are referred to by id (AGENTS.md, "Agent Names"); default display names live only in `apps/orchestra/src/maestro/roster.ts`.
+- Seats are referred to by id (AGENTS.md, "Agent Names"); default display names live only in `modules/maestro/coordination/src/roster.ts`.

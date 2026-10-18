@@ -1,4 +1,4 @@
-import PROMPT from "../../agent/prompt/backend.txt"
+import PROMPT from "./prompt/backend.txt"
 import { define } from "./seat"
 
 // The reference seat (docs/specs/backend-specialist). Its default label is BACKEND_DEFAULT_LABEL in maestro/roster.ts.

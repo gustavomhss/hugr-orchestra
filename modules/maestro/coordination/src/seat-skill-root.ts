@@ -57,7 +57,8 @@ export const playbooks = await (async () => {
     process.env.ORCHESTRA_PLAYBOOKS_DIR ??
     (files
       ? await extract("maestro", files, Global.Path.cache, InstallationVersion)
-      : fileURLToPath(new URL("../../playbooks", import.meta.url)))
+      // Source checkout only. The playbooks still live in apps/orchestra until they move in B1-C.
+      : fileURLToPath(new URL("../../../../apps/orchestra/playbooks", import.meta.url)))
   // Overrides are explicit roots, never permission to publish an empty or incomplete plugin as success.
   const actual = await PlaybookContent.read(root)
   if (files && Object.keys(files).some((file) => actual[file] !== files[file]))

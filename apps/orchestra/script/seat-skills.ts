@@ -4,7 +4,7 @@ import { PlaybookContent } from "../src/maestro/playbook-content"
 import { fileURLToPath } from "node:url"
 
 // Every seat's packaged skills (F6.12) as one generated module: seat id -> tree-relative path -> file text. Both the
-// Bun binary (script/build.ts) and the desktop Node sidecar (script/build-node.ts) embed it; src/maestro/seat-skill-root.ts
+// Bun binary (script/build.ts) and the desktop Node sidecar (script/build-node.ts) embed it; modules/maestro/coordination/src/seat-skill-root.ts
 // extracts each tree to a real directory at runtime.
 export async function seatSkillsModule() {
   const trees = await Promise.all(

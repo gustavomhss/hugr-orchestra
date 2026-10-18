@@ -1,4 +1,4 @@
-import PROMPT from "../../agent/prompt/frankie.txt"
+import PROMPT from "./prompt/frankie.txt"
 import { define } from "./seat"
 
 export default define({

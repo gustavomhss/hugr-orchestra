@@ -173,8 +173,8 @@ describe("seat skill packaging", () => {
 })
 
 async function bundle(dir: string, target: "bun" | "node", files: Record<string, string>, seat = "backend", env: Record<string, string> = {}) {
-  const rootModule = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts").replaceAll("\\", "/")
-  const seatsModule = path.resolve(import.meta.dir, "../../src/maestro/seats/index.ts").replaceAll("\\", "/")
+  const rootModule = path.resolve(import.meta.dir, "../../../../modules/maestro/coordination/src/seat-skill-root.ts").replaceAll("\\", "/")
+  const seatsModule = path.resolve(import.meta.dir, "../../../../modules/maestro/coordination/src/seats/index.ts").replaceAll("\\", "/")
   const config = {
     target,
     format: "esm",

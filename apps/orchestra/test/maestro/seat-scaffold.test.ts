@@ -8,25 +8,27 @@ import { define } from "../../src/maestro/seats/seat"
 import { tmpdir } from "../fixture/fixture"
 
 const source = path.resolve(import.meta.dirname, "../..")
+// The seat registry, roster and seat-skill-root live in the maestro coordination module; the scaffold writes into that package layout.
+const seatsSource = path.resolve(import.meta.dirname, "../../../../modules/maestro/coordination")
 const sample = { ...Seats.all.backend, id: "sample-seat", skills: ["sample-seat-work"], atlasMemory: false, toolkit: false }
 
 async function fixture() {
   return tmpdir({
     init: async (dir) => {
-      const root = path.join(dir, "apps/orchestra")
-      // Seat skill trees live in packages/, beside apps/ in the real layout.
+      const root = path.join(dir, "modules/maestro/coordination")
+      // Seat skill trees live in packages/, beside modules/ in the real layout.
       await fs.mkdir(path.join(dir, "packages"), { recursive: true })
-      await fs.mkdir(path.join(root, "src/agent/prompt"), { recursive: true })
-      await fs.mkdir(path.join(root, "src/maestro/seats"), { recursive: true })
-      const index = path.join(root, "src/maestro/seats/index.ts")
-      await fs.copyFile(path.join(source, "src/maestro/seats/index.ts"), index)
+      await fs.mkdir(path.join(root, "src/seats/prompt"), { recursive: true })
+      await fs.mkdir(path.join(root, "src/seats"), { recursive: true })
+      const index = path.join(root, "src/seats/index.ts")
+      await fs.copyFile(path.join(seatsSource, "src/seats/index.ts"), index)
       return { root, index, lock: `${index}.seat-lock` }
     },
   })
 }
 
 function targets(root: string, id = "sample-seat") {
-  return [path.join(root, `src/maestro/seats/${id}.ts`), path.join(root, `src/agent/prompt/${id}.txt`), path.resolve(root, "../../packages", `${id}-specialist`)]
+  return [path.join(root, `src/seats/${id}.ts`), path.join(root, `src/seats/prompt/${id}.txt`), path.resolve(root, "../../../packages", `${id}-specialist`)]
 }
 
 async function absent(root: string, id = "sample-seat") {
@@ -82,12 +84,12 @@ describe("seat scaffold validation", () => {
     ] as const) {
       await using tmp = await tmpdir()
       const registry = path.join(tmp.path, "registry.ts")
-      await fs.writeFile(registry, `import backend from ${JSON.stringify(path.join(source, "src/maestro/seats/backend.ts"))}\nexport const Seats = { all: { backend, sample: ${JSON.stringify({ ...sample, ...change })} } }\n`)
+      await fs.writeFile(registry, `import backend from ${JSON.stringify(path.join(seatsSource, "src/seats/backend.ts"))}\nexport const Seats = { all: { backend, sample: ${JSON.stringify({ ...sample, ...change })} } }\n`)
       const copied = path.join(tmp.path, "roster.ts")
-      await fs.writeFile(copied, (await fs.readFile(path.join(source, "src/maestro/roster.ts"), "utf8"))
+      await fs.writeFile(copied, (await fs.readFile(path.join(seatsSource, "src/roster.ts"), "utf8"))
         .replace('from "./seats"', `from ${JSON.stringify(registry)}`)
-        .replace('from "./seats/seat"', `from ${JSON.stringify(path.join(source, "src/maestro/seats/seat.ts"))}`)
-        .replace('from "./seat-skill-root"', `from ${JSON.stringify(path.join(source, "src/maestro/seat-skill-root.ts"))}`)
+        .replace('from "./seats/seat"', `from ${JSON.stringify(path.join(seatsSource, "src/seats/seat.ts"))}`)
+        .replace('from "./seat-skill-root"', `from ${JSON.stringify(path.join(seatsSource, "src/seat-skill-root.ts"))}`)
         .replace('from "../tool/truncation-dir"', `from ${JSON.stringify(path.join(source, "src/tool/truncation-dir.ts"))}`)
         .replace('from "@orchestra/core/tool/upstream-arsenal"', `from ${JSON.stringify(path.join(source, "../../packages/core/src/tool/upstream-arsenal.ts"))}`))
       await expect(import(copied)).rejects.toThrow(error)
@@ -125,7 +127,7 @@ describe("seat scaffold transaction", () => {
   test("symlinked package and artifact parents are refused before writes", async () => {
     for (const kind of ["package", "seats", "prompt"]) {
       await using tmp = await fixture()
-      const original = kind === "package" ? tmp.extra.root : path.join(tmp.extra.root, kind === "seats" ? "src/maestro/seats" : "src/agent/prompt")
+      const original = kind === "package" ? tmp.extra.root : path.join(tmp.extra.root, kind === "seats" ? "src/seats" : "src/seats/prompt")
       const redirected = `${original}-real`
       await fs.rename(original, redirected)
       await fs.symlink(redirected, original, process.platform === "win32" ? "junction" : "dir")
