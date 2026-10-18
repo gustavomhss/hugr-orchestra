@@ -10,16 +10,22 @@ import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { Research } from "@orchestra/schema/research"
+import { filesystem, httpClient } from "@orchestra/core/effect/app-node-platform"
 import { Agent } from "@/agent/agent"
+import { Config } from "@/config/config"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
+import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { LogicalTask } from "@/maestro/logical-task"
 import { Permission } from "@/permission"
 import { ResearchExecution } from "@/research/allowance"
 import { MessageID, PartID } from "@/session/schema"
+import { Instruction } from "@/session/instruction"
 import { Session } from "@/session/session"
+import { Skill } from "@/skill"
 import { ToolRegistry } from "@/tool/registry"
+import { Truncate } from "@/tool/truncate"
 import { Tool } from "@/tool/tool"
 import { TestAppNodeBuilder } from "../../fixture/app-node-builder"
 import { TestInstance } from "../../fixture/fixture"
@@ -28,6 +34,8 @@ import { testEffect } from "../../lib/effect"
 const nodes = LayerNode.group([
   ToolRegistry.node, Session.node, ResearchExecution.node, ResearchRecords.node, ResearchArtifacts.node,
   Agent.node, Permission.node, FSUtil.node, Database.node, SessionProjector.node, EventV2Bridge.node, Git.node,
+  // The services ResearchRegistry.make reaches when a test initializes the engine tools itself.
+  Config.node, Skill.node, Truncate.node, Instruction.node, AtlasKnowledge.node, filesystem, httpClient,
 ])
 
 /** The native loop with default flags. */
