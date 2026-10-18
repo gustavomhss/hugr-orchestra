@@ -3,8 +3,10 @@ import { createComputed, createRoot } from "solid-js"
 import { ServerConnection } from "@/context/server"
 import { ServerScope } from "@/utils/server-scope"
 import { clearPending, pendingPolicy, pendingSelection, pendingSnapshot, togglePending } from "@/components/draft-subagent-models"
-import { draftSessionKey } from "@/components/prompt-input/draft-session"
+import { draftSessionKey, persistPending } from "@/components/prompt-input/draft-session"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { Platform } from "@/context/platform"
+import { Persist, removePersisted } from "@/utils/persist"
 
 test("draft key isolates opaque server scope, source directory and draft identity", () => {
   const remote = ServerScope.fromServerKey(ServerConnection.Key.make("opaque-server-b"))
@@ -66,4 +68,39 @@ test("inherit tombstones keep monotonic revisions across inherited-policy ABA un
   expect(pendingSnapshot(key)).toEqual(latest)
   expect(clearPending(key, latest.revision)).toBe(true)
   expect(pendingSnapshot(key)).toEqual({ revision: 0, policy: { mode: "inherit" } })
+})
+
+test("subagent models picked on a draft are saved with it, come back after a reload, and go when the draft goes", () => {
+  const platform: Platform = {
+    platform: "web",
+    openExternal: () => undefined,
+    restart: async () => undefined,
+    notify: async () => undefined,
+  }
+  const key = draftSessionKey(ServerScope.local, "/saved-source", "draft-saved")
+  const saved = Persist.draft("draft-saved", "subagent-models")
+  removePersisted(saved)
+  clearPending(key, pendingSnapshot(key).revision)
+  // Opening the draft's composer starts saving; closing the page stops it and empties memory.
+  const open = () => createRoot((dispose) => {
+    persistPending("draft-saved", key, platform)
+    return dispose
+  })
+
+  const first = open()
+  togglePending(key, "provider", "model/with/slashes", true)
+  first()
+  clearPending(key, pendingSnapshot(key).revision)
+  expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+
+  const reloaded = open()
+  expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model/with/slashes" }] })
+  expect(pendingSnapshot(key).revision).toBeGreaterThan(0)
+  reloaded()
+
+  removePersisted(saved)
+  clearPending(key, pendingSnapshot(key).revision)
+  const gone = open()
+  expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
+  gone()
 })

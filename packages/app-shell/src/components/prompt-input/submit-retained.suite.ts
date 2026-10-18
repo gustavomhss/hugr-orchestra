@@ -7,8 +7,8 @@ import { clearPending, pendingPolicy, pendingSnapshot, togglePending } from "../
 import { draftSessionKey } from "./draft-session"
 import {
   behaviors, commands, createPromptSubmit, createdSessions, enabledAutoAccept, optimistic, optimisticRemovals,
-  policyWrites, promoted, promotedDrafts, promptInputs, sentCommands, sentShell, state, submitInput,
-  policyFixture, sdkFor,
+  policyWrites, promoted, promotedDrafts, promptInputs, removedSessions, sentCommands, sentShell, state, storedSessions,
+  submitInput, policyFixture, sdkFor,
 } from "./submit-harness"
 
 // Restores the retained-admission proofs from dev 792ed6cc7c against the shared isolated harness.
@@ -106,6 +106,58 @@ test.each(["prompt", "command", "shell"])("failed fresh %s keeps its full payloa
   expect([...promptInputs, ...sentCommands, ...sentShell].map((input) => JSON.stringify(input))).toEqual([first, first])
   expect(promotedDrafts).toHaveLength(1)
   expect(state.worktreeResets).toBe(1)
+})
+
+test.each(["v1", "v2"])("failed first send on %s deletes the Session the server confirms empty and keeps the draft", async (protocol) => {
+  state.protocol = protocol
+  state.search.draftId = "draft-1"
+  const key = draftSessionKey(ServerScope.local, "/repo/main", "draft-1")
+  togglePending(key, "provider", "model", true)
+  const real = createPromptState({ prompt: "first turn" })
+  const contents = real.current()
+  state.messageCount = 0
+  state.sendHook = async () => { throw new Error("admission failed") }
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined, pendingKey: () => key })
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(removedSessions).toEqual(["session-1"])
+  expect(storedSessions["/repo/main"]?.map((session) => session.id)).toEqual([])
+  expect(real.current()).toBe(contents)
+  expect(pendingPolicy(key).mode).toBe("allowlist")
+  expect(promotedDrafts).toEqual([])
+  state.sendHook = async () => {}
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toEqual(["/repo/main", "/repo/main"])
+  expect(promptInputs.at(-1)).toMatchObject({ sessionID: "session-2", text: "first turn" })
+  expect(promotedDrafts).toEqual([{ draftID: "draft-1", server: "project-server", sessionId: "session-2" }])
+})
+
+test.each([
+  { name: "the server cannot be read", messageCount: undefined, removeFailure: false, removed: [] },
+  { name: "the delete fails", messageCount: 0, removeFailure: true, removed: ["session-1"] },
+])("failed first send keeps the Session as Empty session when $name, and the retry sends to it", async (probe) => {
+  state.messageCount = probe.messageCount
+  state.removeFailure = probe.removeFailure
+  const real = createPromptState({ prompt: "first turn" })
+  state.sendHook = async () => { throw new Error("admission failed") }
+  const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(removedSessions).toEqual(probe.removed)
+  expect(storedSessions["/repo/main"]).toEqual([expect.objectContaining({ id: "session-1", title: "orchestra.chat.send.emptySession" })])
+  state.removeFailure = false
+  state.sendHook = async () => {}
+  await submit.handleSubmit(new Event("submit"))
+  expect(createdSessions).toEqual(["/repo/main"])
+  expect(promptInputs.at(-1)).toMatchObject({ sessionID: "session-1", text: "first turn" })
+  expect(storedSessions["/repo/main"]?.[0]).toMatchObject({ id: "session-1", title: "New session 1" })
+})
+
+test("failed first send leaves a Session that already holds a message alone", async () => {
+  state.messageCount = 1
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "first turn" }), info: () => undefined })
+  state.sendHook = async () => { throw new Error("response lost") }
+  expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
+  expect(removedSessions).toEqual([])
+  expect(storedSessions["/repo/main"]).toEqual([expect.objectContaining({ id: "session-1", title: "New session 1" })])
 })
 
 test("failed exact retry reuses wire preparation, attachment bytes, optimistic part IDs and system", async () => {
