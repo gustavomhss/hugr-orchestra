@@ -1,7 +1,7 @@
 export * as LLMPrepared from "./prepared"
 
 import { asSchema, jsonSchema, type Tool } from "ai"
-import type { LLM } from "."
+import type { LLM } from "../llm"
 
 declare const prepared: unique symbol
 export type Plan = { readonly [prepared]: true }
