@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { PermissionRequest, Session } from "@orchestra/sdk/v2/client"
 import { base64Encode } from "@orchestra/core/util/encode"
-import { autoRespondsPermission, isDirectoryAutoAccepting, sessionAutoAccept } from "./permission-auto-respond"
+import { autoRespondsPermission, isDirectoryAutoAccepting, isHookAsk, sessionAutoAccept } from "./permission-auto-respond"
 
 const session = (input: { id: string; parentID?: string }) =>
   ({
@@ -103,6 +103,35 @@ describe("autoRespondsPermission", () => {
     }
 
     expect(autoRespondsPermission(autoAccept, sessions, permission("child"), directory)).toBe(true)
+  })
+
+  test("a Relay hook's Ask is never answered by auto-accept, whichever level turned it on", () => {
+    const directory = "/tmp/project"
+    const sessions = [session({ id: "root" }), session({ id: "child", parentID: "root" })]
+    const hookAsk = (sessionID: string) => ({ sessionID, metadata: { action: "relay_hook", message: "Confirm." } })
+    const levels = [
+      { [`${base64Encode(directory)}/*`]: true },
+      { [`${base64Encode(directory)}/root`]: true },
+      { root: true },
+    ]
+
+    levels.forEach((autoAccept) => {
+      expect(autoRespondsPermission(autoAccept, sessions, permission("child"), directory)).toBe(true)
+      expect(autoRespondsPermission(autoAccept, sessions, hookAsk("child"), directory)).toBe(false)
+      expect(sessionAutoAccept(autoAccept, sessions, hookAsk("child"), directory)).toBe(false)
+    })
+    // Other native asks still follow the setting.
+    expect(
+      autoRespondsPermission(
+        { [`${base64Encode(directory)}/*`]: true },
+        sessions,
+        { sessionID: "root", metadata: { action: "edit" } },
+        directory,
+      ),
+    ).toBe(true)
+    expect(isHookAsk({ metadata: { action: "relay_hook" } })).toBe(true)
+    expect(isHookAsk({ metadata: { action: "edit" } })).toBe(false)
+    expect(isHookAsk({})).toBe(false)
   })
 })
 

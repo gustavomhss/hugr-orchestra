@@ -44,6 +44,7 @@ export const CICD_COPY = {
   "orchestra.cicd.field.branch": "Branch",
   "orchestra.cicd.field.trigger": "Trigger",
   "orchestra.cicd.field.commands": "Commands",
+  "orchestra.cicd.field.commandsPlaceholder": "One shell command per line",
   "orchestra.cicd.field.environment": "Deployment environment",
   "orchestra.cicd.field.deploy": "Include a deployment stage",
   "orchestra.cicd.field.commandsRequired": "Add at least one command.",

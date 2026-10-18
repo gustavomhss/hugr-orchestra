@@ -67,19 +67,23 @@ export function shortcutGroup(id: string): ShortcutGroup {
   return "general"
 }
 
-// Turns a key press in the capture field into a binding config. Bare modifiers, Escape and focus
-// moves are not combinations; a bare Backspace or Delete clears the binding like Settings does.
+// Every text field owns these; a binding would take select-all, copy, paste, cut or undo away from it.
+const TEXT_EDITING = new Set(["mod+a", "mod+c", "mod+v", "mod+x", "mod+z", "mod+shift+z"])
+
+// Turns a key press in the capture field into a binding config. Bare modifiers, Escape, focus
+// moves, Enter, Space and the text-editing combinations are not bindable; a bare Backspace or
+// Delete clears the binding. Settings > Shortcuts and the Shortcuts chapter both capture here.
 export function captureKeybind(
   event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">,
   mac: boolean,
 ) {
   if (["Shift", "Control", "Alt", "Meta", "Escape", "Dead", "Unidentified", "Process"].includes(event.key)) return
   const modified = event.ctrlKey || event.metaKey || event.altKey
-  if (event.key === "Tab" && !modified) return
+  if (["Tab", "Enter", " "].includes(event.key) && !modified) return
   if ((event.key === "Backspace" || event.key === "Delete") && !modified && !event.shiftKey) return "none"
   const key = normalizeKey(event.key)
   if (!key) return
-  return [
+  const combo = [
     (mac ? event.metaKey : event.ctrlKey) && "mod",
     mac && event.ctrlKey && "ctrl",
     !mac && event.metaKey && "meta",
@@ -89,6 +93,8 @@ export function captureKeybind(
   ]
     .filter((part) => typeof part === "string")
     .join("+")
+  if (TEXT_EDITING.has(combo)) return
+  return combo
 }
 
 export function keybindSignatures(config: string | undefined) {

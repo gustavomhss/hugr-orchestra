@@ -96,10 +96,8 @@ test("Relay UI cannot POST start, release or check; authoring and recorded GETs 
   try {
     await new Promise((resolve) => setTimeout(resolve, 100))
     const buttons = () => [...host.querySelectorAll<HTMLButtonElement>("button")]
-    const start = buttons().find((button) => button.textContent === "Run")!
-    expect(start).toBeDefined()
-    expect(start.disabled).toBe(true)
-    start.dispatchEvent(new MouseEvent("click", { bubbles: true }))
+    // The editor head renders no Run control while the server has no run routes, so nothing there can start a run.
+    expect(buttons().some((button) => button.textContent === "Run")).toBe(false)
     // Also drive a restored legacy release form: absence alone cannot hide a live callback.
     const reason = host.querySelector("textarea")
     if (reason) {
@@ -127,4 +125,55 @@ test("Relay UI cannot POST start, release or check; authoring and recorded GETs 
     queryClient.clear()
     host.remove()
   }
+})
+
+test("the editor head says why Publish is off, publishes a pending rename and offers Use in chat", async () => {
+  const doc = decodeDocument({
+    id: "d", name: "Workflow", nodes: [], connections: {}, tags: [], meta: {}, isArchived: false, active: true,
+    activeVersionId: "v1", activeVersion: null, versionId: "v2", versionCounter: 2, checksum: "c",
+    createdAt: "2026-10-07T00:00:00Z", updatedAt: "2026-10-07T00:00:00Z", runnable: true,
+  })
+  const calls: string[] = []
+  const show = (input: { canPublish: boolean; save: { state: "saved" | "saving"; dirty: boolean; error: string } }) => {
+    const host = document.createElement("div")
+    document.body.append(host)
+    const dispose = render(() => createComponent(PlatformProvider, {
+      value: { platform: "web", openExternal() {}, restart: async () => {}, notify: async () => {} },
+      get children() { return createComponent(LanguageProvider, { locale: "en", get children() {
+        return createComponent(EditorHead, {
+          kind: "workflow", document: doc, name: doc.name, tab: "editor", runCount: undefined, issues: [], menu: [],
+          go() {}, onIssue() {}, onTest() {}, onInstall() {}, onReload() {},
+          onRename: (name) => void calls.push(`rename ${name}`), onPublish: () => void calls.push("publish"),
+          onUseInChat: () => void calls.push("chat"),
+          ...input,
+        })
+      } }) },
+    }), host)
+    return { host, dispose: () => (dispose(), host.remove()) }
+  }
+  const settle = () => new Promise((resolve) => setTimeout(resolve, 100))
+  const button = (host: HTMLElement, label: string) =>
+    [...host.querySelectorAll<HTMLButtonElement>("button")].find((item) => item.textContent === label)!
+
+  const saving = show({ canPublish: false, save: { state: "saving", dirty: false, error: "" } })
+  await settle()
+  expect(saving.host.querySelector(".wf-publish-reason")?.textContent).toBe("Waiting for the save to finish")
+  expect(button(saving.host, "Publish").disabled).toBe(true)
+  expect(button(saving.host, "Publish").classList.contains("primary")).toBe(false)
+  saving.dispose()
+
+  const ready = show({ canPublish: true, save: { state: "saved", dirty: false, error: "" } })
+  await settle()
+  expect(ready.host.querySelector(".wf-publish-reason")).toBeNull()
+  expect(button(ready.host, "Publish").classList.contains("primary")).toBe(true)
+  button(ready.host, "Use in chat").click()
+  expect(calls).toEqual(["chat"])
+
+  // Pressing Publish blurs the name field, which would switch Publish off before the click: the rename goes with it.
+  const name = ready.host.querySelector<HTMLInputElement>(".wf-name")!
+  name.focus()
+  name.value = "Renamed"
+  button(ready.host, "Publish").dispatchEvent(new Event("pointerdown", { bubbles: true }))
+  expect(calls).toEqual(["chat", "rename Renamed", "publish"])
+  ready.dispose()
 })

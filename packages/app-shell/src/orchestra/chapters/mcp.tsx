@@ -12,10 +12,11 @@ import { useServerSync } from "@/context/server-sync"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { displayName } from "@/pages/layout/helpers"
 import { pathKey } from "@/utils/path-key"
+import { showToast } from "@/utils/toast"
 import { MxBadge, MxPage, MxToggle } from "./kit"
-import { createMcpActions, mcpErrorDetail } from "./mcp-actions"
+import { createMcpActions, createMcpAuth, mcpErrorDetail } from "./mcp-actions"
 import { McpEditDialog, McpRemoveDialog, McpToolsDialog } from "./mcp-dialogs"
-import { mcpAction, mcpBadges, type McpCard, mcpCards, mcpError, mcpMatches } from "./mcp-model"
+import { mcpAction, mcpBadges, type McpCard, mcpCards, MCP_CONFIG_FILE, mcpError, mcpMatches } from "./mcp-model"
 import { createMcpSource } from "./mcp-source"
 import "./mcp.css"
 
@@ -81,11 +82,13 @@ export default function McpPage(props: ChapterPageProps) {
       client().refetchQueries(sync().queryOptions.mcp(key)),
       client().refetchQueries(sync().queryOptions.mcpResources(key)),
     ]).then(() => undefined)
+  const auth = createMcpAuth()
   onCleanup(
     serverSDK().event.on(props.directory, (event) => {
       const type: string = event.type
       if (type === "mcp.status.changed") void refresh()
       if (type === "mcp.tools.changed") void tools.refetch()
+      if (type === "mcp.browser.open.failed") auth.openFailed("properties" in event ? event.properties : undefined)
     }),
   )
   const actions = createMcpActions()
@@ -135,9 +138,15 @@ export default function McpPage(props: ChapterPageProps) {
         status: card.status.status,
         connect: () => source.connect(card.name),
         disconnect: () => source.disconnect(card.name),
-        authenticate: () => source.authenticate(card.name),
+        authenticate: () => auth.run(card.name, (signal) => source.authenticate(card.name, signal)),
         refresh,
       }),
+    )
+  // The link is on screen too, so a blocked clipboard needs no message.
+  const copyLink = (url: string) =>
+    navigator.clipboard?.writeText(url).then(
+      () => showToast({ variant: "success", icon: "circle-check", title: language.t("ui.textField.copied") }),
+      () => undefined,
     )
   // The refresh after a config write can take as long as MCP startup, so dialogs do not wait for it.
   const save = (name: string, value: Parameters<typeof source.save>[1]) =>
@@ -254,6 +263,43 @@ export default function McpPage(props: ChapterPageProps) {
                           </p>
                         )}
                       </Show>
+                      <Show when={card().status.status === "disabled"}>
+                        <p>{language.t("orchestra.mcp.offHint", { file: MCP_CONFIG_FILE })}</p>
+                      </Show>
+                      <Show when={card().status.status === "needs_client_registration"}>
+                        <p>{language.t("orchestra.mcp.registrationHint", { file: MCP_CONFIG_FILE })}</p>
+                      </Show>
+                      <Show when={auth.state.waiting[name]}>
+                        {(waiting) => (
+                          <>
+                            <p role="status">{language.t("orchestra.mcp.authWaiting")}</p>
+                            <Show when={waiting().url}>
+                              {(url) => (
+                                <p role="status">
+                                  {language.t("orchestra.mcp.authBrowserFailed")} <bdi>{url()}</bdi>
+                                </p>
+                              )}
+                            </Show>
+                            <div class="mx-meta">
+                              <Show when={waiting().url}>
+                                {(url) => (
+                                  <>
+                                    <button type="button" class="mx-btn" onClick={() => void copyLink(url())}>
+                                      {language.t("orchestra.mcp.authCopy")}
+                                    </button>
+                                    <button type="button" class="mx-btn" onClick={() => platform.openExternal(url())}>
+                                      {language.t("orchestra.mcp.authOpen")}
+                                    </button>
+                                  </>
+                                )}
+                              </Show>
+                              <button type="button" class="mx-btn" onClick={() => auth.cancel(name)}>
+                                {language.t("orchestra.mcp.cancel")}
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </Show>
                       <footer class="mx-card-foot">
                         <div>
                           <button type="button" class="mx-btn" onClick={() => open({ type: "edit", name })}>
@@ -263,9 +309,8 @@ export default function McpPage(props: ChapterPageProps) {
                             {language.t("orchestra.mcp.tools")}
                           </button>
                         </div>
-                        <Show
-                          when={mcpAction(card().status.status) !== "authenticate"}
-                          fallback={
+                        <Switch>
+                          <Match when={mcpAction(card().status.status) === "authenticate"}>
                             <button
                               type="button"
                               class="mx-btn"
@@ -274,15 +319,17 @@ export default function McpPage(props: ChapterPageProps) {
                             >
                               {language.t("orchestra.mcp.authenticate")}
                             </button>
-                          }
-                        >
-                          <MxToggle
-                            checked={card().status.status === "connected"}
-                            label={language.t("orchestra.mcp.enable", { name })}
-                            disabled={!mcpAction(card().status.status) || !!actions.state.pending[name]}
-                            onChange={() => void toggle(card())}
-                          />
-                        </Show>
+                          </Match>
+                          {/* A retry cannot register a client; the card points to the config instead. */}
+                          <Match when={card().status.status !== "needs_client_registration"}>
+                            <MxToggle
+                              checked={card().status.status === "connected"}
+                              label={language.t("orchestra.mcp.enable", { name })}
+                              disabled={!mcpAction(card().status.status) || !!actions.state.pending[name]}
+                              onChange={() => void toggle(card())}
+                            />
+                          </Match>
+                        </Switch>
                       </footer>
                     </article>
                   )}
@@ -306,6 +353,7 @@ export default function McpPage(props: ChapterPageProps) {
               const [config, entries] = await Promise.all([source.config(), source.entries()])
               return { config, entries }
             }}
+            running={() => source.working()}
             onSave={save}
             onRemove={() => setState("dialog", { type: "remove", name: state.dialog?.name })}
             onClose={close}
@@ -326,7 +374,13 @@ export default function McpPage(props: ChapterPageProps) {
         </Match>
         <Match when={state.dialog?.type === "remove" && state.dialog.name}>
           {(name) => (
-            <McpRemoveDialog name={name()} profile={profile()} onConfirm={() => remove(name())} onClose={close} />
+            <McpRemoveDialog
+              name={name()}
+              profile={profile()}
+              running={() => source.working()}
+              onConfirm={() => remove(name())}
+              onClose={close}
+            />
           )}
         </Match>
       </Switch>

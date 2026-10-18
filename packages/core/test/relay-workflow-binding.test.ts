@@ -349,13 +349,20 @@ describe("host-acquired publication binding", () => {
     expect(acquired.definition.materialization.byteLength).toBe(acquired.bytes.length)
   }))
 
-  it.live("changed active pointer and unpublish invalidate retained binding", () => Effect.gen(function* () {
+  it.live("a retained binding keeps its published version through draft saves and republishing; unpublish holds it", () => Effect.gen(function* () {
     const f = yield* fixture
     yield* f.store.publish(f.draft.id, f.draft.versionId)
     const acquired = yield* RelayWorkflowBinding.acquire(f.input)
+    // An autosave rewrites the document row, never the published version.
     const changed = yield* f.store.save({ id: f.draft.id, body: { name: "Revised packet" } })
+    expect(AuthoringStore.checksum(changed)).not.toBe(acquired.definition.publication.livePublicationChecksum)
+    expect(yield* RelayWorkflowBinding.revalidate(f.port, acquired.definition)).toEqual(acquired)
+    // Republishing binds new acquisitions only.
     yield* f.store.publish(changed.id, changed.versionId)
-    expect(yield* reason(RelayWorkflowBinding.revalidate(f.port, acquired.definition))).toBe("WORKFLOW_PUBLICATION_DRIFT")
+    expect(yield* RelayWorkflowBinding.revalidate(f.port, acquired.definition)).toEqual(acquired)
+    const rebound = yield* RelayWorkflowBinding.acquire(f.input)
+    expect(rebound.definition.publication.activeVersionID).toBe(changed.versionId)
+    expect(acquired.definition.publication.activeVersionID).toBe(f.draft.versionId)
     yield* f.store.unpublish(changed.id)
     expect(yield* reason(RelayWorkflowBinding.revalidate(f.port, acquired.definition))).toBe("WORKFLOW_PUBLICATION_UNPUBLISHED")
   }))
@@ -394,6 +401,66 @@ describe("host-acquired publication binding", () => {
     expect(acquired.definition.resolvedSkills[0]?.content).toBe("Skill version one")
     yield* Effect.sync(() => writeFileSync(file, "Skill version two"))
     expect(yield* reason(RelayWorkflowBinding.revalidate(port, acquired.definition))).toBe("WORKFLOW_SKILL_DRIFT")
+  }))
+
+  it.live("the host's acceptance controls end the materialized plan and are bound by its bytes", () => Effect.gen(function* () {
+    const f = yield* fixture
+    yield* f.store.publish(f.draft.id, f.draft.versionId)
+    const plain = yield* RelayWorkflowBinding.acquire(f.input)
+    const acceptance = [{ id: "package-verification", host_check: "package-verification" },
+      { id: "cold-review", host_check: "cold-review" }]
+    const port: RelayWorkflowBinding.PublicationPort = { ...f.port, acceptance }
+    const acquired = yield* RelayWorkflowBinding.acquire({ ...f.input, port })
+    expect(acquired.sprint.work_packages.slice(0, -1)).toEqual(plain.sprint.work_packages.slice(0, -1))
+    expect(acquired.sprint.work_packages.at(-1)?.checklist)
+      .toEqual([...(plain.sprint.work_packages.at(-1)?.checklist ?? []), ...acceptance])
+    expect(acquired.definition.materialization.digest).toBe(RelayWorkflowBinding.digest(acquired.bytes))
+    expect(acquired.definition.materialization.digest).not.toBe(plain.definition.materialization.digest)
+    expect(yield* RelayWorkflowBinding.revalidate(port, acquired.definition)).toEqual(acquired)
+    expect(yield* reason(RelayWorkflowBinding.revalidate(f.port, acquired.definition))).toBe("WORKFLOW_MATERIALIZATION_DRIFT")
+    expect((yield* RelayWorkflowBinding.catalog(port))[0]?.sprint).toEqual(acquired.sprint)
+    // A plan that already ends on a check keeps it and its bytes: only what the last step lacks is appended.
+    expect(RelayWorkflowBinding.attach(acquired.sprint, acceptance)).toBe(acquired.sprint)
+    const verified = { work_packages: [{ id: "finish", checklist: [{ id: "verify", host_check: "package-verification" }] }] }
+    expect(RelayWorkflowBinding.attach(verified, acceptance).work_packages[0]?.checklist)
+      .toEqual([{ id: "verify", host_check: "package-verification" }, acceptance[1]])
+  }))
+})
+
+describe("workflow catalog and publish admission", () => {
+  it.live("lists published workflows with what acquisition binds, and why the others cannot run", () => Effect.gen(function* () {
+    const f = yield* fixture
+    const unpublished = yield* RelayWorkflowBinding.catalog(f.port)
+    expect(unpublished).toEqual([{ id: f.draft.id, name: "Progressive packet", description: "",
+      publishedVersionID: undefined, sprint: undefined, reason: "It is not published." }])
+    yield* f.store.publish(f.draft.id, f.draft.versionId)
+    const acquired = yield* RelayWorkflowBinding.acquire(f.input)
+    const signed = yield* AuthoringGraph.project("Signed packet", { work_packages: [
+      { id: "implement", instructions: "Implement approved packet.", checklist: [{ id: "impl", cmd: "true" }] },
+      { id: "sign", kind: "human", instructions: "Sign off." },
+    ] })
+    const human = yield* f.store.save({ body: signed })
+    yield* f.store.publish(human.id, human.versionId)
+    const graph = yield* f.store.get(f.draft.id)
+    const profiled = yield* f.store.save({ body: { name: "Design copy", nodes: graph.nodes, connections: graph.connections,
+      meta: { ...graph.meta, relay: { ...graph.meta.relay, profile: "design" } } } })
+    yield* f.store.publish(profiled.id, profiled.versionId)
+    yield* f.store.save({ body: { name: "Guard", meta: { relay: { kind: "hook" } } } })
+    const listed = yield* RelayWorkflowBinding.catalog(f.port)
+    expect(listed.map((entry) => entry.id).toSorted()).toEqual([f.draft.id, human.id, profiled.id].toSorted())
+    const byID = new Map(listed.map((entry) => [entry.id, entry]))
+    expect(byID.get(f.draft.id)).toMatchObject({ publishedVersionID: f.draft.versionId, reason: undefined })
+    expect(byID.get(f.draft.id)?.sprint).toEqual(acquired.sprint)
+    expect(byID.get(human.id)).toMatchObject({ publishedVersionID: human.versionId, sprint: undefined,
+      reason: "Human approval steps cannot run yet. Remove them to run this workflow." })
+    expect(byID.get(profiled.id)?.sprint).toBeUndefined()
+    expect(byID.get(profiled.id)?.reason).toContain("design profile")
+    // The publish route refuses what the catalog reports.
+    const refusal = yield* RelayWorkflowBinding.admission(human, f.port.skills).pipe(Effect.flip)
+    expect(refusal).toMatchObject({ status: 409, code: "step-unsupported" })
+    expect(yield* RelayWorkflowBinding.admission(profiled, f.port.skills).pipe(Effect.flip))
+      .toMatchObject({ status: 409, code: "profile-tools-missing" })
+    expect(yield* RelayWorkflowBinding.admission(graph, f.port.skills)).toEqual(acquired.sprint)
   }))
 })
 

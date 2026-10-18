@@ -79,3 +79,33 @@ test("V1 custom disconnect surfaces removal/config failures and never disables a
     ["updateConfig", { disabled_providers: ["already-disabled", "custom-profile"] }],
   ])
 })
+
+test("disconnect without a project is server-wide and sends no directory", async () => {
+  const card: ProviderCard = {
+    id: "anthropic",
+    base: "anthropic",
+    name: "Anthropic",
+    connected: true,
+    method: "credential",
+    custom: false,
+    models: [],
+    disconnect: { type: "credentials", ids: ["credential-1"] },
+  }
+  const calls: unknown[] = []
+  await disconnectProvider(card, {
+    protocol: "v2",
+    directory: "",
+    failed: "Request failed",
+    sdk: {
+      api: {
+        credential: {
+          remove: async (payload: unknown) => {
+            calls.push(payload)
+          },
+        },
+      },
+    } as unknown as Parameters<typeof disconnectProvider>[1]["sdk"],
+    sync: { data: { config: {} } } as unknown as Parameters<typeof disconnectProvider>[1]["sync"],
+  })
+  expect(calls).toEqual([{ credentialID: "credential-1", location: undefined }])
+})

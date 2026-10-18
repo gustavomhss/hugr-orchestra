@@ -21,6 +21,7 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Plugin } from "@/plugin"
 import { Permission } from "@/permission"
 import { SessionPrompt } from "@/session/prompt"
+import { PromptHost } from "@/session/prompt-host"
 import { PromptIdentity } from "@/session/prompt-identity"
 import { MessageID, SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
@@ -347,12 +348,24 @@ it.instance(
           { type: "file" as const, url: pathToFileURL(file).href, mime: "application/octet-stream" },
         ],
       }
+      // A caller that answers before the run ends (prompt_async) learns the prompt passed its hooks from this signal.
+      const cleared: string[] = []
+      const clearedSignal = Effect.sync(() => {
+        cleared.push("cleared")
+      })
       // Avoid Bun's recursive matcher expanding Effect's yieldable error classes during typechecking.
-      const denied: unknown = yield* prompts.prompt(request).pipe(Effect.result)
+      const denied: unknown = yield* prompts
+        .prompt(request)
+        .pipe(Effect.provideService(PromptHost.HooksCleared, clearedSignal), Effect.result)
       expect(denied).toMatchObject({
         _tag: "Failure",
-        failure: { _tag: "ToolSafety.Denied", reason: "relay-hook-block" },
+        failure: {
+          _tag: "ToolSafety.Denied",
+          reason: "relay-hook-block",
+          hook: { name: "Block", message: "No admission." },
+        },
       })
+      expect(cleared).toEqual([])
       expect(reads.filter((item) => item === file)).toEqual([])
       expect(yield* sessions.get(session.id)).toEqual(before)
       const database = yield* Database.Service
@@ -360,8 +373,11 @@ it.instance(
       expect(yield* database.db.select().from(PartTable).all()).toEqual([])
       expect((yield* rows).filter((row) => row.type === "session.v1.prompt.admitted.1")).toEqual([])
       yield* RelayHookInstall.uninstall(binding)
-      const admitted = yield* prompts.prompt(request)
+      const admitted = yield* prompts
+        .prompt(request)
+        .pipe(Effect.provideService(PromptHost.HooksCleared, clearedSignal))
       expect(admitted.info.role).toBe("user")
+      expect(cleared).toEqual(["cleared"])
       expect(reads.filter((item) => item === file)).toHaveLength(1)
     }),
   { git: true },

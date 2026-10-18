@@ -36,6 +36,7 @@ import {
 import { setupAutoUpdater, showUpdaterDialog } from "./updater"
 import { safeWebContentsURL } from "./window-state"
 import {
+  flushWindows,
   getLastFocusedWindow,
   registerRendererProtocol,
   setRelaunchHandler,
@@ -209,9 +210,10 @@ const main = Effect.gen(function* () {
     promise: undefined as Promise<void> | undefined,
     done: false,
   }
+  // Every quit path lets the windows save unsaved work (at most 3 s) before the sidecars stop.
   const relaunch = () => {
     setAppQuitting()
-    void stopSidecars().finally(() => {
+    void flushWindows().then(stopSidecars).finally(() => {
       app.relaunch()
       app.quit()
     })
@@ -274,15 +276,19 @@ const main = Effect.gen(function* () {
     setAppQuitting()
     if (shutdown.done) return
     event.preventDefault()
-    shutdown.promise ??= Promise.all([
-      stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
-      Promise.resolve()
-        .then(() => shutdown.runtimeStop?.())
-        .catch((error: unknown) => logger.error("failed to stop Linux runtime", error)),
-    ]).then(() => {
-      shutdown.done = true
-      app.quit()
-    })
+    shutdown.promise ??= flushWindows()
+      .then(() =>
+        Promise.all([
+          stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
+          Promise.resolve()
+            .then(() => shutdown.runtimeStop?.())
+            .catch((error: unknown) => logger.error("failed to stop Linux runtime", error)),
+        ]),
+      )
+      .then(() => {
+        shutdown.done = true
+        app.quit()
+      })
   })
 
   app.on("will-quit", () => {
@@ -333,7 +339,7 @@ const main = Effect.gen(function* () {
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
   // still the bundle's, until HuGR desktop icons exist.
   app.setAboutPanelOptions({ applicationName: nativeT("desktop.menu.app"), applicationVersion: app.getVersion() })
-  const updater = setupAutoUpdater(stopSidecars)
+  const updater = setupAutoUpdater(() => flushWindows().then(stopSidecars))
   const menuDeps = {
     trigger: (id: string) => {
       const win = getLastFocusedWindow()
@@ -453,7 +459,6 @@ const main = Effect.gen(function* () {
       }),
     )
     server = listener
-    yield* Deferred.succeed(serverReady, { url, username: "orchestra", password })
 
     if (process.platform === "win32") {
       void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
@@ -466,13 +471,14 @@ const main = Effect.gen(function* () {
           logger.error("sidecar health check failed", e.toString())
         }),
       ),
+      // Windows open before the sidecar is up, so the renderer splash waits on this handshake. It is released once
+      // health settles, whatever the outcome, which is when windows used to open.
+      Effect.ensuring(Deferred.succeed(serverReady, { url, username: "orchestra", password })),
     )
     yield* Effect.promise(() => OmniBoot.report({ url, username: "orchestra", password }, logger))
 
     logger.log("loading task finished")
   }).pipe(forwardInitializationFailure(serverReady), Effect.forkChild)
-
-  yield* Fiber.await(loadingTask)
 
   app.on("window-all-closed", () => {
     if (process.platform === "darwin") return
@@ -483,8 +489,12 @@ const main = Effect.gen(function* () {
     restoreMainWindows()
   })
 
+  // The renderer shows its splash and waits for the sidecar through awaitInitialization.
   const windows = restoreMainWindows()
   if (windows.length) createMenu(menuDeps)
+
+  // Returning would interrupt the sidecar boot, which is a child fiber of this one.
+  yield* Fiber.await(loadingTask)
 })
 
 Effect.runFork(main)
