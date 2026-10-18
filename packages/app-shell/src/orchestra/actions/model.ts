@@ -210,6 +210,11 @@ export function createActionsModel(input: {
     }
     // A link may name only the run: complete workflow, path and commit from the loaded run in place, since a
     // navigate() would clear() the run it just read.
+    // A GitHub run's workflow path comes from the catalog, so read it before completing the route.
+    if (route.runID && !route.path && state.binding?.provider.kind === "github" && state.workflows.status !== "ready") {
+      await page("workflows", target)
+      if (!handle.current()) return
+    }
     const selection = route.runID ? selectedRoute(state, route) : route
     if (JSON.stringify(selection) !== JSON.stringify(route)) { update({ route: selection }); persist() }
     const tab = selection.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")

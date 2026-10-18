@@ -1,3 +1,4 @@
+import type { Actions } from "@orchestra/schema/actions"
 import { useSearchParams } from "@solidjs/router"
 import { createEffect, createMemo, createUniqueId, For, lazy, Match, onCleanup, Show, Suspense, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
@@ -8,9 +9,10 @@ import { Persist, persisted } from "@/utils/persist"
 import type { ChapterPageProps } from "../chapter-route"
 import { setCrumbTrail } from "../crumbs"
 import { createActionsAPI } from "../actions/api"
-import { Empty, Icon, Status, type IconName } from "../actions/components"
+import { Empty, Icon, type IconName } from "../actions/components"
 import type { Model, Route, Translate, ViewProps } from "../actions/contract"
 import { navigationPreferences, readNavigation, resourceDialog, resourceLinks, selectedRoute, synchronizeNavigation, tabKeydown } from "../actions/entry-routing"
+import { join, label } from "../actions/matrix"
 import { createActionsModel, type ActionsPreference } from "../actions/model"
 import { saveActionsResponse } from "../actions/save"
 import { canRequest } from "../actions/request-policy"
@@ -134,6 +136,22 @@ function Workbench(props: ChapterPageProps & {
   const jobs = createMemo(() => state.jobs.status === "ready" ? state.jobs.value?.items.filter((item) =>
     item.bindingID === state.binding?.id && item.runID === state.route.runID
     && (state.route.attempt === undefined || item.attempt === undefined || item.attempt === state.route.attempt)).slice(0, 100) ?? [] : [])
+  // Run label per the agreed fields: `#<number>` when the provider numbers runs, otherwise the native id.
+  const runLabel = () => {
+    const value: (Actions.Run & { number?: number }) | undefined = run()
+    return props.t("orchestra.actions.runNumber", { id: value?.number === undefined ? state.route.runID ?? "" : `#${value.number}` })
+  }
+  // Jobs group by workflow definition once the run's graph is loaded (matrix executions counted); otherwise by name.
+  const groups = createMemo(() => {
+    const graph = state.graph.status === "ready" ? state.graph.value : undefined
+    const single = (job: Actions.Job) => ({ id: job.id, label: job.name, jobs: [job] })
+    if (!graph || graph.source.commit !== run()?.commit) return jobs().map(single)
+    const definitions = new Map(graph.jobs.map((job) => [job.id, job] as const))
+    const joined = join(definitions, jobs(), state.binding?.provider.kind === "github")
+    const grouped = new Set([...joined.values()].flat().map((job) => job.id))
+    return [...[...definitions.values()].flatMap((job) => joined.get(job.id)?.length ? [{ id: job.id, label: label(job), jobs: joined.get(job.id) ?? [] }] : []),
+      ...jobs().filter((job) => !grouped.has(job.id)).map(single)]
+  })
   // Count only what is known: a native total, or a list whose last page is loaded. A truncated page shows none.
   const loaded = (data: { status: string; value?: { items: readonly { bindingID: string }[]; next?: string; total?: number } }) =>
     data.status !== "ready" || !data.value ? undefined
@@ -153,7 +171,7 @@ function Workbench(props: ChapterPageProps & {
     const job = state.route.jobID ? jobs().find((item) => item.id === state.route.jobID) : undefined
     setCrumbTrail([
       ...(workflow() ? [workflow()?.name ?? workflow()?.id ?? ""] : []),
-      ...(state.route.runID ? [`${props.t("orchestra.actions.run")} ${state.route.runID}`] : []),
+      ...(state.route.runID ? [runLabel()] : []),
       ...(job ? [job.name] : []),
       ...(state.route.view === "runs" && !state.route.workflowID ? [props.t("orchestra.actions.shell.runs")] : []),
       ...(state.route.view === "resources" && resource ? [props.t(resource[1])] : []),
@@ -163,34 +181,36 @@ function Workbench(props: ChapterPageProps & {
   })
   onCleanup(() => setCrumbTrail([]))
 
-  const nav = (label: string, route: Route, icon: IconName, selected: boolean) =>
-    <button type="button" class="actions-nav-item" classList={{ selected }} aria-current={selected ? "page" : undefined}
-      onClick={() => model.navigate(route)}><Icon name={icon} /><span><bdi>{label}</bdi></span></button>
+  // Route and selection are accessors: items rendered once by For or Show must follow the current route.
+  const nav = (text: string, route: () => Route, icon: IconName, selected: () => boolean, count?: () => number | undefined) =>
+    <button type="button" class="actions-nav-item" title={text} classList={{ selected: selected() }} aria-current={selected() ? "page" : undefined}
+      onClick={() => model.navigate(route())}><Icon name={icon} /><span><bdi>{text}</bdi></span>
+      <Show when={count?.()}>{(value) => <span class="context-count">{value()}</span>}</Show></button>
   return <>
     <div class="actions-workbench">
       <aside class="actions-sidebar actions-context" aria-label={props.t("orchestra.actions.title")}>
-        <header class="actions-context-head"><span class="mx-mark"><Icon name="workflow" /></span>
-          <div><strong>{props.t("orchestra.actions.title")}</strong><small><bdi>{state.binding?.projectPath ?? props.directory}</bdi></small></div></header>
+        <header class="actions-context-head"><span class="mx-mark"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} /></span>
+          <div><strong>{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.gitlab" : state.binding ? "orchestra.actions.github" : "orchestra.actions.title")}</strong><small><bdi>{state.binding?.projectPath ?? props.directory}</bdi></small></div></header>
         <div class="context-group" role="group" aria-labelledby={`${ids}-browse`}><div class="context-label" id={`${ids}-browse`}>{props.t("orchestra.actions.shell.browse")}</div>
-          {nav(props.t("orchestra.actions.shell.allWorkflows"), { view: "library" }, "workflow", state.route.view === "library")}
-          {nav(props.t("orchestra.actions.shell.allRuns"), { view: "runs" }, "retry", state.route.view === "runs" && !state.route.workflowID)}
+          {nav(props.t("orchestra.actions.shell.allWorkflows"), () => ({ view: "library" }), "workflow", () => state.route.view === "library")}
+          {nav(props.t("orchestra.actions.shell.allRuns"), () => ({ view: "runs" }), "retry", () => state.route.view === "runs" && !state.route.workflowID)}
         </div>
         <Show when={workflow()}>{(item) => <div class="context-selection">
           <strong><bdi>{item().name ?? item().id}</bdi></strong><small><bdi dir="ltr">{item().path}</bdi></small>
-          {nav(props.t("orchestra.actions.graph"), { view: "workflow", workflowID: item().id, path: item().path, ref: state.route.runID ? undefined : state.route.ref, tab: "graph" }, "workflow", state.route.view === "workflow" && tab() === "graph")}
-          {nav(props.t("orchestra.actions.executions"), { view: "runs", workflowID: item().id }, "retry", state.route.view === "runs" && state.route.workflowID === item().id)}
-          {nav(props.t("orchestra.actions.source"), { view: "source", workflowID: item().id, path: item().path, ref: state.route.runID ? undefined : state.route.ref, tab: "source" }, "code", sourceTab() && !state.route.runID)}
+          {nav(props.t("orchestra.actions.graph"), () => ({ view: "workflow", workflowID: item().id, path: item().path, ref: state.route.runID ? undefined : state.route.ref, tab: "graph" }), "workflow", () => state.route.view === "workflow" && tab() === "graph")}
+          {nav(props.t("orchestra.actions.executions"), () => ({ view: "runs", workflowID: item().id }), "retry", () => state.route.view === "runs" && state.route.workflowID === item().id)}
+          {nav(props.t("orchestra.actions.source"), () => ({ view: "source", workflowID: item().id, path: item().path, ref: state.route.runID ? undefined : state.route.ref, tab: "source" }), "code", () => sourceTab() && !state.route.runID)}
         </div>}</Show>
-        <Show when={state.route.runID}><div class="context-group"><div class="context-label">{props.t("orchestra.actions.run")} <code dir="ltr">{state.route.runID}</code></div>
+        <Show when={state.route.runID}><div class="context-group" role="group" aria-labelledby={`${ids}-run`}>
+          <div class="context-label" id={`${ids}-run`}>{runLabel()}</div>
           <For each={[["graph", "orchestra.actions.graph", "workflow"], ["jobs", "orchestra.actions.jobs", "local"],
             ["logs", "orchestra.actions.logs", "logs"], ["artifacts", "orchestra.actions.artifacts", "box"], ["source", "orchestra.actions.source", "code"]] as const}>
-            {(item) => nav(props.t(item[1]), { ...state.route, view: "run", tab: item[0] }, item[2], tab() === item[0])}</For>
-          <Show when={jobs().length}><div class="context-label">{props.t("orchestra.actions.jobs")}</div><For each={jobs()}>{(job) =>
-            <button type="button" class="actions-nav-item context-job" classList={{ selected: state.route.jobID === job.id }}
-              aria-current={state.route.jobID === job.id ? "page" : undefined}
-              onClick={() => model.navigate({ ...state.route, view: tab() === "logs" ? "run" : "job", jobID: job.id, tab: "logs" })}>
-              <span><bdi>{job.name}</bdi><Status status={job.status} conclusion={job.conclusion} t={props.t} /></span>
-            </button>}</For></Show>
+            {(item) => nav(props.t(item[1]), () => ({ ...state.route, view: "run", tab: item[0] }), item[2], () => ["run", "job"].includes(state.route.view) && tab() === item[0])}</For>
+        </div></Show>
+        <Show when={groups().length}><div class="context-group context-jobs" role="group" aria-labelledby={`${ids}-jobs`}>
+          <div class="context-label" id={`${ids}-jobs`}>{props.t("orchestra.actions.jobs")} <span>{jobs().length}</span></div>
+          <For each={groups()}>{(group) => nav(group.label, () => ({ ...state.route, view: tab() === "logs" ? "run" : "job", jobID: group.jobs[0]?.id, tab: "logs" }),
+            "local", () => group.jobs.some((job) => job.id === state.route.jobID), () => group.jobs.length > 1 ? group.jobs.length : undefined)}</For>
         </div></Show>
         <Show when={!contextual() && state.workflows.value?.items.some((item) => item.bindingID === state.binding?.id)}><div class="context-group context-catalog" role="group" aria-labelledby={`${ids}-workflows`}>
           <div class="context-label" id={`${ids}-workflows`}>{props.t("orchestra.actions.shell.workflows")} <span>{loaded(state.workflows)}</span></div>
@@ -204,11 +224,11 @@ function Workbench(props: ChapterPageProps & {
           <Show when={!catalog().length}><small>{props.t("orchestra.actions.noMatches")}</small></Show>
         </div></Show>
         <div class="context-group context-project"><div class="context-label">{props.t("orchestra.actions.projectResources")}</div>
-          <For each={resourceLinks}>{(item) => nav(props.t(item[1]), { view: "resources", resourceKind: item[0] }, item[2],
-            state.route.view === "resources" && (state.route.resourceKind ?? "artifacts") === item[0])}</For>
-          {nav(props.t("orchestra.actions.settings"), { view: "settings" }, "settings", state.route.view === "settings")}
+          <For each={resourceLinks}>{(item) => nav(props.t(item[1]), () => ({ view: "resources", resourceKind: item[0] }), item[2],
+            () => state.route.view === "resources" && (state.route.resourceKind ?? "artifacts") === item[0])}</For>
+          {nav(props.t("orchestra.actions.settings"), () => ({ view: "settings" }), "settings", () => state.route.view === "settings")}
         </div>
-        <footer class="context-footer">{nav(props.t("orchestra.actions.local"), { view: "local" }, "local", state.route.view === "local")}
+        <footer class="context-footer">{nav(props.t("orchestra.actions.local"), () => ({ view: "local" }), "local", () => state.route.view === "local")}
           <small>{props.t("orchestra.actions.localHint")}</small></footer>
       </aside>
       <main class="actions-main" aria-label={props.t("orchestra.actions.title")}>
@@ -278,10 +298,10 @@ function Workbench(props: ChapterPageProps & {
         </Suspense>
       </main>
     </div>
-    <Show when={state.dialog}><Suspense fallback={loading()}><Show when={resourceDialog(state.dialog)} fallback={<Dialogs model={model} t={props.t} />}>
+    <Show when={state.dialog}><Suspense><Show when={resourceDialog(state.dialog)} fallback={<Dialogs model={model} t={props.t} />}>
       <ResourceDialogs model={model} t={props.t} />
     </Show></Suspense></Show>
-    <Show when={state.commandOutput}><Suspense fallback={loading()}><CommandOutput model={model} t={props.t} /></Suspense></Show>
+    <Show when={state.commandOutput}><Suspense><CommandOutput model={model} t={props.t} /></Suspense></Show>
   </>
 }
 
