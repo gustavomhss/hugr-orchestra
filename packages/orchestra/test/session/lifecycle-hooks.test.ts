@@ -6,17 +6,25 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Auth } from "../../src/auth"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
+import { SessionProjector } from "@orchestra/core/session/projector"
 import { Npm } from "@orchestra/core/npm"
 import { Plugin } from "@/plugin"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Session } from "@/session/session"
+import { EventV2Bridge } from "@/event-v2-bridge"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { AuthTest } from "../fake/auth"
 import { NpmTest } from "../fake/npm"
 
 const it = testEffect(
-  AppNodeBuilder.build(LayerNode.group([Session.node, Plugin.node, CrossSpawnSpawner.node]), [
+  AppNodeBuilder.build(LayerNode.group([
+    Session.node,
+    EventV2Bridge.node,
+    SessionProjector.node,
+    Plugin.node,
+    CrossSpawnSpawner.node,
+  ]), [
     [Auth.node, AuthTest.empty],
     [Npm.node, NpmTest.noop],
     [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
