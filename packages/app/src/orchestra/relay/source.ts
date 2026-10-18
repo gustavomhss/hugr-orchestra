@@ -44,8 +44,17 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const queryClient = () => ctx.queryClient
   const key = (...parts: string[]) => relayKey(ctx.sdk.scope, input.directory, ...parts)
 
+  // Another window or a restart can change the library while this one is in the background, so coming back to it
+  // (or the network coming back) refreshes the documents and the installs instead of waiting for the first save to fail.
   const documents = useQuery(
-    () => ({ queryKey: key("documents"), queryFn: client.documents, retry: false, refetchOnMount: "always" as const }),
+    () => ({
+      queryKey: key("documents"),
+      queryFn: client.documents,
+      retry: false,
+      refetchOnMount: "always" as const,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
+    }),
     queryClient,
   )
   const supported = () => !documents.isError || !relayUnsupported(documents.error)
@@ -73,6 +82,8 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
       queryKey: key("installs"),
       queryFn: input.kind === "hook" && documents.isSuccess ? client.installs : skipToken,
       retry: false,
+      refetchOnWindowFocus: true,
+      refetchOnReconnect: true,
     }),
     queryClient,
   )

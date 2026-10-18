@@ -50,6 +50,7 @@ const { WorkflowDetails }: typeof import("@/orchestra/relay/details-workflow") =
 const { SaveStatus }: typeof import("@/orchestra/relay/editor-head") = await load("@/orchestra/relay/editor-head")
 const { Editor }: typeof import("@/orchestra/relay/editor") = await load("@/orchestra/relay/editor")
 const { rememberDocument }: typeof import("@/orchestra/relay/cache") = await load("@/orchestra/relay/cache")
+const { copyDocument, freeName }: typeof import("@/orchestra/relay/presets") = await load("@/orchestra/relay/presets")
 const { openDraft, profileDrafts, BURST_MS, DRAFT_LIMIT, HISTORY_LIMIT }: typeof import("@/orchestra/relay/drafts") = await load("@/orchestra/relay/drafts")
 const { runVersion }: typeof import("@/orchestra/relay/history") = await load("@/orchestra/relay/history")
 const { decodeRun }: typeof import("@/orchestra/relay/runs") = await load("@/orchestra/relay/runs")
@@ -290,13 +291,17 @@ test("failed saves show the server error and explicit retry; conflicts keep relo
   expect(host.querySelector("button")!.textContent).toBe("Discard local changes and reload")
 })
 
+// The library lists the user's own workflows; a shipped profile is only a template.
+const own = () => doc("template", { meta: { relay: { schema: 1, kind: "workflow" } } })
+
 test("duplicate opens only after its saved document is in the library cache", async () => {
   const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [own()])
   const opened: string[] = []
   const host = mount(() => createComponent(WorkflowLibrary, {
     ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", close() {},
     go(path) {
-      expect(api.source.list().find((item) => item.id === "saved")?.name).toBe("Review workflow copy")
+      expect(api.source.list().find((item) => item.id === "saved")?.name).toBe("Review workflow (copy)")
       opened.push(path)
     },
   }))
@@ -307,6 +312,62 @@ test("duplicate opens only after its saved document is in the library cache", as
   await tick()
   expect(opened).toEqual(["/orchestra/workflows/saved"])
   expect(api.requests).toHaveLength(1)
+})
+
+test("default names are numbered against the names already taken", () => {
+  const next = (n: number) => `Blank ${n}`
+  expect(freeName([], "Blank", next)).toBe("Blank")
+  expect(freeName(["Blank"], "Blank", next)).toBe("Blank 2")
+  expect(freeName(["blank", "Blank 2"], "Blank", next)).toBe("Blank 3")
+})
+
+test("create numbers its blank default name and sends the optional description", async () => {
+  const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [doc(), doc("mine", { name: "Blank workflow" })])
+  const host = mount(() => createComponent(CreateWorkflowDialog, { ...api, initial: "blank", onClose() {}, onCreated() {} }))
+  expect(host.querySelector<HTMLInputElement>('input[name="name"]')!.value).toBe("Blank workflow 2")
+  const purpose = host.querySelector<HTMLInputElement>('input[name="description"]')!
+  purpose.value = "Ship releases"
+  purpose.dispatchEvent(new Event("input", { bubbles: true }))
+  submit(host)
+  await until(() => api.requests.length === 1)
+  expect(await api.requests[0].json()).toMatchObject({ name: "Blank workflow 2", description: "Ship releases" })
+})
+
+test("a template copy drops the profile's sample content; a copy of the user's own workflow keeps everything", () => {
+  const node = (id: string, type: string, parameters: Record<string, unknown>) =>
+    ({ id, name: id, type, position: [0, 0], parameters }) as RelayDocument["nodes"][number]
+  const nodes = [
+    node("start", "relay.startTrigger", { relayBrief: "tdd_feature v1.0.0 — profile blurb" }),
+    node("seed", "relay.inject", { text: "Task: add a rate limiter.", file: "docs/brief.md", instructions: "Seed it" }),
+    node("write", "relay.execute", { instructions: "Implement using the TDD skill", skill: "" }),
+    node("skilled", "relay.execute", { instructions: "Apply the skill", skill: "tdd" }),
+  ]
+  expect(copyDocument(doc("template", { nodes }), "Mine").nodes!.map((item) => item.parameters)).toEqual([
+    { relayBrief: "" },
+    { text: "", file: "docs/brief.md", instructions: "Seed it" },
+    { instructions: "", skill: "" },
+    { instructions: "Apply the skill", skill: "tdd" },
+  ])
+  const mine = doc("mine", { nodes, meta: { relay: { schema: 1, kind: "workflow" } } })
+  expect(copyDocument(mine, "Copy").nodes).toBe(nodes)
+})
+
+test("the library lists only the user's workflows, and a failed refresh keeps the list with a notice", () => {
+  const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [doc(), doc("mine", { meta: { relay: { schema: 1, kind: "workflow" } } })])
+  const source = {
+    ...api.source,
+    documents: { isSuccess: false, isPending: false, isError: true, error: new Error("502"), refetch() {} },
+  } as unknown as RelaySource
+  const host = mount(() => createComponent(WorkflowLibrary, {
+    source, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", go() {}, close() {},
+  }))
+  expect([...host.querySelectorAll("[data-document]")].map((row) => row.getAttribute("data-document"))).toEqual(["mine"])
+  expect(host.textContent).toContain("Could not refresh the list")
+  expect(host.textContent).not.toContain("Could not load workflows")
+  // The shipped profile is offered as a template under its own name.
+  expect([...host.querySelectorAll(".wf-tpl h3")].map((title) => title.textContent)).toEqual(["Start from scratch", "Build one work package"])
 })
 
 test("a stale list response cannot overwrite the newly created document", async () => {
@@ -549,6 +610,7 @@ for (const entry of ["create", "clone"]) {
   test(`lifetime owner: disposed ${entry} caches success without navigating`, async () => {
     const response = Promise.withResolvers<Response>()
     const api = setup(async () => response.promise)
+    api.queryClient.setQueryData(api.key("documents"), [own()])
     const [state, setState] = createStore({ open: true })
     const opened: string[] = []
     const host = mount(() => createComponent(Show, { get when() { return state.open }, get children() {

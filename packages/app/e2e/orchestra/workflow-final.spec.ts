@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { setupRelay } from "./relay.fixture"
+import { adopt, setupRelay } from "./relay.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(120_000)
@@ -9,8 +9,10 @@ const located = (data: unknown) => ({ contentType: "application/json", body: JSO
 
 test("final fixes: reload leaves newer typing intact and conflicted", async ({ page }) => {
   const state = await setupRelay(page)
+  // A library row is a workflow the user owns; a seeded profile is only a template.
+  adopt(state, "relay-wp-execute")
   const doc = state.documents.find((document) => document.id === "relay-wp-execute")!
-  const fresh = { ...structuredClone(doc), name: "Fetched v5 workflow", versionCounter: 5, versionId: "remote-v5", nodes: structuredClone(doc.nodes) }
+  const fresh ={ ...structuredClone(doc), name: "Fetched v5 workflow", versionCounter: 5, versionId: "remote-v5", nodes: structuredClone(doc.nodes) }
   const pending = Promise.withResolvers<void>()
   const arrived = Promise.withResolvers<void>()
   await page.route("**/api/relay/document/relay-wp-execute*", async (route) => {

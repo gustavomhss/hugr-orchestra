@@ -1,53 +1,90 @@
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
+import { createMemo, createSignal, For, Match, onCleanup, Show, Switch } from "solid-js"
+import { createStore } from "solid-js/store"
 import { useLocation } from "@solidjs/router"
 import { showToast } from "@/utils/toast"
 import { MxPage } from "../chapters/kit"
-import type { RelayDocument } from "./client"
+import { documentProfile, type RelayDocument } from "./client"
 import { rememberDocument } from "./cache"
-import { CreateWorkflowDialog, templateID, templates } from "./create"
+import { CreateWorkflowDialog, templates } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
-import { profileDrafts } from "./drafts"
 import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
-import { phaseNames, RunBadge, stateLabel, TemplateCard, VersionBadges } from "./parts"
-import { copyDocument } from "./presets"
+import {
+  phaseNames,
+  RetainedDrafts,
+  RunBadge,
+  stateLabel,
+  TemplateCard,
+  unpublishedChanges,
+  VersionBadges,
+} from "./parts"
+import { copyDocument, freeName } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
 import type { RelayRun, RelayRunStatus } from "./runs"
 import type { RelaySource } from "./source"
-import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
+import { Ic, Menu, type MenuItem, RelayDialog, useRelayCopy } from "./ui"
 
 type Props = {
   source: RelaySource
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
-  go: (path: string) => void
+  // The chapter keeps the view, so search and filter survive a round trip through an editor.
+  view?: LibraryView
+  go: (path: string, replace?: boolean) => void
   close: (path: string) => void
+}
+
+export const createLibraryView = () => createStore({ query: "", filter: "all" as "all" | "published" | "draft" })
+export type LibraryView = ReturnType<typeof createLibraryView>
+
+// A published workflow with newer edits is still waiting to be published, so it is a draft too.
+const STATES = {
+  all: () => true,
+  published: (document: RelayDocument) => !!document.activeVersionId,
+  draft: (document: RelayDocument) => !document.activeVersionId || unpublishedChanges(document),
 }
 
 export function WorkflowLibrary(props: Props) {
   const copy = useRelayCopy()
   const duplication = createAction(useLocation())
-  const [query, setQuery] = createSignal("")
-  const [filter, setFilter] = createSignal<"all" | "published" | "draft">("all")
+  const [view, setView] = props.view ?? createLibraryView()
   const [template, setTemplate] = createSignal<string>()
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
-  const [dialog, setDialog] = createSignal<{ type: "delete"; document: RelayDocument }>()
+  const [dialog, setDialog] = createSignal<{ type: "delete" | "rename"; document: RelayDocument }>()
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "workflow")])),
   )
-  const shown = createMemo(() => {
-    const text = query().trim().toLowerCase()
-    return props.source.list().filter((document) => {
-      const published = !!document.activeVersionId
-      if (filter() === "published" && !published) return false
-      if (filter() === "draft" && published) return false
-      return !text || `${document.name} ${document.description}`.toLowerCase().includes(text)
-    })
+  // "5 min ago" is computed from the clock, so the rows read this signal to be computed again every minute.
+  const [clock, setClock] = createSignal(0)
+  const ticker = setInterval(() => setClock((value) => value + 1), 60_000)
+  onCleanup(() => clearInterval(ticker))
+  const updated = (at: number | undefined) => (clock(), copy.when(at))
+  // The shipped profiles are templates, not rows: they are offered under "Start from a template" and nowhere else.
+  const owned = createMemo(() => props.source.list().filter((document) => documentProfile(document) === undefined))
+  const searched = createMemo(() => {
+    const text = view.query.trim().toLowerCase()
+    return owned().filter((document) => !text || `${document.name} ${document.description}`.toLowerCase().includes(text))
   })
+  const shown = createMemo(() => searched().filter(STATES[view.filter]))
+  // A refetch that failed keeps the list that was loaded, so the page does not turn into an error.
+  const cached = () => props.source.list().length > 0
+  const loaded = () => props.source.documents.isSuccess || cached()
+  const emptyCopy = () => {
+    if (view.query.trim() || view.filter === "all") return copy.t("orchestra.workflows.noMatches")
+    return copy.t(
+      view.filter === "published" ? "orchestra.workflows.filter.emptyPublished" : "orchestra.workflows.filter.emptyDraft",
+    )
+  }
   const duplicate = (document: RelayDocument) =>
     duplication.run(async (current) => {
+      const base = copy.t("orchestra.workflows.create.copyName", { name: document.name })
+      const name = freeName(
+        props.source.list().map((item) => item.name),
+        base,
+        (n) => copy.t("orchestra.workflows.create.copyNumbered", { name: document.name, n }),
+      )
       const created = await props.source.client
-        .create(copyDocument(document, copy.t("orchestra.workflows.create.copyName", { name: document.name })))
+        .create(copyDocument(document, name))
         .catch(
           (error: unknown) =>
             void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
@@ -66,6 +103,11 @@ export function WorkflowLibrary(props: Props) {
       label: copy.t("orchestra.workflows.menu.open"),
       icon: "open",
       run: () => props.go(relayPath.editor("workflow", document.id)),
+    },
+    {
+      label: copy.t("orchestra.workflows.menu.rename"),
+      icon: "edit",
+      run: () => setDialog({ type: "rename", document }),
     },
     {
       label: copy.t("orchestra.workflows.menu.duplicate"),
@@ -92,29 +134,33 @@ export function WorkflowLibrary(props: Props) {
         <button
           type="button"
           class="mx-btn primary"
-          disabled={!props.source.documents.isSuccess}
-          onClick={() => openTemplate(templateID(props.source.list()))}
+          disabled={!loaded()}
+          onClick={() => openTemplate("blank")}
         >
           <Ic name="plus" />
           {copy.t("orchestra.workflows.new")}
         </button>
       }
     >
-      <For each={profileDrafts(props.source).filter((draft) => draft.state.flow.kind === "workflow" && (draft.state.save.dirty || draft.state.save.state === "saving"))}>
-        {(draft) => <p class="mx-note" role="status">
-          {copy.t("orchestra.workflows.drafts.retained", { name: draft.state.name })}
-          <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor("workflow", draft.state.base.id))}>
-            {copy.t("orchestra.workflows.menu.open")}
-          </button>
-        </p>}
-      </For>
+      <p class="wf-xlink">
+        <a
+          href={relayPath.library("hook")}
+          onClick={(event) => {
+            event.preventDefault()
+            props.go(relayPath.library("hook"))
+          }}
+        >
+          {copy.t("orchestra.workflows.xlink")}
+        </a>
+      </p>
+      <RetainedDrafts source={props.source} kind="workflow" go={props.go} />
       <Switch>
         <Match when={props.source.documents.isPending}>
           <p class="mx-empty" role="status">
             {copy.t("orchestra.workflows.loading")}
           </p>
         </Match>
-        <Match when={props.source.documents.isError}>
+        <Match when={props.source.documents.isError && !cached()}>
           <p class="mx-error" role="alert">
             {copy.t("orchestra.workflows.error", { reason: String(props.source.documents.error?.message ?? "") })}
           </p>
@@ -123,16 +169,28 @@ export function WorkflowLibrary(props: Props) {
           </button>
         </Match>
         <Match when={true}>
+          <Show when={props.source.documents.isError}>
+            <p class="mx-error wf-retained" role="alert">
+              <span>{copy.t("orchestra.workflows.refreshFailed")}</span>
+              <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
+                {copy.t("orchestra.workflows.retry")}
+              </button>
+            </p>
+          </Show>
           <Show
-            when={props.source.list().length}
+            when={owned().length}
             fallback={
               <div class="mx-empty wf-empty">
                 <strong>{copy.t("orchestra.workflows.empty.title")}</strong>
-                {copy.t("orchestra.workflows.empty.body")}
+                {copy.t(
+                  templates(props.source.list()).length
+                    ? "orchestra.workflows.empty.body"
+                    : "orchestra.workflows.empty.bodyBlank",
+                )}
                 <br />
                 <button type="button" class="mx-btn primary" onClick={() => openTemplate("blank")}>
                   <Ic name="plus" />
-                  {copy.t("orchestra.workflows.new")}
+                  {copy.t("orchestra.workflows.template.blank")}
                 </button>
               </div>
             }
@@ -143,28 +201,29 @@ export function WorkflowLibrary(props: Props) {
                 type="text"
                 aria-label={copy.t("orchestra.workflows.search")}
                 placeholder={copy.t("orchestra.workflows.search")}
-                value={query()}
-                onInput={(event) => setQuery(event.currentTarget.value)}
+                value={view.query}
+                onInput={(event) => setView("query", event.currentTarget.value)}
               />
               <div class="wf-range" role="group" aria-label={copy.t("orchestra.workflows.filter.label")}>
                 <For each={["all", "published", "draft"] as const}>
                   {(value) => (
-                    <button type="button" aria-pressed={filter() === value} onClick={() => setFilter(value)}>
+                    <button type="button" aria-pressed={view.filter === value} onClick={() => setView("filter", value)}>
                       {copy.t(`orchestra.workflows.filter.${value}`)}
+                      <span class="wf-count">{searched().filter(STATES[value]).length}</span>
                     </button>
                   )}
                 </For>
               </div>
             </div>
-            <div class="wf-lhead" aria-hidden="true">
+            <div class="wf-lhead wf-lib" aria-hidden="true">
               <span />
               <span>{copy.t("orchestra.workflows.head.workflow")}</span>
               <span>{copy.t("orchestra.workflows.head.version")}</span>
               <span>{copy.t("orchestra.workflows.head.updated")}</span>
               <span />
             </div>
-            <Show when={shown().length} fallback={<p class="mx-empty">{copy.t("orchestra.workflows.noMatches")}</p>}>
-              <div class="mx-table" role="list" aria-label={copy.t("orchestra.workflows.title")}>
+            <Show when={shown().length} fallback={<p class="mx-empty">{emptyCopy()}</p>}>
+              <div class="mx-table wf-lib" role="list" aria-label={copy.t("orchestra.workflows.title")}>
                 <For each={shown()}>
                   {(document) => {
                     const flow = () => flows().get(document.id)
@@ -206,7 +265,7 @@ export function WorkflowLibrary(props: Props) {
                         </div>
                         <div>
                           <span class="wf-state">
-                            <small>{copy.when(document.updated)}</small>
+                            <small>{updated(document.updated)}</small>
                           </span>
                         </div>
                         <div class="wf-actions" onClick={(event) => event.stopPropagation()}>
@@ -227,27 +286,35 @@ export function WorkflowLibrary(props: Props) {
               </div>
             </Show>
           </Show>
-          <div class="wf-sub" style={{ "margin-top": "30px" }}>
-            <h3 class="mx-section">{copy.t("orchestra.workflows.templates.title")}</h3>
-            <span class="mx-meta">{copy.t("orchestra.workflows.templates.meta")}</span>
-          </div>
-          <div class="wf-tpl-grid">
-            <TemplateCard id="blank" flows={flows()} documents={props.source.list()} onPick={openTemplate} />
-            <For each={templates(props.source.list())}>
-              {(document) => (
-                <TemplateCard id={document.id} flows={flows()} documents={props.source.list()} onPick={openTemplate} />
-              )}
-            </For>
-          </div>
+          {/* With no template there is only Blank, and the New workflow button already starts it. */}
+          <Show when={templates(props.source.list()).length}>
+            <div class="wf-sub" style={{ "margin-top": "30px" }}>
+              <h3 class="mx-section">{copy.t("orchestra.workflows.templates.title")}</h3>
+              <span class="mx-meta">{copy.t("orchestra.workflows.templates.meta")}</span>
+            </div>
+            <div class="wf-tpl-grid">
+              <TemplateCard id="blank" flows={flows()} documents={props.source.list()} onPick={openTemplate} />
+              <For each={templates(props.source.list())}>
+                {(document) => (
+                  <TemplateCard
+                    id={document.id}
+                    flows={flows()}
+                    documents={props.source.list()}
+                    onPick={openTemplate}
+                  />
+                )}
+              </For>
+            </div>
+          </Show>
         </Match>
       </Switch>
-      <Show when={props.route.create && props.source.documents.isSuccess}>
+      <Show when={props.route.create && loaded()}>
         <CreateWorkflowDialog
           source={props.source}
           flows={flows()}
-          initial={template() ?? templateID(props.source.list())}
+          initial={template() ?? "blank"}
           onClose={() => props.close(relayPath.library("workflow"))}
-          onCreated={(id) => props.go(relayPath.editor("workflow", id))}
+          onCreated={(id) => props.go(relayPath.editor("workflow", id), true)}
         />
       </Show>
       <Show when={menu()}>
@@ -261,17 +328,77 @@ export function WorkflowLibrary(props: Props) {
         )}
       </Show>
       <Show when={dialog()} keyed>
-        {(current) => (
-          <DeleteDialog
-            document={current.document}
-            kind="workflow"
-            source={props.source}
-            onClose={() => setDialog(undefined)}
-            onDeleted={() => setDialog(undefined)}
-          />
-        )}
+        {(current) =>
+          current.type === "rename" ? (
+            <RenameDialog document={current.document} source={props.source} onClose={() => setDialog(undefined)} />
+          ) : (
+            <DeleteDialog
+              document={current.document}
+              kind="workflow"
+              source={props.source}
+              onClose={() => setDialog(undefined)}
+              onDeleted={() => setDialog(undefined)}
+            />
+          )
+        }
       </Show>
     </MxPage>
+  )
+}
+
+function RenameDialog(props: { document: RelayDocument; source: RelaySource; onClose: () => void }) {
+  const copy = useRelayCopy()
+  const action = createAction()
+  const [name, setName] = createSignal(props.document.name)
+  const rename = () => {
+    const value = name().trim()
+    if (!value) return action.setError(copy.t("orchestra.workflows.create.nameRequired"))
+    if (value === props.document.name) return props.onClose()
+    return action.run(async () => {
+      // The list holds the newest version; the menu was opened on an older one if the list refreshed since.
+      const latest = props.source.list().find((item) => item.id === props.document.id) ?? props.document
+      const saved = await props.source.client.save(latest, { name: value })
+      await rememberDocument(props.source.queryClient(), props.source.key("documents"), saved)
+      props.onClose()
+    })
+  }
+  return (
+    <RelayDialog
+      title={copy.t("orchestra.workflows.rename.title")}
+      busy={action.busy()}
+      onClose={props.onClose}
+      onSubmit={rename}
+      foot={
+        <>
+          <button type="button" class="mx-btn" disabled={action.busy()} onClick={props.onClose}>
+            {copy.t("orchestra.workflows.dialog.cancel")}
+          </button>
+          <button type="submit" class="mx-btn primary" disabled={action.busy()}>
+            {copy.t("orchestra.workflows.rename.submit")}
+          </button>
+        </>
+      }
+    >
+      <label class="mx-field" style={{ "margin-bottom": "0" }}>
+        <span>{copy.t("orchestra.workflows.create.name")}</span>
+        <input
+          ref={(element) => queueMicrotask(() => element.isConnected && element.select())}
+          name="name"
+          autofocus
+          disabled={action.busy()}
+          value={name()}
+          onInput={(event) => {
+            setName(event.currentTarget.value)
+            action.setError(undefined)
+          }}
+        />
+      </label>
+      <Show when={action.error()}>
+        <p class="mx-error" role="alert" style={{ margin: "14px 0 0" }}>
+          {action.error()}
+        </p>
+      </Show>
+    </RelayDialog>
   )
 }
 

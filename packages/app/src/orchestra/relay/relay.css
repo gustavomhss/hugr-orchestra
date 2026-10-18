@@ -365,6 +365,58 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 .wf-badges > .mx-badge {
   justify-self: start;
 }
+/* The library: the Updated column needs only a short time, and a narrow window gives the name that room back. */
+.wf-lhead.wf-lib,
+.wf-lib .wf-lrow {
+  grid-template-columns: 32px minmax(0, 1fr) 210px 120px 74px;
+}
+@media (max-width: 1100px) {
+  .wf-lhead.wf-lib,
+  .wf-lib .wf-lrow {
+    grid-template-columns: 32px minmax(0, 1fr) minmax(0, 150px) 52px;
+  }
+  .wf-lhead.wf-lib > :nth-child(4),
+  .wf-lib .wf-lrow > :nth-child(4) {
+    display: none;
+  }
+}
+.wf-scope .wf-xlink {
+  margin: -14px 0 22px;
+  color: var(--mx-dim);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.wf-scope .wf-xlink a {
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--mx-line);
+  text-underline-offset: 3px;
+}
+.wf-scope .wf-xlink a:hover {
+  color: var(--mx-blue);
+}
+/* Retained drafts and a failed refresh sit above the list as one line with their actions. */
+.wf-scope .wf-retained {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 10px;
+  margin: 0 0 12px;
+  padding: 9px 12px;
+  border: 1px solid var(--wf-warm-line);
+  border-radius: 8px;
+  color: var(--mx-strong);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.wf-scope .wf-retained.mx-error {
+  border-color: var(--mx-bad);
+  color: var(--mx-bad);
+}
+.wf-scope .wf-retained > span {
+  flex: 1 1 260px;
+  min-inline-size: 0;
+}
 .wf-last {
   min-inline-size: 0;
   align-items: flex-start;
