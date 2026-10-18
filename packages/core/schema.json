@@ -1,9 +1,9 @@
 {
   "version": "7",
   "dialect": "sqlite",
-  "id": "09f477cf-9f1a-42cb-8b0a-5bd76d69df1b",
+  "id": "06358684-d468-4171-afa8-6eb7341dc6fc",
   "prevIds": [
-    "4fe5dce9-5006-47df-9665-2fe3d2f9a0c6"
+    "09f477cf-9f1a-42cb-8b0a-5bd76d69df1b"
   ],
   "ddl": [
     {
@@ -2771,6 +2771,72 @@
       "where": null,
       "origin": "manual",
       "name": "session_parent_idx",
+      "entityType": "indexes",
+      "table": "session"
+    },
+    {
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false
+        },
+        {
+          "value": "time_updated",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_project_time_updated_idx",
+      "entityType": "indexes",
+      "table": "session"
+    },
+    {
+      "columns": [
+        {
+          "value": "time_archived",
+          "isExpression": false
+        },
+        {
+          "value": "time_updated",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_time_archived_time_updated_id_idx",
+      "entityType": "indexes",
+      "table": "session"
+    },
+    {
+      "columns": [
+        {
+          "value": "project_id",
+          "isExpression": false
+        },
+        {
+          "value": "time_archived",
+          "isExpression": false
+        },
+        {
+          "value": "time_created",
+          "isExpression": false
+        },
+        {
+          "value": "id",
+          "isExpression": false
+        }
+      ],
+      "isUnique": false,
+      "where": null,
+      "origin": "manual",
+      "name": "session_project_time_archived_time_created_id_idx",
       "entityType": "indexes",
       "table": "session"
     },
