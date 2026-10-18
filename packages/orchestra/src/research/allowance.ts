@@ -1,6 +1,7 @@
 export * as ResearchExecution from "./allowance"
 
 import { Context, Duration, Effect, Fiber, Layer, Schema } from "effect"
+import { ResearchSeatTools } from "./seat-tools"
 import { Research } from "@orchestra/schema/research"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
@@ -55,18 +56,18 @@ const layer = Layer.effect(
       const task = yield* logical(sessionID)
       const session = yield* sessions.get(SessionID.make(sessionID)).pipe(Effect.mapError(() =>
         new Research.Error({ code: "binding_missing", message: "Native execution Session is not retained" })))
-      if (task?.memberID !== "jimmy" && canonicalMemberId(session.agent) !== "jimmy") return undefined
+      if (task?.memberID !== ResearchSeatTools.SEAT && canonicalMemberId(session.agent) !== ResearchSeatTools.SEAT) return undefined
       if (!task) return yield* new Research.Error({ code: "binding_missing", message: "Discovery execution has no native logical Task binding" })
       const root = yield* InstanceState.context
       const authority = yield* sessions.get(SessionID.make(task.authoritySessionID)).pipe(Effect.mapError(() =>
         new Research.Error({ code: "binding_missing", message: "Native authority Session is not retained" })))
-      if (task.memberID !== "jimmy" || canonicalMemberId(session.agent) !== "jimmy" ||
+      if (task.memberID !== ResearchSeatTools.SEAT || canonicalMemberId(session.agent) !== ResearchSeatTools.SEAT ||
         task.executionSessionID !== session.id || task.projectID !== session.projectID ||
         authority.projectID !== session.projectID || root.project.id !== session.projectID ||
         session.directory !== root.directory || (session.parentID !== undefined && session.parentID !== task.authoritySessionID))
         return yield* new Research.Error({ code: "binding_mismatch", message: "Discovery Task, Session, authority or native instance placement differs" })
       return yield* Schema.decodeUnknownEffect(Research.Binding)({
-        projectID: Project.ID.make(session.projectID), memberID: "jimmy", taskId: task.taskId,
+        projectID: Project.ID.make(session.projectID), memberID: ResearchSeatTools.SEAT, taskId: task.taskId,
         executionSessionID: session.id, authoritySessionID: authority.id,
         directory: AbsolutePath.make(root.directory), worktree: AbsolutePath.make(root.worktree === "/" ? root.directory : root.worktree),
       }).pipe(Effect.mapError(() => new Research.Error({ code: "binding_mismatch", message: "Invalid native research placement" })))
@@ -129,7 +130,7 @@ const layer = Layer.effect(
       const task = yield* logical(input.sessionID)
       const maintenance = input.purpose === "context-maintenance" && input.parentSessionID
         ? yield* logical(input.parentSessionID) : undefined
-      if (task?.memberID === "jimmy" || maintenance?.memberID === "jimmy" || input.agent.id === "jimmy")
+      if (task?.memberID === ResearchSeatTools.SEAT || maintenance?.memberID === ResearchSeatTools.SEAT || input.agent.id === ResearchSeatTools.SEAT)
         return yield* new Research.Error({ code: "binding_missing", message: "Discovery provider invocation is missing native dispatch attribution" })
       return yield* effect
     })

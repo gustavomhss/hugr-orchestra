@@ -1,6 +1,7 @@
 export * as ResearchSessionCleanup from "./session-cleanup"
 
 import { Effect, Option } from "effect"
+import { ResearchSeatTools } from "./seat-tools"
 import { Database } from "@orchestra/core/database/database"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { ResearchBinding } from "@orchestra/core/research/binding"
@@ -16,7 +17,7 @@ export const make = Effect.gen(function* () {
   const artifacts = yield* ResearchArtifacts.Service
   const database = yield* Database.Service
   return (session: { id: SessionID; projectID: string; agent?: string }) => Effect.gen(function* () {
-    if (session.agent !== "jimmy") return
+    if (session.agent !== ResearchSeatTools.SEAT) return
     const binding = yield* ResearchBinding.resolve(session.id, Project.ID.make(session.projectID)).pipe(
       Effect.provideService(Database.Service, database), Effect.option,
     )
