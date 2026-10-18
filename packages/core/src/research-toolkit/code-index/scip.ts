@@ -2,7 +2,11 @@ export * as Scip from "./scip"
 
 import path from "path"
 import { readFileSync, statSync } from "fs"
-import { deserializeSCIP, SymbolRole } from "@c4312/scip"
+import { fromBinary } from "@bufbuild/protobuf"
+// The package root resolves to its `index.ts` source, which does not compile under this repo's
+// `verbatimModuleSyntax`; `scip_pb` ships as JS with declarations. `fromBinary(IndexSchema, …)` is the body of the
+// package's own `deserializeSCIP`.
+import { IndexSchema, SymbolRole } from "@c4312/scip/scip_pb"
 import { Role } from "./types"
 
 // T-X1: the SCIP reader, transplanted from Atlas `adapter-io/src/scip.ts:95-160`. Atlas projects a dump down to
@@ -63,14 +67,14 @@ export type Index = {
  * no `catch` can see a read that does not return. A symlink to a real dump stays supported, since `statSync`
  * follows links; a device, FIFO, socket or directory target is refused before any byte is read.
  */
-const memo = new Map<string, { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof deserializeSCIP> }>()
+const memo = new Map<string, { readonly mtimeMs: number; readonly size: number; readonly raw: ReturnType<typeof decode> }>()
 
 export function decodeScipCached(file: string) {
   const stat = statSync(file)
   if (!stat.isFile()) throw new Error(`scip: '${file}' is not a regular file, so it is not an indexer dump`)
   const cached = memo.get(file)
   if (cached && cached.mtimeMs === stat.mtimeMs && cached.size === stat.size) return cached.raw
-  const raw = deserializeSCIP(readFileSync(file))
+  const raw = decode(readFileSync(file))
   memo.set(file, { mtimeMs: stat.mtimeMs, size: stat.size, raw })
   return raw
 }
@@ -145,6 +149,10 @@ export function descriptorName(symbol: string) {
   const match = symbol.match(/(?:\(([^)]+)\)|\[([^\]]+)\]|(?:`((?:[^`]|``)+)`|([\w$+-]+))(?:\([^)]*\)\.|[#.:!]))$/)
   if (!match) return undefined
   return match[1] ?? match[2] ?? match[3]?.replaceAll("``", "`") ?? match[4]
+}
+
+function decode(bytes: Uint8Array) {
+  return fromBinary(IndexSchema, bytes)
 }
 
 function span(range: ReadonlyArray<number>): Span | undefined {
