@@ -2,7 +2,7 @@ import { mkdtemp, mkdir, realpath, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { expect, test } from "bun:test"
-import { ResourcePaths } from "../../desktop/scripts/resource-paths.ts"
+import { ResourcePaths } from "../../../apps/desktop/scripts/resource-paths.ts"
 
 test("resolves resources from a relocated module registry", async () => {
   const root = await realpath(await mkdtemp(path.join(tmpdir(), "resource-paths-")))

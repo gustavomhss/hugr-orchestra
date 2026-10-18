@@ -23,7 +23,7 @@ export async function prepare() {
   if (!nativeFiles.includes("native/omni/Cargo.lock") || !nativeFiles.some((file) => file.includes("crates/omni-supervisor/src/")))
     throw new Error("native provenance enumeration incomplete")
   const sources = tracked.filter((file) => /^packages\/(core|orchestra|server|protocol|schema|llm)\/(src\/|package\.json$)/.test(file))
-    .concat("bun.lock", "packages/orchestra/script/build.ts", ".github/actions/omni-binaries/action.yml")
+    .concat("bun.lock", "apps/orchestra/script/build.ts", ".github/actions/omni-binaries/action.yml")
   const sourceHashes = Object.fromEntries(sources.map((file) => [file, digest(path.join(ROOT, file))]))
   const nativeSourceHashes = Object.fromEntries(nativeFiles.map((file) => [file, digest(path.join(ROOT, file))]))
   const nativeSourceDigest = createHash("sha256").update(Buffer.concat(nativeFiles.map((file) => Buffer.from(nativeSourceHashes[file]!, "hex")))).digest("hex")
@@ -69,8 +69,8 @@ export async function prepare() {
     // Absence stays a named red editor capability; never substitute a terminal-shaped fixture.
   }
   console.log("MATRIX_PROVENANCE " + JSON.stringify({ ...provenance, sourceHashes: {
-    "bun.lock": sourceHashes["bun.lock"], "packages/orchestra/src/lsp/client.ts": sourceHashes["packages/orchestra/src/lsp/client.ts"],
-    "packages/orchestra/src/lsp/lsp.ts": sourceHashes["packages/orchestra/src/lsp/lsp.ts"],
+    "bun.lock": sourceHashes["bun.lock"], "apps/orchestra/src/lsp/client.ts": sourceHashes["apps/orchestra/src/lsp/client.ts"],
+    "apps/orchestra/src/lsp/lsp.ts": sourceHashes["apps/orchestra/src/lsp/lsp.ts"],
   }, nativeSourceHashes: undefined, node: actualNode, nodeSha256: digest(actualNode.execPath) }))
   return provenance
 }

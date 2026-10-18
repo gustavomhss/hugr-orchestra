@@ -93,9 +93,9 @@ stdenv.mkDerivation (finalAttrs: {
     python3 ${./scripts/prepare-bun-template.py} ${bun}/bin/bun \
       "$BUN_INSTALL_CACHE_DIR/native-bun-template" '${stdenv.hostPlatform.system}'
     test "$("$BUN_INSTALL_CACHE_DIR/native-bun-template" --version)" = '${bun.version}'
-    ln -s "$BUN_INSTALL_CACHE_DIR/native-bun-template" packages/cli/bun-${target}-v${bun.version}
+    ln -s "$BUN_INSTALL_CACHE_DIR/native-bun-template" apps/cli/bun-${target}-v${bun.version}
   '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
-    ln -s ${bun}/bin/bun packages/cli/bun-${target}-v${bun.version}
+    ln -s ${bun}/bin/bun apps/cli/bun-${target}-v${bun.version}
   '' + ''
     # A --target build requires OMNI_ARTIFACTS laid out as <dir>/<omni id>/{addon,supervisor}.
     omniArtifacts="$(mktemp -d)"
@@ -103,12 +103,12 @@ stdenv.mkDerivation (finalAttrs: {
     export OMNI_ARTIFACTS="$omniArtifacts"
     # Bun 1.3.14's automatic Nix-host detection can miss relocated ELF metadata.
     # Preserve the selected Nix compiler's interpreter, then verify emitted paths below.
-    ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}${if stdenv.hostPlatform.isLinux then "\"$BUN_INSTALL_CACHE_DIR/native-bun-template\"" else "bun"} --bun packages/cli/script/build.ts --target ${target} --skip-install
-    bun --bun packages/cli/script/schema.ts schema.json
+    ${lib.optionalString stdenv.hostPlatform.isLinux "BUN_DEBUG_FORCE_NIX_HOST=1 "}${if stdenv.hostPlatform.isLinux then "\"$BUN_INSTALL_CACHE_DIR/native-bun-template\"" else "bun"} --bun apps/cli/script/build.ts --target ${target} --skip-install
+    bun --bun apps/cli/script/schema.ts schema.json
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
     # Bun's Nix-host path can preserve its loader metadata. Rewriting compiled
     # sections aborts in patchelf; require the emitted native paths before publication.
-    cli="packages/cli/dist/cli-${target}/bin/orchestra"
+    cli="apps/cli/dist/cli-${target}/bin/orchestra"
     interpreter="$(cat "$NIX_CC/nix-support/dynamic-linker")"
     # A successful empty RPATH is valid when the native compiler also has none.
     # Query failures must never masquerade as two matching empty values.
@@ -140,7 +140,7 @@ stdenv.mkDerivation (finalAttrs: {
       exit 1
     }
   '' + lib.optionalString stdenv.hostPlatform.isDarwin ''
-    codesign --force --sign - packages/cli/dist/cli-${target}/bin/orchestra
+    codesign --force --sign - apps/cli/dist/cli-${target}/bin/orchestra
   '' + ''
     runHook postBuild
   '';
@@ -149,17 +149,17 @@ stdenv.mkDerivation (finalAttrs: {
     runHook preInstall
     mkdir -p $out/share/orchestra $out/bin
     # The leaf must be fresh: the reviewed producer admits/publishes it itself.
-    bun --bun packages/cli/script/export-artifacts.ts \
-      --dist packages/cli/dist --out "$out/share/orchestra/cli" \
+    bun --bun apps/cli/script/export-artifacts.ts \
+      --dist apps/cli/dist --out "$out/share/orchestra/cli" \
       --version "${finalAttrs.version}" --target ${target}
     # Omni is on by default: core/src/omni.ts resolves both files next to
     # realpath(process.execPath), the real leaf below, never the bin/ wrapper.
     install -Dm755 ${finalAttrs.omni}/hugr-omni-supervisor "$out/share/orchestra/cli/hugr-omni-supervisor"
     install -Dm755 ${finalAttrs.omni}/hugr_omni.node "$out/share/orchestra/cli/hugr_omni.node"
     # maestro-arsenal loads tree-sitter/ beside the same real leaf. The desktop stages a producer
-    # directory's bundle from tree-sitter-<target>/ (packages/desktop/scripts/cli-staging.ts).
-    cp -R packages/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter"
-    cp -R packages/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter-${target}"
+    # directory's bundle from tree-sitter-<target>/ (apps/desktop/scripts/cli-staging.ts).
+    cp -R apps/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter"
+    cp -R apps/cli/dist/cli-${target}/bin/tree-sitter "$out/share/orchestra/cli/tree-sitter-${target}"
     install -Dm644 schema.json $out/share/orchestra/schema.json
     makeWrapper "$out/share/orchestra/cli/orchestra-${target}" $out/bin/orchestra \
       --prefix PATH : ${lib.makeBinPath ([ ripgrep ] ++ lib.optional stdenv.hostPlatform.isDarwin sysctl)}
@@ -184,14 +184,14 @@ stdenv.mkDerivation (finalAttrs: {
   versionCheckKeepEnvironment = [ "HOME" "ORCHESTRA_DISABLE_MODELS_FETCH" ];
   versionCheckProgramArg = "--version";
   postInstallCheck = ''
-    bun --bun packages/cli/script/schema.ts schema-installcheck.json
+    bun --bun apps/cli/script/schema.ts schema-installcheck.json
     cmp schema-installcheck.json $out/share/orchestra/schema.json
     cmp ${finalAttrs.omni}/hugr_omni.node $out/share/orchestra/cli/hugr_omni.node
     cmp ${finalAttrs.omni}/hugr-omni-supervisor $out/share/orchestra/cli/hugr-omni-supervisor
-    diff -r packages/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter
-    diff -r packages/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter-${target}
+    diff -r apps/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter
+    diff -r apps/cli/dist/cli-${target}/bin/tree-sitter $out/share/orchestra/cli/tree-sitter-${target}
     bun --bun --eval '
-      const { cliTreeSitterTarget, verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts")
+      const { cliTreeSitterTarget, verifyCliArtifact } = await import("./apps/desktop/src/main/cli-artifacts.ts")
       const { requireTreeSitterBundle } = await import("./packages/script/src/tree-sitter-prebuilds.ts")
       const artifact = await verifyCliArtifact(process.env.out + "/share/orchestra/cli", "${target}")
       if (artifact.version !== "${finalAttrs.version}") throw new Error("NIX_CLI_ARTIFACT_VERSION_MISMATCH")

@@ -118,7 +118,7 @@ export function targetFiles(locale: Locale) {
   return [
     `packages/app-shell/src/i18n/${locale}.ts`,
     `packages/ui/src/i18n/${locale}.ts`,
-    ...(desktopLocales.has(locale) ? [`packages/desktop/src/renderer/i18n/${locale}.ts`] : []),
+    ...(desktopLocales.has(locale) ? [`apps/desktop/src/renderer/i18n/${locale}.ts`] : []),
   ]
 }
 

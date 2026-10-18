@@ -24,7 +24,7 @@ verified: `415038b`).
   - No Effect caller uses `inherit`, `additionalFds`, `killSignal` or `unref`.
   - The only PipedCommand producer is a pass-through at `tool-safety-sandbox.ts:51`.
 - **The non-Effect paths.**
-  - The legacy `Process` (`packages/orchestra/src/util/process.ts`, 16 importers).
+  - The legacy `Process` (`apps/orchestra/src/util/process.ts`, 16 importers).
   - MCP's `StdioClientTransport`.
   - `maestro-arsenal` (`Bun.spawn`; no dependency on core).
   - The desktop main process.
@@ -331,7 +331,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Regression:** `core/test/pty/*` and `orchestra/test/server/httpapi{,-v2}-pty.test.ts` (Linux and macOS; they skip
   Windows).
 
-**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`packages/orchestra/src/{util,lsp,mcp,session/prompt.ts,cli}`,
+**WP3 Legacy Process, LSP, MCP, maestro-arsenal** (`apps/orchestra/src/{util,lsp,mcp,session/prompt.ts,cli}`,
 `modules/maestro/arsenal`)
 
 - **`util/process.ts`.** Uses an explicit mapping table that must be written before any code, covering:
@@ -400,7 +400,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 
 ### Wave 3 (after Wave 2)
 
-**WP4 Desktop** (`packages/desktop/**`, plus `packages/orchestra/script/build-node.ts`, owned here)
+**WP4 Desktop** (`apps/desktop/**`, plus `apps/orchestra/script/build-node.ts`, owned here)
 
 - **Packaging.**
   - `prebuild.ts` stages `resources/omni/`.
@@ -427,7 +427,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
     with a grandchild, then `kill -9` the Electron main process. The nonce oracle must find 0.
   - macOS `codesign --verify --deep --strict` plus stapler (O5, owner run).
 
-**WP5 CLI distribution** (`packages/orchestra/script/{build,postinstall,publish}.*`)
+**WP5 CLI distribution** (`apps/orchestra/script/{build,postinstall,publish}.*`)
 - **Build.**
   - `build.ts` defines `OMNI_ENABLED` per target (D-L9).
   - It copies `hugr_omni.node` and the supervisor into `dist/<t>/bin/` from `OMNI_ARTIFACTS`. A missing artifact

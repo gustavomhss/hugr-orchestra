@@ -117,14 +117,14 @@ jobs:
           chmod +x "$OMNI_ARTIFACTS"/linux-*/hugr-omni-supervisor
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
           for target in $targets; do
-            bun packages/cli/script/build.ts --skip-install --target "$target"
+            bun apps/cli/script/build.ts --skip-install --target "$target"
           done
-          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
+          bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
             --target windows-x64-baseline --target linux-arm64 --target linux-x64-baseline
           # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each WSL guest's
           # omni pair in omni-<target>/ (scripts/cli-staging.ts reads them there).
           for target in $targets; do
-            bin="packages/cli/dist/cli-$target/bin"
+            bin="apps/cli/dist/cli-$target/bin"
             cp -R "$bin/tree-sitter" "windows-cli/tree-sitter-$target"
             cp -R "$bin/ripgrep" "windows-cli/ripgrep-$target"
             if [[ "$target" == linux-* ]]; then
@@ -247,7 +247,7 @@ jobs:
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
 
       - name: Build the installers
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         env:
           # The electron-vite build exceeds Node's default old space on hosted runners (scripts/lean-candidate.ts).
           # Builder only: it never reaches the packaged app.
@@ -282,7 +282,7 @@ jobs:
           esac
           mkdir -p installers
           for ext in $extensions; do
-            found=(packages/desktop/dist/orchestra-desktop-*."$ext")
+            found=(apps/desktop/dist/orchestra-desktop-*."$ext")
             [ "${#found[@]}" -eq 1 ] && [ -f "${found[0]}" ] || { echo "::error::DESKTOP_INSTALLER_MISSING: expected one .$ext, got: ${found[*]}"; exit 1; }
             cp "${found[0]}" installers/
           done
@@ -296,7 +296,7 @@ jobs:
           APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
         run: |
           set -euo pipefail
-          app="$(find packages/desktop/dist -maxdepth 2 -name '*.app' -type d | head -n 1)"
+          app="$(find apps/desktop/dist -maxdepth 2 -name '*.app' -type d | head -n 1)"
           [ -n "$app" ] || { echo "::error::DESKTOP_APP_MISSING"; exit 1; }
           codesign --verify --deep --strict --verbose=2 "$app"
           spctl -a -t exec -vv "$app"
@@ -312,7 +312,7 @@ jobs:
         if: env.SIGN == 'true' && runner.os == 'Windows'
         shell: pwsh
         run: |
-          $files = @(Get-ChildItem installers/*.exe) + @(Get-ChildItem "packages/desktop/dist/win-unpacked/*.exe")
+          $files = @(Get-ChildItem installers/*.exe) + @(Get-ChildItem "apps/desktop/dist/win-unpacked/*.exe")
           foreach ($file in $files) {
             $status = (Get-AuthenticodeSignature -LiteralPath $file.FullName).Status
             Write-Host "$($file.Name): $status"

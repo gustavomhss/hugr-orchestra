@@ -50,14 +50,14 @@ export function evidence(scratch: Fixture) {
   if (!/^[a-f0-9]{40}$/.test(built.sourceSHA) || digest(bin) !== built.cliSha256 ||
     digest(path.join(path.dirname(bin), "hugr_omni.node")) !== built.addonSha256 ||
     digest(path.join(path.dirname(bin), process.platform === "win32" ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor")) !== built.supervisorSha256 ||
-    ["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
+    ["apps/orchestra/src/lsp/client.ts", "apps/orchestra/src/lsp/lsp.ts", "bun.lock"].some((file) => digest(path.join(ROOT, file)) !== built.sourceHashes?.[file]))
     throw new Error("CLI provenance mismatch: rebuild this worktree after product changes")
   return {
     baseline: "3d1fc21428",
     // GitHub log lines truncate at 64 KiB. Full source manifests stay in cli-provenance.json; emit checked keys + digest.
     cli: bin, ...Object.fromEntries(Object.entries(built).filter(([key]) => key !== "sourceHashes" && key !== "nativeSourceHashes")
       .map(([key, value]) => [key === "at" ? "buildAt" : key, value])),
-    sourceHashes: Object.fromEntries(["packages/orchestra/src/lsp/client.ts", "packages/orchestra/src/lsp/lsp.ts", "bun.lock"]
+    sourceHashes: Object.fromEntries(["apps/orchestra/src/lsp/client.ts", "apps/orchestra/src/lsp/lsp.ts", "bun.lock"]
       .map((file) => [file, built.sourceHashes[file]])),
     harnessHashes: Object.fromEntries(["protocol-fixtures.ts", "v4-lsp.ts", "v5-mcp.ts", "v6-terminal.ts", "pty-byte-probe.ts", "lib.ts"].map((file) => [file, digest(path.join(LOGS, "..", file))])),
     node: scratch.node, harnessRuntime: process.version, home: scratch.home, hostLog: scratch.log,

@@ -10,7 +10,7 @@
 ## Local Dev
 
 - For local UI changes, run the backend and app dev servers separately.
-- Backend (from `packages/orchestra`): `bun run ./src/index.ts serve --port 4096`
+- Backend (from `apps/orchestra`): `bun run ./src/index.ts serve --port 4096`
 - Web entry (from `apps/web`): `bun dev` (Vite serves on port 3000, set in `apps/web/vite.config.ts`)
 - Open `http://localhost:3000` to verify UI changes (it targets the backend at `http://localhost:4096`).
 

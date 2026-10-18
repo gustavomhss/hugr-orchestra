@@ -41,7 +41,7 @@ https://github.com/anomalyco/models.dev
 
 ### Running against a different directory
 
-By default, `bun dev` runs Orchestra in the `packages/orchestra` directory. To run it against a different directory or repository:
+By default, `bun dev` runs Orchestra in the `apps/orchestra` directory. To run it against a different directory or repository:
 
 ```bash
 bun dev <directory>
@@ -58,23 +58,23 @@ bun dev .
 To compile a standalone executable:
 
 ```bash
-./packages/orchestra/script/build.ts --single
+./apps/orchestra/script/build.ts --single
 ```
 
 Then run it with:
 
 ```bash
-./packages/orchestra/dist/orchestra-<platform>/bin/orchestra
+./apps/orchestra/dist/orchestra-<platform>/bin/orchestra
 ```
 
 Replace `<platform>` with your platform (e.g., `darwin-arm64`, `linux-x64`).
 
 - Core pieces:
-  - `packages/orchestra`: Orchestra core business logic & server.
+  - `apps/orchestra`: Orchestra core business logic & server.
   - `packages/tui`: The TUI code, written in SolidJS with [opentui](https://github.com/sst/opentui)
   - `packages/app-shell`: The shared web UI components, written in SolidJS
   - `apps/web`: The browser bootstrap and development server
-  - `packages/desktop`: The native desktop app, built with Electron (wraps `packages/app-shell`)
+  - `apps/desktop`: The native desktop app, built with Electron (wraps `packages/app-shell`)
   - `packages/plugin`: Source for `@orchestra/plugin`
 
 ### Understanding bun dev vs orchestra
@@ -129,14 +129,14 @@ The desktop app is an Electron application that wraps the web UI.
 To run the desktop app in development:
 
 ```bash
-bun run --cwd packages/desktop dev
+bun run --cwd apps/desktop dev
 ```
 
 To create a production build and package the app:
 
 ```bash
-bun run --cwd packages/desktop build
-bun run --cwd packages/desktop package
+bun run --cwd apps/desktop build
+bun run --cwd apps/desktop package
 ```
 
 > [!NOTE]
@@ -159,9 +159,9 @@ Caveats:
 - If you want to run the Orchestra TUI and have breakpoints triggered in the server code, you might need to run `bun dev spawn` instead of
   the usual `bun dev`. This is because `bun dev` runs the server in a worker thread and breakpoints might not work there.
 - If `spawn` does not work for you, you can debug the server separately:
-  - Debug server: `bun run --inspect=ws://localhost:6499/ --cwd packages/orchestra ./src/index.ts serve --port 4096`,
+  - Debug server: `bun run --inspect=ws://localhost:6499/ --cwd apps/orchestra ./src/index.ts serve --port 4096`,
     then attach TUI with `orchestra attach http://localhost:4096`
-  - Debug TUI: `bun run --inspect=ws://localhost:6499/ --cwd packages/orchestra ./src/index.ts`
+  - Debug TUI: `bun run --inspect=ws://localhost:6499/ --cwd apps/orchestra ./src/index.ts`
 
 Other tips and tricks:
 

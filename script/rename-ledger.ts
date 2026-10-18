@@ -40,7 +40,7 @@ export const keptPaths: Kept[] = [
     requires: "modules/relay",
   },
   {
-    path: /^packages\/desktop\/docs\/plans\/dock-accessibility\/(?:recovery-\d+|handoff(?:-claude)?)\.md$/,
+    path: /^apps\/desktop\/docs\/plans\/dock-accessibility\/(?:recovery-\d+|handoff(?:-claude)?)\.md$/,
     reason: "recovery and handoff records that cite the real paths of past sessions",
   },
   {
@@ -52,12 +52,12 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
-    path: /^(?:packages\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
+    path: /^(?:(?:packages|apps)\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
     reason:
       "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
   },
   {
-    path: /^packages\/(?:opencode|orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
+    path: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
     reason: "snapshot of the third-party models.dev catalog, which lists the Zen provider",
   },
   {
@@ -87,7 +87,7 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /`opencode\/\$\{name\}`/g,
-    paths: /^packages\/(?:opencode|orchestra)\/test\/project\/worktree\.test\.ts$/,
+    paths: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/project\/worktree\.test\.ts$/,
     reason: "legacy branch name the worktree test creates on purpose",
   },
   {
@@ -105,13 +105,13 @@ export const protectedStrings: Protected[] = [
     reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
   },
   {
-    pattern: /"@opencode-ai\/client": "file:\.\.\/app-shell\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
-    paths: /^packages\/orchestra\/package\.json$/,
+    pattern: /"@opencode-ai\/client": "file:\.\.\/\.\.\/packages\/app-shell\/vendor\/opencode-ai-client-1\.17\.13-v2\.tgz"/g,
+    paths: /^apps\/orchestra\/package\.json$/,
     reason: "Orchestra's HTTP compatibility proofs depend on the exact published client name and vendored tarball",
   },
   {
     pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
-    paths: /^packages\/storybook\/\.storybook\/mocks\/app\/context\/server-sdk\.ts$/,
+    paths: /^apps\/storybook\/\.storybook\/mocks\/app\/context\/server-sdk\.ts$/,
     reason: "Storybook's OAuth mock imports the vendored promise client's upstream integration types",
   },
   {
@@ -184,7 +184,7 @@ export const protectedStrings: Protected[] = [
   {
     pattern: /"opencode"/g,
     paths:
-      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app(?:-shell)?\/src\/hooks\/use-providers\.ts$|^packages\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app(?:-shell)?\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
+      /^packages\/ui\/src\/components\/provider-icons\/(?:sprite\.svg|types\.ts)$|^packages\/app(?:-shell)?\/src\/hooks\/use-providers\.ts$|^apps\/storybook\/\.storybook\/mocks\/app\/(?:hooks\/use-providers|context\/server-sdk)\.ts$|^packages\/app(?:-shell)?\/src\/orchestra\/(?:model-logo-resolver(?:\.test)?\.ts|chapters\/providers-data\.test\.ts)$|\/test\/session\/retry\.test\.ts$/,
     reason: "the Zen provider id",
   },
   {
@@ -244,23 +244,23 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /\bmodel: "opencode\/httpapi-free"|\benabled_providers: \["opencode"\]/g,
-    paths: /^packages\/orchestra\/test\/server\/httpapi-exercise\/catalog\.ts$/,
+    paths: /^apps\/orchestra\/test\/server\/httpapi-exercise\/catalog\.ts$/,
     reason: "HTTP default-model exercise config must select and enable the external Zen provider by its wire id",
   },
   {
     pattern: /(?<=from )"@opencode-ai\/client\/promise"/g,
-    paths: /^packages\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
+    paths: /^apps\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
     reason: "HTTP compatibility proof imports the vendored upstream client's published promise entrypoint",
   },
   {
     pattern: /\bOpenCode(?=\.make\()|(?<=import \{ )OpenCode(?= \} from)/g,
-    paths: /^packages\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
+    paths: /^apps\/orchestra\/test\/server\/httpapi-integration-compat\.test\.ts$/,
     reason: "OpenCode is the vendored promise client's actual exported factory used by the HTTP compatibility proof",
   },
   {
     pattern:
       /"opencode\/ux-paid"|\b(?:enabled|disabled)_providers: \["opencode"\]|(?<=\.toContain\(\s*)"opencode"|\bresource: "opencode"/g,
-    paths: /^packages\/orchestra\/test\/server\/httpapi-model-recovery\.test\.ts$/,
+    paths: /^apps\/orchestra\/test\/server\/httpapi-model-recovery\.test\.ts$/,
     reason: "HTTP model recovery config, returned provider and policy resource must address the external Zen wire id",
   },
   {

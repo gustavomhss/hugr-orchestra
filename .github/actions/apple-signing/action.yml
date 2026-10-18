@@ -2,7 +2,7 @@ name: "Apple signing"
 description: >-
   Imports a Developer ID Application certificate into a temporary keychain on a macOS runner and exports CSC_NAME (the
   "Developer ID Application: ..." identity) and CSC_KEYCHAIN. The keychain is on the search list so plain codesign
-  (packages/desktop/scripts/utils.ts signs the bundled CLI before electron-builder runs) finds the identity too.
+  (apps/desktop/scripts/utils.ts signs the bundled CLI before electron-builder runs) finds the identity too.
   Callers delete $RUNNER_TEMP/orchestra-signing.keychain-db in an `if: always()` step.
 inputs:
   certificate-p12-base64:
