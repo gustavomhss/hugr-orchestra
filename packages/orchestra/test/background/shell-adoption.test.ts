@@ -13,7 +13,6 @@ import { SessionProjector } from "@orchestra/core/session/projector"
 import { Shell } from "@orchestra/core/shell"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
-import { Account } from "@/account/account"
 import { Auth } from "@/auth"
 import { Agent } from "@/agent/agent"
 import { BackgroundProcess } from "@/background/process"
@@ -26,7 +25,6 @@ import { MessageID } from "@/session/schema"
 import { ShellTool } from "@/tool/shell"
 import { Truncate } from "@/tool/truncate"
 import { alive, gone, reap, sweep, tree } from "../../../core/test/fixture/process-tree"
-import { AccountTest } from "../fake/account"
 import { AuthTest } from "../fake/auth"
 import { NpmTest } from "../fake/npm"
 import { TestInstance } from "../fixture/fixture"
@@ -37,7 +35,6 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   CrossSpawnSpawner.node, FSUtil.node, Plugin.node, Truncate.node, Config.node, Agent.node, RuntimeFlags.node,
 ]), [
   [Auth.node, AuthTest.empty],
-  [Account.node, AccountTest.empty],
   [Npm.node, NpmTest.noop],
   [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
 ]))

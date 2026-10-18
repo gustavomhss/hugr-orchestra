@@ -16,7 +16,6 @@ import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { ToolSafetySandboxRuntime } from "@orchestra/core/tool-safety-sandbox-runtime"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { PermissionV1 } from "@orchestra/core/v1/permission"
-import { Account } from "@/account/account"
 import { Auth } from "@/auth"
 import { ClaudeHostGate } from "@/claude-code/host/gate"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -33,7 +32,6 @@ import { WriteRoots } from "@/maestro/write-roots"
 import { Npm } from "@orchestra/core/npm"
 import { Permission } from "@/permission"
 import { Session } from "@/session/session"
-import { AccountTest } from "../../fake/account"
 import { AuthTest } from "../../fake/auth"
 import { NpmTest } from "../../fake/npm"
 import { TestInstance, provideInstance, tmpdirScoped } from "../../fixture/fixture"
@@ -49,7 +47,6 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   Plugin.node, Config.node, Agent.node, RuntimeFlags.node,
 ]), [
   [Auth.node, AuthTest.empty],
-  [Account.node, AccountTest.empty],
   [Npm.node, NpmTest.noop],
   [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
 ]))

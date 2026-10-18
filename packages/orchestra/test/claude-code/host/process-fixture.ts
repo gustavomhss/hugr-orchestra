@@ -17,7 +17,6 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Npm } from "@orchestra/core/npm"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { Shell } from "@orchestra/core/shell"
-import { Account } from "@/account/account"
 import { Auth } from "@/auth"
 import { Agent } from "@/agent/agent"
 import { BackgroundProcess } from "@/background/process"
@@ -29,7 +28,6 @@ import { SessionRunState } from "@/session/run-state"
 import { Session } from "@/session/session"
 import { MessageID } from "@/session/schema"
 import { Truncate } from "@/tool/truncate"
-import { AccountTest } from "../../fake/account"
 import { AuthTest } from "../../fake/auth"
 import { NpmTest } from "../../fake/npm"
 import { TestInstance } from "../../fixture/fixture"
@@ -59,7 +57,6 @@ export const layer = AppNodeBuilder.build(
   ]),
   [
     [Auth.node, AuthTest.empty],
-    [Account.node, AccountTest.empty],
     [Npm.node, NpmTest.noop],
     [RuntimeFlags.node, RuntimeFlags.layer({ disableDefaultPlugins: true })],
   ],
