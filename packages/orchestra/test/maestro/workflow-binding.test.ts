@@ -184,6 +184,12 @@ describe("authorized resume of a step held for a code review", () => {
     expect(WorkflowBinding.continuesHeldStep({ ...resume, phase: "dispatch" })).toBe(false)
   })
 
+  test("(e) a child whose background job is still running replays; the held run's ended job does not refuse", () => {
+    expect(WorkflowBinding.continuesHeldStep({ ...resume, job: { status: "running" } })).toBe(false)
+    const ended = ["error", "completed", "cancelled"]
+    ended.forEach((status) => expect(WorkflowBinding.continuesHeldStep({ ...resume, job: { status } })).toBe(true))
+  })
+
   it.instance("the hold record is durable, read back for its own child only, and recorded once per reply and position", () =>
     Effect.gen(function* () {
       yield* WorkflowBinding.recordReviewHeld(record)
@@ -192,6 +198,6 @@ describe("authorized resume of a step held for a code review", () => {
       expect(yield* WorkflowBinding.reviewHolds(other)).toEqual([])
       const retried = { ...record, expected: { ...at, attempt: 1 } }
       yield* WorkflowBinding.recordReviewHeld(retried)
-      expect(yield* WorkflowBinding.reviewHolds(reserved)).toEqual([record, retried])
+      expect(yield* WorkflowBinding.reviewHolds(reserved)).toEqual([retried, record])
     }))
 })

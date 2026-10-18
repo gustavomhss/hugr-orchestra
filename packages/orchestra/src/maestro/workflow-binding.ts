@@ -3,7 +3,7 @@ export * as WorkflowBinding from "./workflow-binding"
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Context, Effect, FileSystem, Option, Schema } from "effect"
-import { and, asc, eq, sql } from "drizzle-orm"
+import { and, asc, desc, eq, sql } from "drizzle-orm"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Event } from "@orchestra/schema/event"
@@ -253,7 +253,9 @@ export function phaseFor(input: {
  * (b) the arm is active: not complete, not parked or escalated, and holds no pending settlement;
  * (c) the child's newest reply settled the current step and held for a code review before the arm graded it, so the
  *     durable hold record still names the current position, attempt and ledger sequence: no ledger entry was spent;
- * (d) the call passed the workflow approval in the continuation phase (the exact approved Task input).
+ * (d) the call passed the workflow approval in the continuation phase (the exact approved Task input);
+ * (e) no run of the child is still going: its background job, if any, is not running. The held run's own job ended in
+ *     an error, so only a running job (a continuation already under way) refuses; a second prompt would extend it.
  * The continuation settles the current step again through the same host, which re-runs the cold review against the
  * working tree; a tree that changed after the review needs a review again.
  */
@@ -265,10 +267,12 @@ export function continuesHeldStep(input: {
   readonly held: readonly Schema.Schema.Type<typeof MaestroEvent.Task.WorkflowReviewHeld.data>[]
   readonly lastAssistantID?: string
   readonly phase: "dispatch" | "continuation"
+  readonly job?: { readonly status: string }
 }) {
   const bound = input.bound
   if (!input.reservedID || !bound || input.resumedID !== input.reservedID || bound.executionSessionID !== input.reservedID)
     return false
+  if (input.job?.status === "running") return false
   const view = input.view
   if (!view || view.pending !== undefined || view.state !== "active") return false
   const last = input.lastAssistantID
@@ -289,9 +293,11 @@ export const resumesHeldStep = Effect.fn("WorkflowBinding.resumesHeldStep")(func
   readonly resumedID?: string
   readonly view?: RelayArm.WorkflowPosition & { readonly state: RelayArm.State; readonly pending?: unknown }
   readonly phase: "dispatch" | "continuation"
+  readonly job?: { readonly status: string }
 }) {
   return continuesHeldStep({ ...input, bound: yield* read(input.reservedID), held: yield* reviewHolds(input.reservedID),
-    // Newest first.
+    // Newest first. MessageV2.stream reads the legacy message table only: a child run by the V2 runner has no reply
+    // there, so (c) fails and it keeps the strict replay.
     lastAssistantID: (yield* MessageV2.stream(input.reservedID)).find((message) => message.info.role === "assistant")?.info.id })
 })
 
@@ -304,18 +310,21 @@ export const recordReviewHeld = Effect.fn("WorkflowBinding.recordReviewHeld")(fu
 ) {
   const id = reviewHeldID(data)
   const database = yield* Database.Service
-  if (yield* database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie))
-    return
+  const stored = database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, id)).get().pipe(Effect.orDie)
+  if (yield* stored) return
   const events = yield* EventV2Bridge.Service
-  yield* events.publish(MaestroEvent.Task.WorkflowReviewHeld, data, { id })
+  // A concurrent settle of the same reply may write the same ID first; that row is this record, so the caller still
+  // returns the review hold rather than a defect.
+  yield* events.publish(MaestroEvent.Task.WorkflowReviewHeld, data, { id }).pipe(Effect.catchCause((cause) =>
+    stored.pipe(Effect.flatMap((row) => row ? Effect.void : Effect.failCause(cause)))))
 })
 
-/** The code-review holds recorded for one workflow-bound execution Session, oldest first. */
+/** The code-review holds recorded for one workflow-bound execution Session, newest first (at most 1024). */
 export const reviewHolds = Effect.fn("WorkflowBinding.reviewHolds")(function* (executionSessionID: string) {
   const database = yield* Database.Service
   const rows = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, executionSessionID),
     eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowReviewHeld.type, 1))))
-    .orderBy(asc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
+    .orderBy(desc(EventTable.seq)).limit(1024).all().pipe(Effect.orDie)
   return rows.flatMap((row) => Option.toArray(Schema.decodeUnknownOption(MaestroEvent.Task.WorkflowReviewHeld.data)(row.data)))
 })
 
