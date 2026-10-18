@@ -29,13 +29,9 @@
 .actions-page .actions-matrix-group .wf-group-head > small { margin-inline-start: auto; }
 .actions-page .actions-matrix-group > .wf-port { top: calc(50% - 4.5px); }
 
-/* Executed jobs list under the graph. */
-.actions-page .job-window { margin-block-start: 16px; border: 1px solid var(--actions-line); border-radius: 8px; background: var(--actions-raised); }
-.actions-page .job-window > h2 { position: sticky; top: 0; z-index: 1; margin: 0; padding: 10px 14px; border-block-end: 1px solid var(--actions-line); background: var(--actions-modal); color: var(--actions-strong); font: 500 12px/1.5 var(--mx-emphasis, inherit); }
-.actions-page .job-window .mx-btn { display: flex; align-items: center; gap: 10px; padding-inline: 14px; border: 0; border-block-end: 1px solid var(--actions-line); border-radius: 0; background: transparent; color: var(--actions-strong); text-align: start; }
-.actions-page .job-window .mx-btn:hover { background: var(--actions-soft); }
-.actions-page .job-window .mx-btn > bdi { flex: 1; min-inline-size: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.actions-page .job-window .mx-btn > code { color: var(--actions-dim); font: 10px var(--mx-mono, monospace); }
+/* The graph sits inside the run detail (or right after the workflow detail); it must not add a second page padding. */
+.actions-page .actions-detail .actions-graph { max-inline-size: none; padding: 0; }
+.actions-page .actions-detail + .actions-graph { padding-block-start: 0; }
 
 @media (max-width: 850px) {
   .actions-page .actions-graph .graph-caption { flex-wrap: wrap; }

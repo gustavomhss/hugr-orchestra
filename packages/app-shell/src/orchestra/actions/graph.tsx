@@ -83,7 +83,6 @@ export function Graph(props: ViewProps) {
           </Show>
         )}
       </Show>
-      <Jobs model={props.model} t={props.t} />
     </section>
   )
 }
@@ -405,47 +404,6 @@ function Inspector(props: { job: Actions.GraphJob; executions: Actions.Job[]; sn
       </div>
     </aside>
   )
-}
-function Jobs(props: { model: Model; t: Translate }) {
-  const scoped = createMemo(() => scopedJobs(props.model))
-  const filtered = createMemo(() => { const query = props.model.state.filters.query.toLowerCase(); return scoped().filter((job) => !query || job.id.toLowerCase().includes(query) || job.name.toLowerCase().includes(query)) })
-  return <Show when={props.model.state.jobs.status === "ready"}><Show when={filtered().length} fallback={<Empty title={props.model.state.filters.query ? props.t("orchestra.actions.noMatches") : props.t("orchestra.actions.emptyJobs")} />}><JobWindow jobs={filtered()} model={props.model} t={props.t} /></Show></Show>
-}
-function JobWindow(props: { jobs: Actions.Job[]; model: Model; t: Translate }) {
-  const [window, setWindow] = createStore({ start: 0 })
-  let list: HTMLDivElement | undefined
-  const identity = createMemo(() => props.jobs.map((job) => job.id).join("\0"))
-  const reset = () => { setWindow("start", 0); list?.scrollTo({ top: 0 }) }
-  createEffect((previous?: string) => { const key = identity(); if (key !== previous) reset(); return key })
-  const onScroll = () => setWindow("start", Math.min(Math.max(0, props.jobs.length - WINDOW_LIMIT), Math.floor((list?.scrollTop ?? 0) / 42)))
-  return (
-    <div class="job-window" ref={list} onScroll={onScroll} style={{ "max-height": "420px", overflow: "auto" }}>
-      <h2>{props.t("orchestra.actions.jobs")}</h2>
-      <div style={{ height: `${props.jobs.length * 42}px`, position: "relative" }}>
-        <For each={props.jobs.slice(window.start, window.start + WINDOW_LIMIT)}>{(job, index) => (
-          <button class="mx-btn" type="button" style={{ position: "absolute", top: `${(window.start + index()) * 42}px`, height: "42px", "inline-size": "100%" }} onClick={() => props.model.navigate({ ...props.model.state.route, view: "job", jobID: job.id, runID: job.runID, attempt: job.attempt })}>
-            <bdi>{job.name}</bdi><code dir="ltr">{job.id}</code>
-            <Status status={job.status ?? "unknown"} conclusion={job.conclusion ?? undefined} t={props.t} />
-          </button>
-        )}</For>
-      </div>
-    </div>
-  )
-}
-function scopedJobs(model: Model) {
-  const data = model.state.jobs
-  const run = model.state.run
-  const route = model.state.route
-  if (data.status !== "ready" || !data.value || run.status !== "ready" || !run.value) return []
-  const attempt = route.attempt ?? run.value.attempt
-  return data.value.items.filter((job) => {
-    return job.bindingID === run.value?.bindingID &&
-      (!model.state.binding || model.state.binding.id === job.bindingID) &&
-      job.runID === run.value?.id &&
-      (!route.runID || route.runID === run.value?.id) &&
-      (!route.workflowID || route.workflowID === run.value?.workflowID) &&
-      (attempt === undefined || job.attempt === attempt)
-  })
 }
 function joinExecutions(model: Model, graph: Actions.Graph | undefined, definitions: ReadonlyMap<string, Actions.GraphJob> | undefined) {
   const result = new Map<string, Actions.Job[]>()
