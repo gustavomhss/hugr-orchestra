@@ -1,4 +1,4 @@
-import { afterEach, expect, test } from "bun:test"
+import { afterEach, expect, setSystemTime, test } from "bun:test"
 import { createRequire } from "node:module"
 import path from "node:path"
 import { createComponent, type JSX, Show } from "solid-js"
@@ -8,7 +8,7 @@ import { QueryClient } from "@tanstack/solid-query"
 import { MemoryRouter } from "@solidjs/router"
 import type { RelayDocument, RelayDocumentFields } from "@/orchestra/relay/client"
 import type { RelaySource } from "@/orchestra/relay/source"
-import { documentFields, flowFromDocument } from "@/orchestra/relay/graph"
+import { documentFields, type Flow, flowFromDocument, moveNodes, removeNodes } from "@/orchestra/relay/graph"
 
 // Compile the real component graph with Solid, isolated from other Bun tests' JSX loaders.
 const solid = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))
@@ -50,10 +50,10 @@ const { WorkflowDetails }: typeof import("@/orchestra/relay/details-workflow") =
 const { SaveStatus }: typeof import("@/orchestra/relay/editor-head") = await load("@/orchestra/relay/editor-head")
 const { Editor }: typeof import("@/orchestra/relay/editor") = await load("@/orchestra/relay/editor")
 const { rememberDocument }: typeof import("@/orchestra/relay/cache") = await load("@/orchestra/relay/cache")
-const { openDraft, profileDrafts, DRAFT_LIMIT }: typeof import("@/orchestra/relay/drafts") = await load("@/orchestra/relay/drafts")
+const { openDraft, profileDrafts, BURST_MS, DRAFT_LIMIT, HISTORY_LIMIT }: typeof import("@/orchestra/relay/drafts") = await load("@/orchestra/relay/drafts")
 const { runVersion }: typeof import("@/orchestra/relay/history") = await load("@/orchestra/relay/history")
 const { decodeRun }: typeof import("@/orchestra/relay/runs") = await load("@/orchestra/relay/runs")
-const { DeleteDialog }: typeof import("@/orchestra/relay/dialogs") = await load("@/orchestra/relay/dialogs")
+const { DeleteDialog, RemoveNodesDialog }: typeof import("@/orchestra/relay/dialogs") = await load("@/orchestra/relay/dialogs")
 const { PublishDialog }: typeof import("@/orchestra/relay/dialogs") = await load("@/orchestra/relay/dialogs")
 
 const cleanups: (() => void)[] = []
@@ -358,6 +358,94 @@ test("pending draft survives unmount, late refusal, scoped reopen and successful
   expect(window.dispatchEvent(new Event("beforeunload", { cancelable: true }))).toBe(true)
   expect(profileDrafts(api.source)).toHaveLength(0)
   expect(api.requests).toHaveLength(2)
+})
+
+test("a failed draft stops blocking unload once the editor releases it and blocks again when reopened", async () => {
+  const api = setup(async () => Response.json({ message: "Offline" }, { status: 503 }))
+  const blocked = () => !window.dispatchEvent(new Event("beforeunload", { cancelable: true }))
+  const draft = openDraft(api.source, doc(), "workflow")!
+  draft.rename("Unsaved")
+  await draft.flush()
+  expect(draft.state.save.state).toBe("error")
+  expect(blocked()).toBe(true)
+  draft.release()
+  expect(blocked()).toBe(false)
+  expect(profileDrafts(api.source)).toHaveLength(1)
+  const reopened = openDraft(api.source, doc(), "workflow")!
+  expect(blocked()).toBe(true)
+  reopened.discard()
+  reopened.release()
+  expect(blocked()).toBe(false)
+})
+
+test("undo and redo walk a bounded history, persist through autosave and clear redo on a new edit", async () => {
+  const api = setup()
+  const draft = openDraft(api.source, doc(), "workflow")!
+  let now = 1_000_000
+  setSystemTime(new Date(now))
+  cleanups.push(() => setSystemTime())
+  // Each call lands in its own undo step.
+  const step = (flow: Flow) => {
+    now += BURST_MS + 1
+    setSystemTime(new Date(now))
+    draft.edit(flow)
+  }
+  const start = () => draft.state.flow.nodes.find((node) => node.id === "start")!
+  expect(draft.canUndo()).toBe(false)
+  step(removeNodes(draft.state.flow, ["review"]))
+  step(moveNodes(draft.state.flow, new Map([["start", [40, 40]]])))
+  expect(draft.state.flow.nodes).toHaveLength(1)
+  expect(start().x).toBe(40)
+  draft.undo()
+  expect(start().x).toBe(0)
+  expect(draft.state.flow.nodes).toHaveLength(1)
+  draft.undo()
+  expect(draft.state.flow.nodes).toHaveLength(2)
+  expect([draft.canUndo(), draft.canRedo()]).toEqual([false, true])
+  draft.redo()
+  expect(draft.state.flow.nodes).toHaveLength(1)
+  expect(draft.state.save.dirty).toBe(true)
+  step(moveNodes(draft.state.flow, new Map([["start", [8, 8]]])))
+  expect(draft.canRedo()).toBe(false)
+  await draft.flush()
+  expect((await api.requests.at(-1)!.json()).nodes).toHaveLength(1)
+  // The echo of its own save keeps the history.
+  draft.undo()
+  expect(start().x).toBe(0)
+  draft.undo()
+  expect(draft.state.flow.nodes).toHaveLength(2)
+  Array.from({ length: HISTORY_LIMIT + 10 }, (_, index) => index).forEach((index) =>
+    step(moveNodes(draft.state.flow, new Map([["start", [index, index]]]))),
+  )
+  const undone = Array.from({ length: HISTORY_LIMIT + 10 }, () => draft.canUndo() && (draft.undo(), true)).filter(Boolean)
+  expect(undone).toHaveLength(HISTORY_LIMIT)
+  draft.discard()
+  draft.release()
+})
+
+test("rapid edits share one undo step", () => {
+  const api = setup()
+  const draft = openDraft(api.source, doc(), "workflow")!
+  setSystemTime(new Date(1_000_000))
+  cleanups.push(() => setSystemTime())
+  ;[1, 2, 3].forEach((x) => draft.edit(moveNodes(draft.state.flow, new Map([["start", [x, x]]]))))
+  expect(draft.state.flow.nodes.find((node) => node.id === "start")!.x).toBe(3)
+  draft.undo()
+  expect(draft.state.flow.nodes.find((node) => node.id === "start")!.x).toBe(0)
+  expect(draft.canUndo()).toBe(false)
+  draft.discard()
+  draft.release()
+})
+
+test("deleting several nodes asks first and confirming runs the removal", async () => {
+  const calls: string[] = []
+  const host = mount(() => createComponent(RemoveNodesDialog, {
+    count: 3, onConfirm: () => calls.push("confirm"), onClose: () => calls.push("close"),
+  }))
+  expect(host.textContent).toContain("Delete 3 nodes?")
+  host.querySelector<HTMLButtonElement>('button[type="submit"]')!.click()
+  await until(() => calls.length === 2)
+  expect(calls).toEqual(["confirm", "close"])
 })
 
 test("profile capacity refuses another draft without evicting failed work", async () => {
