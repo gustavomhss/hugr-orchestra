@@ -1,6 +1,7 @@
 import type { LoggingMessageNotification } from "@modelcontextprotocol/sdk/types.js"
 import { Effect } from "effect"
 
+/** Routes an MCP server's own log notification to the matching Effect log level. */
 export function serverLog(name: string, params: LoggingMessageNotification["params"]) {
   const fields = { server: name, logger: params.logger, level: params.level, data: params.data }
   switch (params.level) {

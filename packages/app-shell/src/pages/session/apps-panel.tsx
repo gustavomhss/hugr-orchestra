@@ -40,14 +40,14 @@ export function AppsPanel(
     placeholder?: JSX.Element
   } = {},
 ) {
-  const dock = appDockController()
+  const language = useLanguage()
+  const dock = appDockController(language.t)
   const api = dock.api
   const state = dock.state
   const serverSDK = useServerSDK()
   const sdk = useSDK()
   const global = useGlobal()
   const settings = useSettings()
-  const language = useLanguage()
   const t = language.t
   const desktop = createMediaQuery("(min-width: 768px)")
   // Orchestra's desktop workspace (the titlebar's profile-scoped tab mode) binds the Dock to the
@@ -267,7 +267,9 @@ export function AppsPanel(
             <button
               class="zen-sidebar-toggle"
               type="button"
-              aria-label={t(view.sidebarCollapsed ? "appDock.browser.sidebar.expand" : "appDock.browser.sidebar.collapse")}
+              aria-label={t(
+                view.sidebarCollapsed ? "appDock.browser.sidebar.expand" : "appDock.browser.sidebar.collapse",
+              )}
               aria-pressed={view.sidebarCollapsed}
               onClick={toggleSidebar}
             >
@@ -494,7 +496,9 @@ export function AppsPanel(
           {activeCrashed() && (
             <div class="zen-tab-crash" role="alert" aria-live="assertive">
               <span>
-                {t("appDock.browser.crash.message", { reason: t(`appDock.browser.crash.reason.${activeCrashed()!.reason}`) })}
+                {t("appDock.browser.crash.message", {
+                  reason: t(`appDock.browser.crash.reason.${activeCrashed()!.reason}`),
+                })}
               </span>
               <button
                 class="zen-open-button"

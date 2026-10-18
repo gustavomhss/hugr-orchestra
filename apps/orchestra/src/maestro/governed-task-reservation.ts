@@ -5,6 +5,8 @@ import { SessionID } from "../session/schema"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
+import { MessageV2 } from "../session/message-v2"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { and, asc, eq } from "drizzle-orm"
 import { Effect, Schema } from "effect"
@@ -58,6 +60,25 @@ type GovernedRequest = {
   policyHash: string
   taskHash: string
 }
+
+/**
+ * Whether a reserved child was never prompted: no message in either table and no admitted input. The reserved child
+ * exists before completion.beforeDispatch, so a dispatch held there leaves an authorized child that was never
+ * prompted, and replaying it would hold forever; running it then is still the reservation's one dispatch (the same
+ * child, reserved permissions and authorization). This applies to every authorized dispatch, not only workflow ones.
+ * The caller also requires no background job: the dispatch lock serializes callers in one process, and the job record
+ * guards a run still starting or running in the background. Residual risk: a restart empties the job map, so a run that
+ * died before writing any message or input runs again, and its session-start hooks could run twice.
+ */
+export const unprompted = Effect.fn("MaestroGovernedTaskReservation.unprompted")(function* (childID: SessionID) {
+  const database = yield* Database.Service
+  if ((yield* MessageV2.stream(childID)).length) return false
+  const input = yield* database.db.select({ id: SessionInputTable.id }).from(SessionInputTable)
+    .where(eq(SessionInputTable.session_id, childID)).get().pipe(Effect.orDie)
+  const message = yield* database.db.select({ id: SessionMessageTable.id }).from(SessionMessageTable)
+    .where(eq(SessionMessageTable.session_id, childID)).get().pipe(Effect.orDie)
+  return !input && !message
+})
 
 export const reserve = Effect.fn("MaestroGovernedTaskReservation.reserve")(function* (input: {
   governed: GovernedRequest

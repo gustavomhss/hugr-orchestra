@@ -195,14 +195,31 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
+      const seat = next.native === true ? Seats.find(nextID) : undefined
+      // Resolved before the workflow approval check, which needs to know whether this call resumes the bound child.
+      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
+      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
+        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
+      if (params.task_id && !resumed) {
+        return yield* Effect.fail(
+          new Error(
+            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
+          ),
+        )
+      }
       if (params.workflow && !params.governed && !params.authorizationID)
         return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+      // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
+      if (params.workflow) yield* completion.beforeReserve({ sessionID: ctx.sessionID, directory: parent.directory })
+      // A resume of the authorization's own bound child reads the owner decision already observed; any other call is a
+      // dispatch and needs the owner's immediate approve.
+      const workflowPhase = params.workflow ? WorkflowBinding.phaseFor({ parentSessionID: ctx.sessionID,
+        authorizationID: params.authorizationID, resumed, bound: resumed ? yield* WorkflowBinding.read(resumed.id) : undefined }) : "dispatch"
       const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
           callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
           model: params.model, workflow: params.workflow,
-        }).pipe(Effect.orDie) : undefined
-      const seat = next.native === true ? Seats.find(nextID) : undefined
+        }, workflowPhase).pipe(Effect.orDie) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
         params.writePaths,
@@ -232,16 +249,6 @@ export const TaskTool = Tool.define(
         reservedChildPermissions = reservation.permission
         replayReserved = true
         requireCompletedReplay = true
-      }
-      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
-      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
-        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
-      if (params.task_id && !resumed) {
-        return yield* Effect.fail(
-          new Error(
-            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
-          ),
-        )
       }
       if (params.governed) {
         const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(
@@ -464,12 +471,8 @@ export const TaskTool = Tool.define(
         })
       }
 
-      const metadata = {
-        parentSessionId: ctx.sessionID,
-        sessionId: nextSession.id,
-        model,
-        ...(runInBackground ? { background: true } : {}),
-      }
+      const metadata = { parentSessionId: ctx.sessionID, sessionId: nextSession.id, model,
+        ...(runInBackground ? { background: true } : {}) }
       const completionEvidence: { value?: TaskBackground.Metadata["completion"] } = {}
       // Set when jimmy's tier deadline cancels the child, so the cancelled settlement keeps the named reason.
       const researchDeadline: { reason?: string } = {}
@@ -490,7 +493,15 @@ export const TaskTool = Tool.define(
 
       yield* ctx.metadata({ title: params.description, metadata })
 
-      if (governedChildID && reserved) {
+      // A reserved child never prompted runs as the reservation's one dispatch (GovernedTaskReservation.unprompted).
+      const neverPrompted = params.authorizationID !== undefined && reserved !== undefined &&
+        !(yield* background.get(reserved.id)) &&
+        (yield* GovernedTaskReservation.unprompted(reserved.id).pipe(Effect.provideService(Database.Service, database)))
+      // A resume of a step held for code review re-prompts the same child to settle it again (WorkflowBinding.resumesHeldStep).
+      const continues = params.workflow && reserved && !neverPrompted && (yield* WorkflowBinding.resumesHeldStep({
+        reservedID: reserved.id, resumedID: resumed?.id, phase: workflowPhase, job: yield* background.get(reserved.id),
+        view: yield* completion.workflowView(completionReceipt) }))
+      if (governedChildID && reserved && !neverPrompted && !continues) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
         const strictReplay = requireCompletedReplay || completionReceipt !== undefined
@@ -564,7 +575,7 @@ export const TaskTool = Tool.define(
             sessionID: ctx.sessionID,
             authorizationID: params.authorizationID,
             permission: childPermissions,
-            requireCurrent: true,
+            requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
           }).pipe(
             Effect.provideService(Database.Service, database),
             Effect.provideService(EventV2Bridge.Service, events),
@@ -585,7 +596,7 @@ export const TaskTool = Tool.define(
               sessionID: ctx.sessionID,
               authorizationID: params.authorizationID,
               permission: childPermissions,
-              requireCurrent: true,
+              requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
             }).pipe(
               Effect.provideService(Database.Service, database),
               Effect.provideService(EventV2Bridge.Service, events),

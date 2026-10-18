@@ -28,12 +28,14 @@ let watching = false
 let unloading = false
 type Draft = ReturnType<typeof makeDraft>
 type Source = Pick<RelaySource, "client" | "queryClient" | "key" | "invalidate">
-type Step = { flow: Flow; name: string }
+type Step = { flow: Flow; name: string; description: string }
 type Retained = {
   key: string
   kind: RelayKind
   base: RelayDocument
   name: string
+  // Entries kept before the description was editable have none; they restore the saved one.
+  description?: string
   fields: ReturnType<typeof documentFields>
   save: SaveState
 }
@@ -130,6 +132,7 @@ function makeDraft(
     base: initial,
     flow: flowFromDocument(restored?.fields ?? initial, kind),
     name: restored?.name ?? initial.name,
+    description: restored?.description ?? initial.description,
     save: restored ? reopened(restored.save) : ({ state: "saved", dirty: false, error: "" } as SaveState),
     // Step counts only, so the editor can enable Undo and Redo; the snapshots stay out of the store.
     history: { undo: 0, redo: 0 },
@@ -168,7 +171,11 @@ function makeDraft(
     status({ state: "saving", dirty: false, error: "" })
     try {
       const result = await source.client
-        .save(state.base, { name: state.name, ...documentFields(state.flow) }, { force })
+        .save(
+          state.base,
+          { name: state.name, description: state.description, ...documentFields(state.flow) },
+          { force },
+        )
         .then(
           (document) => ({ document }),
           (error: unknown) => ({ error }),
@@ -208,7 +215,12 @@ function makeDraft(
   }
   // `ours` marks the echo of this draft's own save. Any other replacement is a graph someone else wrote, and undoing across it would revert them.
   const replace = (document: RelayDocument, ours = false) => {
-    setState({ base: document, flow: flowFromDocument(document, kind), name: document.name })
+    setState({
+      base: document,
+      flow: flowFromDocument(document, kind),
+      name: document.name,
+      description: document.description,
+    })
     status({ state: "saved", dirty: false, error: "" })
     if (!ours) {
       past.length = 0
@@ -220,8 +232,20 @@ function makeDraft(
   }
   // The store merges a new flow into its current object in place, so a snapshot has to be a copy. The arrays inside are replaced, never mutated.
   const remember = (stack: Step[]) => {
-    stack.push({ flow: { ...unwrap(state.flow) }, name: state.name })
+    stack.push({ flow: { ...unwrap(state.flow) }, name: state.name, description: state.description })
     if (stack.length > HISTORY_LIMIT) stack.shift()
+  }
+  // Edits within BURST_MS of a burst's first edit share one undo step.
+  const change = (apply: () => void) => {
+    const now = Date.now()
+    if (now - burst > BURST_MS) {
+      remember(past)
+      burst = now
+    }
+    future.length = 0
+    apply()
+    setState("history", { undo: past.length, redo: 0 })
+    changed()
   }
   const travel = (from: Step[], to: Step[]) => {
     const target = from.pop()
@@ -230,6 +254,7 @@ function makeDraft(
     burst = 0
     setState("flow", target.flow)
     setState("name", target.name)
+    setState("description", target.description)
     setState("history", { undo: past.length, redo: future.length })
     changed()
   }
@@ -255,17 +280,9 @@ function makeDraft(
       if (state.save.state !== "error") void flush()
       clean()
     },
-    edit(flow: Flow) {
-      const now = Date.now()
-      if (now - burst > BURST_MS) {
-        remember(past)
-        burst = now
-      }
-      future.length = 0
-      setState("flow", flow)
-      setState("history", { undo: past.length, redo: 0 })
-      changed()
-    },
+    edit: (flow: Flow) => change(() => setState("flow", flow)),
+    // The description field reports every keystroke like a canvas edit, so its typing shares undo steps the same way.
+    describe: (description: string) => change(() => setState("description", description)),
     undo: () => travel(past, future),
     redo: () => travel(future, past),
     canUndo: () => state.history.undo > 0,
@@ -317,7 +334,9 @@ function makeDraft(
     overwrite: () => write(true),
     // Save mine as a copy: the local flow becomes a new document, and this draft's edits leave with it.
     async copy(name: string) {
-      const created = await source.client.create(copyDocument({ ...state.base, ...documentFields(state.flow) }, name))
+      const created = await source.client.create(
+        copyDocument({ ...state.base, description: state.description, ...documentFields(state.flow) }, name),
+      )
       await rememberDocument(source.queryClient(), source.key("documents"), created)
       discard()
       source.invalidate("documents")
@@ -335,6 +354,7 @@ function makeDraft(
       kind,
       base: unwrap(state.base),
       name: state.name,
+      description: state.description,
       fields: documentFields(state.flow),
       save: { ...unwrap(state.save) },
     }),
@@ -435,6 +455,7 @@ function retained(value: unknown): value is Retained {
   return (
     typeof value.key === "string" &&
     typeof value.name === "string" &&
+    (value.description === undefined || typeof value.description === "string") &&
     typeof value.base.id === "string" &&
     Array.isArray(value.fields.nodes)
   )

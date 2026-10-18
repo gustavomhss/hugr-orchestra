@@ -27,6 +27,7 @@ import { virtualScrollElement } from "./virtual-scroll-element"
 type ModelState = ReturnType<typeof useLocal>["model"]
 type ModelItem = ReturnType<ModelState["list"]>[number]
 
+const connectKey = "action:connect"
 const manageKey = "action:manage"
 
 const sortModelGroups = (a: { category: string; items: ModelItem[] }, b: { category: string; items: ModelItem[] }) => {
@@ -158,6 +159,7 @@ export function ModelSelectorPopoverV2(props: {
   onClose?: () => void
 }) {
   const dialog = useDialog()
+  const local = useLocal()
   const controller = createModelSelectorController({
     model: props.model,
     provider: () => props.provider,
@@ -171,6 +173,11 @@ export function ModelSelectorPopoverV2(props: {
       groups={controller.groups}
       current={controller.current}
       select={controller.select}
+      onConnect={() => {
+        void import("./dialog-connect-provider").then((module) => {
+          void dialog.show(() => <module.DialogConnectProvider directory={() => decode64(local.slug())} />)
+        })
+      }}
       onManage={() => {
         void import("./dialog-manage-models").then((module) => {
           void dialog.show(() => <module.DialogManageModelsV2 />)
@@ -226,6 +233,7 @@ function ModelSelectorPopoverV2View(props: {
   groups: (models: ModelItem[]) => { category: string; items: ModelItem[] }[]
   current: () => string | undefined
   select: (item: ModelItem) => void
+  onConnect: () => void
   onManage: () => void
   onClose: () => void
 }) {
@@ -238,7 +246,7 @@ function ModelSelectorPopoverV2View(props: {
 
   const models = createMemo(() => props.models(store.search))
   const groups = createMemo(() => props.groups(models()))
-  const navigation = createModelSelectorNavigation(groups, modelKey, manageKey)
+  const navigation = createModelSelectorNavigation(groups, modelKey, connectKey, manageKey)
   const initialActive = () => {
     const selected = props.current()
     const options = navigation.keys()
@@ -264,6 +272,11 @@ function ModelSelectorPopoverV2View(props: {
     setOpen(false)
     dismiss.afterClose(() => props.select(item))
   }
+  const connect = () => {
+    dismiss.preventTriggerRestore()
+    setOpen(false)
+    dismiss.afterClose(props.onConnect)
+  }
   const manage = () => {
     dismiss.preventTriggerRestore()
     setOpen(false)
@@ -275,6 +288,7 @@ function ModelSelectorPopoverV2View(props: {
       selectModel(item)
       return
     }
+    if (store.active === connectKey) connect()
     if (store.active === manageKey) manage()
   }
   const moveActive = (delta: number) => {
@@ -388,6 +402,18 @@ function ModelSelectorPopoverV2View(props: {
           </ScrollView>
           <div class="h-px bg-v2-border-border-muted" />
           <div class="flex flex-col p-0.5">
+            <MenuV2.Item
+              data-option-key={connectKey}
+              classList={{ "!bg-v2-overlay-simple-overlay-hover": store.active === connectKey }}
+              onMouseEnter={() => {
+                setStore("active", connectKey)
+                setTimeout(() => searchRef?.focus())
+              }}
+              onSelect={connect}
+            >
+              <Icon name="plus" size="small" />
+              <span class="min-w-0 flex-1 truncate leading-5">{language.t("command.provider.connect")}</span>
+            </MenuV2.Item>
             <MenuV2.Item
               data-option-key={manageKey}
               classList={{ "!bg-v2-overlay-simple-overlay-hover": store.active === manageKey }}

@@ -10,6 +10,8 @@ import {
   removeBehavior,
   sanitizeBehaviorState,
   saveBehavior,
+  seedText,
+  sendsInstructions,
   toggleBehavior,
   type BehaviorCardLabels,
   type LlmBehavior,
@@ -27,6 +29,9 @@ const labels: BehaviorCardLabels = {
   kind: "LLM behavior",
   custom: "custom",
   configure: "Configure",
+  name: (behavior) => behavior.name,
+  description: (behavior) => behavior.description,
+  intensity: (level) => level,
   status: (behavior) => (behavior.enabled ? "Active" : "Disabled"),
 }
 
@@ -57,6 +62,21 @@ describe("LLM behaviors", () => {
 
   test("an enabled custom behavior without instructions adds nothing", () => {
     expect(behaviorSystem([{ ...custom, instructions: "   " }])).toBeUndefined()
+  })
+
+  test("only Caveman, or a behavior with instructions, sends anything", () => {
+    expect(sendsInstructions(defaultBehaviorState().behaviors[0]!)).toBe(true)
+    expect(sendsInstructions({ ...defaultBehaviorState().behaviors[0]!, instructions: "" })).toBe(true)
+    expect(sendsInstructions(custom)).toBe(true)
+    expect(sendsInstructions({ ...custom, instructions: " \n " })).toBe(false)
+  })
+
+  test("the seeded Caveman text is shown localized until it is edited", () => {
+    const caveman = defaultBehaviorState().behaviors[0]!
+    expect(seedText(caveman, "name", "Homem das cavernas")).toBe("Homem das cavernas")
+    expect(seedText(caveman, "description", "Substância fica.")).toBe("Substância fica.")
+    expect(seedText({ ...caveman, name: "Grug" }, "name", "Homem das cavernas")).toBe("Grug")
+    expect(seedText({ ...custom, name: "Caveman" }, "name", "Homem das cavernas")).toBe("Caveman")
   })
 
   test("a V2 server receives each enabled behavior on its own, with the same text a V1 prompt carries", () => {

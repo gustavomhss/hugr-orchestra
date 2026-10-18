@@ -1,4 +1,6 @@
 import { Tag } from "@orchestra/ui/v2/badge-v2"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
+import { Dialog, DialogFooter, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
@@ -44,6 +46,15 @@ export const SettingsServersV2: Component = () => {
 
   const openEdit = (server: ServerConnection.Http) => {
     dialog.push(() => <DialogServerV2 mode="edit" server={server} />)
+  }
+
+  // Deleting also drops the saved password and every tab open on the server, so ask first.
+  const confirming = {
+    ...controller,
+    handleRemove: async (key: ServerConnection.Key) => {
+      const name = serverName(controller.sortedItems().find((item) => ServerConnection.key(item) === key)) || key
+      dialog.push(() => <DialogRemoveServer name={name} onConfirm={() => controller.handleRemove(key)} />)
+    },
   }
 
   return (
@@ -98,7 +109,7 @@ export const SettingsServersV2: Component = () => {
           }
         >
           <SettingsListV2>
-            <WslServerSettings controller={controller} servers={wslServers} />
+            <WslServerSettings controller={confirming} servers={wslServers} />
             <For each={filtered()}>
               {(item) => {
                 const key = ServerConnection.key(item)
@@ -126,7 +137,7 @@ export const SettingsServersV2: Component = () => {
                       <Show when={controller.canDefault() && isDefault()}>
                         <Tag>{language.t("dialog.server.status.default")}</Tag>
                       </Show>
-                      <ServerRowMenu server={item} controller={controller} onEdit={openEdit} />
+                      <ServerRowMenu server={item} controller={confirming} onEdit={openEdit} />
                     </div>
                   </div>
                 )
@@ -136,5 +147,34 @@ export const SettingsServersV2: Component = () => {
         </Show>
       </div>
     </>
+  )
+}
+
+function DialogRemoveServer(props: { name: string; onConfirm: () => void }) {
+  const dialog = useDialog()
+  const language = useLanguage()
+  return (
+    <Dialog>
+      <DialogHeader closeLabel={language.t("common.close")}>
+        <DialogTitleGroup
+          title={language.t("orchestra.settings.servers.remove.title", { server: props.name })}
+          description={language.t("orchestra.settings.servers.remove.description")}
+        />
+      </DialogHeader>
+      <DialogFooter>
+        <ButtonV2 variant="neutral" onClick={() => dialog.close()}>
+          {language.t("common.cancel")}
+        </ButtonV2>
+        <ButtonV2
+          variant="danger"
+          onClick={() => {
+            dialog.close()
+            props.onConfirm()
+          }}
+        >
+          {language.t("dialog.server.menu.delete")}
+        </ButtonV2>
+      </DialogFooter>
+    </Dialog>
   )
 }

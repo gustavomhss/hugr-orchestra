@@ -1,16 +1,20 @@
 import { useFilteredList } from "@orchestra/ui/hooks"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
+import { Tag } from "@orchestra/ui/v2/badge-v2"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { Switch } from "@orchestra/ui/v2/switch-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
-import { type Component, For, Show } from "solid-js"
+import { type Accessor, type Component, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useModels } from "@/context/models"
 import { useServerSDK } from "@/context/server-sdk"
+import { useServerSync } from "@/context/server-sync"
 import { popularProviders } from "@/hooks/use-providers"
 import { Persist, persisted } from "@/utils/persist"
+import { createDefaultModelController } from "./default-model"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
 import "./settings-v2.css"
@@ -19,10 +23,19 @@ type ModelItem = ReturnType<ReturnType<typeof useModels>["list"]>[number]
 
 const PROVIDER_ICON_SIZE = 16
 
-export const SettingsModelsV2: Component = () => {
+export const SettingsModelsV2: Component<{
+  directory: Accessor<string | null | undefined>
+  onConnect: () => void
+}> = (props) => {
   const language = useLanguage()
   const models = useModels()
   const serverSdk = useServerSDK()
+  const serverSync = useServerSync()
+  const defaults = createDefaultModelController(props.directory)
+  const providersReady = () => {
+    const directory = props.directory()
+    return directory ? serverSync().child(directory)[0].provider_ready : serverSync().ready
+  }
   const [store, setStore] = persisted(
     Persist.serverGlobal(serverSdk().scope, "settings-v2.models.providers"),
     createStore({ collapsed: {} as Record<string, boolean> }),
@@ -95,9 +108,23 @@ export const SettingsModelsV2: Component = () => {
             when={list.flat().length > 0}
             fallback={
               <div class="settings-v2-models-status">
-                <span>{language.t("dialog.model.empty")}</span>
-                <Show when={list.filter()}>
-                  <span class="settings-v2-models-status-filter">&quot;{list.filter()}&quot;</span>
+                <Show
+                  when={list.filter() || !providersReady()}
+                  fallback={
+                    <>
+                      <span>{language.t("orchestra.settings.models.empty")}</span>
+                      <ButtonV2 variant="neutral" icon="plus" onClick={props.onConnect}>
+                        {language.t("orchestra.settings.providers.connect")}
+                      </ButtonV2>
+                    </>
+                  }
+                >
+                  <span>
+                    {language.t(providersReady() ? "dialog.model.empty" : "orchestra.settings.models.loading")}
+                  </span>
+                  <Show when={list.filter()}>
+                    <span class="settings-v2-models-status-filter">&quot;{list.filter()}&quot;</span>
+                  </Show>
                 </Show>
               </div>
             }
@@ -159,7 +186,26 @@ export const SettingsModelsV2: Component = () => {
                             const key = { providerID: item.provider.id, modelID: item.id }
                             return (
                               <SettingsRowV2 title={item.name} description="">
-                                <div>
+                                <div class="flex items-center gap-3">
+                                  <Show
+                                    when={defaults.isDefault(key)}
+                                    fallback={
+                                      <Show when={defaults.writable() && models.visible(key)}>
+                                        <ButtonV2
+                                          size="small"
+                                          variant="ghost-muted"
+                                          aria-label={language.t("orchestra.settings.models.makeDefaultLabel", {
+                                            model: item.name,
+                                          })}
+                                          onClick={() => defaults.set(key)}
+                                        >
+                                          {language.t("orchestra.settings.models.makeDefault")}
+                                        </ButtonV2>
+                                      </Show>
+                                    }
+                                  >
+                                    <Tag>{language.t("orchestra.settings.models.default")}</Tag>
+                                  </Show>
                                   <Switch
                                     checked={models.visible(key)}
                                     onChange={(checked) => {

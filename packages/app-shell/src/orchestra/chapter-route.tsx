@@ -74,40 +74,43 @@ export function OrchestraChapterRoute() {
               {language.t("orchestra.shell.wip.page")}
             </p>
           </Show>
-          {/* A new boundary: see ChapterPage. */}
-          <Suspense>
-            <Show
-              when={owner()}
-              keyed
-              fallback={
-                <Show
-                  when={serverWideChapters.includes(params.chapter) && selectedServer()}
-                  keyed
-                  fallback={<ChapterEmpty server={selectedServer()} />}
-                >
-                  {(conn) => (
-                    <ServerSDKProvider server={() => conn}>
-                      <ServerSyncProvider server={() => conn}>
-                        <ChapterPage page={page()} server={conn} directory="" />
-                      </ServerSyncProvider>
-                    </ServerSDKProvider>
-                  )}
-                </Show>
-              }
-            >
-              {(owner) => (
-                <ServerSDKProvider server={() => owner.server}>
-                  <ServerSyncProvider server={() => owner.server}>
-                    <SDKProvider directory={owner.directory}>
-                      <ModelsProvider directory={() => owner.directory}>
-                        <ChapterPage page={page()} server={owner.server} directory={owner.directory} />
-                      </ModelsProvider>
-                    </SDKProvider>
-                  </ServerSyncProvider>
-                </ServerSDKProvider>
-              )}
-            </Show>
-          </Suspense>
+          {/* The selected profile comes from async storage. Until it has loaded, "no profile" is not yet true. */}
+          <Show when={layout.ready()}>
+            {/* A new boundary: see ChapterPage. */}
+            <Suspense>
+              <Show
+                when={owner()}
+                keyed
+                fallback={
+                  <Show
+                    when={serverWideChapters.includes(params.chapter) && selectedServer()}
+                    keyed
+                    fallback={<ChapterEmpty server={selectedServer()} />}
+                  >
+                    {(conn) => (
+                      <ServerSDKProvider server={() => conn}>
+                        <ServerSyncProvider server={() => conn}>
+                          <ChapterPage page={page()} server={conn} directory="" />
+                        </ServerSyncProvider>
+                      </ServerSDKProvider>
+                    )}
+                  </Show>
+                }
+              >
+                {(owner) => (
+                  <ServerSDKProvider server={() => owner.server}>
+                    <ServerSyncProvider server={() => owner.server}>
+                      <SDKProvider directory={owner.directory}>
+                        <ModelsProvider directory={() => owner.directory}>
+                          <ChapterPage page={page()} server={owner.server} directory={owner.directory} />
+                        </ModelsProvider>
+                      </SDKProvider>
+                    </ServerSyncProvider>
+                  </ServerSDKProvider>
+                )}
+              </Show>
+            </Suspense>
+          </Show>
         </div>
       )}
     </Show>

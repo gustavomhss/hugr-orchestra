@@ -122,7 +122,7 @@ export function Canvas(props: {
   onSelect: (ids: string[]) => void
   onChange: (flow: Flow) => void
   // A connection or a drop that cannot happen, with the name it concerns (the phase a step could not join).
-  onReject: (reason: "entry" | "phase", detail?: string) => void
+  onReject: (reason: "entry" | "phase" | "empty" | "self", detail?: string) => void
   onOpen: (id: string) => void
   onAdd: (anchor?: { id: string; port: number }) => void
   onDelete: (ids: string[]) => void
@@ -351,7 +351,8 @@ export function Canvas(props: {
     }
     if (current.mode === "connect") {
       const id = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>(".wf-node")?.dataset.id
-      if (!id || id === current.from) return
+      // A wire let go on empty canvas or on its own step connects nothing; a plain click on a port says nothing.
+      if (!id || id === current.from) return current.moved ? props.onReject(id ? "self" : "empty") : undefined
       const next = connect(props.flow, current.from, id, current.port)
       if (!next) return props.onReject("entry")
       const before = [...props.flow.edges]

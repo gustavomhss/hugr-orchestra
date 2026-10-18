@@ -70,7 +70,7 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
   const tabs = useTabs()
   // Created once per screen: a source owns its timers and requests for as long as the screen is mounted.
   const source = props.source()
-  const [state, setState] = createStore({ search: "" })
+  const [state, setState] = createStore({ search: "", retrying: false })
   // A signal, not the store: a store merges a new dialog into the open one instead of replacing it.
   const [dialog, setDialog] = createSignal<Dialog>()
   const lifetime = { dialogs: 0, disposed: false }
@@ -125,6 +125,27 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
     if (props.device) return language.t("orchestra.schedule.noteDevice")
     if (source.status() === "ready") return language.t("orchestra.schedule.note")
   }
+  // A failed poll keeps the tasks already loaded; the banner says so and the page shows them below it.
+  const stale = () => source.status() === "error" && source.tasks().length > 0
+  const retry = () => (
+    <Show when={source.refresh} keyed>
+      {(refresh) => (
+        <button
+          type="button"
+          class="mx-link"
+          disabled={state.retrying}
+          onClick={() => {
+            setState("retrying", true)
+            void refresh().finally(() => {
+              if (!lifetime.disposed) setState("retrying", false)
+            })
+          }}
+        >
+          {language.t("orchestra.schedule.retry")}
+        </button>
+      )}
+    </Show>
+  )
 
   const save = (edit: Extract<Dialog, { type: "edit" }>, form: FormData) => {
     const task = source.tasks().find((task) => task.id === edit.id)
@@ -176,12 +197,19 @@ function ScheduleScreen(props: ChapterPageProps & { source: () => ScheduleSource
           {source.error()}
         </p>
       </Show>
+      <Show when={stale()}>
+        <p class="mx-error" role="alert">
+          {language.t("orchestra.schedule.refreshError")} {retry()}
+        </p>
+      </Show>
       <Switch>
         <Match when={source.status() === "loading"}>
           <div class="mx-empty">{language.t("orchestra.schedule.loading")}</div>
         </Match>
-        <Match when={source.status() === "error"}>
-          <div class="mx-empty">{language.t("orchestra.schedule.loadError")}</div>
+        <Match when={source.status() === "error" && !stale()}>
+          <div class="mx-empty">
+            {language.t("orchestra.schedule.loadError")} {retry()}
+          </div>
         </Match>
         <Match when={source.tasks().length === 0}>
           <div class="mx-empty">

@@ -1,6 +1,6 @@
 import { DEFAULT_PALETTE_KEYBIND, parseKeybind } from "@/context/command"
 
-// Same list, defaults and conflict rules as Settings > Shortcuts; both surfaces write the one
+// The list, defaults and conflict rules of the one shortcut editor (shortcuts-editor.tsx). It writes the
 // keybind store in `settings.v3`, which the command context reads to fire bindings.
 export const PALETTE_ID = "command.palette"
 export const SHORTCUT_GROUPS = ["general", "session", "navigation", "modelAndMcp", "terminal", "prompt"] as const
@@ -72,7 +72,7 @@ const TEXT_EDITING = new Set(["mod+a", "mod+c", "mod+v", "mod+x", "mod+z", "mod+
 
 // Turns a key press in the capture field into a binding config. Bare modifiers, Escape, focus
 // moves, Enter, Space and the text-editing combinations are not bindable; a bare Backspace or
-// Delete clears the binding. Settings > Shortcuts and the Shortcuts chapter both capture here.
+// Delete clears the binding.
 export function captureKeybind(
   event: Pick<KeyboardEvent, "key" | "ctrlKey" | "metaKey" | "altKey" | "shiftKey">,
   mac: boolean,

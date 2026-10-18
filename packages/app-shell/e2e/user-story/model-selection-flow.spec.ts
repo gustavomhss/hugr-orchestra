@@ -57,8 +57,17 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
     },
     sessions: [],
     pageMessages: () => ({ items: [] }),
-    fileList: (path) =>
-      path ? [] : [{ name: "NewProject", path: "NewProject", absolute: directory, type: "directory", ignored: false }],
+    // Adding a project lists its root ("."); an empty root would first ask whether to set up git, but this project is
+    // already a git repository with files in it.
+    fileList: (path) => {
+      if (path === ".")
+        return [
+          { name: "README.md", path: "README.md", absolute: `${directory}\\README.md`, type: "file", ignored: false },
+        ]
+      return path
+        ? []
+        : [{ name: "NewProject", path: "NewProject", absolute: directory, type: "directory", ignored: false }]
+    },
     findFiles: () => ["NewProject"],
   })
   await page.addInitScript(() => {

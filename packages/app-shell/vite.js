@@ -38,8 +38,10 @@ export default [
           // The dep scanner does not follow `?worker&url` imports, so the markdown worker's
           // dependencies were only discovered when the first message rendered. Vite then
           // re-optimized and force-reloaded the open page mid-session (and mid-e2e-test).
-          // The Vite roots (apps/web and desktop) depend on @orchestra/app, not on @orchestra/ui, so the
-          // chain starts there: a spec its root cannot resolve is skipped with only a warning.
+          // Vite resolves each entry from the dev root. apps/web does not declare @orchestra/ui and the isolated
+          // install links only declared dependencies, so the chain starts at @orchestra/app, which the web and
+          // desktop roots both declare. A bare `@orchestra/ui > dep` failed to resolve ("Failed to resolve
+          // dependency" in the dev server log) and left the reload in place.
           include: ["@shikijs/stream", "katex", "marked", "marked-shiki", "remend"].map(
             (dependency) => `@orchestra/app > @orchestra/ui > ${dependency}`,
           ),

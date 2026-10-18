@@ -1,15 +1,18 @@
 name: release-desktop
 
 # Builds the prod-channel Orchestra desktop installers (macOS dmg+zip on arm64 and x64, Windows NSIS x64, Linux
-# AppImage+deb+rpm x64) and, only with publish=true, uploads them with SHA256SUMS-desktop to the GitHub release
-# v<version> that release-cli.yml created. sign=false is a dry run: same installers, no identity, no notarization.
-# sign=true reads the `release` environment's secrets, signs and notarizes macOS, signs Windows with Azure Artifact
-# Signing and verifies both. Linux installers are unsigned. Publishing requires signing.
+# AppImage+deb+rpm x64) and their electron-updater feed. With publish=true it creates desktop-v<version> with the
+# installers and SHA256SUMS, then replaces the assets of desktop-latest, the fixed release prod builds read their update
+# feed from (electron-builder.config.ts). The desktop releases stay apart from the CLI's v<version> releases and are
+# never marked Latest. sign=true reads the `release` environment's secrets, signs and notarizes macOS, signs Windows
+# with Azure Artifact Signing and verifies both. sign=false builds the same installers with no identity: macOS warns on
+# first open and unsigned macOS builds only announce updates (Squirrel.Mac cannot install into an unsigned app), and
+# Windows shows SmartScreen. Linux installers are unsigned either way.
 on:
   workflow_dispatch:
     inputs:
       version:
-        description: Stable X.Y.Z (the CLI release v<version> must already exist to publish)
+        description: Stable X.Y.Z
         required: true
         type: string
       sign:
@@ -17,12 +20,12 @@ on:
         type: boolean
         default: false
       publish:
-        description: Upload the installers to the existing GitHub release v<version>
+        description: Create desktop-v<version> and replace the desktop-latest update feed
         type: boolean
         default: false
 
 concurrency:
-  group: release-desktop-${{ inputs.version }}
+  group: release-desktop
   cancel-in-progress: false
 
 permissions:
@@ -40,9 +43,8 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Require a stable version, and signing plus the CLI release to publish
+      - name: Require a stable, unreleased version to publish
         env:
-          SIGN: ${{ inputs.sign == true }}
           PUBLISH: ${{ inputs.publish == true }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -50,11 +52,8 @@ jobs:
           [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
           if [ "$PUBLISH" = true ]; then
             [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
-            [ "$SIGN" = true ] || { echo "RELEASE_PUBLISH_REQUIRES_SIGNING: publish=true needs sign=true" >&2; exit 1; }
-            gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1 || {
-              echo "RELEASE_CLI_RELEASE_MISSING: v$VERSION does not exist; run release-cli.yml with publish=true first" >&2
-              exit 1
-            }
+            if gh release view "desktop-v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
+            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/desktop-v$VERSION" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
           fi
 
   # A Windows desktop bundles its own CLI and the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Bun on
@@ -160,6 +159,8 @@ jobs:
       SIGN: ${{ inputs.sign == true }}
       ORCHESTRA_CHANNEL: prod
       ORCHESTRA_VERSION: ${{ inputs.version }}
+      # Read by electron.vite.config.ts into the app: only a signed macOS build installs updates in place.
+      ORCHESTRA_MAC_SIGNED: ${{ inputs.sign == true && matrix.os == 'mac' && 'true' || 'false' }}
       # sign=false: electron-builder.config.ts drops identity, notarization and Windows signing.
       ORCHESTRA_DESKTOP_UNSIGNED: ${{ inputs.sign != true && '1' || '' }}
       CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign != true && 'false' || 'true' }}
@@ -263,11 +264,13 @@ jobs:
           AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ env.SIGN == 'true' && runner.os == 'Windows' && secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE || '' }}
         run: |
           set -euo pipefail
-          bun scripts/prebuild.ts
-          bun x electron-vite build
+          # prepare stages the CLI, Claude Code, omni and icons, and stamps the version the update feed records.
+          bun scripts/prepare.ts
+          # No Sentry upload is configured, so the renderer ships without source maps.
+          ORCHESTRA_FAST_BUILD=1 bun x electron-vite build
           # codesign takes the full "Developer ID Application: ..." name; electron-builder refuses that prefix in CSC_NAME.
           if [ -n "${CSC_NAME:-}" ]; then export CSC_NAME="${CSC_NAME#Developer ID Application: }"; fi
-          bun x electron-builder "$BUILDER_PLATFORM" --config electron-builder.config.ts
+          bun x electron-builder "$BUILDER_PLATFORM" --publish never --config electron-builder.config.ts
 
       - name: Collect the installers
         env:
@@ -286,7 +289,20 @@ jobs:
             [ "${#found[@]}" -eq 1 ] && [ -f "${found[0]}" ] || { echo "::error::DESKTOP_INSTALLER_MISSING: expected one .$ext, got: ${found[*]}"; exit 1; }
             cp "${found[0]}" installers/
           done
-          ls -l installers
+          # The update payloads' blockmaps and this build's feed, which the feed job merges.
+          cp apps/desktop/dist/*.blockmap installers/ 2>/dev/null || true
+          mkdir -p feed
+          cp apps/desktop/dist/latest*.yml feed/
+          ls -l installers feed
+
+      - name: Require the packaged app to read the desktop-latest feed
+        working-directory: apps/desktop/dist
+        run: |
+          set -euo pipefail
+          feed=$(find . -path '*esources/app-update.yml' -print -quit)
+          [ -n "$feed" ] || { echo "RELEASE_APP_FEED_MISSING" >&2; exit 1; }
+          cat "$feed"
+          grep -qF "gustavomhss/hugr-orchestra/releases/download/desktop-latest" "$feed" || { echo "RELEASE_APP_FEED_WRONG: $feed" >&2; exit 1; }
 
       - name: Verify the macOS signature, Gatekeeper assessment and notarization
         if: env.SIGN == 'true' && runner.os == 'macOS'
@@ -328,29 +344,124 @@ jobs:
           name: desktop-${{ matrix.os }}-${{ matrix.arch }}
           path: installers/
           if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: latest-yml-${{ matrix.os }}-${{ matrix.arch }}
+          path: feed/latest*.yml
+          if-no-files-found: error
+          retention-days: 14
+
+  # Merges the per-build feeds (the two macOS builds share latest-mac.yml) and checks that every payload a feed names
+  # exists with the size and sha512 it records. Runs on dry runs too: its artifact is what a real run publishes.
+  feed:
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: latest-yml-*
+          path: ${{ runner.temp }}/latest-yml
+      - name: Assemble and verify the update feed and checksums
+        env:
+          LATEST_YML_DIR: ${{ runner.temp }}/latest-yml
+          LATEST_YML_OUT: ${{ runner.temp }}/feed
+          LATEST_PAYLOAD_DIR: ${{ runner.temp }}/dist
+          ORCHESTRA_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$LATEST_YML_OUT"
+          bun apps/desktop/scripts/finalize-latest-yml.ts
+          for feed in latest.yml latest-mac.yml latest-linux.yml; do
+            test -s "$LATEST_YML_OUT/$feed" || { echo "RELEASE_FEED_MISSING: $feed" >&2; exit 1; }
+            cat "$LATEST_YML_OUT/$feed"
+          done
+          (cd "$LATEST_PAYLOAD_DIR" && sha256sum -- *.dmg *.zip *.exe *.AppImage *.deb *.rpm) > "$LATEST_YML_OUT/SHA256SUMS"
+          cat "$LATEST_YML_OUT/SHA256SUMS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-desktop-feed
+          path: ${{ runner.temp }}/feed/
+          if-no-files-found: error
+          retention-days: 14
 
   publish:
-    needs: [build]
     if: inputs.publish == true
+    needs: [feed]
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     environment: release
-    timeout-minutes: 30
     permissions:
       contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SIGNED: ${{ inputs.sign == true }}
     steps:
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           pattern: desktop-*
-          path: installers
           merge-multiple: true
-      - name: Upload the installers and their checksums to v${{ env.VERSION }}
-        working-directory: installers
-        env:
-          GH_TOKEN: ${{ github.token }}
+          path: dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-desktop-feed
+          path: feed
+
+      - name: Create desktop-v<version> with the installers and SHA256SUMS
         run: |
           set -euo pipefail
-          files=(orchestra-desktop-*)
-          [ "${#files[@]}" -eq 8 ] || { echo "::error::DESKTOP_INSTALLER_COUNT: expected 8, got ${#files[@]}: ${files[*]}"; exit 1; }
-          sha256sum "${files[@]}" > SHA256SUMS-desktop
-          cat SHA256SUMS-desktop
-          gh release upload "v$VERSION" "${files[@]}" SHA256SUMS-desktop --repo "$GITHUB_REPOSITORY"
+          tag="desktop-v$VERSION"
+          # Checked again: gh release create attaches to an existing tag instead of failing.
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: $tag" >&2; exit 1; fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: $tag" >&2; exit 1; fi
+          {
+            echo "Download the installer for your system and check it against SHA256SUMS."
+            echo
+            echo "Windows and AppImage installs update themselves. deb and rpm installs tell you when a new version is out and link to its release page."
+            if [ "$SIGNED" != true ]; then
+              echo
+              echo "This release is not signed. On macOS, open it from System Settings > Privacy & Security > Open Anyway, or run \`xattr -dr com.apple.quarantine \"/Applications/HuGR Orchestra.app\"\`; the macOS builds tell you when a new version is out but do not install it themselves. On Windows, choose More info > Run anyway on the SmartScreen prompt."
+            fi
+          } > notes.md
+          shopt -s nullglob
+          installers=(dist/*.dmg dist/*.zip dist/*.exe dist/*.AppImage dist/*.deb dist/*.rpm)
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+            --title "HuGR Orchestra $VERSION" --notes-file notes.md "${installers[@]}" feed/SHA256SUMS
+
+      - name: Replace the desktop-latest feed
+        run: |
+          set -euo pipefail
+          release=desktop-latest
+          if ! gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$release" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+              --title "HuGR Orchestra desktop update feed" \
+              --notes "The update feed installed desktop apps read. Its files are replaced on every desktop release; installers are in the desktop-v<version> releases."
+          fi
+          # Payloads first, then the feeds that name them, so a feed never names a file that is not there yet.
+          payloads=()
+          while read -r name; do
+            payloads+=("dist/$name")
+            if [ -f "dist/$name.blockmap" ]; then payloads+=("dist/$name.blockmap"); fi
+          done < <(sed -n 's/^  - url: //p' feed/latest*.yml | sort -u)
+          [ "${#payloads[@]}" -gt 0 ] || { echo "RELEASE_FEED_EMPTY" >&2; exit 1; }
+          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber "${payloads[@]}"
+          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber feed/latest*.yml
+          # Drop what an earlier release left that this feed no longer names.
+          keep=$(printf '%s\n' "${payloads[@]##*/}"; cd feed && printf '%s\n' latest*.yml)
+          gh release view "$release" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | while read -r asset; do
+            grep -qxF -- "$asset" <<<"$keep" || gh release delete-asset "$release" "$asset" --repo "$GITHUB_REPOSITORY" --yes
+          done

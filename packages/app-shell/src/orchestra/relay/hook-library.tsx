@@ -22,6 +22,8 @@ type Props = {
   source: RelaySource
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
+  // The folder is outside git: its hooks would apply to every such folder, so nothing new is installed here.
+  shared: boolean
   go: (path: string, replace?: boolean) => void
   close: (path: string) => void
 }
@@ -194,7 +196,7 @@ export function HookLibrary(props: Props) {
               {copy.t("orchestra.hooks.order.open")}
             </button>
           </Show>
-          <button type="button" class="mx-btn primary" disabled={!loaded()} onClick={newHook}>
+          <button type="button" class="mx-btn primary" disabled={!loaded() || props.shared} onClick={newHook}>
             <Ic name="plus" />
             {copy.t("orchestra.hooks.new")}
           </button>
@@ -202,11 +204,34 @@ export function HookLibrary(props: Props) {
       }
     >
       <p class="hk-scope">
-        {copy.t("orchestra.hooks.scope", { project: props.profile })} {copy.t("orchestra.hooks.crosslink")}{" "}
+        <Show when={!props.shared}>{copy.t("orchestra.hooks.scope", { project: props.profile })} </Show>
+        {copy.t("orchestra.hooks.crosslink")}{" "}
         <button type="button" class="mx-link" onClick={() => props.go(relayPath.library("workflow"))}>
           {copy.t("orchestra.hooks.crosslink.open")}
         </button>
       </p>
+      <Show when={props.shared}>
+        <p class="wf-retained" role="status" data-slot="relay-repository-required">
+          <span>{copy.t("orchestra.workflows.scope.repositoryRequired")}</span>
+        </p>
+        {/* Installs made here earlier keep enforcing in every folder outside git until someone removes them. */}
+        <Show when={installs().length}>
+          <p class="wf-retained" role="status" data-slot="relay-shared-installs">
+            <span>{copy.t("orchestra.hooks.scope.sharedInstalls")}</span>
+            <For each={installs()}>
+              {(install) => (
+                <button
+                  type="button"
+                  class="mx-btn"
+                  onClick={() => setLayer("uninstall", { install, name: nameOf(install.document) })}
+                >
+                  {copy.t("orchestra.hooks.scope.uninstall", { name: nameOf(install.document) })}
+                </button>
+              )}
+            </For>
+          </p>
+        </Show>
+      </Show>
       <div class="wf-tabs" role="tablist" aria-label={copy.t("orchestra.hooks.tabs")}>
         <button
           type="button"
@@ -312,7 +337,7 @@ export function HookLibrary(props: Props) {
                 <strong>{copy.t("orchestra.hooks.empty.title")}</strong>
                 {copy.t("orchestra.hooks.empty.body")}
                 <br />
-                <button type="button" class="mx-btn primary" onClick={newHook}>
+                <button type="button" class="mx-btn primary" disabled={props.shared} onClick={newHook}>
                   <Ic name="plus" />
                   {copy.t("orchestra.hooks.new")}
                 </button>
@@ -399,7 +424,7 @@ export function HookLibrary(props: Props) {
                             name: document.name,
                             profile: props.profile,
                           })}
-                          disabled={unpublished() || busy()}
+                          disabled={unpublished() || busy() || (props.shared && !enabled())}
                           onClick={() => void toggle(document, !enabled())}
                         />
                         <span>
@@ -413,14 +438,14 @@ export function HookLibrary(props: Props) {
                                 source={props.source}
                                 document={document}
                                 install={current()}
-                                busy={busy()}
+                                busy={busy() || props.shared}
                                 onUpdate={() =>
                                   void change("update", () => props.source.client.update(current().installID))
                                 }
                               />
                             )}
                           </Show>
-                          <Show when={unpublished()}>
+                          <Show when={unpublished() && !props.shared}>
                             <small>{copy.t(`orchestra.hooks.row.reason.${blocker(document) ?? "publish"}`)}</small>
                             <Show when={!blocker(document)}>
                               <button
@@ -465,6 +490,7 @@ export function HookLibrary(props: Props) {
                   type="button"
                   class="mx-card wf-tpl"
                   data-template={item.id}
+                  disabled={props.shared}
                   onClick={() => pickTemplate(item.id)}
                 >
                   <div class="mx-card-top">
@@ -481,7 +507,7 @@ export function HookLibrary(props: Props) {
           </div>
         </Match>
       </Switch>
-      <Show when={props.route.create && loaded()}>
+      <Show when={props.route.create && loaded() && !props.shared}>
         <CreateHookDialog
           source={props.source}
           initial={preset()}

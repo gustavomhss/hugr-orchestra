@@ -20,6 +20,7 @@ import { resolveExternalURL, resolveLocalFilePath } from "./external-url"
 import { registerAppDockWindow } from "./app-dock-rpc"
 import { requireTitlebarFrame, titlebarFramePosition } from "./titlebar-frame"
 import { registerRendererPermissions } from "./window-permissions"
+import { createWindowFlusher } from "./window-flush"
 
 const root = dirname(fileURLToPath(import.meta.url))
 const rendererRoot = join(root, "../renderer")
@@ -66,10 +67,7 @@ const registry = createWindowRegistry<BrowserWindow>({
 const titlebarHeight = 40
 const maxZoomLevel = 10
 const minZoomLevel = 0.2
-const unloadTimeout = 3_000
-const flushed = new WeakSet<BrowserWindow>()
-const flushing = new WeakMap<BrowserWindow, Promise<void>>()
-const unloadReplies = new Map<string, () => void>()
+const flusher = createWindowFlusher<BrowserWindow>()
 
 export function setRelaunchHandler(handler: () => void) {
   relaunchHandler = handler
@@ -290,44 +288,22 @@ function wireNavigationPolicy(win: BrowserWindow) {
   // Unsaved work is not lost by this: the page saved it, or kept it locally, when flushWindow asked before the close
   // or the quit, and it keeps what is still pending as it unloads.
   win.webContents.on("will-prevent-unload", (event) => event.preventDefault())
-  // A close waits, at most unloadTimeout, for the page to save what it still holds; the close after that always goes
+  // A close waits, at most UNLOAD_TIMEOUT, for the page to save what it still holds; the close after that always goes
   // through.
   win.on("close", (event) => {
-    if (flushed.has(win)) return
+    if (flusher.flushed(win)) return
     event.preventDefault()
     void flushWindow(win).then(() => {
       if (!win.isDestroyed()) win.close()
     })
   })
   // Windows gives the app little time at shutdown or logoff, so the windows close without asking the page.
-  win.on("session-end", () => flushed.add(win))
+  win.on("session-end", () => flusher.skip(win))
 }
 
-/**
- * Asks the page to save what it still holds (unsaved Relay drafts) and waits for its answer, at most unloadTimeout,
- * so a hung, crashed or busy page never holds a close or a quit. Each window is asked once: it closes right after.
- */
+/** Asks the window's page to save what it still holds, and waits for its answer for at most UNLOAD_TIMEOUT. */
 export function flushWindow(win: BrowserWindow) {
-  if (flushed.has(win)) return Promise.resolve()
-  const asked = flushing.get(win)
-  if (asked) return asked
-  const next = new Promise<void>((resolve) => {
-    if (win.isDestroyed() || win.webContents.isDestroyed() || win.webContents.isCrashed()) return resolve()
-    const id = randomUUID()
-    const done = () => {
-      clearTimeout(timer)
-      unloadReplies.delete(id)
-      resolve()
-    }
-    const timer = setTimeout(done, unloadTimeout)
-    unloadReplies.set(id, done)
-    win.webContents.send("before-unload", id)
-  }).then(() => {
-    flushed.add(win)
-    flushing.delete(win)
-  })
-  flushing.set(win, next)
-  return next
+  return flusher.flush(win)
 }
 
 /** Every app window saves before the sidecars stop: on quit, relaunch and update install. */
@@ -339,7 +315,7 @@ export function flushWindows() {
 
 /** The page's answer to flushWindow, through the `before-unload-done` IPC message. */
 export function settleUnload(id: unknown) {
-  if (typeof id === "string") unloadReplies.get(id)?.()
+  flusher.settle(id)
 }
 
 function registerWindow(win: BrowserWindow, id: string) {

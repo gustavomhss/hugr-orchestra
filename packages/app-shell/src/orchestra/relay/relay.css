@@ -676,16 +676,35 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 html[data-color-scheme="light"] .wf-editor {
   color-scheme: light;
 }
+/* The head grows instead of letting its right-hand group spill over the name: that group wraps inside its column, and
+   below 1100px (a narrow window, or 200% zoom) it takes a row of its own. */
 .wf-head {
   position: relative;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
   align-items: center;
-  gap: 12px;
-  block-size: 56px;
+  gap: 8px 12px;
+  min-block-size: 56px;
   flex: none;
-  padding: 0 14px 0 12px;
+  padding: 6px 14px 6px 12px;
   border-block-end: 1px solid var(--mx-line);
+}
+@media (max-width: 1100px) {
+  .wf-head {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+  .wf-head .wf-head-right {
+    grid-column: 1 / -1;
+  }
+}
+/* A failed save, with its reason and its ways out, below the head. */
+.wf-save-row {
+  flex: none;
+  padding: 8px 14px 8px 12px;
+  border-block-end: 1px solid var(--mx-line);
+}
+.wf-save-row .wf-save-error {
+  max-inline-size: none;
 }
 .wf-head-left {
   display: flex;
@@ -756,9 +775,10 @@ html[data-color-scheme="light"] .wf-editor {
 }
 .wf-head-right {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: flex-end;
-  gap: 8px;
+  gap: 6px 8px;
   min-inline-size: 0;
 }
 .wf-save {

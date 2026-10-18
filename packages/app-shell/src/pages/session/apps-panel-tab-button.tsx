@@ -95,11 +95,7 @@ export function TabButton(props: {
       onKeyDown={keydown}
     >
       <span class={`zen-tab-icon ${props.tab.loading ? "is-loading" : ""}`}>
-        {props.tab.favicon ? (
-          <img src={props.tab.favicon} alt="" />
-        ) : (
-          tabLabel(props.tab).slice(0, 1).toUpperCase()
-        )}
+        {props.tab.favicon ? <img src={props.tab.favicon} alt="" /> : tabLabel(props.tab).slice(0, 1).toUpperCase()}
       </span>
       <bdi dir="auto" class="zen-tab-title">
         {tabLabel(props.tab)}

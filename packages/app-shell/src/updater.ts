@@ -6,6 +6,8 @@ export type UpdaterState =
   | { status: "checking" }
   | { status: "downloading"; version: string; percent?: number }
   | { status: "ready"; version: string }
+  // A build that cannot replace itself (unsigned macOS, deb, rpm) only announces the update and its release page.
+  | { status: "available"; version: string; url: string }
   | { status: "up-to-date" }
   | { status: "installing"; version: string }
   | { status: "error"; message: string }

@@ -33,9 +33,9 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { serverLog } from "./server-log"
 import { McpStdio, OmniStdioTransport } from "./stdio"
 import { Status } from "./status"
-import { serverLog } from "./server-log"
 
 const DEFAULT_TIMEOUT = 30_000
 const CLIENT_OPTIONS = {
@@ -61,6 +61,8 @@ export const Resource = Schema.Struct({
 export type Resource = Schema.Schema.Type<typeof Resource>
 
 export const ToolsChanged = McpEvent.ToolsChanged
+
+export const StatusChanged = McpEvent.StatusChanged
 
 export const BrowserOpenFailed = McpEvent.BrowserOpenFailed
 
@@ -212,6 +214,8 @@ const layer = Layer.effect(
         (t, exit) => (Exit.isFailure(exit) ? Effect.tryPromise(() => t.close()).pipe(Effect.ignore) : Effect.void),
       )
     })
+
+    const publishStatusChanged = (server: string) => events.publish(StatusChanged, { server }).pipe(Effect.ignore)
 
     const DISABLED_RESULT: CreateResult = { status: { status: "disabled" } }
 
@@ -425,6 +429,7 @@ const layer = Layer.effect(
         bridge.fork(
           Effect.logWarning("MCP connection closed", { server: name }).pipe(
             Effect.andThen(events.publish(ToolsChanged, { server: name })),
+            Effect.andThen(publishStatusChanged(name)),
             Effect.ignore,
           ),
         )
@@ -545,6 +550,7 @@ const layer = Layer.effect(
       else delete s.instructions[name]
       watch(s, name, client, bridge, timeout)
       if (previous) yield* Effect.tryPromise(() => previous.close()).pipe(Effect.ignore)
+      yield* publishStatusChanged(name)
       return s.status[name]
     })
 
@@ -586,8 +592,7 @@ const layer = Layer.effect(
 
     const createAndStore = Effect.fn("MCP.createAndStore")(function* (name: string, mcp: ConfigMCPV1.Info) {
       const s = yield* InstanceState.get(state)
-      const generation = (s.generation[name] ?? 0) + 1
-      s.generation[name] = generation
+      const generation = (s.generation[name] = (s.generation[name] ?? 0) + 1)
       const result = yield* create(name, mcp)
 
       // A disconnect or a newer connect ran while this one was connecting: committing would undo it.
@@ -601,6 +606,7 @@ const layer = Layer.effect(
       if (!result.mcpClient) {
         yield* closeClient(s, name)
         delete s.clients[name]
+        yield* publishStatusChanged(name)
         return result.status
       }
 
@@ -626,6 +632,7 @@ const layer = Layer.effect(
       yield* closeClient(s, name)
       delete s.clients[name]
       s.status[name] = { status: "disabled" }
+      yield* publishStatusChanged(name)
     })
 
     function requestTimeout(s: State, name: string, configured: McpEntry | undefined, fallback?: number) {

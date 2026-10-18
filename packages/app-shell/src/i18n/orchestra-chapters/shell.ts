@@ -8,6 +8,17 @@ export const SHELL_COPY = {
   "orchestra.shell.server.restart": "Restart app",
   "orchestra.shell.error.retry": "Try again",
   "orchestra.shell.error.home": "Go to Home",
+  "orchestra.shell.update.download": "Download {{version}}",
+  "orchestra.shell.logs.exportFailed": "Could not export the logs",
+  "orchestra.shell.picker.failed": "Could not open the folder picker",
+  "orchestra.shell.link.failed": "Could not open the link",
+  "orchestra.shell.link.unsupported": "This link is not supported.",
+  "orchestra.shell.link.missingDirectory": "The folder was not found: {{directory}}",
+  "orchestra.shell.draft.close.title": "Discard this draft?",
+  "orchestra.shell.draft.close.description": "The text and attachments in this draft will be lost.",
+  "orchestra.shell.draft.close.confirm": "Discard draft",
+  // The folder the desktop app creates in Documents on first launch.
+  "orchestra.shell.onboarding.defaultProject": "Default Project",
   "orchestra.shell.settings.repository":
     "Select a repository profile to manage this section. General, Servers, and Shortcuts are available without a repository.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
@@ -25,4 +36,10 @@ export const SHELL_COPY = {
   "orchestra.shell.profile.agents.other": "{{count}} agents",
   "orchestra.shell.project.close": "Close project",
   "orchestra.shell.project.editUnsupported": "This server does not support editing projects.",
+  "orchestra.shell.project.addFailed": "Could not add the project",
+  "orchestra.shell.project.initGit.title": "Set up git for this folder?",
+  "orchestra.shell.project.initGit.description":
+    "{{directory}} is empty. Initialize a git repository so Orchestra can track changes in it.",
+  "orchestra.shell.project.initGit.confirm": "Initialize git",
+  "orchestra.shell.project.initGit.skip": "Add without git",
 }

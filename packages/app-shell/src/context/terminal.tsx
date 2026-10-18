@@ -3,13 +3,14 @@ import { createSimpleContext } from "@orchestra/ui/context"
 import { batch, createEffect, createMemo, createRoot, on, onCleanup } from "solid-js"
 import { useParams } from "@solidjs/router"
 import { useSDK, type DirectorySDK } from "./sdk"
+import { useLanguage } from "./language"
 import type { Platform } from "./platform"
 import { useServerSDK } from "./server-sdk"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { defaultTitle, titleNumber } from "./terminal-title"
 import { Persist, persisted, removePersisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
-import { useLanguage } from "@/context/language"
+import { formatServerError } from "@/utils/server-errors"
 import { ScopedKey, ServerScope, type ServerScope as ServerScopeValue } from "@/utils/server-scope"
 
 export type LocalPTY = {
@@ -38,6 +39,13 @@ function text(value: unknown) {
 
 function num(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : undefined
+}
+
+/** A pty the server no longer has is already closed, so closing it again is not a failure. */
+export function isTerminalGoneError(error: unknown) {
+  if (!record(error)) return false
+  if (error._tag === "PtyNotFoundError") return true
+  return error instanceof Error && record(error.cause) && error.cause.status === 404
 }
 
 function numberFromTitle(title: string) {
@@ -151,8 +159,8 @@ function createWorkspaceTerminalSession(
   sdk: DirectorySDK,
   dir: string,
   scope: ServerScopeValue,
-  legacySessionID: string | undefined,
-  fail: (message: string, error: unknown) => void,
+  legacySessionID?: string,
+  notifyFailure?: (action: "create" | "close", error: unknown) => void,
 ) {
   const location = { directory: sdk.directory }
   const legacy = scope === ServerScope.local ? getLegacyTerminalStorageKeys(dir, legacySessionID) : []
@@ -342,6 +350,7 @@ function createWorkspaceTerminalSession(
           const id = data?.id
           if (!id) {
             if (focusRequest !== undefined) cancelFocus(focusRequest)
+            notifyFailure?.("create", undefined)
             return { status: "failed" }
           }
           const newTerminal = {
@@ -360,7 +369,8 @@ function createWorkspaceTerminalSession(
         })
         .catch((error: unknown): TerminalCreateResult => {
           if (focusRequest !== undefined) cancelFocus(focusRequest)
-          fail("Failed to create terminal", error)
+          console.error("Failed to create terminal", error)
+          notifyFailure?.("create", error)
           return { status: "failed", error }
         })
     },
@@ -426,12 +436,11 @@ function createWorkspaceTerminalSession(
     },
     async close(id: string) {
       const index = store.all.findIndex((f) => f.id === id)
+      const closed = index === -1 ? undefined : { ...store.all[index] }
+      const next = store.active === id ? (index > 0 ? store.all[index - 1]?.id : store.all[1]?.id) : undefined
       if (index !== -1) {
         batch(() => {
-          if (store.active === id) {
-            const next = index > 0 ? store.all[index - 1]?.id : store.all[1]?.id
-            setStore("active", next)
-          }
+          if (store.active === id) setStore("active", next)
           setStore(
             "all",
             produce((all) => {
@@ -441,13 +450,29 @@ function createWorkspaceTerminalSession(
         })
       }
 
-      const removePromise =
-        (await sdk.protocol) === "v1"
-          ? sdk.client.pty.remove({ ptyID: id })
-          : sdk.api.pty.remove({ ptyID: id, location })
-      await removePromise.catch((error: unknown) => {
-        fail("Failed to close terminal", error)
-      })
+      const failed = await (async () => {
+        if ((await sdk.protocol) === "v1") return sdk.client.pty.remove({ ptyID: id })
+        return sdk.api.pty.remove({ ptyID: id, location })
+      })().then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+      if (!failed || isTerminalGoneError(failed.error)) return
+
+      console.error("Failed to close terminal", failed.error)
+      // The process is still running on the server, so the tab comes back instead of hiding it.
+      if (closed && !store.all.some((x) => x.id === id)) {
+        batch(() => {
+          setStore(
+            "all",
+            produce((all) => {
+              all.splice(Math.min(index, all.length), 0, closed)
+            }),
+          )
+          if (store.active === next) setStore("active", id)
+        })
+      }
+      notifyFailure?.("close", failed.error)
     },
     move(id: string, to: number) {
       const index = store.all.findIndex((f) => f.id === id)
@@ -470,14 +495,6 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
     const serverSDK = useServerSDK()
     const params = useParams()
     const language = useLanguage()
-    // Terminal requests have no inline error surface, so report them as a toast.
-    const fail = (message: string, error: unknown) => {
-      console.error(message, error)
-      showToast({
-        title: language.t("common.requestFailed"),
-        description: error instanceof Error ? error.message : undefined,
-      })
-    }
     const cache = new Map<string, TerminalCacheEntry>()
     const scope = () => serverSDK().scope
     const directory = createMemo(() => base64Encode(sdk().directory))
@@ -504,6 +521,15 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       }
     }
 
+    const notifyFailure = (action: "create" | "close", error: unknown) =>
+      showToast({
+        variant: "error",
+        title: language.t(
+          action === "create" ? "orchestra.chat.terminal.createFailed" : "orchestra.chat.terminal.closeFailed",
+        ),
+        description: error === undefined ? undefined : formatServerError(error, language.t),
+      })
+
     const loadWorkspace = (dir: string, legacySessionID: string | undefined, serverScope: ServerScopeValue) => {
       // Terminals are workspace-scoped so tabs persist while switching sessions in the same directory.
       const key = getWorkspaceTerminalCacheKey(dir, serverScope)
@@ -515,7 +541,7 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       }
 
       const entry = createRoot((dispose) => ({
-        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID, fail),
+        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID, notifyFailure),
         dispose,
       }))
 

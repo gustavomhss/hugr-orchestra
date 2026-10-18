@@ -15,13 +15,14 @@ import {
 } from "@modelcontextprotocol/sdk/types.js"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Cause, Effect, Exit, Fiber } from "effect"
+import { EventV2Bridge } from "../../src/event-v2-bridge"
 import type { MCP as MCPNS } from "../../src/mcp/index"
 import { MCP } from "../../src/mcp/index"
 import { McpOAuthCallback } from "../../src/mcp/oauth-callback"
 import { TestInstance } from "../fixture/fixture"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 
-const it = testEffect(LayerNode.compile(MCP.node))
+const it = testEffect(LayerNode.compile(LayerNode.group([MCP.node, EventV2Bridge.node])))
 const stdioFixture = path.join(import.meta.dir, "../fixture/mcp-lifecycle-stdio.ts")
 
 type Page<T> = { items: T[]; nextCursor?: string }
@@ -354,6 +355,33 @@ it.instance("disconnect during an in-flight connect is not undone when the conne
       Effect.sync(() => (server.state.aborted > 0 ? server.state.aborted : undefined)),
       "stale protocol session was not closed",
     )
+  }),
+)
+
+it.instance("connect and disconnect publish mcp.status.changed for the server", () =>
+  Effect.gen(function* () {
+    const server = yield* lifecycleServer()
+    const mcp = yield* MCP.Service
+    const events = yield* EventV2Bridge.Service
+    const changed: string[] = []
+    const unsubscribe = yield* events.listen((evt) => {
+      if (evt.type === MCP.StatusChanged.type) changed.push((evt.data as { server: string }).server)
+      return Effect.void
+    })
+    yield* Effect.addFinalizer(() => unsubscribe)
+
+    yield* mcp.add("status-server", remote(server.url))
+    const added = yield* pollWithTimeout(
+      Effect.sync(() => (changed.length > 0 ? changed.length : undefined)),
+      "add did not publish mcp.status.changed",
+    )
+
+    yield* mcp.disconnect("status-server")
+    yield* pollWithTimeout(
+      Effect.sync(() => (changed.length > added ? changed.length : undefined)),
+      "disconnect did not publish mcp.status.changed",
+    )
+    expect(new Set(changed)).toEqual(new Set(["status-server"]))
   }),
 )
 

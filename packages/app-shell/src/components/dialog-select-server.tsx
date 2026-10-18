@@ -9,7 +9,7 @@ import { TextField } from "@orchestra/ui/text-field"
 import { useMutation } from "@tanstack/solid-query"
 import { showToast } from "@/utils/toast"
 import { useNavigate } from "@solidjs/router"
-import { createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
+import { batch, createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ServerHealthIndicator, ServerRow } from "@/components/server/server-row"
 import { useGlobal } from "@/context/global"
@@ -315,7 +315,13 @@ export function createServerManagementController(
       if (!current()) return
       resetAdd()
       if (options.navigateOnAdd === false) {
-        server.add(conn)
+        // Adding from Settings only saves the entry. add() activates it, which would remount the shell mid-action,
+        // so restore the previous server in the same batch.
+        const active = server.key
+        batch(() => {
+          server.add(conn)
+          server.setActive(active)
+        })
         options.onSelect?.()
         return
       }
