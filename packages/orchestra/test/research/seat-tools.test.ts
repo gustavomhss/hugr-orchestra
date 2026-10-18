@@ -3,7 +3,7 @@ import path from "node:path"
 import { Cause, Effect, Exit } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { filesystem } from "@orchestra/core/effect/app-node-platform"
+import { filesystem, httpClient } from "@orchestra/core/effect/app-node-platform"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -37,7 +37,7 @@ import { testEffect } from "../lib/effect"
 
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   Agent.node, Config.node, Git.node, Session.node, SessionProjector.node, Database.node, Permission.node, FSUtil.node,
-  Skill.node, Truncate.node, filesystem, AtlasKnowledge.node,
+  Skill.node, Truncate.node, filesystem, httpClient, AtlasKnowledge.node,
   EventV2Bridge.node, ResearchExecution.node, ResearchRecords.node,
   ToolRegistry.node,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true, disableExternalSkills: true })]]))
