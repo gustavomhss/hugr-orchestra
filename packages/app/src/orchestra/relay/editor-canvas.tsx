@@ -1,9 +1,9 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import { createMemo, createSignal, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, on, Show } from "solid-js"
 import { useServerSDK } from "@/context/server-sdk"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
-import { Canvas, type CanvasApi, type NodeOverlay } from "./canvas"
+import { Canvas, type CanvasApi, type NodeMenuItem, type NodeOverlay, sameEdge } from "./canvas"
 import { RemoveNodesDialog } from "./dialogs"
 import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
 import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
@@ -23,13 +23,15 @@ import {
   issueNode,
   nodeOf,
   type Outputs,
+  outputsOf,
   readChecklist,
   removeEdge,
   removeNodes,
   START,
   TRIGGER,
+  updatePhase,
 } from "./graph"
-import { addAlternative, addNode, defaultAnchor, groupSelection } from "./insert"
+import { addAlternative, addNode, defaultAnchor, freePhaseName, groupBlock, groupSelection, ungroup } from "./insert"
 import { issueText, stateLabel } from "./parts"
 import { layerBase, relayPath } from "./route"
 import { Ic, useRelayCopy } from "./ui"
@@ -126,17 +128,34 @@ export function CanvasTab(props: Props) {
     return node.type === "relay.review" ? `${copy.t("orchestra.workflows.canvas.review")} · ${count}` : count
   }
 
+  // An insert point only lives as long as the add panel that was opened for it.
+  createEffect(
+    on(
+      () => props.route.add,
+      (open) => {
+        if (!open) setAnchor(undefined)
+      },
+      { defer: true },
+    ),
+  )
+
   const entries = (): PanelEntry[] => {
-    if (workflow())
-      return WORKFLOW_ENTRIES.map((entry) => ({
-        key: entry.key,
-        group: copy.t(`orchestra.workflows.group.${entry.group}`),
-        glyph: entry.glyph,
-        tone: entry.tone,
-        label: copy.t(`orchestra.workflows.type.${entry.key}`),
-        description: copy.t(`orchestra.workflows.typeDesc.${entry.key}`),
-        disabled: entry.key === "phase" && !props.selected.some((id) => nodeOf(props.flow, id)?.type !== START),
-      }))
+    if (workflow()) {
+      const block = groupBlock(props.flow, props.selected)
+      return WORKFLOW_ENTRIES.map((entry) => {
+        const reason = entry.key === "phase" && block ? copy.t(`orchestra.workflows.add.phase.${block}`) : undefined
+        return {
+          key: entry.key,
+          group: copy.t(`orchestra.workflows.group.${entry.group}`),
+          glyph: entry.glyph,
+          tone: entry.tone,
+          label: copy.t(`orchestra.workflows.type.${entry.key}`),
+          description: copy.t(`orchestra.workflows.typeDesc.${entry.key}`),
+          disabled: !!reason,
+          reason,
+        }
+      })
+    }
     const hasTrigger = props.flow.nodes.some((node) => node.type === TRIGGER)
     const operations = hookOperations(types())
     return hookEntries(types()).flatMap((entry): PanelEntry[] => {
@@ -166,17 +185,19 @@ export function CanvasTab(props: Props) {
         }))
     })
   }
-  const panelAnchor = () => anchor() ?? defaultAnchor(props.flow, props.selected)
+  const panelAnchor = () => anchor() ?? defaultAnchor(props.flow, props.selected, props.outputs)
+  // The new phase gets a free name and its header opens for renaming, right on the canvas.
+  const group = (ids: string[]) => {
+    const name = freePhaseName(props.flow, (n) => copy.t("orchestra.workflows.canvas.newPhase", { n }))
+    const grouped = groupSelection(props.flow, ids, name)
+    if (!grouped) return
+    props.edit(grouped.flow)
+    if (props.route.add) props.close(base())
+    queueMicrotask(() => api?.rename(grouped.id))
+  }
   const pick = (key: string, at?: { x: number; y: number }) => {
     if (props.readOnly) return
-    if (key === "phase") {
-      const grouped = groupSelection(props.flow, props.selected, copy.t("orchestra.workflows.canvas.newPhase"))
-      if (!grouped) return
-      props.edit(grouped.flow)
-      setFocusPhase(grouped.id)
-      const start = props.flow.nodes.find((node) => node.type === START)
-      return props.go(start ? relayPath.node(props.kind, props.document.id, start.id) : base(), true)
-    }
+    if (key === "phase") return group(props.selected)
     const [prefix, operation, timing] = key.split(":")
     const trigger = prefix === "trigger"
     const step = WORKFLOW_ENTRIES.find((item) => item.key === key)
@@ -199,6 +220,8 @@ export function CanvasTab(props: Props) {
     props.edit(added.flow)
     props.select([added.id])
     props.go(relayPath.node(props.kind, props.document.id, added.id), true)
+    // A dropped node is already where the user put it; an inserted one may be off screen.
+    if (!at) queueMicrotask(() => api?.center(added.id, false))
   }
   const remove = (ids: string[]) => {
     if (props.readOnly) return
@@ -218,17 +241,79 @@ export function CanvasTab(props: Props) {
     if (count > 1 && !props.readOnly) return setConfirming({ ids, count })
     remove(ids)
   }
+  const startAdd = (next?: { id: string; port: number }) => {
+    if (props.readOnly) return
+    setAnchor(next)
+    if (next) props.select([next.id])
+    props.go(relayPath.add(props.kind, props.document.id))
+  }
   const onEdge = (edge: FlowEdge, action: "insert" | "remove") => {
     if (props.readOnly) return
     if (action === "remove") return props.edit(removeEdge(props.flow, edge))
-    setAnchor({ id: edge.from, port: edge.port })
-    props.select([edge.from])
-    props.go(relayPath.add(props.kind, props.document.id))
+    startAdd({ id: edge.from, port: edge.port })
   }
   const open = (id: string) => props.go(relayPath.node(props.kind, props.document.id, id, props.route.view))
+  const menu = (ids: string[], node: FlowNode): NodeMenuItem[] => {
+    const block = workflow() ? groupBlock(props.flow, ids) : undefined
+    return [
+      { label: copy.t("orchestra.workflows.canvas.menuOpen"), run: () => open(node.id) },
+      ...(outputsOf(props.flow, node, props.outputs).length
+        ? [
+            {
+              label: copy.t("orchestra.workflows.canvas.menuInsert"),
+              run: () => startAdd({ id: node.id, port: 0 }),
+            },
+          ]
+        : []),
+      ...(workflow()
+        ? [
+            {
+              label: copy.t("orchestra.workflows.canvas.menuGroup"),
+              title: block ? copy.t(`orchestra.workflows.add.phase.${block}`) : undefined,
+              disabled: !!block,
+              run: () => group(ids),
+            },
+          ]
+        : []),
+      ...(ids.some((id) => nodeOf(props.flow, id)?.type !== START)
+        ? [
+            {
+              label: copy.t("orchestra.workflows.canvas.menuDelete"),
+              danger: true,
+              run: () => removeSelected(ids),
+            },
+          ]
+        : []),
+    ]
+  }
+  // A connection that replaced others says so and offers to put them back, if nothing else changed the wires since.
+  const rewired = (before: FlowEdge[], after: FlowEdge[], from: string, to: string) => {
+    const replaced = before.filter((edge) => !after.some((item) => sameEdge(item, edge)))
+    if (!replaced.length) return
+    const name = (id: string) => nodeOf(props.flow, id)?.name ?? id
+    showToast({
+      title: copy.t("orchestra.workflows.canvas.rewired", { from: name(from), to: name(to) }),
+      description: copy.t("orchestra.workflows.canvas.rewiredBody", {
+        list: replaced.map((edge) => `${name(edge.from)} → ${name(edge.to)}`).join(", "),
+      }),
+      actions: [
+        {
+          label: copy.t("orchestra.workflows.menu.undo"),
+          onClick: () => {
+            const now = props.flow.edges
+            const unchanged =
+              now.length === after.length && now.every((edge) => after.some((item) => sameEdge(item, edge)))
+            if (unchanged) props.edit({ ...props.flow, edges: before })
+          },
+        },
+      ],
+    })
+  }
   props.keys((event) => {
     const target = event.target instanceof HTMLElement ? event.target : undefined
     if (target && target !== document.body && !target.closest(".wf-canvas")) return
+    // A focused button (a node's tools, a "+" stub) keeps Enter and the arrows for itself.
+    if (target?.closest("button,input,textarea,select,[contenteditable]")) return
     const last = props.selected.at(-1)
     if ((event.key === "Enter" || event.key === "F2") && last) return (event.preventDefault(), open(last))
     if ((event.key === "Delete" || event.key === "Backspace") && props.selected.length)
@@ -393,6 +478,9 @@ export function CanvasTab(props: Props) {
         unlink: copy.t("orchestra.workflows.canvas.unlink"),
         connect: copy.t("orchestra.workflows.canvas.connect"),
         protocol: copy.t("orchestra.workflows.canvas.protocol"),
+        menu: copy.t("orchestra.workflows.canvas.menu"),
+        renamePhase: (name) => copy.t("orchestra.workflows.canvas.renamePhase", { name }),
+        removePhase: (name) => copy.t("orchestra.workflows.canvas.removePhase", { name }),
         steps: (count) =>
           copy.count(count, "orchestra.workflows.count.step.one", "orchestra.workflows.count.step.other"),
       }}
@@ -419,12 +507,7 @@ export function CanvasTab(props: Props) {
       onChange={props.edit}
       onReject={() => showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })}
       onOpen={open}
-      onAdd={(next) => {
-        if (props.readOnly) return
-        setAnchor(next)
-        if (next) props.select([next.id])
-        props.go(relayPath.add(props.kind, props.document.id))
-      }}
+      onAdd={startAdd}
       onDelete={remove}
       onEdge={onEdge}
       onProtocol={
@@ -436,6 +519,10 @@ export function CanvasTab(props: Props) {
             }
           : undefined
       }
+      onRenamePhase={workflow() ? (phase, name) => props.edit(updatePhase(props.flow, phase, { name })) : undefined}
+      onUngroup={workflow() ? (phase) => props.edit(ungroup(props.flow, phase)) : undefined}
+      menu={menu}
+      onRewire={rewired}
       onKeys={props.onKeys}
       onDrop={(key, at) => {
         pick(key, at)

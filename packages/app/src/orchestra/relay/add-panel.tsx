@@ -1,4 +1,4 @@
-import { createMemo, createSignal, For, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js"
 import type { Glyph, Tone } from "./catalog"
 import { Ic, NodeGlyph } from "./ui"
 
@@ -10,6 +10,8 @@ export type PanelEntry = {
   label: string
   description: string
   disabled?: boolean
+  // Why a disabled entry cannot be picked; shown in place of its description.
+  reason?: string
 }
 
 // The right-side "Add a step" panel: search, grouped entries, arrow keys and Enter, or drag onto the canvas.
@@ -27,12 +29,19 @@ export function AddPanel(props: {
   const [query, setQuery] = createSignal("")
   const [active, setActive] = createSignal(0)
   let input!: HTMLInputElement
+  let list!: HTMLDivElement
   const shown = createMemo(() => {
     const text = query().trim().toLowerCase()
     return props.entries.filter((entry) => !text || `${entry.label} ${entry.description}`.toLowerCase().includes(text))
   })
   const enabled = () => shown().filter((entry) => !entry.disabled)
   onMount(() => input.focus())
+  // Arrow keys move the highlight; keep it inside the scrolled list.
+  createEffect(() => {
+    const key = enabled()[active()]?.key
+    if (!key) return
+    list.querySelector<HTMLElement>(`[data-entry="${key}"]`)?.scrollIntoView?.({ block: "nearest" })
+  })
   return (
     <aside
       class="wf-drawer"
@@ -77,7 +86,7 @@ export function AddPanel(props: {
           }
         }}
       />
-      <div class="wf-drawer-list" id="wf-add-list" role="listbox" aria-label={props.title}>
+      <div ref={list} class="wf-drawer-list" id="wf-add-list" role="listbox" aria-label={props.title}>
         <Show when={shown().length} fallback={<p class="wf-col-empty">{props.empty(query())}</p>}>
           <For each={shown()}>
             {(entry, index) => (
@@ -90,6 +99,7 @@ export function AddPanel(props: {
                   class="wf-pick"
                   role="option"
                   data-entry={entry.key}
+                  data-reason={entry.disabled && entry.reason ? "" : undefined}
                   aria-selected={!entry.disabled && enabled()[active()] === entry}
                   disabled={entry.disabled}
                   draggable={!entry.disabled}
@@ -101,7 +111,7 @@ export function AddPanel(props: {
                   </span>
                   <span>
                     <strong>{entry.label}</strong>
-                    <small>{entry.description}</small>
+                    <small>{entry.disabled && entry.reason ? entry.reason : entry.description}</small>
                   </span>
                 </button>
               </>

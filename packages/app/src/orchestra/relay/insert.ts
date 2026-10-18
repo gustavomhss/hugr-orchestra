@@ -1,13 +1,18 @@
 import type { RelayNodeType } from "./client"
-import { groupRect, intersects, NODE, type Point, snap } from "./geometry"
+import { NODE, type Point, snap } from "./geometry"
 import {
   addPhase,
+  chain,
   CONDITION,
   type Flow,
   type FlowNode,
+  HOOK_OUTPUTS,
   insertNode,
   isEntry,
   nodeOf,
+  type Outputs,
+  outputsOf,
+  readChecklist,
   START,
   steps,
   TRIGGER,
@@ -17,7 +22,8 @@ import {
 } from "./graph"
 
 // What the add panel inserts. Workflow steps go after the anchor and push the rest of that row right; hook
-// nodes go to the right of the anchor, one row per output port. A drop places the node unconnected.
+// nodes go to the right of the anchor, one row per output port, and push what follows them right. A drop places
+// the node unconnected and outside every phase.
 
 export type AddRequest = {
   key: string
@@ -32,10 +38,12 @@ export type AddRequest = {
 const STEP_GAP = 136
 const HOOK_GAP = 200
 
+// `check` is the ID of the one empty check a new gate starts with.
 export function defaultParameters(
   type: string,
   types: RelayNodeType[] | undefined,
   request: Pick<AddRequest, "operation" | "timing">,
+  check: string,
 ) {
   const listed = types?.find((item) => item.type === type)?.parameters
   const defaults = Object.fromEntries((listed ?? []).map((parameter) => [parameter.name, parameter.default]))
@@ -44,18 +52,32 @@ export function defaultParameters(
   if (type === CONDITION) return { field: "path", pattern: "", ...defaults }
   if (type.startsWith("relay.hook"))
     return { message: "", ...defaults, ...(type === "relay.hookVerify" ? { check: "" } : {}) }
-  const checklist = type === "relay.gate" ? writeChecklist([{ id: "check_1", cmd: "" }]) : "[]"
+  const checklist = type === "relay.gate" ? writeChecklist([{ id: check, cmd: "" }]) : "[]"
   const step = { instructions: "", skill: "", skillMode: "combine", ...defaults, checklist }
   return type === "relay.inject" ? { text: "", file: "", ...step } : step
 }
 
-// The node a new step follows when the panel was opened without an explicit anchor.
-export function defaultAnchor(flow: Flow, selected: string[]) {
+// The node a new step follows when the panel was opened without an explicit anchor. A hook with nothing selected
+// continues from its right-most open output, so the first node lands wired to the trigger.
+export function defaultAnchor(flow: Flow, selected: string[], outputs: Outputs = HOOK_OUTPUTS) {
   const picked = nodeOf(flow, selected.at(-1))
-  if (picked) return { id: picked.id, port: 0 }
-  if (flow.kind === "hook") return
+  if (picked && outputsOf(flow, picked, outputs).length) return { id: picked.id, port: 0 }
+  if (flow.kind === "hook") return openOutput(flow, outputs)
   const last = steps(flow).at(-1) ?? flow.nodes.find((node) => node.type === START)
   return last ? { id: last.id, port: 0 } : undefined
+}
+
+function openOutput(flow: Flow, outputs: Outputs) {
+  const open = flow.nodes.flatMap((node) =>
+    outputsOf(flow, node, outputs).flatMap((_, port) =>
+      flow.edges.some((edge) => edge.from === node.id && edge.port === port) ? [] : [{ id: node.id, port, x: node.x }],
+    ),
+  )
+  const last = open.reduce<(typeof open)[number] | undefined>(
+    (best, item) => (!best || item.x > best.x ? item : best),
+    undefined,
+  )
+  return last && { id: last.id, port: last.port }
 }
 
 export function addNode(
@@ -72,28 +94,25 @@ export function addNode(
     type: request.type,
     x: placed.x,
     y: placed.y,
-    parameters: defaultParameters(request.type, types, request),
+    parameters: defaultParameters(request.type, types, request, freeCheckID(flow, id)),
   }
-  const shifted = anchor && flow.kind === "workflow" ? shiftRow(flow, anchor) : flow
+  const shifted = !anchor
+    ? flow
+    : flow.kind === "workflow"
+      ? shiftRow(flow, anchor)
+      : shiftBranch(flow, anchor, request.anchor?.port ?? 0, placed)
   const connected =
     request.anchor && anchor && !isEntry(node) ? insertNode(shifted, node, request.anchor) : insertNode(shifted, node)
-  if (request.at && flow.kind === "workflow") {
-    const phase = flow.phases.find((item) => {
-      const rect = groupRect(item.nodeIds.flatMap((member) => nodeOf(flow, member) ?? []))
-      return rect && intersects({ x: request.at!.x, y: request.at!.y }, rect)
-    })
-    if (phase)
-      return {
-        flow: {
-          ...connected,
-          phases: connected.phases.map((item) =>
-            item.id === phase.id ? { ...item, nodeIds: [...item.nodeIds, id] } : item,
-          ),
-        },
-        id,
-      }
-  }
   return { flow: connected, id }
+}
+
+// A new check is named after its step, `<step>_check_<n>`, with the smallest n no check in the flow uses yet.
+function freeCheckID(flow: Flow, nodeID: string) {
+  const taken = new Set(flow.nodes.flatMap((node) => readChecklist(node).controls.map((control) => control.id)))
+  const n = Array.from({ length: taken.size + 1 }, (_, index) => index + 1).find(
+    (index) => !taken.has(`${nodeID}_check_${index}`),
+  )
+  return `${nodeID}_check_${n ?? taken.size + 1}`
 }
 
 function placement(flow: Flow, request: AddRequest, anchor: FlowNode | undefined): Point {
@@ -117,15 +136,71 @@ function shiftRow(flow: Flow, anchor: FlowNode): Flow {
   }
 }
 
-// Groups the selected steps into a new phase; the start node never joins one.
-export function groupSelection(flow: Flow, selected: string[], name: string) {
-  const members = selected.filter((id) => {
-    const node = nodeOf(flow, id)
-    return node && node.type !== START
+// Inserting into a hook wire: the node the new one will point at, and everything after it, move over so the
+// new node does not land on top of them.
+function shiftBranch(flow: Flow, anchor: FlowNode, port: number, placed: Point): Flow {
+  const next = nodeOf(flow, flow.edges.find((edge) => edge.from === anchor.id && edge.port === port)?.to)
+  if (!next) return flow
+  const dx = placed.x + HOOK_GAP - next.x
+  if (dx <= 0) return flow
+  const moving = downstream(flow, next.id)
+  moving.delete(anchor.id)
+  return { ...flow, nodes: flow.nodes.map((node) => (moving.has(node.id) ? { ...node, x: node.x + dx } : node)) }
+}
+
+function downstream(flow: Flow, from: string) {
+  const seen = new Set<string>()
+  const visit = (id: string) => {
+    if (seen.has(id)) return
+    seen.add(id)
+    flow.edges.filter((edge) => edge.from === id).forEach((edge) => visit(edge.to))
+  }
+  visit(from)
+  return seen
+}
+
+// A phase is one unbroken stretch of the sequence, as the server requires. Grouping is possible when the steps
+// are not the start, sit next to each other, and do not cut another phase in two.
+export function groupBlock(flow: Flow, selected: string[]): "none" | "gap" | undefined {
+  const members = groupMembers(flow, selected)
+  if (!members.length) return "none"
+  const order = chain(flow).map((node) => node.id)
+  const touched = flow.phases
+    .filter((phase) => phase.nodeIds.some((id) => members.includes(id)))
+    .map((phase) => phase.id)
+  const broken = addPhase(flow, { id: "", name: "", description: "", nodeIds: members }).phases.some((phase) => {
+    if (phase.id && !touched.includes(phase.id)) return false
+    const at = phase.nodeIds.map((id) => order.indexOf(id))
+    return at.length > 0 && (at.includes(-1) || Math.max(...at) - Math.min(...at) !== at.length - 1)
   })
-  if (!members.length) return
+  return broken ? "gap" : undefined
+}
+
+const groupMembers = (flow: Flow, selected: string[]) =>
+  selected.filter((id, index) => {
+    const node = nodeOf(flow, id)
+    return node && node.type !== START && selected.indexOf(id) === index
+  })
+
+// Groups the selected steps into a new phase. The start node never joins one, and a selection with gaps is refused.
+export function groupSelection(flow: Flow, selected: string[], name: string) {
+  if (groupBlock(flow, selected)) return
   const id = uniqueID(flow, "phase")
-  return { flow: addPhase(flow, { id, name, description: "", nodeIds: members }), id }
+  return { flow: addPhase(flow, { id, name, description: "", nodeIds: groupMembers(flow, selected) }), id }
+}
+
+// The first "Phase n" no phase already has.
+export function freePhaseName(flow: Flow, label: (n: number) => string) {
+  const taken = new Set(flow.phases.map((phase) => phase.name))
+  return (
+    Array.from({ length: taken.size + 1 }, (_, index) => label(index + 1)).find((name) => !taken.has(name)) ??
+    label(taken.size + 1)
+  )
+}
+
+// Removing a phase keeps its steps.
+export function ungroup(flow: Flow, id: string): Flow {
+  return { ...flow, phases: flow.phases.filter((phase) => phase.id !== id) }
 }
 
 // Another condition tried when `id` does not match: it takes over the No port and leads to the same Yes step, so two

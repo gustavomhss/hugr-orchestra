@@ -716,6 +716,10 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-wire.dim {
   opacity: 0.35;
 }
+.wf-wire.sel {
+  stroke: var(--mx-blue);
+  stroke-width: 2;
+}
 .wf-wire-hit {
   fill: none;
   stroke: transparent;
@@ -756,18 +760,86 @@ html[data-color-scheme="light"] .wf-editor {
   cursor: grab;
 }
 .wf-group-head b {
+  min-inline-size: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
   font-family: var(--mx-emphasis);
   font-weight: 600;
   white-space: nowrap;
 }
 .wf-group-head small {
+  flex: none;
   color: var(--mx-dim);
   font: 10px var(--mx-mono);
   white-space: nowrap;
 }
 .wf-group-head .mx-link {
+  flex: none;
   margin-inline-start: auto;
   font-size: 11px;
+}
+.wf-group-name {
+  min-inline-size: 0;
+  inline-size: 120px;
+  padding: 2px 6px;
+  border: 1px solid var(--mx-blue);
+  border-radius: 5px;
+  background: var(--mx-modal);
+  color: var(--mx-strong);
+  font: 600 11.5px var(--mx-emphasis);
+  outline: 0;
+}
+/* A narrow phase box has no room for the buttons next to its name, so they open up on hover or focus; a wide one
+   shows them all the time. */
+.wf-group {
+  container-type: inline-size;
+}
+.wf-group-tools {
+  display: flex;
+  flex: none;
+  gap: 2px;
+  max-inline-size: 0;
+  overflow: hidden;
+  opacity: 0;
+}
+.wf-group:hover .wf-group-tools,
+.wf-group-tools:focus-within {
+  max-inline-size: 48px;
+  opacity: 1;
+}
+@container (min-width: 280px) {
+  .wf-group-tools {
+    max-inline-size: 48px;
+    opacity: 0.55;
+  }
+  .wf-group:hover .wf-group-tools,
+  .wf-group-tools:focus-within {
+    opacity: 1;
+  }
+}
+.wf-group-tools button {
+  display: grid;
+  inline-size: 22px;
+  block-size: 22px;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--mx-dim);
+  cursor: pointer;
+}
+.wf-group-tools button:hover {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
+.wf-group-tools button:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -1px;
+}
+.wf-group-tools .wf-ic {
+  inline-size: 12px;
+  block-size: 12px;
 }
 .wf-node {
   position: absolute;
@@ -912,6 +984,13 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   top: 23.5px;
   cursor: crosshair;
 }
+.wf-port.out::before {
+  /* A 9px dot is too small to hit, so the pointer target reaches past it, mostly into the tile (the "+" stub sits
+     just outside). Two outputs are 20px apart, so it stays under that tall. */
+  content: "";
+  position: absolute;
+  inset: -5px -2px -5px -9px;
+}
 .wf-port.out:hover {
   background: var(--mx-blue);
   transform: scale(1.25);
@@ -971,7 +1050,8 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   box-shadow: var(--mx-pop-shadow);
 }
 .wf-node:hover .wf-node-tools,
-.wf-node:focus-within .wf-node-tools {
+.wf-node:focus-within .wf-node-tools,
+.wf-node.solo .wf-node-tools {
   display: flex;
 }
 .wf-node.dragging .wf-node-tools {
@@ -1051,6 +1131,41 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   border: 1px solid var(--mx-blue);
   background: rgba(154, 191, 229, 0.08);
   pointer-events: none;
+}
+.wf-ctx {
+  position: absolute;
+  z-index: 8;
+  display: flex;
+  min-inline-size: 168px;
+  flex-direction: column;
+  padding: 4px;
+  border: 1px solid var(--mx-line);
+  border-radius: 8px;
+  background: var(--mx-modal);
+  box-shadow: var(--mx-pop-shadow);
+}
+.wf-ctx button {
+  padding: 7px 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--mx-strong);
+  font: inherit;
+  font-size: 12px;
+  text-align: start;
+  cursor: pointer;
+}
+.wf-ctx button:hover:not(:disabled),
+.wf-ctx button:focus-visible {
+  background: var(--mx-soft);
+  outline: 0;
+}
+.wf-ctx button.danger {
+  color: var(--mx-bad);
+}
+.wf-ctx button:disabled {
+  opacity: 0.45;
+  cursor: default;
 }
 
 /* Canvas overlays: status banner, controls, minimap, add button. */
@@ -1167,9 +1282,10 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   position: absolute;
   z-index: 4;
   left: 50%;
-  top: 50%;
+  /* The one node sits in the middle of the canvas; the card goes below it and its label, never over it. */
+  top: calc(50% + 72px);
   inline-size: 320px;
-  transform: translate(-50%, -50%);
+  transform: translateX(-50%);
   text-align: center;
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
@@ -1266,6 +1382,17 @@ html[data-color-scheme="light"] .wf-drawer {
   opacity: 0.45;
   cursor: default;
 }
+/* A disabled entry that says why stays readable: only its tile and name are dimmed. */
+.wf-pick[data-reason]:disabled {
+  opacity: 1;
+}
+.wf-pick[data-reason]:disabled .wf-pick-tile,
+.wf-pick[data-reason]:disabled strong {
+  opacity: 0.45;
+}
+.wf-pick[data-reason]:disabled small {
+  color: var(--mx-warm);
+}
 .wf-pick-tile {
   display: grid;
   inline-size: 34px;
@@ -1321,7 +1448,7 @@ html[data-color-scheme="light"] .wf-drawer {
   max-inline-size: 100%;
   max-block-size: 100%;
 }
-.wf-canvas[data-readonly="true"] :is(.wf-rail, .wf-node-tools, .wf-stub, .wf-edge-tools, .wf-port) {
+.wf-canvas[data-readonly="true"] :is(.wf-rail, .wf-node-tools, .wf-stub, .wf-edge-tools, .wf-port, .wf-ctx) {
   display: none;
 }
 .wf-scrim {

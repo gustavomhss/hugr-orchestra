@@ -283,7 +283,8 @@ export function removeNodes(flow: Flow, ids: string[]): Flow {
   }, flow)
 }
 
-// Inserts a node after `anchor` (on `port`), rewiring what used to follow. Workflow steps join the anchor's phase.
+// Inserts a node after `anchor` (on `port`), rewiring what used to follow. A workflow step joins a phase only when it
+// lands between two steps of that phase, so every phase stays one unbroken stretch of the sequence.
 export function insertNode(flow: Flow, node: FlowNode, anchor?: { id: string; port: number }): Flow {
   const added = { ...flow, nodes: [...flow.nodes, node] }
   if (!anchor) return added
@@ -291,8 +292,8 @@ export function insertNode(flow: Flow, node: FlowNode, anchor?: { id: string; po
   const edges = flow.edges.filter((edge) => edge !== next)
   const into = isEntry(node) ? [] : [{ from: anchor.id, to: node.id, port: anchor.port }]
   const onward = next && !isEntry(node) ? [{ from: node.id, to: next.to, port: 0 }] : []
-  const phase =
-    flow.kind === "workflow" ? (phaseOf(flow, anchor.id) ?? (next ? phaseOf(flow, next.to) : undefined)) : undefined
+  const before = flow.kind === "workflow" ? phaseOf(flow, anchor.id) : undefined
+  const phase = next && before?.nodeIds.includes(next.to) ? before : undefined
   return {
     ...added,
     edges: [...edges, ...into, ...onward],
