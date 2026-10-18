@@ -1404,18 +1404,28 @@ export default function LegacyLayout(props: ParentProps) {
       })
       return false as const
     }
+    // Without the session list the reset cannot archive or clear them, so stop before touching the workspace.
     const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(failed)
-    clearWorkspaceTerminals(directory, (sessions || []).map((s) => s.id), platform, serverSDK().scope)
+    if (!sessions) {
+      setBusy(directory, false)
+      dismiss()
+      return
+    }
+
+    clearWorkspaceTerminals(
+      directory,
+      sessions.map((s) => s.id),
+      platform,
+      serverSDK().scope,
+    )
     await serverSDK()
       .client.instance.dispose({ directory })
       .catch(() => undefined)
 
-    const result =
-      sessions &&
-      (await serverSDK()
-        .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
-        .then((x) => x.data)
-        .catch(failed))
+    const result = await serverSDK()
+      .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
+      .then((x) => x.data)
+      .catch(failed)
 
     if (!result) {
       setBusy(directory, false)
@@ -1424,7 +1434,7 @@ export default function LegacyLayout(props: ParentProps) {
     }
     if ((await serverSDK().protocol) === "v1")
       await Promise.all(
-        (sessions || [])
+        sessions
           .filter((session) => session.time.archived === undefined)
           .map((session) =>
             serverSDK()
