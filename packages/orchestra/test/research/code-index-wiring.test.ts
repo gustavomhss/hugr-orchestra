@@ -128,9 +128,10 @@ describe("the wired code index", () => {
         return yield* fixture.cleanup
       }
 
-      // The first query starts the build in the background and reports index_building until the shard lands.
+      // The first query starts the build in the background and fails index_building ("Index is building") until the
+      // shard lands.
       const answered = yield* fixture.call("code_query", callers).pipe(
-        Effect.repeat({ while: (exit) => failure(exit).includes("index_building"), schedule: Schedule.spaced("3 seconds"), times: 180 }))
+        Effect.repeat({ while: (exit) => failure(exit).includes("Index is building"), schedule: Schedule.spaced("3 seconds"), times: 180 }))
       if (Exit.isFailure(answered)) throw new Error(Cause.pretty(answered.cause))
       const output = answered.value.output
       expect(output).toContain("callers: viaExports function exported src/x.ts:1-3")
