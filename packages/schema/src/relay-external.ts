@@ -1,19 +1,17 @@
 export * as RelayExternal from "./relay-external"
 
 import { Schema } from "effect"
-import { NonNegativeInt, PositiveInt, optional } from "./schema"
+import { NonNegativeInt, PositiveInt } from "./schema"
 
 // External runs: a LangGraph process gated by the Python library writes `<project>/.relay/runs/<runID>/`. The ledger
 // is the only source of truth; `run.json` is a convenience snapshot that no reader trusts. Bodies are written in the
 // order their structs list, optional fields only when set, then the chain suffix `gen` (always 0), `prev`, `seq`,
-// `mac` (always `sha256`: keyed chains wait for a key-sharing design) and `h`, exactly as `LedgerChain.append` does.
+// `mac` (always `sha256`) and `h`, exactly as `LedgerChain.append` does.
 
 export const RUN_ID = /^[A-Za-z0-9_-]{1,64}$/
-export const RunID = Schema.String.check(Schema.isPattern(RUN_ID))
-export type RunID = typeof RunID.Type
 
 // One run per LangGraph `thread_id`: the thread ID itself when it is already a valid run ID, else a stable hash.
-export function runIDFromThread(threadID: string): RunID {
+export function runIDFromThread(threadID: string) {
   if (RUN_ID.test(threadID)) return threadID
   return `t_${sha256(threadID).slice(0, 32)}`
 }
@@ -22,174 +20,106 @@ export function runIDFromThread(threadID: string): RunID {
 export const RUN_NODE = "__start__"
 export const END_NODE = "__end__"
 
-/**
- * The idempotency key `thread_id/node/attempt/kind`. `kind` is the event name, except `check.result:<check id>`, so
- * every check of one attempt has its own key. The writer skips a body whose key is already on the ledger.
- */
+// The idempotency key `thread_id/node/attempt/kind`. `kind` is the event name, except `check.result:<check id>`, so
+// every check of one attempt has its own key. The writer skips a body whose key is already on the ledger.
 export function key(input: { thread_id: string; node: string; attempt: number; kind: string }) {
   return `${input.thread_id}/${input.node}/${input.attempt}/${input.kind}`
 }
 
-const NonEmpty = Schema.NonEmptyString
-// Epoch milliseconds.
-const At = NonNegativeInt
-
-export const CheckKind = Schema.Literals(["cmd", "judge"])
-export type CheckKind = typeof CheckKind.Type
-export const Verdict = Schema.Literals(["pass", "fail", "advisory"])
-export type Verdict = typeof Verdict.Type
-export const DecisionValue = Schema.Literals(["approve", "reject"])
-export type DecisionValue = typeof DecisionValue.Type
-export const Source = Schema.Literals(["terminal", "orchestra"])
-export type Source = typeof Source.Type
-
-const step = { node: NonEmpty, attempt: PositiveInt }
-
-export const RunStart = Schema.Struct({
-  event: Schema.Literal("run.start"),
-  key: NonEmpty,
-  at: At,
-  thread_id: NonEmpty,
-  graph: NonEmpty,
-  library_version: NonEmpty,
-  // Set only for projects exported from a Relay document.
-  document_id: Schema.optionalKey(NonEmpty),
-  document_version: Schema.optionalKey(NonEmpty),
-}).annotate({ identifier: "RelayExternal.RunStart" })
-export interface RunStart extends Schema.Schema.Type<typeof RunStart> {}
-
-export const StepStart = Schema.Struct({
-  event: Schema.Literal("step.start"),
-  key: NonEmpty,
-  at: At,
-  ...step,
-}).annotate({ identifier: "RelayExternal.StepStart" })
-export interface StepStart extends Schema.Schema.Type<typeof StepStart> {}
-
-// `output` may be truncated by the writer; it is evidence of what the process saw, not a full log.
-export const CheckResult = Schema.Struct({
-  event: Schema.Literal("check.result"),
-  key: NonEmpty,
-  at: At,
-  ...step,
-  id: NonEmpty,
-  kind: CheckKind,
-  verdict: Verdict,
-  output: Schema.String,
-}).annotate({ identifier: "RelayExternal.CheckResult" })
-export interface CheckResult extends Schema.Schema.Type<typeof CheckResult> {}
-
-export const ApprovalRequest = Schema.Struct({
-  event: Schema.Literal("approval.request"),
-  key: NonEmpty,
-  at: At,
-  ...step,
-}).annotate({ identifier: "RelayExternal.ApprovalRequest" })
-export interface ApprovalRequest extends Schema.Schema.Type<typeof ApprovalRequest> {}
-
-// `request_seq` is the ledger seq of the approval.request it answers. The MVP library writes only `terminal`;
-// `orchestra` is reserved for app approvals, which the server must match against its own record.
-export const ApprovalDecision = Schema.Struct({
-  event: Schema.Literal("approval.decision"),
-  key: NonEmpty,
-  at: At,
-  ...step,
-  request_seq: NonNegativeInt,
-  decision: DecisionValue,
-  note: Schema.String,
-  source: Source,
-}).annotate({ identifier: "RelayExternal.ApprovalDecision" })
-export interface ApprovalDecision extends Schema.Schema.Type<typeof ApprovalDecision> {}
-
-export const StepEnd = Schema.Struct({
-  event: Schema.Literal("step.end"),
-  key: NonEmpty,
-  at: At,
-  ...step,
-  outcome: Schema.Literals(["pass", "fail"]),
-}).annotate({ identifier: "RelayExternal.StepEnd" })
-export interface StepEnd extends Schema.Schema.Type<typeof StepEnd> {}
-
-// The verifier's terminal events (`verify.ts` TERMINAL).
-export const SprintComplete = Schema.Struct({
-  event: Schema.Literal("sprint-complete"),
-  key: NonEmpty,
-  at: At,
-}).annotate({ identifier: "RelayExternal.SprintComplete" })
-export interface SprintComplete extends Schema.Schema.Type<typeof SprintComplete> {}
-
-export const Escalate = Schema.Struct({
-  event: Schema.Literal("escalate"),
-  key: NonEmpty,
-  at: At,
-  reason: NonEmpty,
-  node: Schema.optionalKey(NonEmpty),
-}).annotate({ identifier: "RelayExternal.Escalate" })
-export interface Escalate extends Schema.Schema.Type<typeof Escalate> {}
+// `at` is epoch milliseconds.
+const base = { key: Schema.NonEmptyString, at: NonNegativeInt }
+const step = { ...base, node: Schema.NonEmptyString, attempt: PositiveInt }
 
 // A ledger line without its chain suffix; decoding a full line drops `gen`, `prev`, `seq`, `mac` and `h`.
 export const Body = Schema.Union([
-  RunStart,
-  StepStart,
-  CheckResult,
-  ApprovalRequest,
-  ApprovalDecision,
-  StepEnd,
-  SprintComplete,
-  Escalate,
+  Schema.Struct({
+    event: Schema.Literal("run.start"),
+    ...base,
+    thread_id: Schema.NonEmptyString,
+    graph: Schema.NonEmptyString,
+    library_version: Schema.NonEmptyString,
+    // Set only for projects exported from a Relay document.
+    document_id: Schema.optionalKey(Schema.NonEmptyString),
+    document_version: Schema.optionalKey(Schema.NonEmptyString),
+  }),
+  Schema.Struct({ event: Schema.Literal("step.start"), ...step }),
+  // `output` may be truncated by the writer.
+  Schema.Struct({
+    event: Schema.Literal("check.result"),
+    ...step,
+    id: Schema.NonEmptyString,
+    kind: Schema.Literals(["cmd", "judge"]),
+    verdict: Schema.Literals(["pass", "fail", "advisory"]),
+    output: Schema.String,
+  }),
+  Schema.Struct({ event: Schema.Literal("approval.request"), ...step }),
+  // `request_seq` is the ledger seq of the approval.request it answers. The MVP library writes only `terminal`.
+  Schema.Struct({
+    event: Schema.Literal("approval.decision"),
+    ...step,
+    request_seq: NonNegativeInt,
+    decision: Schema.Literals(["approve", "reject"]),
+    note: Schema.String,
+    source: Schema.Literals(["terminal", "orchestra"]),
+  }),
+  Schema.Struct({ event: Schema.Literal("step.end"), ...step, outcome: Schema.Literals(["pass", "fail"]) }),
+  // The verifier's terminal events (`verify.ts` TERMINAL).
+  Schema.Struct({ event: Schema.Literal("sprint-complete"), ...base }),
+  Schema.Struct({
+    event: Schema.Literal("escalate"),
+    ...base,
+    reason: Schema.NonEmptyString,
+    node: Schema.optionalKey(Schema.NonEmptyString),
+  }),
 ]).annotate({ identifier: "RelayExternal.Body" })
 export type Body = typeof Body.Type
 
 // The snapshot the app renders, in the shape of app-shell `RelayRun` (`runs.ts` decodeRun).
-export const RunStatus = Schema.Literals(["running", "parked", "completed", "failed"])
-export type RunStatus = typeof RunStatus.Type
-export const StepStatus = Schema.Literals(["running", "passed", "failed", "escalated"])
-export type StepStatus = typeof StepStatus.Type
+export type RunStep = {
+  wp: string
+  status: "running" | "passed" | "failed" | "escalated"
+  attempts: number
+  startedAt?: number
+  endedAt?: number
+  checks: { id: string; verdict: "pass" | "fail" | "advisory"; output: string }[]
+  note?: string
+}
+export type Run = {
+  runID: string
+  documentID: string
+  version?: string
+  status: "running" | "parked" | "completed" | "failed"
+  position?: string
+  failing: string[]
+  reason?: string
+  label: string
+  agent: "langgraph"
+  startedAt: number
+  endedAt?: number
+  steps: RunStep[]
+}
 
-export const RunStep = Schema.Struct({
-  wp: Schema.String,
-  status: StepStatus,
-  attempts: NonNegativeInt,
-  startedAt: optional(At),
-  endedAt: optional(At),
-  checks: Schema.Array(Schema.Struct({ id: Schema.String, verdict: Verdict, output: Schema.String })),
-  note: optional(Schema.String),
-}).annotate({ identifier: "RelayExternal.RunStep" })
-export interface RunStep extends Schema.Schema.Type<typeof RunStep> {}
-
-export const Run = Schema.Struct({
-  runID: RunID,
-  documentID: Schema.String,
-  version: optional(Schema.String),
-  status: RunStatus,
-  position: optional(Schema.String),
-  failing: Schema.Array(Schema.String),
-  reason: optional(Schema.String),
-  label: Schema.String,
-  agent: Schema.Literal("langgraph"),
-  startedAt: At,
-  endedAt: optional(At),
-  steps: Schema.Array(RunStep),
-}).annotate({ identifier: "RelayExternal.Run" })
-export interface Run extends Schema.Schema.Type<typeof Run> {}
+type Scoped = Extract<Body, { readonly attempt: number }>
 
 /**
  * Rebuilds the run from decoded ledger bodies, in ledger order. Undefined unless the first body is `run.start`.
  *
- * Status: `parked` while the last approval.request has no decision (a library that exits while waiting may still end
- * on `escalate`), else `completed` when the last body is `sprint-complete`, `failed` when it is `escalate`, else
- * `running`: a resume after a terminal event appends to the same run and makes it live again.
+ * Status: `parked` while the last approval.request has no decision, else `completed` when the last body is
+ * `sprint-complete`, `failed` when it is `escalate`, else `running`: a resume after a terminal event appends to the
+ * same run and makes it live again.
  */
 export function runFromLedger(bodies: ReadonlyArray<Body>): Run | undefined {
   const start = bodies[0]
   if (start === undefined || start.event !== "run.start") return undefined
   const last = bodies.at(-1)!
-  const scoped = bodies.filter(isStep)
-  const decisions = scoped.filter((body) => body.event === "approval.decision")
+  const scoped = bodies.filter((body): body is Scoped => "attempt" in body)
   const request = scoped.findLast((body) => body.event === "approval.request")
   const escalated = last.event === "escalate" ? last : undefined
-  const status: RunStatus =
-    request !== undefined && !decisions.some((decision) => sameAttempt(decision, request))
+  const status: Run["status"] =
+    request !== undefined &&
+    !scoped.some(
+      (body) => body.event === "approval.decision" && body.node === request.node && body.attempt === request.attempt,
+    )
       ? "parked"
       : last.event === "sprint-complete"
         ? "completed"
@@ -223,22 +153,6 @@ export function runFromLedger(bodies: ReadonlyArray<Body>): Run | undefined {
     endedAt: status === "completed" || status === "failed" ? last.at : undefined,
     steps,
   }
-}
-
-type Scoped = StepStart | CheckResult | ApprovalRequest | ApprovalDecision | StepEnd
-
-function isStep(body: Body): body is Scoped {
-  return (
-    body.event === "step.start" ||
-    body.event === "check.result" ||
-    body.event === "approval.request" ||
-    body.event === "approval.decision" ||
-    body.event === "step.end"
-  )
-}
-
-function sameAttempt(left: Scoped, right: Scoped) {
-  return left.node === right.node && left.attempt === right.attempt
 }
 
 // A node's latest attempt decides its checks, status and note; its first start and latest end bound it.
