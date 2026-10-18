@@ -160,7 +160,7 @@ describe("rename codemod CLI", () => {
   })
 
   test("frozen fixture text or path changes refuse before edits", async () => {
-    for (const file of ["packages/x/test/golden/input.json", "packages/relay/test/fixtures/opencode.bin"]) {
+    for (const file of ["packages/x/test/golden/input.json", "packages/relay/test/fixtures/opencode.bin", "modules/relay/test/fixtures/opencode.bin"]) {
       for (const dry of [true, false]) {
         const cwd = await repo({
           [file]: file.endsWith(".bin") ? "\0binary" : '"OpenCode"\n',
@@ -172,6 +172,22 @@ describe("rename codemod CLI", () => {
         expect(result.output).toContain("in frozen fixtures; nothing was changed.")
         expect(git(cwd, "ls-files", "--stage")).toBe(index)
         expect(await Bun.file(path.join(cwd, "opencode.ts")).text()).toBe("OpenCode\n")
+      }
+    }
+  })
+
+  test("relocated recorder cassettes keep exact bytes through preview and execution", async () => {
+    const text = '{"model":"opencode","message":"OpenCode 日本語"}\r\n'
+    for (const file of ["packages/http-recorder/test/fixtures/recordings/control.json", "tooling/http-recorder/test/fixtures/recordings/control.json"]) {
+      for (const dry of [true, false]) {
+        const control = "tooling/http-recorder/test/fixtures/control.json"
+        const cwd = await repo({ [file]: text, [control]: '"OpenCode"\n', "source.ts": "OpenCode\n" })
+        const result = run(cwd, dry)
+        expect(result.code, result.output).toBe(0)
+        expect(await Bun.file(path.join(cwd, file)).bytes()).toEqual(new TextEncoder().encode(text))
+        expect(await Bun.file(path.join(cwd, control)).bytes())
+          .toEqual(new TextEncoder().encode(dry ? '"OpenCode"\n' : '"Orchestra"\n'))
+        expect(await Bun.file(path.join(cwd, "source.ts")).text()).toBe(dry ? "OpenCode\n" : "Orchestra\n")
       }
     }
   })

@@ -2,9 +2,9 @@ import { expect } from "bun:test"
 import { Effect } from "effect"
 import { ClaudeEngineFixture } from "../engine-fixture"
 import { MessageID } from "@/session/schema"
-import { getSessionContext, getSessionCost } from "../../../../app/src/components/session/session-context-metrics"
-import { normalizeSessionInfo } from "../../../../app/src/utils/session"
-import { normalizeSessionMessages } from "../../../../app/src/utils/session-message"
+import { getSessionContext, getSessionCost } from "../../../../app-shell/src/components/session/session-context-metrics"
+import { normalizeSessionInfo } from "../../../../app-shell/src/utils/session"
+import { normalizeSessionMessages } from "../../../../app-shell/src/utils/session-message"
 
 ClaudeEngineFixture.it.instance("the host persists fallback model usage and failed Bash evidence through real services", () =>
   Effect.gen(function* () {

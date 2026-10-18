@@ -8,7 +8,7 @@
   "scripts": {
     "dev": "bun run --cwd packages/orchestra src/index.ts",
     "dev:desktop": "bun --cwd packages/desktop dev",
-    "dev:web": "bun --cwd packages/app dev",
+    "dev:web": "bun --cwd apps/web dev",
     "dev:storybook": "bun --cwd packages/storybook storybook",
     "lint": "oxlint",
     "check:godfile": "bun run script/godfile.ts",
@@ -21,14 +21,21 @@
     "random": "echo 'Random script'",
     "translate:app": "bun run script/translate-app.ts",
     "test": "echo 'do not run tests from root' && exit 1",
-    "omni:build": "cargo build --manifest-path packages/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
+    "omni:build": "cargo build --manifest-path native/omni/Cargo.toml -p hugr-omni-node -p omni-supervisor",
     "test:ci": "bun run script/test-ci.ts"
   },
   "workspaces": {
     "packages": [
       "packages/*",
+      "apps/web",
+      "modules/relay",
+      "modules/capability-assets",
+      "modules/maestro/arsenal",
+      "tooling/httpapi-codegen",
+      "tooling/http-recorder",
       "packages/sdk/js",
-      "packages/omni/bindings/node"
+      "native/omni/bindings/node",
+      "modules/atlas/boundary"
     ],
     "catalog": {
       "@effect/opentelemetry": "4.0.0-beta.83",

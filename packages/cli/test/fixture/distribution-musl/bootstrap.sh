@@ -35,7 +35,7 @@ bun install --frozen-lockfile --ignore-scripts
 # Verify Bun's actual running ELF, loaded libc, Node's running ABI and native
 # kernel CPU before entering producer boundary. Guest mode creates no Docker.
 bun --eval 'import { linuxRuntimeLibc } from "./packages/script/src/tree-sitter-prebuilds.ts"; const identity = linuxRuntimeLibc(); if (identity.kind !== "musl" || process.versions.bun !== "1.3.14") throw new Error("MUSL_BOOTSTRAP_BUN_ABI_MISMATCH"); console.log(JSON.stringify(identity))' > /proof/evidence/bun-runtime.json
-cd /proof/source/packages/omni
+cd /proof/source/native/omni
 HUGR_BUILD_EXISTING_MUSL_GUEST=1 HUGR_PROOF_HEAD="$2" node scripts/build-artifacts.mjs "linux-$(node -p process.arch)-musl" --out /proof/omni-artifacts
 HUGR_PROOF_REAL=true HUGR_PROOF_ID="linux-$(node -p process.arch)-musl" HUGR_PROOF_ARTIFACTS=/proof/omni-artifacts \
   node --test scripts/artifacts.node-smoke.mjs

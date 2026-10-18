@@ -102,9 +102,12 @@ stdenv.mkDerivation (finalAttrs: {
     export OMNI_ARTIFACTS="$TMPDIR/omni-artifacts"
 
     cp -R ${finalAttrs.node_modules}/. .
-    chmod -R u+w node_modules packages/*/node_modules
-    patchShebangs node_modules
-    patchShebangs packages/*/node_modules
+    test -d node_modules
+    for directory in node_modules packages/*/node_modules packages/*/*/node_modules apps/*/node_modules modules/*/node_modules modules/*/*/node_modules tooling/*/node_modules; do
+      test -d "$directory" || continue
+      chmod -R u+w "$directory"
+      patchShebangs "$directory"
+    done
   '' + lib.optionalString stdenv.hostPlatform.isLinux ''
     # Bun installs both libc variants; Electron here uses glibc. Prune only the
     # locked unsupported optional leaves before the collector creates app.asar.

@@ -1,7 +1,7 @@
 // Stages hugr-omni's addon and supervisor in resources/omni (D-L8); electron-builder ships that directory as
 // Resources/omni (extraResources), where core's loader finds it in the packaged app. Sources, in this order:
 //   1. OMNI_ARTIFACTS: a directory holding both files, directly or under <platform>-<arch>/ (release builds, CI);
-//   2. dev channel only: this checkout's packages/omni/target/{release,debug} (`bun run omni:build`).
+//   2. dev channel only: this checkout's native/omni/target/{release,debug} (`bun run omni:build`).
 // A beta or prod build without them fails, unless OMNI_ENABLED=false declares a target omni has no build for yet
 // (D-L9); the app then runs legacy only, and the flag fails loudly there.
 import { chmod, copyFile, mkdir, rm } from "node:fs/promises"
@@ -23,7 +23,7 @@ export async function stageOmni(channel: Channel) {
   await rm(destination, { recursive: true, force: true })
   if (process.env.OMNI_ENABLED === "false") return console.warn("stage-omni: OMNI_ENABLED=false, nothing staged")
   const found = locate(channel)
-  if (!found) return console.warn("stage-omni: no omni build in packages/omni/target; run `bun run omni:build`")
+  if (!found) return console.warn("stage-omni: no omni build in native/omni/target; run `bun run omni:build`")
   await mkdir(destination, { recursive: true })
   await copyFile(found.addon, join(destination, "hugr_omni.node"))
   await copyFile(found.supervisor, join(destination, SUPERVISOR))

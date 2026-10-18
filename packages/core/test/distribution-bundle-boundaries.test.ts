@@ -33,7 +33,7 @@ function expected(box: Box, name: string) {
     ...(process.platform === "win32" ? [] : [["chmod", "+x", executable]]), ["deno", "--version"],
     ["bun", "script/distribution-deno.ts", "--verify-version", "distribution-logs/deno-version.log"]]
   if (name === "Prove native Windows Job handle closure") return [["cargo", "test", "--release", "-p", "omni-supervisor", "windows::tests", "--", "--nocapture", "--test-threads=1"],
-    ["bun", "../core/test/distribution-bundle-gates.ts", "../../distribution-logs/windows-native-job.log"]]
+    ["bun", "../../packages/core/test/distribution-bundle-gates.ts", "../../distribution-logs/windows-native-job.log"]]
   if (name === "Prove Schema ELF ABI") return [["bun", "test", "--timeout", "120000", "./test/elf.test.ts"]]
   if (name === "Prove native POSIX ABI") return [["bun", "test", "--timeout", "120000", "./test/artifact-abi.test.ts", "-t", "POSIX"]]
   if (name === "Prove packaged parser ABI") return [["bun", "test", "--timeout", "120000", "./test/parser-bindings.test.ts", "./test/onboard.test.ts"]]

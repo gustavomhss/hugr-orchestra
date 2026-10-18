@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
-# Publishes packages/omni to its read-only mirror (github.com/gustavomhss/hugr-omni) as a linear replay of dev.
+# Publishes Omni to its read-only mirror (github.com/gustavomhss/hugr-omni) as a linear replay of dev.
+# Historical commits resolve packages/omni or native/omni at that commit, independently of current placement.
 #
 #   script/omni-mirror.sh <commit> <mirror-url> [--push]          # dev: replay up to <commit>
 #   script/omni-mirror.sh <commit> <mirror-url> --tag <name>      # tag: point <name> at <commit>'s mirror commit
 #
 # The mirror's main up to 415038b is omni's own history (the split recorded by the subtree import). After it, every
-# first-parent commit of dev that changes packages/omni becomes one mirror commit: that tree, the original author,
+# first-parent commit of dev that changes the Omni tree becomes one mirror commit: that tree, the original author,
 # committer, dates and message, plus an `Orchestra-Commit: <sha>` trailer. The commit is fully determined by its
 # source, so a re-run makes the same SHAs and a push is always a fast-forward of what the last run pushed.
 # `git subtree split` did the same job, but on dev's history it overflows dash's recursion limit and runs past an hour.
@@ -15,6 +16,8 @@
 set -euo pipefail
 
 PREFIX=packages/omni
+SOURCE_PREFIX=
+SOURCE_TREE=
 OMNI_V01=415038bd22e37059fcd7fa20c2c96507b2e92c18 # git-subtree-split of the import commit d051d34691
 IMPORT_MAINLINE=39f25ccb2e61fcb8e46249d424bee5afb4dafb82 # git-subtree-mainline: dev's first parent before the import
 
@@ -36,13 +39,36 @@ source_of() {
   git log -1 --format='%(trailers:key=Orchestra-Commit,valueonly,separator=%x0A)' "$1" | tail -1
 }
 
+# Resolve the source layout at the queried commit. An empty result means neither
+# prefix exists; malformed entries and Git lookup failures remain fatal.
+source_tree() {
+  local resolved entry mode type oid path found=0
+  resolved=$(git rev-parse --verify "$1^{commit}") || fail "$1 is not a commit"
+  SOURCE_PREFIX=
+  SOURCE_TREE=
+  for path in packages/omni native/omni; do
+    entry=$(git ls-tree "$resolved" -- "$path") || fail "cannot inspect $path at $resolved"
+    [ -n "$entry" ] || continue
+    IFS=$' \t' read -r mode type oid path <<< "$entry"
+    [ "$type" = tree ] || fail "$path at $resolved is not a tree"
+    git cat-file -e "$oid^{tree}" || fail "$path at $resolved is not a tree"
+    found=$((found + 1))
+    [ "$found" -eq 1 ] || fail "$resolved contains both packages/omni and native/omni"
+    SOURCE_PREFIX=$path
+    SOURCE_TREE=$oid
+  done
+}
+
 # Where the replay resumes, after checking that the mirror's main is exactly what an earlier run pushed.
 from=$(source_of "$main")
 if [ -z "$from" ]; then
   [ "$main" = "$OMNI_V01" ] || fail "the mirror's main $main is neither omni v0.1 nor a replayed commit: the mirror has a commit Orchestra does not; port it to $PREFIX"
   from=$IMPORT_MAINLINE
 else
-  [ "$(git rev-parse "$main^{tree}")" = "$(git rev-parse "$from:$PREFIX")" ] ||
+  source_tree "$from"
+  [ -n "$SOURCE_TREE" ] || fail "the mirror's source $from has no packages/omni or native/omni tree"
+  PREFIX=$SOURCE_PREFIX
+  [ "$(git rev-parse "$main^{tree}")" = "$SOURCE_TREE" ] ||
     fail "the mirror's main $main does not match $PREFIX at $from: the mirror has a commit Orchestra does not; port it to $PREFIX"
 fi
 
@@ -57,7 +83,10 @@ if [ "$mode" = --tag ]; then
     fi
   done < <(git log --first-parent --format='%H %(trailers:key=Orchestra-Commit,valueonly,separator=)' "$main")
   [ -n "$tagged" ] || fail "no mirror commit is made from $target or an ancestor of it: let the dev mirror run first"
-  [ "$(git rev-parse "$tagged^{tree}")" = "$(git rev-parse "$target:$PREFIX")" ] ||
+  source_tree "$target"
+  [ -n "$SOURCE_TREE" ] || fail "$target has no packages/omni or native/omni tree"
+  PREFIX=$SOURCE_PREFIX
+  [ "$(git rev-parse "$tagged^{tree}")" = "$SOURCE_TREE" ] ||
     fail "the mirror's commit for $target ($tagged) does not carry its $PREFIX: let the dev mirror run first"
   echo "tag $name -> $tagged (from $target)"
   git push "$mirror" "$tagged:refs/tags/$name" || fail "the mirror refused tag $name: it exists at another commit; tags are never moved"
@@ -75,7 +104,10 @@ head=$main
 tree=$(git rev-parse "$main^{tree}")
 made=0
 for commit in $(git rev-list --first-parent --reverse "$from..$target"); do
-  next=$(git rev-parse -q --verify "$commit:$PREFIX") || continue
+  source_tree "$commit"
+  [ -n "$SOURCE_TREE" ] || continue
+  PREFIX=$SOURCE_PREFIX
+  next=$SOURCE_TREE
   [ "$next" = "$tree" ] && continue
   IFS=$'\x1f' read -r an ae ad cn ce cd < <(git log -1 --format='%an%x1f%ae%x1f%ad%x1f%cn%x1f%ce%x1f%cd' --date=raw "$commit")
   head=$(
