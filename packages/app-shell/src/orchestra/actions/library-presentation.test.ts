@@ -1,5 +1,4 @@
 import { expect, test } from "bun:test"
-import type { ActionKey } from "@/i18n/actions"
 import { Actions } from "@orchestra/schema/actions"
 import { initial, type State } from "./contract"
 import { libraryPresentation, runFilters, runIdentity, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
@@ -48,10 +47,10 @@ test("workflow filters are fixed, group known disabled states and keep unknown n
 })
 
 test("run filters are a fixed list of distinct native status values per provider", () => {
-  const labels = (waiting: ActionKey): ActionKey[] => ["orchestra.actions.all", "orchestra.actions.failed", "orchestra.actions.running", waiting,
+  const labels = (waiting: string) => ["orchestra.actions.all", "orchestra.actions.failed", "orchestra.actions.running", waiting,
     "orchestra.actions.queued", "orchestra.actions.passed"]
-  expect(runFilters("github").map((item) => item.label)).toEqual(labels("orchestra.actions.needsApproval"))
-  expect(runFilters("gitlab").map((item) => item.label)).toEqual(labels("orchestra.actions.manual"))
+  expect(runFilters("github").map((item): string => item.label)).toEqual(labels("orchestra.actions.needsApproval"))
+  expect(runFilters("gitlab").map((item): string => item.label)).toEqual(labels("orchestra.actions.manual"))
   expect(runFilters("github").map((item) => item.value)).toEqual(["", "failure", "in_progress", "waiting", "queued", "success"])
   expect(runFilters("gitlab").map((item) => item.value)).toEqual(["", "failed", "running", "manual", "pending", "success"])
 })
