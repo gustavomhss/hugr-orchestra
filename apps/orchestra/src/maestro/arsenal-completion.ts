@@ -530,7 +530,7 @@ export function gradeReviewedHold<E1, R1, E2, R2, E3, R3, E4, R4>(input: {
  * and only Maestro's next resume grades it again (gradeReviewedHold). `held` durably records either hold before it
  * returns; that record is what lets the authorized resume continue this step (WorkflowBinding.continuesHeldStep).
  */
-export function settleWorkflow<A, E, R, E2, R2, E3, R3>(input: {
+export function settleWorkflow<A, E, R, E2, R2, E3 = never, R3 = never>(input: {
   readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | null | undefined
   readonly coldReview: HostCheck | undefined
   readonly binding: Binding
