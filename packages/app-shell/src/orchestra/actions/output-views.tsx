@@ -134,8 +134,9 @@ export function ArtifactRow(props: ViewProps & { item: Actions.Resource }) {
     if (expired()) return props.t("orchestra.actions.retentionEnded")
     if (state.binding?.provider.kind === "gitlab" && metadata().expiresAt === null && available()) return props.t("orchestra.actions.kept")
     const value = metadata().expiresAt
-    return typeof value === "string" && !Number.isNaN(Date.parse(value))
-      ? props.t("orchestra.actions.expiresRelative", { when: relative(value) }) : props.t("orchestra.actions.unknown")
+    if (typeof value !== "string" || Number.isNaN(Date.parse(value))) return props.t("orchestra.actions.unknown")
+    // A past expiry the provider still reports as available reads as ended, never "Expires 3 days ago".
+    return Date.parse(value) > Date.now() ? props.t("orchestra.actions.expiresRelative", { when: relative(value) }) : props.t("orchestra.actions.retentionEnded")
   }
   return <div class="mx-row detail-artifact-row">
     <span class="mx-mark"><Icon name="box" /></span>

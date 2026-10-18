@@ -2,7 +2,7 @@ import type { JSX } from "solid-js"
 import type { Actions } from "@orchestra/schema/actions"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { Empty, Icon, Status } from "./components"
-import type { State, ViewProps } from "./contract"
+import type { Data, State, ViewProps } from "./contract"
 import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
@@ -32,8 +32,8 @@ export function RunDetail(props: ViewProps) {
     {(item) => <section class="actions-detail mx-page" aria-label={props.t("orchestra.actions.run")}>
       <RunHeader props={props} run={item} />
       <Tabs props={props} tabs={["graph", "jobs", "logs", "artifacts", "source"]} counts={{
-        jobs: props.model.state.jobs.status === "ready" && !props.model.state.jobs.value?.next ? runJobs(props.model.state, item.id).length : undefined,
-        artifacts: props.model.state.artifacts.status === "ready" && !props.model.state.artifacts.value?.next ? runArtifacts(props.model.state, item.id).length : undefined,
+        jobs: knownCount(props.model.state.jobs, runJobs(props.model.state, item.id).length),
+        artifacts: knownCount(props.model.state.artifacts, runArtifacts(props.model.state, item.id).length),
       }} />
       <JobList props={props} runID={item.id} />
       <SourcePanel props={props} />
@@ -69,6 +69,11 @@ function WorkflowHeader(props: { props: ViewProps; workflow: Actions.Workflow })
       </div>
       <p>{props.workflow.triggers?.join(" · ")}</p>
       <div class="heading-actions">
+        <Show when={model.state.binding?.provider.kind === "github"}><button type="button" class="mx-btn"
+          disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequest(model.state, props.workflow.state === "active" ? "workflow.disable" : "workflow.enable")
+            || !(props.workflow.state === "active" || props.workflow.state.startsWith("disabled_"))}
+          onClick={() => void model.workflowState(props.workflow.state !== "active", props.workflow.id)}>
+          {props.props.t(props.workflow.state === "active" ? "orchestra.actions.disableWorkflow" : "orchestra.actions.enableWorkflow")}</button></Show>
         <button type="button" class="mx-btn primary" disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequestAction(model.state, { kind: "workflow.dispatch", target: { workflowID: props.workflow.id, path: props.workflow.path } })} onClick={() => model.dialog({ kind: "dispatch", workflowID: props.workflow.id })}>
           {model.state.binding?.provider.kind === "gitlab" ? props.props.t("orchestra.actions.dispatchPipeline") : props.props.t("orchestra.actions.dispatch")}
         </button>
@@ -86,15 +91,21 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
   return <>
     <div class="detail-top">
       <Back props={props.props} />
-      <Show when={workflow()}>{(item) => <button type="button" class="title-link detail-workflow-link" aria-label={t("orchestra.actions.workflow")}
+      <Show when={workflow()}>{(item) => <button type="button" class="title-link detail-workflow-link" title={t("orchestra.actions.workflow")}
         onClick={() => model.navigate({ view: "workflow", workflowID: item().id })}><bdi>{item().name ?? item().id}</bdi></button>}</Show>
-      <Show when={github() && props.run.attempt}>{(latest) => <label class="execution-history run-attempt">{t("orchestra.actions.attempt")}
-        <select aria-label={t("orchestra.actions.attempt")} onChange={(event) => {
-          const value = Number(event.currentTarget.value)
+      <Show when={github() ? props.run.attempt : undefined}>{(latest) => {
+        const choose = (input: string) => {
+          const value = Number(input)
           if (Number.isSafeInteger(value) && value > 0 && value <= latest()) model.navigate({ ...model.state.route, attempt: value })
-        }}><For each={Array.from({ length: latest() }, (_, index) => latest() - index)}>{(number) =>
-          <option value={number} selected={number === (attempt() ?? latest())}>{t("orchestra.actions.attemptOption", { number })}</option>}</For></select>
-      </label>}</Show>
+        }
+        // A select lists recent attempts; a long retry history falls back to the bounded number input.
+        return <label class="execution-history run-attempt">{t("orchestra.actions.attempt")}
+          <Show when={latest() <= 50} fallback={<input type="number" min={1} max={latest()} step={1} value={attempt() ?? latest()} onChange={(event) => choose(event.currentTarget.value)} />}>
+            <select onChange={(event) => choose(event.currentTarget.value)}><For each={Array.from({ length: latest() }, (_, index) => latest() - index)}>{(number) =>
+              <option value={number} selected={number === (attempt() ?? latest())}>{t("orchestra.actions.attemptOption", { number })}</option>}</For></select>
+          </Show>
+        </label>
+      }}</Show>
     </div>
     <header class="detail-header">
       <div class="mx-heading detail-heading">
@@ -110,13 +121,13 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
         <RunActions props={props.props} run={props.run} />
       </div>
       <div class="detail-context">
-        <Show when={workflow()}>{(item) => <button type="button" class="title-link detail-source-link" aria-label={t("orchestra.actions.source")}
+        <Show when={workflow()}>{(item) => <button type="button" class="title-link detail-source-link" title={t("orchestra.actions.source")}
           onClick={() => model.navigate({ view: "source", workflowID: item().id, path: item().path, ref: props.run.ref ?? undefined })}>
           <Icon name="code" size={13} /><bdi dir="ltr">{item().path}</bdi></button>}</Show>
         <span><Icon name="branch" size={13} />
-          <button type="button" class="title-link" disabled={!props.run.ref} aria-label={t("orchestra.actions.ref")} onClick={() => model.navigate({ view: "source", workflowID: props.run.workflowID, runID: props.run.id, path: github() ? workflow()?.path : undefined, ref: props.run.ref ?? undefined })}>
+          <button type="button" class="title-link" disabled={!props.run.ref} title={t("orchestra.actions.ref")} onClick={() => model.navigate({ view: "source", workflowID: props.run.workflowID, runID: props.run.id, path: github() ? workflow()?.path : undefined, ref: props.run.ref ?? undefined })}>
             <bdi>{props.run.ref ?? t("orchestra.actions.unknown")}</bdi></button>
-          <button type="button" class="title-link" aria-label={t("orchestra.actions.commit")} onClick={() => model.navigate({ view: "source", workflowID: props.run.workflowID, runID: props.run.id, path: github() ? workflow()?.path : undefined, ref: props.run.commit })}>
+          <button type="button" class="title-link" title={t("orchestra.actions.commit")} onClick={() => model.navigate({ view: "source", workflowID: props.run.workflowID, runID: props.run.id, path: github() ? workflow()?.path : undefined, ref: props.run.commit })}>
             <code dir="ltr">{shortSHA(props.run.commit)}</code></button></span>
         <Show when={attempt()}>{(number) => <span class="mx-badge">{t("orchestra.actions.attemptOption", { number: number() })}</span>}</Show>
       </div>
@@ -169,7 +180,7 @@ function JobSteps(props: { props: ViewProps; job: Actions.Job }) {
 function JobList(props: { props: ViewProps; runID: string }) {
   const state = props.props.model.state
   const jobs = createMemo(() => runJobs(state, props.runID))
-  return <Show when={state.route.tab === "jobs"}><section class="collection-section detail-jobs" aria-label={props.props.t("orchestra.actions.jobs")}><Switch><Match when={state.jobs.status === "loading"}><p role="status">{props.props.t("orchestra.actions.loading")}</p></Match><Match when={state.jobs.status === "error"}><p role="alert">{props.props.t(state.jobs.error?.message ?? "orchestra.actions.unavailable")}</p></Match><Match when={!jobs().length}><Empty title={props.props.t("orchestra.actions.emptyJobs")} /></Match><Match when={jobs().length}><div class="mx-table"><For each={jobs()}>{(job) => <JobRow props={props.props} job={job} />}</For></div></Match></Switch><Show when={state.jobs.value?.next}><button type="button" class="mx-btn" onClick={() => void props.props.model.more("jobs")}>{props.props.t("orchestra.actions.more")}</button></Show></section></Show>
+  return <Show when={state.route.tab === "jobs"}><section class="collection-section detail-jobs"><h2 class="run-sr-only">{props.props.t("orchestra.actions.jobs")}</h2><Switch><Match when={state.jobs.status === "loading"}><p role="status">{props.props.t("orchestra.actions.loading")}</p></Match><Match when={state.jobs.status === "error"}><p role="alert">{props.props.t(state.jobs.error?.message ?? "orchestra.actions.unavailable")}</p></Match><Match when={!jobs().length}><Empty title={props.props.t("orchestra.actions.emptyJobs")} /></Match><Match when={jobs().length}><div class="mx-table"><For each={jobs()}>{(job) => <JobRow props={props.props} job={job} />}</For></div></Match></Switch><Show when={state.jobs.value?.next}><button type="button" class="mx-btn" onClick={() => void props.props.model.more("jobs")}>{props.props.t("orchestra.actions.more")}</button></Show></section></Show>
 }
 
 function JobRow(props: { props: ViewProps; job: Actions.Job }) {
@@ -178,7 +189,7 @@ function JobRow(props: { props: ViewProps; job: Actions.Job }) {
   // Needs are shown only when the job joins the graph definition at the run's commit; otherwise they are unknown, not empty.
   const needs = createMemo(() => definition(model.state, props.job)?.needs.map((id) => model.state.graph.value?.jobs.find((item) => item.id === id)?.name ?? id))
   return <div class="mx-row detail-job-row">
-    <div class="mx-grow"><strong><bdi>{props.job.name}</bdi></strong>
+    <div class="mx-grow"><strong><button type="button" class="title-link" onClick={() => model.navigate({ ...model.state.route, view: "job", jobID: props.job.id })}><bdi>{props.job.name}</bdi></button></strong>
       <small><bdi>{runnerLabel(props.job, t)}</bdi><Show when={needs()}>{(list) => <> · {list().length ? t("orchestra.actions.jobNeeds", { jobs: list().join(", ") }) : t("orchestra.actions.noDependencies")}</>}</Show></small></div>
     <Status status={props.job.status} conclusion={props.job.conclusion} t={t} />
     <span class="detail-job-duration">{jobDuration(props.job)}</span>
@@ -187,6 +198,12 @@ function JobRow(props: { props: ViewProps; job: Actions.Job }) {
       <button type="button" class="mx-btn" aria-label={`${t("orchestra.actions.logs")} ${props.job.name}`} disabled={!logAvailable(model.state, props.job)} onClick={() => model.navigate({ ...model.state.route, tab: "logs", jobID: props.job.id })}><Icon name="logs" />{t("orchestra.actions.logs")}</button>
     </div>
   </div>
+}
+
+// A count is shown only for a complete page that belongs entirely to this run and is not cut by the 100-row bound.
+function knownCount(data: Data<{ readonly items: readonly unknown[]; readonly next?: string }>, owned: number) {
+  const items = data.status === "ready" && !data.value?.next ? data.value?.items : undefined
+  return items && items.length <= 100 && owned === items.length ? owned : undefined
 }
 
 function runJobs(state: State, runID: string) {
@@ -224,7 +241,8 @@ function SourcePanel(props: { props: ViewProps }) {
 }
 
 function Tabs(props: { props: ViewProps; tabs: readonly ("graph" | "jobs" | "logs" | "artifacts" | "source")[]; counts: Partial<Record<"graph" | "jobs" | "logs" | "artifacts" | "source", number>> }) {
-  return <nav class="wf-tabs" role="tablist" aria-label={props.props.t("orchestra.actions.runViews")}><For each={props.tabs}>{(tab) => <button type="button" role="tab" class="mx-btn" aria-selected={props.props.model.state.route.tab === tab} onClick={() => props.props.model.navigate({ ...props.props.model.state.route, tab })}>
+  return <nav class="wf-tabs" role="tablist" aria-label={props.props.t("orchestra.actions.runViews")}><For each={props.tabs}>{(tab) => <button type="button" role="tab" class="mx-btn" aria-selected={props.props.model.state.route.tab === tab}
+    aria-label={props.counts[tab] === undefined ? undefined : `${tabLabel(props.props.t, tab)} ${props.counts[tab]}`} onClick={() => props.props.model.navigate({ ...props.props.model.state.route, tab })}>
     {tabLabel(props.props.t, tab)}<Show when={props.counts[tab] !== undefined}><span class="wf-count">{props.counts[tab]}</span></Show>
   </button>}</For></nav>
 }

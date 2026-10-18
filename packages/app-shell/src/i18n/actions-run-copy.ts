@@ -14,4 +14,6 @@ export const dict = {
   "orchestra.actions.searchLog": "Search this log…",
   "orchestra.actions.downloadLog": "Download log",
   "orchestra.actions.expiresRelative": "Expires {{when}}",
+  "orchestra.actions.enableWorkflow": "Enable",
+  "orchestra.actions.disableWorkflow": "Disable",
 } as const

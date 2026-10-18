@@ -9,7 +9,10 @@
 .actions-page .actions-detail .detail-back:dir(rtl) .actions-icon { transform: none; }
 .actions-page .actions-detail .detail-workflow-link { color: var(--actions-dim); font-size: 12px; }
 .actions-page .actions-detail .run-attempt select { padding: 6px 8px; border: 1px solid var(--actions-line); border-radius: 6px; background: var(--actions-raised); color: var(--actions-strong); font-size: 11px; }
-.actions-page .actions-detail .run-attempt select:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 1px; }
+.actions-page .actions-detail .run-attempt input { inline-size: 72px; padding: 6px 8px; border: 1px solid var(--actions-line); border-radius: 6px; background: var(--actions-raised); color: var(--actions-strong); font-size: 11px; }
+.actions-page .actions-detail .run-attempt select:focus-visible,
+.actions-page .actions-detail .run-attempt input:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 1px; }
+.actions-page .run-sr-only { position: absolute; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
 .actions-page .actions-detail .detail-header .detail-heading { margin: 0; gap: 20px; }
 .actions-page .actions-detail .detail-heading .mx-eyebrow { margin-block-end: 6px; }
 .actions-page .actions-detail .detail-heading h1 { font-size: 23px; line-height: 1.3; }
