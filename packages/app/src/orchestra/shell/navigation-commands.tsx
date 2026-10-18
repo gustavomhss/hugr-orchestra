@@ -162,12 +162,6 @@ export function ShellNavigationCommands() {
         onSelect: () => open("hooks"),
       },
       {
-        id: "relay.executions.open",
-        title: language.t("orchestra.palette.executions"),
-        description: language.t("orchestra.palette.goTo"),
-        onSelect: () => open("workflows", "/executions"),
-      },
-      {
         id: "relay.workflow.new",
         title: language.t("orchestra.workflows.new"),
         onSelect: () => open("workflows", "/new"),

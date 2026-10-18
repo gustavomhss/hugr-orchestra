@@ -322,6 +322,8 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             : "orchestra.palette.showEditor",
         ),
         category,
+        // Workflow runs are hidden until the server has run routes, so a workflow has no second tab to switch to.
+        disabled: kind === "workflow",
         onSelect: () => props.go(editorTab ? relayPath.history(kind, props.id) : relayPath.editor(kind, props.id)),
       },
     ]
