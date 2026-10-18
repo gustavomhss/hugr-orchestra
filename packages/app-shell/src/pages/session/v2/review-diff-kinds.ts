@@ -1,5 +1,5 @@
-import type { SnapshotFileDiff, VcsFileDiff } from "@/compat/sdk-v2"
-import type { FileDiffInfo } from "@/compat/vendored-client-promise"
+import type { SnapshotFileDiff, VcsFileDiff } from "../../../compat/sdk-v2"
+import type { FileDiffInfo } from "../../../compat/vendored-client-promise"
 import type { Kind } from "@/components/file-tree-v2"
 import { normalizeFileTreeV2Path } from "@/components/file-tree-v2-model"
 

@@ -1,4 +1,4 @@
-import type { FileContent } from "@/compat/sdk-v2"
+import type { FileContent } from "../../compat/sdk-v2"
 
 export type FileSelection = {
   startLine: number

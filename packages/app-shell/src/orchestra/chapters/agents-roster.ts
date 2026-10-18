@@ -5,7 +5,7 @@ import type {
   AgentFileInput,
   AgentFilePermission,
   Provider,
-} from "@/compat/sdk-v2-client"
+} from "../../compat/sdk-v2-client"
 import { agentKey } from "@/context/agent-identity"
 import { modelUnavailable } from "@/components/subagent-model-rules"
 

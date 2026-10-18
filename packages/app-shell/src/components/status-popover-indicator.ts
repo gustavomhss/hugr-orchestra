@@ -1,5 +1,5 @@
-import type { LspStatus } from "@/compat/sdk-v2-client"
-import type { McpServer } from "@/compat/vendored-client-promise"
+import type { LspStatus } from "../compat/sdk-v2-client"
+import type { McpServer } from "../compat/vendored-client-promise"
 
 export function hasServiceNeedingAttention(input: { mcp: Array<McpServer["status"]["status"]> }) {
   return input.mcp.some((status) => status === "needs_auth" || status === "needs_client_registration")

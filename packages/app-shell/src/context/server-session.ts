@@ -1,6 +1,6 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
-import type { SessionApi, SessionMessageInfo } from "@/compat/vendored-client-promise"
+import type { SessionApi, SessionMessageInfo } from "../compat/vendored-client-promise"
 import type { ServerCurrentEvent } from "./server-sdk"
 import type {
   Message,
@@ -11,8 +11,8 @@ import type {
   Session,
   SessionStatus,
   Todo,
-} from "@/compat/sdk-v2-client"
-import type { FileDiffInfo } from "@/compat/vendored-client-promise"
+} from "../compat/sdk-v2-client"
+import type { FileDiffInfo } from "../compat/vendored-client-promise"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"

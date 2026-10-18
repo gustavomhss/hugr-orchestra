@@ -1,6 +1,6 @@
 import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
-import type { SessionMessageInfo } from "@/compat/vendored-client-promise"
-import { AssistantMessage, Part, SessionStatus, UserMessage } from "@/compat/sdk-v2"
+import type { SessionMessageInfo } from "../../../compat/vendored-client-promise"
+import { AssistantMessage, Part, SessionStatus, UserMessage } from "../../../compat/sdk-v2"
 import { groupParts, renderable, type PartGroup } from "@orchestra/session-ui/message-part"
 import { TimelineRow, type SummaryDiff } from "./timeline-row"
 import { uniqueSummaryDiffs } from "./summary-diffs"

@@ -1,5 +1,5 @@
-import type { OpenCodeEvent } from "@/compat/vendored-client-promise"
-import type { Event } from "@/compat/sdk-v2-client"
+import type { OpenCodeEvent } from "../compat/vendored-client-promise"
+import type { Event } from "../compat/sdk-v2-client"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"

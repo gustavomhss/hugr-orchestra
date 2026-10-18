@@ -1,5 +1,5 @@
 import { getFilename } from "@orchestra/core/util/path"
-import { type Session } from "@/compat/sdk-v2-client"
+import { type Session } from "../../compat/sdk-v2-client"
 import { pathKey } from "@/utils/path-key"
 import type { ServerConnection } from "@/context/server"
 import type { ServerCtx } from "@/context/global"

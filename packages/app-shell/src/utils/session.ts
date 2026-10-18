@@ -1,5 +1,5 @@
-import type { SessionApi, SessionInfo, SessionListInput } from "@/compat/vendored-client-promise"
-import type { Session, SessionV2Info } from "@/compat/sdk-v2-client"
+import type { SessionApi, SessionInfo, SessionListInput } from "../compat/vendored-client-promise"
+import type { Session, SessionV2Info } from "../compat/sdk-v2-client"
 import { withTimestampedFallback } from "./session-title"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { SessionEvent } from "@orchestra/schema/session-event"

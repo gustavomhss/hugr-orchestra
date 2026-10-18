@@ -1,7 +1,7 @@
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayHook } from "@orchestra/schema/relay-hook"
 import type { RelayLedger } from "@orchestra/schema/relay-ledger"
-import type { OrchestraClient } from "@/compat/sdk-v2-client"
+import type { OrchestraClient } from "../../compat/sdk-v2-client"
 
 // The Relay authoring routes (`server.relay.document`, `server.relay.publish`, `server.relay.hook`), called through
 // the generated V2 client. The types are the frozen schema contracts: the generator drops `NullOr` (an unpublished

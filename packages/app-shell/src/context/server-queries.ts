@@ -1,4 +1,4 @@
-import type { OrchestraClient } from "@/compat/sdk-v2-client"
+import type { OrchestraClient } from "../compat/sdk-v2-client"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
 import type {
@@ -8,7 +8,7 @@ import type {
   McpResourceCatalogInput,
   McpResourceCatalogOutput,
   McpServer,
-} from "@/compat/vendored-client-promise"
+} from "../compat/vendored-client-promise"
 import type { ServerApi } from "@/utils/server"
 import type { ServerScope } from "@/utils/server-scope"
 import type { PathKey } from "@/utils/path-key"
