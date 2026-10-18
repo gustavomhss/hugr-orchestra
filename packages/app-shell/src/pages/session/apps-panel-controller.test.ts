@@ -5,7 +5,7 @@ import { appDockProfile, createAppDockController, tabLabel, type AppDockAPI, typ
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
 const profileB = appDockProfile("http://127.0.0.1:4097", "/work/shared repository")
 // The controller takes its copy from the view's translator; the tests assert on the keys.
-const translate = (key: string) => key
+const translate = (key: string | number) => String(key)
 
 describe("App Dock controller", () => {
   test("native shortcuts are delivered only for the visible current browser generation", async () => {

@@ -5,6 +5,7 @@ import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { showToast } from "@/utils/toast"
 
+// Params are widened to records: the inferred union would add `undefined` keys the translator refuses.
 export function updaterAction(state: UpdaterState | undefined) {
   if (!state) return { label: "settings.updates.action.checkNow" as const }
   switch (state.status) {
@@ -12,7 +13,7 @@ export function updaterAction(state: UpdaterState | undefined) {
       return { label: "settings.updates.action.checking" as const }
     case "downloading":
       if (state.percent === undefined) return { label: "settings.updates.action.downloading" as const }
-      return { label: "orchestra.settings.general.updates.downloading" as const, params: { percent: state.percent } }
+      return { label: "orchestra.settings.general.updates.downloading" as const, params: { percent: state.percent } as Record<string, number> }
     case "ready":
       return { label: "toast.update.action.installRestart" as const, run: "install" as const }
     case "available":
@@ -20,7 +21,7 @@ export function updaterAction(state: UpdaterState | undefined) {
         label: "orchestra.settings.general.updates.download" as const,
         run: "download" as const,
         description: "orchestra.settings.general.updates.available" as const,
-        params: { version: state.version },
+        params: { version: state.version } as Record<string, string>,
       }
     case "installing":
       return { label: "settings.updates.action.installing" as const }

@@ -141,7 +141,7 @@ test.each([
   state.sendHook = async () => { throw new Error("admission failed") }
   const submit = createPromptSubmit({ ...submitInput(), prompt: real, info: () => undefined })
   expect(await submit.handleSubmit(new Event("submit"))).toBe(false)
-  expect(removedSessions).toEqual(probe.removed)
+  expect(removedSessions).toEqual([...probe.removed])
   expect(storedSessions["/repo/main"]).toEqual([expect.objectContaining({ id: "session-1", title: "orchestra.chat.send.emptySession" })])
   state.removeFailure = false
   state.sendHook = async () => {}
