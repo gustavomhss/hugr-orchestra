@@ -1,0 +1,9 @@
+Locate code for a question in one call: the host runs up to 32 searches in parallel, fuses them, rereads every range on disk and returns a short verified set of file:line ranges. No model runs inside it.
+
+Give what you know at once, batched: `terms` (up to 16 strings or identifiers), `symbols` (up to 16 names or qualified names such as DiscoveryResult.assemble), and/or a `question` in plain words, from which identifiers, quoted strings and content words are extracted. At least one is required. `paths` (globs relative to the worktree) narrows the scope; `limit` defaults to 12, at most 40.
+
+Per call it runs: identifier and case-insensitive literal ripgrep per term; definition lookup per symbol by exact name and by name parts in the index; importers and imports of the five best files; the file PageRank breaks ties. Reciprocal Rank Fusion ranks the enclosing definition of each hit (or the hit line with 3 lines of context), at most 3 ranges per file.
+
+Returns `ranges` [{path, startLine, endLine, symbol?, why, score}] with original 1-based inclusive lines, `searches` (every search executed, with hits and truncation), `evidence` (one retained snapshot holding the lines of every range, so you need not reread them) and `basis` (commit, freshness, coverage.discarded = ranges dropped because they no longer matched the file, coverage.complete).
+
+Without an index it runs the lexical searches only and declares the missing languages; it fails with index_unavailable only when ripgrep is unavailable. Prefer one code_locate with many terms over many single searches; use code_query to follow callers or imports of a range you found.
