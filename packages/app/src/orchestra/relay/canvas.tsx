@@ -1,7 +1,6 @@
-import { createEffect, createMemo, createSignal, For, Index, type JSX, onCleanup, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, Index, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { modalActive } from "@/utils/modal-active"
-import { BOLT, nodeGlyph, nodeTone } from "./catalog"
 import {
   bounds,
   centerOn,
@@ -18,16 +17,14 @@ import {
   type View,
   zoomAt,
 } from "./geometry"
-import { connect, type Flow, type FlowEdge, type FlowNode, isEntry, moveNodes, type Outputs, outputsOf } from "./graph"
+import { CanvasControls } from "./canvas-controls"
+import { type NodeMenuItem, NodeMenu } from "./canvas-menu"
+import { CanvasNode, type NodeOverlay } from "./canvas-node"
+import { PhaseHead } from "./canvas-phase"
+import { connect, type Flow, type FlowEdge, type FlowNode, moveNodes, type Outputs, outputsOf } from "./graph"
 import { Minimap } from "./minimap"
-import { Ic, NodeGlyph } from "./ui"
+import { Ic } from "./ui"
 
-export type NodeOverlay = {
-  badge?: "good" | "bad" | "warm" | "run"
-  sub?: string
-  subTone?: "good" | "bad" | "warm" | ""
-  dim?: boolean
-}
 export type CanvasApi = {
   fit: (animate?: boolean) => void
   // `drawer` says whether the add panel will still be open; the node is centred in what is left of the canvas.
@@ -37,7 +34,6 @@ export type CanvasApi = {
   // Puts a phase header into rename mode.
   rename: (phase: string) => void
 }
-export type NodeMenuItem = { label: string; title?: string; danger?: boolean; disabled?: boolean; run: () => void }
 export type CanvasText = {
   label: string
   add: string
@@ -59,12 +55,6 @@ export type CanvasText = {
   steps: (count: number) => string
 }
 
-const BADGE = {
-  good: '<path d="m3 6.2 2 2 4-4.4"/>',
-  warm: '<path d="M4.4 3.5v5M7.6 3.5v5"/>',
-  bad: '<path d="m3.5 3.5 5 5m0-5-5 5"/>',
-  run: "",
-}
 const OVERLAYS = [
   ".wf-rail",
   ".wf-controls",
@@ -142,7 +132,6 @@ export function Canvas(props: {
     menu?: { x: number; y: number; id: string; ids: string[] }
   }>({})
   let pressed: FlowEdge | undefined
-  let context: HTMLDivElement | undefined
   const selected = () => new Set(props.selected)
   const position = (node: FlowNode): Point => moving()?.get(node.id) ?? { x: node.x, y: node.y }
   const nodes = createMemo(() => props.flow.nodes.map((node) => ({ node, ...position(node) })))
@@ -203,28 +192,6 @@ export function Canvas(props: {
   // A selected node and a selected wire are never both the target of Delete.
   createEffect(() => {
     if (props.selected.length) setUI("edge", undefined)
-  })
-  // The right-click menu closes on an outside press or Escape; Escape stops here so the layer below stays open.
-  createEffect(() => {
-    if (!ui.menu) return
-    const press = (event: PointerEvent) => {
-      if (event.target instanceof Node && context?.contains(event.target)) return
-      setUI("menu", undefined)
-    }
-    const key = (event: KeyboardEvent) => {
-      if (event.key !== "Escape") return
-      event.preventDefault()
-      event.stopImmediatePropagation()
-      setUI("menu", undefined)
-      host.focus({ preventScroll: true })
-    }
-    document.addEventListener("pointerdown", press, true)
-    window.addEventListener("keydown", key, true)
-    queueMicrotask(() => context?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus())
-    onCleanup(() => {
-      document.removeEventListener("pointerdown", press, true)
-      window.removeEventListener("keydown", key, true)
-    })
   })
 
   onMount(() => {
@@ -497,69 +464,24 @@ export function Canvas(props: {
                 height: `${group().rect.h}px`,
               }}
             >
-              <div class="wf-group-head" data-grip={group().phase.id}>
-                <Show
-                  when={ui.renaming === group().phase.id && !props.readOnly}
-                  fallback={
-                    <b onDblClick={() => !props.readOnly && props.onRenamePhase && setUI("renaming", group().phase.id)}>
-                      {group().phase.name}
-                    </b>
-                  }
-                >
-                  <input
-                    class="wf-group-name"
-                    aria-label={props.text.renamePhase(group().phase.name)}
-                    // Set once: a save that rebuilds the flow must not overwrite what is being typed.
-                    ref={(input) => {
-                      input.value = group().phase.name
-                      queueMicrotask(() => {
-                        input.focus()
-                        input.select()
-                      })
-                    }}
-                    onKeyDown={(event) => {
-                      event.stopPropagation()
-                      if (event.key === "Enter") renamePhase(group().phase, event.currentTarget.value)
-                      if (event.key !== "Escape") return
-                      event.preventDefault()
-                      setUI("renaming", undefined)
-                      host.focus({ preventScroll: true })
-                    }}
-                    onBlur={(event) => renamePhase(group().phase, event.currentTarget.value)}
-                  />
-                </Show>
-                <small>{props.text.steps(group().phase.nodeIds.length)}</small>
-                <Show when={!props.readOnly && props.onRenamePhase}>
-                  <span class="wf-group-tools">
-                    <button
-                      type="button"
-                      aria-label={props.text.renamePhase(group().phase.name)}
-                      title={props.text.renamePhase(group().phase.name)}
-                      onClick={() => setUI("renaming", group().phase.id)}
-                    >
-                      <Ic name="edit" />
-                    </button>
-                    <button
-                      type="button"
-                      aria-label={props.text.removePhase(group().phase.name)}
-                      title={props.text.removePhase(group().phase.name)}
-                      onClick={() => props.onUngroup?.(group().phase.id)}
-                    >
-                      <Ic name="close" />
-                    </button>
-                  </span>
-                </Show>
-                <Show when={props.onProtocol}>
-                  <button
-                    type="button"
-                    class="mx-link"
-                    data-protocol={group().phase.id}
-                    onClick={() => props.onProtocol?.(group().phase.id)}
-                  >
-                    {props.text.protocol}
-                  </button>
-                </Show>
-              </div>
+              <PhaseHead
+                id={group().phase.id}
+                name={group().phase.name}
+                steps={props.text.steps(group().phase.nodeIds.length)}
+                editing={ui.renaming === group().phase.id}
+                editable={!props.readOnly && !!props.onRenamePhase}
+                renameLabel={props.text.renamePhase(group().phase.name)}
+                removeLabel={props.text.removePhase(group().phase.name)}
+                protocol={props.onProtocol ? props.text.protocol : undefined}
+                onEdit={() => setUI("renaming", group().phase.id)}
+                onCommit={(name) => renamePhase(group().phase, name)}
+                onCancel={() => {
+                  setUI("renaming", undefined)
+                  host.focus({ preventScroll: true })
+                }}
+                onUngroup={() => props.onUngroup?.(group().phase.id)}
+                onProtocol={() => props.onProtocol?.(group().phase.id)}
+              />
             </div>
           )}
         </Index>
@@ -610,104 +532,27 @@ export function Canvas(props: {
           <Show when={temp()}>{(d) => <path class="wf-wire-temp" d={d()} />}</Show>
         </svg>
         <Index each={props.flow.nodes}>
-          {(current) => {
-            const item = {
-              get node() {
-                return current()
-              },
-              get x() {
-                return position(current()).x
-              },
-              get y() {
-                return position(current()).y
-              },
-            }
-            const overlay = () => props.overlay?.(item.node)
-            const round = () => isEntry(item.node)
-            const count = () => outs(item.node).length
+          {(node) => {
+            const overlay = () => props.overlay?.(node())
             return (
-              <div
-                class="wf-node"
-                classList={{
-                  round: round(),
-                  sel: selected().has(item.node.id),
-                  issue: props.issues.has(item.node.id),
-                  dim: !!overlay()?.dim,
-                  dragging: !!moving()?.has(item.node.id),
-                  solo: props.selected.length === 1 && selected().has(item.node.id),
-                }}
-                data-id={item.node.id}
-                style={{ left: `${item.x}px`, top: `${item.y}px` }}
-              >
-                <Show when={round()}>
-                  <span class="wf-bolt">
-                    <svg viewBox="0 0 14 18" aria-hidden="true" innerHTML={BOLT} />
-                  </span>
-                </Show>
-                <div
-                  class={`wf-tile k-${nodeTone(item.node)}`}
-                  role="button"
-                  tabindex="0"
-                  aria-label={item.node.name}
-                  aria-pressed={selected().has(item.node.id)}
-                  // Keyboard focus selects the node, so Enter opens it. A mouse press keeps focus on the canvas.
-                  onMouseDown={(event) => event.preventDefault()}
-                  onFocus={(event) => {
-                    if (event.currentTarget.matches(":focus-visible") && !selected().has(item.node.id))
-                      props.onSelect([item.node.id])
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key !== " ") return
-                    event.preventDefault()
-                    props.onOpen(item.node.id)
-                  }}
-                >
-                  <NodeGlyph name={nodeGlyph(item.node)} />
-                </div>
-                <Show when={!round()}>
-                  <span class="wf-port in" />
-                </Show>
-                <For each={outs(item.node)}>
-                  {(label, port) => (
-                    <span
-                      class={`wf-port out${count() === 2 ? ` p${port()}` : ""}`}
-                      data-port={port()}
-                      title={label || props.text.connect}
-                    />
-                  )}
-                </For>
-                <Show when={overlay()?.badge}>
-                  {(badge) => (
-                    <span class={`wf-state-badge ${badge()}`} aria-hidden="true">
-                      <svg viewBox="0 0 12 12" innerHTML={BADGE[badge()]} />
-                    </span>
-                  )}
-                </Show>
-                <div class="wf-label">
-                  {item.node.name}
-                  <small class={overlay()?.subTone ?? ""}>{overlay()?.sub ?? props.sub(item.node)}</small>
-                </div>
-                <div class="wf-node-tools">
-                  <button
-                    type="button"
-                    aria-label={props.text.open(item.node.name)}
-                    title={props.text.open(item.node.name)}
-                    onClick={() => props.onOpen(item.node.id)}
-                  >
-                    <Ic name="edit" />
-                  </button>
-                  <Show when={item.node.type !== "relay.startTrigger"}>
-                    <button
-                      type="button"
-                      aria-label={props.text.remove(item.node.name)}
-                      title={props.text.remove(item.node.name)}
-                      onClick={() => props.onDelete([item.node.id])}
-                    >
-                      <Ic name="trash" />
-                    </button>
-                  </Show>
-                </div>
-              </div>
+              <CanvasNode
+                node={node()}
+                x={position(node()).x}
+                y={position(node()).y}
+                outputs={outs(node())}
+                overlay={overlay()}
+                sub={overlay()?.sub ?? props.sub(node())}
+                selected={selected().has(node().id)}
+                solo={props.selected.length === 1 && selected().has(node().id)}
+                issue={props.issues.has(node().id)}
+                dragging={!!moving()?.has(node().id)}
+                connect={props.text.connect}
+                openLabel={props.text.open(node().name)}
+                removeLabel={props.text.remove(node().name)}
+                onSelect={() => props.onSelect([node().id])}
+                onOpen={() => props.onOpen(node().id)}
+                onDelete={() => props.onDelete([node().id])}
+              />
             )
           }}
         </Index>
@@ -779,99 +624,32 @@ export function Canvas(props: {
       </div>
       <Show when={ui.menu}>
         {(menu) => (
-          <div
-            ref={context}
-            class="wf-ctx"
-            role="menu"
-            aria-label={props.text.menu}
-            style={{
-              left: `${Math.max(8, Math.min(menu().x, size().w - 200))}px`,
-              top: `${Math.max(8, Math.min(menu().y, size().h - 170))}px`,
+          <NodeMenu
+            label={props.text.menu}
+            x={menu().x}
+            y={menu().y}
+            area={size()}
+            items={menuItems()}
+            onClose={(focus) => {
+              setUI("menu", undefined)
+              if (focus) host.focus({ preventScroll: true })
             }}
-            onKeyDown={(event) => {
-              // The editor's own keys (Enter opens the selected node) must not act on a focused menu item.
-              event.stopPropagation()
-              if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
-              event.preventDefault()
-              const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")]
-              const current = items.findIndex((item) => item === document.activeElement)
-              items.at((current + (event.key === "ArrowDown" ? 1 : -1)) % items.length)?.focus()
-            }}
-          >
-            <For each={menuItems()}>
-              {(item) => (
-                <button
-                  type="button"
-                  role="menuitem"
-                  class={item.danger ? "danger" : ""}
-                  title={item.title}
-                  disabled={item.disabled}
-                  onClick={() => {
-                    setUI("menu", undefined)
-                    host.focus({ preventScroll: true })
-                    item.run()
-                  }}
-                >
-                  {item.label}
-                </button>
-              )}
-            </For>
-          </div>
+          />
         )}
       </Show>
       <Show when={props.banner}>{props.banner}</Show>
-      <div class="wf-rail">
-        <button
-          type="button"
-          class="mx-btn icon"
-          aria-label={props.text.add}
-          title={props.text.add}
-          onClick={() => props.onAdd()}
-        >
-          <Ic name="plus" />
-        </button>
-      </div>
-      <div class="wf-controls">
-        <button
-          type="button"
-          class="mx-btn icon"
-          aria-label={props.text.fit}
-          title={props.text.fit}
-          onClick={() => fit(true)}
-        >
-          <Ic name="fit" />
-        </button>
-        <button
-          type="button"
-          class="mx-btn icon"
-          aria-label={props.text.zoomIn}
-          title={props.text.zoomIn}
-          onClick={() => zoomBy(1.2)}
-        >
-          <Ic name="zoomIn" />
-        </button>
-        <button
-          type="button"
-          class="mx-btn icon"
-          aria-label={props.text.zoomOut}
-          title={props.text.zoomOut}
-          onClick={() => zoomBy(1 / 1.2)}
-        >
-          <Ic name="zoomOut" />
-        </button>
-        <span class="mx-btn wf-zoom" aria-live="polite">
-          {Math.round(view().k * 100)}%
-        </span>
-        <button
-          type="button"
-          class="mx-btn icon"
-          aria-label={props.text.keys}
-          title={props.text.keys}
-          onClick={props.onKeys}
-        >
-          <Ic name="keys" />
-        </button>
-      </div>
+      <CanvasControls
+        add={props.text.add}
+        fit={props.text.fit}
+        zoomIn={props.text.zoomIn}
+        zoomOut={props.text.zoomOut}
+        keys={props.text.keys}
+        zoom={view().k}
+        onAdd={() => props.onAdd()}
+        onFit={() => fit(true)}
+        onZoom={zoomBy}
+        onKeys={props.onKeys}
+      />
       <Minimap
         title={props.text.minimap}
         content={content()}
