@@ -135,14 +135,14 @@ function RunActions(props: { props: ViewProps; run: Actions.Run }) {
   const terminal = () => ["completed", "success", "failed", "canceled", "cancelled", "skipped"].includes(props.run.status ?? "")
   const retryFailed = () => allowed(github() ? "run.retryFailed" : "run.retry")
   const failed = () => ["failure", "failed", "canceled", "cancelled", "timed_out"].includes(props.run.conclusion ?? props.run.status ?? "")
-  const retry = () => props.props.model.dialog({ kind: "retry", runID: props.run.id })
+  const retry = (mode: "failed" | "all") => props.props.model.dialog({ kind: "retry", runID: props.run.id, mode })
   return <div class="heading-actions">
     <Show when={current()} fallback={<span class="mx-badge">{t("orchestra.actions.historicalAttempt")}</span>}>
       <Show when={!terminal()}><button type="button" class="mx-btn" disabled={!allowed("run.cancel")}
         onClick={() => props.props.model.dialog({ kind: "cancel", runID: props.run.id })}><Icon name="stop" />{t("orchestra.actions.stop")}</button></Show>
-      <Show when={failed() || retryFailed()}><button type="button" class="mx-btn primary" disabled={!retryFailed()} onClick={retry}>
+      <Show when={failed() || retryFailed()}><button type="button" class="mx-btn primary" disabled={!retryFailed()} onClick={() => retry("failed")}>
         <Icon name="retry" />{t(github() ? "orchestra.actions.rerunFailed" : "orchestra.actions.retryFailed")}</button></Show>
-      <Show when={github() && terminal()}><button type="button" class="mx-btn" disabled={!allowed("run.retry")} onClick={retry}>
+      <Show when={github() && terminal()}><button type="button" class="mx-btn" disabled={!allowed("run.retry")} onClick={() => retry("all")}>
         <Icon name="retry" />{t("orchestra.actions.rerunAll")}</button></Show>
       <button type="button" class="mx-btn danger" disabled={!terminal() || !canRequest(state, "run.delete")}
         onClick={() => props.props.model.dialog({ kind: "remove", runID: props.run.id })}>{t("orchestra.actions.remove")}</button>
@@ -155,8 +155,8 @@ function JobHeader(props: { props: ViewProps; job: Actions.Job }) {
 }
 
 function JobFacts(props: { props: ViewProps; job: Actions.Job }) {
-  const joined = createMemo(() => definition(props.props.model.state, props.job) !== undefined)
-  return <dl class="mx-meta"><dt>{props.props.t("orchestra.actions.runner")}</dt><dd><bdi>{props.job.runner ?? props.props.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.props.t("orchestra.actions.definition")}</dt><dd dir="ltr">{joined() ? props.job.definitionID : props.props.t("orchestra.actions.unjoined")}</dd></dl>
+  const joined = createMemo(() => definition(props.props.model.state, props.job))
+  return <dl class="mx-meta"><dt>{props.props.t("orchestra.actions.runner")}</dt><dd><bdi>{props.job.runner ?? props.props.t("orchestra.actions.unknown")}</bdi></dd><dt>{props.props.t("orchestra.actions.definition")}</dt><dd dir="ltr">{joined()?.id ?? props.props.t("orchestra.actions.unjoined")}</dd></dl>
 }
 
 function JobSteps(props: { props: ViewProps; job: Actions.Job }) {
@@ -193,6 +193,7 @@ function runJobs(state: State, runID: string) {
   return state.jobs.value?.items.filter((item) => item.runID === runID && item.bindingID === state.binding?.id).slice(0, 100) ?? []
 }
 
+// The one place a native job is joined to its graph definition (job facts and job rows).
 function definition(state: State, job: Actions.Job) {
   const graph = state.graph.status === "ready" ? state.graph.value : undefined
   const run = state.run.status === "ready" ? state.run.value : undefined
