@@ -3,9 +3,13 @@ packages/client/src/generated/
 packages/client/src/generated-effect/
 # Exact-byte Atlas boundary bundles belong to their canonical generator.
 packages/atlas-boundary/src/generated/
+modules/atlas/boundary/src/generated/
 # Exact-byte projections belong to own-snapshot-materialize, not the general formatter.
 foundation/atlas/.orchestra/skills/own/
-# hugr-omni keeps its own gate (packages/omni/scripts/ci.mjs).
+modules/atlas/.orchestra/skills/own/
+# hugr-omni keeps its own gate (native/omni/scripts/ci.mjs).
 packages/omni/**
-# Exact-byte palette stylesheets belong to packages/app/script/orchestra-palettes.ts.
+native/omni/**
+# Exact-byte palette stylesheets belong to packages/app-shell/script/orchestra-palettes.ts.
 packages/app/src/orchestra/palette/generated/
+packages/app-shell/src/orchestra/palette/generated/

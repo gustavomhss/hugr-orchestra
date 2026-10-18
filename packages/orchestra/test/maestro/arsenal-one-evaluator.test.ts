@@ -11,10 +11,10 @@ const scope = [
   "packages/orchestra/src",
   "packages/orchestra/test",
   "packages/orchestra/playbooks",
-  "packages/maestro-arsenal/src",
-  "packages/maestro-arsenal/test",
+  "modules/maestro/arsenal/src",
+  "modules/maestro/arsenal/test",
   "packages/core/src",
-  "packages/relay/src",
+  "modules/relay/src",
   "specs/hugr-maestro",
 ]
 
@@ -28,10 +28,11 @@ test("no source, test or doc names the removed Arsenal evaluator", () => {
   for (const known of [
     "packages/orchestra/src/maestro/arsenal-completion.ts",
     "packages/orchestra/src/maestro/arsenal-bindings.ts",
-    "packages/maestro-arsenal/src/index.ts",
-    "packages/maestro-arsenal/src/governance/completion.ts",
-    "packages/maestro-arsenal/src/tools/relay-arm.ts",
-    "packages/maestro-arsenal/src/governance/HOST-BINDINGS.md",
+    "modules/maestro/arsenal/src/index.ts",
+    "modules/maestro/arsenal/src/governance/completion.ts",
+    "modules/maestro/arsenal/src/tools/relay-arm.ts",
+    "modules/relay/src/arm/evaluate.ts",
+    "modules/maestro/arsenal/src/governance/HOST-BINDINGS.md",
     "specs/hugr-maestro/arsenal-port.md",
   ])
     expect(files).toContain(path.join(repository, known))
@@ -41,5 +42,5 @@ test("no source, test or doc names the removed Arsenal evaluator", () => {
     .toEqual([true, true, false])
   const self = path.join(import.meta.dir, "arsenal-one-evaluator.test.ts")
   expect(files.filter((file) => file !== self && removed.test(readFileSync(file, "utf8")))).toEqual([])
-  expect(existsSync(path.join(repository, "packages/maestro-arsenal/src/governance/completion-evaluation.ts"))).toBe(false)
+  expect(existsSync(path.join(repository, "modules/maestro/arsenal/src/governance/completion-evaluation.ts"))).toBe(false)
 })

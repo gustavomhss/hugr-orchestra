@@ -3,8 +3,8 @@ import { expect, test } from "bun:test"
 import { cpSync, mkdtempSync, rmSync } from "node:fs"
 import os from "node:os"
 import path from "node:path"
-import { BUN, ROOT } from "../../omni/campaign/lib.ts"
-import { run, settle } from "../../omni/campaign/v7-attribution.ts"
+import { BUN, ROOT } from "../../../native/omni/campaign/lib.ts"
+import { run, settle } from "../../../native/omni/campaign/v7-attribution.ts"
 
 if (process.platform !== "linux" || process.env.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "1")
   throw new Error("Linux overhead proof requires its explicit Linux runner and Omni release binaries")
@@ -29,7 +29,7 @@ test("V7 Linux syscall attribution (unprivileged native strace)", async () => {
 
 test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", async () => {
   await settle()
-  const { run } = await import("../../omni/campaign/v7-overhead.ts")
+  const { run } = await import("../../../native/omni/campaign/v7-overhead.ts")
   const result = await run({ quiet: true })
   console.log("V7_KPI " + JSON.stringify(result))
   expect(result.timingKpiRun).toBe(true)
@@ -38,7 +38,7 @@ test("V7 unchanged 1000-pair quiet real AppProcess KPI and baseline mutation", a
   if (process.env.CI !== "true" || process.platform !== "linux") throw new Error("Mutation requires native Linux CI")
   const scratch = mkdtempSync(path.join(os.tmpdir(), "omni-inventory-mutation-"))
   try {
-    const source = path.join(ROOT, "packages/omni")
+    const source = path.join(ROOT, "native/omni")
     cpSync(source, scratch, { recursive: true, filter: (file) =>
       !path.relative(source, file).split(path.sep).some((part) => ["target", "node_modules", "logs", ".git"].includes(part)) })
     const file = path.join(scratch, "crates/omni-supervisor/src/unix/procs.rs")

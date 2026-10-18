@@ -61,17 +61,17 @@ describe("translate app", () => {
 
   test("limits each locale to its app surfaces", () => {
     expect(targetFiles("fr")).toEqual([
-      "packages/app/src/i18n/fr.ts",
+      "packages/app-shell/src/i18n/fr.ts",
       "packages/ui/src/i18n/fr.ts",
       "packages/desktop/src/renderer/i18n/fr.ts",
     ])
     expect(targetFiles("tr")).toEqual([
-      "packages/app/src/i18n/tr.ts",
+      "packages/app-shell/src/i18n/tr.ts",
       "packages/ui/src/i18n/tr.ts",
       "packages/desktop/src/renderer/i18n/tr.ts",
     ])
     expect(targetFiles("dv")).toEqual([
-      "packages/app/src/i18n/dv.ts",
+      "packages/app-shell/src/i18n/dv.ts",
       "packages/ui/src/i18n/dv.ts",
       "packages/desktop/src/renderer/i18n/dv.ts",
     ])

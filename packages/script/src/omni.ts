@@ -50,7 +50,7 @@ export function copyOmni(files: OmniFiles | undefined, bin: string) {
 
 // Where the addon and the supervisor for an omni id come from: OMNI_ARTIFACTS=<dir>/<id>/{hugr_omni.node,
 // hugr-omni-supervisor[.exe]}, required by every build but --single. A --single build without it takes this checkout's
-// packages/omni/target/{release,debug}, admitted for the requested CPU/libc. The files ship next to the binary, never embedded: Bun would
+// native/omni/target/{release,debug}, admitted for the requested CPU/libc. The files ship next to the binary, never embedded: Bun would
 // extract an embedded addon to $TMPDIR, where a planted supervisor wins (probe P1).
 function omniSources(os: string, id: string, single: boolean): OmniFiles {
   const supervisor = `hugr-omni-supervisor${os === "win32" ? ".exe" : ""}`
@@ -71,7 +71,7 @@ function omniSources(os: string, id: string, single: boolean): OmniFiles {
     .map((profile) => path.join(native, "target", profile))
     .map((target) => ({ addon: path.join(target, addon), supervisor: path.join(target, supervisor) }))
     .find((files) => fs.existsSync(files.addon) || fs.existsSync(files.supervisor))
-  if (!found) throw new Error(`OMNI_LOCAL_COMPANIONS_MISSING: ${id}: packages/omni/target/{release,debug}`)
+  if (!found) throw new Error(`OMNI_LOCAL_COMPANIONS_MISSING: ${id}: native/omni/target/{release,debug}`)
   return found
 }
 

@@ -6,7 +6,7 @@
 // script/spawn-allowlist.json lists that file with that hit. A listed hit the file no longer has is stale and fails
 // too, so the list only shrinks.
 //
-// Reach: tracked and untracked-but-not-ignored TS/JS files. Not checked: packages/omni (its own gate), tests and
+// Reach: tracked and untracked-but-not-ignored TS/JS files. Not checked: Omni (its own gate), tests and
 // fixtures (test/, tests/, fixture(s)/, e2e/, __tests__/, *.test.*, *.spec.*), and spellings other than a string
 // literal in import/export-from/import()/require().
 //
@@ -24,7 +24,7 @@ const MODULES: Record<string, string> = {
   "hugr-omni": "hugr-omni",
 }
 const SOURCE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
-const SKIPPED = /^packages\/omni\/|(^|\/)(test|tests|fixture|fixtures|e2e|__tests__)\/|\.(test|spec)\.[^/]+$/
+const SKIPPED = /^(?:packages|native)\/omni\/|(^|\/)(test|tests|fixture|fixtures|e2e|__tests__)\/|\.(test|spec)\.[^/]+$/
 const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)["']([^"']+)["']/g
 
 const root = path.resolve(import.meta.dir, "..")
