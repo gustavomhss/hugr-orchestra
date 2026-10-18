@@ -4,6 +4,7 @@ export * as ResearchRegistry from "./research-registry"
 // charges every builtin call to the research dispatch it runs in, with its sources captured and retained.
 import { Effect, Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import type { Agent } from "@/agent/agent"
 import { AtlasMemory } from "@/maestro/atlas-memory"
@@ -33,9 +34,10 @@ const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.
 
 export const nodes = [ResearchRecords.node, ResearchExecution.node] as const
 
-// Dispatches whose inquiry closed, by execution Session and dispatch call: every later tool call of that dispatch is
-// denied (J5.5), re-entries included. A resumed Task is a new dispatch and starts open.
-const closed = new Set<string>()
+// The output digest of each tool and argument set a dispatch already ran, with the call that ran it. An identical call
+// whose output digest is unchanged is refused (efficiency.md): the model already holds that result.
+const seen = new Map<string, { readonly digest: string; readonly call: string }>()
+const SEEN_LIMIT = 4096
 
 export const make = Effect.gen(function* () {
   const atlas = yield* AtlasContextTool
@@ -49,6 +51,21 @@ export const make = Effect.gen(function* () {
   const inquiry = yield* InquiryTool
   const execution = yield* ResearchExecution.Service
   const capture = yield* ResearchSourceCapture.make
+  const records = yield* ResearchRecords.Service
+  // The dispatch's inquiry closed when its ledger holds the closed event (J5.5), re-entries and restarts included. A
+  // resumed Task binds a new dispatch, whose ledger stream starts after its own allowance, so it starts open.
+  const closed = (allowance: Research.Allowance) => records.dispatch(allowance).pipe(
+    Effect.map((steps) => steps.some((step) => step.type === "research.inquiry.closed")))
+  const repeated = (frame: ResearchExecution.Frame | undefined, id: string, args: unknown, context: Tool.Context, result: Tool.ExecuteResult) => {
+    if (!frame || id === InquiryTool.id) return false
+    const key = `${dispatch(frame.allowance)}\0${id}\0${ResearchLedger.digest(ResearchLedger.canonical(args))}`
+    const digest = ResearchLedger.digest(result.output)
+    const prior = seen.get(key)
+    if (prior && prior.digest === digest && prior.call !== callKey(context)) return true
+    if (seen.size >= SEEN_LIMIT) seen.clear()
+    seen.set(key, { digest, call: callKey(context) })
+    return false
+  }
   return {
     /** The discovery tools, initialized as builtins. */
     init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire), Tool.init(query),
@@ -58,13 +75,13 @@ export const make = Effect.gen(function* () {
       run: (effect: Effect.Effect<Tool.ExecuteResult>) => Effect.Effect<Tool.ExecuteResult, E, R>) =>
       Effect.gen(function* () {
         const frame = yield* ResearchExecution.Current
-        if (frame && closed.has(dispatch(frame.allowance)))
+        if (frame && (yield* closed(frame.allowance)))
           return yield* new Research.Error({ code: "inquiry_state", message: "inquiry closed: this dispatch admits no further tool calls" })
-        const result = yield* execution.tool(context.sessionID, callKey(context), definition.id,
+        return yield* execution.tool(context.sessionID, callKey(context), definition.id,
           capture.withCapture(context, definition.id, run(definition.execute(args, context).pipe(
-            Effect.flatMap((result) => capture.retain(context, definition.id, result, args)))), args))
-        if (frame && closes(definition.id, args)) closed.add(dispatch(frame.allowance))
-        return result
+            Effect.flatMap((result) => repeated(frame, definition.id, args, context, result)
+              ? Effect.die(new Research.Error({ code: "conflict", message: `repeated_call: ${definition.id} already returned this exact output for these arguments in this dispatch; reuse that result, or change the arguments` }))
+              : capture.retain(context, definition.id, result, args)))), args))
       }),
   }
 })
@@ -78,12 +95,6 @@ function callKey(context: Tool.Context) {
 
 function dispatch(allowance: Research.Allowance) {
   return `${allowance.binding.executionSessionID}\0${allowance.dispatchCallID}`
-}
-
-function closes(id: string, args: unknown) {
-  if (id !== InquiryTool.id) return false
-  const input = Schema.decodeUnknownOption(Research.InquiryInput)(args)
-  return input._tag === "Some" && input.value.action === "close"
 }
 
 export function discovery(agent: Agent.Info) {

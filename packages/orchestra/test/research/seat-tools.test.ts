@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import path from "node:path"
-import { Cause, Effect, Exit } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem, httpClient } from "@orchestra/core/effect/app-node-platform"
@@ -123,7 +123,7 @@ describe("the loop's research registry", () => {
       const agents = yield* Agent.Service
       const ids = fixture.tools.map((tool) => tool.id)
       expect(ids).toEqual(expect.arrayContaining(["read", "grep", "glob", "websearch", "research_capture", "research_view", "research_record", "atlas_context"]))
-      expect(ids.filter((id) => [...RETIRED, ...PENDING].includes(id))).toEqual([])
+      expect(ids.filter((id) => [...RETIRED, ...PENDING.filter((id) => !(ResearchSeatTools.OWN as readonly string[]).includes(id))].includes(id))).toEqual([])
       expect(yield* fixture.registry.ids()).toEqual(expect.arrayContaining(PENDING))
       const general = (yield* fixture.registry.tools({ ...model, agent: yield* agents.get("general") })).map((tool) => tool.id)
       expect(general.filter((id) => ResearchRegistry.IDS.includes(id))).toEqual([])
@@ -154,17 +154,18 @@ describe("the loop's research registry", () => {
       const fixture = yield* setup()
       const fs = yield* FSUtil.Service
       yield* fs.writeFileString(path.join(fixture.directory, "product.txt"), "product bytes")
-      const research = yield* ResearchRegistry.make
       const read = fixture.tool("read")
-      const inquiry: Tool.Def<typeof Research.InquiryInput> = {
-        id: "inquiry", description: "Accepted inquiry", parameters: Research.InquiryInput,
-        execute: () => Effect.succeed({ title: "inquiry", output: "accepted", metadata: {} }),
-      }
-      const call = (input: Research.InquiryInput) => fixture.run("inquiry", (context) =>
-        research.charge(inquiry, input, context, (effect) => effect))
-      expect((yield* call({ action: "status" })).output).toBe("accepted")
-      expect((yield* fixture.run("read", (context) => read.execute({ filePath: "product.txt" }, context))).output).toContain("product bytes")
-      expect((yield* call({ action: "close", sufficiency: "answered", answer: "The answer." })).output).toBe("accepted")
+      const inquiry = fixture.tool("inquiry")
+      const call = (input: Research.InquiryInput) => fixture.run("inquiry", (context) => inquiry.execute(input, context))
+      const opened = (yield* call({ action: "open", question: "What is in product.txt?", subquestions: ["Its bytes"], profile: "locate" })).metadata.inquiry
+      const product = yield* fixture.run("read", (context) => read.execute({ filePath: "product.txt" }, context))
+      expect(product.output).toContain("product bytes")
+      const source = Schema.decodeUnknownSync(Research.SourceReceipt)(product.metadata.researchSource).ref
+      const sub = Schema.decodeUnknownSync(Schema.Struct({ subquestions: Schema.Array(Research.RecordRef) }))(opened).subquestions[0]
+      yield* call({ action: "claim", subquestion: sub, proposition: "It holds the product bytes", nature: "extraction",
+        evidence: [{ source, lines: { start: 1, end: 1 } }] })
+      yield* call({ action: "check" })
+      expect((yield* call({ action: "close", sufficiency: "answered", answer: "product.txt:1 holds the product bytes." })).output).toContain("\"closed\":\"answered\"")
       for (const after of [
         fixture.run("read", (context) => read.execute({ filePath: "product.txt" }, context)),
         call({ action: "status" }),

@@ -1,0 +1,13 @@
+Run this dispatch's investigation. The host keeps its state and puts a compact snapshot (ids, counts, next step) before every turn, so you never reread to remember.
+
+Actions:
+- open: the question and 1-6 subquestions, with profile (and optional genre). Once per dispatch, before any other action.
+- hypothesize: a proposition to test under one subquestion.
+- claim: a proposition that answers one subquestion. nature is extraction, observation or inference. evidence cites retained sources: {source, lines:{start,end}} in original-file lines (1-based, inclusive), {source, quote} literal in the retained bytes, or {source, pointer} for JSON. Add contrary evidence, conditions, and scope "universal" for only/always/never/none/all claims.
+- resolve: confirm or refute an open hypothesis, with the evidence that decides it.
+- drop: abandon a hypothesis or claim, or declare a subquestion's gap, with the reason.
+- check: verify the inquiry as answered: at least one evidenced claim, every locator resolves, every subquestion answered, no open hypothesis. Any later write invalidates it.
+- close: sufficiency answered (needs a passing check), partial or blocked, and the full answer for the human. Close is refused without a current check, and, unless blocked, while a subquestion has neither a claim nor a declared gap. After close, every tool of this dispatch is denied.
+- status: the snapshot and the last check.
+
+Every reply carries the refs you need next. The host assembles the card from this state; never write card JSON.

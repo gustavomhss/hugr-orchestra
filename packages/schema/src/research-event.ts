@@ -51,4 +51,21 @@ export const AllowanceCharged = Event.define({
     kind: Schema.Literals(["provider", "tool", "bytes"]), amount: NonNegativeInt,
   },
 })
-export const Definitions = Event.inventory(SourceAdmitted, SourceRequested, SourceAttempted, RecordCommitted, DocumentPublished, AllowanceBound, AllowanceCharged)
+// One dispatch's inquiry (J5.1): opened over its question records, each check, and the close that carries the card.
+export const InquiryOpened = Event.define({
+  type: "research.inquiry.opened",
+  durable: { version: 1, aggregate: "sessionID" },
+  schema: { ...operation, ...Research.InquiryOpened.fields },
+})
+export const InquiryChecked = Event.define({
+  type: "research.inquiry.checked",
+  durable: { version: 1, aggregate: "sessionID" },
+  schema: { ...operation, ...Research.InquiryChecked.fields },
+})
+export const InquiryClosed = Event.define({
+  type: "research.inquiry.closed",
+  durable: { version: 1, aggregate: "sessionID" },
+  schema: { ...operation, ...Research.InquiryClosed.fields },
+})
+export const Definitions = Event.inventory(SourceAdmitted, SourceRequested, SourceAttempted, RecordCommitted, DocumentPublished,
+  AllowanceBound, AllowanceCharged, InquiryOpened, InquiryChecked, InquiryClosed)

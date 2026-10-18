@@ -3,7 +3,7 @@ export * as ResearchRecords from "./records"
 import { Capability } from "@orchestra/schema/capability"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
-import { Cause, Context, Effect, Layer, Schema } from "effect"
+import { Cause, Context, Effect, Exit, Layer, Schema } from "effect"
 import { and, asc, eq } from "drizzle-orm"
 import { EventTable } from "../event/sql"
 import { Database } from "../database/database"
@@ -44,13 +44,23 @@ export type View = Research.Record | Research.ArtifactPage | Research.Corpus | {
   readonly coordinates: "utf16"
   readonly complete: boolean
 }
+/** One inquiry event a dispatch appends (J5.1); the host supplies the operation fields. */
+export type InquiryEvent =
+  | { readonly type: "research.inquiry.opened"; readonly question: Research.RecordRef; readonly subquestions: readonly Research.RecordRef[] }
+  | { readonly type: "research.inquiry.checked"; readonly check: Research.CheckResult }
+  | { readonly type: "research.inquiry.closed"; readonly card: Research.CardV2 }
 export interface Interface {
-  readonly record: (binding: Research.Binding, context: Tool.Context, input: Research.RecordInput) => Effect.Effect<Mutation, Research.Error>
+  /** `slot` names one of several writes a single tool call makes; each slot is its own replayable operation. */
+  readonly record: (binding: Research.Binding, context: Tool.Context, input: Research.RecordInput, slot?: string) => Effect.Effect<Mutation, Research.Error>
   readonly capture: (binding: Research.Binding, context: Tool.Context, input: CaptureInput) => Effect.Effect<Research.SourceReceipt, Research.Error>
   readonly beginAcquisition: (binding: Research.Binding, context: Tool.Context, requestHash: string) => Effect.Effect<Research.AttemptReceipt | undefined, Research.Error>
   readonly attempt: (binding: Research.Binding, context: Tool.Context, input: Pick<Research.AttemptReceipt, "outcome" | "stage" | "reason" | "source" | "returned">) => Effect.Effect<Research.AttemptReceipt, Research.Error>
   readonly view: (binding: Research.Binding, input: Research.ViewInput) => Effect.Effect<View, Research.Error>
   readonly verifyEvidence: (binding: Research.Binding, ref: Research.EvidenceRef) => Effect.Effect<void, Research.Error>
+  /** Append an inquiry event. Opened and closed happen once per dispatch; an exact retry replays the stored event. */
+  readonly inquire: (allowance: Research.Allowance, context: Tool.Context, input: InquiryEvent) => Effect.Effect<ResearchLedger.Inquiry, Research.Error>
+  /** The dispatch's ledger stream the inquiry folds over. */
+  readonly dispatch: (allowance: Research.Allowance) => Effect.Effect<readonly ResearchLedger.Step[], Research.Error>
 }
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ResearchRecords") {}
 
@@ -91,7 +101,7 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
 
   const evidence = Effect.fn("ResearchRecords.evidence")(function* (binding: Research.Binding, ref: Research.EvidenceRef) {
     const content = yield* source(binding, ref.source)
-    return yield* Effect.try({ try: () => checkLocator(content.text, ref.source.representation, ref.locator),
+    return yield* Effect.try({ try: () => checkLocator(content.text, ref.source.representation, retainedLocator(ref.locator, content.receipt)),
       catch: (error) => error instanceof Research.Error ? error : new Research.Error({ code: "reference_invalid", message: "Source locator does not match" }) })
   })
 
@@ -107,14 +117,14 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
     catch: () => new Research.Error({ code: "conflict", message: "Research operation conflicts with admitted input" }),
   })
 
-  const record = Effect.fn("ResearchRecords.record")(function* (binding: Research.Binding, context: Tool.Context, raw: Research.RecordInput) {
+  const record = Effect.fn("ResearchRecords.record")(function* (binding: Research.Binding, context: Tool.Context, raw: Research.RecordInput, slot?: string) {
     yield* fieldBounds(raw)
     yield* ResearchLedger.bounded(raw.action === "document" ? { ...raw, document: { ...raw.document, body: undefined } } : raw)
     const input = yield* Schema.decodeUnknownEffect(Schema.toType(Research.RecordInput))(raw).pipe(
       Effect.mapError(() => new Research.Error({ code: "reference_invalid", message: "Invalid research mutation" })),
     )
     yield* require(binding, context)
-    const operation = ResearchLedger.operation(context, input.action)
+    const operation = ResearchLedger.operation(context, slot === undefined ? input.action : `${input.action}:${slot}`)
     const inputHash = ResearchLedger.digest(ResearchLedger.canonical(input))
     const current = yield* entries(binding)
     const existing = yield* replay(current, operation, inputHash)
@@ -407,7 +417,52 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
       bindingHash: ResearchLedger.digest(ResearchLedger.canonical(binding)), offset: next, snapshot, limit,
     })).toString("base64url") } : {}) }
   })
-  return Service.of({ record, capture, beginAcquisition, attempt, view, verifyEvidence: evidence })
+  const dispatch = (allowance: Research.Allowance) => ResearchLedger.dispatch(allowance).pipe(Effect.provideService(Database.Service, database))
+
+  const inquire = Effect.fn("ResearchRecords.inquire")(function* (allowance: Research.Allowance, context: Tool.Context, input: InquiryEvent) {
+    const binding = allowance.binding
+    yield* ResearchLedger.bounded(input)
+    yield* require(binding, context)
+    const operation = ResearchLedger.operation(context, input.type)
+    const inputHash = ResearchLedger.digest(ResearchLedger.canonical(input))
+    const stored = (list: readonly ResearchLedger.Step[]) => {
+      const found = list.flatMap((step) => isInquiry(step) && step.data.operation === operation ? [step] : [])
+      if (found.some((step) => step.data.inputHash !== inputHash))
+        throw new Research.Error({ code: "conflict", message: "Inquiry operation was reused with different input" })
+      return found[0]
+    }
+    const replayed = (list: readonly ResearchLedger.Step[]) => Effect.try({ try: () => stored(list),
+      catch: (error) => error instanceof Research.Error ? error : new Research.Error({ code: "conflict", message: "Inquiry operation conflicts" }) })
+    const existing = yield* replayed(yield* dispatch(allowance))
+    if (existing) return existing
+    const id = ResearchLedger.eventID(binding, `inquiry:${allowance.dispatchCallID}:${operation}`)
+    const shared = { sessionID: binding.executionSessionID, operation, inputHash, binding }
+    // The native event transaction owns this check: a dispatch opens and closes its inquiry once, and nothing follows a close.
+    const commit = () => dispatch(allowance).pipe(Effect.flatMap((list) => {
+      const inquiries = list.filter(isInquiry)
+      if (inquiries.some((step) => step.type === "research.inquiry.closed"))
+        return Effect.die(new Research.Error({ code: "inquiry_state", message: "inquiry closed: this dispatch admits no further inquiry events" }))
+      if (input.type !== "research.inquiry.checked" && inquiries.some((step) => step.type === input.type))
+        return Effect.die(new Research.Error({ code: "inquiry_state", message: `${input.type} already happened in this dispatch` }))
+      return Effect.void
+    }), Effect.orDie)
+    const publish: Effect.Effect<unknown, unknown> = input.type === "research.inquiry.opened"
+      ? events.publish(ResearchEvent.InquiryOpened, { ...shared, question: input.question, subquestions: input.subquestions }, { id, persist: true, commit })
+      : input.type === "research.inquiry.checked"
+        ? events.publish(ResearchEvent.InquiryChecked, { ...shared, check: input.check }, { id, persist: true, commit })
+        : events.publish(ResearchEvent.InquiryClosed, { ...shared, card: input.card }, { id, persist: true, commit })
+    const outcome = yield* Effect.exit(publish)
+    const after = yield* replayed(yield* dispatch(allowance))
+    if (after) return after
+    if (Exit.isSuccess(outcome)) return yield* new Research.Error({ code: "publication_uncertain", message: "Inquiry event was not retained" })
+    if (Cause.hasInterrupts(outcome.cause)) return yield* Effect.failCause(outcome.cause).pipe(Effect.orDie)
+    const reason = outcome.cause.reasons.flatMap((reason) => Cause.isDieReason(reason) ? [reason.defect]
+      : Cause.isFailReason(reason) ? [reason.error] : []).find((error) => error instanceof Research.Error)
+    return yield* reason instanceof Research.Error ? reason
+      : new Research.Error({ code: "publication_uncertain", message: "Inquiry event publication is uncertain" })
+  })
+
+  return Service.of({ record, capture, beginAcquisition, attempt, view, verifyEvidence: evidence, inquire, dispatch })
 }))
 
 export const node = makeGlobalNode({ service: Service, layer, deps: [Database.node, EventV2.node, ResearchArtifacts.node] })
@@ -439,6 +494,19 @@ function fieldBounds(value: unknown): Effect.Effect<void, Research.Error> {
     }
     walk(value, "")
   }, catch: () => new Research.Error({ code: "over_cap", message: "Research field UTF-8 limit exceeded" }) })
+}
+
+function isInquiry(step: ResearchLedger.Step): step is ResearchLedger.Inquiry {
+  return step.type === "research.inquiry.opened" || step.type === "research.inquiry.checked" || step.type === "research.inquiry.closed"
+}
+
+// Original-file lines (J5.3) address the captured span through the receipt's first line; retained lines start at 1.
+function retainedLocator(locator: Research.Locator, receipt: Research.SourceReceipt | Research.DocumentReceipt): Research.Locator {
+  if (locator.kind !== "lines" || locator.basis !== "original") return locator
+  const first = "origin" in receipt ? receipt.observed?.lineStart ?? 1 : 1
+  if (locator.start < first)
+    throw new Research.Error({ code: "reference_invalid", message: `Lines ${locator.start}-${locator.end} start before the captured span (line ${first})` })
+  return { kind: "lines", start: locator.start - first + 1, end: locator.end - first + 1 }
 }
 
 function checkLocator(text: string, representation: typeof Research.Representation.Type, locator: Research.Locator) {
