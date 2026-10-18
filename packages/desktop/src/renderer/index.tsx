@@ -243,6 +243,8 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
       window.api.relaunch()
     },
 
+    onBeforeUnload: (handler) => window.api.onBeforeUnload(handler),
+
     notify: async (title, description, onClick) => {
       const focused = await window.api.getWindowFocused().catch(() => document.hasFocus())
       if (focused) return

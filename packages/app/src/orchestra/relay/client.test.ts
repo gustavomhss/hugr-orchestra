@@ -8,6 +8,7 @@ import {
   RelayError,
   relayUnsupported,
   type RelayDocumentView,
+  writeFailure,
 } from "./client"
 import { createRunClient, decodeRun } from "./runs"
 
@@ -136,6 +137,26 @@ describe("authoring routes through the generated client", () => {
     )
     const conflict = await stale.client.save(decodeDocument(view()), {}).catch((cause: unknown) => cause)
     expect(conflict instanceof RelayError && [conflict.status, conflict.code]).toEqual([409, "version-conflict"])
+  })
+
+  test("a forced save says so; no answer reads as offline, a deleted document as missing", async () => {
+    const api = server(() => located(view({ versionId: "v6", versionCounter: 6 })))
+    await api.client.save(decodeDocument(view()), { name: "Mine" }, { force: true })
+    expect(await api.requests[0].json()).toEqual({
+      name: "Mine",
+      versionId: "v4",
+      expectedChecksum: "c".repeat(64),
+      force: true,
+    })
+    const down = server(() => {
+      throw new TypeError("Failed to fetch")
+    })
+    const offline = await down.client.save(decodeDocument(view()), {}).catch((cause: unknown) => cause)
+    expect(offline instanceof RelayError && [offline.status, offline.code]).toEqual([-1, "transport"])
+    expect(writeFailure(offline)).toBe("offline")
+    expect(writeFailure(new RelayError(404, "Resource not found", "not-found", "RelayNotFoundError"))).toBe("missing")
+    expect(writeFailure(new RelayError(409, "Changed", "version-conflict", "RelayConflictError"))).toBe("conflict")
+    expect(writeFailure(new RelayError(404, "404"))).toBe("error")
   })
 
   test("decisions are ledger lines, timed in epoch seconds", async () => {

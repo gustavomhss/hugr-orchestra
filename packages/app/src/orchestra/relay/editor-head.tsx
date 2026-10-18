@@ -1,10 +1,18 @@
 import { createSignal, type JSX, Show } from "solid-js"
-import type { RelayDocument, RelayKind } from "./client"
+import { showToast } from "@/utils/toast"
+import { type RelayDocument, type RelayKind, writeFailure } from "./client"
+import { useDraftScope } from "./drafts"
 import { HeadBadge } from "./parts"
 import { relayPath } from "./route"
 import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 
-export type SaveState = { state: "saved" | "saving" | "error" | "conflict"; dirty: boolean; error: string }
+// `reason` says why a write failed: the server could not be reached, or the document no longer exists there.
+export type SaveState = {
+  state: "saved" | "saving" | "error" | "conflict"
+  dirty: boolean
+  error: string
+  reason?: "offline" | "missing"
+}
 
 // Editor header: back and crumb on the left, Editor / Activity in the middle (hooks only), autosave and Publish on
 // the right, then Test and Install for hooks or Use in chat for a published workflow.
@@ -262,6 +270,8 @@ export function EditorHead(props: {
   )
 }
 
+// Every failed state says what happened and offers each way out that keeps the edits. Keep mine, Save mine as a copy
+// and Close need the editor's draft scope; without it only Retry and the discards show.
 export function SaveStatus(props: {
   save: SaveState
   saved?: JSX.Element
@@ -269,32 +279,89 @@ export function SaveStatus(props: {
   onReload: () => void
 }) {
   const copy = useRelayCopy()
+  const scope = useDraftScope()
+  const [busy, setBusy] = createSignal(false)
+  const reason = () =>
+    props.save.reason === "offline" ? copy.t("orchestra.workflows.editor.offline") : props.save.error
+  // The pressed button goes away once the state changes, so focus moves to a stable control of the dialog first.
+  const act = async (event: MouseEvent & { currentTarget: HTMLButtonElement }, run: () => unknown) => {
+    const modal = event.currentTarget.closest<HTMLElement>('[role="dialog"]')
+    ;(modal?.querySelector<HTMLElement>("[data-relay-done]") ?? modal)?.focus({ preventScroll: true })
+    setBusy(true)
+    await run()
+    setBusy(false)
+  }
+  const saveCopy = async () => {
+    if (!scope) return
+    const created = await scope.draft
+      .copy(copy.t("orchestra.workflows.create.copyName", { name: scope.draft.state.name }))
+      .catch((error: unknown) => {
+        showToast({
+          title: copy.t("orchestra.workflows.menu.duplicateFailed"),
+          description: writeFailure(error) === "offline"
+            ? copy.t("orchestra.workflows.editor.offline")
+            : error instanceof Error ? error.message : String(error),
+        })
+      })
+    if (created) scope.go(relayPath.editor(scope.draft.state.flow.kind, created.id))
+  }
+  const close = () => {
+    if (!scope) return
+    scope.draft.close()
+    scope.go(relayPath.library(scope.draft.state.flow.kind), true)
+  }
   return (
     <span
       class="wf-save"
       classList={{ bad: props.save.state === "error" || props.save.state === "conflict" }}
       role="status"
       data-save={props.save.state}
+      data-reason={props.save.reason}
     >
       <Show when={props.save.state === "conflict"}>
         {copy.t("orchestra.workflows.editor.conflict")}
-        <button type="button" class="mx-link" onClick={(event) => {
-          // This button disappears after reload; leave focus on a stable modal control first.
-          const modal = event.currentTarget.closest<HTMLElement>('[role="dialog"]')
-          ;(modal?.querySelector<HTMLElement>("[data-relay-done]") ?? modal)?.focus({ preventScroll: true })
-          props.onReload()
-        }}>
-          {copy.t("orchestra.workflows.editor.reloadDiscard")}
+        <Show when={reason()}>
+          <span class="wf-save-error">{reason()}</span>
+        </Show>
+        <Show when={scope}>
+          <button
+            type="button"
+            class="mx-link"
+            disabled={busy()}
+            onClick={(event) => void act(event, () => scope?.draft.overwrite())}
+          >
+            {copy.t("orchestra.workflows.editor.keepMine")}
+          </button>
+          <button type="button" class="mx-link" disabled={busy()} onClick={(event) => void act(event, saveCopy)}>
+            {copy.t("orchestra.workflows.editor.copyMine")}
+          </button>
+        </Show>
+        <button type="button" class="mx-link" disabled={busy()} onClick={(event) => void act(event, props.onReload)}>
+          {copy.t("orchestra.workflows.editor.discardMine")}
         </button>
       </Show>
-      <Show when={props.save.state === "error"}>
+      <Show when={props.save.state === "error" && props.save.reason === "missing"}>
+        <span>{copy.t("orchestra.workflows.editor.deleted")}</span>
+        <Show when={scope}>
+          <button type="button" class="mx-link" disabled={busy()} onClick={(event) => void act(event, saveCopy)}>
+            {copy.t("orchestra.workflows.editor.copyMine")}
+          </button>
+          <button type="button" class="mx-link" disabled={busy()} onClick={close}>
+            {copy.t("orchestra.workflows.dialog.close")}
+          </button>
+        </Show>
+      </Show>
+      <Show when={props.save.state === "error" && props.save.reason !== "missing"}>
         <span>{copy.t("orchestra.workflows.editor.saveFailed")}</span>
-        <span class="wf-save-error">{props.save.error}</span>
+        <span class="wf-save-error">{reason()}</span>
         <Show when={props.onRetry}>
-          <button type="button" class="mx-link" onClick={props.onRetry}>
+          <button type="button" class="mx-link" disabled={busy()} onClick={props.onRetry}>
             {copy.t("orchestra.workflows.retry")}
           </button>
         </Show>
+        <button type="button" class="mx-link" disabled={busy()} onClick={(event) => void act(event, props.onReload)}>
+          {copy.t("orchestra.workflows.editor.discard")}
+        </button>
       </Show>
       <Show when={props.save.state === "saving" || (props.save.state === "saved" && props.save.dirty)}>
         {copy.t("orchestra.workflows.editor.saving")}
