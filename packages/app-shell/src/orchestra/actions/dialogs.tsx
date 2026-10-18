@@ -222,7 +222,7 @@ function DispatchFields(props: { form: FormState; setForm: SetStoreFunction<Form
       <Show when={props.data.status === "idle"}><p class="ad-note">{props.t("orchestra.actions.noSource")}</p></Show>
       <Show when={props.data.status === "ready"}>
         <Show when={props.data.definitions} fallback={<label class="mx-field"><span>{props.t("orchestra.actions.rawInputs")}</span><textarea name="raw" dir="ltr" value={props.form.raw} onInput={(event) => props.setForm("raw", event.currentTarget.value)} /></label>}>
-          {(definition) => <Show when={definition().length} fallback={<p class="ad-note">{props.t("orchestra.actions.noRunInputs")}</p>}><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></Show>}
+          {(definition) => <Show when={definition().length} fallback={<p class="ad-hint">{props.t("orchestra.actions.noRunInputs")}</p>}><For each={definition()}>{(item) => <Input definition={item} t={props.t} />}</For></Show>}
         </Show>
       </Show>
     </div></fieldset>
