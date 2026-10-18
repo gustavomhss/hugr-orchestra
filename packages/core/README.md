@@ -20,9 +20,9 @@ subpaths:
 - `@orchestra/core/system-context`
 - `@orchestra/core/backend-toolkit`
 
-The package map also provides `@orchestra/core/*`, which resolves to matching
-modules under `src/`. Check `packages/core/package.json` for the current map
-before relying on a subpath. Namespace imports should use the names actually
+Every other public subpath is an explicit key in `packages/core/package.json`;
+there is no `@orchestra/core/*` wildcard. Regenerate the map with
+`bun run script/explicit-exports.ts core --write` when a new subpath gains a consumer. Namespace imports should use the names actually
 exported by a module, such as `SessionExecution` or `SystemContext`.
 
 ## Sessions and Locations

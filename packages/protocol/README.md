@@ -12,7 +12,7 @@ import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { MessageGroup } from "@orchestra/protocol/groups/message"
 ```
 
-The export map is wildcard-only (`"./*"`), so there is no bare `@orchestra/protocol` root export.
+Every subpath is an explicit key in the export map, and there is no bare `@orchestra/protocol` root export.
 
 ## Consumers and dependencies
 
