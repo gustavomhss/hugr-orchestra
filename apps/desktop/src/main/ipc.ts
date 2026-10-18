@@ -7,7 +7,7 @@ import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@orchestra/a
 
 import type { FatalRendererError, ServerReadyData, TitlebarTheme } from "../preload/types"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
-import { setMenuAvailability } from "./menu"
+import { applyFocusedMenuAvailability, setMenuAvailability } from "./menu"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
 import { getStore, removeStoreFileIfEmpty } from "./store"
@@ -322,6 +322,8 @@ export function registerIpcHandlers(deps: Deps) {
       relaunch: deps.relaunch,
     })
   })
+  // The native menu is global, so it follows the focused window's last report.
+  app.on("browser-window-focus", applyFocusedMenuAvailability)
   ipcMain.on("set-menu-availability", (event, commands: unknown) => {
     const win = BrowserWindow.fromWebContents(event.sender)
     if (!win || !Array.isArray(commands) || !commands.every((id) => typeof id === "string")) return

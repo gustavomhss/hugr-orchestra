@@ -1,4 +1,4 @@
-import { app, BrowserWindow, Menu } from "electron"
+import { BrowserWindow, Menu } from "electron"
 import type { MenuItemConstructorOptions } from "electron"
 import {
   DESKTOP_MENU,
@@ -25,15 +25,14 @@ let commandCount = 0
 
 export function setMenuAvailability(windowID: number, commands: string[]) {
   availability.set(windowID, commands)
-  if (BrowserWindow.getFocusedWindow()?.id === windowID) applyFocused()
+  if (BrowserWindow.getFocusedWindow()?.id === windowID) applyFocusedMenuAvailability()
 }
 
-function applyFocused() {
+export function applyFocusedMenuAvailability() {
   const id = BrowserWindow.getFocusedWindow()?.id
   applyMenuAvailability(Menu.getApplicationMenu(), (id !== undefined && availability.get(id)) || null)
 }
 
-app.on("browser-window-focus", applyFocused)
 
 export function createMenu(deps: Deps) {
   if (process.platform !== "darwin") return
@@ -50,7 +49,7 @@ export function createMenu(deps: Deps) {
   })
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
-  applyFocused()
+  applyFocusedMenuAvailability()
 }
 
 function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOptions {
