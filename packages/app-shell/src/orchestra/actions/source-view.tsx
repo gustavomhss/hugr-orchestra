@@ -2,8 +2,7 @@ import { createEffect, createMemo, For, Match, onCleanup, Show, Switch, untrack 
 import { createStore } from "solid-js/store"
 import { Empty, Icon } from "./components"
 import type { ViewProps } from "./contract"
-import { selectedRoute, tabKeydown } from "./entry-routing"
-import { WorkflowTabs } from "./workflow-tabs"
+import { RunDetail, WorkflowDetail } from "./detail"
 import { canRequest } from "./request-policy"
 import { canEditSource, immutableSource } from "./requests"
 import { sourceDiscardBlocked, sourceDraftDirty, sourceUnloadGuard } from "./source-draft-ui"
@@ -41,6 +40,14 @@ export function SourceView(props: ViewProps) {
   const workflow = createMemo(() => state.workflows.value?.items.find((item) => item.bindingID === state.binding?.id
     && item.id === (state.route.workflowID ?? state.run.value?.workflowID)))
   const path = createMemo(() => state.route.path ?? originalSource()?.path)
+  const sourceError = createMemo(() => {
+    const message = state.source.error?.message
+    return message && message !== "orchestra.actions.noSource" && message !== "orchestra.actions.unavailable" ? props.t(message) : undefined
+  })
+  // Idle counts as loading only when the model's source read can resolve path and ref (mirrors model.ts source()).
+  const pending = createMemo(() => state.source.status === "loading" || state.source.status === "idle"
+    && Boolean((path() ?? (!historical() || state.binding?.provider.kind === "github" ? workflow()?.path : undefined))
+      && (historical() ? state.run.value?.commit : state.route.ref)))
   const diagnostics = createMemo(() => state.diagnostics.slice(0, 32))
 
   createEffect(() => {
@@ -61,34 +68,25 @@ export function SourceView(props: ViewProps) {
     props.model.navigate({ ...state.route, path: path(), ref: view.ref.trim(), tab: "source" })
   }
 
-  return <section class="actions-detail detail-source" aria-label={props.t("orchestra.actions.source")}>
-    <header class="detail-top">
-      <button type="button" class="mx-btn" onClick={() => {
-        const item = workflow()
-        props.model.navigate(item ? historical() ? { view: "runs", workflowID: item.id }
-          : selectedRoute(state, { view: "workflow", workflowID: item.id }) : { view: "library" })
-      }}>
-        {props.t("orchestra.actions.previous")}</button>
-      <h2><bdi>{workflow()?.name ?? state.run.value?.name ?? props.t("orchestra.actions.source")}</bdi></h2>
-    </header>
-    <Show when={historical() || !workflow()} fallback={<WorkflowTabs {...props} />}><nav class="wf-tabs" role="tablist" aria-label={props.t(historical() ? "orchestra.actions.run" : "orchestra.actions.workflow")} onKeyDown={tabKeydown}>
-      <button type="button" role="tab" class="wf-tab" aria-selected={false} tabindex={-1}
-        disabled={!workflow() && !state.route.runID} onClick={() => props.model.navigate(selectedRoute(state,
-          { ...state.route, view: historical() ? "run" : "workflow", tab: "graph" }))}>{props.t("orchestra.actions.graph")}</button>
-      <Show when={historical()}><For each={["jobs", "logs", "artifacts"] as const}>{(tab) => <button type="button" role="tab" class="wf-tab"
-        aria-selected={false} tabindex={-1} onClick={() => props.model.navigate({ ...state.route, view: "run", tab })}>
-        {props.t(tab === "jobs" ? "orchestra.actions.jobs" : tab === "logs" ? "orchestra.actions.logs" : "orchestra.actions.artifacts")}</button>}</For></Show>
-      <Show when={!historical() && workflow()}><button type="button" role="tab" class="wf-tab" aria-selected={false} tabindex={-1}
-        onClick={() => { const item = workflow(); if (item) props.model.navigate({ view: "runs", workflowID: item.id }) }}>
-        {props.t("orchestra.actions.executions")}</button></Show>
-      <button type="button" role="tab" class="wf-tab" aria-selected={true}>{props.t("orchestra.actions.source")}</button>
-    </nav></Show>
+  return <>
+    {/* Run and workflow sources keep their header and tab row; a draft with no catalog workflow keeps a plain back line. */}
+    <Switch>
+      <Match when={historical()}><RunDetail {...props} /></Match>
+      <Match when={workflow() && state.route.workflowID}><WorkflowDetail {...props} /></Match>
+      <Match when={true}><div class="actions-detail detail-frame"><div class="detail-top">
+        <button type="button" class="mx-btn" onClick={() => props.model.navigate({ view: "library" })}>{props.t("orchestra.actions.previous")}</button>
+        <h2><bdi>{path() ?? props.t("orchestra.actions.source")}</bdi></h2>
+      </div></div></Match>
+    </Switch>
+    <section class="actions-detail detail-source" aria-label={props.t("orchestra.actions.source")}>
     <div class="source-toolbar">
-      <span><Icon name="code" /><bdi dir="ltr">{path() ?? props.t("orchestra.actions.noSource")}</bdi></span>
+      <span><Show when={path()}><Icon name="code" /><bdi dir="ltr">{path()}</bdi></Show>
+        <Show when={historical()}><span class="mx-badge">{props.t("orchestra.actions.sourceImmutable")}</span></Show>
+        <Show when={permission() !== "orchestra.actions.unknown"}><span class="source-access">{props.t("orchestra.actions.access")}: {props.t(permission())}</span></Show></span>
       <div>
-        <Show when={!historical()} fallback={<span class="mx-badge"><bdi dir="ltr">{originalSource()?.ref}</bdi></span>}>
-          <form onSubmit={selectRef}><label>{props.t("orchestra.actions.ref")}
-            <input dir="ltr" value={view.ref} maxlength={2048} aria-label={props.t("orchestra.actions.ref")}
+        <Show when={!historical()} fallback={<Show when={originalSource()?.ref}>{(ref) => <span class="mx-badge"><bdi dir="ltr">{ref().slice(0, 7)}</bdi></span>}</Show>}>
+          <form onSubmit={selectRef}><label><span>{props.t("orchestra.actions.ref")}</span>
+            <input dir="ltr" value={view.ref} maxlength={2048}
               disabled={state.submitting} onInput={(event) => setView("ref", event.currentTarget.value)} /></label>
             <button type="submit" class="mx-btn" disabled={!view.ref.trim() || state.submitting}>{props.t("orchestra.actions.open")}</button>
           </form>
@@ -111,13 +109,8 @@ export function SourceView(props: ViewProps) {
       }}>{props.t("orchestra.actions.confirm")}</button>
     </div></Show>
     <Switch>
-      <Match when={state.source.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
-      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")}
-        error={props.t(state.source.error?.message ?? "orchestra.actions.unavailable")} /></Match>
+      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")} error={sourceError()} /></Match>
       <Match when={originalSource() || draftOnly()}>
-        <div class="provider-note" role="status"><Icon name="code" />
-          {props.t("orchestra.actions.access")}: {props.t(permission())}
-        </div>
         <textarea class="source-editor" id="source-editor" aria-label={props.t("orchestra.actions.source")} spellcheck={false}
           dir="ltr" readOnly={!editable() || view.discard} value={immutableSource(state, originalSource() ?? state.draftBase) ? originalSource()?.text ?? "" : state.draft}
           onInput={(event) => { if (editable() && !view.discard) props.model.editSource(event.currentTarget.value) }} />
@@ -145,9 +138,11 @@ export function SourceView(props: ViewProps) {
           <Show when={originalSource()?.diagnostics?.length}><ul><For each={originalSource()?.diagnostics?.slice(0, 32)}>{(message) => <li><bdi dir="auto">{message}</bdi></li>}</For></ul></Show>
         </div>
       </Match>
+      <Match when={pending()}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
       <Match when={true}><Empty title={props.t("orchestra.actions.noSource")} /></Match>
     </Switch>
-  </section>
+    </section>
+  </>
 }
 
 export default SourceView

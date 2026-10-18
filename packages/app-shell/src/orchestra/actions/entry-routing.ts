@@ -1,6 +1,6 @@
 import { Actions } from "@orchestra/schema/actions"
 import { Option, Schema } from "effect"
-import { batch, createEffect, untrack, type JSX } from "solid-js"
+import { batch, createEffect, createSignal, untrack, type JSX } from "solid-js"
 import type { Dialog, Filters, Model, Route } from "./contract"
 import type { ActionsPreference } from "./model"
 
@@ -86,21 +86,43 @@ export function resourceDialog(value?: Dialog) {
   return value !== undefined && (value.kind === "project-settings" || resourceDialogKinds.includes(value.kind))
 }
 
-/** Query parameters keep chapter navigation in the existing router's Back/Forward stack. */
+/**
+ * Query parameters keep chapter navigation in the existing router's Back/Forward stack.
+ *
+ * A link applies when its `actionsScope` is this server and directory. A link without `actionsScope` applies only
+ * when it names an `actionsBinding` that this directory's binding list contains: a binding belongs to exactly one
+ * directory, so it proves the scope. Any other unscoped link is ignored and the URL is rewritten to the selection.
+ */
 export function synchronizeNavigation(input: {
   model: Model
   scope: string
   query: () => Query
   write: (query: ReturnType<typeof navigationQuery> & { actionsScope: string }, replace: boolean) => void
+  /** The binding the model last persisted as wanted; when it no longer exists the model selects none. */
+  wanted?: () => Actions.BindingID | undefined
 }) {
   const cursor: { written: string; route: string; initialized: boolean; selection?: ActionsPreference } = { written: "", route: "", initialized: false }
   const snapshot = (): ActionsPreference => ({ bindingID: input.model.state.binding?.id,
     route: { ...input.model.state.route }, filters: { ...input.model.state.filters } })
+  // Wait until the model has resolved its binding: acting on the query while that first read is in flight re-enters
+  // selectBinding/navigate, whose clear() resets the slot the in-flight read was about to fill. The read is resolved
+  // once a binding is selected, or when none will be: a failed read, no bindings, or a stale persisted binding.
+  const settled = () => {
+    const state = input.model.state
+    if (state.bindings.status === "error") return true
+    if (state.bindings.status !== "ready") return false
+    const wanted = input.wanted?.()
+    return state.binding !== undefined || !state.bindings.value?.some((item) => item.id === (wanted ?? item.id))
+  }
+  // Writing waits for the first read of the query, so an initial link is applied before the selection overwrites it.
+  const [synced, setSynced] = createSignal(false)
   createEffect(() => {
     const query = input.query()
-    const ready = input.model.state.bindings.status === "ready"
-    const target = query.actionsScope === input.scope ? readNavigation(query) : undefined
-    if (!target || !ready || navigationKey(target) === cursor.written) return
+    if (!settled()) return
+    const target = query.actionsScope === input.scope || (query.actionsScope === undefined && typeof query.actionsBinding === "string")
+      ? readNavigation(query) : undefined
+    untrack(() => setSynced(true))
+    if (!target || navigationKey(target) === cursor.written) return
     untrack(() => {
       const state = input.model.state
       const binding = state.bindings.value?.find((item) => item.id === target.bindingID)
@@ -123,7 +145,7 @@ export function synchronizeNavigation(input: {
   })
   createEffect(() => {
     const value = snapshot()
-    if (input.model.state.bindings.status !== "ready" && value.route?.view !== "local") return
+    if (value.route?.view !== "local" && (!synced() || !settled())) return
     const key = navigationKey(value)
     if (key === cursor.written) return
     const route = JSON.stringify([value.bindingID, value.route])
