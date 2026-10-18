@@ -33,8 +33,9 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   const { params } = useSessionKey()
   const frozen = input ? { source: sdk(), state: sync(), serverState: serverSync() } : undefined
   const origin = () => input?.server ?? serverSDK()
-  const available = () => !!origin().protocolKind() && !unsupported[origin().scope]
+  // Restore exists only on V2: the V1 session update cannot clear time.archived. Offer Archive nowhere it could not be undone.
   const restorable = () => origin().protocolKind() === "v2" && !unsupported[origin().scope]
+  const available = restorable
   const busy = (sessionID: string) => operations[ScopedKey.from(origin().scope, sessionID)] ?? false
 
   const navigateAfterRemoval = (sessionID: string, parentID?: string, nextSessionID?: string, target = {
@@ -73,7 +74,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
     if (!session || operations[key]) return
     const revision = session.archiveRevision
     const timestamp = session.archiveChangedAt
-    if (unsupported[serverSDK.scope]) {
+    if (serverSDK.protocolKind() !== "v2" || unsupported[serverSDK.scope]) {
       showToast({ title: language.t("session.archive.unavailable") })
       return
     }
