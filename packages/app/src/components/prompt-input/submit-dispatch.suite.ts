@@ -12,6 +12,7 @@ import {
   createPromptSubmit,
   interrupts,
   optimistic,
+  policyFixture,
   promoted,
   preparations,
   promptInputs,
@@ -76,6 +77,34 @@ test("empty existing Session submit interrupts while another submission awaits p
   await submit.handleSubmit(new Event("submit"))
   expect(interrupts).toEqual(["session-1"])
   expect(promptInputs).toEqual([])
+  gate.resolve()
+  await sending
+  expect(promptInputs).toEqual([])
+})
+
+test("failed Stop toasts and reads the Session status back instead of keeping the optimistic idle", async () => {
+  state.params.id = "session-1"
+  const fixture = policyFixture.sdk
+  policyFixture.sdk = {
+    ...fixture,
+    api: {
+      ...fixture.api,
+      session: {
+        ...fixture.api.session,
+        interrupt: async () => { throw new Error("interrupt failed") },
+        active: async () => ({ "session-1": { type: "running" as const } }),
+      },
+    },
+  }
+  const entered = deferred()
+  const gate = deferred()
+  state.policyWait = async () => { entered.resolve(); await gate.promise }
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "pending send" }), working: () => true })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  await submit.abort()
+  expect(toasts.at(-1)).toMatchObject({ title: "orchestra.chat.stop.failed", description: "interrupt failed" })
+  expect(statusWrites).toEqual([{ sessionID: "session-1", type: "idle" }, { sessionID: "session-1", type: "busy" }])
   gate.resolve()
   await sending
   expect(promptInputs).toEqual([])
