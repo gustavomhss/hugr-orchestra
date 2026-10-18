@@ -210,7 +210,7 @@ describe("Atlas publication knowledge binding", () => {
   it.live("a published control with no check holds before the arm loads it", () => Effect.gen(function* () {
     const f = yield* fixture
     const empty = yield* AuthoringGraph.project("Empty control", {
-      work_packages: [{ id: "implement", instructions: "Implement.", checklist: [{ id: "ok", kind: "command" }] }],
+      work_packages: [{ id: "implement", instructions: "Implement.", checklist: [{ id: "ok" }] }],
     })
     // The store keeps bodies as given; only the compiler refuses the control.
     const saved = yield* f.store.save({ id: f.draft.id, body: empty })
