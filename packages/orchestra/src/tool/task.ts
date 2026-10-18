@@ -16,8 +16,6 @@ import { Effect, Exit, FileSystem, Option, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
-import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
-import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { reserveDispatch } from "@/maestro/dispatch"
 import { authorizedTaskMismatch, readAuthorization } from "@/maestro/authorization"
@@ -44,6 +42,7 @@ import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { TaskBackground } from "./task-background"
+import { TaskWorkflow } from "./task-workflow"
 import { TaskWorkObservation } from "./task-work-observation"
 
 export interface TaskPromptOps {
@@ -211,19 +210,11 @@ export const TaskTool = Tool.define(
           ),
         )
       }
-      if (params.workflow && !params.governed && !params.authorizationID)
-        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
       // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
-      if (params.workflow) yield* completion.beforeReserve({ sessionID: ctx.sessionID, directory: parent.directory })
-      // A resume of the authorization's own bound child reads the owner decision already observed; any other call is a
-      // dispatch and needs the owner's immediate approve.
-      const workflowPhase = params.workflow ? WorkflowBinding.phaseFor({ parentSessionID: ctx.sessionID,
-        authorizationID: params.authorizationID, resumed, bound: resumed ? yield* WorkflowBinding.read(resumed.id) : undefined }) : "dispatch"
-      const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
-          callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
-          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
-          model: params.model, workflow: params.workflow,
-        }, workflowPhase).pipe(Effect.orDie) : undefined
+      const { phase: workflowPhase, ready: workflowReady } = yield* TaskWorkflow.prepare({ completion, workflow: params.workflow,
+        governed: params.governed !== undefined, authorizationID: params.authorizationID, resumed, sessionID: ctx.sessionID,
+        assistantMessageID: ctx.messageID, callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
+        writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model })
       const childPermissions = yield* WriteRoots.bind(
         nextID,
         params.writePaths,
@@ -459,11 +450,7 @@ export const TaskTool = Tool.define(
           assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
         } } : {}),
-      }).pipe(Effect.provideService(WorkflowBinding.Activity, (executionSessionID) => Effect.gen(function* () {
-        // A child counts as running while its Task job runs or its Session is busy or retrying in this process.
-        if ((yield* background.get(executionSessionID))?.status === "running") return true
-        return (yield* status.get(SessionID.make(executionSessionID))).type !== "idle"
-      })))
+      }).pipe(Effect.provideService(WorkflowBinding.Activity, TaskWorkflow.activity(background, status)))
 
       if (params.governed) {
         const governed = params.governed
@@ -501,24 +488,10 @@ export const TaskTool = Tool.define(
 
       yield* ctx.metadata({ title: params.description, metadata })
 
-      // The reserved child exists before completion.beforeDispatch, so a dispatch held there leaves an authorized child
-      // that was never prompted, and replaying it would hold forever. This applies to every authorized dispatch, not
-      // only workflow ones. Running it now is still the reservation's one dispatch: the same child, reserved permissions
-      // and authorization. The dispatch lock serializes callers in this process, and the background job record guards a
-      // run that is still starting or ran in the background. Any message, admitted input or job means a run started,
-      // and that child keeps the strict replay below. Residual risk: a restart empties the job map, so a run that died
-      // before writing any message or input runs again, and its session-start hooks could run twice.
-      const neverPrompted = params.authorizationID !== undefined && reserved !== undefined &&
-        (yield* MessageV2.stream(reserved.id)).length === 0 &&
-        !(yield* background.get(reserved.id)) &&
-        !(yield* database.db.select({ id: SessionInputTable.id }).from(SessionInputTable)
-          .where(eq(SessionInputTable.session_id, reserved.id)).get().pipe(Effect.orDie)) &&
-        !(yield* database.db.select({ id: SessionMessageTable.id }).from(SessionMessageTable)
-          .where(eq(SessionMessageTable.session_id, reserved.id)).get().pipe(Effect.orDie))
-      // A resume of a step held for code review re-prompts the same child to settle it again (WorkflowBinding.resumesHeldStep).
-      const continues = params.workflow && reserved && !neverPrompted && (yield* WorkflowBinding.resumesHeldStep({
-        reservedID: reserved.id, resumedID: resumed?.id, phase: workflowPhase, job: yield* background.get(reserved.id),
-        view: yield* completion.workflowView(completionReceipt) }))
+      // A never-prompted reserved child runs now; a step held for code review continues (TaskWorkflow.reservedChild).
+      const { neverPrompted, continues } = yield* TaskWorkflow.reservedChild({ database, background, completion,
+        receipt: completionReceipt, reservedID: reserved?.id, authorizationID: params.authorizationID,
+        workflow: params.workflow !== undefined, resumedID: resumed?.id, phase: workflowPhase })
       if (governedChildID && reserved && !neverPrompted && !continues) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
