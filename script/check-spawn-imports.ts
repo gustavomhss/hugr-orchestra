@@ -73,7 +73,10 @@ function check() {
 }
 
 export function hits(file: string, text: string) {
-  const modules = [...text.matchAll(SPECIFIER)].map((match) => MODULES[match[1]]).filter((hit) => hit !== undefined)
+  const modules = [...text.matchAll(SPECIFIER)].flatMap((match) => {
+    const hit = match[1] === undefined ? undefined : MODULES[match[1]]
+    return hit === undefined ? [] : [hit]
+  })
   return [...new Set([...modules, ...(namesStdio(file, text) ? [STDIO] : [])])].sort((a, b) => a.localeCompare(b))
 }
 

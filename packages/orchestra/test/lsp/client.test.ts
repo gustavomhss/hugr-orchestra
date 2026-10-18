@@ -35,7 +35,7 @@ describe("LSPClient interop", () => {
     })
 
     // The fake server forwards the client's reply, so this awaits the answer instead of sleeping past it.
-    expect(await client.connection.sendRequest("test/request-client", { method: "workspace/workspaceFolders" })).toEqual({
+    expect(await client.connection.sendRequest<unknown>("test/request-client", { method: "workspace/workspaceFolders" })).toEqual({
       result: [{ name: "workspace", uri: pathToFileURL(tmp.path).href }],
       error: null,
     })
@@ -59,7 +59,7 @@ describe("LSPClient interop", () => {
     })
 
     expect(
-      await client.connection.sendRequest("test/request-client", {
+      await client.connection.sendRequest<unknown>("test/request-client", {
         method: "client/registerCapability",
         params: {
           registrations: [
@@ -88,7 +88,7 @@ describe("LSPClient interop", () => {
     })
 
     expect(
-      await client.connection.sendRequest("test/request-client", {
+      await client.connection.sendRequest<unknown>("test/request-client", {
         method: "client/unregisterCapability",
         params: { unregisterations: [{ id: "test-diagnostic-registration", method: "textDocument/diagnostic" }] },
       }),
