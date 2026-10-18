@@ -266,6 +266,23 @@ test("V2 servers apply the profile's behaviors to turns without touching the pro
   await expect.poll(() => sets.slice(pushed).at(-1)?.behaviors).toEqual([])
 })
 
+test("a failed behavior sync offers Retry that pushes the set again", async ({ page }) => {
+  await openSession(page, "dark", "v2")
+  await serveV2Catalog(page)
+  const failing = await serveBehaviors(page, 500)
+  await openPlugins(page)
+  const note = chapter(page).locator('[data-slot="plugins-application"]')
+  await expect(note).toContainText("this server did not accept the latest change")
+  expect(failing.length).toBeGreaterThan(0)
+  await page.unroute("**/api/behavior**")
+  const sets = await serveBehaviors(page)
+  await note.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect.poll(() => sets.at(-1)).toEqual({ directory, behaviors: [] })
+  await expect(note).toHaveText(
+    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+  )
+})
+
 test("V2 servers without the behavior route keep behaviors on the profile without claiming they reach turns", async ({
   page,
 }) => {
