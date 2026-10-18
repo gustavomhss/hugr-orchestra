@@ -356,8 +356,7 @@ const layer = Layer.effect(
           }
         }
 
-        yield* config.get()
-        yield* research.prewarm(yield* agent.get(ResearchSeatTools.SEAT), ctx.worktree)
+        yield* config.get().pipe(Effect.andThen(agent.get(ResearchSeatTools.SEAT)), Effect.flatMap((seat) => research.prewarm(seat, ctx.worktree)))
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
         yield* MaestroArsenalTools.prepare.pipe(Effect.provideService(FSUtil.Service, fs), Effect.orDie)
 
