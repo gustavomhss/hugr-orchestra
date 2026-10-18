@@ -41,7 +41,7 @@ test("each recorded built-in output maps to its retained representation; any oth
   const sessionID = SessionID.descending()
   const map = (tool: string, response: unknown) => ClaudeHostResearch.retained({ sessionID, callID: "toolu_1", tool, response })
   expect(Option.getOrThrow(map("Read", output.Read))).toEqual({
-    source: { origin: { kind: "file", uri: "/repo/sample.txt" }, representation: "text", mediaType: "text/plain",
+    source: { origin: { kind: "file", uri: path.join("/repo", "sample.txt") }, representation: "text", mediaType: "text/plain",
       content: "beta needle\ngamma\ndelta needle", complete: false },
     lines: { start: 2, end: 4 },
   })

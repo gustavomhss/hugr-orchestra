@@ -502,7 +502,7 @@ it.instance(
       yield* Effect.promise(async () => {
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
         for (const seat of seats) {
-          const listed = frontmatter(await Bun.file(path.join(built.path, `agents/${seat.id}.md`)).text()).tools.split(
+          const listed = frontmatter(await Bun.file(path.join(built.path, `agents/${ClaudeHostPlugin.agents(seat.id!)[0].name}.md`)).text()).tools.split(
             ", ",
           )
           expect(listed).toEqual(ClaudeHostPlugin.tools(seat.id!, tools[seat.id!]))
