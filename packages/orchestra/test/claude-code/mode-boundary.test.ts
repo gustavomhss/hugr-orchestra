@@ -34,6 +34,26 @@ const ADAPTER_EDGES = [
     reason: "Legacy provider discovery adapts the host sign-in status.",
   },
   {
+    file: "server/routes/instance/httpapi/handlers/provider.ts",
+    target: "claude-code/sdk",
+    reason: "Claude sign-in resolves the pinned SDK's CLI.",
+  },
+  {
+    file: "server/routes/instance/httpapi/handlers/provider.ts",
+    target: "claude-code/login",
+    reason: "The Claude subscription sign-in route runs the CLI's own login.",
+  },
+  {
+    file: "server/routes/instance/httpapi/handlers/provider.ts",
+    target: "claude-code/executable",
+    reason: "Claude sign-in locates the Claude Code executable.",
+  },
+  {
+    file: "server/routes/instance/httpapi/handlers/provider.ts",
+    target: "claude-code/host/options",
+    reason: "Claude sign-in builds the host's CLI environment.",
+  },
+  {
     file: "server/routes/instance/httpapi/server.ts",
     target: "claude-code/sdk",
     reason: "Server composition supplies the SDK service for host catalog probes.",
@@ -71,6 +91,8 @@ const INTERFACE = [
   // Native compaction restores a retained plan only after reading its durable owner-message admission record.
   // This shared persistence port does not invoke either mode's LLM loop.
   "maestro/admission-record",
+  // The Claude sign-in runs the CLI's own `auth login` through the shared process spawner.
+  "util/process",
 ]
 
 /** Orchestra's own loop. Claude mode never imports it, whatever INTERFACE says. */
