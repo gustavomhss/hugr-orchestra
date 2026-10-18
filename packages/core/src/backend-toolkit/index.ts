@@ -87,7 +87,7 @@ export const ensure = Effect.fn("BackendToolkit.ensure")(function* <Id extends s
 export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* <Id extends string = EngineId>(
   engines?: ReadonlyArray<Id>,
   target?: TargetId,
-) {
+): Effect.fn.Return<ReadonlyArray<State<Id>>> {
   const manifest = yield* Manifest
   const host = yield* Target
   const ids = engines ?? Object.values(manifest).map((item) => item.id as Id)

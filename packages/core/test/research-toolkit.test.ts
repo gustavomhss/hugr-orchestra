@@ -77,7 +77,7 @@ it.live("an unshipped pack is unsupported in status and ensure fails named, neve
     const root = yield* temporary("research-toolkit-")
     const scoped = <A, E, R>(self: Effect.Effect<A, E, R>) => self.pipe(Effect.provideService(ResearchToolkit.Root, root), Effect.provideService(ResearchToolkit.Manifest, {}))
     expect(yield* ResearchToolkit.status().pipe(scoped)).toEqual(
-      ["scip-typescript", "scip-python", "typescript"].map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
+      (["scip-typescript", "scip-python", "typescript"] as const).map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
     )
     const reason = yield* ResearchToolkit.ensure("typescript").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
     expect(reason).toBe("toolkit-not-ready:unsupported:typescript:pack-not-shipped")
@@ -90,11 +90,14 @@ it.live("research packs install on the backend lifecycle under the research root
     const target = host()
     const directory = path.join(f.root, "engines", "scip-typescript", `0.0.1-${target}`)
     const executable = path.join(directory, file("scip-typescript"))
-    expect(yield* ResearchToolkit.status("scip-typescript").pipe(f.within)).toEqual([
+    // The lifecycle's states carry the target, which the research State type leaves out.
+    const absent: ReadonlyArray<unknown> = yield* ResearchToolkit.status("scip-typescript").pipe(f.within)
+    expect(absent).toEqual([
       { engine: "scip-typescript", version: "0.0.1", target, status: "absent" },
     ])
     expect(yield* ResearchToolkit.ensure("scip-typescript").pipe(f.within)).toEqual({ executable })
-    expect(yield* ResearchToolkit.status("scip-typescript").pipe(f.within)).toEqual([
+    const ready: ReadonlyArray<unknown> = yield* ResearchToolkit.status("scip-typescript").pipe(f.within)
+    expect(ready).toEqual([
       { engine: "scip-typescript", version: "0.0.1", target, status: "ready", directory, executable },
     ])
     expect(yield* Effect.promise(() => readdir(path.join(f.root, "bin")))).toEqual([file("scip-typescript")])
