@@ -149,6 +149,27 @@ it.instance("default integration key connects its base provider without reload",
   }),
 )
 
+it.instance("getLanguage rebuilds the language after the integration key rotates", () =>
+  Effect.gen(function* () {
+    const credentials = yield* Credential.Service
+    const provider = yield* Provider.Service
+    yield* credentials.create({
+      integrationID: Integration.ID.make("anthropic"),
+      value: Credential.Key.make({ type: "key", key: "test-anthropic-key" }),
+    })
+    const model = yield* provider.getModel(ProviderV2.ID.anthropic, ModelV2.ID.make("claude-sonnet-4-6"))
+    const first = yield* provider.getLanguage(model)
+    // Same key: the cached language is reused.
+    expect(yield* provider.getLanguage(model)).toBe(first)
+    yield* credentials.create({
+      integrationID: Integration.ID.make("anthropic"),
+      value: Credential.Key.make({ type: "key", key: "test-anthropic-key-rotated" }),
+    })
+    // Rotated key: a language bound to the revoked key must not be served from the cache.
+    expect(yield* provider.getLanguage(model)).not.toBe(first)
+  }),
+)
+
 it.instance(
   "provider loaded from config with apiKey option",
   Effect.gen(function* () {
