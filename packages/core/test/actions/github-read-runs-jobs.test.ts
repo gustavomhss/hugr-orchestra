@@ -31,7 +31,8 @@ it.effect("run native filters, owning repository, actor and attempt survive proj
 }))
 
 it.effect("run duration is claimed only for completed runs with both native stamps", Effect.gen(function* () {
-  for (const data of [{ ...f.run, status: "in_progress" }, { ...f.run, run_started_at: undefined }, { ...f.run, updated_at: undefined }]) {
+  for (const data of [{ ...f.run, status: "in_progress" },
+    ...["run_started_at", "updated_at"].map((key) => Object.fromEntries(Object.entries(f.run).filter((entry) => entry[0] !== key)))]) {
     const fixture = f.recorded({ [runRoute]: f.response(data) })
     expect(yield* fixture.adapter.run(f.binding, "30433642")).not.toHaveProperty("duration")
   }
