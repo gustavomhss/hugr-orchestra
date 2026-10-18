@@ -25,8 +25,8 @@ fn a_root_over_the_cap_is_killed_with_memory_exceeded() {
     assert!(!out.exit.success());
 }
 
-/// Only a descendant holds the memory (the root stays tiny): the cap is on the whole tree. After `wait()` nothing
-/// of the tree is left.
+/// Only a descendant holds the memory (the root stays tiny): the cap is on the whole tree. Nothing of the tree is
+/// left.
 #[test]
 fn a_descendant_over_the_cap_kills_the_whole_tree() {
     let mut cmd = fixture();
@@ -34,7 +34,12 @@ fn a_descendant_over_the_cap_kills_the_whole_tree() {
     let child = cmd.spawn().expect("spawn");
     let exit = block(child.wait()).expect("wait");
     assert_eq!(exit.reason, Reason::MemoryExceeded, "{exit:?}");
-    assert!(block(child.processes()).expect("processes").is_empty());
+    // `wait()` resolves at the root's exit; the stop that confirms the rest of the tree gone may still be finishing.
+    let deadline = std::time::Instant::now() + LIMIT;
+    while !block(child.processes()).expect("processes").is_empty() {
+        assert!(std::time::Instant::now() < deadline, "the tree is still alive");
+        std::thread::sleep(Duration::from_millis(20));
+    }
 }
 
 /// Control: the same program under a roomy cap, living through several samples (the period is 250 ms), exits on its
