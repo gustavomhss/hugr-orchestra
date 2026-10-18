@@ -8,6 +8,8 @@ import { useServerSDK } from "./server-sdk"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { defaultTitle, titleNumber } from "./terminal-title"
 import { Persist, persisted, removePersisted } from "@/utils/persist"
+import { showToast } from "@/utils/toast"
+import { useLanguage } from "@/context/language"
 import { ScopedKey, ServerScope, type ServerScope as ServerScopeValue } from "@/utils/server-scope"
 
 export type LocalPTY = {
@@ -149,7 +151,8 @@ function createWorkspaceTerminalSession(
   sdk: DirectorySDK,
   dir: string,
   scope: ServerScopeValue,
-  legacySessionID?: string,
+  legacySessionID: string | undefined,
+  fail: (error: unknown) => void,
 ) {
   const location = { directory: sdk.directory }
   const legacy = scope === ServerScope.local ? getLegacyTerminalStorageKeys(dir, legacySessionID) : []
@@ -289,7 +292,7 @@ function createWorkspaceTerminalSession(
         })
       ).data
     })().catch((error: unknown) => {
-      console.error("Failed to clone terminal", error)
+      fail(error)
       return undefined
     })
     if (!data?.id) return
@@ -357,7 +360,7 @@ function createWorkspaceTerminalSession(
         })
         .catch((error: unknown): TerminalCreateResult => {
           if (focusRequest !== undefined) cancelFocus(focusRequest)
-          console.error("Failed to create terminal", error)
+          fail(error)
           return { status: "failed", error }
         })
     },
@@ -443,7 +446,7 @@ function createWorkspaceTerminalSession(
           ? sdk.client.pty.remove({ ptyID: id })
           : sdk.api.pty.remove({ ptyID: id, location })
       await removePromise.catch((error: unknown) => {
-        console.error("Failed to close terminal", error)
+        fail(error)
       })
     },
     move(id: string, to: number) {
@@ -466,6 +469,15 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
     const sdk = useSDK()
     const serverSDK = useServerSDK()
     const params = useParams()
+    const language = useLanguage()
+    // Terminal requests have no inline error surface, so report them as a toast.
+    const fail = (error: unknown) => {
+      console.error("Terminal request failed", error)
+      showToast({
+        title: language.t("common.requestFailed"),
+        description: error instanceof Error ? error.message : undefined,
+      })
+    }
     const cache = new Map<string, TerminalCacheEntry>()
     const scope = () => serverSDK().scope
     const directory = createMemo(() => base64Encode(sdk().directory))
@@ -503,7 +515,7 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
       }
 
       const entry = createRoot((dispose) => ({
-        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID),
+        value: createWorkspaceTerminalSession(sdk(), dir, serverScope, legacySessionID, fail),
         dispose,
       }))
 

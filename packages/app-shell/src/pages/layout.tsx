@@ -851,7 +851,7 @@ export default function LegacyLayout(props: ParentProps) {
   }
 
   async function archiveSession(session: Session) {
-    if ((await serverSDK().protocol) !== "v1") return
+    if ((await serverSDK().protocol) !== "v1") return void showToast(language.t("common.requestFailed"))
     const [store, setStore] = serverSync().child(session.directory)
     const sessions = store.session ?? []
     const index = sessions.findIndex((s) => s.id === session.id)
@@ -1242,7 +1242,7 @@ export default function LegacyLayout(props: ParentProps) {
 
     if (project.id && project.id !== "global") {
       const sdk = serverSDK()
-      if ((await sdk.protocol) !== "v1") return
+      if ((await sdk.protocol) !== "v1") return void showToast(language.t("common.requestFailed"))
       const result = await sdk.client.project
         .update({ projectID: project.id, directory: project.worktree, name })
         .then((response) => response.data)

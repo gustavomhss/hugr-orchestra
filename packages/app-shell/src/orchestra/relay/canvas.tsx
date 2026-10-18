@@ -468,8 +468,18 @@ export function Canvas(props: {
                 <div
                   class={`wf-tile k-${nodeTone(item.node)}`}
                   role="button"
+                  tabIndex={0}
                   aria-label={item.node.name}
                   aria-pressed={selected().has(item.node.id)}
+                  onKeyDown={(event) => {
+                    const id = item.node.id
+                    if (event.key === "Enter") return (event.preventDefault(), props.onOpen(id))
+                    if (event.key !== " ") return
+                    event.preventDefault()
+                    props.onSelect(
+                      selected().has(id) ? props.selected.filter((other) => other !== id) : [...props.selected, id],
+                    )
+                  }}
                 >
                   <NodeGlyph name={nodeGlyph(item.node)} />
                 </div>
