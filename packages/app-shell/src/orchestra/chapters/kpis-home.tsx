@@ -67,6 +67,7 @@ export function OrchestraHome(props: { home: HomeController }) {
             title={(sessionID, fallback) => owner.ctx.sync.session.peek(sessionID)?.title || fallback}
             running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
             openProviders={() => navigate("/orchestra/providers")}
+            newSession={() => props.home.project.openProjectNewSession(owner.conn, owner.directory)}
             openSession={(sessionID) => {
               owner.ctx.projects.open(owner.directory)
               owner.ctx.projects.touch(owner.directory)

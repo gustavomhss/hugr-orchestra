@@ -125,7 +125,7 @@ test("creates a session in a new project, connects OpenCode Go, and selects its 
   await expect(editor).toHaveText(draft)
   const providerTip = page.locator('[data-component="provider-tip"]')
   await expect(providerTip).toHaveAttribute("data-visible", "true")
-  await expect(providerTip).toContainText("Connect to 75+ providers")
+  await expect(providerTip).toContainText("Connect a provider to start")
 
   const modelControl = page.locator('[data-action="prompt-model"]')
   await expect(modelControl).toHaveCount(1)

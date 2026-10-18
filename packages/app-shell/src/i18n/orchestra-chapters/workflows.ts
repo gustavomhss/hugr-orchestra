@@ -22,7 +22,7 @@ export const WORKFLOWS_COPY = {
     "For a rule that applies to every session, such as blocking edits to generated files, use Hooks.",
   "orchestra.workflows.scope": "Available to every agent session in {{project}} and its other checkouts.",
   "orchestra.workflows.scope.repositoryRequired":
-    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    "Hooks and workflows need a git repository with at least one commit. This folder has no repository or no first commit yet, so they would apply to every such folder.",
   "orchestra.workflows.unsupported": "This server does not support workflows yet.",
   "orchestra.workflows.checkAgain": "Check again",
   "orchestra.workflows.loading": "Loading workflows…",
@@ -549,6 +549,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.instructions": "Instructions",
   "orchestra.workflows.details.instructionsHint":
     "What the agent does in this step. The phase instructions come first.",
+  "orchestra.workflows.details.instructionsEmpty": "No instructions yet. The agent only has the phase instructions to go on.",
   "orchestra.workflows.details.gateHint": "Optional. What the agent should have ready before this checkpoint.",
   "orchestra.workflows.details.skill": "Skill",
   "orchestra.workflows.details.noSkill": "No skill",

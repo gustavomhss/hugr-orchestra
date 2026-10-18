@@ -137,6 +137,27 @@ export function ShellNavigationCommands() {
       keybind: "mod+alt+arrowdown",
       onSelect: () => cycleProject(1),
     },
+    {
+      id: "home.go",
+      title: language.t("orchestra.shell.goHome"),
+      category: language.t("command.category.view"),
+      keybind: "mod+shift+h",
+      onSelect: () => {
+        if (layout.route().type !== "home") tabs.toggleHome({ home: false })
+      },
+    },
+    {
+      id: "session.new",
+      title: language.t("command.session.new"),
+      category: language.t("command.category.session"),
+      keybind: "mod+shift+s",
+      onSelect: () => {
+        const conn = connection()
+        const directory = target().directory
+        if (!conn || !directory) return
+        home.project.openProjectNewSession(conn, directory)
+      },
+    },
     // The titlebar tab strip owns the tab order and registers the cyclers.
     {
       id: "session.previous",

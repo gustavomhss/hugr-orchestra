@@ -647,7 +647,7 @@ export function MessageTimeline(props: {
 
   const deleteSession = async (sessionID: string) => {
     const session = sync().session.get(sessionID)
-    if (!session) return false
+    if (!session) return true
 
     const sessions = (sync().data.session ?? []).filter((s) => !s.parentID && !s.time?.archived)
     const index = sessions.findIndex((s) => s.id === sessionID)
@@ -724,8 +724,8 @@ export function MessageTimeline(props: {
     const [state, setState] = createStore({ deleting: false })
     const handleDelete = async () => {
       setState("deleting", true)
-      await deleteSession(props.sessionID)
-      dialog.close()
+      if (await deleteSession(props.sessionID)) return dialog.close()
+      setState("deleting", false)
     }
 
     return (
