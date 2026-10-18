@@ -67,7 +67,7 @@ function parse(tip: string): TipPart[] {
   return parts
 }
 
-const NO_MODELS_TIP = "Free models are ready to use. Run {highlight}/connect{/highlight} to add your own provider, such as Claude, GPT or Gemini"
+const NO_MODELS_TIP = "Run {highlight}/connect{/highlight} to add an AI provider, such as Claude, GPT or Gemini"
 const NO_MODELS_PARTS = parse(NO_MODELS_TIP)
 
 function shortcutText(value: string) {
