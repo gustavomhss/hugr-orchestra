@@ -274,11 +274,11 @@ export const Allowance = struct("Research.Allowance", {
   binding: Binding,
   dispatchCallID: text(256),
   // Version 1 bindings admitted before tiers existed were all quick; decoding them keeps that allowance.
-  tier: Depth.pipe(Schema.optional, Schema.withDecodingDefault(Effect.succeed("quick" as const))),
+  tier: Depth.pipe(Schema.withDecodingDefaultKey(Effect.succeed("quick" as const))),
   providerLimit: PositiveInt,
   toolLimit: PositiveInt,
   byteLimit: PositiveInt,
-  deadlineSeconds: PositiveInt.pipe(Schema.optional, Schema.withDecodingDefault(Effect.succeed(Tiers.quick.deadlineSeconds))),
+  deadlineSeconds: PositiveInt.pipe(Schema.withDecodingDefaultKey(Effect.succeed(Tiers.quick.deadlineSeconds))),
 })
 export type Allowance = typeof Allowance.Type
 

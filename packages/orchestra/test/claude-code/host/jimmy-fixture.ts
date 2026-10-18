@@ -82,8 +82,8 @@ export const setup = Effect.fn("ClaudeResearchFixture.setup")(function* (input: 
       Effect.tap(() => Effect.sync(() => { mirrored.set(part.callID, part) })), Effect.asVoid) },
   })
   // Native admission goes through the real hook and retained logical Task. Only SDK task identity is scripted.
-  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research", prompt?: string) {
-    const admitted = yield* dispatch(callID, { prompt })
+  const nativeDispatch = Effect.fn("ClaudeResearchFixture.nativeDispatch")(function* (callID = "toolu_research", brief?: string) {
+    const admitted = yield* dispatch(callID, { prompt: brief })
     const child = join.child(callID)
     if (!child) throw new Error(`Research dispatch denied: ${JSON.stringify(admitted.output)}`)
     const taskID = `native-${callID}`
