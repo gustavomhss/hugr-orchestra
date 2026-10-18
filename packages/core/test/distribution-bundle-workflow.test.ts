@@ -178,7 +178,7 @@ function inspect(input: unknown, discovered = distribution) {
     check(new Set(files).size === files.length, `BUNDLE_FILES_REPEATED: ${row.lane}/${row.package}/${row.host}`)
     files.forEach((file) => {
       check(!rows.some((other) => other !== row && other.package === row.package && other.host === row.host && other.files?.includes(file)), `BUNDLE_FILES_OVERLAP: ${row.lane}/${row.package}/${row.host}/${file}`)
-      check(file.startsWith("./test/") && file.endsWith(".test.ts") && !file.slice(2).split("/").some((part) => !part || part === "." || part === "..") && statSync(path.join(root, "packages", row.package, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
+      check(file.startsWith("./test/") && file.endsWith(".test.ts") && !file.slice(2).split("/").some((part) => !part || part === "." || part === "..") && statSync(path.join(root, row.package === "cli" ? "apps/cli" : `packages/${row.package}`, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
     })
     if (row.package === "cli") {
       check(files.includes("./test/distribution-native.test.ts") === (row.lane === "regression" && row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.lane}/${row.host}`)

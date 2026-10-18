@@ -866,7 +866,7 @@ describe("session HttpApi", () => {
 
         const query = new URLSearchParams({
           scope: "project",
-          path: "apps/orchestra/src",
+          path: "packages/orchestra/src",
           directory: currentDir,
         })
         const headers = { "x-orchestra-directory": test.directory }

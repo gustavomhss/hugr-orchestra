@@ -55,7 +55,7 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     call.arguments.length > 0 && ts.isStringLiteral(call.arguments[0]!) && call.arguments[0].text === "spawns"
   const counter = "packages/core/src/omni.ts"
   if (!set.has(counter)) return { problems: [`${counter} is not tracked`], flagged: [], checked: 0 }
-  const surface = new Set([counter, ...tracked.filter((file) => /^packages\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
+  const surface = new Set([counter, ...tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
     !/\.test\.tsx?$/.test(file) && readFileSync(path.join(base, file), "utf8").includes("Omni.count(") && calls(file, counts))])
   if (surface.size === 1) problems.push("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   const resolve = (from: string, specifier: string) => {

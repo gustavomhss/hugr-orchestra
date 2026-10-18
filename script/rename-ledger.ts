@@ -52,12 +52,12 @@ export const keptPaths: Kept[] = [
     reason: "frozen upstream OpenAPI fixture",
   },
   {
-    path: /^(?:packages\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
+    path: /^(?:(?:packages|apps)\/[^/]+|tooling\/http-recorder)\/test\/fixtures\/recordings\//,
     reason:
       "recorded HTTP cassettes; replay matches request bodies byte for byte, so they are re-recorded, not renamed",
   },
   {
-    path: /^(?:packages\/opencode|apps\/orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
+    path: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/tool\/fixtures\/models-api\.json$/,
     reason: "snapshot of the third-party models.dev catalog, which lists the Zen provider",
   },
   {
@@ -88,7 +88,7 @@ export const protectedStrings: Protected[] = [
   },
   {
     pattern: /`opencode\/\$\{name\}`/g,
-    paths: /^(?:packages\/opencode|apps\/orchestra)\/test\/project\/worktree\.test\.ts$/,
+    paths: /^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/project\/worktree\.test\.ts$/,
     reason: "legacy branch name the worktree test creates on purpose",
   },
   {
@@ -144,13 +144,13 @@ export const protectedStrings: Protected[] = [
   {
     pattern: /opencode\/\$\{InstallationVersion\}/g,
     paths:
-      /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^(?:packages\/opencode|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+      /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
     reason: "Zen free-model transport User-Agent, preserved by dev PR #91",
   },
   {
     pattern: /opencode(?:#credential|-test)\b/g,
     paths:
-      /^packages\/core\/test\/session-runner-model\.test\.ts$|^(?:packages\/opencode|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
+      /^packages\/core\/test\/session-runner-model\.test\.ts$|^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
     reason: "Zen provider-family fixtures for credential and free-model header eligibility",
   },
   {
