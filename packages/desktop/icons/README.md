@@ -9,7 +9,7 @@ channel's folder to `resources/icons`, where electron-builder and the main proce
 - `icon.png`: the Linux window icon in unpackaged runs (512 px).
 - `dock.png`: the macOS Dock icon in unpackaged runs (256 px), so it matches the packaged app.
 
-The macOS assets are generated from `packages/app/public/orchestra/hugr-symbol-inverse.svg` without changing its
+The macOS assets are generated from `packages/app-shell/public/orchestra/hugr-symbol-inverse.svg` without changing its
 geometry or colors. From `packages/desktop`, regenerate with `python3 scripts/mac-icons.py`; `--check` compares bytes
 without writing them. Reproduction uses librsvg, Pillow and macOS `iconutil`; byte identity is scoped to the recorded
 toolchain, not promised across versions.

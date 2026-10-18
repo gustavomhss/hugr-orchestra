@@ -182,7 +182,7 @@ test("Node config loader bundles registry bootstrap helpers for normal and candi
     for (const file of ["electron.vite.config.ts", "electron.vite.candidate.config.ts"]) {
       const loaded = await loadConfigFromFile({ command: "build", mode: "production" }, file, process.cwd())
       assert(loaded.dependencies.some((file) => file.endsWith("/script/src/workspace-paths.ts")))
-      assert.equal(loaded.config.renderer.publicDir, realpathSync(path.resolve("../app/public")))
+      assert.equal(loaded.config.renderer.publicDir, realpathSync(path.resolve("../app-shell/public")))
     }
     console.log("REGISTRY_CONFIG_LOAD_OK")
   `], { cwd: import.meta.dirname, env: { PATH: process.env.PATH, ORCHESTRA_CHANNEL: "dev" }, stdout: "pipe", stderr: "pipe" })

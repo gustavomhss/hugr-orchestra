@@ -113,7 +113,7 @@ if (config.treeArgs) {
     /**
      * An install whose installer outlives its own output: the child stops writing, the host drains every byte the
      * child produced, and only then is it released to exit. A child that exits with output still in flight loses
-     * the tail (omni keeps 16 MiB per stream for a consumer, packages/omni/docs/api-contract.md §4), which would put
+     * the tail (omni keeps 16 MiB per stream for a consumer, native/omni/docs/api-contract.md §4), which would put
      * the 64 MiB cap out of reach and let that loss stand in for it.
      */
     drained: (config: Config) =>

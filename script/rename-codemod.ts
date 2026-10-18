@@ -57,13 +57,13 @@ const rules: Rule[] = [
 
 // Rewritten by their generators, never by rules.
 const GENERATED =
-  /^packages\/sdk\/js\/src\/v2\/gen\/|^packages\/sdk\/openapi\.json$|^packages\/client\/src\/generated(?:-effect)?\/|^packages\/atlas-boundary\/src\/generated\//
+  /^packages\/sdk\/js\/src\/v2\/gen\/|^packages\/sdk\/openapi\.json$|^packages\/client\/src\/generated(?:-effect)?\/|^(?:packages\/atlas-boundary|modules\/atlas\/boundary)\/src\/generated\//
 // yargs right-aligns the type column, so a longer name must eat the padding to keep the line width.
 const RIGHT_ALIGNED =
   /^packages\/(?:opencode|orchestra)\/test\/cli\/help\/__snapshots__\/help-snapshots\.test\.ts\.snap$/
 // Golden and relay fixtures feed byte comparisons and hashes. The codemod refuses to run rather than change one; only
 // their .md docs may change. A refusal lists the lines, which then need a ledger entry or a deliberate re-record.
-const FROZEN = /(?:^|\/)test\/golden\/|^packages\/relay\/test\/fixtures\//
+const FROZEN = /(?:^|\/)test\/golden\/|^(?:packages|modules)\/relay\/test\/fixtures\//
 
 const args = process.argv.slice(2)
 const dryRun = args.includes("--dry-run")
@@ -335,7 +335,7 @@ function regenerate() {
   step("the v2 SDK", ".", ["bun", "./packages/sdk/js/script/build.ts"])
   step("packages/sdk/openapi.json", "packages/orchestra", ["bun", "dev", "generate"], "../sdk/openapi.json")
   step("the client", "packages/client", ["bun", "run", "generate"])
-  step("the Atlas bundles", "packages/atlas-boundary", ["bun", "run", "generate"])
+  step("the Atlas bundles", existsSync(path.join(root, "modules/atlas/boundary")) ? "modules/atlas/boundary" : "packages/atlas-boundary", ["bun", "run", "generate"])
 }
 
 function git(cwd: string, ...command: string[]) {

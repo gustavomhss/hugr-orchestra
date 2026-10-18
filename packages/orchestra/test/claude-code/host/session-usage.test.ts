@@ -5,7 +5,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { ClaudeHost } from "@/claude-code/host/session"
 import { Provider } from "@/provider/provider"
 import { ClaudeEngineFixture } from "../engine-fixture"
-import { getSessionCost } from "../../../../app/src/components/session/session-context-metrics"
+import { getSessionCost } from "../../../../app-shell/src/components/session/session-context-metrics"
 
 const model = "claude-haiku-4-5-20251001"
 const contextWindow = 512_000

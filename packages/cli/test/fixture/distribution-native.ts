@@ -135,7 +135,7 @@ export async function buildVersions(directory: string, artifacts?: { omni: strin
   if (artifacts && nativeLibc?.kind !== "musl") throw new Error("NATIVE_EXPLICIT_ARTIFACTS_REQUIRE_VERIFIED_MUSL")
   await successful([process.execPath, "script/runtime-proof.ts", "--target", target, "--host"], { ...box, cwd: cli })
   const oracle = await captureOracle() // Canonical bytes captured before either compile.
-  const release = resolve(cli, "../omni/target/release")
+  const release = resolve(cli, "../../native/omni/target/release")
   const companions = [
     { source: join(release, process.platform === "win32" ? "hugr_omni_node.dll" : process.platform === "darwin" ? "libhugr_omni_node.dylib" : "libhugr_omni_node.so"), path: "bin/hugr_omni.node" },
     { source: join(release, `hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}`), path: `bin/hugr-omni-supervisor${process.platform === "win32" ? ".exe" : ""}` },

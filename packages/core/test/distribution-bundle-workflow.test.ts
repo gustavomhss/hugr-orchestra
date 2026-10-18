@@ -173,13 +173,13 @@ function inspect(input: unknown, discovered = distribution) {
   const oracles = requireStep(job.steps, "Prove localized proof oracles", "BUNDLE_LOCALIZED_ORACLES")
   check(abi.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && desktop.if === abi.if && desktop["working-directory"] === "packages/desktop" && job.steps.indexOf(abi) < job.steps.indexOf(desktop) && job.steps.indexOf(desktop) < job.steps.indexOf(run), "BUNDLE_SOURCE_ABI")
   check(elf.if === abi.if && elf["working-directory"] === "packages/schema" && job.steps.indexOf(elf) < job.steps.indexOf(run), "BUNDLE_SCHEMA_ELF")
-  check(parser.if === abi.if && parser["working-directory"] === "packages/maestro-arsenal" && job.steps.indexOf(parser) < job.steps.indexOf(run), "BUNDLE_PARSER_ABI")
+  check(parser.if === abi.if && parser["working-directory"] === "modules/maestro/arsenal" && job.steps.indexOf(parser) < job.steps.indexOf(run), "BUNDLE_PARSER_ABI")
   check(oracles.if === `${abi.if} && matrix.cpu == 'X64'` && oracles["working-directory"] === "packages/cli" && job.steps.indexOf(parser) < job.steps.indexOf(oracles) && job.steps.indexOf(oracles) < job.steps.indexOf(run), "BUNDLE_LOCALIZED_ORACLES")
   check(oracles.run === `set -euo pipefail\nmkdir -p ../../distribution-logs\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ${localized.join(" ")} 2>&1 | tee ../../distribution-logs/localized-oracles.log\n`, "BUNDLE_LOCALIZED_ORACLES")
   localized.forEach((file) => check(statSync(path.join(root, "packages/cli", file), { throwIfNoEntry: false })?.isFile() && !rows.some((row) => row.files?.includes(file)), `BUNDLE_LOCALIZED_ORACLE_MISSING_OR_REPEATED: ${file}`))
   check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
   check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
-  check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "packages/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
+  check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "native/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
   check(posix.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.platform != 'win32'" && posix["working-directory"] === "packages/cli" && job.steps.indexOf(posix) < job.steps.indexOf(run), "BUNDLE_NATIVE_POSIX")
   check(posix.run === 'set -euo pipefail\nmkdir -p ../../distribution-logs\nif [ "$RUNNER_OS" = macOS ]; then\n  sdk=$(xcrun --sdk macosx --show-sdk-path)\n  export ORCHESTRA_ARTIFACT_DARWIN_SDK="$sdk"\nfi\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/artifact-abi.test.ts -t POSIX 2>&1 | tee ../../distribution-logs/native-posix-abi.log\n', "BUNDLE_NATIVE_POSIX")
   check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "packages/${{ matrix.package }}", "BUNDLE_EXECUTION")
@@ -220,7 +220,7 @@ function inspect(input: unknown, discovered = distribution) {
   check(staticJob?.["timeout-minutes"] === 20, "BUNDLE_STATIC_TIMEOUT")
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
-    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "packages/maestro-arsenal", undefined],
+    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "modules/maestro/arsenal", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
   // Opting in runs the same qualification job; only its single row and parallelism differ.
