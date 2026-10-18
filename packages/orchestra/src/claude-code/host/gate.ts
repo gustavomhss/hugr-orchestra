@@ -33,7 +33,7 @@ import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { Permission } from "@/permission"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
-import { PromptHost } from "@/session/prompt-host"
+import { ToolSafetyPlacement } from "@orchestra/core/tool-safety-placement"
 import { approve, resolvePath } from "@/tool/shell/scan"
 import { ShellExecution } from "@/tool/shell/execution"
 import type { Tool } from "@/tool/tool"
@@ -264,7 +264,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
       const hooked = yield* arsenal.withSession(actor.sessionID, ToolSafety.beforeHooked({ tool: call.tool, args: call.args,
         sessionID: actor.sessionID, callID: toolUseID, agent: actor.seat, directory: session.directory,
         projectID: session.projectID, projectDirectory, ...(part ? { assistantMessageID: part.messageID } : {}) })).pipe(
-        Effect.provideService(ToolSafetyHooks.Placement, PromptHost.placement(locations, session, scope)),
+        Effect.provideService(ToolSafetyHooks.Placement, ToolSafetyPlacement.make(locations, session, scope)),
         Effect.onExit((exit) => Exit.isSuccess(exit) && exit.value ? Effect.void : Scope.close(scope, Exit.void)))
       if (hooked) hooks.set(toolUseID, { hooked, scope })
     }),
