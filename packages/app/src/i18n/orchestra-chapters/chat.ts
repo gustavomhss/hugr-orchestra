@@ -9,6 +9,7 @@ export const CHAT_COPY = {
   "orchestra.chat.exportDiffSkipped": "{{count}} listed files had no patch text and were left out of the export.",
   "orchestra.chat.contextFiles": "Add files to context",
   "orchestra.chat.stop": "Stop",
+  "orchestra.chat.stop.failed": "Could not stop the session. It may still be running on the server.",
   "orchestra.chat.placeholder": "Message Orchestra…",
   "orchestra.chat.menu.rename": "Rename session",
   "orchestra.chat.menu.export": "Export session",
