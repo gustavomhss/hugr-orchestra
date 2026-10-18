@@ -1,10 +1,9 @@
 import { Effect } from "effect"
 import { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
-import { Git } from "@orchestra/core/git"
-import { AbsolutePath } from "@orchestra/core/schema"
 import { AppProcess } from "@orchestra/core/process"
 import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import { CodeSearch } from "@orchestra/core/research-toolkit/search"
+import { Git } from "@/git"
 import { InstanceState } from "@/effect/instance-state"
 import DESCRIPTION from "./code-search.txt"
 import { Tool } from "./tool"
@@ -21,8 +20,8 @@ export const CodeSearchTool = Tool.define("code_search", Effect.gen(function* ()
     execute: (input: CodeIndex.SearchInput, ctx: Tool.Context): Effect.Effect<Tool.ExecuteResult> =>
       Effect.gen(function* () {
         const instance = yield* InstanceState.context
-        const repository = yield* git.repo.discover(AbsolutePath.make(instance.directory))
-        const commit = repository ? yield* git.history.head(repository) : undefined
+        const head = yield* git.run(["rev-parse", "HEAD"], { cwd: instance.directory })
+        const commit = head.exitCode === 0 ? head.text().trim() : undefined
         const result = yield* CodeSearch.run(input, { cwd: instance.directory, signal: ctx.abort, commit }).pipe(
           Effect.provideService(AppProcess.Service, processes),
           Effect.provideService(RipgrepBinary.Service, binary),
