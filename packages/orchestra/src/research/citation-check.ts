@@ -1,10 +1,12 @@
 export * as ResearchCitationCheck from "./citation-check"
 
-import { Effect } from "effect"
+import path from "node:path"
+import { Effect, Option } from "effect"
 import { Research } from "@orchestra/schema/research"
 import type { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { Database } from "@orchestra/core/database/database"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { ResearchQualifications } from "./qualifications"
 
 export type Issue = { readonly citation: string; readonly reason: string }
@@ -18,6 +20,9 @@ export type Result = {
 const URL_PATTERN = /https?:\/\/[^\s<>()[\]{}"'`]+/g
 // A path, then `:line` or `:start-end`. URLs are removed and candidates filtered by `file` before use.
 const PATH_PATTERN = /(?<![\w@~./\\:-])((?:[A-Za-z]:)?[\w@~./\\-]+):(\d+)(?:-(\d+))?(?!\d)/g
+// The same path with a `#L10` or `#L10-L20` anchor, as written in markdown links and code-host URLs.
+const ANCHOR_PATTERN = /(?<![\w@~./\\:-])((?:[A-Za-z]:)?[\w@~./\\-]+)#L(\d+)(?:-L?(\d+))?(?!\d)/g
+const URL_ANCHOR = /#L(\d+)(?:-L?(\d+))?$/
 const FENCE_PATTERN = /(```|~~~)[\s\S]*?\1/g
 // Top-level domains that are not common file extensions; `name.<tld>:<n>` without a slash is a host and port.
 const HOSTS = new Set(["com", "org", "net", "io", "dev", "ai", "co", "edu", "gov", "info", "biz", "me", "us", "uk", "eu", "de",
@@ -73,37 +78,34 @@ export const check = Effect.fn("ResearchCitationCheck.check")(function* (
 
   const refs = [...new Map([...card.findingRefs, ...owned.flatMap((document) => document.receipt.findingRefs)]
     .map((ref) => [`${ref.id}:${ref.revision}`, ref])).values()]
-  const findings = refs.flatMap((ref) => {
+  const findings = refs.map((ref) => {
     const citation = `finding ${ref.id}@${ref.revision}`
     const record = own.find((entry) => ResearchQualifications.ownFinding(entry, binding, ref))?.data.record
-    if (!record || record.kind !== "finding") return [{ citation, reason: "finding not admitted by this dispatch" }]
-    if (record.nature !== "hypothesis" && !record.evidence.length) return [{ citation, reason: "finding has no supporting evidence" }]
+    if (!record || record.kind !== "finding") return { supported: false, issues: [{ citation, reason: "finding not admitted by this dispatch" }] }
+    if (record.nature !== "hypothesis" && !record.evidence.length) return { supported: false, issues: [{ citation, reason: "finding has no supporting evidence" }] }
     if ([...record.evidence, ...record.contrary].some((item) => !retained.has(ResearchLedger.canonical(item.source))))
-      return [{ citation, reason: "finding cites evidence not retained by this dispatch" }]
-    return []
+      return { supported: false, issues: [{ citation, reason: "finding cites evidence not retained by this dispatch" }] }
+    // A hypothesis without evidence is admissible, but it verifies nothing for the answer.
+    return { supported: record.evidence.length > 0, issues: [] }
   })
 
-  const cited = [...new Set([card.answer, prose, ...owned.map((document) => document.body)].flatMap(extract))]
-  const unmapped = yield* Effect.forEach(cited, (citation) => Effect.gen(function* () {
-    if (/^https?:/.test(citation)) {
-      const target = url(citation)
-      return sources.some((source) => source.origin.kind === "url" && target !== undefined && url(source.origin.uri) === target)
-        ? [] : [{ citation, reason: "no retained source for this URL in this dispatch" }]
-    }
-    const match = /^(.*):(\d+)(?:-(\d+))?$/.exec(citation)
-    if (!match) return []
-    const file = normal(match[1])
-    const start = Number(match[2])
-    const end = Number(match[3] ?? match[2])
-    const candidates = sources.filter((source) => source.origin.kind === "file" &&
-      (normal(source.origin.uri) === file || normal(source.origin.uri).endsWith(`/${file}`)))
-    if (!candidates.length) return [{ citation, reason: "no retained source for this path in this dispatch" }]
+  // Relative citations resolve exactly against this dispatch's directory or worktree, through the same real path the
+  // read tool records, so a bare `index.ts:10` cannot borrow any captured `*/index.ts`.
+  const fs = yield* Effect.serviceOption(FSUtil.Service)
+  const targets = (written: string) => Effect.forEach([...new Set([binding.directory, binding.worktree])], (root) => {
+    const resolved = path.resolve(root, written)
+    return Option.isSome(fs) ? fs.value.resolve(resolved).pipe(Effect.map((real) => [resolved, real]),
+      Effect.catchDefect(() => Effect.succeed([resolved]))) :Effect.succeed([resolved])
+  }).pipe(Effect.map((list) => new Set(list.flat().map(normal))))
+  const covered = (citation: string, candidates: readonly Research.SourceReceipt[], start: number, end: number) => Effect.gen(function* () {
     const extents = candidates.flatMap((source) => source.observed?.lineStart
       ? [{ start: source.observed.lineStart, end: source.observed.lineEnd ?? source.observed.lineStart - 1 }] : [])
     if (start <= end && extents.some((extent) => extent.start <= start && end <= extent.end)) return []
-    // A complete capture from the first byte has original coordinates equal to its retained lines.
+    // A complete capture from the first byte has original coordinates equal to its retained lines. A page rendered
+    // from HTML or otherwise transformed has no such coordinates, so it never covers a line anchor.
     const counts = yield* Effect.forEach(candidates.filter((source) => !source.observed?.lineStart && source.complete &&
-      (source.observed?.byteStart ?? 0) === 0), (source) => {
+      (source.observed?.byteStart ?? 0) === 0 && (source.origin.kind !== "url" ||
+        (!/html/i.test(source.mediaType) && (!source.transformation || source.transformation === "utf8-decode-v1")))), (source) => {
       const key = ResearchLedger.canonical(source.ref)
       const known = lines.get(key)
       if (known !== undefined) return Effect.succeed(known)
@@ -116,13 +118,40 @@ export const check = Effect.fn("ResearchCitationCheck.check")(function* (
     if (start <= end && counts.some((count) => end <= count)) return []
     const captured = extents.map((extent) => `${extent.start}-${extent.end}`).join(", ")
     return [{ citation, reason: captured ? `line outside captured range (captured ${captured})` : "line outside captured range" }]
+  })
+
+  const cited = [...new Set([card.answer, prose, ...owned.map((document) => document.body)].flatMap(extract))]
+  const unmapped = yield* Effect.forEach(cited, (citation) => Effect.gen(function* () {
+    if (/^https?:/.test(citation)) {
+      const target = url(citation)
+      const candidates = sources.filter((source) => source.origin.kind === "url" && target !== undefined && url(source.origin.uri) === target)
+      if (!candidates.length) return [{ citation, reason: "no retained source for this URL in this dispatch" }]
+      // A `#L10-L20` anchor cites lines, so the retained page must hold them, not merely exist.
+      const anchor = URL_ANCHOR.exec(citation)
+      return anchor ? yield* covered(citation, candidates, Number(anchor[1]), Number(anchor[2] ?? anchor[1])) : []
+    }
+    const match = /^(.*):(\d+)(?:-(\d+))?$/.exec(citation)
+    if (!match) return [{ citation, reason: "citation form not recognized" }]
+    const exact = yield* targets(match[1])
+    const candidates = sources.filter((source) => source.origin.kind === "file" && exact.has(normal(source.origin.uri)))
+    if (!candidates.length) return [{ citation, reason: "no retained source for this path in this dispatch" }]
+    return yield* covered(citation, candidates, Number(match[2]), Number(match[3] ?? match[2]))
   }))
 
-  const issues = [...new Map([...documents.flatMap((document) => document.issues), ...evidence.flat(), ...citations, ...findings, ...unmapped.flat()]
+  // R2 anti-vacuity: an answered card must rest on at least one citation that resolved to this dispatch's evidence.
+  const authored = owned.reduce((sum, document) => sum + Object.keys(document.receipt.citations).length, 0)
+  const total = card.evidenceRefs.length + authored + refs.length + cited.length
+  const verified = evidence.filter((list) => !list.length).length + authored - citations.length +
+    findings.filter((finding) => finding.supported).length + unmapped.filter((list) => !list.length).length
+  const vacuous = card.sufficiency === "answered" && verified === 0
+    ? [{ citation: "answer", reason: total ? "answered card has no verified evidence" : "answered card cites no evidence" }] : []
+
+  const issues = [...new Map([...vacuous, ...documents.flatMap((document) => document.issues), ...evidence.flat(), ...citations,
+    ...findings.flatMap((finding) => finding.issues), ...unmapped.flat()]
     .map((issue) => [`${issue.citation}\n${issue.reason}`, issue])).values()]
   return {
     verdict: issues.length ? "fail" : "pass",
-    checked: { evidence: card.evidenceRefs.length + owned.reduce((sum, document) => sum + Object.keys(document.receipt.citations).length, 0),
+    checked: { evidence: card.evidenceRefs.length + authored,
       prose: cited.length, findings: refs.length, documents: card.documentRefs.length },
     issues: issues.slice(0, 32),
     omitted: Math.max(0, issues.length - 32),
@@ -148,7 +177,8 @@ function extract(text: string) {
 }
 
 function paths(text: string) {
-  return [...text.replace(URL_PATTERN, " ").matchAll(PATH_PATTERN)].filter((match) => file(match[1]))
+  const bare = text.replace(URL_PATTERN, " ")
+  return [...bare.matchAll(PATH_PATTERN), ...bare.matchAll(ANCHOR_PATTERN)].filter((match) => file(match[1]))
     .map((match) => `${match[1]}:${match[2]}${match[3] ? `-${match[3]}` : ""}`)
 }
 
@@ -204,7 +234,8 @@ function url(value: string) {
 }
 
 function normal(value: string) {
-  return value.replaceAll("\\", "/").replace(/^\.\//, "")
+  const slashed = value.replaceAll("\\", "/").replace(/^\.\//, "")
+  return process.platform === "win32" ? slashed.toLowerCase() : slashed
 }
 
 function squash(value: string) {

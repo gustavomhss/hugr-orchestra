@@ -157,4 +157,40 @@ ${fence}`
     yield* fixture.sessions.remove(fixture.authority.id)
     yield* foreign.sessions.remove(foreign.authority.id)
   }))
+
+  it.instance("R2: an answered card with no citation, or none verified, fails and is never done", () => Effect.gen(function* () {
+    const fixture = yield* dispatch()
+    const empty = yield* fixture.assemble("It works.", { ...base, answer: "It works.", evidenceRefs: [] })
+    expect(empty.citationCheck).toEqual({ verdict: "fail", checked: { evidence: 0, prose: 0, findings: 0, documents: 0 },
+      issues: [{ citation: "answer", reason: "answered card cites no evidence" }], omitted: 0 })
+    expect(empty.outcome).toBeUndefined()
+    const unverified = yield* fixture.assemble("See missing.ts:1.", { ...base, answer: "It works.", evidenceRefs: [] })
+    expect(unverified.citationCheck?.verdict).toBe("fail")
+    expect(unverified.citationCheck?.issues).toEqual([
+      { citation: "answer", reason: "answered card has no verified evidence" },
+      { citation: "missing.ts:1", reason: "no retained source for this path in this dispatch" },
+    ])
+    expect(unverified.outcome).toBeUndefined()
+    // R2 binds answered cards only; a partial card with nothing cited is not promoted either way.
+    const partial = yield* fixture.assemble("Not found yet.", { ...base, sufficiency: "partial", answer: "Not found yet.", evidenceRefs: [] })
+    expect(partial.citationCheck?.verdict).toBe("pass")
+    expect(partial.outcome).toBeUndefined()
+    yield* fixture.sessions.remove(fixture.authority.id)
+  }))
+
+  it.instance("paths match the retained file exactly and #L anchors are line citations", () => Effect.gen(function* () {
+    const fixture = yield* dispatch()
+    const fs = yield* FSUtil.Service
+    yield* fs.writeWithDirs(path.join(fixture.directory, "nested", "index.ts"), "export const a = 1\nexport const b = 2\n")
+    yield* fixture.run("read", { filePath: path.join("nested", "index.ts") })
+    // A bare basename names the root `index.ts`, which was never read; it must not borrow `nested/index.ts`.
+    const prose = "index.ts:1 is not retained; nested/index.ts:1, nested/index.ts#L1-L2 and [b](nested/index.ts#L2) hold; nested/index.ts#L40 does not."
+    const result = yield* fixture.assemble(prose, { ...base, answer: "Exported value (nested/index.ts#L1).", evidenceRefs: [] })
+    expect(result.citationCheck?.verdict).toBe("fail")
+    expect(result.citationCheck?.checked.prose).toBe(5)
+    expect(result.citationCheck?.issues.map((issue) => issue.citation)).toEqual(["index.ts:1", "nested/index.ts:40"])
+    expect(result.citationCheck?.issues[0]?.reason).toBe("no retained source for this path in this dispatch")
+    expect(result.citationCheck?.issues[1]?.reason).toStartWith("line outside captured range")
+    yield* fixture.sessions.remove(fixture.authority.id)
+  }))
 })
