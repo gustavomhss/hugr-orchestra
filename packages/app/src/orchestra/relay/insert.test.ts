@@ -140,25 +140,37 @@ describe("hook presets", () => {
   ]
 
   test("a preset is offered only when the server lists every node and operation it needs", () => {
-    const offered = hookPresets(types(["read", "edit", "write", "command"], actions(["main"])))
-    expect(offered.map((preset) => preset.id)).toEqual(["protect-generated", "ask-shell", "remind-first"])
-    // Without an Allow node type, the No branch is left out instead of offering an action the server lacks.
-    expect(offered[0].nodes.map((node) => node.id)).toEqual(["event", "match", "block"])
+    const offered = hookPresets(types(["read", "edit", "write", "command", "tool"], actions(["main"])))
+    expect(offered.map((preset) => preset.id)).toEqual(["protect-generated", "ask-shell", "remind-edit"])
+    // Write and apply_patch are operations of their own, so protecting generated files needs the any-tool trigger.
+    const noTool = hookPresets(types(["read", "edit", "write", "command"], actions(["main"])))
+    expect(noTool.map((preset) => preset.id)).toEqual(["ask-shell", "remind-edit"])
+    // A preset never offers an action the server lacks.
+    const noAsk = actions(["main"]).filter((item) => item.type !== "relay.hookApprove")
+    expect(hookPresets(types(["edit", "command", "tool"], noAsk)).map((preset) => preset.id)).toEqual([
+      "protect-generated",
+      "remind-edit",
+    ])
   })
 
-  test("the session-stop gate needs the session-idle trigger and Run gate's Pass and Fail", () => {
-    const all = types(
-      ["edit", "command", "session-idle"],
-      [...actions(["Pass", "Fail"]), { type: "relay.hookAllow", outputs: ["main"] }],
-    )
+  test("the session-stop check needs the session-idle trigger and Run gate, and only records", () => {
+    const all = types(["edit", "command", "tool", "session-idle"], actions(["Pass", "Fail"]))
     expect(hookPresets(all).map((preset) => preset.id)).toEqual([
       "protect-generated",
       "ask-shell",
-      "gate-stop",
-      "remind-first",
+      "check-stop",
+      "remind-edit",
     ])
-    const gate = hookPresets(all).find((preset) => preset.id === "gate-stop")!
-    expect(gate.nodes[0].parameters).toEqual({ operation: "session-idle", timing: "after" })
+    const check = hookPresets(all).find((preset) => preset.id === "check-stop")!
+    expect(check.nodes[0].parameters).toEqual({ operation: "session-idle", timing: "after" })
+    // The runtime drops what a hook decides at session stop, so the preset holds no action that could only be dropped.
+    expect(check.nodes.map((node) => node.type)).toEqual([TRIGGER, "relay.hookVerify"])
+  })
+
+  test("no preset ends in an Allow branch: an unconnected No already lets the call through", () => {
+    const every = hookPresets(undefined)
+    expect(every).toHaveLength(4)
+    expect(every.flatMap((preset) => preset.nodes).some((node) => node.type === "relay.hookAllow")).toBe(false)
   })
 
   test("the risky-commands preset uses two conditions, never a | inside one pattern", () => {

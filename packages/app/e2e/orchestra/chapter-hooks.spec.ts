@@ -93,8 +93,8 @@ test("trigger events come from the contract and Block refuses an After event", a
     "After read file",
     "Before edit file",
     "After edit file",
-    "Before create file",
-    "After create file",
+    "Before create or overwrite file",
+    "After create or overwrite file",
     "Before shell command",
     "After shell command",
     "Before any tool",
@@ -119,7 +119,7 @@ test("a | in a pattern is literal, so a second pattern is another condition on N
   const saved = page.waitForRequest(
     (request) => request.method() === "PATCH" && request.url().includes("/api/relay/document/ask-shell"),
   )
-  await details(page).getByRole("button", { name: "Add condition" }).click()
+  await details(page).getByRole("button", { name: "Or match another pattern" }).click()
   await expect(details(page).locator("h2")).toHaveText("Push command 2")
   const body = (await saved).postDataJSON() as {
     nodes: { id: string; name: string }[]

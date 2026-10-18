@@ -49,32 +49,35 @@ export const HOOKS_COPY = {
   "orchestra.hooks.create.blank": "Blank hook",
   "orchestra.hooks.create.blankBody": "A trigger and nothing else.",
   "orchestra.hooks.preset.protect-generated": "Protect generated files",
-  "orchestra.hooks.preset.protect-generated.body": "Refuse edits under a generated path and say how to regenerate.",
+  "orchestra.hooks.preset.protect-generated.body":
+    "Refuse edits and overwrites under a generated path and say how to regenerate.",
   "orchestra.hooks.preset.ask-shell": "Ask before risky commands",
   "orchestra.hooks.preset.ask-shell.body": "Pause commands that change shared state until a human approves.",
-  "orchestra.hooks.preset.gate-stop": "Gate on session stop",
-  "orchestra.hooks.preset.gate-stop.body": "Run a check when an agent stops and ask for a repair on failure.",
-  "orchestra.hooks.preset.remind-first": "Remind before first edit",
-  "orchestra.hooks.preset.remind-first.body": "Add a short instruction before the agent changes a file.",
+  "orchestra.hooks.preset.check-stop": "Check at session stop",
+  "orchestra.hooks.preset.check-stop.body":
+    "Run a check when an agent stops and record whether it passed. It cannot send the agent back.",
+  "orchestra.hooks.preset.remind-edit": "Remind on every edit",
+  "orchestra.hooks.preset.remind-edit.body":
+    "Add a short note to the result of each edit, so the agent reads it right after the edit.",
   "orchestra.hooks.preset.pathMatches": "Path matches",
+  "orchestra.hooks.preset.isEdit": "Edits a file",
+  "orchestra.hooks.preset.isWrite": "Creates or overwrites a file",
   "orchestra.hooks.preset.pushMatches": "Push command",
   "orchestra.hooks.preset.deleteMatches": "Recursive delete",
   "orchestra.hooks.preset.blockChange": "Block change",
   "orchestra.hooks.preset.blockMessage":
     "Generated files are rebuilt by the generator. Change the source schema and regenerate.",
   "orchestra.hooks.preset.askMessage": "This command changes shared state. Approve to continue.",
-  "orchestra.hooks.preset.gateMessage": "Type errors must be fixed before stopping.",
-  "orchestra.hooks.preset.recordMessage": "Typecheck passed at stop.",
-  "orchestra.hooks.preset.repairMessage": "Fix the reported type errors, then stop again.",
-  "orchestra.hooks.preset.remindMessage": "Read AGENTS.md before the first edit in a session.",
+  "orchestra.hooks.preset.gateMessage": "Typecheck failed when the session stopped.",
+  "orchestra.hooks.preset.remindMessage": "Check that this change follows AGENTS.md.",
 
   "orchestra.hooks.trigger.before.read": "Before read file",
   "orchestra.hooks.trigger.before.edit": "Before edit file",
-  "orchestra.hooks.trigger.before.write": "Before create file",
+  "orchestra.hooks.trigger.before.write": "Before create or overwrite file",
   "orchestra.hooks.trigger.before.command": "Before shell command",
   "orchestra.hooks.trigger.after.read": "After read file",
   "orchestra.hooks.trigger.after.edit": "After edit file",
-  "orchestra.hooks.trigger.after.write": "After create file",
+  "orchestra.hooks.trigger.after.write": "After create or overwrite file",
   "orchestra.hooks.trigger.after.command": "After shell command",
   "orchestra.hooks.trigger.before.tool": "Before any tool",
   "orchestra.hooks.trigger.after.tool": "After any tool",
@@ -106,14 +109,21 @@ export const HOOKS_COPY = {
   "orchestra.hooks.typeDesc.block": "Refuse the operation and tell the agent why. Before events only.",
   "orchestra.hooks.typeDesc.approve": "Pause until a human approves. Before events only.",
   "orchestra.hooks.typeDesc.allow": "Let the operation continue. Optionally note why.",
-  "orchestra.hooks.typeDesc.remind": "Add a short instruction to the agent's context.",
+  "orchestra.hooks.typeDesc.remind": "Add a short note the agent reads with the call's result, or with the prompt.",
   "orchestra.hooks.typeDesc.verify": "Run a command check. Continue on Pass or Fail.",
   "orchestra.hooks.typeDesc.repair": "Send the agent back with what to fix.",
-  "orchestra.hooks.typeDesc.record": "Write the event to the session log only.",
+  "orchestra.hooks.typeDesc.record": "Write the event to Activity only. The agent sees nothing.",
   "orchestra.hooks.field.path": "File path",
   "orchestra.hooks.field.tool": "Tool",
   "orchestra.hooks.field.command": "Command",
   "orchestra.hooks.field.event": "Event",
+
+  "orchestra.workflows.issue.record-only":
+    "{{name}} cannot act on a session start or stop: a hook there only records. Remove it, or pick an event that comes with a call.",
+  "orchestra.workflows.issue.field-unavailable":
+    "{{name}} reads a value this event does not carry, so it always takes No. Pick another field.",
+  "orchestra.workflows.issue.cycle": "{{name}} leads back to a step before it. Hooks cannot loop.",
+  "orchestra.workflows.issue.never-runs": "{{name}} never runs: it comes after Require repair, which ends the call.",
 
   "orchestra.hooks.canvas.add": "Add node (N)",
   "orchestra.hooks.canvas.addNode": "Add node",
@@ -144,20 +154,35 @@ export const HOOKS_COPY = {
   "orchestra.hooks.details.agentSees": "The agent sees",
   "orchestra.hooks.details.eventHint":
     "Block and Ask need a Before event. After events can remind, record or run a gate.",
+  "orchestra.hooks.details.eventHintRecordOnly":
+    "A hook on session start or stop only records. Conditions, Run gate, Record and Allow work here; Block, Ask, Remind and Require repair would have no effect.",
   "orchestra.hooks.details.field": "Field",
   "orchestra.hooks.details.matches": "Matches",
   "orchestra.hooks.details.ports": "Yes continues from the upper port, No from the lower one.",
   "orchestra.hooks.details.patternPath":
-    "* and ? stay inside a folder, ** crosses folders, {a,b} is either. A | is matched literally: for another pattern, add a condition.",
-  "orchestra.hooks.details.patternWildcard":
-    "* matches any text and ? one character. A | is matched literally: for another pattern, add a condition.",
-  "orchestra.hooks.details.addCondition": "Add condition",
+    "Relative to the project folder, like src/app.ts. * and ? stay inside a folder, ** crosses folders, {a,b} is either. A | is matched literally: for another pattern, use “Or match another pattern”.",
+  "orchestra.hooks.details.patternCommand":
+    "The whole command must match: “git push *” misses “cd app && git push”, while “*git push*” catches both. * matches any text and ? one character. A | is matched literally: for another pattern, use “Or match another pattern”.",
+  "orchestra.hooks.details.patternTool":
+    "The tool's name, like bash or apply_patch; MCP tools are named server_tool. * matches any text and ? one character. A | is matched literally: for another pattern, use “Or match another pattern”.",
+  "orchestra.hooks.details.patternEvent":
+    "The event as operation.timing, like edit.before. * matches any text and ? one character. A | is matched literally: for another pattern, use “Or match another pattern”.",
+  "orchestra.hooks.details.placeholder.path": "src/generated/**",
+  "orchestra.hooks.details.placeholder.tool": "bash",
+  "orchestra.hooks.details.placeholder.command": "git push *",
+  "orchestra.hooks.details.placeholder.event": "edit.before",
+  "orchestra.hooks.details.addCondition": "Or match another pattern",
+  "orchestra.hooks.details.addRequirement": "And also require…",
+  "orchestra.hooks.details.combine":
+    "Or: either pattern is enough. And also: both must match, and No means at least one did not.",
   "orchestra.hooks.details.commandHash": "Command hash",
   "orchestra.hooks.details.command": "Command",
   "orchestra.hooks.details.passFail": "Exit 0 continues on Pass; anything else on Fail.",
   "orchestra.hooks.details.message": "Message to the agent",
   "orchestra.hooks.details.note": "Note (optional)",
-  "orchestra.hooks.details.logLine": "Log line",
+  "orchestra.hooks.details.noteHint": "Kept with the hook, for whoever reads it. The agent does not see it.",
+  "orchestra.hooks.details.remindHint":
+    "Added to the result of the call, so the agent reads it right after the call, not before.",
 
   "orchestra.hooks.testDialog.title": "Test hook",
   "orchestra.hooks.testDialog.description":

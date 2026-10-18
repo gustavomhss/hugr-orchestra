@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import {
+  addRequirement,
   chain,
   CONDITION,
+  conditionFields,
   connect,
   documentFields,
   type Flow,
@@ -10,6 +12,7 @@ import {
   issues,
   layoutWorkflow,
   readChecklist,
+  RECORDED,
   removeNodes,
   START,
   TRIGGER,
@@ -19,6 +22,7 @@ import {
   walkHook,
   wildcard,
 } from "./graph"
+import { hookDocument, hookPresets } from "./presets"
 
 const node = (id: string, type: string, parameters: Record<string, unknown> = {}) => ({
   id,
@@ -92,6 +96,153 @@ describe("documents and flows", () => {
   test("the sequence follows edges from the start, not array order", () => {
     const flow = workflow()
     expect(chain({ ...flow, nodes: flow.nodes.toReversed() }).map((item) => item.id)).toEqual(["start", "a", "g", "b"])
+  })
+})
+
+describe("hook rules", () => {
+  const hookNode = (id: string, type: string, parameters: Record<string, unknown> = {}, y = 0) => ({
+    id,
+    name: id.toUpperCase(),
+    type,
+    x: 0,
+    y,
+    parameters,
+  })
+  const trigger = (operation: string, timing: string) => hookNode("t", TRIGGER, { operation, timing })
+  const wired = (nodes: ReturnType<typeof hookNode>[], edges: [string, string, number?][]): Flow => ({
+    kind: "hook",
+    nodes,
+    edges: edges.map(([from, to, port]) => ({ from, to, port: port ?? 0 })),
+    phases: [],
+  })
+  const lone = (operation: string, timing: string, type: string, parameters: Record<string, unknown>) =>
+    wired([trigger(operation, timing), hookNode("x", type, parameters)], [["t", "x"]])
+
+  test("session start and stop only record: actions that could only be dropped there are flagged", () => {
+    const enforcing = ["relay.hookBlock", "relay.hookApprove", "relay.hookRemind", "relay.hookRepair"]
+    for (const operation of ["session-idle", "session-start"])
+      for (const type of enforcing)
+        expect(issues(lone(operation, "after", type, { message: "Stop." }))).toEqual([
+          { code: "record-only", node: "x" },
+        ])
+    // A check, a record and an allow still show in Activity.
+    expect(issues(lone("session-idle", "after", "relay.hookVerify", { message: "Fail.", check: "true" }))).toEqual([])
+    expect(issues(lone("session-idle", "after", "relay.hookRecord", { message: "" }))).toEqual([])
+    expect(issues(lone("session-start", "after", "relay.hookAllow", { message: "" }))).toEqual([])
+    // A prompt is refused before it is admitted, so Block works there.
+    expect(issues(lone("prompt", "before", "relay.hookBlock", { message: "No." }))).toEqual([])
+  })
+
+  test("a condition on a field the trigger's event does not carry is flagged", () => {
+    const on = (operation: string, field: string) =>
+      issues(
+        wired(
+          [
+            trigger(operation, "before"),
+            hookNode("c", CONDITION, { field, pattern: "x" }),
+            hookNode("b", "relay.hookBlock", { message: "No." }),
+          ],
+          [
+            ["t", "c"],
+            ["c", "b"],
+          ],
+        ),
+      )
+    expect(on("command", "path")).toEqual([{ code: "field-unavailable", node: "c" }])
+    expect(on("command", "command")).toEqual([])
+    expect(on("edit", "command")).toEqual([{ code: "field-unavailable", node: "c" }])
+    expect(on("edit", "path")).toEqual([])
+    expect(on("prompt", "tool")).toEqual([{ code: "field-unavailable", node: "c" }])
+    expect(on("tool", "path")).toEqual([])
+    expect(conditionFields("session-idle")).toEqual(["event"])
+    expect(conditionFields("something-new")).toEqual(["path", "tool", "command", "event"])
+  })
+
+  test("what follows Require repair never runs, unless another path reaches it", () => {
+    const repair = hookNode("p", "relay.hookRepair", { message: "Fix it." })
+    const remind = hookNode("r", "relay.hookRemind", { message: "Careful." })
+    const straight = wired(
+      [trigger("edit", "before"), repair, remind],
+      [
+        ["t", "p"],
+        ["p", "r"],
+      ],
+    )
+    expect(issues(straight)).toEqual([{ code: "never-runs", node: "r" }])
+    const branch = wired(
+      [trigger("edit", "before"), hookNode("c", CONDITION, { field: "path", pattern: "src/**" }), repair, remind],
+      [
+        ["t", "c"],
+        ["c", "p"],
+        ["p", "r"],
+        ["c", "r", 1],
+      ],
+    )
+    expect(issues(branch)).toEqual([])
+  })
+
+  test("a loop is flagged once, on its first node", () => {
+    const remind = (id: string) => hookNode(id, "relay.hookRemind", { message: "Careful." })
+    const looped = wired(
+      [trigger("edit", "before"), remind("a"), remind("b")],
+      [
+        ["t", "a"],
+        ["a", "b"],
+        ["b", "a"],
+      ],
+    )
+    expect(issues(looped)).toEqual([{ code: "cycle", node: "a" }])
+    expect(issues({ ...looped, edges: looped.edges.slice(0, 2) })).toEqual([])
+  })
+
+  test("Record's note is optional; an empty one saves as text because the export needs it", () => {
+    const flow = lone("edit", "after", "relay.hookRecord", { message: "" })
+    expect(issues(flow)).toEqual([])
+    const saved = (value: Flow) => documentFields(value).nodes.find((item) => item.id === "x")?.parameters.message
+    expect(saved(flow)).toBe(RECORDED)
+    expect(flow.nodes[1].parameters.message).toBe("")
+    expect(saved(lone("edit", "after", "relay.hookRecord", { message: "Ran." }))).toBe("Ran.")
+    // Allow's note is optional in the export already; every other action still needs its message.
+    expect(saved(lone("edit", "after", "relay.hookAllow", { message: "" }))).toBe("")
+    expect(issues(lone("edit", "after", "relay.hookRemind", { message: "" }))).toEqual([
+      { code: "message-empty", node: "x" },
+    ])
+  })
+
+  test("And also require chains on Yes; No still leads where No led", () => {
+    const flow = wired(
+      [
+        trigger("edit", "before"),
+        hookNode("c", CONDITION, { field: "path", pattern: "src/**" }, 200),
+        hookNode("b", "relay.hookBlock", { message: "No." }, 100),
+        hookNode("r", "relay.hookRemind", { message: "Careful." }, 300),
+      ],
+      [
+        ["t", "c"],
+        ["c", "b"],
+        ["c", "r", 1],
+      ],
+    )
+    const added = addRequirement(flow, "c", "If it matches")!
+    const edges = added.flow.edges.map((item) => `${item.from}:${item.port}>${item.to}`)
+    expect(edges).toEqual(["t:0>c", "c:1>r", `c:0>${added.id}`, `${added.id}:0>b`, `${added.id}:1>r`])
+    const created = added.flow.nodes.find((item) => item.id === added.id)!
+    expect(created.parameters).toEqual({ field: "tool", pattern: "" })
+    expect(created.y).toBeGreaterThan(Math.max(...flow.nodes.map((item) => item.y)))
+    expect(addRequirement(flow, "b", "x")).toBeUndefined()
+  })
+
+  test("Protect generated files stops edits and overwrites, and lets reads and other paths through", () => {
+    const preset = hookPresets(undefined).find((item) => item.id === "protect-generated")!
+    const fields = hookDocument("Protect", preset, (key) => key)
+    const flow = flowFromDocument({ nodes: fields.nodes ?? [], connections: fields.connections ?? {} }, "hook")
+    const blocked = (operation: string, path: string) =>
+      walkHook(flow, { operation, timing: "before", path, tool: operation }).actions.map((item) => item.type)
+    expect(blocked("edit", "src/generated/client.ts")).toEqual(["relay.hookBlock"])
+    expect(blocked("write", "src/generated/client.ts")).toEqual(["relay.hookBlock"])
+    expect(blocked("read", "src/generated/client.ts")).toEqual([])
+    expect(blocked("edit", "src/app.ts")).toEqual([])
+    expect(issues(flow)).toEqual([])
   })
 })
 
