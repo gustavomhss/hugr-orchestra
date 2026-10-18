@@ -43,9 +43,12 @@ type Props = {
   issues: string[]
   skills: Skills
   focusPhase?: string
+  // The workflow's own description, edited on its Start step.
+  description: string
   save: JSX.Element
   readOnly?: boolean
   onChange: (flow: Flow) => void
+  onDescribe: (description: string) => void
   onNav: (id: string) => void
   onClose: () => void
   onReview: (run: RelayRun) => void
@@ -587,6 +590,15 @@ function StartParams(props: Props) {
           onInput={(event) => update({ relayBrief: event.currentTarget.value })}
         />
         <span class="mx-hint">{copy.t("orchestra.workflows.details.objectiveHint")}</span>
+      </label>
+      <label class="mx-field">
+        <span>{copy.t("orchestra.workflows.details.purpose")}</span>
+        <input
+          name="description"
+          value={props.description}
+          onInput={(event) => props.onDescribe(event.currentTarget.value)}
+        />
+        <span class="mx-hint">{copy.t("orchestra.workflows.details.purposeHint")}</span>
       </label>
       <label class="mx-field" style={{ "max-width": "260px" }}>
         <span>{copy.t("orchestra.workflows.details.budgetField")}</span>

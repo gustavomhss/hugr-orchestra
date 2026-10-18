@@ -564,6 +564,9 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.noChecksHint": "No checks: this step finishes as soon as the agent stops.",
   "orchestra.workflows.details.objective": "Goal",
   "orchestra.workflows.details.objectiveHint": "What this workflow must achieve. Every step sees it.",
+  "orchestra.workflows.details.purpose": "What is it for?",
+  "orchestra.workflows.details.purposeHint":
+    "A short note shown in the library, where you can search it. Steps don't receive it.",
   "orchestra.workflows.details.budgetField": "Fixes allowed per step",
   "orchestra.workflows.details.budgetHint":
     "With {{count}}, a step may fail {{count}} times. The next failure pauses the run until a person decides.",
