@@ -55,6 +55,8 @@ export type HostCheck = (binding: Binding) => Effect.Effect<CheckOutcome, unknow
 export interface Host {
   /** Native authority resolves a stored token by actual dispatch identity. Never read model metadata. */
   readonly resolve: (input: Dispatch) => Effect.Effect<Binding | undefined, ToolSafety.Denied>
+  /** Whether the dispatching Session holds a stored arm at all. A cheap precheck before a dispatch spends anything. */
+  readonly armed?: (input: { readonly sessionID: string; readonly directory: string }) => Effect.Effect<boolean, ToolSafety.Denied>
   readonly checks: ReadonlyMap<string, HostCheck>
   /** The Relay service of the binding's Location, which holds the arm and its ledger. */
   readonly relay: (placement: { readonly directory: string; readonly projectID: string }) => Effect.Effect<Relay.Interface, ToolSafety.Denied>
@@ -179,6 +181,14 @@ export const make = Effect.gen(function* () {
     if (Option.isSome(parked)) return yield* new ToolSafety.Denied({
       reason: "completion-parked-awaiting-owner", detail: Relay.parkedHold(parked.value.wp, parked.value.failing),
     })
+  })
+
+  // A workflow Task without an arm holds before its authorization reserves the write-once governed child.
+  // beforeDispatch still runs every binding check once the child exists.
+  const beforeReserve = Effect.fn("ArsenalCompletion.beforeReserve")(function* (input: { sessionID: string; directory: string }) {
+    if (!host) return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND" })
+    if (host.armed && !(yield* host.armed(input)))
+      return yield* new ToolSafety.Denied({ reason: "WORKFLOW_NATIVE_ARM_UNBOUND", detail: ARM_FIRST })
   })
 
   const beforeDispatch = Effect.fn("ArsenalCompletion.beforeDispatch")(function* (input: Dispatch) {
@@ -386,7 +396,7 @@ export const make = Effect.gen(function* () {
       Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
     ) : Effect.void
   }
-  return { beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
+  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost }
 })
 
 // The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.

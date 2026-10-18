@@ -1,5 +1,10 @@
 import { afterEach, expect } from "bun:test"
 import { Database } from "@orchestra/core/database/database"
+import { EventTable } from "@orchestra/core/event/sql"
+import { SessionInputTable } from "@orchestra/core/session/sql"
+import { SessionMessage } from "@orchestra/schema/session-message"
+import { createHash } from "node:crypto"
+import { eq } from "drizzle-orm"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
@@ -440,6 +445,102 @@ it.instance(
       expect(child?.agent).toBe("backend")
       expect(result.metadata.sessionId).toBe(child?.id)
       expect(prompts).toBe(1)
+    }),
+  { git: true },
+)
+
+// Every dispatch below runs the approved "implement card" intent on the backend seat with a counting stub prompt.
+const authorized = Effect.fn("TaskGovernanceTest.authorized")(function* () {
+  const granted = yield* grant()
+  const tool = yield* TaskTool
+  const def = yield* tool.init()
+  const prompts = { count: 0 }
+  const context = (metadata: () => Effect.Effect<void> = () => Effect.void, signal = new AbortController().signal) => ({
+    sessionID: granted.chat.id,
+    messageID: granted.assistant.id,
+    agent: "maestro",
+    agentID: "maestro",
+    abort: signal,
+    extra: { promptOps: stubOps(() => prompts.count++) },
+    messages: [],
+    metadata,
+    ask: () => Effect.void,
+  })
+  const params = { description: "implement card", prompt: "implement card", subagent_type: "backend", authorizationID: granted.authorizationID }
+  return { ...granted, def, prompts, context, params }
+})
+
+// Reproduces a dispatch held after its reservation: the governed child exists, but it was never prompted.
+const heldAfterReservation = Effect.fn("TaskGovernanceTest.heldAfterReservation")(function* (
+  setup: Effect.Success<ReturnType<typeof authorized>>,
+) {
+  const controller = new AbortController()
+  const held = yield* setup.def.execute(setup.params, setup.context(() => Effect.sync(() => controller.abort()), controller.signal)).pipe(Effect.exit)
+  expect(Exit.isFailure(held)).toBe(true)
+  if (Exit.isFailure(held)) expect(Cause.pretty(held.cause)).toContain("Task cancelled")
+  const sessions = yield* Session.Service
+  const child = (yield* sessions.children(setup.chat.id))[0]
+  if (!child) throw new Error("missing reserved child")
+  expect(yield* sessions.messages({ sessionID: child.id })).toHaveLength(0)
+  expect(setup.prompts.count).toBe(0)
+  return child
+})
+
+it.instance(
+  "an unarmed workflow dispatch holds before reserving, so the authorization still dispatches",
+  () =>
+    Effect.gen(function* () {
+      const setup = yield* authorized()
+      const workflow = { documentID: "packet", planRevisionID: EventV2.ID.make("evt_maestro_plan_task_test"), parameters: {} }
+      const unarmed = yield* setup.def.execute({ ...setup.params, workflow, writePaths: ["src"] }, setup.context()).pipe(Effect.exit)
+      expect(Exit.isFailure(unarmed)).toBe(true)
+      if (Exit.isFailure(unarmed)) expect(Cause.pretty(unarmed.cause)).toContain("WORKFLOW_NATIVE_ARM_UNBOUND")
+      const database = yield* Database.Service
+      const reservationID = EventV2.ID.make(`evt_maestro_dispatch_${createHash("sha256").update(setup.authorizationID, "utf8").digest("hex")}`)
+      expect(yield* database.db.select({ id: EventTable.id }).from(EventTable).where(eq(EventTable.id, reservationID))
+        .get().pipe(Effect.orDie)).toBeUndefined()
+      const sessions = yield* Session.Service
+      expect(yield* sessions.children(setup.chat.id)).toHaveLength(0)
+
+      const result = yield* setup.def.execute(setup.params, setup.context())
+      expect(result.output).toContain("done")
+      expect(setup.prompts.count).toBe(1)
+    }),
+  { git: true },
+)
+
+it.instance(
+  "a reserved child that was never prompted runs once instead of replaying",
+  () =>
+    Effect.gen(function* () {
+      const setup = yield* authorized()
+      const child = yield* heldAfterReservation(setup)
+      const result = yield* setup.def.execute(setup.params, setup.context())
+      expect(result.metadata.sessionId).toBe(child.id)
+      expect(result.output).toContain("done")
+      expect(setup.prompts.count).toBe(1)
+      // The fresh run spent the reservation: a retry replays strictly and never prompts again.
+      const retry = yield* setup.def.execute(setup.params, setup.context()).pipe(Effect.exit)
+      expect(Exit.isFailure(retry)).toBe(true)
+      if (Exit.isFailure(retry)) expect(Cause.pretty(retry.cause)).toContain("reserved-child-incomplete")
+      expect(setup.prompts.count).toBe(1)
+    }),
+  { git: true },
+)
+
+it.instance(
+  "a reserved child with an admitted prompt and no messages still replays strictly",
+  () =>
+    Effect.gen(function* () {
+      const setup = yield* authorized()
+      const child = yield* heldAfterReservation(setup)
+      const database = yield* Database.Service
+      yield* database.db.insert(SessionInputTable).values({ id: SessionMessage.ID.make(MessageID.ascending()), session_id: child.id,
+        prompt: { text: "implement card" }, delivery: "steer", admitted_seq: 1 }).run().pipe(Effect.orDie)
+      const replay = yield* setup.def.execute(setup.params, setup.context()).pipe(Effect.exit)
+      expect(Exit.isFailure(replay)).toBe(true)
+      if (Exit.isFailure(replay)) expect(Cause.pretty(replay.cause)).toContain("reserved-child-incomplete")
+      expect(setup.prompts.count).toBe(0)
     }),
   { git: true },
 )

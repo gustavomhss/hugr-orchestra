@@ -464,6 +464,7 @@ export const make = Effect.gen(function* () {
   ])
    const host: ArsenalCompletion.Host = {
     resolve,
+    armed: (input) => under(input.directory, arms(input.sessionID).pipe(Effect.map((rows) => rows.some((entry) => entry.fact.token)))),
     checks,
     relay: ArsenalCompletion.locationRelay((ref) => locations.get(ref)),
     observe: (binding, capture) =>

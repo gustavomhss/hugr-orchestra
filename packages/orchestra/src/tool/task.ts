@@ -15,6 +15,8 @@ import { Effect, Exit, FileSystem, Option, Schema, Scope } from "effect"
 import { EffectBridge } from "@/effect/bridge"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { Database } from "@orchestra/core/database/database"
+import { SessionInputTable, SessionMessageTable } from "@orchestra/core/session/sql"
+import { eq } from "drizzle-orm"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { reserveDispatch } from "@/maestro/dispatch"
 import { authorizedTaskMismatch, readAuthorization } from "@/maestro/authorization"
@@ -192,6 +194,8 @@ export const TaskTool = Tool.define(
       const nextID = next.id ?? params.subagent_type
       if (params.workflow && !params.governed && !params.authorizationID)
         return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
+      // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
+      if (params.workflow) yield* completion.beforeReserve({ sessionID: ctx.sessionID, directory: parent.directory })
       const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
           callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
@@ -483,7 +487,18 @@ export const TaskTool = Tool.define(
 
       yield* ctx.metadata({ title: params.description, metadata })
 
-      if (governedChildID && reserved) {
+      // The reserved child exists before completion.beforeDispatch, so a dispatch held there leaves an authorized child
+      // that was never prompted, and replaying it would hold forever. Running it now is still the reservation's one
+      // dispatch: the same child, reserved permissions and authorization, serialized by the dispatch lock. Any message,
+      // admitted input or background job means a run started, and that child keeps the strict replay below.
+      const neverPrompted = params.authorizationID !== undefined && reserved !== undefined &&
+        (yield* MessageV2.stream(reserved.id)).length === 0 &&
+        !(yield* background.get(reserved.id)) &&
+        !(yield* database.db.select({ id: SessionInputTable.id }).from(SessionInputTable)
+          .where(eq(SessionInputTable.session_id, reserved.id)).get().pipe(Effect.orDie)) &&
+        !(yield* database.db.select({ id: SessionMessageTable.id }).from(SessionMessageTable)
+          .where(eq(SessionMessageTable.session_id, reserved.id)).get().pipe(Effect.orDie))
+      if (governedChildID && reserved && !neverPrompted) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
         const strictReplay = requireCompletedReplay || completionReceipt !== undefined
