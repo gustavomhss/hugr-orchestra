@@ -18,7 +18,7 @@ describe("toolkit command", () => {
           env: { BACKEND_TOOLKIT_ROOT: path.join(home, "toolkit") },
         })
         // An engine can be unsupported on a target the host supports (sqlx needs the MSVC linker on Windows).
-        const expected: BackendToolkit.State[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
+        const expected: BackendToolkit.State<string>[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
           if (!("target" in detected))
             return { engine: engine.id, version: engine.version, status: "unsupported", reason: detected.unsupported }
           const reason = "runtime" in engine ? engine.unsupported?.[detected.target] : undefined
@@ -27,6 +27,23 @@ describe("toolkit command", () => {
         })
         orchestra.expectExit(result, expected.some((state) => state.status === "unsupported") ? 1 : 0, "toolkit status --json")
         expect(JSON.parse(result.stdout)).toEqual(expected)
+      }),
+    60_000,
+  )
+
+  cliIt.live(
+    "status --research --json prints the research engines and the worktree's shards",
+    ({ home, orchestra }) =>
+      Effect.gen(function* () {
+        const result = yield* orchestra.spawn(["toolkit", "status", "--research", "--json"], {
+          env: { RESEARCH_TOOLKIT_ROOT: path.join(home, "research-toolkit") },
+        })
+        orchestra.expectExit(result, 0, "toolkit status --research --json")
+        // No research pack is shipped yet and no index builder is wired, so every engine is named unsupported.
+        expect(JSON.parse(result.stdout)).toEqual({
+          engines: ["scip-typescript", "scip-python", "typescript"].map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
+          shards: [],
+        })
       }),
     60_000,
   )
