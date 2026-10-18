@@ -159,3 +159,19 @@ live("a session opened in a subdirectory is covered: ancestors up to the write r
     expect((yield* p.run("echo ok > ../sibling.txt && echo ok > here.txt", { directory: sub })).exitCode).toBe(0)
   }), 240_000,
 )
+
+// A governed backend's grant names files. Its jail used to refuse to start (sandbox-project-config-acquisition).
+live("a file write root runs confined: the granted file is writable, a write outside it is refused", () =>
+  Effect.gen(function* () {
+    const p = yield* project
+    const file = path.join(p.root, "src", "x.ts")
+    yield* p.fs.makeDirectory(path.dirname(file))
+    yield* p.fs.writeFileString(file, "orig")
+    const profile = { requireSandbox: true, writeRoots: [file], sandbox: { enabled: true, unconfinedFallback: false } } satisfies ToolSafety.Profile
+    expect((yield* p.run("echo ok > src/x.ts", { profile })).exitCode).toBe(0)
+    expect(yield* p.fs.readFileString(file)).toBe("ok\n")
+    for (const attack of ["echo pwn > src/y.ts", "echo pwn > outside.txt", "echo pwn > orchestra.json", "mkdir src/.orchestra"])
+      expect({ attack, exitCode: (yield* p.run(attack, { profile })).exitCode }).not.toEqual({ attack, exitCode: 0 })
+    expect(["src/y.ts", "outside.txt", "orchestra.json", "src/.orchestra"].filter(p.present)).toEqual([])
+  }), 240_000,
+)
