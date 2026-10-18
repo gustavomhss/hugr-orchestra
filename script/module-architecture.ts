@@ -178,10 +178,11 @@ export function renderReadmeBlock(workspace: Workspace, alias: string) {
   if (!member) throw new Error(`MODULE_ALIAS_UNKNOWN:${alias}`)
   const spec = member.spec
   const code = (value: string) => `\`${value}\``
+  const ref = (value: string) => (value.includes(" ") ? value : code(value))
   const layers = workspace.architecture.layers[spec.layer] ?? []
   const legacy = workspace.architecture.legacy
     .filter((item) => item.path !== undefined && (item.path === member.path || item.path.startsWith(`${member.path}/`)))
-    .map((item) => `${item.label ?? code(item.path ?? "")} (${item.status}${item.successor ? `, successor ${code(item.successor)}` : ""})`)
+    .map((item) => `${item.label ?? code(item.path ?? "")} (${item.status}${item.successor ? `, successor ${ref(item.successor)}` : ""})`)
   const entry = member.manifest.exports
     ? "explicit `exports` in package.json"
     : member.manifest.main
@@ -196,7 +197,7 @@ export function renderReadmeBlock(workspace: Workspace, alias: string) {
     `- Package: ${code(member.name)} at ${code(member.path)} (alias ${code(alias)})`,
     `- Summary: ${spec.summary}`,
     `- Layer: ${code(spec.layer)}; may depend on: ${layers.length ? layers.map(code).join(", ") : "nothing (base layer)"}`,
-    `- Status: ${code(spec.status)}${spec.successor ? `; successor: ${code(spec.successor)}` : ""}${spec.live ? `; live: ${spec.live}` : ""}`,
+    `- Status: ${code(spec.status)}${spec.successor ? `; successor: ${ref(spec.successor)}` : ""}${spec.live ? `; live: ${spec.live}` : ""}`,
     `- Owner: ${spec.owner}`,
     `- Public entry: ${entry}`,
     `- Legacy and compatibility: ${legacy.length ? legacy.join("; ") : "none"}`,

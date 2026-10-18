@@ -1,0 +1,67 @@
+#!/usr/bin/env bun
+// Routes a package's non-test imports of a legacy specifier (registry `legacy[].compat`) through its own
+// `<package>/src/compat/<facade>.ts` (D13). Only the string literal of an import, export-from or import-type
+// specifier changes; the quote and everything else on the line stay. Default and namespace imports, dynamic
+// `import()` and `require()` of a legacy specifier are refused, not rewritten.
+//
+// Usage: bun run script/compat-facade.ts <alias> <prefix>... [--write|--check]
+import { readFileSync, writeFileSync } from "node:fs"
+import path from "node:path"
+import { SOURCE, isTestFile, loadWorkspace, specifiersOf } from "./module-architecture"
+
+const root = path.resolve(import.meta.dir, "..")
+const args = process.argv.slice(2)
+const [alias, ...prefixes] = args.filter((arg) => !arg.startsWith("--"))
+if (!alias || prefixes.length === 0) fail("usage: compat-facade.ts <alias> <prefix>... [--write|--check]")
+const workspace = loadWorkspace(root)
+const member = workspace.member(alias) ?? fail(`MODULE_ALIAS_UNKNOWN:${alias}`)
+const facades = new Map(
+  workspace.architecture.legacy.flatMap((item) =>
+    Object.entries(item.compat ?? {}).map(([subpath, facade]) => [`${item.specifier}${subpath.slice(1)}`, facade] as const),
+  ),
+)
+const compat = `${member.path}/src/compat/`
+prefixes.forEach((prefix) => {
+  if (prefix !== member.path && !prefix.startsWith(`${member.path}/`)) fail(`FACADE_PREFIX_OUTSIDE_PACKAGE:${prefix}`)
+})
+const files = workspace.files.filter(
+  (file) =>
+    SOURCE.test(file) &&
+    !isTestFile(file) &&
+    !file.startsWith(compat) &&
+    prefixes.some((prefix) => file === prefix || file.startsWith(`${prefix.replace(/\/$/, "")}/`)),
+)
+const tracked = new Set(workspace.files)
+const changed = files.flatMap((file) => {
+  const text = readFileSync(path.join(root, file), "utf8")
+  const edits = specifiersOf(file, text)
+    .filter((item) => facades.has(item.specifier))
+    .map((item) => {
+      if (item.unsupported || item.kind === "dynamic" || item.kind === "require" || item.kind === "import-equals")
+        fail(`FACADE_UNSUPPORTED_IMPORT_FORM:${file}:${item.specifier}`)
+      const facade = `${compat}${facades.get(item.specifier)}`
+      if (!tracked.has(`${facade}.ts`)) fail(`FACADE_MISSING:${facade}.ts`)
+      return { ...item, replacement: replacement(file, facade) }
+    })
+  if (edits.length === 0) return []
+  // Edit from the end so earlier offsets stay valid.
+  const next = edits
+    .sort((a, b) => b.start - a.start)
+    .reduce((current, edit) => current.slice(0, edit.start) + edit.replacement + current.slice(edit.end), text)
+  if (args.includes("--write")) writeFileSync(path.join(root, file), next)
+  return [file]
+})
+console.log(`compat-facade: ${changed.length} files ${args.includes("--write") ? "changed" : "would change"}`)
+if (args.includes("--check") && changed.length > 0) process.exit(1)
+
+function replacement(file: string, facade: string) {
+  const alias = Object.entries(member.spec.aliases ?? {}).find(([, target]) => target === "src/")?.[0]
+  if (alias) return `${alias}${facade.slice(member.path.length + "/src/".length)}`
+  const relative = path.posix.relative(path.posix.dirname(file), facade)
+  return relative.startsWith(".") ? relative : `./${relative}`
+}
+
+function fail(message: string): never {
+  console.error(message)
+  process.exit(1)
+}
