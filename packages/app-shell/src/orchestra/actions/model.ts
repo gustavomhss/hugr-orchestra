@@ -208,16 +208,21 @@ export function createActionsModel(input: {
       })
       if (!handle.current() || state.run.status !== "ready") return
     }
-    const tab = route.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
+    // A link may name only the run: complete workflow, path and commit from the loaded run in place, since a
+    // navigate() would clear() the run it just read.
+    const selection = route.runID ? selectedRoute(state, route) : route
+    if (JSON.stringify(selection) !== JSON.stringify(route)) { update({ route: selection }); persist() }
+    const tab = selection.tab ?? (route.view === "workflow" ? "graph" : route.view === "source" ? "source" : route.view === "job" ? "logs" : "jobs")
     if (route.view === "workflow") {
       if (state.workflows.status !== "ready") await page("workflows", target)
       if (!handle.current()) return
     }
     if (tab === "artifacts") { await page("artifacts", target); return }
     if (tab === "source" || tab === "graph") {
-      if (!route.path && state.workflows.status !== "ready") await page("workflows", target)
+      // Without a ref, configuration source resolves the workflow's native default ref from the catalog.
+      if ((!selection.path || (!selection.runID && !selection.ref)) && state.workflows.status !== "ready") await page("workflows", target)
       if (handle.current() && tab === "graph" && route.runID) await page("jobs", target)
-      if (handle.current()) await source(target, route, tab === "graph")
+      if (handle.current()) await source(target, selection, tab === "graph")
       return
     }
     await page("jobs", target)
@@ -313,7 +318,10 @@ export function createActionsModel(input: {
       owner.reset()
       clear()
       wanted = id
-      update({ binding: state.bindings.value?.find((item) => item.id === id), filters: { ...unwrap(state.filters), scope: undefined }, commandError: undefined, route: { view: "library" } })
+      const binding = state.bindings.value?.find((item) => item.id === id)
+      // Run status filters are provider-native (GitHub `failure`, GitLab `failed`); never carry one across providers.
+      const status = binding?.provider.kind === state.binding?.provider.kind ? state.filters.status : ""
+      update({ binding, filters: { ...unwrap(state.filters), scope: undefined, status }, commandError: undefined, route: { view: "library" } })
       persist()
       void view(false)
     },

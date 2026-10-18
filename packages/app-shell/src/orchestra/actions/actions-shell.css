@@ -1,1 +1,36 @@
-/* Actions Actions shell: tabs, context navigation, breadcrumb and narrow layout, matched to the approved Actions mock. */
+/* Actions shell: tabs, context navigation, breadcrumb and narrow layout, matched to the approved Actions mock. */
+
+/* Top tabs carry an icon and, for loaded lists, a count badge (mock app.js tabs). */
+.actions-page .wf-tab { display: inline-flex; align-items: center; gap: 6px; flex: none; }
+.actions-page .wf-tab > .actions-icon { inline-size: 13px; block-size: 13px; flex: none; }
+
+/* Context navigation (mock context.css): the workflow list scrolls on its own so Browse and Project resources stay in view. */
+.actions-page .actions-context { overflow-anchor: none; }
+.actions-page .context-label { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.actions-page .context-label > span:empty { display: none; }
+.actions-page .context-catalog-list { max-block-size: min(40vh, 340px); overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; }
+.actions-page .context-catalog-list .context-origin { flex: none; margin-inline-start: auto; }
+.actions-page .actions-nav-item > .actions-icon { inline-size: 14px; block-size: 14px; flex: none; }
+
+/* Run context actions (deployment review) sit at the inline end of the entry header. */
+.actions-page .actions-context-actions:empty { display: none; }
+.actions-page .actions-context-actions { justify-content: flex-end; margin-block-end: 12px; }
+
+/* Narrow (mock collections.css:259-275, mock.css:175): tabs scroll instead of clipping; search takes its own row. */
+@media (max-width: 850px) {
+  .actions-page .wf-tabs { overflow-x: auto; overflow-y: hidden; scrollbar-width: none; }
+  .actions-page .collection-toolbar { flex-wrap: wrap; }
+  .actions-page .collection-toolbar .search-wrap { flex: 1 1 100%; max-inline-size: none; min-inline-size: 0; }
+  .actions-page .collection-toolbar .mx-search { inline-size: 100%; min-inline-size: 0; }
+  .actions-page .collection-toolbar .wf-range { max-inline-size: 100%; overflow-x: auto; }
+  .actions-page .collection-toolbar .wf-range button { flex: none; }
+  .actions-page .collection-filters { flex-wrap: wrap; }
+  .actions-page .collection-filters > * { min-inline-size: 0; max-inline-size: 100%; }
+}
+@media (max-width: 620px) {
+  .actions-page .wf-tab { padding-inline: 8px; gap: 5px; }
+  .actions-page .wf-tab > .actions-icon { display: none; }
+  .actions-page .context-catalog-list { max-block-size: 160px; }
+  .actions-page .repo-strip select { max-inline-size: 100%; min-inline-size: 0; }
+  .actions-page .repo-strip .provider-label { flex: 1 1 100%; min-inline-size: 0; }
+}

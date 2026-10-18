@@ -129,6 +129,13 @@ export function OrchestraSidebar(props: {
         (ctx && target.directory ? profileProject(ctx, target.directory) : undefined),
     }
   })
+  // A chapter opens the selected directory even before it is an opened (listed or bootstrapped) project, so name it
+  // by its folder rather than asking to choose a project that is already selected.
+  const profileName = () => {
+    const target = profile()
+    if (target.project) return displayName(target.project)
+    if (target.directory && layout.route().type === "chapter") return displayName({ worktree: target.directory })
+  }
   const selected = createMemo(() => {
     const target = profile()
     return target.conn && target.project ? { conn: target.conn, project: target.project } : undefined
@@ -475,7 +482,7 @@ export function OrchestraSidebar(props: {
                   data-unset={
                     !getProjectAvatarSource(profile().project?.icon) && !profile().project?.icon?.color ? "" : undefined
                   }
-                  fallback={profile().project ? displayName(profile().project!) : ""}
+                  fallback={profileName() ?? ""}
                   src={getProjectAvatarSource(profile().project?.icon)}
                   variant={getProjectAvatarVariant(profile().project?.icon?.color)}
                   aria-hidden="true"
@@ -483,7 +490,7 @@ export function OrchestraSidebar(props: {
                 <span class="orchestra-profile-text">
                   <strong id="orchestra-profile-name">
                     <bdi>
-                      {profile().project ? displayName(profile().project!) : language.t("orchestra.profile.empty")}
+                      {profileName() ?? language.t("orchestra.profile.empty")}
                     </bdi>
                   </strong>
                   <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
