@@ -10,7 +10,6 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
 import {
   ListRootsRequestSchema,
-  type LoggingMessageNotification,
   LoggingMessageNotificationSchema,
   type Tool as MCPToolDef,
   ToolListChangedNotificationSchema,
@@ -34,6 +33,7 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
+import { serverLog } from "./server-log"
 import { McpStdio, OmniStdioTransport } from "./stdio"
 import { Status } from "./status"
 
@@ -61,6 +61,8 @@ export const Resource = Schema.Struct({
 export type Resource = Schema.Schema.Type<typeof Resource>
 
 export const ToolsChanged = McpEvent.ToolsChanged
+
+export const StatusChanged = McpEvent.StatusChanged
 
 export const BrowserOpenFailed = McpEvent.BrowserOpenFailed
 
@@ -210,6 +212,8 @@ const layer = Layer.effect(
         (t, exit) => (Exit.isFailure(exit) ? Effect.tryPromise(() => t.close()).pipe(Effect.ignore) : Effect.void),
       )
     })
+
+    const publishStatusChanged = (server: string) => events.publish(StatusChanged, { server }).pipe(Effect.ignore)
 
     const DISABLED_RESULT: CreateResult = { status: { status: "disabled" } }
 
@@ -423,6 +427,7 @@ const layer = Layer.effect(
         bridge.fork(
           Effect.logWarning("MCP connection closed", { server: name }).pipe(
             Effect.andThen(events.publish(ToolsChanged, { server: name })),
+            Effect.andThen(publishStatusChanged(name)),
             Effect.ignore,
           ),
         )
@@ -443,24 +448,6 @@ const layer = Layer.effect(
         s.defs[name] = listed
         await bridge.promise(events.publish(ToolsChanged, { server: name }).pipe(Effect.ignore))
       })
-    }
-
-    function serverLog(name: string, params: LoggingMessageNotification["params"]) {
-      const fields = { server: name, logger: params.logger, level: params.level, data: params.data }
-      switch (params.level) {
-        case "debug":
-          return Effect.logDebug("MCP server log", fields)
-        case "info":
-        case "notice":
-          return Effect.logInfo("MCP server log", fields)
-        case "warning":
-          return Effect.logWarning("MCP server log", fields)
-        case "error":
-        case "critical":
-        case "alert":
-        case "emergency":
-          return Effect.logError("MCP server log", fields)
-      }
     }
 
     const state = yield* InstanceState.make<State>(
@@ -560,6 +547,7 @@ const layer = Layer.effect(
       else delete s.instructions[name]
       watch(s, name, client, bridge, timeout)
       if (previous) yield* Effect.tryPromise(() => previous.close()).pipe(Effect.ignore)
+      yield* publishStatusChanged(name)
       return s.status[name]
     })
 
@@ -607,6 +595,7 @@ const layer = Layer.effect(
       if (!result.mcpClient) {
         yield* closeClient(s, name)
         delete s.clients[name]
+        yield* publishStatusChanged(name)
         return result.status
       }
 
@@ -631,6 +620,7 @@ const layer = Layer.effect(
       yield* closeClient(s, name)
       delete s.clients[name]
       s.status[name] = { status: "disabled" }
+      yield* publishStatusChanged(name)
     })
 
     function requestTimeout(s: State, name: string, configured: McpEntry | undefined, fallback?: number) {
