@@ -15,6 +15,7 @@ import { CodeIndexBuild } from "./build"
 import { Callers } from "./callers"
 import { Enclosing } from "./enclosing"
 import { CodeIndexFilter } from "./filter"
+import { CodeIndexPython } from "./python"
 import type { CodeIndexQuery } from "./query"
 import { CodeIndexResolve } from "./resolve"
 import { Scip } from "./scip"
@@ -163,7 +164,8 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (
     const output = path.join(directory, "index.scip")
     yield* Effect.promise(() => writeFile(output, ""))
     const launch = yield* ToolSafetySandbox.confine({
-      command: ready.executable, args: ["index", "--output", output], cwd: directory, write: [output], env: process.env,
+      command: ready.executable, cwd: directory,
+      args: input.shard.language === "py" ? CodeIndexPython.args({ project: input.shard.project, output }) : ["index", "--output", output], write: [output], env: process.env,
     }).pipe(Effect.mapError((denied) => failed(`sandbox ${denied.reason}`)))
     const result = yield* proc.run(
       ChildProcess.make(launch.command, launch.args, {
@@ -292,9 +294,9 @@ function enclosing(doc: Enclosing.Document, index: number) {
     .toSorted((a, b) => b.range.startLine - a.range.startLine || b.range.startCol - a.range.startCol)[0]?.symbol
 }
 
-// Locals, parameters (`(name)`), type parameters (`[name]`) and file modules (`path/`) are not stored.
+// Locals, parameters (`(name)`), type parameters (`[name]`) and file modules (`path/`, Python's `module/__init__:`) are not stored.
 function indexable(symbol: string) {
-  return !Scip.isLocalSymbol(symbol) && !/[)\]/]$/.test(symbol)
+  return !Scip.isLocalSymbol(symbol) && !/[)\]/]$/.test(symbol) && CodeIndexPython.indexable(symbol)
 }
 
 // The SCIP descriptor suffix, for a definition the structural layer did not name and for external symbols.

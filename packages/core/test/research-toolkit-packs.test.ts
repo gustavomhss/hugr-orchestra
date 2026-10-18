@@ -11,8 +11,9 @@ const lockOf = (install: { readonly lock: string }) =>
   ).filter(([key, entry]) => key !== "" && !entry.inBundle)
 
 describe("research toolkit packs", () => {
-  test("ships the TypeScript indexer and oracle", () => {
-    expect(packs.map((pack) => pack.id).toSorted()).toEqual(["scip-typescript", "typescript"])
+  test("ships the TypeScript and Python indexers and the TypeScript oracle", () => {
+    expect(packs.map((pack) => pack.id).toSorted()).toEqual(["scip-python", "scip-typescript", "typescript"])
+    expect(ResearchToolkitManifest.ENGINES["scip-python"]?.fit).toEqual({ role: "indexer", languages: ["py"] })
     expect(ResearchToolkitManifest.ENGINES["scip-typescript"]?.fit).toEqual({ role: "indexer", languages: ["ts", "js"] })
     expect(ResearchToolkitManifest.ENGINES.typescript?.fit.role).toBe("oracle")
   })
