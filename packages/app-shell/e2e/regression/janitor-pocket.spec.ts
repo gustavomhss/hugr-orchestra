@@ -124,7 +124,6 @@ for (const viewport of [
       onPrompt: (input) => prompts.push(input),
       sessions: [session(), session({ id: janitorSessionID, title: "Janitor chat" })],
     })
-    await page.getByRole("button", { name: "Dismiss Tabs information", exact: true }).click()
     const debug = page.getByRole("button", { name: "Toggle debug tools", exact: true })
     if ((await debug.getAttribute("aria-pressed")) === "true") await debug.click()
     await expect(debug).toHaveAttribute("aria-pressed", "false")
