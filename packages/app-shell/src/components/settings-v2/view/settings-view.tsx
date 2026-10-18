@@ -9,13 +9,13 @@ import { useServerProtocol } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { popularProviders } from "@/hooks/use-providers"
 import { MxBadge, MxToggle } from "@/orchestra/chapters/kit"
+import { ProviderList } from "@/orchestra/chapters/providers-list"
 import { resolveModelLogo } from "@/orchestra/model-logo-resolver"
 import { showToast } from "@/utils/toast"
 import { createDefaultModelController } from "../default-model"
 import { SettingsGeneralV2 } from "../general"
 import { SettingsServersV2 } from "../servers"
 import { AgentsSection, McpSection } from "./capabilities-section"
-import { ProvidersSection } from "./providers-section"
 import {
   contextLabel,
   PERMISSION_ACTIONS,
@@ -93,7 +93,17 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
                 <PermissionsSection />
               </Match>
               <Match when={section() === "providers"}>
-                <ProvidersSection directory={props.directory} onModels={() => open("models")} />
+                <ProviderList server={props.server} directory={props.directory} onModels={() => open("models")}>
+                  {(list) => (
+                    <SettingsSec
+                      title={language.t("settings.providers.title")}
+                      description={language.t("orchestra.settings.providers.description")}
+                      action={list.connect}
+                    >
+                      {list.body}
+                    </SettingsSec>
+                  )}
+                </ProviderList>
               </Match>
               <Match when={section() === "models"}>
                 <ModelsSection directory={props.directory} onConnect={() => open("providers")} />
