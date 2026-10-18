@@ -266,6 +266,7 @@
         "@ai-sdk/vercel": "2.0.39",
         "@ai-sdk/xai": "3.0.102",
         "@aws-sdk/credential-providers": "3.1057.0",
+        "@c4312/scip": "0.1.0",
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
         "@effect/sql-sqlite-bun": "catalog:",
@@ -1195,6 +1196,8 @@
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.12.0", "", {}, "sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA=="],
 
     "@bufbuild/protoplugin": ["@bufbuild/protoplugin@2.12.0", "", { "dependencies": { "@bufbuild/protobuf": "2.12.0", "@typescript/vfs": "^1.6.2", "typescript": "5.4.5" } }, "sha512-ORlDITp8AFUXzIhLRoMCG+ud+D3MPKWb5HQXBoskMMnjeyEjE1H1qLonVNPyOr8lkx3xSfYUo8a0dvOZJVAzow=="],
+
+    "@c4312/scip": ["@c4312/scip@0.1.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0" } }, "sha512-V1VIq3rB1tIj7n3NHIg+VgbKEYl75O+yM30GD4K5wQgdgC7taOsJU7itQdMvtkKhyCWHHuR3WZ0ijUUqPELR3g=="],
 
     "@clack/core": ["@clack/core@1.0.0-alpha.1", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-rFbCU83JnN7l3W1nfgCqqme4ZZvTTgsiKQ6FM0l+r0P+o2eJpExcocBUWUIwnDzL76Aca9VhUdWmB2MbUv+Qyg=="],
 
