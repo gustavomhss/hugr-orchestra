@@ -1,7 +1,8 @@
-import { ServerConnection, useServer, useSettings, useTabs } from "@orchestra/app"
+import { ServerConnection, useLanguage, useServer, useSettings, useTabs } from "@orchestra/app"
 import { onMount } from "solid-js"
 
 export function DesktopFirstLaunchOnboarding(props: { initialUrl: string; onLoaded: () => void }) {
+  const language = useLanguage()
   const server = useServer()
   const settings = useSettings()
   const tabs = useTabs()
@@ -37,7 +38,10 @@ export function DesktopFirstLaunchOnboarding(props: { initialUrl: string; onLoad
         servers: server.list.map(ServerConnection.key),
       })
 
-      const directory = await window.api.finishFirstLaunchOnboarding(shouldTrigger)
+      const directory = await window.api.finishFirstLaunchOnboarding(
+        shouldTrigger,
+        language.t("orchestra.shell.onboarding.defaultProject"),
+      )
       if (!shouldTrigger || !directory) return
 
       console.info("[desktop-onboarding] starting first launch draft", { directory })

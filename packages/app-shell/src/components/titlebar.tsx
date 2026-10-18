@@ -32,6 +32,7 @@ import { useSettings } from "@/context/settings"
 import { WindowsAppMenu } from "./windows-app-menu"
 import { applyPath, backPath, forwardPath } from "./titlebar-history"
 import { TitlebarTabStrip } from "@/components/titlebar-tab-strip"
+import { useDraftCloseGuard } from "@/components/titlebar-draft-close"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { createMediaQuery } from "@solid-primitives/media"
 import { readSessionTabsRemovedDetail, SESSION_TABS_REMOVED_EVENT } from "@/components/titlebar-session-events"
@@ -227,6 +228,7 @@ export function Titlebar(props: {
             const global = useGlobal()
 
             const tabs = useTabs()
+            const guardDraftClose = useDraftCloseGuard()
             const tabsStore = tabs.store
             const tabsStoreActions = tabs
             const [session] = createResource(
@@ -382,13 +384,13 @@ export function Titlebar(props: {
                 const project = global.ensureServerCtx(conn).projects.list()[0]
                 return project ? [{ server: ServerConnection.key(conn), project }] : []
               })[0]
-              if (!fallback) return
+              if (!fallback) return command.trigger("project.open")
 
               tabs.newDraft({ server: fallback.server, directory: fallback.project.worktree }, "")
             }
             const toggleHome = () => tabs.toggleHome({ home: layout.route().type === "home", current: currentTab() })
             const [visible, setVisible] = createStore({ tabs: [] as Tab[] })
-            const closeTab = (tab: Tab) =>
+            const closeNow = (tab: Tab) =>
               closeProfileTab({
                 tabs,
                 visible: profile() ? visible.tabs : undefined,
@@ -396,6 +398,7 @@ export function Titlebar(props: {
                 tab,
                 home: () => navigate("/"),
               })
+            const closeTab = (tab: Tab) => guardDraftClose(tab, () => closeNow(tab))
 
             command.register("titlebar-home", () => [
               {

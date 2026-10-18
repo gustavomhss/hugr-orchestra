@@ -4,7 +4,6 @@ import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { createEffect, ErrorBoundary, on, onCleanup, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DebugBar } from "@/components/debug-bar"
-import { TabsInfoPopup } from "@/components/help-button"
 import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
@@ -188,7 +187,6 @@ export default function NewLayout(props: ParentProps) {
             </div>
           </div>
           {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
-          <TabsInfoPopup />
           <ToastRegion v2 />
         </div>
       </Show>
