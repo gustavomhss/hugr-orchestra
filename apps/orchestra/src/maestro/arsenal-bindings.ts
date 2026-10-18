@@ -464,6 +464,8 @@ export const make = Effect.gen(function* () {
   ])
    const host: ArsenalCompletion.Host = {
     resolve,
+    // Only "no arm at all in this Session"; beforeDispatch plus the Task tool's empty-child recovery cover a wrong arm.
+    armed: (input) => under(input.directory, arms(input.sessionID).pipe(Effect.map((rows) => rows.some((entry) => entry.fact.token)))),
     checks,
     relay: ArsenalCompletion.locationRelay((ref) => locations.get(ref)),
     observe: (binding, capture) =>
