@@ -13,6 +13,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { ResearchBinding } from "@orchestra/core/research/binding"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 import { Research } from "@orchestra/schema/research"
@@ -20,6 +21,8 @@ import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Agent } from "@/agent/agent"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
+import { EventV2Bridge } from "@/event-v2-bridge"
+import { Git } from "@/git"
 import { LogicalTask } from "@/maestro/logical-task"
 import { Permission } from "@/permission"
 import { ResearchExecution } from "@/research/allowance"
@@ -35,7 +38,8 @@ import { testEffect } from "../lib/effect"
 
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   ToolRegistry.node, Session.node, ResearchExecution.node, ResearchRecords.node,
-  Agent.node, Permission.node, FSUtil.node, Database.node, SessionProjector.node,
+  ResearchArtifacts.node, Agent.node, Permission.node, FSUtil.node, Database.node, SessionProjector.node,
+  EventV2Bridge.node, Git.node,
 ])))
 const model = { providerID: ProviderV2.ID.make("openai"), modelID: ModelV2.ID.make("gpt-test") }
 const REPO = ["repo_git_state", "repo_map", "repo_symbols"]
