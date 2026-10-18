@@ -68,7 +68,6 @@
       "dependencies": {
         "@modelcontextprotocol/sdk": "1.29.0",
         "@orchestra/schema": "workspace:*",
-        "hugr-omni": "workspace:*",
         "tree-sitter": "0.25.0",
         "tree-sitter-python": "0.25.0",
         "tree-sitter-typescript": "0.23.2",

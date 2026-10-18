@@ -28,6 +28,8 @@ const recordingPlugin = [
   "export default async () => ({",
   '  "session.start": async (input, output) => {',
   "    bus.starts.push({ sessionID: input.sessionID, cwd: input.cwd, agent: input.agent, timestamp: input.timestamp })",
+  "    output.metadata.fromPlugin = 'yes'",
+  "    output.metadata.owned = 'plugin'",
   "  },",
   '  "session.end": async (input, output) => {',
   "    bus.ends.push({ sessionID: input.sessionID, reason: input.reason, duration_ms: input.duration_ms })",
@@ -71,6 +73,19 @@ describe("session lifecycle hooks (E2E via Session.create)", () => {
       expect(typeof bus.starts[0].cwd).toBe("string")
       expect(bus.starts[0].cwd.length).toBeGreaterThan(0)
       expect(typeof bus.starts[0].timestamp).toBe("number")
+    }),
+  )
+
+  it.instance("session.start metadata is stored on the session without overriding creator keys", () =>
+    Effect.gen(function* () {
+      clearBus()
+      yield* installPlugin
+      const sessions = yield* Session.Service
+      const created = yield* sessions.create({ title: "Metadata Test", metadata: { owned: "creator" } })
+      const stored = yield* sessions.get(created.id)
+
+      expect(created.metadata).toEqual({ owned: "creator", fromPlugin: "yes" })
+      expect(stored.metadata).toEqual({ owned: "creator", fromPlugin: "yes" })
     }),
   )
 })

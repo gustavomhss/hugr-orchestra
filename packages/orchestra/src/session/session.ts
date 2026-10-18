@@ -559,7 +559,14 @@ const layer: Layer.Layer<
           ),
         )
 
-      return result
+      // Creator-supplied keys win: a plugin may add metadata, never overwrite what the caller set.
+      const added = Object.fromEntries(
+        Object.entries(sessionStartOutput.metadata).filter(([key]) => !(key in (result.metadata ?? {}))),
+      )
+      if (Object.keys(added).length === 0) return result
+      const metadata = { ...result.metadata, ...added }
+      yield* patch(result.id, { metadata }).pipe(Effect.orDie)
+      return { ...result, metadata }
     })
 
     const get = Effect.fn("Session.get")(function* (id: SessionID) {

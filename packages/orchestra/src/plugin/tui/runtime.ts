@@ -16,7 +16,7 @@ import { TuiConfig } from "@/config/tui"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { errorData, errorMessage } from "@orchestra/tui/util/error"
 import { isRecord } from "@orchestra/tui/util/record"
-import { resolveHostAttentionSoundPaths } from "@/config/tui-host-attention"
+import { TuiHostAttention } from "@/config/tui-host-attention"
 import {
   readPackageThemes,
   readPluginId,
@@ -173,7 +173,7 @@ function createScopedAttention(
         return scope.track(
           attention.soundboard.registerPack({
             ...pack,
-            sounds: resolveHostAttentionSoundPaths(root, pack.sounds, { trim: true }),
+            sounds: TuiHostAttention.resolveSoundPaths(root, pack.sounds, { trim: true }),
           }),
         )
       },
