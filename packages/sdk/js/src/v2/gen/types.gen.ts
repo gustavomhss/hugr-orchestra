@@ -3343,6 +3343,23 @@ export type ProviderAuthError1 = {
   }
 }
 
+export type ClaudeCodeAccount = {
+  signedIn: boolean
+  email?: string
+  subscription?: string
+}
+
+export type ClaudeCodeLogin = {
+  url: string
+}
+
+export type ClaudeCodeLoginError = {
+  name: "ClaudeCodeLoginFailed"
+  data: {
+    message: string
+  }
+}
+
 export type SessionActivitySession = {
   id: string
   title: string
@@ -13004,6 +13021,95 @@ export type ProviderOauthCallbackResponses = {
 }
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
+
+export type ProviderClaudeCodeAccountData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/account"
+}
+
+export type ProviderClaudeCodeAccountErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeAccountError = ProviderClaudeCodeAccountErrors[keyof ProviderClaudeCodeAccountErrors]
+
+export type ProviderClaudeCodeAccountResponses = {
+  /**
+   * Claude Code sign-in status
+   */
+  200: ClaudeCodeAccount
+}
+
+export type ProviderClaudeCodeAccountResponse =
+  ProviderClaudeCodeAccountResponses[keyof ProviderClaudeCodeAccountResponses]
+
+export type ProviderClaudeCodeLoginData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login"
+}
+
+export type ProviderClaudeCodeLoginErrors = {
+  /**
+   * ClaudeCodeLoginError | InvalidRequestError
+   */
+  400: ClaudeCodeLoginError | InvalidRequestError
+}
+
+export type ProviderClaudeCodeLoginError = ProviderClaudeCodeLoginErrors[keyof ProviderClaudeCodeLoginErrors]
+
+export type ProviderClaudeCodeLoginResponses = {
+  /**
+   * Fallback sign-in URL
+   */
+  200: ClaudeCodeLogin
+}
+
+export type ProviderClaudeCodeLoginResponse = ProviderClaudeCodeLoginResponses[keyof ProviderClaudeCodeLoginResponses]
+
+export type ProviderClaudeCodeLoginCodeData = {
+  body?: {
+    code: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login/code"
+}
+
+export type ProviderClaudeCodeLoginCodeErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeLoginCodeError =
+  ProviderClaudeCodeLoginCodeErrors[keyof ProviderClaudeCodeLoginCodeErrors]
+
+export type ProviderClaudeCodeLoginCodeResponses = {
+  /**
+   * Whether a running sign-in received the code
+   */
+  200: boolean
+}
+
+export type ProviderClaudeCodeLoginCodeResponse =
+  ProviderClaudeCodeLoginCodeResponses[keyof ProviderClaudeCodeLoginCodeResponses]
 
 export type SessionListData = {
   body?: never

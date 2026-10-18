@@ -163,6 +163,12 @@ import type {
   PromptInput,
   ProviderAuthErrors,
   ProviderAuthResponses,
+  ProviderClaudeCodeAccountErrors,
+  ProviderClaudeCodeAccountResponses,
+  ProviderClaudeCodeLoginCodeErrors,
+  ProviderClaudeCodeLoginCodeResponses,
+  ProviderClaudeCodeLoginErrors,
+  ProviderClaudeCodeLoginResponses,
   ProviderListErrors,
   ProviderListResponses,
   ProviderOauthAuthorizeErrors,
@@ -3687,6 +3693,117 @@ export class Oauth extends HeyApiClient {
   }
 }
 
+export class ClaudeCode extends HeyApiClient {
+  /**
+   * Get Claude Code account
+   *
+   * Whether the Claude Code binary Claude mode runs is signed in, with the account email and subscription. No credential is returned.
+   */
+  public account<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ProviderClaudeCodeAccountResponses,
+      ProviderClaudeCodeAccountErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/account",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start Claude Code sign-in
+   *
+   * Run `claude auth login --claudeai` with the binary Claude mode runs. Claude Code opens the browser itself; the returned URL is its manual fallback, whose page shows a code to send to provider.claudeCode.loginCode. Sign-in continues in the background; provider.claudeCode.account reports the result.
+   */
+  public login<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProviderClaudeCodeLoginResponses,
+      ProviderClaudeCodeLoginErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/login",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Send Claude Code sign-in code
+   *
+   * Hand the code shown by the fallback sign-in page to the running Claude Code sign-in.
+   */
+  public loginCode<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      code?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "code" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ProviderClaudeCodeLoginCodeResponses,
+      ProviderClaudeCodeLoginCodeErrors,
+      ThrowOnError
+    >({
+      url: "/provider/claude-code/login/code",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Provider extends HeyApiClient {
   /**
    * List providers
@@ -3751,6 +3868,11 @@ export class Provider extends HeyApiClient {
   private _oauth?: Oauth
   get oauth(): Oauth {
     return (this._oauth ??= new Oauth({ client: this.client }))
+  }
+
+  private _claudeCode?: ClaudeCode
+  get claudeCode(): ClaudeCode {
+    return (this._claudeCode ??= new ClaudeCode({ client: this.client }))
   }
 }
 

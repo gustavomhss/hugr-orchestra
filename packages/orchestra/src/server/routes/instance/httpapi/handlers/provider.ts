@@ -10,7 +10,8 @@ import { Effect, Schema } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
-import { ProviderAuthApiError } from "../groups/provider"
+import { ClaudeCodeLoginApiError, ProviderAuthApiError } from "../groups/provider"
+import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { ProviderV2 } from "@orchestra/core/provider"
 
 function mapProviderAuthError<A, R>(self: Effect.Effect<A, ProviderAuth.Error, R>) {
@@ -40,14 +41,19 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
     const svc = yield* ProviderAuth.Service
     const authStore = yield* Auth.Service
     const credentials = yield* Credential.Service
-    // Only Claude-mode configurations evaluate this lazy status check. It sends no model prompt.
-    const hostSignedIn = yield* Effect.cachedWithTTL(
+    // Only Claude-mode configurations and the Claude mode settings evaluate this lazy status check. It sends no model
+    // prompt. A finished sign-in invalidates it so the provider list and the account route see the new login at once.
+    const [hostAccount, refreshHostAccount] = yield* Effect.cachedInvalidateWithTTL(
       Effect.gen(function* () {
         const { ClaudeHostProvider } = yield* Effect.promise(() => import("@/claude-code/host/provider"))
-        return yield* ClaudeHostProvider.signedIn
+        return yield* ClaudeHostProvider.account
       }),
       "30 seconds",
     )
+    const hostSignedIn = hostAccount.pipe(Effect.map((account) => account.signedIn))
+    // One `claude auth login` per server process: a new sign-in replaces an unfinished one.
+    const login: { current?: { code: (text: string) => boolean; stop: () => Promise<void> } } = {}
+    yield* Effect.addFinalizer(() => Effect.promise(async () => login.current?.stop()))
 
     const list = Effect.fn("ProviderHttpApi.list")(function* () {
       const config = yield* cfg.get()
@@ -151,10 +157,47 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
       return true
     })
 
+    const claudeCodeLogin = Effect.fn("ProviderHttpApi.claudeCodeLogin")(function* () {
+      const { ClaudeCodeLogin } = yield* Effect.promise(() => import("@/claude-code/login"))
+      const { ClaudeCodeExecutable } = yield* Effect.promise(() => import("@/claude-code/executable"))
+      const { ClaudeHostOptions } = yield* Effect.promise(() => import("@/claude-code/host/options"))
+      const env = ClaudeHostOptions.environment(yield* ClaudeCodeSDK.Environment)
+      const previous = login.current
+      if (previous) yield* Effect.promise(async () => previous.stop())
+      const started = yield* Effect.try({
+        try: () => ClaudeCodeLogin.start({ executable: ClaudeCodeExecutable.command(env), env }),
+        catch: loginError,
+      })
+      login.current = started
+      // Refresh the status when this sign-in ends, whatever the outcome; a replaced sign-in leaves the slot alone.
+      void started.exited.then(() => {
+        if (login.current === started) login.current = undefined
+        Effect.runFork(refreshHostAccount)
+      })
+      const url = yield* Effect.tryPromise({ try: () => started.url, catch: loginError }).pipe(
+        Effect.timeoutOrElse({
+          duration: "30 seconds",
+          orElse: () => Effect.fail(loginError(new Error("Claude Code did not print a sign-in URL"))),
+        }),
+        Effect.tapError(() => Effect.promise(async () => started.stop())),
+      )
+      return { url }
+    })
+
     return handlers
       .handle("list", list)
+      .handle("claudeCodeAccount", () => hostAccount)
+      .handle("claudeCodeLogin", claudeCodeLogin)
+      .handle("claudeCodeLoginCode", (ctx) => Effect.sync(() => login.current?.code(ctx.payload.code) ?? false))
       .handle("auth", auth)
       .handleRaw("authorize", authorizeRaw)
       .handle("callback", callback)
   }),
 )
+
+function loginError(cause: unknown) {
+  return new ClaudeCodeLoginApiError({
+    name: "ClaudeCodeLoginFailed",
+    data: { message: cause instanceof Error ? cause.message : String(cause) },
+  })
+}

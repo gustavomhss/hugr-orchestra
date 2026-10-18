@@ -4,6 +4,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { fileURLToPath } from "node:url"
 import { createHash } from "node:crypto"
+import { createRequire } from "node:module"
 import pkg from "../../package.json"
 
 declare const ORCHESTRA_COMPILED: boolean
@@ -102,6 +103,24 @@ export function resolve(
   if (resourceDigest(resolved) !== manifest.sha256)
     throw new UnavailableError(`Claude Code deployed bytes differ: ${directory}`)
   return resolved
+}
+
+/**
+ * The binary a Claude mode query starts, for running Claude Code's own CLI commands: the explicit or deployed one
+ * (`resolve`), else the SDK's platform package as the SDK itself finds it in source runs, else `claude` on PATH.
+ */
+export function command(env: Record<string, string | undefined> = process.env) {
+  const resolved = resolve({ env })
+  if (resolved) return resolved
+  const platform = process.platform
+  const name = `@anthropic-ai/claude-agent-sdk-${target(platform, process.arch, platform === "linux" ? nativeLibc() : undefined)}`
+  try {
+    return createRequire(fileURLToPath(import.meta.resolve("@anthropic-ai/claude-agent-sdk"))).resolve(
+      `${name}/${platform === "win32" ? "claude.exe" : "claude"}`,
+    )
+  } catch {
+    return "claude"
+  }
 }
 
 function resourceDigest(file: string) {
