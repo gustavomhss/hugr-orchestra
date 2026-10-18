@@ -1,5 +1,5 @@
-import type { ToolPart } from "@orchestra/sdk/v2"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { ToolPart } from "@/compat/sdk-v2"
+import type { SessionMessageInfo } from "@/compat/vendored-client-promise"
 import {
   detectTestRunner,
   failedCount,

@@ -1,4 +1,4 @@
-import type { Session } from "@orchestra/sdk/v2/client"
+import type { Session } from "@/compat/sdk-v2-client"
 import { Avatar } from "@orchestra/ui/avatar"
 import { Icon } from "@orchestra/ui/icon"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"

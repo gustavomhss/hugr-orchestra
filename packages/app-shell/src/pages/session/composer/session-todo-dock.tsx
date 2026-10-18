@@ -1,4 +1,4 @@
-import type { Todo } from "@orchestra/sdk/v2"
+import type { Todo } from "@/compat/sdk-v2"
 import { AnimatedNumber } from "@orchestra/ui/animated-number"
 import { Checkbox } from "@orchestra/ui/checkbox"
 import { DockTray } from "@orchestra/ui/dock-surface"

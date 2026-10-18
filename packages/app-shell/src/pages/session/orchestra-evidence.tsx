@@ -1,4 +1,4 @@
-import type { Message, Part } from "@orchestra/sdk/v2"
+import type { Message, Part } from "@/compat/sdk-v2"
 import { Icon } from "@orchestra/ui/v2/icon"
 import {
   type Accessor,
