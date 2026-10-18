@@ -163,15 +163,14 @@
     copy: (v) => copy(v, "Copied"),
     toast: (v) => A.toast(A.esc(v), "info"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },
-    reground: (v) => change(v, { regrounded: true }, "Re-anchored to the current code. The claim stays the same; the anchor now matches HEAD."),
-    retire: (v) => change(v, { retired: true }, "Retired. Agents stop receiving it; it stays in the store.", "minusc"),
-    promote: (v) => change(v, { promotedNow: true }, "Promoted through the emit door. It now reaches agents in the advisory band."),
+    retire: (v) => change(v, { retired: true }, "Tagged SUPERSEDED through emit. Reads do not filter it yet, so agents still receive it (R6).", "minusc"),
+    promote: (v) => change(v, { promotedNow: true }, "Promoted through the emit door (R2: single-row promote is a new capability). It is in the store; agents in Orchestra get it after the Own snapshot is rebuilt."),
     discard: (v) => change(v, { discarded: true }, "Left in staging. It is hidden here and stays in the staging file.", "minusc"),
     "promote-all": () => dialog(promoteAll()),
     "promote-all-confirm": () => {
       $("#dialog").close()
       const keys = M().candidates.filter((x) => !x.promotedNow && !x.discarded).map((x) => x.key)
-      change(keys, { promotedNow: true }, `${keys.length} candidates promoted. 596 already-promoted rows were re-checked and left unchanged.`)
+      change(keys, { promotedNow: true }, `Promote settled every staging row: ${keys.length} new facts, and the 596 already promoted were re-emitted and counted again. Agents get them after the Own snapshot is rebuilt.`)
     },
     ratify: (v) => dialog(ratifyDialog(M().byKey[v])),
     classify: (v) => dialog(classifyDialog(M().byKey[v])),
@@ -181,18 +180,26 @@
       const slot = $('input[name="slot"]:checked')?.value
       if (!slot) return A.toast("Pick a type first.", "info")
       $("#dialog").close()
-      change(v, { slot }, `Classified as <code>${slot}</code> through the draft and emit doors. The fact moves under its type.`, "fact")
+      const x = M().byKey[v]
+      if (M().state(x) === "drifted") return A.toast("Refused by the truth gate: the anchor is not FRESH. Rewrite the claim first.", "xc")
+      const copy = { ...x, key: `${x.key.slice(0, 56)}${slot.slice(0, 8).padEnd(8, "0")}`, slot, example: true }
+      M().facts.push(copy)
+      M().byKey[copy.key] = copy
+      undo = () => { M().facts.splice(M().facts.indexOf(copy), 1); delete M().byKey[copy.key] }
+      A.toast(`Wrote a new fact at (anchor, <code>${slot}</code>). The unclassified one is still served until you retire it.${undoLink}`, "fact")
+      render(true)
     },
     "ratify-confirm": (v) => {
       const tier = $('input[name="tier"]:checked')?.value ?? "T1"
       $("#dialog").close()
-      change(v, { tier, proposedTier: undefined, ratifiedBy: tier === "T0" ? "you" : "maestro" }, tier === "T0" ? "Ratified as T0. It now governs every agent in this scope." : "Ratified as T1. It moved to the governing band.", "shield")
+      change(v, { tier, proposedTier: undefined }, tier === "T0" ? "Re-emitted as T0 with the ratifier token billy. It is now in every agent's constitution." : "Re-emitted as T1. It moved to the governing band; its claims were replaced by the ratified one.", "shield")
     },
     edit: (v) => dialog(editDialog(M().byKey[v])),
     save: (v) => {
       const claim = $("#edit-text").value.trim()
       $("#dialog").close()
-      change(v, { claim, regrounded: true }, "Saved through the emit door. The edited claim replaces the old one; git keeps the prior bytes.")
+      const x = M().byKey[v]
+      change(v, { claim, regrounded: true }, M().state(x) === "drifted" ? "Rewritten against the current file and emitted with a new grounding. The fact is fresh again." : "Emitted. At the same tier the new claim joins the fact's claim set; prior bytes stay in the content store.")
     },
     mine: () => {
       const scope = $("#mine-scope")?.value || "the whole repository"
@@ -207,26 +214,6 @@
       A.toast(`Dismissed. The lesson stays in its task checkpoint.${undoLink}`, "minusc")
       render(true)
     },
-    "archive-rule": (v) => {
-      const [member, i] = v.split("|")
-      const m = M().memory[member]
-      const [r] = m.indexed.splice(Number(i), 1)
-      m.archived.push(r)
-      undo = () => { m.archived.splice(m.archived.indexOf(r), 1); m.indexed.splice(Number(i), 0, r) }
-      A.toast(`Archived. It no longer rides in every turn; it stays in memory.jsonl.${undoLink}`, "download")
-      render(true)
-    },
-    "restore-rule": (v) => {
-      const [member, text] = v.split("|")
-      const m = M().memory[member]
-      const r = m.archived.find((x) => x.rule === text)
-      m.archived.splice(m.archived.indexOf(r), 1)
-      m.indexed.push({ ...r, frecency: 1 })
-      A.toast("Restored to the indexed set.", "check")
-      render(true)
-    },
-    respawn: (v) => dialog(respawnDialog(...v.split("|"))),
-    "respawn-confirm": (v) => { $("#dialog").close(); A.toast(`Respawned on <code>${A.esc(v)}</code> with its latest checkpoint. The new invocation appears in the task timeline.`, "play") },
     "rule-confirm": (v) => {
       const [member, lesson, unit] = v.split("|")
       const rule = $("#rule-text").value.trim()
@@ -243,7 +230,7 @@
       render(true)
     },
     territory: (v) => dialog(territoryDialog(v ?? "")),
-    "territory-confirm": () => { $("#dialog").close(); A.toast("Territory declared in the catalog. Facts under it now have an owner and a tier.", "territory") },
+    "territory-confirm": () => { $("#dialog").close(); A.toast("Declared (R4). The catalog is committed JSON; Maestro re-reads it on the next verified read.", "territory") },
     palette: (v) => openPalette(v ?? ""),
     shortcuts: () => dialog(shortcuts(), true),
     state: (v) => setPreview(v),
@@ -267,35 +254,35 @@
   const foot = (note, action, label, value = "") => `<footer class="mx-dialog-foot"><span>${note}</span><button class="mx-btn" value="cancel">Cancel</button><button class="mx-btn primary" type="button" data-action="${action}" data-value="${A.esc(value)}">${label}</button></footer>`
   const promoteAll = () => {
     const n = M().candidates.filter((x) => !x.promotedNow && !x.discarded).length
-    return `<form method="dialog">${head(`Promote ${n} candidates`, "Promote reads every staging row and sends it through the emit door. Rows already promoted are recognised by their content and left unchanged.")}
-      <div class="mx-dialog-body"><div class="at-gates">${[["New", n, "blue"], ["Unchanged", 596, ""], ["Need ratify token", n, "warm"]].map(([l, v, t]) => `<div class="at-gate"><b class="at-state ${t}">${A.num(v)}</b><small>${l}</small></div>`).join("")}</div>
-      <p class="mx-note">Each one is re-checked against the code now; a candidate whose file changed since mining is refused by the truth gate and stays in staging.</p></div>${foot("Acting as Maestro · scope atlas:mined", "promote-all-confirm", `Promote ${n}`)}</form>`
+    return `<form method="dialog">${head("Promote all staged rows", "atlas promote takes no arguments. It re-presents every staging row through the emit door, already-promoted rows included, and each must pass the gates again. The batch is not atomic.")}
+      <div class="mx-dialog-body"><div class="at-gates">${[["Staging rows", 660, ""], ["Not yet promoted", n, "blue"], ["Need a ratify token", 660, "warm"]].map(([l, v, t]) => `<div class="at-gate"><b class="at-state ${t}">${A.num(v)}</b><small>${l}</small></div>`).join("")}</div>
+      <p class="mx-note">A row whose file changed since mining is refused by the truth gate. Rows stay in staging after promotion; staging has no marker or delete.</p></div>${foot("Actor seat:orchestrator · scope atlas:mined", "promote-all-confirm", "Promote all")}</form>`
   }
   const ratifyDialog = (x) => `<form method="dialog">${head("Ratify", A.esc(x.claim))}<div class="mx-dialog-body">
       <div class="at-radio"><label><input type="radio" name="tier" value="T1" checked><span><b>T1 · load-bearing</b><small>Moves to the governing band. Needs a ratify token.</small></span></label>
-      <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Becomes part of the constitution every agent reads. Only a person ratifies; Billy supplies the security input.</small></span></label></div>
-      <label class="mx-field"><span>Note for the record</span><textarea placeholder="Why this should govern"></textarea></label></div>${foot("Through atlas-emit with your identity", "ratify-confirm", "Ratify", x.key)}</form>`
+      <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Feeds the constitution every agent reads. Needs the ratifier token <code>billy</code>.</small></span></label></div>
+      <p class="ins-note warm">Raising the tier replaces the fact's claim set with this one claim. The store does not record who ratified.</p></div>${foot("Re-emitted through atlas-emit", "ratify-confirm", "Ratify", x.key)}</form>`
   const classifyDialog = (x) => `<form method="dialog">${head("Classify", `${A.esc(x.claim)}`)}
     <div class="mx-dialog-body at-slotpick">${M().SLOT_GROUPS.map(([g, meaning, slots]) => `<div class="at-slotgroup"><strong>${g}</strong><small>${meaning}</small>${slots.map((sl) => `<label><input type="radio" name="slot" value="${sl}" ${x.slot === sl ? "checked" : ""}><code>${sl}</code><span>${A.esc(M().SLOT_MEANING[sl])}</span></label>`).join("")}</div>`).join("")}</div>
-    ${foot("A slot is part of the fact's identity: Atlas re-emits it through atlas-draft and atlas-emit", "classify-confirm", "Classify", x.key)}</form>`
-  const editDialog = (x) => `<form method="dialog">${head("Edit claim", `Anchored to <code>${A.esc(x.file)}</code>. Advisory facts are edited in place; the old bytes stay in the store and in git.`)}
+    ${foot("The slot is part of the nodeKey: this writes a new fact (draft, then emit); the old one stays until retired", "classify-confirm", "Classify", x.key)}</form>`
+  const editDialog = (x) => `<form method="dialog">${head(M().state(x) === "drifted" ? "Rewrite claim" : "Edit claim", M().state(x) === "drifted" ? `The file changed. Write the claim as it holds now: it is drafted against the current <code>${A.esc(x.file)}</code> and emitted with a new grounding.` : `At the same tier the new claim joins the fact's claim set. If it cites other symbols, the anchor moves and it becomes a new fact.`)}
     <div class="mx-dialog-body"><label class="mx-field"><span>Claim</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label><p class="mx-note">One sentence, checkable against the file. The truth gate re-derives the anchor before it is saved.</p></div>${foot("Through atlas-emit", "save", "Save", x.key)}</form>`
   const respawnDialog = (member, unit) => {
     const t = (A.spawns ?? []).find((x) => x.unit === unit)
     const c = t && [...t.checkpoints].reverse().find((x) => x.outcome === "admitted")
     const name = member[0].toUpperCase() + member.slice(1)
-    return `<form method="dialog">${head(`Respawn ${name} on ${A.esc(unit)}`, `Maestro calls ${name} again on the same task. Atlas hands back the latest checkpoint once, before ${name} reads your packet.`)}
+    return `<form method="dialog">${head(`Resume ${name} on ${A.esc(unit)}`, `Maestro resumes ${name}'s session on this task. Atlas adds the latest admitted checkpoint once, before ${name} reads the packet.`)}
     <div class="mx-dialog-body"><div class="at-given" style="margin:0 0 14px">${A.icon("memory")}<span>Checkpoint handed back: <b>${A.esc(c?.entry.stoppedAt ?? "none — the resume would be refused")}</b></span></div>
     <label class="mx-field"><span>Packet</span><textarea rows="4">Continue this unit with the next phase your checkpoint names. When done, record an updated checkpoint.</textarea></label>
     <div class="mx-fields"><label class="mx-field"><span>Write paths</span><input value="counter.ts"></label><label class="mx-field"><span>Model</span><select><option>Same as last run</option><option>Claude Opus</option><option>Claude Sonnet</option></select></label></div>
-    <p class="mx-note">Sent as <code>task</code> with <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>${t ? ` and task <code>${A.esc(t.taskRef)}</code>` : ""}.</p></div>${foot("Through Maestro", "respawn-confirm", "Respawn", unit)}</form>`
+    <p class="mx-note">Maestro calls <code>task</code> with <code>task_id</code>${t ? ` <code>${A.esc(t.taskRef)}</code>` : ""} and <code>memoryUnit {"kind":"task","id":"${A.esc(unit)}"}</code>. In a fresh session with no receipt, Atlas hands back the unit's single checkpoint or refuses as <code>ambiguous</code> when there are several.</p>${A.newcap("R5")}</div>${foot("Through Maestro", "respawn-confirm", "Ask Maestro to resume", unit)}</form>`
   }
   const ruleDialog = (member = "backend", lesson = "", unit = "") => `<form method="dialog">${head("Index a project-memory rule", "Rules ride in every turn, so write one imperative line: an always or a never, with where it applies.")}
     <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea id="rule-text" rows="3">${A.esc(lesson)}</textarea></label><label class="mx-field"><span>Applies to</span><input id="rule-scope" placeholder="a path glob, a tool or a phase — * for everywhere" value="${lesson ? "tasks with phased packets" : ""}"></label>
-    <p class="mx-note">It starts with frecency 1, halves every wave it goes unused, and is archived below 0.10.</p></div>${foot("Through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
-  const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives a region of the code an owner and a tier. Overlaps resolve deterministically.")}
+    <p class="mx-note">A rule enters with frecency 1. Every later record in memory.jsonl, by any member, halves it; after four more records it falls below 0.10 and leaves the header. Re-sending the same rule does not renew it.</p>${A.newcap("R1")}</div>${foot("Written as the member through atlas_memory_emit · secret-scanned", "rule-confirm", "Index", `${member}|${lesson}|${unit}`)}</form>`
+  const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives units an owner and a tier; the tier is ratified by a person. Today the catalog is TERRITORY-CATALOG.json, committed and edited by hand.")}
     <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
-    <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${foot("Written to the territory catalog", "territory-confirm", "Declare")}</form>`
+    <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${A.newcap("R4")}${foot("Written to TERRITORY-CATALOG.json", "territory-confirm", "Declare")}</form>`
 
   const step = (delta) => {
     const list = A.state.list

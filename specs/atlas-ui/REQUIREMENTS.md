@@ -1,0 +1,18 @@
+# Atlas UI — capacidades novas que o desenho pede
+
+O mock mantém estas ações porque elas fazem sentido como produto, mas nem o Atlas nem o Orchestra as têm hoje. Na tela, cada uma aparece marcada **"New capability · Rn"**. A verificação está em [`REVIEW.md`](REVIEW.md), grupo B.
+
+| # | Capacidade | Hoje | Onde construir | Aceite |
+|---|---|---|---|---|
+| **R1** | **Memória de projeto aprovada pelo steward.** As lições que o membro escreve nos checkpoints viram propostas; uma pessoa indexa (com texto e escopo) ou descarta. A interface também permite "Adicionar regra". | O próprio membro grava `atlas_memory_emit` (kind `project`) e a regra é admitida na hora. A ferramenta só roda para o membro dono. Não existe estado de proposta. | Atlas memory (estado de proposta e porta de admissão com ator humano) e um host Orchestra que escreva como o membro, com autorização explícita | Uma proposta indexada aparece no cabeçalho do membro no turno seguinte; uma descartada fica registrada; nenhuma regra entra sem decisão |
+| **R2** | **Promover ou manter um candidato por vez.** | `atlas promote` não recebe argumentos, assenta todo o staging e não é atômico. O staging não tem marca nem remoção. | Atlas genesis/tools: `promote <nodeKey…>` e uma marca de decisão no staging | Promover uma linha não reapresenta as outras; "manter no staging" sobrevive ao próximo `promote` |
+| **R3** | **Fila de propostas de ratificação.** Um revisor (Lucy, Archie…) propõe um fato para T1 ou T0; uma pessoa ratifica ou rejeita com motivo. | Ratificar é reemitir com um token. Não existe `proposedTier` nem rejeição. | Atlas knowledge (registro de proposta e de rejeição) | A proposta mostra quem propôs e por quê; a rejeição fica no histórico; o T0 continua exigindo o ratificador humano |
+| **R4** | **Declarar território pela interface.** | `TERRITORY-CATALOG.json` é comitado e editado à mão; `publishTerritoryCatalog` não tem chamador. | Porta de escrita do catálogo, com o tier ratificado por pessoa, mais a releitura verificada pelo Maestro | O território declarado aparece no catálogo comitado e nas unidades, sem `artifacts-invalid` |
+| **R5** | **Retomar uma task pela interface** ("Resume via Maestro"). | Só o Maestro, um modelo, chama `task` com `task_id` e `memoryUnit`. O replay de transcript (`@atlas/persist` reinvoke) não está ligado. | Orchestra: ação do host que despacha a retomada, mais um transcript reproduzível | A retomada recebe o checkpoint admitido mais recente uma vez; numa sessão nova com vários checkpoints, a interface pede a escolha em vez de recusar com `ambiguous` |
+| **R6** | **Aposentar tira o fato da leitura.** | O emit marca `authoring: SUPERSEDED`, mas nenhum caminho de leitura (pack, bandas, own) filtra isso: o agente continua recebendo. | Atlas retrieval: excluir SUPERSEDED de `query` e `own` | Um fato aposentado some do pack e continua no histórico |
+| **R7** | **Reconstruir o snapshot Own pela interface**, para que mudanças vivas cheguem aos agentes. | O Orchestra lê só o `OWN-SNAPSHOT.json` comitado (hoje 1 unidade). O snapshot não exporta pack com fato fora de FRESH, e o host trava com `artifacts-invalid` se a fonte mudou. | Orchestra e Atlas: materializar e comitar o snapshot a partir do store, com escolha das unidades | Depois de reconstruir, `atlas_context unit` serve o pack novo; fatos com drift bloqueiam a reconstrução com o motivo |
+
+**Saiu do desenho:**
+
+- **Arquivar/Restaurar regra.** A saída do cabeçalho é calculada na leitura, então virou uma lista só de leitura, "Out of the header".
+- **Atribuição de quem ratificou.** O nó não guarda o ratificador.

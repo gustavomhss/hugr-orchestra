@@ -78,8 +78,8 @@ window.Atlas = window.Atlas || {}
   // Atlas vocabulary, shown as glyph + word with a one-line explanation on hover.
   const states = {
     fresh: ["good", "checkc", "Fresh", "The anchored code still hashes the same as when the fact was derived."],
-    drifted: ["warm", "drift", "Drifted", "The anchored code changed since the fact was derived. Someone has to say whether it still holds."],
-    retired: ["", "minusc", "Retired", "Marked superseded. Kept in the store, no longer served."],
+    drifted: ["warm", "drift", "Drifted", "Semantic drift: the anchored content no longer exists anywhere, so reconcile blocks the merge until the claim is rewritten or retired."],
+    retired: ["", "minusc", "Superseded", "Retired through emit (authoring SUPERSEDED). Reads do not filter it yet, so agents still receive it (R6)."],
     pending: ["blue", "clock", "In staging", "Mined, not promoted yet. Agents never see staging."],
   }
   A.chip = (value) => {
@@ -103,6 +103,18 @@ window.Atlas = window.Atlas || {}
     const i = path.lastIndexOf("/")
     return `<code class="at-path">${i < 0 ? "" : `<span>${A.esc(path.slice(0, i + 1))}</span>`}${A.esc(path.slice(i + 1))}</code>`
   }
+
+  // Actions the design keeps although Atlas/Orchestra cannot do them yet. Each points at specs/atlas-ui/REQUIREMENTS.md.
+  A.REQS = {
+    R1: "Steward-approved project memory: proposals from a member's lessons, indexed by a person. Today the member writes its own rule and it is admitted at once.",
+    R2: "Promote or keep a single staged candidate. Today atlas promote settles every staging row at once and staging has no marker.",
+    R3: "Ratification proposals: a reviewer proposes a fact for T1/T0 and a person ratifies or rejects with a reason. Atlas has no proposal state.",
+    R4: "Declare a territory from the app. Today the catalog is a committed JSON edited by hand.",
+    R5: "Resume a task from the app. Today only Maestro can call task with task_id and memoryUnit; transcript replay is not wired.",
+    R6: "Retiring withdraws a fact from what agents read. Today it is tagged SUPERSEDED but still served.",
+    R7: "Rebuild the Own snapshot from the app, so live changes reach agents. Today a maintainer re-materializes it.",
+  }
+  A.newcap = (id) => `<span class="at-newcap" data-tip="Requires a new capability · ${id}: ${A.esc(A.REQS[id])}">${A.icon("sparkle")}New capability · ${id}</span>`
 
   A.badge = (label, tone = "") => `<span class="mx-badge ${tone}">${A.esc(label)}</span>`
   A.btn = (label, action, opts = {}) =>

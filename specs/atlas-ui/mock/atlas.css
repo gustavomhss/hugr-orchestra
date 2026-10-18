@@ -784,3 +784,15 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 @media (max-width: 760px) { .at-unit-cell { display: none; } .at-slotpick { grid-template-columns: minmax(0, 1fr); } }
 .at-terr { display: inline-flex; align-items: center; gap: 5px; color: var(--mx-strong); } .at-terr .wf-ic { inline-size: 12px; block-size: 12px; color: var(--mx-blue); } .at-ckpt.pr summary .grow { color: var(--mx-strong); }
 .at-terr { display: inline-flex; align-items: center; gap: 5px; color: var(--mx-strong); } .at-terr .wf-ic { inline-size: 12px; block-size: 12px; color: var(--mx-blue); } .at-ckpt.pr summary .grow { color: var(--mx-strong); }
+
+/* New-capability marker and fidelity notes */
+.at-newcap { display: inline-flex; align-items: center; gap: 5px; flex: none; block-size: 20px; padding: 0 8px; border: 1px dashed var(--wf-warm-line); border-radius: 10px; color: var(--mx-warm); font-size: 10px; white-space: nowrap; }
+.at-newcap .wf-ic { inline-size: 10px; block-size: 10px; }
+.at-snapline { display: flex; align-items: center; gap: 10px; margin: 14px 18px 0; padding: 10px 12px; border: 1px solid var(--mx-line); border-radius: 9px; background: var(--mx-soft); font-size: 11px; line-height: 1.55; color: var(--mx-dim); }
+.at-snapline > span:not(.at-newcap) { flex: 1; }
+.at-snapline.good { border-color: rgba(146, 190, 167, .25); }
+.at-snapline .wf-ic { color: var(--mx-blue); }
+.at-snapline code { font: 10px var(--mx-mono); }
+.at-band.gotcha { box-shadow: inset 3px 0 0 var(--mx-warm), var(--mx-highlight); }
+.ins-foot .at-newcap, .at-card > footer .at-newcap { margin-inline-end: 4px; }
+.mx-dialog-body .at-newcap { margin-block-start: 10px; }

@@ -73,18 +73,20 @@
       ${kpi("Checkpoints", saved, st.checkpoints ? `${st.refused} refused · ${st.invocations} calls` : "—", st.refused ? "warn" : "")}</div>`
 
     const rule = (r, i) => `<div class="at-rule-row"><span class="rank">${i + 1}</span><div class="grow"><div>${A.esc(r.rule)}</div><small>${A.esc(r.scope)} · from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(r.unit)}">${A.esc(r.unit)}</a></small></div>
-      <span class="at-frec" data-tip="Frecency ${r.frecency.toFixed(2)}. Each cited use refreshes it; it halves every wave unused and the rule is archived below 0.10."><i style="inline-size:${Math.min(100, r.frecency * 100)}%"></i></span><span class="at-tok">${words(r.rule)} tok</span>${A.btn("", "archive-rule", { value: `${member}|${i}`, icon: "download", label: "Archive", tip: "Archive (leaves every turn, kept in the log)" })}</div>`
+      <span class="at-frec" data-tip="Frecency ${r.frecency.toFixed(2)}: 1 when written, halved by every later record in memory.jsonl from any member. Below 0.10 it leaves the header (after about four more records). Re-sending the same rule does not renew it."><i style="inline-size:${Math.min(100, r.frecency * 100)}%"></i></span><span class="at-tok">${words(r.rule)} tok</span></div>`
     const indexed = `<div class="at-tokens"><div><b>${pm.used}</b><span> tokens</span><small>${pm.indexed.length} ${pm.indexed.length === 1 ? "rule" : "rules"} indexed</small></div>
         <small class="at-tok-note">Plus the shared header every member carries (Awareness ${pm.shared} tokens, Orientation 0): <b>${pm.used + pm.shared} tokens</b> of memory in each of ${name}'s turns.</small></div>
       ${pm.indexed.length ? pm.indexed.map(rule).join("") : `<div class="at-band-empty">Nothing indexed yet. ${pm.proposals.length ? `Index a proposal to give ${name} its first rule.` : ""}</div>`}
-      ${pm.archived.length ? `<details class="at-sub-acc"><summary>${A.icon("chev")}<span>Archived</span><span class="wf-count">${pm.archived.length}</span></summary>${pm.archived.map((r) => `<div class="at-rule-row muted"><span class="rank">·</span><div class="grow"><div>${A.esc(r.rule)}</div><small>left every turn · kept in the log</small></div>${A.btn("Restore", "restore-rule", { value: `${member}|${r.rule}` })}</div>`).join("")}</details>` : ""}`
+      ${pm.archived.length ? `<details class="at-sub-acc"><summary>${A.icon("chev")}<span>Out of the header</span><span class="wf-count">${pm.archived.length}</span></summary>${pm.archived.map((r) => `<div class="at-rule-row muted"><span class="rank">·</span><div class="grow"><div>${A.esc(r.rule)}</div><small>frecency ${r.frecency.toFixed(2)}, below 0.10 · still in memory.jsonl · computed on read, nothing to restore</small></div></div>`).join("")}</details>` : ""}
+      <p class="at-foot-id">Atlas counts every rule ${name} ever wrote, in or out of the header, and refuses new ones past 500 words (800 for Maestro).</p>`
     const proposals = pm.proposals.length
       ? `<p class="at-stew-intro">Lessons ${name} wrote in its task checkpoints. Indexing one turns it into a rule it carries into every turn.</p>${pm.proposals.map((l) => `<div class="at-rule-row"><span class="rank">${A.icon("sparkle")}</span><div class="grow"><div>${A.esc(l.lesson)}</div><small>${words(l.lesson)} tokens · from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(l.unit)}">${A.esc(l.unit)}</a></small></div>${A.btn("Dismiss", "dismiss-proposal", { value: `${member}|${l.lesson}` })}${A.btn("Index…", "promote-rule", { value: `${member}|${l.lesson}|${l.unit}`, primary: true })}</div>`).join("")}`
       : `<div class="at-band-empty">No proposals. New lessons from ${name}'s tasks will show up here.</div>`
     const project = `<div class="at-acc-tools"><div class="wf-range" role="tablist">
         <button role="tab" aria-selected="${tab === "proposals"}" data-action="go" data-value="${href({ pm: "proposals" })}">Proposals<span class="wf-count">${pm.proposals.length}</span></button>
         <button role="tab" aria-selected="${tab === "indexed"}" data-action="go" data-value="${href({ pm: "indexed" })}">Indexed<span class="wf-count">${pm.indexed.length}</span></button></div>
-        <span class="grow"></span>${tab === "indexed" ? A.btn("Add rule", "promote-rule", { value: `${member}||`, icon: "plus" }) : ""}</div>
+        <span class="grow"></span>${A.newcap("R1")}${tab === "indexed" ? A.btn("Add rule", "promote-rule", { value: `${member}||`, icon: "plus" }) : ""}</div>
+      <p class="at-stew-intro">Today ${name} writes its own rules while working (<code>atlas_memory_emit</code>, kind project) and Atlas admits them at once. Proposals and indexing by a person are the new capability R1.</p>
       ${tab === "indexed" ? indexed : proposals}`
 
     const taskRows = [...ts].reverse().filter((t) => !filter || status(t)[2] === filter).map((t) => {
@@ -97,16 +99,17 @@
         <span class="at-task-meta"><span>${inv} calls</span><span>${day(t.steps[0].start)}</span></span>${A.icon("arrow")}</a>`
     }).join("")
     const prs = M().memory[member].prs ?? []
-    const prRows = prs.map((p) => `<details class="at-ckpt pr"><summary><span class="at-kindtag">PR</span><code class="at-mono">${A.esc(p.prId)}</code><span class="grow">${A.esc(p.title)}</span><small>${p.decisions.length} decisions</small></summary><div class="at-panel-body"><dl class="at-kv wide"><dt>Decisions</dt><dd>${p.decisions.map(A.esc).join("<br>")}</dd><dt>Review</dt><dd>${p.reviewOutcomes.map(A.esc).join("<br>")}</dd><dt>Knowledge delta</dt><dd>${p.knowledgeDelta.map(A.esc).join("<br>")}</dd></dl></div></details>`).join("")
+    const prRows = prs.map((p) => `<details class="at-ckpt pr"><summary><span class="at-kindtag">PR</span><code class="at-mono">${A.esc(p.prId)}</code><span class="grow">${A.esc(p.title)}</span><span class="at-pill" data-tip="The PR template exists in Atlas, but nothing in Orchestra asks members to write PR memory yet.">example</span><small>${p.decisions.length} decisions</small></summary><div class="at-panel-body"><dl class="at-kv wide"><dt>Decisions</dt><dd>${p.decisions.map(A.esc).join("<br>")}</dd><dt>Review</dt><dd>${p.reviewOutcomes.map(A.esc).join("<br>")}</dd><dt>Knowledge delta</dt><dd>${p.knowledgeDelta.map((k) => `<code>${A.esc(k.change)}</code> ${A.esc(k.unit)} · ${k.facts} ${k.facts === 1 ? "fact" : "facts"}`).join("<br>")}</dd></dl></div></details>`).join("")
     const log = ts.length || prs.length
-      ? `<div class="at-acc-tools"><div class="wf-range">${[["", "All", ts.length], ["Done", "Done", by("Done")], ["Paused", "Paused", by("Paused")], ["Blocked", "Blocked", by("Blocked")]].map(([v, l, n]) => `<button aria-pressed="${filter === v}" data-action="go" data-value="${href({ status: v })}">${l}<span class="wf-count">${n}</span></button>`).join("")}</div><span class="grow"></span><span class="at-hint">Read only when ${name} asks for them; never injected</span></div>${taskRows || (ts.length ? '<div class="at-band-empty">No entries with this status.</div>' : "")}${prRows}`
+      ? `<div class="at-acc-tools"><div class="wf-range">${[["", "All", ts.length], ["Done", "Done", by("Done")], ["Paused", "Paused", by("Paused")], ["Blocked", "Blocked", by("Blocked")]].map(([v, l, n]) => `<button aria-pressed="${filter === v}" data-action="go" data-value="${href({ status: v })}">${l}<span class="wf-count">${n}</span></button>`).join("")}</div><span class="grow"></span><span class="at-hint" data-tip="Status is the interface's reading of the latest checkpoint; Atlas has no task status.">Read only when ${name} asks, or once when a task is resumed</span></div>${taskRows || (ts.length ? '<div class="at-band-empty">No entries with this status.</div>' : "")}${prRows}`
       : `<div class="at-band-empty">No entries yet. Each task or PR ${name} works on adds one here.</div>`
 
     return {
       crumbs,
       html: `<div class="at-page narrow">${head(name, role, true)}${kpis}
         ${acc(`${member}-project`, "shield", "Project memory", `What ${name} carries into every turn`, `${pm.used} tokens`, project, true)}
-        ${acc(`${member}-log`, "history", "Memory log", "One entry per task or PR it worked on", ts.length || prs.length ? `${st.tasks} tasks${prs.length ? ` · ${prs.length} PR` : ""}${ts.length ? ` · last ${day(last)}` : ""}` : "empty", log, true)}</div>`,
+        <p class="at-foot-id">Each member's header injects only its own rules, but memory is plaintext in the worktree: anyone with repository access, this screen included, can read every member's records.</p>
+        ${acc(`${member}-log`, "history", "Memory log", "Every checkpoint it wrote, grouped by task or PR", ts.length || prs.length ? `${st.tasks} tasks${prs.length ? ` · ${prs.length} PR` : ""}${ts.length ? ` · last ${day(last)}` : ""}` : "empty", log, true)}</div>`,
     }
   }
 
@@ -130,7 +133,7 @@
       return `<li class="at-step ${s.kind}"><span class="at-step-dot">${A.icon(stepGlyph[s.kind] ?? "dot")}</span><div class="at-step-body">
         <div class="at-step-head"><strong>${stepName[s.kind] ?? s.kind}</strong><small>${day(s.start)} ${time(s.start)} · ${dur(secs(s.start, s.end))}${s.model ? ` · ${A.esc(s.model.split("/").at(-1))}` : ""}</small></div>
         ${given.map((g) => `<div class="at-given">${A.icon("memory")}Atlas handed back checkpoint <code>${A.esc((g.ref?.eventId ?? "").slice(0, 12))}…</code></div>`).join("")}
-        ${s.kind === "compact" ? `<p class="at-step-text">The session was compacted; nothing changed.</p>` : `<p class="at-step-text clamp2">${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim())}</p>
+        ${s.kind === "compact" ? `<p class="at-step-text">Compaction was requested. If it applied, the checkpoint handed back on resume can fall out of view; the host then restores it once (wired, not yet observed in a live run).</p>` : `<p class="at-step-text clamp2">${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim())}</p>
         <details class="at-sub-acc inline"><summary>${A.icon("chev")}<span>Packet from Maestro</span></summary><div class="at-reasoning">${A.esc(s.packet)}</div></details>`}
         ${made.map((x) => `<div class="at-made ${x.outcome}">${A.icon(x.outcome === "admitted" ? "checkc" : "xc")}${x.outcome === "admitted" ? "Checkpoint saved" : `Checkpoint refused · <code>${A.esc(x.refusal)}</code>`}</div>`).join("")}
       </div></li>` }).join("")}</ol>`
@@ -139,15 +142,15 @@
       crumbs,
       html: `<div class="at-page narrow">
       <div class="at-agent-head"><span class="at-avatar">${name[0]}</span><div><div class="mx-eyebrow">${name} · task memory</div><h1 class="mono">${A.esc(unit)}</h1><p>${A.esc((t.title ?? t.steps[0]?.packet.split("\n").find((l) => /Phase 1/.test(l)) ?? role).replace(/^- Phase 1 \(now\): /, "").replace(/ \(@backend-label subagent\)/, "").replace(/`/g, ""))}</p></div><span class="grow"></span>
-        ${A.btn("Transcript", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}/transcript`, icon: "chat" })}${A.btn("Respawn with this memory", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div>
+        ${A.btn("Transcript", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}/transcript`, icon: "chat" })}${A.newcap("R5")}${A.btn("Resume via Maestro", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div>
       <div class="at-kpis">
         ${kpi("Status", `<span class="at-state ${tone}">${A.icon(glyph)}${label}</span>`, c ? "from its latest checkpoint" : "no checkpoint")}
         ${kpi("Calls", inv, `${(tokens(t) / 1000).toFixed(0)}k tokens`)}
         ${kpi("Time", dur(total), `${day(t.steps[0].start)} · ${t.steps[0].model ? A.esc(t.steps[0].model.split("/").at(-1)) : ""}`)}
         ${kpi("Checkpoints", t.checkpoints.length - refused, refused ? `${refused} refused` : "none refused", refused ? "warn" : "")}</div>
-      ${acc(`task-latest`, "memory", "Where it stopped", `What it gets back on respawn`, c ? A.esc((c.entry.stoppedAt ?? "").slice(0, 60)) + "…" : "no checkpoint", c ? fold(c.entry) : '<div class="at-band-empty">No saved checkpoint, so a resume would be refused.</div>', true)}
+      ${acc(`task-latest`, "memory", "Where it stopped", `The latest admitted checkpoint: what a resume hands back`, c ? A.esc((c.entry.stoppedAt ?? "").slice(0, 60)) + "…" : "no checkpoint", c ? fold(c.entry) : '<div class="at-band-empty">No saved checkpoint, so a resume would be refused.</div>', true)}
       ${acc(`task-calls`, "history", "Calls", "Each time Maestro called it", `${inv} calls · ${dur(total)}`, steps, true)}
-      ${acc(`task-ckpts`, "stack", "Checkpoint history", "Every write, refused ones too", `${t.checkpoints.length - refused} saved${refused ? ` · ${refused} refused` : ""}`, all)}
+      ${acc(`task-ckpts`, "stack", "Checkpoint history", "Saved records from memory.jsonl; refused writes come from the session's receipts", `${t.checkpoints.length - refused} saved${refused ? ` · ${refused} refused` : ""}`, all)}
       ${t.diff ? acc(`task-diff`, "code", "Files changed", "What it changed in the repository", "counter.ts", `<pre class="at-raw">${A.esc(t.diff)}</pre>`) : ""}
       <p class="at-foot-id">session <code>${A.esc(t.seatSession)}</code></p></div>`,
     }
@@ -168,7 +171,7 @@
     return {
       crumbs: [["Atlas", "#/overview"], ["Memory", `#/memory/${member}`], [name, `#/memory/${member}`], [unit, `#/memory/${member}/task/${encodeURIComponent(unit)}`, true], ["Transcript"]],
       flush: true,
-      html: `<div class="at-session"><div class="at-tabs-strip"><span class="at-sess-tab">${A.icon("chat")}${A.esc(t.title ?? `${name} · ${unit}`)} <code>${A.esc(t.seatSession.slice(0, 16))}…</code></span><span class="grow"></span>${A.btn("Back to task", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}`, icon: "back" })}${A.btn("Respawn with this memory", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div>
+      html: `<div class="at-session"><div class="at-tabs-strip"><span class="at-sess-tab">${A.icon("chat")}${A.esc(t.title ?? `${name} · ${unit}`)} <code>${A.esc(t.seatSession.slice(0, 16))}…</code></span><span class="grow"></span>${A.btn("Back to task", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}`, icon: "back" })}${A.newcap("R5")}${A.btn("Resume via Maestro", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div>
       <div class="at-transcript">${t.transcript.map((m) => `<div class="at-turn ${m.role === "user" ? "user" : ""}">${m.role === "assistant" ? `<div class="at-turn-head">${A.agent(member)}<span>${A.esc(m.model ?? "")}</span><span class="grow"></span><small>${A.num(m.tokens.in + m.tokens.out)} tokens${m.tokens.cache ? ` · ${A.num(m.tokens.cache)} cached` : ""}</small></div>` : `<div class="at-turn-head"><span>${A.agent("maestro")}</span><span>packet</span></div>`}${m.parts.map(part).join("")}</div>`).join("")}</div></div>`,
     }
   }

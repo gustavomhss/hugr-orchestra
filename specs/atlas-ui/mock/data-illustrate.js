@@ -51,10 +51,10 @@
     { name: "Documentation", owner: "rosie", tier: "T2", globs: ["docs/**"] },
   ]
   R.awareness = [
-    { facet: "mission", state: "seeded", source: "docs/design/product-definition.md", text: "Serve agents the currently-true, task-relevant, minimal slice of what the codebase knows, retrieved by structure, never by similarity." },
-    { facet: "constitution", state: "seeded", source: "3 T0 facts", text: R.facts.filter((x) => x.tier === "T0").map((x) => x.claim.split(/[.;—]/)[0]).join(" · ") },
-    { facet: "terrain", state: "seeded", source: "7 territories", text: "Identity & storage (T0, Backend) · Knowledge lifecycle · Retrieval & memory (Archie) · Genesis (Jimmy) · Product surface · Verification · Documentation" },
-    { facet: "ontology", state: "seeded", source: `${R.facts.filter((x) => x.slot === "definition").length} definition facts`, text: "fact · unit · pack · band · tier · slot · anchor · drift · staging · door" },
+    { facet: "mission", state: "UN-SEEDED", source: "no source wired in Atlas" },
+    { facet: "constitution", state: "seeded", source: `${R.facts.filter((x) => x.tier === "T0").length} T0 facts`, text: R.facts.filter((x) => x.tier === "T0").map((x) => x.claim.split(/[.;—]/)[0]).join(" · ") },
+    { facet: "terrain", state: "UN-SEEDED", source: "no source wired in Atlas (territories do not feed it)" },
+    { facet: "ontology", state: "UN-SEEDED", source: "no source wired in Atlas (definition facts do not feed it)" },
     { facet: "taste", state: "seeded", source: "CONVENTIONS.md", text: "A claim carries its derivation, or it does not ship. Refusing beats guessing. A gate must be able to fail. Mutation-probe anything load-bearing. One file, one seam." },
   ]
 
@@ -107,8 +107,8 @@
     },
     archived: { backend: [{ rule: "Prefer Bun.file over fs for every read.", scope: "*", unit: "manual", frecency: 0.05 }] },
     prs: {
-      archie: [{ prId: "#658", title: "Anchor Atlas knowledge for Archie and Relay", decisions: ["Cap a plan at 8 Own units", "Freeze unit bodies into the anchor by hash"], reviewOutcomes: ["Approved after the Windows time-budget fix"], knowledgeDelta: ["+6 facts in packages/retrieval", "1 fact superseded in packages/knowledge"] }],
-      backend: [{ prId: "#664", title: "Accept JSON-text anchor arguments", decisions: ["Parse at the tool boundary, keep the schema strict"], reviewOutcomes: ["Approved, no changes"], knowledgeDelta: ["none"] }],
+      archie: [{ prId: "#658", title: "Anchor Atlas knowledge for Archie and Relay", decisions: ["Cap a plan at 8 Own units", "Freeze unit bodies into the anchor by hash"], reviewOutcomes: ["Approved after the Windows time-budget fix"], knowledgeDelta: [{ change: "emitted", unit: "packages/retrieval", facts: 6 }, { change: "superseded", unit: "packages/knowledge", facts: 1 }] }],
+      backend: [{ prId: "#664", title: "Accept JSON-text anchor arguments", decisions: ["Parse at the tool boundary, keep the schema strict"], reviewOutcomes: ["Approved, no changes"], knowledgeDelta: [{ change: "none", unit: "—", facts: 0 }] }],
     },
   }
 })(window.Atlas)

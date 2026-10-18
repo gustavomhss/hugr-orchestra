@@ -2,16 +2,21 @@
 // computes (bands, caps, pull-reachable, dependents, drift) so every number on screen comes from the data.
 ;(function (A) {
   const R = A.real
-  const OWN_ADVISORY_CAP = 750 // tokens (retrieval/src/own.ts)
+  // retrieval/src/own.ts: the whole briefing is capped at 1500 CHARACTERS of claim text; the advisory band gets at
+  // most half of it and is paid last; dependents are capped at 8 facts, finer scopes at 16.
+  const OWN_CAP = 1500
+  const OWN_ADVISORY_CAP = OWN_CAP / 2
   const EDGE_CAP = 8
   const FINER_CAP = 16
-  const tokens = (text) => Math.ceil(text.length / 4) + 6
+  const tokens = (text) => text.length
 
   const state = (x) => (x.retired ? "retired" : x.drift && !x.regrounded ? "drifted" : "fresh")
+  const isGotcha = (x) => x.slot === "gotcha" || x.slot === "rationale"
   const facts = R.facts.map((x) => ({ ...x, kind: "fact" }))
   const candidates = R.candidates.map((x) => ({ ...x, kind: "candidate" }))
   const byKey = Object.fromEntries([...facts, ...candidates].map((x) => [x.key, x]))
-  const live = () => [...facts, ...candidates.filter((x) => x.promotedNow)].filter((x) => !x.retired)
+  // Retire tags a fact SUPERSEDED through emit, but no read path filters on it, so it stays served (REVIEW A5).
+  const live = () => [...facts, ...candidates.filter((x) => x.promotedNow)]
   const governing = (x) => x.tier === "T0" || x.tier === "T1"
 
   // Own units: the grain Atlas serves knowledge at (`own_<unit>`, level crate | module | service | feature,
@@ -34,7 +39,7 @@
     const map = new Map()
     for (const x of live()) {
       const id = unitOf(x.file)
-      const u = map.get(id) ?? { id, group: unitGroup(id), level: unitGroup(id) === "code" ? "module" : unitGroup(id) === "root" ? "repo" : "folder", facts: 0, drifted: 0, governing: 0, unclassified: 0, files: new Set() }
+      const u = map.get(id) ?? { id, group: unitGroup(id), level: "module", facts: 0, drifted: 0, governing: 0, unclassified: 0, files: new Set() }
       u.facts++
       if (state(x) === "drifted") u.drifted++
       if (governing(x)) u.governing++
@@ -85,22 +90,34 @@
   // sub-cap, what did not fit named as pull-reachable, dependents capped, finer scopes capped.
   const briefing = (path) => {
     const here = live().filter(under(path))
-    const gov = here.filter(governing)
-    const adv = here.filter((x) => !governing(x)).sort((a, b) => (state(a) === state(b) ? a.file.localeCompare(b.file) : state(a) === "fresh" ? -1 : 1))
-    const fit = []
+    const byKey = (a, b) => (a.tier === b.tier ? a.key.localeCompare(b.key) : a.tier.localeCompare(b.tier))
+    const inv = here.filter((x) => governing(x) && !isGotcha(x)).sort(byKey)
+    const gotchas = here.filter((x) => governing(x) && isGotcha(x)).sort(byKey)
+    const sent = []
     const pull = []
     let used = 0
-    for (const x of adv) {
-      const t = tokens(x.claim)
-      if (used + t <= OWN_ADVISORY_CAP) { fit.push(x); used += t } else pull.push(x)
+    // Governing rows and gotchas are paid first; whatever does not fit is named, never dropped silently.
+    for (const x of [...inv, ...gotchas]) {
+      if (used + x.claim.length <= OWN_CAP) { sent.push(x); used += x.claim.length } else pull.push(x)
+    }
+    // The advisory band is paid last, under its own sub-cap, and stops at the first row that does not fit.
+    const advBudget = Math.min(OWN_ADVISORY_CAP, OWN_CAP - used)
+    const adv = []
+    let advUsed = 0
+    let stopped = false
+    for (const x of here.filter((y) => !governing(y)).sort(byKey)) {
+      if (!stopped && advUsed + x.claim.length <= advBudget) { adv.push(x); advUsed += x.claim.length } else { stopped = true; pull.push(x) }
     }
     const node = findNode(path)
     const finer = node ? [...node.children.values()].sort((a, b) => b.facts - a.facts) : []
-    const deps = dependents(path)
-    return { here, gov, adv: fit, pull, used, cap: OWN_ADVISORY_CAP, finer: finer.slice(0, FINER_CAP), finerTotal: finer.length, deps: deps.slice(0, EDGE_CAP), depsTotal: deps.length }
+    const depFiles = dependents(path)
+    const depFacts = live().filter((x) => depFiles.includes(x.file)).sort(byKey)
+    return { here, inv: inv.filter((x) => sent.includes(x)), gotchas: gotchas.filter((x) => sent.includes(x)), gov: inv.concat(gotchas).filter((x) => sent.includes(x)), adv, pull, used: used + advUsed, advUsed, cap: OWN_CAP, advCap: OWN_ADVISORY_CAP,
+      finer: finer.slice(0, FINER_CAP), finerTotal: finer.length, depFiles, depFacts: depFacts.slice(0, EDGE_CAP), depFactsTotal: depFacts.length, deps: depFiles.slice(0, EDGE_CAP), depsTotal: depFiles.length }
   }
 
-  // Who depends on this scope: files outside it importing files inside it (stand-in for the SCIP axis).
+  // Files outside the scope that import files inside it: the stand-in for the SCIP reverse closure. Atlas
+  // reports the FACTS anchored on those files (own `dependent` rows), capped at 8.
   const dependents = (path) => {
     const inside = under(path)
     const out = new Set()
@@ -110,6 +127,9 @@
     })
     return [...out].sort()
   }
+
+  // What Orchestra actually serves: the committed Own snapshot (OWN-SNAPSHOT.json), not the live store.
+  const snapshot = { revision: "1a235323", units: ["packages/genesis"], catalog: false }
 
   const stats = () => {
     const l = live()
@@ -158,11 +178,11 @@
   })
   const awareness = R.awareness ?? [
     { facet: "mission", state: "UN-SEEDED", source: "No source wired yet" },
-    { facet: "constitution", state: "UN-SEEDED", source: "Built from T0 facts; there are none yet" },
-    { facet: "terrain", state: "UN-SEEDED", source: "Built from territories; none declared" },
-    { facet: "ontology", state: "UN-SEEDED", source: "Built from definition facts; none yet" },
+    { facet: "constitution", state: "UN-SEEDED", source: "From T0 facts; there are none" },
+    { facet: "terrain", state: "UN-SEEDED", source: "No source wired in Atlas" },
+    { facet: "ontology", state: "UN-SEEDED", source: "No source wired in Atlas" },
     { facet: "taste", state: "seeded", source: "CONVENTIONS.md", text: "A claim carries its derivation, or it does not ship. Refusing beats guessing. A gate must be able to fail. Mutation-probe anything load-bearing. One file, one seam." },
   ]
 
-  A.m = { territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  A.m = { snapshot, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

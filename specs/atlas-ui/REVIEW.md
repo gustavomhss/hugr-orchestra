@@ -93,4 +93,6 @@ Os achados se dividem em dois tipos:
 | B6 | **"Respawnar com esta memória"** como botão | Só o Maestro chama `task` com `memoryUnit`. O replay de transcript (`@atlas/persist`) não está ligado. |
 | B7 | Mostrar **quem ratificou** | O nó não guarda o ratificador. |
 
-**Recomendação:** corrigir todo o grupo A agora. No grupo B, manter só o que você quer como produto (B1, B3 e B6 parecem centrais), marcando na tela "requer capacidade nova", e registrar cada um como requisito para o Atlas ou o Orchestra. O que você não quiser sai do mock.
+**Decisão do owner (2026-10-18):** corrigir o grupo A; manter B1, B3, B4, B5 e B6 marcados como capacidade nova, e somar R6 (aposentar tira da leitura) e R7 (reconstruir o snapshot). Ver [`REQUIREMENTS.md`](REQUIREMENTS.md). B2 virou lista só de leitura; B7 saiu.
+
+**Recomendação original:** corrigir todo o grupo A agora. No grupo B, manter só o que você quer como produto (B1, B3 e B6 parecem centrais), marcando na tela "requer capacidade nova", e registrar cada um como requisito para o Atlas ou o Orchestra. O que você não quiser sai do mock.
