@@ -94,7 +94,7 @@ test("MUSL-GUEST actual native musl compile and real curl/npm lifecycle with ful
     expect(sha256(await readFile(`/proof/omni-artifacts/${producer.id}/${file}`))).toBe(digest)
   }
   expect(Object.keys(producer.sha256).sort()).toEqual(["hugr-omni-supervisor", "hugr_omni.node"])
-  const python = join(await realpath(dirname(Bun.resolveSync("tree-sitter-python/package.json", resolve(cli, "../maestro-arsenal")))),
+  const python = join(await realpath(dirname(Bun.resolveSync("tree-sitter-python/package.json", resolve(cli, "../../modules/maestro/arsenal")))),
     "prebuilds", `linux-${process.arch}`, "tree-sitter-python.node")
   expect(requireElfLibc(python, "glibc").machine).toBe(NATIVE_MACHINES[`linux-${process.arch}`])
   await copyFile(python, "/proof/controls/glibc-python.node")

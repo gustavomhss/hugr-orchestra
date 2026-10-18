@@ -27,7 +27,7 @@ export async function build() {
   const dirty = git("status", "--porcelain", "--untracked-files=no")
   if (sourceSHA !== (process.env.DESKTOP_PR_HEAD || process.env.GITHUB_SHA) || dirty) throw new Error(`desktop source pin/clean checkout mismatch: ${sourceSHA}; ${dirty}`)
   if (git("merge-base", base, sourceSHA) !== base) throw new Error("desktop baseline not ancestor of exact checkout")
-  const files = git("ls-files", "-z").split("\0").filter((file) => /^(packages\/|modules\/|tooling\/|assets\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
+  const files = git("ls-files", "-z").split("\0").filter((file) => /^(apps\/|packages\/|modules\/|native\/|tooling\/|assets\/|script\/|patches\/|bun.lock$|package.json$|\.github\/actions\/)/.test(file))
   if (!files.includes("packages/orchestra/script/build-node.ts") || !files.includes("native/omni/Cargo.lock") || !files.includes("modules/capability-assets/src/catalog.ts")) throw new Error("source manifest incomplete")
   const sourceHashes = Object.fromEntries(files.map((file) => [file, digest(path.join(ROOT, file))]))
   const addon = process.env.HUGR_OMNI_ADDON
