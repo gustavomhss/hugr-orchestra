@@ -27,9 +27,11 @@ export default function LeanPage(props: ChapterPageProps) {
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
   const controller = createLeanController((error) => {
-    if (error instanceof LeanAPIError) return {
-      message: language.t("lean.page.unavailable"), unavailable: error.reason === "unsupported",
-    }
+    // An unsupported server has no data, so the empty state already says Lean is unavailable. An empty message keeps
+    // the error banner from saying it a second time.
+    if (error instanceof LeanAPIError) return error.reason === "unsupported"
+      ? { message: "", unavailable: true }
+      : { message: language.t("lean.page.unavailable"), unavailable: false }
     if (error instanceof LeanResponseError) return {
       message: language.t(error.reason === "scope" ? "lean.invalidScope" : "lean.page.historyUnavailable"),
     }

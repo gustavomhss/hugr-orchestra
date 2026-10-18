@@ -459,6 +459,8 @@ it.live("reminders never grant permission: prompt Block and tool Block still den
           )
           .pipe(Effect.provideService(ToolSafety.RuntimeProfile, { hooks: installs.installs }), Effect.flip)
         expect(denied).toMatchObject({ reason: "relay-hook-block" })
+        // The note given before the Block still reaches the model, with the refusal.
+        expect(denied.detail).toBe("Blocked by hook 'Prompt notes': No.\n\nHook 'Prompt notes': Please allow.")
         expect(executed).toEqual([])
         expect(requests).toEqual([])
         expect((yield* decisions(session.id)).map((item) => item.outcome)).toEqual([

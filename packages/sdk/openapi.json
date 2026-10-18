@@ -21012,6 +21012,9 @@
             "$ref": "#/components/schemas/EventMcpToolsChanged"
           },
           {
+            "$ref": "#/components/schemas/EventMcpStatusChanged"
+          },
+          {
             "$ref": "#/components/schemas/EventMcpBrowserOpenFailed"
           },
           {
@@ -27279,6 +27282,31 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["mcp.status.changed"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "server": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["server"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["mcp.browser.open.failed"]
                   },
                   "properties": {
@@ -32455,6 +32483,9 @@
           },
           {
             "$ref": "#/components/schemas/McpToolsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/McpStatusChanged"
           },
           {
             "$ref": "#/components/schemas/McpBrowserOpenFailed"
@@ -47218,6 +47249,53 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "McpStatusChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["mcp.status.changed"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "type": "string"
+              }
+            },
+            "required": ["server"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
       "McpBrowserOpenFailed": {
         "type": "object",
         "properties": {
@@ -53719,6 +53797,31 @@
           "type": {
             "type": "string",
             "enum": ["mcp.tools.changed"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "type": "string"
+              }
+            },
+            "required": ["server"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMcpStatusChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["mcp.status.changed"]
           },
           "properties": {
             "type": "object",

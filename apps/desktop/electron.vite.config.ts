@@ -39,6 +39,7 @@ export default defineConfig({
   main: {
     define: {
       "import.meta.env.ORCHESTRA_CHANNEL": JSON.stringify(channel),
+      "import.meta.env.ORCHESTRA_MAC_SIGNED": JSON.stringify(process.env.ORCHESTRA_MAC_SIGNED === "true" ? "true" : "false"),
     },
     build: {
       rollupOptions: {

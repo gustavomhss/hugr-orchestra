@@ -4,11 +4,13 @@ import { appDockProfile, createAppDockController, tabLabel, type AppDockAPI, typ
 
 const profileA = appDockProfile("http://127.0.0.1:4096", "/work/shared repository")
 const profileB = appDockProfile("http://127.0.0.1:4097", "/work/shared repository")
+// The controller takes its copy from the view's translator; the tests assert on the keys.
+const translate = (key: string | number) => String(key)
 
 describe("App Dock controller", () => {
   test("native shortcuts are delivered only for the visible current browser generation", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const commands: string[] = []
     controller.onShortcut((command) => commands.push(command))
     const detach = controller.attach(element(), profileA)
@@ -25,7 +27,7 @@ describe("App Dock controller", () => {
     const replies = [Promise.withResolvers<{ ok: boolean; url: string }>(), Promise.withResolvers<{ ok: boolean; url: string }>()]
     const requests: string[] = []
     dock.api.appDockNavigate = (_id, url) => replies[requests.push(url) - 1]!.promise
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     await controller.openNewTab()
@@ -48,7 +50,7 @@ describe("App Dock controller", () => {
     const dock = fakeDock()
     const reply = Promise.withResolvers<{ ok: boolean; url: string }>()
     dock.api.appDockNavigate = () => reply.promise
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     await controller.openNewTab()
@@ -70,7 +72,7 @@ describe("App Dock controller", () => {
 
   test("moving between views hides and shows the same live tabs without reopening or closing", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const page = element()
     const detachPage = controller.attach(page, profileA)
     await until(() => controller.state.status === "ready")
@@ -102,7 +104,7 @@ describe("App Dock controller", () => {
 
   test("keeps one owner: a replaced view's late detach does not hide the current view", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const page = element()
     const detachPage = controller.attach(page, profileA)
     await until(() => controller.state.status === "ready")
@@ -122,7 +124,7 @@ describe("App Dock controller", () => {
 
   test("a repository profile switch restores that profile's saved tabs in its own native profile", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const detachA = controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -151,7 +153,7 @@ describe("App Dock controller", () => {
 
   test("a tab that opens after the owner changed is closed instead of shown", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     const gate = Promise.withResolvers<void>()
@@ -169,7 +171,7 @@ describe("App Dock controller", () => {
 
   test("an overlay over the Dock occludes the browser; closing it releases whichever tab is current", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(placed(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -197,7 +199,7 @@ describe("App Dock controller", () => {
 
   test("a popover registered inside the Dock occludes the browser only while it covers the page", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const host = placed()
     controller.attach(host, profileA)
     await until(() => controller.state.status === "ready")
@@ -226,7 +228,7 @@ describe("App Dock controller", () => {
 
   test("a view attached while an overlay is open is occluded before its tab is shown", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const detachPage = controller.attach(placed(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -246,7 +248,7 @@ describe("App Dock controller", () => {
 
   test("Resize, Hide and Show name exactly the tab and generation they target", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const detach = controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -278,7 +280,7 @@ describe("App Dock controller", () => {
         ],
       },
     })
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     // Restoring attaches each saved tab in turn, so the last one restored is the one on screen.
     controller.attach(element(), profileA)()
     await until(() => controller.state.status === "ready")
@@ -305,7 +307,7 @@ describe("App Dock controller", () => {
 
   test("a popup from a background tab joins the tabs without being selected or shown", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -331,7 +333,7 @@ describe("App Dock controller", () => {
 
   test("a crashed tab is not shown, so selecting it hides the tab shown before it", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -352,7 +354,7 @@ describe("App Dock controller", () => {
 
   test("a late open reply preserves the newer selection and its detach identity", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const detach = controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -382,7 +384,7 @@ describe("App Dock controller", () => {
     ["newer live selection", false, false],
   ] as const)("a late recovery reconciles its native identity with %s", async (_name, crashed, detached) => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     const detach = controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -416,7 +418,7 @@ describe("App Dock controller", () => {
   test("a failed load shows its error and retry restores the profile", async () => {
     const dock = fakeDock()
     dock.failManifest(true)
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "failed")
     expect(controller.state.error).toBe("manifest unavailable")
@@ -424,6 +426,19 @@ describe("App Dock controller", () => {
     controller.retry()
     await until(() => controller.state.status === "ready")
     expect(controller.state.error).toBeUndefined()
+  })
+
+  test("navigation failures are reported with the view's copy", async () => {
+    const dock = fakeDock()
+    const controller = createAppDockController(dock.api, translate)
+    controller.attach(element(), profileA)
+    await until(() => controller.state.status === "ready")
+    await controller.openNewTab()
+    dock.emit({
+      type: "navigation-error",
+      payload: { identity: tab("tab-1", 1), code: "blocked", url: "https://example.com/blocked" },
+    })
+    expect(controller.state.error).toBe("orchestra.dock.navigation.blocked")
   })
 
   test("without a repository profile the Dock keeps following the manifest's browser profiles", async () => {
@@ -438,7 +453,7 @@ describe("App Dock controller", () => {
         work: [{ url: "https://example.com/work", pinned: true }],
       },
     })
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element())
     await until(() => controller.state.status === "ready")
     expect(controller.state.profile).toBe("default")
@@ -458,7 +473,7 @@ describe("App Dock controller", () => {
   })
 
   test("without the native bridge the Dock is unavailable and issues no calls", async () => {
-    const missing = createAppDockController(undefined)
+    const missing = createAppDockController(undefined, translate)
     expect(missing.available).toBe(false)
     missing.attach(element(), profileA)()
     expect(missing.state.status).toBe("idle")
@@ -469,7 +484,7 @@ describe("App Dock controller", () => {
         calls.push("open")
         return { tabID: "tab", generation: 1, url: "https://example.com" }
       },
-    } as unknown as AppDockAPI)
+    } as unknown as AppDockAPI, translate)
     expect(partial.available).toBe(false)
     partial.attach(element(), profileA)()
     await settle()
@@ -482,7 +497,7 @@ describe("App Dock controller with the Linux workspace", () => {
   const workspace = (tabID: string, generation: number) => ({ tabID, generation, url: "appdock://linux" as const })
   const ready = async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     controller.setURL("https://example.com/a")
@@ -542,7 +557,7 @@ describe("App Dock controller with the Linux workspace", () => {
 
   test("a browser open announced before its reply keeps one tab with the newer navigation state", async () => {
     const dock = fakeDock()
-    const controller = createAppDockController(dock.api)
+    const controller = createAppDockController(dock.api, translate)
     controller.attach(element(), profileA)
     await until(() => controller.state.status === "ready")
     const release = Promise.withResolvers<void>()

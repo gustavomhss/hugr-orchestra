@@ -503,6 +503,39 @@ describe("relay hooks", () => {
     expect(receipts[3]).toMatchObject({ version: republished.activeVersionId, sha256: updated.sha256 })
   })
 
+  test("a folder outside git refuses new hooks and workflows, and still lets an earlier install be paused or removed", async () => {
+    await using tmp = await tmpdir()
+    // Every folder outside git resolves to the one global project, so whatever is made there applies to all of them.
+    expect(await call(tmp.path, "GET", "/api/relay/hook")).toMatchObject({
+      status: 200,
+      body: { location: { project: { id: "global" } } },
+    })
+    const refusal = {
+      status: 409,
+      tag: "RelayConflictError",
+      code: "repository-required",
+      message:
+        "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    }
+    expect(await refused(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/document", hookDocument("Not here"))).toEqual(refusal)
+    expect(
+      await refused(tmp.path, "POST", "/api/relay/document/relay-wp-execute/publish", { versionId: "v1" }),
+    ).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: "relay-wp-execute" })).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/update", {})).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/enable")).toEqual(refusal)
+    // Pausing and uninstalling are not gated: they reach the install list and find nothing to change.
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/disable")).toMatchObject({
+      status: 404,
+      code: "install-missing",
+    })
+    expect(await refused(tmp.path, "DELETE", "/api/relay/hook/h-earlier")).toMatchObject({
+      status: 404,
+      code: "install-missing",
+    })
+  })
+
   test("decisions are the hook-decision lines of the install's ledger", async () => {
     await using tmp = await tmpdir({ git: true })
     const { root } = await relayRoot(tmp.path)

@@ -132,9 +132,8 @@ const getBase = (appId: string): Configuration => ({
     version: process.env.ORCHESTRA_VERSION ?? source.version,
     desktopName: `${appId}.desktop`,
   },
-  // Orchestra is a fork separated from upstream opencode and publishes no releases of its own, so it
-  // must not embed an update feed. null (not omission) also stops electron-builder from inferring a
-  // GitHub feed from the git remote, which here is upstream. Re-enable only with Orchestra's own feed.
+  // Only prod embeds a feed (see getConfig). null (not omission) stops dev and beta builds from inferring a GitHub
+  // feed from the git remote.
   publish: null,
   files: [
     "out/**/*",
@@ -290,6 +289,12 @@ function getConfig() {
         appId,
         productName: "HuGR Orchestra",
         protocols: { name: "HuGR Orchestra", schemes: ["orchestra"] },
+        // The fixed desktop-latest release holds the current latest*.yml and update payloads, apart from the CLI's
+        // v<version> releases (.github/workflows/release-desktop.yml).
+        publish: {
+          provider: "generic" as const,
+          url: "https://github.com/gustavomhss/hugr-orchestra/releases/download/desktop-latest",
+        },
         deb: { fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
         rpm: { packageName: "orchestra", fpm: [metainfoFpm(appId), legacyDesktopEntryFpm] },
       }

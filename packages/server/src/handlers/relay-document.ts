@@ -44,6 +44,7 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
       .handle("relay.document.create", (ctx) =>
         RelayDocuments.respond(
           Effect.gen(function* () {
+            yield* RelayDocuments.requireRepository
             const skills = RelayDocuments.skills(yield* SkillV2.Service)
             return yield* documents.use((store) =>
               RelayDocuments.save({ store, skills, fields: ctx.payload }).pipe(
@@ -183,6 +184,7 @@ export const RelayPublishHandler = HttpApiBuilder.group(Api, "server.relay.publi
       .handle("relay.publish.publish", (ctx) =>
         RelayDocuments.respond(
           Effect.gen(function* () {
+            yield* RelayDocuments.requireRepository
             const skills = RelayDocuments.skills(yield* SkillV2.Service)
             return yield* documents.use((store) =>
               Effect.gen(function* () {

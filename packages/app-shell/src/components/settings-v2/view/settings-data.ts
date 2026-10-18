@@ -120,18 +120,3 @@ export function contextLabel(tokens: number | undefined) {
   if (tokens >= 1_000_000) return `${Math.round(tokens / 100_000) / 10}M`
   return `${Math.round(tokens / 1000)}K`
 }
-
-// New turns use the configured default model (`config.model`, "provider/model"). Choosing a
-// route keeps the current model when that provider serves it, otherwise the provider's default.
-export function routeModel(input: {
-  provider: { id: string; models: Record<string, unknown> }
-  defaults: Record<string, string>
-  current?: { providerID: string; modelID: string }
-}) {
-  const models = Object.keys(input.provider.models)
-  const keep = input.current && models.includes(input.current.modelID) ? input.current.modelID : undefined
-  const fallback = input.defaults[input.provider.id]
-  const model = keep ?? (fallback && models.includes(fallback) ? fallback : models[0])
-  if (!model) return
-  return `${input.provider.id}/${model}`
-}
