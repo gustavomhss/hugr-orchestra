@@ -1951,10 +1951,12 @@ const layer = Layer.effect(
     const getLanguage = Effect.fn("Provider.getLanguage")(function* (model: Model) {
       const s = yield* InstanceState.get(state)
       const envs = yield* env.all()
-      const key = `${model.providerID}/${model.id}`
+      const provider = (yield* ensureProvider(s, model.providerID)) ?? s.providers[model.providerID]
+      // ensureProvider swaps in credentials written after this state loaded, so a rotated or
+      // removed key must miss the cache instead of reusing a language bound to the old key.
+      const key = `${model.providerID}/${model.id}/${Hash.fast(provider?.key ?? "")}`
       if (s.models.has(key)) return s.models.get(key)!
 
-      const provider = (yield* ensureProvider(s, model.providerID)) ?? s.providers[model.providerID]
       return yield* EffectPromise.refineRejection(
         async () => {
           const sdk = await resolveSDK(model, s, envs)
