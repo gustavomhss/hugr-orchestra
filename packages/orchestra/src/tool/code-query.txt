@@ -1,0 +1,14 @@
+Answer structural questions about the code of the linked worktree from its prebuilt index, in one call. Prefer this over reading files or searching text when you know a name or a location.
+
+Operations (op):
+- definition: where a symbol is defined. Also returns its first callers and the imports of its file, so one call replaces three.
+- references, callers, callees, implementations: who uses it, who calls it (with the call lines), what it calls, what implements it.
+- imports, importers: what a file imports, and which files import it. Needs path.
+- symbols: the outline of a file (path), or symbols by name, kind or exported.
+- map: files and directories ranked by importance, with line counts.
+
+Name the target with name ("assemble" or "DiscoveryResult.assemble"), narrowed by path; or with symbol (a symbol id from an earlier result); or with at {path, line, column}. An ambiguous name returns candidates and no result: pick one and repeat with symbol or path.
+
+Lines are 1-based and inclusive, in the file as it is on disk. Paths are relative to the worktree. Results are capped: limit is at most 200, and "next" gives the offset for the following page.
+
+Every result ends with its basis: commit, freshness (fresh, stale, dirty-overlay), coverage (documents, skipped paths, missing languages, opaque sites, complete) and bounds. An incomplete or stale basis means the answer may be missing items; say so. Opaque hits are references the index could not attribute. A failure is named (index_unavailable, index_building, reference_invalid), never an empty success.
