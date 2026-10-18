@@ -16,11 +16,10 @@ export function WorkflowDetail(props: ViewProps) {
     return props.model.state.workflows.status === "ready" ? props.model.state.workflows.value?.items.find((item) => item.id === props.model.state.route.workflowID && item.bindingID === binding?.id) : undefined
   })
   return <Show when={workflow()} keyed fallback={<StateView props={props} kind="workflow" />}>
-    {(item) => <DetailShell props={props} title={item.name ?? item.id} subtitle={item.path}>
+    {(item) => <section class="actions-detail mx-page detail-frame" aria-label={props.t("orchestra.actions.workflow")}>
       <WorkflowHeader props={props} workflow={item} />
       <WorkflowTabs {...props} />
-      <SourcePanel props={props} />
-    </DetailShell>}
+    </section>}
   </Show>
 }
 
@@ -30,14 +29,13 @@ export function RunDetail(props: ViewProps) {
     return props.model.state.run.status === "ready" && props.model.state.run.value?.id === props.model.state.route.runID && props.model.state.run.value?.bindingID === binding?.id ? props.model.state.run.value : undefined
   })
   return <Show when={run()} keyed fallback={<StateView props={props} kind="run" />}>
-    {(item) => <section class="actions-detail mx-page" aria-label={props.t("orchestra.actions.run")}>
+    {(item) => <section class="actions-detail mx-page detail-frame" aria-label={props.t("orchestra.actions.run")}>
       <RunHeader props={props} run={item} />
       <Tabs props={props} tabs={["graph", "jobs", "logs", "artifacts", "source"]} counts={{
         jobs: knownCount(props.model.state.jobs, runJobs(props.model.state, item.id).length),
         artifacts: knownCount(props.model.state.artifacts, runArtifacts(props.model.state, item.id).length),
       }} />
       <JobList props={props} runID={item.id} />
-      <SourcePanel props={props} />
     </section>}
   </Show>
 }
@@ -58,29 +56,39 @@ export function JobDetail(props: ViewProps) {
 
 function WorkflowHeader(props: { props: ViewProps; workflow: Actions.Workflow }) {
   const model = props.props.model
-  const label = createMemo(() => props.workflow.state === "active" ? props.props.t("orchestra.actions.enabled") : props.workflow.state.startsWith("disabled_") ? props.props.t("orchestra.actions.disabled") : props.props.t("orchestra.actions.unknown"))
-  return (
-    <div class="detail-header">
-      <div class="detail-meta">
-        <span class="mx-badge">{label()}</span>
-        <button type="button" class="mx-link" aria-label={props.props.t("orchestra.actions.source")} onClick={() => model.navigate({ view: "source", workflowID: props.workflow.id, path: props.workflow.path })}>
-          <bdi dir="ltr">{props.workflow.path}</bdi>
-        </button>
-        <Show when={props.workflow.updatedAt}><span>{stamp(props.workflow.updatedAt)}</span></Show>
+  const t = props.props.t
+  const github = () => model.state.binding?.provider.kind === "github"
+  const active = () => props.workflow.state === "active"
+  return <>
+    <div class="detail-top"><Back props={props.props} /></div>
+    <header class="detail-header">
+      <div class="mx-heading detail-heading">
+        <div class="mx-grow">
+          <div class="mx-eyebrow">{t(github() ? "orchestra.actions.github" : "orchestra.actions.gitlab")} · {t("orchestra.actions.sourceConfiguration")}</div>
+          <h1><bdi>{props.workflow.name ?? props.workflow.id}</bdi></h1>
+          <div class="detail-meta">
+            <span class="mx-badge" classList={{ good: active() || props.workflow.state === "configured" }}>{t(active() || props.workflow.state === "configured" ? "orchestra.actions.active" : props.workflow.state.startsWith("disabled_") ? "orchestra.actions.disabled" : "orchestra.actions.unknown")}</span>
+            <Show when={props.workflow.updatedAt}><time datetime={props.workflow.updatedAt} title={stamp(props.workflow.updatedAt)}>{relative(props.workflow.updatedAt)}</time></Show>
+          </div>
+        </div>
+        <div class="heading-actions">
+          <Show when={github()}><button type="button" class="mx-btn"
+            disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequest(model.state, active() ? "workflow.disable" : "workflow.enable")
+              || !(active() || props.workflow.state.startsWith("disabled_"))}
+            onClick={() => void model.workflowState(!active(), props.workflow.id)}>
+            {t(active() ? "orchestra.actions.disableWorkflow" : "orchestra.actions.enableWorkflow")}</button></Show>
+          <button type="button" class="mx-btn primary" disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequestAction(model.state, { kind: "workflow.dispatch", target: { workflowID: props.workflow.id, path: props.workflow.path } })} onClick={() => model.dialog({ kind: "dispatch", workflowID: props.workflow.id })}>
+            <Icon name="play" />{t(github() ? "orchestra.actions.dispatch" : "orchestra.actions.dispatchPipeline")}</button>
+        </div>
       </div>
-      <p>{props.workflow.triggers?.join(" · ")}</p>
-      <div class="heading-actions">
-        <Show when={model.state.binding?.provider.kind === "github"}><button type="button" class="mx-btn"
-          disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequest(model.state, props.workflow.state === "active" ? "workflow.disable" : "workflow.enable")
-            || !(props.workflow.state === "active" || props.workflow.state.startsWith("disabled_"))}
-          onClick={() => void model.workflowState(props.workflow.state !== "active", props.workflow.id)}>
-          {props.props.t(props.workflow.state === "active" ? "orchestra.actions.disableWorkflow" : "orchestra.actions.enableWorkflow")}</button></Show>
-        <button type="button" class="mx-btn primary" disabled={props.workflow.bindingID !== model.state.binding?.id || !canRequestAction(model.state, { kind: "workflow.dispatch", target: { workflowID: props.workflow.id, path: props.workflow.path } })} onClick={() => model.dialog({ kind: "dispatch", workflowID: props.workflow.id })}>
-          {model.state.binding?.provider.kind === "gitlab" ? props.props.t("orchestra.actions.dispatchPipeline") : props.props.t("orchestra.actions.dispatch")}
-        </button>
+      <div class="detail-context">
+        <button type="button" class="title-link detail-source-link" title={t("orchestra.actions.source")} onClick={() => model.navigate({ view: "source", workflowID: props.workflow.id, path: props.workflow.path, tab: "source" })}>
+          <Icon name="code" size={13} /><bdi dir="ltr">{props.workflow.path}</bdi></button>
+        <Show when={props.workflow.triggers?.length}><div class="collection-triggers" role="group" aria-label={t("orchestra.actions.sourceTriggers")}>
+          <For each={props.workflow.triggers}>{(trigger) => <span class="mx-badge"><bdi dir="ltr">{trigger}</bdi></span>}</For></div></Show>
       </div>
-    </div>
-  )
+    </header>
+  </>
 }
 
 function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
@@ -89,6 +97,15 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
   const workflow = createMemo(() => model.state.workflows.value?.items.find((item) => item.id === props.run.workflowID && item.bindingID === model.state.binding?.id))
   const github = () => model.state.binding?.provider.kind === "github"
   const attempt = () => model.state.route.attempt ?? props.run.attempt
+  // "7 jobs · 15 executions": definitions from a graph at this run's commit, executions from a complete job page; unknown parts are omitted.
+  const counts = createMemo(() => {
+    const graph = model.state.graph.status === "ready" ? model.state.graph.value : undefined
+    const definitions = graph && graph.source.bindingID === props.run.bindingID && graph.source.commit === props.run.commit ? graph.jobs.length : undefined
+    const executions = knownCount(model.state.jobs, runJobs(model.state, props.run.id).length)
+    return [definitions === undefined ? "" : definitions === 1 ? t("orchestra.actions.definitionCountOne") : t("orchestra.actions.definitionCount", { count: definitions }),
+      executions === undefined ? "" : executions === 1 ? t("orchestra.actions.executionCountOne") : t("orchestra.actions.executionCount", { count: executions })]
+      .filter(Boolean).join(" · ")
+  })
   return <>
     <div class="detail-top">
       <Back props={props.props} />
@@ -111,8 +128,8 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
     <header class="detail-header">
       <div class="mx-heading detail-heading">
         <div class="mx-grow">
-          <div class="mx-eyebrow">{t(github() ? "orchestra.actions.github" : "orchestra.actions.gitlab")} · <bdi dir="ltr">{t("orchestra.actions.runNumber", { id: props.run.id })}</bdi></div>
-          <h1><bdi>{props.run.name ?? workflow()?.name ?? props.run.id}</bdi></h1>
+          <div class="mx-eyebrow">{t(github() ? "orchestra.actions.github" : "orchestra.actions.gitlab")} · <bdi dir="ltr">{runLabel(props.run, t)}</bdi></div>
+          <h1><bdi>{runTitle(props.run) ?? workflow()?.name ?? props.run.id}</bdi></h1>
           <div class="detail-meta">
             <Status status={props.run.status} conclusion={props.run.conclusion} t={t} />
             <span><bdi>{props.run.event}</bdi> · <bdi>{props.run.actor ?? t("orchestra.actions.unknown")}</bdi></span>
@@ -130,7 +147,9 @@ function RunHeader(props: { props: ViewProps; run: Actions.Run }) {
             <bdi>{props.run.ref ?? t("orchestra.actions.unknown")}</bdi></button>
           <button type="button" class="title-link" title={t("orchestra.actions.commit")} onClick={() => model.navigate({ view: "source", workflowID: props.run.workflowID, runID: props.run.id, path: github() ? workflow()?.path : undefined, ref: props.run.commit })}>
             <code dir="ltr">{shortSHA(props.run.commit)}</code></button></span>
-        <Show when={attempt()}>{(number) => <span class="mx-badge">{t("orchestra.actions.attemptOption", { number: number() })}</span>}</Show>
+        {/* The top-line select already names the attempt on GitHub; the chip covers providers without it. */}
+        <Show when={!github() && attempt()}>{(number) => <span class="mx-badge">{t("orchestra.actions.attemptOption", { number: number() })}</span>}</Show>
+        <Show when={counts()}>{(text) => <span>{text()}</span>}</Show>
       </div>
     </header>
   </>
@@ -222,24 +241,13 @@ function definition(state: State, job: Actions.Job) {
   return graph.jobs.find((item) => item.id === id)
 }
 
-function SourcePanel(props: { props: ViewProps }) {
-  const source = createMemo(() => props.props.model.state.source.value)
-  const workflow = createMemo(() => {
-    const route = props.props.model.state.route
-    const run = props.props.model.state.run.value
-    const workflowID = route.view === "run" ? run?.workflowID : route.workflowID
-    return props.props.model.state.workflows.value?.items.find((item) => item.id === workflowID && item.bindingID === props.props.model.state.binding?.id)
-  })
-  const valid = createMemo(() => {
-    const value = source()
-    const route = props.props.model.state.route
-    const binding = props.props.model.state.binding
-    const run = props.props.model.state.run.value
-    if (!value || value.bindingID !== binding?.id || !workflow() || value.path !== workflow()?.path || (route.path && value.path !== route.path) || (route.ref && value.ref !== route.ref)) return false
-    if (route.view === "run") return Boolean(props.props.model.state.run.status === "ready" && run && run.id === route.runID && run.bindingID === binding?.id && value.commit && value.commit === run.commit)
-    return route.view === "workflow" && props.props.model.state.workflows.status === "ready"
-  })
-   return <Show when={props.props.model.state.route.tab === "source"}><section class="detail-source"><Switch><Match when={props.props.model.state.source.status === "loading"}><p role="status">{props.props.t("orchestra.actions.loading")}</p></Match><Match when={props.props.model.state.source.status === "error"}><p role="alert">{props.props.t(props.props.model.state.source.error?.message ?? "orchestra.actions.unavailable")}</p></Match><Match when={valid() && source()}><pre dir="ltr" aria-label={props.props.t("orchestra.actions.source")}>{source()?.text}</pre></Match><Match when={true}><Empty title={props.props.t("orchestra.actions.noSource")} /></Match></Switch></section></Show>
+// Native title (GitHub display_title, GitLab pipeline name) and run number when the schema carries them; guarded so it compiles before and after A9.
+function runTitle(run: Actions.Run) {
+  return "title" in run && typeof run.title === "string" && run.title ? run.title : run.name ?? undefined
+}
+
+function runLabel(run: Actions.Run, t: ViewProps["t"]) {
+  return "number" in run && typeof run.number === "number" ? t("orchestra.actions.runNumbered", { number: run.number }) : t("orchestra.actions.runNumber", { id: run.id })
 }
 
 function Tabs(props: { props: ViewProps; tabs: readonly ("graph" | "jobs" | "logs" | "artifacts" | "source")[]; counts: Partial<Record<"graph" | "jobs" | "logs" | "artifacts" | "source", number>> }) {

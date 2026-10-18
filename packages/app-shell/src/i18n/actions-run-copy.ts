@@ -16,4 +16,10 @@ export const dict = {
   "orchestra.actions.expiresRelative": "Expires {{when}}",
   "orchestra.actions.enableWorkflow": "Enable",
   "orchestra.actions.disableWorkflow": "Disable",
+  "orchestra.actions.runNumbered": "Run #{{number}}",
+  "orchestra.actions.definitionCount": "{{count}} jobs",
+  "orchestra.actions.definitionCountOne": "1 job",
+  "orchestra.actions.executionCount": "{{count}} executions",
+  "orchestra.actions.executionCountOne": "1 execution",
+  "orchestra.actions.completedLog": "Completed job output · status updates separately",
 } as const
