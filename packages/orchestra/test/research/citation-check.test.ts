@@ -69,11 +69,12 @@ const dispatch = Effect.fn("CitationCheck.dispatch")(function* () {
   const assemble = (prose: string, card: Research.Card) => DiscoveryResult.assemble({
     info: { ...assistant, finish: "stop", time: { ...assistant.time, completed: Date.now() } },
     parts: [{ id: PartID.ascending(), sessionID: child.id, messageID: assistant.id, type: "text" as const,
-      text: `${prose}\n```jimmy-result\n${JSON.stringify(card)}\n```` }],
+      text: `${prose}\n${fence}jimmy-result\n${JSON.stringify(card)}\n${fence}` }],
   }, [])
   return { sessions, authority, run, assemble, directory: instance.directory }
 })
 
+const fence = "`".repeat(3)
 const source = (result: Tool.ExecuteResult) => Schema.decodeUnknownSync(Research.SourceReceipt)(result.metadata.researchSource)
 const base = { profile: "understand", depth: "quick", sufficiency: "answered", findingRefs: [], documentRefs: [],
   coverage: { examined: [], excluded: [], failures: [] }, limitations: [], nextActions: [] } as const
