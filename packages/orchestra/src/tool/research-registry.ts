@@ -5,6 +5,7 @@ export * as ResearchRegistry from "./research-registry"
 import { Effect, Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import type { Agent } from "@/agent/agent"
 import { AtlasMemory } from "@/maestro/atlas-memory"
 import { nativeProfiles } from "@/maestro/roster"
@@ -31,7 +32,8 @@ export const IDS: readonly string[] = [AtlasContextTool, ResearchRecordTool, Res
 // What the seat may see on the loop: its descriptor, never a tool its permissions merely reach through another tool.
 const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
 
-export const nodes = [ResearchRecords.node, ResearchExecution.node] as const
+// RipgrepBinary: code_search runs the bundled ripgrep with its own argv.
+export const nodes = [ResearchRecords.node, ResearchExecution.node, RipgrepBinary.node] as const
 
 // Dispatches whose inquiry closed, by execution Session and dispatch call: every later tool call of that dispatch is
 // denied (J5.5), re-entries included. A resumed Task is a new dispatch and starts open.
