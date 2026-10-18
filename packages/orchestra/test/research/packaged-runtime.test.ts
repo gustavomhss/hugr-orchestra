@@ -15,10 +15,13 @@ const Report = Schema.Struct({
   card: Schema.Struct({ parsed: Schema.Boolean, messageID: Schema.String }),
   referencesChecked: Schema.Boolean,
   terminal: Schema.Struct({ reason: Schema.String }),
-  discovery: Research.Card,
+  outcome: Schema.Literal("done"),
+  discovery: Research.CardV2,
   documents: Schema.Array(Research.DocumentReceipt),
   corpus: Research.Corpus,
 })
+// research_view source pages also say where their line 1 sits in the original file (J5.3).
+const SourcePage = Schema.Struct({ ...Research.ArtifactPage.fields, lines: Schema.Struct({ basis: Schema.Literals(["original", "retained"]), start: Schema.Int }) })
 const Calls = Schema.Array(Schema.Struct({ tool: Schema.String, status: Schema.String }))
 const Evidence = Schema.Struct({
   runtime: Schema.Literals(["bun", "node"]),
@@ -28,12 +31,12 @@ const Evidence = Schema.Struct({
   skills: Schema.Array(Schema.Struct({ name: Schema.String, location: Schema.String, content: Schema.String, output: Schema.String })),
   companion: Schema.String,
   source: Research.SourceReceipt,
-  received: Research.ArtifactPage,
-  retained: Research.ArtifactPage,
+  received: SourcePage,
+  retained: SourcePage,
   finding: Research.FindingRecord,
   document: Research.DocumentReceipt,
   page: Research.ArtifactPage,
-  card: Research.Card,
+  card: Research.CardV2,
   calls: Calls,
   report: Report,
   task: Schema.Struct({
@@ -42,7 +45,7 @@ const Evidence = Schema.Struct({
       workResult: Schema.Struct({ ...Report.fields, taskId: Schema.String }),
     }),
     source: Research.SourceReceipt, finding: Research.FindingRecord, document: Research.DocumentReceipt,
-    page: Research.ArtifactPage, card: Research.Card, generated: Research.ArtifactPage, generatedDigest: Research.Digest,
+    page: Research.ArtifactPage, card: Research.CardV2, generated: Research.ArtifactPage, generatedDigest: Research.Digest,
     siblingError: Schema.Struct({ _tag: Schema.Literal("ResearchArtifactNotFoundError"), message: Schema.String }),
     requests: Schema.Array(Schema.Struct({ url: Schema.String, directory: Schema.NullOr(Schema.String), status: Schema.Number })),
     providerURL: Schema.String,
@@ -174,17 +177,27 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(evidence.received.receipt).toMatchObject({ ref: evidence.source.derivedFrom, complete: true })
   expect(evidence.retained.text).toBe("Version 1 only.\nDisabled rejects operation.")
   expect(evidence.retained.receipt).toEqual(evidence.source)
+  expect([evidence.received.lines, evidence.retained.lines]).toEqual([{ basis: "original", start: 1 }, { basis: "original", start: 1 }])
   expect(evidence.finding).toMatchObject({ kind: "finding", nature: "extraction", conditions: ["version 1", "enabled"] })
-  expect(evidence.finding.evidence).toEqual([evidence.card.evidenceRefs[0]])
-  expect(evidence.finding.contrary).toEqual([evidence.card.evidenceRefs[1]])
-  expect(evidence.document.findingRefs).toEqual(evidence.card.findingRefs)
-  expect(evidence.document.citations).toEqual({ supported: evidence.card.evidenceRefs[0], disabled: evidence.card.evidenceRefs[1] })
+  // The host assembled the card on inquiry close from the seat's claim over the same retained quotes.
+  expect(evidence.card).toMatchObject({ schema: "jimmy-card-v2", sufficiency: "answered", profile: "understand",
+    answer: "Version 1 is supported when enabled; disabled rejects operation.", check: { verdict: "pass" } })
+  expect(evidence.card.claims).toHaveLength(1)
+  expect(evidence.card.claims[0]).toMatchObject({ proposition: "Version 1 is supported when enabled", nature: "extraction", conditions: ["version 1", "enabled"] })
+  expect(evidence.card.claims[0].evidence).toEqual(evidence.finding.evidence)
+  expect(evidence.card.claims[0].contrary).toEqual(evidence.finding.contrary)
+  expect(evidence.card.sources.shown.map((shown) => shown.ref)).toContainEqual(evidence.source.ref)
+  expect(evidence.document.findingRefs).toEqual([{ id: evidence.finding.id, revision: evidence.finding.revision }])
+  expect(evidence.document.citations).toEqual({ supported: evidence.finding.evidence[0], disabled: evidence.finding.contrary[0] })
   expect(evidence.page).toMatchObject({ representation: "markdown", complete: true, receipt: evidence.document, ref: evidence.document.artifact })
   expect(evidence.page.text).toBe("Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n")
-  expect(evidence.report).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, discovery: evidence.card })
+  expect(evidence.report).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true }, outcome: "done", referencesChecked: true,
+    terminal: { reason: "ended" }, discovery: evidence.card })
+  expect(evidence.card.documentRefs).toEqual([evidence.document.ref])
   expect(evidence.report.documents).toEqual([evidence.document])
   expect(evidence.report.corpus.documents).toEqual([evidence.document])
-  expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "skill", "read", "read", "research_view", "research_view", "research_record", "research_view", "research_record", "research_view"])
+  expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "skill", "read", "read", "research_view", "research_view", "research_record", "research_view",
+    "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"])
   expect(evidence.calls.every((call) => call.status === "completed")).toBe(true)
 
   const task = evidence.task
@@ -199,20 +212,25 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(task.finding).toMatchObject({ proposition: "Version 1 is supported only when enabled", nature: "extraction", conditions: ["version 1", "enabled"] })
   expect(task.finding.evidence).toEqual([{ source: task.source.ref, locator: { kind: "quote", exact: "Version 1 only." } }])
   expect(task.finding.contrary).toEqual([{ source: task.source.ref, locator: { kind: "quote", exact: "Disabled rejects operation." } }])
-  expect(task.card.findingRefs).toEqual([{ id: task.finding.id, revision: task.finding.revision }])
-  expect(task.card.evidenceRefs).toEqual([...task.finding.evidence, ...task.finding.contrary])
-  expect(task.card.documentRefs).toEqual([task.document.ref])
+  expect(task.card).toMatchObject({ schema: "jimmy-card-v2", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.",
+    check: { verdict: "pass" }, limitations: ["Scripted static-source mechanics only"] })
+  expect(task.card.claims).toHaveLength(1)
+  expect(task.card.claims[0].evidence).toEqual(task.finding.evidence)
+  expect(task.card.claims[0].contrary).toEqual(task.finding.contrary)
+  expect(task.card.sources.shown.map((shown) => shown.ref)).toContainEqual(task.source.ref)
   expect(task.document.binding).toEqual(task.source.binding)
-  expect(task.document.findingRefs).toEqual(task.card.findingRefs)
+  expect(task.document.findingRefs).toEqual([{ id: task.finding.id, revision: task.finding.revision }])
   expect(task.document.citations).toEqual({ supported: task.finding.evidence[0], disabled: task.finding.contrary[0] })
-  expect(task.metadata.workResult).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true },
+  expect(task.metadata.workResult).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true }, outcome: "done",
     referencesChecked: true, terminal: { reason: "ended" }, discovery: task.card })
+  expect(task.card.documentRefs).toEqual([task.document.ref])
   expect(task.metadata.workResult.documents).toEqual([task.document])
   expect(task.metadata.workResult.corpus.documents).toEqual([task.document])
   expect(task.metadata.workResult.corpus.sources).toContainEqual(task.source)
-  expect(task.childFinal).toBe(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(task.card)}\n\u0060\u0060\u0060`)
+  expect(task.childFinal).toBe("Inquiry closed.")
   expect(task.parentFinal).toBe("Native discovery returned with verified admitted references.")
-  expect(task.calls).toEqual(["read", "research_record", "research_record", "research_view"].map((tool) => ({ tool, status: "completed" })))
+  expect(task.calls).toEqual(["read", "research_record", "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"]
+    .map((tool) => ({ tool, status: "completed" })))
 
   // Compare native tool response and generated-client response against the same admitted bytes and digest.
   expect(task.page).toMatchObject({ representation: "markdown", complete: true, ref: task.document.artifact, receipt: task.document })
@@ -231,17 +249,18 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(new URL(task.providerURL).hostname).toBe("127.0.0.1")
   expect(new URL(task.providerURL).port).not.toBe("")
   expect(new URL(task.providerURL).pathname).toBe("/v1")
-  expect(task.providerRequests).toHaveLength(7)
+  expect(task.providerRequests).toHaveLength(11)
   task.providerRequests.forEach((request) => {
     expect(request.path).toBe("/v1/chat/completions")
     expect(request.model).toBe("test-model")
     expect(request.stream).toBe(true)
   })
   expect(task.providerRequests[0].tools).toContain("task")
-  task.providerRequests.slice(1, 6).forEach((request) => {
+  task.providerRequests.slice(1, 10).forEach((request) => {
     expect(request.tools).toContain("read")
     expect(request.tools).toContain("research_record")
     expect(request.tools).toContain("research_view")
+    expect(request.tools).toContain("inquiry")
     expect(request.tools).not.toContain("task")
     expect(request.tools).not.toContain("bash")
     expect(request.tools).not.toContain("edit")
@@ -250,7 +269,15 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(task.providerRequests[3].toolResponses.join("\n")).toContain(task.finding.id)
   expect(task.providerRequests[4].toolResponses.join("\n")).toContain(task.document.digest)
   expect(task.providerRequests[5].toolResponses.join("\n")).toContain(task.page.text.replace(/\n$/, ""))
-  expect(task.providerRequests[6].toolResponses.join("\n")).toContain(task.childFinal)
+  expect(task.providerRequests[6].toolResponses.join("\n")).toContain(task.card.subquestions[0].ref.id)
+  expect(task.providerRequests[7].toolResponses.join("\n")).toContain(task.card.claims[0].ref.id)
+  expect(task.providerRequests[8].toolResponses.join("\n")).toContain("\"verdict\":\"pass\"")
+  expect(task.providerRequests[9].toolResponses.join("\n")).toContain("\"closed\":\"answered\"")
+  // The parent reads the host check and the card answer before the child's quoted last text.
+  const handoff = task.providerRequests[10].toolResponses.join("\n")
+  expect(handoff).toContain("Inquiry check: pass")
+  expect(handoff).toContain(JSON.stringify(task.card.answer))
+  expect(handoff).toContain(JSON.stringify(task.childFinal))
 }, 120000)
 
 async function subprocess(label: string, timeout: number, cmd: string[], options: { cwd: string; env?: Record<string, string | undefined> }) {

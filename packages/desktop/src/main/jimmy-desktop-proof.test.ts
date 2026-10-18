@@ -231,7 +231,7 @@ async function runProof(root: string, install: string, electron: string, mutant:
     return parse(text)
   }
   const historySchema = Schema.Array(Schema.Struct({ info: Schema.Struct({ id: Schema.String }), parts: Schema.Array(Schema.Unknown) }))
-  const state: { parent?: string; child?: string; source?: Research.SourceReceipt; finding?: typeof Research.FindingRecord.Type; document?: Research.DocumentReceipt; page?: Research.ArtifactPage; card?: Research.Card } = {}
+  const state: { parent?: string; child?: string; source?: Research.SourceReceipt; finding?: typeof Research.FindingRecord.Type; document?: Research.DocumentReceipt; page?: Research.ArtifactPage } = {}
   const requests: { path: string; tools: string[]; toolResponses: string[] }[] = []
   const errors: string[] = []
   const skills = ["jimmy-discovery", "jimmy-research"]
@@ -242,7 +242,7 @@ async function runProof(root: string, install: string, electron: string, mutant:
       requests.push({ path: new URL(request.url).pathname, tools: payload.tools.map((tool) => tool.function.name), toolResponses: payload.messages.flatMap((message) => message.role === "tool" && typeof message.content === "string" ? [message.content] : []) })
       const tool = (name: string, input: unknown) => reply().tool(name, input)
       const output = await (async () => {
-        if (turns === 0) return tool("task", { description: "Inspect conditional behavior", prompt: "Load Jimmy skills, read task-evidence.txt, retain both branches, publish qualified answer, return jimmy-result.", subagent_type: "jimmy" })
+        if (turns === 0) return tool("task", { description: "Inspect conditional behavior", prompt: "Load Jimmy skills, read task-evidence.txt, retain both branches, publish qualified answer, close the inquiry.", subagent_type: "jimmy" })
         if (turns === 1 || turns === 2) return tool("skill", { name: skills[turns - 1] })
         if (turns === 3) return tool("read", { filePath: "task-evidence.txt" })
         if (!state.parent) throw new Error("Native parent session missing")
@@ -268,11 +268,17 @@ async function runProof(root: string, install: string, electron: string, mutant:
         }
         if (turns === 7) {
           state.page = json(Research.ArtifactPage, parse(String(latest.output)))
-          if (!state.document || !state.finding) throw new Error("Native publication/finding missing")
-          state.card = { answer: "Version 1 only; disabled rejects operation.", profile: "understand", depth: "quick", sufficiency: "answered", findingRefs: state.document.findingRefs, evidenceRefs: [...state.finding.evidence, ...state.finding.contrary], documentRefs: [state.document.ref], coverage: { examined: ["task-evidence.txt"], excluded: ["runtime behavior"], failures: [] }, limitations: ["Scripted static-source mechanics only"], nextActions: [] }
-          return reply().text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`).stop()
+          return tool("inquiry", { action: "open", question: "When is version 1 supported?", subquestions: ["Which condition enables version 1"], profile: "understand" })
         }
-        if (turns === 8) return reply().text("Native discovery returned with verified admitted references.").stop()
+        // The host assembles the card on inquiry close; the open reply's first line names the subquestion to claim.
+        if (turns === 8) {
+          const opened = json(Schema.Struct({ subquestions: Schema.NonEmptyArray(Research.RecordRef) }), parse(String(latest.output).split("\n")[0]))
+          return tool("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "Version 1 is supported when enabled", nature: "extraction", conditions: ["version 1", "enabled"], evidence: [{ source: state.source?.ref, quote: "Version 1 only." }], contrary: [{ source: state.source?.ref, quote: "Disabled rejects operation." }] })
+        }
+        if (turns === 9) return tool("inquiry", { action: "check" })
+        if (turns === 10) return tool("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.", limitations: ["Scripted static-source mechanics only"] })
+        if (turns === 11) return reply().text("Inquiry closed.").stop()
+        if (turns === 12) return reply().text("Native discovery returned with verified admitted references.").stop()
         throw new Error(`Unexpected provider turn ${turns}`)
       })()
       const item = output.item()
@@ -358,19 +364,20 @@ async function runProof(root: string, install: string, electron: string, mutant:
     state.parent = String(object(await api("/session", { title: "Desktop native Task authority", agent: "maestro" })).id)
     await api(`/session/${state.parent}/message`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Delegate conditional source research to jimmy and receive verified document references." }] })
     expect(errors).toEqual([])
-    expect(requests).toHaveLength(9)
-    requests.slice(1, 8).forEach((request) => {
+    expect(requests).toHaveLength(13)
+    requests.slice(1, 12).forEach((request) => {
       expect(request.path).toBe("/v1/chat/completions")
       expect(request.tools).toContain("research_record")
       expect(request.tools).toContain("research_view")
+      expect(request.tools).toContain("inquiry")
       ;["task", "bash", "edit"].forEach((tool) => expect(request.tools).not.toContain(tool))
     })
-    if (!state.child || !state.source || !state.finding || !state.document || !state.page || !state.card) throw new Error("Desktop native corpus/card missing")
+    if (!state.child || !state.source || !state.finding || !state.document || !state.page) throw new Error("Desktop native corpus missing")
     const parentHistory = json(historySchema, await api(`/session/${state.parent}/message`))
     const childHistory = json(historySchema, await api(`/session/${state.child}/message`))
     const parts = childHistory.flatMap((message) => message.parts).map(object)
     const calls = parts.filter((part) => part.type === "tool")
-    expect(calls.map((part) => ({ tool: part.tool, status: object(part.state).status }))).toEqual(["skill", "skill", "read", "research_record", "research_record", "research_view"].map((tool) => ({ tool, status: "completed" })))
+    expect(calls.map((part) => ({ tool: part.tool, status: object(part.state).status }))).toEqual(["skill", "skill", "read", "research_record", "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"].map((tool) => ({ tool, status: "completed" })))
     const loaded = await Promise.all(calls.slice(0, 2).map(async (part, index) => {
       const metadata = object(object(part.state).metadata)
       const location = path.join(String(metadata.dir), "SKILL.md")
@@ -386,7 +393,10 @@ async function runProof(root: string, install: string, electron: string, mutant:
     expect(object(task?.state).status).toBe("completed")
     const metadata = object(object(task?.state).metadata)
     const report = object(metadata.workResult)
-    expect(report).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, discovery: state.card, documents: [state.document] })
+    expect(report).toMatchObject({ schema: "discovery-work-result-v1", card: { parsed: true }, outcome: "done", referencesChecked: true, terminal: { reason: "ended" },
+      discovery: { schema: "jimmy-card-v2", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.", check: { verdict: "pass" },
+        claims: [{ proposition: "Version 1 is supported when enabled", evidence: state.finding.evidence, contrary: state.finding.contrary }] } })
+    expect(object(report.corpus).documents).toEqual([state.document])
     expect(state.source.binding).toMatchObject({ memberID: "jimmy", executionSessionID: state.child, authoritySessionID: state.parent, taskId: report.taskId, directory: project, worktree: project })
     expect(state.source).toMatchObject({ complete: true, transformation: "read-line-projection-v1" })
     expect(state.page.text).toBe(body)
@@ -412,6 +422,8 @@ async function runProof(root: string, install: string, electron: string, mutant:
     expect(requests[5].toolResponses.join("\n")).toContain(state.finding.id)
     expect(requests[6].toolResponses.join("\n")).toContain(state.document.digest)
     expect(requests[7].toolResponses.join("\n")).toContain(body.trim())
+    expect(requests[11].toolResponses.join("\n")).toContain("\"closed\":\"answered\"")
+    expect(requests[12].toolResponses.join("\n")).toContain("Inquiry check: pass")
     const sibling = String(object(await api("/session", { agent: "jimmy", parentID: state.parent })).id)
     const siblingError = await client.research.artifact({ sessionID: sibling, artifactID: state.document.artifact.id, revision: state.document.artifact.revision }).then(() => undefined, (error: unknown) => object(error))
     expect(siblingError).toMatchObject({ _tag: "ResearchArtifactNotFoundError", message: "Research artifact not found" })
@@ -433,8 +445,8 @@ async function runProof(root: string, install: string, electron: string, mutant:
         expect(published).toHaveLength(1)
         expect(object(parse(published[0].data)).receipt).toEqual(state.document)
         const committed = json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type LIKE 'research.record.committed%'").all(childID))
-        expect(committed).toHaveLength(1)
-        expect(object(parse(committed[0].data)).record).toEqual(state.finding)
+        // The inquiry commits its question, claim and relation records beside the published finding.
+        expect(committed.map((row) => object(parse(row.data)).record).filter((record) => object(record).id === state.finding?.id)).toEqual([state.finding])
         // Read admissions and immutable blobs from the host, independently of HTTP/tool metadata.
         const admitted = json(Schema.Array(Schema.Struct({ sessionID: Schema.String, binding: Research.Binding, receipt: Research.SourceReceipt })), json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type = 'research.source.admitted.1'").all(childID)).map((row) => parse(row.data)))
         expect(admitted).toHaveLength(2)

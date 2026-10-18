@@ -1,12 +1,12 @@
 import { expect } from "bun:test"
 import path from "node:path"
-import { Effect, Exit, Layer, Schema } from "effect"
+import { Effect, Exit, Layer, Option, Schema } from "effect"
 import { EventV2 } from "@orchestra/core/event"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { ResearchRecords } from "@orchestra/core/research/records"
-import type { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionV1 } from "@orchestra/core/v1/session"
 import { Research } from "@orchestra/schema/research"
 import { ResearchEvent } from "@orchestra/schema/research-event"
 import { Config } from "@/config/config"
@@ -19,6 +19,7 @@ import { ResearchExecution } from "@/research/allowance"
 import { SessionCompaction } from "@/session/compaction"
 import { MessageV2 } from "@/session/message-v2"
 import { NativeResearchTask } from "./fixtures/native-task"
+import { TestLLMServer } from "../lib/llm-server"
 import { TestInstance } from "../fixture/fixture"
 import { awaitWithTimeout, testEffect } from "../lib/effect"
 
@@ -76,13 +77,12 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
     const log = path.join(roots[0], ".atlas/memory.jsonl")
     yield* fixture.fs.remove(log)
     yield* fixture.fs.makeDirectory(log)
-    const card: Research.Card = { answer: "Only version 1; Atlas is unavailable.", profile: "understand", depth: "quick", sufficiency: "partial",
-      findingRefs: [], evidenceRefs: [{ source: admitted.receipt.ref, locator: { kind: "quote", exact: "Only version 1 is supported." } }], documentRefs: [],
-      coverage: { examined: ["conditions.txt"], excluded: ["Atlas"], failures: ["Atlas unavailable"] }, limitations: ["Current Atlas rules could not be loaded"], nextActions: [] }
-    yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes("Read conditions.txt; report scope and Atlas availability"), `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`)
   }).pipe(Effect.orDie))
   yield* Effect.addFinalizer(() => unsubscribe)
   yield* fixture.remote.toolMatch((hit) => JSON.stringify(hit.body).includes("Read conditions.txt; report scope and Atlas availability"), "read", { filePath: path.join(fixture.instance.directory, "conditions.txt") })
+  yield* inquire("Read conditions.txt; report scope and Atlas availability", () => state.source?.ref, { quote: "Only version 1 is supported.",
+    proposition: "Version 1 is supported", sufficiency: "partial", answer: "Version 1 is supported; Atlas is unavailable.",
+    limitations: ["Current Atlas rules could not be loaded"] })
   const discovery = yield* awaitWithTimeout(fixture.call({ description: "Observe discovery outage", prompt: "Read conditions.txt; report scope and Atlas availability", subagent_type: "jimmy" }, "jimmy-outage"), "Discovery outage turns did not settle", "30 seconds")
   if (Exit.isFailure(discovery.exit)) return yield* Effect.failCause(discovery.exit.cause)
   expect(state.source).toBeDefined()
@@ -92,7 +92,8 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
   if (Exit.isFailure(switched.exit)) return yield* Effect.failCause(switched.exit.cause)
   expect(switched.exit.value.metadata.workResult).toMatchObject({ card: { parsed: true }, terminal: { reason: "ended" } })
   const requests = yield* fixture.remote.inputs
-  expect(requests).toHaveLength(4)
+  // Jimmy's six turns: read, inquiry open, claim, check, close and the last text.
+  expect(requests).toHaveLength(8)
   const headers = requests.map(currentHeader)
   expect(headers[0]).toContain('member="backend"')
   expect(headers[0]).toContain(rules.backend)
@@ -109,8 +110,8 @@ it.instance("A02/A12 real provider turns isolate own Atlas header and retire rul
     expect(header).not.toContain("HEADER_TASK_MUST_NOT_LOAD")
     expect(header).not.toContain("HEADER_PR_MUST_NOT_LOAD")
   })
-  expect(headers[2]).toContain('member="jimmy" degraded="unavailable"')
-  expect(headers[3]).toContain('member="backend" degraded="unavailable"')
+  headers.slice(2, 7).forEach((header) => expect(header).toContain('member="jimmy" degraded="unavailable"'))
+  expect(headers[7]).toContain('member="backend" degraded="unavailable"')
   headers.slice(2).forEach((header) => {
     expect(header).not.toContain(rules.backend)
     expect(header).not.toContain(rules.jimmy)
@@ -138,12 +139,8 @@ it.instance("A08 native Task checkpoint survives actual provider-driven compacti
   const state: { source?: Research.SourceReceipt; sources: Research.SourceReceipt[];
     bounds: Schema.Schema.Type<typeof ResearchEvent.AllowanceBound.data>[];
     charges: Schema.Schema.Type<typeof ResearchEvent.AllowanceCharged.data>[] } = { sources: [], bounds: [], charges: [] }
-  const card = (source: Research.SourceRef): Research.Card => ({
-    answer: "Only version 1 with enabled operation; disabled operation rejects requests.", profile: "investigate", depth: "focused",
-    sufficiency: "answered", findingRefs: [], evidenceRefs: [{ source, locator: { kind: "quote", exact: "Disabled operation rejects the request." } }],
-    documentRefs: [], coverage: { examined: ["conditions.txt"], excluded: ["runtime execution"], failures: [] },
-    limitations: ["Supplied static conditions only"], nextActions: [],
-  })
+  const claim = { quote: "Disabled operation rejects the request.", proposition: "Disabled operation rejects the request", sufficiency: "answered" as const,
+    answer: "Disabled operation rejects requests.", limitations: ["Supplied static conditions only"] }
   const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
     if (event.type === ResearchEvent.AllowanceBound.type) {
       const bound = Schema.decodeUnknownSync(ResearchEvent.AllowanceBound.data)(event.data)
@@ -161,13 +158,13 @@ it.instance("A08 native Task checkpoint survives actual provider-driven compacti
     state.sources.push(admitted.receipt)
     if (state.source) return
     state.source = admitted.receipt
-    yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes("Capture conditional source once"), `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card(admitted.receipt.ref))}\n\u0060\u0060\u0060`)
   }))
   yield* Effect.addFinalizer(() => unsubscribe)
   yield* fixture.remote.toolMatch((hit) => JSON.stringify(hit.body).includes("Capture conditional source once"), "read", { filePath: path.join(instance.directory, "conditions.txt") })
+  yield* inquire("Capture conditional source once", () => state.source?.ref, claim)
   const initial = yield* awaitWithTimeout(fixture.call({ description: "Capture conditional evidence", prompt: "Capture conditional source once", subagent_type: "jimmy" }, "source-capture"), "Initial native source capture did not settle", "30 seconds")
   if (Exit.isFailure(initial.exit)) return yield* Effect.failCause(initial.exit.cause)
-  expect(initial.exit.value.metadata.workResult).toMatchObject({ card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" } })
+  expect(initial.exit.value.metadata.workResult).toMatchObject({ card: { parsed: true }, outcome: "done", referencesChecked: true, terminal: { reason: "ended" } })
   const source = state.source
   if (!source) throw new Error("Native Task did not capture source bytes")
   const childID = source.binding.executionSessionID
@@ -187,18 +184,22 @@ it.instance("A08 native Task checkpoint survives actual provider-driven compacti
   const resumeInput = { description: "Resume retained evidence", prompt: "Reopen retained source without reacquisition", subagent_type: "jimmy",
     task_id: task.taskId, memoryUnit: { kind: "task", id: task.taskId } }
   yield* fixture.remote.toolMatch((hit) => JSON.stringify(hit.body).includes(resumeInput.prompt), "research_view", { action: "source", ref: source.ref })
-  yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes(resumeInput.prompt), `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card(source.ref))}\n\u0060\u0060\u0060`)
+  // The resumed dispatch closes its own inquiry: an earlier dispatch's card never answers for it. It cites the source an
+  // earlier dispatch of the same Task retained, without reacquiring the file.
+  yield* inquire(resumeInput.prompt, () => source.ref, claim)
   const resumed = yield* awaitWithTimeout(fixture.call(resumeInput, "checkpoint-resume"), "Native checkpoint resume did not settle", "30 seconds")
   if (Exit.isFailure(resumed.exit)) return yield* Effect.failCause(resumed.exit.cause)
   expect(resumed.exit.value.metadata).toMatchObject({ sessionId: childID, workResult: { taskId: task.taskId,
-    card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" } } })
+    card: { parsed: true }, outcome: "done", referencesChecked: true, terminal: { reason: "ended" },
+    discovery: { sufficiency: "answered", check: { verdict: "pass" } } } })
   const firstAdmission = admissionParts(yield* fixture.sessions.messages({ sessionID: childID }))
   expect(firstAdmission).toHaveLength(1)
   // A changed store cannot replace the durable selection when the same dispatch is retried.
   const later = memory.write({ ...checkpoint, lesson: "LATER_CHECKPOINT_MUST_NOT_REPLACE_ADMISSION" })
   if (!later.ok) throw new Error(`Real later checkpoint refused: ${JSON.stringify(later)}`)
   expect(later.ref).not.toEqual(written.ref)
-  yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes(resumeInput.prompt), `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card(source.ref))}\n\u0060\u0060\u0060`)
+  // The exact retry is the same dispatch, whose inquiry already closed; one last text ends it.
+  yield* fixture.remote.textMatch((hit) => JSON.stringify(hit.body).includes(resumeInput.prompt), "Inquiry closed.")
   const retried = yield* awaitWithTimeout(fixture.call(resumeInput, "checkpoint-resume"), "Exact native checkpoint retry did not settle", "30 seconds")
   if (Exit.isFailure(retried.exit)) return yield* Effect.failCause(retried.exit.cause)
   expect(retried.exit.value.metadata).toMatchObject({ sessionId: childID, workResult: { taskId: task.taskId,
@@ -217,12 +218,16 @@ it.instance("A08 native Task checkpoint survives actual provider-driven compacti
   expect(reopened).toHaveLength(1)
   expect(reopened[0]).toMatchObject({ state: { status: "completed", input: { action: "source", ref: source.ref } } })
   if (reopened[0].type !== "tool" || reopened[0].state.status !== "completed") throw new Error("Native source reopen did not complete")
-  expect(Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))(reopened[0].state.output)).toMatchObject({ text: sourceText, complete: true, ref: source.ref.artifact })
+  // A source page also says where its line 1 sits in the original file (J5.3).
+  const SourcePage = Schema.Struct({ ...Research.ArtifactPage.fields, lines: Schema.Struct({ basis: Schema.Literals(["original", "retained"]), start: Schema.Int }) })
+  expect(Schema.decodeUnknownSync(Schema.fromJsonString(SourcePage))(reopened[0].state.output)).toMatchObject({ text: sourceText, complete: true,
+    ref: source.ref.artifact, lines: { basis: "original", start: 1 } })
   const providerBefore = state.charges.filter((charge) => charge.kind === "provider")
-  expect(providerBefore.map((charge) => charge.dispatchCallID)).toEqual(["source-capture", "source-capture", "checkpoint-resume", "checkpoint-resume", "checkpoint-resume"])
+  // Each dispatch: read or reopen, inquiry open, claim, check, close and the last text; the retry adds one text turn.
+  expect(providerBefore.map((charge) => charge.dispatchCallID)).toEqual([...Array.from({ length: 6 }, () => "source-capture"), ...Array.from({ length: 7 }, () => "checkpoint-resume")])
   const requestsBefore = yield* fixture.remote.inputs
-  expect(requestsBefore).toHaveLength(5)
-  expect(JSON.stringify(requestsBefore[2])).toContain(written.ref.eventId)
+  expect(requestsBefore).toHaveLength(13)
+  expect(JSON.stringify(requestsBefore[6])).toContain(written.ref.eventId)
   requestsBefore.map(currentHeader).forEach((header) => expect(header).toContain('member="jimmy"'))
   yield* compaction.create({ sessionID: childID, agent: "jimmy", model: { providerID: fixture.model.providerID, modelID: fixture.model.id }, auto: false })
   const compacting = yield* fixture.sessions.messages({ sessionID: childID })
@@ -259,13 +264,45 @@ it.instance("A08 native Task checkpoint survives actual provider-driven compacti
   expect(state.charges.filter((charge) => charge.kind === "provider")).toHaveLength(providerBefore.length + 1)
   const requests = yield* fixture.remote.inputs
   expect(requests).toHaveLength(requestsBefore.length + 1)
-  expect(systemText(requests[5])).not.toContain('<atlas-header member="')
-  expect(JSON.stringify(requests[5])).toContain(written.ref.eventId)
+  expect(systemText(requests[13])).not.toContain('<atlas-header member="')
+  expect(JSON.stringify(requests[13])).toContain(written.ref.eventId)
   expect(yield* artifacts.read(source.binding, source.ref.artifact)).toMatchObject({ text: sourceText, complete: true, receipt: source })
   expect(yield* records.view(source.binding, { action: "source", ref: source.ref })).toMatchObject({ text: sourceText, ref: source.ref.artifact })
   expect(state.sources).toEqual([source])
   expect(yield* fixture.remote.pending).toBe(0)
 }), { git: true }, 120_000)
+
+const Opened = Schema.Struct({ inquiry: Schema.Struct({ question: Research.RecordRef, subquestions: Schema.NonEmptyArray(Research.RecordRef) }) })
+
+/**
+ * The seat's inquiry for the dispatch whose prompt matches: open is queued now, after the turns already queued; when
+ * its reply names the subquestion, claim, check and close follow, then the seat's last text.
+ */
+const inquire = Effect.fn("AtlasProviderTest.inquire")(function* (prompt: string, source: () => Research.SourceRef | undefined,
+  script: { quote: string; proposition: string; sufficiency: "answered" | "partial"; answer: string; limitations: string[] }) {
+  const remote = yield* TestLLMServer
+  const events = yield* EventV2.Service
+  const match = (hit: { body: unknown }) => JSON.stringify(hit.body).includes(prompt)
+  const state = { opened: false }
+  yield* remote.toolMatch(match, "inquiry", { action: "open", question: "What does the retained source state?",
+    subquestions: ["Which condition the source states"], profile: "understand" })
+  const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
+    if (event.type !== SessionV1.Event.PartUpdated.type || state.opened) return
+    const part = Schema.decodeUnknownSync(SessionV1.Event.PartUpdated.data)(event.data).part
+    if (part.type !== "tool" || part.tool !== "inquiry" || part.state.status !== "completed") return
+    const opened = Schema.decodeUnknownOption(Opened)(part.state.metadata)
+    if (Option.isNone(opened)) return
+    const ref = source()
+    if (!ref) throw new Error("Inquiry opened before the dispatch retained its source")
+    state.opened = true
+    yield* remote.toolMatch(match, "inquiry", { action: "claim", subquestion: opened.value.inquiry.subquestions[0], proposition: script.proposition,
+      nature: "extraction", evidence: [{ source: ref, quote: script.quote }] })
+    yield* remote.toolMatch(match, "inquiry", { action: "check" })
+    yield* remote.toolMatch(match, "inquiry", { action: "close", sufficiency: script.sufficiency, answer: script.answer, limitations: script.limitations })
+    yield* remote.textMatch(match, "Inquiry closed.")
+  }).pipe(Effect.orDie))
+  yield* Effect.addFinalizer(() => unsubscribe)
+})
 
 function systemText(request: unknown) {
   const decoded = Schema.decodeUnknownSync(Schema.Struct({ messages: Schema.Array(Schema.Struct({ role: Schema.String, content: Schema.Unknown })) }))(request)

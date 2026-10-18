@@ -59,19 +59,27 @@ ClaudeResearchFixture.it.instance("native unique correlated response IDs charge 
   expect(yield* fixture.research.status(dispatch.child)).toMatchObject({ closed: true, deadlineActive: false })
 }), 30_000)
 
-ClaudeResearchFixture.it.instance("native tools remain available without response observations; parent receives exact card and qualifications", () => Effect.gen(function* () {
+ClaudeResearchFixture.it.instance("native tools remain available without response observations; parent receives the host card and qualifications", () => Effect.gen(function* () {
   const fixture = yield* ClaudeResearchFixture.setup()
   const dispatch = yield* fixture.nativeDispatch()
-  const finding = { action: "finding", proposition: "Support is conditional", nature: "hypothesis",
-    conditions: ["release 1 only", "enabled mode only"], evidence: [], contrary: [], reason: "No runtime observation" } as const
-  expect(yield* dispatch.pre("mcp__orchestra__research_record", "finding", finding))
-    .toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
-  const recorded = yield* dispatch.run("research_record", finding, "finding")
-  const result = Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(recorded.metadata.research)
-  const card: Research.Card = { answer: "Support is conditional.", profile: "understand", depth: "quick", sufficiency: "partial",
-    findingRefs: [{ id: result.record.id, revision: result.record.revision }], evidenceRefs: [], documentRefs: [],
-    coverage: { examined: [], excluded: ["runtime"], failures: [] }, limitations: ["No runtime observation"], nextActions: [] }
-  const final = `Support is conditional.\n\n\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`
+  yield* Effect.promise(() => Bun.write(path.join(fixture.parent.directory, "conditions.txt"), "Support holds in release 1 with enabled mode.\n"))
+  // Each call is admitted by the real PreToolUse hook, then runs the registry tool under the dispatch's allowance.
+  const step = (name: string, args: unknown, toolUseID: string) => Effect.gen(function* () {
+    expect(yield* dispatch.pre(`mcp__orchestra__${name}`, toolUseID, args)).toMatchObject({ hookSpecificOutput: { permissionDecision: "allow" } })
+    return yield* dispatch.run(name, args, toolUseID)
+  })
+  const source = Schema.decodeUnknownSync(Research.SourceReceipt)(
+    (yield* step("research_capture", { kind: "file", path: "conditions.txt" }, "capture")).metadata.researchSource)
+  const opened = Schema.decodeUnknownSync(Schema.Struct({ subquestions: Schema.Array(Research.RecordRef) }))((yield* step("inquiry",
+    { action: "open", question: "When does support hold?", subquestions: ["Which conditions apply"], profile: "understand" }, "open")).metadata.inquiry)
+  const conditions = ["release 1 only", "enabled mode only"]
+  const claim = Schema.decodeUnknownSync(Schema.Struct({ claim: Research.RecordRef }))((yield* step("inquiry", { action: "claim",
+    subquestion: opened.subquestions[0], proposition: "Support is conditional", nature: "extraction", conditions,
+    evidence: [{ source: source.ref, quote: "release 1 with enabled mode" }] }, "claim")).metadata.inquiry).claim
+  expect((yield* step("inquiry", { action: "check" }, "check")).output).toContain("\"verdict\":\"pass\"")
+  yield* step("inquiry", { action: "close", sufficiency: "answered", answer: "Support is conditional.",
+    limitations: ["No runtime observation"] }, "close")
+  const final = "Support is conditional."
   const output = yield* fixture.fire({ ...ClaudeResearchFixture.base, hook_event_name: "PostToolUse", tool_name: "Agent",
     tool_use_id: dispatch.callID, tool_input: {}, tool_response: { status: "completed", agentId: dispatch.taskID,
       content: [{ type: "text", text: final }] } })
@@ -79,10 +87,14 @@ ClaudeResearchFixture.it.instance("native tools remain available without respons
     additionalContext: expect.stringContaining("Retained finding qualifications") } })
   const part = fixture.mirrored.get(dispatch.callID)
   if (part?.state.status !== "completed") throw new Error("Expected settled Agent part")
-  expect(part.state.metadata.workResult).toMatchObject({ referencesChecked: true, discovery: card,
-    qualifications: { records: [result.record], complete: true, omitted: 0, total: 1 } })
-  expect(part.state.output).toContain(JSON.stringify(result.record.conditions))
-  expect(part.state.output).toEndWith(final)
+  expect(part.state.metadata.workResult).toMatchObject({ referencesChecked: true, outcome: "done", card: { parsed: true },
+    discovery: { schema: "jimmy-card-v2", answer: final, sufficiency: "answered", limitations: ["No runtime observation"],
+      claims: [{ ref: claim, conditions }], check: { verdict: "pass" } },
+    qualifications: { records: [{ id: claim.id, revision: claim.revision, conditions }], complete: true, omitted: 0, total: 1 } })
+  expect(part.state.output).toStartWith("Inquiry check: pass; rules ")
+  expect(part.state.output).toContain(JSON.stringify(conditions))
+  expect(part.state.output).toContain(`Card answer (answered; host-assembled`)
+  expect(part.state.output).toEndWith(`Quoted raw child text (authored data):\n> ${JSON.stringify(final)}`)
   const author = (yield* fixture.sessions.messages({ sessionID: dispatch.child })).findLast((message) => message.info.role === "assistant")
   expect(author?.parts.flatMap((part) => part.type === "text" ? [part.text] : [])).toEqual([final])
   expect((yield* ClaudeResearchFixture.charges(dispatch.child)).filter((entry) => entry.kind === "provider")).toEqual([])
