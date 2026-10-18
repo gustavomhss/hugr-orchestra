@@ -13,6 +13,7 @@ import fuzzysort from "fuzzysort"
 import { DEFAULT_PALETTE_KEYBIND, formatKeybind, parseKeybind, useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
+import { captureKeybind } from "@/orchestra/chapters/shortcuts-model"
 import { SettingsList } from "./settings-list"
 import { SettingsListV2 } from "./settings-v2/parts/list"
 
@@ -68,37 +69,6 @@ function groupFor(id: string): KeybindGroup {
     return "Session"
 
   return "General"
-}
-
-function isModifier(key: string) {
-  return key === "Shift" || key === "Control" || key === "Alt" || key === "Meta"
-}
-
-function normalizeKey(key: string) {
-  if (key === ",") return "comma"
-  if (key === "+") return "plus"
-  if (key === " ") return "space"
-  return key.toLowerCase()
-}
-
-function recordKeybind(event: KeyboardEvent) {
-  if (isModifier(event.key)) return
-
-  const parts: string[] = []
-
-  const mod = IS_MAC ? event.metaKey : event.ctrlKey
-  if (mod) parts.push("mod")
-
-  if (IS_MAC && event.ctrlKey) parts.push("ctrl")
-  if (!IS_MAC && event.metaKey) parts.push("meta")
-  if (event.altKey) parts.push("alt")
-  if (event.shiftKey) parts.push("shift")
-
-  const key = normalizeKey(event.key)
-  if (!key) return
-  parts.push(key)
-
-  return parts.join("+")
 }
 
 function signatures(config: string | undefined) {
@@ -222,20 +192,13 @@ function useKeyCapture(input: {
         return
       }
 
-      const clear =
-        (event.key === "Backspace" || event.key === "Delete") &&
-        !event.ctrlKey &&
-        !event.metaKey &&
-        !event.altKey &&
-        !event.shiftKey
-      if (clear) {
+      const next = captureKeybind(event, IS_MAC)
+      if (!next) return
+      if (next === "none") {
         input.set(id, "none")
         input.stop()
         return
       }
-
-      const next = recordKeybind(event)
-      if (!next) return
 
       const conflicts = new Map<string, string>()
       for (const sig of signatures(next)) {
@@ -339,20 +302,13 @@ export function createKeybindSettingsController(
       return
     }
 
-    const clear =
-      (event.key === "Backspace" || event.key === "Delete") &&
-      !event.ctrlKey &&
-      !event.metaKey &&
-      !event.altKey &&
-      !event.shiftKey
-    if (clear) {
+    const next = captureKeybind(event, IS_MAC)
+    if (!next) return
+    if (next === "none") {
       input.settings.keybinds.set(id, "none")
       stop()
       return
     }
-
-    const next = recordKeybind(event)
-    if (!next) return
 
     const conflicts = new Map<string, string>()
     for (const signature of signatures(next)) {

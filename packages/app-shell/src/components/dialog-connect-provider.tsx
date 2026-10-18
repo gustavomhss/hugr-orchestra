@@ -597,6 +597,8 @@ function ProviderConnection(props: {
   }
 
   let auto = false
+  // A stored API key is only verified by the first request, so its toast must not claim the provider works.
+  let keySaved = false
   createEffect(() => {
     if (auto) return
     if (loading() || integration.error()) return
@@ -622,8 +624,12 @@ function ProviderConnection(props: {
     showToast({
       variant: "success",
       icon: "circle-check",
-      title: language.t("provider.connect.toast.connected.title", { provider: provider().name }),
-      description: language.t("provider.connect.toast.connected.description", { provider: provider().name }),
+      title: keySaved
+        ? language.t("orchestra.providers.connectDialog.keySaved.title", { provider: provider().name })
+        : language.t("provider.connect.toast.connected.title", { provider: provider().name }),
+      description: keySaved
+        ? language.t("orchestra.providers.connectDialog.keySaved.description")
+        : language.t("provider.connect.toast.connected.description", { provider: provider().name }),
     })
   }
 
@@ -739,7 +745,10 @@ function ProviderConnection(props: {
           key: apiKey,
           label: label || undefined,
         })
-        .then(complete)
+        .then(() => {
+          keySaved = true
+          return complete()
+        })
         .catch((error) => setFormStore("error", formatError(error, language.t("common.requestFailed"))))
         .finally(() => setFormStore("pending", false))
     }

@@ -18,7 +18,7 @@ export const navigation = [
   { id: "lean", label: "orchestra.nav.lean", chapter: undefined },
   { id: "cicd", label: "orchestra.nav.cicd", chapter: "C07", wip: true },
   { id: "schedule", label: "orchestra.nav.schedule", chapter: "C08" },
-  { id: "env", label: "orchestra.nav.env", chapter: "C09" },
+  { id: "env", label: "orchestra.nav.env", chapter: "C09", wip: true },
   { id: "dock", label: "orchestra.nav.dock", chapter: "C13" },
   { id: "search", label: "orchestra.nav.search", chapter: undefined },
   { id: "workspaces", label: "orchestra.nav.workspaces", chapter: "C12", wip: true },

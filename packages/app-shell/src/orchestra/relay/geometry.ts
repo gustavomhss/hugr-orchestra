@@ -5,6 +5,8 @@ export const NODE = 56
 export const MIN_ZOOM = 0.3
 export const MAX_ZOOM = 2
 export const GRID = 8
+// The width of the add drawer, which covers that much of the canvas.
+export const DRAWER = 340
 
 export type Point = { x: number; y: number }
 export type Rect = { x: number; y: number; w: number; h: number }
@@ -101,6 +103,17 @@ export function bounds(nodes: Point[]): Rect {
 
 export const clampZoom = (k: number) => Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, k))
 
+// The room the overlays leave around the content. The add drawer sits at the end of the reading direction, so its
+// reserve is on the left in a right-to-left UI.
+export function viewInset(drawer: boolean, rtl: boolean) {
+  const reserve = drawer ? DRAWER : 0
+  return { left: 30 + (rtl ? reserve : 0), top: 64, right: 30 + (rtl ? 0 : reserve), bottom: 126 }
+}
+
+// One mouse-wheel notch reports a deltaY of about 100 and a trackpad pinch single digits; either zooms by at most 10%
+// per event, so a wheel has usable steps between 30% and 200%.
+export const wheelFactor = (deltaY: number) => Math.min(1.1, Math.max(0.9, Math.exp(-deltaY * 0.01)))
+
 // Fits the content inside the area the overlays leave free, never above 100%.
 export function fitView(
   content: Rect,
@@ -125,10 +138,11 @@ export function zoomAt(view: View, factor: number, px: number, py: number): View
   return { k, x: px - wx * k, y: py - wy * k }
 }
 
-export function centerOn(view: View, point: Point, viewport: { w: number; h: number }): View {
+// `viewport.x` is where the free area starts when something covers the left of the canvas.
+export function centerOn(view: View, point: Point, viewport: { w: number; h: number; x?: number }): View {
   return {
     k: view.k,
-    x: viewport.w / 2 - (point.x + NODE / 2) * view.k,
+    x: (viewport.x ?? 0) + viewport.w / 2 - (point.x + NODE / 2) * view.k,
     y: viewport.h / 2 - (point.y + NODE / 2) * view.k,
   }
 }
@@ -152,4 +166,59 @@ export function minimapPoint(box: Rect, size: { w: number; h: number }, click: P
 
 export function intersects(node: Point, box: Rect) {
   return node.x + NODE > box.x && node.x < box.x + box.w && node.y + NODE > box.y && node.y < box.y + box.h
+}
+
+export const contains = (rect: Rect, point: Point) =>
+  point.x >= rect.x && point.x <= rect.x + rect.w && point.y >= rect.y && point.y <= rect.y + rect.h
+
+// How far to move a span so it sits inside [from, to]; one wider than the room lines up its start.
+export function nudge(start: number, end: number, from: number, to: number) {
+  if (end - start > to - from || start < from) return from - start
+  return end > to ? to - end : 0
+}
+
+// Where a popup goes: its left edge at `place.x`, below `place.bottom`, or above `place.top` when it does not fit
+// below, and never outside the area.
+export function popupAt(
+  place: { x: number; top: number; bottom: number },
+  size: { w: number; h: number },
+  area: { w: number; h: number },
+  gap = 6,
+  margin = 8,
+): Point {
+  const below = place.bottom + gap
+  const above = place.top - gap - size.h
+  return {
+    x: Math.max(margin, Math.min(place.x, area.w - size.w - margin)),
+    y: below + size.h <= area.h - margin ? below : above >= margin ? above : Math.max(margin, area.h - margin - size.h),
+  }
+}
+
+export type Direction = "left" | "right" | "up" | "down"
+
+// The step an arrow key reaches from `from`: along its wires when there is one that way (the lower output of a
+// two-output node on Down), else the closest node lying that way, leaning toward the one most in line with it.
+export function neighbour<T extends Point & { id: string }>(
+  nodes: T[],
+  edges: { from: string; to: string; port: number }[],
+  from: string,
+  direction: Direction,
+): string | undefined {
+  const forward = direction === "right" || direction === "down"
+  const wires = edges
+    .filter((edge) => (forward ? edge.from === from : edge.to === from))
+    .toSorted((a, b) => a.port - b.port)
+  const wire = (direction === "down" && wires.find((edge) => edge.port === 1)) || wires[0]
+  if (wire) return forward ? wire.to : wire.from
+  const origin = nodes.find((node) => node.id === from)
+  if (!origin) return
+  const horizontal = direction === "left" || direction === "right"
+  const sign = forward ? 1 : -1
+  return nodes
+    .flatMap((node) => {
+      const along = (horizontal ? node.x - origin.x : node.y - origin.y) * sign
+      const across = Math.abs(horizontal ? node.y - origin.y : node.x - origin.x)
+      return node.id !== from && along > NODE / 2 ? [{ id: node.id, score: along + across * 2 }] : []
+    })
+    .sort((a, b) => a.score - b.score)[0]?.id
 }

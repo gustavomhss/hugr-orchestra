@@ -62,7 +62,7 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(page.locator("[data-mcp-name]")).toHaveCount(6)
   await expect(row(page, "broken")).toContainText("Connection refused by upstream")
   await expect(row(page, "registration")).toContainText("Register an OAuth client")
-  await expect(row(page, "online").getByRole("switch", { name: "Enable online" })).toBeChecked()
+  await expect(row(page, "online").getByRole("switch", { name: "Connect online (until restart)" })).toBeChecked()
   await expect(row(page, "online").locator("p").first()).toHaveText("https://mcp.example.test/docs?key=•••")
   await expect(row(page, "online").locator(".mx-badge")).toHaveText(["Connected", "http", "2 tools"])
   await expect(row(page, "broken").locator(".mx-badge")).toHaveText(["Error", "stdio"])
@@ -71,11 +71,14 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(page.locator("[data-mx-page]")).toContainText(
     "Switches apply until the server restarts. Saving or removing a server restarts this profile's MCP servers.",
   )
-  await expect(row(page, "shared").locator(".mx-badge")).toHaveText(["Disabled"])
+  await expect(row(page, "shared").locator(".mx-badge")).toHaveText(["Disconnected (until restart)"])
+  await expect(row(page, "shared")).toContainText('set "enabled": false in its entry in orchestra.json')
   // The switch shows a live connection: a failed server is off and switching it on retries.
-  await expect(row(page, "broken").getByRole("switch", { name: "Enable broken" })).not.toBeChecked()
-  await expect(row(page, "registration").getByRole("switch", { name: "Enable registration" })).not.toBeChecked()
-  await expect(row(page, "shared").getByRole("switch", { name: "Enable shared" })).not.toBeChecked()
+  await expect(row(page, "broken").getByRole("switch", { name: "Connect broken (until restart)" })).not.toBeChecked()
+  // A retry cannot register an OAuth client, so the card points to the config instead of offering a switch.
+  await expect(row(page, "registration").getByRole("switch")).toHaveCount(0)
+  await expect(row(page, "registration")).toContainText("Add oauth.clientId to its entry in orchestra.json")
+  await expect(row(page, "shared").getByRole("switch", { name: "Connect shared (until restart)" })).not.toBeChecked()
   await expect(row(page, "waiting").getByRole("switch")).toBeDisabled()
   await expect(row(page, "secured").getByRole("button", { name: "Authenticate" })).toBeVisible()
   expect(
@@ -86,7 +89,7 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
   await expect(page.getByRole("searchbox", { name: "Search MCP" })).toHaveAttribute("placeholder", "Search mcp")
   await page.getByRole("searchbox", { name: "Search MCP" }).fill("SHARED")
   await expect(page.locator("[data-mcp-name]")).toHaveCount(1)
-  const connection = row(page, "shared").getByRole("switch", { name: "Enable shared" })
+  const connection = row(page, "shared").getByRole("switch", { name: "Connect shared (until restart)" })
   await expect(connection).toBeEnabled()
   await connection.focus()
   await page.keyboard.press("Space")
@@ -263,7 +266,7 @@ test("add validates the name and endpoint and writes the profile config", async 
   await expect(page.getByRole("dialog")).toHaveCount(0)
   await expect(page.getByRole("button", { name: "Add MCP server" })).toBeFocused()
   await expect(row(page, "docs")).toContainText("https://mcp.example.test/docs")
-  await expect(row(page, "docs").locator(".mx-badge")).toHaveText(["Disabled", "http"])
+  await expect(row(page, "docs").locator(".mx-badge")).toHaveText(["Disconnected (until restart)", "http"])
   const put = {
     method: "PUT",
     url: `${serverA}/mcp/docs/config`,

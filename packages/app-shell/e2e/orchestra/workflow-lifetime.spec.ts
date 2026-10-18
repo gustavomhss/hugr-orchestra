@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { authoringSettlement, setupRelay } from "./relay.fixture"
+import { adopt, authoringSettlement, setupRelay } from "./relay.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(120_000)
@@ -14,6 +14,15 @@ test.beforeEach(({ page }) => {
   page.on("pageerror", (error) => failures.push(error.stack ?? error.message))
 })
 test.afterEach(({ page }) => expect(errors.get(page)).toEqual([]))
+
+// The library lists the user's own workflows; a seeded profile is only a template. These tests work on rows, so the two
+// profiles they use become workflows the user owns.
+async function setup(page: Page) {
+  const state = await setupRelay(page)
+  adopt(state, workflow)
+  adopt(state, "relay-tdd_feature")
+  return state
+}
 
 const located = (data: unknown) => ({ contentType: "application/json", body: JSON.stringify({ location: { directory: "/repo/orchestra-canonical" }, data }) })
 const refused = (status: number) => ({ status, contentType: "application/json", body: JSON.stringify({ _tag: status === 409 ? "RelayConflictError" : "RelayUnavailableError", message: status === 409 ? "Changed elsewhere" : "Activity offline" }) })
@@ -45,7 +54,7 @@ async function library(page: Page, kind = "Workflows") {
 
 for (const entry of ["workflow library pending", "hook library failed", "workflow editor pending"]) {
   test(`lifetime: delete from ${entry} disposes draft and rejects a late ACK`, async ({ page }) => {
-    const state = await setupRelay(page)
+    const state = await setup(page)
     const hook = entry.startsWith("hook")
     const id = hook ? "protect-generated" : workflow
     const settled = await authoringSettlement(page, "save", id)
@@ -114,23 +123,21 @@ async function delayCreate(page: Page) {
   return { pending, arrived }
 }
 
-for (const entry of ["retained library new", "retained editor history", "retained library roundtrip", "normal clone"]) {
+// The editor Executions tab is hidden while workflow runs are, so no editor layer is left to retain here.
+for (const entry of ["retained library new", "retained library roundtrip", "normal clone"]) {
   test(`lifetime: clone completion respects ${entry}`, async ({ page }) => {
-    const state = await setupRelay(page)
+    const state = await setup(page)
     const delayed = await delayCreate(page)
-    const inEditor = entry.includes("editor")
-    const origin = `/orchestra/workflows${inEditor ? `/${workflow}` : ""}`
+    const origin = "/orchestra/workflows"
     const settled = await authoringSettlement(page, "navigation", origin)
     await page.goto(origin, { waitUntil: "domcontentloaded" })
-    const surface = page.locator(inEditor ? '[data-component="relay-editor"]' : '[data-mx-page="orchestra-workflows"]')
+    const surface = page.locator('[data-mx-page="orchestra-workflows"]')
     await expect(surface).toBeVisible()
     const owner = await surface.elementHandle()
-    if (inEditor) await editor(page).getByRole("button", { name: "More actions", exact: true }).click()
-    if (!inEditor) await page.locator(`[data-document="${workflow}"]`).locator('button[aria-haspopup="menu"]').click()
+    await page.locator(`[data-document="${workflow}"]`).locator('button[aria-haspopup="menu"]').click()
     const response = page.waitForResponse((reply) => reply.request().method() === "POST" && new URL(reply.url()).pathname === "/api/relay/document")
     await page.getByRole("menuitem", { name: "Duplicate", exact: true }).click()
     await delayed.arrived.promise
-    if (inEditor) await editor(page).getByRole("tab", { name: /^Executions/ }).click()
     if (entry.includes("library")) {
       await page.getByRole("button", { name: "New workflow", exact: true }).click()
       await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true }).fill("Selected route draft")
@@ -139,7 +146,7 @@ for (const entry of ["retained library new", "retained editor history", "retaine
       await page.goBack()
       await expect(page.getByRole("dialog", { name: "New workflow", exact: true })).toHaveCount(0)
     }
-    const chosen = entry === "retained library new" ? `${origin}/new` : inEditor ? `${origin}/executions` : origin
+    const chosen = entry === "retained library new" ? `${origin}/new` : origin
     await expect(page).toHaveURL(new RegExp(`${chosen}$`))
     expect(await owner!.evaluate((element) => element.isConnected)).toBe(true)
     expect(settled.completed()).toBe(false)
@@ -159,7 +166,6 @@ for (const entry of ["retained library new", "retained editor history", "retaine
       await expect(page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("textbox", { name: "Name", exact: true })).toHaveValue("Selected route draft")
       await page.getByRole("dialog", { name: "New workflow", exact: true }).getByRole("button", { name: "Cancel", exact: true }).click()
     }
-    if (inEditor) await editor(page).getByRole("link", { name: "Back to Workflows", exact: true }).click()
     await expect(page.locator(`[data-document="${created.id}"]`)).toContainText(String(created.name))
     expect(state.writes.filter((write) => write.method === "POST")).toHaveLength(1)
   })
@@ -167,7 +173,7 @@ for (const entry of ["retained library new", "retained editor history", "retaine
 
 for (const kind of ["workflow", "hook"]) {
   test(`lifetime: Back during ${kind} create caches success without navigating a replacement dialog`, async ({ page }) => {
-    const state = await setupRelay(page)
+    const state = await setup(page)
     const delayed = await delayCreate(page)
     const chapter = kind === "workflow" ? "workflows" : "hooks"
     const title = kind === "workflow" ? "Workflows" : "Hooks"
@@ -204,7 +210,7 @@ for (const kind of ["workflow", "hook"]) {
 
 for (const entry of ["workflow library", "workflow editor", "hook editor"]) {
   test(`lifetime: late clone from ${entry} preserves the chosen route and caches its document`, async ({ page }) => {
-    const state = await setupRelay(page)
+    const state = await setup(page)
     const delayed = await delayCreate(page)
     const hook = entry.startsWith("hook")
     const chapter = hook ? "hooks" : "workflows"
@@ -241,7 +247,7 @@ for (const entry of ["workflow library", "workflow editor", "hook editor"]) {
 }
 
 test("lifetime: shortcut popup blocks editor and command keys from button focus and restores them on close", async ({ page }) => {
-  await setupRelay(page)
+  await setup(page)
   await page.goto(`/orchestra/workflows/${workflow}`, { waitUntil: "domcontentloaded" })
   await canvas(page).getByRole("button", { name: "Keyboard shortcuts (?)", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "Keyboard shortcuts", exact: true })
@@ -258,7 +264,7 @@ test("lifetime: shortcut popup blocks editor and command keys from button focus 
   await expect(canvas(page).getByRole("button", { name: "Keyboard shortcuts (?)", exact: true })).toBeFocused()
   await page.keyboard.press("n")
   await expect(page).toHaveURL(new RegExp(`/orchestra/workflows/${workflow}/add$`))
-  await expect(page.locator(".wf-drawer").getByRole("textbox")).toBeEditable()
+  await expect(page.locator(".wf-drawer").getByRole("combobox")).toBeEditable()
   await page.keyboard.press("Escape")
   await expect(page.locator(".wf-drawer")).toHaveCount(0)
   await page.keyboard.press("ControlOrMeta+k")
@@ -266,7 +272,7 @@ test("lifetime: shortcut popup blocks editor and command keys from button focus 
 })
 
 test("lifetime: node Test dialog supports pointer, typing, submit and Escape restores parent", async ({ page }) => {
-  const state = await setupRelay(page)
+  const state = await setup(page)
   await openNode(page, "hooks", "protect-generated", "b")
   const trigger = details(page).locator(".wf-ndv-nav").getByRole("button", { name: "Test", exact: true })
   await trigger.click()
@@ -293,7 +299,7 @@ test("lifetime: node Test dialog supports pointer, typing, submit and Escape res
 
 for (const queued of [false, true]) {
   test(`lifetime: query-known v3 wins delayed v2 ACK with queued edits ${queued}`, async ({ page }) => {
-    const state = await setupRelay(page)
+    const state = await setup(page)
     const index = state.documents.findIndex((document) => document.id === workflow)
     state.documents[index] = version(state.documents[index], 1, "Initial instructions")
     const pending = Promise.withResolvers<void>()
@@ -332,7 +338,7 @@ for (const queued of [false, true]) {
 }
 
 async function conflict(page: Page) {
-  const state = await setupRelay(page)
+  const state = await setup(page)
   const index = state.documents.findIndex((document) => document.id === workflow)
   state.documents[index] = version(state.documents[index], 1, "Cached v1 instructions")
   const fresh = { ...version(state.documents[index], 2, "Reloaded v2 instructions"), name: "Reloaded v2 workflow" }
@@ -348,7 +354,7 @@ async function conflict(page: Page) {
 
 test("lifetime: conflict reload updates shared cache before clean editor is released", async ({ page }) => {
   await conflict(page)
-  await details(page).getByRole("button", { name: "Discard local changes and reload" }).click()
+  await details(page).getByRole("button", { name: "Discard mine", exact: true }).click()
   await expect(details(page).getByRole("textbox", { name: "Instructions", exact: true })).toHaveValue("Reloaded v2 instructions")
   await details(page).getByRole("button", { name: "Done", exact: true }).click()
   await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
@@ -362,7 +368,7 @@ test("lifetime: conflict reload updates shared cache before clean editor is rele
 
 test("lifetime: conflict reload keeps focus inside modal and next Escape closes it", async ({ page }) => {
   await conflict(page)
-  await details(page).getByRole("button", { name: "Discard local changes and reload" }).click()
+  await details(page).getByRole("button", { name: "Discard mine", exact: true }).click()
   await expect(details(page).locator('[data-save="saved"]')).toBeVisible()
   expect(await details(page).evaluate((element) => element.contains(document.activeElement))).toBe(true)
   await page.keyboard.press("Escape")
@@ -371,7 +377,7 @@ test("lifetime: conflict reload keeps focus inside modal and next Escape closes 
 })
 
 test("lifetime: hook node observations distinguish pending, failure and successful empty decisions", async ({ page }) => {
-  await setupRelay(page)
+  await setup(page)
   const pending = Promise.withResolvers<void>()
   const attempts: string[] = []
   await page.route("**/api/relay/hook/inst-protect/decisions*", async (route) => {

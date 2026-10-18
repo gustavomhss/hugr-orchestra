@@ -10,6 +10,8 @@ import type { RelayKind } from "./client"
 //   …/<id>/run/<run>[/node/<node>]              canvas and details showing one run (workflows)
 //   …/<id>/executions[/<run>]                   executions and receipt   …/<id>/activity (hooks)
 // Document IDs are server-made UUIDs, so they never collide with the reserved words.
+// Workflow runs are hidden while the server has no run routes (WP17): their executions and run URLs still parse, to
+// the library and to the canvas, so a bookmark or a palette command never lands on a missing page.
 
 export type RelayRoute =
   | { page: "library"; kind: RelayKind; tab: "list" | "runs"; create: boolean }
@@ -25,6 +27,7 @@ export type RelayRoute =
     }
 
 const runsWord = (kind: RelayKind) => (kind === "workflow" ? "executions" : "activity")
+const runsShown = (kind: RelayKind) => kind === "hook"
 
 export function chapterOf(kind: RelayKind) {
   return kind === "workflow" ? "workflows" : "hooks"
@@ -43,20 +46,23 @@ export function parseRelayRoute(kind: RelayKind, rest: string): RelayRoute {
     })
   const first = parts[0]
   if (!first || first === runsWord(kind) || first === "new")
-    return { page: "library", kind, tab: first === runsWord(kind) ? "runs" : "list", create: first === "new" }
+    return {
+      page: "library",
+      kind,
+      tab: first === runsWord(kind) && runsShown(kind) ? "runs" : "list",
+      create: first === "new",
+    }
   const route: Extract<RelayRoute, { page: "editor" }> = { page: "editor", kind, id: first, tab: "editor", add: false }
   const read = (index: number): Extract<RelayRoute, { page: "editor" }> => {
     const word = parts[index]
     if (word === undefined) return route
     if (word === runsWord(kind)) {
+      if (!runsShown(kind)) return route
       route.tab = "runs"
       if (parts[index + 1] !== undefined) route.run = parts[index + 1]
       return route
     }
-    if (word === "run" && kind === "workflow" && parts[index + 1] !== undefined) {
-      route.view = parts[index + 1]
-      return read(index + 2)
-    }
+    if (word === "run" && kind === "workflow" && parts[index + 1] !== undefined) return read(index + 2)
     if (word === "node" && parts[index + 1] !== undefined) {
       route.node = parts[index + 1]
       return route

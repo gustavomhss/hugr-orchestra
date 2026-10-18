@@ -14,7 +14,7 @@ function setup(overrides: Record<string, string> = {}) {
       {
         command: {
           catalog: [
-            { id: "session.alpha", title: "Alpha", keybind: "mod+a" },
+            { id: "session.alpha", title: "Alpha", keybind: "mod+k" },
             { id: "session.beta", title: "Beta", keybind: "mod+b" },
             { id: "model.choose", title: "Choose model", keybind: "mod+'" },
             { id: "mcp.toggle", title: "Toggle MCPs", keybind: "mod+;" },
@@ -90,21 +90,39 @@ describe("keybind settings controller", () => {
     const state = setup()
 
     state.controller.capture.toggle("session.beta")
-    document.dispatchEvent(modKey("a"))
+    document.dispatchEvent(modKey("k"))
     expect(state.changes).toEqual([])
     expect(state.notifications).toHaveLength(1)
     expect(state.controller.capture.active()).toBe("session.beta")
 
-    document.dispatchEvent(modKey("x"))
-    expect(state.changes).toEqual([["session.beta", "mod+x"]])
+    document.dispatchEvent(modKey("j"))
+    expect(state.changes).toEqual([["session.beta", "mod+j"]])
     expect(state.suppression).toEqual([false, true])
     expect(state.controller.capture.active()).toBeNull()
 
     state.controller.capture.toggle("session.alpha")
     state.dispose()
     expect(state.suppression).toEqual([false, true, false, true])
-    document.dispatchEvent(modKey("z"))
-    expect(state.changes).toEqual([["session.beta", "mod+x"]])
+    document.dispatchEvent(modKey("m"))
+    expect(state.changes).toEqual([["session.beta", "mod+j"]])
+  })
+
+  test("keeps listening through focus, activation and text-editing keys", () => {
+    const state = setup()
+
+    state.controller.capture.toggle("session.beta")
+    for (const key of ["Tab", "Enter", " "])
+      document.dispatchEvent(new KeyboardEvent("keydown", { key, bubbles: true, cancelable: true }))
+    for (const key of ["a", "c", "v", "x", "z"]) document.dispatchEvent(modKey(key))
+    expect(state.changes).toEqual([])
+    expect(state.notifications).toEqual([])
+    expect(state.controller.capture.active()).toBe("session.beta")
+
+    document.dispatchEvent(new KeyboardEvent("keydown", { key: "Backspace", bubbles: true, cancelable: true }))
+    expect(state.changes).toEqual([["session.beta", "none"]])
+    expect(state.controller.capture.active()).toBeNull()
+
+    state.dispose()
   })
 
   test("resets persisted overrides and reports success", () => {
