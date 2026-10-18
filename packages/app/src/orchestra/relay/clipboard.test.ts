@@ -52,7 +52,7 @@ describe("duplicate, copy and paste", () => {
 
   test("several steps paste as a chain in the order they run, whatever order they were selected in", () => {
     const text = copySteps(flow(), ["b", "a"])
-    const pasted = text && pasteSteps(flow(), text, { id: "b", port: 0 })
+    const pasted = text ? pasteSteps(flow(), text, { id: "b", port: 0 }) : undefined
     expect(pasted?.ids).toEqual(["a_2", "b_2"])
     expect(chain(pasted!.flow).map((node) => node.id)).toEqual(["start", "a", "b", "a_2", "b_2"])
     expect([...checks(pasted!.flow, "a_2"), ...checks(pasted!.flow, "b_2")]).toEqual(["a_2_check_1", "b_2_check_1"])
