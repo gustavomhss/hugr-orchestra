@@ -142,12 +142,6 @@
     return [...out].sort()
   }
 
-  // Files outside the scope that files inside it import (own `edges.dependencies`, one hop).
-  const uses = (path) => {
-    const inside = under(path)
-    return Object.entries(R.dependents).filter(([target, users]) => !inside({ file: target }) && users.some((u) => inside({ file: u }))).map(([t]) => t).sort()
-  }
-
   // What Orchestra actually serves: the committed Own snapshot (OWN-SNAPSHOT.json), not the live store.
   // Its one unit is a curated fixture, not exported from this store: owner atlas-foundation, one T1 invariant.
   const snapshot = { revision: "1a235323", units: ["packages/genesis", ...(R.snapshotUnits ?? [])], catalog: !!R.catalogPresent, packs: { "packages/genesis": { summary: "Genesis owns deterministic bootstrap and governed fact seeding.", owner: "atlas-foundation", tier: "T1", invariants: [{ nodeId: "genesis:deterministic-bootstrap", tier: "T1", claim: "Genesis builds deterministic structural state before governed fact seeding.", freshness: "FRESH" }], advisory: 0, dependents: 0, tokenEstimate: 42, sourceFiles: 3 } } }
@@ -301,12 +295,13 @@
     const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie" }
     const events = []
     ;(A.spawns ?? []).forEach((t) => {
-      t.checkpoints.forEach((c) => events.push({ at: c.at, who: t.member, kind: "memory", ok: c.outcome === "admitted", unit: t.unit, text: c.outcome === "admitted" ? `${names[t.member]} saved a checkpoint` : `${names[t.member]}'s checkpoint was not saved`, refusal: c.refusal, reason: c.reason, ref: c.ref, example: t.example, task: t }))
+      t.checkpoints.forEach((c) => events.push({ at: c.at, who: t.member, kind: "memory", ok: c.outcome === "admitted", outcome: c.outcome, unit: t.unit, text: c.outcome === "admitted" ? `${names[t.member]} saved a checkpoint` : `${names[t.member]}'s checkpoint was not saved`, refusal: c.refusal, reason: c.reason, ref: c.ref, example: t.example, task: t }))
       ;(t.admissions ?? []).forEach((a) => events.push({ at: a.at, who: t.member, kind: "resume", ok: a.ok !== false, unit: t.unit, text: `${names[t.member]} was resumed with its checkpoint`, residency: a.residency, ref: a.ref, example: t.example, task: t }))
       t.transcript.forEach((m) => m.parts.filter((p) => p.type === "tool" && p.tool === "atlas_context").forEach((p) => {
         const input = (() => { try { return JSON.parse(p.input) } catch { return {} } })()
         // A unit outside the published catalog is held, not read; the hold event below covers it.
         if (input.action === "unit" && !snapshot.units.includes(input.unit)) return
+        if (input.action === "anchor") return events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: "anchor", target: input.reference, units: input.units, text: `${names[t.member]} froze ${input.units.length} units for ${input.reference}`, example: t.example, task: t })
         events.push({ at: m.at, who: t.member, kind: "read", ok: true, unit: t.unit, action: input.action, target: input.unit, text: input.action === "catalog" ? `${names[t.member]} read the unit catalog` : `${names[t.member]} read the briefing for ${input.unit}`, research: t.member === "jimmy", example: t.example, task: t })
       }))
       t.checkpoints.filter((c) => (c.entry.failedWith ?? []).some((f) => /AtlasContextHeld/.test(f))).forEach((c) => {
@@ -317,5 +312,5 @@
     return events.sort((a, b) => b.at - a.at)
   }
 
-  A.m = { uses, actor, writable, checks, promoteRun, reconcile, why, health, activity, provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  A.m = { actor, writable, checks, promoteRun, reconcile, why, health, activity, provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

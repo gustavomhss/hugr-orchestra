@@ -89,7 +89,7 @@ window.Atlas = window.Atlas || {}
   const tierWord = { T0: ["Core", "T0 · must be right; only a person ratifies (ratifier name billy)"], T1: ["Ratified", "T1 · load-bearing; ratified with an approval key"], T2: ["Hint", "T2 · advisory; mined or written, nobody ratified it"] }
   A.tier = (t) => `<span class="at-tier-chip" data-tip="${tierWord[t]?.[1] ?? t}">${tierWord[t]?.[0] ?? A.esc(t)}</span>`
   A.band = (x) => A.tier(x.tier)
-  const familyWord = { advisory: ["Stated", "advisory · a grounded sentence with no executable check"], predicate: ["Tested", "predicate · carries a check: HOLDS, BROKEN or NA"], relation: ["Link", "relation · a proven edge: depends-on or calls"], negation: ["Never calls", "negation · nothing in a scope calls a target"], transition: ["Code change", "transition · what changed between two commits"], "test-vacuity": ["Hollow test", "test-vacuity · a test that cannot fail"] }
+  const familyWord = { advisory: ["Stated", "advisory · a grounded sentence with no executable check"], predicate: ["Tested", "predicate · carries the check status it was written with (HOLDS, BROKEN or NA); Atlas does not re-run it"], relation: ["Link", "relation · a proven edge: depends-on or calls"], negation: ["Never calls", "negation · nothing in a scope calls a target"], transition: ["Code change", "transition · what changed between two commits"], "test-vacuity": ["Hollow test", "test-vacuity · a test that cannot fail"] }
   A.family = (f) => `<span class="at-origin" data-tip="${familyWord[f]?.[1] ?? f}">${familyWord[f]?.[0] ?? A.esc(f)}</span>`
   A.familyWord = (f) => familyWord[f]?.[0] ?? f
   A.origin = (x) => (x.scope === "atlas:mined" ? "Mined" : "Written")
@@ -104,9 +104,19 @@ window.Atlas = window.Atlas || {}
     ungrounded: "The code changed since then", unauthorized: "You can't write to this group", unratified: "Needs an approval key",
     contended: "Changed by someone else meanwhile", "untrusted-store": "This store is in git, so Atlas refuses writes", untrusted: "This store is in git, so Atlas refuses writes",
     "closed-slot-violation": "This kind isn't allowed here", "canonical-form violation": "Wording doesn't fit the template", "scanner-blocked": "Looks like it contains a secret",
-    "scanner-unavailable": "No secret scanner is installed", "over-cap": "Too many rule words for this member", ambiguous: "Several checkpoints, pick one", "undetermined-kind": "It doesn't match a memory template",
+    "scanner-unavailable": "No secret scanner is installed", ambiguous: "Several checkpoints, pick one", "undetermined-kind": "It doesn't match a memory template",
     "template-invalid": "A field is missing or has the wrong type", "unit-missing-or-ambiguous": "That unit isn't in the published catalog",
+    "over-cap": "This member has used up its 500 lifetime rule words", "store-partial": "Some memory lines couldn't be read", "store-unavailable": "Memory couldn't be read",
+    "kind-conflation": "It mixes two memory kinds", unowned: "No member owns this write", "logbook-unauthorized": "Only orch may write the logbook", "logbook-duplicate": "This PR already has a logbook entry",
+    "no-own-fold": "No saved checkpoint for this task", "record-not-found": "That checkpoint isn't in memory", "foreign-owner": "That checkpoint belongs to another member", "unit-mismatch": "That checkpoint is for another task",
+    "provider-unconfigured": "Atlas isn't connected to this project", "provider-project-mismatch": "Atlas is connected to another project", "artifacts-invalid": "The published briefings no longer match the code",
+    "source-revision-not-ancestor": "The briefings were built from another branch", "context-dirty": "The working tree has uncommitted files", "plan-grounding-stale": "The plan was made on older briefings",
+    "grounded-plan-required": "The plan names no published units", "territory-unavailable": "That territory isn't in the catalog", "unit-unavailable": "That unit isn't in the published catalog",
+    "skill-bytes-changed": "A briefing file was edited by hand", "anchor-source-drift": "A unit changed after the plan froze it", "knowledge-body-budget-exceeded": "The frozen units are over 128 KiB",
   }
+  // Every memory write ends in one of four outcomes (maestro/atlas-memory.ts MemoryOutcome), plus "already saved".
+  const outcomes = { admitted: ["good", "checkc", "Saved"], reconciled: ["good", "checkc", "Already saved"], refused: ["bad", "xc", "Not saved"], unavailable: ["", "minusc", "Couldn't reach memory"], uncertain: ["warm", "warning", "Unconfirmed"] }
+  A.outcome = (c) => { const [tone, glyph, label] = outcomes[c.reconciled ? "reconciled" : c.outcome] ?? outcomes.refused; return `<span class="at-state ${tone}">${A.icon(glyph)}${label}</span>` }
   A.refusal = (code) => A.REFUSALS[code] ?? code
   A.help = (text) => `<button type="button" class="at-help" data-tip="${A.esc(text)}" aria-label="${A.esc(text)}">?</button>`
   A.hashv = (h) => (h ? `<code class="at-hashv" data-tip="${A.esc(h)}">${A.esc(String(h).slice(0, 8))}…</code>` : "—")

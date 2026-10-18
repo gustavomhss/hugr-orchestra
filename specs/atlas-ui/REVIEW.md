@@ -147,3 +147,30 @@ Coisas reais que um steward usaria e o mock ainda não mostra. Nenhuma contradiz
 | Delta de conhecimento por PR e comparação entre gerações | Histórico | UC-G13, UC-G27 |
 | Calibração (`budget`, taxa off-atlas de `territories`): hoje zero honesto, sem escritor | Settings › Índice | `docs/reference/commands/budget.md` |
 | Planejadores `anchors`, `slots`, `draft` dentro dos diálogos de Reescrever e Classificar | Diálogos | |
+
+## Terceira rodada (2026-10-18)
+
+Três leituras do código (conceitos, memória, comandos + Orchestra), cada achado conferido no arquivo citado.
+
+### O mock estava errado
+
+| Achado | Verdade | Fonte |
+|---|---|---|
+| Connections › Uses calculado dos imports | O Atlas nunca serve `dependencies`; a linha agora diz "Not recorded" | `adapter-io/src/own-source.ts:221` |
+| Glossário "Out of date (still sent) = STALE" | Um fato só é FRESH ou DRIFTED | `knowledge/src/types.ts:38` |
+| "Tested" sugeria checagem viva | O status é o escrito; ninguém reavalia | `knowledge/src/lifecycle/evaluator.ts` sem chamador |
+| Undo depois de indexar regra | Memória é append-only | `memory/src/rules.ts:207` |
+| Teto de 800 para o Maestro | 800 é do actor `orch`; o Maestro não é dono de memória | `adapter-io/src/memory-emit.ts:206` |
+| Resume com escolha "Earlier" | O Maestro não passa ref; vale o último recibo da sessão | `orch/maestro/atlas-resume.ts:76-98` |
+| Checkpoint "Saved / Not saved" | Quatro resultados mais "já salvo" | `orch/tool/atlas-memory.ts:115-137` |
+| Facetas "Not set up yet" | Mission, terrain, ontology e orientation não têm escritor | `adapter-io/src/awareness-store.ts:60-118` |
+| 4 textos de próximo passo | O Orchestra tem 9 e os anexa à mensagem do hold | `orch/maestro/atlas-source.ts:27` |
+| Tooltip "nada pede memória de PR" | O emit anuncia o template PR e o resume aceita `pr` | `orch/tool/atlas-memory.ts:102` |
+
+### Adicionado
+
+Add a fact (anchors → slots → draft → check), Check a claim (`verify-fact`), Proven structure com linhas e abstenções, plano Current/Out of date, evento "froze units" (anchor do Archie), Republish com as pré-condições do script e estado Served/Held, Suggest territories com blast radius, Import, Hot set com orçamento, matriz agente × ferramenta, linhas Health de Memory e Secret scanner, aviso de `.gitignore`, onde a memória mora, formas degradadas do cabeçalho, regra re-indexada idêntica ("Already saved"), teto vitalício na frase de recusa.
+
+### Deixado de fora de propósito
+
+Capacidades construídas só na biblioteca (sem CLI/MCP) e conceitos só de docs: lista em `DESIGN.md` › Fora de propósito.

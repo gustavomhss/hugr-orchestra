@@ -884,3 +884,19 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-ucard-num b { color: var(--mx-text, inherit); font-weight: 600; font-size: 15px; }
 .at-ucard-num .warm { color: var(--mx-warm); }
 .at-ucard > small { font-size: 11.5px; color: var(--mx-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* v5: proven structure groups, agent permissions grid, memory location line */
+.at-struct + .at-struct { margin-block-start: 12px; }
+.at-struct-head { display: flex; align-items: center; gap: 6px; padding-block: 4px; font-size: 13px; }
+.at-struct-head .wf-count { margin-inline-start: auto; }
+.at-acc-label { font-size: 13px; font-weight: 600; }
+.at-linkrow.muted, small.muted, .at-grid .muted { color: var(--mx-dim); }
+.at-memwhere { font-family: var(--mx-sans); display: flex; align-items: center; gap: 6px; margin: -4px 0 14px; flex-wrap: wrap; }
+.at-grid { inline-size: 100%; border-collapse: collapse; font-size: 13px; }
+.at-grid th, .at-grid td { padding: 8px 10px; border-block-end: 1px solid var(--mx-line); text-align: center; }
+.at-grid thead th { color: var(--mx-dim); font-weight: 500; }
+.at-grid tbody th { text-align: start; font-weight: 500; }
+.at-grid td .wf-ic { display: inline-block; vertical-align: middle; }
+.at-grid .wf-ic.good { color: var(--mx-good); }
+.at-grid tbody th { inline-size: 38%; }
+@media (max-width: 640px) { .at-grid th, .at-grid td { padding: 6px 4px; } }

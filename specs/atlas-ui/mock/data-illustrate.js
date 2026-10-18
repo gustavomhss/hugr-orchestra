@@ -101,6 +101,9 @@
       [say(420, "user", "List the ADRs that changed the write gates, phase 1 only."), tool(422, "glob", "docs/adr/*.md"), say(430, "assistant", "Three ADRs changed the gates; stopping at ADR-0008 as the packet asks.")]),
   )
 
+  // Archie freezes the units a plan step depends on (atlas_context anchor): body hashes Relay checks before each step.
+  A.spawns.find((t) => t.unit === "WP-ATLAS-W1").transcript.splice(4, 0, tool(16, "atlas_context", "{\"action\":\"anchor\",\"reference\":\"WP-ATLAS-W1/WP-2\",\"units\":[\"packages/knowledge\",\"packages/retrieval\"]}"))
+
   A.illustrations = {
     // Every project rule, in or out of the header. `age` = records appended to memory.jsonl after it, by any
     // member (tasks included): effective frecency is 0.5^age, so the log keeps at most four rules above 0.10.
@@ -120,8 +123,19 @@
     },
     // Plans whose steps froze Own units by hash (maestro/atlas-knowledge.ts): a changed unit makes them hold.
     pinned: [
-      { plan: "WP-ATLAS-W1", member: "archie", revision: 3, units: ["packages/knowledge", "packages/retrieval", "packages/tools"] },
+      { plan: "WP-ATLAS-W1", member: "archie", revision: 3, units: ["packages/knowledge", "packages/retrieval", "packages/tools"], stale: true },
     ],
+    // Proven facts a working store would hold (relations, negations with an abstention, a transition, a hollow test).
+    structure: {
+      "packages/knowledge": {
+        links: [{ kind: "depends-on", a: "packages/knowledge", b: "packages/contracts" }, { kind: "calls", a: "write/upsert.ts#upsert", b: "kernel/src/hash.ts#blake3" }],
+        never: [{ scope: "packages/knowledge/src", target: "node:fs" }],
+        abstained: [{ scope: "packages/knowledge", target: "process.env", reason: "scope-dynamic" }],
+        changes: [{ unit: "packages/knowledge/src/write", before: "2211f30", after: "80355ab" }],
+        hollow: [{ test: "upsert keeps claims on the same tier", shape: "assertion-only-in-catch" }],
+      },
+      "packages/retrieval": { links: [{ kind: "depends-on", a: "packages/retrieval", b: "packages/index" }], never: [{ scope: "packages/retrieval/src", target: "fetch" }] },
+    },
     prs: {
       archie: [{ prId: "#658", title: "Anchor Atlas knowledge for Archie and Relay", decisions: ["Cap a plan at 8 Own units", "Freeze unit bodies into the anchor by hash"], reviewOutcomes: ["Approved after the Windows time-budget fix"], knowledgeDelta: [{ change: "emitted", unit: "packages/retrieval", facts: 6 }, { change: "superseded", unit: "packages/knowledge", facts: 1 }] }],
       backend: [{ prId: "#664", title: "Accept JSON-text anchor arguments", decisions: ["Parse at the tool boundary, keep the schema strict"], reviewOutcomes: ["Approved, no changes"], knowledgeDelta: [{ change: "none", unit: "—", facts: 0 }] }],

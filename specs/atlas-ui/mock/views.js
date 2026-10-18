@@ -74,7 +74,7 @@
     return {
       crumbs: [["Atlas", "#/overview"], ["Knowledge"]],
       html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas</div><h1>Knowledge</h1><p>${plural(units.length, "unit")} · ${plural(s.facts, "fact")}</p></div></div>
+      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas</div><h1>Knowledge</h1><p>${plural(units.length, "unit")} · ${plural(s.facts, "fact")}</p></div><div class="heading-actions">${A.btn("Check a claim…", "verify", { icon: "shield" })}</div></div>
       <div class="at-toolbar"><label class="at-search wide">${A.icon("search")}<input id="list-search" placeholder="Search every fact by sentence or file" value="${A.esc(q.q ?? "")}" aria-label="Search facts"><kbd>/</kbd></label></div>
       ${text ? `<section class="at-panel"><header class="at-panel-head"><h3>${plural(results.length, "fact")} match</h3>${A.btn("Clear", "go", { value: "#/knowledge" })}</header>${A.seven(results, "search", (x) => factRow(x, state), 25) || '<div class="at-band-empty">Nothing matches.</div>'}</section>`
         : groups.map(([g, title, purpose, open]) => {
@@ -123,22 +123,34 @@
     const kindsBody = `<div class="at-acc-tools"><div class="at-typechips">${[["", here.length], ...kinds].map(([g, n]) => `<button class="at-typechip ${type === g ? "on" : ""}" data-action="go" data-value="${href({ type: g })}">${g || "All"}<span>${n}</span></button>`).join("")}</div>${A.help("Kinds are Atlas slots: Contract, Property, Guidance, Structure. Sorting a fact writes a new fact at (anchor, slot).")}</div>
       ${A.seven(shown, `kind${type}`, (x) => factRow(x, state, { short: true }))}`
 
-    // Proven structure: the other fact families, each from its own read command.
-    const structure = [["Links", "atlas relations · depends-on and calls edges proven from the code index"], ["Never calls", "atlas negations · nothing in the scope calls a target, plus what Atlas couldn't decide"], ["Code changes", "atlas transitions · what changed between two commits"], ["Hollow tests", "atlas test-vacuities · tests that cannot fail"]]
-    const structureBody = structure.map(([label, tip]) => `<div class="at-linkrow static">${A.icon("relations")}<span>${label}</span>${A.help(tip)}<span class="grow"></span><small>none yet</small></div>`).join("") + `<p class="at-stew-intro">This store holds stated facts only. Links come from <b>Derive links</b> in Review.</p>`
+    // Proven structure: the other fact families, each from its own read command (relations, negations, transitions,
+    // test-vacuities). This store holds none; illustrated mode adds marked examples for a few units.
+    const ps = A.illustrations?.structure?.[path] ?? {}
+    const abstainWord = { "scope-open": "the scope can still grow", "target-not-global": "the target isn't one global symbol", "scope-empty": "the scope holds no code", "target-unresolvable": "the target couldn't be found", "escape-open": "code in the scope can reach out dynamically", "scope-dynamic": "code in the scope loads modules at run time" }
+    const hollowWord = { "assertion-only-in-catch": "its only assertion sits in a catch block", "no-assertion-in-test": "it asserts nothing", "assertion-never-invoked": "its assertion never runs" }
+    const ex = '<span class="at-pill">example</span>'
+    const sRow = (glyph, text, tail = "") => `<div class="at-linkrow static">${A.icon(glyph)}<span>${text}</span><span class="grow"></span>${tail}${ex}</div>`
+    const structure = [
+      ["links", "Links", "atlas relations · depends-on and calls edges proven from the code index", (ps.links ?? []).map((l) => sRow("relations", `<code class="at-mono">${A.esc(l.a)}</code> ${l.kind === "calls" ? "calls" : "depends on"} <code class="at-mono">${A.esc(l.b)}</code>`, '<span class="at-state good">Machine-proven</span>'))],
+      ["never", "Never calls", "atlas negations · nothing in the scope calls a target", [...(ps.never ?? []).map((n) => sRow("minusc", `Nothing in <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>`)),
+        ...(ps.abstained ?? []).map((n) => sRow("info", `Couldn't decide whether <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>: ${abstainWord[n.reason] ?? A.esc(n.reason)}`))]],
+      ["changes", "Code changes", "atlas transitions · what changed in a unit between two commits", (ps.changes ?? []).map((c) => sRow("commit", `<code class="at-mono">${A.esc(c.unit)}</code> changed between <code class="at-sha">${A.esc(c.before)}</code> and <code class="at-sha">${A.esc(c.after)}</code>`))],
+      ["hollow", "Hollow tests", "atlas test-vacuities · tests that cannot fail", (ps.hollow ?? []).map((t) => sRow("warning", `“${A.esc(t.test)}” can't fail: ${hollowWord[t.shape] ?? A.esc(t.shape)}`))],
+    ]
+    const structureCount = structure.reduce((n, [, , , rows]) => n + rows.length, 0)
+    const structureBody = structure.map(([id, label, tip, rows]) => `<div class="at-struct"><div class="at-struct-head"><strong>${label}</strong>${A.help(tip)}<span class="wf-count">${rows.length}</span></div>${rows.join("") || '<div class="at-band-empty">None yet.</div>'}</div>`).join("") + `<p class="at-stew-intro">Proven facts come from <b>More producers</b> in Review.</p>`
 
-    // Connections: used by (own sends 8 dependent facts) and uses (dependencies).
-    const dir = q.conn === "uses" ? "uses" : "used"
-    const usesFiles = M().uses(path)
+    // Connections: what depends on it (own `edges.dependents`). Atlas has no forward closure, so "what it uses" is
+    // always empty in the pack (adapter-io/src/own-source.ts) and the UI says so instead of computing it.
     const usedFacts = M().live().filter((x) => b.depFiles.includes(x.file)).sort((a, z) => a.key.localeCompare(z.key))
-    const connBody = `<div class="at-acc-tools"><div class="wf-range"><button aria-pressed="${dir === "used"}" data-action="go" data-value="${href({ conn: "" })}">Used by<span class="wf-count">${usedFacts.length}</span></button><button aria-pressed="${dir === "uses"}" data-action="go" data-value="${href({ conn: "uses" })}">Uses<span class="wf-count">${usesFiles.length}</span></button></div>${A.help("Here from import statements; Atlas reads index.scip. The briefing sends the first 8 dependent facts.")}</div>
-      ${dir === "used" ? (usedFacts.length ? A.seven(usedFacts, "used", (x) => factRow(x, state)) : '<div class="at-band-empty">Nothing outside depends on it.</div>')
-        : (usesFiles.length ? A.seven(usesFiles, "uses", (f) => `<a class="at-linkrow" href="${unitHref(f)}">${A.icon("code")}<code class="at-mono">${A.esc(f)}</code></a>`) : '<div class="at-band-empty">It imports nothing outside itself.</div>')}`
+    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit, from the code index. The briefing sends the first 8 of their facts.")}</div>
+      ${usedFacts.length ? A.seven(usedFacts, "used", (x) => factRow(x, state)) : '<div class="at-band-empty">Nothing outside depends on it.</div>'}
+      <div class="at-linkrow static muted">${A.icon("minusc")}<span>What it uses</span>${A.help("Atlas's index only answers what depends on a unit, so the briefing's dependencies band is always empty.")}<span class="grow"></span><small>Not recorded</small></div>`
 
     const finer = node ? [...node.children.values()].sort((x, y) => x.path.localeCompare(y.path)) : []
     const finerBody = finer.length ? A.seven(finer, "finer", (c) => `<a class="at-linkrow" href="${unitHref(c.path)}">${A.icon(c.file ? "fact" : "folder")}<code class="at-mono">${A.esc(c.name)}</code><span class="grow"></span>${c.drifted ? `<span class="at-sdot warm"></span>` : ""}<small>${plural(c.facts, "fact")}</small></a>`) : `<div class="at-band-empty">Nothing finer: this is a single file.</div>`
     const pins = (A.illustrations?.pinned ?? []).filter((p) => p.units.includes(path))
-    const pinsBody = pins.map((p) => `<a class="at-linkrow" href="#/memory/${p.member}/task/${encodeURIComponent(p.plan)}">${A.icon("lock")}<span>${A.esc(p.plan)} · revision ${p.revision}</span><span class="grow"></span><span class="at-pill">example</span></a>`).join("") + `<p class="at-stew-intro">If this unit changes, these plan steps hold until the plan is re-anchored.</p>`
+    const pinsBody = pins.map((p) => `<a class="at-linkrow" href="#/memory/${p.member}/task/${encodeURIComponent(p.plan)}">${A.icon("lock")}<span>${A.esc(p.plan)} · revision ${p.revision}</span><span class="grow"></span>${p.stale ? `<span class="at-state warm" data-tip="plan-grounding-stale · the snapshot changed after this revision">${A.icon("drift")}Out of date</span>` : `<span class="at-state good">${A.icon("checkc")}Current</span>`}<span class="at-pill">example</span></a>`).join("") + `<p class="at-stew-intro">If this unit changes, these plan steps hold until the plan is recorded again.</p>`
 
     const owner = M().packOwner(path === "(root)" ? "" : unitId)
     const tech = A.tech([
@@ -161,7 +173,7 @@
       html: `<div class="at-page narrow">
       <div class="at-agent-head"><span class="at-avatar unit">${A.icon(node?.file ? "fact" : "stack")}</span><div><div class="mx-eyebrow">${isUnit ? `Unit · ${A.esc(path.includes("/") ? path.split("/")[0] : "repository root")}` : `inside <a class="mx-link" href="${unitHref(unitId)}">${A.esc(unitId.split("/").slice(1).join("/") || unitId)}</a>`}</div><h1 class="mono">${A.esc(isUnit ? (path.split("/").slice(1).join("/") || path) : segs.slice(-2).join("/"))}</h1>
         <p>${terr ? `${A.esc(terr.name)} · ${A.agent(terr.owner)}` : "No territory"}</p></div><span class="grow"></span>
-        ${terr ? "" : A.btn("Declare territory", "territory", { value: path, cap: "R4" })}</div>
+        ${terr ? "" : A.btn("Declare territory", "territory", { value: path, cap: "R4" })}${A.btn("Add fact…", "add-fact", { value: path, icon: "plus", write: true })}</div>
       <div class="at-kpis">
         ${kpi("Facts", here.length, `${here.filter((x) => M().governing(x)).length} ratified`)}
         ${kpi("Up to date", `${pct(fresh, here.length)}%`, here.length - fresh ? `${here.length - fresh} changed` : "nothing changed", here.length - fresh ? "warn" : "")}
@@ -169,8 +181,8 @@
         ${kpi("Depends on it", b.depFactsTotal, b.depFactsTotal ? "facts elsewhere" : "nothing outside")}</div>
       ${acc("unit-brief", "stack", "Briefing", "What an agent gets for this unit", plural(sent, "fact"), briefing, true)}
       ${acc("unit-kinds", "fact", "Facts by kind", "Every fact here, by the kind of claim it makes", `${here.length}`, kindsBody)}
-      ${acc("unit-structure", "relations", "Proven structure", "Links, calls that never happen, code changes, hollow tests", "none yet", structureBody)}
-      ${acc("unit-conn", "graph", "Connections", "What depends on it, and what it uses", `${usedFacts.length} · ${usesFiles.length}`, connBody)}
+      ${acc("unit-structure", "relations", "Proven structure", "Links, calls that never happen, code changes, hollow tests", structureCount ? `${structureCount}` : "none yet", structureBody)}
+      ${acc("unit-conn", "graph", "Connections", "What depends on it", `${usedFacts.length}`, connBody)}
       ${acc("unit-finer", "folder", "Inside", "Folders and files in this unit", `${finer.length}`, finerBody)}
       ${pins.length ? acc("unit-pins", "lock", "Pinned by plans", "Plans that froze this unit", `${pins.length}`, pinsBody) : ""}
       ${tech}
@@ -204,6 +216,7 @@
     </ul>`
     const related = `${same.length ? `<h5>On the same file</h5>${same.slice(0, 4).map((y) => `<div class="ins-rel" data-action="open" data-value="${y.key}" tabindex="0">${A.chip(M().state(y))}<span class="ins-rel-claim">${A.esc(y.claim)}</span></div>`).join("")}` : ""}
       <h5>Same as</h5><div class="at-linkrow static"><span>No equivalent linked</span><span class="grow"></span>${staged ? "" : A.btn("Link…", "link-fact", { value: x.key })}</div>
+      <h5>Broader · narrower</h5><div class="at-linkrow static"><span>None found</span>${A.help("atlas query reports subsumes pairs: a fact whose claim covers another's.")}</div>
       <h5>Files that import it</h5>${importers.slice(0, 5).map((f) => `<a class="at-linkrow" href="#/unit/${encodeURIComponent(f)}">${A.icon("code")}<code class="at-mono">${A.esc(f)}</code></a>`).join("") || '<p class="mx-note">None found in the imports.</p>'}`
     const writers = R().policy[x.scope] ?? []
     const tech = A.tech([
@@ -214,7 +227,7 @@
       ["Obviousness", `${A.esc(x.obvious ?? "—")} · by ${A.esc(x.obviousBy ?? "harness-predicate")} · the check is pinned to false, so every mined fact is “obvious”`],
       ["Seal · witness", "none · none"], ["supersededBy · sameAs", "none · none"],
       ["Generation", staged ? `staging ${R().stagingGen}` : `projection ${R().gen}`], x.why ? ["answerRef", A.hashv(x.why)] : null,
-      ["Re-check proof", `${A.btn("Re-check", "verify-fact", { value: x.key })}`],
+      ["Check a claim", `${A.btn("Check against the code…", "verify", { value: x.file })}`],
     ])
     const body = `
       <p class="ins-claim">${A.esc(x.claim)}</p>
