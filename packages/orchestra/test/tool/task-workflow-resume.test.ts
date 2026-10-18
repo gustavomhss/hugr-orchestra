@@ -2,7 +2,7 @@ import { afterEach, expect } from "bun:test"
 import path from "node:path"
 import { mkdir } from "node:fs/promises"
 import { and, eq } from "drizzle-orm"
-import { Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
@@ -67,7 +67,8 @@ afterEach(async () => {
 const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make("test-model") }
 const token = "arm-held"
 
-const setup = Effect.fn("TaskWorkflowResumeTest.setup")(function* () {
+// `hook` changes the tree inside writePaths after the reservation and before the model, as a session-start hook can.
+const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: { hook?: boolean } = {}) {
   const sessions = yield* Session.Service
   const events = yield* EventV2Bridge.Service
   const chat = yield* sessions.create({ title: "Workflow resume" })
@@ -152,14 +153,19 @@ const setup = Effect.fn("TaskWorkflowResumeTest.setup")(function* () {
   const def = yield* TaskTool.pipe(Effect.flatMap((tool) => tool.init()),
     Effect.provideService(ArsenalCompletion.NativeHost, completionHost))
 
-  // The child's turn as the workflow loop runs it: one settled reply, then the settlement through the native host.
+  // The child's turn as the workflow loop runs it: the reservation check before the model, one reply that leaves an
+  // uncommitted edit inside writePaths, then the settlement through the native host.
   const services = yield* Effect.context<Session.Service | Database.Service>()
   const prompts = { count: 0 }
+  const edit = (text: string) => Effect.promise(() => Bun.write(path.join(chat.directory, "src", "card.ts"), text))
   const ops: TaskPromptOps = {
     cancel: () => Effect.void,
-    resolvePromptParts: (template) => Effect.succeed([{ type: "text", text: template }]),
-    prompt: (input) => Effect.gen(function* () {
+    resolvePromptParts: (template) =>
+      Effect.as(options.hook ? edit("// hook\n") : Effect.void, [{ type: "text" as const, text: template }]),
+    prompt: (input, prompt) => Effect.gen(function* () {
+      yield* prompt?.beforeModel ?? Effect.void
       prompts.count++
+      yield* edit(`export const card = ${prompts.count}\n`)
       const sessions = yield* Session.Service
       const asked = yield* sessions.updateMessage({ id: input.messageID ?? MessageID.ascending(), role: "user",
         sessionID: input.sessionID, agent: "backend", model, time: { created: Date.now() } })
@@ -191,14 +197,20 @@ const setup = Effect.fn("TaskWorkflowResumeTest.setup")(function* () {
       Effect.exit)
   })
 
-  // The first dispatch: the reply settles, the cold review finds no code review, and the Task returns the hold.
-  const held = yield* call()
+  return { chat, prompts, reviewed, call }
+})
+
+// The first dispatch: the reply settles, the cold review finds no code review, and the Task returns the hold.
+const setup = Effect.fn("TaskWorkflowResumeTest.setup")(function* () {
+  const f = yield* fixture()
+  const sessions = yield* Session.Service
+  const held = yield* f.call()
   expect(Exit.isFailure(held)).toBe(true)
-  expect(prompts.count).toBe(1)
-  const child = SessionID.make((yield* sessions.children(chat.id))[0]?.id ?? "ses_missing")
+  expect(f.prompts.count).toBe(1)
+  const child = SessionID.make((yield* sessions.children(f.chat.id))[0]?.id ?? "ses_missing")
   const logical = yield* LogicalTask.read(child)
   if (!logical) throw new Error("fixture child has no logical task")
-  return { child, taskID: logical.taskId, prompts, reviewed, call }
+  return { child, taskID: logical.taskId, prompts: f.prompts, reviewed: f.reviewed, call: f.call }
 })
 
 it.instance("a held workflow child resumed with the approved input is prompted again and settles the held step", () =>
@@ -210,12 +222,23 @@ it.instance("a held workflow child resumed with the approved input is prompted a
     expect(holds[0]).toMatchObject({ executionSessionID: f.child, token, expected: { attempt: 0, ledgerSeq: -1 } })
 
     f.reviewed.value = true
+    // The held turn left its edit uncommitted, so the tree no longer equals the approved context; the continuation
+    // runs on the workers' result instead of failing context-not-current.
     const resumed = yield* f.call({ task_id: f.taskID })
     expect(f.prompts.count).toBe(2)
     expect(Exit.isSuccess(resumed)).toBe(true)
     // The continuation graded the held step, so a later resume has nothing held to continue and only replays.
     yield* f.call({ task_id: f.taskID })
     expect(f.prompts.count).toBe(2)
+  }), { git: true })
+
+it.instance("an authorized dispatch that is not a continuation still requires the approved tree before the model", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture({ hook: true })
+    const exit = yield* f.call()
+    expect(Exit.isFailure(exit)).toBe(true)
+    if (Exit.isFailure(exit)) expect(Cause.pretty(exit.cause)).toContain("MaestroDispatchRejected: context-not-current")
+    expect(f.prompts.count).toBe(0)
   }), { git: true })
 
 const unheld = {
