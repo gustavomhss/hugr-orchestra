@@ -325,7 +325,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     return props.source.client
       .unpublish(base())
       .then((item) => rememberDocument(props.source.queryClient(), props.source.key("documents"), item, draft.active))
-      // An unpublished hook's installs stop firing; the installs list shows them as unpublished.
       .then(() => kind === "hook" && props.source.invalidate("installs"))
       .finally(draft.release)
   }
@@ -365,7 +364,6 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (!draft.active()) return
     if (save.dirty || save.state !== "saved") throw new Error(save.error || copy.t("orchestra.workflows.export.unsaved"))
     const version = base().versionId
-    // A workflow downloads as its authoring document (Import reads it); a hook keeps its compiled export.
     const value = kind === "workflow"
       ? workflowFile({ ...base(), description: description(), ...documentFields(flow()) })
       : await props.source.client.definition(props.id)
