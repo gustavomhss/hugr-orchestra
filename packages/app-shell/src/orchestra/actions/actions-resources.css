@@ -1,4 +1,9 @@
 /* Actions resources, artifacts and caches, matched to the approved Actions mock (resources.css). */
+/* Resources mount straight in .actions-main: take the same centered, padded column as the library and run views. */
+.actions-page .actions-resources.resources-layout { inline-size: 100%; max-inline-size: 1320px; margin-inline: auto; padding: 28px 24px 42px; }
+.actions-page .actions-resources.resources-layout > .ar-surface { min-inline-size: 0; }
+/* The artifacts section reuses .actions-detail; inside the resources column it must not add a second padding. */
+.actions-page .actions-resources .detail-artifacts { max-inline-size: none; padding: 0; }
 .actions-page .actions-resources .ar-head { box-shadow: var(--mx-highlight, none); }
 .actions-page .actions-resources .ar-head h2 { margin: 0; color: var(--actions-strong); letter-spacing: -.02em; }
 .actions-page .actions-resources .ar-head p { margin: 5px 0 0; line-height: 1.6; }
@@ -37,6 +42,7 @@
   .actions-page .actions-resources .ar-schedules .ar-table { --ar-actions: 210px; }
 }
 @media (max-width: 620px) {
+  .actions-page .actions-resources.resources-layout { padding-inline: 12px; }
   .actions-page .actions-resources .ad-scope-field .mx-field { flex: 1; }
   .actions-page .actions-resources .ad-scope-field :is(input, select) { inline-size: 100%; }
 }
