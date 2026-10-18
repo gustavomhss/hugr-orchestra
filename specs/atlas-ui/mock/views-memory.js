@@ -28,75 +28,109 @@
     return { tasks: ts.length, invocations: ts.reduce((n, t) => n + t.steps.filter((s) => s.kind !== "compact").length, 0), checkpoints: ts.reduce((n, t) => n + t.checkpoints.length, 0), refused: ts.reduce((n, t) => n + t.checkpoints.filter((c) => c.outcome !== "admitted").length, 0) }
   }
 
-  const head = (member, name, role, bound) => {
-    const s = A.memoryStats(member)
-    return `<div class="at-agent-head"><span class="at-avatar">${name[0]}</span><div><div class="mx-eyebrow">Atlas · Memory</div><h1>${name}</h1><p>${role}${bound ? "" : " · memory not bound in Orchestra"}</p></div>
-      ${bound ? `<div class="at-head-stats"><span><b>${s.tasks}</b> tasks</span><span><b>${s.invocations}</b> invocations</span><span><b>${s.checkpoints}</b> checkpoints${s.refused ? ` · ${s.refused} refused` : ""}</span><span><b>0</b>/12 stewardship rules</span></div>` : ""}</div>`
-  }
+  // A collapsible section: title, one-line purpose, a summary that stays visible when closed.
+  const acc = (id, glyph, title, purpose, summary, body, open = false) =>
+    `<details class="at-acc" data-acc="${id}" ${open ? "open" : ""}><summary><span class="at-acc-ic">${A.icon(glyph)}</span><span class="at-acc-t"><strong>${title}</strong><small>${purpose}</small></span><span class="at-acc-sum">${summary}</span>${A.icon("chev", "at-acc-chev")}</summary><div class="at-acc-body">${body}</div></details>`
+  const kpi = (label, value, foot, tone = "") => `<div class="at-kpi ${tone}"><span>${label}</span><b>${value}</b><small>${foot}</small></div>`
+  const dot = (tone, n, label) => (n ? `<span class="at-kdot ${tone}"><i></i>${n} ${label}</span>` : "")
+
+  const head = (name, role, bound, actions = "") => `<div class="at-agent-head"><span class="at-avatar">${name[0]}</span><div><div class="mx-eyebrow">Atlas · Memory</div><h1>${name}</h1><p>${role}</p></div>
+    <span class="grow"></span>${bound ? `<span class="at-pill good">${A.icon("checkc")}Memory on</span>` : `<span class="at-pill">${A.icon("minusc")}Memory not bound</span>`}${actions}</div>`
 
   /* ---------- Member page ---------- */
   const memberPage = (state, member) => {
     const [name, role] = members[member]
     const bound = M().memory[member].bound
+    const crumbs = [["Atlas", "#/overview"], ["Memory", "#/memory/backend"], [name]]
+    if (!bound) return { crumbs, html: `<div class="at-page narrow">${head(name, role, false)}<div class="at-clear">${A.icon("memory")}<strong>Maestro's memory is defined but not bound</strong><p>Atlas gives the orchestrator its own stewardship rules, task memory and a logbook: one entry per PR with what shipped, the decisions and why, trade-offs, risks and open threads. Orchestra binds memory only for Backend, Jimmy and Archie today.</p></div></div>` }
     const ts = tasksOf(member)
-    const showHeader = state.query.header === "1"
-    const raw = `<atlas-header member="${member}" rules="0">\nAwareness:\n${M().awareness.map((a) => `  ${a.facet}: ${a.state === "seeded" ? a.text : "UN-SEEDED"}`).join("\n")}\nOrientation:\n  (empty)\nProject rules:\n  (none)\n</atlas-header>`
-    if (!bound) return {
-      crumbs: [["Atlas", "#/overview"], ["Memory", "#/memory/backend"], [name]],
-      html: `<div class="at-page narrow">${head(member, name, role, false)}<div class="at-clear">${A.icon("memory")}<strong>Maestro's memory is defined but not bound</strong><p>Atlas gives the orchestrator its own stewardship rules, task memory and a logbook (one entry per PR: what shipped, decisions and why, trade-offs, risks, open threads). Orchestra binds memory only for Backend, Jimmy and Archie today.</p></div></div>`,
-    }
+    const st = A.memoryStats(member)
+    const by = (label) => ts.filter((t) => status(t)[2] === label).length
     const ls = lessons(member)
+    const filter = state.query.status ?? ""
+    const shown = [...ts].reverse().filter((t) => !filter || status(t)[2] === filter)
+    const last = ts.length ? ts.at(-1).steps.at(-1).end ?? ts.at(-1).steps.at(-1).start : null
+    const saved = st.checkpoints - st.refused
+    const raw = `<atlas-header member="${member}" rules="0">\nAwareness:\n${M().awareness.map((a) => `  ${a.facet}: ${a.state === "seeded" ? a.text : "UN-SEEDED"}`).join("\n")}\nOrientation:\n  (empty)\nProject rules:\n  (none)\n</atlas-header>`
+
+    const kpis = `<div class="at-kpis three">
+      ${kpi("Tasks", st.tasks, ts.length ? `${dot("good", by("Done"), "done")}${dot("warm", by("Paused"), "paused")}${dot("bad", by("Blocked"), "blocked")}` : "none yet")}
+      ${kpi("Checkpoints", saved, st.checkpoints ? `${st.refused} refused · ${st.invocations} calls` : "—", st.refused ? "warn" : "")}
+      ${kpi("Stewardship", "0<small> / 12</small>", ls.length ? `${ls.length} suggestions waiting` : "no rules yet")}</div>`
+
+    const taskRows = shown.map((t) => {
+      const [tone, glyph, label] = status(t)
+      const c = latest(t)
+      const inv = t.steps.filter((s) => s.kind !== "compact").length
+      const refused = t.checkpoints.filter((x) => x.outcome !== "admitted").length
+      const title = (t.title ?? t.steps[0]?.packet.split("\n").find((l) => /Phase 1/.test(l)) ?? "").replace(/^- Phase 1 \(now\): /, "").replace(/ \(@backend-label subagent\)/, "")
+      return `<a class="at-task" href="#/memory/${member}/task/${encodeURIComponent(t.unit)}"><span class="at-state ${tone}">${A.icon(glyph)}${label}</span>
+        <span class="at-task-main"><span class="at-task-title"><code>${A.esc(t.unit)}</code>${A.esc(title.replace(/`/g, "").slice(0, 80))}</span><small class="clamp1">${A.esc(c?.entry.stoppedAt ?? "No checkpoint")}</small></span>
+        <span class="at-task-meta"><span>${inv} calls</span><span>${day(t.steps[0].start)}</span></span>${A.icon("arrow")}</a>`
+    }).join("")
+    const tasks = ts.length
+      ? `<div class="at-acc-tools"><div class="wf-range">${[["", "All", ts.length], ["Done", "Done", by("Done")], ["Paused", "Paused", by("Paused")], ["Blocked", "Blocked", by("Blocked")]].map(([v, l, n]) => `<button aria-pressed="${filter === v}" data-action="go" data-value="#/memory/${member}${v ? `?status=${v}` : ""}">${l}<span class="wf-count">${n}</span></button>`).join("")}</div></div>${taskRows || '<div class="at-band-empty">No tasks with this status.</div>'}`
+      : `<div class="at-band-empty">No tasks yet. The first time ${name} is dispatched with a task unit, it shows up here.</div>`
+
+    const header = `<div class="at-slabs">
+        <div class="at-slab"><span>Awareness <em>shared</em></span><b>1 of 5 facets</b><small>taste from CONVENTIONS.md; mission, constitution, terrain, ontology not seeded</small></div>
+        <div class="at-slab"><span>Orientation <em>shared</em></span><b>Empty</b><small>nothing writes the orientation log yet</small></div>
+        <div class="at-slab"><span>Rules <em>${name}'s</em></span><b>0 of 12</b><small>stewardship above</small></div></div>
+      <details class="at-sub-acc"><summary>${A.icon("chev")}<span>Exact text injected</span></summary><pre class="at-raw">${A.esc(raw)}</pre></details>`
+    const stewardship = `<p class="at-stew-intro">Carried into every turn. One line each, up to 12.</p>
+      <div class="at-stew-rules"><div class="at-stew-empty"><strong>No rules yet</strong></div>${A.btn("Add rule", "promote-rule", { icon: "plus" })}</div>
+      ${ls.length ? `<details class="at-sub-acc" data-acc="${member}-lessons"><summary>${A.icon("chev")}<span>Suggested from its lessons</span><span class="wf-count">${ls.length}</span></summary>
+        ${ls.map((l) => `<div class="at-lesson"><div class="grow">${A.esc(l.lesson)}<small>from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(l.unit)}">${A.esc(l.unit)}</a></small></div>${A.btn("Make it a rule", "promote-rule", { value: l.lesson })}</div>`).join("")}</details>` : ""}
+      <details class="at-sub-acc" data-acc="${member}-turn"><summary>${A.icon("chev")}<span>What rides in every turn</span></summary>${header}</details>`
+
     return {
-      crumbs: [["Atlas", "#/overview"], ["Memory", "#/memory/backend"], [name]],
-      html: `<div class="at-page narrow">${head(member, name, role, true)}
-      <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("shield")}Stewardship</h3><small>Project memory: short, scoped know-how ${name} carries into every turn — what someone who has worked on this code for years just knows. At most 12 rules, about 500 words; rules it stops using fade out and are archived.</small></div>${A.meter("Words", 0, 500, "warm")}</header>
-        <div class="at-band-empty left" style="padding:14px 15px">No stewardship rules yet. ${name} starts every turn with only the shared header.</div>
-        ${ls.length ? `<div class="at-subhead">From ${name}'s own task lessons · could become stewardship</div>${ls.map((l) => `<div class="at-lesson"><div class="grow">${A.esc(l.lesson)}<small>lesson from <a class="mx-link" href="#/memory/${member}/task/${encodeURIComponent(l.unit)}">${A.esc(l.unit)}</a></small></div>${A.btn("Make it a rule…", "promote-rule", { value: l.lesson })}</div>`).join("")}` : ""}
-        <footer class="at-card-foot"><span class="grow">The turn header also carries Awareness and Orientation, which are shared by every member.</span>${A.btn(showHeader ? "Hide header" : "What it carries every turn", "go", { value: `#/memory/${member}${showHeader ? "" : "?header=1"}` })}</footer>
-        ${showHeader ? `<div class="at-panel-body"><pre class="at-raw">${A.esc(raw)}</pre></div>` : ""}</section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("check")}Tasks</h3><small>One memory per dispatched task. Each keeps ${name}'s session (respawnable), every invocation of it, and the checkpoints ${name} wrote: what it tried, what failed, where it stopped, the lesson. Resuming the task hands the latest checkpoint back.</small></div><span class="wf-count">${ts.length}</span></header>
-        ${ts.length ? `<table class="at-grid-table"><thead><tr><th>Task</th><th>Status</th><th>Where it stopped</th><th class="num">Invocations</th><th class="num">Checkpoints</th><th>When</th></tr></thead><tbody>
-        ${[...ts].reverse().map((t) => { const [tone, glyph, label] = status(t); const c = latest(t); const inv = t.steps.filter((s) => s.kind !== "compact").length; const refused = t.checkpoints.filter((x) => x.outcome !== "admitted").length
-          return `<tr data-action="go" data-value="#/memory/${member}/task/${encodeURIComponent(t.unit)}" tabindex="0"><td><code class="at-mono">${A.esc(t.unit)}</code><small class="at-sub">${A.esc((t.title ?? t.steps[0]?.packet.split("\n").find((l) => /Phase 1/.test(l)) ?? "").replace(/^- Phase 1 \(now\): /, "").replace(/ \(@backend-label subagent\)/, "").slice(0, 70))}</small></td><td><span class="at-state ${tone}">${A.icon(glyph)}${label}</span></td><td class="at-cell-text">${A.esc(c?.entry.stoppedAt ?? "—")}</td><td class="num">${inv}</td><td class="num">${t.checkpoints.length - refused}${refused ? `<small class="at-sub bad">${refused} refused</small>` : ""}</td><td>${day(t.steps[0].start)} ${time(t.steps[0].start)}</td></tr>` }).join("")}
-        </tbody></table>` : `<div class="at-band-empty left" style="padding:16px 15px">No tasks yet. The first time ${name} is dispatched with a task unit, its session and checkpoints appear here.</div>`}</section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("branch")}Pull requests</h3><small>One memory per PR: decisions, review outcomes and the knowledge it changed. Read only when ${name} asks for it.</small></div><span class="wf-count">0</span></header><div class="at-band-empty left" style="padding:14px 15px">No PR memory yet.</div></section>
-      <p class="mx-note">Stored in <code>.atlas/memory.jsonl</code> in the worktree, append-only and versioned with the repository; every write is scanned for secrets first. Only ${name} reads it.</p></div>`,
+      crumbs,
+      html: `<div class="at-page narrow">${head(name, role, true)}${kpis}
+        ${acc(`${member}-tasks`, "check", "Tasks", "Every time it was called on a piece of work", `last ${ts.length ? day(last) : "—"}`, tasks, true)}
+        ${acc(`${member}-stew`, "shield", "Stewardship", "What it always knows about this project", ls.length ? `0 rules · ${ls.length} suggestions` : "0 rules", stewardship)}</div>`,
     }
   }
 
   /* ---------- Task page ---------- */
   const taskPage = (state, member, unit) => {
     const t = tasksOf(member).find((x) => x.unit === unit)
-    const [name] = members[member]
-    if (!t) return { crumbs: [["Atlas", "#/overview"], ["Memory", `#/memory/${member}`], [unit]], html: `<div class="at-page narrow">${A.empty("No such task", "It may belong to another member.", A.btn("Back", "go", { value: `#/memory/${member}` }))}</div>` }
+    const [name, role] = members[member]
+    const crumbs = [["Atlas", "#/overview"], ["Memory", `#/memory/${member}`], [name, `#/memory/${member}`], [unit, null, true]]
+    if (!t) return { crumbs, html: `<div class="at-page narrow">${A.empty("No such task", "It may belong to another member.", A.btn("Back", "go", { value: `#/memory/${member}` }))}</div>` }
     const [tone, glyph, label] = status(t)
     const c = latest(t)
     const at = (ms) => new Date(ms).toISOString()
     const inStep = (s, ms) => { const x = at(ms); return x >= s.start && (!s.end || x <= s.end) }
     const total = secs(t.steps[0].start, t.steps.at(-1).end)
+    const inv = t.steps.filter((s) => s.kind !== "compact").length
+    const refused = t.checkpoints.filter((x) => x.outcome !== "admitted").length
     const fold = (e) => `<dl class="at-kv wide"><dt>Tried</dt><dd>${(e.attempted ?? []).map(A.esc).join("<br>") || "—"}</dd><dt>Failed with</dt><dd>${(e.failedWith ?? []).length ? e.failedWith.map(A.esc).join("<br>") : "<small>nothing</small>"}</dd><dt>Stopped at</dt><dd>${A.esc(e.stoppedAt ?? "—")}</dd><dt>Lesson</dt><dd class="at-lesson-text">${A.esc(e.lesson ?? "—")}</dd></dl>`
+    const steps = `<ol class="at-steps">${t.steps.map((s) => {
+      const made = t.checkpoints.filter((x) => inStep(s, x.at))
+      const given = t.admissions.filter((x) => inStep(s, x.at))
+      return `<li class="at-step ${s.kind}"><span class="at-step-dot">${A.icon(stepGlyph[s.kind] ?? "dot")}</span><div class="at-step-body">
+        <div class="at-step-head"><strong>${stepName[s.kind] ?? s.kind}</strong><small>${day(s.start)} ${time(s.start)} · ${dur(secs(s.start, s.end))}${s.model ? ` · ${A.esc(s.model.split("/").at(-1))}` : ""}</small></div>
+        ${given.map((g) => `<div class="at-given">${A.icon("memory")}Atlas handed back checkpoint <code>${A.esc((g.ref?.eventId ?? "").slice(0, 12))}…</code></div>`).join("")}
+        ${s.kind === "compact" ? `<p class="at-step-text">The session was compacted; nothing changed.</p>` : `<p class="at-step-text clamp2">${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim())}</p>
+        <details class="at-sub-acc inline"><summary>${A.icon("chev")}<span>Packet from Maestro</span></summary><div class="at-reasoning">${A.esc(s.packet)}</div></details>`}
+        ${made.map((x) => `<div class="at-made ${x.outcome}">${A.icon(x.outcome === "admitted" ? "checkc" : "xc")}${x.outcome === "admitted" ? "Checkpoint saved" : `Checkpoint refused · <code>${A.esc(x.refusal)}</code>`}</div>`).join("")}
+      </div></li>` }).join("")}</ol>`
+    const all = t.checkpoints.map((x) => `<details class="at-ckpt ${x.outcome}"><summary><span class="at-state ${x.outcome === "admitted" ? "good" : "bad"}">${A.icon(x.outcome === "admitted" ? "checkc" : "xc")}${x.outcome === "admitted" ? "saved" : "refused"}</span><span class="grow">${A.esc(x.entry.stoppedAt ?? x.reason)}</span>${x === c ? '<span class="at-pill warm">latest</span>' : ""}<small>${time(at(x.at))}</small></summary><div class="at-panel-body">${x.outcome === "admitted" ? fold(x.entry) : `<p class="at-step-text"><code>${A.esc(x.refusal)}</code> — ${A.esc(x.reason)}</p>`}</div></details>`).join("")
     return {
-      crumbs: [["Atlas", "#/overview"], ["Memory", `#/memory/${member}`], [name, `#/memory/${member}`], [unit, null, true]],
+      crumbs,
       html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">${name} · task memory</div><h1 class="mono">${A.esc(unit)}</h1>
-        <div class="at-scope-facts"><span class="at-state ${tone}">${A.icon(glyph)}${label}</span><span>${plural(t.steps.filter((s) => s.kind !== "compact").length, "invocation")} · ${dur(total)}</span><span>${A.num(tokens(t))} tokens</span><span>dispatched by ${A.agent("maestro")}</span></div></div>
-        <div class="heading-actions">${A.btn("Open transcript", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}/transcript`, icon: "chat" })}${A.btn("Respawn with this memory", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div></div>
-      <section class="at-panel at-stopped"><header class="at-panel-head"><div><h3>${A.icon("memory")}Latest checkpoint</h3><small>This is what ${name} gets back when the task is resumed${c?.ref ? ` · record <code>${A.esc(c.ref.slice(0, 12))}…</code>` : ""}</small></div></header><div class="at-panel-body">${c ? fold(c.entry) : '<div class="at-band-empty left">No admitted checkpoint, so a resume would be refused.</div>'}</div></section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("history")}Invocations</h3><small>Every time Maestro called ${name} on this task, in order. The seat session stays the same; each call adds to it.</small></div></header><ol class="at-steps">
-        ${t.steps.map((s, i) => {
-          const made = t.checkpoints.filter((x) => inStep(s, x.at))
-          const given = t.admissions.filter((x) => inStep(s, x.at))
-          return `<li class="at-step ${s.kind}"><span class="at-step-dot">${A.icon(stepGlyph[s.kind] ?? "dot")}</span><div class="at-step-body">
-            <div class="at-step-head"><strong>${stepName[s.kind] ?? s.kind}</strong><small>${day(s.start)} ${time(s.start)} · ${dur(secs(s.start, s.end))}${s.model ? ` · ${A.esc(s.model.split("/").at(-1))}` : ""}</small></div>
-            ${given.map((g) => `<div class="at-given">${A.icon("memory")}Atlas handed back checkpoint <code>${A.esc((g.ref?.eventId ?? "").slice(0, 12))}…</code> · ${A.esc(g.residency)}</div>`).join("")}
-            ${s.kind === "compact" ? `<p class="at-step-text">The seat session was compacted. ${A.esc(s.result || "No change.")}</p>` : `<details class="at-why-details"><summary>${A.icon("chev")}Packet from Maestro</summary><div class="at-reasoning">${A.esc(s.packet)}</div></details>
-            <p class="at-step-text">${A.esc((s.result.split("TEXT:")[1] ?? s.result).replace(/\*\*/g, "").trim().slice(0, 420))}${s.result.length > 420 ? "…" : ""}</p>`}
-            ${made.map((x) => `<div class="at-made ${x.outcome}">${A.icon(x.outcome === "admitted" ? "checkc" : "xc")}${x.outcome === "admitted" ? `Checkpoint saved <code>${A.esc((x.ref ?? "").slice(0, 12))}…</code>` : `Checkpoint refused · <code>${A.esc(x.refusal)}</code>`}<span class="grow"></span><small>${A.esc(x.entry.stoppedAt ? x.entry.stoppedAt.slice(0, 70) : x.reason.slice(0, 70))}</small></div>`).join("")}
-          </div></li>` }).join("")}</ol></section>
-      <section class="at-panel"><header class="at-panel-head"><div><h3>${A.icon("stack")}All checkpoints</h3><small>Append-only. Refused writes never replace the latest one; the newest admitted checkpoint is what a resume hands back.</small></div><span class="wf-count">${t.checkpoints.length}</span></header>
-        ${t.checkpoints.map((x, i) => `<details class="at-ckpt ${x.outcome}" ${x === c ? "open" : ""}><summary><span class="at-state ${x.outcome === "admitted" ? "good" : "bad"}">${A.icon(x.outcome === "admitted" ? "checkc" : "xc")}${x.outcome}</span><span class="grow">${A.esc(x.entry.stoppedAt ?? x.reason)}</span>${x === c ? '<span class="at-pill warm">latest</span>' : ""}<small>${time(at(x.at))}</small></summary><div class="at-panel-body">${x.outcome === "admitted" ? fold(x.entry) : `<p class="at-step-text"><code>${A.esc(x.refusal)}</code> — ${A.esc(x.reason)}</p>`}</div></details>`).join("")}</section>
-      ${t.diff ? `<section class="at-panel"><header class="at-panel-head"><h3>${A.icon("code")}Files changed</h3></header><div class="at-panel-body"><pre class="at-raw">${A.esc(t.diff)}</pre></div></section>` : ""}
-      <p class="mx-note">Seat session <code>${A.esc(t.seatSession)}</code> · task <code>${A.esc(t.taskRef)}</code> · dispatched from <code>${A.esc(t.maestroSession)}</code>. From the live continuity run ${A.esc(t.run)} (Oct 11).</p></div>`,
+      <div class="at-agent-head"><span class="at-avatar">${name[0]}</span><div><div class="mx-eyebrow">${name} · task memory</div><h1 class="mono">${A.esc(unit)}</h1><p>${A.esc((t.title ?? t.steps[0]?.packet.split("\n").find((l) => /Phase 1/.test(l)) ?? role).replace(/^- Phase 1 \(now\): /, "").replace(/ \(@backend-label subagent\)/, "").replace(/`/g, ""))}</p></div><span class="grow"></span>
+        ${A.btn("Transcript", "go", { value: `#/memory/${member}/task/${encodeURIComponent(unit)}/transcript`, icon: "chat" })}${A.btn("Respawn with this memory", "respawn", { value: `${member}|${unit}`, icon: "play", primary: true })}</div>
+      <div class="at-kpis">
+        ${kpi("Status", `<span class="at-state ${tone}">${A.icon(glyph)}${label}</span>`, c ? "from its latest checkpoint" : "no checkpoint")}
+        ${kpi("Calls", inv, `${(tokens(t) / 1000).toFixed(0)}k tokens`)}
+        ${kpi("Time", dur(total), `${day(t.steps[0].start)} · ${t.steps[0].model ? A.esc(t.steps[0].model.split("/").at(-1)) : ""}`)}
+        ${kpi("Checkpoints", t.checkpoints.length - refused, refused ? `${refused} refused` : "none refused", refused ? "warn" : "")}</div>
+      ${acc(`task-latest`, "memory", "Where it stopped", `What it gets back on respawn`, c ? A.esc((c.entry.stoppedAt ?? "").slice(0, 60)) + "…" : "no checkpoint", c ? fold(c.entry) : '<div class="at-band-empty">No saved checkpoint, so a resume would be refused.</div>', true)}
+      ${acc(`task-calls`, "history", "Calls", "Each time Maestro called it", `${inv} calls · ${dur(total)}`, steps, true)}
+      ${acc(`task-ckpts`, "stack", "Checkpoint history", "Every write, refused ones too", `${t.checkpoints.length - refused} saved${refused ? ` · ${refused} refused` : ""}`, all)}
+      ${t.diff ? acc(`task-diff`, "code", "Files changed", "What it changed in the repository", "counter.ts", `<pre class="at-raw">${A.esc(t.diff)}</pre>`) : ""}
+      <p class="at-foot-id">session <code>${A.esc(t.seatSession)}</code></p></div>`,
     }
   }
 

@@ -51,6 +51,12 @@
       const treeKeep = main.querySelector(".at-tree-pane")?.scrollTop ?? 0
       main.innerHTML = view.html
       main.classList.toggle("flush", !!view.flush)
+      // Remember which sections the viewer opened or closed (per section id, this browser only).
+      main.querySelectorAll("details[data-acc]").forEach((d) => {
+        const key = `atlas-acc:${d.dataset.acc}`
+        try { const v = localStorage.getItem(key); if (v !== null) d.open = v === "1" } catch {}
+        d.addEventListener("toggle", () => { try { localStorage.setItem(key, d.open ? "1" : "0") } catch {} })
+      })
       const tree = main.querySelector(".at-tree-pane")
       if (tree) {
         tree.scrollTop = treeKeep
