@@ -42,7 +42,6 @@ import { TaskReport } from "./task-report"
 import { Seats } from "@/maestro/seats"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { TaskBackground } from "./task-background"
-import { TaskWorkflow } from "./task-workflow"
 import { TaskWorkObservation } from "./task-work-observation"
 
 export interface TaskPromptOps {
@@ -211,7 +210,7 @@ export const TaskTool = Tool.define(
         )
       }
       // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
-      const workflow = yield* TaskWorkflow.prepare({ completion, workflow: params.workflow,
+      const workflow = yield* WorkflowBinding.prepareTask({ completion, workflow: params.workflow,
         governed: params.governed !== undefined, authorizationID: params.authorizationID, resumed, sessionID: ctx.sessionID,
         assistantMessageID: ctx.messageID, callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
         writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model })
@@ -450,7 +449,7 @@ export const TaskTool = Tool.define(
           assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
         } } : {}),
-      }).pipe(Effect.provideService(WorkflowBinding.Activity, TaskWorkflow.activity(background, status)))
+      }).pipe(Effect.provideService(WorkflowBinding.Activity, WorkflowBinding.taskActivity(background, status)))
 
       if (params.governed) {
         const governed = params.governed
@@ -488,8 +487,8 @@ export const TaskTool = Tool.define(
 
       yield* ctx.metadata({ title: params.description, metadata })
 
-      // A never-prompted reserved child runs now; a step held for code review continues (TaskWorkflow.reservedChild).
-      const child = yield* TaskWorkflow.reservedChild({ database, background, completion,
+      // A never-prompted reserved child runs now; a step held for code review continues (WorkflowBinding.reservedChild).
+      const child = yield* WorkflowBinding.reservedChild({ database, background, completion,
         receipt: completionReceipt, reservedID: reserved?.id, authorizationID: params.authorizationID,
         workflow: params.workflow !== undefined, resumedID: resumed?.id, phase: workflow.phase })
       if (governedChildID && reserved && !child.neverPrompted && !child.continues) {
