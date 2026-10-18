@@ -216,7 +216,6 @@ export const dict = {
   "orchestra.actions.capabilityManageResources": "Manage project resources",
   "orchestra.actions.capabilityReviewDeployments": "Review deployments",
   "orchestra.actions.capabilityEditSource": "Edit source",
-  "orchestra.actions.capabilityLiveLogs": "Live job logs",
   "orchestra.actions.serverManagedAuth": "Server-managed authentication",
   "orchestra.actions.providerSignInRequired": "Sign in to the provider CLI on this server, then try again.",
   "orchestra.actions.serverAuthFailed": "Server authentication failed.",

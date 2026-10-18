@@ -51,8 +51,7 @@ export function selectedFilter(filters: readonly { value: string }[], status: st
   return filters.some((item) => item.value === status) ? status : ""
 }
 
-// `title` and `number` are being added to Actions.Run; the widened parameter compiles before and after that schema change.
-export function runIdentity(run: Actions.Run & { title?: string; number?: number }) {
+export function runIdentity(run: Actions.Run) {
   return { title: run.title ?? run.name ?? run.id, number: run.number === undefined ? run.id : `#${run.number}` }
 }
 

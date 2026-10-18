@@ -136,9 +136,9 @@ function Workbench(props: ChapterPageProps & {
   const jobs = createMemo(() => state.jobs.status === "ready" ? state.jobs.value?.items.filter((item) =>
     item.bindingID === state.binding?.id && item.runID === state.route.runID
     && (state.route.attempt === undefined || item.attempt === undefined || item.attempt === state.route.attempt)).slice(0, 100) ?? [] : [])
-  // Run label per the agreed fields: `#<number>` when the provider numbers runs, otherwise the native id.
+  // `#<number>` when the provider numbers runs, otherwise the native id.
   const runLabel = () => {
-    const value: (Actions.Run & { number?: number }) | undefined = run()
+    const value = run()
     return props.t("orchestra.actions.runNumber", { id: value?.number === undefined ? state.route.runID ?? "" : `#${value.number}` })
   }
   // Jobs group by workflow definition once the run's graph is loaded (matrix executions counted); otherwise by name.
@@ -209,7 +209,7 @@ function Workbench(props: ChapterPageProps & {
         </div></Show>
         <Show when={groups().length}><div class="context-group context-jobs" role="group" aria-labelledby={`${ids}-jobs`}>
           <div class="context-label" id={`${ids}-jobs`}>{props.t("orchestra.actions.jobs")} <span>{jobs().length}</span></div>
-          <For each={groups()}>{(group) => nav(group.label, () => ({ ...state.route, view: tab() === "logs" ? "run" : "job", jobID: group.jobs[0]?.id, tab: "logs" }),
+          <For each={groups()}>{(group) => nav(group.label, () => ({ ...state.route, view: "run", jobID: group.jobs[0]?.id, tab: tab() === "logs" ? "logs" : "graph" }),
             "local", () => group.jobs.some((job) => job.id === state.route.jobID), () => group.jobs.length > 1 ? group.jobs.length : undefined)}</For>
         </div></Show>
         <Show when={!contextual() && state.workflows.value?.items.some((item) => item.bindingID === state.binding?.id)}><div class="context-group context-catalog" role="group" aria-labelledby={`${ids}-workflows`}>
@@ -289,7 +289,7 @@ function Workbench(props: ChapterPageProps & {
             <Match when={!state.binding}><Empty title={props.t("orchestra.actions.noConnection")} /></Match>
             <Match when={state.route.view === "resources"}><Resources model={model} t={props.t} /></Match>
             <Match when={state.route.view === "library"}><Library model={model} t={props.t} embedded /></Match>
-            <Match when={state.route.view === "runs"}><RunHistory model={model} t={props.t} embedded /></Match>
+            <Match when={state.route.view === "runs"}><Show when={state.route.workflowID}><WorkflowDetail model={model} t={props.t} /></Show><RunHistory model={model} t={props.t} embedded /></Match>
             <Match when={sourceTab()}><SourceView model={model} t={props.t} /></Match>
             <Match when={state.route.view === "workflow"}><WorkflowDetail model={model} t={props.t} /><Graph model={model} t={props.t} /></Match>
             <Match when={state.route.view === "job"}><JobDetail model={model} t={props.t} /><OutputPanel model={model} t={props.t} /></Match>

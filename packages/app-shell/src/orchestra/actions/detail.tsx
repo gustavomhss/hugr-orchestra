@@ -59,6 +59,16 @@ function WorkflowHeader(props: { props: ViewProps; workflow: Actions.Workflow })
   const t = props.props.t
   const github = () => model.state.binding?.provider.kind === "github"
   const active = () => props.workflow.state === "active"
+  // Core leaves catalog triggers empty for GitHub; the parsed `on:` of a loaded graph for the same file fills them.
+  const triggers = createMemo(() => {
+    if (props.workflow.triggers?.length) return props.workflow.triggers
+    const graph = model.state.graph.status === "ready" ? model.state.graph.value : undefined
+    if (!github() || !graph || graph.source.bindingID !== props.workflow.bindingID || graph.source.path !== props.workflow.path) return []
+    const on = graph.triggers
+    if (typeof on === "string") return [on]
+    if (Array.isArray(on)) return on.filter((item): item is string => typeof item === "string")
+    return on && typeof on === "object" ? Object.keys(on) : []
+  })
   return <>
     <div class="detail-top"><Back props={props.props} /></div>
     <header class="detail-header">
@@ -84,8 +94,8 @@ function WorkflowHeader(props: { props: ViewProps; workflow: Actions.Workflow })
       <div class="detail-context">
         <button type="button" class="title-link detail-source-link" title={t("orchestra.actions.source")} onClick={() => model.navigate({ view: "source", workflowID: props.workflow.id, path: props.workflow.path, tab: "source" })}>
           <Icon name="code" size={13} /><bdi dir="ltr">{props.workflow.path}</bdi></button>
-        <Show when={props.workflow.triggers?.length}><div class="collection-triggers" role="group" aria-label={t("orchestra.actions.sourceTriggers")}>
-          <For each={props.workflow.triggers}>{(trigger) => <span class="mx-badge"><bdi dir="ltr">{trigger}</bdi></span>}</For></div></Show>
+        <Show when={triggers().length}><div class="collection-triggers" role="group" aria-label={t("orchestra.actions.sourceTriggers")}>
+          <For each={triggers()}>{(trigger) => <span class="mx-badge"><bdi dir="ltr">{trigger}</bdi></span>}</For></div></Show>
       </div>
     </header>
   </>
@@ -241,13 +251,13 @@ function definition(state: State, job: Actions.Job) {
   return graph.jobs.find((item) => item.id === id)
 }
 
-// Native title (GitHub display_title, GitLab pipeline name) and run number when the schema carries them; guarded so it compiles before and after A9.
+// Native title (GitHub display_title, GitLab pipeline name) and run number when the provider gives them.
 function runTitle(run: Actions.Run) {
-  return "title" in run && typeof run.title === "string" && run.title ? run.title : run.name ?? undefined
+  return run.title || (run.name ?? undefined)
 }
 
 function runLabel(run: Actions.Run, t: ViewProps["t"]) {
-  return "number" in run && typeof run.number === "number" ? t("orchestra.actions.runNumbered", { number: run.number }) : t("orchestra.actions.runNumber", { id: run.id })
+  return run.number === undefined ? t("orchestra.actions.runNumber", { id: run.id }) : t("orchestra.actions.runNumbered", { number: run.number })
 }
 
 function Tabs(props: { props: ViewProps; tabs: readonly ("graph" | "jobs" | "logs" | "artifacts" | "source")[]; counts: Partial<Record<"graph" | "jobs" | "logs" | "artifacts" | "source", number>> }) {
