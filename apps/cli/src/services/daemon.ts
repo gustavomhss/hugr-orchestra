@@ -1,6 +1,6 @@
 import { Global } from "@orchestra/core/global"
 import { InstallationVersion } from "@orchestra/core/installation/version"
-import { createOrchestraClient } from "../compat/sdk-v2-client"
+import { ClientError, Orchestra } from "@orchestra/client"
 import { ServerAuth } from "@orchestra/server/auth"
 import { Context, Effect, FileSystem, Layer, Option, Schedule, Schema, Scope } from "effect"
 import { HttpServer } from "effect/unstable/http"
@@ -9,7 +9,7 @@ import { spawn } from "node:child_process"
 import path from "path"
 
 export interface Interface {
-  readonly client: () => Effect.Effect<ReturnType<typeof createOrchestraClient>, unknown>
+  readonly client: () => Effect.Effect<ReturnType<typeof Orchestra.make>, unknown>
   readonly transport: () => Effect.Effect<{ url: string; headers: RequestInit["headers"] }, unknown>
   readonly start: () => Effect.Effect<string, Error>
   readonly status: () => Effect.Effect<string | undefined>
@@ -60,7 +60,7 @@ export const layer = Layer.effect(
     })
 
     const createClient = Effect.fnUntraced(function* (url: string) {
-      return createOrchestraClient({ baseUrl: url, headers: ServerAuth.headers({ password: yield* password() }) })
+      return Orchestra.make({ baseUrl: url, headers: ServerAuth.headers({ password: yield* password() }) })
     })
 
     // Failure messages are fixed reason codes: `service start` reports the last
@@ -68,11 +68,16 @@ export const layer = Layer.effect(
     const healthy = Effect.fnUntraced(function* () {
       const info = yield* registration().pipe(Effect.mapError(() => new Error("registration-unavailable")))
       const client = yield* createClient(info.url).pipe(Effect.mapError(() => new Error("password-unavailable")))
+      // The client throws on any non-success status where the legacy client resolved without data, so only
+      // transport failures stay "unreachable"; every other failure keeps reporting "unhealthy".
       const response = yield* Effect.tryPromise({
-        try: () => client.v2.health.get({ signal: AbortSignal.timeout(2_000) }),
-        catch: () => new Error("health-unreachable"),
+        try: () => client.health.get({ signal: AbortSignal.timeout(2_000) }),
+        catch: (cause) =>
+          new Error(
+            cause instanceof ClientError && cause.reason === "Transport" ? "health-unreachable" : "health-unhealthy",
+          ),
       })
-      if (response.data?.healthy === true) return info
+      if (response.healthy === true) return info
       return yield* Effect.fail(new Error("health-unhealthy"))
     })
 
@@ -156,7 +161,7 @@ export const layer = Layer.effect(
 
     const client = Effect.fn("cli.daemon.client")(function* () {
       const connection = yield* transport()
-      return createOrchestraClient({ baseUrl: connection.url, headers: connection.headers })
+      return Orchestra.make({ baseUrl: connection.url, headers: connection.headers })
     })
 
     const status = Effect.fn("cli.daemon.status")(function* () {
