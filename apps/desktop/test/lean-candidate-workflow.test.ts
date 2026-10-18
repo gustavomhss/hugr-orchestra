@@ -19,9 +19,9 @@ const pins = {
 // Follow-up host pin: align Intel-probe stderr and absent-OID empty stdout with B's parent contract.
 // Hash exact parsed run bodies. Legitimate edits require review plus an explicit pin update.
 const bodyPins = {
-  host: "9996a7591426138e692dc984b706d83d1038680c5df44eab13c3650712aa14ea",
-  versions: "5d8d002f9c8dc80f9d9010c8d475b7554a2aa42695a5607e4a29848a342af66f",
-  archive: "f64433a7dad8df6ce6550bd30c93cb3cb78de1008fc068add8a39583ca146ee4",
+  host: "95babe4f4417b4189ed224638620c88481dd4eb6009ca4b1ca43531c394a8601",
+  versions: "243c924be01e513fc330e9c69127def53d2bd63ca0c4ef5838c6d1bdfe5df900",
+  archive: "9ac9a97f9f9b56ba6602f6ed626e1cefcad5ba176a008412df9ab3c8c006a7d7",
 }
 const artifacts = [
   "apps/desktop/dist-candidate/ownedappArtifact.zip",

@@ -165,7 +165,7 @@ describe("session.list", () => {
         const pathIDs = (yield* SessionNs.Service.use((session) =>
           session.list({
             directory: path.join(test.directory, "packages", "app"),
-            path: "apps/orchestra/src",
+            path: "packages/orchestra/src",
           }),
         )).map((session) => session.id)
         expect(pathIDs).not.toContain(parent.id)
@@ -218,7 +218,7 @@ describe("session.list", () => {
         const pathIDs = (yield* SessionNs.Service.use((session) =>
           session.list({
             directory: path.join(test.directory, "packages", "orchestra", "src"),
-            path: "apps/orchestra/src",
+            path: "packages/orchestra/src",
           }),
         )).map((session) => session.id)
         expect(pathIDs).toContain(current.id)
