@@ -34,6 +34,7 @@ import { presentApprovalFromSession, recordApproval } from "../../src/maestro/ap
 import { renderPresentation } from "../../src/maestro/approval"
 import { Agent } from "../../src/agent/agent"
 import { BackgroundJob } from "../../src/background/job"
+import { SessionStatus } from "../../src/session/status"
 import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import { Truncate } from "../../src/tool/truncate"
 import { TaskTool } from "../../src/tool/task"
@@ -58,6 +59,7 @@ const it = testEffect(
       SessionProjector.node,
       Agent.node,
       BackgroundJob.node,
+      SessionStatus.node,
       RuntimeFlags.node,
       Truncate.node,
       CrossSpawnSpawner.node,
