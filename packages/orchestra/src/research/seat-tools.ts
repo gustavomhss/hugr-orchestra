@@ -1,15 +1,15 @@
 export * as ResearchSeatTools from "./seat-tools"
 
 // The one declaration of the discovery seat's tools (J1.1). Allow-lists, capture lists and retention lists derive from
-// it. A new tool enters OWN only in the PR that qualifies it (JD-2): code_locate, code_query, code_search, probe_run and
-// inquiry are absent until then. RETAINED already names them; it only applies once a tool runs.
+// it. A new tool enters OWN only in the PR that qualifies it (JD-2): code_locate, code_query, code_search and probe_run
+// are absent until then. RETAINED already names them; it only applies once a tool runs.
 
 export const SEAT = "jimmy"
 
 /** Orchestra tools the seat calls on both engines. None duplicates a Claude Code builtin (claude-code/host/mcp.ts). */
 export const OWN = [
   "research_capture", "research_view", "research_record",
-  "atlas_context", "atlas_memory_recall", "atlas_memory_emit",
+  "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "inquiry",
 ] as const
 
 /** Orchestra loop ids, besides OWN. */
