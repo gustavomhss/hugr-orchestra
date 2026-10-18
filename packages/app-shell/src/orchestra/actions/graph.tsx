@@ -461,6 +461,6 @@ function joinExecutions(model: Model, graph: Actions.Graph | undefined, definiti
   if (model.state.binding && model.state.binding.id !== run.value.bindingID) return result
   const value = run.value
   const attempt = route.attempt ?? value.attempt
-  return join(definitions, jobs.value.items.filter((job) => job.bindingID === value.bindingID && job.bindingID === graph.source.bindingID && job.runID === value.id && (attempt === undefined || job.attempt === attempt)))
+  return join(definitions, jobs.value.items.filter((job) => job.bindingID === value.bindingID && job.bindingID === graph.source.bindingID && job.runID === value.id && (attempt === undefined || job.attempt === attempt)), model.state.binding?.provider.kind === "github")
 }
 function routeDefinition(jobID: string | undefined, joins: ReadonlyMap<string, Actions.Job[]>) { if (!jobID) return ""; for (const [definitionID, jobs] of joins) if (jobs.some((job) => job.id === jobID)) return definitionID; return "" }

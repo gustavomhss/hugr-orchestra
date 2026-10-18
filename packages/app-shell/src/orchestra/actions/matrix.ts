@@ -5,7 +5,11 @@ type Cell = Record<string, unknown>
 type Matcher = { id: string; names: ReadonlySet<string>; pattern?: RegExp }
 
 const EXPRESSION = /\$\{\{([\s\S]*?)\}\}/g
+// Consecutive expressions collapse into one hole so the pattern never stacks lazy wildcards.
+const HOLES = /(?:\$\{\{[\s\S]*?\}\})+/
 const MATRIX_PATH = /^matrix((?:\.[A-Za-z_][\w-]*)+)$/
+// GitHub runs at most 256 jobs per matrix; larger expansions are treated as unknown.
+const MATRIX_LIMIT = 256
 
 // Display name for a definition: a name template with unresolved expressions falls back to the job key.
 export function label(job: Actions.GraphJob) {
@@ -20,13 +24,14 @@ export function placement(job: Actions.GraphJob) {
   return text || undefined
 }
 
-// Providers without a native definition identity (GitHub) are joined by execution name. An execution joins only
-// when exactly one definition can have produced its name; anything else stays unjoined.
-export function join(definitions: ReadonlyMap<string, Actions.GraphJob>, jobs: readonly Actions.Job[]) {
-  const matchers = [...definitions.values()].map(matcher)
+// A native definition identity always wins. Only GitHub (`byName`) is joined by execution name, because its job
+// names derive from the workflow source; an execution joins only when exactly one definition can produce its name.
+// GitLab names do not prove a definition (parallel/matrix jobs can share them), so they stay unjoined.
+export function join(definitions: ReadonlyMap<string, Actions.GraphJob>, jobs: readonly Actions.Job[], byName: boolean) {
+  const matchers = byName ? [...definitions.values()].map(matcher) : []
   const result = new Map<string, Actions.Job[]>()
   for (const job of jobs) {
-    const id = job.definitionID ? (definitions.has(job.definitionID) ? job.definitionID : undefined) : named(job.name, matchers)
+    const id = job.definitionID ? (definitions.has(job.definitionID) ? job.definitionID : undefined) : byName ? named(job.name, matchers) : undefined
     if (!id) continue
     const items = result.get(id) ?? []
     items.push(job)
@@ -35,12 +40,13 @@ export function join(definitions: ReadonlyMap<string, Actions.GraphJob>, jobs: r
   return result
 }
 
-// Aggregate result of a matrix: one failure fails it, any live execution keeps it running.
+// Aggregate result of a matrix, with GitHub's run semantics: it stays in progress while any execution is live and
+// has a conclusion only once all are completed; then one failure fails it.
 export function aggregate(jobs: readonly Actions.Job[]): { status?: string | null; conclusion?: string | null } {
   if (jobs.length <= 1) return { status: jobs[0]?.status, conclusion: jobs[0]?.conclusion }
   const values = jobs.map((job) => ((job.status === "completed" ? job.conclusion : job.status) ?? job.conclusion ?? "").toLowerCase())
-  if (values.some((value) => ["failure", "failed", "error", "timed_out", "startup_failure"].includes(value))) return { status: "completed", conclusion: "failure" }
   if (values.some((value) => ["in_progress", "running", "queued", "pending", "waiting", "requested"].includes(value))) return { status: "in_progress" }
+  if (values.some((value) => ["failure", "failed", "error", "timed_out", "startup_failure"].includes(value))) return { status: "completed", conclusion: "failure" }
   if (values.every((value) => value === "skipped")) return { status: "completed", conclusion: "skipped" }
   if (values.every((value) => ["success", "passed", "skipped"].includes(value))) return { status: "completed", conclusion: "success" }
   if (values.some((value) => ["cancelled", "canceled"].includes(value))) return { status: "completed", conclusion: "cancelled" }
@@ -84,12 +90,13 @@ function matcher(job: Actions.GraphJob): Matcher {
   if (job.matrix === undefined && !dynamic && !job.reusable) return { id: job.id, names: new Set([template]) }
   // A job that never expanded (for example a skipped matrix) keeps its literal name, so the template is a name too.
   const cells = job.matrix === undefined ? undefined : cellsOf(job.matrix)
-  const names = dynamic && cells ? cells.map((cell) => interpolate(template, cell)) : []
+  // Without an expression in its name, GitHub names each matrix execution `<name> (<cell values>)`.
+  const names = cells?.map((cell) => dynamic ? interpolate(template, cell) : suffixed(template, cell)) ?? []
   const resolved = names.filter((value): value is string => value !== undefined)
   if (!job.reusable && resolved.length && resolved.length === names.length) return { id: job.id, names: new Set([template, ...resolved]) }
-  // Unenumerable names: expression holes match any text, and a matrix without a name template gets ` (values)`.
+  // Names that cannot be enumerated (unknown cells, non-matrix expressions, called workflows) become anchored patterns.
   const body = dynamic
-    ? template.split(EXPRESSION).map((part, index) => index % 2 ? "[\\s\\S]*?" : escape(part)).join("")
+    ? template.split(HOLES).map(escape).join("[\\s\\S]*?")
     : `${escape(template)}${job.matrix === undefined ? "" : " \\(.+\\)"}`
   // Called workflow jobs are reported as `<caller> / <called job>`.
   return { id: job.id, names: new Set([template]), pattern: new RegExp(`^${body}${job.reusable ? " / .+" : ""}$`) }
@@ -103,6 +110,7 @@ function cellsOf(matrix: unknown) {
   if (!records(include) || !records(exclude)) return undefined
   const dimensions = Object.entries(matrix).filter(([key]) => key !== "include" && key !== "exclude")
   if (!dimensions.every((entry): entry is [string, unknown[]] => Array.isArray(entry[1]) && entry[1].length > 0)) return undefined
+  if (dimensions.reduce((size, [, values]) => size * values.length, 1) > MATRIX_LIMIT) return undefined
   const product = dimensions.reduce<Cell[]>((cells, [key, values]) => cells.flatMap((cell) => values.map((value) => ({ ...cell, [key]: value }))), [{}])
   const keys = new Set(dimensions.map(([key]) => key))
   const base = dimensions.length ? product.filter((cell) => !exclude.some((entry) => Object.entries(entry).every(([key, value]) => same(cell[key], value)))) : []
@@ -112,7 +120,13 @@ function cellsOf(matrix: unknown) {
     return matches.length ? [] : [{ ...entry }]
   })
   const cells = [...base, ...added]
-  return cells.length ? cells : undefined
+  return cells.length && cells.length <= MATRIX_LIMIT ? cells : undefined
+}
+
+function suffixed(template: string, cell: Cell) {
+  const values = Object.values(cell)
+  if (!values.every((value) => typeof value === "string" || typeof value === "number" || typeof value === "boolean")) return undefined
+  return `${template} (${values.map(String).join(", ")})`
 }
 
 function interpolate(template: string, cell: Cell) {
