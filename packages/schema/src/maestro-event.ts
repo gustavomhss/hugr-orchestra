@@ -523,6 +523,9 @@ export namespace Review {
         worktree: Schema.NonEmptyString,
         changedPaths: Schema.Array(Schema.NonEmptyString),
       }),
+      // `plan` judges the plan and its committed spec before approval; `code` judges what the workers produced, from
+      // the plan review's head. Receipts recorded before stages existed carry none and read as `plan`.
+      stage: optional(Schema.Literals(["plan", "code"])),
     },
   })
   export type ReceivedV2 = typeof ReceivedV2.Type

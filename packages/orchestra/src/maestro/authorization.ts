@@ -35,7 +35,7 @@ const nextSteps: Record<string, string> = {
   "context-not-current": STALE_CONTEXT_NEXT_STEP,
   "context-dirty": DIRTY_CONTEXT_NEXT_STEP,
   "review-not-approved":
-    "Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+    "Authorization needs a cold-review (`lucy`) APPROVE plan-stage receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the plan or its committed spec and validate again with a new workCardID.",
   "approval-not-current":
     "The owner's latest message must still be the exact approve reply to the newest presentation; any later user message, even an instruction to continue, makes it not current. Record approval and grant authorization in the turn that answers the owner's reply; call maestro_record_approval to see why it is not current.",
   "approval-binding-mismatch":
@@ -209,7 +209,13 @@ function findReview(sessionID: string, validationRecordID: string, workCardHash:
       .pipe(Effect.orDie)
     for (const row of rows.reverse()) {
       const review = row.data ? decodeReview(row) : undefined
-      if (review?.validationRecordID === validationRecordID && review.workCardHash === workCardHash) return review
+      // Only a plan-stage receipt authorizes; a code-stage receipt judges work that already ran.
+      if (
+        review?.validationRecordID === validationRecordID &&
+        review.workCardHash === workCardHash &&
+        (review.stage ?? "plan") === "plan"
+      )
+        return review
     }
     return undefined
   })

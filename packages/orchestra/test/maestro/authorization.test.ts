@@ -109,9 +109,9 @@ it.instance(
       expect(denied).toMatchObject({ reason: "review-not-approved" })
       // The model sees only the message, so it must carry the reason and the step that satisfies it.
       expect(denied instanceof Error && denied.message).toBe(
-        "MaestroAuthorizationRejected: review-not-approved. Authorization needs a cold-review (`lucy`) APPROVE receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the work and validate again with a new workCardID.",
+        "MaestroAuthorizationRejected: review-not-approved. Authorization needs a cold-review (`lucy`) APPROVE plan-stage receipt for this validation and work card; call maestro_request_review, and after FIX_FIRST or REJECT fix the plan or its committed spec and validate again with a new workCardID.",
       )
-      yield* events.publish(MaestroEvent.Review.Received, {
+      const receipt = {
         sessionID: session.id,
         projectID: session.projectID,
         validationRecordID: validation.id,
@@ -121,7 +121,7 @@ it.instance(
         grantHash: validation.grantHash,
         reviewPolicyHash: validation.reviewPolicyHash,
         actor: validation.actor,
-        reviewerID: "lucy",
+        reviewerID: "lucy" as const,
         reviewMethodVersion: "review-v1",
         artifact: {
           workCardHash: validation.workCardHash,
@@ -129,12 +129,31 @@ it.instance(
           baseSHA: "a".repeat(40),
           headSHA: "b".repeat(40),
           worktree: "/tmp",
-          changedPaths: [],
-          bytes: "ZGlmZg==",
+          changedPaths: ["test/price.test.ts"],
         },
-        verdict: "APPROVE",
+        verdict: "APPROVE" as const,
         findings: [],
+      }
+      // A code-stage APPROVE judges work that already ran; it never stands in for the plan review.
+      yield* events.publish(MaestroEvent.Review.ReceivedV2, {
+        ...receipt,
+        stage: "code",
+        artifact: {
+          ...receipt.artifact,
+          baseSHA: "b".repeat(40),
+          headSHA: "c".repeat(40),
+          changedPaths: ["src/price.ts"],
+        },
       })
+      expect(
+        yield* grantAuthorization({
+          sessionID: session.id,
+          validationRecordID: validation.id,
+          approvalMessageID: "msg_missing",
+        }).pipe(Effect.flip),
+      ).toMatchObject({ reason: "review-not-approved" })
+      // A repair plan's review approves only its committed spec (the test); the code it plans does not exist yet.
+      yield* events.publish(MaestroEvent.Review.ReceivedV2, { ...receipt, stage: "plan" })
       const assistant: SessionV1.Assistant = {
         id: MessageID.ascending(),
         parentID: MessageID.ascending(),

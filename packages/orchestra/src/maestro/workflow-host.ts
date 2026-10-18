@@ -113,14 +113,33 @@ export function make(deps: Dependencies) {
     const status = yield* deps.git.run(["status", "--porcelain=v1", "--untracked-files=all"], { cwd: binding.directory })
     const head = yield* deps.git.run(["rev-parse", "HEAD"], { cwd: binding.directory })
     const placement = yield* InstanceState.context
-    const diff = yield* deps.git.run([
+    const diffDigest = (base: string, tip: string) => deps.git.run([
       "diff", "--binary", "--full-index", "--no-ext-diff", "--no-renames", "--src-prefix=a/", "--dst-prefix=b/",
-      review.data.artifact.baseSHA, review.data.artifact.headSHA, "--", ".",
-    ], { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 })
+      base, tip, "--", ".",
+    ], { cwd: review.data.artifact.worktree, maxOutputBytes: 2 * 1024 * 1024 }).pipe(Effect.map((diff) =>
+      diff.exitCode || diff.truncated || !diff.stdout.length ? undefined : RelayWorkflowBinding.digest(diff.stdout)))
     if (status.exitCode || status.truncated || status.text().trim() || head.exitCode || head.truncated ||
-      head.text().trim() !== review.data.artifact.headSHA || diff.exitCode || diff.truncated || !diff.stdout.length ||
-      RelayWorkflowBinding.digest(diff.stdout) !== review.data.artifact.sha256 ||
+      (yield* diffDigest(review.data.artifact.baseSHA, review.data.artifact.headSHA)) !== review.data.artifact.sha256 ||
       (yield* deps.fs.realPath(review.data.artifact.worktree)) !== (yield* deps.fs.realPath(placement.worktree)))
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
+    // The plan review approved the tree before execution; whatever the workers committed since needs its own code
+    // review, bound to this exact result. A run that committed nothing completes on the plan review alone.
+    const result = head.text().trim()
+    if (result === review.data.artifact.headSHA) return
+    const code = yield* findReview(binding.sessionID, validation.id, result)
+    if (code?.data.verdict !== "APPROVE")
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_REQUIRED",
+        detail: `The workers' result ${result} has ${code ? `a ${code.data.verdict} code review` : "no code review"}. Call maestro_request_review with stage "code" and the approved validationRecordID and work card; after FIX_FIRST or REJECT the workers fix it, commit, and the new head is reviewed again.` })
+    if (code.data.sessionID !== binding.sessionID || code.data.validationRecordID !== validation.id ||
+      code.data.projectID !== binding.projectID || code.data.reviewerID !== "lucy" ||
+      code.data.workCardHash !== validation.workCardHash || code.data.artifact.workCardHash !== validation.workCardHash ||
+      code.data.routedMemberID !== validation.routedMemberID || code.data.rosterHash !== validation.rosterHash ||
+      code.data.grantHash !== validation.grantHash || code.data.reviewPolicyHash !== validation.reviewPolicyHash ||
+      !reviewActorMatches(code.data.actor, binding, "lucy"))
+      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    if (code.data.artifact.baseSHA !== review.data.artifact.headSHA ||
+      (yield* diffDigest(review.data.artifact.headSHA, result)) !== code.data.artifact.sha256 ||
+      (yield* deps.fs.realPath(code.data.artifact.worktree)) !== (yield* deps.fs.realPath(placement.worktree)))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })
   }).pipe(Effect.provide(deps.context)))
 
