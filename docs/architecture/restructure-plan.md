@@ -851,3 +851,21 @@ Controles medidos: excluir o boundary do guard host falhou; forçar fallback dia
 Inventory real final: 49 declarações, producer SHA-256 `878869cdf69391b89155db6fd3154789cb172d79151b65cda3aa0348a5822740`, fingerprint `176820ba984bafc927c9c4365ccb7941701b6368279917fe673548fce1c2c531`, qualificação `syntax-and-declaration-shape-only`. Receipts locais: `native-move-proof.json`, `native-move-inventory-final.json`, `native-move-mutations.md` e reviews frios em `/var/folders/lt/z11pyzhj0m17vn798jkk69hh0000gn/T/opencode`.
 
 Sem dispatch manual de CI intermediária. As drafts dispararam seis workflows automáticos, todos confirmados `completed/cancelled` conforme a cadência do owner: #615 `38619323308`, `38619323242`, `38619323263`, `38619323232`; #614 `38619323528`, `38619323983`. Seus resultados não qualificam entrega. [Handoff consolidado publicado em #291](https://github.com/gustavomhss/hugr-orchestra/pull/291#issuecomment-6176051294), referenciado em ambas as drafts. Hosted ABI/platforms, release/npm/installer, Nix delivery, qualificação global e landing humano continuam nos respectivos gates. Este lote fecha a implementação física revisada, não a campanha 0–100.
+
+### Landing do lote físico e próximos movimentos — 17 e 18 de outubro de 2026
+
+A campanha voltou para o Claude Code em 17 de outubro. A cópia não commitada deste plano foi perdida junto com o worktree que a guardava; o conteúdo acima foi reconstruído a partir das 41 edições gravadas na sessão anterior e confere com a última leitura registrada.
+
+- **#681, mergeado em `dev` (`ca6d9b5625`):** as 14 drafts (#524–#615) e o corte `web-entry` entraram juntos.
+  - O lote foi juntado duas vezes com `dev`, que estava 650 commits à frente.
+  - Os conflitos e as referências novas do `dev` aos caminhos antigos foram corrigidos.
+  - Uma rodada completa do epic CI passou antes do merge.
+  - Defeitos achados pelo CI e pelas auditorias: caminhos relativos de profundidade errada em workflows e fixtures, fixtures e2e servidas da raiz web movida, ledgers com chaves por caminho e timeouts dos testes do espelho no Windows.
+- **#738 (60-B/C):** `packages/{orchestra,desktop,cli,storybook}` foram para `apps/`.
+  - Um codemod recalculou cada caminho relativo de import e config a partir da nova posição.
+  - Uma auditoria Sonnet/Haiku corrigiu mais 15 caminhos construídos por variável, regex ou heredoc.
+- **#755 (20-B/C), empilhado sobre #738:** `specs/orchestra-visual/{handoff,evidence,screenshots}` saiu da árvore.
+  - O conteúdo está retido em `HuGR/orchestra-recovery`; a restauração de evidence e screenshots conferiu 100 de 100 blobs.
+  - `docs/archives` indexa os dois bundles.
+
+Próximos marcos: evidência e pesquisa restantes (`specs/backend-specialist`, `apps/orchestra/specs/benchmark-evidence`) com retenção antes da remoção; documentação viva de `specs/` para `docs/`; depois 70–80 (modularidade interna).
