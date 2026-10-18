@@ -29,7 +29,7 @@ export async function artifactFixture(
   await writeFile(join(input.bin, "orchestra"), bytes)
   await writeFile(
     join(input.dist, `cli-${target}/package.json`),
-    JSON.stringify({ name: `@hugr/cli-${target}`, version, os: ["linux"], cpu: ["arm64"] }),
+    JSON.stringify({ name: `@humangr/cli-${target}`, version, os: ["linux"], cpu: ["arm64"] }),
   )
   await mkdir(join(root, "external"))
   await writeFile(join(root, "external", "orchestra"), "external bytes must stay untouched")
@@ -190,7 +190,7 @@ test("native source boundary publishes exact raw bytes accepted by actual Deskto
     const filesystem = await admitArtifacts({ ...input, targets: [target] })
     try {
       expect(JSON.parse(filesystem.capture()[0].metadata.toString())).toEqual({
-        name: `@hugr/cli-${target}`,
+        name: `@humangr/cli-${target}`,
         version,
         os: ["linux"],
         cpu: ["arm64"],

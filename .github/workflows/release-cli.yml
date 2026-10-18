@@ -1,7 +1,7 @@
 name: release-cli
 
 # Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
-# only with publish=true, publishes the GitHub release, npm (@hugr/cli), the Homebrew tap and AUR (orchestra-bin).
+# only with publish=true, publishes the GitHub release, npm (@humangr/cli), the Homebrew tap and AUR (orchestra-bin).
 # A dry run (the default) uploads every assembled artifact and publishes nothing. With sign=true the native build jobs sign
 # every macOS and Windows executable before the payload is hashed, archived, packed or checksummed, so every channel ships
 # the signed bytes. An unsigned publish is allowed: brew, npm, AUR and install.sh download without the browser quarantine
@@ -51,7 +51,7 @@ jobs:
             [ "$SIGN" = true ] || echo "::warning::Publishing unsigned binaries; a binary downloaded from the release page in a browser trips Gatekeeper and SmartScreen"
             [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
             if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: v$VERSION" >&2; exit 1; fi
-            if npm view "@hugr/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
+            if npm view "@humangr/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
           fi
 
   models:
@@ -322,7 +322,7 @@ jobs:
           rm -rf "$RUNNER_TEMP/assembled/npm"
           packs="$RUNNER_TEMP/assembled/npm-packs"
           npm install --prefix "$RUNNER_TEMP/npm-smoke" --no-audit --no-fund --omit=optional \
-            "$packs/hugr-cli-linux-x64-baseline-$VERSION.tgz" "$packs/hugr-cli-$VERSION.tgz"
+            "$packs/humangr-cli-linux-x64-baseline-$VERSION.tgz" "$packs/humangr-cli-$VERSION.tgz"
           reported=$(HOME="$RUNNER_TEMP/npm-smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/orchestra" --version)
           [ "$reported" = "$VERSION" ] || { echo "RELEASE_PACKED_VERSION_MISMATCH: $reported" >&2; exit 1; }
       - name: Run the packed musl CLI in Alpine
@@ -330,7 +330,7 @@ jobs:
           set -euo pipefail
           docker run --rm --mount "type=bind,source=$RUNNER_TEMP/assembled/npm-packs,target=/packs,readonly" node:22-alpine sh -euc '
             npm install --prefix /smoke --no-audit --no-fund --omit=optional \
-              "/packs/hugr-cli-linux-x64-baseline-musl-$0.tgz" "/packs/hugr-cli-$0.tgz" >/dev/null
+              "/packs/humangr-cli-linux-x64-baseline-musl-$0.tgz" "/packs/humangr-cli-$0.tgz" >/dev/null
             reported=$(HOME=/tmp/home /smoke/node_modules/.bin/orchestra --version)
             [ "$reported" = "$0" ] || { echo "RELEASE_PACKED_MUSL_VERSION_MISMATCH: $reported" >&2; exit 1; }' "$VERSION"
       - name: Generate the AUR .SRCINFO with real makepkg
@@ -367,10 +367,13 @@ jobs:
       - name: Create the GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
+          SIGN: ${{ inputs.sign }}
         run: |
           set -euo pipefail
+          SIGNING_NOTE="macOS binaries are signed and notarized; Windows binaries are signed."
+          if [ "$SIGN" != true ]; then SIGNING_NOTE="These binaries are not signed. The installers above never trip Gatekeeper or SmartScreen; a binary downloaded here in a browser can."; fi
           gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
-            --notes "Install with \`npm install -g @hugr/cli\`, \`brew install gustavomhss/tap/orchestra\`, the AUR package \`orchestra-bin\`, or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. macOS binaries are signed and notarized; Windows binaries are signed." \
+            --notes "Install with \`npm install -g @humangr/cli\`, \`brew install gustavomhss/tap/orchestra\`, the AUR package \`orchestra-bin\`, or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. $SIGNING_NOTE" \
             assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh
       # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
       - name: Publish npm packages
@@ -379,14 +382,15 @@ jobs:
         run: |
           set -euo pipefail
           [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
-          for package in assembled/npm-packs/hugr-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
-          npm publish "assembled/npm-packs/hugr-cli-$VERSION.tgz" --access public --provenance
+          for package in assembled/npm-packs/humangr-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
+          npm publish "assembled/npm-packs/humangr-cli-$VERSION.tgz" --access public --provenance
       - name: Update the Homebrew tap
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}
         run: |
           set -euo pipefail
-          [ -n "${TAP_TOKEN:-}" ] || { echo "RELEASE_HOMEBREW_TAP_TOKEN_MISSING" >&2; exit 1; }
+          # Homebrew and AUR are optional channels: without their secret the release ships on GitHub and npm only.
+          [ -n "${TAP_TOKEN:-}" ] || { echo "::warning::No HOMEBREW_TAP_TOKEN: the Homebrew tap is not updated"; exit 0; }
           git clone "https://x-access-token:$TAP_TOKEN@github.com/gustavomhss/homebrew-tap.git" tap
           mkdir -p tap/Formula
           cp assembled/homebrew/Formula/orchestra.rb tap/Formula/orchestra.rb
@@ -398,7 +402,7 @@ jobs:
           AUR_SSH_PRIVATE_KEY: ${{ secrets.AUR_SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          [ -n "${AUR_SSH_PRIVATE_KEY:-}" ] || { echo "RELEASE_AUR_SSH_KEY_MISSING" >&2; exit 1; }
+          [ -n "${AUR_SSH_PRIVATE_KEY:-}" ] || { echo "::warning::No AUR_SSH_PRIVATE_KEY: the AUR package is not updated"; exit 0; }
           install -m 700 -d ~/.ssh
           printf '%s\n' "$AUR_SSH_PRIVATE_KEY" > ~/.ssh/aur && chmod 600 ~/.ssh/aur
           ssh-keyscan -t ed25519 aur.archlinux.org >> ~/.ssh/known_hosts

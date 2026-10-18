@@ -20,7 +20,7 @@ The first public release is pending. This section describes the product as it st
 - Lean mode for shell output, with per-profile controls and measurements in a Lean settings chapter.
 - Session archive and restore, and checkpoints that save an exact fork input.
 - Desktop app for macOS, Windows and Linux (AppImage, deb, rpm), with the Claude Code executable and ripgrep packaged.
-- Command line `orchestra`, published as `@hugr/cli` on npm, through a Homebrew tap, as the AUR package `orchestra-bin`, and as release archives with `install.sh`, for glibc and musl Linux, macOS and Windows.
+- Command line `orchestra`, published as `@humangr/cli` on npm, through a Homebrew tap, as the AUR package `orchestra-bin`, and as release archives with `install.sh`, for glibc and musl Linux, macOS and Windows.
 - Packaged skills embedded in the CLI and refreshed when the version changes.
 - Workflow, MCP, provider and model settings in the app, translated into the app's locales.
 

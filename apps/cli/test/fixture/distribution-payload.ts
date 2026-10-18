@@ -58,7 +58,7 @@ export async function payloadFixture(roots: string[], parent = tmpdir()) {
   const input = { dist: join(root, "dist"), out: join(root, "prepared"), version: "1.2.3", target: tuple.target }
   const source = join(input.dist, `cli-${tuple.target}`)
   await mkdir(join(source, "bin"), { recursive: true })
-  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@hugr/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
+  await writeFile(join(source, "package.json"), JSON.stringify({ name: `@humangr/cli-${tuple.target}`, version: input.version, os: [tuple.os], cpu: [tuple.arch] }))
   if (process.platform !== "win32") await chmod(join(source, "package.json"), 0o644)
   const files = [`bin/${tuple.executable}`, "bin/hugr_omni.node", `bin/${tuple.supervisor}`, "bin/extra/note.txt", ...treeSitterPaths]
   await Promise.all(files.map(async (file) => {

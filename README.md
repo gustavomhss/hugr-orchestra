@@ -25,7 +25,7 @@ An unsigned build makes the system ask before the first launch. On macOS, open S
 ### Command line
 
 ```bash
-npm install -g @hugr/cli
+npm install -g @humangr/cli
 brew install gustavomhss/tap/orchestra
 ```
 

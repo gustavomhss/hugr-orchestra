@@ -112,7 +112,7 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
   await Bun.write(launcher, Bun.file(path.join(root, "bin/orchestra.cjs")))
   await copyFile(binary, path.join(home, "launcher/bin/.orchestra"))
   expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
-  const installed = path.join(home, `launcher/node_modules/@hugr/cli-${native}/bin`)
+  const installed = path.join(home, `launcher/node_modules/@humangr/cli-${native}/bin`)
   await mkdir(installed, { recursive: true })
   await rename(path.join(home, "launcher/bin/.orchestra"), path.join(installed, path.basename(binary)))
   expect((await run(["node", launcher, "--version"])).stdout).toBe(version)
@@ -451,7 +451,7 @@ test("all explicit targets produce correct executable format/architecture and pr
       expect(bytes.readUInt16LE(pe + 4)).toBe(arm ? 0xaa64 : 0x8664)
     }
     const manifest = await Bun.file(path.join(root, `dist/cli-${target}/package.json`)).json()
-    expect(manifest.name).toBe(`@hugr/cli-${target}`)
+    expect(manifest.name).toBe(`@humangr/cli-${target}`)
     expect(manifest.version).toBe(version)
     expect(manifest.os).toEqual([target.startsWith("windows-") ? "win32" : target.split("-")[0]])
     expect(manifest.cpu).toEqual([arm ? "arm64" : "x64"])

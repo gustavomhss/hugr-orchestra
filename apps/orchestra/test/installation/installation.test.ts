@@ -105,10 +105,10 @@ describe("installation", () => {
       for (const method of ["npm", "pnpm", "bun", "yarn", "brew"] as const)
         yield* Installation.use.upgrade(method, "9.9.9")
       expect(commands.spawns).toEqual([
-        "npm install -g @hugr/cli@9.9.9",
-        "pnpm add -g @hugr/cli@9.9.9",
-        "bun add -g @hugr/cli@9.9.9",
-        "yarn global add @hugr/cli@9.9.9",
+        "npm install -g @humangr/cli@9.9.9",
+        "pnpm add -g @humangr/cli@9.9.9",
+        "bun add -g @humangr/cli@9.9.9",
+        "yarn global add @humangr/cli@9.9.9",
         "brew upgrade gustavomhss/tap/orchestra",
       ])
       expect(commands.directories.every((directory) => directory === Global.Path.state)).toBe(true)
@@ -146,8 +146,8 @@ describe("installation", () => {
     expect(Installation.isDesktopBundle("/usr/local/bin/orchestra")).toBe(false)
   })
 
-  const detect = recordingLayer({ stdout: (command) => (command === "pnpm list -g --depth=0" ? "@hugr/cli 1.0.0" : "orchestra-ai 1.0.0") })
-  testEffect(detect.layer).effect("method() matches the @hugr/cli package name, not the old one", () =>
+  const detect = recordingLayer({ stdout: (command) => (command === "pnpm list -g --depth=0" ? "@humangr/cli 1.0.0" : "orchestra-ai 1.0.0") })
+  testEffect(detect.layer).effect("method() matches the @humangr/cli package name, not the old one", () =>
     Effect.gen(function* () {
       const detected = yield* Installation.use.method()
       if (detected === "curl" || detected === "desktop") return

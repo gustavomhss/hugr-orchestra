@@ -90,7 +90,7 @@ export async function prepareNpmDistribution(input: { payloads: string[]; out: s
       }
       const metadata = JSON.parse(captured.get("package.json")!.bytes.toString("utf8"))
       await writeFile(join(source, "package.json"), JSON.stringify({
-        name: `@hugr/cli-${target}`, version, license: "MIT", repository: repository(),
+        name: `@humangr/cli-${target}`, version, license: "MIT", repository: repository(),
         os: metadata.os, cpu: metadata.cpu,
         files: [...manifest.files.map((file) => file.path), "distribution.json", "checksums.sha256"].sort(),
       }, null, 2))
@@ -111,9 +111,9 @@ export async function prepareNpmDistribution(input: { payloads: string[]; out: s
       executable: process.platform !== "win32",
     })
     expected.set("cli/package.json", { bytes: Buffer.from(JSON.stringify({
-      name: "@hugr/cli", version, type: "module", license: "MIT", repository: repository(),
+      name: "@humangr/cli", version, type: "module", license: "MIT", repository: repository(),
       bin: { orchestra: "./bin/orchestra.cjs" }, files: ["bin/orchestra.cjs"], engines: { node: ">=22" },
-      optionalDependencies: Object.fromEntries(targets.toSorted().map((target) => [`@hugr/cli-${target}`, version])),
+      optionalDependencies: Object.fromEntries(targets.toSorted().map((target) => [`@humangr/cli-${target}`, version])),
     }, null, 2)), executable: false })
     const requireSame = async () => {
       const existing = pin(parent, basename(out))
