@@ -206,6 +206,15 @@ export const HistoryInput = Schema.Union([
   struct("Research.HistoryLog", { ...historyFields, operation: Schema.Literal("log"), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))) }),
   struct("Research.HistoryShow", { ...historyFields, operation: Schema.Literal("show") }),
   struct("Research.HistoryDiff", { ...historyFields, operation: Schema.Literal("diff"), base: GitRevision }),
+  struct("Research.HistoryBlame", { ...historyFields, operation: Schema.Literal("blame"), start: optional(PositiveInt), end: optional(PositiveInt) }),
+  struct("Research.HistoryCompare", {
+    kind: Schema.Literal("history"), operation: Schema.Literal("compare"), base: GitRevision, revision: optional(GitRevision),
+    paths: list(text(8192), 16).check(Schema.isMinLength(1)), stat: optional(Schema.Boolean),
+  }),
+  struct("Research.HistorySearch", {
+    kind: Schema.Literal("history"), operation: Schema.Literal("search"), revision: optional(GitRevision),
+    message: optional(text(256)), path: optional(text(8192)), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
+  }),
 ])
 export type HistoryInput = typeof HistoryInput.Type
 
