@@ -1,11 +1,18 @@
 import { define } from "./internal"
 import { Effect, Stream } from "effect"
+import type { Types } from "effect"
 import { EventV2 } from "../event"
 import { ModelsDev } from "../models-dev"
-import { ModelV2 } from "../model"
+import type { ModelV2 } from "../model"
 import { ProviderV2 } from "../provider"
 
-type Cost = ModelV2.MutableInfo["cost"]
+// The plugin context still types catalog drafts with its own wire shape, whose request and variant bodies are
+// open-ended (`unknown`) where the schema says JSON. Keep that widening here until the plugin types move to schema.
+type Draft = Omit<Types.DeepMutable<typeof ModelV2.Info.Encoded>, "request" | "variants"> & {
+  request: { headers: Record<string, string>; body: Record<string, unknown> }
+  variants: Array<{ id: string; headers: Record<string, string>; body: Record<string, unknown> }>
+}
+type Cost = Draft["cost"]
 
 function released(date: string) {
   const time = Date.parse(date)
@@ -77,7 +84,7 @@ function modeName(model: ModelsDev.Model, mode: string) {
 }
 
 function applyModel(
-  draft: ModelV2.MutableInfo,
+  draft: Draft,
   model: ModelsDev.Model,
   input: {
     readonly name?: string
@@ -86,16 +93,16 @@ function applyModel(
   } = {},
 ) {
   draft.name = input.name ?? model.name
-  draft.family = model.family === undefined ? undefined : ModelV2.Family.make(model.family)
+  draft.family = model.family
   draft.api = model.provider?.npm
     ? {
-        id: ModelV2.ID.make(model.id),
+        id: model.id,
         type: "aisdk",
         package: model.provider.npm,
         url: model.provider.api,
       }
     : {
-        id: ModelV2.ID.make(model.id),
+        id: model.id,
         type: "native",
         url: model.provider?.api,
         settings: {},
