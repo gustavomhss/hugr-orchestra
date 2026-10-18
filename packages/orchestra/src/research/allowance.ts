@@ -21,7 +21,8 @@ export const Current = Context.Reference<Frame | undefined>("@orchestra/Research
 const issued = new WeakSet<Frame>()
 
 export interface Interface {
-  readonly enter: <A, E, R>(sessionID: string, dispatchCallID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
+  /** The dispatching caller's tier (default quick) binds once per dispatch; nothing inside the dispatch can change it. */
+  readonly enter: <A, E, R>(sessionID: string, dispatchCallID: string, effect: Effect.Effect<A, E, R>, tier?: Research.Depth) => Effect.Effect<A, E | Research.Error, R>
   readonly withAttribution: <A, E, R>(sessionID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly provider: <A, E, R>(input: LLM.StreamInput, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly tool: <A, E, R>(sessionID: string, callID: string, toolID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
@@ -70,12 +71,12 @@ const layer = Layer.effect(
       return undefined
     })
 
-    const enter: Interface["enter"] = (sessionID, dispatchCallID, effect) => Effect.gen(function* () {
+    const enter: Interface["enter"] = (sessionID, dispatchCallID, effect, tier) => Effect.gen(function* () {
       const binding = yield* placement(sessionID)
       if (!binding) return yield* effect
       if (!dispatchCallID.trim())
         return yield* new Research.Error({ code: "binding_missing", message: "Discovery dispatch call identity is missing" })
-      const allowance = yield* allowances.bind(binding, dispatchCallID)
+      const allowance = yield* allowances.bind(binding, dispatchCallID, tier)
       const current: Frame = Object.freeze({ allowance: Object.freeze({ ...allowance, binding: Object.freeze({ ...allowance.binding }) }) })
       issued.add(current)
       return yield* effect.pipe(Effect.provideService(Current, current))

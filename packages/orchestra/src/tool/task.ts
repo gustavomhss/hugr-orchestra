@@ -31,6 +31,7 @@ import { LogicalTask } from "@/maestro/logical-task"
 import { SessionAuthority } from "@/maestro/session-authority"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Research } from "@orchestra/schema/research"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -98,6 +99,10 @@ const BaseParameterFields = {
   writePaths: WriteRoots.Param,
   workflow: Schema.optional(WorkflowBinding.Selection),
   memoryUnit: AtlasResume.Param,
+  effort: Schema.optional(Research.Depth).annotate({
+    description:
+      "jimmy only: the research effort tier, fixed for this dispatch. quick (default), focused or deep; each step doubles its provider-call, tool, byte and time allowance. Ignored for other teammates.",
+  }),
 }
 
 const BaseParameters = Schema.Struct(BaseParameterFields)
@@ -610,7 +615,7 @@ export const TaskTool = Tool.define(
         )
         // A native research dispatch runs under its allowance; the discovery seat never runs without one.
         const result = yield* completion.withWorkflow(completionReceipt, Option.isSome(research)
-          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted)
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted, params.effort)
           : nextID === "jimmy"
             ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
             : prompted)
