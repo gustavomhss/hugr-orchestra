@@ -89,11 +89,24 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   )
   const invalidate = (...parts: string[]) => void ctx.queryClient.invalidateQueries({ queryKey: key(...parts) })
 
+  // A hook decision is published before its ledger receipt is written, so Activity refetches once a burst of
+  // decisions has settled instead of on the event itself.
+  let decided: ReturnType<typeof setTimeout> | undefined
+  onCleanup(() => clearTimeout(decided))
+
   // Durable relay.* events arrive on the profile's event stream; each one refreshes what it can change.
   onCleanup(
     ctx.sdk.event.on(input.directory, (event) => {
       const type: string = event.type
       if (!type.startsWith("relay.")) return
+      if (type === "relay.hook.decided") {
+        clearTimeout(decided)
+        decided = setTimeout(() => {
+          invalidate("decisions")
+          invalidate("decisions-all")
+        }, 1000)
+        return
+      }
       if (type.startsWith("relay.hook")) {
         invalidate("documents")
         return invalidate("installs")

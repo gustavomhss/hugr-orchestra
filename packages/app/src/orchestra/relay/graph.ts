@@ -1,3 +1,4 @@
+import { HookGlob } from "@orchestra/schema/hook-glob"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import type { RelayKind } from "./client"
 
@@ -364,12 +365,16 @@ export function uniqueName(flow: Flow, base: string) {
 
 /* ---------- hook test ---------- */
 
-/** A sample agent event: the trigger's operation and timing and the value the conditions read. */
+/**
+ * A sample agent call as the runtime reports it: the concrete operation (`edit`, `command`, `tool` for any other
+ * tool, or a session event), its timing, and the tool ID, path and command it carries.
+ */
 export type HookProbe = { operation: string; timing: string; path?: string; command?: string; tool?: string }
 
-// Walks the hook the way the engine plans it (relay/src/hook/evaluate.ts): a condition takes Yes or No, actions
-// run in order along their output, Block ends the branch, and a Run gate continues on Pass because its check is
-// not run here. Graph only; nothing is evaluated on the server.
+// Walks the hook the way the engine plans and enforces it (relay/src/hook/evaluate.ts, core/tool-safety-hooks.ts): a
+// condition takes Yes or No, actions run in order along their output, Block and Require repair end the walk because
+// their denial ends the call, and a Run gate continues on Pass because its check is not run here. Graph only; nothing
+// is evaluated on the server.
 export function walkHook(flow: Flow, probe: HookProbe) {
   const trigger = flow.nodes.find((node) => node.type === TRIGGER)
   if (!trigger) return { path: [], actions: [] }
@@ -378,7 +383,7 @@ export function walkHook(flow: Flow, probe: HookProbe) {
     if (!node || path.includes(id)) return path
     const port = node.type === CONDITION ? (conditionHolds(node.parameters, probe) ? 0 : 1) : 0
     const next = flow.edges.find((edge) => edge.from === id && edge.port === port)
-    if (!next || node.type === "relay.hookBlock") return [...path, id]
+    if (!next || node.type === "relay.hookBlock" || node.type === "relay.hookRepair") return [...path, id]
     return visit(next.to, [...path, id])
   }
   const path = visit(trigger.id, [])
@@ -389,10 +394,11 @@ export function walkHook(flow: Flow, probe: HookProbe) {
   return { path, actions }
 }
 
-// A condition on a field the event lacks (a path on a command, a tool on a session trigger) takes No.
+// A condition on a field the event lacks (a path on a command, a tool on a session trigger) takes No. Paths use the
+// engine's own glob (HookGlob), so a path pattern holds here exactly when it holds at runtime.
 export function conditionHolds(parameters: Record<string, unknown>, probe: HookProbe) {
   const pattern = String(parameters.pattern ?? "")
-  if (parameters.field === "path") return probe.path !== undefined && pathMatch(pattern, probe.path)
+  if (parameters.field === "path") return probe.path !== undefined && HookGlob.match(pattern, probe.path)
   if (parameters.field === "event") return wildcard(pattern, `${probe.operation}.${probe.timing}`)
   const value = parameters.field === "tool" ? probe.tool : probe.command
   return value !== undefined && wildcard(pattern, value)
@@ -400,46 +406,19 @@ export function conditionHolds(parameters: Record<string, unknown>, probe: HookP
 
 // Commands, tools and events use Orchestra's permission wildcard: `*` is any run (across `/` too), `?` one
 // character, everything else literal, including `|`. A pattern ending in " *" also matches without the argument.
+// As in the engine, a `\` on either side reads as `/`.
 export function wildcard(pattern: string, value: string) {
+  const subject = value.replaceAll("\\", "/")
   const test = (body: string) =>
     new RegExp(
       `^${body
-        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replaceAll("\\", "/")
+        .replace(/[.+^${}()|[\]]/g, "\\$&")
         .replace(/\*/g, "[\\s\\S]*")
         .replace(/\?/g, "[\\s\\S]")}$`,
-    ).test(value)
+    ).test(subject)
   return test(pattern) || (pattern.endsWith(" *") && test(pattern.slice(0, -2)))
 }
-
-// Paths use the engine's glob: `*` and `?` stay inside one segment, `**` crosses segments, `[a-z]` and `[!a]` are
-// classes, `{a,b}` are alternatives, `\` escapes, and each leading `!` negates. `|` is literal.
-export function pathMatch(pattern: string, path: string) {
-  const bangs = /^!*/.exec(pattern)![0].length
-  const tokens = pattern.slice(bangs).match(/\\[\s\S]|\*\*\/?|\*|\?|\[(?:\\.|[^\]])+\]|[{},]|[\s\S]/g) ?? []
-  const body = tokens.reduce(
-    (acc, token) => {
-      if (token === "{") return { out: `${acc.out}(?:`, depth: acc.depth + 1 }
-      if (token === "}" && acc.depth > 0) return { out: `${acc.out})`, depth: acc.depth - 1 }
-      if (token === "," && acc.depth > 0) return { out: `${acc.out}|`, depth: acc.depth }
-      return { out: acc.out + globToken(token), depth: acc.depth }
-    },
-    { out: "", depth: 0 },
-  )
-  if (body.depth > 0) return bangs % 2 === 1
-  return new RegExp(`^${body.out}$`).test(path) !== (bangs % 2 === 1)
-}
-
-function globToken(token: string) {
-  if (token.startsWith("\\")) return escape(token.slice(1))
-  if (token === "**/") return "(?:[\\s\\S]*/)?"
-  if (token === "**") return "[\\s\\S]*"
-  if (token === "*") return "[^/]*"
-  if (token === "?") return "[^/]"
-  if (token.startsWith("[") && token.length > 2) return `[${token.slice(1, -1).replace(/^[!^]/, "^")}]`
-  return escape(token)
-}
-
-const escape = (text: string) => text.replace(/[.+^${}()|[\]\\*?]/g, "\\$&")
 
 /* ---------- layout ---------- */
 
