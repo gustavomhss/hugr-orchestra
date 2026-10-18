@@ -365,7 +365,7 @@ describe("module-boundary gate", () => {
       tree.files["packages/core/src/session/linked.ts"] = 'export { thing } from "@fx/schema/thing"\nexport { decoy } from "@fx/schema/decoy"\n'
     })
     mkdirSync(path.join(root, "node_modules/@fx"), { recursive: true })
-    symlinkSync(decoy, path.join(root, "node_modules/@fx/schema"))
+    symlinkSync(decoy, path.join(root, "node_modules/@fx/schema"), process.platform === "win32" ? "junction" : "dir")
     expect(found(root).map((item) => `${item.rule} ${item.specifier}`)).toEqual(["R6b @fx/schema/decoy"])
   })
 })
