@@ -147,10 +147,15 @@ test("create preserves a custom name when selecting a template and caches its sa
   expect(host.querySelector(".mx-error")?.textContent).toBeUndefined()
   expect(opened).toEqual(["saved"])
   expect(api.requests).toHaveLength(1)
-  expect(await api.requests[0].json()).toMatchObject({
+  const created = await api.requests[0].json()
+  expect(created).toMatchObject({
     name: "Sprint review", nodes: doc().nodes, connections: doc().connections,
-    meta: { relay: { profile: "wp-execute" } },
+    meta: { relay: { kind: "workflow" } },
   })
+  // The copy is the user's own workflow, so it drops the profile mark that lists templates.
+  expect(created.meta.relay).not.toHaveProperty("profile")
+  // A template that cannot run is not offered.
+  expect(host.querySelector('[data-template="blocked"]')).toBeNull()
 })
 
 test("create validates name, keeps inputs after refusal, locks pending submission, and retries once", async () => {
@@ -207,7 +212,7 @@ test("a missing template never silently creates blank; choosing blank explicitly
 })
 
 for (const direction of ["ltr", "rtl"]) {
-  test(`template radios support ${direction} arrows, skip unavailable choices, and preserve typed name`, async () => {
+  test(`template radios support ${direction} arrows and preserve typed name`, async () => {
     const api = setup()
     const host = mount(() => createComponent(CreateWorkflowDialog, { ...api, initial: "blank", onClose() {}, onCreated() {} }), direction)
     const input = field(host, "Typed name")

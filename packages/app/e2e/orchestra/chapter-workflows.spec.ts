@@ -7,9 +7,6 @@ test.setTimeout(180_000)
 const sidebar = (page: Page) => page.locator(".orchestra-sidebar")
 const editor = (page: Page) => page.locator('[data-component="relay-editor"]')
 const canvas = (page: Page) => page.locator('[data-component="relay-canvas"]')
-const RUNS_MISSING = "This server cannot run workflows yet. Runs, receipts and audits appear here once it can."
-const MAESTRO_ONLY =
-  "Maestro alone starts workflows, checks executable gates and releases parked runs. This view authors definitions and reads recorded results."
 const SEEDED = [
   "Relay · wp-execute",
   "Relay · spec-decompose",
@@ -27,7 +24,7 @@ async function openWorkflows(page: Page) {
 }
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: the library lists the seeded profiles, and runs say the server cannot run them yet`, async ({
+  test(`${scheme}: the library lists the seeded profiles, offers only templates that can run, and hides runs`, async ({
     page,
   }) => {
     await setupRelay(page, { scheme })
@@ -40,30 +37,17 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(row("Relay · wp-execute").locator(".wf-badges .mx-badge")).toHaveText(["Published v3", "Draft v4"])
     await expect(row("Relay · tdd_feature").locator(".wf-badges .mx-badge")).toHaveText(["Published v1"])
     await expect(row("Relay · design").locator(".wf-badges .mx-badge")).toHaveText(["Draft v1 · not published"])
-    // No live runs, no fabricated last runs and no waiting count while the run routes are missing.
+    // Runs are hidden: no live runs, no last-run column, no waiting count and no run button on a row.
     await expect(view.locator(".wf-attn")).toHaveCount(0)
     await expect(row("Relay · wp-execute").locator(".wf-last")).toHaveCount(0)
     await expect(sidebar(page).locator('[data-slot="orchestra-nav-attention"]')).toHaveCount(0)
-    // Maestro alone starts runs, so every row's run button is disabled and says so.
-    for (const name of ["Relay · wp-execute", "Relay · design"]) {
-      const run = row(name).getByRole("button", { name: `Run ${name}` })
-      await expect(run).toBeDisabled()
-      await expect(run).toHaveAttribute("title", MAESTRO_ONLY)
-    }
+    for (const name of ["Relay · wp-execute", "Relay · design"])
+      await expect(row(name).getByRole("button", { name: `Run ${name}` })).toHaveCount(0)
 
+    // Profiles that still need tools are not offered as templates.
     const templates = view.locator(".wf-tpl-grid .wf-tpl h3")
-    await expect(templates).toHaveText([
-      "Blank workflow",
-      "Relay · tdd_feature",
-      "Relay · wp-execute",
-      "Relay · design",
-      "Relay · planning",
-      "Relay · research-v2",
-      "Relay · spec-decompose",
-    ])
-    const blocked = view.locator('.wf-tpl[aria-disabled="true"]')
-    await expect(blocked).toHaveCount(4)
-    await expect(blocked.locator(".mx-badge.warm")).toHaveText(Array(4).fill("Needs tools not available yet"))
+    await expect(templates).toHaveText(["Blank workflow", "Relay · tdd_feature", "Relay · wp-execute"])
+    await expect(view.locator('.wf-tpl[aria-disabled="true"]')).toHaveCount(0)
     await page.screenshot({ path: test.info().outputPath(`${scheme}-library.png`) })
 
     await view.getByRole("textbox", { name: "Search workflows" }).fill("TDD")
@@ -72,12 +56,11 @@ for (const scheme of ["dark", "light"] as const) {
     await view.getByRole("group", { name: "Filter by status" }).getByRole("button", { name: "Published" }).click()
     await expect(rows.locator("strong")).toHaveText(["Relay · wp-execute", "Relay · tdd_feature"])
 
-    await view.getByRole("tab", { name: /Executions/ }).click()
-    await expect(page).toHaveURL(/\/orchestra\/workflows\/executions$/)
-    await expect(view.locator('[data-slot="relay-runs-unsupported"]')).toHaveText(RUNS_MISSING)
-    await expect(page.locator('[data-slot="orchestra-titlebar-breadcrumb"]')).toHaveText(/Workflows\s*\/\s*Executions/)
-    await page.goBack()
-    await expect(page).toHaveURL(/\/orchestra\/workflows$/)
+    await expect(view.getByRole("tab", { name: /Executions/ })).toHaveCount(0)
+    // A bookmarked executions URL opens the library.
+    await page.goto("/orchestra/workflows/executions", { waitUntil: "domcontentloaded" })
+    await expect(view.locator("h1")).toHaveText("Workflows")
+    await expect(view.getByRole("listitem").locator("strong")).toHaveText(SEEDED)
   })
 }
 
@@ -93,22 +76,22 @@ test("a server without the Relay routes says so on both chapters", async ({ page
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
 })
 
-test("a template that can run is copied with its profile mark; one that cannot is not offered", async ({ page }) => {
+test("a template that can run is copied as the user's own workflow; one that cannot is not offered", async ({ page }) => {
   const state = await setupRelay(page)
   await page.goto("/orchestra/workflows/new")
   const dialog = page.getByRole("dialog", { name: "New workflow" })
   await expect(dialog.getByRole("radio", { name: /Relay · tdd_feature/ })).toHaveAttribute("aria-checked", "true")
-  // A profile whose tools are missing is shown, but cannot be picked.
-  await expect(dialog.getByRole("radio", { name: /Relay · design/ })).toHaveAttribute("aria-disabled", "true")
-  await expect(dialog.getByRole("radio", { name: /Relay · design/ })).toHaveAttribute("aria-checked", "false")
+  // A profile whose tools are missing is not offered at all.
+  await expect(dialog.getByRole("radio", { name: /Relay · design/ })).toHaveCount(0)
   await dialog.getByRole("radio", { name: /Relay · wp-execute/ }).click()
   await expect(dialog.getByRole("textbox", { name: "Name" })).toHaveValue("Relay · wp-execute copy")
   await dialog.getByRole("textbox", { name: "Name" }).fill("WP-07 Session recovery")
   await dialog.getByRole("button", { name: "Create and open" }).click()
   await expect(page).toHaveURL(/\/orchestra\/workflows\/doc-\d+$/)
   const created = state.writes.find((write) => write.method === "POST" && write.path === "/api/relay/document")
-  const body = created?.body as { name: string; nodes: unknown[]; meta: { relay: { profile: string } } }
-  expect([body.name, body.nodes.length, body.meta.relay.profile]).toEqual(["WP-07 Session recovery", 14, "wp-execute"])
+  const body = created?.body as { name: string; nodes: unknown[]; meta: { relay: { profile?: string } } }
+  // The copy drops the profile mark, so it is not listed as a template.
+  expect([body.name, body.nodes.length, body.meta.relay.profile]).toEqual(["WP-07 Session recovery", 14, undefined])
   await expect(editor(page).locator(".wf-name")).toHaveValue("WP-07 Session recovery")
 })
 
@@ -128,7 +111,8 @@ test("canvas: inspect a step, walk to its neighbour and close only the top layer
   ])
   await expect(canvas(page).locator(".wf-banner")).toHaveCount(0)
   await expect(canvas(page).locator(".wf-state-badge")).toHaveCount(0)
-  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toBeDisabled()
+  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
+  await expect(editor(page).getByText("Maestro runs workflows from chat.")).toBeVisible()
 
   await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
   await expect(page).toHaveURL(/\/relay-wp-execute\/node\/green\.implement$/)
@@ -143,10 +127,7 @@ test("canvas: inspect a step, walk to its neighbour and close only the top layer
   await expect(page).toHaveURL(/\/orchestra\/workflows\/relay-wp-execute$/)
   await expect(canvas(page)).toBeVisible()
 
-  await editor(page)
-    .getByRole("tab", { name: /Executions/ })
-    .click()
-  await expect(page.locator('[data-slot="relay-runs-unsupported"]')).toHaveText(RUNS_MISSING)
+  await expect(editor(page).getByRole("tab", { name: /Executions/ })).toHaveCount(0)
   await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
   await expect(page).toHaveURL(/\/orchestra\/workflows$/)
 })
@@ -199,8 +180,8 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
   const published = state.writes.find((write) => write.path === "/api/relay/document/relay-wp-execute/publish")
   expect(published?.body).toMatchObject({ versionId: expect.stringMatching(/^relay-wp-execute-v\d+$/) })
   await expect(editor(page).locator(".wf-head .mx-badge").first()).toHaveText(/^Published v\d+$/)
-  // Publishing does not make the missing run routes appear.
-  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toBeDisabled()
+  // Publishing does not bring a run button back.
+  await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
   expect(state.writes.some((write) => write.path.startsWith("/api/relay/run"))).toBe(false)
 })
 
