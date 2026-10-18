@@ -57,9 +57,7 @@ export const SettingsProvidersV2: Component<{
                             <Show
                               when={controller.canDisconnect(item)}
                               fallback={
-                                <span class="settings-v2-provider-env-hint">
-                                  {language.t("settings.providers.connected.environmentDescription")}
-                                </span>
+                                <span class="settings-v2-provider-env-hint">{controller.disconnectHint(item)}</span>
                               }
                             >
                               <ButtonV2

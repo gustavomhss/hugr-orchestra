@@ -12,6 +12,8 @@ import {
   createPromptSubmit,
   interrupts,
   optimistic,
+  optimisticRemovals,
+  policyFixture,
   promoted,
   preparations,
   promptInputs,
@@ -79,6 +81,57 @@ test("empty existing Session submit interrupts while another submission awaits p
   gate.resolve()
   await sending
   expect(promptInputs).toEqual([])
+})
+
+test("failed Stop toasts and reads the Session status back instead of keeping the optimistic idle", async () => {
+  state.params.id = "session-1"
+  const fixture = policyFixture.sdk
+  policyFixture.sdk = {
+    ...fixture,
+    api: {
+      ...fixture.api,
+      session: {
+        ...fixture.api.session,
+        interrupt: async () => { throw new Error("interrupt failed") },
+        active: async () => ({ "session-1": { type: "running" as const } }),
+      },
+    },
+  }
+  const entered = deferred()
+  const gate = deferred()
+  state.policyWait = async () => { entered.resolve(); await gate.promise }
+  const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "pending send" }), working: () => true })
+  const sending = submit.handleSubmit(new Event("submit"))
+  await entered.promise
+  await submit.abort()
+  expect(toasts.at(-1)).toMatchObject({ title: "orchestra.chat.stop.failed", description: "interrupt failed" })
+  expect(statusWrites).toEqual([{ sessionID: "session-1", type: "idle" }, { sessionID: "session-1", type: "busy" }])
+  gate.resolve()
+  await sending
+  expect(promptInputs).toEqual([])
+})
+
+test("a prompt a hook refused returns to the composer with the hook named, and the Session is not left busy", async () => {
+  state.params.id = "session-1"
+  const refusal = {
+    name: "PromptBlockedError",
+    data: {
+      message: "Blocked by hook 'No prompts': Not now.",
+      reason: "relay-hook-block",
+      hook: { name: "No prompts", message: "Not now." },
+    },
+  }
+  state.sendHook = async () => { throw new Error(refusal.data.message, { cause: { body: refusal, status: 409 } }) }
+  const real = createPromptState({ prompt: "ship it" })
+  expect(await createPromptSubmit({ ...submitInput(), prompt: real }).handleSubmit(new Event("submit"))).toBe(false)
+  expect(promptInputs).toHaveLength(1)
+  expect(real.current()[0]).toMatchObject({ content: "ship it" })
+  expect(toasts.at(-1)).toMatchObject({
+    title: "prompt.toast.promptSendFailed.title",
+    description: "orchestra.chat.send.blockedByHook",
+  })
+  expect(optimisticRemovals.length).toBeGreaterThan(0)
+  expect(statusWrites.at(-1)).toEqual({ sessionID: "session-1", type: "idle" })
 })
 
 test.each(["prompt", "command", "shell", "handoff"])("existing Session %s fences failed writes without clearing", async (pathway) => {

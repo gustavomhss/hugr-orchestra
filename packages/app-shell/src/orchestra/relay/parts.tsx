@@ -1,76 +1,92 @@
-import { For, Show } from "solid-js"
-import type { RelayDocument } from "./client"
+import { createSignal, For, Show } from "solid-js"
+import { documentProfile, type RelayDocument, type RelayKind } from "./client"
+import { profileDrafts } from "./drafts"
 import type { RelayRun } from "./runs"
 import { badgeTone, RUN_TONE, runHandle } from "./format"
 import { checkCount, type Flow, type Issue, nodeOf, START, steps } from "./graph"
+import { relayPath } from "./route"
+import type { RelaySource } from "./source"
 import { Ic, useRelayCopy } from "./ui"
 
+// The draft has edits Maestro does not see yet: it was published, and the draft moved on.
+export const unpublishedChanges = (document: RelayDocument) =>
+  !!document.activeVersionId && document.activeVersionId !== document.versionId
+
+// States, not counters: every autosave is a version, so a number would mean nothing to the user. The counters stay in a tooltip.
 export function VersionBadges(props: { document: RelayDocument }) {
   const copy = useRelayCopy()
-  const draftAhead = () =>
-    props.document.publishedCounter !== undefined && props.document.versionCounter > props.document.publishedCounter
   return (
     <Show
       when={props.document.activeVersionId}
       fallback={
-        <span class="mx-badge warm">
-          {copy.t("orchestra.workflows.badge.unpublished", { version: props.document.versionCounter })}
+        <span
+          class="mx-badge warm"
+          title={copy.t("orchestra.workflows.badge.versionTitle", { version: props.document.versionCounter })}
+        >
+          {copy.t("orchestra.workflows.badge.unpublished")}
         </span>
       }
     >
-      <span class="mx-badge good">
-        {props.document.publishedCounter === undefined
-          ? copy.t("orchestra.workflows.badge.publishedPlain")
-          : copy.t("orchestra.workflows.badge.published", { version: props.document.publishedCounter })}
+      <span class="mx-badge good" title={publishedTitle(copy, props.document)}>
+        {copy.t("orchestra.workflows.badge.published")}
       </span>
-      <Show when={draftAhead()}>
-        <span class="mx-badge">
-          {copy.t("orchestra.workflows.badge.draft", { version: props.document.versionCounter })}
+      <Show when={unpublishedChanges(props.document)}>
+        <span class="mx-badge" title={aheadTitle(copy, props.document)}>
+          {copy.t("orchestra.workflows.badge.draft")}
         </span>
       </Show>
     </Show>
   )
 }
 
-// The editor head shows one badge: unpublished, ahead of the live version, or published.
+// The editor head shows one badge: unpublished, ahead of the published version, or published.
 export function HeadBadge(props: { document: RelayDocument }) {
   const copy = useRelayCopy()
   return (
     <Show
       when={props.document.activeVersionId}
       fallback={
-        <span class="mx-badge warm">
-          {copy.t("orchestra.workflows.badge.unpublished", { version: props.document.versionCounter })}
+        <span
+          class="mx-badge warm"
+          title={copy.t("orchestra.workflows.badge.versionTitle", { version: props.document.versionCounter })}
+        >
+          {copy.t("orchestra.workflows.badge.unpublished")}
         </span>
       }
     >
       <Show
-        when={props.document.activeVersionId !== props.document.versionId}
+        when={unpublishedChanges(props.document)}
         fallback={
-          <span class="mx-badge good">
-            {props.document.publishedCounter === undefined
-              ? copy.t("orchestra.workflows.badge.publishedPlain")
-              : copy.t("orchestra.workflows.badge.published", { version: props.document.publishedCounter })}
+          <span class="mx-badge good" title={publishedTitle(copy, props.document)}>
+            {copy.t("orchestra.workflows.badge.published")}
           </span>
         }
       >
-        <span class="mx-badge wf-badge-full" title={copy.t("orchestra.workflows.badge.aheadTitle")}>
-          {copy.t("orchestra.workflows.badge.draft", { version: props.document.versionCounter })} ·{" "}
-          <span style={{ color: "var(--mx-good)" }}>
-            {props.document.publishedCounter === undefined
-              ? copy.t("orchestra.workflows.badge.livePlain")
-              : copy.t("orchestra.workflows.badge.live", { version: props.document.publishedCounter })}
-          </span>
+        <span class="mx-badge wf-badge-full" title={aheadTitle(copy, props.document)}>
+          {copy.t("orchestra.workflows.badge.publishedAhead")}
         </span>
-        {/* Narrow windows keep the live version only, as the approved mock does at 1280px. */}
-        <span class="mx-badge good wf-badge-compact" title={copy.t("orchestra.workflows.badge.aheadTitle")}>
-          {props.document.publishedCounter === undefined
-            ? copy.t("orchestra.workflows.badge.publishedPlain")
-            : copy.t("orchestra.workflows.badge.published", { version: props.document.publishedCounter })}
+        {/* Narrow windows keep the part that asks for action. */}
+        <span class="mx-badge wf-badge-compact" title={aheadTitle(copy, props.document)}>
+          {copy.t("orchestra.workflows.badge.draft")}
         </span>
       </Show>
     </Show>
   )
+}
+
+function publishedTitle(copy: ReturnType<typeof useRelayCopy>, document: RelayDocument) {
+  if (document.publishedCounter === undefined) return undefined
+  return copy.t("orchestra.workflows.badge.publishedTitle", { version: document.publishedCounter })
+}
+
+function aheadTitle(copy: ReturnType<typeof useRelayCopy>, document: RelayDocument) {
+  return [
+    copy.t("orchestra.workflows.badge.aheadTitle"),
+    copy.t("orchestra.workflows.badge.versionTitle", { version: document.versionCounter }),
+    publishedTitle(copy, document),
+  ]
+    .filter(Boolean)
+    .join("\n")
 }
 
 export function stateLabel(copy: ReturnType<typeof useRelayCopy>, run: RelayRun) {
@@ -141,6 +157,67 @@ export function phaseNames(flow: Flow) {
     .map((phase) => phase.name)
 }
 
+// Drafts that could not be saved and are kept in memory, with why and a way out.
+export function RetainedDrafts(props: { source: RelaySource; kind: RelayKind; go: (path: string) => void }) {
+  const copy = useRelayCopy()
+  const [confirming, setConfirming] = createSignal<string>()
+  return (
+    <For
+      each={profileDrafts(props.source).filter(
+        (draft) =>
+          draft.state.flow.kind === props.kind && draft.state.save.dirty && draft.state.save.state !== "saving",
+      )}
+    >
+      {(draft) => (
+        <p class="mx-note wf-retained" role="status">
+          <span>
+            {draft.state.save.state === "error"
+              ? copy.t("orchestra.workflows.drafts.error", { name: draft.state.name })
+              : draft.state.save.state === "conflict"
+                ? copy.t("orchestra.workflows.drafts.conflict", { name: draft.state.name })
+                : copy.t("orchestra.workflows.drafts.retained", { name: draft.state.name })}
+          </span>
+          <button
+            type="button"
+            class="mx-btn"
+            onClick={() => props.go(relayPath.editor(props.kind, draft.state.base.id))}
+          >
+            {copy.t("orchestra.workflows.menu.open")}
+          </button>
+          <Show
+            when={confirming() === draft.state.base.id}
+            fallback={
+              <button type="button" class="mx-btn" onClick={() => setConfirming(draft.state.base.id)}>
+                {copy.t("orchestra.workflows.drafts.discard")}
+              </button>
+            }
+          >
+            <button type="button" class="mx-btn danger" onClick={() => draft.discard()}>
+              {copy.t("orchestra.workflows.drafts.discardConfirm")}
+            </button>
+            <button type="button" class="mx-btn" onClick={() => setConfirming(undefined)}>
+              {copy.t("orchestra.workflows.drafts.keep")}
+            </button>
+          </Show>
+        </p>
+      )}
+    </For>
+  )
+}
+
+const PROFILE_NAMES = {
+  tdd_feature: "orchestra.workflows.template.tddFeature",
+  "wp-execute": "orchestra.workflows.template.wpExecute",
+} as const
+
+// A shipped profile's name for people. A profile without one keeps the name the server gave it.
+export function templateName(copy: ReturnType<typeof useRelayCopy>, document: RelayDocument) {
+  const profile = documentProfile(document)
+  const key =
+    profile && Object.hasOwn(PROFILE_NAMES, profile) ? PROFILE_NAMES[profile as keyof typeof PROFILE_NAMES] : undefined
+  return key ? copy.t(key) : document.name
+}
+
 // A seeded profile's objective without its "name vX — " prefix, which the card title already says.
 export function templateSummary(document: RelayDocument) {
   const brief = document.nodes.find((node) => node.type === START)?.parameters.relayBrief
@@ -161,26 +238,23 @@ export function TemplateCard(props: {
   const copy = useRelayCopy()
   const document = () => props.documents.find((item) => item.id === props.id)
   const flow = () => props.flows.get(props.id)
-  // Profiles whose Relay tools are not ported yet can be read in the library, but not started from here.
-  const blocked = () => document()?.runnable === false
   return (
     <button
       type="button"
       class="mx-card wf-tpl"
       role={props.radio ? "radio" : undefined}
       aria-checked={props.radio ? !!props.selected : undefined}
-      aria-disabled={blocked() || props.disabled ? "true" : undefined}
+      aria-disabled={props.disabled ? "true" : undefined}
       disabled={props.disabled}
-      tabindex={props.radio ? ((props.selected || props.tabstop) && !blocked() ? 0 : -1) : undefined}
-      title={blocked() ? copy.t("orchestra.workflows.template.toolsMissingTitle") : undefined}
+      tabindex={props.radio ? (props.selected || props.tabstop ? 0 : -1) : undefined}
       data-template={props.id}
-      onClick={() => !blocked() && !props.disabled && props.onPick(props.id)}
+      onClick={() => !props.disabled && props.onPick(props.id)}
     >
       <div class="mx-card-top">
         <span class="mx-mark">
           <Ic name={props.id === "blank" ? "plus" : "workflows"} />
         </span>
-        <h3>{document()?.name ?? copy.t("orchestra.workflows.template.blank")}</h3>
+        <h3>{document() ? templateName(copy, document()!) : copy.t("orchestra.workflows.template.blank")}</h3>
       </div>
       <p>
         {document()
@@ -216,9 +290,6 @@ export function TemplateCard(props: {
             </>
           )}
         </Show>
-        <Show when={blocked()}>
-          <span class="mx-badge warm">{copy.t("orchestra.workflows.template.toolsMissing")}</span>
-        </Show>
       </div>
     </button>
   )
@@ -227,5 +298,5 @@ export function TemplateCard(props: {
 export function issueText(copy: ReturnType<typeof useRelayCopy>, flow: Flow, issue: Issue) {
   if (issue.code === "server") return issue.text
   const name = "node" in issue ? (nodeOf(flow, issue.node)?.name ?? "") : ""
-  return copy.t(`orchestra.workflows.issue.${issue.code}`, { name })
+  return copy.t(`orchestra.workflows.issue.${issue.code}`, { name, ...("params" in issue ? issue.params : {}) })
 }

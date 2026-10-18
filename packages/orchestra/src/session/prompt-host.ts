@@ -1,8 +1,13 @@
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyPlacement } from "@orchestra/core/tool-safety-placement"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { LocationServiceMap } from "@orchestra/core/location-services"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { FSUtil } from "@orchestra/core/fs-util"
+import { AppProcess } from "@orchestra/core/process"
+import { Global } from "@orchestra/core/global"
 import type { PromptContext } from "@orchestra/schema/prompt-context"
 import { Context, Effect, Exit, Layer, Option, Schema } from "effect"
 import { InstanceState } from "@/effect/instance-state"
@@ -16,6 +21,15 @@ import { PromptIdentity } from "./prompt-identity"
 import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import type { Database } from "@orchestra/core/database/database"
 import type { EventV2 } from "@orchestra/core/event"
+
+/**
+ * Run once a prompt is past its installed hooks, which is when a refusal can no longer happen. A caller that returns
+ * before the run ends provides it to tell a refused prompt from an accepted one.
+ */
+export const HooksCleared = Context.Reference<Effect.Effect<unknown> | undefined>(
+  "@orchestra/PromptHost/HooksCleared",
+  { defaultValue: () => undefined },
+)
 
 /** Publish through the native bridge; only the tagged exact winner may turn a losing publication into a retry. */
 export const admit = Effect.fn("PromptHost.publishAdmission")(function* (
@@ -75,14 +89,18 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
   const locations = yield* LocationServiceMap.Service
 
   return Effect.fn("PromptHost.admit")(function* (input: SessionPrompt.PromptInput) {
+    const cleared = (yield* HooksCleared) ?? Effect.void
     const messageID = input.messageID ?? MessageID.ascending()
     // Schema.Any metadata can retain caller references; detach before identity and any asynchronous hook.
     const original = structuredClone(Schema.encodeSync(dependencies.schema)(input))
     const identity = PromptIdentity.fromEncoded(original)
     const request = Schema.decodeUnknownSync(dependencies.schema)(original)
     const existing = yield* dependencies.sessions.reconcilePrompt({ sessionID: request.sessionID, messageID, identity })
-    if (existing)
+    if (existing) {
+      // An exact retry is not asked again.
+      yield* cleared
       return request.noReply === true ? existing : yield* dependencies.loop({ sessionID: request.sessionID })
+    }
 
     const session = yield* dependencies.sessions.get(request.sessionID).pipe(Effect.orDie)
     const ctx = yield* InstanceState.context
@@ -120,6 +138,7 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
         )),
     ])
 
+    yield* cleared
     // Capture only old revert targets: cleanup's live-history query after admission would delete the new prompt.
     const history = session.revert
       ? yield* dependencies.sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
@@ -181,5 +200,48 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
     return yield* dependencies.loop({ sessionID: session.id })
   }, Effect.scoped)
 })
+
+/**
+ * Installed hooks on a V1 Session event with no result to stop, as V2 runs them (core session.ts, runner/llm.ts):
+ * `session-start` once the Session is stored and `session-idle` once its drain settles. Only a project with a hooks.json
+ * loads them. They only record: no approval host is bound, so an Ask is recorded as rejected instead of holding the
+ * Session, and callers ignore whatever they return or refuse.
+ */
+export const record = Effect.fn("PromptHost.record")(function* (
+  session: Pick<Session.Info, "id" | "agent" | "directory" | "projectID" | "workspaceID">,
+  operation: "session-start" | "session-idle",
+) {
+  const { RelayHookInstall } = yield* Effect.promise(() => import("@orchestra/core/relay-hook-install"))
+  if (!(yield* Effect.promise(() => Bun.file(RelayHookInstall.file(Global.Path.data, session.projectID)).exists())))
+    return []
+  const { ToolSafetyHooks } = yield* Effect.promise(() => import("@orchestra/core/tool-safety-hooks"))
+  const { ToolSafetyProfile } = yield* Effect.promise(() => import("@orchestra/core/tool-safety-profile"))
+  const { MaestroArsenal } = yield* Effect.promise(() => import("@orchestra/core/tool/maestro-arsenal"))
+  const ctx = yield* InstanceState.context
+  const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
+  const scope = yield* Effect.scope
+  return yield* Effect.gen(function* () {
+    const safety = yield* ToolSafety.make
+    const load = ToolSafetyProfile.makeLoader(yield* FSUtil.Service, {
+      directory: session.directory,
+      stateDirectory: MaestroArsenal.stateDirectory(Global.Path.data, session.projectID),
+      projectID: session.projectID,
+    }, yield* ToolSafety.RuntimeProfile)
+    return yield* safety
+      .session({
+        operation,
+        sessionID: session.id,
+        ...(session.agent ? { agent: session.agent } : {}),
+        directory: session.directory,
+        projectID: session.projectID,
+        projectDirectory: ctx.worktree === "/" ? ctx.directory : ctx.worktree,
+      })
+      .pipe(
+        Effect.provideService(ToolSafety.RuntimeProfileLoader, load),
+        Effect.provideService(ToolSafety.NativeHost, undefined),
+        Effect.provideService(ToolSafetyHooks.Placement, ToolSafetyPlacement.make(locations, session, scope)),
+      )
+  }).pipe(Effect.provide(LayerNode.compile(LayerNode.group([FSUtil.node, AppProcess.node, Global.node]))))
+}, Effect.scoped)
 
 export * as PromptHost from "./prompt-host"

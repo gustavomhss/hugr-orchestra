@@ -1,14 +1,16 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { useLocation } from "@solidjs/router"
-import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
-import { showToast } from "@/utils/toast"
+import { createEffect, createMemo, createSignal, For, Match, on, Show, Switch } from "solid-js"
+import { createStore } from "solid-js/store"
 import { MxPage } from "../chapters/kit"
-import { decisionTime, type RelayDocument } from "./client"
-import { createAction, DeleteDialog, failure } from "./dialogs"
+import { decisionTime, documentDiagnostics, RelayError, type RelayDocument, type RelayInstall } from "./client"
+import { createAction, DeleteDialog } from "./dialogs"
 import { profileDrafts } from "./drafts"
 import { rememberDocument } from "./cache"
-import { type Flow, flowFromDocument, nodeOf, TRIGGER } from "./graph"
+import { type Flow, flowFromDocument, issues, nodeOf, TRIGGER } from "./graph"
 import { ActivityRows } from "./hook-activity"
+import { OrderDialog, UninstallDialog } from "./hook-dialogs"
+import { type InstallChange, installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
 import { Chain, VersionBadges } from "./parts"
 import { hookDocument, type HookPresetID, hookPresets, presetChain, type PresetKey } from "./presets"
@@ -20,9 +22,13 @@ type Props = {
   source: RelaySource
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
-  go: (path: string) => void
+  go: (path: string, replace?: boolean) => void
   close: (path: string) => void
 }
+
+// A ledger the server cannot read, or an install it no longer has, only hides that hook's activity.
+const ledgerIssue = (error: unknown) =>
+  error instanceof RelayError && (error.code === "ledger-invalid" || error.code === "install-missing")
 
 export function hookChain(flow: Flow) {
   const trigger = flow.nodes.find((node) => node.type === TRIGGER)
@@ -40,11 +46,21 @@ export function HookLibrary(props: Props) {
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
   const [remove, setRemove] = createSignal<RelayDocument>()
   const [preset, setPreset] = createSignal<HookPresetID | "blank">("blank")
-  const [busy, setBusy] = createSignal<string>()
+  const [busy, setBusy] = createSignal(false)
+  // `unreadable` holds the installs whose ledger the last activity read could not parse.
+  const [layer, setLayer] = createStore({
+    uninstall: undefined as { install: RelayInstall; name: string } | undefined,
+    ordering: false,
+    unreadable: [] as string[],
+  })
   const text = (key: PresetKey) => copy.t(`orchestra.hooks.${key}`)
   const presets = () => hookPresets(props.source.nodeTypes.data?.hook)
+  // The list stays on screen when a background refresh fails; only a first load can leave nothing to show.
+  const loaded = () => props.source.documents.data !== undefined
   const installs = () => props.source.installs.isSuccess ? props.source.installs.data ?? [] : []
   const installOf = (id: string) => installs().find((item) => item.document === id)
+  const nameOf = (documentID: string | undefined) =>
+    props.source.list().find((item) => item.id === documentID)?.name ?? copy.t("orchestra.hooks.editor.missing")
   const decisions = useQuery(
     () => ({
       queryKey: props.source.key(
@@ -54,15 +70,24 @@ export function HookLibrary(props: Props) {
           .join(","),
       ),
       queryFn: installs().length
-        ? () =>
-            Promise.all(installs().map((item) => props.source.client.decisions(item.installID))).then((lists) =>
-              lists.flat(),
+        ? async () => {
+            const list = installs()
+            const results = await Promise.allSettled(list.map((item) => props.source.client.decisions(item.installID)))
+            // A server-wide failure is still a failure; one unreadable ledger only marks its own hook.
+            const failed = results.find((result) => result.status === "rejected" && !ledgerIssue(result.reason))
+            if (failed?.status === "rejected") throw failed.reason
+            setLayer(
+              "unreadable",
+              list.flatMap((item, index) => (results[index]?.status === "rejected" ? [item.installID] : [])),
             )
+            return results.flatMap((result) => (result.status === "fulfilled" ? result.value : []))
+          }
         : skipToken,
       retry: false,
     }),
     props.source.queryClient,
   )
+  const unreadableInstalls = () => installs().filter((item) => layer.unreadable.includes(item.installID))
   const lastFire = (id: string) => {
     const install = installOf(id)
     if (!install) return
@@ -73,57 +98,115 @@ export function HookLibrary(props: Props) {
   const flows = createMemo(
     () => new Map(props.source.list().map((document) => [document.id, flowFromDocument(document, "hook")])),
   )
-  const toggle = async (document: RelayDocument, next: boolean) => {
+  // One change at a time across the list: a switch, an update, or a publish that installs. Every row stays locked
+  // until the refreshed install list lands, so the next click acts on what is really installed.
+  const change = async (kind: InstallChange, run: () => Promise<unknown>) => {
     if (busy() || !props.source.installs.isSuccess) return
-    setBusy(document.id)
-    const current = installOf(document.id)
-    const result = await (
-      current ? props.source.client.enable(current.installID, next) : props.source.client.install(document.id)
-    ).then(
+    setBusy(true)
+    const failed = await run().then(
       () => undefined,
-      (error: unknown) => failure(error),
+      (error: unknown) => ({ error }),
     )
-    setBusy(undefined)
-    props.source.invalidate("installs")
-    if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
+    await refreshInstalls(props.source)
+    setBusy(false)
+    if (failed) installNotice(copy, kind, failed.error)
   }
-  const rowMenu = (document: RelayDocument): MenuItem[] => [
-    {
-      label: copy.t("orchestra.workflows.menu.open"),
-      icon: "open",
-      run: () => props.go(relayPath.editor("hook", document.id)),
-    },
-    {
-      label: copy.t("orchestra.hooks.tab.activity"),
-      icon: "history",
-      run: () => props.go(relayPath.history("hook", document.id)),
-    },
-    "-",
-    { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setRemove(document) },
-  ]
+  const toggle = (document: RelayDocument, next: boolean) => {
+    const current = installOf(document.id)
+    return change(current && !next ? "pause" : "install", () =>
+      current ? props.source.client.enable(current.installID, next) : props.source.client.install(document.id),
+    )
+  }
+  const publishAndInstall = (document: RelayDocument) =>
+    change("install", async () => {
+      const published = await props.source.client.publish(document)
+      await rememberDocument(props.source.queryClient(), props.source.key("documents"), published)
+      await props.source.client.install(document.id)
+    })
+  // Why a never-published hook cannot be published from the list: the editor holds changes the saved copy lacks, or
+  // the editor would flag issues the server then refuses.
+  const blocker = (document: RelayDocument) => {
+    const draft = profileDrafts(props.source).find((item) => item.state.base.id === document.id)
+    if (draft && (draft.state.save.dirty || draft.state.save.state !== "saved")) return "draft"
+    return issues(flows().get(document.id)!, [...documentDiagnostics(document)]).length ? "issues" : undefined
+  }
+  const rowMenu = (document: RelayDocument): MenuItem[] => {
+    const install = installOf(document.id)
+    return [
+      {
+        label: copy.t("orchestra.workflows.menu.open"),
+        icon: "open",
+        run: () => props.go(relayPath.editor("hook", document.id)),
+      },
+      {
+        label: copy.t("orchestra.hooks.tab.activity"),
+        icon: "history",
+        run: () => props.go(relayPath.history("hook", document.id)),
+      },
+      ...(install
+        ? [
+            {
+              label: copy.t("orchestra.hooks.menu.uninstall"),
+              icon: "close" as const,
+              run: () => setLayer("uninstall", { install, name: document.name }),
+            },
+          ]
+        : []),
+      "-",
+      { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setRemove(document) },
+    ]
+  }
   const pickTemplate = (id: HookPresetID | "blank") => {
     setPreset(id)
     props.go(relayPath.create("hook"))
   }
+  // "New hook" never reopens the last template: the pick resets here, and when the dialog closes, so the command
+  // palette's route opens Blank too.
+  const newHook = () => {
+    setPreset("blank")
+    props.go(relayPath.create("hook"))
+  }
+  createEffect(
+    on(
+      () => props.route.create,
+      (create) => {
+        if (!create) setPreset("blank")
+      },
+      { defer: true },
+    ),
+  )
 
   return (
     <MxPage
       id="orchestra-hooks"
-      eyebrow={copy.t("orchestra.workflows.eyebrow", { profile: props.profile })}
+      eyebrow={copy.t("orchestra.hooks.eyebrow", { profile: props.profile })}
       title={copy.t("orchestra.hooks.title")}
       description={copy.t("orchestra.hooks.description")}
       action={
-        <button
-          type="button"
-          class="mx-btn primary"
-          disabled={!props.source.documents.isSuccess}
-          onClick={() => props.go(relayPath.create("hook"))}
-        >
-          <Ic name="plus" />
-          {copy.t("orchestra.hooks.new")}
-        </button>
+        <div class="hk-actions">
+          <Show when={installs().length > 1}>
+            <button
+              type="button"
+              class="mx-btn"
+              title={copy.t("orchestra.hooks.order.openTitle")}
+              onClick={() => setLayer("ordering", true)}
+            >
+              {copy.t("orchestra.hooks.order.open")}
+            </button>
+          </Show>
+          <button type="button" class="mx-btn primary" disabled={!loaded()} onClick={newHook}>
+            <Ic name="plus" />
+            {copy.t("orchestra.hooks.new")}
+          </button>
+        </div>
       }
     >
+      <p class="hk-scope">
+        {copy.t("orchestra.hooks.scope", { project: props.profile })} {copy.t("orchestra.hooks.crosslink")}{" "}
+        <button type="button" class="mx-link" onClick={() => props.go(relayPath.library("workflow"))}>
+          {copy.t("orchestra.hooks.crosslink.open")}
+        </button>
+      </p>
       <div class="wf-tabs" role="tablist" aria-label={copy.t("orchestra.hooks.tabs")}>
         <button
           type="button"
@@ -156,11 +239,28 @@ export function HookLibrary(props: Props) {
           </button>
         </p>}
       </For>
-      <Show when={props.source.documents.isSuccess && !props.source.installs.isSuccess}>
-        <HookQueryStatus kind="installs" query={props.source.installs} />
+      <Show when={loaded() && !props.source.installs.isSuccess}>
+        <HookQueryStatus kind="installs" query={props.source.installs} source={props.source} />
       </Show>
       <Show when={props.source.installs.isSuccess && installs().length && !decisions.isSuccess}>
         <HookQueryStatus kind="activity" query={decisions} />
+      </Show>
+      <Show when={unreadableInstalls().length && decisions.isSuccess}>
+        <p class="mx-note" role="status">
+          {copy.t("orchestra.hooks.activity.unreadable", {
+            names: unreadableInstalls()
+              .map((item) => nameOf(item.document))
+              .join(", "),
+          })}
+        </p>
+      </Show>
+      <Show when={props.source.documents.isError && loaded()}>
+        <p class="mx-error" role="alert">
+          {copy.t("orchestra.hooks.error", { reason: String(props.source.documents.error?.message ?? "") })}
+          <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
+            {copy.t("orchestra.workflows.retry")}
+          </button>
+        </p>
       </Show>
       <Switch>
         <Match when={props.source.documents.isPending}>
@@ -168,7 +268,7 @@ export function HookLibrary(props: Props) {
             {copy.t("orchestra.hooks.loading")}
           </p>
         </Match>
-        <Match when={props.source.documents.isError}>
+        <Match when={props.source.documents.isError && !loaded()}>
           <p class="mx-error" role="alert">
             {copy.t("orchestra.hooks.error", { reason: String(props.source.documents.error?.message ?? "") })}
           </p>
@@ -212,14 +312,14 @@ export function HookLibrary(props: Props) {
                 <strong>{copy.t("orchestra.hooks.empty.title")}</strong>
                 {copy.t("orchestra.hooks.empty.body")}
                 <br />
-                <button type="button" class="mx-btn primary" onClick={() => props.go(relayPath.create("hook"))}>
+                <button type="button" class="mx-btn primary" onClick={newHook}>
                   <Ic name="plus" />
                   {copy.t("orchestra.hooks.new")}
                 </button>
               </div>
             }
           >
-            <div class="wf-lhead" aria-hidden="true">
+            <div class="wf-lhead hk" aria-hidden="true">
               <span />
               <span>{copy.t("orchestra.hooks.head.hook")}</span>
               <span>{copy.t("orchestra.workflows.head.version")}</span>
@@ -231,11 +331,37 @@ export function HookLibrary(props: Props) {
                 {(document) => {
                   const install = () => installOf(document.id)
                   const fired = () => lastFire(document.id)
-                  const on = () => !!install()?.enabled
+                  const enabled = () => !!install()?.enabled
+                  const label = () =>
+                    enabled()
+                      ? "orchestra.hooks.installed"
+                      : install()
+                        ? "orchestra.hooks.row.paused"
+                        : "orchestra.hooks.notInstalled"
+                  // Never published and never installed: the switch cannot work yet.
+                  const unpublished = () => !document.activeVersionId && !install()
+                  // A newer publish leaves the install on the version it pinned until it is updated.
+                  const stale = () => {
+                    const current = install()
+                    return current && document.activeVersionId && current.version !== document.activeVersionId
+                      ? current
+                      : undefined
+                  }
+                  const summary = () => {
+                    const current = install()
+                    if (!current) return ""
+                    if (layer.unreadable.includes(current.installID))
+                      return copy.t("orchestra.hooks.row.activityUnavailable")
+                    if (!decisions.isSuccess) return ""
+                    const last = fired()
+                    return last
+                      ? `${copy.t(`orchestra.hooks.outcome.${last.outcome}`)} · ${copy.when(decisionTime(last))}`
+                      : copy.t("orchestra.hooks.row.notFired")
+                  }
                   const open = () => props.go(relayPath.editor("hook", document.id))
                   return (
                     <div
-                      class="mx-row wf-lrow"
+                      class="mx-row wf-lrow hk"
                       role="listitem"
                       tabindex="0"
                       data-document={document.id}
@@ -262,32 +388,52 @@ export function HookLibrary(props: Props) {
                       <div class="wf-badges">
                         <VersionBadges document={document} />
                       </div>
-                      <div class="wf-state" style={{ gap: "10px" }} onClick={(event) => event.stopPropagation()}>
+                      <div class="wf-state hk-state" onClick={(event) => event.stopPropagation()}>
                         <Show when={props.source.installs.isSuccess} fallback={<span>{copy.t("orchestra.workflows.hookState.unknown")}</span>}>
                         <button
                           type="button"
                           class="mx-toggle"
                           role="switch"
-                          aria-checked={on()}
+                          aria-checked={enabled()}
                           aria-label={copy.t("orchestra.hooks.row.install", {
                             name: document.name,
                             profile: props.profile,
                           })}
-                          title={
-                            document.activeVersionId || install() ? undefined : copy.t("orchestra.hooks.publishFirst")
-                          }
-                          disabled={(!document.activeVersionId && !install()) || busy() === document.id}
-                          onClick={() => void toggle(document, !on())}
+                          disabled={unpublished() || busy()}
+                          onClick={() => void toggle(document, !enabled())}
                         />
                         <span>
-                          {copy.t(on() ? "orchestra.hooks.installed" : "orchestra.hooks.off")}
-                          <small style={{ display: "block", "margin-top": "2px" }}>
-                            {decisions.isSuccess && fired()
-                              ? `${copy.t(`orchestra.hooks.outcome.${fired()!.outcome}`)} · ${copy.when(decisionTime(fired()!))}`
-                              : decisions.isSuccess || !install()
-                                ? copy.t("orchestra.hooks.row.notFired")
-                                : ""}
-                          </small>
+                          {copy.t(label())}
+                          <Show when={summary()}>
+                            <small>{summary()}</small>
+                          </Show>
+                          <Show when={stale()}>
+                            {(current) => (
+                              <StaleInstall
+                                source={props.source}
+                                document={document}
+                                install={current()}
+                                busy={busy()}
+                                onUpdate={() =>
+                                  void change("update", () => props.source.client.update(current().installID))
+                                }
+                              />
+                            )}
+                          </Show>
+                          <Show when={unpublished()}>
+                            <small>{copy.t(`orchestra.hooks.row.reason.${blocker(document) ?? "publish"}`)}</small>
+                            <Show when={!blocker(document)}>
+                              <button
+                                type="button"
+                                class="mx-btn primary"
+                                aria-label={copy.t("orchestra.hooks.row.publishInstallLabel", { name: document.name })}
+                                disabled={busy()}
+                                onClick={() => void publishAndInstall(document)}
+                              >
+                                {copy.t("orchestra.hooks.row.publishInstall")}
+                              </button>
+                            </Show>
+                          </Show>
                         </span>
                         </Show>
                       </div>
@@ -335,12 +481,12 @@ export function HookLibrary(props: Props) {
           </div>
         </Match>
       </Switch>
-      <Show when={props.route.create && props.source.documents.isSuccess}>
+      <Show when={props.route.create && loaded()}>
         <CreateHookDialog
           source={props.source}
           initial={preset()}
           onClose={() => props.close(relayPath.library("hook"))}
-          onCreated={(id) => props.go(relayPath.editor("hook", id))}
+          onCreated={(id) => props.go(relayPath.editor("hook", id), true)}
         />
       </Show>
       <Show when={menu()}>
@@ -364,7 +510,60 @@ export function HookLibrary(props: Props) {
           />
         )}
       </Show>
+      <Show when={layer.uninstall}>
+        {(current) => (
+          <UninstallDialog
+            install={current().install}
+            name={current().name}
+            source={props.source}
+            onClose={() => setLayer("uninstall", undefined)}
+          />
+        )}
+      </Show>
+      <Show when={layer.ordering}>
+        <OrderDialog source={props.source} name={(id) => nameOf(id)} onClose={() => setLayer("ordering", false)} />
+      </Show>
     </MxPage>
+  )
+}
+
+// A newer publish leaves an install on the version it pinned, so the row says which one is installed and offers the
+// update. Saved versions never change, so the installed version's number is read once.
+function StaleInstall(props: {
+  source: RelaySource
+  document: RelayDocument
+  install: RelayInstall
+  busy: boolean
+  onUpdate: () => void
+}) {
+  const copy = useRelayCopy()
+  const installed = useQuery(
+    () => ({
+      queryKey: props.source.key("version", props.document.id, props.install.version),
+      queryFn: () => props.source.client.version(props.document.id, props.install.version),
+      staleTime: Infinity,
+      retry: false,
+    }),
+    props.source.queryClient,
+  )
+  return (
+    <small class="hk-stale">
+      {installed.data && props.document.publishedCounter !== undefined
+        ? copy.t("orchestra.hooks.row.stale", {
+            installed: installed.data.versionCounter,
+            published: props.document.publishedCounter,
+          })
+        : copy.t("orchestra.hooks.row.staleUnnumbered")}
+      <button
+        type="button"
+        class="mx-btn primary"
+        aria-label={copy.t("orchestra.hooks.row.updateLabel", { name: props.document.name })}
+        disabled={props.busy}
+        onClick={props.onUpdate}
+      >
+        {copy.t("orchestra.hooks.row.update")}
+      </button>
+    </small>
   )
 }
 

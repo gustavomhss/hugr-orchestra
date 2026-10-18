@@ -1,6 +1,7 @@
 import { PermissionV1 } from "@orchestra/core/v1/permission"
 import { Agent } from "@/agent/agent"
 import { SessionV1 } from "@orchestra/core/v1/session"
+import { ToolSafety } from "@orchestra/core/tool-safety"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Command } from "@/command"
 import { Permission } from "@/permission"
@@ -11,6 +12,7 @@ import { ProjectV2 } from "@orchestra/core/project"
 import { SessionContinuity } from "@/continuity/service"
 import { MessageV2 } from "@/session/message-v2"
 import { SessionPrompt } from "@/session/prompt"
+import { PromptHost } from "@/session/prompt-host"
 import { SessionRevert } from "@/session/revert"
 import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
@@ -19,7 +21,7 @@ import { Todo } from "@/session/todo"
 import { WriteRoots } from "@/maestro/write-roots"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { NamedError } from "@orchestra/core/util/error"
-import { Cause, Clock, Effect, Option, Schema, Scope } from "effect"
+import { Cause, Clock, Deferred, Effect, Option, Schema, Scope } from "effect"
 import * as Stream from "effect/Stream"
 import { InstanceState } from "@/effect/instance-state"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
@@ -294,15 +296,20 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       payload: typeof PromptPayload.Type
     }) {
       yield* requireSession(ctx.params.sessionID)
-      const message = yield* promptSvc
+      return yield* promptSvc
         .prompt({
           ...ctx.payload,
           sessionID: ctx.params.sessionID,
         })
-        .pipe(Effect.mapError(() => new HttpApiError.BadRequest({})))
-      return HttpServerResponse.stream(Stream.make(JSON.stringify(message)).pipe(Stream.encodeText), {
-        contentType: "application/json",
-      })
+        .pipe(
+          Effect.map((message) =>
+            HttpServerResponse.stream(Stream.make(JSON.stringify(message)).pipe(Stream.encodeText), {
+              contentType: "application/json",
+            }),
+          ),
+          Effect.catchTag("ToolSafety.Denied", (denied) => Effect.succeed(SessionError.promptBlocked(denied))),
+          Effect.mapError(() => new HttpApiError.BadRequest({})),
+        )
     })
 
     const promptAsync = Effect.fn("SessionHttpApi.promptAsync")(function* (ctx: {
@@ -310,18 +317,28 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       payload: typeof PromptPayload.Type
     }) {
       yield* requireSession(ctx.params.sessionID)
+      // The sender hears an installed hook's refusal before the run goes on in the background. `cleared` holds the
+      // refusal, or nothing once the prompt is past its hooks (or ended some other way).
+      const cleared = yield* Deferred.make<ToolSafety.Denied | undefined>()
       yield* promptSvc.prompt({ ...ctx.payload, sessionID: ctx.params.sessionID }).pipe(
-        Effect.catchCause((cause) =>
-          Effect.gen(function* () {
+        Effect.provideService(PromptHost.HooksCleared, Deferred.succeed(cleared, undefined)),
+        Effect.catchCause((cause) => {
+          const error = Cause.findErrorOption(cause)
+          if (Option.isSome(error) && error.value instanceof ToolSafety.Denied)
+            return Deferred.succeed(cleared, error.value)
+          return Effect.gen(function* () {
             yield* Effect.logError("prompt_async failed", { sessionID: ctx.params.sessionID, cause })
             yield* events.publish(Session.Event.Error, {
               sessionID: ctx.params.sessionID,
               error: new NamedError.Unknown({ message: Cause.pretty(cause) }).toObject(),
             })
-          }),
-        ),
+          })
+        }),
+        Effect.ensuring(Deferred.succeed(cleared, undefined)),
         Effect.forkIn(scope, { startImmediately: true }),
       )
+      const denied = yield* Deferred.await(cleared)
+      if (denied) return SessionError.promptBlocked(denied)
       return HttpApiSchema.NoContent.make()
     })
 
@@ -330,9 +347,10 @@ export const sessionHandlers = HttpApiBuilder.group(InstanceHttpApi, "session", 
       payload: typeof CommandPayload.Type
     }) {
       yield* requireSession(ctx.params.sessionID)
-      return yield* promptSvc
-        .command({ ...ctx.payload, sessionID: ctx.params.sessionID })
-        .pipe(Effect.mapError(() => new HttpApiError.BadRequest({})))
+      return yield* promptSvc.command({ ...ctx.payload, sessionID: ctx.params.sessionID }).pipe(
+        Effect.catchTag("ToolSafety.Denied", (denied) => Effect.succeed(SessionError.promptBlocked(denied))),
+        Effect.mapError(() => new HttpApiError.BadRequest({})),
+      )
     })
 
     const shell = Effect.fn("SessionHttpApi.shell")(function* (ctx: {

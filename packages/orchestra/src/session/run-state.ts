@@ -5,6 +5,7 @@ import { Runner } from "@/effect/runner"
 import { BackgroundJob } from "@/background/job"
 import { Effect, Latch, Layer, Scope, Context } from "effect"
 import { Session } from "./session"
+import { PromptHost } from "./prompt-host"
 import { SessionID } from "./schema"
 import { SessionStatus } from "./status"
 import { MessageV2 } from "./message-v2"
@@ -137,7 +138,15 @@ const layer = Layer.effect(
       work: Effect.Effect<SessionV1.WithParts>,
     ) {
       const current = yield* runner(sessionID, onInterrupt)
-      return yield* current.runner.ensureRunning(current.fresh ? closeStaleRun(sessionID).pipe(Effect.andThen(work)) : work)
+      const data = yield* InstanceState.get(state)
+      // Installed `session-idle` hooks run once the drain settles, as V2's do. They only record and run beside the
+      // Session: a slow check never holds the drain open while a new prompt waits on it.
+      const drain = work.pipe(Effect.tap(() => sessions.get(sessionID).pipe(
+        Effect.flatMap((session) => PromptHost.record(session, "session-idle")),
+        Effect.exit,
+        Effect.forkIn(data.scope),
+      )))
+      return yield* current.runner.ensureRunning(current.fresh ? closeStaleRun(sessionID).pipe(Effect.andThen(drain)) : drain)
     })
 
     const startShell = Effect.fn("SessionRunState.startShell")(function* (

@@ -100,7 +100,7 @@ test("delayed failure keeps draft and retries same Session/message ID", async ({
   expect(fixture.admissions).toHaveLength(2)
 })
 
-test("new edit during admission stays in draft until deliberate next Send", async ({ page }) => {
+test("new edit during admission moves to the session composer unsent until deliberate next Send", async ({ page }) => {
   const fixture = await setup(page)
   const gate = Promise.withResolvers<void>()
   fixture.promptGate = gate.promise
@@ -117,9 +117,13 @@ test("new edit during admission stays in draft until deliberate next Send", asyn
   const receipt = await response
   expect(receipt.request()).toBe(sent)
   expect(receipt.status()).toBe(204)
+  // An admitted prompt always hands the draft off to its Session; the newer edit follows it without being sent.
+  await expect(page).toHaveURL(sessionURL)
+  await expect(page.locator(draftTab)).toHaveCount(0)
   await expect(page.locator(composer)).toHaveAttribute("data-prompt-admitting", "false")
   await expect(page.locator(editor)).toHaveText("newer unsent draft")
-  await expect(page.locator(draftTab)).toHaveCount(1)
+  await expect(page.locator(userText)).toHaveText(["admitted original"])
+  expect(fixture.prompts).toHaveLength(1)
   expect(fixture.admissions).toHaveLength(1)
   const next = page.waitForResponse((response) => isPromptRequest(response.request()))
   const nextRequest = page.waitForRequest(isPromptRequest)

@@ -3,6 +3,11 @@ export const SHELL_COPY = {
   "orchestra.shell.navigation": "Navigation",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
+  "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",
+  "orchestra.shell.server.retry": "Retry now",
+  "orchestra.shell.server.restart": "Restart app",
+  "orchestra.shell.error.retry": "Try again",
+  "orchestra.shell.error.home": "Go to Home",
   "orchestra.shell.settings.repository":
     "Select a repository profile to manage this section. General, Servers, and Shortcuts are available without a repository.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
@@ -18,4 +23,6 @@ export const SHELL_COPY = {
   "orchestra.shell.wip.page": "WIP · revisit before production",
   "orchestra.shell.profile.agents.one": "{{count}} agent",
   "orchestra.shell.profile.agents.other": "{{count}} agents",
+  "orchestra.shell.project.close": "Close project",
+  "orchestra.shell.project.editUnsupported": "This server does not support editing projects.",
 }

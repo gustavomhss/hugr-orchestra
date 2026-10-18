@@ -253,6 +253,10 @@ function v2Method(
 function v1Disconnect(source: string | undefined, credential: string | undefined, custom: boolean): ProviderDisconnect {
   if (source === "env") return { type: "none" }
   if (credential) return { type: "credentials", ids: [credential] }
+  // The server sets source "config" on every provider with a config entry (provider.ts, "load config"), and such a
+  // provider stays listed whatever the auth store holds, so removing a stored key would not disconnect it. An
+  // OpenAI-compatible endpoint with models is the exception: it is disabled through config.
+  if (source === "config" && !custom) return { type: "none" }
   return { type: "auth", custom }
 }
 
