@@ -42,9 +42,11 @@ it.instance("unit parent retains deadline/control acknowledgement, exact author/
       exhaustionReason: expect.stringContaining("deadline exhausted"), nativeJoin: { status: "joined", taskID: dispatch.taskID },
       nativeStop: { status: "acknowledged", evidence: "sdk-control-status", physicalCompletion: "unobserved" } })
     expect(part.state.metadata.researchControl.nativeBudget).toEqual({
-      tools: { limit: Research.Limits.toolCalls, admission: "pre-execution" },
-      retainedBytes: { limit: Research.Limits.capturedBytes, admission: "pre-retention" },
-      provider: { accounting: "observed-sdk-response-ids", maxTurns: Research.Limits.providerCalls,
+      tier: "quick",
+      deadlineSeconds: Research.Tiers.quick.deadlineSeconds,
+      tools: { limit: Research.Tiers.quick.toolCalls, admission: "pre-execution" },
+      retainedBytes: { limit: Research.Tiers.quick.capturedBytes, admission: "pre-retention" },
+      provider: { accounting: "observed-sdk-response-ids", limit: Research.Tiers.quick.providerCalls, maxTurns: Research.Tiers.deep.providerCalls,
         bound: "native-agentic-api-round-trips", physicalPreProviderAdmission: "unavailable", hiddenWork: "unmeasured" },
     })
     expect(part.state.metadata.workResult).toMatchObject({ terminal: { reason: "interrupted", hostDetail: expect.stringContaining("deadline") },
@@ -297,7 +299,7 @@ for (const outcome of ["failure", "completed"] as const)
 it.instance("unit parent observes after-frame provider exhaustion while a fresh real native dispatch has its own allowance", () => Effect.gen(function* () {
   const fixture = yield* DelegationTerminalFixture.setup()
   const dispatch = yield* fixture.admit()
-  yield* Effect.forEach(Array.from({ length: Research.Limits.providerCalls }, (_, index) => index), (index) =>
+  yield* Effect.forEach(Array.from({ length: Research.Tiers.quick.providerCalls }, (_, index) => index), (index) =>
     fixture.research.observe(fixture.join, ResearchTerminalFixture.assistant(dispatch.callID, `observed-${index}`)))
   yield* fixture.delegation.settle(DelegationTerminalFixture.post(dispatch.callID, dispatch.taskID, "Observed frames only."))
   const part = yield* fixture.part(dispatch.callID)

@@ -1,5 +1,6 @@
 import { describe, expect } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Fiber, Option, Schema, Stream } from "effect"
+import { TestClock } from "effect/testing"
 import { eq } from "drizzle-orm"
 import path from "node:path"
 import { Database } from "@orchestra/core/database/database"
@@ -231,4 +232,44 @@ describe("native research dispatch attribution", () => {
       expect(yield* fixture.remote.calls).toBe(25)
     }), 120_000)
   }
+
+  it.instance("the bound tier's deadline interrupts the dispatch, denies further admission and settles budget_exhausted", () => Effect.gen(function* () {
+    const fixture = yield* setup()
+    const execution = yield* ResearchExecution.Service
+    const interrupted = yield* Deferred.make<void>()
+    const captured = yield* Deferred.make<ResearchExecution.Frame>()
+    const dispatch = yield* execution.enter(fixture.execution.id, "deadline-dispatch", Effect.gen(function* () {
+      const frame = yield* ResearchExecution.Current
+      if (frame) yield* Deferred.succeed(captured, frame)
+      yield* execution.tool(fixture.execution.id, "before-deadline", "read", Effect.void)
+      yield* Deferred.await(interrupted)
+      return "returned after interruption"
+    }), { tier: "focused", onDeadline: () => Deferred.succeed(interrupted, undefined).pipe(Effect.asVoid) }).pipe(Effect.exit, Effect.forkChild)
+    const frame = yield* Deferred.await(captured)
+    yield* TestClock.adjust("1199 seconds")
+    expect(yield* Deferred.isDone(interrupted)).toBe(false)
+    yield* TestClock.adjust("1 second")
+    expect(failure(yield* Fiber.join(dispatch))).toMatchObject({ code: "budget_exhausted",
+      message: expect.stringContaining("deadline exhausted (1200 seconds); retained work remains available") })
+    expect(yield* Deferred.isDone(interrupted)).toBe(true)
+    expect(failure(yield* Effect.exit(execution.tool(fixture.execution.id, "after-deadline", "read", Effect.void).pipe(
+      Effect.provideService(ResearchExecution.Current, frame))))).toMatchObject({ code: "budget_exhausted" })
+    expect(failure(yield* Effect.exit(execution.provider(fixture.input, Effect.void).pipe(
+      Effect.provideService(ResearchExecution.Current, frame))))).toMatchObject({ code: "budget_exhausted" })
+    // Retained work stays readable: the ledger keeps the pre-deadline charge and nothing after it.
+    expect((yield* charges(fixture.execution.id)).map((entry) => entry.operation)).toEqual(["tool:before-deadline:read"])
+  }).pipe(Effect.provide(TestClock.layer())), 30_000)
+
+  it.instance("a dispatch that settles before its deadline clears the timer", () => Effect.gen(function* () {
+    const fixture = yield* setup()
+    const execution = yield* ResearchExecution.Service
+    const fired = yield* Deferred.make<void>()
+    const frame = yield* execution.enter(fixture.execution.id, "settled-dispatch", ResearchExecution.Current,
+      { onDeadline: () => Deferred.succeed(fired, undefined).pipe(Effect.asVoid) })
+    if (!frame) return yield* Effect.die("Missing host frame")
+    yield* TestClock.adjust("601 seconds")
+    expect(yield* Deferred.isDone(fired)).toBe(false)
+    yield* execution.tool(fixture.execution.id, "after-settlement", "read", Effect.void).pipe(Effect.provideService(ResearchExecution.Current, frame))
+    expect(yield* charges(fixture.execution.id)).toHaveLength(1)
+  }).pipe(Effect.provide(TestClock.layer())), 30_000)
 })

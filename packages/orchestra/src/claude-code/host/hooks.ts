@@ -24,6 +24,7 @@ import { ClaudeHostGate } from "./gate"
 import type { ClaudeHostJoin } from "./join"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMemory } from "./memory"
+import { ClaudeHostResearch } from "./research"
 import { ClaudeHostResearchResult } from "./research-result"
 
 /**
@@ -62,8 +63,9 @@ export type Context = {
  * Each fails to refuse: an exhausted allowance is a hard stop, an unrecorded source is withheld from the model.
  */
 export type Research = ClaudeHostResearchResult.Port & {
-  /** Bind the dispatch's allowance to the child Session, at `PreToolUse[Agent]`. */
-  readonly enter: (executionSessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>
+  /** Bind the dispatch's allowance, at the dispatcher's effort tier, to the child Session at `PreToolUse[Agent]`. */
+  readonly enter: (executionSessionID: SessionID, dispatchCallID: string,
+    tier: NonNullable<ReturnType<typeof ClaudeHostResearch.effort>>) => Effect.Effect<void, unknown>
   /** Charge one tool call before it runs. */
   readonly tool: (executionSessionID: SessionID, callID: string, tool: string) => Effect.Effect<void, unknown>
   /** Optional fallback for builtin readers; production scopes discovery to native MCP capture instead. */
@@ -110,11 +112,15 @@ export function create(ctx: Context): Partial<Record<HookEvent, HookCallbackMatc
         return ClaudeHostGate.output(decision)
       }
       if (ClaudeHostGate.agentCall(input.tool_name)) {
+        const tier = ClaudeHostResearch.effort(args.prompt)
+        const invalidTier = "HOLD: jimmy's brief starts with an unknown effort line. Use `effort: quick`, `effort: focused` or `effort: deep`, or omit the line for quick."
         if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !ctx.research)
           return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")
+        if (args.subagent_type === `${ClaudeHostDelegation.PREFIX}jimmy` && !tier) return ClaudeHostGate.deny(invalidTier)
         yield* delegation.dispatch(input, actor)
         const dispatched = delegation.child(input.tool_use_id)
-        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy") yield* ctx.research.enter(dispatched, input.tool_use_id)
+        if (dispatched && ctx.research && delegation.seat(input.tool_use_id) === "jimmy")
+          yield* tier ? ctx.research.enter(dispatched, input.tool_use_id, tier) : Effect.fail(new Error(invalidTier))
       }
       if (actor.seat === "jimmy") {
         if (!ctx.research) return ClaudeHostGate.deny("HOLD: jimmy's research allowance is not available on this host.")

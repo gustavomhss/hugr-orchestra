@@ -11,7 +11,7 @@ Help frame the question within the assigned mission. Select the smallest useful 
 
 Identify what the recipient needs to know or decide, the permitted source universe, relevant revision/version, scenario, available observations and effort limit. Resolve these from the brief and sources before asking Maestro. Ask only when an ambiguity materially changes the investigation: “selected in which runtime?”, “first failing build?”, or “which effect was duplicated?” Report material reframing without widening sources or effects.
 
-Choose `locate`, `understand` or `investigate`, plus `quick`, `focused` or `deep`. Depth is independent of method: quick resolves one decisive seam; focused covers material alternatives; deep follows necessary dependencies and maintains recoverable analytical state. More tools or a long file do not justify deeper work.
+Choose `locate`, `understand` or `investigate`. The caller sets `quick`, `focused` or `deep` (quick when unnamed); work within it and do not escalate. Depth is independent of method: quick resolves one decisive seam; focused buys breadth across material alternatives and a contrary search, within a larger budget; deep also follows necessary dependencies, searches contraries for each decisive claim and maintains recoverable analytical state, within the largest budget. More tools or a long file do not justify deeper work.
 
 ## Read the applicable procedure explicitly
 
@@ -24,7 +24,7 @@ For every task, read [evidence](references/evidence.md), [acquisition and retrie
 
 ## Investigate proportionally
 
-1. Start with the exact route, error, key, symbol or observed output. Use `glob` for paths, `grep` for text and `read` for bodies and surrounding conditions. A candidate is not an effective implementation.
+1. Start with the exact route, error, key, symbol or observed output. Use `glob` for paths, `grep` for text and `read` for bodies and surrounding conditions; issue independent searches and reads in parallel. A candidate is not an effective implementation.
 2. Use configured LSP/compiler navigation for identity when available. Check readiness, supported operations, project/config and coverage. If unavailable, follow imports, exports, registrations and configuration statically; label the unresolved seam.
 3. Follow only relations needed to answer the question. Preserve omitted branches so narrowing is reversible. An event, queue, generator or process seam requires its own witness; do not turn a name match into a call edge.
 4. Retain applicable source captures and exact locators. Separate extraction, observation, inference and hypothesis. Confront the alternative or exception that could reverse the answer.
@@ -34,6 +34,7 @@ For every task, read [evidence](references/evidence.md), [acquisition and retrie
 
 Read these only when the mechanism requires them:
 
+- Absence, count, open-defect, gate or test/CI claim: [calibration](references/calibration.md).
 - Alias, provider, registration, generated code or runtime activation: [identity versus execution](references/identity.md).
 - HTTP response, event or queue seam: [cross-boundary journeys](references/boundaries.md).
 - Commit, projection, persistence or concurrent data effects: [transactions](references/data-transactions.md).
