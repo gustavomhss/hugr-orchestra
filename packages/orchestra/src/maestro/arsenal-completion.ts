@@ -18,6 +18,7 @@ import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { WorkflowBinding } from "./workflow-binding"
+import { CodeReview } from "./code-review"
 import { isDeepStrictEqual } from "node:util"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Git } from "@/git"
@@ -280,7 +281,7 @@ export const make = Effect.gen(function* () {
           if (Option.isNone(audit) || audit.value.result !== "PASS")
             return yield* new ToolSafety.Denied({ reason: "WORKFLOW_AUDIT_UNAVAILABLE" })
           yield* current.workflow.host.complete(current.workflow.binding).pipe(
-            Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
+            Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason, detail: error.detail })),
           )
           return { verified: true as const, planID: binding.planID, taskID, checks: audit.value.controls.length }
         }
@@ -363,11 +364,16 @@ export const make = Effect.gen(function* () {
         if (position.token !== ready.token || !isDeepStrictEqual(position.binding, ready.binding))
           return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_TASK_BINDING_MISMATCH" })
         yield* ready.verifySettlement(settlement.assistantMessageID)
-        return yield* current.relay.transition({
-        token: ready.token, binding: ready.binding, settlement,
-        agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,
-        hostChecks: new Map([...current.checks].map(([name, check]) => [name, adapt(check, current.binding, "")])),
-        observe: observe ?? ((capture) => current.host.observe(current.binding, capture)),
+        return yield* settleWorkflow({
+          checklist: ready.materialized.sprint.work_packages[position.view.index]?.checklist,
+          coldReview: current.checks.get("cold-review"),
+          binding: current.binding,
+          transition: current.relay.transition({
+            token: ready.token, binding: ready.binding, settlement,
+            agentID: ready.binding.executionSessionID, revalidate: ready.revalidate,
+            hostChecks: new Map([...current.checks].map(([name, check]) => [name, adapt(check, current.binding, "")])),
+            observe: observe ?? ((capture) => current.host.observe(current.binding, capture)),
+          }),
         })
       }).pipe(Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held ? error
         : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_SETTLEMENT_ACQUISITION" }))),
@@ -429,6 +435,28 @@ export function sprint(contract: RelayArm.Contract): RelaySprint.Sprint {
       checklist: gate.checks.map((check) => ({ id: check.id, host_check: check.hostCheck })),
     })),
   }
+}
+
+/**
+ * One workflow settlement. A gate that grades the final cold review asks for the code review first: while the
+ * workers' result has no code receipt at all, only Maestro can request one, so the hold returns the Task to Maestro
+ * before the arm grades, without touching the arm or spending the gate's retry budget. Every other outcome, including
+ * a FIX_FIRST or REJECT receipt and a stale or missing binding, is graded as usual.
+ */
+export function settleWorkflow<A, E, R>(input: {
+  readonly checklist: ReadonlyArray<{ readonly host_check?: string }> | null | undefined
+  readonly coldReview: HostCheck | undefined
+  readonly binding: Binding
+  readonly transition: Effect.Effect<A, E, R>
+}) {
+  return Effect.gen(function* () {
+    if (input.coldReview && input.checklist?.some((control) => control.host_check === "cold-review")) {
+      const exit = yield* Effect.exit(input.coldReview(input.binding))
+      const error = Exit.isFailure(exit) ? Cause.squash(exit.cause) : undefined
+      if (error instanceof RelayWorkflowBinding.Held && error.reason === CodeReview.REQUIRED) return yield* Effect.fail(error)
+    }
+    return yield* input.transition
+  })
 }
 
 // A host check as the arm calls it. A failed callback is an acquisition error with the same provenance, never a pass.

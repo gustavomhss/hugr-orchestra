@@ -4,6 +4,8 @@ Schema source pin supplied by Relay: `c0fcf4f394`; inspected transfer baseline: 
 
 ## Author the native shape
 
+Exact field names, meanings and a valid example: [native field reference](native-fields.md). Read it before writing any key.
+
 Map global context/criteria/coverage and source refs to `brief`; ordered step contracts to `work_packages`; each step's objective, exact read/write scope, inputs, outputs, inherited criteria/deltas, interface anchors and oracle references to `title`/`instructions`; proposed runtime controls to `checklist`. Keep one complete versioned artifact for host, not only the visible step or a diff. A macro groups context, not a second executor. WP/control IDs are nonempty and NUL-free; `host_check` has identifier syntax but that cannot prove registration or authorization.
 
 Use [decomposition](../../archie-plan/references/decomposition.md) for acceptance ownership/five exact headings, [contracts](../../archie-plan/references/load-bearing-contracts.md) for exact load-bearing sketches, and [briefs](../../archie-plan/references/briefs.md) for bounded materials/returns. These prose contracts belong in native text fields or referenced assigned artifacts, not a second execution DSL. `partitionPlan` is authoring material, not durable governed `PlanRevision`.

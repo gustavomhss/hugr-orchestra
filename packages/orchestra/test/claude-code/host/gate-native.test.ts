@@ -213,6 +213,21 @@ describe("native gate real policy", () => {
     expect(yield* Fiber.join(pending)).toEqual({ allow: true })
   }), { git: true })
 
+  // The served Task exists only for Relay workflow dispatch; an ordinary dispatch through it would skip Agent's records.
+  it.instance("the served task holds a call without workflow before any other check", () => Effect.gen(function* () {
+    const f = yield* fixture()
+    const gate = { ...f.gate, granted: { maestro: ["task"] } }
+    const profile = yield* ToolSafety.RuntimeProfile
+    const decide = (input: Record<string, unknown>) => ClaudeHostGate.decide(gate, f.actor, "mcp__orchestra__task", input,
+      crypto.randomUUID()).pipe(Effect.provideService(ToolSafety.RuntimeProfile, profile))
+    const args = { subagent_type: "backend", description: "bounded work", prompt: "harmless", writePaths: ["src/money.ts"] }
+    refused(yield* decide(args), "WORKFLOW_TASK_SELECTION_MISSING")
+    refused(yield* decide(args), "Dispatch any other work with Agent")
+    const selected = yield* decide({ ...args, authorizationID: "evt_maestro_authorization_fixture",
+      workflow: { documentID: "packet", planRevisionID: "evt_maestro_plan_revision_fixture", parameters: {} } })
+    if (!selected.allow) expect(selected.reason).not.toContain("WORKFLOW_TASK_SELECTION_MISSING")
+  }), { git: true })
+
   it.instance("file permission rules check the requested alias and its physical target", () => Effect.gen(function* () {
     const f = yield* fixture([
       { permission: "read", pattern: ".env", action: "deny" },
