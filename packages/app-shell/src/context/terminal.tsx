@@ -300,7 +300,7 @@ function createWorkspaceTerminalSession(
         })
       ).data
     })().catch((error: unknown) => {
-      fail("Failed to clone terminal", error)
+      console.error("Failed to clone terminal", error)
       return undefined
     })
     if (!data?.id) return

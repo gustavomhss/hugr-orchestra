@@ -486,8 +486,6 @@ function ProviderConnection(props: {
             dispatch({ type: "auth.error", error: language.t("orchestra.providers.connectDialog.badLink") })
             return
           }
-          if (props.provider === "opencode" && platform.platform === "desktop")
-            url.searchParams.set("client_id", "opencode-desktop")
           dispatch({ type: "auth.complete", authorization: { ...x.data, url: url.href } })
         })
         .catch((e) => {
