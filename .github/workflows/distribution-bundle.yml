@@ -3,6 +3,13 @@ on:
   push:
     branches: [distribution-bundle]
   workflow_dispatch:
+    inputs:
+      provider:
+        # Opt-in: the provider lane needs the owner's hosted-inference key and
+        # third-party quota, so it runs before a release, not in every bundle.
+        description: Run the hosted provider qualification lane
+        type: boolean
+        default: false
 permissions:
   contents: read
 defaults:
@@ -34,12 +41,12 @@ jobs:
           GODFILE_BASE_REF: origin/dev
       - run: git diff --check origin/dev HEAD
   qualification:
-    name: qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})
+    name: &qualification-name qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})
     runs-on: ${{ matrix.host }}
     timeout-minutes: 90
     strategy:
       fail-fast: false
-      max-parallel: 13
+      max-parallel: 12
       matrix:
         include:
           # Preserve regression coverage; expensive closures get independent native runners.
@@ -116,13 +123,7 @@ jobs:
             cpu: ARM64
             platform: linux
             files: [./test/distribution-musl.test.ts]
-          - lane: provider
-            package: cli
-            host: ubuntu-latest
-            cpu: X64
-            platform: linux
-            files: [./test/distribution-provider.test.ts]
-    env:
+    env: &qualification-env
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
       # The CLI is an app (apps/cli); every other lane package is a library under packages/.
@@ -132,7 +133,7 @@ jobs:
       # Fail closed: the provider lane runs real hosted inference and must never
       # fall back to a local, credential-free or scripted provider.
       OPENROUTER_API_KEY: ${{ matrix.lane == 'provider' && secrets.OPENROUTER_API_KEY || '' }}
-    steps:
+    steps: &qualification-steps
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5
       - uses: ./.github/actions/setup-bun
       - name: Prepare native Windows Rust
@@ -301,3 +302,23 @@ jobs:
           path: distribution-logs
           if-no-files-found: error
           retention-days: 7
+  # Opt-in: hosted inference needs the owner's key and third-party quota, so this
+  # row runs only on dispatch with provider=true, with the qualification steps unchanged.
+  provider:
+    if: ${{ inputs.provider }}
+    name: *qualification-name
+    runs-on: ${{ matrix.host }}
+    timeout-minutes: 90
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        include:
+          - lane: provider
+            package: cli
+            host: ubuntu-latest
+            cpu: X64
+            platform: linux
+            files: [./test/distribution-provider.test.ts]
+    env: *qualification-env
+    steps: *qualification-steps

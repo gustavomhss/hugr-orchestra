@@ -65,7 +65,10 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
     const compiled = yield* AuthoringGraph.compile(version, input.port.skills).pipe(
       // The compiler can reject the union before the defensive binding-level cap below.
       Effect.mapError((error) => error.code === "knowledge-reference-limit"
-        ? new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_LIMIT" }) : error),
+        ? new Held({ reason: "WORKFLOW_KNOWLEDGE_REFERENCE_LIMIT" })
+        : error.code === "control-empty"
+          ? new Held({ reason: "WORKFLOW_CONTROL_EMPTY", detail: error.message })
+          : error),
     )
     const sprint = Schema.decodeUnknownOption(RelaySprint.Sprint)(compiled.sprint)
     if (Option.isNone(sprint) || !compiled.sprint.work_packages.length ||
