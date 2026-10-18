@@ -151,10 +151,10 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { host: macos-15, os: mac, arch: arm64, omni: darwin-arm64, builder: --mac }
-          - { host: macos-15-intel, os: mac, arch: x64, omni: darwin-x64, builder: --mac }
-          - { host: windows-2022, os: win, arch: x64, omni: win32-x64-msvc, builder: --win }
-          - { host: ubuntu-24.04, os: linux, arch: x64, omni: linux-x64-gnu, builder: --linux }
+          - { host: macos-15, os: mac, arch: arm64, omni: darwin-arm64, target: aarch64-apple-darwin, builder: --mac }
+          - { host: macos-15-intel, os: mac, arch: x64, omni: darwin-x64, target: x86_64-apple-darwin, builder: --mac }
+          - { host: windows-2022, os: win, arch: x64, omni: win32-x64-msvc, target: x86_64-pc-windows-msvc, builder: --win }
+          - { host: ubuntu-24.04, os: linux, arch: x64, omni: linux-x64-gnu, target: x86_64-unknown-linux-gnu, builder: --linux }
     env:
       SIGN: ${{ inputs.sign == true }}
       ORCHESTRA_CHANNEL: prod
@@ -349,7 +349,8 @@ jobs:
 
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
-          name: latest-yml-${{ matrix.os }}-${{ matrix.arch }}
+          # finalize-latest-yml.ts reads latest-yml-<rust target>/.
+          name: latest-yml-${{ matrix.target }}
           path: feed/latest*.yml
           if-no-files-found: error
           retention-days: 14
