@@ -253,14 +253,15 @@ test("ORCHESTRA_DESKTOP_UNSIGNED=1 builds prod installers with no signing identi
   expect(unsigned.dmg?.sign).toBe(false)
   expect(unsigned.win?.signtoolOptions).toBeUndefined()
   expect(unsigned.win?.signAndEditExecutable).toBe(false)
-  // Everything else is the release config: same identity, targets, resources and no update feed.
+  // Everything else is the release config: same identity, targets, resources and desktop-latest update feed.
   expect(unsigned.appId).toBe("ai.hugr.orchestra")
   expect(unsigned.mac?.target).toEqual(["dmg", "zip"])
   expect(unsigned.win?.target).toEqual(["nsis"])
   expect(unsigned.linux?.target).toEqual(["AppImage", "deb", "rpm"])
   expect(unsigned.mac?.signIgnore).toEqual(signed.mac?.signIgnore)
   expect(unsigned.extraResources).toEqual(signed.extraResources)
-  expect(unsigned.publish).toBeNull()
+  expect(unsigned.publish).toEqual(signed.publish)
+  expect(unsigned.publish).toMatchObject({ url: expect.stringContaining("/releases/download/desktop-latest") })
 
   // Without the switch the release config signs and notarizes.
   expect(signed.mac?.identity).toBeUndefined()
