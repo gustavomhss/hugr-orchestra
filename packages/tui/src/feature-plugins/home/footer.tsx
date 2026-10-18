@@ -3,6 +3,7 @@ import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, Match, Show, Switch } from "solid-js"
 import { abbreviateHome } from "../../runtime"
 import { useTuiPaths } from "../../context/runtime"
+import { useSDK } from "../../context/sdk"
 import { useHomeSessionDestination } from "../../routes/home/session-destination"
 
 const id = "internal:home-footer"
@@ -51,6 +52,15 @@ function Mcp(props: { api: TuiPluginApi }) {
   )
 }
 
+function Offline(props: { api: TuiPluginApi }) {
+  const sdk = useSDK()
+  return (
+    <Show when={sdk.offline()}>
+      <text fg={props.api.theme.current.error}>● Offline, reconnecting</text>
+    </Show>
+  )
+}
+
 function Version(props: { api: TuiPluginApi }) {
   const theme = () => props.api.theme.current
 
@@ -75,6 +85,7 @@ function View(props: { api: TuiPluginApi }) {
     >
       <Directory api={props.api} />
       <Mcp api={props.api} />
+      <Offline api={props.api} />
       <box flexGrow={1} />
       <Version api={props.api} />
     </box>
