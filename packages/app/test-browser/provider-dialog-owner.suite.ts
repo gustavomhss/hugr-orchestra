@@ -165,7 +165,7 @@ const fixtures = {
     }),
   },
   tabs: { useTabs: () => ({ store: [] }) },
-  router: { useParams: () => ({}) },
+  router: { useParams: () => ({}), useNavigate: () => () => undefined },
   toast: { showToast: () => undefined },
   unused: {
     SettingsGeneralV2: () => undefined,
@@ -183,6 +183,7 @@ const imports: Record<string, string> = {
   "@/utils/persist": subject("../src/utils/persist.ts"),
   "@/hooks/use-providers": subject("../src/hooks/use-providers.ts"),
   "../dialog-connect-provider": subject("../src/components/dialog-connect-provider.tsx"),
+  "@/orchestra/use-claude-mode": subject("../src/orchestra/use-claude-mode.ts"),
   "../dialog-custom-provider": subject("../src/components/dialog-custom-provider.tsx"),
   "./dialog-custom-provider": subject("../src/components/dialog-custom-provider.tsx"),
   "./provider-controller": subject("../src/components/settings-v2/provider-controller.tsx"),
