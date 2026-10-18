@@ -28,64 +28,6 @@
     <div class="at-item-meta">${opts.noFile ? "" : `<span class="at-meta-file">${A.esc(opts.short ? x.file.split("/").at(-1) : x.file)}</span>`}${x.slot ? `<span>${A.esc(x.slot)}</span>` : ""}${opts.extra ?? ""}</div></div>${A.second(x)}</div>`
   A.factRow = factRow
 
-  /* ---------- Overview: is Atlas fine, and what needs me? ---------- */
-  A.views.overview = (state) => {
-    const s = M().stats()
-    const building = state.preview === "building"
-    const need = M().curationCount()
-    const toRatify = M().live().filter((x) => x.proposedTier).length
-    const events = M().activity()
-    const reads = events.filter((e) => e.kind === "read")
-    const sentence = M().provenance() !== "trusted" ? "Read-only: this store is in git, so Atlas sends agents nothing from it." : need ? `${plural(need, "thing")} wait for you.` : "Nothing waits for you."
-    const tile = (href, label, value, foot, tone = "") => `<a class="at-tile ${tone}" href="${href}"><span class="at-tile-label">${label}${A.icon("arrow")}</span><b>${building ? '<span class="at-skel" style="block-size:26px;inline-size:50%"></span>' : value}</b><small>${foot}</small></a>`
-    return {
-      crumbs: [["Atlas"]],
-      html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas · project atlas</div><h1>Overview</h1><p>${sentence}</p></div></div>
-      ${building ? `<div class="at-building"><span class="spin"></span><div><strong>Building the code index</strong><small>Counts appear when it finishes; nothing is estimated.</small></div></div>` : ""}
-      <div class="at-tiles">
-        ${tile("#/review", "Needs you", A.num(need), `${s.drifted} changed · ${s.candidates} mined · ${toRatify} to ratify`, need ? "attn" : "")}
-        ${tile("#/knowledge", "Knowledge", `${A.num(s.facts)}<small> facts</small>`, `${pct(s.fresh, s.facts)}% up to date · ${s.governing} ratified`)}
-        ${tile("#/activity", "Agents", `${M().snapshot.units.length}<small> ${M().snapshot.units.length === 1 ? "unit" : "units"} published</small>`, reads.length ? `last read: ${A.esc(reads[0].text)}` : "No reads recorded yet")}
-      </div>
-      ${A.healthSection(state.query.show === "health").html}
-      <div class="at-cols">
-        <section class="at-panel"><header class="at-panel-head"><h3>Busiest units</h3><a class="mx-link" href="#/knowledge">All units</a></header>
-          ${M().units().slice(0, 5).map((u) => `<a class="at-linkrow" href="${unitHref(u.id)}">${dot(u)}<span>${A.esc(u.id.split("/").slice(1).join("/") || u.id)}</span><small>${A.esc(u.id.includes("/") ? u.id.split("/")[0] : "")}</small><span class="grow"></span><small>${plural(u.facts, "fact")}</small></a>`).join("")}</section>
-        <section class="at-panel"><header class="at-panel-head"><h3>Recent activity</h3><a class="mx-link" href="#/activity">Activity</a></header>
-          ${events.slice(0, 5).map((e) => A.eventRow(e, true)).join("") || '<div class="at-band-empty">Nothing recorded yet.</div>'}</section>
-      </div></div>`,
-    }
-  }
-
-  /* ---------- Knowledge: find a unit ---------- */
-  A.views.knowledge = (state) => {
-    const q = state.query
-    const text = (q.q ?? "").trim().toLowerCase()
-    const units = M().units()
-    const s = M().stats()
-    const names = { backend: "Backend", archie: "Archie", jimmy: "Jimmy", lucy: "Lucy", rosie: "Rosie" }
-    const owner = (u) => { const t = M().territoryOf(u.id); return t ? `${A.esc(t.name)} · ${A.esc(names[t.owner] ?? t.owner)}` : "No territory" }
-    // The group already says where a unit lives, so a card shows only its own name.
-    const card = (u) => `<a class="at-ucard" href="${unitHref(u.id)}"><span class="at-ucard-top"><strong>${A.esc(u.id === "(root)" ? "Top-level files" : u.id.split("/").slice(1).join("/"))}</strong>${dot(u)}</span>
-      <span class="at-ucard-num"><b>${A.num(u.facts)}</b> ${u.facts === 1 ? "fact" : "facts"}${u.drifted ? ` · <span class="warm">${u.drifted} changed</span>` : ""}</span>
-      <small>${owner(u)}</small></a>`
-    const groups = [["code", "Code", "Packages agents work inside", true], ["docs", "Docs", "Specifications, ADRs and reference pages", false], ["harness", "Harness", "CI gates and probes", false], ["root", "Repository root", "Top-level files", false]]
-    const results = text ? M().live().filter((x) => `${x.claim} ${x.file}`.toLowerCase().includes(text)) : []
-    return {
-      crumbs: [["Atlas", "#/overview"], ["Knowledge"]],
-      html: `<div class="at-page narrow">
-      <div class="mx-heading"><div><div class="mx-eyebrow">Atlas</div><h1>Knowledge</h1><p>${plural(units.length, "unit")} · ${plural(s.facts, "fact")}</p></div><div class="heading-actions">${A.btn("Check a claim…", "verify", { icon: "shield" })}</div></div>
-      <div class="at-toolbar"><label class="at-search wide">${A.icon("search")}<input id="list-search" placeholder="Search every fact by sentence or file" value="${A.esc(q.q ?? "")}" aria-label="Search facts"><kbd>/</kbd></label></div>
-      ${text ? `<section class="at-panel"><header class="at-panel-head"><h3>${plural(results.length, "fact")} match</h3>${A.btn("Clear", "go", { value: "#/knowledge" })}</header>${A.seven(results, "search", (x) => factRow(x, state), 25) || '<div class="at-band-empty">Nothing matches.</div>'}</section>`
-        : groups.map(([g, title, purpose, open]) => {
-          const list = units.filter((u) => u.group === g)
-          return list.length ? acc(`units-${g}`, g === "code" ? "stack" : g === "docs" ? "fact" : g === "harness" ? "settings" : "folder", title, purpose, plural(list.length, "unit"), `<div class="at-ucards">${list.map(card).join("")}</div>`, open) : ""
-        }).join("")}
-      </div>`,
-    }
-  }
-
   /* ---------- A unit: what an agent learns here, and whether it still holds ---------- */
   A.views.unit = (state) => {
     const path = state.params[0] || "packages/knowledge"
@@ -171,8 +113,29 @@
 
     const segs = path.split("/")
     const crumbs = [["Atlas", "#/overview"], ["Knowledge", "#/knowledge"], ...(isUnit ? [[path, null, true]] : [[unitId, unitHref(unitId), true], [path.slice(unitId.length + 1), null, true]])]
+    // Accordions that draw on open: the briefing build and the file map.
+    const after = () => {
+      const when = (id, run) => { const d = document.querySelector(`details[data-acc="${id}"]`); if (!d) return; let done = false; const go = () => { if (d.open && !done) { done = true; run() } }; d.addEventListener("toggle", go); go() }
+      when("unit-build", () => A.buildBriefing(document.querySelector("#unit-brief-build"), path))
+      when("unit-map", () => {
+        const fg = M().fileGraph(path)
+        const st = (f) => { const xs = M().live().filter((x) => x.file === f); return xs.some((x) => M().state(x) === "drifted") ? "warm" : "good" }
+        A.graph(document.querySelector("#unit-map"), { id: "unitmap", length: 90, repel: 1600, labelMin: 11,
+          nodes: [...fg.files.map((f) => ({ id: f, label: f, short: f.slice(path.length + 1).split("/").at(-1), r: 5 + Math.min(10, (R().dependents[f] ?? []).length / 2), gw: 2, tone: st(f), tip: `<b>${A.esc(f.slice(path.length + 1))}</b><span>${A.num((R().dependents[f] ?? []).length)} files import it</span>` })),
+            ...fg.outside.map(([u, n]) => ({ id: `unit:${u}`, label: u, short: u.split("/").slice(1).join("/") || u, r: 7 + Math.min(10, n), tone: "ext", gw: 0.15, pin: true, tip: `<b>${A.esc(u)}</b><span>${n} imports into ${A.esc(leaf)}</span>` }))],
+          edges: fg.edges,
+          onSelect: (id) => {
+            const host = document.querySelector("#unit-map-pick")
+            if (!id) return (host.innerHTML = "")
+            if (id.startsWith("unit:")) return (host.innerHTML = `<div class="at-pick-head"><strong>${A.esc(id.slice(5))}</strong><span class="grow"></span>${A.btn("Open", "go", { value: unitHref(id.slice(5)), primary: true })}</div>`)
+            const facts = M().live().filter((x) => x.file === id)
+            host.innerHTML = `<div class="at-pick-head"><code class="at-mono">${A.esc(id.slice(path.length + 1))}</code><span class="grow"></span>${A.btn("Open file", "go", { value: unitHref(id) })}</div>${facts.map((x) => factRow(x, state, { noFile: true })).join("")}`
+          } })
+      })
+    }
     return {
       crumbs,
+      after,
       html: `<div class="at-page narrow">
       <div class="at-agent-head"><span class="at-avatar unit">${A.icon(node?.file ? "fact" : "stack")}</span><div><div class="mx-eyebrow">${isUnit ? `Unit · ${A.esc(path.includes("/") ? path.split("/")[0] : "repository root")}` : `inside <a class="mx-link" href="${unitHref(unitId)}">${A.esc(unitId.split("/").slice(1).join("/") || unitId)}</a>`}</div><h1 class="mono">${A.esc(isUnit ? (path.split("/").slice(1).join("/") || path) : segs.slice(-2).join("/"))}</h1>
         <p>${terr ? `${A.esc(terr.name)} · ${A.agent(terr.owner)}` : "No territory"}</p></div><span class="grow"></span>
@@ -183,6 +146,8 @@
         ${kpi("In the briefing", blind || path === "(root)" ? 0 : sent, blind ? "store in git: nothing sent" : `${A.num(b.used)} of 1,500 characters`)}
         ${kpi("Depends on it", b.depFactsTotal, b.depFactsTotal ? "facts elsewhere" : "nothing outside")}</div>
       ${acc("unit-brief", "stack", "Briefing", "What an agent gets for this unit", plural(sent, "fact"), briefing, true)}
+      ${path === "(root)" ? "" : acc("unit-build", "play", "Watch it being built", "The same order and limits Atlas uses, step by step", `${A.num(b.used)} / 1,500`, '<div id="unit-brief-build"></div>')}
+      ${path === "(root)" || node?.file ? "" : acc("unit-map", "graph", "Map", "Its files, and the code elsewhere that imports them", `${M().fileGraph(path).files.length} files`, '<div class="at-graph-host" id="unit-map"></div><div class="at-graph-legend"><span><i class="lg good"></i>file holds</span><span><i class="lg warm"></i>file changed</span><span><i class="lg ext"></i>another unit</span><span class="grow"></span><span class="at-hint">Click a file to see its blast radius</span></div><div id="unit-map-pick" class="at-graph-pick"></div>')}
       ${acc("unit-kinds", "fact", "Facts by kind", "Every fact here, by the kind of claim it makes", `${here.length}`, kindsBody)}
       ${acc("unit-structure", "relations", "Proven structure", "Links, calls that never happen, code changes, hollow tests", structureCount ? `${structureCount}` : "none yet", structureBody)}
       ${acc("unit-conn", "graph", "Connections", "What depends on it", `${usedFacts.length}`, connBody)}

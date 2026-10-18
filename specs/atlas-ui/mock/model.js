@@ -325,5 +325,37 @@
     return events.sort((a, b) => b.at - a.at)
   }
 
-  A.m = { actor, writable, checks, promoteRun, reconcile, why, health, activity, provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
+  // The unit graph: one node per unit, an edge when files in one unit import files in another (importer → target,
+  // "depends on"). Atlas walks index.scip for the same edges; imports stand in for it in the preview.
+  const unitGraph = () => {
+    const us = units()
+    const ids = new Set(us.map((u) => u.id))
+    const w = new Map()
+    Object.entries(R.dependents).forEach(([target, users]) => users.forEach((user) => {
+      const a = unitOf(user), b = unitOf(target)
+      if (a === b || !ids.has(a) || !ids.has(b)) return
+      w.set(`${a}|${b}`, (w.get(`${a}|${b}`) ?? 0) + 1)
+    }))
+    return { units: us, edges: [...w].map(([k, n]) => { const [source, target] = k.split("|"); return { source, target, w: n } }) }
+  }
+  // The file graph of one unit: its files, plus the outside files that import them, folded into their units.
+  const fileGraph = (unitId) => {
+    const files = [...new Set(live().filter((x) => unitOf(x.file) === unitId).map((x) => x.file))]
+    const inside = new Set(files)
+    const edges = []
+    const outside = new Map()
+    Object.entries(R.dependents).forEach(([target, users]) => {
+      if (!inside.has(target)) return
+      users.forEach((user) => {
+        if (inside.has(user)) return edges.push({ source: user, target, w: 1 })
+        const u = unitOf(user)
+        if (u === unitId) return
+        outside.set(u, (outside.get(u) ?? 0) + 1)
+        edges.push({ source: `unit:${u}`, target, w: 1 })
+      })
+    })
+    return { files, outside: [...outside], edges }
+  }
+
+  A.m = { unitGraph, fileGraph, actor, writable, checks, promoteRun, reconcile, why, health, activity, provenance, snapshot, packOwner, dependentFacts, frecency, header, headerText, appendRecord, words, isGotcha, OWN_CAP, territories, territoryOf, R, facts, candidates, byKey, live, state, governing, areaOf, areas, unitOf, units, unitGroup, SLOT_GROUPS, SLOT_MEANING, tree, findNode, under, briefing, dependents, stats, curationCount, codeChanges, memory, awareness, tokens }
 })(window.Atlas)

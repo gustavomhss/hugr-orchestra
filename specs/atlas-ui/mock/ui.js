@@ -62,6 +62,9 @@ window.Atlas = window.Atlas || {}
     download: '<path d="M8 1v10m-4-4 4 4 4-4M2 10v4h12v-4"/>',
     settings: '<circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13"/>',
     dot: '<circle cx="8" cy="8" r="2.5"/>',
+    plus: '<path d="M8 3v10M3 8h10"/>',
+    minus: '<path d="M3 8h10"/>',
+    list: '<path d="M5 4h9M5 8h9M5 12h9M2 4h.5M2 8h.5M2 12h.5"/>',
     folder: '<path d="M1.5 4.5V12a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3.5h-4a1 1 0 0 0-1 1Z"/>',
     hash: '<path d="M3 6h11M2 10h11M6.5 2 5 14M11 2 9.5 14"/>',
   }

@@ -13,7 +13,7 @@
     ["plugins", "Plugins", "code"], ["hooks", "Hooks", "hooks"], ["actions", "Actions", "bolt"], ["schedule", "Schedule", "clock"],
     ["env", ".env", "lock"], ["dock", "Dock", "dock"], ["workspaces", "Workspaces", "server"],
   ]
-  const atlasRoutes = ["overview", "knowledge", "unit", "fact", "review", "activity", "memory", "settings", "gallery"]
+  const atlasRoutes = ["overview", "explore", "knowledge", "unit", "fact", "review", "activity", "genesis", "how", "memory", "settings", "gallery"]
   const routes = [...atlasRoutes, "agents", "chat"]
 
   /* ---------- Routing ---------- */
@@ -61,6 +61,7 @@
       const illus = atlas && M().R.illustrated && !view.flush ? `<div class="at-illus">${A.icon("info")}<span><b>Illustrated.</b> Items marked example are invented.</span><button class="mx-link" data-action="data" data-value="real">Real store only</button></div>` : ""
       const banner = storeBanner + illus
       main.innerHTML = banner + view.html
+      view.after?.()
       main.classList.toggle("flush", !!view.flush)
       // Remember which sections the viewer opened or closed (per section id, this browser only).
       main.querySelectorAll("details[data-acc]").forEach((d) => {
@@ -119,15 +120,19 @@
     const healthOk = M().health().cas.sound && M().provenance() === "trusted"
     host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>project atlas</small></div></header>
       <div class="context-group">
-        ${link("#/overview", "Overview", "overview", s.route === "overview", healthOk || held ? "" : '<span class="at-sdot warm" data-tip="A health check needs attention"></span>')}
-        ${link("#/knowledge", "Knowledge", "stack", ["knowledge", "unit", "fact"].includes(s.route))}
+        ${link("#/overview", "Home", "home", s.route === "overview", healthOk || held ? "" : '<span class="at-sdot warm" data-tip="A health check needs attention"></span>')}
+        ${link("#/explore", "Explore", "graph", ["explore", "knowledge", "unit", "fact"].includes(s.route))}
         ${link("#/review", "Review", "inbox", s.route === "review", count(M().curationCount(), "warm"))}
         ${link("#/activity", "Activity", "history", s.route === "activity")}
-        ${link("#/settings", "Settings", "settings", s.route === "settings")}
+      </div>
+      <div class="context-group"><div class="context-label">THE ENGINE</div>
+        ${link("#/genesis", "Genesis", "sparkle", s.route === "genesis")}
+        ${link("#/how", "How it works", "fact", s.route === "how")}
       </div>
       <div class="context-group"><div class="context-label">MEMORY</div>
         ${[["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["maestro", "Maestro"]].map(([id, n]) => link(`#/memory/${id}`, n, "memory", member === id, M().memory[id].bound ? "" : '<span class="context-hint">off</span>')).join("")}
       </div>
+      <div class="context-group">${link("#/settings", "Settings", "settings", s.route === "settings")}</div>
       <footer class="context-footer">${held ? "<span>Not connected</span>" : M().provenance() === "trusted" ? `<span>${A.icon("server")} Local store</span>` : `<a class="warm" href="#/overview?show=health">${A.icon("lock")} Store in git · ${M().provenance() === "tracked-staging" ? "locked" : "read-only"}</a>`}<a href="#/gallery">${A.icon("eye")}All screens</a></footer></aside>`
   }
 
@@ -311,6 +316,10 @@
     },
     more: (v) => { const [id, n] = v.split("|"); history.replaceState(null, "", withQuery({ [`n-${id}`]: n })); render(true) },
     step: (v) => step(Number(v)),
+    "graph-zoom": (v) => A.exploreGraph?.zoom(Number(v)),
+    "graph-fit": () => A.exploreGraph?.fit(),
+    "open-fact-page": (v) => A.go(`#/fact/${v}`),
+    "rebuild-brief": (v) => { const [path, focus] = v.split("|"); const host = document.querySelector("#how-brief, #unit-brief-build"); if (host) A.buildBriefing(host, path, focus || undefined) },
     "toggle-why": () => A.go(withQuery({ why: A.state.query.why === "all" ? null : "all" })),
     "copy-link": (v) => copy(`${location.href.split("#")[0]}#/fact/${v}`, "Link copied"),
     copy: (v) => copy(v, "Copied"),
@@ -530,7 +539,7 @@
 
   /* ---------- Keyboard ---------- */
   let chord = false
-  const chords = { o: "#/overview", k: "#/knowledge", r: "#/review", a: "#/activity", h: "#/overview?show=health", y: "#/memory/backend", s: "#/settings", c: "#/chat" }
+  const chords = { o: "#/overview", e: "#/explore", n: "#/genesis", w: "#/how", k: "#/explore", r: "#/review", a: "#/activity", h: "#/overview?show=health", y: "#/memory/backend", s: "#/settings", c: "#/chat" }
   document.addEventListener("keydown", (event) => {
     const typing = event.target.matches("input, textarea, select")
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -567,7 +576,7 @@
   let found = []
   let index = 0
   const everything = (words) => {
-    const pages = [["Overview", "#/overview", "overview"], ["Knowledge", "#/knowledge", "stack"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/overview?show=health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
+    const pages = [["Home", "#/overview", "home"], ["Explore · graph", "#/explore", "graph"], ["Explore · map", "#/explore?view=map", "stack"], ["Explore · list", "#/explore?view=list", "list"], ["Genesis", "#/genesis", "sparkle"], ["How it works", "#/how", "fact"], ["Review · changed code", "#/review?tab=changed", "drift"], ["Review · mined", "#/review?tab=mined", "sparkle"], ["Review · to ratify", "#/review?tab=ratify", "shield"], ["Activity", "#/activity", "history"], ["Health", "#/overview?show=health", "health"], ["Settings · connection", "#/settings", "server"], ["Settings · territories", "#/settings?tab=territories", "territory"], ["Settings · permissions", "#/settings?tab=permissions", "lock"]]
       .map(([label, href, glyph]) => ({ group: "Go to", label, hint: "", glyph, run: () => A.go(href) }))
     const areas = M().units().map((u) => ({ group: "Units", label: u.id, hint: `${u.facts} facts`, glyph: "stack", run: () => A.go(`#/unit/${encodeURIComponent(u.id)}`) }))
     const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/unit/${encodeURIComponent(f)}`) }))
@@ -623,9 +632,12 @@
     const first = M().live()[0].key
     const drifted = M().live().find((x) => x.drift).key
     const screens = [
-      ["Overview", "#/overview", "overview", "Is Atlas fine, and what needs me: three cards and two short lists."],
-      ["Knowledge", "#/knowledge", "stack", "Find a unit; search every fact."],
-      ["A unit", "#/unit/packages%2Fknowledge", "stack", "The briefing an agent gets, facts by kind, proven structure, connections."],
+      ["Home", "#/overview", "home", "What Atlas knows, the live unit graph, and what it learned, caught and delivered."],
+      ["Explore · graph", "#/explore", "graph", "The units as a graph: click one to see everything that depends on it."],
+      ["Explore · map", "#/explore?view=map", "stack", "The units as a map: area is knowledge, colour is how much still holds."],
+      ["Genesis", "#/genesis", "sparkle", "How Atlas learns a repository: the pipeline, a real claim with its reasoning, the configuration."],
+      ["How it works", "#/how", "fact", "Follow one real fact from mining to an agent, through the store."],
+      ["A unit", "#/unit/packages%2Fknowledge", "stack", "The briefing an agent gets, watched being built, the file map, facts by kind."],
       ["A fact", `#/unit/packages%2Fcontracts?fact=${first}`, "eye", "Can I trust this sentence, and where did it come from."],
       ["A changed fact", `#/review?tab=changed&fact=${drifted}`, "drift", "The diff first, then what Atlas suggests."],
       ["Review · changed code", "#/review?tab=changed", "drift", "Facts whose code changed, with the merge check."],
