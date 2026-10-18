@@ -85,7 +85,8 @@ export const assemble = Effect.fn("DiscoveryResult.assemble")(function* (
  */
 export function locations(card: Research.CardV2, worktree: string) {
   const flagged = new Set(card.check.issues.flatMap((issue) => issue.rule === "R9" && issue.citation ? [issue.citation] : []))
-  const found = InquiryCheck.extract(card.answer).flatMap((citation) => {
+  // The extractor groups citations by form; the answer's own order is the ranking.
+  const found = InquiryCheck.extract(card.answer).toSorted((left, right) => card.answer.indexOf(left.raw) - card.answer.indexOf(right.raw)).flatMap((citation) => {
     if (citation.kind !== "file" || citation.start === undefined || citation.end === undefined || flagged.has(citation.raw)) return []
     const relative = path.relative(worktree, path.resolve(worktree, citation.target)).replaceAll("\\", "/")
     return [{ path: relative, start: citation.start, end: citation.end }]
