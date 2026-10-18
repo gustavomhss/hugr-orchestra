@@ -24,7 +24,7 @@ import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
 import { setCursorPosition } from "./editor-dom"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError, hookRefusal } from "@/utils/server-errors"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { createPromptSubmissionState } from "./submission-state"
 import { normalizeSessionInfo } from "@/utils/session"
@@ -189,6 +189,8 @@ export function createPromptSubmit(input: PromptSubmitInput) {
   untrack(admissionSource)
 
   const errorMessage = (err: unknown) => {
+    const refusal = hookRefusal(err)
+    if (refusal) return language.t("orchestra.chat.send.blockedByHook", refusal)
     if (err && typeof err === "object" && "message" in err && typeof err.message === "string") return err.message
     if (err && typeof err === "object" && "data" in err) {
       const data = err.data
@@ -627,7 +629,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         }
         if (ownsSource()) showToast({
           title: language.t(isCommand ? "prompt.toast.commandSendFailed.title" : "prompt.toast.promptSendFailed.title"),
-          description: isCommand ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
+          description: isCommand && !hookRefusal(err) ? formatServerError(err, language.t, language.t("common.requestFailed")) : errorMessage(err),
         })
         removeOptimisticMessage()
         restoreInput()

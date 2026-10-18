@@ -10,6 +10,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Event } from "@orchestra/schema/event"
+import { ProjectID } from "@orchestra/schema/project-id"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { AppRuntime } from "@/effect/app-runtime"
@@ -79,6 +80,32 @@ it.live("a workflow dispatch without a current owner approval names the approval
         expect(held.message).toStartWith(
           "Tool safety HOLD: WORKFLOW_DIRECT_APPROVAL_MISSING. maestro_record_approval reports HOLD: presentation-not-current.")
         expect(held.message).toContain("record approval, grant authorization, arm and dispatch in the turn that answers it")
+      }).pipe(Effect.provideService(InstanceRef, instance))
+    }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(LayerNode.group([
+      filesystem, AppProcess.node, CrossSpawnSpawner.node, AtlasKnowledge.node,
+    ])))))
+  }), 90000)
+
+// The owner approves the plan with the global acceptance checks in it: the native host supplies them to materialization.
+it.live("the native workflow host attaches the global acceptance checks to every workflow plan", () =>
+  Effect.promise(async () => {
+    await using tmp = await tmpdir({ git: true })
+    await AppRuntime.runPromise(Effect.gen(function* () {
+      const instances = yield* InstanceStore.Service
+      const instance = yield* instances.load({ directory: tmp.path })
+      yield* Effect.gen(function* () {
+        const sessions = yield* Session.Service
+        const session = yield* sessions.create({ agent: "maestro" })
+        const runtime = yield* ArsenalBindings.make
+        const port = yield* runtime.withSession(session.id, Effect.gen(function* () {
+          const host = yield* WorkflowBinding.NativeHost
+          if (!host) throw new Error("actual native workflow host missing")
+          return yield* host.publication({ directory: session.directory, projectID: ProjectID.make(session.projectID) })
+        }))
+        expect(port.acceptance).toEqual([
+          { id: "package-verification", host_check: "package-verification" },
+          { id: "cold-review", host_check: "cold-review" },
+        ])
       }).pipe(Effect.provideService(InstanceRef, instance))
     }).pipe(Effect.scoped, Effect.provide(LayerNode.compile(LayerNode.group([
       filesystem, AppProcess.node, CrossSpawnSpawner.node, AtlasKnowledge.node,

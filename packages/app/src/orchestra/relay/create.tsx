@@ -5,20 +5,17 @@ import { rememberDocument } from "./cache"
 import { documentProfile, type RelayDocument } from "./client"
 import { createAction } from "./dialogs"
 import type { Flow } from "./graph"
-import { TemplateCard } from "./parts"
-import { blankWorkflow, copyDocument } from "./presets"
+import { TemplateCard, templateName } from "./parts"
+import { blankWorkflow, copyDocument, freeName } from "./presets"
 import type { RelaySource } from "./source"
 import { RelayDialog, useRelayCopy } from "./ui"
 
-// Templates are the shipped Relay profiles the server seeded that can run, by name. A profile that still needs
-// tools that are not available is not offered at all.
+// Templates are the shipped profiles the server seeded that can run. They are offered here and nowhere else: the
+// library lists the user's own workflows. A profile that still needs tools that are not available is not offered.
 export const templates = (documents: RelayDocument[]) =>
   documents
     .filter((document) => documentProfile(document) !== undefined && document.runnable)
     .toSorted((a, b) => a.name.localeCompare(b.name))
-
-// The first template is the default; a profile without one starts blank.
-export const templateID = (documents: RelayDocument[]) => templates(documents)[0]?.id ?? "blank"
 
 export function CreateWorkflowDialog(props: {
   source: RelaySource
@@ -30,15 +27,20 @@ export function CreateWorkflowDialog(props: {
   const copy = useRelayCopy()
   const action = createAction(useLocation())
   const documents = () => templates(props.source.list())
+  // The default name is the template's, or "Blank workflow", numbered when a workflow already has it.
   const nameOf = (id: string) => {
     const source = props.source.list().find((item) => item.id === id)
-    return source
-      ? copy.t("orchestra.workflows.create.copyName", { name: source.name })
-      : copy.t("orchestra.workflows.template.blank")
+    const base = source ? templateName(copy, source) : copy.t("orchestra.workflows.create.blankName")
+    return freeName(
+      props.source.list().map((item) => item.name),
+      base,
+      (n) => copy.t("orchestra.workflows.create.numbered", { name: base, n }),
+    )
   }
   const [draft, setDraft] = createStore({
     pick: props.initial,
     name: nameOf(props.initial),
+    description: "",
     custom: false,
     invalid: false,
   })
@@ -59,9 +61,11 @@ export function CreateWorkflowDialog(props: {
       return
     }
     return action.run(async (current) => {
-      const created = await props.source.client.create(
-        source ? copyDocument(source, value) : blankWorkflow(value, copy.t("orchestra.workflows.type.start")),
-      )
+      const fields = source
+        ? copyDocument(source, value)
+        : blankWorkflow(value, copy.t("orchestra.workflows.type.start"))
+      const description = draft.description.trim()
+      const created = await props.source.client.create(description ? { ...fields, description } : fields)
       await rememberDocument(props.source.queryClient(), props.source.key("documents"), created)
       if (!current()) return
       props.onCreated(created.id)
@@ -112,6 +116,16 @@ export function CreateWorkflowDialog(props: {
             {copy.t("orchestra.workflows.create.nameRequired")}
           </span>
         </Show>
+      </label>
+      <label class="mx-field">
+        <span>{copy.t("orchestra.workflows.create.purpose")}</span>
+        <input
+          name="description"
+          disabled={action.busy()}
+          value={draft.description}
+          placeholder={copy.t("orchestra.workflows.create.purposeHint")}
+          onInput={(event) => setDraft("description", event.currentTarget.value)}
+        />
       </label>
       <div class="mx-field" style={{ "margin-bottom": "0" }}>
         <span id={templateLabel}>{copy.t("orchestra.workflows.create.template")}</span>

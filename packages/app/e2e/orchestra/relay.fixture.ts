@@ -265,6 +265,13 @@ export function relayState(now = Date.now()) {
 }
 
 export type RelayState = ReturnType<typeof relayState>
+
+// A seeded profile is a template, never a library row. A copy the user made has no profile mark; dropping it from a
+// seeded document makes it the user's own workflow, which the library lists.
+export function adopt(state: RelayState, id: string) {
+  const meta = state.documents.find((document) => document.id === id)!.meta as { relay: Json }
+  delete meta.relay.profile
+}
 // Observe the actual client continuation, including a discarded write, rather than transport completion.
 export async function authoringSettlement(page: Page, kind: "save" | "navigation", owner: string) {
   const settled = Promise.withResolvers<void>()

@@ -8,6 +8,7 @@ import { QueryClient } from "@tanstack/solid-query"
 import { MemoryRouter } from "@solidjs/router"
 import type { RelayDocument, RelayDocumentFields } from "@/orchestra/relay/client"
 import type { RelaySource } from "@/orchestra/relay/source"
+import type { SaveState } from "@/orchestra/relay/editor-head"
 import { documentFields, type Flow, flowFromDocument, moveNodes, removeNodes } from "@/orchestra/relay/graph"
 
 // Compile the real component graph with Solid, isolated from other Bun tests' JSX loaders.
@@ -50,7 +51,8 @@ const { WorkflowDetails }: typeof import("@/orchestra/relay/details-workflow") =
 const { SaveStatus }: typeof import("@/orchestra/relay/editor-head") = await load("@/orchestra/relay/editor-head")
 const { Editor }: typeof import("@/orchestra/relay/editor") = await load("@/orchestra/relay/editor")
 const { rememberDocument }: typeof import("@/orchestra/relay/cache") = await load("@/orchestra/relay/cache")
-const { openDraft, profileDrafts, BURST_MS, DRAFT_LIMIT, HISTORY_LIMIT }: typeof import("@/orchestra/relay/drafts") = await load("@/orchestra/relay/drafts")
+const { copyDocument, freeName }: typeof import("@/orchestra/relay/presets") = await load("@/orchestra/relay/presets")
+const { DraftScope, openDraft, profileDrafts, BURST_MS, DRAFT_LIMIT, HISTORY_LIMIT }: typeof import("@/orchestra/relay/drafts") = await load("@/orchestra/relay/drafts")
 const { runVersion }: typeof import("@/orchestra/relay/history") = await load("@/orchestra/relay/history")
 const { decodeRun }: typeof import("@/orchestra/relay/runs") = await load("@/orchestra/relay/runs")
 const { DeleteDialog, RemoveNodesDialog }: typeof import("@/orchestra/relay/dialogs") = await load("@/orchestra/relay/dialogs")
@@ -252,7 +254,7 @@ test("step rename preserves spaces while typing and serialized connections follo
   const [state, setState] = createStore({ flow: flowFromDocument(doc(), "workflow") })
   const host = mount(() => createComponent(WorkflowDetails, {
     get flow() { return state.flow }, get node() { return state.flow.nodes[1] },
-    run: undefined, frozen: undefined, issues: [], skills: [], save: undefined,
+    run: undefined, frozen: undefined, issues: [], skills: { names: [], error: false, retry() {} }, save: undefined,
     onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
   }))
   const input = document.querySelector<HTMLInputElement>('[data-component="relay-node-details"] input[data-autofocus]')!
@@ -276,8 +278,23 @@ test("step rename preserves spaces while typing and serialized connections follo
   expect(input.getAttribute("aria-invalid")).toBe("false")
 })
 
+test("the skill list marks a skill that no longer exists and says when it cannot load", () => {
+  const [state, setState] = createStore({ flow: flowFromDocument(doc(), "workflow"), names: ["other"] as string[] | undefined })
+  setState("flow", "nodes", 1, "parameters", { instructions: "Review changes", skill: "gone" })
+  mount(() => createComponent(WorkflowDetails, {
+    get flow() { return state.flow }, get node() { return state.flow.nodes[1] }, run: undefined, frozen: undefined, issues: [],
+    get skills() { return { names: state.names, error: !state.names, retry() {} } },
+    save: undefined, onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
+  }))
+  const text = () => document.querySelector('[data-component="relay-node-details"]')!.textContent!
+  expect(text()).toContain("gone (not found)")
+  setState("names", undefined)
+  expect(text()).toContain("could not be loaded")
+  expect(text()).not.toContain("(not found)")
+})
+
 test("failed saves show the server error and explicit retry; conflicts keep reload distinct", () => {
-  const [state, setState] = createStore({ save: { state: "error" as "error" | "conflict", dirty: true, error: "Disk full" }, retries: 0 })
+  const [state, setState] = createStore({ save: { state: "error", dirty: true, error: "Disk full" } as SaveState, retries: 0 })
   const host = mount(() => createComponent(SaveStatus, {
     get save() { return state.save }, onRetry: () => setState("retries", (value) => value + 1), onReload() {},
   }))
@@ -286,17 +303,112 @@ test("failed saves show the server error and explicit retry; conflicts keep relo
   expect(host.querySelector("button")!.textContent).toBe("Try again")
   host.querySelector("button")!.click()
   expect(state.retries).toBe(1)
-  setState("save", "state", "conflict")
-  expect(host.querySelector("button")!.textContent).toBe("Discard local changes and reload")
+  expect([...host.querySelectorAll("button")].map((button) => button.textContent)).toEqual(["Try again", "Discard changes"])
+  // A transport failure names the server, not the browser's raw message.
+  setState("save", { error: "Failed to fetch", reason: "offline" })
+  expect(host.textContent).toContain("Can't reach the Orchestra server.")
+  expect(host.textContent).not.toContain("Failed to fetch")
+  setState("save", { state: "conflict", error: "", reason: undefined })
+  // Without the editor's draft scope only the discard is offered.
+  expect([...host.querySelectorAll("button")].map((button) => button.textContent)).toEqual(["Discard mine"])
 })
+
+test("Keep mine in the save status overwrites a conflict with a forced save of the local flow", async () => {
+  const api = setup(async (request) => {
+    const body = await request.json()
+    if (!body.force) return Response.json({ message: "The workflow changed.", _tag: "RelayConflictError" }, { status: 409 })
+    return Response.json({ location: { directory: "/repo" }, data: doc("template", { ...body, versionId: "v3", versionCounter: 3, checksum: "e".repeat(64) }) })
+  })
+  const draft = openDraft(api.source, doc(), "workflow")!
+  draft.rename("Mine")
+  await draft.flush()
+  expect(draft.state.save).toMatchObject({ state: "conflict", dirty: true, error: "" })
+  const host = mount(() => createComponent(DraftScope, { draft, go() {}, get children() {
+    return createComponent(SaveStatus, { get save() { return draft.state.save }, onReload() {} })
+  } }))
+  expect([...host.querySelectorAll("button")].map((button) => button.textContent)).toEqual(["Keep mine", "Save mine as a copy", "Discard mine"])
+  host.querySelector("button")!.click()
+  await until(() => draft.state.save.state === "saved" && !draft.state.save.dirty)
+  expect(await api.requests.at(-1)!.json()).toMatchObject({ name: "Mine", versionId: "v1", force: true })
+  expect(draft.state.base.versionId).toBe("v3")
+  draft.release()
+})
+
+test("a server that cannot be reached reads as offline, and focus tries the write again", async () => {
+  const server = { down: true }
+  const api = setup(async (request) => {
+    if (server.down) throw new TypeError("Failed to fetch")
+    return Response.json({ location: { directory: "/repo" }, data: doc("template", { ...await request.json(), versionId: "v2", checksum: "d".repeat(64) }) })
+  })
+  const draft = openDraft(api.source, doc(), "workflow")!
+  draft.rename("Offline edit")
+  await draft.flush()
+  expect(draft.state.save).toMatchObject({ state: "error", dirty: true, reason: "offline" })
+  server.down = false
+  window.dispatchEvent(new Event("focus"))
+  await until(() => draft.state.save.state === "saved" && !draft.state.save.dirty)
+  expect(draft.state.save.reason).toBeUndefined()
+  draft.release()
+})
+
+test("a document deleted elsewhere stops retrying and leaves as a copy of the local flow", async () => {
+  const api = setup(async (request) => request.method === "POST"
+    ? Response.json({ location: { directory: "/repo" }, data: doc("copied", { ...await request.json(), tags: [] }) })
+    : Response.json({ _tag: "RelayNotFoundError", code: "not-found", message: "Resource not found" }, { status: 404 }))
+  const draft = openDraft(api.source, doc(), "workflow")!
+  draft.edit(moveNodes(draft.state.flow, new Map([["start", [7, 7]]])))
+  await draft.flush()
+  expect(draft.state.save).toMatchObject({ state: "error", dirty: true, reason: "missing" })
+  draft.rename("Still mine")
+  await draft.flush()
+  expect(api.requests.filter((request) => request.method === "PATCH")).toHaveLength(1)
+  const created = await draft.copy("Still mine copy")
+  expect(created.id).toBe("copied")
+  const sent: { name: string; nodes: { id: string; position: number[] }[] } = await api.requests.at(-1)!.json()
+  expect(sent.name).toBe("Still mine copy")
+  expect(sent.nodes.find((node) => node.id === "start")?.position).toEqual([7, 7])
+  expect(api.source.list().some((item) => item.id === "copied")).toBe(true)
+  expect(draft.active()).toBe(false)
+  draft.release()
+})
+
+test("unsaved drafts are kept locally as the page goes and come back in the next page", async () => {
+  const kept = () => Array.from({ length: localStorage.length }, (_, index) => localStorage.key(index) ?? "")
+    .filter((name) => name.startsWith("orchestra-relay-draft:"))
+  cleanups.push(() => kept().forEach((name) => localStorage.removeItem(name)))
+  const api = setup(async () => Response.json({ message: "Offline" }, { status: 503 }))
+  const draft = openDraft(api.source, doc(), "workflow")!
+  draft.rename("Kept locally")
+  await draft.flush()
+  draft.release()
+  window.dispatchEvent(new Event("pagehide"))
+  expect(kept()).toHaveLength(1)
+  // The next page: a new query client for the same server profile.
+  const next = setup(async (request) => Response.json({
+    location: { directory: "/repo" }, data: doc("template", { ...await request.json(), versionId: "v2", checksum: "d".repeat(64) }),
+  }))
+  const [restored] = profileDrafts(next.source)
+  expect(restored).not.toBe(draft)
+  expect(restored.state.name).toBe("Kept locally")
+  expect(restored.state.save).toMatchObject({ state: "error", dirty: true, error: "Offline" })
+  await restored.flush()
+  expect(restored.state.save).toMatchObject({ state: "saved", dirty: false })
+  expect(kept()).toHaveLength(0)
+  expect(profileDrafts(next.source)).toHaveLength(0)
+  draft.discard()
+})
+
+// The library lists the user's own workflows; a shipped profile is only a template.
+const own = () => doc("template", { meta: { relay: { schema: 1, kind: "workflow" } } })
 
 test("duplicate opens only after its saved document is in the library cache", async () => {
   const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [own()])
   const opened: string[] = []
   const host = mount(() => createComponent(WorkflowLibrary, {
     ...api, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", close() {},
     go(path) {
-      expect(api.source.list().find((item) => item.id === "saved")?.name).toBe("Review workflow copy")
+      expect(api.source.list().find((item) => item.id === "saved")?.name).toBe("Review workflow (copy)")
       opened.push(path)
     },
   }))
@@ -307,6 +419,62 @@ test("duplicate opens only after its saved document is in the library cache", as
   await tick()
   expect(opened).toEqual(["/orchestra/workflows/saved"])
   expect(api.requests).toHaveLength(1)
+})
+
+test("default names are numbered against the names already taken", () => {
+  const next = (n: number) => `Blank ${n}`
+  expect(freeName([], "Blank", next)).toBe("Blank")
+  expect(freeName(["Blank"], "Blank", next)).toBe("Blank 2")
+  expect(freeName(["blank", "Blank 2"], "Blank", next)).toBe("Blank 3")
+})
+
+test("create numbers its blank default name and sends the optional description", async () => {
+  const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [doc(), doc("mine", { name: "Blank workflow" })])
+  const host = mount(() => createComponent(CreateWorkflowDialog, { ...api, initial: "blank", onClose() {}, onCreated() {} }))
+  expect(host.querySelector<HTMLInputElement>('input[name="name"]')!.value).toBe("Blank workflow 2")
+  const purpose = host.querySelector<HTMLInputElement>('input[name="description"]')!
+  purpose.value = "Ship releases"
+  purpose.dispatchEvent(new Event("input", { bubbles: true }))
+  submit(host)
+  await until(() => api.requests.length === 1)
+  expect(await api.requests[0].json()).toMatchObject({ name: "Blank workflow 2", description: "Ship releases" })
+})
+
+test("a template copy drops the profile's sample content; a copy of the user's own workflow keeps everything", () => {
+  const node = (id: string, type: string, parameters: Record<string, unknown>) =>
+    ({ id, name: id, type, position: [0, 0], parameters }) as RelayDocument["nodes"][number]
+  const nodes = [
+    node("start", "relay.startTrigger", { relayBrief: "tdd_feature v1.0.0 — profile blurb" }),
+    node("seed", "relay.inject", { text: "Task: add a rate limiter.", file: "docs/brief.md", instructions: "Seed it" }),
+    node("write", "relay.execute", { instructions: "Implement using the TDD skill", skill: "" }),
+    node("skilled", "relay.execute", { instructions: "Apply the skill", skill: "tdd" }),
+  ]
+  expect(copyDocument(doc("template", { nodes }), "Mine").nodes!.map((item) => item.parameters)).toEqual([
+    { relayBrief: "" },
+    { text: "", file: "docs/brief.md", instructions: "Seed it" },
+    { instructions: "", skill: "" },
+    { instructions: "Apply the skill", skill: "tdd" },
+  ])
+  const mine = doc("mine", { nodes, meta: { relay: { schema: 1, kind: "workflow" } } })
+  expect(copyDocument(mine, "Copy").nodes).toBe(nodes)
+})
+
+test("the library lists only the user's workflows, and a failed refresh keeps the list with a notice", () => {
+  const api = setup()
+  api.queryClient.setQueryData(api.key("documents"), [doc(), doc("mine", { meta: { relay: { schema: 1, kind: "workflow" } } })])
+  const source = {
+    ...api.source,
+    documents: { isSuccess: false, isPending: false, isError: true, error: new Error("502"), refetch() {} },
+  } as unknown as RelaySource
+  const host = mount(() => createComponent(WorkflowLibrary, {
+    source, route: { page: "library", kind: "workflow", tab: "list", create: false }, profile: "Test", go() {}, close() {},
+  }))
+  expect([...host.querySelectorAll("[data-document]")].map((row) => row.getAttribute("data-document"))).toEqual(["mine"])
+  expect(host.textContent).toContain("Could not refresh the list")
+  expect(host.textContent).not.toContain("Could not load workflows")
+  // The shipped profile is offered as a template under its own name.
+  expect([...host.querySelectorAll(".wf-tpl h3")].map((title) => title.textContent)).toEqual(["Start from scratch", "Build one work package"])
 })
 
 test("a stale list response cannot overwrite the newly created document", async () => {
@@ -365,7 +533,7 @@ test("pending draft survives unmount, late refusal, scoped reopen and successful
   expect(api.requests).toHaveLength(2)
 })
 
-test("a failed draft stops blocking unload once the editor releases it and blocks again when reopened", async () => {
+test("a failed draft keeps blocking unload after its editor releases it, until it is discarded", async () => {
   const api = setup(async () => Response.json({ message: "Offline" }, { status: 503 }))
   const blocked = () => !window.dispatchEvent(new Event("beforeunload", { cancelable: true }))
   const draft = openDraft(api.source, doc(), "workflow")!
@@ -374,10 +542,10 @@ test("a failed draft stops blocking unload once the editor releases it and block
   expect(draft.state.save.state).toBe("error")
   expect(blocked()).toBe(true)
   draft.release()
-  expect(blocked()).toBe(false)
+  expect(blocked()).toBe(true)
   expect(profileDrafts(api.source)).toHaveLength(1)
   const reopened = openDraft(api.source, doc(), "workflow")!
-  expect(blocked()).toBe(true)
+  expect(reopened).toBe(draft)
   reopened.discard()
   reopened.release()
   expect(blocked()).toBe(false)
@@ -438,6 +606,32 @@ test("rapid edits share one undo step", () => {
   draft.undo()
   expect(draft.state.flow.nodes.find((node) => node.id === "start")!.x).toBe(0)
   expect(draft.canUndo()).toBe(false)
+  draft.discard()
+  draft.release()
+})
+
+test("a rename is its own undo step and a burst is timed from its first edit", () => {
+  const api = setup()
+  const draft = openDraft(api.source, doc(), "workflow")!
+  setSystemTime(new Date(1_000_000))
+  cleanups.push(() => setSystemTime())
+  const start = () => draft.state.flow.nodes.find((node) => node.id === "start")!
+  draft.rename("Renamed")
+  expect(draft.canUndo()).toBe(true)
+  // Edits 300 ms apart: the third is more than BURST_MS after the first, so it starts a new step.
+  ;[1, 2, 3].forEach((x) => {
+    setSystemTime(new Date(1_000_000 + x * 300))
+    draft.edit(moveNodes(draft.state.flow, new Map([["start", [x, x]]])))
+  })
+  draft.undo()
+  expect(start().x).toBe(2)
+  draft.undo()
+  expect([start().x, draft.state.name]).toEqual([0, "Renamed"])
+  draft.undo()
+  expect(draft.state.name).toBe("Review workflow")
+  expect(draft.canUndo()).toBe(false)
+  draft.redo()
+  expect(draft.state.name).toBe("Renamed")
   draft.discard()
   draft.release()
 })
@@ -549,6 +743,7 @@ for (const entry of ["create", "clone"]) {
   test(`lifetime owner: disposed ${entry} caches success without navigating`, async () => {
     const response = Promise.withResolvers<Response>()
     const api = setup(async () => response.promise)
+    api.queryClient.setQueryData(api.key("documents"), [own()])
     const [state, setState] = createStore({ open: true })
     const opened: string[] = []
     const host = mount(() => createComponent(Show, { get when() { return state.open }, get children() {

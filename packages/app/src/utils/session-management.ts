@@ -1,3 +1,4 @@
+import { createSignal } from "solid-js"
 import { Orchestra } from "@orchestra/client"
 import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { ServerConnection } from "@/context/server"
@@ -21,6 +22,9 @@ export function createSessionManagementForServer(input: {
   const protocol = input.protocol
   const legacy = input.legacy
   const lifetime = input.signal
+  const headers = http.password
+    ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
+    : undefined
   const client = Orchestra.make({
     baseUrl: http.url,
     // Declared 404s can be decoded to domain errors without their HTTP status. Classify at the transport boundary.
@@ -39,10 +43,31 @@ export function createSessionManagementForServer(input: {
       },
       { preconnect: fetcher.preconnect },
     ),
-    headers: http.password
-      ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
-      : undefined,
+    headers,
   })
+  // The desktop sidecar answers /global/health, so it reads as V1, but it also serves the V2 session routes.
+  // A numeric pid from /api/health proves them. Only archive uses them here: V1 cannot clear time.archived.
+  // Probe lazily, once per server context, so servers whose archive UI never renders see no extra request.
+  // An answer is kept; a request that never got one is asked again next time.
+  const [archiveRouted, setArchiveRouted] = createSignal(false)
+  let archiveProbe: Promise<boolean> | undefined
+  const archiveRoutes = () => {
+    if (archiveProbe) return archiveProbe
+    archiveProbe = protocol.then(async (kind) => {
+      if (kind === "v2") return true
+      const response = await fetcher(new URL("/api/health", http.url), { headers }).catch(() => undefined)
+      if (!response) {
+        archiveProbe = undefined
+        return false
+      }
+      const body: unknown = response.ok
+        ? await response.json().catch(() => undefined)
+        : await response.body?.cancel().catch(() => undefined)
+      return !!body && typeof body === "object" && "pid" in body && typeof body.pid === "number"
+    })
+    void archiveProbe.then((routed) => setArchiveRouted(routed), () => {})
+    return archiveProbe
+  }
   const writes = new Map<string, Promise<SubagentModelPolicy>>()
   const versions = new Map<string, number>()
   lifetime?.addEventListener("abort", () => {
@@ -50,9 +75,15 @@ export function createSessionManagementForServer(input: {
     versions.clear()
   }, { once: true })
   return {
+    /** Resolves true when archive, restore and the archived list can use the V2 session routes. */
+    archiveRoutes,
+    hasArchiveRoutes() {
+      void archiveRoutes()
+      return archiveRouted()
+    },
     listArchived(directory: string) {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) !== "v2") throw new SessionManagementUnsupported()
+        if (!(await archiveRoutes())) throw new SessionManagementUnsupported()
         lifetime?.throwIfAborted()
         const sessions: AppSession[] = []
         let cursor: string | undefined
@@ -129,7 +160,7 @@ export function createSessionManagementForServer(input: {
     },
     archive(sessionID: string, archived: boolean, directory: string) {
       return runSessionManagementOperation(lifetime, async () => {
-        if ((await protocol) === "v1") {
+        if (!(await archiveRoutes())) {
           lifetime?.throwIfAborted()
           if (!archived) throw new SessionManagementUnsupported()
           await legacy.session.update({ sessionID, directory, time: { archived: Date.now() } })

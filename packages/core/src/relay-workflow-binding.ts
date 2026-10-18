@@ -2,11 +2,13 @@ export * as RelayWorkflowBinding from "./relay-workflow-binding"
 
 import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
-import { Effect, Option, Schema } from "effect"
+import { Effect, Option, Result, Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 import { ProjectID } from "@orchestra/schema/project-id"
 import { AuthoringStore } from "@orchestra/relay/authoring/store"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
+import { AuthoringHook } from "@orchestra/relay/authoring/hook"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { RelaySprint } from "@orchestra/schema/relay-sprint"
 import { AtlasKnowledge } from "@orchestra/schema/atlas-knowledge"
 
@@ -25,10 +27,12 @@ export class Held extends Schema.TaggedErrorClass<Held>()("RelayWorkflow.Held", 
 export interface PublicationPort {
   readonly projectID: ProjectID
   readonly use: <A, E>(
-    read: (store: Pick<AuthoringStore.Interface, "get" | "version">) => Effect.Effect<A, E>,
+    read: (store: Pick<AuthoringStore.Interface, "get" | "version" | "documents">) => Effect.Effect<A, E>,
   ) => Effect.Effect<A, E | Held>
   readonly skills: AuthoringGraph.SkillResolver
   readonly knowledge?: (reference: AtlasKnowledge.Reference, authorSessionID: string) => Effect.Effect<AtlasKnowledge.Anchor, Held>
+  /** Host-check controls every workflow plan must end on; materialization appends them to the last work package. */
+  readonly acceptance?: readonly RelaySprint.Control[]
 }
 
 export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (input: {
@@ -38,6 +42,8 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
   readonly parameters: Readonly<Record<string, string>>
   readonly writePaths: readonly string[]
   readonly authorSessionID?: string
+  // A retained binding's publication: materialize that immutable version, not whatever is published now.
+  readonly pinned?: RelayArm.WorkflowDefinition["publication"]
 }) {
   if (input.port.projectID !== input.projectID)
     return yield* new Held({ reason: "WORKFLOW_PUBLICATION_PROJECT_MISMATCH" })
@@ -47,9 +53,12 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
       return yield* new Held({ reason: "WORKFLOW_PUBLICATION_DOCUMENT_MISMATCH" })
     if (!live.active || !live.activeVersionId || live.isArchived)
       return yield* new Held({ reason: "WORKFLOW_PUBLICATION_UNPUBLISHED" })
-    const version = yield* store.version(live.id, live.activeVersionId)
-    if (version.workflowId !== live.id || version.id !== live.id || version.versionId !== live.activeVersionId)
+    const versionID = input.pinned?.activeVersionID ?? live.activeVersionId
+    const version = yield* store.version(live.id, versionID)
+    if (version.workflowId !== live.id || version.id !== live.id || version.versionId !== versionID)
       return yield* new Held({ reason: "WORKFLOW_PUBLICATION_VERSION_MISMATCH" })
+    if (input.pinned && AuthoringStore.checksum(version) !== input.pinned.immutableVersionBodyChecksum)
+      return yield* new Held({ reason: "WORKFLOW_PUBLICATION_DRIFT" })
     yield* AuthoringStore.runnable(version).pipe(
       Effect.mapError(() => new Held({ reason: "WORKFLOW_TOOLING_NOT_RUNNABLE" })),
     )
@@ -83,13 +92,18 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
     const knowledge = validateKnowledge({ sprint: sprint.value, knowledge: resolved,
       projectID: input.projectID, authorSessionID: author })
     if (knowledge instanceof Held) return yield* knowledge
-    const bytes = Buffer.from(JSON.stringify(compiled.sprint), "utf8")
+    // The required acceptance is part of the materialized bytes, so the plan revision the owner approves carries it.
+    const materialized = attach(compiled.sprint, input.port.acceptance)
+    const bytes = Buffer.from(JSON.stringify(materialized), "utf8")
+    // Draft saves rewrite the document row but never a version, so only unpublishing, or for a new binding a
+    // republish, during acquisition changes what is bound.
     const after = yield* store.get(live.id)
-    if (!after.active || after.activeVersionId !== live.activeVersionId ||
-      AuthoringStore.checksum(after) !== AuthoringStore.checksum(live))
+    if (!after.active || !after.activeVersionId || after.isArchived ||
+      (!input.pinned && after.activeVersionId !== live.activeVersionId))
       return yield* new Held({ reason: "WORKFLOW_PUBLICATION_DRIFT" })
     const definition = Schema.decodeUnknownSync(RelayArm.WorkflowDefinition)({
-      publication: {
+      // The live checksum records the document row at binding time; a retained binding keeps it as recorded.
+      publication: input.pinned ?? {
         projectID: input.projectID,
         documentID: live.id,
         activeVersionID: live.activeVersionId,
@@ -102,7 +116,7 @@ export const acquire = Effect.fn("RelayWorkflowBinding.acquire")(function* (inpu
       writePaths: input.writePaths,
       ...(knowledge.length ? { knowledge } : {}),
     })
-    return { definition, sprint: compiled.sprint, bytes }
+    return { definition, sprint: materialized, bytes }
   })).pipe(Effect.mapError((error) => error instanceof Held
     ? error : new Held({ reason: "WORKFLOW_PUBLICATION_ACQUISITION" })))
 })
@@ -114,11 +128,10 @@ export const revalidate = Effect.fn("RelayWorkflowBinding.revalidate")(function*
   const author = expected.knowledge?.[0]?.authorSessionID
   if (expected.knowledge?.some((anchor) => anchor.authorSessionID !== author))
     return yield* new Held({ reason: "WORKFLOW_KNOWLEDGE_AUTHOR_MISMATCH" })
+  // A bound run keeps its immutable published version: draft saves and later publishes do not hold it, unpublishing does.
   const current = yield* acquire({ port, projectID: expected.publication.projectID,
     documentID: expected.publication.documentID, parameters: expected.parameters, writePaths: expected.writePaths,
-    authorSessionID: author })
-  if (!isDeepStrictEqual(current.definition.publication, expected.publication))
-    return yield* new Held({ reason: "WORKFLOW_PUBLICATION_DRIFT" })
+    authorSessionID: author, pinned: expected.publication })
   if (!isDeepStrictEqual(current.definition.resolvedSkills, expected.resolvedSkills))
     return yield* new Held({ reason: "WORKFLOW_SKILL_DRIFT" })
   if (!isDeepStrictEqual(current.definition.materialization, expected.materialization))
@@ -127,6 +140,64 @@ export const revalidate = Effect.fn("RelayWorkflowBinding.revalidate")(function*
     return yield* new Held({ reason: "WORKFLOW_KNOWLEDGE_DRIFT" })
   return current
 })
+
+/**
+ * What acquisition admits before it binds anything: a profile whose tools exist, a sprint that compiles with its skills,
+ * and no step kind the arm cannot run (`human` records `unknown-kind`). A refusal says why in words for the owner.
+ */
+export const admission = (
+  document: RelayAuthoring.Document | RelayAuthoring.Version,
+  skills: AuthoringGraph.SkillResolver,
+) =>
+  AuthoringStore.runnable(document).pipe(
+    Effect.andThen(AuthoringGraph.compile(document, skills)),
+    Effect.flatMap((compiled) => compiled.sprint.work_packages.some((wp) => wp.kind === "human")
+      ? Effect.fail(new AuthoringGraph.Refusal({ status: 409, code: "step-unsupported",
+        message: "Human approval steps cannot run yet. Remove them to run this workflow." }))
+      : Effect.succeed(compiled.sprint)),
+  )
+
+/**
+ * Every workflow in the project as Maestro may select it: a published one with its admitted sprint, or the reason it
+ * cannot run. Hooks are not workflows and are left out.
+ */
+export const catalog = Effect.fn("RelayWorkflowBinding.catalog")(function* (port: PublicationPort) {
+  return yield* port.use((store) => Effect.gen(function* () {
+    const workflows = (yield* store.documents()).filter((document) => !AuthoringHook.isHook(document))
+    return yield* Effect.forEach(workflows, (live) => Effect.gen(function* () {
+      const published = live.active && live.activeVersionId && !live.isArchived ? live.activeVersionId : undefined
+      const admitted = published
+        ? yield* store.version(live.id, published).pipe(
+          Effect.flatMap((version) => admission(version, port.skills)),
+          Effect.map((sprint) => attach(sprint, port.acceptance)),
+          Effect.result,
+        )
+        : undefined
+      return {
+        id: live.id,
+        name: live.name,
+        description: live.description ?? "",
+        publishedVersionID: published,
+        sprint: admitted && Result.isSuccess(admitted) ? admitted.success : undefined,
+        reason: !admitted ? "It is not published." : Result.isFailure(admitted) ? admitted.failure.message : undefined,
+      }
+    }))
+  }))
+})
+
+/**
+ * The sprint with each required acceptance control appended to its last work package. A control is left out when that
+ * step already runs its host check or the sprint already uses its id, so a plan that carries them stays byte-identical.
+ */
+export function attach(sprint: RelaySprint.Sprint, acceptance: readonly RelaySprint.Control[] = []): RelaySprint.Sprint {
+  const last = sprint.work_packages.at(-1)
+  const ids = new Set(sprint.work_packages.flatMap((wp) => wp.checklist ?? []).map((control) => control.id))
+  const missing = acceptance.filter((control) => !ids.has(control.id) &&
+    !last?.checklist?.some((existing) => existing.host_check === control.host_check))
+  if (!last || !missing.length) return sprint
+  return { ...sprint, work_packages: [...sprint.work_packages.slice(0, -1),
+    { ...last, checklist: [...(last.checklist ?? []), ...missing] }] }
+}
 
 export function knowledgeReferences(sprint: RelaySprint.Sprint) {
   return [...new Set([...(sprint.knowledge ?? []), ...sprint.work_packages.flatMap((wp) => wp.knowledge ?? [])])]

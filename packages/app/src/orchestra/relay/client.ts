@@ -66,6 +66,18 @@ export function relayUnsupported(error: unknown) {
   return (error.status === 404 || error.status === 405 || error.status === 501) && !error.tag?.startsWith("Relay")
 }
 
+/**
+ * What a failed write or reload means to the editor: the server could not be reached, the document no longer exists
+ * there, someone saved a newer version first, or a refusal whose message is shown as it is.
+ */
+export function writeFailure(error: unknown) {
+  if (!(error instanceof RelayError)) return "error" as const
+  if (error.code === "transport") return "offline" as const
+  if (error.status === 409) return "conflict" as const
+  if (error.status === 404 && !relayUnsupported(error)) return "missing" as const
+  return "error" as const
+}
+
 export type RelayClient = ReturnType<typeof createRelayClient>
 
 type Answer = { data?: unknown; error?: unknown; response?: Response }
@@ -88,8 +100,8 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
       decodeDocument(
         await body<RelayDocumentView>(relay.document.create({ location, relayDocumentCreate: contract(fields) }, off)),
       ),
-    // A save of the loaded version; a stale one is a 409 version-conflict.
-    save: async (document: RelayDocument, fields: RelayDocumentFields) =>
+    // A save of the loaded version; a stale one is a 409 version-conflict. `force` writes over whatever is stored.
+    save: async (document: RelayDocument, fields: RelayDocumentFields, options: { force?: boolean } = {}) =>
       decodeDocument(
         await body<RelayDocumentView>(
           relay.document.update(
@@ -100,6 +112,7 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
                 ...fields,
                 versionId: document.versionId,
                 expectedChecksum: document.checksum,
+                force: options.force,
               }),
             },
             off,
@@ -123,12 +136,31 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
           ),
         ),
       ),
+    // Withdraws the published version; the draft is kept.
+    unpublish: async (document: RelayDocument) =>
+      decodeDocument(
+        await body<RelayDocumentView>(
+          relay.publish.unpublish(
+            { documentID: document.id, location, relayUnpublishInput: { expectedChecksum: document.checksum } },
+            off,
+          ),
+        ),
+      ),
     installs: async () => (await body<{ installs: RelayInstall[] }>(relay.hook.list({ location }, off))).installs,
     // The server pins the document's published version; `version` is left out so it never pins anything else.
     install: (documentID: string) =>
       body<RelayInstall>(relay.hook.install({ location, relayHookInstallInput: { document: documentID } }, off)),
     update: (installID: string) =>
       body<RelayInstall>(relay.hook.update({ installID, location, relayHookUpdateInput: {} }, off)),
+    // The server moves a corrupt hooks.json aside and starts an empty install list; it refuses a valid or unreadable file.
+    repair: () =>
+      body<{ backup: string; installs: RelayInstall[] }>(
+        relay.hook.repair({ location, relayHookRepairInput: { confirm: true } }, off),
+      ),
+    // The evaluation order: every install exactly once, first to last. Answers the installs in their new order.
+    order: async (installIDs: string[]) =>
+      (await body<{ installs: RelayInstall[] }>(relay.hook.order({ location, relayHookOrderInput: { installIDs } }, off)))
+        .installs,
     enable: (installID: string, enabled: boolean) =>
       body<RelayInstall>(
         enabled ? relay.hook.enable({ installID, location }, off) : relay.hook.disable({ installID, location }, off),
@@ -151,8 +183,12 @@ async function body<T>(call: Promise<Answer>, empty = false): Promise<T> {
       throw new RelayError(0, "The server did not answer as Relay")
     throw new RelayError(-1, cause instanceof Error ? cause.message : String(cause), "transport")
   })
-  const status = result.response?.status ?? -1
-  if (!result.response?.ok || result.error !== undefined) throw refusal(status, result.error)
+  // No response at all: the request never reached the server, or the server never answered.
+  if (!result.response) {
+    const message = record(result.error) && typeof result.error.message === "string" ? result.error.message : ""
+    throw new RelayError(-1, message || String(result.error), "transport")
+  }
+  if (!result.response.ok || result.error !== undefined) throw refusal(result.response.status, result.error)
   if (empty) return contract<T>(undefined)
   if (!record(result.data) || !("data" in result.data)) throw new RelayError(0, "The server did not answer as Relay")
   return contract<T>(result.data.data)
