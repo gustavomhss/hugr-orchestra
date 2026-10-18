@@ -69,6 +69,8 @@ export function Dialogs(props: ViewProps) {
       return
     }
       const connectPending = form.pending && form.owner === owner && owner.kind === "connect"
+      // A retry opened from a specific button asks for its mode; an unavailable request falls back below.
+      const requested = owner.kind === "retry" && "mode" in owner && (owner.mode === "failed" || owner.mode === "all") ? owner.mode : undefined
       setForm({
         owner,
         bindingID: selected?.id,
@@ -83,7 +85,8 @@ export function Dialogs(props: ViewProps) {
         projectPath: selected?.projectPath ?? "",
         ref: owner.kind === "dispatch" ? dispatchDefaultRef(props.model.state, owner) : defaultRef(selected?.id, props.model.state),
         raw: "",
-        retryMode: owner.kind === "retry" && !retryModeAvailable(props.model.state, "failed") && retryModeAvailable(props.model.state, "all") ? "all" : "failed",
+        retryMode: requested && retryModeAvailable(props.model.state, requested) ? requested
+          : owner.kind === "retry" && !retryModeAvailable(props.model.state, "failed") && retryModeAvailable(props.model.state, "all") ? "all" : "failed",
         hostnameEdited: false,
         apiOriginEdited: false,
         error: "",
