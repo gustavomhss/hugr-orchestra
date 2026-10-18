@@ -39,9 +39,10 @@ import { Snapshot } from "@/snapshot"
 import { ProjectV2 } from "@orchestra/core/project"
 import { WorkspaceV2 } from "@orchestra/core/workspace"
 import { SessionID, MessageID, PartID } from "./schema"
+import { logHookFailure } from "./hook-failure"
 
 import type { Provider } from "@/provider/provider"
-import { Cause, Effect, Layer, Option, Context, Schema, Types } from "effect"
+import { Effect, Layer, Option, Context, Schema, Types } from "effect"
 import { NonNegativeInt, optional } from "@orchestra/core/schema"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -552,12 +553,7 @@ const layer: Layer.Layer<
           sessionStartOutput,
         )
         // A plugin hook that throws dies inside `trigger`; log it like a hook failure instead of failing creation.
-        .pipe(
-          Effect.catchCauseIf(
-            (cause) => !Cause.hasInterruptsOnly(cause),
-            (cause) => Effect.logError("session.start hook failed", { sessionID: result.id, cause }),
-          ),
-        )
+        .pipe(logHookFailure("session.start hook failed", result.id))
 
       // Creator-supplied keys win: a plugin may add metadata, never overwrite what the caller set.
       const added = Object.fromEntries(
@@ -660,10 +656,7 @@ const layer: Layer.Layer<
             .pipe(
               Effect.timeout(5000),
               Effect.catch((err) => Effect.logError("session.end hook failed or timed out", { sessionID, err })),
-              Effect.catchCauseIf(
-                (cause) => !Cause.hasInterruptsOnly(cause),
-                (cause) => Effect.logError("session.end hook failed or timed out", { sessionID, cause }),
-              ),
+              logHookFailure("session.end hook failed or timed out", sessionID),
             )
         }
 
