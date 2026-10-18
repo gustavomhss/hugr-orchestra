@@ -17,6 +17,7 @@ import {
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
 import { AuthoringHook } from "@orchestra/relay/authoring/hook"
 import { AuthoringStore } from "@orchestra/relay/authoring/store"
+import { ProjectID } from "@orchestra/schema/project-id"
 import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { response } from "./location"
 
@@ -155,6 +156,22 @@ export function skills(catalog: SkillV2.Interface): AuthoringGraph.SkillResolver
       }),
     )
 }
+
+/**
+ * Hooks and workflows are scoped to the project: every clone and checkout of one repository shares them. A folder
+ * outside git resolves to the one global project all such folders share, so anything new made there would apply to
+ * every one of them. New documents, publishes and installs are refused there; what is already stored or installed
+ * keeps working and can still be paused or removed.
+ */
+export const requireRepository = Effect.gen(function* () {
+  const location = yield* Location.Service
+  if (location.project.id !== ProjectID.global) return
+  return yield* refusal(
+    "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    409,
+    "repository-required",
+  )
+})
 
 /** The value inside the Location envelope, with authoring refusals as their HttpApi errors. */
 export function respond<A, E, R>(effect: Effect.Effect<A, E, R>) {

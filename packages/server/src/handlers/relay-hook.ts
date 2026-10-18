@@ -45,6 +45,7 @@ export const RelayHookHandler = HttpApiBuilder.group(Api, "server.relay.hook", (
       .handle("relay.hook.install", (ctx) =>
         run(
           Effect.gen(function* () {
+            yield* RelayDocuments.requireRepository
             const changed = yield* RelayHookInstall.install({
               ...(yield* binding),
               ...(yield* pinned(ctx.payload.document, ctx.payload.version)),
@@ -58,6 +59,7 @@ export const RelayHookHandler = HttpApiBuilder.group(Api, "server.relay.hook", (
       .handle("relay.hook.update", (ctx) =>
         run(
           Effect.gen(function* () {
+            yield* RelayDocuments.requireRepository
             const bound = yield* binding
             const current = (yield* RelayHookInstall.read(bound)).installs.find(
               (item) => item.installID === ctx.params.installID,
@@ -77,9 +79,11 @@ export const RelayHookHandler = HttpApiBuilder.group(Api, "server.relay.hook", (
           }),
         ),
       )
+      // Pausing and uninstalling stay open outside git, so an install made there earlier can always be taken back.
       .handle("relay.hook.enable", (ctx) =>
         run(
-          binding.pipe(
+          RelayDocuments.requireRepository.pipe(
+            Effect.andThen(binding),
             Effect.flatMap((bound) =>
               RelayHookInstall.setEnabled({
                 ...bound,
