@@ -25,7 +25,7 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { Snapshot } from "@orchestra/core/snapshot"
 import { Hash } from "@orchestra/core/util/hash"
-import { SessionV1 } from "@orchestra/core/v1/session"
+import { SessionV1 } from "./compat/core-v1-session"
 import { MaestroArsenal } from "@orchestra/core/tool/maestro-arsenal"
 
 export const MAX_OBSERVATIONS = 2048
