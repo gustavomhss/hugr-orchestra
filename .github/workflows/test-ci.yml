@@ -187,7 +187,7 @@ jobs:
       # artifact-native-windows.ts). The omni artifact above skips cargo, so nothing else installs the toolchain
       # pinned by native/omni/rust-toolchain.toml.
       - name: Rust toolchain (rust-toolchain.toml)
-        if: runner.os == 'Windows' && steps.request.outputs.directory == 'packages/cli'
+        if: runner.os == 'Windows' && steps.request.outputs.directory == 'apps/cli'
         working-directory: native/omni
         run: rustup show active-toolchain || rustup toolchain install
 

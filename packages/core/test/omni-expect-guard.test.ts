@@ -32,7 +32,7 @@ const ledger: Record<string, string> = {
     "tests the omni campaign's process inventory; it reaches the surface only through native/omni/campaign helpers, and its own processes start through node:child_process",
   "packages/core/test/omni-loader.test.ts":
     "unit tests of the loader, the counters (which it takes back) and the verdict; its process-tree case spawns through node:child_process on purpose",
-  "packages/desktop/src/main/omni-appcontainer.test.ts":
+  "apps/desktop/src/main/omni-appcontainer.test.ts":
     "builds the AppContainer command for the supervisor and asserts its arguments; it spawns nothing",
 }
 
@@ -62,8 +62,8 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     const pkg = from.split("/").slice(0, 2).join("/")
     const stem = specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier)
       : specifier.startsWith("@orchestra/core/") ? `packages/core/src/${specifier.slice("@orchestra/core/".length)}`
-        : pkg === "packages/orchestra" && specifier.startsWith("@/") ? `packages/orchestra/src/${specifier.slice(2)}`
-          : pkg === "packages/orchestra" && specifier.startsWith("@test/") ? `packages/orchestra/test/${specifier.slice(6)}`
+        : pkg === "apps/orchestra" && specifier.startsWith("@/") ? `apps/orchestra/src/${specifier.slice(2)}`
+          : pkg === "apps/orchestra" && specifier.startsWith("@test/") ? `apps/orchestra/test/${specifier.slice(6)}`
             : undefined
     if (stem === undefined) return undefined
     return [stem, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`].find((candidate) => set.has(candidate))
@@ -117,8 +117,8 @@ test("every test file that drives omni's spawn surface declares its spawning tes
   expect(result.checked).toBeGreaterThan(100)
   // The files this PR declares are seen as driving the surface: the reading engages the real tree.
   expect(result.flagged).toEqual(expect.arrayContaining([
-    "packages/core/test/tcp-proxy.test.ts", "packages/orchestra/test/util/process-omni.test.ts",
-    "packages/desktop/src/main/omni-process.test.ts", "packages/orchestra/test/mcp/omni-stdio.test.ts",
+    "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts",
+    "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts",
   ]))
 })
 

@@ -19,7 +19,7 @@ jobs:
       - uses: ./.github/actions/setup-bun
       - run: git fetch --depth=1 origin dev:refs/remotes/origin/dev
       - run: bun typecheck
-        working-directory: packages/cli
+        working-directory: apps/cli
       - run: bun typecheck
         working-directory: packages/core
       - run: bun typecheck
@@ -125,6 +125,8 @@ jobs:
     env:
       ROW: ${{ toJSON(matrix) }}
       PACKAGE: ${{ matrix.package }}
+      # The CLI is an app (apps/cli); every other lane package is a library under packages/.
+      PACKAGE_DIR: ${{ matrix.package == 'cli' && 'apps/cli' || format('packages/{0}', matrix.package) }}
       ORCHESTRA_OMNI_CONTROL: suite
       ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER: ${{ matrix.platform == 'win32' && 'true' || 'false' }}
       # Fail closed: the provider lane runs real hosted inference and must never
@@ -168,13 +170,13 @@ jobs:
           if (!arch || !os || process.arch !== arch || process.platform !== row.platform || process.env.RUNNER_ARCH !== row.cpu || process.env.RUNNER_OS !== os)
             throw new Error(`BUNDLE_NATIVE_HOST_MISMATCH: ${row.host} ${process.platform}/${process.arch}`)
           const root = realpathSync(process.env.GITHUB_WORKSPACE)
-          const dir = realpathSync(path.resolve(root, 'packages', row.package)) + path.sep
+          const dir = realpathSync(path.resolve(root, process.env.PACKAGE_DIR)) + path.sep
           const isFile = (file) => (statSync(path.resolve(root, file), { throwIfNoEntry: false })?.isFile() ?? false) && realpathSync(path.resolve(root, file)).startsWith(dir)
-          const request = validateRequest({ package: row.package, runner: 'bun', args: row.files }, isFile)
+          const request = validateRequest({ package: row.package, runner: 'bun', args: row.files }, isFile, () => ({ package: row.package, directory: process.env.PACKAGE_DIR }))
           if (!request.args.length) throw new Error('BUNDLE_FILES_EMPTY')
           if (new Set(request.args).size !== request.args.length) throw new Error('BUNDLE_FILES_REPEATED')
           request.args.forEach((file) => {
-            if (!file.startsWith('./test/') || !file.endsWith('.test.ts') || file.slice(2).split('/').some((part) => !part || part === '.' || part === '..') || !isFile(`packages/${row.package}/${file}`))
+            if (!file.startsWith('./test/') || !file.endsWith('.test.ts') || file.slice(2).split('/').some((part) => !part || part === '.' || part === '..') || !isFile(`${process.env.PACKAGE_DIR}/${file}`))
               throw new Error(`BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
           })
           writeFileSync(path.resolve(root, '.distribution-files'), request.args.join('\n') + '\n')
@@ -208,7 +210,7 @@ jobs:
           bun ../../packages/core/test/distribution-bundle-gates.ts ../../distribution-logs/windows-native-job.log
       - name: Prove native POSIX ABI
         if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.platform != 'win32'
-        working-directory: packages/cli
+        working-directory: apps/cli
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
@@ -226,7 +228,7 @@ jobs:
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./src/tree-sitter-prebuilds.test.ts 2>&1 | tee ../../distribution-logs/source-abi.log
       - name: Prove Desktop ABI consumer
         if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
@@ -247,13 +249,13 @@ jobs:
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/parser-bindings.test.ts ./test/onboard.test.ts 2>&1 | tee ../../../distribution-logs/parser-abi.log
       - name: Prove localized proof oracles
         if: matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest' && matrix.cpu == 'X64'
-        working-directory: packages/cli
+        working-directory: apps/cli
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
           GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-aur/bootstrap-config.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
-        working-directory: packages/${{ matrix.package }}
+        working-directory: ${{ env.PACKAGE_DIR }}
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs

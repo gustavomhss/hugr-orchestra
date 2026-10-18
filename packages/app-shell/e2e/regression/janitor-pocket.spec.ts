@@ -1,6 +1,6 @@
 import { expect, test, type Locator } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type {} from "../../../desktop/src/renderer/env"
+import type {} from "../../../../apps/desktop/src/renderer/env"
 import {
   directory,
   sessionID as routeSessionID,

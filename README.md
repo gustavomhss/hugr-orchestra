@@ -2,7 +2,7 @@
 
 HuGR Orchestra is a desktop app for software work. You talk to Maestro, the lead agent. Maestro scopes the work, delegates it to a team of specialist agents, and brings the plan and the results back to you for approval.
 
-The app combines an Electron host (`packages/desktop`), a shared Solid UI (`packages/app-shell`), and local server/session services. `apps/web` owns the browser bootstrap and web distribution. `packages/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
+The app combines an Electron host (`apps/desktop`), a shared Solid UI (`packages/app-shell`), and local server/session services. `apps/web` owns the browser bootstrap and web distribution. `apps/orchestra` remains the legacy product composition; the live V2 CLI, Core, Protocol, and Server packages have separate responsibilities.
 
 ## Run from source
 
@@ -18,16 +18,16 @@ bun install
 bun run dev:desktop
 ```
 
-This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](packages/desktop/README.md) for package-local commands and packaging inputs.
+This runs Desktop's `predev` step, which installs Electron, copies channel icons, builds the legacy server bundle, stages Omni, and builds/stages CLI resources before starting `electron-vite dev`. See the [Desktop guide](apps/desktop/README.md) for package-local commands and packaging inputs.
 
 A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; it does not isolate the entire Electron profile, settings, or draft store.
 
 ### Other entry points
 
-- `bun dev` runs the terminal UI and server from `packages/orchestra/src/index.ts`. `bun dev <directory>` runs it against another directory.
+- `bun dev` runs the terminal UI and server from `apps/orchestra/src/index.ts`. `bun dev <directory>` runs it against another directory.
 - `bun run dev:web` runs the web UI from `apps/web`.
-- From `packages/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](packages/cli/README.md) for daemon/API commands and compiled resources.
-- `./packages/orchestra/script/build.ts --single` compiles a standalone binary for your platform into `packages/orchestra/dist/orchestra-<platform>/bin/orchestra`.
+- From `apps/cli`, `bun run dev` runs the V2 preview CLI; see its [guide](apps/cli/README.md) for daemon/API commands and compiled resources.
+- `./apps/orchestra/script/build.ts --single` compiles a standalone binary for your platform into `apps/orchestra/dist/orchestra-<platform>/bin/orchestra`.
 
 ### Checks
 
@@ -40,11 +40,11 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 
 | Path                       | What it holds                                                                                   |
 | -------------------------- | ----------------------------------------------------------------------------------------------- |
-| [`packages/desktop`](packages/desktop/README.md) | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging |
+| [`apps/desktop`](apps/desktop/README.md) | Electron main/preload/renderer, IPC, profile persistence, platform adapters, and packaging |
 | [`packages/app-shell`](packages/app-shell/README.md) | Shared Solid UI and public `@orchestra/app` exports consumed by Web and Desktop |
 | [`apps/web`](apps/web/README.md) | Browser bootstrap, development server and web distribution |
-| [`packages/cli`](packages/cli/README.md) | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts |
-| `packages/orchestra`       | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration |
+| [`apps/cli`](apps/cli/README.md) | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts |
+| `apps/orchestra`       | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration |
 | [`packages/core`](packages/core/README.md) | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting |
 | [`packages/schema`](packages/schema/README.md) | Portable contracts, canonical schema identity, and wire/storage datatypes |
 | [`packages/protocol`](packages/protocol/README.md) | Public HTTP contract, route schemas, errors, and middleware requirements |

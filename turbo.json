@@ -64,8 +64,8 @@
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/.github/actions/setup-bun/action.yml",
         "$TURBO_ROOT$/.github/workflows/distribution-bundle.yml",
-        "$TURBO_ROOT$/packages/cli/script/test.ts",
-        "$TURBO_ROOT$/packages/cli/test/*.test.ts"
+        "$TURBO_ROOT$/apps/cli/script/test.ts",
+        "$TURBO_ROOT$/apps/cli/test/*.test.ts"
       ],
       "outputs": [],
       // Windows PowerShell initializes its module-analysis cache before the recorder's first CIM query.
@@ -90,8 +90,8 @@
       // The artifact suites import Desktop's CLI artifact verifier, which is not a CLI dependency.
       "inputs": [
         "$TURBO_DEFAULT$",
-        "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts",
-        "$TURBO_ROOT$/packages/orchestra/src/maestro/**",
+        "$TURBO_ROOT$/apps/desktop/src/main/cli-artifacts.ts",
+        "$TURBO_ROOT$/apps/orchestra/src/maestro/**",
         "$TURBO_ROOT$/packages/*-specialist/skills/**",
         "$TURBO_ROOT$/modules/specialists/*/skills/**"
       ],
@@ -119,15 +119,15 @@
         "$TURBO_ROOT$/script/archive-scopes.json",
         "$TURBO_ROOT$/script/recovery-bundle.ts",
         "$TURBO_ROOT$/script/recovery-publication.ts",
-        "$TURBO_ROOT$/packages/cli/script/artifact-elf.ts",
+        "$TURBO_ROOT$/apps/cli/script/artifact-elf.ts",
         "$TURBO_ROOT$/nix/scripts/workspace-config.ts",
         "$TURBO_ROOT$/nix/scripts/control-ledger.ts",
         "$TURBO_ROOT$/nix/scripts/verify-distribution.ts",
         "$TURBO_ROOT$/nix/scripts/probe-distribution.ts",
         "$TURBO_ROOT$/nix/scripts/dependency_measurement.py",
-        "$TURBO_ROOT$/packages/cli/script/build.ts",
-        "$TURBO_ROOT$/packages/cli/script/targets.ts",
-        "$TURBO_ROOT$/packages/desktop/scripts/resource-paths.ts",
+        "$TURBO_ROOT$/apps/cli/script/build.ts",
+        "$TURBO_ROOT$/apps/cli/script/targets.ts",
+        "$TURBO_ROOT$/apps/desktop/scripts/resource-paths.ts",
         "$TURBO_ROOT$/.github/workflows/test-ci.yml",
         "$TURBO_ROOT$/script/test-guard.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",
@@ -144,8 +144,8 @@
         "$TURBO_ROOT$/nix/scripts/control-ledger.ts",
         "$TURBO_ROOT$/nix/scripts/verify-distribution.ts",
         "$TURBO_ROOT$/nix/scripts/probe-distribution.ts",
-        "$TURBO_ROOT$/packages/desktop/src/main/cli-artifacts.ts",
-        "$TURBO_ROOT$/packages/desktop/scripts/resource-paths.ts",
+        "$TURBO_ROOT$/apps/desktop/src/main/cli-artifacts.ts",
+        "$TURBO_ROOT$/apps/desktop/scripts/resource-paths.ts",
         "$TURBO_ROOT$/packages/core/src/ripgrep/bundle.ts",
         "$TURBO_ROOT$/packages/core/src/ripgrep/release.ts",
         "$TURBO_ROOT$/packages/core/test/fixture/monolith-inventory.ts",

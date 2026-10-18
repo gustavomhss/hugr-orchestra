@@ -16,7 +16,7 @@ for (const earlyEvent of [false, true]) {
       onPinchZoomEnabledChanged: () => () => {},
     } })
     try {
-      const zoom: typeof import("../../desktop/src/renderer/webview-zoom") = await import(`../../desktop/src/renderer/webview-zoom.ts?zoom-${earlyEvent}`)
+      const zoom: typeof import("../../../apps/desktop/src/renderer/webview-zoom") = await import(`../../../apps/desktop/src/renderer/webview-zoom.ts?zoom-${earlyEvent}`)
       if (earlyEvent) changed(2)
       initial.resolve(1.6)
       await initial.promise

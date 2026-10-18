@@ -10,7 +10,7 @@ import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 
 // Adapted from orchestra/test/lean-package.test.ts at 66172f566642a3f66580b001082aba4448e75946
 // (repository MIT): Node-only artifact, observed whole output, real HTTP config and Solid consumers.
-const orchestra = path.resolve(import.meta.dir, "../../orchestra")
+const orchestra = path.resolve(import.meta.dir, "../../../apps/orchestra")
 function child(cmd: string[], env = process.env, cwd = orchestra) {
   const proc = Bun.spawn(cmd, { cwd, env, stdout: "pipe", stderr: "pipe", timeout: 600000, killSignal: "SIGKILL" })
   const result = Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])

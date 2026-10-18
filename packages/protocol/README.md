@@ -23,7 +23,7 @@ The export map is wildcard-only (`"./*"`), so there is no bare `@orchestra/proto
 
 ## Route ownership
 
-`src/api.ts` composes the public `server` API. Protocol owns the route contract, API composition, and middleware placement; Server owns handler behavior and supplies concrete Location and Session Location middleware. The hosted OpenAPI contract test is `packages/orchestra/test/server/httpapi-public-openapi.test.ts`. The current groups are:
+`src/api.ts` composes the public `server` API. Protocol owns the route contract, API composition, and middleware placement; Server owns handler behavior and supplies concrete Location and Session Location middleware. The hosted OpenAPI contract test is `apps/orchestra/test/server/httpapi-public-openapi.test.ts`. The current groups are:
 
 - Health and Location; Agent and Session; Research Artifact and Message.
 - Model, Provider, Integration, and Credential; Permission.
