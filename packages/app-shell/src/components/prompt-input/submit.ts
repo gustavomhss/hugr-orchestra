@@ -408,8 +408,10 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       input.setPopover(null)
     }
 
+    // Leaving the Session abandons a send that has not reached the server, so the text goes back to the composer it
+    // came from; the checks below only touch the editor when that composer is still on screen.
     const restoreInput = () => {
-      if (!consumed.input || !ownsSource()) return false
+      if (!consumed.input) return false
       const restored = submission.restore()
       if (!restored) return false
       restored.target.set(restored.prompt, input.promptLength(restored.prompt))
