@@ -2,6 +2,10 @@ type Channel = "dev" | "beta" | "prod"
 const raw = import.meta.env.ORCHESTRA_CHANNEL
 export const CHANNEL: Channel = raw === "dev" || raw === "beta" || raw === "prod" ? raw : "dev"
 
-// Orchestra is a fork separated from upstream opencode and publishes no releases of its own, so any
-// update feed would install upstream OpenCode over Orchestra. Re-enable only with Orchestra's own feed.
-export const UPDATER_ENABLED = false
+// Only prod builds embed Orchestra's update feed (electron-builder.config.ts). The lean candidate is a prod build
+// without one.
+export const UPDATER_ENABLED = CHANNEL === "prod" && import.meta.env.ORCHESTRA_LEAN_CANDIDATE !== "1"
+
+// Set by .github/workflows/release-desktop.yml for a macOS build it signed. Squirrel.Mac cannot install an update into
+// an unsigned app, so every other macOS build only announces updates.
+export const MAC_SIGNED = import.meta.env.ORCHESTRA_MAC_SIGNED === "true"

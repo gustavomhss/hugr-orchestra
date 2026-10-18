@@ -87,6 +87,12 @@ export const SETTINGS_COPY = {
   "orchestra.settings.shortcuts.edit": "Edit {{name}}",
   "orchestra.settings.general.shellError": "Could not load the shells on this server.",
   "orchestra.settings.general.shellRetry": "Try again",
+  "orchestra.settings.general.updates.downloading": "Downloading… {{percent}}%",
+  "orchestra.settings.general.updates.available":
+    "Version {{version}} is available. Download it from its release page and install it.",
+  "orchestra.settings.general.updates.download": "Download",
+  "orchestra.settings.general.updates.failed": "The last check for updates failed.",
+  "orchestra.settings.general.updates.retry": "Try again",
   "orchestra.settings.general.autoAccept.description":
     "Approve permission requests automatically in this session only. Other sessions are not affected.",
   "orchestra.settings.general.autoAccept.unavailable":

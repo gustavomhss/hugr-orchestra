@@ -585,10 +585,13 @@ export const SettingsGeneral: Component = () => {
       <SettingsList>
         <SettingsRow
           title={language.t("settings.updates.row.check.title")}
-          description={language.t("settings.updates.row.check.description")}
+          description={language.t(
+            updater.action().description ?? "settings.updates.row.check.description",
+            updater.action().params,
+          )}
         >
           <Button size="small" variant="secondary" disabled={!updater.action().run} onClick={updater.run}>
-            {language.t(updater.action().label)}
+            {language.t(updater.action().label, updater.action().params)}
           </Button>
         </SettingsRow>
       </SettingsList>
@@ -659,7 +662,9 @@ export const SettingsGeneral: Component = () => {
 
         <SoundsSection />
 
-        <UpdatesSection />
+        <Show when={updater.visible()}>
+          <UpdatesSection />
+        </Show>
 
         <DisplaySection />
 

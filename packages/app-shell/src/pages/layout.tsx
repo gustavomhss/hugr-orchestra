@@ -53,7 +53,8 @@ import { useTheme, type ColorScheme } from "@orchestra/ui/theme/context"
 import { useCommand, type CommandOption } from "@/context/command"
 import { ConstrainDragXAxis, getDraggableId } from "@/utils/solid-dnd"
 import { DebugBar } from "@/components/debug-bar"
-import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
+import { Titlebar } from "@/components/titlebar"
+import { useTitlebarUpdate } from "@/components/updater-action"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { ServerConnection, useServer } from "@/context/server"
 import { useLanguage, type Locale } from "@/context/language"
@@ -158,11 +159,7 @@ export default function LegacyLayout(props: ParentProps) {
     return state.version
   }
   const installUpdate = () => void platform.updater?.install()
-  const titlebarUpdate: TitlebarUpdate = {
-    version: updateVersion,
-    installing: () => platform.updater?.state().status === "installing",
-    install: installUpdate,
-  }
+  const titlebarUpdate = useTitlebarUpdate()
 
   const editor = createInlineEditorController()
   const setBusy = (directory: string, value: boolean) => {
