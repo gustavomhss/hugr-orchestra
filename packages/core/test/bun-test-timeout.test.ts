@@ -56,6 +56,8 @@ it.live("every Bun test package loads the shared guard", () => Effect.gen(functi
   const manifests = new Set(files.filter((file) => file.endsWith("/package.json")).map((file) => path.posix.dirname(file)))
   const configs = [...new Set(files
     .filter((file) => /^(packages|modules|tooling)\/.*\.(test|spec)\.(ts|tsx|js|jsx)$/.test(file))
+    // Atlas's own packages are its npm/Vitest toolchain domain, not Bun test packages; its boundary is.
+    .filter((file) => !file.startsWith("modules/atlas/packages/"))
     .map((file) => {
       const parts = file.split("/")
       const owner = parts.map((_, index) => parts.slice(0, index).join("/")).findLast((directory) => manifests.has(directory))
