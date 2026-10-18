@@ -36,6 +36,7 @@ import {
 import { setupAutoUpdater, showUpdaterDialog } from "./updater"
 import { safeWebContentsURL } from "./window-state"
 import {
+  flushWindows,
   getLastFocusedWindow,
   registerRendererProtocol,
   setRelaunchHandler,
@@ -209,9 +210,10 @@ const main = Effect.gen(function* () {
     promise: undefined as Promise<void> | undefined,
     done: false,
   }
+  // Every quit path lets the windows save unsaved work (at most 3 s) before the sidecars stop.
   const relaunch = () => {
     setAppQuitting()
-    void stopSidecars().finally(() => {
+    void flushWindows().then(stopSidecars).finally(() => {
       app.relaunch()
       app.quit()
     })
@@ -274,15 +276,19 @@ const main = Effect.gen(function* () {
     setAppQuitting()
     if (shutdown.done) return
     event.preventDefault()
-    shutdown.promise ??= Promise.all([
-      stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
-      Promise.resolve()
-        .then(() => shutdown.runtimeStop?.())
-        .catch((error: unknown) => logger.error("failed to stop Linux runtime", error)),
-    ]).then(() => {
-      shutdown.done = true
-      app.quit()
-    })
+    shutdown.promise ??= flushWindows()
+      .then(() =>
+        Promise.all([
+          stopSidecars().catch((error: unknown) => logger.error("failed to stop sidecars", error)),
+          Promise.resolve()
+            .then(() => shutdown.runtimeStop?.())
+            .catch((error: unknown) => logger.error("failed to stop Linux runtime", error)),
+        ]),
+      )
+      .then(() => {
+        shutdown.done = true
+        app.quit()
+      })
   })
 
   app.on("will-quit", () => {
@@ -333,7 +339,7 @@ const main = Effect.gen(function* () {
   // The About panel would show the inherited process name (APP_NAMES); it names the product instead. Its icon is
   // still the bundle's, until HuGR desktop icons exist.
   app.setAboutPanelOptions({ applicationName: nativeT("desktop.menu.app"), applicationVersion: app.getVersion() })
-  const updater = setupAutoUpdater(stopSidecars)
+  const updater = setupAutoUpdater(() => flushWindows().then(stopSidecars))
   const menuDeps = {
     trigger: (id: string) => {
       const win = getLastFocusedWindow()
