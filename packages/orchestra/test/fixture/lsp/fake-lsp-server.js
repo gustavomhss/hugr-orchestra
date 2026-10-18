@@ -105,9 +105,11 @@ function handle(raw) {
 
   if (typeof data.method === "undefined" && typeof data.id !== "undefined") {
     const pending = pendingClientRequests.get(data.id)
-    if (!pending) return
+    if (pending === undefined) return
     pendingClientRequests.delete(data.id)
-    sendResponse(pending, data.result ?? null)
+    // test/request-client answers with the client's whole reply, so a test can tell a handled request from an error.
+    if (typeof pending === "object") sendResponse(pending.id, { result: data.result ?? null, error: data.error ?? null })
+    else sendResponse(pending, data.result ?? null)
     return
   }
 
@@ -149,27 +151,10 @@ function handle(raw) {
     return
   }
 
-  if (data.method === "test/trigger") {
-    const method = data.params && data.params.method
-    if (method === "client/registerCapability") {
-      sendRequest(method, {
-        registrations: [
-          {
-            id: "test-diagnostic-registration",
-            method: "textDocument/diagnostic",
-            registerOptions: { identifier: "syntax" },
-          },
-        ],
-      })
-      return
-    }
-    if (method === "client/unregisterCapability") {
-      sendRequest(method, {
-        unregisterations: [{ id: "test-diagnostic-registration", method: "textDocument/diagnostic" }],
-      })
-      return
-    }
-    if (method) sendRequest(method, {})
+  // Sends the client a request and answers this one with the client's reply once it arrives: no sleep, no guess.
+  if (data.method === "test/request-client") {
+    const id = sendRequest(data.params.method, data.params.params ?? {})
+    pendingClientRequests.set(id, { id: data.id })
     return
   }
 

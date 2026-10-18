@@ -50,6 +50,8 @@ type RecordedScenario = {
   readonly recordAuth?: () => Auth.Info | undefined
   readonly replayAuth?: Auth.Info
   readonly stableID?: string
+  // Set while the scenario has no committed cassette; replay fails a scenario without one unless this says why.
+  readonly unrecorded?: string
   readonly config: (model: ModelsDev.Provider["models"][string]) => Partial<ConfigV1.Info>
 }
 
@@ -118,6 +120,7 @@ const RECORDED_SCENARIOS = [
     providerID: ProviderV2.ID.openai,
     modelID: "gpt-4.1-mini",
     cassette: "session/native-openai-tool-loop",
+    unrecorded: "never recorded: no cassette was committed for the OpenAI API key scenario",
     protocol: "openai-responses",
     tags: ["orchestra", "native", "tool-loop"],
     canRecord: () => Boolean(envValue("ORCHESTRA_RECORD_OPENAI_API_KEY", "OPENAI_API_KEY")),
@@ -404,7 +407,20 @@ describe("session.llm native recorded", () => {
         })
         continue
       }
-      test.skip(`${scenario.name}: drives a tool loop to a final text answer`, () => {})
+      if (shouldRecord || scenario.unrecorded) {
+        test.skip(`${scenario.name}: drives a tool loop to a final text answer`, () => {})
+        continue
+      }
+      // Replay used to skip a scenario without a cassette, so a deleted or renamed cassette left it green and unrun.
+      test(`${scenario.name}: drives a tool loop to a final text answer`, () => {
+        throw new Error(`${scenario.cassette} has no cassette: record it with RECORD=true, or set unrecorded with a reason`)
+      })
+      continue
+    }
+    if (!shouldRecord && scenario.unrecorded) {
+      test(`${scenario.name}: drives a tool loop to a final text answer`, () => {
+        throw new Error(`${scenario.cassette} is recorded now; remove the scenario's unrecorded reason`)
+      })
       continue
     }
     const it = testEffect(recordedNativeLLMLayer(scenario))
