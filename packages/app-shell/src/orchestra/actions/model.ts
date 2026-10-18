@@ -192,13 +192,15 @@ export function createActionsModel(input: {
       await load("capabilities", JSON.stringify(target), state.capabilities, (data) => update({ capabilities: data }),
         (signal) => input.api.capabilities(target, signal))
     if (!handle.current()) return
+    // The context rail lists the workflow catalog on every entry view, so a reload or deep link reads it too.
+    const catalog = () => state.workflows.status === "ready" ? Promise.resolve() : page("workflows", target)
     if (route.view === "settings") {
-      await load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))
+      await Promise.all([catalog(), load("settings", JSON.stringify(target), state.resources, (data) => update({ resources: data }), (signal) => readPolicy(input.api, target, signal))])
       return
     }
-    if (route.view === "resources") { await page("resources", target); return }
+    if (route.view === "resources") { await Promise.all([catalog(), page("resources", target)]); return }
     if (route.view === "library") { await Promise.all([page("workflows", target), page("runs", target)]); return }
-    if (route.view === "runs") { await page("runs", target); return }
+    if (route.view === "runs") { await Promise.all([catalog(), page("runs", target)]); return }
     if (route.runID) {
       const runID = route.runID
       await load("run", JSON.stringify([target, runID]), state.run, (data) => update({ run: data }), async (signal) => {

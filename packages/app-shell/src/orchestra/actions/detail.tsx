@@ -217,7 +217,8 @@ function JobRow(props: { props: ViewProps; job: Actions.Job }) {
   const model = props.props.model
   const t = props.props.t
   // Needs are shown only when the job joins the graph definition at the run's commit; otherwise they are unknown, not empty.
-  const needs = createMemo(() => definition(model.state, props.job)?.needs.map((id) => model.state.graph.value?.jobs.find((item) => item.id === id)?.name ?? id))
+  // Needs are job keys, the same labels the graph nodes use; `name:` templates may hold unresolved expressions.
+  const needs = createMemo(() => definition(model.state, props.job)?.needs)
   return <div class="mx-row detail-job-row">
     <div class="mx-grow"><strong><button type="button" class="title-link" onClick={() => model.navigate({ ...model.state.route, view: "job", jobID: props.job.id })}><bdi>{props.job.name}</bdi></button></strong>
       <small><bdi>{runnerLabel(props.job, t)}</bdi><Show when={needs()}>{(list) => <> · {list().length ? t("orchestra.actions.jobNeeds", { jobs: list().join(", ") }) : t("orchestra.actions.noDependencies")}</>}</Show></small></div>
