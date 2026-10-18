@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { ClaudeHost } from "@/claude-code/host/session"
+import { ClaudeHostAdmission } from "@/claude-code/host/admission"
 
 // The host's session plumbing (meta-harness PLAN.md §4.1): the 1:1 session id, the long-lived input, steer priority.
 
@@ -11,22 +12,22 @@ test("Claude Code's session id is a stable v5 UUID derived 1:1 from the Orchestr
 })
 
 test("SDK steering input carries next priority; a turn's prompt carries no priority", () => {
-  const steer = ClaudeHost.userInput("Use Postgres instead", "next")
+  const steer = ClaudeHostAdmission.userInput("Use Postgres instead", "next")
   expect(steer).toMatchObject({ type: "user", message: { role: "user", content: "Use Postgres instead" }, parent_tool_use_id: null, priority: "next" })
   expect(steer.uuid).toBeString()
-  expect("priority" in ClaudeHost.userInput("Start")).toBe(false)
+  expect("priority" in ClaudeHostAdmission.userInput("Start")).toBe(false)
 })
 
 test("the session input stays open between turns and ends only on release", async () => {
-  const input = ClaudeHost.inbox()
+  const input = ClaudeHostAdmission.inbox()
   const seen: string[] = []
   const reader = (async () => {
     for await (const message of input) seen.push(String(message.message.content))
   })()
-  input.push(ClaudeHost.userInput("first"))
+  input.push(ClaudeHostAdmission.userInput("first"))
   await Bun.sleep(5)
   expect(seen).toEqual(["first"])
-  input.push(ClaudeHost.userInput("second", "next"))
+  input.push(ClaudeHostAdmission.userInput("second", "next"))
   await Bun.sleep(5)
   expect(seen).toEqual(["first", "second"])
   input.end()

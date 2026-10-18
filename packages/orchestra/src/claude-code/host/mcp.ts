@@ -2,8 +2,9 @@ export * as ClaudeHostMcp from "./mcp"
 
 // The `orchestra` MCP server of a Claude Code host session (meta-harness PLAN §4.3). It serves Orchestra's registry
 // tools ADDITIVELY: Atlas, App Dock `dock_*`, the `maestro_*` workflows, `context_recall`, the research capture tools,
-// the `process` tool (process-tool.ts) and `task_grant`. It never serves a tool that duplicates a Claude Code built-in:
-// those stay Claude Code's own, and a seat's plugin allow-list names the built-in instead (plugin.ts).
+// the `process` tool (process-tool.ts) and `task_grant`. It never serves a tool that duplicates a Claude Code built-in,
+// except `task` for a Relay workflow dispatch (WORKFLOW_TASK): those stay Claude Code's own, and a seat's plugin
+// allow-list names the built-in instead (plugin.ts).
 //
 // Each accepted hook injects a dispatch receipt into the MCP input. The handler checks that exact reservation,
 // then strips the receipt before Orchestra's own parameter validation and execution.
@@ -48,10 +49,16 @@ export const BUILTINS: Readonly<Record<string, readonly string[]>> = Object.free
 
 /**
  * Orchestra tools that belong to Orchestra's own loop, so Claude mode never serves them: `context_compact` (Claude Code
- * compacts its own context), `invalid` (the loop's repair tool), `execute` (code mode runs tools through the loop),
- * and `maestro_request_review` (requires that loop's prompt executor; the append explains native Agent reviews).
+ * compacts its own context), `invalid` (the loop's repair tool) and `execute` (code mode runs tools through the loop).
  */
-export const LOOP_ONLY: readonly string[] = Object.freeze(["invalid", "context_compact", "execute", "maestro_request_review"])
+export const LOOP_ONLY: readonly string[] = Object.freeze(["invalid", "context_compact", "execute"])
+
+/**
+ * The one built-in duplicate the server serves. A Relay workflow dispatch must run Orchestra's own Task, which binds the
+ * approved plan revision, approval and arm to the call; Claude Code's `Agent` input cannot carry that binding. The
+ * policy gate holds a served `task` call without `workflow`, so every other dispatch stays Claude Code's `Agent`.
+ */
+export const WORKFLOW_TASK = "task"
 
 /** The Orchestra tools Claude mode may serve over MCP. */
 export function exposed(defs: readonly Tool.Def[]) {
@@ -59,7 +66,7 @@ export function exposed(defs: readonly Tool.Def[]) {
 }
 
 export function servable(id: string) {
-  return !Object.hasOwn(BUILTINS, id) && !LOOP_ONLY.includes(id)
+  return (id === WORKFLOW_TASK || !Object.hasOwn(BUILTINS, id)) && !LOOP_ONLY.includes(id)
 }
 
 /** The host server executes each reservation in its mirrored caller's context and runtime binding. */
