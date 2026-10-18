@@ -111,5 +111,4 @@ files directly.
 - `actions` — platform — `src/actions/`, `src/actions.ts` — packages/core
 - `util` — platform — `src/util/`, `src/image/`, `src/image.ts`, `src/npm.ts`, `src/npm-config.ts` — packages/core
 - `v1` — compat — `src/v1/` — packages/core
-- `compat` — compat — `src/compat/` — packages/core
 <!-- module-contract:end -->

@@ -1,7 +1,7 @@
 export * as VariantPlugin from "./variant"
 
-import type { ModelV2Info } from "../compat/sdk-v2-types"
 import { Effect } from "effect"
+import type { ModelV2 } from "../model"
 import { define } from "./internal"
 
 export const Plugin = define({
@@ -27,7 +27,10 @@ export const Plugin = define({
   }),
 })
 
-export function generate(model: ModelV2Info): ModelV2Info["variants"] {
+// Reads only the API identity, so it accepts the plugin context model without depending on its open-ended bodies.
+export function generate(
+  model: Pick<typeof ModelV2.Info.Encoded, "id" | "api">,
+): (typeof ModelV2.Info.Encoded)["variants"] {
   if (model.api.type !== "aisdk" || model.api.package !== "@ai-sdk/openai-compatible") return []
   const ids = `${model.id} ${model.api.id}`.toLowerCase()
   if (!["glm-5.2", "glm-5-2", "glm-5p2"].some((name) => ids.includes(name))) return []
