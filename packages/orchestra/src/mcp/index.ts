@@ -10,7 +10,6 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
 import {
   ListRootsRequestSchema,
-  type LoggingMessageNotification,
   LoggingMessageNotificationSchema,
   type Tool as MCPToolDef,
   ToolListChangedNotificationSchema,
@@ -36,6 +35,7 @@ import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
 import { McpStdio, OmniStdioTransport } from "./stdio"
 import { Status } from "./status"
+import { serverLog } from "./server-log"
 
 const DEFAULT_TIMEOUT = 30_000
 const CLIENT_OPTIONS = {
@@ -445,24 +445,6 @@ const layer = Layer.effect(
         s.defs[name] = listed
         await bridge.promise(events.publish(ToolsChanged, { server: name }).pipe(Effect.ignore))
       })
-    }
-
-    function serverLog(name: string, params: LoggingMessageNotification["params"]) {
-      const fields = { server: name, logger: params.logger, level: params.level, data: params.data }
-      switch (params.level) {
-        case "debug":
-          return Effect.logDebug("MCP server log", fields)
-        case "info":
-        case "notice":
-          return Effect.logInfo("MCP server log", fields)
-        case "warning":
-          return Effect.logWarning("MCP server log", fields)
-        case "error":
-        case "critical":
-        case "alert":
-        case "emergency":
-          return Effect.logError("MCP server log", fields)
-      }
     }
 
     const state = yield* InstanceState.make<State>(

@@ -8,7 +8,6 @@ export * as ClaudeHost from "./session"
 // - Stop is `interrupt()`, the model picker is `setModel()`;
 // - Claude Code's session id is derived 1:1 from the Orchestra session id, so resume and fork use the SDK's own
 //   `resume` / `forkSession` and need no transcript store;
-import { createHash } from "node:crypto"
 import { Context, Effect, Exit, FileSystem, Layer } from "effect"
 import type { AgentDefinition, AgentInfo, CanUseTool, ModelInfo, ModelUsage, PermissionResult, Query, SDKMessage } from "@anthropic-ai/claude-agent-sdk"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -70,6 +69,7 @@ import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostMirror } from "./mirror"
 import { ClaudeHostPlugin } from "./plugin"
 import { ClaudeHostOptions } from "./options"
+import { claudeSessionID } from "./session-id"
 
 export interface Interface {
   /**
@@ -106,15 +106,7 @@ export const Adapters = Context.Reference<Partial<Omit<ClaudeHostOptions.Adapter
 /** How long a session's process outlives its last turn, so a quick follow-up does not respawn it. */
 export const IdleRelease = Context.Reference<number>("@orchestra/ClaudeHost/IdleRelease", { defaultValue: () => 60_000 })
 
-/** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts. */
-export function claudeSessionID(sessionID: string) {
-  const hash = createHash("sha1").update(NAMESPACE).update(sessionID).digest()
-  hash[6] = (hash[6] & 0x0f) | 0x50
-  hash[8] = (hash[8] & 0x3f) | 0x80
-  const hex = hash.subarray(0, 16).toString("hex")
-  return [hex.slice(0, 8), hex.slice(8, 12), hex.slice(12, 16), hex.slice(16, 20), hex.slice(20)].join("-")
-}
-const NAMESPACE = Buffer.from("8f0c5b3e6a2d4f1b9c7e0d2a4b6c8e1f", "hex")
+export { claudeSessionID }
 
 export const userInput = ClaudeHostAdmission.userInput
 export const inbox = ClaudeHostAdmission.inbox
