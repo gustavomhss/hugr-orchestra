@@ -28,9 +28,13 @@ export function Footer() {
     // Track all timeouts to ensure proper cleanup
     const timeouts: ReturnType<typeof setTimeout>[] = []
 
+    // Blink a few times to draw attention, then stay visible instead of flashing forever.
+    let cycles = 0
+
     function tick() {
       if (connected()) return
       if (!store.welcome) {
+        if (++cycles > 3) return setStore("welcome", true)
         setStore("welcome", true)
         timeouts.push(setTimeout(() => tick(), 5000))
         return

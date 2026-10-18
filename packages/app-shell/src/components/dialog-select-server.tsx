@@ -11,11 +11,12 @@ import { showToast } from "@/utils/toast"
 import { useNavigate } from "@solidjs/router"
 import { batch, createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { DialogRemoveServer } from "@/components/server/dialog-remove-server"
 import { ServerHealthIndicator, ServerRow } from "@/components/server/server-row"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { normalizeServerUrl, ServerConnection, useServer } from "@/context/server"
+import { normalizeServerUrl, ServerConnection, serverName, useServer } from "@/context/server"
 import { detectServerProtocol } from "@/utils/server-protocol"
 import { type ServerHealth, useCheckServerHealth } from "@/utils/server-health"
 import { useSettings } from "@/context/settings"
@@ -632,6 +633,7 @@ export function createServerManagementController(
 export function ServerConnectionList(props: { controller: ReturnType<typeof useServerManagementController> }) {
   const language = useLanguage()
   const settings = useSettings()
+  const dialog = useDialog()
 
   return (
     <div class="flex flex-1 min-h-0 flex-col gap-4">
@@ -710,7 +712,11 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
                         </Show>
                         <DropdownMenu.Separator />
                         <DropdownMenu.Item
-                          onSelect={() => props.controller.handleRemove(ServerConnection.key(i))}
+                          onSelect={() =>
+                            dialog.push(() => (
+                              <DialogRemoveServer name={serverName(i)} onConfirm={() => props.controller.handleRemove(key)} />
+                            ))
+                          }
                           class="text-text-on-critical-base hover:bg-surface-critical-weak"
                         >
                           <DropdownMenu.ItemLabel>{language.t("dialog.server.menu.delete")}</DropdownMenu.ItemLabel>

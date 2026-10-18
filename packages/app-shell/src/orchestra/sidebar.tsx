@@ -302,7 +302,11 @@ export function OrchestraSidebar(props: {
     if (route.type === "session" || route.type === "draft") return
     const conn = profile().conn ?? home.server.focused()
     if (!conn) {
-      command.trigger("settings.open")
+      showToast({
+        title: language.t("orchestra.chat.send.openProviders"),
+        description: language.t("orchestra.chat.noConnection.description"),
+      })
+      navigate("/orchestra/providers")
       return
     }
     const ctx = global.ensureServerCtx(conn)

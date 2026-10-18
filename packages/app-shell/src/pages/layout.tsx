@@ -1397,35 +1397,27 @@ export default function LegacyLayout(props: ParentProps) {
     })
     const dismiss = () => dismissToast(progress)
 
-    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(() => [])
-
-    clearWorkspaceTerminals(
-      directory,
-      sessions.map((s) => s.id),
-      platform,
-      serverSDK().scope,
-    )
-    await serverSDK()
-      .client.instance.dispose({ directory })
-      .catch(() => undefined)
-
+    const stop = () => {
+      setBusy(directory, false)
+      dismiss()
+    }
+    const failed = (err: unknown) => {
+      showToast({
+        title: language.t("workspace.reset.failed.title"),
+        description: errorMessage(err, language.t("common.requestFailed")),
+      })
+      return false as const
+    }
+    // Without the session list the reset cannot archive or clear them, so stop before touching the workspace.
+    const sessions = await listAllSessions(serverSDK().api.session, { directory, order: "desc" }).catch(failed)
+    if (!sessions) return stop()
+    clearWorkspaceTerminals(directory, sessions.map((s) => s.id), platform, serverSDK().scope)
+    await serverSDK().client.instance.dispose({ directory }).catch(() => undefined)
     const result = await serverSDK()
       .client.worktree.reset({ directory: root, worktreeResetInput: { directory } })
       .then((x) => x.data)
-      .catch((err) => {
-        showToast({
-          title: language.t("workspace.reset.failed.title"),
-          description: errorMessage(err, language.t("common.requestFailed")),
-        })
-        return false
-      })
-
-    if (!result) {
-      setBusy(directory, false)
-      dismiss()
-      return
-    }
-
+      .catch(failed)
+    if (!result) return stop()
     if ((await serverSDK().protocol) === "v1")
       await Promise.all(
         sessions
@@ -1440,10 +1432,8 @@ export default function LegacyLayout(props: ParentProps) {
               .catch(() => undefined),
           ),
       )
-
     setBusy(directory, false)
     dismiss()
-
     showToast({
       title: language.t("workspace.reset.success.title"),
       description: language.t("workspace.reset.success.description"),
