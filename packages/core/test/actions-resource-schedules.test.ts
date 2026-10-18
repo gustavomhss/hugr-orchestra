@@ -89,6 +89,26 @@ it.live("GitHub schedule listing reads actual default-branch workflow YAML and e
   expect(fixture.requests.find((request) => request.path === "fixture/source")?.query.ref).toBe(ActionsResourceFixture.commit)
 }))
 
+it.live("GitHub schedule listing skips workflows absent from the default branch and reports an unreadable workflow per item", Effect.gen(function* () {
+  const fixture = yield* ActionsResourceFixture.make()
+  const workflow = (id: string, path: string) => ({ id, bindingID: fixture.binding.id, name: id, path, state: "active", dispatchable: false })
+  fixture.state.handler = (request): ActionsResourceFixture.Reply | undefined => {
+    if (request.path === "fixture/workflows") return { data: { capturedAt: Date.now(), items: [workflow("24", ".github/workflows/nightly.yml"),
+      workflow("25", ".github/workflows/removed.yml"), workflow("26", "dynamic/github-code-scanning/codeql"), workflow("27", ".github/workflows/broken.yml")] } }
+    if (request.path === "repositories/9347/contents/.github/workflows") return { data: [
+      { type: "file", path: ".github/workflows/nightly.yml" }, { type: "file", path: ".github/workflows/broken.yml" }, { type: "dir", path: ".github/workflows/removed.yml" }] }
+    if (request.path === "fixture/source" && request.query.path === ".github/workflows/broken.yml") return { data: { bindingID: fixture.binding.id,
+      path: request.query.path, ref: request.query.ref, commit: ActionsResourceFixture.commit, version: ActionsResourceFixture.blob, text: "on:\n  schedule: []\non:\n  push:\n", editable: true } }
+  }
+  const page = yield* ActionsSchedules.make(fixture).list(fixture.binding, { kind: "schedules" })
+  expect(page.items.map((item) => [item.id, item.status])).toEqual([["24", "Active"], ["27", "Unreadable"]])
+  expect(page.items[1]?.data).toMatchObject({ workflowID: "27", path: ".github/workflows/broken.yml", unreadable: true, problem: "Schedule YAML failed the shared bounded CI document guard", problemKind: "source_unresolved" })
+  expect(fixture.requests.filter((request) => request.path === "fixture/source").map((request) => request.query.path).toSorted())
+    .toEqual([".github/workflows/broken.yml", ".github/workflows/nightly.yml"])
+  fixture.state.handler = (request) => request.path === "repositories/9347/contents/.github/workflows" ? { status: 404, data: { message: "Not Found" } } : undefined
+  expect((yield* ActionsSchedules.make(fixture).list(fixture.binding, { kind: "schedules" })).items).toEqual([])
+}))
+
 it.live("GitHub schedule authoring uses injected publisher, captured workflow path and shared guarded comment-preserving YAML", Effect.gen(function* () {
   const fixture = yield* ActionsResourceFixture.make()
   const published: string[] = []

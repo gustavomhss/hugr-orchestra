@@ -238,7 +238,19 @@ const githubList = Effect.fn("ActionsSchedules.githubList")(function* (services:
   const response = yield* ActionsResourceNative.get(services, binding, `${repo.path}/commits/${encodeURIComponent(repo.native.default_branch)}`)
   const commit = yield* ActionsResourceNative.checked(binding, () => ActionsResourceNative.decode(binding, Schema.Struct({ sha: GitHubNative.SHA }), response.data).sha)
   const page = yield* ActionsResourceNative.before(binding, services.reader.workflows(binding, { ...(input.cursor === undefined ? {} : { cursor: input.cursor }), limit: input.limit ?? 20 }))
-  const items = yield* Effect.forEach(page.items.filter((workflow) => input.resourceID === undefined || workflow.id === input.resourceID), (workflow) => Effect.gen(function* () {
+  // The native list keeps workflows whose file left the default branch (deleted
+  // or branch-only) and GitHub-managed `dynamic/...` workflows. Neither has a
+  // default-branch YAML schedule and reading their source fails, so only files
+  // present in `.github/workflows` at the default-branch commit are read.
+  const listing = yield* ActionsResourceNative.get(services, binding, `${repo.path}/contents/.github/workflows`, { ref: commit }).pipe(
+    Effect.catch((error) => error.kind === "not_found" ? Effect.succeed(undefined) : Effect.fail(error)))
+  const files = listing === undefined ? new Set<string>() : yield* ActionsResourceNative.checked(binding, () => new Set(ActionsResourceNative
+    .decode(binding, Schema.Array(Schema.Struct({ type: Schema.String, path: Schema.String })), listing.data)
+    .filter((entry) => entry.type === "file").map((entry) => entry.path)))
+  const selected = page.items.filter((workflow) => (input.resourceID === undefined || workflow.id === input.resourceID) && files.has(workflow.path))
+  // One unreadable workflow must not hide the schedules of the others: it is
+  // reported as its own item carrying the failure kind instead of failing the page.
+  const items = yield* Effect.forEach(selected, (workflow) => Effect.gen(function* () {
     if (workflow.bindingID !== binding.id || !/^\.github\/workflows\/[^/]+\.ya?ml$/.test(workflow.path))
       return yield* ActionsResourceNative.error(binding, "source_unresolved", "Native schedule workflow path/ownership was not proved")
     const source = yield* ActionsResourceNative.before(binding, services.reader.source(binding, { path: workflow.path, ref: commit }))
@@ -252,7 +264,11 @@ const githubList = Effect.fn("ActionsSchedules.githubList")(function* (services:
         resourceVersion: ActionsResourceNative.version({ workflowID: workflow.id, sourceVersion: source.version, state: workflow.state }),
         cron: schedules.map((item) => item.cron).join(" · "), schedules, zone: "UTC", ref: repo.native.default_branch ?? "",
         enabled: workflow.state === "active", origin: "Workflow YAML", editMode: "source", bestEffort: true } }
-  }), { concurrency: 4 })
+  }).pipe(Effect.catch((error) => Effect.succeed({ id: workflow.id, bindingID: binding.id, kind: "schedules" as const, name: workflow.name ?? workflow.path,
+    scope: ActionsResourceNative.scope(binding), status: "Unreadable",
+    data: { nativeID: workflow.id, workflowID: workflow.id, path: workflow.path, commit, ref: repo.native.default_branch ?? "", zone: "UTC", enabled: false,
+      origin: "Workflow YAML", editMode: "source", bestEffort: true, unreadable: true, problem: error.message, problemKind: error.kind } }))),
+  { concurrency: 4 })
   // Cursor advances native workflows, including workflows with no schedules;
   // native workflow totals are not misrepresented as schedule totals.
   return { items: items.filter((item) => item !== undefined), capturedAt: Date.now(), ...(page.next === undefined ? {} : { next: page.next }) }
