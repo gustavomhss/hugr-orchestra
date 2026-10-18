@@ -106,6 +106,34 @@ describe("v2 location HttpApi", () => {
     }
   })
 
+  test("honors the plain directory query like location[directory]", async () => {
+    await using target = await tmpdir({ git: true })
+    await using other = await tmpdir({ git: true })
+    const read = async (query: string) => {
+      // The header places the default Location elsewhere, so only the query can select the target.
+      const response = await request(`/api/command${query}`, other.path)
+      return {
+        status: response.status,
+        body: (await response.json()) as { location?: { directory: string; project: { id: string } } },
+      }
+    }
+    const encoded = encodeURIComponent(target.path)
+    const plain = await read(`?directory=${encoded}`)
+    const nested = await read(`?location[directory]=${encoded}`)
+    const both = await read(`?directory=${encoded}&location[directory]=${encoded}`)
+    const conflict = await read(`?directory=${encoded}&location[directory]=${encodeURIComponent(other.path)}`)
+    const neither = await read("")
+
+    expect(plain.status).toBe(200)
+    expect(plain.body.location?.directory).toBe(target.path)
+    expect(plain.body.location?.project.id).toBe(nested.body.location?.project.id)
+    expect(both.status).toBe(200)
+    expect(both.body.location?.directory).toBe(target.path)
+    expect(conflict.status).toBe(400)
+    expect(neither.status).toBe(200)
+    expect(neither.body.location?.directory).toBe(other.path)
+  })
+
   test("streams native EventV2 payloads across locations", async () => {
     await using subscriber = await tmpdir({ git: true })
     await using publisher = await tmpdir({ git: true })
