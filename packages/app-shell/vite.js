@@ -38,9 +38,12 @@ export default [
           // The dep scanner does not follow `?worker&url` imports, so the markdown worker's
           // dependencies were only discovered when the first message rendered. Vite then
           // re-optimized and force-reloaded the open page mid-session (and mid-e2e-test).
-          // Anchored on @orchestra/ui so the same specs resolve from the app and desktop roots.
+          // Vite resolves each leading segment of a nested id from the previous one, starting at the Vite root.
+          // The web root depends on @orchestra/app but not on @orchestra/ui, so an id anchored on @orchestra/ui
+          // alone never resolved there ("Failed to resolve dependency") and the reload came back. Every root
+          // that uses this plugin depends on @orchestra/app, which depends on @orchestra/ui.
           include: ["@shikijs/stream", "katex", "marked", "marked-shiki", "remend"].map(
-            (dependency) => `@orchestra/ui > ${dependency}`,
+            (dependency) => `@orchestra/app > @orchestra/ui > ${dependency}`,
           ),
         },
       }
