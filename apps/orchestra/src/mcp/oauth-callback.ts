@@ -16,6 +16,7 @@ interface PendingAuth {
 }
 
 let server: ReturnType<typeof createServer> | undefined
+let starting: Promise<void> | undefined
 const pendingAuths = new Map<string, PendingAuth>()
 // Reverse index: mcpName → oauthState, so cancelPending(mcpName) can
 // find the right entry in pendingAuths (which is keyed by oauthState).
@@ -113,21 +114,26 @@ export async function ensureRunning(redirectUri?: string): Promise<void> {
 
   if (server) return
 
-  const running = await isPortInUse(port)
-  if (running) {
-    return
-  }
+  // Concurrent callers share one start: a second probe-then-listen would hit EADDRINUSE and,
+  // before this, overwrite `server` with the dead handle.
+  starting ??= start(port, path).finally(() => {
+    starting = undefined
+  })
+  return starting
+}
+
+async function start(port: number, path: string) {
+  if (await isPortInUse(port)) return
 
   currentPort = port
   currentPath = path
 
-  server = createServer(handleRequest)
+  const candidate = createServer(handleRequest)
   await new Promise<void>((resolve, reject) => {
-    server!.listen(currentPort, OAUTH_CALLBACK_HOST, () => {
-      resolve()
-    })
-    server!.on("error", reject)
+    candidate.on("error", reject)
+    candidate.listen(port, OAUTH_CALLBACK_HOST, () => resolve())
   })
+  server = candidate
 }
 
 export function waitForCallback(oauthState: string, mcpName?: string): Promise<string> {

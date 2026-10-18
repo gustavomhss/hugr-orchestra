@@ -247,6 +247,9 @@ const getBase = (appId: string): Configuration => ({
   linux: {
     icon: `resources/icons`,
     category: "Development",
+    // deb needs a maintainer; without this electron-builder derives it from package.json author.email, which Orchestra
+    // does not publish yet.
+    maintainer: "HuGR",
     executableName: appId,
     desktop: {
       entry: {
@@ -261,7 +264,17 @@ const getBase = (appId: string): Configuration => ({
 
 function getConfig() {
   const appId = APP_IDS[channel]
-  const base = getBase(appId)
+  const signed = getBase(appId)
+  // A release dry run (release-desktop.yml sign=false) builds the same installers with no signing identity or notarization.
+  const base: Configuration =
+    process.env.ORCHESTRA_DESKTOP_UNSIGNED === "1"
+      ? {
+          ...signed,
+          mac: { ...signed.mac, identity: null, sign: undefined, notarize: false },
+          dmg: { ...signed.dmg, sign: false },
+          win: { ...signed.win, signtoolOptions: undefined, signAndEditExecutable: false },
+        }
+      : signed
 
   switch (channel) {
     case "dev": {

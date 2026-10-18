@@ -120,7 +120,7 @@ describe("ModelsDevPlugin", () => {
           expect(unknown?.request.body.apiKey).toBeUndefined()
           const free = yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("ling-3.0-flash-fin-free"))
           expect(free?.cost).toEqual([{ input: 0, output: 0, cache: { read: 0, write: 0 } }])
-          expect(free?.request.body.apiKey).toBe("public")
+          expect(free?.request.body.apiKey).toBeUndefined()
         }).pipe(Effect.provide(AppNodeBuilder.build(ModelsDev.node))),
       (previous) =>
         Effect.sync(() => {
@@ -130,7 +130,7 @@ describe("ModelsDevPlugin", () => {
     ),
   )
 
-  it.effect("imported missing pricing cannot grant anonymous Zen access", () =>
+  it.effect("imported Zen models stay unavailable without a credential, whatever their pricing", () =>
     Effect.gen(function* () {
       const integrations = yield* Integration.Service
       const catalog = yield* Catalog.Service
@@ -173,8 +173,8 @@ describe("ModelsDevPlugin", () => {
       expect(
         (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("unknown")))?.request.body.apiKey,
       ).toBeUndefined()
-      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
-      expect((yield* catalog.model.default())?.request.body.apiKey).toBe("public")
+      expect(yield* catalog.model.available()).toEqual([])
+      expect(yield* catalog.model.default()).toBeUndefined()
     }),
   )
   it.effect("projects models.dev modes as separate models instead of variants", () =>

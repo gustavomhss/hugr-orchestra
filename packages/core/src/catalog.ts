@@ -13,14 +13,6 @@ import { Integration } from "./integration"
 
 export const VIRTUAL_SEPARATOR = "#"
 
-// Anonymous access is a Zen-only contract. Missing pricing and a paid tier are not proof of free use.
-const isAnonymousZenModel = (model: ModelV2.Info) =>
-  model.providerID === ProviderV2.ID.opencode &&
-  model.enabled &&
-  model.status !== "deprecated" &&
-  model.cost.length > 0 &&
-  model.cost.every((cost) => cost.input === 0 && cost.output === 0 && cost.cache.read === 0 && cost.cache.write === 0)
-
 export const parseVirtualID = (id: ProviderV2.ID) => {
   const index = id.indexOf(VIRTUAL_SEPARATOR)
   if (index === -1) return undefined
@@ -113,10 +105,6 @@ const layer = Layer.effect(
         body: { ...provider.request.body, ...model.request.body },
         variant: model.request.variant,
       }
-      // The V2 runner and legacy AISDK path both read request.body.apiKey. Add the public sentinel only
-      // to explicitly free models; credentials still take precedence in the runner.
-      if (isAnonymousZenModel(model) && request.body.apiKey === undefined && api.settings?.apiKey === undefined)
-        request.body.apiKey = "public"
       return ModelV2.Info.make({
         ...model,
         api,
@@ -255,12 +243,7 @@ const layer = Layer.effect(
           const active = new Map((yield* integrations.list()).map((integration) => [integration.id, integration]))
           return (yield* result.provider.all()).filter((provider) => {
             if (virtualByID.has(provider.id)) return !provider.disabled
-            if (available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))) return true
-            return (
-              !provider.disabled &&
-              provider.id === ProviderV2.ID.opencode &&
-              [...(state.get().providers.get(provider.id)?.models.values() ?? [])].some(isAnonymousZenModel)
-            )
+            return available(provider, active.get(provider.integrationID ?? Integration.ID.make(provider.id)))
           })
         }),
       },
@@ -293,16 +276,8 @@ const layer = Layer.effect(
         }),
 
         available: Effect.fn("CatalogV2.model.available")(function* () {
-          const providers = new Map((yield* result.provider.available()).map((provider) => [provider.id, provider]))
-          const zen = providers.get(ProviderV2.ID.opencode)
-          const authenticated =
-            zen && available(zen, yield* integrations.get(zen.integrationID ?? Integration.ID.make("opencode")))
-          return (yield* result.model.all()).filter(
-            (model) =>
-              providers.has(model.providerID) &&
-              model.enabled &&
-              (model.providerID !== ProviderV2.ID.opencode || authenticated || isAnonymousZenModel(model)),
-          )
+          const providers = new Set((yield* result.provider.available()).map((provider) => provider.id))
+          return (yield* result.model.all()).filter((model) => providers.has(model.providerID) && model.enabled)
         }),
 
         default: Effect.fn("CatalogV2.model.default")(function* () {

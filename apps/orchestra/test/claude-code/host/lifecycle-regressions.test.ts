@@ -711,3 +711,42 @@ ClaudeEngineFixture.it.instance(
     }),
   30_000,
 )
+
+// An exact retry re-admits the same user while its first steer is still between its durable write and the push.
+ClaudeEngineFixture.it.instance(
+  "concurrent steers of one admitted input push it to Claude Code once",
+  () =>
+    Effect.gen(function* () {
+      ClaudeEngineFixture.reset()
+      const f = yield* ClaudeEngineFixture.setup()
+      const host = yield* ClaudeHost.Service
+      const ready = Promise.withResolvers<void>()
+      const drained = Promise.withResolvers<void>()
+      ClaudeEngineFixture.state.construct = (params) =>
+        transport(params, async function* (input) {
+          const first = await input[Symbol.asyncIterator]().next()
+          if (first.done) return
+          yield { type: "system", subtype: "init", model: "claude-haiku-4-5-20251001", ...frame }
+          yield { ...first.value, session_id: frame.session_id }
+          ready.resolve()
+          for await (const message of input) if (message.message.content === "sentinel") drained.resolve()
+        })
+      const first = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("active"), noReply: true })
+      if (first.info.role !== "user") throw new Error("missing first user")
+      const running = yield* host.turn({ sessionID: f.chat.id, user: first.info }).pipe(Effect.forkChild)
+      yield* Effect.promise(() => ready.promise)
+      const steer = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("retried steer"), noReply: true })
+      const steered = yield* Effect.all([1, 2, 3].map(() => host.steer({ sessionID: f.chat.id, user: steer })), {
+        concurrency: "unbounded",
+      })
+      expect(steered).toEqual([true, true, true])
+      // The inbox is FIFO: once the sentinel is read, any duplicate push of the steer was read before it.
+      const sentinel = yield* f.prompt.prompt({ sessionID: f.chat.id, ...ClaudeEngineFixture.say("sentinel"), noReply: true })
+      expect(yield* host.steer({ sessionID: f.chat.id, user: sentinel })).toBe(true)
+      yield* awaitWithTimeout(Effect.promise(() => drained.promise), "the sentinel steer was not read", "5 seconds")
+      expect(ClaudeEngineFixture.state.inputs).toEqual(["active", "retried steer", "sentinel"])
+      yield* host.release(f.chat.id)
+      yield* Fiber.await(running)
+    }),
+  30_000,
+)

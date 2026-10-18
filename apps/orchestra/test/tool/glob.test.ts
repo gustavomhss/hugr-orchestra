@@ -129,4 +129,19 @@ describe("tool.glob", () => {
       }
     }),
   )
+
+  it.instance("rejects a path that does not exist instead of reporting no files", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const missing = path.join(test.directory, "missing")
+      const info = yield* GlobTool
+      const glob = yield* info.init()
+      const exit = yield* glob.execute({ pattern: "*.ts", path: missing }, ctx).pipe(Effect.exit)
+      expect(Exit.isFailure(exit)).toBe(true)
+      if (Exit.isFailure(exit)) {
+        const err = Cause.squash(exit.cause)
+        expect(err instanceof Error ? err.message : String(err)).toContain(`glob path does not exist: ${missing}`)
+      }
+    }),
+  )
 })

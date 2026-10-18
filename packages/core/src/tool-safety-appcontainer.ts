@@ -100,8 +100,11 @@ export const command = Effect.fn("ToolSafetyAppContainer.command")(function* (in
     return yield* new ToolSafety.Denied({ reason: "sandbox-appcontainer-guard-over-write-root" })
   // Config paths only need the read-only guard where the container could otherwise write them: strictly inside a write
   // root. Elsewhere they are already read-only or closed.
-  const guards = [...new Set(input.guards)].filter((entry) =>
-    writes.some((root) => FSUtil.contains(root, entry) && root !== entry))
+  // A name under a file write root gets no guard: the launcher cannot create its placeholder directory under a file,
+  // and the container cannot swap the file for a directory, since its parent grants no FILE_ADD_SUBDIRECTORY.
+  const guards = yield* Effect.filter([...new Set(input.guards)].filter((entry) =>
+    writes.some((root) => FSUtil.contains(root, entry) && root !== entry)), (entry) =>
+    fs.stat(path.dirname(entry)).pipe(Effect.map((info) => info.type !== "File"), Effect.orElseSucceed(() => true)))
   const name = `orchestra-${createHash("sha256").update(JSON.stringify([reads, writes, input.ports])).digest("hex").slice(0, 32)}`
   const broker = input.ports.length
     ? yield* fs.makeTempDirectoryScoped({ directory: os.tmpdir(), prefix: "otcp-" }).pipe(

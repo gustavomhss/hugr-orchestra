@@ -74,6 +74,7 @@
     "./database/migration/20261008025417_prompt_context": "./src/database/migration/20261008025417_prompt_context.ts",
     "./database/migration/20261010135215_project_checkpoints": "./src/database/migration/20261010135215_project_checkpoints.ts",
     "./database/migration/20261012134025_session_subagent_models": "./src/database/migration/20261012134025_session_subagent_models.ts",
+    "./database/migration/20261018031800_session_list_indexes": "./src/database/migration/20261018031800_session_list_indexes.ts",
     "./database/sqlite": "./src/database/sqlite.ts",
     "./database/sqlite.bun": "./src/database/sqlite.bun.ts",
     "./effect/app-node-builder": "./src/effect/app-node-builder.ts",

@@ -7,7 +7,9 @@ import { Session as SessionNs } from "@/session/session"
 import { MessageV2 } from "../../src/session/message-v2"
 import { MessageID, PartID, type SessionID } from "../../src/session/schema"
 import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
-import { provideInstance, tmpdirScoped } from "../fixture/fixture"
+import path from "path"
+import { pathToFileURL } from "url"
+import { provideInstance, TestInstance, tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -267,6 +269,37 @@ describe("Session", () => {
 
       expect((yield* session.messages({ sessionID: beforeWrap.id })).map((msg) => msg.info.time.created)).toEqual([1])
       expect((yield* session.messages({ sessionID: afterWrap.id })).map((msg) => msg.info.time.created)).toEqual([1, 2])
+    }),
+  )
+
+  it.instance("creates and removes sessions when a lifecycle plugin hook throws", () =>
+    Effect.gen(function* () {
+      const test = yield* TestInstance
+      const file = path.join(test.directory, "throwing-lifecycle-plugin.ts")
+      yield* Effect.promise(() =>
+        Bun.write(
+          file,
+          [
+            'import { appendFileSync } from "fs"',
+            'const mark = (name) => appendFileSync(import.meta.dir + "/hooks.log", name + "\\n")',
+            "export default async () => ({",
+            '  "session.start": async () => { mark("start"); throw new Error("start hook broke") },',
+            '  "session.end": async () => { mark("end"); throw new Error("end hook broke") },',
+            "})",
+            "",
+          ].join("\n"),
+        ),
+      )
+      yield* Effect.promise(() =>
+        Bun.write(path.join(test.directory, "orchestra.json"), JSON.stringify({ plugin: [pathToFileURL(file).href] })),
+      )
+      const session = yield* SessionNs.Service
+
+      const created = yield* session.create({ title: "throwing-hooks" })
+      yield* session.remove(created.id)
+
+      expect(Exit.isFailure(yield* session.get(created.id).pipe(Effect.exit))).toBe(true)
+      expect(yield* Effect.promise(() => Bun.file(path.join(test.directory, "hooks.log")).text())).toBe("start\nend\n")
     }),
   )
 

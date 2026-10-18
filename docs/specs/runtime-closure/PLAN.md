@@ -33,7 +33,7 @@ These are source observations, not measured red-test results. The baseline accep
 3. No upstream executable/installer or unowned SDK package is a runtime fallback.
 4. Declared public SDK imports use bundled objects; unknown/deep imports cannot execute a planted registry copy. Ordinary plugin dependencies still work.
 5. Copilot, xAI, DigitalOcean and other changed OAuth flows must display Orchestra through real registered identities. No fabricated client IDs, insecure TLS or hidden third-party fallback.
-6. Preserve OpenCode Zen/Go provider protocol and Codex `originator: opencode` until the owner's real compatibility probe justifies changing it.
+6. Keep OpenCode Zen/Go as ordinary providers; every provider request, Codex included, presents Orchestra's own client identity.
 7. Artifact target, version and bytes are explicit and verified; caches cannot silently reuse another executable.
 8. Test data, daemons and credentials are isolated. Do not restart the running app/server or use its data roots for smoke tests.
 9. Tests run on Actions; local package typecheck/godfile only. Stage by exact paths. No hook bypass, force push, shared git-config edits or bulk cleanup.

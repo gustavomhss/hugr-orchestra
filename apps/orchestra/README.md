@@ -36,7 +36,7 @@ This project was created using `bun init` in bun v1.2.12. [Bun](https://bun.sh) 
 - `session-engine` — platform-legacy — `src/session/`, `src/storage/`, `src/background/` — core v1 Session, storage and jobs plus modules/session-engine
 - `agent` — platform-legacy — `src/agent/` — core agent plus the product roster (70-C')
 - `config` — platform-legacy — `src/config/`, `src/permission/`, `src/question/`, `src/command/`, `src/skill/`, `src/env/` — core config, permission and instruction
-- `identity` — platform-legacy — `src/account/`, `src/auth/` — core identity
+- `identity` — platform-legacy — `src/auth/` — core identity
 - `project` — platform-legacy — `src/project/`, `src/git/`, `src/worktree/`, `src/snapshot/` — core project
 - `provider` — platform-legacy — `src/provider/`, `src/plugin/` — core provider and plugin-host plus llm
 - `tool` — platform-legacy — `src/tool/` — core tool

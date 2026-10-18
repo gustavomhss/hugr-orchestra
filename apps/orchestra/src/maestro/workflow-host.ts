@@ -139,10 +139,7 @@ export function make(deps: Dependencies) {
     // the gate's retry budget, so review and resume loops stay bounded and end in the normal park.
     if (!code)
       return yield* new RelayWorkflowBinding.Held({ reason: CodeReview.REQUIRED,
-        detail: `The workers' result (tree ${result.tree}) has no code review. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then on APPROVE resumes this workflow Task with its task_id ${binding.taskID} and exactly the approved dispatch input.` })
-    if (code.data.verdict !== "APPROVE")
-      return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_CODE_REVIEW_NOT_APPROVED",
-        detail: `The code review of the workers' result (tree ${result.tree}) is ${code.data.verdict}: ${code.id}. Its findings do not reach the workers; fixing them needs a new plan round.` })
+        detail: `The workers' result (tree ${result.tree}) has no code review. Maestro calls maestro_request_review with stage "code", the approved validationRecordID and its work card, then on APPROVE or FIX_FIRST resumes this workflow Task with its task_id ${binding.taskID} and exactly the approved dispatch input. A REJECT needs a new plan round.` })
     if (code.data.sessionID !== binding.sessionID || code.data.validationRecordID !== validation.id ||
       code.data.projectID !== binding.projectID || code.data.reviewerID !== "lucy" ||
       code.data.workCardHash !== validation.workCardHash || code.data.artifact.workCardHash !== validation.workCardHash ||
@@ -150,6 +147,11 @@ export function make(deps: Dependencies) {
       code.data.grantHash !== validation.grantHash || code.data.reviewPolicyHash !== validation.reviewPolicyHash ||
       !reviewActorMatches(code.data.actor, binding, "lucy"))
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_MISSING" })
+    // Checked after the receipt's bindings, so findings that reach the workers come only from a receipt bound to this
+    // validation, card and reviewer. `receiptID` names it for the host that grades a resumed held step.
+    if (code.data.verdict !== "APPROVE")
+      return yield* new RelayWorkflowBinding.Held({ reason: CodeReview.NOT_APPROVED, receiptID: code.id,
+        detail: `The code review of the workers' result (tree ${result.tree}) is ${code.data.verdict}: ${code.id}. On FIX_FIRST, Maestro resumes this workflow Task with its task_id ${binding.taskID} and exactly the approved dispatch input: the host grades the held step, which spends one retry, and the next attempt carries the recorded findings. A REJECT needs a new plan round.` })
     if (code.data.artifact.baseSHA !== review.data.artifact.headSHA || code.data.artifact.sha256 !== result.sha256 ||
       (yield* deps.fs.realPath(code.data.artifact.worktree)) !== worktree)
       return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_COLD_REVIEW_STALE" })

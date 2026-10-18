@@ -55,6 +55,27 @@ describe("window registry", () => {
     expect(restarted.persisted()).toEqual(["a"])
   })
 
+  test("a new window opened after the last close replaces the kept ids", () => {
+    const app = setup()
+    app.registry.register("a", { name: "a" })
+    app.registry.register("b", { name: "b" })
+    app.registry.closed("a")
+    app.registry.closed("b")
+    expect(app.state.stored).toEqual(["b"])
+    app.registry.register("c", { name: "c" })
+    expect(app.state.stored).toEqual(["c"])
+    expect(app.cleaned).toEqual(["a", "b"])
+  })
+
+  test("restoring kept ids at launch keeps them", () => {
+    const app = setup(["a", "b"])
+    app.registry.register("a", { name: "a" })
+    app.registry.register("b", { name: "b" })
+    app.registry.register("c", { name: "c" })
+    expect(app.state.stored).toEqual(["a", "b", "c"])
+    expect(app.cleaned).toEqual([])
+  })
+
   test("keeps every id when windows close during quit", () => {
     const app = setup()
     app.registry.register("a", { name: "a" })

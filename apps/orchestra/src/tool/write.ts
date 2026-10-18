@@ -11,7 +11,7 @@ import { Watcher } from "@orchestra/core/filesystem/watcher"
 import { Format } from "../format"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { InstanceState } from "@/effect/instance-state"
-import { trimDiff } from "./edit"
+import { fileLock, trimDiff } from "./edit"
 import { assertExternalDirectoryEffect, editPatterns } from "./external-directory"
 import * as Bom from "@/util/bom"
 import { physicalPath, writePhysical } from "@orchestra/core/util/physical-path"
@@ -46,33 +46,39 @@ export const WriteTool = Tool.define(
           const physical = yield* Effect.promise(() => physicalPath(filepath))
           yield* assertExternalDirectoryEffect(ctx, filepath, { real: physical })
 
-          const exists = yield* fs.existsSafe(physical)
-          const source = exists ? yield* Bom.readFile(fs, physical) : { bom: false, text: "" }
-          const next = Bom.split(params.content)
-          const desiredBom = source.bom || next.bom
-          const contentOld = source.text
-          const contentNew = next.text
+          // Shares edit's per-file lock, so a write cannot interleave with an edit's read-modify-write of the same file.
+          const exists = yield* fileLock(physical).withPermits(1)(
+            Effect.gen(function* () {
+              const existed = yield* fs.existsSafe(physical)
+              const source = existed ? yield* Bom.readFile(fs, physical) : { bom: false, text: "" }
+              const next = Bom.split(params.content)
+              const desiredBom = source.bom || next.bom
+              const contentOld = source.text
+              const contentNew = next.text
 
-          const diff = trimDiff(createTwoFilesPatch(filepath, filepath, contentOld, contentNew))
-          yield* ctx.ask({
-            permission: "edit",
-            patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filepath, physical)),
-            always: ["*"],
-            metadata: {
-              filepath,
-              diff,
-            },
-          })
+              const diff = trimDiff(createTwoFilesPatch(filepath, filepath, contentOld, contentNew))
+              yield* ctx.ask({
+                permission: "edit",
+                patterns: yield* Effect.promise(() => editPatterns(instance.worktree, filepath, physical)),
+                always: ["*"],
+                metadata: {
+                  filepath,
+                  diff,
+                },
+              })
 
-          yield* Effect.promise(() => writePhysical(physical, Bom.join(contentNew, desiredBom)))
-          if (yield* format.file(filepath)) {
-            yield* Bom.syncFile(fs, physical, desiredBom)
-          }
-          yield* events.publish(FileSystem.Event.Edited, { file: filepath })
-          yield* events.publish(Watcher.Event.Updated, {
-            file: filepath,
-            event: exists ? "change" : "add",
-          })
+              yield* Effect.promise(() => writePhysical(physical, Bom.join(contentNew, desiredBom)))
+              if (yield* format.file(filepath)) {
+                yield* Bom.syncFile(fs, physical, desiredBom)
+              }
+              yield* events.publish(FileSystem.Event.Edited, { file: filepath })
+              yield* events.publish(Watcher.Event.Updated, {
+                file: filepath,
+                event: existed ? "change" : "add",
+              })
+              return existed
+            }),
+          )
 
           let output = "Wrote file successfully."
           yield* lsp.touchFile(filepath, "document")

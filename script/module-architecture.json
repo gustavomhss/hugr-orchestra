@@ -423,7 +423,7 @@
           "target": "core config, permission and instruction",
           "patterns": ["src/config/", "src/permission/", "src/question/", "src/command/", "src/skill/", "src/env/"]
         },
-        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/account/", "src/auth/"] },
+        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/auth/"] },
         "project": { "kind": "platform-legacy", "target": "core project", "patterns": ["src/project/", "src/git/", "src/worktree/", "src/snapshot/"] },
         "provider": { "kind": "platform-legacy", "target": "core provider and plugin-host plus llm", "patterns": ["src/provider/", "src/plugin/"] },
         "tool": { "kind": "platform-legacy", "target": "core tool", "patterns": ["src/tool/"] },

@@ -1,3 +1,5 @@
+export * as ConfigEntryName from "./entry-name"
+
 import path from "path"
 
 // Strips a known prefix from an already-relative path. Callers should pass the
@@ -12,7 +14,7 @@ function stripPrefix(relativePath: string, prefixes: string[]) {
   }
 }
 
-export function configEntryNameFromPath(relativePath: string, prefixes: string[]) {
+export function fromPath(relativePath: string, prefixes: string[]) {
   const candidate = stripPrefix(relativePath, prefixes) ?? path.basename(relativePath)
   const ext = path.extname(candidate)
   return ext.length ? candidate.slice(0, -ext.length) : candidate

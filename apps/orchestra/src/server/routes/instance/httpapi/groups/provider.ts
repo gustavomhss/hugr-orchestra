@@ -31,6 +31,25 @@ export class ProviderAuthApiError extends Schema.ErrorClass<ProviderAuthApiError
   { httpApiStatus: 400 },
 ) {}
 
+export const ClaudeCodeAccount = Schema.Struct({
+  signedIn: Schema.Boolean,
+  email: Schema.optional(Schema.String),
+  subscription: Schema.optional(Schema.String),
+}).annotate({ identifier: "ClaudeCodeAccount" })
+
+export const ClaudeCodeLogin = Schema.Struct({
+  url: Schema.String,
+}).annotate({ identifier: "ClaudeCodeLogin" })
+
+export const ClaudeCodeLoginCode = Schema.Struct({
+  code: Schema.String,
+})
+
+export class ClaudeCodeLoginApiError extends Schema.ErrorClass<ClaudeCodeLoginApiError>("ClaudeCodeLoginError")(
+  { name: Schema.Literal("ClaudeCodeLoginFailed"), data: Schema.Struct({ message: Schema.String }) },
+  { httpApiStatus: 400 },
+) {}
+
 export const ProviderApi = HttpApi.make("provider")
   .add(
     HttpApiGroup.make("provider")
@@ -79,6 +98,40 @@ export const ProviderApi = HttpApi.make("provider")
             identifier: "provider.oauth.callback",
             summary: "Handle OAuth callback",
             description: "Handle the OAuth callback from a provider after user authorization.",
+          }),
+        ),
+        HttpApiEndpoint.get("claudeCodeAccount", `${root}/claude-code/account`, {
+          query: WorkspaceRoutingQuery,
+          success: described(ClaudeCodeAccount, "Claude Code sign-in status"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.claudeCode.account",
+            summary: "Get Claude Code account",
+            description:
+              "Whether the Claude Code binary Claude mode runs is signed in, with the account email and subscription. No credential is returned.",
+          }),
+        ),
+        HttpApiEndpoint.post("claudeCodeLogin", `${root}/claude-code/login`, {
+          query: WorkspaceRoutingQuery,
+          success: described(ClaudeCodeLogin, "Fallback sign-in URL"),
+          error: ClaudeCodeLoginApiError,
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.claudeCode.login",
+            summary: "Start Claude Code sign-in",
+            description:
+              "Run `claude auth login --claudeai` with the binary Claude mode runs. Claude Code opens the browser itself; the returned URL is its manual fallback, whose page shows a code to send to provider.claudeCode.loginCode. Sign-in continues in the background; provider.claudeCode.account reports the result.",
+          }),
+        ),
+        HttpApiEndpoint.post("claudeCodeLoginCode", `${root}/claude-code/login/code`, {
+          query: WorkspaceRoutingQuery,
+          payload: ClaudeCodeLoginCode,
+          success: described(Schema.Boolean, "Whether a running sign-in received the code"),
+        }).annotateMerge(
+          OpenApi.annotations({
+            identifier: "provider.claudeCode.loginCode",
+            summary: "Send Claude Code sign-in code",
+            description: "Hand the code shown by the fallback sign-in page to the running Claude Code sign-in.",
           }),
         ),
       )

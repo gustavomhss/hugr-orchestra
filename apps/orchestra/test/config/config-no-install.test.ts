@@ -8,10 +8,8 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Npm } from "@orchestra/core/npm"
 import { Config } from "@/config/config"
-import { Account } from "../../src/account/account"
 import { Auth } from "../../src/auth"
 import { Env } from "../../src/env"
-import { AccountTest } from "../fake/account"
 import { AuthTest } from "../fake/auth"
 import { provideInstanceEffect, testInstanceStoreLayer, tmpdirScoped } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -34,7 +32,6 @@ const unexpectedHttp = HttpClient.make((request) => Effect.die(`unexpected http 
 const it = testEffect(
   LayerNode.compile(LayerNode.group([Config.node, FSUtil.node, Env.node, CrossSpawnSpawner.node]), [
     [Auth.node, AuthTest.empty],
-    [Account.node, AccountTest.empty],
     [Npm.node, recordingNpm],
     [httpClient, Layer.succeed(HttpClient.HttpClient, unexpectedHttp)],
   ]),

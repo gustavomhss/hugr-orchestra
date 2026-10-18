@@ -19,6 +19,7 @@ import { useSDK } from "@/context/sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useProviders } from "@/hooks/use-providers"
 import { HugrMark } from "@/orchestra/brand"
+import { useClaudeMode } from "@/orchestra/use-claude-mode"
 import { NEW_SESSION_CONTENT_WIDTH } from "@/pages/session/new-session-layout"
 import { Persist, persisted } from "@/utils/persist"
 import type { NewSessionDraftController } from "./new-session-draft-controller"
@@ -101,6 +102,7 @@ function ProviderTip() {
   const sdk = useSDK()
   const serverSync = useServerSync()
   const providers = useProviders(() => sdk().directory)
+  const claudeMode = useClaudeMode(() => sdk().directory)
   const [persistedState, setPersistedState, , persistedReady] = persisted(
     Persist.global("new-session.provider-tip"),
     createStore({ dismissedAt: 0 }),
@@ -142,6 +144,14 @@ function ProviderTip() {
             <span class="flex size-6 shrink-0 items-center justify-center" aria-hidden="true">
               <IconV2 name="chevron-down" size="small" class="-rotate-90" />
             </span>
+          </button>
+          <button
+            type="button"
+            data-action="claude-mode"
+            class="flex h-6 min-w-0 items-center rounded-[4px] px-1.5 text-[13px] leading-none tracking-[-0.04px] text-v2-text-text-faint transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-muted focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-muted focus-visible:outline-none"
+            onClick={() => void claudeMode()}
+          >
+            <span class="truncate">{language.t("orchestra.providers.claudeMode.use")}</span>
           </button>
           <TooltipV2
             class="hover-reveal absolute left-full top-0 flex h-6 w-7 items-center justify-end delay-0 duration-0 group-hover/provider-tip:delay-[250ms] group-hover/provider-tip:duration-150 group-hover/provider-tip:opacity-100 focus-within:delay-0 focus-within:duration-0 focus-within:opacity-100"

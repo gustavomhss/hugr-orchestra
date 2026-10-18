@@ -72,7 +72,6 @@ export const protectedStrings: Protected[] = [
     reason: "upstream-hosted domain; renaming would point at an unrelated domain",
   },
   { pattern: /\b(?:anomalyco|sst|claudianus)(?:\/|\\+)opencode\b/g, reason: "upstream repository" },
-  { pattern: /\bsst-dev\.opencode\b/g, reason: "upstream VS Code extension id" },
   { pattern: /\bupstream (?:opencode|OpenCode)\b/g, reason: "sentence about the upstream project" },
   { pattern: /\bOpenCode's historical\b/g, reason: "sentence about upstream history" },
   { pattern: /\bopencode 2\.0\b/g, reason: "sentence about an upstream release" },
@@ -125,11 +124,6 @@ export const protectedStrings: Protected[] = [
   // Context patterns come before the plain `opencode-go` entry, which would otherwise hide their context.
   { pattern: /"opencode"(?=,\s*"opencode-go")/g, reason: "the Zen provider id in a provider list" },
   { pattern: /(?<=connected[^\n]{0,40})"opencode"/g, reason: "the Zen provider id in a connected-provider fixture" },
-  {
-    pattern: /disabled_providers: \["opencode"\]|providerByID\(body, "all", "opencode"\)/g,
-    paths: /^apps\/orchestra\/test\/(?:provider\/provider|server\/httpapi-provider)\.test\.ts$/,
-    reason: "the Zen provider id in a provider test",
-  },
   { pattern: /\bOpenCode (?:Zen|Go)\b/g, reason: "third-party provider name" },
   {
     pattern: /\bopencode-go\b|\bopencode(?:Zen|Go)\b/g,
@@ -137,16 +131,9 @@ export const protectedStrings: Protected[] = [
   },
   { pattern: /OPENCODE_API_KEY\b/g, reason: "Zen's own API key variable, as published by models.dev" },
   {
-    pattern: /opencode\/\$\{InstallationVersion\}/g,
-    paths:
-      /^packages\/core\/(?:src\/installation\/headers\.ts|test\/session-runner-model\.test\.ts)$|^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
-    reason: "Zen free-model transport User-Agent, preserved by dev PR #91",
-  },
-  {
     pattern: /opencode(?:#credential|-test)\b/g,
-    paths:
-      /^packages\/core\/test\/session-runner-model\.test\.ts$|^(?:packages\/(?:opencode|orchestra)|apps\/orchestra)\/test\/session\/llm-free-headers\.test\.ts$/,
-    reason: "Zen provider-family fixtures for credential and free-model header eligibility",
+    paths: /^packages\/core\/test\/session-runner-model\.test\.ts$/,
+    reason: "Zen provider-family fixture proving the configured User-Agent is never overridden",
   },
   {
     pattern: /opencode:free-model/g,
@@ -158,16 +145,6 @@ export const protectedStrings: Protected[] = [
     paths: /^packages\/app(?:-shell)?\/e2e\/orchestra\/chapter-settings\.spec\.ts$/,
     reason: "negative assertion against the inherited theme names, not against Orchestra",
   },
-  {
-    pattern: /opencode\/<InstallationVersion>|`opencode`/g,
-    paths: /^docs\/specs\/v2\/provider-model\.md$/,
-    reason: "documented Zen provider id and compatibility User-Agent",
-  },
-  {
-    pattern: /\bx-opencode-(?:project|session|request|client)\b/g,
-    reason: "Zen request headers read by Zen's backend",
-  },
-  { pattern: /(?<=client_?id["'\s,:=]{1,6})opencode-(?:cli|desktop)\b/gi, reason: "Zen console OAuth client id" },
   {
     pattern: /\b(?:providerID|provider|id|router)\s*[!=]==?\s*(["'])opencode\1/g,
     reason: "comparison with the Zen provider id",
@@ -285,25 +262,6 @@ export const protectedStrings: Protected[] = [
     pattern: /\bopencode-v2-openapi\.json\b/g,
     paths: /^packages\/codemode\/test\/openapi\.test\.ts$/,
     reason: "reference to the frozen upstream OpenAPI fixture, whose basename is kept",
-  },
-
-  // Provider identity still under a live probe (rename-external-plan.md items 8b-8e, 8i)
-  { pattern: /\boriginator(?:["']?\]?\s*[:=]\s*["']?|=)opencode\b/g, reason: "Codex originator, kept until probed" },
-  {
-    pattern:
-      /(?<=["'](?:X-Title|X-Source|X-Cerebras-3rd-Party-Integration|X-BILLING-INVOKE-ORIGIN)["']\]?\s*(?:\?\?=|=|:)\s*["'])(?:opencode|OpenCode)\b/g,
-    reason: "provider attribution header, kept until probed",
-  },
-  { pattern: /\breferrer:\s*"opencode"/g, reason: "xAI referrer, kept until probed" },
-  {
-    pattern: /opencode\/\$\{InstallationVersion\}/g,
-    paths: /(?:github-copilot\/copilot|openai\/codex|plugin\/xai|plugin\/provider\/openai)\.ts$/,
-    reason: "User-Agent sent with upstream-registered OAuth apps, kept until probed",
-  },
-  {
-    pattern: /\^opencode\\\/|toBe\("opencode"\)/g,
-    paths: /\/test\/plugin\/xai\.test\.ts$/,
-    reason: "xAI User-Agent and referrer, kept until probed",
   },
 
   // Unrelated words

@@ -1,3 +1,5 @@
+export * as ConfigPlugin from "./plugin"
+
 import { Glob } from "@orchestra/core/util/glob"
 import { ConfigPluginV1 } from "@orchestra/core/v1/config/plugin"
 import { pathToFileURL } from "url"
@@ -76,4 +78,3 @@ export function deduplicatePluginOrigins(plugins: Origin[]): Origin[] {
   return list.toReversed()
 }
 
-export * as ConfigPlugin from "./plugin"

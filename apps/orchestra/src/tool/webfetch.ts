@@ -8,8 +8,10 @@ import { isImageAttachment } from "@/util/media"
 import { ResearchSourceCapture } from "@/research/source-capture"
 
 const MAX_RESPONSE_SIZE = 5 * 1024 * 1024 // 5MB
-const DEFAULT_TIMEOUT = 30 * 1000 // 30 seconds
-const MAX_TIMEOUT = 120 * 1000 // 2 minutes
+const DEFAULT_TIMEOUT_SECONDS = 30
+// A zero, negative or unbounded timeout would fail every request at once or hold the turn open indefinitely.
+const MIN_TIMEOUT_SECONDS = 1
+const MAX_TIMEOUT_SECONDS = 120
 
 export const Parameters = Schema.Struct({
   url: Schema.String.annotate({ description: "The URL to fetch content from" }),
@@ -19,7 +21,9 @@ export const Parameters = Schema.Struct({
       default: "markdown",
     })
     .pipe(Schema.withDecodingDefault(Effect.succeed("markdown" as const))),
-  timeout: Schema.optional(Schema.Number).annotate({ description: "Optional timeout in seconds (max 120)" }),
+  timeout: Schema.optional(
+    Schema.Number.check(Schema.isBetween({ minimum: MIN_TIMEOUT_SECONDS, maximum: MAX_TIMEOUT_SECONDS })),
+  ).annotate({ description: `Optional timeout in seconds (${MIN_TIMEOUT_SECONDS} to ${MAX_TIMEOUT_SECONDS}, default ${DEFAULT_TIMEOUT_SECONDS})` }),
 })
 
 export const WebFetchTool = Tool.define(
@@ -48,7 +52,7 @@ export const WebFetchTool = Tool.define(
             },
           })
 
-          const timeout = Math.min((params.timeout ?? DEFAULT_TIMEOUT / 1000) * 1000, MAX_TIMEOUT)
+          const timeout = (params.timeout ?? DEFAULT_TIMEOUT_SECONDS) * 1000
 
           // Build Accept header based on requested format with q parameters for fallbacks
           let acceptHeader = "*/*"

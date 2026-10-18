@@ -13,6 +13,8 @@ process.env.XDG_CONFIG_HOME = path.join(exerciseGlobalRoot, "config")
 process.env.XDG_STATE_HOME = path.join(exerciseGlobalRoot, "state")
 process.env.XDG_CACHE_HOME = path.join(exerciseGlobalRoot, "cache")
 process.env.ORCHESTRA_INHERIT_CREDENTIALS = "0"
+// The Claude mode routes resolve this missing executable and fail at once instead of starting Claude Code's sign-in.
+process.env.ORCHESTRA_CLAUDE_CODE_EXECUTABLE = path.join(exerciseGlobalRoot, "missing-claude-code")
 export const exerciseConfigDirectory = path.join(exerciseGlobalRoot, "config", "orchestra")
 export const exerciseDataDirectory = path.join(exerciseGlobalRoot, "data", "orchestra")
 // Always in the system temp directory: auth probes create git worktrees wherever git root discovery lands, so

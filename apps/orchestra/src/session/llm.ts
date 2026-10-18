@@ -388,6 +388,8 @@ export const live: Layer.Layer<
           maxOutputTokens: prepared.params.maxOutputTokens,
           abortSignal: input.abort,
           headers: prepared.headers,
+          // SessionRetry in the processor owns turn retries (visible retry status, Retry-After);
+          // SDK-level retries stay off by default so they never stack under it unseen.
           maxRetries: input.retries ?? 0,
           messages: prepared.messages,
           model: wrapLanguageModel({

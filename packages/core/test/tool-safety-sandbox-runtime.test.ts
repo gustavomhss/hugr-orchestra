@@ -88,6 +88,26 @@ it.live("acquisition installs pinned artifacts and refuses a tampered one before
   }), 30_000,
 )
 
+it.live("a defect during acquisition is recorded as a failure, not left acquiring forever", () =>
+  Effect.gen(function* () {
+    const f = yield* fixture
+    // Reading the artifacts throws inside acquire: a defect, not a typed Denied failure.
+    const broken: ToolSafetySandboxRuntime.Source = {
+      directory: path.join(f.directory, "defect"),
+      dependencies: [],
+      get artifacts(): ReadonlyArray<ToolSafetySandboxRuntime.Artifact> {
+        throw new Error("artifact list unavailable")
+      },
+    }
+    const provide = Effect.provideService(ToolSafetySandboxRuntime.Source, broken)
+    expect(yield* ToolSafetySandboxRuntime.resolve(true).pipe(provide)).toEqual({ reason: "sandbox-runtime-acquiring" })
+    // settled never fails, even when the acquisition died.
+    yield* ToolSafetySandboxRuntime.settled().pipe(provide)
+    expect(yield* ToolSafetySandboxRuntime.resolve(false).pipe(provide))
+      .toEqual({ reason: "sandbox-runtime-acquisition-failed: sandbox-runtime-acquisition-defect" })
+  }), 30_000,
+)
+
 noSeatbelt("without a sandbox a fallback profile runs the command unconfined and says why; edits stay held", () =>
   Effect.gen(function* () {
     const f = yield* fixture

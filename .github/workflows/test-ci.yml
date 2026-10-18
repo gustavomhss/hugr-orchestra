@@ -172,8 +172,9 @@ jobs:
               ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER) ;;
               *) echo "::error::.ci-run.json env key $key is not allow-listed"; exit 2 ;;
             esac
-            if ! printf '%s' "$value" | grep -Eq '^[A-Za-z0-9_]+$'; then
-              echo "::error::.ci-run.json env value for $key is not [A-Za-z0-9_]+"
+            # Only omni's two on states: "0" or an invalid value would run on legacy with the omni control off.
+            if ! printf '%s' "$value" | grep -Eq '^(1|strict)$'; then
+              echo "::error::.ci-run.json env value for $key is not 1 or strict"
               exit 2
             fi
             echo "$key=$value" >> "$GITHUB_ENV"

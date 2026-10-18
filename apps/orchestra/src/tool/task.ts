@@ -4,6 +4,7 @@ import { ToolJsonSchema } from "./json-schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { BackgroundJob } from "@/background/job"
 import { Session } from "@/session/session"
+import { SessionStatus } from "@/session/status"
 import { SessionID, MessageID } from "../session/schema"
 import { MessageV2 } from "../session/message-v2"
 import { Agent } from "../agent/agent"
@@ -135,6 +136,7 @@ export const TaskTool = Tool.define(
     const config = yield* Config.Service
     const sessions = yield* Session.Service
     const research = yield* Effect.serviceOption(ResearchExecution.Service)
+    const status = yield* SessionStatus.Service
     const researchRecords = yield* Effect.serviceOption(ResearchRecords.Service)
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
@@ -207,19 +209,11 @@ export const TaskTool = Tool.define(
           ),
         )
       }
-      if (params.workflow && !params.governed && !params.authorizationID)
-        return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
       // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
-      if (params.workflow) yield* completion.beforeReserve({ sessionID: ctx.sessionID, directory: parent.directory })
-      // A resume of the authorization's own bound child reads the owner decision already observed; any other call is a
-      // dispatch and needs the owner's immediate approve.
-      const workflowPhase = params.workflow ? WorkflowBinding.phaseFor({ parentSessionID: ctx.sessionID,
-        authorizationID: params.authorizationID, resumed, bound: resumed ? yield* WorkflowBinding.read(resumed.id) : undefined }) : "dispatch"
-      const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
-          callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
-          writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
-          model: params.model, workflow: params.workflow,
-        }, workflowPhase).pipe(Effect.orDie) : undefined
+      const workflow = yield* WorkflowBinding.prepareTask({ completion, workflow: params.workflow,
+        governed: params.governed !== undefined, authorizationID: params.authorizationID, resumed, sessionID: ctx.sessionID,
+        assistantMessageID: ctx.messageID, callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
+        writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model })
       const childPermissions = yield* WriteRoots.bind(
         nextID,
         params.writePaths,
@@ -310,7 +304,7 @@ export const TaskTool = Tool.define(
           database,
           events,
           sessions,
-          workflowBinding: workflowReady?.materialized.definition,
+          workflowBinding: workflow.ready?.materialized.definition,
           writePaths: params.writePaths,
         })
         governedChildID = reservation.childSessionID
@@ -455,7 +449,7 @@ export const TaskTool = Tool.define(
           assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
         } } : {}),
-      })
+      }).pipe(Effect.provideService(WorkflowBinding.Activity, WorkflowBinding.taskActivity(background, status)))
 
       if (params.governed) {
         const governed = params.governed
@@ -493,15 +487,11 @@ export const TaskTool = Tool.define(
 
       yield* ctx.metadata({ title: params.description, metadata })
 
-      // A reserved child never prompted runs as the reservation's one dispatch (GovernedTaskReservation.unprompted).
-      const neverPrompted = params.authorizationID !== undefined && reserved !== undefined &&
-        !(yield* background.get(reserved.id)) &&
-        (yield* GovernedTaskReservation.unprompted(reserved.id).pipe(Effect.provideService(Database.Service, database)))
-      // A resume of a step held for code review re-prompts the same child to settle it again (WorkflowBinding.resumesHeldStep).
-      const continues = params.workflow && reserved && !neverPrompted && (yield* WorkflowBinding.resumesHeldStep({
-        reservedID: reserved.id, resumedID: resumed?.id, phase: workflowPhase, job: yield* background.get(reserved.id),
-        view: yield* completion.workflowView(completionReceipt) }))
-      if (governedChildID && reserved && !neverPrompted && !continues) {
+      // A never-prompted reserved child runs now; a step held for code review continues (WorkflowBinding.reservedChild).
+      const child = yield* WorkflowBinding.reservedChild({ database, background, completion,
+        receipt: completionReceipt, reservedID: reserved?.id, authorizationID: params.authorizationID,
+        workflow: params.workflow !== undefined, resumedID: resumed?.id, phase: workflow.phase })
+      if (governedChildID && reserved && !child.neverPrompted && !child.continues) {
         if (!replayReserved) return yield* Effect.fail(new Error("Governed Task denied: reserved-child-incomplete"))
         const history = yield* MessageV2.stream(governedChildID)
         const strictReplay = requireCompletedReplay || completionReceipt !== undefined
@@ -575,7 +565,7 @@ export const TaskTool = Tool.define(
             sessionID: ctx.sessionID,
             authorizationID: params.authorizationID,
             permission: childPermissions,
-            requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
+            requireCurrent: !child.continues, // a held step continues on the workers' result, whose scope the continuation approval checked
           }).pipe(
             Effect.provideService(Database.Service, database),
             Effect.provideService(EventV2Bridge.Service, events),
@@ -585,6 +575,8 @@ export const TaskTool = Tool.define(
             Effect.provideService(Session.Service, sessions),
           )
         }
+        // A FIX_FIRST of the held reply is graded once, unless an earlier resume graded it and the child never ran.
+        if (child.continues && !child.continues.graded) yield* completion.gradeHeld(completionReceipt, child.continues.settlement)
         // A brief names other agents as plain text. As an @mention, an agent part would tell the child to
         // delegate to that agent and skip its own task permission prompt.
         const parts = (yield* ops.resolvePromptParts(params.prompt)).filter((part) => part.type !== "agent")
@@ -596,7 +588,7 @@ export const TaskTool = Tool.define(
               sessionID: ctx.sessionID,
               authorizationID: params.authorizationID,
               permission: childPermissions,
-              requireCurrent: !continues, // a held step continues on the workers' result, whose scope the continuation approval checked
+              requireCurrent: !child.continues, // a held step continues on the workers' result, whose scope the continuation approval checked
             }).pipe(
               Effect.provideService(Database.Service, database),
               Effect.provideService(EventV2Bridge.Service, events),

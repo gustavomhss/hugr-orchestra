@@ -7,7 +7,7 @@ import { constants } from "fs"
 import { access, mkdir, mkdtemp, rename, rm, writeFile } from "fs/promises"
 import { promisify } from "util"
 import which from "which"
-import { Context, Effect, Schedule } from "effect"
+import { Cause, Context, Effect, Option, Schedule } from "effect"
 import { Global } from "./global"
 import { RipgrepBinary } from "./ripgrep/binary"
 import { ToolSafety } from "./tool-safety"
@@ -140,9 +140,16 @@ export const resolve = Effect.fn("ToolSafetySandboxRuntime.resolve")(function* (
   // Acquisition is asynchronous from its first step, so its outcome always lands after this entry.
   attempts.set(source.directory, {
     at: Date.now(),
-    done: Effect.runPromise(acquire(source).pipe(Effect.match({
+    // Every outcome, a defect included, replaces this entry: a lost one would report "acquiring" forever.
+    done: Effect.runPromise(acquire(source).pipe(Effect.matchCause({
       onSuccess: () => void attempts.delete(source.directory),
-      onFailure: (error) => void attempts.set(source.directory, { failed: error.reason, at: Date.now() }),
+      onFailure: (cause) => void attempts.set(source.directory, {
+        failed: Option.match(Cause.findErrorOption(cause), {
+          onSome: (error) => error.reason,
+          onNone: () => "sandbox-runtime-acquisition-defect",
+        }),
+        at: Date.now(),
+      }),
     }))),
   })
   return { reason: "sandbox-runtime-acquiring" }

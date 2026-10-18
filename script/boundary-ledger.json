@@ -2078,12 +2078,6 @@
     },
     {
       "rule": "R7",
-      "file": "apps/orchestra/src/account/repo.ts",
-      "specifier": "@orchestra/core/account/sql",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
       "file": "apps/orchestra/src/agent/agent.ts",
       "specifier": "@orchestra/core/agent/prompt",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"

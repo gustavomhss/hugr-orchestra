@@ -27,6 +27,7 @@ const dict: Record<string, string> = {
   "dialog.model.unpaid.viewMoreProviders": "See 70+ more providers",
   "dialog.provider.opencode.tagline": "Reliable optimized models",
   "dialog.provider.opencodeGo.tagline": "Low cost subscription for everyone",
+  "orchestra.providers.claudeMode.use": "Use your Claude subscription (Claude mode)",
   "dialog.provider.custom.label": "Custom OpenAI-compatible provider",
   "dialog.provider.search.placeholder": "Search providers",
   "dialog.provider.empty": "No providers found",

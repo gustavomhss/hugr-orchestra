@@ -443,9 +443,8 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
-            "X-Source": "opencode",
+            "X-Title": "Orchestra",
+            "X-Source": "orchestra",
           },
         },
       }),
@@ -463,9 +462,8 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: provider.source === "config",
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
-            "X-BILLING-INVOKE-ORIGIN": "OpenCode",
+            "X-Title": "Orchestra",
+            "X-BILLING-INVOKE-ORIGIN": "Orchestra",
           },
         },
       }),
@@ -578,8 +576,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
+            "X-Title": "Orchestra",
           },
         },
       }),
@@ -859,7 +856,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "X-Cerebras-3rd-Party-Integration": "opencode",
+            "X-Cerebras-3rd-Party-Integration": "orchestra",
           },
         },
       }),
@@ -868,8 +865,7 @@ function custom(dep: CustomDep): Record<string, CustomLoader> {
         autoload: false,
         options: {
           headers: {
-            "HTTP-Referer": "https://opencode.ai/",
-            "X-Title": "opencode",
+            "X-Title": "Orchestra",
           },
         },
       }),
@@ -1089,19 +1085,6 @@ export const ConfigProvidersResult = Schema.Struct({
   default: DefaultModelIDs,
 })
 export type ConfigProvidersResult = Types.DeepMutable<Schema.Schema.Type<typeof ConfigProvidersResult>>
-
-// Anonymous access is a Zen-only contract, mirroring Catalog.isAnonymousZenModel:
-// a zero-cost active model needs no credential.
-export function hasAnonymousModel(provider: Pick<Info, "models">) {
-  return Object.values(provider.models).some(
-    (model) =>
-      model.status !== "deprecated" &&
-      model.cost?.input === 0 &&
-      model.cost?.output === 0 &&
-      model.cost?.cache?.read === 0 &&
-      model.cost?.cache?.write === 0,
-  )
-}
 
 export function toPublicInfo(provider: Info): Omit<Info, "key"> {
   // Keys authenticate the runtime; they must never reach clients or plugins.
@@ -1907,29 +1890,11 @@ const layer = Layer.effect(
             if (!s.credentialKeys.has(providerID)) s.credentialKeys.set(providerID, s.providers[providerID])
             s.providers[providerID] = { ...base, key: credential.value.key }
           }
-        } else {
-          if (s.credentialKeys.has(providerID)) {
-            const previous = s.credentialKeys.get(providerID)
-            s.credentialKeys.delete(providerID)
-            if (previous) s.providers[providerID] = previous
-            else delete s.providers[providerID]
-          }
-          // No credential: Zen anonymous models run under the public sentinel.
-          // The sentinel stays ephemeral (never cached), so the snapshot above
-          // never records it and revocation always falls back to anonymous.
-          // Anonymity is decided by the trusted catalog entry, never merged content.
-          const current: Info | undefined = s.providers[providerID]
-          if (current?.key) return current
-          const catalogEntry: Info | undefined = s.catalog[providerID]
-          if (providerID === ProviderV2.ID.opencode && catalogEntry && hasAnonymousModel(catalogEntry)) {
-            const cfg = yield* config.get()
-            const disabled = new Set(cfg.disabled_providers ?? [])
-            const enabled = cfg.enabled_providers ? new Set(cfg.enabled_providers) : null
-            if (enabled && !enabled.has(providerID)) return current
-            if (disabled.has(providerID)) return current
-            return { ...(current ?? catalogEntry), key: "public" }
-          }
-          return current
+        } else if (s.credentialKeys.has(providerID)) {
+          const previous = s.credentialKeys.get(providerID)
+          s.credentialKeys.delete(providerID)
+          if (previous) s.providers[providerID] = previous
+          else delete s.providers[providerID]
         }
         return s.providers[providerID]
       }
@@ -1986,10 +1951,12 @@ const layer = Layer.effect(
     const getLanguage = Effect.fn("Provider.getLanguage")(function* (model: Model) {
       const s = yield* InstanceState.get(state)
       const envs = yield* env.all()
-      const key = `${model.providerID}/${model.id}`
+      const provider = (yield* ensureProvider(s, model.providerID)) ?? s.providers[model.providerID]
+      // ensureProvider swaps in credentials written after this state loaded, so a rotated or
+      // removed key must miss the cache instead of reusing a language bound to the old key.
+      const key = `${model.providerID}/${model.id}/${Hash.fast(provider?.key ?? "")}`
       if (s.models.has(key)) return s.models.get(key)!
 
-      const provider = (yield* ensureProvider(s, model.providerID)) ?? s.providers[model.providerID]
       return yield* EffectPromise.refineRejection(
         async () => {
           const sdk = await resolveSDK(model, s, envs)
