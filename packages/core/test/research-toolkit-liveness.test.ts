@@ -23,7 +23,7 @@ const check = (urls: string[], extra: Partial<Liveness.Options> = {}) => Effect.
 
 describe("Liveness", () => {
   test("classifies 2xx, redirects, 4xx and loops", async () => {
-    const results = await check([`${base}/ok`, `${base}/hop`, `${base}/gone`, `${base}/loop`, `${base}/limited`], { seen: [`${base}/gone`] })
+    const results = await check([`${base}/ok`, `${base}/hop`, `${base}/gone`, `${base}/loop`, `${base}/limited`], { seen: [`${base}/gone`, `${base}/loop`] })
     expect(results.map((item) => item.status)).toEqual(["LIVE", "LIVE", "DEAD", "DEAD", "UNKNOWN"])
     expect(results[2].httpStatus).toBe(404)
   })
@@ -44,7 +44,7 @@ describe("Liveness", () => {
     const results = await check([`${base}/gone`, `${base}/gone/`.replace(/\/$/, "")], { now, captured: [{ url: `${base}/gone#x`, capturedAt: now - 1000 }] })
     expect(results.map((item) => item.status)).toEqual(["LIVE"])
     expect(seen).toEqual([])
-    const stale = await check([`${base}/gone`], { now, captured: [{ url: `${base}/gone`, capturedAt: now - 25 * 3600_000 }], seen: [`${base}/gone`] })
+    const stale = await check([`${base}/gone`], { now, captured: [{ url: `${base}/gone`, capturedAt: now - 25 * 3600_000 }], seen: [`${base}/gone`, `${base}/loop`] })
     expect(stale[0].status).toBe("DEAD")
   })
 
