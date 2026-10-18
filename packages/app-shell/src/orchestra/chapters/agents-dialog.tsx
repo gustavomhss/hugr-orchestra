@@ -32,6 +32,8 @@ export function AgentDialog(props: {
   onRetryModels?: () => void
   load: (id: string) => Promise<AgentFileInfo>
   save: (id: string, input: AgentFileInput) => Promise<void>
+  // Called once a Remove has been written, so the page can offer to take it back.
+  onRemoved?: (agent: Agent) => void
   onClose: () => void
 }) {
   const language = useLanguage()
@@ -57,6 +59,10 @@ export function AgentDialog(props: {
     props.onClose()
     if (opener?.isConnected) opener.focus()
   }
+  // A person closing the dialog never abandons a write in flight: a late failure would have no dialog to show it in.
+  const dismiss = () => {
+    if (!state.saving) finish()
+  }
   const readOnly = () => state.loadError !== "" || state.file?.invalid === true
   const relative = (filepath: string) =>
     filepath.startsWith(`${props.directory}/`) ? filepath.slice(props.directory.length + 1) : filepath
@@ -78,11 +84,14 @@ export function AgentDialog(props: {
     if (state.file?.invalid) return language.t("orchestra.agents.error.invalid", { path: relative(state.file.path) })
     return state.error
   }
-  const commit = (name: string, input: AgentFileInput) => {
+  const commit = (name: string, input: AgentFileInput, removing = false) => {
     setState({ saving: true, error: "" })
     props
       .save(name, input)
-      .then(finish)
+      .then(() => {
+        if (removing && life.open && props.agent) props.onRemoved?.(props.agent)
+        finish()
+      })
       .catch((error: unknown) => setState({ saving: false, error: saveFailure(error) }))
   }
   const load = () => {
@@ -129,14 +138,14 @@ export function AgentDialog(props: {
       aria-labelledby="agents-dialog-title"
       onCancel={(event) => {
         event.preventDefault()
-        finish()
+        dismiss()
       }}
       // A Kobalte layer behind this modal (a navigation tooltip still open or animating out) takes Escape on the
       // document and cancels the native close. The modal is the top layer, so it takes Escape first.
       on:keydown={(event) => {
         if (event.key !== "Escape" || event.defaultPrevented) return
         event.preventDefault()
-        finish()
+        dismiss()
       }}
       onClick={(event) => {
         if (event.target !== event.currentTarget) return
@@ -146,7 +155,7 @@ export function AgentDialog(props: {
           event.clientX <= rect.right &&
           event.clientY >= rect.top &&
           event.clientY <= rect.bottom
-        if (!inside) finish()
+        if (!inside) dismiss()
       }}
     >
       <form
@@ -156,7 +165,7 @@ export function AgentDialog(props: {
           if (state.saving || readOnly() || state.phase === "loading") return
           if (state.phase === "confirm") {
             if (maestro) return
-            return commit(agentFileTarget(draft, props.agent), removeInput(state.file))
+            return commit(agentFileTarget(draft, props.agent), removeInput(state.file), true)
           }
           const problem = draftError(draft, props.agents.map(agentKey), !props.agent)
           if (problem) return setState("error", language.t(`orchestra.agents.error.${problem}`))
@@ -176,7 +185,8 @@ export function AgentDialog(props: {
             type="button"
             class="mx-link agents-close"
             aria-label={language.t("orchestra.agents.dialog.close")}
-            onClick={finish}
+            disabled={state.saving}
+            onClick={dismiss}
           >
             <svg class="agents-ic" viewBox="0 0 16 16" aria-hidden="true">
               <path d="m4 4 8 8m0-8-8 8" />
@@ -235,7 +245,7 @@ export function AgentDialog(props: {
                       <For each={AGENT_MODES}>
                         {(mode) => (
                           <option value={mode} selected={draft.mode === mode}>
-                            {mode}
+                            {language.t(`orchestra.agents.mode.${mode}`)}
                           </option>
                         )}
                       </For>
@@ -396,7 +406,7 @@ export function AgentDialog(props: {
           </Show>
         </div>
         <footer class="mx-dialog-foot">
-          <button type="button" class="mx-btn" onClick={finish}>
+          <button type="button" class="mx-btn" disabled={state.saving} onClick={dismiss}>
             {language.t("orchestra.agents.cancel")}
           </button>
           <button

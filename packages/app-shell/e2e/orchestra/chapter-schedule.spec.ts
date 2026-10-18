@@ -431,10 +431,30 @@ test("an unreachable schedule API says so and runs nothing from the page", async
   const api = await setup(page)
   api.schedule.unavailable = true
   await openSchedule(page)
-  await expect(page.locator(".mx-empty")).toHaveText("Could not load scheduled tasks from the server.")
+  await expect(page.locator(".mx-empty")).toHaveText("Could not load scheduled tasks from the server. Retry")
   await expect(page.locator(".mx-note")).toHaveCount(0)
   api.schedule.unavailable = false
-  await openSchedule(page)
+  await page.getByRole("button", { name: "Retry", exact: true }).click()
   await expect(page.locator(".mx-empty")).toHaveText("No scheduled tasks.Create a one-off or recurring task.")
   expect(api.attempts).toBe(0)
+})
+
+test("a failed poll keeps the loaded tasks under a banner with Retry", async ({ page }) => {
+  await page.clock.install({ time: new Date("2031-01-15T09:00:00-05:00") })
+  const api = await setup(page)
+  await openSchedule(page)
+  await createTask(page, { name: "Later once", prompt: "Tag the release.", date: "2031-01-15T09:45" })
+  const task = page.getByRole("article", { name: "Later once" })
+  await expect(task).toBeVisible()
+
+  api.schedule.unavailable = true
+  await page.clock.runFor(15_000)
+  const banner = page.getByRole("alert").filter({ hasText: "The list below may be out of date." })
+  await expect(banner).toBeVisible()
+  await expect(task).toBeVisible()
+
+  api.schedule.unavailable = false
+  await banner.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(banner).toHaveCount(0)
+  await expect(task).toBeVisible()
 })

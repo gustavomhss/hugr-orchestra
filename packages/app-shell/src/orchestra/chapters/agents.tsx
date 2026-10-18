@@ -8,11 +8,12 @@ import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useSDK } from "@/context/sdk"
 import { useTabs } from "@/context/tabs"
+import { agentKey } from "@/context/agent-identity"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge } from "./kit"
 import { AgentDialog } from "./agents-dialog"
-import { agentModels, agentRoster, agentUnavailable } from "./agents-roster"
+import { agentModels, agentRoster, agentUnavailable, restoreInput } from "./agents-roster"
 import { modelUnavailable } from "@/components/subagent-model-rules"
 import { AgentsRoster } from "./agents-view"
 import "./agents.css"
@@ -52,6 +53,10 @@ export default function Agents(props: ChapterPageProps) {
     pending: undefined as { directory: string; path: string } | undefined,
     opening: false,
     failed: false,
+    // The agent just removed, until the person restores it or removes another.
+    removed: undefined as { id: string; name: string } | undefined,
+    restoring: false,
+    restoreFailed: false,
   })
   createEffect(() => {
     if (query.isSuccess && query.data) sync()[1]("agent", reconcile(query.data))
@@ -119,6 +124,17 @@ export default function Agents(props: ChapterPageProps) {
       })
     await query.refetch()
   }
+  const restore = (removed: { id: string; name: string }) => {
+    setState({ restoring: true, restoreFailed: false })
+    void load(removed.id)
+      .then((file) => {
+        if (!file.exists || file.invalid) throw new Error("not restorable")
+        return save(removed.id, restoreInput(file))
+      })
+      .then(() => setState("removed", undefined))
+      .catch(() => setState("restoreFailed", true))
+      .finally(() => setState("restoring", false))
+  }
   createEffect(() => {
     const pending = state.pending
     if (!pending || pending.directory !== props.directory) return
@@ -184,6 +200,21 @@ export default function Agents(props: ChapterPageProps) {
             <bdi>{getFilename(props.directory) || props.directory}</bdi>
           </MxBadge>
         </div>
+        <Show when={state.removed}>
+          {(removed) => (
+            <p class="mx-note agents-removed" role="status">
+              {language.t("orchestra.agents.removed", { name: removed().name })}{" "}
+              <button type="button" class="mx-link" disabled={state.restoring} onClick={() => restore(removed())}>
+                {language.t("orchestra.agents.restore")}
+              </button>
+            </p>
+          )}
+        </Show>
+        <Show when={state.restoreFailed}>
+          <p class="mx-error" role="alert">
+            {language.t("orchestra.agents.restoreFailed")}
+          </p>
+        </Show>
         <Show when={state.pending?.directory === props.directory ? state.pending : undefined}>
           {(pending) => (
             <p class="mx-note agents-pending" role="status">
@@ -253,6 +284,9 @@ export default function Agents(props: ChapterPageProps) {
             onRetryModels={() => void providers.refetch()}
             load={load}
             save={save}
+            onRemoved={(agent) =>
+              setState({ removed: { id: agentKey(agent), name: agent.name }, restoreFailed: false })
+            }
             onClose={() => {
               // A save that finishes late must not close a dialog opened after this one.
               if (state.editing === editing) setState("editing", undefined)

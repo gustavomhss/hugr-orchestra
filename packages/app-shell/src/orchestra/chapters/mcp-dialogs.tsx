@@ -31,6 +31,11 @@ function McpDialog(props: {
   const id = createUniqueId()
   let dialog!: HTMLDialogElement
   onMount(() => dialog.showModal())
+  // A person closing the dialog never abandons a write in flight: a late failure would have no dialog to show it in.
+  // A finished write still closes through the `close` handed to `onSubmit`.
+  const dismiss = () => {
+    if (!props.busy) dialog.close()
+  }
 
   // Unmounting an open dialog (another dialog replaced it) is not a user close.
   return (
@@ -43,7 +48,10 @@ function McpDialog(props: {
       on:keydown={(event) => {
         if (event.key !== "Escape" || event.defaultPrevented) return
         event.preventDefault()
-        dialog.close()
+        dismiss()
+      }}
+      onCancel={(event) => {
+        if (props.busy) event.preventDefault()
       }}
       onClose={() => {
         if (dialog.isConnected) props.onClose()
@@ -56,7 +64,7 @@ function McpDialog(props: {
           event.clientX <= rect.right &&
           event.clientY >= rect.top &&
           event.clientY <= rect.bottom
-        if (!inside) dialog.close()
+        if (!inside) dismiss()
       }}
     >
       <form
@@ -76,7 +84,8 @@ function McpDialog(props: {
             type="button"
             class="mx-link"
             aria-label={language.t("orchestra.mcp.closeDialog")}
-            onClick={() => dialog.close()}
+            disabled={props.busy}
+            onClick={dismiss}
           >
             <svg class="orchestra-mcp-ic" viewBox="0 0 16 16" aria-hidden="true">
               <path d="m4 4 8 8m0-8-8 8" />
@@ -92,7 +101,7 @@ function McpDialog(props: {
           {props.children}
         </div>
         <footer class="mx-dialog-foot">
-          <button type="button" class="mx-btn" onClick={() => dialog.close()}>
+          <button type="button" class="mx-btn" disabled={props.busy} onClick={dismiss}>
             {language.t("orchestra.mcp.cancel")}
           </button>
           <Show when={props.save}>
