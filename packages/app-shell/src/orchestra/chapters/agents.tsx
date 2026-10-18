@@ -8,7 +8,6 @@ import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useSDK } from "@/context/sdk"
 import { useTabs } from "@/context/tabs"
-import { agentKey } from "@/context/agent-identity"
 import { directoryKey, normalizeAgentList } from "@/context/global-sync/utils"
 import type { ChapterPageProps } from "../chapter-route"
 import { MxBadge } from "./kit"
@@ -284,9 +283,7 @@ export default function Agents(props: ChapterPageProps) {
             onRetryModels={() => void providers.refetch()}
             load={load}
             save={save}
-            onRemoved={(agent) =>
-              setState({ removed: { id: agentKey(agent), name: agent.name }, restoreFailed: false })
-            }
+            onRemoved={(removed) => setState({ removed, restoreFailed: false })}
             onClose={() => {
               // A save that finishes late must not close a dialog opened after this one.
               if (state.editing === editing) setState("editing", undefined)

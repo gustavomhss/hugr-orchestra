@@ -33,7 +33,7 @@ export function AgentDialog(props: {
   load: (id: string) => Promise<AgentFileInfo>
   save: (id: string, input: AgentFileInput) => Promise<void>
   // Called once a Remove has been written, so the page can offer to take it back.
-  onRemoved?: (agent: Agent) => void
+  onRemoved?: (removed: { id: string; name: string }) => void
   onClose: () => void
 }) {
   const language = useLanguage()
@@ -85,11 +85,14 @@ export function AgentDialog(props: {
     return state.error
   }
   const commit = (name: string, input: AgentFileInput, removing = false) => {
+    // The roster refresh after the write can rewrite this agent in place (a legacy server sends no ids), so what the
+    // page needs to restore it is read before the write.
+    const removed = removing && props.agent ? { id: agentKey(props.agent), name: props.agent.name } : undefined
     setState({ saving: true, error: "" })
     props
       .save(name, input)
       .then(() => {
-        if (removing && life.open && props.agent) props.onRemoved?.(props.agent)
+        if (removed && life.open) props.onRemoved?.(removed)
         finish()
       })
       .catch((error: unknown) => setState({ saving: false, error: saveFailure(error) }))
