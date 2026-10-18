@@ -21,7 +21,7 @@ export const MaestroWorkflowsTool = Tool.define(
     const sessions = yield* Session.Service
     return {
       description:
-        "List the published Relay workflows Maestro can run in this project: id, name, description and published version. With `workflow`, resolve one by id or exact name; a match that cannot run is listed under `unavailable` with the reason to tell the owner. Read-only. Maestro only. Running one is governed work, with its id as `workflow.documentID` in `maestro_record_plan_revision`. Its `acceptance` lists the checks its plan ends on, which the host attaches: arm `relay-arm` with exactly these as the contract's checks before dispatching its Task.",
+        "List the published Relay workflows Maestro can run in this project: id, name, description and published version. With `workflow`, resolve one by id or exact name; a match that cannot run is listed under `unavailable` with the reason to tell the owner. Read-only. Maestro only. Running one is governed work, with its id as `workflow.documentID` in `maestro_record_plan_revision`. The host arms its Task with the approved plan's own checks: before dispatching it, arm `relay-arm` with only `sessionID` and a `label` naming that Task, without `chain`.",
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx) =>
         Effect.gen(function* () {
@@ -41,7 +41,6 @@ export const MaestroWorkflowsTool = Tool.define(
                 name: entry.name,
                 description: entry.description,
                 publishedVersionID: entry.publishedVersionID,
-                acceptance: entry.sprint ? WorkflowBinding.acceptance(entry.sprint) : [],
               },
               // Admitted is not enough: a workflow Task also holds without the global acceptance checks.
               reason: entry.reason ?? (entry.sprint && WorkflowBinding.accepts(entry.sprint) ? undefined : ACCEPTANCE),

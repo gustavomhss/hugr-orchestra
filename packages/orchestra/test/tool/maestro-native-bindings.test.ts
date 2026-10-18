@@ -435,15 +435,11 @@ describe("Maestro native output bindings", () => {
               Effect.map((result) => JSON.parse(result.output)),
             )
           const listed = yield* run({})
-          // An editor-built workflow runs: its plan ends on the attached checks, which Maestro arms by these ids.
+          // An editor-built workflow runs: its plan ends on the attached checks, which the host arms itself.
           expect(listed.workflows.toSorted((left: { name: string }, right: { name: string }) =>
             left.name.localeCompare(right.name))).toEqual([
-            { id: accepted.id, name: "Accepted", description: "", publishedVersionID: accepted.versionId, acceptance: [
-              { id: "verify", hostCheck: "package-verification" }, { id: "cold", hostCheck: "cold-review" },
-            ] },
-            { id: plain.id, name: "Plain", description: "", publishedVersionID: plain.versionId, acceptance: [
-              { id: "package-verification", hostCheck: "package-verification" }, { id: "cold-review", hostCheck: "cold-review" },
-            ] },
+            { id: accepted.id, name: "Accepted", description: "", publishedVersionID: accepted.versionId },
+            { id: plain.id, name: "Plain", description: "", publishedVersionID: plain.versionId },
           ])
           expect(listed.unavailable).toBeUndefined()
           // Without the attachment the binding still refuses it, and the catalog says why.
