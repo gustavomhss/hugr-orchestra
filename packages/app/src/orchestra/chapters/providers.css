@@ -87,3 +87,24 @@
   background: var(--mx-backdrop);
   backdrop-filter: blur(5px);
 }
+
+/* Claude mode section (claude-mode.tsx), built from the shared kit table rows. */
+.providers-claude {
+  margin-block-end: 8px;
+}
+.providers-claude-description {
+  margin: -6px 0 12px;
+}
+.providers-claude .mx-row > .mx-field {
+  margin: 0;
+}
+.providers-claude-engine {
+  inline-size: 200px;
+  flex: none;
+}
+.providers-claude-signin .mx-field {
+  margin: 8px 0 0;
+}
+.providers-claude-error {
+  margin: 0;
+}

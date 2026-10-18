@@ -34,6 +34,10 @@ export function useLayout() {
     fileTree: {
       setTab() {},
     },
+    home: {
+      selection: () => ({ server: "mock-server" }),
+      setSelection() {},
+    },
     handoff: {
       setTabs() {},
     },
