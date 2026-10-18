@@ -7,6 +7,7 @@ import { parseDesktopNativeBundle, type DesktopNativeBundle } from "@orchestra/a
 
 import type { FatalRendererError, ServerReadyData, TitlebarTheme } from "../preload/types"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
+import { setMenuAvailability } from "./menu"
 import { setForceFocus } from "./debug"
 import { assertAttachmentBudget, createPickedFileAuthorizations } from "./attachment-picker"
 import { getStore, removeStoreFileIfEmpty } from "./store"
@@ -320,6 +321,11 @@ export function registerIpcHandlers(deps: Deps) {
       checkForUpdates: () => void deps.showUpdater(),
       relaunch: deps.relaunch,
     })
+  })
+  ipcMain.on("set-menu-availability", (event, commands: unknown) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win || !Array.isArray(commands) || !commands.every((id) => typeof id === "string")) return
+    setMenuAvailability(win.id, commands)
   })
   ipcMain.handle("set-titlebar-frame", (event: IpcMainInvokeEvent, frame: unknown) => {
     const win = BrowserWindow.fromWebContents(event.sender)

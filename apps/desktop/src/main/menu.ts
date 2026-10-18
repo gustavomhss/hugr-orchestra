@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu } from "electron"
+import { app, BrowserWindow, Menu } from "electron"
 import type { MenuItemConstructorOptions } from "electron"
 import {
   DESKTOP_MENU,
@@ -11,6 +11,7 @@ import { UPDATER_ENABLED } from "./constants"
 import { runDesktopMenuAction } from "./desktop-menu-actions"
 import { nativeT } from "./native-translations"
 import { macZoomItem } from "./menu-zoom"
+import { applyMenuAvailability, menuItemId } from "./menu-availability"
 
 type Deps = {
   trigger: (id: string) => void
@@ -18,8 +19,25 @@ type Deps = {
   relaunch: () => void
 }
 
+// Last command availability reported by each window's renderer; the native menu is global, so the focused window wins.
+const availability = new Map<number, string[]>()
+let commandCount = 0
+
+export function setMenuAvailability(windowID: number, commands: string[]) {
+  availability.set(windowID, commands)
+  if (BrowserWindow.getFocusedWindow()?.id === windowID) applyFocused()
+}
+
+function applyFocused() {
+  const id = BrowserWindow.getFocusedWindow()?.id
+  applyMenuAvailability(Menu.getApplicationMenu(), (id !== undefined && availability.get(id)) || null)
+}
+
+app.on("browser-window-focus", applyFocused)
+
 export function createMenu(deps: Deps) {
   if (process.platform !== "darwin") return
+  commandCount = 0
 
   const template = DESKTOP_MENU.filter((menu) => desktopMenuVisible(menu, "macos")).map((menu) => {
     if (menu.role) return { role: nativeRole(menu.role), label: nativeT(menu.labelKey) }
@@ -32,6 +50,7 @@ export function createMenu(deps: Deps) {
   })
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+  applyFocused()
 }
 
 function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOptions {
@@ -41,6 +60,7 @@ function nativeItem(entry: DesktopMenuEntry, deps: Deps): MenuItemConstructorOpt
   if (entry.role) return { role: nativeRole(entry.role), label: entry.labelKey ? nativeT(entry.labelKey) : undefined }
 
   const item: MenuItemConstructorOptions = {
+    id: entry.command ? menuItemId(entry.command, commandCount++) : undefined,
     label: entry.labelKey ? nativeT(entry.labelKey) : undefined,
     accelerator: entry.accelerator?.macos,
     enabled: entry.enabled === "updater" ? UPDATER_ENABLED : undefined,
