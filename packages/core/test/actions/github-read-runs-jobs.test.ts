@@ -25,9 +25,16 @@ it.effect("run native filters, owning repository, actor and attempt survive proj
   expect(page.items[0]).toMatchObject({ id: "30433642", workflowID: "161335", ref: "main", commit: f.sha,
     status: "completed", conclusion: "neutral", event: "pull_request", actor: "octocat", attempt: 3,
     createdAt: f.run.created_at, startedAt: f.run.run_started_at, updatedAt: f.run.updated_at,
-    triggeringActor: "another-user", repositoryID: "9347" })
+    triggeringActor: "another-user", repositoryID: "9347", title: "Keep native result", number: 7, duration: 10 })
   expect(page.items[0].finishedAt).toBeUndefined()
   expect(yield* fixture.adapter.run(f.binding, "30433642")).toEqual(page.items[0])
+}))
+
+it.effect("run duration is claimed only for completed runs with both native stamps", Effect.gen(function* () {
+  for (const data of [{ ...f.run, status: "in_progress" }, { ...f.run, run_started_at: undefined }, { ...f.run, updated_at: undefined }]) {
+    const fixture = f.recorded({ [runRoute]: f.response(data) })
+    expect(yield* fixture.adapter.run(f.binding, "30433642")).not.toHaveProperty("duration")
+  }
 }))
 
 it.effect("run detail wrong native run or owning repository rejects; fork head repository stays distinct", Effect.gen(function* () {
