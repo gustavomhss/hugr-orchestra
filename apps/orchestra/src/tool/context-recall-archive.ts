@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect"
 import { Archive } from "@/continuity/archive"
-import { ArchiveSearch } from "@/continuity/archive-search"
+import { ArchiveSearch } from "@orchestra/continuity/archive-search"
 import type { ArchiveReference } from "@/continuity/memory-types"
 import { MessageID, type SessionID } from "@/session/schema"
 

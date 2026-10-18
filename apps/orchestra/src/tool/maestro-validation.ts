@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm"
 import { recordReview, recordValidation, validationRecordHash } from "@/maestro/validation-record"
 import { readPlanRevision } from "@/maestro/plan-revision"
 import { contextIsCurrent, readContext, STALE_CONTEXT_NEXT_STEP } from "@/maestro/context-record"
-import { validateWorkContract, workContractSections, type WorkContractValidation } from "@/maestro/work-contract"
+import { validateWorkContract, workContractSections, type WorkContractValidation } from "@orchestra/maestro/work-contract"
 import { Database } from "@orchestra/core/database/database"
 import { Tool } from "./tool"
 

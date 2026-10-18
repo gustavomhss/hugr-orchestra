@@ -34,8 +34,8 @@ import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { InstallationChannel } from "@orchestra/core/installation/version"
 import { HuGRComposerPlugin } from "./hugr-composer"
-import { AppDockPlugin } from "./app-dock"
-import { LinuxWorkspacePlugin } from "./linux-workspace"
+import { AppDockPlugin } from "@orchestra/app-dock/app-dock"
+import { LinuxWorkspacePlugin } from "@orchestra/app-dock/linux-workspace"
 import { ListenerContext } from "@/server/listener-context"
 
 type State = {

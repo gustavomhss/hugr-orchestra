@@ -2,9 +2,9 @@ import { describe, expect, spyOn, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { add } from "../../script/seat"
-import { canonicalMemberId, createRoster, LEGACY_BACKEND_ID, roster } from "../../src/maestro/roster"
-import { Seats } from "../../src/maestro/seats"
-import { define } from "../../src/maestro/seats/seat"
+import { canonicalMemberId, createRoster, LEGACY_BACKEND_ID, roster } from "@orchestra/maestro/roster"
+import { Seats } from "@orchestra/maestro/seats"
+import { define } from "@orchestra/maestro/seats/seat"
 import { tmpdir } from "../fixture/fixture"
 
 const source = path.resolve(import.meta.dirname, "../..")

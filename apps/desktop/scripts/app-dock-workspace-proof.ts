@@ -11,7 +11,7 @@ import { AppDockNativeWorkspace } from "../src/main/app-dock-native-workspace"
 import { NativeDockProtocol } from "../src/main/app-dock-native-protocol"
 import { AppDockRPC } from "../src/main/app-dock-rpc"
 import { DockerEngine } from "../src/main/docker-engine"
-import { createAppDockHooks } from "../../orchestra/src/plugin/app-dock"
+import { createAppDockHooks } from "@orchestra/app-dock/app-dock"
 
 type Options = { output: string; root?: string; image?: string; context?: string; nativePayload?: string; suppressAction?: boolean; diagnosticCase?: string }
 type Item = { ref: NativeDockProtocol.NativeRef; role: number; name: string; depth: number; states: number[]; interfaces: string[];

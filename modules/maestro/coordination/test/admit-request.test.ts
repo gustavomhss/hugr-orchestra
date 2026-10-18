@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { Schema } from "effect"
-import { decideAdmission, IntentAssessment, isIntentAssessment } from "../../src/maestro/admit-request"
+import { decideAdmission, IntentAssessment, isIntentAssessment } from "../src/admit-request"
 
 const orient: IntentAssessment = {
   kind: "orient",

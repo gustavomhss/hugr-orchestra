@@ -12,8 +12,8 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionMessageUpdater } from "@orchestra/core/session/message-updater"
 import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "@orchestra/core/session/sql"
 import { SessionV1 } from "@orchestra/core/v1/session"
-import { UpstreamResult } from "@/maestro/upstream-result"
-import { SessionAuthority } from "@/maestro/session-authority"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
+import { SessionAuthority } from "@orchestra/maestro/session-authority"
 import { MessageV2 } from "./message-v2"
 import { MessageID, SessionID } from "./schema"
 
@@ -177,7 +177,7 @@ const readProposal = Effect.fn("UpstreamTaskSettlement.readProposal")(function* 
   const legacy = yield* database.db.select().from(MessageTable).where(eq(MessageTable.id, SessionV1.MessageID.make(input.authorMessageID))).get()
   const old = legacy ? yield* Effect.gen(function* () {
     const { BackendResult } = yield* Effect.promise(() => import("@/maestro/backend-result"))
-    const { Seats } = yield* Effect.promise(() => import("@/maestro/seats"))
+    const { Seats } = yield* Effect.promise(() => import("@orchestra/maestro/seats"))
     if (legacy.session_id !== input.childSessionID) return yield* refuse("UPSTREAM_SETTLEMENT_AUTHOR_MISMATCH")
     const message = yield* MessageV2.get({ sessionID: input.childSessionID, messageID: input.authorMessageID })
     if (message.info.role !== "assistant" || message.info.agent !== "archie" || message.info.time.completed === undefined ||

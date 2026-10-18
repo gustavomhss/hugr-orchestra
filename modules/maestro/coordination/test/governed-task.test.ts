@@ -3,7 +3,7 @@ import {
   verifyGovernedTask,
   type ApprovalDecisionEvent,
   type GovernedTaskRequest,
-} from "../../src/maestro/governed-task"
+} from "../src/governed-task"
 
 const request: GovernedTaskRequest = {
   sessionID: "ses_01",

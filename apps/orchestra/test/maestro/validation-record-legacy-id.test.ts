@@ -14,7 +14,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { SessionID } from "@/session/schema"
 import { recordValidation } from "../../src/maestro/validation-record"
-import { LEGACY_BACKEND_ID } from "../../src/maestro/roster"
+import { LEGACY_BACKEND_ID } from "@orchestra/maestro/roster"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

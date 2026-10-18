@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { spawn } from "node:child_process"
 import { query } from "@anthropic-ai/claude-agent-sdk"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import { tmpdir } from "../fixture/fixture"
 
 // Spawn-environment audit (meta-harness PLAN.md §3, V2-V4): Claude Code gets the owner's environment as it is.

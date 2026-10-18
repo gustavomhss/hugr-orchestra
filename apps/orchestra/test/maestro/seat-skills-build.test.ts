@@ -2,9 +2,9 @@ import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
 import { seatSkillsFiles, seatSkillsModule } from "../../script/seat-skills"
-import { SeatSkillContent } from "@/maestro/seat-skill-content"
-import { Seats } from "@/maestro/seats"
-import { PlaybookContent } from "@/maestro/playbook-content"
+import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
+import { Seats } from "@orchestra/maestro/seats"
+import { PlaybookContent } from "@orchestra/maestro/playbook-content"
 import { tmpdir } from "../fixture/fixture"
 
 const entry = "cold-review/SKILL.md"
@@ -23,7 +23,7 @@ describe("seat skill packaging", () => {
     await Promise.all(Object.entries(files).map(([file, text]) => Bun.write(path.join(tmp.path, file), text)))
     const read = await SeatSkillContent.read("cold", tmp.path, skills)
     expect(read).toEqual(files)
-    const { SeatSkillRoot } = await import("@/maestro/seat-skill-root")
+    const { SeatSkillRoot } = await import("@orchestra/maestro/seat-skill-root")
     const root = await SeatSkillRoot.extract("cold", read, path.join(tmp.path, "cache"), "local")
     await Promise.all(Object.keys(files).map(async (file) => {
       expect(await fs.readFile(path.join(root, file))).toEqual(await fs.readFile(path.join(tmp.path, file)))

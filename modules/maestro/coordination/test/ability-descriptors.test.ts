@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { abilityDescriptors } from "../../src/maestro/ability-descriptors"
-import { availableAbilities, createAbilityRegistry } from "../../src/maestro/ability-registry"
+import { abilityDescriptors } from "../src/ability-descriptors"
+import { availableAbilities, createAbilityRegistry } from "../src/ability-registry"
 
 describe("Maestro ability descriptors", () => {
   test("declares exact core ability metadata", () => {

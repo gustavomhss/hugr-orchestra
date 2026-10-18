@@ -16,7 +16,7 @@ import { lazy } from "@/util/lazy"
 import { BashArity } from "@/permission/arity"
 import type { Tool } from "../tool"
 import { ShellID } from "./id"
-import { Seats } from "@/maestro/seats"
+import { Seats } from "@orchestra/maestro/seats"
 
 const CWD = new Set(["cd", "chdir", "popd", "pushd", "push-location", "set-location"])
 const FILES = new Set([

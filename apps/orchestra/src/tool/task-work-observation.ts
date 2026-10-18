@@ -12,7 +12,7 @@ import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "@orc
 import { SessionV1 } from "@orchestra/core/v1/session"
 import type { BackendResult } from "@/maestro/backend-result"
 import { LogicalTask } from "@/maestro/logical-task"
-import { SessionAuthority } from "@/maestro/session-authority"
+import { SessionAuthority } from "@orchestra/maestro/session-authority"
 import { UpstreamSettlement } from "@/maestro/upstream-settlement"
 import type { SessionID } from "@/session/schema"
 import type { Tool } from "./tool"

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL } from "@orchestra/maestro/roster"
 
 // Owner rule: the backend seat's former personal name survives in exactly one tracked line, the default display
 // label. The search target is that label lowercased (matched case-insensitively), so this file never spells the name;

@@ -3,7 +3,7 @@ import { UpstreamArsenal } from "@orchestra/core/tool/upstream-arsenal"
 import { Seats, type Seat } from "./seats"
 import { validateInstalled } from "./seats/seat"
 import { SeatSkillRoot } from "./seat-skill-root"
-import { TRUNCATION_DIR } from "../tool/truncation-dir"
+import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 
 // The backend specialist's packaged skills (F6.2): the source tree, or the copy a compiled build extracts from its embed.
 export const backendSkills = Object.freeze({

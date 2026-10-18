@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { once } from "node:events"
 import { Worker } from "node:worker_threads"
-import { UpstreamProposal } from "../../src/maestro/upstream-proposal"
+import { UpstreamProposal } from "../src/upstream-proposal"
 
 const compact = '{"brief":"café","work_packages":[]}'
 const spaced = '{\r\n  "work_packages": [],\r\n  "brief": "caf\\u00e9"\r\n}\r\n'

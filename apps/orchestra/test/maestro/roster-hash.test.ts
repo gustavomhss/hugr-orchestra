@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { omit } from "remeda"
-import { createRoster, nativeProfiles, roster } from "../../src/maestro/roster"
-import { lookupRouteGrant } from "../../src/maestro/route-grant"
+import { createRoster, nativeProfiles, roster } from "@orchestra/maestro/roster"
+import { lookupRouteGrant } from "@orchestra/maestro/route-grant"
 import {
   reviewPolicyHash,
   rosterHash,

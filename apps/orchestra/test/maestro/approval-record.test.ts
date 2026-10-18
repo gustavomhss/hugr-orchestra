@@ -12,7 +12,7 @@ import { Effect } from "effect"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { presentApprovalFromSession, recordApproval } from "../../src/maestro/approval-record"
-import { renderPresentation } from "../../src/maestro/approval"
+import { renderPresentation } from "@orchestra/maestro/approval"
 
 afterEach(async () => {
   await disposeAllInstances()

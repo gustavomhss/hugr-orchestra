@@ -1,6 +1,6 @@
 import { Effect, Schema } from "effect"
 import { recordAdmission } from "@/maestro/admission-record"
-import { IntentAssessment } from "@/maestro/admit-request"
+import { IntentAssessment } from "@orchestra/maestro/admit-request"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Agent } from "@/agent/agent"

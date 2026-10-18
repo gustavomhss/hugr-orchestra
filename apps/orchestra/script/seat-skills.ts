@@ -1,6 +1,6 @@
-import { Seats } from "../src/maestro/seats"
-import { SeatSkillContent } from "../src/maestro/seat-skill-content"
-import { PlaybookContent } from "../src/maestro/playbook-content"
+import { Seats } from "@orchestra/maestro/seats"
+import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
+import { PlaybookContent } from "@orchestra/maestro/playbook-content"
 import { fileURLToPath } from "node:url"
 
 // Every seat's packaged skills (F6.12) as one generated module: seat id -> tree-relative path -> file text. Both the

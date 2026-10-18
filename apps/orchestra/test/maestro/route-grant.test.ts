@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import { lookupRouteGrant } from "../../src/maestro/route-grant"
-import { roster } from "../../src/maestro/roster"
+import { lookupRouteGrant } from "@orchestra/maestro/route-grant"
+import { roster } from "@orchestra/maestro/roster"
 
 describe("Maestro route grants", () => {
   test("routes every non-Maestro roster seat with roster-derived metadata", () => {

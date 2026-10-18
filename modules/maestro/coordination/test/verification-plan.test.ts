@@ -3,7 +3,7 @@ import {
   compileVerificationPlan,
   type CompileVerificationPlanInput,
   type VerificationPlan,
-} from "../../src/maestro/verification-plan"
+} from "../src/verification-plan"
 
 const input: CompileVerificationPlanInput = {
   baseSHA: "a".repeat(40),

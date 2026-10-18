@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
-import { ATTACHMENT_TOKENS, estimate } from "@/continuity/masking"
+import { ATTACHMENT_TOKENS, estimate } from "@orchestra/continuity/masking"
 import { ParentReceipt } from "@/continuity/parent-receipt"
 import { completeSnapshot } from "@/continuity/fork"
 import { LLMPrepared } from "@/session/llm/prepared"

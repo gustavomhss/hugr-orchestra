@@ -3,8 +3,8 @@ import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { BackendResult } from "../../src/maestro/backend-result"
-import { Seats } from "../../src/maestro/seats"
-import { UpstreamResult } from "../../src/maestro/upstream-result"
+import { Seats } from "@orchestra/maestro/seats"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
 import { MessageID, PartID, SessionID } from "../../src/session/schema"
 
 const card = { outcome: "done", artifacts: [{ kind: "task" }], blockers: [], risks: [], nextActions: [] } satisfies UpstreamResult.Card

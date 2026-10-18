@@ -28,7 +28,7 @@ import {
   REVIEW_ARTIFACT_MAX_BYTES,
   reviewPolicyHash,
 } from "../../src/maestro/validation-record"
-import { nativeProfiles, roster } from "../../src/maestro/roster"
+import { nativeProfiles, roster } from "@orchestra/maestro/roster"
 import { disposeAllInstances, provideInstance, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

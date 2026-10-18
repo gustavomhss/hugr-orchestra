@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import type { Hooks, PluginInput, ToolContext } from "@orchestra/plugin"
 import { tool } from "@orchestra/plugin"
 import { AppDockPlugin, createAppDockHooks, scopeLinuxWorkspace } from "./app-dock"
-import { Permission } from "@/permission"
+import { Permission } from "orchestra/permission"
 import { context, input, fakePort, host, page, control, field, nativeError, type Envelope, type Reply } from "./app-dock.fixture"
 
 type PermissionConfig = Parameters<typeof Permission.fromConfig>[0]

@@ -5,7 +5,7 @@ import { AppDockNative } from "../src/main/app-dock-native"
 import { NativeDockClient } from "../src/main/app-dock-native-client"
 import { NativeDockProtocol } from "../src/main/app-dock-native-protocol"
 import { AppDockRPC } from "../src/main/app-dock-rpc"
-import { createAppDockHooks } from "../../orchestra/src/plugin/app-dock"
+import { createAppDockHooks } from "@orchestra/app-dock/app-dock"
 import {
   appIDs, check, checkout, configValue, digest, failure, inventory, message, outputPath, recorder, requirements, restoring,
   senderID, snapshot, success, successArray, validateProcess, wireRequests,

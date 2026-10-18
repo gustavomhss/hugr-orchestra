@@ -9,7 +9,7 @@ import type { TaskPromptOps } from "@/tool/task"
 import type { Tool } from "@/tool/tool"
 import { ClaudeHostMcp } from "./mcp"
 import type { ClaudeHostMirror } from "./mirror"
-import type { ClaudeHostOptions } from "./options"
+import type { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
 import type { ClaudeHostResearch } from "./research"
 
 export type Live = {

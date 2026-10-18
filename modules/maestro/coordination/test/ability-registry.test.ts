@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { availableAbilities, createAbilityRegistry, type AbilityDescriptor } from "../../src/maestro/ability-registry"
+import { availableAbilities, createAbilityRegistry, type AbilityDescriptor } from "../src/ability-registry"
 
 const descriptors: readonly AbilityDescriptor[] = [
   {

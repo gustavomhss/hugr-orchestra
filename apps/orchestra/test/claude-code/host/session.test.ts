@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ClaudeHost } from "@/claude-code/host/session"
-import { ClaudeHostAdmission } from "@/claude-code/host/admission"
+import { ClaudeHostAdmission } from "@orchestra/engine-claude-code/host/admission"
 
 // The host's session plumbing (meta-harness PLAN.md §4.1): the 1:1 session id, the long-lived input, steer priority.
 

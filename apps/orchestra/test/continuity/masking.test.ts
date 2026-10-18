@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import { ATTACHMENT_TOKENS, ERROR_LINES, TAIL_STEPS, apply, candidates, estimate, stub } from "@/continuity/masking"
+import { ATTACHMENT_TOKENS, ERROR_LINES, TAIL_STEPS, apply, candidates, estimate, stub } from "@orchestra/continuity/masking"
 import { PartID } from "@/session/schema"
 import { messages, sessionID } from "./memory-fixture"
 

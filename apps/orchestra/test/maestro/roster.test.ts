@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, UPSTREAM_DEFAULT_LABEL, createRoster, lookupRosterMember, roster } from "@orchestra/maestro/roster"
 
 describe("Maestro roster", () => {
   test("declares exact nine contract seats in deterministic order", () => {

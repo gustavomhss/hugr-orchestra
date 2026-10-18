@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
-import { ClaudeCodeTranscript } from "@/claude-code/transcript"
+import { ClaudeCodeTranscript } from "@orchestra/engine-claude-code/transcript"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 
 // The text the host hands Claude Code for the owner's undelivered messages (host/session.ts turn and steer).

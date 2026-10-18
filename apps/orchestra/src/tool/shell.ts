@@ -12,7 +12,7 @@ import { Shell } from "@orchestra/core/shell"
 import { ShellID } from "./shell/id"
 import { ShellScan } from "./shell/scan"
 import { ShellExecution } from "./shell/execution"
-import { Seats } from "@/maestro/seats"
+import { Seats } from "@orchestra/maestro/seats"
 
 import { Truncate } from "./truncate"
 import { Plugin } from "@/plugin"

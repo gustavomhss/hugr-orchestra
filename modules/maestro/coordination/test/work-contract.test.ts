@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { validateWorkContract, type WorkArtifactKind, type WorkContractSection } from "../../src/maestro/work-contract"
+import { validateWorkContract, type WorkArtifactKind, type WorkContractSection } from "../src/work-contract"
 
 const kinds: WorkArtifactKind[] = ["epic", "issue", "sub-issue", "contract", "task", "work-package"]
 

@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { taskHash } from "../../src/maestro/task-hash"
+import { taskHash } from "../src/task-hash"
 import { Schema } from "effect"
 import { RelayArm } from "@orchestra/schema/relay-arm"
 

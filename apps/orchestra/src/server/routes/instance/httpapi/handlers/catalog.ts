@@ -8,7 +8,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import { Config } from "@/config/config"
 import { InstanceStore } from "@/project/instance-store"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 
 /** V2 catalog lists advertise host execution separately from ordinary API transport availability. */
 export const layer = Layer.effectContext(

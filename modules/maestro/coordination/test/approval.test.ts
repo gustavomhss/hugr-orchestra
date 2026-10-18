@@ -5,7 +5,7 @@ import {
   type ApprovalDecision,
   type ApprovalMessage,
   type ApprovalPresentation,
-} from "../../src/maestro/approval"
+} from "../src/approval"
 
 const presentation: ApprovalPresentation = {
   id: "apr_01",

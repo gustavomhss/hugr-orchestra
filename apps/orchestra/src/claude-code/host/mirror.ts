@@ -22,7 +22,7 @@ import { Provider } from "@/provider/provider"
 import { ModelV2 } from "@orchestra/core/model"
 import type { ModelsDev } from "@orchestra/core/models-dev"
 import { ClaudeCodeMirror, NAMES } from "../mirror"
-import { ClaudeCodeTranscript } from "../transcript"
+import { ClaudeCodeTranscript } from "@orchestra/engine-claude-code/transcript"
 import { ClaudeHostTodos } from "./todos"
 
 /** Claude Code built-ins shown under the Orchestra tool id whose card renders them. */

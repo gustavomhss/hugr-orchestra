@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { SeatSkillRoot } from "@/maestro/seat-skill-root"
-import { backendSkills } from "@/maestro/roster"
+import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
+import { backendSkills } from "@orchestra/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
 
 const SOURCE = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")

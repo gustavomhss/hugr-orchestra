@@ -6,7 +6,7 @@ import { fileURLToPath } from "url"
 import { seatSkillsFiles } from "./seat-skills"
 import { leanNotices } from "./lean-notices"
 import { resolveClaudeCodeResource, stageClaudeCodeResource } from "./claude-code-resources"
-import { ClaudeCodeExecutable } from "../src/claude-code/executable"
+import { ClaudeCodeExecutable } from "@orchestra/engine-claude-code/executable"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)

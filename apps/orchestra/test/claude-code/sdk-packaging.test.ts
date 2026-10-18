@@ -1,8 +1,8 @@
 import { expect, test } from "bun:test"
 import { chmod, realpath, rm } from "node:fs/promises"
 import { join } from "node:path"
-import { ClaudeCodeExecutable } from "@/claude-code/executable"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeExecutable } from "@orchestra/engine-claude-code/executable"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import { stageClaudeCodeResource, verifyClaudeCodeResource } from "../../script/claude-code-resources"
 import { tmpdir } from "../fixture/fixture"
 

@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import { Cause, Deferred, Effect, Exit, Fiber } from "effect"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
-import { ClaudeHostJoin } from "@/claude-code/host/join"
+import { ClaudeHostJoin } from "@orchestra/engine-claude-code/host/join"
 import { ClaudeHostResearch } from "@/claude-code/host/research"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchTerminalFixture } from "./research-terminal-fixture"

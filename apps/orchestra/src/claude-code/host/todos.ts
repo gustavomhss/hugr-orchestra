@@ -4,7 +4,7 @@ import { Effect, Schema } from "effect"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Session } from "@/session/session"
 import type { PartID, SessionID } from "@/session/schema"
-import { ClaudeCodeTranscript } from "../transcript"
+import { ClaudeCodeTranscript } from "@orchestra/engine-claude-code/transcript"
 import { ClaudeHostBoundary } from "./boundary"
 
 export const TOOLS = ["TaskCreate", "TaskUpdate", "TaskGet", "TaskList"]

@@ -11,7 +11,7 @@ import { Permission } from "../../src/permission"
 import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { Skill } from "../../src/skill"
-import { BACKEND_DEFAULT_LABEL, backendSkills } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, backendSkills } from "@orchestra/maestro/roster"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

@@ -4,7 +4,7 @@ import { Effect } from "effect"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import type { SessionID } from "@/session/schema"
-import type { ClaudeHostJoin } from "./join"
+import type { ClaudeHostJoin } from "@orchestra/engine-claude-code/host/join"
 import type { ClaudeHostResearch } from "./research"
 
 export type Port = {

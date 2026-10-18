@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { Event } from "@orchestra/schema/event"
 import { Schema } from "effect"
-import { fold } from "../../src/maestro/lifecycle-fold"
+import { fold } from "../src/lifecycle-fold"
 
 const admission = MaestroEvent.Admission.Decided.make({
   id: Event.ID.make("evt_admission"),

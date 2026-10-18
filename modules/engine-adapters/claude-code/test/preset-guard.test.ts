@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeSDK } from "../src/sdk"
 
 // Claude mode adds to Claude Code's own prompt and never replaces it: the one seam every engine query goes through
 // (turns, Maestro, seats) refuses anything but the preset.

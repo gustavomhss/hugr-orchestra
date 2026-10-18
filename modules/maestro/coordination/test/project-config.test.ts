@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { validateProjectConfig, type ProjectConfig, type ProjectConfigField } from "../../src/maestro/project-config"
+import { validateProjectConfig, type ProjectConfig, type ProjectConfigField } from "../src/project-config"
 
 const config: ProjectConfig = {
   owner: "gustavomhss",

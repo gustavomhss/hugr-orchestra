@@ -14,7 +14,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Session } from "@/session/session"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { LogicalTask } from "./logical-task"
-import { SessionAuthority } from "./session-authority"
+import { SessionAuthority } from "@orchestra/maestro/session-authority"
 
 export const Parameters = Schema.Struct({
   parentSessionID: SessionID.check(Schema.isPattern(/^ses_/)),
