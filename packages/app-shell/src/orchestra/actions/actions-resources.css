@@ -16,8 +16,9 @@
 .actions-page .actions-resources .ar-operations [data-action^="delete"]:hover:not(:disabled) { color: var(--actions-bad); border-color: var(--actions-bad); }
 .actions-page .actions-resources .ar-surface > .actions-empty { padding: 34px 18px; border-radius: 9px; }
 
-/* Cache keys can be long hashes: one line, full key in the title tooltip. */
+/* Cache keys can be long hashes: one line; hover, focus or tap shows the full key. */
 .actions-page .actions-resources .ar-caches .ar-identity strong { overflow: hidden; white-space: nowrap; text-overflow: ellipsis; overflow-wrap: normal; }
+.actions-page .actions-resources .ar-caches .ar-identity strong:is(:hover, :focus) { white-space: normal; overflow-wrap: anywhere; }
 
 /* Provider failure keeps the surface header and offers the page refresh. */
 .actions-page .actions-resources .ar-state > p + p { margin-block-start: 6px; }

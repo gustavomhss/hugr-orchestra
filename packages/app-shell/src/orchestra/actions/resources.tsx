@@ -169,7 +169,9 @@ function Caches(p: RP) {
   const sizes = () => p.items.map((r) => amount(json(r.data).sizeInBytes))
   const total = () => {
     const native = amount(usage().sizeInBytes)
-    if (native !== undefined) return p.t("orchestra.actions.cacheUsage.total", { size: bytes(native), count: amount(usage().count) ?? p.items.length })
+    const count = amount(usage().count)
+    if (native !== undefined && count !== undefined)
+      return p.t(count === 1 ? "orchestra.actions.cacheUsage.totalOne" : "orchestra.actions.cacheUsage.total", { size: bytes(native), count })
     const known = sizes().filter((size): size is number => size !== undefined)
     return known.length && known.length === sizes().length
       ? p.t("orchestra.actions.cacheUsage.listed", { size: bytes(known.reduce((sum, size) => sum + size, 0)) }) : ""
@@ -255,7 +257,7 @@ function Row(p: RP & { kind: Kind; waiting?: Run; resource: Item; headers: reado
       <div class="ar-identity" role="cell">
         <span class="mx-mark"><Glyph name={identity().glyph} size={16} /></span>
         <div>
-          <strong title={p.kind === "caches" ? resource.name : undefined}><bdi>{resource.name}</bdi></strong>
+          <strong title={p.kind === "caches" ? resource.name : undefined} tabIndex={p.kind === "caches" ? 0 : undefined}><bdi>{resource.name}</bdi></strong>
           <small><bdi>{identity().detail}</bdi></small>
           <div class="ar-tags">{identity().tags}</div>
         </div>
@@ -323,8 +325,8 @@ function identityFor(p: { kind: Kind; state: State; t: Translate }, r: Item, d: 
   }
   return {
     glyph: "clock" as const,
-    detail: [text(d, "cron"), text(d, "zone")].filter(Boolean).join(" · "),
-    tags: <Badge value={p.t(enabled(d, r.status)
+    detail: text(d, "cron") ? [text(d, "cron"), text(d, "zone")].filter(Boolean).join(" · ") : "",
+    tags: unreadable(d, r.status) ? <Badge value={p.t("orchestra.actions.unavailable")} tone="warm" /> : <Badge value={p.t(enabled(d, r.status)
       ? "orchestra.actions.active"
       : "orchestra.actions.paused")} tone={enabled(d, r.status) ? "good" : ""} />,
   }
@@ -338,8 +340,8 @@ function Meta(p: RP & { kind: Kind; resource: Item; data: Data; status: string; 
   }
   if (p.kind === "caches") return <><strong>{bytes(amount(p.data.sizeInBytes) ?? amount(p.data.size))}</strong><small>{p.t("orchestra.actions.lastUsed", { age: relative(text(p.data, "lastAccessedAt") || text(p.data, "age")) })}</small></>
   // A schedule whose workflow could not be read keeps its row and states the problem there.
-  const failure = text(p.data, "problem") || text(p.data, "error") || text(json(p.data.error), "message")
-  if (p.kind === "schedules" && failure) return <><Badge value={p.t("orchestra.actions.unavailable")} tone="warm" /><small><bdi>{failure}</bdi></small></>
+  if (p.kind === "schedules" && unreadable(p.data, p.resource.status))
+    return <><strong>{p.t("orchestra.actions.scheduleUnreadable")}</strong><small><bdi>{problem(p.data)}</bdi></small></>
   const owner = p.resource.owner || text(p.data, "owner") || text(p.data, "actor")
   if (p.kind === "schedules" && p.state.binding?.provider.kind === "github") {
     return <><code dir="ltr">{text(p.data, "ref")}</code><small>{p.t("orchestra.actions.defaultBranchWorkflowSource")}</small></>
@@ -356,7 +358,7 @@ function Operations(p: RP & { kind: Kind; resource: Item; data: Data; inherited:
   const path = text(p.data, "path")
   const workflowID = text(p.data, "workflowID") || text(p.data, "workflowId")
   const ref = text(p.data, "ref")
-  if (github) return <ActionButton action="source" icon="code" label={p.t("orchestra.actions.editYaml")} disabled={!path} onClick={() => path && p.model.navigate({ view: "source", path, workflowID, ref })} />
+  if (github) return <ActionButton action="source" icon="code" label={p.t("orchestra.actions.editYaml")} disabled={!path} onClick={() => path && p.model.navigate({ view: "source", path, workflowID, ref: ref || undefined })} />
   const active = enabled(p.data, r.status)
   return <><ActionButton action="edit" icon="settings" label={p.t("orchestra.actions.edit")} disabled={!allowed(p.state, "resource.update", r)} onClick={() => p.model.dialog({ kind: "edit-schedule", id: r.id, scope: r.scope })} /><ActionButton action="run" icon="play" label={p.t("orchestra.actions.runNow")} disabled={!allowed(p.state, "schedule.play", r)} onClick={() => p.model.resourceAction("play", r)} /><ActionButton action={active ? "pause" : "resume"} label={p.t(active ? "orchestra.actions.pause" : "orchestra.actions.resume")} disabled={!allowed(p.state, "resource.update", r)} onClick={() => p.model.resourceAction("pause", r)} /><ActionButton action="delete" icon="trash" label={p.t("orchestra.actions.delete")} disabled={!allowed(p.state, "resource.delete", r)} onClick={() => p.model.dialog({ kind: "delete-schedule", id: r.id, scope: r.scope })} /></>
 }
@@ -381,6 +383,9 @@ function enabled(d: Data, status?: string) { return d.enabled === true || status
 function flags(d: Data) { const value = d.flags; const values = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : typeof value === "string" ? value.split(/[·,\s]+/).filter(Boolean) : []; return [...new Set(values.filter((item) => ["Protected", "Masked", "Hidden"].includes(item)))] }
 function flagKey(flag: string) { return flag === "Protected" ? "orchestra.actions.protected" : flag === "Masked" ? "orchestra.actions.masked" : "orchestra.actions.hidden" }
 function sensitive(r: Item, d: Data) { return r.sensitive === true || text(d, "type") === "Secret" || flags(d).some((flag) => flag === "Masked" || flag === "Hidden") }
+// A workflow whose YAML could not be read keeps its row; the problem replaces cron and ref.
+function unreadable(d: Data, status?: string) { return d.unreadable === true || status === "Unreadable" || Boolean(problem(d)) }
+function problem(d: Data) { return text(d, "problem") || text(d, "error") || text(json(d.error), "message") }
 function amount(value: unknown) { return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined }
 function json(value: unknown): Data { return isData(value) ? value : {} }
 function isData(value: unknown): value is Data { return typeof value === "object" && value !== null && !Array.isArray(value) }
