@@ -251,28 +251,11 @@ test("Files Changed and All files lead to each other", async ({ page }) => {
   await expect(page.locator('[data-session-tab="files"]')).toBeHidden()
 })
 
-test("V1: the delivery toggle explains why every prompt steers", async ({ page }) => {
+test("V1: the bundled server shows no Steer/Queue control", async ({ page }) => {
   await setupCockpit(page, { bridge: false, empty: true })
   await openParent(page)
-  const delivery = page.locator('[data-action="prompt-delivery"]')
-  await expect(delivery).toHaveText("Steer")
-  await expect(delivery).toHaveAttribute("aria-disabled", "true")
-  await expect(delivery).toHaveAccessibleDescription(
-    "This server delivers every prompt as a steer; queueing needs a server that speaks the V2 protocol.",
-  )
-  // aria-disabled keeps the toggle focusable so its reason stays reachable, and Playwright will not click
-  // an aria-disabled control. The toggle itself takes the pointer at its center, and a real click there
-  // changes nothing.
-  const box = await delivery.boundingBox()
-  if (!box) throw new Error("The delivery toggle has no layout box")
-  const center = { x: box.x + box.width / 2, y: box.y + box.height / 2 }
-  expect(
-    await delivery.evaluate((element, point) => element.contains(document.elementFromPoint(point.x, point.y)), center),
-  ).toBe(true)
-  await page.mouse.click(center.x, center.y)
-  await expect(delivery).toHaveText("Steer")
-  await expect(delivery).toHaveAttribute("data-delivery", "steer")
-  await expect(delivery).toHaveAttribute("aria-pressed", "false")
+  await expect(page.locator('[data-slot="orchestra-compose-tools"]')).toBeVisible()
+  await expect(page.locator('[data-action="prompt-delivery"]')).toHaveCount(0)
 })
 
 test("V2: Steer is the default delivery and the Queue choice is sent with the next prompt", async ({ page }) => {

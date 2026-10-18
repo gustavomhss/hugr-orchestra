@@ -397,7 +397,14 @@ export default function EnvPage(props: ChapterPageProps) {
                   </Show>
                   <Show when={state.dialog === "view"}>
                     <pre class="mx-log env-file" dir="ltr">
-                      {serializeEnv(state.lines).replace(/\r\n?/g, "\n")}
+                      {state.lines
+                        .map((line) =>
+                          line.assignment
+                            ? `${line.assignment.prefix}${line.assignment.key}=${language.t("orchestra.env.mask")}${line.assignment.eol}`
+                            : line.raw,
+                        )
+                        .join("")
+                        .replace(/\r\n?/g, "\n")}
                     </pre>
                   </Show>
                   <Show when={state.dialog === "remove"}>
