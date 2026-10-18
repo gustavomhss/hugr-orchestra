@@ -44,7 +44,7 @@ import { useEditorContext } from "../../context/editor"
 import { openEditor } from "../../editor"
 import { useDialog } from "../../ui/dialog"
 import { DialogAlert } from "../../ui/dialog-alert"
-import { TodoItem } from "../../component/todo-item"
+import { TodoItem, todoProgress } from "../../component/todo-item"
 import { DialogMessage } from "./dialog-message"
 import type { PromptInfo } from "../../component/prompt/history"
 import { DialogConfirm } from "../../ui/dialog-confirm"
@@ -1763,7 +1763,7 @@ function InlineTool(props: {
       complete={props.complete}
       pending={props.pending}
       failure={props.failure}
-      spinner={props.spinner}
+      spinner={props.spinner ?? props.part.state.status === "running"}
       separate={props.separate}
       onMouseOver={() => clickable() && setHover(true)}
       onMouseOut={() => setHover(false)}
@@ -1894,7 +1894,7 @@ function BlockTool(props: {
       <Show when={props.title}>
         {(title) => (
           <Show
-            when={props.spinner}
+            when={props.spinner ?? props.part?.state.status === "running"}
             fallback={
               <text paddingLeft={3} fg={theme.textMuted}>
                 {title()}
@@ -2387,7 +2387,7 @@ function TodoWrite(props: ToolProps) {
   return (
     <Switch>
       <Match when={parseTodos(props.metadata.todos).length}>
-        <BlockTool title="# Todos" part={props.part}>
+        <BlockTool title={`# Todos (${todoProgress(todos())})`} part={props.part}>
           <box>
             <For each={todos()}>{(todo) => <TodoItem status={todo.status} content={todo.content} />}</For>
           </box>
