@@ -152,7 +152,7 @@ function createWorkspaceTerminalSession(
   dir: string,
   scope: ServerScopeValue,
   legacySessionID: string | undefined,
-  fail: (error: unknown) => void,
+  fail: (message: string, error: unknown) => void,
 ) {
   const location = { directory: sdk.directory }
   const legacy = scope === ServerScope.local ? getLegacyTerminalStorageKeys(dir, legacySessionID) : []
@@ -292,7 +292,7 @@ function createWorkspaceTerminalSession(
         })
       ).data
     })().catch((error: unknown) => {
-      fail(error)
+      fail("Failed to clone terminal", error)
       return undefined
     })
     if (!data?.id) return
@@ -360,7 +360,7 @@ function createWorkspaceTerminalSession(
         })
         .catch((error: unknown): TerminalCreateResult => {
           if (focusRequest !== undefined) cancelFocus(focusRequest)
-          fail(error)
+          fail("Failed to create terminal", error)
           return { status: "failed", error }
         })
     },
@@ -446,7 +446,7 @@ function createWorkspaceTerminalSession(
           ? sdk.client.pty.remove({ ptyID: id })
           : sdk.api.pty.remove({ ptyID: id, location })
       await removePromise.catch((error: unknown) => {
-        fail(error)
+        fail("Failed to close terminal", error)
       })
     },
     move(id: string, to: number) {
@@ -471,8 +471,8 @@ export const { use: useTerminal, provider: TerminalProvider } = createSimpleCont
     const params = useParams()
     const language = useLanguage()
     // Terminal requests have no inline error surface, so report them as a toast.
-    const fail = (error: unknown) => {
-      console.error("Terminal request failed", error)
+    const fail = (message: string, error: unknown) => {
+      console.error(message, error)
       showToast({
         title: language.t("common.requestFailed"),
         description: error instanceof Error ? error.message : undefined,

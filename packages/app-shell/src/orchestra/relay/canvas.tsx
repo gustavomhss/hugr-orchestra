@@ -465,21 +465,14 @@ export function Canvas(props: {
                     <svg viewBox="0 0 14 18" aria-hidden="true" innerHTML={BOLT} />
                   </span>
                 </Show>
+                {/* Not a tab stop: the canvas is the single focusable application and owns the keys
+                    (arrows select, Enter opens), so a pointer press keeps focus on it and closing a
+                    node dialog returns there. */}
                 <div
                   class={`wf-tile k-${nodeTone(item.node)}`}
                   role="button"
-                  tabIndex={0}
                   aria-label={item.node.name}
                   aria-pressed={selected().has(item.node.id)}
-                  onKeyDown={(event) => {
-                    const id = item.node.id
-                    if (event.key === "Enter") return (event.preventDefault(), props.onOpen(id))
-                    if (event.key !== " ") return
-                    event.preventDefault()
-                    props.onSelect(
-                      selected().has(id) ? props.selected.filter((other) => other !== id) : [...props.selected, id],
-                    )
-                  }}
                 >
                   <NodeGlyph name={nodeGlyph(item.node)} />
                 </div>
