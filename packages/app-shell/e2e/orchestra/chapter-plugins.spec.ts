@@ -154,6 +154,13 @@ for (const scheme of ["dark", "light"] as const) {
     const reviewer = card(page, "Reviewer")
     await expect(reviewer.locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "Active"])
 
+    // An enabled behavior without instructions sends nothing, so its card does not claim to be Active.
+    await view.getByRole("button", { name: "Add behavior", exact: true }).click()
+    await dialog.getByLabel("Name").fill("Blank")
+    await dialog.getByLabel("Description").fill("Nothing yet.")
+    await dialog.getByRole("button", { name: "Save", exact: true }).click()
+    await expect(card(page, "Blank").locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "No instructions"])
+
     await view.getByRole("textbox", { name: "Search LLM Plugins" }).fill("evidence")
     await expect(view.locator("article.mx-card")).toHaveCount(1)
     await expect(reviewer).toBeVisible()
