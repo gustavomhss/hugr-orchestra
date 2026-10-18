@@ -15,7 +15,6 @@ export const keptPaths: Kept[] = [
     reason: "the rename tooling names the old strings it replaces",
   },
   { path: /(?:^|\/)(?:LICENSE|NOTICE)(?:\.[a-z]+)?$/, reason: "license and notice texts keep their copyright lines" },
-  { path: /^specs\/orchestra-visual\/(?:handoff|evidence)\//, reason: "hash-pinned evidence archives" },
   {
     path: /^packages\/app(?:-shell)?\/src\/i18n\/branding\.test\.ts$/,
     reason: "branding detector and its planted old-product counterexamples must keep the name they reject",

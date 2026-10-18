@@ -26,12 +26,16 @@
       "sha256": "27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48",
       "method": "restored original restore-evidence.ts reconstructed all ordered parts; full output hash compared"
     },
-    "host": { "platform": "darwin", "arch": "x64", "bun": "1.3.14" }
+    "host": {
+      "platform": "darwin",
+      "arch": "x64",
+      "bun": "1.3.14"
+    }
   },
   "readers": [
     "specs/orchestra-visual/handoff/restore-evidence.ts",
     "specs/orchestra-visual/handoff/evidence-snapshot.json",
     "specs/orchestra-visual/handoff/README.md"
   ],
-  "sourceRemoval": "not performed; reader retargeting and tar-member restoration remain a separate cleanup slice"
+  "sourceRemoval": "removed from the tree; restore from the retained bundle"
 }
