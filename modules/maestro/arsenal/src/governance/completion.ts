@@ -19,7 +19,7 @@ export function validateCompletion(contract: CompletionContract) {
   const checks = contract.chain.flatMap((gate) => {
     id(gate.id)
     requireValue(Array.isArray(gate.checks) && gate.checks.length > 0 && gate.checks.length <= 64, `COMPLETION_CHECKS_EMPTY: ${gate.id}`)
-    gate.checks.forEach((check) => { id(check.id); id(check.hostCheck) })
+    gate.checks.forEach((check: NonNullable<CompletionContract["chain"]>[number]["checks"][number]) => { id(check.id); id(check.hostCheck) })
     return gate.checks
   })
   requireValue(new Set(checks.map((check) => check.id)).size === checks.length, "COMPLETION_CHECK_DUPLICATE")
