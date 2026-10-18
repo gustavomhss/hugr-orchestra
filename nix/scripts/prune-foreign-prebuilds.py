@@ -30,8 +30,9 @@ def main():
     host = HOSTS[system]
     trees = [root / "node_modules"] + [
         path
-        for directory in (root / "packages", root / "apps")
-        for path in directory.glob("*/node_modules")
+        # The same workspace roots nix/orchestra.nix and nix/desktop.nix walk after copying node_modules.
+        for pattern in ("packages/*", "apps/*", "modules/*", "modules/*/*", "tooling/*")
+        for path in root.glob(f"{pattern}/node_modules")
         if path.is_dir()
     ]
     require(trees[0].is_dir(), "DEPENDENCY_SOURCE_MISSING")
