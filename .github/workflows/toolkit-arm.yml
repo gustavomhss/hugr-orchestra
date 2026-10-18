@@ -169,5 +169,5 @@ jobs:
 
       # A compiled CLI has no node_modules: it ships these bindings in bin/tree-sitter and parses from beside itself.
       - name: The compiled linux-arm64 CLI extracts real symbols with the tree-sitter it ships
-        working-directory: packages/cli
+        working-directory: apps/cli
         run: GITHUB_ACTIONS=false bun test --timeout 900000 ./test/tree-sitter-bundle.test.ts

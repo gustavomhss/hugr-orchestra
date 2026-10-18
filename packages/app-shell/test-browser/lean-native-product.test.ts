@@ -10,7 +10,7 @@ import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 
 // Adapted from orchestra/test/lean-package.test.ts at 66172f566642a3f66580b001082aba4448e75946
 // (repository MIT): Node-only artifact, observed whole output, real HTTP config and Solid consumers.
-const orchestra = path.resolve(import.meta.dir, "../../orchestra")
+const orchestra = path.resolve(import.meta.dir, "../../../apps/orchestra")
 function child(cmd: string[], env = process.env, cwd = orchestra) {
   const proc = Bun.spawn(cmd, { cwd, env, stdout: "pipe", stderr: "pipe", timeout: 600000, killSignal: "SIGKILL" })
   const result = Promise.all([new Response(proc.stdout).text(), new Response(proc.stderr).text(), proc.exited])
@@ -83,10 +83,10 @@ if (process.env.LEAN_NATIVE_PRODUCT_DOM !== "1") {
       console.log(await child(["bun", "run", "script/build-node.ts"], buildEnv).finish())
       const artifact = path.join(orchestra, "dist/node/node.js")
       await mkdir(path.join(orchestra, "dist/node/node_modules/@lydell"), { recursive: true })
-      const pty = createRequire(path.join(orchestra, "../core/package.json")).resolve("@lydell/node-pty/package.json")
+      const pty = createRequire(path.join(orchestra, "../../packages/core/package.json")).resolve("@lydell/node-pty/package.json")
       await symlink(path.dirname(pty), path.join(orchestra, "dist/node/node_modules/@lydell/node-pty"), "junction")
       const manifest = await Bun.file(path.join(orchestra, "dist/node/licenses/hugr-lean/manifest.json")).json()
-      const archive = new Uint8Array(await Bun.file(path.join(orchestra, "../core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz")).arrayBuffer())
+      const archive = new Uint8Array(await Bun.file(path.join(orchestra, "../../packages/core/vendor/hugr-lean-0.4.0-0660c2b5dc92.tgz")).arrayBuffer())
       const digest = createHash("sha256").update(archive).digest("hex")
       expect(digest).toBe("5ff983c58aa056d82059d5edd5b428478dda50a7683a201b7d844949aa1712a3")
       expect(manifest).toMatchObject({ version: "0.4.0", commit: "0660c2b5dc9249816330603160aadfaeb33e5fc7", sha256: digest })

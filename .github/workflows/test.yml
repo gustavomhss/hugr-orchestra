@@ -154,7 +154,7 @@ jobs:
         if: github.event_name != 'pull_request' || steps.atlas-diff.outputs.touches_code == 'true'
         run: npm test
 
-  # packages/orchestra holds almost all unit-test time, so it runs in Bun shards; every other
+  # apps/orchestra holds almost all unit-test time, so it runs in Bun shards; every other
   # package runs through Turbo in unit-rest, where unchanged packages replay from the Turbo cache.
   omni:
     if: github.event_name == 'workflow_dispatch' || github.event.label.name == 'epic'
@@ -247,12 +247,12 @@ jobs:
       # Per-file timings show where suite time goes; the edit stays inside the runner checkout.
       - name: Enable JUnit timings
         if: steps.previous.outputs.hit != 'true'
-        run: printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-orchestra-${{ matrix.shard }}.xml" >> packages/orchestra/bunfig.toml
+        run: printf "\n[test.reporter]\njunit = '%s'\n" "$RUNNER_TEMP/junit-orchestra-${{ matrix.shard }}.xml" >> apps/orchestra/bunfig.toml
 
       - name: Run orchestra tests
         if: steps.previous.outputs.hit != 'true'
         timeout-minutes: 30
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         # Not --parallel: on 2026-10-05 it made shards slower and broke timing-sensitive tests.
         # Shards are balanced by measured time (script/test-shard.ts), not by file count; the
         # assignment fails the step if the script fails instead of falling back to every file.
@@ -454,7 +454,7 @@ jobs:
         if: matrix.part == 'gates'
         # Effect mode takes about 15 minutes for 355 scenarios; fail instead of holding the runner if a scenario wedges.
         timeout-minutes: 25
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         run: bun run test:httpapi
 
       # Relay's retained Python oracle runs even when an earlier step failed, so one failure does not
@@ -493,7 +493,7 @@ jobs:
 
       - name: Legacy shell process behavior
         if: ${{ !cancelled() && matrix.part == 'rest' }}
-        working-directory: packages/orchestra
+        working-directory: apps/orchestra
         run: bun test test/util/process-omni.test.ts --timeout 30000
         env:
           ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER: "0"
