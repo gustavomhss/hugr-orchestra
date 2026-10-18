@@ -357,7 +357,6 @@ const layer = Layer.effect(
         }
 
         yield* config.get()
-        // J6.7: the code index warms in the background once per instance, only while the discovery seat is active.
         yield* research.prewarm(yield* agent.get(ResearchSeatTools.SEAT), ctx.worktree)
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
         yield* MaestroArsenalTools.prepare.pipe(Effect.provideService(FSUtil.Service, fs), Effect.orDie)
