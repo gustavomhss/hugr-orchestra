@@ -52,3 +52,6 @@ relay demo tamper [run_dir]   # flips one byte in a copy and shows verify catch 
 - The check runs in the agent's own process. The ledger shows what that process recorded and that nothing changed afterwards. It does not show an independent party ran the check.
 - Plain SHA-256 catches edits by anyone who does not recompute the chain. A process that controls the folder can rewrite it whole. Approvals are self-reported in the MVP.
 - Install is from git until the package is on PyPI.
+- `gated()` rewires the graph through LangGraph builder internals (`edges`, `branches`), so `langgraph` is pinned below 2.
+- Gated nodes with conditional edges or `Command` destinations are refused, not supported.
+- One run per `thread_id`: invoking the same thread again after it finished does not write a new end entry.
