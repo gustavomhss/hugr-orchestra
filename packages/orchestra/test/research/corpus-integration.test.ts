@@ -281,6 +281,76 @@ describe("native research vertical slice", () => {
     yield* fixture.sessions.remove(fixture.authority.id)
   }), { git: true })
 
+  it.instance("Git blame, range compare and commit search stay finite, full-hash and read-gated", () => Effect.gen(function* () {
+    const fixture = yield* setup()
+    const fs = yield* FSUtil.Service
+    const git = yield* Git.Service
+    const records = yield* ResearchRecords.Service
+    const commit = (message: string, files: Record<string, string>) => Effect.gen(function* () {
+      yield* Effect.forEach(Object.entries(files), ([name, body]) => Effect.gen(function* () {
+        yield* fs.ensureDir(path.dirname(path.join(fixture.directory, name)))
+        yield* fs.writeFileString(path.join(fixture.directory, name), body)
+      }), { discard: true })
+      expect((yield* git.run(["add", "--", ...Object.keys(files)], { cwd: fixture.directory })).exitCode).toBe(0)
+      expect((yield* git.run(["commit", "-m", message], { cwd: fixture.directory })).exitCode).toBe(0)
+      return (yield* git.run(["rev-parse", "HEAD"], { cwd: fixture.directory })).text().trim()
+    })
+    const first = yield* commit("fixture: add parser", { "src/parser.ts": "one\ntwo\n", "src/lexer.ts": "lex\n" })
+    const second = yield* commit("Fix: Parser regression", { "src/parser.ts": "one\nTWO\nthree\n", "docs/notes.md": "notes\n" })
+    const binding = yield* ResearchBinding.resolve(fixture.child.id, fixture.child.projectID)
+    const structured = (receipt: Research.SourceReceipt) => records.view(binding, { action: "source", ref: receipt.ref }).pipe(
+      Effect.map((page) => JSON.parse("text" in page ? page.text : "{}")))
+    const before = yield* git.status(fixture.directory)
+
+    const blame = source(yield* fixture.run("research_capture", { kind: "history", operation: "blame", path: "src/parser.ts", start: 2, end: 3 }))
+    expect(blame).toMatchObject({ complete: true, origin: { revision: second } })
+    expect((yield* structured(blame)).lines).toMatchObject([
+      { line: 2, commit: second, summary: "Fix: Parser regression", content: "TWO" },
+      { line: 3, commit: second, content: "three" },
+    ])
+    const older = yield* structured(source(yield* fixture.run("research_capture",
+      { kind: "history", operation: "blame", path: "src/parser.ts", revision: first })))
+    expect(older.lines.map((line: { commit: string }) => line.commit)).toEqual([first, first])
+    expect(typeof older.lines[0].authorTime).toBe("number")
+
+    const patch = source(yield* fixture.run("research_capture", { kind: "history", operation: "compare", base: first, paths: ["src", "docs"] }))
+    const compared = yield* structured(patch)
+    expect(compared).toMatchObject({ complete: true, base: first, revision: second, files: ["docs/notes.md", "src/parser.ts"] })
+    expect(compared.text).toContain("+three")
+    expect(compared.text).not.toContain("lexer")
+    const stat = yield* structured(source(yield* fixture.run("research_capture",
+      { kind: "history", operation: "compare", base: first, paths: ["src/parser.ts"], stat: true })))
+    expect(stat.files).toEqual([{ path: "src/parser.ts", added: 2, deleted: 1 }])
+
+    const found = source(yield* fixture.run("research_capture", { kind: "history", operation: "search", message: "parser" }))
+    expect((yield* structured(found)).commits.map((entry: { commit: string }) => entry.commit)).toEqual([second, first])
+    const bounded = source(yield* fixture.run("research_capture", { kind: "history", operation: "search", message: "parser", limit: 1 }))
+    expect(bounded.complete).toBe(false)
+    expect((yield* structured(bounded)).commits).toMatchObject([{ commit: second, summary: "Fix: Parser regression" }])
+    const byPath = yield* structured(source(yield* fixture.run("research_capture", { kind: "history", operation: "search", path: "src/lexer.ts" })))
+    expect(byPath.commits.map((entry: { commit: string }) => entry.commit)).toEqual([first])
+    expect(yield* git.status(fixture.directory)).toEqual(before)
+
+    const secret = yield* commit("fixture: config", { "cfg/app.txt": "app\n", "cfg/.env": "TOKEN=x\n" })
+    yield* commit("fixture: many files", Object.fromEntries(Array.from({ length: 101 }, (_, index) => [`bulk/${index}.txt`, `${index}\n`])))
+    for (const input of [
+      { kind: "history", operation: "blame", path: "src/parser.ts", revision: second.slice(0, 12) },
+      { kind: "history", operation: "blame", path: "src/parser.ts", start: 3, end: 2 },
+      { kind: "history", operation: "blame", path: "../outside.txt" },
+      { kind: "history", operation: "compare", base: first.slice(0, 7), paths: ["src"] },
+      { kind: "history", operation: "compare", base: first, paths: ["../outside"] },
+      { kind: "history", operation: "compare", base: first, paths: [] },
+      { kind: "history", operation: "compare", base: first, paths: Array.from({ length: 17 }, (_, index) => `src/${index}.ts`) },
+      { kind: "history", operation: "compare", base: second, revision: secret, paths: ["cfg"] },
+      { kind: "history", operation: "compare", base: secret, paths: ["bulk"] },
+      { kind: "history", operation: "search" },
+      { kind: "history", operation: "search", message: "parser", limit: 51 },
+      { kind: "history", operation: "search", message: "parser", revision: "HEAD" },
+      { kind: "history", operation: "search", path: "../outside" },
+    ]) expect(Exit.isFailure(yield* fixture.run("research_capture", input).pipe(Effect.exit))).toBe(true)
+    yield* fixture.sessions.remove(fixture.authority.id)
+  }), { git: true })
+
   it.instance("partial received UTF-8 scalar preserves a valid projection; unpersisted view invocation is refused", () => Effect.gen(function* () {
     const fixture = yield* setup()
     const fs = yield* FSUtil.Service
