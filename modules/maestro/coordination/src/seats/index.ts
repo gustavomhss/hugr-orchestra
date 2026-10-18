@@ -1,4 +1,4 @@
-export * as Seats from "./index"
+export * as Seats from "."
 
 import backend from "./backend"
 import archie from "./archie"

@@ -92,7 +92,8 @@ const files: Record<string, string> = {
   "apps/app/src/tool/use.ts": 'import { dir } from "./dir"\nexport const use = dir\n',
   "apps/app/src/user.ts": userSource,
   "apps/app/test/user.test.ts": 'const source = "src/feature/b"\nexport const dir = "apps/app/src/feature/"\n',
-  "apps/app/src/kit/index.ts": "export const kit = 1\n",
+  // A directory index's self-export through "." stays "." after the move.
+  "apps/app/src/kit/index.ts": 'export * as Kit from "."\nexport const kit = 1\n',
   // Moves inside its package: its own alias import becomes relative, an unmoved importer keeps its alias.
   "apps/app/src/old/e.ts": 'import { log } from "@/util/log"\nexport const e = log\n',
   // No package owns this importer, so it stays relative; `.js` and a directory index keep their spelling.

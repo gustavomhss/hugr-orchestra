@@ -163,7 +163,8 @@ function render(workspace: Workspace, item: { original: string; packaged: boolea
   const alias = item.moved ? undefined : aliasOf(from, item.original)
   const root = alias && from ? `${from.path}/${alias[1]}` : undefined
   if (alias && root && body.startsWith(root)) return { specifier: `${alias[0]}${body.slice(root.length)}`, exportMissing: undefined }
-  const relative = path.posix.relative(path.posix.dirname(importer), body)
+  // A directory's own index is spelled ".", as in the repo's `export * as X from "."` self-exports.
+  const relative = path.posix.relative(path.posix.dirname(importer), body) || "."
   return { specifier: relative.startsWith(".") ? relative : `./${relative}`, exportMissing: undefined }
 }
 
