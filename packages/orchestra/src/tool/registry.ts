@@ -577,7 +577,8 @@ const layer = Layer.effect(
         ) {
           return false
         }
-        if (tool.id === WebSearchTool.id) return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
+        // The discovery seat always has the keyless Exa/Parallel backend (owner decision D1); others need a provider flag.
+        if (tool.id === WebSearchTool.id) return ResearchRegistry.discovery(input.agent) || webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
         if (tool.id === LspTool.id) return flags.experimentalLspTool || ResearchRegistry.discovery(input.agent)
 
         const usePatch =
