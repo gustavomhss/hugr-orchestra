@@ -17,6 +17,7 @@ import { ToolSafety } from "./tool-safety"
 
 // Installed Relay hooks on the tool path (relay-exec-spec H2, port plan §5). ToolSafety.run calls `before` once native
 // safety passed and `after` once the effect settled successfully, both over the snapshot it loaded at the call's start.
+// A host whose before and after are separate callbacks (Claude Code) uses ToolSafety.beforeHooked and `settle`.
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
 // nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
 // but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
@@ -97,14 +98,18 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
 })
 
 /**
- * The `after` hooks of a call whose effect settled, then every note appended to its result. A failed check or a Repair
- * turns the result into a denial; the effect itself is not undone.
+ * The `after` hooks of a call whose effect settled, then every note of the call in order, for a host that hands them to
+ * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial; the effect itself is not undone.
  */
-export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
+export const settle = (hooked: Hooked, succeeded: boolean) =>
   Effect.gen(function* () {
     const notes = succeeded ? yield* enforce(hooked.scope, "after") : []
-    return annotate(value, [...hooked.notes, ...notes])
+    return [...hooked.notes, ...notes]
   })
+
+/** `settle`, with every note appended to the call's result. */
+export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
+  settle(hooked, succeeded).pipe(Effect.map((notes) => annotate(value, notes)))
 
 // The services a decision needs: the call's own context first, then ToolSafety's construction context, then a host's
 // Placement outside any Location.
@@ -250,6 +255,7 @@ const act = Effect.fnUntraced(function* (
   const hook = scope.installs.get(step.installID)!.snapshot
   const node = hook.nodes.find((item) => item.id === step.nodeID)?.name ?? step.nodeID
   const tail = timing === "after" ? AFTER : ""
+  const origin = { name: hook.name, message: step.message }
   const decide = (outcome: RelayLedger.HookOutcome) => decided(scope, timing, step, outcome, started)
   if (step.action === "remind") {
     yield* decide("reminded")
@@ -261,11 +267,11 @@ const act = Effect.fnUntraced(function* (
   }
   if (step.action === "block") {
     yield* decide("blocked")
-    return yield* deny("relay-hook-block", `Blocked by hook '${hook.name}': ${step.message}${tail}`)
+    return yield* deny("relay-hook-block", `Blocked by hook '${hook.name}': ${step.message}${tail}`, origin)
   }
   if (step.action === "repair") {
     yield* decide("repair-required")
-    return yield* deny("relay-hook-repair", `Hook '${hook.name}' requires a repair: ${step.message}${tail}`)
+    return yield* deny("relay-hook-repair", `Hook '${hook.name}' requires a repair: ${step.message}${tail}`, origin)
   }
   if (step.action === "approve") {
     yield* ask(scope, timing, step, `Hook '${hook.name}' asks for approval: ${step.message}`)
@@ -279,7 +285,11 @@ const act = Effect.fnUntraced(function* (
   if (verified.verdict === "fail") {
     yield* decide("failed")
     if (step.onFail) return { notes: [], branch: step.onFail }
-    return yield* deny("relay-hook-verify-failed", `Hook '${hook.name}' check '${node}' failed: ${step.message}${tail}`)
+    return yield* deny(
+      "relay-hook-verify-failed",
+      `Hook '${hook.name}' check '${node}' failed: ${step.message}${tail}`,
+      origin,
+    )
   }
   yield* decide("unavailable")
   const unavailable = `Hook '${hook.name}' check '${node}' could not run (${verified.reason ?? "unavailable"})`
@@ -296,10 +306,11 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
     Effect.gen(function* () {
       const started = yield* Clock.currentTimeMillis
       const decide = (outcome: RelayLedger.HookOutcome) => decided(scope, timing, step, outcome, started, "approve")
+      const origin = { name: scope.installs.get(step.installID)!.snapshot.name, message: step.message }
       const host = yield* ToolSafety.NativeHost
       if (!host) {
         yield* decide("rejected")
-        return yield* deny("relay-hook-approve-native-binding-missing", message)
+        return yield* deny("relay-hook-approve-native-binding-missing", message, origin)
       }
       const exit = yield* restore(
         host.ask({
@@ -316,7 +327,7 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
       yield* decide(interrupted ? "cancelled" : "rejected")
       const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause))
       if (interrupted || !error) return yield* Effect.failCause(exit.cause)
-      return yield* deny(error.reason, message)
+      return yield* deny(error.reason, message, origin)
     }),
   )
 }
@@ -361,8 +372,8 @@ function resources(scope: Scope) {
   return paths.length > 0 ? paths : [scope.call.tool]
 }
 
-function deny(reason: string, detail: string) {
-  return Effect.fail(new ToolSafety.Denied({ reason, detail }))
+function deny(reason: string, detail: string, hook: { readonly name: string; readonly message: string }) {
+  return Effect.fail(new ToolSafety.Denied({ reason, detail, hook }))
 }
 
 /**

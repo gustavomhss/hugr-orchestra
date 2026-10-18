@@ -70,6 +70,11 @@ for (const scheme of ["dark", "light"] as const) {
     // Menus rove with arrows; every item is reachable from the first.
     await page.keyboard.press("ArrowDown")
     await expect(menu.getByRole("menuitem", { name: "Add project", exact: true })).toBeFocused()
+    // The selected project's actions follow; the web build has no file manager, so Reveal is absent.
+    await page.keyboard.press("ArrowDown")
+    await expect(menu.getByRole("menuitem", { name: "Edit project", exact: true })).toBeFocused()
+    await page.keyboard.press("ArrowDown")
+    await expect(menu.getByRole("menuitem", { name: "Close project", exact: true })).toBeFocused()
     await page.keyboard.press("ArrowDown")
     await expect(project).toBeFocused()
     await page.keyboard.press("Escape")

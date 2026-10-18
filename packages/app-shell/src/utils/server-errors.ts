@@ -63,6 +63,19 @@ export function isSessionNotFoundError(error: unknown, sessionID: string) {
   return value._tag === "SessionNotFoundError" && value.sessionID === sessionID
 }
 
+/** The hook that stopped a prompt before the server admitted it, with the hook's own words. */
+export function hookRefusal(error: unknown) {
+  const unwrapped = unwrapNamedError(error)
+  if (typeof unwrapped !== "object" || unwrapped === null) return undefined
+  const body = unwrapped as Record<string, unknown>
+  if (body.name !== "PromptBlockedError" || typeof body.data !== "object" || body.data === null) return undefined
+  const hook = (body.data as Record<string, unknown>).hook
+  if (typeof hook !== "object" || hook === null) return undefined
+  const value = hook as Record<string, unknown>
+  if (typeof value.name !== "string" || typeof value.message !== "string") return undefined
+  return { name: value.name, message: value.message }
+}
+
 function isConfigInvalidErrorLike(error: unknown): error is ConfigInvalidError {
   if (typeof error !== "object" || error === null) return false
   const o = error as Record<string, unknown>

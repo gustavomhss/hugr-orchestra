@@ -2,13 +2,13 @@ export * as ClaudeHostGate from "./gate"
 
 // Orchestra's policy gate for every Claude Code tool call, built-ins, MCP tools and subagent calls alike, run from the
 // in-process `PreToolUse` hook. A call passes only when every check passes: governance HOLDs, ToolSafety under the
-// calling agent's own write roots, the arsenal input bindings for Orchestra's in-process tools, then Orchestra's
-// permission rules. Any failure is a deny, and nothing later can turn a deny back into an allow. Claude Code's own
+// calling agent's own write roots and the project's installed Relay hooks (their `after` runs in PostToolUse), the
+// arsenal input bindings for Orchestra's in-process tools, then Orchestra's permission rules. Any failure is a deny, and nothing later can turn a deny back into an allow. Claude Code's own
 // native tools never reached ToolSafety before; this gate is where they do. A PreToolUse deny wins in every permission
 // mode, bypass included, while `canUseTool` is skipped whenever an allow rule matches (spike S7), so all policy is here.
 // Shell calls obey the actor's effective project sandbox; write-roots seats also require their per-call grant's roots.
 // Parsing a command for its writes is not a control.
-import { Effect, Exit, Scope } from "effect"
+import { Effect, Exit, Option, Scope } from "effect"
 import path from "node:path"
 import fs from "node:fs/promises"
 import { ChildProcess } from "effect/unstable/process"
@@ -16,6 +16,8 @@ import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner
 import type { HookJSONOutput } from "@anthropic-ai/claude-agent-sdk"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
+import { ToolSafetyHooks } from "@orchestra/core/tool-safety-hooks"
+import { LocationServiceMap } from "@orchestra/core/location-services"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Wildcard } from "@orchestra/core/util/wildcard"
@@ -31,6 +33,7 @@ import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { Permission } from "@/permission"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
+import { ToolSafetyPlacement } from "@orchestra/core/tool-safety-placement"
 import { approve, resolvePath } from "@/tool/shell/scan"
 import { ShellExecution } from "@/tool/shell/execution"
 import type { Tool } from "@/tool/tool"
@@ -63,7 +66,10 @@ export type Ports = {
   readonly granted: Readonly<{ [agent: string]: readonly string[] }>
   /** Governance HOLDs that refuse a call before any policy is evaluated. */
   readonly hold: (actor: Actor, name: string, input: Input) => Effect.Effect<void, unknown>
-  /** ToolSafety, evaluated with the actor Session's profile, so a subagent's write roots are its own grant's. */
+  /**
+   * ToolSafety, evaluated with the actor Session's profile, so a subagent's write roots are its own grant's; then the
+   * project's installed Relay hooks, whose `before` state waits for the call's `settle`.
+   */
   readonly safety: (actor: Actor, call: Call, toolUseID: string) => Effect.Effect<void, unknown>
   /** The arsenal input bindings of an Orchestra in-process tool (`mcp__orchestra__<tool>`). */
   readonly arsenal: (actor: Actor, tool: string, input: Input) => Effect.Effect<void, unknown>
@@ -76,6 +82,12 @@ export type Ports = {
   readonly confine: (actor: Actor, command: string, toolUseID: string, process?: { workdir?: string }) => Effect.Effect<string | undefined, unknown>
   /** Releases what a confined call holds (the jail's policy and scratch files) once the call has ended. */
   readonly release: (toolUseID: string) => Effect.Effect<void>
+  /**
+   * The installed hooks' `after` for a call `safety` let through, once it ended (none run when it did not succeed): the
+   * notes for the model, or a failure when a hook refuses the result. Ends the call's hook state; policies without hooks
+   * leave it out.
+   */
+  readonly settle?: (toolUseID: string, succeeded: boolean) => Effect.Effect<ReadonlyArray<string>, unknown>
   /** Releases every jail still held, such as a background `process`'s, when the host session ends. */
   readonly close: Effect.Effect<void>
 }
@@ -129,7 +141,9 @@ export function invocation(name: string, input: Input): Call {
   if (name === "Write") return { tool: "write", args: { filePath: file } }
   if (name === "Edit" || name === "MultiEdit" || name === "NotebookEdit") return { tool: "edit", args: { filePath: file } }
   if (name === "Read") return { tool: "read", args: { filePath: file, limit: input.limit, offset: input.offset } }
-  return { tool: name, args: input }
+  // Any other built-in under its Orchestra tool's name, so a hook's tool condition reads the same on both engines.
+  const native = agentCall(name) ? "task" : Object.entries(ClaudeHostMcp.BUILTINS).find((entry) => entry[1].includes(name))?.[0]
+  return { tool: native ?? name, args: input }
 }
 
 /** The `process` MCP tool: a background shell command whose jail lives until the host session ends. */
@@ -185,6 +199,19 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
   const shell = Shell.acceptable((yield* config.get()).shell)
   const projectDirectory = instance.worktree === "/" ? instance.directory : instance.worktree
   const scopes = new Map<string, Scope.Closeable>()
+  // Installed hooks run in PreToolUse (`before`) and PostToolUse (`after`): what `before` left for `after`, and the scope
+  // holding the Session Location's Relay service, for checks and receipts, until the call settles.
+  const hooks = new Map<string, { readonly hooked: ToolSafetyHooks.Hooked; readonly scope: Scope.Closeable }>()
+  const locations = Option.getOrUndefined(yield* Effect.serviceOption(LocationServiceMap.Service))
+  const forget = (toolUseID: string) => Effect.suspend(() => {
+    const entry = hooks.get(toolUseID)
+    hooks.delete(toolUseID)
+    return entry ? Scope.close(entry.scope, Exit.void) : Effect.void
+  })
+  // A call Claude Code never settled ends with the session.
+  input.abort.addEventListener("abort", () => {
+    Effect.runFork(Effect.forEach([...hooks.keys()], forget, { discard: true }))
+  }, { once: true })
 
   const context = Effect.fnUntraced(function* (actor: Actor, toolUseID: string) {
     const session = yield* sessions.get(actor.sessionID)
@@ -231,9 +258,15 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
     }),
     safety: (actor, call, toolUseID) => Effect.gen(function* () {
       const session = yield* sessions.get(actor.sessionID)
-      yield* arsenal.withSession(actor.sessionID, ToolSafety.beforeInvocation({ tool: call.tool, args: call.args,
+      const part = input.part?.(toolUseID)
+      const scope = yield* Scope.make()
+      // The same hooks, decisions and Activity ledger as the V1 tools boundary, under Orchestra's name for the call.
+      const hooked = yield* arsenal.withSession(actor.sessionID, ToolSafety.beforeHooked({ tool: call.tool, args: call.args,
         sessionID: actor.sessionID, callID: toolUseID, agent: actor.seat, directory: session.directory,
-        projectID: session.projectID, projectDirectory }))
+        projectID: session.projectID, projectDirectory, ...(part ? { assistantMessageID: part.messageID } : {}) })).pipe(
+        Effect.provideService(ToolSafetyHooks.Placement, ToolSafetyPlacement.make(locations, session, scope)),
+        Effect.onExit((exit) => Exit.isSuccess(exit) && exit.value ? Effect.void : Scope.close(scope, Exit.void)))
+      if (hooked) hooks.set(toolUseID, { hooked, scope })
     }),
     arsenal: (actor, tool, args) => arsenal.beforeExecute(actor.sessionID, tool, args),
     confine: (actor, command, toolUseID, background) => arsenal.withSession(actor.sessionID, Effect.gen(function* () {
@@ -282,6 +315,13 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
       return updated
     })),
     release,
+    settle: (toolUseID, succeeded) => Effect.gen(function* () {
+      const entry = hooks.get(toolUseID)
+      if (!entry) return []
+      // A call that did not succeed runs no `after` hooks, so it needs no Session services.
+      if (!succeeded) return yield* ToolSafetyHooks.settle(entry.hooked, false)
+      return yield* arsenal.withSession(entry.hooked.scope.call.sessionID, ToolSafetyHooks.settle(entry.hooked, true))
+    }).pipe(Effect.ensuring(forget(toolUseID))),
     ask: (actor, name, args, toolUseID) => Effect.gen(function* () {
       const ctx = yield* context(actor, toolUseID)
       // Delegation is Orchestra's `task` permission on the seat, as Task asks it.

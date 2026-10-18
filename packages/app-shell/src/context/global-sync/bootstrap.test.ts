@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createStore } from "solid-js/store"
 import { QueryClient } from "@tanstack/solid-query"
-import type { Config, OrchestraClient, Project } from "@orchestra/sdk/v2/client"
+import type { Config, OrchestraClient, Project, Session } from "@orchestra/sdk/v2/client"
 import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@opencode-ai/client/promise"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import {
@@ -15,6 +15,8 @@ import {
   loadReferencesQuery,
 } from "./bootstrap"
 import type { State, VcsCache } from "./types"
+import { createServerSession } from "../server-session"
+import { sessionPermissionRequest, sessionQuestionRequest } from "@/pages/session/composer/session-request-tree"
 import { ServerScope } from "@/utils/server-scope"
 import type { ServerApi } from "@/utils/server"
 
@@ -396,6 +398,65 @@ describe("bootstrapDirectory", () => {
     newer.reject(new Error("newer read failed"))
     await new Promise((resolve) => setTimeout(resolve, 0))
     expect(state[0].load).toEqual({ agent: "ready", config: "failed", session_status: "failed" })
+  })
+
+  test("indexes the subagent Sessions between a pending request and its root so the parent still finds it", async () => {
+    const info = (id: string, parentID?: string): Session => ({
+      id,
+      slug: id,
+      projectID: "project",
+      directory: "/project",
+      title: id,
+      version: "1",
+      parentID,
+      time: { created: 1, updated: 1 },
+    })
+    const sessions: Record<string, Session> = {
+      root: info("root"),
+      child: info("child", "root"),
+      grandchild: info("grandchild", "child"),
+    }
+    const session = createServerSession({
+      session: { get: async (input: { sessionID: string }) => ({ data: sessions[input.sessionID] }) },
+    } as unknown as OrchestraClient)
+    const [store, setStore] = directoryState()
+
+    await bootstrapDirectory({
+      directory: "/project",
+      scope: ServerScope.local,
+      mcp: false,
+      global: {
+        config: {} satisfies Config,
+        path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
+        project: [{ id: "project", worktree: "/project" } as Project],
+        provider,
+      },
+      sdk: {
+        app: { agents: async () => ({ data: [] }) },
+        config: { get: async () => ({ data: {} }) },
+        session: { status: async () => ({ data: {} }) },
+        vcs: { get: async () => ({ data: undefined }) },
+        permission: { list: async () => ({ data: [{ id: "per_1", sessionID: "grandchild" }] }) },
+        question: { list: async () => ({ data: [{ id: "que_1", sessionID: "child" }] }) },
+        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
+        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
+      } as unknown as OrchestraClient,
+      api,
+      store,
+      setStore,
+      vcsCache: { setStore() {} } as unknown as VcsCache,
+      loadSessions() {},
+      loadActiveSessions: async () => ({}),
+      translate: (key) => key,
+      queryClient: new QueryClient(),
+      session,
+      protocol: Promise.resolve("v1"),
+    })
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    expect(store.session.map((item) => item.id)).toEqual(["child", "grandchild"])
+    expect(sessionPermissionRequest(store.session, session.data.permission, "root")?.id).toBe("per_1")
+    expect(sessionQuestionRequest(store.session, session.data.question, "root")?.id).toBe("que_1")
   })
 })
 

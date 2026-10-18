@@ -16,6 +16,8 @@ import {
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
 let kind: "v1" | "v2" = "v1"
+// A V1 server whose /api/health reports a pid also serves the V2 archive routes, as the desktop sidecar does.
+let sidecar = false
 let active: "A" | "B" = "B"
 let pathname = "/source-B/shared"
 let request = Promise.withResolvers<void>()
@@ -29,7 +31,8 @@ const writes: { source: string; input: unknown }[] = []
 const navigated: string[] = []
 const drafts: unknown[] = []
 const notices: SessionTabsRemovedDetail[] = []
-const toasts: unknown[] = []
+const toasts: { actions?: { onClick: () => void }[] }[] = []
+const opened: unknown[] = []
 
 function state() {
   const rows = ["shared", "neighbor"].map((id) => ({
@@ -112,7 +115,7 @@ beforeAll(async () => {
           if (listFailure) throw new Error("history offline")
           return { data: stores[source].data.session, cursor: {} }
         } } },
-        sessionManagement: { listArchived: async () => {
+        sessionManagement: { hasArchiveRoutes: () => kind === "v2" || sidecar, listArchived: async () => {
           if (listFailure) throw new Error("history offline")
           return [...stores[source].canonical.values()].filter((session) => session.time.archived !== undefined)
         }, archive: async (sessionID: string, archived: boolean, directory: string) => {
@@ -128,7 +131,13 @@ beforeAll(async () => {
       }
     },
   }))
-  mock.module("@/context/tabs", () => ({ useTabs: () => ({ newDraft: (draft: unknown) => drafts.push(draft) }) }))
+  mock.module("@/context/tabs", () => ({
+    useTabs: () => ({
+      newDraft: (draft: unknown) => drafts.push(draft),
+      addSessionTab: (tab: unknown) => tab,
+      select: (tab: unknown) => opened.push(tab),
+    }),
+  }))
   mock.module("@/pages/session/session-layout", () => ({
     useSessionKey: () => ({
       params: {
@@ -140,7 +149,7 @@ beforeAll(async () => {
     }),
   }))
   mock.module("@/context/language", () => ({ useLanguage: () => ({ t: () => "" }) }))
-  mock.module("@/utils/toast", () => ({ showToast: (toast: unknown) => toasts.push(toast) }))
+  mock.module("@/utils/toast", () => ({ showToast: (toast: (typeof toasts)[number]) => toasts.push(toast) }))
   window.addEventListener(SESSION_TABS_REMOVED_EVENT, (event) => {
     const notice = readSessionTabsRemovedDetail(event)
     if (notice) notices.push(notice)
@@ -152,7 +161,8 @@ beforeAll(async () => {
 })
 
 beforeEach(() => {
-  kind = "v1"
+  kind = "v2"
+  sidecar = false
   missing = false
   listFailure = false
   reactive = false
@@ -161,7 +171,35 @@ beforeEach(() => {
   request = Promise.withResolvers<void>()
   started = Promise.withResolvers<void>()
   stores = { A: state(), B: state() }
-  writes.length = navigated.length = drafts.length = notices.length = toasts.length = 0
+  writes.length = navigated.length = drafts.length = notices.length = toasts.length = opened.length = 0
+})
+
+test("V1 offers no archive because restore does not exist there", async () => {
+  kind = "v1"
+  const action = useSessionArchive()
+  expect(action.available()).toBe(false)
+  expect(action.restorable()).toBe(false)
+  await action.archive("shared")
+  expect(writes).toEqual([])
+  expect(notices).toEqual([])
+  expect(stores.B.data.session.map((item) => item.id)).toEqual(["shared", "neighbor"])
+  expect(toasts[0]).toMatchObject({ title: "Archive unavailable on this server" })
+})
+
+test("V1 server whose /api/health reports a pid gets restore", async () => {
+  kind = "v1"
+  sidecar = true
+  stores.B.set("session", 0, "time", "archived", 5)
+  const action = useSessionArchive()
+  expect(action.available()).toBe(true)
+  expect(action.restorable()).toBe(true)
+  const restored = action.restore("shared")
+  await started.promise
+  request.resolve()
+  expect(await restored).toBe(true)
+  expect(writes).toEqual([{ source: "B", input: { sessionID: "shared", archived: false, directory: "/shared/repo" } }])
+  expect(stores.B.data.session.find((item) => item.id === "shared")?.time.archived).toBeUndefined()
+  expect(toasts).toEqual([])
 })
 
 test("old V2 archive explains unsupported operations without removing sessions or tabs", async () => {
@@ -282,6 +320,9 @@ test("real archive history DOM retries a failed load, then restores only its cap
   await until(() => !host.querySelector('[data-session-id="shared"]'))
   expect(stores.A.data.session.map((session) => session.id)).toEqual(["shared", "neighbor"])
   expect(notices).toEqual([])
+  expect(toasts).toMatchObject([{ variant: "success", description: "shared", actions: [{}] }])
+  toasts[0].actions![0].onClick()
+  expect(opened).toEqual([{ server: servers.B, sessionId: "shared" }])
   dispose()
   host.remove()
 }, 30_000)

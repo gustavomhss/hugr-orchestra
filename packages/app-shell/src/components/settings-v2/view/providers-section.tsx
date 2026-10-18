@@ -174,9 +174,7 @@ function ProviderCard(props: {
               class="mx-btn"
               disabled={!props.controller.canDisconnect(props.item)}
               title={
-                props.controller.canDisconnect(props.item)
-                  ? undefined
-                  : language.t("settings.providers.connected.environmentDescription")
+                props.controller.canDisconnect(props.item) ? undefined : props.controller.disconnectHint(props.item)
               }
               onClick={() => void props.controller.disconnect(props.item.id, props.item.name)}
             >

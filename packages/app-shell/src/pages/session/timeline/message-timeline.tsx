@@ -17,7 +17,6 @@ import { createMediaQuery } from "@solid-primitives/media"
 import { useMutation } from "@tanstack/solid-query"
 import { createVirtualizer, defaultRangeExtractor, elementScroll, type VirtualItem } from "@tanstack/solid-virtual"
 import { Button } from "@orchestra/ui/button"
-import { Card } from "@orchestra/ui/card"
 import {
   ContextToolGroup,
   Message,
@@ -70,6 +69,7 @@ import { observeElementOffsetReconnectAware } from "./observe-element-offset"
 import { createTimelineProjection } from "./projection"
 import { MessageComment, TimelineRow, TimelineRowMap } from "./rows"
 import { TimelineDiffSummaryRow } from "./timeline-diff-summary-row"
+import { TimelineErrorCard } from "./timeline-error-row"
 import { filterVirtualIndexes } from "./virtual-items"
 import { errorMessage } from "@/pages/layout/helpers"
 import { agentLabel, OrchestraTurn } from "./orchestra-turn"
@@ -1091,9 +1091,7 @@ export function MessageTimeline(props: {
           <TimelineRowFrame row={errorRow}>
             <div data-slot="session-turn-message-container" class="w-full px-4 md:px-5">
               <OrchestraTurn chrome={turnChrome()} role="assistant" head={false}>
-                <Card variant="error" class="error-card">
-                  {errorRow().text}
-                </Card>
+                <TimelineErrorCard text={errorRow().text} providerID={errorRow().providerID} />
               </OrchestraTurn>
             </div>
           </TimelineRowFrame>

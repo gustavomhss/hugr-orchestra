@@ -9,6 +9,7 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServerSDK } from "@/context/server-sdk"
 import { createProviderResource } from "@/hooks/provider-catalog"
+import { showToast } from "@/utils/toast"
 import {
   authorizationURL,
   type CatalogEntry,
@@ -146,7 +147,8 @@ export function ProviderConnectDialog(props: {
   const dialog = useDialog()
   const sdk = useServerSDK()
   const platform = usePlatform()
-  const location = { directory: props.directory }
+  // Without a project the connection is server-wide, so no directory scope is sent.
+  const location = props.directory ? { directory: props.directory } : undefined
   const integration = createProviderResource(
     () => ({ id: props.id, location, client: sdk(), server: sdk().scope }),
     (input) =>
@@ -226,7 +228,16 @@ export function ProviderConnectDialog(props: {
     if (current.type === "key") {
       await sdk()
         .api.integration.connect.key({ integrationID: props.id, location, key: state.key.trim() })
-        .then(finish, fail)
+        .then(() => {
+          // The server only stores the key; the provider checks it on the first request.
+          showToast({
+            variant: "success",
+            icon: "circle-check",
+            title: language.t("orchestra.providers.connectDialog.keySaved.title", { provider: props.name }),
+            description: language.t("orchestra.providers.connectDialog.keySaved.description"),
+          })
+          return finish()
+        }, fail)
       return
     }
     const attempt = state.attempt

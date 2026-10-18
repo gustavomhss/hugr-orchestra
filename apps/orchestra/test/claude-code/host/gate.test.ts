@@ -154,6 +154,11 @@ describe("ClaudeHostGate.decide", () => {
     expect(ClaudeHostGate.invocation("NotebookEdit", { notebook_path: "/n" })).toEqual({ tool: "edit", args: { filePath: "/n" } })
     expect(ClaudeHostGate.invocation("Bash", { command: "ls", description: "d" })).toEqual({ tool: "bash", args: { command: "ls" } })
     expect(ClaudeHostGate.invocation("mcp__orchestra__edit", { filePath: "/e" })).toEqual({ tool: "edit", args: { filePath: "/e" } })
-    expect(ClaudeHostGate.invocation("Grep", { pattern: "x" })).toEqual({ tool: "Grep", args: { pattern: "x" } })
+    // Other built-ins too, so a hook's tool condition matches the same name on both engines.
+    expect(ClaudeHostGate.invocation("Grep", { pattern: "x" })).toEqual({ tool: "grep", args: { pattern: "x" } })
+    expect(ClaudeHostGate.invocation("WebFetch", { url: "u" })).toEqual({ tool: "webfetch", args: { url: "u" } })
+    expect(ClaudeHostGate.invocation("Agent", { prompt: "p" })).toEqual({ tool: "task", args: { prompt: "p" } })
+    expect(ClaudeHostGate.invocation("Task", { prompt: "p" })).toEqual({ tool: "task", args: { prompt: "p" } })
+    expect(ClaudeHostGate.invocation("mcp__other__thing", { a: 1 })).toEqual({ tool: "mcp__other__thing", args: { a: 1 } })
   })
 })
