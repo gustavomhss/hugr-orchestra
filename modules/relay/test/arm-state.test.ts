@@ -706,6 +706,15 @@ describe("rebind", () => {
     expect(await run(armsDir, ArmCreate.create(arm("ses_b")))).toBe("unchanged")
   })
 
+  test("a staging file left by a rebind that died before its rename does not block the next one and is swept", async () => {
+    const armsDir = await created()
+    const leftover = path.join(armsDir, "arm-1", ".meta.json~0b5c1d2e-3f40-4a51-8b62-7c83d94e0f15")
+    await writeFile(leftover, "{}")
+    expect(await run(armsDir, ArmCreate.rebind({ ...arm("ses_b"), from: "ses_a" }))).toBe("rebound")
+    expect(existsSync(leftover)).toBe(false)
+    expect((await readdir(path.join(armsDir, "arm-1"))).sort()).toEqual(["agent_id", "meta.json", "sprint.json"])
+  })
+
   const refused: [string, (armsDir: string) => Promise<unknown>, ReturnType<typeof arm> & { from: string }][] = [
     ["held by another Session", async () => undefined, { ...arm("ses_b"), from: "ses_x" }],
     ["graded or positioned", (armsDir) => writeFile(path.join(armsDir, "arm-1", "position"), "implement"),

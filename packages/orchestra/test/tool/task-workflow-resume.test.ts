@@ -2,7 +2,7 @@ import { afterEach, expect } from "bun:test"
 import path from "node:path"
 import { mkdir, rm } from "node:fs/promises"
 import { and, eq, inArray } from "drizzle-orm"
-import { Cause, Effect, Exit, Schema } from "effect"
+import { Cause, Effect, Exit, Option, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
@@ -368,8 +368,15 @@ it.instance("an arm bound to a child that held before the model moves to the nex
     const database = yield* Database.Service
     const rebound = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, child),
       eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)))).all().pipe(Effect.orDie)
-    expect(rebound.map((row) => row.data)).toEqual([expect.objectContaining({ executionSessionID: child, from: unrun.id, token })])
+    expect(rebound.map((row) => row.data)).toEqual([expect.objectContaining({ executionSessionID: child, from: unrun.id, token,
+      authorityCallID: expect.any(String) })])
+    expect(rebound[0]?.data.recoveredBy).toBeUndefined()
     expect((yield* WorkflowBinding.read(unrun.id))?.executionSessionID).toBe(unrun.id)
+    // The stale child's next turn reads its step first, and the arm no longer names it: refused before any model call.
+    const stale = yield* WorkflowBinding.read(unrun.id)
+    if (!stale) throw new Error("missing stale binding")
+    const turn = yield* f.relay.currentStep(token, stale.binding).pipe(Effect.flip)
+    expect(turn).toMatchObject({ reason: "WORKFLOW_ARM_BINDING_MISMATCH" })
     expect((yield* f.relay.audit(token)).result).toBe("PASS")
   }), { git: true })
 
@@ -472,7 +479,11 @@ it.instance("a retry of the same authorization after a crash between the move an
     // The retry reaches the same child, finds the arm already its own, records the move once and runs.
     expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
     expect(f.prompts.count).toBe(1)
-    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ executionSessionID: child, from: f.unrun.id, token })])
+    // The retry recorded a move it did not make, so it is named as the recorder only.
+    const recorded = yield* rebounds(child)
+    expect(recorded).toEqual([expect.objectContaining({ executionSessionID: child, from: f.unrun.id, token,
+      recoveredBy: expect.objectContaining({ authorityCallID: expect.any(String) }) })])
+    expect(recorded[0]?.authorityCallID).toBeUndefined()
     expect((yield* WorkflowBinding.read(child))?.token).toBe(token)
     expect((yield* f.relay.audit(token)).result).toBe("PASS")
   }), { git: true })
@@ -485,9 +496,53 @@ it.instance("another authorization after such a crash records the stranded move 
     expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
     expect(f.prompts.count).toBe(1)
     const child = SessionID.make(Dispatch.childSessionID(next))
-    expect(yield* rebounds(stranded)).toEqual([expect.objectContaining({ from: f.unrun.id, token })])
-    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ from: stranded, token })])
+    expect(yield* rebounds(stranded)).toEqual([expect.objectContaining({ from: f.unrun.id, token, recoveredBy: expect.anything() })])
+    expect(yield* rebounds(child)).toEqual([expect.objectContaining({ from: stranded, token, authorityCallID: expect.any(String) })])
     expect((yield* f.relay.audit(token)).result).toBe("PASS")
+  }), { git: true })
+
+it.instance("a child the arm moved from never takes it back, with or without its own binding", () =>
+  Effect.gen(function* () {
+    const f = yield* heldBeforeModel()
+    // `heldBeforeModel` dispatched the fixture's own authorization; the arm moves from its child to `next`'s.
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_forward")
+    expect(Exit.isFailure(yield* f.call({ authorizationID: next }, { abort: true }))).toBe(true)
+    const moved = SessionID.make(Dispatch.childSessionID(next))
+    const holder = () => f.relay.holder(token).pipe(Effect.map(Option.getOrUndefined))
+    expect(yield* holder()).toBe(moved)
+
+    // The old child's own authorization: its binding no longer matches the arm, so the dispatch holds.
+    const back = yield* f.call()
+    expect(Exit.isFailure(back)).toBe(true)
+    if (Exit.isFailure(back)) expect(Cause.pretty(back.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
+    expect(yield* holder()).toBe(moved)
+
+    // Even without its binding record, a child moved from is refused instead of moved back to.
+    const database = yield* Database.Service
+    yield* database.db.delete(EventTable).where(and(eq(EventTable.aggregate_id, f.unrun.id),
+      eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1)))).run().pipe(Effect.orDie)
+    const again = yield* f.call()
+    expect(Exit.isFailure(again)).toBe(true)
+    if (Exit.isFailure(again)) expect(Cause.pretty(again.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
+    expect(yield* holder()).toBe(moved)
+    expect(f.prompts.count).toBe(0)
+  }), { git: true })
+
+it.instance("an arm bound to a child whose Session is busy, with no Task job, is not moved until it is idle", () =>
+  Effect.gen(function* () {
+    const f = yield* heldBeforeModel()
+    const status = yield* SessionStatus.Service
+    yield* status.set(f.unrun.id, { type: "busy" })
+    const next = yield* f.authorize("evt_maestro_authorization_workflow_busy")
+    const refused = yield* f.call({ authorizationID: next })
+    expect(Exit.isFailure(refused)).toBe(true)
+    if (Exit.isFailure(refused)) expect(Cause.pretty(refused.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
+    expect(f.prompts.count).toBe(0)
+    expect(yield* rebounds(SessionID.make(Dispatch.childSessionID(next)))).toEqual([])
+
+    yield* status.set(f.unrun.id, { type: "idle" })
+    expect(Exit.isSuccess(yield* f.call({ authorizationID: next }))).toBe(true)
+    expect(f.prompts.count).toBe(1)
   }), { git: true })
 
 const unheld = {
