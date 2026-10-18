@@ -98,7 +98,7 @@ await naturalHost({
           if (!args.path.includes(`${path.sep}packages${path.sep}`) || args.path.includes(`${path.sep}node_modules${path.sep}`)) return undefined
           const text = await Bun.file(args.path).text()
           inputs[path.relative(ROOT, args.path).replaceAll("\\", "/")] = createHash("sha256").update(text).digest("hex")
-          if (!/[\\/]packages[\\/](orchestra|core)[\\/]src[\\/].*\.ts$/.test(args.path) || !/\bimport\.meta\.dir\b(?!name)/.test(text)) return undefined
+          if (!/[\\/](?:apps[\\/]orchestra|packages[\\/]core)[\\/]src[\\/].*\.ts$/.test(args.path) || !/\bimport\.meta\.dir\b(?!name)/.test(text)) return undefined
           return { contents: text.replace(/\bimport\.meta\.dir\b(?!name)/g, "import.meta.dirname"), loader: "ts" }
         })
       } }],

@@ -81,7 +81,7 @@ jobs:
           import path from "node:path"
           import { Omni } from "@orchestra/core/omni"
           import { Flag } from "@orchestra/core/flag/flag"
-          import { tree } from "../../core/test/fixture/process-tree.ts"
+          import { tree } from "../../../packages/core/test/fixture/process-tree.ts"
 
           const shipped = path.dirname(realpathSync(process.execPath))
           if (Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "on") throw new Error("unset CLI flag did not select Omni")
@@ -102,7 +102,7 @@ jobs:
           import { mkdtempSync, readdirSync, symlinkSync } from "node:fs"
           import os from "node:os"
           import path from "node:path"
-          import { alive, gone, reap, sweep } from "../../core/test/fixture/process-tree.ts"
+          import { alive, gone, reap, sweep } from "../../../packages/core/test/fixture/process-tree.ts"
 
           const fail = (message: string) => {
             console.error(`::error::${message}`)

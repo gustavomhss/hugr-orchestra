@@ -23,9 +23,9 @@ export default defineMain({
     "@storybook/addon-vitest",
   ],
   stories: [
-    "../../ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../../session-ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
-    "../../app-shell/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../packages/ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../packages/session-ui/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
+    "../../../packages/app-shell/src/**/*.stories.@(js|jsx|mjs|ts|tsx)",
   ],
   async viteFinal(config) {
     const { mergeConfig, searchForWorkspaceRoot } = await import("vite")

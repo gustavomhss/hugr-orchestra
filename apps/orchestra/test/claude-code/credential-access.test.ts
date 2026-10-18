@@ -20,6 +20,7 @@ import ts from "typescript"
 const ROOT = path.resolve(import.meta.dir, "../../../..")
 const SCOPE = [
   "packages/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
+  "apps/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
   "modules/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
   "modules/*/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",
   "tooling/*/{src,script}/**/*.{ts,tsx,js,mjs,cjs,py,sh}",

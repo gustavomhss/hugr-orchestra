@@ -13,10 +13,10 @@ await fs.cp(path.join(source, "src/maestro/seats"), path.join(packageRoot, "src/
 await fs.cp(path.join(source, "src/agent/prompt"), path.join(packageRoot, "src/agent/prompt"), { recursive: true })
 // Preserve every installed skill tree without importing/caching the live registry before the loader is registered.
 // Otherwise adding a real specialist makes this isolated registry fail before its runtime or bundle proof can run.
-const trees = (await fs.readdir(path.resolve(source, ".."), { withFileTypes: true }))
+const trees = (await fs.readdir(path.resolve(source, "../../packages"), { withFileTypes: true }))
   .filter((entry) => entry.isDirectory() && entry.name.endsWith("-specialist"))
 if (trees.length === 0) throw new Error("Second-seat specialist snapshot is empty")
-await Promise.all(trees.map((entry) => fs.cp(path.resolve(source, "..", entry.name), path.join(snapshot, "packages", entry.name), { recursive: true })))
+await Promise.all(trees.map((entry) => fs.cp(path.resolve(source, "../../packages", entry.name), path.join(snapshot, "packages", entry.name), { recursive: true })))
 await Promise.all(["modules/specialists/backend", "modules/specialists/archie"].map((tree) =>
   fs.cp(path.resolve(source, "../..", tree), path.join(snapshot, tree), { recursive: true }),
 ))

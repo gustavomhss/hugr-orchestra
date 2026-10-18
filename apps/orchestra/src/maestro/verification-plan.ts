@@ -12,6 +12,8 @@ const checks = [
 
 const risks = ["docs", "package", "workflow", "api", "persistence", "security", "concurrency", "unknown"] as const
 const packageIDs = ["orchestra", "core", "schema"] as const
+// Orchestra is an app; core and schema are libraries.
+const packageRoots = { orchestra: "apps/orchestra/", core: "packages/core/", schema: "packages/schema/" } as const
 
 type CheckID = (typeof checks)[number]
 type PackageID = (typeof packageIDs)[number]
@@ -62,7 +64,7 @@ export function compileVerificationPlan(input: CompileVerificationPlanInput): Ve
 
   if (
     input.packages.length === 0 ||
-    !input.changedPaths.every((path) => input.packages.some((pkg) => path.startsWith(`packages/${pkg}/`)))
+    !input.changedPaths.every((path) => input.packages.some((pkg) => path.startsWith(packageRoots[pkg])))
   ) {
     return fallback(input)
   }

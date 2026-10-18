@@ -52,7 +52,7 @@ const result = await Bun.build({
       // the same directory on Node and Bun.
       name: "node-import-meta-dir",
       setup(build) {
-        build.onLoad({ filter: /[\\/]packages[\\/](orchestra|core)[\\/]src[\\/].*\.ts$/ }, async (args) => {
+        build.onLoad({ filter: /[\\/](?:apps[\\/]orchestra|packages[\\/]core)[\\/]src[\\/].*\.ts$/ }, async (args) => {
           const text = await Bun.file(args.path).text()
           if (!/\bimport\.meta\.dir\b(?!name)/.test(text)) return undefined
           return { contents: text.replace(/\bimport\.meta\.dir\b(?!name)/g, "import.meta.dirname"), loader: "ts" }
