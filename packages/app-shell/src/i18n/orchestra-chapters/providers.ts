@@ -52,6 +52,8 @@ export const PROVIDERS_COPY = {
   "orchestra.providers.custom.endpoint": "Base URL",
   "orchestra.providers.custom.model": "Model ID",
   "orchestra.providers.custom.key": "API key (optional)",
+  "orchestra.providers.custom.headersHint":
+    "Headers are saved in your config file. Put secrets in the API key field, which is stored securely.",
   "orchestra.providers.custom.nameError": "Choose a unique provider name.",
   "orchestra.providers.custom.endpointError": "Enter a valid endpoint URL.",
   "orchestra.providers.custom.modelError": "Enter the model ID this endpoint serves.",
