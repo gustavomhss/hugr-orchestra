@@ -3,7 +3,7 @@ import { createStore } from "solid-js/store"
 import type { RelayRun } from "./runs"
 import { workflowKey } from "./catalog"
 import { CheckList } from "./checks"
-import { Empty, NodeDetails, NodeNameField, Rows, Switchable } from "./details"
+import { Empty, NodeDetails, NodeNameField, pasteOneLine, Rows, Switchable } from "./details"
 import { badgeTone, runHandle, span, STEP_TONE } from "./format"
 import {
   chain,
@@ -32,13 +32,16 @@ import { issueText, phaseNames } from "./parts"
 import { runsEnabled } from "./source"
 import { Ic, useRelayCopy } from "./ui"
 
+// The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
+export type Skills = { names: string[] | undefined; error: boolean; retry: () => void }
+
 type Props = {
   flow: Flow
   node: FlowNode
   run: RelayRun | undefined
   frozen: Flow | undefined
   issues: string[]
-  skills: string[]
+  skills: Skills
   focusPhase?: string
   save: JSX.Element
   readOnly?: boolean
@@ -389,6 +392,10 @@ function Params(props: Props) {
         ? [issueText(copy, props.flow, issue)]
         : [],
     )
+  const skill = () => String(props.node.parameters.skill ?? "")
+  // Only a loaded catalog can say a skill is gone; until then the name is taken at its word.
+  const skillGone = () => !!skill() && !!props.skills.names && !props.skills.names.includes(skill())
+  const skillOptions = () => [...new Set([...(props.skills.names ?? []), skill()].filter(Boolean))]
   const unchecked = () => ["relay.execute", "relay.review"].includes(props.node.type) && !checklist().controls.length
   return (
     <>
@@ -410,13 +417,22 @@ function Params(props: Props) {
             <span>{copy.t("orchestra.workflows.details.phaseField")}</span>
             <select
               value={phaseOf(props.flow, props.node.id)?.id ?? ""}
-              onChange={(event) => props.onChange(setPhase(props.flow, props.node.id, event.currentTarget.value))}
+              onChange={(event) => {
+                props.onChange(setPhase(props.flow, props.node.id, event.currentTarget.value))
+                // A change that waits for an answer leaves the step in its phase, so the list shows it there.
+                event.currentTarget.value = phaseOf(props.flow, props.node.id)?.id ?? ""
+              }}
             >
               <Show when={choices().none}>
                 <option value="">{copy.t("orchestra.workflows.details.noPhase")}</option>
               </Show>
               <For each={choices().phases}>{(phase) => <option value={phase.id}>{phase.name}</option>}</For>
             </select>
+            <Show when={!choices().none && phaseOf(props.flow, props.node.id)}>
+              {(phase) => (
+                <span class="mx-hint">{copy.t("orchestra.workflows.details.phaseMiddle", { phase: phase().name })}</span>
+              )}
+            </Show>
           </label>
         </div>
         <Show when={props.node.type === INJECT}>
@@ -452,17 +468,41 @@ function Params(props: Props) {
           <div class="mx-fields">
             <label class="mx-field">
               <span>{copy.t("orchestra.workflows.details.skill")}</span>
-              <select
-                value={String(props.node.parameters.skill ?? "")}
-                onChange={(event) => update({ skill: event.currentTarget.value })}
-              >
+              <select value={skill()} onChange={(event) => update({ skill: event.currentTarget.value })}>
                 <option value="">{copy.t("orchestra.workflows.details.noSkill")}</option>
-                <For each={[...new Set([...props.skills, String(props.node.parameters.skill ?? "")].filter(Boolean))]}>
-                  {(skill) => <option value={skill}>{skill}</option>}
+                <For each={skillOptions()}>
+                  {(name) => (
+                    <option value={name}>
+                      {skillGone() && name === skill()
+                        ? copy.t("orchestra.workflows.details.skillMissing", { skill: name })
+                        : name}
+                    </option>
+                  )}
                 </For>
               </select>
+              <Show when={props.skills.error}>
+                <span class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
+                  {copy.t("orchestra.workflows.details.skillsError")}{" "}
+                  <button type="button" class="mx-link" onClick={props.skills.retry}>
+                    {copy.t("orchestra.workflows.retry")}
+                  </button>
+                </span>
+              </Show>
+              <Show when={!props.skills.names && !props.skills.error}>
+                <span class="mx-hint" role="status">
+                  {copy.t("orchestra.workflows.details.skillsLoading")}
+                </span>
+              </Show>
+              <Show when={skillGone()}>
+                <span class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
+                  {copy.t("orchestra.workflows.details.skillMissingHint", { skill: skill() })}
+                </span>
+              </Show>
+              <Show when={skill() && !skillGone()}>
+                <span class="mx-hint">{copy.t("orchestra.workflows.details.skillLive")}</span>
+              </Show>
             </label>
-            <Show when={String(props.node.parameters.skill ?? "")}>
+            <Show when={skill()}>
               <div class="mx-field">
                 <span>{copy.t("orchestra.workflows.details.skillMode")}</span>
                 <div class="wf-seg" role="group" aria-label={copy.t("orchestra.workflows.details.skillMode")}>
@@ -556,9 +596,12 @@ function StartParams(props: Props) {
           max="99"
           value={retryBudget(props.flow)}
           onInput={(event) => {
+            // An empty field is a number being retyped: the budget keeps its value until there is a new one.
+            if (!event.currentTarget.value.trim()) return
             const value = Math.round(Number(event.currentTarget.value))
             if (Number.isFinite(value)) update({ relayRetryBudget: Math.max(0, Math.min(99, value)) })
           }}
+          onBlur={(event) => (event.currentTarget.value = String(retryBudget(props.flow)))}
         />
         <span class="mx-hint">
           {copy.t("orchestra.workflows.details.budgetHint", { count: retryBudget(props.flow) })}
@@ -618,7 +661,7 @@ function StartParams(props: Props) {
 function PhaseNameField(props: { flow: Flow; phase: FlowPhase; onChange: (flow: Flow) => void }) {
   const copy = useRelayCopy()
   const id = createUniqueId()
-  const [draft, setDraft] = createStore({ name: props.phase.name, error: "" as "" | "required" | "taken" })
+  const [draft, setDraft] = createStore({ name: props.phase.name, error: "" as "" | "required" | "taken" | "lines" })
   createEffect(
     on(
       () => [props.phase.id, props.phase.name],
@@ -644,6 +687,7 @@ function PhaseNameField(props: { flow: Flow; phase: FlowPhase; onChange: (flow: 
           if (!name || taken || name === props.phase.name) return
           props.onChange(updatePhase(props.flow, props.phase.id, { name }))
         }}
+        onPaste={(event) => pasteOneLine(event, () => setDraft("error", "lines"))}
         onBlur={() => setDraft({ name: props.phase.name, error: "" })}
       />
       <Show when={draft.error}>
@@ -651,7 +695,9 @@ function PhaseNameField(props: { flow: Flow; phase: FlowPhase; onChange: (flow: 
           {copy.t(
             draft.error === "required"
               ? "orchestra.workflows.details.nameRequired"
-              : "orchestra.workflows.details.phaseNameTaken",
+              : draft.error === "lines"
+                ? "orchestra.workflows.details.nameOneLine"
+                : "orchestra.workflows.details.phaseNameTaken",
           )}
         </span>
       </Show>

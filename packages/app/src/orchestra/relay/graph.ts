@@ -42,6 +42,7 @@ export type Issue =
   | { code: "check-duplicate"; node: string; params: { id: string; other: string } }
   | { code: "check-repeated"; node: string; params: { id: string } }
   | { code: "phase-gap"; node: string; params: { phase: string } }
+  | { code: "skill-missing"; node: string; params: { skill: string } }
   | { code: "no-steps" | "no-trigger" | "no-action"; node?: string }
   | {
       code: "trigger-count" | "needs-before" | "pattern-empty" | "hook-loose" | "message-empty" | "check-command"
@@ -60,8 +61,9 @@ export function flowFromDocument(
   kind: RelayKind,
 ): Flow {
   const ids = new Map(document.nodes.map((node) => [node.name, node.id]))
+  // A stored document this app did not write may carry an output other than `main`, or none.
   const edges = Object.entries(document.connections).flatMap(([source, outputs]) =>
-    outputs.main.flatMap((channel, port) =>
+    (outputs.main ?? []).flatMap((channel, port) =>
       channel.flatMap((edge) => {
         const from = ids.get(source)
         const to = ids.get(edge.node)
@@ -100,16 +102,18 @@ export function documentFields(flow: Flow): {
   nodeGroups?: RelayAuthoring.NodeGroup[]
 } {
   const names = new Map(flow.nodes.map((node) => [node.id, node.name]))
-  const connections: Record<string, { main: RelayAuthoring.Edge[][] }> = {}
+  // A Map, not an object literal: a step named `__proto__` would otherwise set the prototype and lose its connection.
+  const outputs = new Map<string, RelayAuthoring.Edge[][]>()
   flow.edges.forEach((edge) => {
     const source = names.get(edge.from)
     const target = names.get(edge.to)
     if (!source || !target) return
-    const main = connections[source]?.main ?? []
+    const main = outputs.get(source) ?? []
     while (main.length <= edge.port) main.push([])
     main[edge.port].push({ node: target, type: "main", index: 0 })
-    connections[source] = { main }
+    outputs.set(source, main)
   })
+  const connections = Object.fromEntries([...outputs].map(([source, main]) => [source, { main }] as const))
   const nodes = flow.nodes.map((node) => ({
     id: node.id,
     name: node.name,
@@ -188,13 +192,14 @@ export function retryBudget(flow: Flow) {
   return typeof value === "number" ? value : 3
 }
 
-export function issues(flow: Flow, diagnostics: string[] = []): Issue[] {
+// `skills` are the names the skill catalog lists, once it has loaded; a step that names another skill cannot run.
+export function issues(flow: Flow, diagnostics: string[] = [], skills?: string[]): Issue[] {
   const server = diagnostics.map((text): Issue => ({ code: "server", text }))
-  if (flow.kind === "workflow") return [...workflowIssues(flow), ...server]
+  if (flow.kind === "workflow") return [...workflowIssues(flow, skills), ...server]
   return [...hookIssues(flow), ...server]
 }
 
-function workflowIssues(flow: Flow): Issue[] {
+function workflowIssues(flow: Flow, skills: string[] | undefined): Issue[] {
   const inChain = new Set(chain(flow).map((node) => node.id))
   const loose = flow.nodes
     .filter((node) => !inChain.has(node.id))
@@ -224,6 +229,12 @@ function workflowIssues(flow: Flow): Issue[] {
         node.type === INJECT && !String(node.parameters.text ?? "").trim() && !String(node.parameters.file ?? "").trim(),
     )
     .map((node): Issue => ({ code: "inject-empty", node: node.id }))
+  const gone = flow.nodes.flatMap((node): Issue[] => {
+    const skill = String(node.parameters.skill ?? "")
+    return skill && skills && !skills.includes(skill)
+      ? [{ code: "skill-missing", node: node.id, params: { skill } }]
+      : []
+  })
   const order = [...chain(flow), ...flow.nodes.filter((node) => !inChain.has(node.id))]
   return [
     ...loose,
@@ -231,6 +242,7 @@ function workflowIssues(flow: Flow): Issue[] {
     ...checks,
     ...unsupported,
     ...contexts,
+    ...gone,
     ...duplicateChecks(order),
     ...phaseGaps(flow),
     ...empty,
@@ -281,6 +293,17 @@ export function phaseChoices(flow: Flow, id: string) {
     phases: flow.phases.filter((phase) => phase.id === current?.id || fits(phase.id)),
     none: !current || fits(""),
   }
+}
+
+// The phases with instructions that an edit leaves without a single step. A phase with no steps is not saved, so its
+// name and instructions would be gone after the next autosave.
+export function emptiedPhases(before: Flow, after: Flow) {
+  return before.phases.filter(
+    (phase) =>
+      phase.nodeIds.length &&
+      phase.description.trim() &&
+      after.phases.some((item) => item.id === phase.id && !item.nodeIds.length),
+  )
 }
 
 // Contract C1: `<node>_check_<n>`, n the smallest positive integer no check anywhere in the workflow uses yet.
@@ -515,7 +538,9 @@ export function updatePhase(flow: Flow, id: string, change: Partial<Pick<FlowPha
 // IDs and names are unique per document; new nodes take the first free suffix.
 export function uniqueID(flow: Flow, base: string) {
   const taken = new Set([...flow.nodes.map((node) => node.id), ...flow.phases.map((phase) => phase.id)])
-  const clean = base.replace(/[^A-Za-z0-9_.-]+/g, "_") || "step"
+  const replaced = base.replace(/[^A-Za-z0-9_.-]+/g, "_")
+  // A name in another script leaves only underscores; those are not an ID worth keeping.
+  const clean = /[A-Za-z0-9]/.test(replaced) ? replaced : "step"
   if (!taken.has(clean)) return clean
   const free = Array.from({ length: taken.size + 1 }, (_, index) => `${clean}_${index + 2}`).find(
     (id) => !taken.has(id),

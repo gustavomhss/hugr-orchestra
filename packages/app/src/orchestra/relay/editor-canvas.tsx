@@ -1,6 +1,4 @@
-import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, createSignal, on, Show } from "solid-js"
-import { useServerSDK } from "@/context/server-sdk"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
 import { Canvas, type CanvasApi, sameEdge } from "./canvas"
@@ -12,7 +10,7 @@ import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall
 import type { RelayRun } from "./runs"
 import { HookDetails, hookOperations, triggerName } from "./details-hook"
 import type { HookQueryState } from "./hook-status"
-import { WorkflowDetails } from "./details-workflow"
+import { type Skills, WorkflowDetails } from "./details-workflow"
 import { SaveStatus, type SaveState } from "./editor-head"
 import type { EditorProps } from "./editor"
 import { runHandle, RUN_TONE } from "./format"
@@ -49,6 +47,7 @@ type Props = EditorProps & {
   selected: string[]
   run: RelayRun | undefined
   runs: RelayRun[]
+  skills: Skills
   decision: RelayDecision | undefined
   decisionKnown?: boolean
   decisionStatus?: HookQueryState
@@ -71,7 +70,6 @@ type Props = EditorProps & {
 // The Editor tab: the canvas with its banner, the add panel and node details, each layer on its own URL.
 export function CanvasTab(props: Props) {
   const copy = useRelayCopy()
-  const serverSDK = useServerSDK()
   const [anchor, setAnchor] = createSignal<{ id: string; port: number }>()
   const [focusPhase, setFocusPhase] = createSignal<string>()
   const [confirming, setConfirming] = createSignal<{ ids: string[]; count: number }>()
@@ -331,24 +329,6 @@ export function CanvasTab(props: Props) {
     api?.center(next)
   })
 
-  const skills = useQuery(
-    () => ({
-      queryKey: props.source.key("skills"),
-      queryFn:
-        props.route.node && workflow()
-          ? () =>
-              serverSDK()
-                .currentApi.skill.list({ location: { directory: props.directory } })
-                .then(
-                  (result) => result.data.map((skill) => skill.name),
-                  () => [],
-                )
-          : skipToken,
-      retry: false,
-      staleTime: 60_000,
-    }),
-    props.source.queryClient,
-  )
   const detail = () => nodeOf(props.flow, props.route.node)
   const banner = () => {
     if (props.test)
@@ -605,7 +585,7 @@ export function CanvasTab(props: Props) {
               frozen={props.frozen}
               readOnly={props.readOnly}
               issues={props.issues.map((issue) => issueText(copy, props.flow, issue))}
-              skills={skills.data ?? []}
+              skills={props.skills}
               focusPhase={focusPhase()}
               save={save()}
               onChange={props.edit}

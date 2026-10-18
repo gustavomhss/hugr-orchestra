@@ -848,7 +848,35 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-body {
   position: relative;
   display: flex;
+  flex-direction: column;
   min-block-size: 0;
+  flex: 1;
+}
+/* Notices (a failed download, a hook status) stack above the canvas, never beside it. */
+.wf-notices {
+  display: grid;
+  gap: 8px;
+  padding: 10px 14px;
+  border-block-end: 1px solid var(--mx-line);
+}
+.wf-body .wf-notices > * {
+  margin: 0;
+}
+.wf-notice {
+  align-items: center;
+}
+.wf-notice > div {
+  min-inline-size: 0;
+  flex: 1;
+}
+.wf-notice strong {
+  display: block;
+}
+.wf-stage {
+  position: relative;
+  display: flex;
+  min-block-size: 0;
+  min-inline-size: 0;
   flex: 1;
 }
 .wf-pop {
@@ -1152,10 +1180,14 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   overflow-wrap: anywhere;
 }
 .wf-label small {
-  display: block;
+  display: -webkit-box;
   margin-block-start: 2px;
+  overflow: hidden;
   color: var(--mx-dim);
   font: 9.5px/13px var(--mx-mono);
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
 }
 .wf-label small.good {
   color: var(--mx-good);
@@ -1960,6 +1992,26 @@ html[data-color-scheme="light"] .wf-check.bad {
 }
 .wf-ctl .mx-error {
   margin: 7px 0 0;
+}
+.wf-ctl input.prose {
+  block-size: 28px;
+  margin-block-end: 7px;
+  padding: 0 9px;
+  font: 11.5px/1.5 var(--mx-sans);
+}
+.wf-ctl-params {
+  margin-block-start: 8px;
+  color: var(--mx-dim);
+  font-size: 11px;
+  line-height: 1.5;
+}
+.wf-ctl-params ul {
+  margin: 3px 0 0;
+  padding-inline-start: 16px;
+}
+.wf-ctl-params code {
+  color: var(--mx-strong);
+  font: 10.5px/1.5 var(--mx-mono);
 }
 .wf-proto {
   margin-block-end: 8px;
