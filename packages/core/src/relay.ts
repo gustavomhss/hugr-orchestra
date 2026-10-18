@@ -89,6 +89,10 @@ export interface Interface {
   readonly create: (
     input: ArmCreate.Input,
   ) => Effect.Effect<"created" | "unchanged", ArmCreate.Conflict | ArmState.StateError | Unavailable>
+  // Moves a workflow arm that graded nothing from one execution Session to another (ArmCreate.rebind).
+  readonly rebind: (
+    input: ArmCreate.Input & { readonly agentID: string; readonly from: string },
+  ) => Effect.Effect<"rebound" | "unchanged", ArmCreate.Conflict | ArmState.StateError | ArmState.Busy | Unavailable>
   readonly evaluate: (input: RelayArm.EvaluateInput) => Effect.Effect<RelayArm.Evaluation, Unavailable>
   readonly currentStep: (token: RelayArm.Token, binding: RelayArm.WorkflowBinding) =>
     Effect.Effect<RelayWorkflowCurrentStep.View, RelayWorkflowBinding.Held | Unavailable>
@@ -368,6 +372,9 @@ const layer = Layer.effect(
       }),
       create: Effect.fn("Relay.create")(function* (input: ArmCreate.Input) {
         return yield* armed(ArmCreate.create(input))
+      }),
+      rebind: Effect.fn("Relay.rebind")(function* (input: ArmCreate.Input & { readonly agentID: string; readonly from: string }) {
+        return yield* armed(ArmCreate.rebind(input))
       }),
       evaluate: Effect.fn("Relay.evaluate")(function* (input: RelayArm.EvaluateInput) {
         if (!Schema.is(RelayArm.Token)(input.token)) return { outcome: "refused" as const, failing: [], ledgerSeq: -1 }

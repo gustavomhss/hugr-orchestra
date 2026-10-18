@@ -218,7 +218,10 @@ export const make = Effect.gen(function* () {
       const workflow = yield* WorkflowBinding.adopt({ token: binding.token, relay,
         dispatch: { ...input, ...input.workflow, workflow: input.workflow.selection },
         globalChecks: loaded.contract.chain.flatMap((gate) => gate.checks), availableChecks: new Set(checks.keys()),
-      }).pipe(Effect.provideService(FileSystem.FileSystem, fs), Effect.mapError(bindingDenied))
+      }).pipe(Effect.provideService(FileSystem.FileSystem, fs),
+        Effect.mapError((error) => error instanceof RelayWorkflowBinding.Held
+          ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
+          : new ToolSafety.Denied({ reason: "WORKFLOW_BINDING_ACQUISITION" })))
       const receipt = Object.freeze({ taskID: binding.taskID, planID: binding.planID, directory: binding.directory })
       receipts.set(receipt, { host, binding, ...loaded, checks, relay, baseRevision, workflow })
       return receipt
@@ -398,30 +401,16 @@ export const make = Effect.gen(function* () {
       Effect.mapError((error) => new ToolSafety.Denied({ reason: error.reason })),
     ) : Effect.void
   }
-  // The workflow arm's current step for a receipt whose child was already bound at dispatch, read fresh; undefined for
-  // any other dispatch, whose arm is not bound to its child until bindWorkflow.
+  // The workflow arm's current step for a bound receipt, read fresh; undefined for any other dispatch.
   const workflowView = (receipt: Receipt | undefined) => {
     const current = receipt ? receipts.get(receipt) : undefined
-    if (!current?.workflow?.bound) return Effect.succeed(undefined)
+    if (!current?.workflow) return Effect.succeed(undefined)
     return current.relay.currentStep(current.workflow.token, current.workflow.binding).pipe(
       Effect.mapError(() => new ToolSafety.Denied({ reason: "WORKFLOW_STATE_ACQUISITION" })),
     )
   }
-  // Binds the workflow arm to the receipt's child (WorkflowBinding.adopt's `bind`). The Task tool runs it after every
-  // hold, right before it prompts the child, so a dispatch held earlier leaves the arm free for the next dispatch.
-  const bindWorkflow = (receipt: Receipt | undefined) => {
-    const current = receipt ? receipts.get(receipt) : undefined
-    return current?.workflow ? current.workflow.bind.pipe(Effect.mapError(bindingDenied)) : Effect.void
-  }
-  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost, workflowView,
-    bindWorkflow }
+  return { beforeReserve, beforeDispatch, verifiedCompletion, withWorkflow, revalidateWorkflow, workflowSessionHost, workflowView }
 })
-
-function bindingDenied(error: unknown) {
-  return error instanceof RelayWorkflowBinding.Held
-    ? new ToolSafety.Denied({ reason: error.reason, detail: error.detail })
-    : new ToolSafety.Denied({ reason: "WORKFLOW_BINDING_ACQUISITION" })
-}
 
 // The arm stores the contract and the next workflow Task dispatch binds it, so the order is always arm, then dispatch.
 const ARM_FIRST = "No armed completion contract is bound for this workflow Task. Arm it first with relay-arm action arm (contract.sessionID is this Session), then dispatch the Task with the approved workflow and writePaths; nothing was dispatched."

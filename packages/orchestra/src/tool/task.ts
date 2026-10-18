@@ -619,10 +619,6 @@ export const TaskTool = Tool.define(
               Effect.asVoid,
             )
           : undefined
-        // Only now, after every hold above, does a workflow arm bind to this child: a dispatch held earlier leaves the arm
-        // free, so the next authorization's child binds the same (content-addressed) token. The prompt loop reads the
-        // binding before the model, so it cannot wait for beforeModel.
-        yield* completion.bindWorkflow(completionReceipt)
         const promptID = MessageID.ascending()
         const prompted = ops.prompt(
           {

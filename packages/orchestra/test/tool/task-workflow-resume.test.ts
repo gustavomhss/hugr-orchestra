@@ -69,7 +69,8 @@ const model = { providerID: ProviderV2.ID.make("test"), modelID: ModelV2.ID.make
 const token = "arm-held"
 
 // `hook` changes the tree inside writePaths after the reservation and before the model, as a session-start hook can.
-const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: { hook?: boolean } = {}) {
+// `persisted` writes the child's user message and its empty reply before the pre-model check, as the prompt loop does.
+const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: { hook?: boolean; persisted?: boolean } = {}) {
   const sessions = yield* Session.Service
   const events = yield* EventV2Bridge.Service
   const chat = yield* sessions.create({ title: "Workflow resume" })
@@ -134,17 +135,22 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
     approve: () => Effect.void, complete: () => Effect.void }
 
   // The armed completion contract and its native host; `reviewed` is whether a code-stage APPROVE covers the tree.
-  // `resolve` always answers the same token, as re-arming an identical contract does (the token is content-addressed).
+  // `resolve` answers the latest arm. Re-arming an identical contract returns the same token (it is content-addressed),
+  // so the arm stays `token` until `rearm` arms a changed contract under a new one.
   const reviewed = { value: false }
   const state = yield* tmpdirScoped()
   yield* Effect.promise(() => mkdir(path.join(state, chat.projectID, "completion"), { recursive: true }))
-  yield* Effect.promise(() => Bun.write(path.join(state, chat.projectID, "completion", `${token}.json`), JSON.stringify({
-    schema: 1, projectID: chat.projectID, contract: { sessionID: chat.id, label: "held", chain: [{ id: "gate",
-      checks: [{ id: "build", hostCheck: "package-verification" }, { id: "review", hostCheck: "cold-review" }] }] },
-  })))
+  const armed = { token }
+  const rearm = (next: string) => Effect.promise(() => Bun.write(path.join(state, chat.projectID, "completion", `${next}.json`),
+    JSON.stringify({ schema: 1, projectID: chat.projectID, contract: { sessionID: chat.id, label: next, chain: [{ id: "gate",
+      checks: [{ id: "build", hostCheck: "package-verification" }, { id: "review", hostCheck: "cold-review" }] }] } })))
+    .pipe(Effect.andThen(Effect.sync(() => {
+      armed.token = next
+    })))
+  yield* rearm(token)
   const relay = yield* relayFor({ directory: chat.directory, projectID: chat.projectID })
   const completionHost: ArsenalCompletion.Host = {
-    resolve: (input) => Effect.succeed({ ...input, planID: revision.id, token, stateDirectory: state, ownedPaths: [] }),
+    resolve: (input) => Effect.succeed({ ...input, planID: revision.id, token: armed.token, stateDirectory: state, ownedPaths: [] }),
     checks: new Map<string, ArsenalCompletion.HostCheck>([
       ["package-verification", () => Effect.succeed({ status: "pass" as const, exitCode: 0 })],
       ["cold-review", () => reviewed.value ? Effect.succeed({ status: "pass" as const, exitCode: 0 })
@@ -160,12 +166,22 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
   // uncommitted edit inside writePaths, then the settlement through the native host.
   const services = yield* Effect.context<Session.Service | Database.Service>()
   const prompts = { count: 0 }
+  const hook = { value: options.hook === true }
   const edit = (text: string) => Effect.promise(() => Bun.write(path.join(chat.directory, "src", "card.ts"), text))
   const ops: TaskPromptOps = {
     cancel: () => Effect.void,
     resolvePromptParts: (template) =>
-      Effect.as(options.hook ? edit("// hook\n") : Effect.void, [{ type: "text" as const, text: template }]),
+      Effect.as(hook.value ? edit("// hook\n") : Effect.void, [{ type: "text" as const, text: template }]),
     prompt: (input, prompt) => Effect.gen(function* () {
+      if (options.persisted) {
+        const sessions = yield* Session.Service
+        const asked = yield* sessions.updateMessage({ id: MessageID.ascending(), role: "user", sessionID: input.sessionID,
+          agent: "backend", model, time: { created: Date.now() } })
+        yield* sessions.updateMessage({ id: MessageID.ascending(), role: "assistant", parentID: asked.id,
+          sessionID: input.sessionID, mode: "backend", agent: "backend", cost: 0, path: { cwd: chat.directory, root: chat.directory },
+          tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }, modelID: model.modelID,
+          providerID: model.providerID, time: { created: Date.now() } })
+      }
       yield* prompt?.beforeModel ?? Effect.void
       prompts.count++
       yield* edit(`export const card = ${prompts.count}\n`)
@@ -207,7 +223,7 @@ const fixture = Effect.fn("TaskWorkflowResumeTest.fixture")(function* (options: 
 
   // Puts the tree back to the one the authorizations approved, as a reverted worker edit does.
   const revert = () => Effect.promise(() => rm(path.join(chat.directory, "src", "card.ts"), { force: true }))
-  return { chat, prompts, reviewed, call, authorize, revert }
+  return { chat, prompts, reviewed, hook, relay, call, authorize, revert, rearm }
 })
 
 // The first dispatch: the reply settles, the cold review finds no code review, and the Task returns the hold.
@@ -251,39 +267,52 @@ it.instance("an authorized dispatch that is not a continuation still requires th
     expect(f.prompts.count).toBe(0)
   }), { git: true })
 
-// Live-03: a dispatch held after beforeDispatch bound the arm to a child that never ran, so the next authorization's
+// Live-03: a dispatch bound the arm and then held before its child's first provider turn, so the next authorization's
 // dispatch failed WORKFLOW_ARM_BINDING_MISMATCH and re-arming the same contract returned the same, still-bound token.
-it.instance("a workflow dispatch held before its child is prompted leaves the arm free for the next authorization", () =>
+it.instance("an arm bound to a child that held before the model moves to the next authorization's child", () =>
   Effect.gen(function* () {
-    const f = yield* fixture()
+    const f = yield* fixture({ hook: true, persisted: true })
     const sessions = yield* Session.Service
-    const held = yield* f.call({}, { abort: true })
+    const held = yield* f.call()
     expect(Exit.isFailure(held)).toBe(true)
-    if (Exit.isFailure(held)) expect(Cause.pretty(held.cause)).toContain("Task cancelled")
+    if (Exit.isFailure(held)) expect(Cause.pretty(held.cause)).toContain("context-not-current")
+    expect(f.prompts.count).toBe(0)
     const unrun = (yield* sessions.children(f.chat.id))[0]
     if (!unrun) throw new Error("missing reserved child")
-    expect(f.prompts.count).toBe(0)
-    expect(yield* WorkflowBinding.read(unrun.id)).toBeUndefined()
+    // The child holds its prompt and an empty reply, and the arm is bound to it.
+    expect((yield* sessions.messages({ sessionID: unrun.id })).map((message) => message.info.role).sort())
+      .toEqual(["assistant", "user"])
+    expect((yield* WorkflowBinding.read(unrun.id))?.token).toBe(token)
 
-    // The identical contract re-armed resolves the same token; the next authorization's child binds it and runs.
+    // The identical contract re-armed resolves the same token; the next authorization's child takes the arm and runs.
+    f.hook.value = false
+    yield* f.revert()
     f.reviewed.value = true
     const next = yield* f.authorize("evt_maestro_authorization_workflow_rearm")
     const ran = yield* f.call({ authorizationID: next })
     expect(Exit.isSuccess(ran)).toBe(true)
     expect(f.prompts.count).toBe(1)
-    expect((yield* WorkflowBinding.read(SessionID.make(Dispatch.childSessionID(next))))?.token).toBe(token)
+    const child = SessionID.make(Dispatch.childSessionID(next))
+    expect((yield* WorkflowBinding.read(child))?.token).toBe(token)
+
+    // The move is recorded on the new child, the old binding stays as history, and the arm's ledger still audits.
+    const database = yield* Database.Service
+    const rebound = yield* database.db.select().from(EventTable).where(and(eq(EventTable.aggregate_id, child),
+      eq(EventTable.type, EventV2.versionedType(MaestroEvent.Task.WorkflowRebound.type, 1)))).all().pipe(Effect.orDie)
+    expect(rebound.map((row) => row.data)).toEqual([expect.objectContaining({ executionSessionID: child, from: unrun.id, token })])
+    expect((yield* WorkflowBinding.read(unrun.id))?.executionSessionID).toBe(unrun.id)
+    expect((yield* f.relay.audit(token)).result).toBe("PASS")
   }), { git: true })
 
-it.instance("an arm bound to a child that ran still refuses another authorization's child before it is prompted", () =>
+it.instance("an arm bound to a child that ran refuses another authorization's child and leaves that authorization unspent", () =>
   Effect.gen(function* () {
     const f = yield* fixture()
     const sessions = yield* Session.Service
-    // The first child runs and holds for the code review, so the arm is bound to a child that actually ran.
+    // The first child runs and holds for the code review before the arm grades: the arm is untouched, but the child ran.
     expect(Exit.isFailure(yield* f.call())).toBe(true)
     expect(f.prompts.count).toBe(1)
     const ran = (yield* sessions.children(f.chat.id))[0]
     if (!ran) throw new Error("missing reserved child")
-    expect((yield* WorkflowBinding.read(ran.id))?.token).toBe(token)
 
     yield* f.revert()
     f.reviewed.value = true
@@ -292,7 +321,16 @@ it.instance("an arm bound to a child that ran still refuses another authorizatio
     expect(Exit.isFailure(refused)).toBe(true)
     if (Exit.isFailure(refused)) expect(Cause.pretty(refused.cause)).toContain("WORKFLOW_ARM_BINDING_MISMATCH")
     expect(f.prompts.count).toBe(1)
-    expect(yield* WorkflowBinding.read(SessionID.make(Dispatch.childSessionID(next)))).toBeUndefined()
+    const child = SessionID.make(Dispatch.childSessionID(next))
+    expect(yield* WorkflowBinding.read(child)).toBeUndefined()
+    expect((yield* WorkflowBinding.read(ran.id))?.token).toBe(token)
+
+    // Nothing of the authorization was spent: its child was never prompted, so it dispatches under a new contract.
+    expect(yield* sessions.messages({ sessionID: child })).toHaveLength(0)
+    yield* f.rearm("arm-fresh")
+    const retried = yield* f.call({ authorizationID: next })
+    expect(Exit.isSuccess(retried)).toBe(true)
+    expect(f.prompts.count).toBe(2)
   }), { git: true })
 
 const unheld = {

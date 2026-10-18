@@ -672,3 +672,53 @@ describe("create", () => {
     expect((await readdir(armsDir)).sort()).toEqual(["race", "run-01J"])
   })
 })
+
+// A workflow arm moves to another execution Session only while it has graded nothing and is held by the named one.
+describe("rebind", () => {
+  const binding = (session: string) => ({
+    definition: {
+      publication: { projectID: "project", documentID: "packet", activeVersionID: "version-1",
+        immutableVersionBodyChecksum: "1".repeat(64), livePublicationChecksum: "2".repeat(64) },
+      materialization: { schemaIdentifier: "RelaySprint.Sprint", digest: "3".repeat(64), byteLength: 1 },
+      resolvedSkills: [], parameters: {}, writePaths: ["src"],
+    },
+    planRevisionID: "evt_plan", executionSessionID: session, authoritySessionID: "ses_parent", logicalTaskID: `tsk_${session}`,
+  })
+  const arm = (session: string, meta: Record<string, unknown> = {}) => ({
+    token: "arm-1", sprint: sprint({ id: "implement" }), agentID: session,
+    meta: { workdir: "/work", token: "arm-1", project_id: "project", session_id: session, workflow: binding(session), ...meta } as
+      unknown as RelayArm.Meta,
+  })
+  const created = async () => {
+    const armsDir = await scratch()
+    expect(await run(armsDir, ArmCreate.create(arm("ses_a")))).toBe("created")
+    return armsDir
+  }
+
+  test("moves an untouched arm, then is unchanged, and the moved arm is the new Session's create body", async () => {
+    const armsDir = await created()
+    expect(await run(armsDir, ArmCreate.rebind({ ...arm("ses_b"), from: "ses_a" }))).toBe("rebound")
+    expect(await readFile(path.join(armsDir, "arm-1", "agent_id"), "utf8")).toBe("ses_b")
+    expect(await readFile(path.join(armsDir, "arm-1", "meta.json"), "utf8")).toBe(JSON.stringify(arm("ses_b").meta))
+    expect((await readdir(path.join(armsDir, "arm-1"))).sort()).toEqual(["agent_id", "meta.json", "sprint.json"])
+    expect(await run(armsDir, ArmCreate.rebind({ ...arm("ses_b"), from: "ses_a" }))).toBe("unchanged")
+    expect(await run(armsDir, ArmCreate.create(arm("ses_b")))).toBe("unchanged")
+  })
+
+  const refused: [string, (armsDir: string) => Promise<unknown>, ReturnType<typeof arm> & { from: string }][] = [
+    ["held by another Session", async () => undefined, { ...arm("ses_b"), from: "ses_x" }],
+    ["graded or positioned", (armsDir) => writeFile(path.join(armsDir, "arm-1", "position"), "implement"),
+      { ...arm("ses_b"), from: "ses_a" }],
+    ["another plan", async () => undefined, { ...arm("ses_b"), sprint: sprint({ id: "other" }), from: "ses_a" }],
+    ["a meta that differs beyond the Session", async () => undefined, { ...arm("ses_b", { workdir: "/other" }), from: "ses_a" }],
+    ["not a workflow arm", async () => undefined, { ...arm("ses_b", { workflow: undefined }), from: "ses_a" }],
+  ]
+  test.each(refused)("refuses an arm %s and leaves it as it was", async (_, touch, input) => {
+    const armsDir = await created()
+    await touch(armsDir)
+    const before = await Promise.all(["agent_id", "meta.json"].map((name) => readFile(path.join(armsDir, "arm-1", name), "utf8")))
+    expect(await failure(armsDir, ArmCreate.rebind(input))).toMatchObject({ _tag: "ArmCreate.Conflict", token: "arm-1" })
+    expect(await Promise.all(["agent_id", "meta.json"].map((name) => readFile(path.join(armsDir, "arm-1", name), "utf8"))))
+      .toEqual(before)
+  })
+})
