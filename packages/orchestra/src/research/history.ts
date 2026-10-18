@@ -111,7 +111,7 @@ function gate(ctx: Tool.Context, binding: Research.Binding, root: string, relati
  * The caller environment without GIT_*, NODE_OPTIONS or NODE_PATH, and with no global or system config, prompt or
  * optional lock (J2.14, as modules/maestro/arsenal/src/engine/process.ts).
  */
-export function environment(source: NodeJS.ProcessEnv = process.env) {
+export function environment(source: NodeJS.ProcessEnv = process.env): Record<string, string> {
   return {
     ...Object.fromEntries(Object.entries(source).filter((entry): entry is [string, string] => entry[1] !== undefined &&
       !entry[0].toUpperCase().startsWith("GIT_") && !["NODE_OPTIONS", "NODE_PATH"].includes(entry[0].toUpperCase()))),
