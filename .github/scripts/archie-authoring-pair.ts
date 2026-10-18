@@ -96,7 +96,7 @@ export async function pinNativeAssets(candidate: string, packet: Packet) {
     requireFact(entry.isFile(), "PAIR_NATIVE_ASSET_LINK_OR_TYPE_REFUSED")
     return [await canonical(path)]
   }))).flat()
-  const paths = [...await visit(root), await canonical(join(candidate, "apps/orchestra/src/agent/prompt/archie.txt"))].sort()
+  const paths = [...await visit(root), await canonical(join(candidate, "modules/maestro/coordination/src/seats/prompt/archie.txt"))].sort()
   requireFact(paths.length > 1, "PAIR_NATIVE_ASSETS_EMPTY")
   const pins = await Promise.all(paths.map(async (path) => {
     const suffix = "/" + relative(candidate, path).replaceAll("\\", "/")
@@ -167,7 +167,7 @@ export function requireSameSessionResume(stages: readonly { sessionID: string; c
 // Direct mode has no Task, so no logical task ID: the work result is the native assembler's (BackendResult.assemble).
 export async function requireSuccessfulAuthoring(candidate: string, work: unknown, message: unknown, proposal: string, base: string) {
   const { Option, Schema }: typeof import("effect") = await import(createRequire(join(candidate, "apps/orchestra/package.json")).resolve("effect"))
-  const { UpstreamResult } = await import(join(candidate, "apps/orchestra/src/maestro/upstream-result.ts"))
+  const { UpstreamResult } = await import(join(candidate, "modules/maestro/coordination/src/upstream-result.ts"))
   const decoded = Schema.decodeUnknownOption(Schema.Struct({ schema: Schema.Literal("upstream-work-result-v1"),
     card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.NonEmptyString }), outcome: Schema.Literal("done"), terminal: Schema.Struct({ reason: Schema.Literal("ended"), hostDetail: Schema.optional(Schema.Unknown) }),
     blockers: Schema.Array(Schema.Unknown), artifacts: Schema.Array(Schema.Struct({ kind: Schema.String, path: Schema.optional(Schema.String) })), risks: Schema.Array(Schema.String), nextActions: Schema.Array(Schema.String),
