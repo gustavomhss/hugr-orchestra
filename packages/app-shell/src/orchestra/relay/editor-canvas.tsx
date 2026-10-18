@@ -649,6 +649,8 @@ export function CanvasTab(props: Props) {
                   .filter((issue) => issueNode(issue) === node().id)
                   .map((issue) => issueText(copy, props.flow, issue))}
                 save={save()}
+                // A conflicting save is settled in the footer first; edits made meanwhile would be lost or overwrite.
+                readOnly={props.readOnly || props.save.state === "conflict"}
                 onChange={props.edit}
                 onNav={(id) => props.go(relayPath.node("hook", props.document.id, id), true)}
                 onClose={() => props.close(base())}
