@@ -1,0 +1,40 @@
+{
+  "verify": {
+    "exit": 0,
+    "line": null
+  },
+  "run": {
+    "runID": "thread-approval",
+    "documentID": "doc_release",
+    "version": "ver_3",
+    "status": "completed",
+    "position": "deploy",
+    "failing": [],
+    "label": "release",
+    "agent": "langgraph",
+    "startedAt": 1700000000000,
+    "endedAt": 1700000007000,
+    "steps": [
+      {
+        "wp": "deploy",
+        "status": "passed",
+        "attempts": 1,
+        "startedAt": 1700000001000,
+        "endedAt": 1700000006000,
+        "checks": [
+          {
+            "id": "smoke",
+            "verdict": "pass",
+            "output": "smoke ok"
+          },
+          {
+            "id": "changelog",
+            "verdict": "advisory",
+            "output": "advisory: no model configured"
+          }
+        ],
+        "note": "ship it"
+      }
+    ]
+  }
+}
