@@ -11,7 +11,8 @@ import DESCRIPTION from "./code-locate.txt"
 
 /**
  * The lexical (L1, `C/research-toolkit/search.ts`) and index (X3, `C/research-toolkit/code-index/query.ts`) sources for
- * one worktree. Integration binds them; until then search reports index_unavailable and locate has no index (J3.7).
+ * one worktree. CodeIndexTools binds them; without that layer search reports index_unavailable and locate has no index
+ * (J3.7). Read once, when the tool registry builds the tool.
  */
 export const Index = Context.Reference<(worktree: string) => Pick<Locate.Sources, "search" | "query">>("@orchestra/CodeLocate/Index", {
   defaultValue: () => () => ({
@@ -21,6 +22,7 @@ export const Index = Context.Reference<(worktree: string) => Pick<Locate.Sources
 
 export const CodeLocateTool = Tool.define("code_locate", Effect.gen(function* () {
   const run = yield* ResearchTools.make
+  const index = yield* Index
   return {
     description: DESCRIPTION,
     parameters: CodeIndex.LocateInput,
@@ -29,7 +31,6 @@ export const CodeLocateTool = Tool.define("code_locate", Effect.gen(function* ()
       const capture = yield* ResearchSourceCapture.Current
       if (!capture)
         return yield* new Research.Error({ code: "unsupported", message: "code_locate retains its ranges only inside a research dispatch" })
-      const index = yield* Index
       const state: { receipt?: Research.SourceReceipt } = {}
       const result = yield* Locate.run(input, {
         ...index(binding.worktree),

@@ -372,7 +372,8 @@ function related(scope: Scope, target: Found, op: "references" | "callers" | "ca
         ...(row.site_opaque ? { opaque: true } : {}),
       })))
     // callers (J2.9): references grouped by the definition that encloses them; top-level sites stay single references.
-    const sites = rows.flatMap((entry) => entry.rows.map((row) => ({
+    // An import names a symbol without calling it, as in X1's caller view (callers.ts), so it is no caller site.
+    const sites = rows.flatMap((entry) => entry.rows.filter((row) => !(row.site_role & CodeIndex.Role.import)).map((row) => ({
       site: row.site_line, path: row.site_path, opaque: row.site_opaque === 1,
       via: row.id === null ? undefined : found(entry.choice, row as Row).ref,
     })))

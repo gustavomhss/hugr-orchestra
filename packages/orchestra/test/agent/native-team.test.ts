@@ -135,9 +135,9 @@ it.instance("registers native team specialists with fixed profiles", () =>
       if (seat.id === "jimmy") {
         for (const name of ["jimmy-discovery", "jimmy-research"])
           expect(Permission.evaluate("skill", name, agent.permission).action).toBe("allow")
-        for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit"])
+        for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "code_query", "code_locate", "code_search"])
           expect(evaluate(agent, tool)).toBe("allow")
-        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state", "code_query", "code_locate", "code_search", "probe_run", "inquiry"])
+        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state", "probe_run", "inquiry"])
           expect(evaluate(agent, tool)).toBe("deny")
         for (const tool of ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"])
           expect(evaluate(agent, tool)).toBe("deny")

@@ -15,6 +15,7 @@ import { ResearchExecution } from "@/research/allowance"
 import { ResearchSeatTools } from "@/research/seat-tools"
 import { ResearchSourceCapture } from "@/research/source-capture"
 import { AtlasContextTool } from "./atlas-context"
+import { CodeIndexTools } from "./code-index"
 import { CodeLocateTool } from "./code-locate"
 import { CodeQueryTool } from "./code-query"
 import { CodeSearchTool } from "./code-search"
@@ -33,8 +34,9 @@ export const IDS: readonly string[] = [AtlasContextTool, ResearchRecordTool, Res
 // What the seat may see on the loop: its descriptor, never a tool its permissions merely reach through another tool.
 const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
 
-// RipgrepBinary: code_search runs the bundled ripgrep with its own argv.
-export const nodes = [ResearchRecords.node, ResearchExecution.node, RipgrepBinary.node] as const
+// RipgrepBinary: code_search runs the bundled ripgrep with its own argv. CodeIndexTools: the code index behind
+// code_query, code_locate and code_search's enclosing symbols.
+export const nodes = [ResearchRecords.node, ResearchExecution.node, RipgrepBinary.node, CodeIndexTools.node] as const
 
 // The output digest of each tool and argument set a dispatch already ran, with the call that ran it. An identical call
 // whose output digest is unchanged is refused (efficiency.md): the model already holds that result.
