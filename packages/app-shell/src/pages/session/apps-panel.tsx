@@ -41,14 +41,14 @@ export function AppsPanel(
     placeholder?: JSX.Element
   } = {},
 ) {
-  const dock = appDockController()
+  const language = useLanguage()
+  const dock = appDockController(language.t)
   const api = dock.api
   const state = dock.state
   const serverSDK = useServerSDK()
   const sdk = useSDK()
   const global = useGlobal()
   const settings = useSettings()
-  const language = useLanguage()
   const desktop = createMediaQuery("(min-width: 768px)")
   // Orchestra's desktop workspace (the titlebar's profile-scoped tab mode) binds the Dock to the
   // repository profile. Everywhere else the Apps panel keeps its manual browser profiles.

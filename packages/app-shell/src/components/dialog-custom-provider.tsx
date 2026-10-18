@@ -310,6 +310,7 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
           <Button type="button" size="small" variant="ghost" icon="plus-small" onClick={addHeader} class="self-start">
             {language.t("provider.custom.headers.add")}
           </Button>
+          <p class="text-12-regular text-text-weak">{language.t("orchestra.providers.custom.headersHint")}</p>
         </div>
 
         <Button
