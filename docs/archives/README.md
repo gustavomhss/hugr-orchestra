@@ -23,4 +23,10 @@ Before restoration, compare `manifest.json` SHA-256 with the index. The retained
 
 The restored original `restore-evidence.ts` reconstructed the historical tarball from its ordered parts. Its complete 207,658,700-byte output matched SHA-256 `27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48`.
 
-This checkpoint restores source files, including opaque archives, and verifies historical archive reconstruction. Extraction and per-tar-member restoration, reader migration, and any source removal belong to a subsequent cleanup slice. Original files remain in their current paths.
+This checkpoint restores source files, including opaque archives, and verifies historical archive reconstruction. The handoff directory has since been removed from the tree. Restore it from this bundle when it is needed.
+
+## Visual evidence and screenshots
+
+[`visual-evidence.json`](visual-evidence.json) identifies `specs/orchestra-visual/evidence` and `specs/orchestra-visual/screenshots` at `ca6d9b5625bca4ca0bd7c42b09f50105ad4c1ad3`: 100 files, 12,994,044 bytes. The bundle is `visual-evidence-ca6d9b5625bc` in the same retention directory, and it restores the same way as the handoff bundle.
+
+All 100 restored files hashed to their source Git blobs before the directories were removed from the tree. The design documents that cite this evidence (`VERIFICATION.md`, `COVERAGE.md`, `DELIVERY.md`) stay in `specs/orchestra-visual`.
