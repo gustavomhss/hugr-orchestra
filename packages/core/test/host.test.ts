@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { Context, Effect, Layer } from "effect"
+import { Context, Layer } from "effect"
 import { makeGlobalNode, makeLocationNode } from "../src/effect/app-node"
 import { Host } from "../src/host"
 import { LocationServiceMap } from "../src/location-service-map"
@@ -36,17 +36,14 @@ describe("Host.merge", () => {
     expect(merged.locationNodes).toEqual([area])
   })
 
-  test("merges reference overrides into one layer", async () => {
+  test("collects reference overrides into one layer", () => {
     const Reference = Context.Reference<number>("@test/host/Reference", { defaultValue: () => 0 })
-    const merged = Host.merge([
-      { id: "one", references: Layer.succeed(Reference, 1) },
-      { id: "two", references: Layer.empty },
-    ])
-    const read = Effect.gen(function* () {
-      return yield* Reference
-    })
-    expect(await Effect.runPromise(read.pipe(Effect.provide(merged.references)))).toBe(1)
-    expect(await Effect.runPromise(read)).toBe(0)
+    const one = Layer.succeed(Reference, 1)
+    const two = Layer.succeed(Reference, 2)
+    // Running a merged layer needs the root's Database, EventV2 and Location map; createRoutes supplies them.
+    expect(Host.merge([{ id: "one", references: one }, { id: "two" }]).references).toBe(one)
+    expect(Host.merge([{ id: "one", references: one }, { id: "two", references: two }]).references).not.toBe(one)
+    expect(Host.merge([{ id: "one" }, { id: "two" }]).references).toBe(Layer.empty)
   })
 
   test("rejects a duplicate contribution id", () => {

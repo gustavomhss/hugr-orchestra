@@ -50,7 +50,7 @@ export function merge(contributions: ReadonlyArray<Contribution>) {
   const location = repeated(locationNodes.map((item) => item.name)) ?? locationNodes.find((item) => builtIn.has(item.name))?.name
   if (location) throw new Error(`Host contribution Location node is not unique: ${location}`)
   const [first, ...rest] = contributions.flatMap((item) => (item.references ? [item.references] : []))
-  const references: Layer.Layer<never, never, ReferenceServices> = first ? Layer.mergeAll(first, ...rest) : Layer.empty
+  const references: Layer.Layer<never, never, ReferenceServices> = !first ? Layer.empty : rest.length === 0 ? first : Layer.mergeAll(first, ...rest)
   return { replacements, nodes, locationNodes, references }
 }
 
