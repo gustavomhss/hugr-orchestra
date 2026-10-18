@@ -26,6 +26,7 @@ import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
 import { MaestroRecordAdmissionTool } from "./maestro-admission"
 import { MaestroCatalogContextTool, MaestroRecordPlanRevisionTool } from "./maestro-plan"
+import { MaestroWorkflowsTool } from "./maestro-workflows"
 import { MaestroRecordContextTool } from "./maestro-context"
 import { MaestroRequestReviewTool } from "./maestro-review"
 import { MaestroRecordReviewTool, MaestroRecordValidationTool } from "./maestro-validation"
@@ -176,6 +177,7 @@ const layer = Layer.effect(
     const maestroRecordAdmission = yield* MaestroRecordAdmissionTool
     const maestroRecordPlanRevision = yield* MaestroRecordPlanRevisionTool
     const maestroCatalogContext = yield* MaestroCatalogContextTool
+    const maestroWorkflows = yield* MaestroWorkflowsTool
     const maestroRecordContext = yield* MaestroRecordContextTool
     const maestroRequestReview = yield* MaestroRequestReviewTool
     const maestroRecordValidation = yield* MaestroRecordValidationTool
@@ -376,6 +378,7 @@ const layer = Layer.effect(
           maestroRecordAdmission: Tool.init(maestroRecordAdmission),
           maestroRecordPlanRevision: Tool.init(maestroRecordPlanRevision),
           maestroCatalogContext: Tool.init(maestroCatalogContext),
+          maestroWorkflows: Tool.init(maestroWorkflows),
           maestroRecordContext: Tool.init(maestroRecordContext),
           maestroRequestReview: Tool.init(maestroRequestReview),
           maestroRecordValidation: Tool.init(maestroRecordValidation),
@@ -416,7 +419,7 @@ const layer = Layer.effect(
             tool.maestroRecordApproval,
             tool.maestroRecordAdmission,
             tool.maestroRecordPlanRevision,
-            tool.maestroCatalogContext,
+            tool.maestroCatalogContext, tool.maestroWorkflows,
             tool.maestroRecordContext,
             tool.maestroRequestReview,
             tool.maestroRecordValidation,
@@ -550,7 +553,7 @@ const layer = Layer.effect(
             tool.id === MaestroRecordApprovalTool.id ||
             tool.id === MaestroRecordAdmissionTool.id ||
             tool.id === MaestroRecordPlanRevisionTool.id ||
-            tool.id === MaestroCatalogContextTool.id ||
+            tool.id === MaestroCatalogContextTool.id || tool.id === MaestroWorkflowsTool.id ||
             tool.id === MaestroRecordContextTool.id ||
             tool.id === MaestroRequestReviewTool.id ||
             tool.id === MaestroRecordValidationTool.id) &&
