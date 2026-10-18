@@ -11,5 +11,6 @@ export const dict = {
   "orchestra.actions.refColumn": "Ref / trigger",
   "orchestra.actions.resultColumn": "Result",
   "orchestra.actions.timeColumn": "Time",
-  "orchestra.actions.runAttempt": "run #{{run}} · attempt {{attempt}}",
+  "orchestra.actions.noRecentRun": "No recent run loaded",
+  "orchestra.actions.runAttempt": "run {{run}} · attempt {{attempt}}",
 } as const

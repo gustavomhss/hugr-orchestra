@@ -51,6 +51,11 @@ export function selectedFilter(filters: readonly { value: string }[], status: st
   return filters.some((item) => item.value === status) ? status : ""
 }
 
+// `title` and `number` are being added to Actions.Run; the widened parameter compiles before and after that schema change.
+export function runIdentity(run: Actions.Run & { title?: string; number?: number }) {
+  return { title: run.title ?? run.name ?? run.id, number: run.number === undefined ? run.id : `#${run.number}` }
+}
+
 export function workflowState(state: string): { filter: string; label?: Parameters<Translate>[0]; tone: string } {
   if (state === "active" || state === "configured") return { filter: "active", label: "orchestra.actions.active", tone: "good" }
   if (["disabled", "disabled_manually", "disabled_inactivity", "disabled_fork"].includes(state)) {
