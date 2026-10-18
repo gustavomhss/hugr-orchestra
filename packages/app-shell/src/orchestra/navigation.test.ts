@@ -30,7 +30,7 @@ describe("breadcrumbLabel", () => {
       "Workflows",
       "Hooks",
       "Actions",
-      "Agendar",
+      "Schedule",
       ".env",
       "Providers",
       "Shortcuts",
@@ -48,6 +48,8 @@ test("marks exactly the owner's revisit-before-production screens as WIP", () =>
   expect(navigation.filter((item) => isWip(item.id)).map((item) => item.id)).toEqual([
     "agents",
     "mcp",
+    "cicd",
+    "env",
     "workspaces",
   ])
   expect(isWip("missing")).toBe(false)

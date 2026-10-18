@@ -16,6 +16,7 @@ import {
   openExternalURL,
   openLocalFileURL,
   setPinchZoomEnabled,
+  settleUnload,
   setTitlebar,
   setTitlebarFrame,
   updateTitlebar,
@@ -291,6 +292,8 @@ export function registerIpcHandlers(deps: Deps) {
   ipcMain.on("relaunch", () => {
     deps.relaunch()
   })
+
+  ipcMain.on("before-unload-done", (_event: IpcMainEvent, id: unknown) => settleUnload(id))
 
   ipcMain.handle("get-zoom-factor", (event: IpcMainInvokeEvent) => event.sender.getZoomFactor())
   ipcMain.handle("set-zoom-factor", (event: IpcMainInvokeEvent, factor: number) => {

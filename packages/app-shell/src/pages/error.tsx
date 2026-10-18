@@ -210,7 +210,7 @@ function formatErrorChain(error: unknown, t: Translator, depth = 0, parentMessag
   return indent + json(error)
 }
 
-function formatError(error: unknown, t: Translator): string {
+export function formatError(error: unknown, t: Translator): string {
   return formatErrorChain(error, t, 0)
 }
 

@@ -242,12 +242,18 @@ const createPlatform = (windowState: DesktopWindowState): Platform => {
 
     setForceFocus: (enabled) => window.api.setForceFocus(enabled),
 
-    recordFatalRendererError: (error) => window.api.recordFatalRendererError(error),
+    // Only ErrorPage records through the platform. Restart must not reopen the URL that crashed into it.
+    recordFatalRendererError: (error) => {
+      setLastActiveUrl(windowState.id ?? "browser", "/")
+      return window.api.recordFatalRendererError(error)
+    },
 
     restart: async () => {
       await window.api.killSidecar().catch(() => undefined)
       window.api.relaunch()
     },
+
+    onBeforeUnload: (handler) => window.api.onBeforeUnload(handler),
 
     notify: async (title, description, onClick) => {
       const focused = await window.api.getWindowFocused().catch(() => document.hasFocus())
@@ -350,7 +356,7 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
         (http) => checkServerHealth(http, platform.fetch ?? fetch).then((result) => result.healthy),
       )
       if (remote) {
-        void platform.recordFatalRendererError?.({
+        void window.api.recordFatalRendererError({
           error: sidecar.error instanceof Error ? sidecar.error.stack ?? sidecar.error.message : String(sidecar.error),
           url: location.href, platform: "desktop", os: platform.os, version: pkg.version,
         })

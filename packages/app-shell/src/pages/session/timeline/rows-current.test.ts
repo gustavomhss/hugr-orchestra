@@ -1,5 +1,6 @@
 import { describe, expect, mock, test } from "bun:test"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { AssistantMessage, UserMessage } from "@orchestra/sdk/v2"
 import { normalizeSessionMessages } from "@/utils/session-message"
 
 mock.module("@orchestra/session-ui/message-part", () => ({
@@ -203,5 +204,31 @@ describe("current session timeline rows", () => {
     )
 
     expect(result.rows.map((row) => row._tag)).toEqual(["UserMessage", "AssistantPart"])
+  })
+
+  test("an error row names the provider only when its API key can be fixed", () => {
+    const user = { id: "msg_user" } as UserMessage
+    const failed = (error: AssistantMessage["error"]) =>
+      Timeline.constructMessageRows(
+        user,
+        () => [],
+        [{ id: "msg_failed", providerID: "anthropic#work", error } as AssistantMessage],
+        0,
+        true,
+        "idle",
+        false,
+        true,
+      ).flatMap((row) => (row._tag === "Error" ? [row.providerID] : []))
+
+    expect(failed({ name: "ProviderAuthError", data: { providerID: "openai", message: "No API key" } })).toEqual([
+      "openai",
+    ])
+    expect(failed({ name: "APIError", data: { message: "Bad key", statusCode: 401, isRetryable: false } })).toEqual([
+      "anthropic#work",
+    ])
+    expect(failed({ name: "APIError", data: { message: "Busy", statusCode: 429, isRetryable: true } })).toEqual([
+      undefined,
+    ])
+    expect(failed({ name: "UnknownError", data: { message: "Boom" } })).toEqual([undefined])
   })
 })

@@ -17,7 +17,8 @@ test.afterEach(({ page }) => expect(errors.get(page)).toEqual([]))
 async function workflows(page: Page) {
   await page.goto("/orchestra/workflows", { waitUntil: "domcontentloaded" })
   await expect(page.locator('[data-mx-page="orchestra-workflows"] h1')).toHaveText("Workflows", { timeout: 60_000 })
-  await page.getByRole("listitem").filter({ hasText: "Relay · wp-execute" }).click()
+  // The seeded profiles are templates, not library rows, so the editor opens by its address.
+  await page.goto("/orchestra/workflows/relay-wp-execute", { waitUntil: "domcontentloaded" })
   await expect(canvas(page)).toBeVisible()
 }
 
@@ -39,8 +40,8 @@ test("cold review: pending save fails after navigation; returning restores exact
   await editor(page).getByRole("link", { name: "Back to Workflows" }).click()
   await expect(page).toHaveURL(/\/workflows$/)
   pending.resolve()
-  await expect(page.getByText("Unsaved changes: Relay · wp-execute", { exact: false })).toBeVisible()
-  await page.getByRole("listitem").filter({ hasText: "Relay · wp-execute" }).click()
+  await expect(page.getByText("Could not save changes to Relay · wp-execute", { exact: false })).toBeVisible()
+  await page.getByRole("button", { name: "Open", exact: true }).click()
   await expect(editor(page).locator('[data-save="error"]')).toContainText("Disk full")
   await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
   await expect(details(page).getByRole("textbox", { name: "Instructions", exact: true })).toHaveValue("Keep these instructions after a late 503.")
@@ -96,6 +97,17 @@ test("cold review: parameters remain usable at 390, 768, 1440, RTL and 200% zoom
   expect((await details(page).getByRole("textbox", { name: "Instructions", exact: true }).boundingBox())!.width).toBeGreaterThan(250)
 })
 
+test("cold review: in RTL the canvas still draws its steps inside the canvas, and Fit view keeps them there", async ({ page }) => {
+  await setupRelay(page)
+  await workflows(page)
+  await page.evaluate(() => (document.documentElement.dir = "rtl"))
+  await canvas(page).getByRole("button", { name: "Fit view (1)" }).click()
+  const area = (await canvas(page).boundingBox())!
+  const tile = (await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').boundingBox())!
+  expect(tile.x).toBeGreaterThanOrEqual(area.x)
+  expect(tile.x + tile.width).toBeLessThanOrEqual(area.x + area.width)
+})
+
 test("cold review: unknown hook installations show loading/error/retry and never Off or mutable toggles", async ({ page }) => {
   const state = await setupRelay(page)
   const pending = Promise.withResolvers<void>()
@@ -129,7 +141,8 @@ test("cold review: unknown hook installations show loading/error/retry and never
   await expect(name).toHaveValue("Block generated files")
 })
 
-test("cold review: run history uses immutable graph and unavailable history never falls back to draft", async ({ page }) => {
+// Skipped while workflow runs are hidden (run URLs open the plain canvas); restore it with the Executions views.
+test.skip("cold review: run history uses immutable graph and unavailable history never falls back to draft", async ({ page }) => {
   const state = await setupRelay(page)
   const current = state.documents.find((document) => document.id === "relay-wp-execute")!
   const nodes = structuredClone(current.nodes) as { id: string; parameters: { instructions: string } }[]

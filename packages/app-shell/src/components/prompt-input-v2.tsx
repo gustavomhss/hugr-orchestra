@@ -164,7 +164,6 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       .join("")
     return text.trim().length === 0 && attachments().length === 0 && commentCount() === 0
   })
-  const stopping = createMemo(() => working() && blank())
   const placeholder = createMemo(() =>
     promptPlaceholder({
       mode: mode(),
@@ -259,6 +258,9 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
     model: props.controls.model.selection,
     delivery: useSessionDelivery(() => props.controls.session.id).delivery,
   })
+  // A new-session draft has no Session status to watch; its admission in flight is what Send turns into Stop for.
+  const admitting = () => !props.controls.session.id && submission.submitting()
+  const stopping = createMemo(() => admitting() || (working() && blank()))
 
   const referenceDescription = (reference: ReferenceInfo) =>
     reference.source.type === "git" ? reference.source.repository : reference.source.path
@@ -431,7 +433,7 @@ export function usePromptInputV2Controller(props: PromptInputV2ControllerProps):
       },
       submit: {
         stopping,
-        working,
+        working: () => working() || admitting(),
         onSubmit: () => void submission.handleSubmit(new Event("submit")),
         onStop: () => void submission.abort(),
       },

@@ -128,7 +128,7 @@ export const ORCHESTRA_COPY = {
   "orchestra.cicd.discuss": "Discuss in Chat",
   "orchestra.cicd.prompt":
     "Let's discuss the CI workflow at {{path}} in this repository. Explain its triggers and jobs, and suggest improvements.",
-  "orchestra.nav.schedule": "Agendar",
+  "orchestra.nav.schedule": "Schedule",
   "orchestra.nav.env": ".env",
   "orchestra.nav.dock": "Dock",
   "orchestra.nav.workspaces": "Workspaces",

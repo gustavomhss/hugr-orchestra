@@ -12,6 +12,14 @@ const updaterHandler = (_: unknown, state: UpdaterState) => {
   updaterState = state
   updaterCallbacks.forEach((callback) => callback(state))
 }
+// Main asks before it closes this window or quits, and waits for the answer at most 3 s. A handler that throws or
+// rejects still lets the answer go.
+const unloadHandlers = new Set<() => Promise<void>>()
+ipcRenderer.on("before-unload", (_: unknown, id: string) => {
+  void Promise.allSettled([...unloadHandlers].map((handler) => Promise.resolve().then(handler))).then(() =>
+    ipcRenderer.send("before-unload-done", id),
+  )
+})
 
 const api: ElectronAPI = {
   appDockLinuxOpen: (bounds, profile) => ipcRenderer.invoke("app-dock-linux-open", bounds, profile),
@@ -134,6 +142,10 @@ const api: ElectronAPI = {
   },
 
   getWindowID: () => ipcRenderer.invoke("get-window-id"),
+  onBeforeUnload: (handler) => {
+    unloadHandlers.add(handler)
+    return () => void unloadHandlers.delete(handler)
+  },
   onMenuCommand: (cb) => {
     const handler = (_: unknown, id: string) => cb(id)
     ipcRenderer.on("menu-command", handler)

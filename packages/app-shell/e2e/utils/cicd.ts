@@ -21,14 +21,11 @@ export async function openSource(page: Page, path: string) {
   return dialog
 }
 
-export async function createPipeline(page: Page, options: { deploy: boolean; branch?: string }) {
+export async function createPipeline(page: Page) {
   await page.getByRole("button", { name: "New pipeline", exact: true }).click()
   const dialog = page.getByRole("dialog", { name: "New pipeline" })
   await dialog.locator('[name="name"]').fill("Project checks")
-  if (options.branch) await dialog.locator('[name="branch"]').fill(options.branch)
   await dialog.locator('[name="command"]').fill("bun run build\nbun test")
-  await dialog.locator('[name="environment"]').selectOption({ label: "Staging" })
-  if (options.deploy) await dialog.getByRole("checkbox", { name: "Include a deployment stage" }).check()
   await dialog.getByRole("button", { name: "Save", exact: true }).click()
   await expect(dialog).toHaveCount(0)
 }

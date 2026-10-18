@@ -182,6 +182,7 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   janitor: JanitorAPI
 
   getWindowID: () => Promise<string>
+  onBeforeUnload: (handler: () => Promise<void>) => () => void
   onMenuCommand: (cb: (id: string) => void) => () => void
   onDeepLink: (cb: (urls: string[]) => void) => () => void
 
