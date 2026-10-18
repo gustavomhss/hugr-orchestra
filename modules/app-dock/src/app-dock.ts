@@ -4,13 +4,9 @@ import { randomUUID } from "node:crypto"
 import { AppDockHints } from "./app-dock-hints"
 import { AppDockOutline } from "./app-dock-outline"
 import { scopeLinuxWorkspace } from "./app-dock-linux"
+import type { Transport } from "./transport"
 
 export { scopeLinuxWorkspace } from "./app-dock-linux"
-
-type ParentPortLike = {
-  postMessage(message: unknown): void
-  on(event: "message", listener: (event: { data: unknown }) => void): void
-}
 
 type Pending = {
   native: boolean
@@ -20,7 +16,7 @@ type Pending = {
   finish(error?: Error, value?: unknown): void
 }
 
-const pending = new WeakMap<ParentPortLike, Map<string, Pending>>()
+const pending = new WeakMap<Transport, Map<string, Pending>>()
 const object = (value: unknown): value is Record<string, unknown> =>
   typeof value === "object" && value !== null && !Array.isArray(value)
 
@@ -32,7 +28,7 @@ class NativeRPCError extends Error {
   }
 }
 
-const routerFor = (port: ParentPortLike) => {
+const routerFor = (port: Transport) => {
   const existing = pending.get(port)
   if (existing) return existing
   const router = new Map<string, Pending>()
@@ -69,7 +65,7 @@ const routerFor = (port: ParentPortLike) => {
   return router
 }
 
-function request(port: ParentPortLike, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
+function request(port: Transport, op: string, args: Record<string, unknown>, signal: AbortSignal, timeoutMs: number): Promise<unknown> {
   const id = randomUUID()
   const router = routerFor(port)
   const native = op === "action" || (typeof args.ref === "string" && args.ref.startsWith("n:"))
@@ -123,8 +119,8 @@ function request(port: ParentPortLike, op: string, args: Record<string, unknown>
   })
 }
 
-const parentPort = (): ParentPortLike | undefined =>
-  (process as typeof process & { parentPort?: ParentPortLike }).parentPort
+const parentPort = (): Transport | undefined =>
+  (process as typeof process & { parentPort?: Transport }).parentPort
 
 const toolError = (error: unknown) => error instanceof NativeRPCError
   ? toJSON({ backend: error.backend, code: error.code, message: error.message, outcome: error.outcome,
@@ -145,7 +141,7 @@ const readable = (value: unknown) => object(value) && value.backend === "linux-a
   ? { ...value, items: value.items.map((item) => object(item) && typeof item.roleName === "string"
     ? { ...item, roleName: AppDockOutline.role({ role: item.role, roleName: item.roleName }) } : item) }
   : value
-const invoke = (context: ToolContext, port: ParentPortLike, op: string, args: Record<string, unknown>, timeoutMs: number,
+const invoke = (context: ToolContext, port: Transport, op: string, args: Record<string, unknown>, timeoutMs: number,
   clock?: Clock) => {
   const asked = Date.now()
   return context
@@ -299,7 +295,7 @@ function pick(scan: NativeScan, query: NativeQuery) {
 }
 
 // findDeadlineMs is a test seam; production keeps the 90 s default.
-export function createAppDockHooks(port: ParentPortLike, config: { timeoutMs?: number; findDeadlineMs?: number } = {}): Hooks {
+export function createAppDockHooks(port: Transport, config: { timeoutMs?: number; findDeadlineMs?: number } = {}): Hooks {
   const timeoutMs = config.timeoutMs ?? 15000
   if (!Number.isSafeInteger(timeoutMs) || timeoutMs < 1 || timeoutMs > 15000) throw new Error("Invalid App Dock timeout")
   const findDeadlineMs = config.findDeadlineMs ?? FIND_DEADLINE_MS

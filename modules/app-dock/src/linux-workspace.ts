@@ -1,11 +1,7 @@
 import { randomUUID } from "node:crypto"
 import { tool } from "@orchestra/plugin"
 import type { Hooks, Plugin, ToolContext } from "@orchestra/plugin"
-
-type Port = {
-  postMessage(message: unknown): void
-  on(event: "message", listener: (event: { data: unknown }) => void): void
-}
+import type { Transport } from "./transport"
 // What the agent can do about each workspace state; without it models retry blindly or reach for other tools.
 // Only the linux agent holds these tools, and it cannot ask the owner, so each hint ends in a report.
 const hints = {
@@ -14,9 +10,9 @@ const hints = {
   "workspace-unavailable": "The Linux workspace is not available in this app window; stop and report that the owner must open it in the App Dock",
 }
 
-const routers = new WeakMap<Port, Map<string, { settle: (value: unknown, error?: string) => void }>>()
+const routers = new WeakMap<Transport, Map<string, { settle: (value: unknown, error?: string) => void }>>()
 
-export function createLinuxWorkspaceHooks(port: Port): Hooks {
+export function createLinuxWorkspaceHooks(port: Transport): Hooks {
   const router = routers.get(port) ?? new Map<string, { settle: (value: unknown, error?: string) => void }>()
   if (!routers.has(port)) {
     routers.set(port, router)
@@ -186,6 +182,6 @@ export function createLinuxWorkspaceHooks(port: Port): Hooks {
 }
 
 export const LinuxWorkspacePlugin: Plugin = async () => {
-  const port = (process as typeof process & { parentPort?: Port }).parentPort
+  const port = (process as typeof process & { parentPort?: Transport }).parentPort
   return port ? createLinuxWorkspaceHooks(port) : {}
 }

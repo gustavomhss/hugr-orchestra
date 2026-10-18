@@ -16,7 +16,7 @@ import { channel, command, deadline, files, manifests, validateLaunches } from "
 const sourceFiles = [
   "apps/desktop/src/main/app-dock-native-protocol.ts", "apps/desktop/src/main/app-dock-native-client.ts",
   "apps/desktop/src/main/app-dock-native.ts", "apps/desktop/src/main/app-dock-rpc.ts",
-  "apps/desktop/src/main/app-dock-api.ts", "apps/orchestra/src/plugin/app-dock.ts",
+  "apps/desktop/src/main/app-dock-api.ts", "modules/app-dock/src/app-dock.ts",
   "apps/desktop/scripts/app-dock-native-proof.ts", "apps/desktop/test/native/scenarios.json",
   "apps/desktop/scripts/native-proof-docker.ts",
   "apps/desktop/scripts/app-dock-native-proof-support.ts", "apps/desktop/scripts/app-dock-native-proof-guest.ts",

@@ -6,6 +6,10 @@
   "type": "module",
   "license": "MIT",
   "exports": {},
+  "scripts": {
+    "test": "bun test --timeout 30000",
+    "typecheck": "tsgo --noEmit"
+  },
   "dependencies": {
     "@orchestra/plugin": "workspace:*"
   },

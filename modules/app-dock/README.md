@@ -6,7 +6,7 @@ App Dock and Linux workspace tools: the hooks that let an agent read and operate
 
 App Dock and Linux workspace tools: the hooks that let an agent read and operate desktop apps over the Electron main channel. Owner: The App Dock owner.
 
-Moves in with card C2 of plan 70-C' B1; until then the tools live in apps/orchestra as V1 plugins.
+Sources live in `src/` (moved from apps/orchestra/src/plugin by card C2 of plan 70-C' B1). `createAppDockHooks` and `createLinuxWorkspaceHooks` take a `Transport` (`src/transport.ts`). `AppDockPlugin` and `LinuxWorkspacePlugin` still read `process.parentPort` for the legacy server until B9.
 
 ## Public entry points and consumers
 
