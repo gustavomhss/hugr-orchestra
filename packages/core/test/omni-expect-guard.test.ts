@@ -38,7 +38,7 @@ const ledger: Record<string, string> = {
 
 function guard(base: string, tracked: string[], exceptions: Record<string, string>) {
   const problems: string[] = []
-  const packages = tracked.filter((file) => /^packages\/[^/]+\/bunfig\.toml$/.test(file))
+  const packages = tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/bunfig\.toml$/.test(file))
     .filter((file) => preloadsControl(TOML.parse(readFileSync(path.join(base, file), "utf8")) as { test?: { preload?: unknown } }))
     .map((file) => path.posix.dirname(file) + "/")
   if (packages.length === 0) return { problems: ["no package preloads script/test-omni-control.ts"], flagged: [], checked: 0 }
