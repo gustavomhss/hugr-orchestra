@@ -50,7 +50,7 @@
       </div>
       <div class="at-cols">
         <section class="at-panel"><header class="at-panel-head"><h3>Busiest units</h3><a class="mx-link" href="#/knowledge">All units</a></header>
-          ${M().units().slice(0, 5).map((u) => `<a class="at-linkrow" href="${unitHref(u.id)}">${dot(u)}<code class="at-mono">${A.esc(u.id)}</code><span class="grow"></span><small>${plural(u.facts, "fact")}</small></a>`).join("")}</section>
+          ${M().units().slice(0, 5).map((u) => `<a class="at-linkrow" href="${unitHref(u.id)}">${dot(u)}<span>${A.esc(u.id.split("/").slice(1).join("/") || u.id)}</span><small>${A.esc(u.id.includes("/") ? u.id.split("/")[0] : "")}</small><span class="grow"></span><small>${plural(u.facts, "fact")}</small></a>`).join("")}</section>
         <section class="at-panel"><header class="at-panel-head"><h3>Recent activity</h3><a class="mx-link" href="#/activity">Activity</a></header>
           ${events.slice(0, 5).map((e) => A.eventRow(e, true)).join("") || '<div class="at-band-empty">Nothing recorded yet.</div>'}</section>
       </div></div>`,
@@ -65,7 +65,10 @@
     const s = M().stats()
     const names = { backend: "Backend", archie: "Archie", jimmy: "Jimmy", lucy: "Lucy", rosie: "Rosie" }
     const owner = (u) => { const t = M().territoryOf(u.id); return t ? `${A.esc(t.name)} · ${A.esc(names[t.owner] ?? t.owner)}` : "No territory" }
-    const row = (u) => `<a class="at-unit" href="${unitHref(u.id)}">${dot(u)}<span class="at-unit-main"><code>${A.esc(u.id)}</code><small>${owner(u)}</small></span><span class="at-unit-cell">${A.num(u.facts)}<small>facts</small></span>${A.icon("arrow")}</a>`
+    // The group already says where a unit lives, so a card shows only its own name.
+    const card = (u) => `<a class="at-ucard" href="${unitHref(u.id)}"><span class="at-ucard-top"><strong>${A.esc(u.id === "(root)" ? "Top-level files" : u.id.split("/").slice(1).join("/"))}</strong>${dot(u)}</span>
+      <span class="at-ucard-num"><b>${A.num(u.facts)}</b> ${u.facts === 1 ? "fact" : "facts"}${u.drifted ? ` · <span class="warm">${u.drifted} changed</span>` : ""}</span>
+      <small>${owner(u)}</small></a>`
     const groups = [["code", "Code", "Packages agents work inside", true], ["docs", "Docs", "Specifications, ADRs and reference pages", false], ["harness", "Harness", "CI gates and probes", false], ["root", "Repository root", "Top-level files", false]]
     const results = text ? M().live().filter((x) => `${x.claim} ${x.file}`.toLowerCase().includes(text)) : []
     return {
@@ -76,7 +79,7 @@
       ${text ? `<section class="at-panel"><header class="at-panel-head"><h3>${plural(results.length, "fact")} match</h3>${A.btn("Clear", "go", { value: "#/knowledge" })}</header>${A.seven(results, "search", (x) => factRow(x, state), 25) || '<div class="at-band-empty">Nothing matches.</div>'}</section>`
         : groups.map(([g, title, purpose, open]) => {
           const list = units.filter((u) => u.group === g)
-          return list.length ? acc(`units-${g}`, g === "code" ? "stack" : g === "docs" ? "fact" : g === "harness" ? "settings" : "folder", title, purpose, plural(list.length, "unit"), list.map(row).join(""), open) : ""
+          return list.length ? acc(`units-${g}`, g === "code" ? "stack" : g === "docs" ? "fact" : g === "harness" ? "settings" : "folder", title, purpose, plural(list.length, "unit"), `<div class="at-ucards">${list.map(card).join("")}</div>`, open) : ""
         }).join("")}
       </div>`,
     }
@@ -156,7 +159,7 @@
     return {
       crumbs,
       html: `<div class="at-page narrow">
-      <div class="at-agent-head"><span class="at-avatar unit">${A.icon(node?.file ? "fact" : "stack")}</span><div><div class="mx-eyebrow">${isUnit ? "Unit" : `inside <a class="mx-link" href="${unitHref(unitId)}">${A.esc(unitId)}</a>`}</div><h1 class="mono">${A.esc(isUnit ? path : segs.slice(-2).join("/"))}</h1>
+      <div class="at-agent-head"><span class="at-avatar unit">${A.icon(node?.file ? "fact" : "stack")}</span><div><div class="mx-eyebrow">${isUnit ? `Unit · ${A.esc(path.includes("/") ? path.split("/")[0] : "repository root")}` : `inside <a class="mx-link" href="${unitHref(unitId)}">${A.esc(unitId.split("/").slice(1).join("/") || unitId)}</a>`}</div><h1 class="mono">${A.esc(isUnit ? (path.split("/").slice(1).join("/") || path) : segs.slice(-2).join("/"))}</h1>
         <p>${terr ? `${A.esc(terr.name)} · ${A.agent(terr.owner)}` : "No territory"}</p></div><span class="grow"></span>
         ${terr ? "" : A.btn("Declare territory", "territory", { value: path, cap: "R4" })}</div>
       <div class="at-kpis">

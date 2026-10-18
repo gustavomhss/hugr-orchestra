@@ -873,3 +873,14 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-foot-note { margin-inline-end: auto; }
 .at-facets { margin-block: 6px 4px; }
 .at-band-head .wf-count { margin-inline-start: auto; }
+
+/* Knowledge: units as cards */
+.at-ucards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; padding: 4px 0 6px; }
+.at-ucard { display: flex; flex-direction: column; gap: 6px; padding: 14px 15px; border: 1px solid var(--mx-line); border-radius: 12px; background: var(--mx-soft); color: inherit; text-decoration: none; transition: border-color .15s, transform .15s; }
+.at-ucard:hover, .at-ucard:focus-visible { border-color: var(--mx-dim); transform: translateY(-1px); }
+.at-ucard-top { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.at-ucard-top strong { font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.at-ucard-num { font-size: 12.5px; color: var(--mx-dim); }
+.at-ucard-num b { color: var(--mx-text, inherit); font-weight: 600; font-size: 15px; }
+.at-ucard-num .warm { color: var(--mx-warm); }
+.at-ucard > small { font-size: 11.5px; color: var(--mx-dim); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
