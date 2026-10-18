@@ -39,6 +39,8 @@ function replay(source: string, mirror: string, target: string) {
   return git(source, "--git-dir", mirror, "rev-parse", "refs/heads/main")
 }
 
+// Each case builds real repositories and replays them through the mirror script: about 3 s on Linux and 25 s on
+// Windows runners, past the package's 5 s default.
 test("pre-move replay keeps the legacy deterministic mirror SHA", async () => {
   const fixtureState = await fixture()
   try {
@@ -61,7 +63,7 @@ test("pre-move replay keeps the legacy deterministic mirror SHA", async () => {
   } finally {
     await rm(fixtureState.directory, { recursive: true, force: true })
   }
-})
+}, 120_000)
 
 test("relocation is tree-neutral, new-prefix replay resumes, reruns, and tags both layouts", async () => {
   const fixtureState = await fixture()
@@ -94,7 +96,7 @@ test("relocation is tree-neutral, new-prefix replay resumes, reruns, and tags bo
   } finally {
     await rm(fixtureState.directory, { recursive: true, force: true })
   }
-})
+}, 120_000)
 
 test("malformed and ambiguous source placements fail instead of being skipped", async () => {
   const fixtureState = await fixture()
@@ -129,4 +131,4 @@ test("malformed and ambiguous source placements fail instead of being skipped", 
   } finally {
     await rm(fixtureState.directory, { recursive: true, force: true })
   }
-})
+}, 120_000)
