@@ -18,7 +18,7 @@ describe("toolkit command", () => {
           env: { BACKEND_TOOLKIT_ROOT: path.join(home, "toolkit") },
         })
         // An engine can be unsupported on a target the host supports (sqlx needs the MSVC linker on Windows).
-        const expected: BackendToolkit.State[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
+        const expected: BackendToolkit.State<string>[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
           if (!("target" in detected))
             return { engine: engine.id, version: engine.version, status: "unsupported", reason: detected.unsupported }
           const reason = "runtime" in engine ? engine.unsupported?.[detected.target] : undefined
