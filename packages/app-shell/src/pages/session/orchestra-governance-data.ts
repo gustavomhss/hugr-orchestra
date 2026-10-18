@@ -6,8 +6,8 @@ import type {
   Part,
   ToolPart,
   ToolStateCompleted,
-} from "@orchestra/sdk/v2/client"
-import type { SessionMessageAssistantTool, SessionMessageInfo } from "@opencode-ai/client/promise"
+} from "@/compat/sdk-v2-client"
+import type { SessionMessageAssistantTool, SessionMessageInfo } from "@/compat/vendored-client-promise"
 import type { State } from "@/context/global-sync/types"
 import type { ServerProtocol } from "@/utils/server-protocol"
 import { agentKey } from "@/context/agent-identity"

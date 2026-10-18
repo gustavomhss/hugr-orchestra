@@ -1,6 +1,6 @@
-import type { SessionApi } from "@opencode-ai/client/promise"
+import type { SessionApi } from "@/compat/vendored-client-promise"
 import { normalizeSessionInfo } from "@/utils/session"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
+import type { OrchestraClient } from "@/compat/sdk-v2-client"
 
 export async function loadRootSessions(input: { api: Pick<SessionApi, "list">; directory: string; limit: number }) {
   const result = await input.api.list({

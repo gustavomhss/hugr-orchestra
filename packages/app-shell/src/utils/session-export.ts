@@ -1,4 +1,4 @@
-import type { Message, Part, Session } from "@orchestra/sdk/v2/client"
+import type { Message, Part, Session } from "@/compat/sdk-v2-client"
 import { downloadText } from "./download"
 
 // Matches the exact `{ info, messages: [{ info, parts }] }` structure produced by `orchestra export` CLI

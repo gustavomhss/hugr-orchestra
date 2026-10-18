@@ -1,4 +1,4 @@
-import type { ScheduledTaskInfo } from "@orchestra/sdk/v2/client"
+import type { ScheduledTaskInfo } from "@/compat/sdk-v2-client"
 import { createEffect, createSignal, onCleanup } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"

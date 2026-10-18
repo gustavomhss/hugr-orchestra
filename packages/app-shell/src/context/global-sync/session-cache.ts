@@ -1,6 +1,6 @@
-import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@/compat/sdk-v2-client"
+import type { FileDiffInfo } from "@/compat/vendored-client-promise"
+import type { SessionMessageInfo } from "@/compat/vendored-client-promise"
 
 export const SESSION_CACHE_LIMIT = 40
 
