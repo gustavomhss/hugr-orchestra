@@ -49,7 +49,8 @@ export function SourceView(props: ViewProps) {
     const listed = workflow()?.triggers
     if (listed?.length) return listed
     const graph = state.graph.value
-    if (state.graph.status !== "ready" || !graph || state.binding?.provider.kind !== "github" || graph.source.path !== path()) return []
+    if (state.graph.status !== "ready" || !graph || state.binding?.provider.kind !== "github" || graph.source.path !== path()
+      || graph.source.ref !== identityRef() || graph.source.commit !== identityCommit()) return []
     const on = graph.triggers
     if (typeof on === "string") return [on]
     if (Array.isArray(on)) return on.filter((item): item is string => typeof item === "string")
@@ -59,6 +60,10 @@ export function SourceView(props: ViewProps) {
     const message = state.source.error?.message
     return message && message !== "orchestra.actions.noSource" && message !== "orchestra.actions.unavailable" ? props.t(message) : undefined
   })
+  // Idle counts as loading only when the model's source read can resolve path and ref (mirrors model.ts source()).
+  const pending = createMemo(() => state.source.status === "loading" || state.source.status === "idle"
+    && Boolean((path() ?? (!historical() || state.binding?.provider.kind === "github" ? workflow()?.path : undefined))
+      && (historical() ? state.run.value?.commit : state.route.ref)))
   const diagnostics = createMemo(() => state.diagnostics.slice(0, 32))
 
   createEffect(() => {
@@ -142,7 +147,7 @@ export function SourceView(props: ViewProps) {
       }}>{props.t("orchestra.actions.confirm")}</button>
     </div></Show>
     <Switch>
-      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")} detail={sourceError()} /></Match>
+      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")} error={sourceError()} /></Match>
       <Match when={originalSource() || draftOnly()}>
         <textarea class="source-editor" id="source-editor" aria-label={props.t("orchestra.actions.source")} spellcheck={false}
           dir="ltr" readOnly={!editable() || view.discard} value={immutableSource(state, originalSource() ?? state.draftBase) ? originalSource()?.text ?? "" : state.draft}
@@ -171,8 +176,7 @@ export function SourceView(props: ViewProps) {
           <Show when={originalSource()?.diagnostics?.length}><ul><For each={originalSource()?.diagnostics?.slice(0, 32)}>{(message) => <li><bdi dir="auto">{message}</bdi></li>}</For></ul></Show>
         </div>
       </Match>
-      {/* Idle is the instant before the view starts its source read, so it reads as loading too. */}
-      <Match when={state.source.status === "loading" || state.source.status === "idle"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
+      <Match when={pending()}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
       <Match when={true}><Empty title={props.t("orchestra.actions.noSource")} /></Match>
     </Switch>
   </section>
