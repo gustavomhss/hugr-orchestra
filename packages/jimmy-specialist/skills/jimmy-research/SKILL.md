@@ -1,6 +1,6 @@
 ---
 name: jimmy-research
-description: "Answer applicable factual questions; explore fields, analyze mechanisms, compare alternatives, review evidence/literature, assess transfer and feasibility, or discover evidenced opportunities. Select quick, focused or deep effort independently of modality. Use for question-oriented research and evaluation with retained sources and coherent synthesis. Not for implementing solutions, delegating, approving architecture/security, claiming systematic coverage without its method, or outward publication."
+description: "Answer applicable factual questions; explore fields, analyze mechanisms, compare alternatives, review evidence/literature, assess transfer and feasibility, or discover evidenced opportunities. The caller sets quick, focused or deep effort, independently of modality. Use for question-oriented research and evaluation with retained sources and coherent synthesis. Not for implementing solutions, delegating, approving architecture/security, claiming systematic coverage without its method, or outward publication."
 ---
 
 # Research that answers a question
