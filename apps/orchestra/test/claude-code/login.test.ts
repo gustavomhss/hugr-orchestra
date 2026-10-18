@@ -3,7 +3,6 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { ClaudeCodeLogin } from "@/claude-code/login"
 import { tmpdir } from "../fixture/fixture"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 
 // A stand-in for Claude Code 2.1.289 `auth login`: the same stdout lines, the URL inside the OSC 8 hyperlink the CLI
 // prints, then one `code#state` line read from stdin for the manual flow. Unlike the real CLI, which keeps reading after
@@ -28,35 +27,37 @@ async function cli(dir: string) {
   return file
 }
 
-test.skipIf(process.platform === "win32")("sign-in relays the printed URL and the pasted code, then reports success", async () => {
-  await using dir = await tmpdir()
-  expectSpawn(import.meta.path)
-  const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env } })
-  expect(await login.url).toBe(URL)
-  expect(login.code("  good#state \n")).toBe(true)
-  expect(await login.exited).toBe(true)
-})
+test.skipIf(process.platform === "win32")(
+  "sign-in relays the printed URL and the pasted code, then reports success",
+  async () => {
+    await using dir = await tmpdir()
+    const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env } })
+    expect(await login.url).toBe(URL)
+    expect(login.code("  good#state \n")).toBe(true)
+    expect(await login.exited).toBe(true)
+  },
+)
 
 test.skipIf(process.platform === "win32")("a failed sign-in reports no success", async () => {
   await using dir = await tmpdir()
-  expectSpawn(import.meta.path)
   const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env } })
   await login.url
   login.code("bad")
   expect(await login.exited).toBe(false)
 })
 
-test.skipIf(process.platform === "win32")("a CLI that stops before printing a URL rejects with its own reason", async () => {
-  await using dir = await tmpdir()
-  expectSpawn(import.meta.path)
-  const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env, FAIL_EARLY: "1" } })
-  await expect(login.url).rejects.toThrow("Login failed: managed settings forbid this login")
-  expect(await login.exited).toBe(false)
-})
+test.skipIf(process.platform === "win32")(
+  "a CLI that stops before printing a URL rejects with its own reason",
+  async () => {
+    await using dir = await tmpdir()
+    const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env, FAIL_EARLY: "1" } })
+    await expect(login.url).rejects.toThrow("Login failed: managed settings forbid this login")
+    expect(await login.exited).toBe(false)
+  },
+)
 
 test.skipIf(process.platform === "win32")("stopping a sign-in ends the CLI", async () => {
   await using dir = await tmpdir()
-  expectSpawn(import.meta.path)
   const login = ClaudeCodeLogin.start({ executable: await cli(dir.path), env: { ...process.env } })
   await login.url
   await login.stop()

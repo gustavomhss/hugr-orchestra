@@ -36,6 +36,17 @@ export const account = Effect.gen(function* () {
 
 export const signedIn = account.pipe(Effect.map((info) => info.signedIn))
 
+/** Start `claude auth login` on the deployed executable with the environment every Claude-mode run gets. */
+export const startLogin = Effect.gen(function* () {
+  const { ClaudeCodeLogin } = yield* Effect.promise(() => import("../login"))
+  const { ClaudeCodeExecutable } = yield* Effect.promise(() => import("../executable"))
+  const env = ClaudeHostOptions.environment(yield* ClaudeCodeSDK.Environment)
+  return yield* Effect.try({
+    try: () => ClaudeCodeLogin.start({ executable: ClaudeCodeExecutable.command(env), env }),
+    catch: (cause) => cause,
+  })
+})
+
 function authenticated(account: AccountInfo) {
   return (account.tokenSource !== undefined && account.tokenSource !== "none") ||
     (account.apiKeySource !== undefined && account.apiKeySource !== "none") ||

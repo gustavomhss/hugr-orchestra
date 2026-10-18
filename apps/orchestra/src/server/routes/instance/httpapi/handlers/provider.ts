@@ -11,7 +11,6 @@ import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
 import { ClaudeCodeLoginApiError, ProviderAuthApiError } from "../groups/provider"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
 import { ProviderV2 } from "@orchestra/core/provider"
 
 function mapProviderAuthError<A, R>(self: Effect.Effect<A, ProviderAuth.Error, R>) {
@@ -158,16 +157,10 @@ export const providerHandlers = HttpApiBuilder.group(InstanceHttpApi, "provider"
     })
 
     const claudeCodeLogin = Effect.fn("ProviderHttpApi.claudeCodeLogin")(function* () {
-      const { ClaudeCodeLogin } = yield* Effect.promise(() => import("@/claude-code/login"))
-      const { ClaudeCodeExecutable } = yield* Effect.promise(() => import("@/claude-code/executable"))
-      const { ClaudeHostOptions } = yield* Effect.promise(() => import("@/claude-code/host/options"))
-      const env = ClaudeHostOptions.environment(yield* ClaudeCodeSDK.Environment)
+      const { ClaudeHostProvider } = yield* Effect.promise(() => import("@/claude-code/host/provider"))
       const previous = login.current
       if (previous) yield* Effect.promise(async () => previous.stop())
-      const started = yield* Effect.try({
-        try: () => ClaudeCodeLogin.start({ executable: ClaudeCodeExecutable.command(env), env }),
-        catch: loginError,
-      })
+      const started = yield* ClaudeHostProvider.startLogin.pipe(Effect.mapError(loginError))
       login.current = started
       // Refresh the status when this sign-in ends, whatever the outcome; a replaced sign-in leaves the slot alone.
       void started.exited.then(() => {

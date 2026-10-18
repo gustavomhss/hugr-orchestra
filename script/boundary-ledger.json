@@ -87,31 +87,7 @@
     {
       "rule": "R11",
       "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
-      "specifier": "@/claude-code/executable",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
-      "specifier": "@/claude-code/host/options",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
       "specifier": "@/claude-code/host/provider",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
-      "specifier": "@/claude-code/login",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/provider.ts",
-      "specifier": "@/claude-code/sdk",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -1298,12 +1274,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/orchestra/test/claude-code/login.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/orchestra/test/claude-code/runtime-version.test.ts",
       "specifier": "../../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -1912,12 +1882,6 @@
       "rule": "R5",
       "file": "packages/script/test/archive-inventory.test.ts",
       "specifier": "../../../script/archive-inventory",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "packages/script/test/check-spawn-imports.test.ts",
-      "specifier": "../../../script/check-spawn-imports.ts",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
