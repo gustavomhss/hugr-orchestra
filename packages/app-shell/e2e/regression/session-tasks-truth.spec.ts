@@ -175,10 +175,7 @@ async function setup(page: Page, owner = server) {
   await page.addInitScript(
     ({ directory, server, sessionId }) => {
       // The tabs introduction toast would sit over the cockpit's lower cards.
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({

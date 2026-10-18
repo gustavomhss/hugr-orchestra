@@ -51,10 +51,7 @@ async function openMockedApp(page: Page, root: unknown[]) {
   )
   await page.addInitScript(() => {
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-    localStorage.setItem(
-      "settings.v3",
-      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-    )
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
     localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ projects: { local: [] } }))
   })
   await page.goto("/")

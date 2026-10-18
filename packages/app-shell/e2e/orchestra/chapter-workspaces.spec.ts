@@ -539,10 +539,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
   const pending: (() => Promise<void>)[] = []
   await page.addInitScript(
     ({ serverA, serverB, root, scheme }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))

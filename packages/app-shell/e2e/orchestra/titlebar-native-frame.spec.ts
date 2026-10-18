@@ -106,14 +106,10 @@ test("reactive zoom reads settled CSS geometry without converting to native poin
   expect(after.frames).toEqual(before.frames)
 })
 
-test("clears and restores frames for fullscreen, legacy and the 768px desktop boundary", async ({ page }) => {
+test("clears and restores frames for fullscreen and the 768px desktop boundary", async ({ page }) => {
   await update(page, { fullscreen: true })
   expect((await snapshot(page)).frames.at(-1)).toBeNull()
   await update(page, { fullscreen: false })
-  expect((await snapshot(page)).frames.at(-1)).toEqual({ left: 13, top: 13, height: 45 })
-  await update(page, { newLayout: false })
-  expect((await snapshot(page)).frames.at(-1)).toBeNull()
-  await update(page, { newLayout: true })
   expect((await snapshot(page)).frames.at(-1)).toEqual({ left: 13, top: 13, height: 45 })
   await page.setViewportSize({ width: 767, height: 800 })
   await settled(page)

@@ -71,7 +71,7 @@ async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" 
   )
   const prompts: Array<{ sessionID: string; body: unknown }> = []
   await setupTimeline(page, {
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
+    settings: { shouldDisplayTabsToast: false },
     locale: "en",
     protocol,
     onPrompt: (input) => prompts.push(input),
@@ -331,7 +331,7 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     })
   })
   await page.addInitScript(() => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
+    localStorage.setItem("settings.v3", JSON.stringify({ general: {}, notifications: {} }))
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
     localStorage.setItem(

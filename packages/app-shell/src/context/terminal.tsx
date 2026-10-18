@@ -4,11 +4,10 @@ import { batch, createEffect, createMemo, createRoot, on, onCleanup } from "soli
 import { useParams } from "@solidjs/router"
 import { useSDK, type DirectorySDK } from "./sdk"
 import { useLanguage } from "./language"
-import type { Platform } from "./platform"
 import { useServerSDK } from "./server-sdk"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { defaultTitle, titleNumber } from "./terminal-title"
-import { Persist, persisted, removePersisted } from "@/utils/persist"
+import { Persist, persisted } from "@/utils/persist"
 import { showToast } from "@/utils/toast"
 import { formatServerError } from "@/utils/server-errors"
 import { ScopedKey, ServerScope, type ServerScope as ServerScopeValue } from "@/utils/server-scope"
@@ -127,32 +126,6 @@ const trimTerminal = (pty: LocalPTY) => {
 
 function terminalPersistTarget(scope: ServerScopeValue, dir: string, legacy?: string[]) {
   return Persist.serverWorkspace(scope, dir, "terminal", legacy)
-}
-
-export function clearWorkspaceTerminals(
-  dir: string,
-  sessionIDs?: string[],
-  platform?: Platform,
-  scope: ServerScopeValue = ServerScope.local,
-) {
-  const key = getWorkspaceTerminalCacheKey(dir, scope)
-  for (const cache of caches) {
-    const entry = cache.get(key)
-    entry?.value.clear()
-  }
-
-  void removePersisted(terminalPersistTarget(scope, dir), platform)
-
-  if (scope !== ServerScope.local) return
-  const legacy = new Set(getLegacyTerminalStorageKeys(dir))
-  for (const id of sessionIDs ?? []) {
-    for (const key of getLegacyTerminalStorageKeys(dir, id)) {
-      legacy.add(key)
-    }
-  }
-  for (const key of legacy) {
-    void removePersisted({ key }, platform)
-  }
 }
 
 function createWorkspaceTerminalSession(

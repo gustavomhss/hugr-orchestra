@@ -30,11 +30,10 @@ afterEach(() => {
 function fixture(theme?: DesktopTheme) {
   return createRoot((dispose) => {
     owners.push(dispose)
-    const [state, setState] = createStore({ mode: "dark" as "light" | "dark", newLayout: true, theme })
+    const [state, setState] = createStore({ mode: "dark" as "light" | "dark", theme })
     const palette = createTerminalTheme({
       mode: () => state.mode,
       theme: () => state.theme,
-      newLayout: () => state.newLayout,
     })
     return { palette, setState, dispose }
   })
@@ -97,16 +96,6 @@ describe("terminal palette", () => {
     document.body.setAttribute("data-new-layout", "")
     await flush()
     expect(terminal.palette().colors.background).toBe("#0e141b")
-    terminal.setState({ newLayout: false, mode: "light" })
-    expect(terminal.palette().colors.background).toBe("#fcfcfc")
-  })
-
-  test("preserves selected UI theme colors when Orchestra is disabled", async () => {
-    const theme = await Bun.file(new URL("../../ui/src/theme/themes/oc-2.json", import.meta.url)).json()
-    const terminal = fixture(theme)
-    terminal.setState("newLayout", false)
-    expect(terminal.palette().colors.background).toBe("#151515")
-    expect(terminal.palette().colors.foreground).toBe("#EDEDED")
   })
 
   test("recolors the live Ghostty terminal while preserving its buffer, size, and font", async () => {

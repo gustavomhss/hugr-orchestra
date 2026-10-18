@@ -10,7 +10,6 @@ import { decode64 } from "@/utils/base64"
 import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
 import { type DraftTab, useTabs } from "./tabs"
-import { useSettings } from "./settings"
 import { parseServerKey } from "@/utils/session-route"
 import type { ServerScope } from "@/utils/server-scope"
 import { normalizePermissionRequest } from "./global-sync/utils"
@@ -61,7 +60,6 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
     const global = useGlobal()
     const server = useServer()
     const tabs = useTabs()
-    const settings = useSettings()
     const owner = getOwner()
     const states = new Map<ServerScope, { key: ServerConnection.Key; dispose: () => void; state: PermissionState }>()
 
@@ -71,8 +69,7 @@ export const { use: usePermission, provider: PermissionProvider } = createSimple
     })
 
     const activeServer = createMemo(() => {
-      const routed = settings.general.newLayoutDesigns() ? parseServerKey(params.serverKey) : undefined
-      return routed ?? activeDraft()?.server ?? server.key
+      return parseServerKey(params.serverKey) ?? activeDraft()?.server ?? server.key
     })
 
     const ensure = (key: ServerConnection.Key) => {

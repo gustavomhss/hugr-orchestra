@@ -6,10 +6,7 @@ test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block" })
 async function setup(page: Page) {
   await page.addInitScript(() => {
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-    localStorage.setItem(
-      "settings.v3",
-      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-    )
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
     localStorage.setItem(
       "orchestra.global.dat:server",
       JSON.stringify({ projects: { local: [{ worktree: "/repo", expanded: true }] } }),

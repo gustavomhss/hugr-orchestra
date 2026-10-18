@@ -602,12 +602,6 @@
     },
     {
       "rule": "R3",
-      "file": "packages/app-shell/src/app.tsx",
-      "specifier": "@/pages/layout",
-      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
-    },
-    {
-      "rule": "R3",
       "file": "packages/core/src/config.ts",
       "specifier": "./v1/config/config",
       "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
