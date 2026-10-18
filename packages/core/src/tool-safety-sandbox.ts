@@ -427,7 +427,8 @@ export const confine = Effect.fn("ToolSafetySandbox.confine")(function* (input: 
   return {
     command: sandbox.command,
     args: [...(process.versions.bun ? ["--no-env-file", "--config=/dev/null"] : []), ...sandbox.args, "--settings", settings, "--", input.command, ...input.args],
-    env: { ...env, ...sandbox.env },
+    // srt replaces the child's TMPDIR with CLAUDE_CODE_TMPDIR, a /tmp/claude that does not exist in the jail.
+    env: { ...env, ...sandbox.env, CLAUDE_CODE_TMPDIR: scratch },
   }
 })
 
