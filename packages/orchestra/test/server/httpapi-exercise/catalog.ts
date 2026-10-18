@@ -47,6 +47,8 @@ export const catalogScenarios: Scenario[] = [
             env: [],
             npm: "@ai-sdk/openai-compatible",
             api: "http://127.0.0.1:1/v1",
+            // Zen offers nothing without a key, even free models; a synthetic key makes the configured model available.
+            options: { apiKey: "httpapi-synthetic-key" },
             models: {
               "httpapi-free": {
                 name: "HTTP API Free",
