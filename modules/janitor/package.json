@@ -5,7 +5,10 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": {},
+  "exports": {
+    "./bootstrap": "./src/bootstrap.ts",
+    "./report-state": "./src/report-state.ts"
+  },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"

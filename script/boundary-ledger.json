@@ -14,36 +14,6 @@
     },
     {
       "rule": "R11",
-      "file": "apps/orchestra/src/agent/agent.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/agent/agent.ts",
-      "specifier": "@/maestro/seat-skill-root",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/agent/agent.ts",
-      "specifier": "@/maestro/seats",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/plugin/index.ts",
-      "specifier": "./app-dock",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/plugin/index.ts",
-      "specifier": "./linux-workspace",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
       "file": "apps/orchestra/src/project/bootstrap.ts",
       "specifier": "@/maestro/upstream-v2",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
@@ -56,32 +26,8 @@
     },
     {
       "rule": "R11",
-      "file": "apps/orchestra/src/research/allowance.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/research/binding.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
       "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/catalog.ts",
       "specifier": "@/claude-code/host/provider",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/catalog.ts",
-      "specifier": "@/claude-code/sdk",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/handlers/global.ts",
-      "specifier": "@/janitor/report-state",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -105,12 +51,6 @@
     {
       "rule": "R11",
       "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
-      "specifier": "@/claude-code/sdk",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/server/routes/instance/httpapi/server.ts",
       "specifier": "@/continuity/service",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
@@ -122,20 +62,8 @@
     },
     {
       "rule": "R11",
-      "file": "apps/orchestra/src/server/server.ts",
-      "specifier": "@/janitor/bootstrap",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
       "file": "apps/orchestra/src/session/compaction.ts",
       "specifier": "@/maestro/atlas-resume-restore",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/llm/context-budget.ts",
-      "specifier": "@/continuity/masking",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -183,12 +111,6 @@
     {
       "rule": "R11",
       "file": "apps/orchestra/src/session/prompt.ts",
-      "specifier": "@/continuity/alias",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/prompt.ts",
       "specifier": "@/continuity/service",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
@@ -202,12 +124,6 @@
       "rule": "R11",
       "file": "apps/orchestra/src/session/prompt.ts",
       "specifier": "@/maestro/arsenal-bindings",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/prompt.ts",
-      "specifier": "@/maestro/arsenal-observations",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -230,12 +146,6 @@
     },
     {
       "rule": "R11",
-      "file": "apps/orchestra/src/session/tools.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
       "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
       "specifier": "@/maestro/backend-result",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
@@ -244,36 +154,6 @@
       "rule": "R11",
       "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
       "specifier": "@/maestro/logical-task",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
-      "specifier": "@/maestro/seats",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
-      "specifier": "@/maestro/session-authority",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/session/upstream-task-settlement.ts",
-      "specifier": "@/maestro/upstream-result",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/skill/index.ts",
-      "specifier": "@/maestro/seat-skill-root",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/skill/index.ts",
-      "specifier": "@/maestro/seats",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -381,12 +261,6 @@
     {
       "rule": "R11",
       "file": "apps/orchestra/src/tool/registry.ts",
-      "specifier": "@/maestro/arsenal-observations",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/registry.ts",
       "specifier": "@/maestro/atlas-knowledge",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
@@ -404,12 +278,6 @@
     },
     {
       "rule": "R11",
-      "file": "apps/orchestra/src/tool/registry.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
       "file": "apps/orchestra/src/tool/research-registry.ts",
       "specifier": "./atlas-context",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
@@ -418,42 +286,6 @@
       "rule": "R11",
       "file": "apps/orchestra/src/tool/research-registry.ts",
       "specifier": "@/maestro/atlas-memory",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/research-registry.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/research-repo.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/shell.ts",
-      "specifier": "@/maestro/seats",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/shell/execution.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/shell/execution.ts",
-      "specifier": "@/maestro/seats",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/shell/scan.ts",
-      "specifier": "@/maestro/seats",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -489,12 +321,6 @@
     {
       "rule": "R11",
       "file": "apps/orchestra/src/tool/task-background.ts",
-      "specifier": "@/maestro/upstream-result",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/task-background.ts",
       "specifier": "@/maestro/upstream-settlement",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
@@ -508,12 +334,6 @@
       "rule": "R11",
       "file": "apps/orchestra/src/tool/task-work-observation.ts",
       "specifier": "@/maestro/logical-task",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/task-work-observation.ts",
-      "specifier": "@/maestro/session-authority",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -568,24 +388,6 @@
       "rule": "R11",
       "file": "apps/orchestra/src/tool/task.ts",
       "specifier": "@/maestro/logical-task",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/task.ts",
-      "specifier": "@/maestro/roster",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/task.ts",
-      "specifier": "@/maestro/seats",
-      "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
-    },
-    {
-      "rule": "R11",
-      "file": "apps/orchestra/src/tool/task.ts",
-      "specifier": "@/maestro/session-authority",
       "reason": "D17: platform-legacy code imports a product domain; resolved by the 70-C' cut"
     },
     {
@@ -734,18 +536,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/script/packaged-skills.ts",
-      "specifier": "../../orchestra/src/maestro/seat-skill-content",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/script/packaged-skills.ts",
-      "specifier": "../../orchestra/src/maestro/seats",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/script/ripgrep-proof.ts",
       "specifier": "../../desktop/src/main/cli-artifacts",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -878,18 +668,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-native.ts",
-      "specifier": "../../../orchestra/src/maestro/seat-skill-content",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-native.ts",
-      "specifier": "../../../orchestra/src/maestro/seats",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/test/fixture/distribution-provider-proof.ts",
       "specifier": "../../../../packages/schema/src/agent",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -956,18 +734,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/packaged-skills-build.test.ts",
-      "specifier": "../../orchestra/src/maestro/seat-skill-content",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/packaged-skills-build.test.ts",
-      "specifier": "../../orchestra/src/maestro/seats",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/electron-builder.candidate.config.test.ts",
       "specifier": "../orchestra/script/lean-notices",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -980,44 +746,14 @@
     },
     {
       "rule": "R5",
-      "file": "apps/desktop/scripts/app-dock-native-proof.ts",
-      "specifier": "../../orchestra/src/plugin/app-dock",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/scripts/app-dock-workspace-proof.ts",
-      "specifier": "../../orchestra/src/plugin/app-dock",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/scripts/lean-candidate.ts",
       "specifier": "../../orchestra/script/lean-notices",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
       "rule": "R5",
-      "file": "apps/desktop/scripts/linux-workspace-proof.ts",
-      "specifier": "../../orchestra/src/plugin/linux-workspace",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/desktop/scripts/stage-claude.ts",
       "specifier": "../../orchestra/package.json",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/app-dock-rpc-native.test.ts",
-      "specifier": "../../../orchestra/src/plugin/app-dock",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/src/main/app-dock-rpc-workspace.fixture.ts",
-      "specifier": "../../../orchestra/src/plugin/app-dock",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {
@@ -2222,24 +1958,6 @@
     },
     {
       "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
-      "specifier": "@orchestra/core/session/message",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
-      "specifier": "@orchestra/core/session/schema",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-approval.ts",
-      "specifier": "@orchestra/core/session/store",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
       "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
       "specifier": "@orchestra/core/event/sql",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
@@ -2265,36 +1983,6 @@
     {
       "rule": "R7",
       "file": "apps/orchestra/src/maestro/arsenal-bindings.ts",
-      "specifier": "@orchestra/core/session/store",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
-      "specifier": "@orchestra/core/event/sql",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
-      "specifier": "@orchestra/core/session/event",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
-      "specifier": "@orchestra/core/session/message",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
-      "specifier": "@orchestra/core/session/schema",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/arsenal-observations.ts",
       "specifier": "@orchestra/core/session/store",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
@@ -2374,18 +2062,6 @@
       "rule": "R7",
       "file": "apps/orchestra/src/maestro/plan-revision.ts",
       "specifier": "@orchestra/core/event/sql",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/seat-skill-content.ts",
-      "specifier": "@orchestra/core/config/markdown",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/session-authority.ts",
-      "specifier": "@orchestra/core/session/schema",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
     {

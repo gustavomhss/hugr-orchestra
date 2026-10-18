@@ -5,7 +5,11 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": {},
+  "exports": {
+    "./app-dock": "./src/app-dock.ts",
+    "./app-dock-linux": "./src/app-dock-linux.ts",
+    "./linux-workspace": "./src/linux-workspace.ts"
+  },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"

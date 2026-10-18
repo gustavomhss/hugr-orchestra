@@ -5,7 +5,14 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": {},
+  "exports": {
+    "./alias": "./src/alias.ts",
+    "./archive-search": "./src/archive-search.ts",
+    "./dry-transport": "./src/dry-transport.ts",
+    "./masking": "./src/masking.ts",
+    "./raw-payload": "./src/raw-payload.ts",
+    "./request-source": "./src/request-source.ts"
+  },
   "scripts": {
     "typecheck": "tsgo --noEmit"
   },

@@ -323,7 +323,8 @@
     "./host": "./src/host.ts",
     "./host/agent-execution": "./src/host/agent-execution.ts",
     "./host/catalog-availability": "./src/host/catalog-availability.ts",
-    "./host/pty-environment": "./src/host/pty-environment.ts"
+    "./host/pty-environment": "./src/host/pty-environment.ts",
+    "./tool/truncation-dir": "./src/tool/truncation-dir.ts"
   },
   "imports": {
     "#sqlite": {

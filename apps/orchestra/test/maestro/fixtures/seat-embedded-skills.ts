@@ -14,7 +14,7 @@ plugin({
   },
 })
 
-const { SeatSkillRoot } = await import("../../../../../modules/maestro/coordination/src/seat-skill-root")
+const { SeatSkillRoot } = await import("@orchestra/maestro/seat-skill-root")
 const root = SeatSkillRoot.roots.backend
 const extracted = (await fs.readdir(root, { recursive: true, withFileTypes: true }))
   .filter((entry) => entry.isFile())

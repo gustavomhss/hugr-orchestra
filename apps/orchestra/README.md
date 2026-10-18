@@ -31,8 +31,6 @@ This project was created using `bun init` in bun v1.2.12. [Bun](https://bun.sh) 
 - `continuity` — product — `src/continuity/`, `src/tool/context-compact.ts`, `src/tool/context-recall.ts`, `src/tool/context-recall-archive.ts`, `src/session/prompt-continuity.ts` — modules/continuity
 - `claude-code` — product — `src/claude-code/` — modules/engine-adapters/claude-code
 - `acp` — product — `src/acp/` — modules/acp
-- `janitor` — product — `src/janitor/` — modules/janitor
-- `app-dock` — product — `src/plugin/app-dock*`, `src/plugin/linux-workspace*` — modules/app-dock
 - `session-engine` — platform-legacy — `src/session/`, `src/storage/`, `src/background/` — core v1 Session, storage and jobs plus modules/session-engine
 - `agent` — platform-legacy — `src/agent/` — core agent plus the product roster (70-C')
 - `config` — platform-legacy — `src/config/`, `src/permission/`, `src/question/`, `src/command/`, `src/skill/`, `src/env/` — core config, permission and instruction

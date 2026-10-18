@@ -5,7 +5,26 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": {},
+  "exports": {
+    "./admit-request": "./src/admit-request.ts",
+    "./approval": "./src/approval.ts",
+    "./arsenal-native": "./src/arsenal-native.ts",
+    "./arsenal-observations": "./src/arsenal-observations.ts",
+    "./arsenal-outcome": "./src/arsenal-outcome.ts",
+    "./context-tool-plan": "./src/context-tool-plan.ts",
+    "./governed-task": "./src/governed-task.ts",
+    "./playbook-content": "./src/playbook-content.ts",
+    "./roster": "./src/roster.ts",
+    "./route-grant": "./src/route-grant.ts",
+    "./seat-skill-content": "./src/seat-skill-content.ts",
+    "./seat-skill-root": "./src/seat-skill-root.ts",
+    "./seats": "./src/seats/index.ts",
+    "./seats/seat": "./src/seats/seat.ts",
+    "./session-authority": "./src/session-authority.ts",
+    "./task-hash": "./src/task-hash.ts",
+    "./upstream-result": "./src/upstream-result.ts",
+    "./work-contract": "./src/work-contract.ts"
+  },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"

@@ -5,13 +5,21 @@
   "private": true,
   "type": "module",
   "license": "MIT",
-  "exports": {},
+  "exports": {
+    "./executable": "./src/executable.ts",
+    "./host/admission": "./src/host/admission.ts",
+    "./host/join": "./src/host/join.ts",
+    "./host/options": "./src/host/options.ts",
+    "./sdk": "./src/sdk.ts",
+    "./transcript": "./src/transcript.ts"
+  },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@anthropic-ai/claude-agent-sdk": "0.3.289",
+    "@orchestra/continuity": "workspace:*",
     "@orchestra/core": "workspace:*",
     "effect": "catalog:"
   },

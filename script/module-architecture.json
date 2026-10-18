@@ -455,8 +455,6 @@
         },
         "claude-code": { "kind": "product", "target": "modules/engine-adapters/claude-code", "patterns": ["src/claude-code/"] },
         "acp": { "kind": "product", "target": "modules/acp", "patterns": ["src/acp/"] },
-        "janitor": { "kind": "product", "target": "modules/janitor", "patterns": ["src/janitor/"] },
-        "app-dock": { "kind": "product", "target": "modules/app-dock", "patterns": ["src/plugin/app-dock*", "src/plugin/linux-workspace*"] },
         "session-engine": {
           "kind": "platform-legacy",
           "target": "core v1 Session, storage and jobs plus modules/session-engine",
@@ -610,8 +608,7 @@
         "apps/desktop/src/main/app-dock*",
         "apps/desktop/src/main/ipc-app-dock*",
         "apps/desktop/src/main/linux-workspace*",
-        "apps/orchestra/src/plugin/app-dock*",
-        "apps/orchestra/src/plugin/linux-workspace*",
+        "modules/app-dock/src/*",
         "packages/app-shell/src/app-dock-linux.ts"
       ],
       "readme": "apps/desktop/src/main/README.md",
@@ -638,12 +635,16 @@
     "apps/orchestra/src/continuity/README.md",
     "apps/orchestra/src/claude-code/README.md",
     "apps/orchestra/src/acp/README.md",
-    "apps/orchestra/src/janitor/README.md",
+    "modules/janitor/README.md",
     "apps/orchestra/src/control-plane/README.md",
     "apps/desktop/src/main/README.md",
     "packages/core/src/session/README.md",
     "packages/core/src/backend-toolkit/README.md",
     "packages/core/src/database/README.md",
-    "packages/core/src/plugin/README.md"
+    "packages/core/src/plugin/README.md",
+    "modules/app-dock/README.md",
+    "modules/continuity/README.md",
+    "modules/engine-adapters/claude-code/README.md",
+    "modules/maestro/coordination/README.md"
   ]
 }
