@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import {
+  addPhase,
   addRequirement,
   chain,
   checkID,
@@ -7,6 +8,7 @@ import {
   conditionFields,
   connect,
   documentFields,
+  emptiedPhases,
   type Flow,
   flowFromDocument,
   insertNode,
@@ -16,6 +18,7 @@ import {
   readChecklist,
   RECORDED,
   removeNodes,
+  setPhase,
   START,
   TRIGGER,
   uniqueID,
@@ -72,6 +75,26 @@ describe("documents and flows", () => {
     expect("nodeGroups" in fields && fields.nodeGroups).toEqual([
       { id: "p", name: "Phase", description: "", nodeIds: ["a", "g"] },
     ])
+  })
+
+  test("a stored document without a main output still opens", () => {
+    // Documents this app did not write can carry any output key, or an empty object.
+    const stored = JSON.parse('{"START":{},"A":{"other":[]}}')
+    const flow = flowFromDocument(
+      { nodes: [node("start", START), node("a", "relay.execute")], connections: stored, nodeGroups: [] },
+      "workflow",
+    )
+    expect(flow.edges).toEqual([])
+    expect(flow.nodes).toHaveLength(2)
+  })
+
+  test("a step named __proto__ keeps its connection when the document is written", () => {
+    const flow = workflow()
+    const named = { ...flow, nodes: flow.nodes.map((item) => (item.id === "a" ? { ...item, name: "__proto__" } : item)) }
+    const fields = documentFields(named)
+    expect(Object.keys(fields.connections)).toEqual(["START", "__proto__", "G"])
+    expect(fields.connections.START.main[0][0].node).toBe("__proto__")
+    expect(JSON.parse(JSON.stringify(fields.connections)).G.main[0][0].node).toBe("B")
   })
 
   test("hook outputs keep their port index, and hooks carry no phases", () => {
@@ -346,6 +369,14 @@ describe("step configuration", () => {
     expect(issues(retype(flow, "b", "relay.inject", { file: "docs/brief.md" }))).toEqual([])
   })
 
+  test("a step naming a skill the catalog lacks is flagged once the catalog has loaded", () => {
+    const flow = retype(linear(), "b", "relay.execute", { skill: "gone" })
+    expect(issues(flow)).toEqual([])
+    expect(issues(flow, [], ["other"])).toEqual([{ code: "skill-missing", node: "b", params: { skill: "gone" } }])
+    expect(issues(flow, [], ["gone", "other"])).toEqual([])
+    expect(issues(retype(linear(), "b", "relay.execute", { skill: "" }), [], [])).toEqual([])
+  })
+
   test("a human approval step in an existing document blocks publishing", () => {
     expect(issues(retype(linear(), "c", "relay.human"))).toEqual([{ code: "human-unsupported", node: "c" }])
   })
@@ -371,6 +402,20 @@ describe("step configuration", () => {
     expect(issues(linear({}, group(["a", "b"])))).toEqual([])
     expect(issues(linear({}, group(["b", "c", "d"])))).toEqual([])
     expect(issues(linear({}, group(["c"])))).toEqual([])
+  })
+
+  test("an edit that leaves a phase with instructions and no steps is named; one without instructions is not", () => {
+    const flow = linear({}, [
+      { id: "p", name: "Plan", description: "Be careful.", nodeIds: ["a"] },
+      { id: "q", name: "Build", description: " ", nodeIds: ["b", "c"] },
+    ])
+    const ids = (next: Flow) => emptiedPhases(flow, next).map((phase) => phase.id)
+    expect(ids(setPhase(flow, "a", ""))).toEqual(["p"])
+    expect(ids(removeNodes(flow, ["a"]))).toEqual(["p"])
+    expect(ids(addPhase(flow, { id: "r", name: "New", description: "", nodeIds: ["a"] }))).toEqual(["p"])
+    // Nothing is lost when the phase keeps a step, or when it had no instructions.
+    expect(ids(setPhase(flow, "b", ""))).toEqual([])
+    expect(ids(removeNodes(flow, ["b", "c"]))).toEqual([])
   })
 
   test("a step is only offered the phases it can join or leave without splitting one", () => {
@@ -438,6 +483,9 @@ describe("edits", () => {
     expect(uniqueID(flow, "a")).toBe("a_2")
     expect(uniqueID(flow, "p")).toBe("p_2")
     expect(uniqueID(flow, "new step!")).toBe("new_step_")
+    // A name with no ASCII letters or digits falls back to a plain ID.
+    expect(uniqueID(flow, "日本語")).toBe("step")
+    expect(uniqueID(flow, "!!!")).toBe("step")
     expect(uniqueName(flow, "A")).toBe("A 2")
     expect(uniqueName(flow, "Fresh")).toBe("Fresh")
   })

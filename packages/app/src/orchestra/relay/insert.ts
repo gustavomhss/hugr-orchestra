@@ -160,20 +160,23 @@ function downstream(flow: Flow, from: string) {
 }
 
 // A phase is one unbroken stretch of the sequence, as the server requires. Grouping is possible when the steps
-// are not the start, sit next to each other, and do not cut another phase in two.
-export function groupBlock(flow: Flow, selected: string[]): "none" | "gap" | undefined {
+// are not the start, sit next to each other (`gap` when they do not), and do not cut another phase in two (`split`,
+// as one step from the middle of a phase does).
+export function groupBlock(flow: Flow, selected: string[]): "none" | "gap" | "split" | undefined {
   const members = groupMembers(flow, selected)
   if (!members.length) return "none"
   const order = chain(flow).map((node) => node.id)
-  const touched = flow.phases
-    .filter((phase) => phase.nodeIds.some((id) => members.includes(id)))
-    .map((phase) => phase.id)
-  const broken = addPhase(flow, { id: "", name: "", description: "", nodeIds: members }).phases.some((phase) => {
-    if (phase.id && !touched.includes(phase.id)) return false
-    const at = phase.nodeIds.map((id) => order.indexOf(id))
-    return at.length > 0 && (at.includes(-1) || Math.max(...at) - Math.min(...at) !== at.length - 1)
-  })
-  return broken ? "gap" : undefined
+  const unbroken = (ids: string[]) => {
+    const at = ids.map((id) => order.indexOf(id))
+    return !at.length || (!at.includes(-1) && Math.max(...at) - Math.min(...at) === at.length - 1)
+  }
+  if (!unbroken(members)) return "gap"
+  const cuts = flow.phases.some(
+    (phase) =>
+      phase.nodeIds.some((id) => members.includes(id)) &&
+      !unbroken(phase.nodeIds.filter((id) => !members.includes(id))),
+  )
+  return cuts ? "split" : undefined
 }
 
 const groupMembers = (flow: Flow, selected: string[]) =>

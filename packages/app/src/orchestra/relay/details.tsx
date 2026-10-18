@@ -199,14 +199,24 @@ export function Empty(props: { children: JSX.Element }) {
   return <div class="wf-col-empty">{props.children}</div>
 }
 
+// A one-line field drops pasted line breaks and glues the lines together without a word. The paste is refused instead,
+// and `refused` says so.
+export function pasteOneLine(event: ClipboardEvent, refused: () => void) {
+  if (!/[\r\n]/.test(event.clipboardData?.getData("text") ?? "")) return
+  event.preventDefault()
+  refused()
+}
+
 export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (flow: Flow) => void }) {
   const copy = useRelayCopy()
   const id = createUniqueId()
-  const [draft, setDraft] = createStore({ name: props.node.name, error: "" as "" | "required" | "taken" })
+  const [draft, setDraft] = createStore({ name: props.node.name, error: "" as "" | "required" | "taken" | "lines" })
   createEffect(on(() => [props.node.id, props.node.name], (next, previous) => {
     if (next[0] === previous?.[0] && next[1] === draft.name.trim()) return
     setDraft({ name: props.node.name, error: "" })
   }, { defer: true }))
+  // A refused paste leaves the typed name as it was, so it never keeps the field from closing.
+  const blocked = () => draft.error === "required" || draft.error === "taken"
   return (
     <label class="mx-field" classList={{ invalid: !!draft.error }}>
       <span id={`${id}-label`}>{copy.t("orchestra.workflows.details.name")}</span>
@@ -224,9 +234,10 @@ export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (fl
           if (!name || taken || name === props.node.name) return
           props.onChange(updateNode(props.flow, props.node.id, { name }))
         }}
-        onBlur={() => !draft.error && setDraft("name", props.node.name)}
+        onPaste={(event) => pasteOneLine(event, () => setDraft("error", "lines"))}
+        onBlur={() => !blocked() && setDraft({ name: props.node.name, error: "" })}
         on:keydown={(event) => {
-          if (event.key === "Enter" && !draft.error) event.currentTarget.blur()
+          if (event.key === "Enter" && !blocked()) event.currentTarget.blur()
           if (event.key !== "Escape" || !draft.error) return
           event.preventDefault()
           event.stopPropagation()
@@ -235,7 +246,13 @@ export function NodeNameField(props: { flow: Flow; node: FlowNode; onChange: (fl
       />
       <Show when={draft.error}>
         <span id={id} class="mx-hint" role="alert" style={{ color: "var(--mx-bad)" }}>
-          {copy.t(draft.error === "required" ? "orchestra.workflows.details.nameRequired" : "orchestra.workflows.details.nameTaken")}
+          {copy.t(
+            draft.error === "required"
+              ? "orchestra.workflows.details.nameRequired"
+              : draft.error === "lines"
+                ? "orchestra.workflows.details.nameOneLine"
+                : "orchestra.workflows.details.nameTaken",
+          )}
         </span>
       </Show>
     </label>

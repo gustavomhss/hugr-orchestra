@@ -254,7 +254,7 @@ test("step rename preserves spaces while typing and serialized connections follo
   const [state, setState] = createStore({ flow: flowFromDocument(doc(), "workflow") })
   const host = mount(() => createComponent(WorkflowDetails, {
     get flow() { return state.flow }, get node() { return state.flow.nodes[1] },
-    run: undefined, frozen: undefined, issues: [], skills: [], save: undefined,
+    run: undefined, frozen: undefined, issues: [], skills: { names: [], error: false, retry() {} }, save: undefined,
     onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
   }))
   const input = document.querySelector<HTMLInputElement>('[data-component="relay-node-details"] input[data-autofocus]')!
@@ -276,6 +276,21 @@ test("step rename preserves spaces while typing and serialized connections follo
   input.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape", bubbles: true, cancelable: true }))
   expect(input.value).toBe("Review changes")
   expect(input.getAttribute("aria-invalid")).toBe("false")
+})
+
+test("the skill list marks a skill that no longer exists and says when it cannot load", () => {
+  const [state, setState] = createStore({ flow: flowFromDocument(doc(), "workflow"), names: ["other"] as string[] | undefined })
+  setState("flow", "nodes", 1, "parameters", { instructions: "Review changes", skill: "gone" })
+  mount(() => createComponent(WorkflowDetails, {
+    get flow() { return state.flow }, get node() { return state.flow.nodes[1] }, run: undefined, frozen: undefined, issues: [],
+    get skills() { return { names: state.names, error: !state.names, retry() {} } },
+    save: undefined, onChange: (flow) => setState("flow", flow), onNav() {}, onClose() {}, onReview() {},
+  }))
+  const text = () => document.querySelector('[data-component="relay-node-details"]')!.textContent!
+  expect(text()).toContain("gone (not found)")
+  setState("names", undefined)
+  expect(text()).toContain("could not be loaded")
+  expect(text()).not.toContain("(not found)")
 })
 
 test("failed saves show the server error and explicit retry; conflicts keep reload distinct", () => {

@@ -205,6 +205,10 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.delete.confirm": "Delete",
   "orchestra.workflows.removeNodes.title": "Delete {{count}} nodes?",
   "orchestra.workflows.removeNodes.body": "They are removed from this canvas. Undo brings them back.",
+  "orchestra.workflows.phaseEmpty.title": "Delete the phase “{{name}}”?",
+  "orchestra.workflows.phaseEmpty.body":
+    "A phase with no steps is not kept, so its instructions would be deleted with it. Undo brings them back.",
+  "orchestra.workflows.phaseEmpty.confirm": "Delete phase",
   "orchestra.workflows.publish.title": "Publish {{name}}",
   "orchestra.workflows.publish.workflow":
     "Maestro uses this version from now on. Publishing does not start anything. Runs already in progress finish on the version they started with.",
@@ -312,6 +316,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.editor.serverIssue.message": "A message can't be empty.",
   "orchestra.workflows.editor.serverIssue.checks": "A step's checks could not be read. Open the step and fix them.",
   "orchestra.workflows.editor.serverIssue.unknownStep": "This workflow has a step Maestro can't run. Remove it.",
+  "orchestra.workflows.editor.serverIssue.skill":
+    "A step uses a skill that doesn't exist. Open the steps and choose another skill, or No skill.",
   "orchestra.workflows.editor.serverIssue.budget": "Retries per step must be a whole number from 0 to 99.",
   "orchestra.workflows.editor.serverIssue.startPhase": "Start can't be part of a phase. Take it out of the phase.",
   "orchestra.workflows.editor.serverIssue.oneEvent": "A hook needs exactly one event.",
@@ -378,6 +384,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.add.phase.none": "Select steps first: Shift+click them on the canvas.",
   "orchestra.workflows.add.phase.gap":
     "The selected steps are not next to each other. A phase is one unbroken run of steps.",
+  "orchestra.workflows.add.phase.split":
+    "Taking the selected steps out of the middle of a phase would split that phase in two.",
   "orchestra.workflows.add.foot":
     "Click to insert, or drag onto the canvas. Steps run in the order of their connections, not their position.",
   "orchestra.workflows.group.work": "Work",
@@ -417,6 +425,8 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.issue.human-unsupported": "{{name}}: Maestro can't run Human approval steps. Remove this step.",
   "orchestra.workflows.issue.phase-gap":
     "The {{phase}} phase must be one unbroken run of steps. Move {{name}} into the phase or out of the middle of it.",
+  "orchestra.workflows.issue.skill-missing":
+    "{{name}} uses the skill “{{skill}}”, which doesn't exist. Choose another skill, or No skill.",
   "orchestra.workflows.issue.no-steps": "Add a first step after Start.",
   "orchestra.workflows.issue.no-trigger": "Add a trigger.",
   "orchestra.workflows.issue.trigger-count": "A hook has exactly one trigger.",
@@ -438,6 +448,19 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.check.remove": "Remove check {{id}}",
   "orchestra.workflows.check.commandPlaceholder": "Shell command; exit 0 passes",
   "orchestra.workflows.check.empty": "Add a command, or switch to an AI check. Publishing needs one.",
+  "orchestra.workflows.check.oneLine":
+    "A command is one line. Join commands with && or ;, or put them in a script file.",
+  "orchestra.workflows.check.assert": "What this check proves",
+  "orchestra.workflows.check.assertPlaceholder": "What this check proves, in plain words (optional)",
+  "orchestra.workflows.check.params": "Parameters in this check. Each value is supplied when a run starts.",
+  "orchestra.workflows.check.paramOther": "a value supplied when a run starts",
+  "orchestra.workflows.check.param.base_ref": "the git revision the work is compared with",
+  "orchestra.workflows.check.param.src_path": "the source files this step changes",
+  "orchestra.workflows.check.param.test_path": "the test files this step changes",
+  "orchestra.workflows.check.param.test_cmd": "the command that runs the tests",
+  "orchestra.workflows.check.param.lint_cmd": "the command that lints the code",
+  "orchestra.workflows.check.param.wp_dir": "the folder where this work package keeps its working files",
+  "orchestra.workflows.check.param.review_artifact": "the file the review is written to",
   "orchestra.workflows.check.criterion": "What should the AI confirm?",
   "orchestra.workflows.check.context": "Files the AI reads",
   "orchestra.workflows.check.contextPlaceholder": "Paths, for example docs/review.md",
@@ -491,8 +514,11 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.none": "None",
   "orchestra.workflows.details.name": "Name",
   "orchestra.workflows.details.nameTaken": "Use a name no other node has.",
+  "orchestra.workflows.details.nameOneLine": "A name is one line. Remove the line breaks and paste again.",
   "orchestra.workflows.details.phaseField": "Phase",
   "orchestra.workflows.details.noPhase": "No phase",
+  "orchestra.workflows.details.phaseMiddle":
+    "This step is in the middle of “{{phase}}”, so it can't leave without splitting it. Move the steps at its edges first.",
   "orchestra.workflows.details.phaseName": "Phase name",
   "orchestra.workflows.details.phaseNameTaken": "Use a name no other phase has.",
   "orchestra.workflows.details.context": "Context",
@@ -507,6 +533,13 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.details.gateHint": "Optional. What the agent should have ready before this checkpoint.",
   "orchestra.workflows.details.skill": "Skill",
   "orchestra.workflows.details.noSkill": "No skill",
+  "orchestra.workflows.details.skillMissing": "{{skill}} (not found)",
+  "orchestra.workflows.details.skillMissingHint":
+    "The skill “{{skill}}” no longer exists, so Maestro can't run this step. Choose another skill, or No skill.",
+  "orchestra.workflows.details.skillsError": "The skill list could not be loaded, so it may be incomplete.",
+  "orchestra.workflows.details.skillsLoading": "Loading skills…",
+  "orchestra.workflows.details.skillLive":
+    "Maestro reads the skill when a run starts. If you rename, delete or edit it after publishing, runs can be held until you publish again.",
   "orchestra.workflows.details.skillMode": "How to use the skill",
   "orchestra.workflows.details.skillAdd": "Skill plus instructions",
   "orchestra.workflows.details.skillReplace": "Skill replaces instructions",

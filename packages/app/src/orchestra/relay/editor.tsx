@@ -2,6 +2,7 @@ import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLocation } from "@solidjs/router"
 import { useCommand } from "@/context/command"
 import { useLayout } from "@/context/layout"
+import { useServerSDK } from "@/context/server-sdk"
 import { useTabs } from "@/context/tabs"
 import { showToast } from "@/utils/toast"
 import { modalActive } from "@/utils/modal-active"
@@ -19,7 +20,7 @@ import { DraftScope, openDraft, profileDrafts } from "./drafts"
 import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
-import { documentFields, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
+import { documentFields, emptiedPhases, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
 import { HookActivity, TestDialog } from "./hook-activity"
 import { installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
@@ -28,8 +29,9 @@ import { issueText } from "./parts"
 import { RunsUnavailable } from "./library"
 import { copyDocument } from "./presets"
 import { layerBase, type RelayRoute, relayPath } from "./route"
+import { SERVER_ISSUES } from "./server-issues"
 import type { RelaySource } from "./source"
-import { type MenuItem, useRelayCopy } from "./ui"
+import { Ic, type MenuItem, useRelayCopy } from "./ui"
 
 export type EditorProps = {
   source: RelaySource
@@ -41,51 +43,6 @@ export type EditorProps = {
   openSession: (sessionID: string) => void
   crumbs: (items: string[]) => void
 }
-
-type CopyKey = Parameters<ReturnType<typeof useRelayCopy>["t"]>[0]
-
-// The server's compile messages, matched by their wording, with plain copy for each. `covered` lists the client issues
-// that already say the same thing: the message is then left out of the list.
-const SERVER_ISSUES: { match: RegExp; key: CopyKey; covered?: string[] }[] = [
-  { match: /^Add at least one step/, key: "orchestra.workflows.editor.serverIssue.noSteps", covered: ["no-steps"] },
-  { match: /^Add at least one action/, key: "orchestra.workflows.editor.serverIssue.noAction", covered: ["no-action"] },
-  {
-    match: /^Criterion IDs must be unique/,
-    key: "orchestra.workflows.editor.serverIssue.duplicateCheck",
-    covered: ["check-duplicate"],
-  },
-  { match: /contiguous stretch/, key: "orchestra.workflows.editor.serverIssue.phase" },
-  { match: /cycles/, key: "orchestra.workflows.editor.serverIssue.cycle", covered: ["cycle"] },
-  {
-    match: /^Remove branches|^Relay accepts one sequential output|^A hook output accepts one next step/,
-    key: "orchestra.workflows.editor.serverIssue.branches",
-    covered: ["branches"],
-  },
-  {
-    match: /^Connect every step|^Some steps are disconnected|^A connection points to a missing step|^Connect the event/,
-    key: "orchestra.workflows.editor.serverIssue.loose",
-    covered: ["loose", "hook-loose"],
-  },
-  { match: /^Message must be/, key: "orchestra.workflows.editor.serverIssue.message", covered: ["message-empty"] },
-  {
-    match: /^Criteria must be|^A criterion must be/,
-    key: "orchestra.workflows.editor.serverIssue.checks",
-    covered: ["checklist-invalid"],
-  },
-  { match: /no Relay implementation/, key: "orchestra.workflows.editor.serverIssue.unknownStep" },
-  { match: /retry budget must be/, key: "orchestra.workflows.editor.serverIssue.budget" },
-  { match: /start stays outside every phase/, key: "orchestra.workflows.editor.serverIssue.startPhase" },
-  {
-    match: /^A hook needs exactly one event/,
-    key: "orchestra.workflows.editor.serverIssue.oneEvent",
-    covered: ["no-trigger", "trigger-count"],
-  },
-  {
-    match: /need an event before the effect/,
-    key: "orchestra.workflows.editor.serverIssue.before",
-    covered: ["needs-before"],
-  },
-]
 
 const DRAFT_REASON = {
   error: "orchestra.workflows.drafts.reason.error",
@@ -141,6 +98,7 @@ export function Editor(props: EditorProps) {
 function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const copy = useRelayCopy()
   const dialogs = useDialog()
+  const serverSDK = useServerSDK()
   const tabs = useTabs()
   const layout = useLayout()
   const duplication = createAction(useLocation())
@@ -167,7 +125,14 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const flow = () => draft.state.flow
   const name = () => draft.state.name
   const save = draft.state.save
-  const edit = (next: Flow) => { if (!props.route.view) draft.edit(next) }
+  // A phase left without steps is not kept, and its instructions go with it, so an edit that would do that asks first.
+  const [emptying, setEmptying] = createSignal<{ flow: Flow; names: string }>()
+  const edit = (next: Flow) => {
+    if (props.route.view) return
+    const lost = emptiedPhases(flow(), next)
+    if (!lost.length) return draft.edit(next)
+    setEmptying({ flow: next, names: lost.map((phase) => phase.name).join("”, “") })
+  }
   // The selection may name nodes that the step removed.
   const travel = (step: () => void) => {
     if (props.route.view) return
@@ -187,11 +152,31 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const outputs = () => (kind === "hook" ? hookOutputs(props.source.nodeTypes.data?.hook) : {})
   // A workflow from a shipped profile whose tools are missing cannot run, so Publish stays off for it.
   const unrunnable = () => kind === "workflow" && base().runnable === false
+  // The skills a step can name. Skills are read when Maestro runs the workflow, so one that is gone stops the step.
+  const skills = useQuery(
+    () => ({
+      queryKey: props.source.key("skills"),
+      queryFn:
+        kind === "workflow"
+          ? () =>
+              serverSDK()
+                .currentApi.skill.list({ location: { directory: props.directory } })
+                .then((result) => result.data.map((skill) => skill.name))
+          : skipToken,
+      retry: false,
+      staleTime: 60_000,
+    }),
+    props.source.queryClient,
+  )
   const found = createMemo(() =>
-    issues(flow(), [
-      ...(unrunnable() ? [copy.t("orchestra.workflows.editor.notRunnable")] : []),
-      ...documentDiagnostics(base()),
-    ]),
+    issues(
+      flow(),
+      [
+        ...(unrunnable() ? [copy.t("orchestra.workflows.editor.notRunnable")] : []),
+        ...documentDiagnostics(base()),
+      ],
+      skills.data,
+    ),
   )
   const issueList = () => {
     const codes = new Set<string>(found().map((issue) => issue.code))
@@ -202,6 +187,11 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       if (known.covered?.some((code) => codes.has(code))) return []
       return [{ text: copy.t(known.key) }]
     })
+  }
+  // The server's words for a draft that cannot be used yet, in plain copy where there is some.
+  const plain = (text: string) => {
+    const known = SERVER_ISSUES.find((entry) => entry.match.test(text))
+    return known ? copy.t(known.key) : text
   }
   const runs = () => (props.source.runs.data ?? []).filter((run) => run.documentID === props.id)
   const installed = () => props.source.installs.isSuccess
@@ -377,12 +367,32 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     })
     const link = window.document.createElement("a")
     link.href = URL.createObjectURL(blob)
-    link.download = `${name().replace(/[^A-Za-z0-9_.-]+/g, "-") || "relay"}.json`
+    // A name with no ASCII letters or digits would leave nothing but dashes.
+    const stem = name().replace(/[^A-Za-z0-9_.-]+/g, "-").replace(/^-+|-+$/g, "")
+    link.download = `${/[A-Za-z0-9]/.test(stem) ? stem : "relay"}.json`
     link.click()
     URL.revokeObjectURL(link.href)
   })
   let api: CanvasApi | undefined
   let canvasKeys: ((event: KeyboardEvent) => void) | undefined
+  // Notices sit above the canvas. The canvas fits itself once, when it is first measured; a notice that comes or goes
+  // resizes it afterwards, so it is fitted again once the browser has laid the new size out.
+  const noticed = () =>
+    !!exporting.error() ||
+    (kind === "hook" && (!props.source.installs.isSuccess || (!!installed() && !decisions.isSuccess)))
+  let frame: number | undefined
+  createEffect(
+    on(
+      noticed,
+      () => {
+        if (props.route.tab !== "editor") return
+        if (frame !== undefined) cancelAnimationFrame(frame)
+        frame = requestAnimationFrame(() => (frame = requestAnimationFrame(() => api?.fit())))
+      },
+      { defer: true },
+    ),
+  )
+  onCleanup(() => frame !== undefined && cancelAnimationFrame(frame))
   const menu = (): MenuItem[] => [
     {
       label: copy.t("orchestra.workflows.menu.fit"),
@@ -550,18 +560,37 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         onRetry={() => void flush()}
       />
       <div class="wf-body">
-        <Show when={exporting.error()}>
-          <div class="wf-alert" role="alert" data-slot="relay-export-error">
-            <strong>{copy.t("orchestra.workflows.export.failed")}</strong>
-            <span>{exporting.error()}</span>
+        <Show when={noticed()}>
+          <div class="wf-notices">
+            <Show when={exporting.error()}>
+              {(message) => (
+                <div class="wf-alert wf-notice" role="alert" data-slot="relay-export-error">
+                  <Ic name="warn" />
+                  <div>
+                    <strong>{copy.t("orchestra.workflows.export.failed")}</strong>
+                    <span>{plain(message())}</span>
+                  </div>
+                  <button
+                    type="button"
+                    class="mx-btn icon"
+                    aria-label={copy.t("orchestra.workflows.dialog.close")}
+                    title={copy.t("orchestra.workflows.dialog.close")}
+                    onClick={() => exporting.setError(undefined)}
+                  >
+                    <Ic name="close" />
+                  </button>
+                </div>
+              )}
+            </Show>
+            <Show when={kind === "hook" && !props.source.installs.isSuccess}>
+              <HookQueryStatus kind="installs" query={props.source.installs} />
+            </Show>
+            <Show when={kind === "hook" && installed() && !decisions.isSuccess}>
+              <HookQueryStatus kind="activity" query={decisions} />
+            </Show>
           </div>
         </Show>
-        <Show when={kind === "hook" && !props.source.installs.isSuccess}>
-          <HookQueryStatus kind="installs" query={props.source.installs} />
-        </Show>
-        <Show when={kind === "hook" && installed() && !decisions.isSuccess}>
-          <HookQueryStatus kind="activity" query={decisions} />
-        </Show>
+        <div class="wf-stage">
         <Switch>
           <Match when={props.route.view && !frozenFlow()}>
             <div class="mx-page" data-slot="relay-history-unavailable">
@@ -591,6 +620,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
               selected={selected()}
               run={overlayRun()}
               runs={runs()}
+              skills={{ names: skills.data, error: skills.isError, retry: () => void skills.refetch() }}
               decision={decisions.isSuccess ? decisions.data.toSorted((a, b) => b.seq - a.seq)[0] : undefined}
               decisionKnown={props.source.installs.isSuccess && (!installed() || decisions.isSuccess)}
               decisionStatus={!props.source.installs.isSuccess
@@ -646,7 +676,19 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             />
           </Match>
         </Switch>
+        </div>
       </div>
+      <Show when={emptying()}>
+        {(pending) => (
+          <ConfirmDialog
+            title={copy.t("orchestra.workflows.phaseEmpty.title", { name: pending().names })}
+            body={copy.t("orchestra.workflows.phaseEmpty.body")}
+            confirm={copy.t("orchestra.workflows.phaseEmpty.confirm")}
+            onConfirm={() => draft.edit(pending().flow)}
+            onClose={() => setEmptying(undefined)}
+          />
+        )}
+      </Show>
       <Switch>
         <Match when={dialog() === "publish"}>
           <PublishDialog document={base()} flow={flow()} source={props.source} active={draft.active}

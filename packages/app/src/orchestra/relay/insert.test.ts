@@ -134,7 +134,9 @@ describe("phases", () => {
   test("grouping never cuts another phase in two", () => {
     const steps = line(["a", "b", "c", "d"], [phase("p", ["a", "b", "c"])])
     // The middle of a phase would leave a and c apart; either end of it is fine.
-    expect(groupBlock(steps, ["b"])).toBe("gap")
+    expect(groupBlock(steps, ["b"])).toBe("split")
+    expect(groupSelection(steps, ["b"], "Phase 2")).toBeUndefined()
+    expect(groupBlock(steps, ["a", "c"])).toBe("gap")
     expect(groupBlock(steps, ["c", "d"])).toBeUndefined()
     expect(groupSelection(steps, ["c", "d"], "Phase 2")?.flow.phases.map((item) => item.nodeIds)).toEqual([
       ["a", "b"],
