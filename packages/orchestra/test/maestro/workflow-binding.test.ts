@@ -1,4 +1,4 @@
-import { describe, expect } from "bun:test"
+import { describe, expect, test } from "bun:test"
 import { Effect, Result, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -14,6 +14,7 @@ import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { workflowRevisionBody } from "../../src/maestro/plan-revision"
 import { WorkflowBinding } from "../../src/maestro/workflow-binding"
+import { Dispatch } from "../../src/maestro/dispatch"
 import { testEffect } from "../lib/effect"
 import { MessageID, PartID } from "../../src/session/schema"
 import { Session } from "../../src/session/session"
@@ -83,4 +84,42 @@ describe("workflow upstream integration seam", () => {
       expect(result.failure.reason).toBe("WORKFLOW_APPROVED_SCOPE_MISMATCH")
       expect(result.failure.message).toBe(`Tool safety HOLD: WORKFLOW_APPROVED_SCOPE_MISMATCH. Plan revision ${revision.id} approved writePaths ["src/money.ts"]; this Task passed ["proposal.md"]. Retry with exactly the approved writePaths, in the same order.`)
     }))
+})
+
+// A resume reads the owner decision already observed; only the authorization's own bound child may take that path.
+describe("workflow Task approval phase", () => {
+  const authorizationID = "evt_maestro_authorization_phase"
+  const child = Dispatch.childSessionID(authorizationID)
+  const resume = { parentSessionID: "ses_parent", authorizationID, resumed: { id: child, parentID: "ses_parent" },
+    bound: { executionSessionID: child } }
+
+  test("a resume of the authorization's own bound child continues", () => {
+    expect(WorkflowBinding.phaseFor(resume)).toBe("continuation")
+  })
+
+  test("a first dispatch without task_id needs the owner's immediate reply", () => {
+    expect(WorkflowBinding.phaseFor({ ...resume, resumed: undefined, bound: undefined })).toBe("dispatch")
+  })
+
+  test("a resume of a child without a workflow binding is a dispatch", () => {
+    expect(WorkflowBinding.phaseFor({ ...resume, bound: undefined })).toBe("dispatch")
+  })
+
+  test("a resume without an authorization is a dispatch", () => {
+    expect(WorkflowBinding.phaseFor({ ...resume, authorizationID: undefined })).toBe("dispatch")
+  })
+
+  test("a bound child reserved by another authorization is a dispatch", () => {
+    const other = Dispatch.childSessionID("evt_maestro_authorization_other")
+    expect(WorkflowBinding.phaseFor({ ...resume, resumed: { id: other, parentID: "ses_parent" },
+      bound: { executionSessionID: other } })).toBe("dispatch")
+  })
+
+  test("a bound child under another parent is a dispatch", () => {
+    expect(WorkflowBinding.phaseFor({ ...resume, resumed: { id: child, parentID: "ses_other" } })).toBe("dispatch")
+  })
+
+  test("a binding recorded for another execution Session is a dispatch", () => {
+    expect(WorkflowBinding.phaseFor({ ...resume, bound: { executionSessionID: "ses_other" } })).toBe("dispatch")
+  })
 })

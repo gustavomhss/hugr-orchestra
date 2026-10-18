@@ -192,16 +192,31 @@ export const TaskTool = Tool.define(
         return yield* Effect.fail(new Error(`${params.subagent_type} is a primary agent and cannot be started as a subagent`))
       }
       const nextID = next.id ?? params.subagent_type
+      const seat = next.native === true ? Seats.find(nextID) : undefined
+      // Resolved before the workflow approval check, which needs to know whether this call resumes the bound child.
+      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
+      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
+        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
+      if (params.task_id && !resumed) {
+        return yield* Effect.fail(
+          new Error(
+            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
+          ),
+        )
+      }
       if (params.workflow && !params.governed && !params.authorizationID)
         return yield* Effect.fail(new Error("Tool safety HOLD: WORKFLOW_APPROVAL_BINDING_MISSING"))
       // An authorized dispatch reserves its one governed child below; an unarmed workflow must hold before that.
       if (params.workflow) yield* completion.beforeReserve({ sessionID: ctx.sessionID, directory: parent.directory })
+      // A resume of the authorization's own bound child reads the owner decision already observed; any other call is a
+      // dispatch and needs the owner's immediate approve.
+      const workflowPhase = params.workflow ? WorkflowBinding.phaseFor({ parentSessionID: ctx.sessionID,
+        authorizationID: params.authorizationID, resumed, bound: resumed ? yield* WorkflowBinding.read(resumed.id) : undefined }) : "dispatch"
       const workflowReady = params.workflow ? yield* WorkflowBinding.beforeTask({ sessionID: ctx.sessionID, assistantMessageID: ctx.messageID,
           callID: ctx.callID ?? "", directory: parent.directory, projectID: parent.projectID,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt,
           model: params.model, workflow: params.workflow,
-        }).pipe(Effect.orDie) : undefined
-      const seat = next.native === true ? Seats.find(nextID) : undefined
+        }, workflowPhase).pipe(Effect.orDie) : undefined
       const childPermissions = yield* WriteRoots.bind(
         nextID,
         params.writePaths,
@@ -231,16 +246,6 @@ export const TaskTool = Tool.define(
         reservedChildPermissions = reservation.permission
         replayReserved = true
         requireCompletedReplay = true
-      }
-      const strictTask = seat?.strictResume === true || params.governed !== undefined || params.authorizationID !== undefined || params.workflow !== undefined
-      const resumed = yield* LogicalTask.resolveResume({ taskID: params.task_id, strict: strictTask,
-        parentSessionID: ctx.sessionID, projectID: parent.projectID, memberID: nextID })
-      if (params.task_id && !resumed) {
-        return yield* Effect.fail(
-          new Error(
-            `No task ${params.task_id} in this session. Omit task_id to start a new task, or pass an id returned by an earlier task call.`,
-          ),
-        )
       }
       if (params.governed) {
         const message = yield* MessageV2.get({ sessionID: ctx.sessionID, messageID: ctx.messageID }).pipe(

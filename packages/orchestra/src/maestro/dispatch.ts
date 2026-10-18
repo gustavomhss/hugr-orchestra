@@ -67,6 +67,15 @@ function isDuplicate(cause: Cause.Cause<unknown>) {
   return message.includes("already exists") || message.includes("UNIQUE constraint failed")
 }
 
+/** The one governed child an authorization reserves, derived from the authorization alone. */
+export function childSessionID(authorizationID: string) {
+  return `ses_maestro_dispatch_${suffix(authorizationID)}`
+}
+
+function suffix(authorizationID: string) {
+  return createHash("sha256").update(authorizationID, "utf8").digest("hex")
+}
+
 export const reserveDispatch = Effect.fn("MaestroDispatch.reserve")(function* (input: {
   sessionID: string
   authorizationID: string
@@ -77,12 +86,11 @@ export const reserveDispatch = Effect.fn("MaestroDispatch.reserve")(function* (i
   if (!authorization) return yield* new DispatchRejectedError({ reason: "authorization-not-found" })
   if (authorization.sessionID !== input.sessionID)
     return yield* new DispatchRejectedError({ reason: "session-mismatch" })
-  const suffix = createHash("sha256").update(input.authorizationID, "utf8").digest("hex")
-  const id = EventV2.ID.make(`evt_maestro_dispatch_${suffix}`)
+  const id = EventV2.ID.make(`evt_maestro_dispatch_${suffix(input.authorizationID)}`)
   const wanted = {
     sessionID: authorization.sessionID,
     authorizationID: input.authorizationID,
-    childSessionID: `ses_maestro_dispatch_${suffix}`,
+    childSessionID: childSessionID(input.authorizationID),
     projectID: authorization.projectID,
     routedMemberID: authorization.routedMemberID,
     taskIntentHash: authorization.taskIntentHash,

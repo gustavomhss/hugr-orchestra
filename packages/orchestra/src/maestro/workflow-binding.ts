@@ -28,6 +28,7 @@ import type { Agent } from "@/agent/agent"
 import type { ArsenalCompletion } from "./arsenal-completion"
 import { canonicalMemberId } from "./roster"
 import { readAuthorization } from "./authorization"
+import { childSessionID } from "./dispatch"
 import { readValidation } from "./validation-record"
 
 // Selection is a reference, never model-supplied binding/attribution/approval. The host acquires every bound byte.
@@ -224,6 +225,22 @@ export const adopt = Effect.fn("WorkflowBinding.adopt")(function* (input: {
         : new RelayWorkflowBinding.Held({ reason: "WORKFLOW_BINDING_ACQUISITION" }))),
   }
 })
+
+/**
+ * A workflow Task call continues only when it resumes, by task_id, the child its own authorization reserved under this
+ * parent, and that child carries the workflow binding. Every other call is a dispatch.
+ */
+export function phaseFor(input: {
+  readonly parentSessionID: string
+  readonly authorizationID?: string
+  readonly resumed?: { readonly id: string; readonly parentID?: string }
+  readonly bound?: { readonly executionSessionID: string }
+}) {
+  if (!input.authorizationID || !input.resumed || !input.bound) return "dispatch" as const
+  if (input.resumed.id !== childSessionID(input.authorizationID) || input.resumed.parentID !== input.parentSessionID ||
+    input.bound.executionSessionID !== input.resumed.id) return "dispatch" as const
+  return "continuation" as const
+}
 
 export const read = Effect.fn("WorkflowBinding.read")(function* (executionSessionID: string) {
   const database = yield* Database.Service
