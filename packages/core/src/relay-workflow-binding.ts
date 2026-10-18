@@ -16,6 +16,8 @@ export class Held extends Schema.TaggedErrorClass<Held>()("RelayWorkflow.Held", 
   reason: Schema.String,
   /** Words for the model after the reason, such as the approved and the supplied values that differ. */
   detail: Schema.optional(Schema.String),
+  /** The durable receipt the hold is about, such as the code review that did not approve, for a host that reads it. */
+  receiptID: Schema.optional(Schema.String),
 }) {
   override get message() {
     return this.detail === undefined ? `Tool safety HOLD: ${this.reason}` : `Tool safety HOLD: ${this.reason}. ${this.detail}`

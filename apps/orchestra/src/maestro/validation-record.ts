@@ -8,7 +8,7 @@ import { createHash } from "node:crypto"
 import { stat } from "node:fs/promises"
 import path from "node:path"
 import { isDeepStrictEqual } from "node:util"
-import { eq } from "drizzle-orm"
+import { desc, eq } from "drizzle-orm"
 import { Cause, Effect, Schema } from "effect"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
@@ -495,7 +495,10 @@ export function decodeReview(row: { id: string; type: string; data: unknown }): 
   return { id: row.id, ...legacy, artifact: omit(legacy.artifact, ["bytes"]) }
 }
 
-/** The plan-stage receipt for a validation; `headSHA` selects the code-stage receipt for that worker result. */
+/**
+ * The newest plan-stage receipt for a validation; `headSHA` selects the newest code-stage receipt for that worker
+ * result. Newest, as authorization reads it: a later verdict on the same tree supersedes an earlier one.
+ */
 export const findReview = Effect.fn("MaestroReview.find")(function* (
   sessionID: string,
   validationRecordID: string,
@@ -506,6 +509,7 @@ export const findReview = Effect.fn("MaestroReview.find")(function* (
     .select({ id: EventTable.id, type: EventTable.type, data: EventTable.data })
     .from(EventTable)
     .where(eq(EventTable.aggregate_id, sessionID))
+    .orderBy(desc(EventTable.seq))
     .all()
     .pipe(Effect.orDie)
   return rows
