@@ -32,6 +32,10 @@ const files = workspace.files.filter(
     prefixes.some((prefix) => file === prefix || file.startsWith(`${prefix.replace(/\/$/, "")}/`)),
 )
 const tracked = new Set(workspace.files)
+// node16/nodenext resolution requires the emitted extension on relative imports.
+const nodeNext = /"moduleResolution"\s*:\s*"node(?:16|next)"/i.test(
+  readFileSync(path.join(root, member.path, "tsconfig.json"), "utf8"),
+)
 const changed = files.flatMap((file) => {
   const text = readFileSync(path.join(root, file), "utf8")
   const edits = specifiersOf(file, text)
@@ -58,7 +62,7 @@ function replacement(file: string, facade: string) {
   const alias = Object.entries(member.spec.aliases ?? {}).find(([, target]) => target === "src/")?.[0]
   if (alias) return `${alias}${facade.slice(member.path.length + "/src/".length)}`
   const relative = path.posix.relative(path.posix.dirname(file), facade)
-  return relative.startsWith(".") ? relative : `./${relative}`
+  return `${relative.startsWith(".") ? relative : `./${relative}`}${nodeNext ? ".js" : ""}`
 }
 
 function fail(message: string): never {

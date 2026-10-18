@@ -8,7 +8,7 @@
 
 ## Public entry points and consumers
 
-- Consumers: server, effect, plugin and project.
+- Consumers: server, effect, plugin, project and storage (which re-exports `WorkspaceTable`).
 
 ## Dependencies and boundaries
 

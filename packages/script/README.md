@@ -20,7 +20,7 @@ Build, CI and repository tooling library.
 
 ## Assets, schemas and generated files
 
-- Reads `script/module-registry.json`, `script/module-architecture.json` and `script/boundary-ledger.json`.
+- Reads `script/module-registry.json` (`src/workspace-paths.ts`). The architecture registry and the boundary ledger are read by the root `script/*.ts` tools, not by this package.
 
 ## Persistence, identity and lifetime
 

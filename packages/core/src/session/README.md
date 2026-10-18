@@ -6,7 +6,7 @@
 
 ## Public entry points and consumers
 
-- Consumers: server, apps/orchestra, apps/cli and sdk-next; other packages should import the entries.
+- Consumers: server, apps/orchestra and apps/cli; other packages should import the entries.
 
 ## Dependencies and boundaries
 

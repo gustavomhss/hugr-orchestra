@@ -9,8 +9,8 @@ import type {
   Message,
   Part,
   Config as SDKConfig,
-} from "./compat/sdk"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/sdk-v2"
+} from "./compat/sdk.js"
+import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/sdk-v2.js"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"

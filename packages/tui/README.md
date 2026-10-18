@@ -10,7 +10,7 @@ Terminal UI used by the CLI.
 ## Public entry points and consumers
 
 - Explicit `exports` keys.
-- Consumers: `apps/cli` and `apps/orchestra` (`apps/orchestra/src/cli/cmd`, `apps/orchestra/src/config`, `apps/orchestra/src/plugin/tui`).
+- Consumers: `apps/cli` and `apps/orchestra` (`apps/orchestra/src/cli`, `apps/orchestra/src/config`, `apps/orchestra/src/plugin/tui`, `apps/orchestra/src/util`).
 
 ## Dependencies and boundaries
 

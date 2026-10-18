@@ -6,7 +6,7 @@
 
 ## Public entry points and consumers
 
-- Consumers: every core domain with tables, and the server.
+- Consumers: every core domain with tables, `apps/orchestra` (the largest consumer) and the server.
 
 ## Dependencies and boundaries
 
