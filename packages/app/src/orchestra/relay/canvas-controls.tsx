@@ -54,9 +54,7 @@ export function CanvasControls(props: {
         >
           <Ic name="zoomOut" />
         </button>
-        <span class="mx-btn wf-zoom" aria-live="polite">
-          {Math.round(props.zoom * 100)}%
-        </span>
+        <span class="mx-btn wf-zoom">{Math.round(props.zoom * 100)}%</span>
         <button
           type="button"
           class="mx-btn icon"

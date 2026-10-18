@@ -4,24 +4,42 @@ import { modalActive } from "@/utils/modal-active"
 import {
   bounds,
   centerOn,
+  contains,
+  DRAWER,
   edgePath,
   fitView,
   groupRect,
   intersects,
   NODE,
+  nudge,
   type Point,
   portY,
   type Rect,
   snap,
   toWorld,
   type View,
+  viewInset,
+  wheelFactor,
   zoomAt,
 } from "./geometry"
 import { CanvasControls } from "./canvas-controls"
 import { type NodeMenuItem, NodeMenu } from "./canvas-menu"
 import { CanvasNode, type NodeOverlay } from "./canvas-node"
 import { PhaseHead } from "./canvas-phase"
-import { connect, type Flow, type FlowEdge, type FlowNode, moveNodes, type Outputs, outputsOf } from "./graph"
+import { edgeKey, EdgeTools, Wires } from "./canvas-wires"
+import {
+  connect,
+  type Flow,
+  type FlowEdge,
+  type FlowNode,
+  isEntry,
+  moveNodes,
+  type Outputs,
+  outputsOf,
+  phaseChoices,
+  phaseOf,
+  setPhase,
+} from "./graph"
 import { Minimap } from "./minimap"
 import { Ic } from "./ui"
 
@@ -33,6 +51,8 @@ export type CanvasApi = {
   zoomTo: (k: number) => void
   // Puts a phase header into rename mode.
   rename: (phase: string) => void
+  // Moves keyboard focus to a step's tile.
+  focus: (id: string) => void
 }
 export type CanvasText = {
   label: string
@@ -43,6 +63,7 @@ export type CanvasText = {
   keys: string
   minimap: string
   open: (name: string) => string
+  hasIssue: (name: string) => string
   remove: (name: string) => string
   addAfter: (name: string) => string
   insert: string
@@ -75,7 +96,6 @@ const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(na
 let instances = 0
 
 export const sameEdge = (a: FlowEdge, b: FlowEdge) => a.from === b.from && a.to === b.to && a.port === b.port
-const edgeKey = (edge: FlowEdge) => `${edge.from}>${edge.to}:${edge.port}`
 
 type Drag =
   | { mode: "pan"; view: View; sx: number; sy: number; moved: boolean; pointer: number; edge?: FlowEdge }
@@ -101,7 +121,8 @@ export function Canvas(props: {
   children?: JSX.Element
   onSelect: (ids: string[]) => void
   onChange: (flow: Flow) => void
-  onReject: (reason: "entry") => void
+  // A connection or a drop that cannot happen, with the name it concerns (the phase a step could not join).
+  onReject: (reason: "entry" | "phase", detail?: string) => void
   onOpen: (id: string) => void
   onAdd: (anchor?: { id: string; port: number }) => void
   onDelete: (ids: string[]) => void
@@ -164,7 +185,9 @@ export function Canvas(props: {
     }),
   )
   const content = createMemo(() => bounds(nodes()))
-  const inset = () => ({ left: 30, top: 64, right: 30 + (props.drawer ? 340 : 0), bottom: 126 })
+  // The canvas coordinate space is always left to right; the add drawer sits at the end of the reading direction.
+  const rtl = () => getComputedStyle(host).direction === "rtl"
+  const inset = () => viewInset(props.drawer, rtl())
 
   const fit = (smooth = false) => {
     if (!size().w) return
@@ -179,14 +202,22 @@ export function Canvas(props: {
     const item = at(id)
     if (!item) return
     setAnimate(true)
-    setView(centerOn(view(), item, { w: size().w - (drawer ? 340 : 0), h: size().h }))
+    const reserve = drawer ? DRAWER : 0
+    setView(centerOn(view(), item, { x: rtl() ? reserve : 0, w: size().w - reserve, h: size().h }))
   }
+  // Focus that moves on purpose (an arrow key) has already placed the view; it must not nudge it again.
+  let quiet = false
   props.api?.({
     fit,
     center,
     zoomBy,
     zoomTo: (k) => zoomBy(k / view().k),
     rename: (phase) => setUI("renaming", phase),
+    focus: (id) => {
+      quiet = true
+      host.querySelector<HTMLElement>(`.wf-node[data-id="${CSS.escape(id)}"] .wf-tile`)?.focus({ preventScroll: true })
+      quiet = false
+    },
   })
 
   // A selected node and a selected wire are never both the target of Delete.
@@ -311,10 +342,7 @@ export function Canvas(props: {
     if (current.mode === "node") {
       const positions = moving()
       setMoving(undefined)
-      if (current.moved && positions)
-        return props.onChange(
-          moveNodes(props.flow, new Map([...positions].map(([id, point]) => [id, [point.x, point.y]]))),
-        )
+      if (current.moved && positions) return dropped(current.ids, positions, world(event))
       if (!event.shiftKey && !event.metaKey && !(event.ctrlKey && !IS_MAC) && current.ids.length > 1) {
         const id = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>(".wf-node")?.dataset.id
         if (id) props.onSelect([id])
@@ -335,6 +363,23 @@ export function Canvas(props: {
     if (box) props.onSelect(props.flow.nodes.filter((node) => intersects(position(node), box)).map((node) => node.id))
   }
 
+  // A step dragged into another phase's box joins that phase when it sits next to it in the sequence; otherwise it
+  // just moves, and the user is told why it did not join.
+  const dropped = (ids: string[], positions: Map<string, Point>, point: Point) => {
+    const moved = moveNodes(props.flow, new Map([...positions].map(([id, to]) => [id, [to.x, to.y]])))
+    const node = ids.length === 1 ? props.flow.nodes.find((item) => item.id === ids[0]) : undefined
+    const target =
+      node && !isEntry(node)
+        ? groups().find((item) => item.phase.id !== phaseOf(props.flow, node.id)?.id && contains(item.rect, point))
+        : undefined
+    if (!node || !target) return props.onChange(moved)
+    if (!phaseChoices(moved, node.id).phases.some((phase) => phase.id === target.phase.id)) {
+      props.onChange(moved)
+      return props.onReject("phase", target.phase.name)
+    }
+    props.onChange(setPhase(moved, node.id, target.phase.id))
+  }
+
   const wheel = (event: WheelEvent) => {
     if (event.defaultPrevented || modalActive()) return
     if (event.target instanceof Element && event.target.closest(".wf-drawer,[role=dialog],dialog,input,textarea,select")) return
@@ -342,7 +387,7 @@ export function Canvas(props: {
     setAnimate(false)
     if (event.ctrlKey || event.metaKey) {
       const point = local(event)
-      return setView(zoomAt(view(), Math.exp(-event.deltaY * 0.01), point.x, point.y))
+      return setView(zoomAt(view(), wheelFactor(event.deltaY), point.x, point.y))
     }
     setView({ ...view(), x: view().x - event.deltaX, y: view().y - event.deltaY })
   }
@@ -369,6 +414,30 @@ export function Canvas(props: {
     const node = open && at(open.id)?.node
     return open && node ? (props.menu?.(open.ids, node) ?? []) : []
   }
+  // The overflow-hidden canvas must never scroll: a focused tile outside the view would shift every overlay and offset
+  // every coordinate. Put the scroll back, then pan the view just far enough to show what took focus. A button the
+  // pointer pressed stays put under it, so only focus that came from the keyboard pans.
+  const reveal = (event: FocusEvent) => {
+    host.scrollLeft = 0
+    host.scrollTop = 0
+    const target = event.target
+    if (quiet || !(target instanceof Element) || !target.closest(".wf-world") || !target.matches(":focus-visible"))
+      return
+    const area = host.getBoundingClientRect()
+    const box = target.getBoundingClientRect()
+    const frame = inset()
+    const dx = nudge(box.left, box.right, area.left + frame.left, area.right - frame.right)
+    const dy = nudge(box.top, box.bottom, area.top + frame.top, area.bottom - frame.bottom)
+    if (!dx && !dy) return
+    setAnimate(true)
+    setView({ ...view(), x: view().x + dx, y: view().y + dy })
+  }
+  // The pointer keeps its capture until the button is released; with no drag left, its moves and release do nothing.
+  const cancel = () => {
+    setDrag(undefined)
+    setMoving(undefined)
+  }
+  const overlaid = (event: Event) => event.target instanceof Element && !!event.target.closest(OVERLAYS)
   // Blur and Enter both end the edit; the second one finds nothing left to finish.
   const renamePhase = (phase: { id: string; name: string }, value: string) => {
     if (ui.renaming !== phase.id) return
@@ -411,8 +480,19 @@ export function Canvas(props: {
       onPointerDown={down}
       onPointerMove={move}
       onPointerUp={up}
-      onPointerCancel={() => (setDrag(undefined), setMoving(undefined))}
+      onPointerCancel={cancel}
+      onScroll={() => {
+        host.scrollLeft = 0
+        host.scrollTop = 0
+      }}
+      onFocusIn={reveal}
       onKeyDown={(event) => {
+        // Escape drops a drag in progress and nothing else.
+        if (event.key === "Escape" && drag()) {
+          event.preventDefault()
+          event.stopPropagation()
+          return cancel()
+        }
         if ((event.key !== "Delete" && event.key !== "Backspace") || !ui.edge || props.readOnly) return
         const target = event.target instanceof Element ? event.target : undefined
         if (target !== host && !target?.closest(".wf-world")) return
@@ -437,9 +517,12 @@ export function Canvas(props: {
           event.target instanceof Element ? event.target.closest<HTMLElement>(".wf-node")?.dataset.id : undefined
         if (id && !(event.target instanceof Element && event.target.closest(".wf-node-tools"))) props.onOpen(id)
       }}
-      onDragOver={(event) => event.dataTransfer?.types.includes("text/relay-kind") && event.preventDefault()}
+      onDragOver={(event) => {
+        if (event.dataTransfer?.types.includes("text/relay-kind") && !overlaid(event)) event.preventDefault()
+      }}
       onDrop={(event) => {
-        if (props.readOnly) return
+        // Letting go over the add drawer or another overlay cancels the drag; the step is not made underneath it.
+        if (props.readOnly || overlaid(event)) return
         const key = event.dataTransfer?.getData("text/relay-kind")
         if (!key || !props.onDrop) return
         event.preventDefault()
@@ -485,52 +568,15 @@ export function Canvas(props: {
             </div>
           )}
         </Index>
-        <svg class="wf-wires" width="1" height="1" aria-hidden="true">
-          <defs>
-            <marker id={marker} viewBox="0 0 8 8" refX="7.2" refY="4" markerWidth="7" markerHeight="7" orient="auto">
-              <path d="M0 0.8 7.4 4 0 7.2z" class="wf-arrow" />
-            </marker>
-          </defs>
-          <Index each={wires()}>
-            {(wire) => (
-              <>
-                <path
-                  class="wf-wire"
-                  classList={{ on: wire().on, ok: wire().ok, dim: wire().dim, sel: edgeKey(wire().edge) === ui.edge }}
-                  d={wire().d}
-                  marker-end={`url(#${marker})`}
-                />
-                <Show when={wire().back}>
-                  <path
-                    class="wf-arrow"
-                    d={`M${wire().mx + 4} ${wire().my - 4} L${wire().mx - 3} ${wire().my} L${wire().mx + 4} ${wire().my + 4}z`}
-                  />
-                </Show>
-                <Show when={outs(wire().from.node).length === 2 && outs(wire().from.node)[wire().edge.port]}>
-                  <text
-                    class="wf-port-label"
-                    x={wire().from.x + NODE + 9}
-                    y={portY(wire().from, wire().edge.port, 2) - 5}
-                  >
-                    {outs(wire().from.node)[wire().edge.port]}
-                  </text>
-                </Show>
-              </>
-            )}
-          </Index>
-          <Index each={wires()}>
-            {(wire) => (
-              <path
-                class="wf-wire-hit"
-                d={wire().d}
-                onPointerDown={() => (pressed = wire().edge)}
-                onPointerEnter={() => tools(wire().edge)}
-                onPointerLeave={() => tools(undefined)}
-              />
-            )}
-          </Index>
-          <Show when={temp()}>{(d) => <path class="wf-wire-temp" d={d()} />}</Show>
-        </svg>
+        <Wires
+          marker={marker}
+          wires={wires()}
+          selected={ui.edge}
+          outputs={outs}
+          temp={temp()}
+          onPress={(edge) => (pressed = edge)}
+          onHover={tools}
+        />
         <Index each={props.flow.nodes}>
           {(node) => {
             const overlay = () => props.overlay?.(node())
@@ -547,9 +593,17 @@ export function Canvas(props: {
                 issue={props.issues.has(node().id)}
                 dragging={!!moving()?.has(node().id)}
                 connect={props.text.connect}
+                issueLabel={props.text.hasIssue(node().name)}
                 openLabel={props.text.open(node().name)}
                 removeLabel={props.text.remove(node().name)}
                 onSelect={() => props.onSelect([node().id])}
+                onToggle={() =>
+                  props.onSelect(
+                    selected().has(node().id)
+                      ? props.selected.filter((id) => id !== node().id)
+                      : [...props.selected, node().id],
+                  )
+                }
                 onOpen={() => props.onOpen(node().id)}
                 onDelete={() => props.onDelete([node().id])}
               />
@@ -579,33 +633,18 @@ export function Canvas(props: {
         </Index>
         <Show when={toolsAt()}>
           {(wire) => (
-            <div
-              class="wf-edge-tools"
-              style={{ left: `${wire().mx}px`, top: `${wire().my}px` }}
-              onPointerEnter={() => tools(wire().edge)}
-              onPointerLeave={() => tools(undefined)}
-            >
-              <button
-                type="button"
-                aria-label={props.text.insert}
-                title={props.text.insert}
-                onClick={() => props.onEdge(wire().edge, "insert")}
-              >
-                <Ic name="plus" />
-              </button>
-              <button
-                type="button"
-                aria-label={props.text.unlink}
-                title={props.text.unlink}
-                onClick={() => {
-                  setEdgeTools(undefined)
-                  setUI("edge", undefined)
-                  props.onEdge(wire().edge, "remove")
-                }}
-              >
-                <Ic name="trash" />
-              </button>
-            </div>
+            <EdgeTools
+              wire={wire()}
+              insert={props.text.insert}
+              unlink={props.text.unlink}
+              onHover={tools}
+              onInsert={() => props.onEdge(wire().edge, "insert")}
+              onUnlink={() => {
+                setEdgeTools(undefined)
+                setUI("edge", undefined)
+                props.onEdge(wire().edge, "remove")
+              }}
+            />
           )}
         </Show>
         <Show

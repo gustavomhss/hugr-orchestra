@@ -299,6 +299,16 @@ describe("edits", () => {
     // The unphased step after the phase starts the second column of the first row.
     expect([at("b")?.x, at("b")?.y]).toEqual([200 + 272 + 96 + 40, 132])
   })
+
+  test("steps outside the sequence go to a row of their own below the tidied ones", () => {
+    const base = workflow()
+    const loose = (id: string) => ({ id, name: id, type: "relay.execute", x: 300, y: 132, parameters: {} })
+    const flow = layoutWorkflow({ ...base, nodes: [...base.nodes, loose("x"), loose("y")] })
+    const at = (id: string) => flow.nodes.find((item) => item.id === id)
+    expect([at("x")?.x, at("x")?.y, at("y")?.x, at("y")?.y]).toEqual([240, 372, 376, 372])
+    // No two steps share a spot.
+    expect(new Set(flow.nodes.map((item) => `${item.x},${item.y}`)).size).toBe(flow.nodes.length)
+  })
 })
 
 describe("hook test walk", () => {

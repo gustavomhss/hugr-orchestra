@@ -74,12 +74,23 @@ export function OrderDialog(props: { source: RelaySource; name: (document: strin
   const copy = useRelayCopy()
   const action = createAction()
   const list = () => (props.source.installs.data ?? []).toSorted((a, b) => a.order - b.order)
-  const move = (index: number, by: -1 | 1) =>
-    action.run(async () => {
+  let rows!: HTMLOListElement
+  const move = async (index: number, by: -1 | 1) => {
+    const moved = list()[index]?.installID
+    await action.run(async () => {
       const ids = list().map((item) => item.installID)
       const installs = await props.source.client.order(ids.toSpliced(index, 1).toSpliced(index + by, 0, ids[index]!))
       props.source.queryClient().setQueryData<RelayInstall[]>(props.source.key("installs"), installs)
     })
+    // The answer rebuilt every row, which dropped the focused button. Focus goes back to the row that moved, on the
+    // same direction while it can still go that way.
+    const row = [...rows.children].find((item) => item instanceof HTMLElement && item.dataset.install === moved)
+    const direction = by < 0 ? "up" : "down"
+    ;(
+      row?.querySelector<HTMLElement>(`button[data-move="${direction}"]:not(:disabled)`) ??
+      row?.querySelector<HTMLElement>("button:not(:disabled)")
+    )?.focus()
+  }
   return (
     <RelayDialog
       title={copy.t("orchestra.hooks.order.title")}
@@ -93,7 +104,7 @@ export function OrderDialog(props: { source: RelaySource; name: (document: strin
         </button>
       }
     >
-      <ol class="hk-order">
+      <ol ref={rows} class="hk-order">
         <For each={list()}>
           {(item, index) => {
             const name = () => props.name(item.document)
@@ -108,6 +119,7 @@ export function OrderDialog(props: { source: RelaySource; name: (document: strin
                   type="button"
                   class="mx-btn icon"
                   aria-label={copy.t("orchestra.hooks.order.up", { name: name() })}
+                  data-move="up"
                   disabled={action.busy() || index() === 0}
                   onClick={() => void move(index(), -1)}
                 >
@@ -117,6 +129,7 @@ export function OrderDialog(props: { source: RelaySource; name: (document: strin
                   type="button"
                   class="mx-btn icon"
                   aria-label={copy.t("orchestra.hooks.order.down", { name: name() })}
+                  data-move="down"
                   disabled={action.busy() || index() === list().length - 1}
                   onClick={() => void move(index(), 1)}
                 >

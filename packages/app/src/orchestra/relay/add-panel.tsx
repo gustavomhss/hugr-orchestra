@@ -1,4 +1,4 @@
-import { createEffect, createMemo, createSignal, For, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, createUniqueId, For, onCleanup, onMount, Show } from "solid-js"
 import type { Glyph, Tone } from "./catalog"
 import { Ic, NodeGlyph } from "./ui"
 
@@ -28,14 +28,36 @@ export function AddPanel(props: {
 }) {
   const [query, setQuery] = createSignal("")
   const [active, setActive] = createSignal(0)
+  const prefix = createUniqueId()
+  let panel!: HTMLElement
   let input!: HTMLInputElement
   let list!: HTMLDivElement
+  // Where focus was when the panel opened: the "+" that opened it, or the canvas the keyboard shortcut was used on.
+  const opener = document.activeElement
+  const canvas = () => panel.closest<HTMLElement>(".wf-canvas") ?? undefined
+  const optionID = (entry: PanelEntry) => `${prefix}-${entry.key}`
+  const highlighted = () => {
+    const entry = enabled()[active()]
+    return entry ? optionID(entry) : undefined
+  }
   const shown = createMemo(() => {
     const text = query().trim().toLowerCase()
     return props.entries.filter((entry) => !text || `${entry.label} ${entry.description}`.toLowerCase().includes(text))
   })
   const enabled = () => shown().filter((entry) => !entry.disabled)
   onMount(() => input.focus())
+  // Closing the panel hands focus back instead of dropping it on the page, unless it already went somewhere else.
+  onCleanup(() => {
+    const focused = document.activeElement
+    if (focused && focused !== document.body && !panel.contains(focused)) return
+    const home = opener instanceof HTMLElement && opener.isConnected && opener !== document.body ? opener : canvas()
+    home?.focus({ preventScroll: true })
+  })
+  // The step this makes opens its details; focus is on the canvas by then, which is where closing them returns.
+  const pick = (key: string) => {
+    canvas()?.focus({ preventScroll: true })
+    props.onPick(key)
+  }
   // Arrow keys move the highlight; keep it inside the scrolled list.
   createEffect(() => {
     const key = enabled()[active()]?.key
@@ -44,6 +66,7 @@ export function AddPanel(props: {
   })
   return (
     <aside
+      ref={panel}
       class="wf-drawer"
       aria-label={props.title}
       data-component="relay-add-panel"
@@ -62,9 +85,13 @@ export function AddPanel(props: {
         ref={input}
         class="mx-search"
         type="text"
+        role="combobox"
+        aria-expanded="true"
+        aria-autocomplete="list"
         placeholder={props.search}
         aria-label={props.search}
         aria-controls="wf-add-list"
+        aria-activedescendant={highlighted()}
         value={query()}
         onInput={(event) => {
           setQuery(event.currentTarget.value)
@@ -82,7 +109,7 @@ export function AddPanel(props: {
           if (event.key === "Enter") {
             event.preventDefault()
             const entry = enabled()[active()]
-            if (entry) props.onPick(entry.key)
+            if (entry) pick(entry.key)
           }
         }}
       />
@@ -98,13 +125,14 @@ export function AddPanel(props: {
                   type="button"
                   class="wf-pick"
                   role="option"
+                  id={optionID(entry)}
                   data-entry={entry.key}
                   data-reason={entry.disabled && entry.reason ? "" : undefined}
                   aria-selected={!entry.disabled && enabled()[active()] === entry}
                   disabled={entry.disabled}
                   draggable={!entry.disabled}
                   onDragStart={(event) => event.dataTransfer?.setData("text/relay-kind", entry.key)}
-                  onClick={() => props.onPick(entry.key)}
+                  onClick={() => pick(entry.key)}
                 >
                   <span class={`wf-pick-tile k-${entry.tone}`}>
                     <NodeGlyph name={entry.glyph} />

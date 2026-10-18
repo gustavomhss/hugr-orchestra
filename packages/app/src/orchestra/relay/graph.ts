@@ -531,5 +531,9 @@ export function layoutWorkflow(flow: Flow): Flow {
   })
   const start = flow.nodes.find((node) => node.type === START)
   if (start) positions.set(start.id, [96, 132])
+  // Steps outside the sequence keep to a row of their own below the last phase row, so none ends up under a tidied one.
+  const loose = flow.nodes.filter((node) => node.type !== START && !positions.has(node.id))
+  const below = 60 + Math.ceil(segments.length / 2) * 240 + 72
+  loose.forEach((node, index) => positions.set(node.id, [240 + index * 136, below]))
   return moveNodes(flow, positions)
 }

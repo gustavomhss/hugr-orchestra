@@ -479,7 +479,10 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       return
     }
     if (typing || props.route.node) return
-    if (event.key === "?") return (event.preventDefault(), setDialog("keys"))
+    // The single-character keys (? N 1 0 + -) act only while focus is on the canvas, so dictation or typing meant for
+    // another control never triggers them (WCAG 2.1.4).
+    const onCanvas = !!target?.closest(".wf-canvas")
+    if (event.key === "?" && onCanvas) return (event.preventDefault(), setDialog("keys"))
     if (props.route.tab !== "editor" || target?.closest(".wf-drawer") || mod) {
       if (mod && props.route.tab === "editor" && !target?.closest(".wf-drawer")) {
         const letter = event.key.toLowerCase()
@@ -493,7 +496,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       }
       return
     }
-    const key = event.key
+    const key = onCanvas ? event.key : ""
     if (!props.route.view && (key === "n" || key === "N")) return (event.preventDefault(), props.go(relayPath.add(kind, props.id)))
     if (key === "1") return api?.fit(true)
     if (key === "0") return api?.zoomTo(1)

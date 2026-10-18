@@ -1,11 +1,13 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
-import { createEffect, createMemo, createSignal, on, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, on, onCleanup, onMount, Show } from "solid-js"
 import { useServerSDK } from "@/context/server-sdk"
+import { modalActive } from "@/utils/modal-active"
 import { showToast } from "@/utils/toast"
 import { type PanelEntry, AddPanel } from "./add-panel"
 import { Canvas, type CanvasApi, sameEdge } from "./canvas"
 import type { NodeMenuItem } from "./canvas-menu"
 import type { NodeOverlay } from "./canvas-node"
+import { copySteps, duplicateSteps, pasteSteps, watchClipboard } from "./clipboard"
 import { RemoveNodesDialog } from "./dialogs"
 import { hookEntries, WORKFLOW_ENTRIES } from "./catalog"
 import { decisionTime, type RelayDecision, type RelayDocument, type RelayInstall, type RelayKind } from "./client"
@@ -16,12 +18,15 @@ import { WorkflowDetails } from "./details-workflow"
 import { SaveStatus, type SaveState } from "./editor-head"
 import type { EditorProps } from "./editor"
 import { runHandle, RUN_TONE } from "./format"
+import { type Direction, neighbour } from "./geometry"
 import {
   CONDITION,
+  connect,
   type Flow,
   type FlowEdge,
   type FlowNode,
   type Issue,
+  isEntry,
   issueNode,
   nodeOf,
   type Outputs,
@@ -37,6 +42,13 @@ import { addAlternative, addNode, defaultAnchor, freePhaseName, groupBlock, grou
 import { issueText, stateLabel } from "./parts"
 import { layerBase, relayPath } from "./route"
 import { Ic, useRelayCopy } from "./ui"
+
+const ARROWS = new Map<string, Direction>([
+  ["ArrowLeft", "left"],
+  ["ArrowRight", "right"],
+  ["ArrowUp", "up"],
+  ["ArrowDown", "down"],
+])
 
 type Props = EditorProps & {
   kind: RelayKind
@@ -277,6 +289,10 @@ export function CanvasTab(props: Props) {
             },
           ]
         : []),
+      ...(workflow() && ids.some((id) => nodeOf(props.flow, id)?.type !== START)
+        ? [{ label: copy.t("orchestra.workflows.canvas.menuDuplicate"), run: () => duplicate(ids) }]
+        : []),
+      ...connections(ids),
       ...(ids.some((id) => nodeOf(props.flow, id)?.type !== START)
         ? [
             {
@@ -287,6 +303,28 @@ export function CanvasTab(props: Props) {
           ]
         : []),
     ]
+  }
+  // With two steps selected, the first can be wired to the second from the menu: the way to connect without a pointer.
+  const connections = (ids: string[]): NodeMenuItem[] => {
+    const from = ids.length === 2 ? nodeOf(props.flow, ids[0]) : undefined
+    const to = ids.length === 2 ? nodeOf(props.flow, ids[1]) : undefined
+    if (!from || !to || isEntry(to)) return []
+    return outputsOf(props.flow, from, props.outputs).flatMap((label, port): NodeMenuItem[] => {
+      if (props.flow.edges.some((edge) => edge.from === from.id && edge.to === to.id && edge.port === port)) return []
+      const key = label ? "orchestra.workflows.canvas.menuConnectPort" : "orchestra.workflows.canvas.menuConnect"
+      return [
+        {
+          label: copy.t(key, { from: from.name, to: to.name, port: label }),
+          run: () => {
+            const next = connect(props.flow, from.id, to.id, port)
+            if (!next) return showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })
+            const before = [...props.flow.edges]
+            props.edit(next)
+            rewired(before, next.edges, from.id, to.id)
+          },
+        },
+      ]
+    })
   }
   // A connection that replaced others says so and offers to put them back, if nothing else changed the wires since.
   const rewired = (before: FlowEdge[], after: FlowEdge[], from: string, to: string) => {
@@ -320,16 +358,51 @@ export function CanvasTab(props: Props) {
     if ((event.key === "Enter" || event.key === "F2") && last) return (event.preventDefault(), open(last))
     if ((event.key === "Delete" || event.key === "Backspace") && props.selected.length)
       return (event.preventDefault(), removeSelected(props.selected))
-    const forward = event.key === "ArrowRight" || event.key === "ArrowDown"
-    if (!forward && event.key !== "ArrowLeft" && event.key !== "ArrowUp") return
+    const direction = ARROWS.get(event.key)
+    if (!direction) return
     event.preventDefault()
-    if (!last) return props.flow.nodes[0] && props.select([props.flow.nodes[0].id])
-    const edge = props.flow.edges.find((item) => (forward ? item.from === last : item.to === last))
-    const next = edge && (forward ? edge.to : edge.from)
-    if (!next) return
-    props.select([next])
-    api?.center(next)
+    if (!last) return props.flow.nodes[0] && reach(props.flow.nodes[0].id, false)
+    const next = neighbour(props.flow.nodes, props.flow.edges, last, direction)
+    if (next) reach(next, event.shiftKey)
   })
+  // An arrow key moves the selection and focus together, so a screen reader announces the step it lands on. Shift adds
+  // that step to the selection instead of replacing it.
+  const reach = (id: string, extend: boolean) => {
+    props.select(extend ? [...props.selected.filter((item) => item !== id), id] : [id])
+    api?.center(id)
+    api?.focus(id)
+  }
+
+  // Copy and paste act on steps only while focus is on the canvas itself, never in a field or behind a dialog.
+  const canvasFocus = (event: Event) => {
+    const target = event.target instanceof HTMLElement ? event.target : undefined
+    if (!workflow() || props.readOnly || props.route.node || modalActive()) return false
+    if (target?.closest("input,textarea,select,[contenteditable],.wf-drawer")) return false
+    return target === document.body || !!target?.closest(".wf-canvas")
+  }
+  const landed = (pasted: { flow: Flow; ids: string[] }) => {
+    props.edit(pasted.flow)
+    props.select(pasted.ids)
+    const last = pasted.ids.at(-1)
+    if (last) queueMicrotask(() => api?.center(last))
+  }
+  const duplicate = (ids: string[]) => {
+    const copied = props.readOnly ? undefined : duplicateSteps(props.flow, ids)
+    if (copied) landed(copied)
+  }
+  onMount(() =>
+    onCleanup(
+      watchClipboard({
+        active: canvasFocus,
+        copy: () => copySteps(props.flow, props.selected),
+        paste: (text) => {
+          const pasted = pasteSteps(props.flow, text, defaultAnchor(props.flow, props.selected, props.outputs))
+          if (pasted) landed(pasted)
+          return !!pasted
+        },
+      }),
+    ),
+  )
 
   const skills = useQuery(
     () => ({
@@ -474,6 +547,7 @@ export function CanvasTab(props: Props) {
         keys: copy.t("orchestra.workflows.canvas.keys"),
         minimap: copy.t("orchestra.workflows.canvas.minimap"),
         open: (name) => copy.t("orchestra.workflows.canvas.open", { name }),
+        hasIssue: (name) => copy.t("orchestra.workflows.canvas.hasIssue", { name }),
         remove: (name) => copy.t("orchestra.workflows.canvas.remove", { name }),
         addAfter: (name) => copy.t("orchestra.workflows.canvas.addAfter", { name }),
         insert: copy.t("orchestra.workflows.canvas.insert"),
@@ -507,7 +581,16 @@ export function CanvasTab(props: Props) {
       }
       onSelect={props.select}
       onChange={props.edit}
-      onReject={() => showToast({ title: copy.t("orchestra.workflows.canvas.entryNoInput") })}
+      onReject={(reason, detail) =>
+        showToast(
+          reason === "phase"
+            ? {
+                title: copy.t("orchestra.workflows.canvas.phaseBlocked", { phase: detail ?? "" }),
+                description: copy.t("orchestra.workflows.canvas.phaseBlockedBody"),
+              }
+            : { title: copy.t("orchestra.workflows.canvas.entryNoInput") },
+        )
+      }
       onOpen={open}
       onAdd={startAdd}
       onDelete={remove}

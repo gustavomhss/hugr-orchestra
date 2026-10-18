@@ -197,6 +197,13 @@ test("the command palette reaches Workflows and Hooks from any page", async ({ p
   await expect(page).toHaveURL(/\/orchestra\/hooks$/)
 })
 
+test("workflow authoring: double-clicking New workflow leaves the dialog open", async ({ page }) => {
+  await setupRelay(page)
+  await openWorkflows(page)
+  await page.getByRole("button", { name: "New workflow", exact: true }).dblclick()
+  await expect(page.getByRole("dialog", { name: "New workflow" })).toBeVisible()
+})
+
 test("workflow authoring: typed names, failed autosave retry and creation focus", async ({ page }) => {
   const state = await setupRelay(page)
   await openWorkflows(page)

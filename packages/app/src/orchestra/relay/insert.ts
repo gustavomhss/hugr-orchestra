@@ -35,7 +35,7 @@ export type AddRequest = {
   at?: Point
 }
 
-const STEP_GAP = 136
+export const STEP_GAP = 136
 const HOOK_GAP = 200
 
 // `check` is the ID of the one empty check a new gate starts with.
@@ -125,7 +125,7 @@ function placement(flow: Flow, request: AddRequest, anchor: FlowNode | undefined
 }
 
 // Steps to the right of the anchor on its row move one slot over to make room.
-function shiftRow(flow: Flow, anchor: FlowNode): Flow {
+export function shiftRow(flow: Flow, anchor: FlowNode): Flow {
   return {
     ...flow,
     nodes: flow.nodes.map((node) =>

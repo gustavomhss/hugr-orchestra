@@ -16,6 +16,8 @@ const BADGE = {
   bad: '<path d="m3.5 3.5 5 5m0-5-5 5"/>',
   run: "",
 }
+// A step with an issue wears a mark as well as the red border, so colour is not the only signal.
+const ISSUE = '<path d="M6 3v3.6M6 8.9v.1"/>'
 
 // One node tile with its ports, state badge, label and tools. Pointer gestures (select, drag, connect) are the
 // canvas's, read from the node's `data-id` and its ports' `data-port`.
@@ -33,9 +35,13 @@ export function CanvasNode(props: {
   issue: boolean
   dragging: boolean
   connect: string
+  // What a screen reader says for a step that has an issue.
+  issueLabel: string
   openLabel: string
   removeLabel: string
   onSelect: () => void
+  // Adds the step to the selection, or takes it out.
+  onToggle: () => void
   onOpen: () => void
   onDelete: () => void
 }) {
@@ -63,9 +69,10 @@ export function CanvasNode(props: {
         class={`wf-tile k-${nodeTone(props.node)}`}
         role="button"
         tabindex="0"
-        aria-label={props.node.name}
+        aria-label={props.issue ? props.issueLabel : props.node.name}
         aria-pressed={props.selected}
-        // Keyboard focus selects the node, so Enter opens it. A mouse press keeps focus on the canvas.
+        // Keyboard focus selects the node, so Enter opens it and Space adds it to the selection or takes it out. A
+        // mouse press keeps focus on the canvas.
         onMouseDown={(event) => event.preventDefault()}
         onFocus={(event) => {
           if (event.currentTarget.matches(":focus-visible") && !props.selected) props.onSelect()
@@ -73,7 +80,7 @@ export function CanvasNode(props: {
         onKeyDown={(event) => {
           if (event.key !== " ") return
           event.preventDefault()
-          props.onOpen()
+          props.onToggle()
         }}
       >
         <NodeGlyph name={nodeGlyph(props.node)} />
@@ -96,6 +103,11 @@ export function CanvasNode(props: {
             <svg viewBox="0 0 12 12" innerHTML={BADGE[badge()]} />
           </span>
         )}
+      </Show>
+      <Show when={props.issue && !props.overlay?.badge}>
+        <span class="wf-state-badge bad" aria-hidden="true">
+          <svg viewBox="0 0 12 12" innerHTML={ISSUE} />
+        </span>
       </Show>
       <div class="wf-label">
         {props.node.name}

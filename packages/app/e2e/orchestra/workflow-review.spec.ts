@@ -96,6 +96,17 @@ test("cold review: parameters remain usable at 390, 768, 1440, RTL and 200% zoom
   expect((await details(page).getByRole("textbox", { name: "Instructions", exact: true }).boundingBox())!.width).toBeGreaterThan(250)
 })
 
+test("cold review: in RTL the canvas still draws its steps inside the canvas, and Fit view keeps them there", async ({ page }) => {
+  await setupRelay(page)
+  await workflows(page)
+  await page.evaluate(() => (document.documentElement.dir = "rtl"))
+  await canvas(page).getByRole("button", { name: "Fit view (1)" }).click()
+  const area = (await canvas(page).boundingBox())!
+  const tile = (await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').boundingBox())!
+  expect(tile.x).toBeGreaterThanOrEqual(area.x)
+  expect(tile.x + tile.width).toBeLessThanOrEqual(area.x + area.width)
+})
+
 test("cold review: unknown hook installations show loading/error/retry and never Off or mutable toggles", async ({ page }) => {
   const state = await setupRelay(page)
   const pending = Promise.withResolvers<void>()
