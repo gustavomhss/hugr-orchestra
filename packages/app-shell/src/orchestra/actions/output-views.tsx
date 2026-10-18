@@ -1,7 +1,7 @@
 import type { Actions } from "@orchestra/schema/actions"
 import { createEffect, createMemo, For, Match, Show, Switch, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
-import { Empty, Icon, Status } from "./components"
+import { Empty, Icon } from "./components"
 import type { ErrorState, State, Translate, ViewProps } from "./contract"
 import { bytes, duration, relative } from "./format"
 import { artifactMetadata } from "./artifact-metadata"
@@ -43,15 +43,6 @@ export function Logs(props: ViewProps) {
       <Match when={!run() || !jobs().length}><Empty title={props.t("orchestra.actions.noLog")} /></Match>
       <Match when={run()}>
         <div class="log-layout">
-          <aside class="log-jobs" aria-label={props.t("orchestra.actions.jobs")}>
-            <strong>{props.t("orchestra.actions.jobs")}</strong>
-            <For each={jobs()}>{(item) => <button type="button" class="log-job" classList={{ selected: job()?.id === item.id }}
-              aria-pressed={job()?.id === item.id} onClick={() => props.model.navigate({ ...state.route, tab: "logs", jobID: item.id })}>
-              <span><bdi>{item.name}</bdi><small><Status status={item.status} conclusion={item.conclusion} t={props.t} /></small></span>
-            </button>}</For>
-            <Show when={state.jobs.value?.next}><button type="button" class="mx-btn" disabled={state.jobs.status === "loading"}
-              onClick={() => void props.model.more("jobs")}>{props.t("orchestra.actions.more")}</button></Show>
-          </aside>
           <section class="log-panel" aria-label={props.t("orchestra.actions.logs")}>
             <div class="log-toolbar">
               <div class="log-title"><strong><bdi>{job()?.name ?? props.t("orchestra.actions.noLog")}</bdi></strong>
@@ -67,13 +58,9 @@ export function Logs(props: ViewProps) {
                   runID: item.runID, attempt: state.route.attempt ?? item.attempt }) }}>
                 <Icon name="logs" />{props.t("orchestra.actions.downloadLog")}</button>
             </div>
-            <div class="log-info">
-              <span>{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.gitlab" : "orchestra.actions.github")}</span>
-              <span>{props.t("orchestra.actions.capabilityLiveLogs")}: {props.t(state.binding?.provider.kind === "gitlab"
-                && state.capabilities.value?.some((item) => ["logs.live", "logs.tail"].includes(item.operation) && item.state === "available")
-                ? "orchestra.actions.available" : "orchestra.actions.unavailable")}</span>
-              <Show when={job()}>{(item) => <><code dir="ltr">{item().id}</code><span>{props.t("orchestra.actions.attempt")}: {state.route.attempt ?? item().attempt ?? props.t("orchestra.actions.unknown")}</span></>}</Show>
-            </div>
+            {/* The run sidebar lists the jobs; this line only states what the output is, and only when it is true. */}
+            <Show when={["completed", "success", "failed", "canceled", "cancelled"].includes(job()?.status?.toLowerCase() ?? "")}>
+              <div class="log-info"><span>{props.t("orchestra.actions.completedLog")}</span></div></Show>
             <Switch>
               <Match when={!readable()}><Empty title={props.t("orchestra.actions.noLog")} detail={props.t("orchestra.actions.unavailable")} /></Match>
               <Match when={state.log.status === "loading" || state.log.status === "idle"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>

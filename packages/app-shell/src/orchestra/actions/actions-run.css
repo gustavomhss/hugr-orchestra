@@ -21,6 +21,12 @@
 .actions-page .actions-detail .detail-context code { font-size: 10.5px; }
 .actions-page .actions-detail .wf-tabs > .mx-btn .wf-count { margin-inline-start: 6px; }
 
+/* A header frame (workflow or run) and the tab content below it read as one column: no doubled page padding between them. */
+.actions-page .actions-detail.detail-frame { padding-block-end: 0; overflow: visible; }
+.actions-page .actions-detail.detail-frame + .actions-detail { padding-block-start: 0; }
+.actions-page .actions-detail.detail-frame > .wf-tabs { margin-block-end: 18px; }
+.actions-page .actions-detail .detail-context .collection-triggers { display: inline-flex; flex-wrap: wrap; gap: 6px; }
+
 /* Jobs: a full-width list with runner, needs, duration and row actions. */
 .actions-page .actions-detail .detail-jobs { inline-size: 100%; }
 .actions-page .actions-detail .detail-jobs .mx-table { inline-size: 100%; }
