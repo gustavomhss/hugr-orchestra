@@ -63,6 +63,56 @@ test("install sends the document only; the server pins the published version", a
   expect(state.installs.find((item) => item.document === "typecheck-stop")?.version).toBe("typecheck-stop-v1")
 })
 
+test("a damaged hooks file shows the repair banner, and the reset refreshes the installs", async ({ page }) => {
+  await setupRelay(page)
+  let damaged = true
+  const repairs: unknown[] = []
+  await page.route("**/api/relay/hook**", async (route) => {
+    const request = route.request()
+    const path = new URL(request.url()).pathname
+    if (path === "/api/relay/hook/repair") {
+      damaged = false
+      repairs.push(request.postDataJSON())
+      return route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ location: {}, data: { backup: "/data/hooks.json.corrupt-1-ab", installs: [] } }),
+      })
+    }
+    if (!damaged || path !== "/api/relay/hook" || request.method() !== "GET") return route.fallback()
+    return route.fulfill({
+      status: 409,
+      contentType: "application/json",
+      body: JSON.stringify({ _tag: "RelayConflictError", code: "profile-invalid", message: "hooks.json is not JSON." }),
+    })
+  })
+  await page.goto("/orchestra/hooks")
+  const banner = page.locator("[data-hook-damaged]")
+  await expect(banner).toContainText("The hooks file is damaged — agent tools in this project are blocked")
+  await expect(page.getByRole("switch")).toHaveCount(0)
+  await banner.getByRole("button", { name: "Back up and reset installed hooks" }).click()
+  await page
+    .getByRole("dialog", { name: "Back up and reset installed hooks?" })
+    .getByRole("button", { name: "Back up and reset", exact: true })
+    .click()
+  await expect(banner).toHaveCount(0)
+  expect(repairs).toEqual([{ confirm: true }])
+  await expect(page.getByRole("switch").first()).toBeVisible()
+})
+
+test("New hook starts from Blank, even after a template was opened and cancelled", async ({ page }) => {
+  await setupRelay(page)
+  await page.goto("/orchestra/hooks")
+  const view = page.locator('[data-mx-page="orchestra-hooks"]')
+  await view.locator('[data-template="ask-shell"]').click()
+  const dialog = page.getByRole("dialog", { name: "New hook", exact: true })
+  await expect(dialog.getByRole("radio", { name: /Ask before risky commands/ })).toHaveAttribute("aria-checked", "true")
+  await dialog.getByRole("button", { name: "Cancel", exact: true }).click()
+  await expect(dialog).toHaveCount(0)
+  await view.getByRole("button", { name: "New hook", exact: true }).click()
+  await expect(dialog.getByRole("radio", { name: /Blank hook/ })).toHaveAttribute("aria-checked", "true")
+})
+
 test("hook canvas: Yes and No ports, Pass and Fail on a Run gate, and a test walk", async ({ page }) => {
   await setupRelay(page)
   await page.goto("/orchestra/hooks/protect-generated")

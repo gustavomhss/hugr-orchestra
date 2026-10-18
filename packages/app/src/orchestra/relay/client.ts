@@ -129,6 +129,15 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
       body<RelayInstall>(relay.hook.install({ location, relayHookInstallInput: { document: documentID } }, off)),
     update: (installID: string) =>
       body<RelayInstall>(relay.hook.update({ installID, location, relayHookUpdateInput: {} }, off)),
+    // The server moves a corrupt hooks.json aside and starts an empty install list; it refuses a valid or unreadable file.
+    repair: () =>
+      body<{ backup: string; installs: RelayInstall[] }>(
+        relay.hook.repair({ location, relayHookRepairInput: { confirm: true } }, off),
+      ),
+    // The evaluation order: every install exactly once, first to last. Answers the installs in their new order.
+    order: async (installIDs: string[]) =>
+      (await body<{ installs: RelayInstall[] }>(relay.hook.order({ location, relayHookOrderInput: { installIDs } }, off)))
+        .installs,
     enable: (installID: string, enabled: boolean) =>
       body<RelayInstall>(
         enabled ? relay.hook.enable({ installID, location }, off) : relay.hook.disable({ installID, location }, off),
