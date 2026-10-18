@@ -282,6 +282,8 @@ function wireNavigationPolicy(win: BrowserWindow) {
     event.preventDefault()
     openExternalURL(url)
   })
+  // before-quit stops the sidecars before it calls app.quit again, so a page beforeunload that cancels the unload would leave the app open with a dead server.
+  win.webContents.on("will-prevent-unload", (event) => event.preventDefault())
 }
 
 function registerWindow(win: BrowserWindow, id: string) {
