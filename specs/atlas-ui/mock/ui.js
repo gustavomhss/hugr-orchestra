@@ -62,6 +62,7 @@ window.Atlas = window.Atlas || {}
     download: '<path d="M8 1v10m-4-4 4 4 4-4M2 10v4h12v-4"/>',
     settings: '<circle cx="8" cy="8" r="2.5"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3 3l1.4 1.4M11.6 11.6 13 13M13 3l-1.4 1.4M4.4 11.6 3 13"/>',
     dot: '<circle cx="8" cy="8" r="2.5"/>',
+    folder: '<path d="M1.5 4.5V12a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1V6a1 1 0 0 0-1-1H8L6.5 3.5h-4a1 1 0 0 0-1 1Z"/>',
     hash: '<path d="M3 6h11M2 10h11M6.5 2 5 14M11 2 9.5 14"/>',
   }
 
@@ -74,33 +75,34 @@ window.Atlas = window.Atlas || {}
   }
   A.num = (n) => Number(n).toLocaleString("en-US")
 
-  // Plain-language states. Each one is glyph + word, never colour alone.
-  const statuses = {
-    ok: ["good", "checkc", "Up to date", "Checked against the current code."],
-    moved: ["warm", "drift", "Code moved", "Still true. The code it points to moved and the reference needs updating."],
-    broken: ["bad", "xc", "No longer true", "The code changed and this no longer holds. Agents are warned not to rely on it."],
-    unchecked: ["", "clock", "Not checked yet", "Atlas could not check this against the current code yet."],
+  // Atlas vocabulary, shown as glyph + word with a one-line explanation on hover.
+  const states = {
+    fresh: ["good", "checkc", "Fresh", "The anchored code still hashes the same as when the fact was derived."],
+    drifted: ["warm", "drift", "Drifted", "The anchored code changed since the fact was derived. Someone has to say whether it still holds."],
+    retired: ["", "minusc", "Retired", "Marked superseded. Kept in the store, no longer served."],
+    pending: ["blue", "clock", "In staging", "Mined, not promoted yet. Agents never see staging."],
   }
-  A.status = (value, plain = false) => {
-    const [tone, glyph, label, tip] = statuses[value] ?? statuses.unchecked
-    return `<span class="at-state ${tone}" ${plain ? "" : `data-tip="${tip}"`}>${A.icon(glyph)}${label}</span>`
+  A.chip = (value) => {
+    const [tone, glyph, label, tip] = states[value] ?? states.fresh
+    return `<span class="at-state ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
   }
-  A.statusTip = (value) => (statuses[value] ?? statuses.unchecked)[3]
-  const kinds = {
-    rule: ["blue", "shield", "Rule", "Confirmed. Agents follow it."],
-    caution: ["warm", "warning", "Caution", "Confirmed. Something to watch out for."],
-    suggestion: ["dash", "sparkle", "Suggestion", "Proposed by an agent. Not confirmed yet, so agents treat it as a hint."],
-  }
-  A.kind = (item) => {
-    if (item.critical) return `<span class="at-kind crit" data-tip="Critical rule. Only a person can confirm or change it.">${A.icon("lock")}Critical rule</span>`
-    const [tone, glyph, label, tip] = kinds[item.kind]
-    return `<span class="at-kind ${tone}" data-tip="${tip}">${A.icon(glyph)}${label}</span>`
-  }
+  A.band = (x) => (x.tier === "T0" || x.tier === "T1"
+    ? `<span class="at-kind blue" data-tip="Governing band: ratified, drives agent behaviour.">${A.icon("shield")}Governing</span>`
+    : `<span class="at-kind dash" data-tip="Advisory band: proposals nobody ratified. Agents receive them as hints, apart from the rules.">${A.icon("sparkle")}Advisory</span>`)
+  A.tier = (t) => `<span class="at-tier-chip" data-tip="${{ T0: "T0 · must be right; only a person ratifies", T1: "T1 · load-bearing; ratified", T2: "T2 · default; advisory" }[t] ?? t}">${A.esc(t)}</span>`
+  A.origin = (x) => (x.scope === "atlas:mined"
+    ? `<span class="at-origin" data-tip="Mined by genesis and promoted through the emit door.">${A.icon("sparkle")}Mined</span>`
+    : `<span class="at-origin" data-tip="Emitted directly by an agent or a person.">${A.icon("fact")}Emitted</span>`)
+  A.family = (f) => `<span class="at-origin" data-tip="${{ advisory: "Advisory: a grounded claim with no executable check.", predicate: "Predicate: carries a check with a HOLDS / BROKEN / NA verdict.", relation: "Relation: a proven edge between two units.", negation: "Negation: nothing in a scope calls a target.", transition: "Transition: what changed between two commits.", "test-vacuity": "Test vacuity: a test that cannot fail." }[f] ?? f}">${A.esc(f)}</span>`
   A.agent = (id) => {
-    const a = A.data.agents[id] ?? { name: id }
-    return `<span class="at-seat ${a.human ? "human" : ""}"><i>${A.esc(a.name[0])}</i>${A.esc(a.name)}</span>`
+    const names = { backend: "Backend", jimmy: "Jimmy", archie: "Archie", maestro: "Maestro", "seat:orchestrator": "Maestro", you: "You" }
+    const name = names[id] ?? id
+    return `<span class="at-seat"><i>${A.esc(name[0])}</i>${A.esc(name)}</span>`
   }
-  A.where = (item) => `<code class="at-where">${A.esc(item.file)}<span>:${item.line}</span></code>`
+  A.file = (path) => {
+    const i = path.lastIndexOf("/")
+    return `<code class="at-path">${i < 0 ? "" : `<span>${A.esc(path.slice(0, i + 1))}</span>`}${A.esc(path.slice(i + 1))}</code>`
+  }
 
   A.badge = (label, tone = "") => `<span class="mx-badge ${tone}">${A.esc(label)}</span>`
   A.btn = (label, action, opts = {}) =>

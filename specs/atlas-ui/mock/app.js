@@ -1,9 +1,10 @@
-// Router, navigation, details panel, review actions, command palette and keyboard for the Atlas preview.
+// Router, rail, fact panel, curation actions (with Undo), search, keyboard and the gallery for the preview.
 // Every view is a URL (hash route), so back/forward, reload and shared links land on the same screen.
 ;(function (A) {
   const $ = (s) => document.querySelector(s)
   const main = $("#main")
   const panel = $("#inspector")
+  const M = () => A.m
   A.state = { preview: "ready", list: [] }
 
   const appNav = [
@@ -12,15 +13,15 @@
     ["plugins", "Plugins", "code"], ["hooks", "Hooks", "hooks"], ["actions", "Actions", "bolt"], ["schedule", "Schedule", "clock"],
     ["env", ".env", "lock"], ["dock", "Dock", "dock"], ["workspaces", "Workspaces", "server"],
   ]
-  const atlasRoutes = ["overview", "knowledge", "review", "item", "gallery"]
-  const views = ["overview", "knowledge", "review", "item", "agents", "chat", "gallery"]
+  const atlasRoutes = ["overview", "map", "knowledge", "fact", "curation", "memory", "history", "settings", "gallery"]
+  const routes = [...atlasRoutes, "agents", "chat"]
 
   /* ---------- Routing ---------- */
   const parse = () => {
     const raw = location.hash.replace(/^#\/?/, "") || "overview"
     const [path, search = ""] = raw.split("?")
     const [route, ...rest] = path.split("/")
-    return { route: views.includes(route) ? route : "overview", params: rest.length ? [decodeURIComponent(rest.join("/"))] : [], query: Object.fromEntries(new URLSearchParams(search)), raw }
+    return { route: routes.includes(route) ? route : "overview", params: rest.length ? [decodeURIComponent(rest.join("/"))] : [], query: Object.fromEntries(new URLSearchParams(search)), raw }
   }
   const withQuery = (patch) => {
     const s = parse()
@@ -35,49 +36,54 @@
   const render = (force = false) => {
     const s = parse()
     Object.assign(A.state, s)
-    const page = `${s.raw.split("?")[0]}?${new URLSearchParams(Object.entries(s.query).filter(([k]) => k !== "item"))}|${A.state.preview}`
+    const page = `${s.raw.split("?")[0]}?${new URLSearchParams(Object.entries(s.query).filter(([k]) => k !== "fact" && k !== "why"))}|${A.state.preview}`
     const samePage = page === lastPage && !force
     lastPage = page
     const atlas = atlasRoutes.includes(s.route)
     const view = atlas && A.state.preview === "held" ? A.views.held() : atlas && A.state.preview === "building" && s.route !== "overview" ? building() : A.views[s.route](A.state)
     renderSidebar(s)
     renderRail(s)
-    $("#breadcrumbs").innerHTML = `Orchestra${view.crumbs.map(([label, href, mono], i) => `<span class="sep">/</span>${href && i < view.crumbs.length - 1 ? `<a href="${href}">${A.esc(label)}</a>` : `<span class="crumb-current">${mono ? `<code>${A.esc(label)}</code>` : A.esc(label)}</span>`}`).join("")}`
+    $("#breadcrumbs").innerHTML = `Orchestra${view.crumbs.map(([label, href, mono], i) => `<span class="sep">/</span>${href && i < view.crumbs.length - 1 ? `<a href="${href}">${mono ? `<code>${A.esc(label)}</code>` : A.esc(label)}</a>` : `<span class="crumb-current">${mono ? `<code>${A.esc(label)}</code>` : A.esc(label)}</span>`}`).join("")}`
     if (!samePage) {
       const focused = document.activeElement?.id === "list-search"
-      const keep = force ? main.scrollTop : 0
+      const scroller = () => main.querySelector(".at-map-main") ?? main
+      const keep = force ? scroller().scrollTop : 0
+      const treeKeep = main.querySelector(".at-tree-pane")?.scrollTop ?? 0
       main.innerHTML = view.html
       main.classList.toggle("flush", !!view.flush)
+      const tree = main.querySelector(".at-tree-pane")
+      if (tree) {
+        tree.scrollTop = treeKeep
+        tree.querySelector(".selected")?.scrollIntoView({ block: "nearest" })
+      }
       if (focused) {
         const input = $("#list-search")
         input.focus()
         input.setSelectionRange(input.value.length, input.value.length)
       } else {
-        main.scrollTop = keep
+        scroller().scrollTop = keep
         if (!force) main.focus({ preventScroll: true })
       }
-      if (!force) main.querySelector(".at-card.focus")?.scrollIntoView({ block: "start" })
     }
-    // Openable rows in document order drive j/k and the panel's previous/next.
     A.state.list = [...new Set([...main.querySelectorAll('[data-action="open"][data-value]')].map((el) => el.dataset.value))]
-    main.querySelectorAll(".at-item[data-value]").forEach((el) => el.classList.toggle("selected", el.dataset.value === s.query.item))
+    main.querySelectorAll(".at-item[data-value]").forEach((el) => el.classList.toggle("selected", el.dataset.value === s.query.fact))
     renderPanel(s)
   }
 
   const building = () => ({
-    crumbs: [["Atlas", "#/overview"], ["Reading the code"]],
-    html: `<div class="at-page"><div class="at-building"><span class="spin"></span><div><strong>Reading the code at ${A.data.HEAD}</strong><small>About 5 seconds the first time. The list fills in when it's done.</small></div></div>
-      <section class="at-panel"><div class="at-panel-body">${Array.from({ length: 7 }, (_, i) => `<div style="display:flex;gap:14px;align-items:center;padding:11px 0"><span class="at-skel" style="inline-size:64px;block-size:18px"></span><span class="at-skel" style="flex:1;block-size:12px;max-inline-size:${72 - i * 6}%"></span><span class="at-skel" style="inline-size:80px;block-size:12px"></span></div>`).join("")}</div></section></div>`,
+    crumbs: [["Atlas", "#/overview"], ["Building the index"]],
+    html: `<div class="at-page"><div class="at-building"><span class="spin"></span><div><strong>Building the structural index for ${M().R.head}</strong><small>Hashing every unit and loading index.scip. The view fills in when it finishes; nothing is estimated.</small></div></div>
+      <section class="at-panel"><div class="at-panel-body">${Array.from({ length: 7 }, (_, i) => `<div style="display:flex;gap:14px;align-items:center;padding:11px 0"><span class="at-skel" style="inline-size:64px;block-size:18px"></span><span class="at-skel" style="flex:1;block-size:12px;max-inline-size:${72 - i * 6}%"></span></div>`).join("")}</div></section></div>`,
   })
 
   const renderSidebar = (s) => {
     const active = s.route === "chat" ? "chat" : s.route === "agents" ? "agents" : "atlas"
-    const need = A.data.reviewCount()
+    const need = M().curationCount()
     $("#sidebar-nav").innerHTML = appNav.map(([id, label, glyph, href]) => (id === "sep" ? '<span class="nav-sep"></span>' : `<a class="nav-item ${id === active ? "active" : ""}" href="${href ?? "#"}" ${href ? "" : `data-action="toast" data-value="${label} is outside this preview."`} ${id === active ? 'aria-current="page"' : ""}>${A.icon(glyph)}<span>${label}</span>${id === "atlas" && need && A.state.preview === "ready" ? `<span class="wf-count warm">${need}</span>` : ""}</a>`)).join("")
   }
 
-  const link = (href, label, glyph, selected, extra = "", depth = 0) =>
-    `<a class="context-item ${selected ? "selected" : ""} ${depth ? "nested" : ""}" href="${href}" ${selected ? 'aria-current="page"' : ""}>${A.icon(glyph)}<span>${A.esc(label)}</span>${extra}</a>`
+  const link = (href, label, glyph, selected, extra = "", cls = "") =>
+    `<a class="context-item ${selected ? "selected" : ""} ${cls}" href="${href}" ${selected ? 'aria-current="page"' : ""}>${A.icon(glyph)}<span>${A.esc(label)}</span>${extra}</a>`
 
   const renderRail = (s) => {
     const host = $("#atlas-context")
@@ -85,103 +91,101 @@
     if (s.route === "agents") {
       const current = s.params[0] ?? "backend"
       host.innerHTML = `<aside class="atlas-context" aria-label="Agents"><div class="context-group" style="margin:0"><div class="context-label">AGENTS</div>
-        ${Object.entries(A.data.agents).filter(([, a]) => !a.human).map(([id, a]) => link(`#/agents/${id}`, a.name, a.memory ? "memory" : "agents", id === current)).join("")}</div></aside>`
+        ${[["maestro", "Maestro"], ["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["patty", "Patty"], ["billy", "Billy"]].map(([id, n]) => link(`#/agents/${id}`, n, "agents", id === current)).join("")}</div></aside>`
       return
     }
     const held = A.state.preview === "held"
-    const need = A.data.reviewCount()
-    const item = s.route === "item" ? A.data.byId[s.params[0]] : s.query.item && A.data.byId[s.query.item]
-    const folder = s.query.folder ?? (s.route === "item" && item ? item.folder : null)
-    const areaId = s.query.area ?? (folder && A.data.areas.find((a) => a.folders.some((f) => f.path === folder))?.id)
-    const health = (a) => {
-      const st = A.data.stats(A.data.items.filter((x) => !x.removed && A.data.areaOf(x)?.id === a.id))
-      return st.broken ? '<span class="wf-dot bad" title="Something here is no longer true"></span>' : st.moved ? '<span class="wf-dot warm" title="Some references need updating"></span>' : '<span class="wf-dot good" title="Up to date"></span>'
-    }
-    host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>hugr-orchestra</small></div></header>
+    const st = M().stats()
+    const count = (n, tone = "") => (held ? "" : `<span class="wf-count ${tone}">${A.num(n)}</span>`)
+    const member = s.route === "memory" ? s.params[0] ?? "backend" : null
+    host.innerHTML = `<aside class="atlas-context" aria-label="Atlas"><header class="context-head"><span class="mx-mark">${A.icon("atlas")}</span><div><strong>Atlas</strong><small>project atlas</small></div></header>
       <div class="context-group">
         ${link("#/overview", "Overview", "overview", s.route === "overview")}
-        ${link("#/knowledge", "Knowledge", "fact", s.route === "knowledge" && !areaId && !folder)}
-        ${link("#/review", "Review", "inbox", s.route === "review", need && !held ? `<span class="wf-count warm">${need}</span>` : "")}
+        ${link("#/map", "Map", "territory", s.route === "map")}
+        ${link("#/knowledge", "Knowledge", "fact", s.route === "knowledge" || s.route === "fact", count(st.facts))}
+        ${link("#/curation", "Curation", "inbox", s.route === "curation", count(M().curationCount(), "warm"))}
       </div>
-      ${held ? "" : `<div class="context-group"><div class="context-label">AREAS</div>
-        ${A.data.areas.map((a) => `${link(`#/knowledge?area=${a.id}`, a.name, "territory", (s.route === "knowledge" || s.route === "item") && areaId === a.id && !folder, health(a))}${areaId === a.id ? a.folders.map((f) => link(`#/knowledge?folder=${encodeURIComponent(f.path)}`, f.path.split("/").at(-1), "pin", folder === f.path, "", 1)).join("") : ""}`).join("")}</div>`}
-      <footer class="context-footer">${held ? "<span>Atlas is off for this project</span>" : `<span>Checked 12 min ago</span><a href="#" data-action="recheck">${A.icon("refresh")}Check again</a><a href="#/gallery">${A.icon("eye")}All screens</a>`}</footer></aside>`
+      <div class="context-group"><div class="context-label">MEMORY</div>
+        ${[["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["maestro", "Maestro"]].map(([id, n]) => link(`#/memory/${id}`, n, "memory", member === id, M().memory[id].bound ? "" : '<span class="context-hint">off</span>')).join("")}
+      </div>
+      <div class="context-group">${link("#/history", "History", "history", s.route === "history")}${link("#/settings", "Settings", "settings", s.route === "settings")}</div>
+      <footer class="context-footer">${held ? "<span>Not connected</span>" : `<span data-tip="Knowledge lives in .atlas/ on this machine and is not versioned by git.">${A.icon("server")} Local store · gen ${M().R.gen}</span><a href="#/gallery">${A.icon("eye")}All screens</a>`}</footer></aside>`
   }
 
   const renderPanel = (s) => {
-    const id = s.query.item
-    if (!id || !A.data.byId[id] || s.route === "item") {
+    const key = s.query.fact
+    if (!key || !M().byKey[key] || s.route === "fact") {
       panel.hidden = true
       panel.innerHTML = ""
       return
     }
-    panel.innerHTML = A.views.detail(id, A.state)
+    const scroll = panel.querySelector(".ins-body")?.scrollTop ?? 0
+    const same = panel.dataset.key === key
+    panel.innerHTML = A.views.detail(key, A.state)
+    panel.dataset.key = key
     panel.hidden = false
-    main.querySelector(`[data-value="${id}"][data-action="open"]`)?.scrollIntoView({ block: "nearest" })
+    if (same) panel.querySelector(".ins-body").scrollTop = scroll
+    main.querySelector(`[data-value="${key}"][data-action="open"]`)?.scrollIntoView({ block: "nearest" })
   }
 
-  /* ---------- Changes (reversible, with Undo) ---------- */
+  /* ---------- Writes (simulated, reversible) ---------- */
   let undo = null
   const undoLink = '<button class="mx-link" data-action="undo">Undo</button>'
-  const change = (id, patch, message) => {
-    const x = A.data.byId[id]
-    const before = Object.fromEntries(Object.keys(patch).map((k) => [k, x[k]]))
-    Object.assign(x, patch)
-    undo = () => Object.assign(x, before)
-    if (patch.removed && A.state.query.item === id) history.replaceState(null, "", withQuery({ item: null }))
-    A.toast(`${message}${undoLink}`, "check")
+  const change = (keys, patch, message, glyph = "check") => {
+    const items = [].concat(keys).map((k) => M().byKey[k])
+    const before = items.map((x) => Object.fromEntries(Object.keys(patch).map((k) => [k, x[k]])))
+    items.forEach((x) => Object.assign(x, patch))
+    undo = () => items.forEach((x, i) => Object.assign(x, before[i]))
+    if (items.some((x) => x.key === A.state.query.fact) && (patch.retired || patch.promotedNow || patch.discarded)) history.replaceState(null, "", withQuery({ fact: null }))
+    A.toast(`${message}${undoLink}`, glyph)
     render(true)
   }
 
   const actions = {
     go: (v) => A.go(v),
     back: () => history.back(),
-    open: (v) => A.go(A.state.route === "item" ? `#/item/${v}` : withQuery({ item: v })),
+    open: (v) => A.go(A.state.route === "fact" ? `#/fact/${v}` : withQuery({ fact: v, why: null })),
     close: () => {
-      const id = A.state.query.item
-      A.go(withQuery({ item: null }))
-      setTimeout(() => main.querySelector(`[data-value="${id}"][data-action="open"]`)?.focus({ preventScroll: true }), 0)
+      const key = A.state.query.fact
+      A.go(withQuery({ fact: null, why: null }))
+      setTimeout(() => main.querySelector(`[data-value="${key}"][data-action="open"]`)?.focus({ preventScroll: true }), 0)
     },
     step: (v) => step(Number(v)),
-    "copy-link": (v) => copy(`${location.href.split("#")[0]}#/item/${v}`, "Link copied"),
+    "toggle-why": () => A.go(withQuery({ why: A.state.query.why === "all" ? null : "all" })),
+    "copy-link": (v) => copy(`${location.href.split("#")[0]}#/fact/${v}`, "Link copied"),
+    copy: (v) => copy(v, "Copied"),
     toast: (v) => A.toast(A.esc(v), "info"),
-    recheck: () => A.toast(`Checked again against <code>${A.data.HEAD}</code>. Nothing new.`, "refresh"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },
-    confirm: (v) => {
-      const x = A.data.byId[v]
-      if (A.data.pending.includes(x)) {
-        A.data.pending.splice(A.data.pending.indexOf(x), 1)
-        A.data.items.push(Object.assign(x, { confirmedBy: "you", when: "just now" }))
-        undo = () => { A.data.items.splice(A.data.items.indexOf(x), 1); A.data.pending.push(Object.assign(x, { confirmedBy: undefined })) }
-        A.toast(`Confirmed. Every agent now treats it as a hard limit.${undoLink}`, "lock")
-        return render(true)
-      }
-      change(v, { kind: "rule", confirmedBy: "you", when: "just now" }, "Confirmed. Agents can now rely on it.")
-    },
-    dismiss: (v) => {
-      const x = A.data.byId[v]
-      if (A.data.pending.includes(x)) return change(v, { done: true }, `Rejected. ${A.data.agents[x.by].name} will see your decision.`)
-      change(v, { removed: true }, "Dismissed. It stays in the history.")
-    },
-    remove: (v) => change(v, { removed: true }, "Removed. Agents stop using it from their next turn; it stays in the history."),
-    update: (v) => change(v, { status: "ok" }, "Reference updated."),
-    "update-all": () => {
-      const moved = A.data.review().moved
-      moved.forEach((x) => (x.status = "ok"))
-      undo = () => moved.forEach((x) => (x.status = "moved"))
-      A.toast(`${moved.length} references updated.${undoLink}`, "check")
-      render(true)
-    },
-    "fix-code": () => A.toast(`Started a session asking Backend to make the code follow this rule again. <a class="mx-link" href="#/chat">Open chat</a>`, "chat"),
-    forget: () => A.toast("Forgotten. The agent won't carry this lesson any more.", "check"),
-    edit: (v) => dialog(editDialog(A.data.byId[v])),
-    save: (v) => {
-      const text = $("#edit-text").value.trim()
+    reground: (v) => change(v, { regrounded: true }, "Re-anchored to the current code. The claim stays the same; the anchor now matches HEAD."),
+    retire: (v) => change(v, { retired: true }, "Retired. Agents stop receiving it; it stays in the store.", "minusc"),
+    promote: (v) => change(v, { promotedNow: true }, "Promoted through the emit door. It now reaches agents in the advisory band."),
+    discard: (v) => change(v, { discarded: true }, "Left in staging. It is hidden here and stays in the staging file.", "minusc"),
+    "promote-all": () => dialog(promoteAll()),
+    "promote-all-confirm": () => {
       $("#dialog").close()
-      const x = A.data.byId[v]
-      change(v, { text, status: x.status === "broken" ? "ok" : x.status, kind: x.kind === "suggestion" ? "rule" : x.kind, confirmedBy: x.confirmedBy ?? "you", when: "just now" }, "Saved. Agents use the new wording from their next turn.")
+      const keys = M().candidates.filter((x) => !x.promotedNow && !x.discarded).map((x) => x.key)
+      change(keys, { promotedNow: true }, `${keys.length} candidates promoted. 596 already-promoted rows were re-checked and left unchanged.`)
     },
-    enable: () => { setPreview("building"); setTimeout(() => setPreview("ready"), 1800) },
+    ratify: (v) => dialog(ratifyDialog(M().byKey[v])),
+    "ratify-confirm": (v) => {
+      const tier = $('input[name="tier"]:checked')?.value ?? "T1"
+      $("#dialog").close()
+      change(v, { tier }, tier === "T0" ? "Ratified as T0. It now governs every agent in this scope." : "Ratified as T1. It moved to the governing band.", "shield")
+    },
+    edit: (v) => dialog(editDialog(M().byKey[v])),
+    save: (v) => {
+      const claim = $("#edit-text").value.trim()
+      $("#dialog").close()
+      change(v, { claim, regrounded: true }, "Saved through the emit door. The edited claim replaces the old one; git keeps the prior bytes.")
+    },
+    mine: () => {
+      const scope = $("#mine-scope")?.value || "the whole repository"
+      A.toast(`In the app this runs genesis on <code>${A.esc(scope)}</code>. Proposals land in Candidates.`, "sparkle")
+    },
+    "promote-rule": () => dialog(ruleDialog()),
+    "rule-confirm": () => { $("#dialog").close(); A.toast("Saved as a project rule. It joins Backend's turn header from the next turn.", "shield") },
+    territory: (v) => dialog(territoryDialog(v ?? "")),
+    "territory-confirm": () => { $("#dialog").close(); A.toast("Territory declared in the catalog. Facts under it now have an owner and a tier.", "territory") },
     palette: (v) => openPalette(v ?? ""),
     shortcuts: () => dialog(shortcuts(), true),
     state: (v) => setPreview(v),
@@ -200,15 +204,31 @@
     render(true)
   }
 
-  const editDialog = (x) => `<form method="dialog"><header class="mx-dialog-head"><div><h2 id="dialog-title">${x.kind === "suggestion" ? "Edit and confirm" : x.status === "broken" ? "Update the rule" : "Edit"}</h2><p>${x.status === "broken" ? A.esc(x.why) : "Agents use the new wording from their next turn. The old wording stays in the history."}</p></div></header>
-    <div class="mx-dialog-body"><label class="mx-field"><span>What should agents know?</span><textarea id="edit-text" rows="3">${A.esc(x.text)}</textarea></label>
-    <p class="mx-note">Applies to ${A.where(x)} in ${A.esc(A.data.areaOf(x)?.name ?? "this project")}</p></div>
-    <footer class="mx-dialog-foot"><button class="mx-btn" value="cancel">Cancel</button><button class="mx-btn primary" type="button" data-action="save" data-value="${x.id}">${x.kind === "suggestion" ? "Save and confirm" : "Save"}</button></footer></form>`
+  /* ---------- Dialogs ---------- */
+  const head = (title, text) => `<header class="mx-dialog-head"><div><h2 id="dialog-title">${title}</h2><p>${text}</p></div></header>`
+  const foot = (note, action, label, value = "") => `<footer class="mx-dialog-foot"><span>${note}</span><button class="mx-btn" value="cancel">Cancel</button><button class="mx-btn primary" type="button" data-action="${action}" data-value="${A.esc(value)}">${label}</button></footer>`
+  const promoteAll = () => {
+    const n = M().candidates.filter((x) => !x.promotedNow && !x.discarded).length
+    return `<form method="dialog">${head(`Promote ${n} candidates`, "Promote reads every staging row and sends it through the emit door. Rows already promoted are recognised by their content and left unchanged.")}
+      <div class="mx-dialog-body"><div class="at-gates">${[["New", n, "blue"], ["Unchanged", 596, ""], ["Need ratify token", n, "warm"]].map(([l, v, t]) => `<div class="at-gate"><b class="at-state ${t}">${A.num(v)}</b><small>${l}</small></div>`).join("")}</div>
+      <p class="mx-note">Each one is re-checked against the code now; a candidate whose file changed since mining is refused by the truth gate and stays in staging.</p></div>${foot("Acting as Maestro · scope atlas:mined", "promote-all-confirm", `Promote ${n}`)}</form>`
+  }
+  const ratifyDialog = (x) => `<form method="dialog">${head("Ratify", A.esc(x.claim))}<div class="mx-dialog-body">
+      <div class="at-radio"><label><input type="radio" name="tier" value="T1" checked><span><b>T1 · load-bearing</b><small>Moves to the governing band. Needs a ratify token.</small></span></label>
+      <label><input type="radio" name="tier" value="T0"><span><b>T0 · must be right</b><small>Becomes part of the constitution every agent reads. Only a person ratifies; Billy supplies the security input.</small></span></label></div>
+      <label class="mx-field"><span>Note for the record</span><textarea placeholder="Why this should govern"></textarea></label></div>${foot("Through atlas-emit with your identity", "ratify-confirm", "Ratify", x.key)}</form>`
+  const editDialog = (x) => `<form method="dialog">${head("Edit claim", `Anchored to <code>${A.esc(x.file)}</code>. Advisory facts are edited in place; the old bytes stay in the store and in git.`)}
+    <div class="mx-dialog-body"><label class="mx-field"><span>Claim</span><textarea id="edit-text" rows="4">${A.esc(x.claim)}</textarea></label><p class="mx-note">One sentence, checkable against the file. The truth gate re-derives the anchor before it is saved.</p></div>${foot("Through atlas-emit", "save", "Save", x.key)}</form>`
+  const ruleDialog = () => `<form method="dialog">${head("Promote lesson to a project rule", "Project rules are injected into every turn this member runs, so they are short, imperative and capped at 12.")}
+    <div class="mx-dialog-body"><label class="mx-field"><span>Rule</span><textarea rows="2">Stop at the packet's phase boundary and record where you stopped.</textarea></label><label class="mx-field"><span>Applies to</span><input value="tasks with phased packets"></label></div>${foot("Saved to Backend's memory after the secret scan", "rule-confirm", "Save rule")}</form>`
+  const territoryDialog = (path) => `<form method="dialog">${head("Declare territory", "A territory gives a region of the code an owner and a tier. Overlaps resolve deterministically.")}
+    <div class="mx-dialog-body"><div class="mx-fields"><label class="mx-field"><span>Name</span><input value="${A.esc(path.split("/").at(-1) || "")}"></label><label class="mx-field"><span>Owner</span><select><option>Backend</option><option>Archie</option><option>Patty</option><option>Billy</option></select></label></div>
+    <label class="mx-field"><span>Globs</span><input value="${A.esc(path ? `${path}/**` : "")}"></label><label class="mx-field"><span>Tier</span><select><option>T2 · default</option><option>T1 · load-bearing</option><option>T0 · must be right (a person ratifies)</option></select></label></div>${foot("Written to the territory catalog", "territory-confirm", "Declare")}</form>`
 
   const step = (delta) => {
     const list = A.state.list
     if (!list.length) return
-    const at = list.indexOf(A.state.query.item)
+    const at = list.indexOf(A.state.query.fact)
     actions.open(list[Math.max(0, Math.min(list.length - 1, at < 0 ? 0 : at + delta))])
   }
   const copy = (text, message) => {
@@ -220,7 +240,7 @@
     el.innerHTML = html
     el.classList.toggle("wide", wide)
     el.showModal()
-    el.querySelector("textarea")?.focus()
+    el.querySelector("textarea, input")?.focus()
   }
 
   document.addEventListener("click", (event) => {
@@ -230,16 +250,20 @@
     event.stopPropagation()
     actions[el.dataset.action](el.dataset.value)
   })
-  $("#preview-state").addEventListener("change", (e) => setPreview(e.target.value))
+  document.addEventListener("change", (event) => {
+    if (event.target.id === "preview-state") return setPreview(event.target.value)
+    const nav = event.target.dataset.nav
+    if (nav) A.go(withQuery({ [nav]: event.target.value || null, n: null, fact: null }))
+  })
   document.addEventListener("input", (event) => {
     if (event.target.id !== "list-search") return
     clearTimeout(A.searchTimer)
-    A.searchTimer = setTimeout(() => { history.replaceState(null, "", withQuery({ q: event.target.value, item: null })); render() }, 120)
+    A.searchTimer = setTimeout(() => { history.replaceState(null, "", withQuery({ q: event.target.value, fact: null, n: null })); render() }, 140)
   })
 
   /* ---------- Keyboard ---------- */
   let chord = false
-  const chords = { o: "#/overview", k: "#/knowledge", r: "#/review", a: "#/agents/backend", c: "#/chat" }
+  const chords = { o: "#/overview", m: "#/map", k: "#/knowledge", u: "#/curation", y: "#/memory/backend", h: "#/history", s: "#/settings", c: "#/chat" }
   document.addEventListener("keydown", (event) => {
     const typing = event.target.matches("input, textarea, select")
     if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
@@ -250,7 +274,7 @@
     if ($("#dialog").open) return
     if (event.key === "Escape") {
       if (typing) return event.target.blur()
-      if (A.state.query.item) return actions.close()
+      if (A.state.query.fact) return actions.close()
     }
     if (typing) return
     if (chord) {
@@ -262,7 +286,7 @@
     if (event.key === "?") return actions.shortcuts()
     if (event.key === "j" || event.key === "k") {
       event.preventDefault()
-      if (A.state.query.item) return step(event.key === "j" ? 1 : -1)
+      if (A.state.query.fact) return step(event.key === "j" ? 1 : -1)
       const rows = [...main.querySelectorAll("[data-action][tabindex]")]
       return rows[Math.max(0, Math.min(rows.length - 1, rows.indexOf(document.activeElement) + (event.key === "j" ? 1 : -1)))]?.focus()
     }
@@ -275,23 +299,19 @@
   /* ---------- Search (⌘K) ---------- */
   let found = []
   let index = 0
-  const everything = () => {
-    const d = A.data
-    return [
-      { group: "Go to", label: "Overview", hint: "Atlas", glyph: "overview", run: () => A.go("#/overview") },
-      { group: "Go to", label: "Review", hint: `${d.reviewCount()} waiting`, glyph: "inbox", run: () => A.go("#/review") },
-      { group: "Go to", label: "All knowledge", hint: "Atlas", glyph: "fact", run: () => A.go("#/knowledge") },
-      ...d.areas.map((a) => ({ group: "Areas", label: a.name, hint: a.path, glyph: "territory", run: () => A.go(`#/knowledge?area=${a.id}`) })),
-      ...d.areas.flatMap((a) => a.folders).map((f) => ({ group: "Folders", label: f.path, hint: "folder", glyph: "pin", run: () => A.go(`#/knowledge?folder=${encodeURIComponent(f.path)}`) })),
-      ...d.items.filter((x) => !x.removed).map((x) => ({ group: "Knowledge", label: x.text, hint: x.file, glyph: x.kind === "caution" ? "warning" : x.kind === "suggestion" ? "sparkle" : "shield", run: () => (atlasRoutes.includes(A.state.route) && A.state.route !== "item" ? actions.open(x.id) : A.go(`#/knowledge?item=${x.id}`)) })),
-      ...Object.entries(d.agents).filter(([, a]) => a.memory).map(([id, a]) => ({ group: "Agent memory", label: `${a.name}'s memory`, hint: a.role, glyph: "memory", run: () => A.go(`#/agents/${id}`) })),
-      { group: "Actions", label: "Check the code again", hint: "", glyph: "refresh", run: actions.recheck },
-      { group: "Actions", label: "Switch light / dark", hint: "", glyph: "eye", run: actions.theme },
-      { group: "Actions", label: "Keyboard shortcuts", hint: "?", glyph: "keyboard", run: actions.shortcuts },
-    ]
+  const everything = (words) => {
+    const pages = [["Overview", "#/overview", "overview"], ["Map", "#/map", "territory"], ["Knowledge", "#/knowledge", "fact"], ["Curation · drifted", "#/curation?tab=drift", "drift"], ["Curation · candidates", "#/curation?tab=candidates", "sparkle"], ["Curation · ratify", "#/curation?tab=ratify", "shield"], ["Curation · mine", "#/curation?tab=mine", "play"], ["History", "#/history", "history"], ["Settings · territories", "#/settings", "territory"], ["Settings · write policy", "#/settings?tab=policy", "lock"]]
+      .map(([label, href, glyph]) => ({ group: "Go to", label, hint: "", glyph, run: () => A.go(href) }))
+    const areas = M().areas().map((a) => ({ group: "Areas", label: a.id, hint: `${a.facts} facts`, glyph: "territory", run: () => A.go(`#/map?path=${encodeURIComponent(a.id)}`) }))
+    const files = [...new Set(M().live().map((x) => x.file))].map((f) => ({ group: "Files", label: f, hint: "", glyph: "code", run: () => A.go(`#/map?path=${encodeURIComponent(f)}`) }))
+    const facts = M().live().map((x) => ({ group: "Facts", label: x.claim, hint: x.file.split("/").at(-1), glyph: "fact", run: () => (["knowledge", "map", "curation"].includes(A.state.route) ? actions.open(x.key) : A.go(`#/knowledge?fact=${x.key}`)) }))
+    const memory = [["backend", "Backend"], ["jimmy", "Jimmy"], ["archie", "Archie"], ["maestro", "Maestro"]].map(([id, n]) => ({ group: "Memory", label: `${n}'s memory`, hint: "", glyph: "memory", run: () => A.go(`#/memory/${id}`) }))
+    const acts = [["Switch light / dark", "eye", actions.theme], ["Keyboard shortcuts", "keyboard", actions.shortcuts]].map(([label, glyph, run]) => ({ group: "Actions", label, hint: "", glyph, run }))
+    const match = (x) => words.every((w) => `${x.label} ${x.hint} ${x.group}`.toLowerCase().includes(w))
+    return [...pages, ...areas, ...memory, ...acts].filter(match).concat(words.length ? files.filter(match).slice(0, 8) : [], words.length ? facts.filter(match).slice(0, 12) : [])
   }
   const openPalette = (prefix = "") => {
-    $("#palette-root").innerHTML = `<div class="at-palette-backdrop" data-close="1"><div class="at-palette" role="dialog" aria-label="Search"><div class="at-palette-input">${A.icon("search")}<input id="palette-input" placeholder="Search knowledge, areas, folders and agents" aria-label="Search" autocomplete="off" value="${A.esc(prefix)}"><kbd>esc</kbd></div><div class="at-palette-list" id="palette-list" role="listbox"></div><div class="at-palette-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div></div></div>`
+    $("#palette-root").innerHTML = `<div class="at-palette-backdrop" data-close="1"><div class="at-palette" role="dialog" aria-label="Search"><div class="at-palette-input">${A.icon("search")}<input id="palette-input" placeholder="Search facts, files, areas, memory and pages" aria-label="Search" autocomplete="off" value="${A.esc(prefix)}"><kbd>esc</kbd></div><div class="at-palette-list" id="palette-list" role="listbox"></div><div class="at-palette-foot"><span><kbd>↑</kbd><kbd>↓</kbd> move</span><span><kbd>↵</kbd> open</span><span><kbd>esc</kbd> close</span></div></div></div>`
     const input = $("#palette-input")
     input.addEventListener("input", () => fill(input.value))
     $(".at-palette-backdrop").addEventListener("mousedown", (e) => e.target.dataset.close && closePalette())
@@ -300,8 +320,7 @@
   }
   const closePalette = () => ($("#palette-root").innerHTML = "")
   const fill = (raw) => {
-    const words = raw.toLowerCase().split(/\s+/).filter(Boolean)
-    found = everything().filter((x) => words.every((w) => `${x.label} ${x.hint} ${x.group}`.toLowerCase().includes(w))).slice(0, 40)
+    found = everything(raw.toLowerCase().split(/\s+/).filter(Boolean)).slice(0, 40)
     index = 0
     const groups = [...new Set(found.map((x) => x.group))]
     $("#palette-list").innerHTML = found.length
@@ -325,37 +344,43 @@
     if (event.key === "Enter") { event.preventDefault(); return run(index) }
   }
 
-  const shortcuts = () => `<form method="dialog"><header class="mx-dialog-head"><div><h2 id="dialog-title">Keyboard shortcuts</h2><p>You can change these in Settings › Shortcuts.</p></div></header>
+  const shortcuts = () => `<form method="dialog">${head("Keyboard shortcuts", "You can change these in Settings › Shortcuts.")}
     <div class="mx-dialog-body"><div class="at-keys">
-      <h5>Anywhere</h5><div>Search<span><kbd>⌘</kbd><kbd>K</kbd></span></div><div>Search this list<span><kbd>/</kbd></span></div><div>Shortcuts<span><kbd>?</kbd></span></div><div>Close details<span><kbd>esc</kbd></span></div>
-      <h5>Lists</h5><div>Next<span><kbd>j</kbd></span></div><div>Previous<span><kbd>k</kbd></span></div><div>Open details<span><kbd>↵</kbd></span></div><div></div>
-      <h5>Go to</h5><div>Overview<span><kbd>g</kbd><kbd>o</kbd></span></div><div>Knowledge<span><kbd>g</kbd><kbd>k</kbd></span></div><div>Review<span><kbd>g</kbd><kbd>r</kbd></span></div><div>Agent memory<span><kbd>g</kbd><kbd>a</kbd></span></div><div>Chat<span><kbd>g</kbd><kbd>c</kbd></span></div>
+      <h5>Anywhere</h5><div>Search<span><kbd>⌘</kbd><kbd>K</kbd></span></div><div>Search this list<span><kbd>/</kbd></span></div><div>Shortcuts<span><kbd>?</kbd></span></div><div>Close the fact panel<span><kbd>esc</kbd></span></div>
+      <h5>Lists</h5><div>Next<span><kbd>j</kbd></span></div><div>Previous<span><kbd>k</kbd></span></div><div>Open<span><kbd>↵</kbd></span></div><div></div>
+      <h5>Go to</h5>${Object.entries({ o: "Overview", m: "Map", k: "Knowledge", u: "Curation", y: "Memory", h: "History", s: "Settings", c: "Chat" }).map(([k, l]) => `<div>${l}<span><kbd>g</kbd><kbd>${k}</kbd></span></div>`).join("")}
     </div></div><footer class="mx-dialog-foot"><button class="mx-btn primary" value="ok">Done</button></footer></form>`
 
-  /* ---------- Gallery of every screen, for review ---------- */
+  /* ---------- Gallery ---------- */
   A.views.gallery = () => {
+    const first = M().live()[0].key
+    const drifted = M().live().find((x) => x.drift).key
     const screens = [
-      ["Overview", "#/overview", "overview", "What agents know, how much is up to date, what needs you, areas and recent changes."],
-      ["All knowledge", "#/knowledge", "fact", "Everything, grouped by folder, with kind and status filters."],
-      ["An area", "#/knowledge?area=core", "territory", "One area of the code; the side list shows its folders."],
-      ["A folder", `#/knowledge?folder=${encodeURIComponent("packages/core/src/session-v2")}`, "pin", "One folder with its rules, cautions and suggestions."],
-      ["Details panel", "#/knowledge?area=core&item=admit", "eye", "Opens beside the list: where it applies, who said it, what else to check."],
-      ["Details page", "#/item/conflict", "expand", "The same details as a page you can link to."],
-      ["Review · no longer true", "#/review?tab=broken", "xc", "The code changed: update the rule, remove it, or fix the code."],
-      ["Review · confirmation", "#/review?tab=confirm", "lock", "A critical rule only a person can confirm."],
-      ["Review · suggestions", "#/review?tab=suggestions", "sparkle", "What agents proposed: confirm, edit or dismiss."],
-      ["Review · code moved", "#/review?tab=moved", "drift", "Still true: update references one by one or all at once."],
-      ["Agents › Memory", "#/agents/backend", "memory", "What one agent remembers: current work, lessons, notes from PRs."],
-      ["Agent without memory", "#/agents/patty", "agents", "What you see for an agent that keeps no memory."],
-      ["Chat citations", "#/chat?used=1", "chat", "Knowledge the agent used, inline; opens the details panel."],
+      ["Overview", "#/overview", "overview", "Counts, freshness, what waits for a decision, where knowledge lives, code changes that drifted it."],
+      ["Map · repository", "#/map", "territory", "The code as Atlas indexes it, with the briefing an agent receives at the root."],
+      ["Map · a package", "#/map?path=packages%2Fknowledge", "pin", "Briefing for one package: bands, budget, what did not fit, dependents, deeper scopes."],
+      ["Map · a file", "#/map?path=packages%2Fknowledge%2Fsrc%2Ftypes.ts", "fact", "A single file with its facts and the files that import it."],
+      ["Knowledge", "#/knowledge", "fact", "All 596 facts with band, state and area filters."],
+      ["Fact panel", `#/knowledge?fact=${first}`, "eye", "Anchor, how genesis derived it, provenance, dependents, other facts on the file."],
+      ["Drifted fact", `#/fact/${drifted}`, "drift", "A real drift: the commits and the diff since the fact was derived."],
+      ["Curation · drifted", "#/curation", "drift", "63 real drifts to check against their change, filterable by commit and area."],
+      ["Curation · candidates", "#/curation?tab=candidates", "sparkle", "64 mined candidates in staging with genesis' reasoning, and the four gates."],
+      ["Curation · ratify", "#/curation?tab=ratify", "shield", "Nothing waiting; facts flagged by the policy's T0 keywords."],
+      ["Curation · mine", "#/curation?tab=mine", "play", "Run genesis on a scope: arms, sites, budget and cost."],
+      ["Memory · Backend", "#/memory/backend", "memory", "Turn header (awareness, orientation, rules) and the real task record."],
+      ["Memory · as injected", "#/memory/backend?raw=1", "code", "The exact header text the agent receives."],
+      ["Memory · Maestro", "#/memory/maestro", "memory", "Defined by Atlas, not bound in Orchestra today."],
+      ["History", "#/history", "history", "Code changes that drifted knowledge, store generations, memory writes."],
+      ["Settings", "#/settings", "settings", "Territories, write policy, index and store."],
+      ["Agents › Backend", "#/agents/backend", "agents", "How the agent profile links to its memory in Atlas."],
+      ["Chat", "#/chat?used=1", "chat", "What the agent read and wrote in Atlas during a turn."],
     ]
     return {
       crumbs: [["Atlas", "#/overview"], ["All screens"]],
-      html: `<div class="at-page"><div class="mx-heading"><div><div class="mx-eyebrow">Design preview</div><h1>All screens</h1><p>Use the State menu at the top to see “reading the code” and “Atlas is off”. Review actions work and can be undone.</p></div></div>
+      html: `<div class="at-page"><div class="mx-heading"><div><div class="mx-eyebrow">Design preview · real store</div><h1>All screens</h1><p>Every fact, candidate, reasoning, drift and dependent here comes from the real Atlas store over its own code. Use State at the top for “building” and “not connected”. Curation actions work and can be undone.</p></div></div>
       <div class="at-gallery">${screens.map(([title, href, glyph, text]) => `<a class="at-gcard" href="${href}"><header><span class="mx-mark">${A.icon(glyph)}</span><strong>${title}</strong></header><p>${text}</p></a>`).join("")}
-      <a class="at-gcard" href="#" data-action="palette"><header><span class="mx-mark">${A.icon("search")}</span><strong>Search</strong></header><p>⌘K finds knowledge, areas, folders and agents.</p></a>
-      <a class="at-gcard" href="#" data-action="edit" data-value="conflict"><header><span class="mx-mark">${A.icon("fact")}</span><strong>Update a rule</strong></header><p>The edit dialog for a rule that no longer holds.</p></a>
-      <a class="at-gcard" href="#" data-action="state" data-value="held"><header><span class="mx-mark">${A.icon("atlas")}</span><strong>Atlas is off</strong></header><p>What a project without Atlas sees.</p></a></div></div>`,
+      <a class="at-gcard" href="#" data-action="palette"><header><span class="mx-mark">${A.icon("search")}</span><strong>Search</strong></header><p>⌘K across facts, files, areas, memory and pages.</p></a>
+      <a class="at-gcard" href="#" data-action="state" data-value="held"><header><span class="mx-mark">${A.icon("warning")}</span><strong>Not connected</strong></header><p>The HOLD an Orchestra project without Atlas config gets.</p></a></div></div>`,
     }
   }
 

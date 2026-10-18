@@ -174,7 +174,7 @@ Somam-se as metas de leitura do ORC/SEAT, que um humano também quer inspecionar
 
 ## 5. Proposta: arquitetura de informação e navegação
 
-> **Em revisão (2026-10-18, terceira rodada).** O owner apontou que a versão abaixo perdeu a estrutura do Atlas. O modelo completo do que o Atlas guarda, organiza e faz, verificado no código e num store real, está em [`ATLAS-MODEL.md`](ATLAS-MODEL.md). Esta seção e o mock serão refeitos a partir dele, depois da validação do owner.
+> **Substituída (2026-10-18, terceira rodada).** O owner apontou que a versão abaixo perdeu a estrutura do Atlas. O modelo completo, verificado no código e num store real, está em [`ATLAS-MODEL.md`](ATLAS-MODEL.md). A arquitetura que vale é a da §8 de lá, no mock v3 em [`mock/`](mock/README.md): Mapa, Conhecimento, Curadoria, Memória, Histórico e Configuração, sobre dados reais. Decisões do owner: o usuário é o steward técnico, a memória fica no Atlas (com link em Agents), a curadoria entra completa e as lacunas aparecem como estado normal. O texto abaixo fica só como histórico.
 
 > **Revisão 2026-10-18.** A primeira versão desta seção tinha 13 telas, espelhava a estrutura interna do Atlas (territórios, escopos, nodeKey, tiers, bandas, negações, saúde do CAS) e mostrava cadeados de fase na tela. O owner rejeitou com razão: o usuário não sabe o que é nada disso e não precisa saber. Esta versão parte do que a pessoa quer fazer.
 

@@ -13,13 +13,13 @@
   </head>
   <body data-new-layout class="atlas-mock wf-scope">
     <div class="preview-bar">
-      <span><b>DESIGN PREVIEW</b> · Atlas · sample data</span>
+      <span><b>DESIGN PREVIEW</b> · Atlas · real store (Atlas over its own code)</span>
       <div>
         <label class="preview-state">State
           <select id="preview-state" aria-label="Preview data state">
             <option value="ready">Ready</option>
-            <option value="building">Reading the code</option>
-            <option value="held">Atlas is off</option>
+            <option value="building">Building the index</option>
+            <option value="held">Not connected</option>
           </select>
         </label>
         <button type="button" data-action="palette">⌘K Search</button>
@@ -34,7 +34,7 @@
         <img class="brand" src="../../../packages/app-shell/public/orchestra/hugr-horizontal-compact-inverse.svg" alt="HuGR Orchestra" />
         <div class="nav-group">WORKSPACE</div>
         <nav id="sidebar-nav"></nav>
-        <div class="profile"><span class="avatar">H</span><span><strong>hugr-orchestra</strong><small>Local workspace · dev</small></span></div>
+        <div class="profile"><span class="avatar">A</span><span><strong>atlas</strong><small>Local workspace · dev</small></span></div>
       </aside>
       <div class="surface">
         <header class="titlebar">
@@ -56,8 +56,10 @@
     <div id="toast" role="status" aria-live="polite" hidden></div>
     <!-- Classic scripts so the preview opens straight from disk (file://) without a server. -->
     <script src="ui.js"></script>
-    <script src="data.js"></script>
+    <script src="data-real.js"></script>
+    <script src="model.js"></script>
     <script src="views.js"></script>
+    <script src="views-more.js"></script>
     <script src="app.js"></script>
   </body>
 </html>
