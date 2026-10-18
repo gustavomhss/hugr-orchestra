@@ -268,6 +268,20 @@ describe("edits", () => {
     expect(flow.phases[0].nodeIds).toEqual(["a", "g", "n"])
   })
 
+  test("inserting at the edge of a phase leaves the new step outside it", () => {
+    const added = { id: "n", name: "N", type: "relay.execute", x: 0, y: 0, parameters: {} }
+    // After the phase's last step (b is outside) and before its first (the start is outside).
+    expect(insertNode(workflow(), added, { id: "g", port: 0 }).phases[0].nodeIds).toEqual(["a", "g"])
+    expect(insertNode(workflow(), added, { id: "start", port: 0 }).phases[0].nodeIds).toEqual(["a", "g"])
+    expect(chain(insertNode(workflow(), added, { id: "g", port: 0 })).map((item) => item.id)).toEqual([
+      "start",
+      "a",
+      "g",
+      "n",
+      "b",
+    ])
+  })
+
   test("new IDs and names never collide", () => {
     const flow = workflow()
     expect(uniqueID(flow, "a")).toBe("a_2")

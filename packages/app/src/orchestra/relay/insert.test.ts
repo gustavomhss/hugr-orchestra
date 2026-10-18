@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test"
 import { CONDITION, chain, type Flow, readChecklist, START, TRIGGER } from "./graph"
-import { addAlternative, addNode, defaultAnchor, groupSelection } from "./insert"
+import { addAlternative, addNode, defaultAnchor, freePhaseName, groupBlock, groupSelection, ungroup } from "./insert"
 import { hookPresets } from "./presets"
 
 const flow = (): Flow => ({
@@ -30,23 +30,53 @@ describe("adding steps", () => {
     expect(added.flow.nodes.find((item) => item.id === "b")?.x).toBe(512)
     expect(added.flow.phases[0].nodeIds).toContain(added.id)
     // A new gate starts with one empty check so the issue list asks for its command.
-    expect(node && readChecklist(node).controls).toEqual([{ id: "check_1", cmd: "" }])
+    expect(node && readChecklist(node).controls).toEqual([{ id: "gate_check_1", cmd: "" }])
+  })
+
+  test("a step joins a phase only between two of its steps, so the phase stays one stretch", () => {
+    const step = { key: "execute", type: "relay.execute", name: "New" }
+    const phases = (anchor: string) =>
+      addNode(flow(), { ...step, anchor: { id: anchor, port: 0 } }, undefined).flow.phases[0].nodeIds
+    // After the phase's last step, and before its first, the new step is outside the phase.
+    expect(phases("b")).toEqual(["a", "b"])
+    expect(phases("start")).toEqual(["a", "b"])
+    expect(phases("a")).toEqual(["a", "b", "execute"])
+  })
+
+  test("a gate's first check is named after its step and is free across the whole flow", () => {
+    const gate = { key: "gate", type: "relay.gate", name: "New gate" }
+    const first = addNode(flow(), { ...gate, anchor: { id: "b", port: 0 } }, undefined)
+    const second = addNode(first.flow, { ...gate, anchor: { id: first.id, port: 0 } }, undefined)
+    const checks = (value: Flow, id: string) => {
+      const node = value.nodes.find((item) => item.id === id)
+      return node ? readChecklist(node).controls.map((control) => control.id) : []
+    }
+    expect([first.id, second.id]).toEqual(["gate", "gate_2"])
+    expect(checks(second.flow, first.id)).toEqual(["gate_check_1"])
+    expect(checks(second.flow, second.id)).toEqual(["gate_2_check_1"])
+    // A check somewhere else that already took the name pushes the number up.
+    const taken = {
+      ...flow(),
+      nodes: flow().nodes.map((node) =>
+        node.id === "a" ? { ...node, parameters: { checklist: '[{"id":"gate_check_1","cmd":"true"}]' } } : node,
+      ),
+    }
+    expect(checks(addNode(taken, gate, undefined).flow, "gate")).toEqual(["gate_check_2"])
   })
 
   test("without a selection a step is appended after the last step", () => {
     expect(defaultAnchor(flow(), [])).toEqual({ id: "b", port: 0 })
     expect(defaultAnchor(flow(), ["a"])).toEqual({ id: "a", port: 0 })
-    expect(defaultAnchor({ ...flow(), kind: "hook" }, [])).toBeUndefined()
   })
 
-  test("a dropped step lands where it was dropped, unconnected, inside the phase it was dropped on", () => {
+  test("a dropped step lands where it was dropped, unconnected and outside every phase", () => {
     const added = addNode(
       flow(),
       { key: "execute", type: "relay.execute", name: "Dropped", at: { x: 300, y: 140 } },
       undefined,
     )
     expect(added.flow.edges).toHaveLength(2)
-    expect(added.flow.phases[0].nodeIds).toContain(added.id)
+    expect(added.flow.phases[0].nodeIds).toEqual(["a", "b"])
   })
 
   test("a trigger takes its operation and timing; phases group only steps", () => {
@@ -68,6 +98,115 @@ describe("adding steps", () => {
       ["b"],
       ["a"],
     ])
+  })
+})
+
+describe("phases", () => {
+  const line = (ids: string[], phases: Flow["phases"] = []): Flow => {
+    const order = ["start", ...ids]
+    return {
+      kind: "workflow",
+      nodes: order.map((id, index) => ({
+        id,
+        name: id,
+        type: id === "start" ? START : "relay.execute",
+        x: 96 + index * 136,
+        y: 132,
+        parameters: {},
+      })),
+      edges: order.slice(1).map((to, index) => ({ from: order[index], to, port: 0 })),
+      phases,
+    }
+  }
+  const phase = (id: string, nodeIds: string[], name = id) => ({ id, name, description: "", nodeIds })
+
+  test("only steps that sit next to each other can be grouped", () => {
+    const steps = line(["a", "b", "c", "d"])
+    expect(groupBlock(steps, ["b", "c"])).toBeUndefined()
+    expect(groupBlock(steps, ["c", "b"])).toBeUndefined()
+    expect(groupBlock(steps, ["a", "c"])).toBe("gap")
+    expect(groupBlock(steps, ["start"])).toBe("none")
+    expect(groupBlock(steps, [])).toBe("none")
+    expect(groupSelection(steps, ["a", "d"], "Phase 1")).toBeUndefined()
+    expect(groupSelection(steps, ["b", "c"], "Phase 1")?.flow.phases.map((item) => item.nodeIds)).toEqual([["b", "c"]])
+  })
+
+  test("grouping never cuts another phase in two", () => {
+    const steps = line(["a", "b", "c", "d"], [phase("p", ["a", "b", "c"])])
+    // The middle of a phase would leave a and c apart; either end of it is fine.
+    expect(groupBlock(steps, ["b"])).toBe("gap")
+    expect(groupBlock(steps, ["c", "d"])).toBeUndefined()
+    expect(groupSelection(steps, ["c", "d"], "Phase 2")?.flow.phases.map((item) => item.nodeIds)).toEqual([
+      ["a", "b"],
+      ["c", "d"],
+    ])
+  })
+
+  test("new phases take the first free number, and removing one keeps its steps", () => {
+    const named = (n: number) => `Phase ${n}`
+    const steps = line(["a", "b"], [phase("x", ["a"], "Phase 1"), phase("y", ["b"], "Phase 3")])
+    expect(freePhaseName(steps, named)).toBe("Phase 2")
+    expect(freePhaseName(line(["a"]), named)).toBe("Phase 1")
+    const removed = ungroup(steps, "x")
+    expect(removed.phases.map((item) => item.id)).toEqual(["y"])
+    expect(removed.nodes).toEqual(steps.nodes)
+  })
+})
+
+describe("hook nodes", () => {
+  const hook = (): Flow => ({
+    kind: "hook",
+    nodes: [
+      { id: "t", name: "T", type: TRIGGER, x: 120, y: 200, parameters: {} },
+      { id: "m", name: "M", type: CONDITION, x: 320, y: 200, parameters: {} },
+      { id: "b", name: "B", type: "relay.hookBlock", x: 520, y: 200, parameters: {} },
+    ],
+    edges: [
+      { from: "t", to: "m", port: 0 },
+      { from: "m", to: "b", port: 0 },
+    ],
+    phases: [],
+  })
+  const alone = (): Flow => ({ ...hook(), nodes: hook().nodes.slice(0, 1), edges: [] })
+
+  test("the first node goes on the trigger; later ones on the right-most open output", () => {
+    expect(defaultAnchor(alone(), [])).toEqual({ id: "t", port: 0 })
+    // The condition's No output is the only one left open; Block has none.
+    expect(defaultAnchor(hook(), [])).toEqual({ id: "m", port: 1 })
+    expect(defaultAnchor(hook(), ["b"])).toEqual({ id: "m", port: 1 })
+    expect(defaultAnchor(hook(), ["t"])).toEqual({ id: "t", port: 0 })
+    expect(defaultAnchor({ kind: "hook", nodes: [], edges: [], phases: [] }, [])).toBeUndefined()
+  })
+
+  test("a node added to the trigger of an empty hook is wired to it", () => {
+    const added = addNode(
+      alone(),
+      { key: "match", type: CONDITION, name: "Match", anchor: defaultAnchor(alone(), []) },
+      undefined,
+    )
+    expect(added.flow.edges).toEqual([{ from: "t", to: "match", port: 0 }])
+  })
+
+  test("inserting between two nodes moves the rest of the branch over instead of landing on it", () => {
+    const added = addNode(
+      hook(),
+      { key: "remind", type: "relay.hookRemind", name: "Remind", anchor: { id: "t", port: 0 } },
+      undefined,
+    )
+    const x = (id: string) => added.flow.nodes.find((item) => item.id === id)?.x
+    expect([x("t"), x("remind"), x("m"), x("b")]).toEqual([120, 320, 520, 720])
+    expect(chain(added.flow).map((item) => item.id)).toEqual(["t", "remind", "m", "b"])
+    expect(new Set(added.flow.nodes.map((item) => `${item.x},${item.y}`)).size).toBe(added.flow.nodes.length)
+  })
+
+  test("nothing moves when the next node already has room", () => {
+    const wide = { ...hook(), nodes: hook().nodes.map((node) => (node.id === "m" ? { ...node, x: 560 } : node)) }
+    const added = addNode(
+      wide,
+      { key: "remind", type: "relay.hookRemind", name: "Remind", anchor: { id: "t", port: 0 } },
+      undefined,
+    )
+    expect(added.flow.nodes.find((item) => item.id === "m")?.x).toBe(560)
   })
 })
 

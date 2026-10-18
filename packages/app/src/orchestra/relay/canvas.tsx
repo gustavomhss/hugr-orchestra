@@ -1,4 +1,5 @@
-import { createMemo, createSignal, For, type JSX, onCleanup, onMount, Show } from "solid-js"
+import { createEffect, createMemo, createSignal, For, Index, type JSX, onCleanup, onMount, Show } from "solid-js"
+import { createStore } from "solid-js/store"
 import { modalActive } from "@/utils/modal-active"
 import { BOLT, nodeGlyph, nodeTone } from "./catalog"
 import {
@@ -29,10 +30,14 @@ export type NodeOverlay = {
 }
 export type CanvasApi = {
   fit: (animate?: boolean) => void
-  center: (id: string) => void
+  // `drawer` says whether the add panel will still be open; the node is centred in what is left of the canvas.
+  center: (id: string, drawer?: boolean) => void
   zoomBy: (factor: number) => void
   zoomTo: (k: number) => void
+  // Puts a phase header into rename mode.
+  rename: (phase: string) => void
 }
+export type NodeMenuItem = { label: string; title?: string; danger?: boolean; disabled?: boolean; run: () => void }
 export type CanvasText = {
   label: string
   add: string
@@ -48,6 +53,9 @@ export type CanvasText = {
   unlink: string
   connect: string
   protocol: string
+  menu: string
+  renamePhase: (name: string) => string
+  removePhase: (name: string) => string
   steps: (count: number) => string
 }
 
@@ -57,12 +65,30 @@ const BADGE = {
   bad: '<path d="m3.5 3.5 5 5m0-5-5 5"/>',
   run: "",
 }
-const OVERLAYS =
-  ".wf-rail,.wf-controls,.wf-banner,.wf-drawer,.wf-node-tools,.wf-stub,.wf-edge-tools,.wf-empty-canvas,.wf-minimap,[data-protocol]"
+const OVERLAYS = [
+  ".wf-rail",
+  ".wf-controls",
+  ".wf-banner",
+  ".wf-drawer",
+  ".wf-node-tools",
+  ".wf-stub",
+  ".wf-edge-tools",
+  ".wf-empty-canvas",
+  ".wf-minimap",
+  ".wf-ctx",
+  ".wf-group-tools",
+  ".wf-group-name",
+  "[data-protocol]",
+].join(",")
+// Ctrl-click toggles the selection everywhere but on a Mac, where it opens the context menu.
+const IS_MAC = typeof navigator === "object" && /(Mac|iPod|iPhone|iPad)/.test(navigator.platform)
 let instances = 0
 
+export const sameEdge = (a: FlowEdge, b: FlowEdge) => a.from === b.from && a.to === b.to && a.port === b.port
+const edgeKey = (edge: FlowEdge) => `${edge.from}>${edge.to}:${edge.port}`
+
 type Drag =
-  | { mode: "pan"; view: View; sx: number; sy: number; moved: boolean; pointer: number }
+  | { mode: "pan"; view: View; sx: number; sy: number; moved: boolean; pointer: number; edge?: FlowEdge }
   | { mode: "node"; ids: string[]; start: Map<string, Point>; sx: number; sy: number; moved: boolean; pointer: number }
   | { mode: "connect"; from: string; port: number; pointer: number; at?: Point; moved: boolean; sx: number; sy: number }
   | { mode: "rubber"; origin: Point; box?: Rect; pointer: number; moved: boolean; sx: number; sy: number }
@@ -91,6 +117,12 @@ export function Canvas(props: {
   onDelete: (ids: string[]) => void
   onEdge: (edge: FlowEdge, action: "insert" | "remove") => void
   onProtocol?: (phase: string) => void
+  onRenamePhase?: (phase: string, name: string) => void
+  onUngroup?: (phase: string) => void
+  // The right-click menu of a node; `ids` is the selection it acts on.
+  menu?: (ids: string[], node: FlowNode) => NodeMenuItem[]
+  // A connection replaced others: the edges before and after, and the two steps joined.
+  onRewire?: (before: FlowEdge[], after: FlowEdge[], from: string, to: string) => void
   onKeys: () => void
   onDrop?: (key: string, at: Point) => void
   api?: (api: CanvasApi) => void
@@ -103,10 +135,19 @@ export function Canvas(props: {
   const [moving, setMoving] = createSignal<Map<string, Point>>()
   const [drag, setDrag] = createSignal<Drag>()
   const [edgeTools, setEdgeTools] = createSignal<FlowEdge>()
+  // `edge` is the selected wire (its tools stay up); `menu` is an open right-click menu.
+  const [ui, setUI] = createStore<{
+    renaming?: string
+    edge?: string
+    menu?: { x: number; y: number; id: string; ids: string[] }
+  }>({})
+  let pressed: FlowEdge | undefined
+  let context: HTMLDivElement | undefined
   const selected = () => new Set(props.selected)
   const position = (node: FlowNode): Point => moving()?.get(node.id) ?? { x: node.x, y: node.y }
   const nodes = createMemo(() => props.flow.nodes.map((node) => ({ node, ...position(node) })))
-  const at = (id: string) => nodes().find((item) => item.node.id === id)
+  const byID = createMemo(() => new Map(nodes().map((item) => [item.node.id, item])))
+  const at = (id: string) => byID().get(id)
   const groups = createMemo(() =>
     props.flow.phases.flatMap((phase) => {
       const rect = groupRect(phase.nodeIds.flatMap((id) => at(id) ?? []))
@@ -145,13 +186,46 @@ export function Canvas(props: {
     setAnimate(false)
     setView(zoomAt(view(), factor, size().w / 2, size().h / 2))
   }
-  const center = (id: string) => {
+  const center = (id: string, drawer = props.drawer) => {
     const item = at(id)
     if (!item) return
     setAnimate(true)
-    setView(centerOn(view(), item, { w: size().w - (props.drawer ? 340 : 0), h: size().h }))
+    setView(centerOn(view(), item, { w: size().w - (drawer ? 340 : 0), h: size().h }))
   }
-  props.api?.({ fit, center, zoomBy, zoomTo: (k) => zoomBy(k / view().k) })
+  props.api?.({
+    fit,
+    center,
+    zoomBy,
+    zoomTo: (k) => zoomBy(k / view().k),
+    rename: (phase) => setUI("renaming", phase),
+  })
+
+  // A selected node and a selected wire are never both the target of Delete.
+  createEffect(() => {
+    if (props.selected.length) setUI("edge", undefined)
+  })
+  // The right-click menu closes on an outside press or Escape; Escape stops here so the layer below stays open.
+  createEffect(() => {
+    if (!ui.menu) return
+    const press = (event: PointerEvent) => {
+      if (event.target instanceof Node && context?.contains(event.target)) return
+      setUI("menu", undefined)
+    }
+    const key = (event: KeyboardEvent) => {
+      if (event.key !== "Escape") return
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      setUI("menu", undefined)
+      host.focus({ preventScroll: true })
+    }
+    document.addEventListener("pointerdown", press, true)
+    window.addEventListener("keydown", key, true)
+    queueMicrotask(() => context?.querySelector<HTMLButtonElement>("button:not(:disabled)")?.focus())
+    onCleanup(() => {
+      document.removeEventListener("pointerdown", press, true)
+      window.removeEventListener("keydown", key, true)
+    })
+  })
 
   onMount(() => {
     const observer = new ResizeObserver(() => {
@@ -173,11 +247,14 @@ export function Canvas(props: {
   }
 
   const down = (event: PointerEvent) => {
+    const wire = pressed
+    pressed = undefined
     if (event.button !== 0) return
     const target = event.target instanceof Element ? event.target : undefined
     if (!target || target.closest(OVERLAYS)) return
     host.focus({ preventScroll: true })
     setEdgeTools(undefined)
+    setUI("edge", undefined)
     const port = target.closest<HTMLElement>(".wf-port.out")
     const nodeElement = target.closest<HTMLElement>(".wf-node")
     const grip = target.closest<HTMLElement>("[data-grip]")
@@ -186,7 +263,7 @@ export function Canvas(props: {
       return setDrag({ mode: "connect", from: nodeElement.dataset.id, port: Number(port.dataset.port ?? 0), ...base })
     if (nodeElement?.dataset.id) {
       const id = nodeElement.dataset.id
-      const toggle = event.shiftKey || event.metaKey
+      const toggle = event.shiftKey || event.metaKey || (event.ctrlKey && !IS_MAC)
       const next = toggle
         ? selected().has(id)
           ? props.selected.filter((item) => item !== id)
@@ -215,7 +292,7 @@ export function Canvas(props: {
       })
     }
     if (event.shiftKey) return setDrag({ mode: "rubber", origin: world(event), ...base })
-    setDrag({ mode: "pan", view: view(), ...base })
+    setDrag({ mode: "pan", view: view(), edge: wire, ...base })
   }
 
   const move = (event: PointerEvent) => {
@@ -258,7 +335,12 @@ export function Canvas(props: {
     const current = drag()
     if (!current) return
     setDrag(undefined)
-    if (current.mode === "pan") return current.moved ? undefined : props.onSelect([])
+    if (current.mode === "pan") {
+      if (current.moved) return
+      // A plain click on a wire selects it, which keeps its insert and remove tools up.
+      if (current.edge) setUI("edge", edgeKey(current.edge))
+      return props.onSelect([])
+    }
     if (current.mode === "node") {
       const positions = moving()
       setMoving(undefined)
@@ -266,7 +348,7 @@ export function Canvas(props: {
         return props.onChange(
           moveNodes(props.flow, new Map([...positions].map(([id, point]) => [id, [point.x, point.y]]))),
         )
-      if (!event.shiftKey && !event.metaKey && current.ids.length > 1) {
+      if (!event.shiftKey && !event.metaKey && !(event.ctrlKey && !IS_MAC) && current.ids.length > 1) {
         const id = document.elementFromPoint(event.clientX, event.clientY)?.closest<HTMLElement>(".wf-node")?.dataset.id
         if (id) props.onSelect([id])
       }
@@ -277,7 +359,10 @@ export function Canvas(props: {
       if (!id || id === current.from) return
       const next = connect(props.flow, current.from, id, current.port)
       if (!next) return props.onReject("entry")
-      return props.onChange(next)
+      const before = [...props.flow.edges]
+      props.onChange(next)
+      props.onRewire?.(before, next.edges, current.from, id)
+      return
     }
     const box = current.box
     if (box) props.onSelect(props.flow.nodes.filter((node) => intersects(position(node), box)).map((node) => node.id))
@@ -306,7 +391,24 @@ export function Canvas(props: {
     if (edge) return setEdgeTools(edge)
     hideTools = setTimeout(() => setEdgeTools(undefined), 260)
   }
-  const toolsAt = () => wires().find((wire) => wire.edge === edgeTools())
+  const toolsAt = () => {
+    const hovered = edgeTools()
+    const key = hovered ? edgeKey(hovered) : ui.edge
+    return key ? wires().find((wire) => edgeKey(wire.edge) === key) : undefined
+  }
+
+  const menuItems = () => {
+    const open = ui.menu
+    const node = open && at(open.id)?.node
+    return open && node ? (props.menu?.(open.ids, node) ?? []) : []
+  }
+  // Blur and Enter both end the edit; the second one finds nothing left to finish.
+  const renamePhase = (phase: { id: string; name: string }, value: string) => {
+    if (ui.renaming !== phase.id) return
+    setUI("renaming", undefined)
+    const name = value.trim()
+    if (name && name !== phase.name) props.onRenamePhase?.(phase.id, name)
+  }
 
   const stubs = createMemo(() =>
     nodes().flatMap((item) =>
@@ -343,6 +445,26 @@ export function Canvas(props: {
       onPointerMove={move}
       onPointerUp={up}
       onPointerCancel={() => (setDrag(undefined), setMoving(undefined))}
+      onKeyDown={(event) => {
+        if ((event.key !== "Delete" && event.key !== "Backspace") || !ui.edge || props.readOnly) return
+        const target = event.target instanceof Element ? event.target : undefined
+        if (target !== host && !target?.closest(".wf-world")) return
+        const wire = wires().find((item) => edgeKey(item.edge) === ui.edge)
+        if (!wire) return
+        event.preventDefault()
+        setUI("edge", undefined)
+        props.onEdge(wire.edge, "remove")
+      }}
+      onContextMenu={(event) => {
+        const id =
+          event.target instanceof Element ? event.target.closest<HTMLElement>(".wf-node")?.dataset.id : undefined
+        if (!id || props.readOnly || !props.menu) return
+        event.preventDefault()
+        const ids = selected().has(id) ? props.selected : [id]
+        if (!selected().has(id)) props.onSelect(ids)
+        const point = local(event)
+        setUI("menu", { x: point.x, y: point.y, id, ids })
+      }}
       onDblClick={(event) => {
         const id =
           event.target instanceof Element ? event.target.closest<HTMLElement>(".wf-node")?.dataset.id : undefined
@@ -363,27 +485,76 @@ export function Canvas(props: {
         classList={{ animate: animate() }}
         style={{ transform: `translate(${view().x}px, ${view().y}px) scale(${view().k})` }}
       >
-        <For each={groups()}>
+        <Index each={groups()}>
           {(group) => (
             <div
               class="wf-group"
-              data-phase={group.phase.id}
+              data-phase={group().phase.id}
               style={{
-                left: `${group.rect.x}px`,
-                top: `${group.rect.y}px`,
-                width: `${group.rect.w}px`,
-                height: `${group.rect.h}px`,
+                left: `${group().rect.x}px`,
+                top: `${group().rect.y}px`,
+                width: `${group().rect.w}px`,
+                height: `${group().rect.h}px`,
               }}
             >
-              <div class="wf-group-head" data-grip={group.phase.id}>
-                <b>{group.phase.name}</b>
-                <small>{props.text.steps(group.phase.nodeIds.length)}</small>
+              <div class="wf-group-head" data-grip={group().phase.id}>
+                <Show
+                  when={ui.renaming === group().phase.id && !props.readOnly}
+                  fallback={
+                    <b onDblClick={() => !props.readOnly && props.onRenamePhase && setUI("renaming", group().phase.id)}>
+                      {group().phase.name}
+                    </b>
+                  }
+                >
+                  <input
+                    class="wf-group-name"
+                    aria-label={props.text.renamePhase(group().phase.name)}
+                    // Set once: a save that rebuilds the flow must not overwrite what is being typed.
+                    ref={(input) => {
+                      input.value = group().phase.name
+                      queueMicrotask(() => {
+                        input.focus()
+                        input.select()
+                      })
+                    }}
+                    onKeyDown={(event) => {
+                      event.stopPropagation()
+                      if (event.key === "Enter") renamePhase(group().phase, event.currentTarget.value)
+                      if (event.key !== "Escape") return
+                      event.preventDefault()
+                      setUI("renaming", undefined)
+                      host.focus({ preventScroll: true })
+                    }}
+                    onBlur={(event) => renamePhase(group().phase, event.currentTarget.value)}
+                  />
+                </Show>
+                <small>{props.text.steps(group().phase.nodeIds.length)}</small>
+                <Show when={!props.readOnly && props.onRenamePhase}>
+                  <span class="wf-group-tools">
+                    <button
+                      type="button"
+                      aria-label={props.text.renamePhase(group().phase.name)}
+                      title={props.text.renamePhase(group().phase.name)}
+                      onClick={() => setUI("renaming", group().phase.id)}
+                    >
+                      <Ic name="edit" />
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={props.text.removePhase(group().phase.name)}
+                      title={props.text.removePhase(group().phase.name)}
+                      onClick={() => props.onUngroup?.(group().phase.id)}
+                    >
+                      <Ic name="close" />
+                    </button>
+                  </span>
+                </Show>
                 <Show when={props.onProtocol}>
                   <button
                     type="button"
                     class="mx-link"
-                    data-protocol={group.phase.id}
-                    onClick={() => props.onProtocol?.(group.phase.id)}
+                    data-protocol={group().phase.id}
+                    onClick={() => props.onProtocol?.(group().phase.id)}
                   >
                     {props.text.protocol}
                   </button>
@@ -391,57 +562,64 @@ export function Canvas(props: {
               </div>
             </div>
           )}
-        </For>
+        </Index>
         <svg class="wf-wires" width="1" height="1" aria-hidden="true">
           <defs>
             <marker id={marker} viewBox="0 0 8 8" refX="7.2" refY="4" markerWidth="7" markerHeight="7" orient="auto">
               <path d="M0 0.8 7.4 4 0 7.2z" class="wf-arrow" />
             </marker>
           </defs>
-          <For each={wires()}>
+          <Index each={wires()}>
             {(wire) => (
               <>
                 <path
                   class="wf-wire"
-                  classList={{ on: wire.on, ok: wire.ok, dim: wire.dim }}
-                  d={wire.d}
+                  classList={{ on: wire().on, ok: wire().ok, dim: wire().dim, sel: edgeKey(wire().edge) === ui.edge }}
+                  d={wire().d}
                   marker-end={`url(#${marker})`}
                 />
-                <Show when={wire.back}>
+                <Show when={wire().back}>
                   <path
                     class="wf-arrow"
-                    d={`M${wire.mx + 4} ${wire.my - 4} L${wire.mx - 3} ${wire.my} L${wire.mx + 4} ${wire.my + 4}z`}
+                    d={`M${wire().mx + 4} ${wire().my - 4} L${wire().mx - 3} ${wire().my} L${wire().mx + 4} ${wire().my + 4}z`}
                   />
                 </Show>
-                <Show when={outs(wire.from.node).length === 2 && outs(wire.from.node)[wire.edge.port]}>
-                  <text class="wf-port-label" x={wire.from.x + NODE + 9} y={portY(wire.from, wire.edge.port, 2) - 5}>
-                    {outs(wire.from.node)[wire.edge.port]}
+                <Show when={outs(wire().from.node).length === 2 && outs(wire().from.node)[wire().edge.port]}>
+                  <text
+                    class="wf-port-label"
+                    x={wire().from.x + NODE + 9}
+                    y={portY(wire().from, wire().edge.port, 2) - 5}
+                  >
+                    {outs(wire().from.node)[wire().edge.port]}
                   </text>
                 </Show>
               </>
             )}
-          </For>
-          <For each={wires()}>
+          </Index>
+          <Index each={wires()}>
             {(wire) => (
               <path
                 class="wf-wire-hit"
-                d={wire.d}
-                onPointerEnter={() => tools(wire.edge)}
+                d={wire().d}
+                onPointerDown={() => (pressed = wire().edge)}
+                onPointerEnter={() => tools(wire().edge)}
                 onPointerLeave={() => tools(undefined)}
               />
             )}
-          </For>
+          </Index>
           <Show when={temp()}>{(d) => <path class="wf-wire-temp" d={d()} />}</Show>
         </svg>
-        <For each={props.flow.nodes}>
-          {(node) => {
+        <Index each={props.flow.nodes}>
+          {(current) => {
             const item = {
-              node,
+              get node() {
+                return current()
+              },
               get x() {
-                return position(node).x
+                return position(current()).x
               },
               get y() {
-                return position(node).y
+                return position(current()).y
               },
             }
             const overlay = () => props.overlay?.(item.node)
@@ -456,6 +634,7 @@ export function Canvas(props: {
                   issue: props.issues.has(item.node.id),
                   dim: !!overlay()?.dim,
                   dragging: !!moving()?.has(item.node.id),
+                  solo: props.selected.length === 1 && selected().has(item.node.id),
                 }}
                 data-id={item.node.id}
                 style={{ left: `${item.x}px`, top: `${item.y}px` }}
@@ -468,8 +647,20 @@ export function Canvas(props: {
                 <div
                   class={`wf-tile k-${nodeTone(item.node)}`}
                   role="button"
+                  tabindex="0"
                   aria-label={item.node.name}
                   aria-pressed={selected().has(item.node.id)}
+                  // Keyboard focus selects the node, so Enter opens it. A mouse press keeps focus on the canvas.
+                  onMouseDown={(event) => event.preventDefault()}
+                  onFocus={(event) => {
+                    if (event.currentTarget.matches(":focus-visible") && !selected().has(item.node.id))
+                      props.onSelect([item.node.id])
+                  }}
+                  onKeyDown={(event) => {
+                    if (event.key !== " ") return
+                    event.preventDefault()
+                    props.onOpen(item.node.id)
+                  }}
                 >
                   <NodeGlyph name={nodeGlyph(item.node)} />
                 </div>
@@ -519,28 +710,28 @@ export function Canvas(props: {
               </div>
             )
           }}
-        </For>
-        <For each={stubs()}>
+        </Index>
+        <Index each={stubs()}>
           {(stub) => (
             <div
               class="wf-stub"
               style={{
-                left: `${stub.item.x + NODE + 4}px`,
-                top: `${portY(stub.item, stub.port, outs(stub.item.node).length) - 11}px`,
+                left: `${stub().item.x + NODE + 4}px`,
+                top: `${portY(stub().item, stub().port, outs(stub().item.node).length) - 11}px`,
               }}
             >
               <i />
               <button
                 type="button"
-                aria-label={props.text.addAfter(stub.item.node.name)}
-                title={props.text.addAfter(stub.item.node.name)}
-                onClick={() => props.onAdd({ id: stub.item.node.id, port: stub.port })}
+                aria-label={props.text.addAfter(stub().item.node.name)}
+                title={props.text.addAfter(stub().item.node.name)}
+                onClick={() => props.onAdd({ id: stub().item.node.id, port: stub().port })}
               >
                 <Ic name="plus" />
               </button>
             </div>
           )}
-        </For>
+        </Index>
         <Show when={toolsAt()}>
           {(wire) => (
             <div
@@ -561,7 +752,11 @@ export function Canvas(props: {
                 type="button"
                 aria-label={props.text.unlink}
                 title={props.text.unlink}
-                onClick={() => (setEdgeTools(undefined), props.onEdge(wire().edge, "remove"))}
+                onClick={() => {
+                  setEdgeTools(undefined)
+                  setUI("edge", undefined)
+                  props.onEdge(wire().edge, "remove")
+                }}
               >
                 <Ic name="trash" />
               </button>
@@ -582,6 +777,48 @@ export function Canvas(props: {
           )}
         </Show>
       </div>
+      <Show when={ui.menu}>
+        {(menu) => (
+          <div
+            ref={context}
+            class="wf-ctx"
+            role="menu"
+            aria-label={props.text.menu}
+            style={{
+              left: `${Math.max(8, Math.min(menu().x, size().w - 200))}px`,
+              top: `${Math.max(8, Math.min(menu().y, size().h - 170))}px`,
+            }}
+            onKeyDown={(event) => {
+              // The editor's own keys (Enter opens the selected node) must not act on a focused menu item.
+              event.stopPropagation()
+              if (event.key !== "ArrowDown" && event.key !== "ArrowUp") return
+              event.preventDefault()
+              const items = [...event.currentTarget.querySelectorAll<HTMLButtonElement>("button:not(:disabled)")]
+              const current = items.findIndex((item) => item === document.activeElement)
+              items.at((current + (event.key === "ArrowDown" ? 1 : -1)) % items.length)?.focus()
+            }}
+          >
+            <For each={menuItems()}>
+              {(item) => (
+                <button
+                  type="button"
+                  role="menuitem"
+                  class={item.danger ? "danger" : ""}
+                  title={item.title}
+                  disabled={item.disabled}
+                  onClick={() => {
+                    setUI("menu", undefined)
+                    host.focus({ preventScroll: true })
+                    item.run()
+                  }}
+                >
+                  {item.label}
+                </button>
+              )}
+            </For>
+          </div>
+        )}
+      </Show>
       <Show when={props.banner}>{props.banner}</Show>
       <div class="wf-rail">
         <button
