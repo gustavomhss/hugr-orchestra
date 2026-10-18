@@ -1,16 +1,18 @@
 import { define } from "./internal"
-import type { ModelV2Info } from "../compat/sdk-v2-types"
 import { Effect, Stream } from "effect"
 import { EventV2 } from "../event"
 import { ModelsDev } from "../models-dev"
+import { ModelV2 } from "../model"
 import { ProviderV2 } from "../provider"
+
+type Cost = ModelV2.MutableInfo["cost"]
 
 function released(date: string) {
   const time = Date.parse(date)
   return Number.isFinite(time) ? time : 0
 }
 
-function cost(input: ModelsDev.Model["cost"]): ModelV2Info["cost"] {
+function cost(input: ModelsDev.Model["cost"]): Cost {
   if (!input) return []
   const base = {
     input: input?.input ?? 0,
@@ -50,13 +52,13 @@ function cost(input: ModelsDev.Model["cost"]): ModelV2Info["cost"] {
   ]
 }
 
-function mergeCost(base: ModelV2Info["cost"], override: ModelsDev.Model["cost"] | undefined) {
+function mergeCost(base: Cost, override: ModelsDev.Model["cost"] | undefined) {
   if (!override) return base
   const next = cost(override)
   const [baseDefault, ...baseTiers] = base
   const [nextDefault, ...nextTiers] = next
-  const tierKey = (item: ModelV2Info["cost"][number]) => `${item.tier?.type ?? "base"}:${item.tier?.size ?? 0}`
-  const merge = (left: ModelV2Info["cost"][number], right: ModelV2Info["cost"][number]) => ({
+  const tierKey = (item: Cost[number]) => `${item.tier?.type ?? "base"}:${item.tier?.size ?? 0}`
+  const merge = (left: Cost[number], right: Cost[number]) => ({
     ...left,
     ...right,
     tier: right.tier ?? left.tier,
@@ -75,25 +77,25 @@ function modeName(model: ModelsDev.Model, mode: string) {
 }
 
 function applyModel(
-  draft: ModelV2Info,
+  draft: ModelV2.MutableInfo,
   model: ModelsDev.Model,
   input: {
     readonly name?: string
-    readonly cost?: ModelV2Info["cost"]
+    readonly cost?: Cost
     readonly request?: NonNullable<NonNullable<ModelsDev.Model["experimental"]>["modes"]>[string]["provider"]
   } = {},
 ) {
   draft.name = input.name ?? model.name
-  draft.family = model.family
+  draft.family = model.family === undefined ? undefined : ModelV2.Family.make(model.family)
   draft.api = model.provider?.npm
     ? {
-        id: model.id,
+        id: ModelV2.ID.make(model.id),
         type: "aisdk",
         package: model.provider.npm,
         url: model.provider.api,
       }
     : {
-        id: model.id,
+        id: ModelV2.ID.make(model.id),
         type: "native",
         url: model.provider?.api,
         settings: {},

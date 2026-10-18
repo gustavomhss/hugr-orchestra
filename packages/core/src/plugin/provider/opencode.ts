@@ -2,7 +2,6 @@ import { Duration, Effect, Schema, Semaphore, Stream } from "effect"
 import type { Scope } from "effect"
 import type { IntegrationOAuthMethodRegistration } from "@orchestra/plugin/v2/effect/integration"
 import { define } from "@orchestra/plugin/v2/effect/plugin"
-import type { CredentialValue } from "../../compat/sdk-v2-types"
 import { HttpClient, HttpClientRequest, HttpClientResponse } from "effect/unstable/http"
 import { EventV2 } from "../../event"
 import { Credential } from "../../credential"
@@ -178,7 +177,7 @@ export const OpencodePlugin = define<HttpClient.HttpClient | EventV2.Service | S
   }),
 })
 
-function fetchProviders(http: HttpClient.HttpClient, value: CredentialValue) {
+function fetchProviders(http: HttpClient.HttpClient, value: typeof Credential.Value.Encoded) {
   const metadata = value.metadata
   const server = typeof metadata?.server === "string" ? metadata.server : defaultServer
   const orgID = typeof metadata?.orgID === "string" ? metadata.orgID : undefined

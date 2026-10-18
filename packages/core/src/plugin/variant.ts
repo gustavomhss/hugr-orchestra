@@ -1,7 +1,7 @@
 export * as VariantPlugin from "./variant"
 
-import type { ModelV2Info } from "../compat/sdk-v2-types"
 import { Effect } from "effect"
+import { ModelV2 } from "../model"
 import { define } from "./internal"
 
 export const Plugin = define({
@@ -27,12 +27,12 @@ export const Plugin = define({
   }),
 })
 
-export function generate(model: ModelV2Info): ModelV2Info["variants"] {
+export function generate(model: ModelV2.Info): ModelV2.Info["variants"] {
   if (model.api.type !== "aisdk" || model.api.package !== "@ai-sdk/openai-compatible") return []
   const ids = `${model.id} ${model.api.id}`.toLowerCase()
   if (!["glm-5.2", "glm-5-2", "glm-5p2"].some((name) => ids.includes(name))) return []
   return ["high", "max"].map((id) => ({
-    id,
+    id: ModelV2.VariantID.make(id),
     headers: {},
     body: { reasoning_effort: id },
   }))
