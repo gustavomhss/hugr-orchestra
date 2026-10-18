@@ -1,5 +1,4 @@
 import { useServerManagementController } from "@/components/dialog-select-server"
-import { useSettingsDialog } from "@/components/settings-dialog"
 import { DialogServerV2 } from "@/components/settings-v2/dialog-server-v2"
 import { type LocalProject } from "@/context/layout"
 import { useLanguage } from "@/context/language"
@@ -15,7 +14,6 @@ export function createHomeProjectsController(home: HomeController) {
   const dialog = useDialog()
   const language = useLanguage()
   const notification = useNotification()
-  const openSettings = useSettingsDialog()
   const serverManagement = useServerManagementController({ navigateOnAdd: false })
   const [_state, setState, _, ready] = persisted(
     Persist.global("home.servers", ["home.servers.v1"]),
@@ -79,9 +77,6 @@ export function createHomeProjectsController(home: HomeController) {
       },
       canReveal: home.project.canReveal,
       reveal: home.project.reveal,
-    },
-    utility: {
-      settings: openSettings,
     },
   }
 }

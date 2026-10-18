@@ -6,7 +6,6 @@ import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
 import { useServerSDK } from "@/context/server-sdk"
-import { useSettings } from "@/context/settings"
 import { pathKey } from "@/utils/path-key"
 import {
   appDockController,
@@ -48,14 +47,12 @@ export function AppsPanel(
   const serverSDK = useServerSDK()
   const sdk = useSDK()
   const global = useGlobal()
-  const settings = useSettings()
-  const desktop = createMediaQuery("(min-width: 768px)")
   // Orchestra's desktop workspace (the titlebar's profile-scoped tab mode) binds the Dock to the
   // repository profile. Everywhere else the Apps panel keeps its manual browser profiles.
-  const repository = () => settings.general.newLayoutDesigns() && desktop()
+  const desktop = createMediaQuery("(min-width: 768px)")
   // Sessions in a sandbox share the profile of their project worktree, like the sidebar profile.
   const profile = createMemo(() => {
-    if (!repository()) return
+    if (!desktop()) return
     const server = serverSDK().server
     const directory = pathKey(sdk().directory)
     const project = global
@@ -281,7 +278,7 @@ export function AppsPanel(
                 <bdi dir="ltr">{language.t("appDock.linux.title")}</bdi>
               </strong>
             )}
-            {!repository() && !activeLinux() && (
+            {!desktop() && !activeLinux() && (
               <>
                 <select
                   class="zen-workspace-indicator-name"
@@ -312,7 +309,7 @@ export function AppsPanel(
               </>
             )}
           </div>
-          {!repository() && !activeLinux() && view.profileCreating && (
+          {!desktop() && !activeLinux() && view.profileCreating && (
             <form class="zen-profile-form" onSubmit={createProfile}>
               <input
                 autofocus

@@ -32,7 +32,6 @@
   "e2e/regression/cross-server-tab-close.spec.ts": 8.5,
   "e2e/regression/file-browser-sidebar-tab-switch.spec.ts": 10.0,
   "e2e/regression/janitor-pocket.spec.ts": 13.2,
-  "e2e/regression/legacy-new-session.spec.ts": 2.6,
   "e2e/regression/model-picker-virtual-list.spec.ts": 7.9,
   "e2e/regression/new-session-panel-corner.spec.ts": 4.8,
   "e2e/regression/open-file-expand-folder.spec.ts": 8.0,

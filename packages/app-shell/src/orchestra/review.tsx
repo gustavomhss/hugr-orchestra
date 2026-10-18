@@ -5,7 +5,6 @@ import { createResizeObserver } from "@solid-primitives/resize-observer"
 import { FileComponentProvider, useFileComponent } from "@orchestra/ui/context/file"
 import type { FileProps } from "@orchestra/session-ui/file"
 import { useLanguage } from "@/context/language"
-import { useSettings } from "@/context/settings"
 import { SESSION_OPEN_FILE_TAB } from "@/pages/session/helpers"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { ReviewPanelV2, type ReviewPanelV2Props } from "@/pages/session/v2/review-panel-v2"
@@ -17,7 +16,6 @@ import { collectPatches, joinPatches } from "@/pages/session/review-export"
 import "@/orchestra/chapters/kit.css"
 
 export function createOrchestraReviewPanel() {
-  const settings = useSettings()
   // Preserve explicit toolbar choices across rail tab switches without new persisted state.
   const [store, setStore] = createStore({ width: 600, selected: false })
 
@@ -26,7 +24,7 @@ export function createOrchestraReviewPanel() {
     const language = useLanguage()
     const layout = useSessionLayout()
     let root!: HTMLDivElement
-    const compact = createMemo(() => settings.general.newLayoutDesigns() && store.width < 600)
+    const compact = createMemo(() => store.width < 600)
     const sidebarVisible = () => props.state.sidebarOpened() && (!compact() || props.state.sidebarWidth() > 0)
     const diffs = createMemo(() => props.diffs().filter(filterRenderableDiff))
     const [exporting, setExporting] = createSignal(false)

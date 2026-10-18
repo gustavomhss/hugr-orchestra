@@ -370,8 +370,7 @@
       "owner": "UI maintainer",
       "summary": "The shared Solid application library that desktop and web load.",
       "exportsPolicy": "none",
-      "aliases": { "@/": "src/" },
-      "modules": [{ "path": "src/pages/layout.tsx", "kind": "collection", "status": "legacy", "successor": "src/pages/layout-new.tsx" }]
+      "aliases": { "@/": "src/" }
     },
     "tui": {
       "layer": "terminal-ui",
@@ -510,13 +509,6 @@
       "status": "legacy",
       "successor": "the V2 Session core in packages/core",
       "reason": "v1 compatibility surface kept for the legacy server",
-      "decision": "D14"
-    },
-    {
-      "path": "packages/app-shell/src/pages/layout.tsx",
-      "status": "legacy",
-      "successor": "packages/app-shell/src/pages/layout-new.tsx",
-      "reason": "old layout behind the newLayoutDesigns branch",
       "decision": "D14"
     },
     {

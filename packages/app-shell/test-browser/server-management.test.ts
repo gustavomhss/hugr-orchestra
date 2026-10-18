@@ -25,11 +25,10 @@ function setup() {
           setActive(key) { setState("active", key) },
         },
         tabs: { removeServer: () => { writes.push("tabs") } },
-        global: { servers: { list: () => state.servers, health: {} }, ensureServerCtx: () => { throw new Error("unexpected bootstrap") } },
+        global: { servers: { list: () => state.servers, health: {} } },
         platform: { platform: "web", openExternal() {}, notify: async () => {}, restart: async () => {},
           getDefaultServer: async () => state.default, setDefaultServer: async (key) => { writes.push("default"); setState("default", key) } },
         language: { t: (key) => key },
-        settings: { general: { newLayoutDesigns: () => true } },
         checkServerHealth: () => { started.resolve(); return checked.promise },
       }, { navigateOnAdd: false })
       return null
