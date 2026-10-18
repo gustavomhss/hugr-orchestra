@@ -1313,7 +1313,12 @@ const layer = Layer.effect(
               const stopOutput = { continue: false }
               yield* plugin
                 .trigger("stop", stopInput, stopOutput)
-                .pipe(Effect.catch((err) => Effect.logError("stop hook failed", { sessionID, err })))
+                .pipe(
+                  Effect.catchCauseIf(
+                    (cause) => !Cause.hasInterruptsOnly(cause),
+                    (cause) => Effect.logError("stop hook failed", { sessionID, cause }),
+                  ),
+                )
 
               if (stopOutput.continue) {
                 yield* Effect.logInfo("stop hook requested continue", {
