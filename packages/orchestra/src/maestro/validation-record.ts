@@ -551,7 +551,7 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
         maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
       })
     : undefined
-  if (code && "reason" in code) return yield* new ReviewRejectedError({ reason: code.reason })
+  if (code?.reason !== undefined) return yield* new ReviewRejectedError({ reason: code.reason })
   const reviewed =
     code ?? (yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root))
   const artifact = reviewed.artifact

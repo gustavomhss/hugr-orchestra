@@ -122,7 +122,7 @@ The provider row left the default bundle. `distribution-bundle` [38940991556](ht
 
 - `workflow_dispatch` has a boolean `provider` input, default `false`. The provider row moved from the `qualification` matrix into its own `provider` job with `if: ${{ inputs.provider }}`. That job reuses the qualification job's name, environment and steps through YAML anchors, so push runs and dispatches without the input run 12 qualification rows plus static. `packages/core/test/distribution-bundle-workflow.test.ts` pins the input, the job condition, the row placement and the job's equality with `qualification`. A missing or always-true condition, a default of `true`, a changed step or environment, or the provider row back in the default matrix all fail it. A matrix `exclude` was tried first: run [39074449158](https://github.com/gustavomhss/hugr-orchestra/actions/runs/39074449158) ended in `failure` without creating the qualification job; GitHub applies `exclude` before `include` entries are added, so it cannot remove an include-only row.
 - With `-f provider=true` the row runs as before: the same oracle, the same `BUNDLE_PROVIDER_CREDENTIAL_MISSING` fail-closed step and the same `OPENROUTER_API_KEY` wiring. The owner runs it before each release.
-- Anonymous OpenCode Zen models were not usable as a credential-free replacement: every chat request (10 free models, 5 trials each) returned `HTTP 403 FreeTierError`, because that free tier is restricted to the OpenCode client.
+- Anonymous Zen models were not usable as a credential-free replacement: every chat request (10 free models, 5 trials each) returned `HTTP 403 FreeTierError`, because that free tier is restricted to the vendor's own client.
 
 ## Release workflow (dry runs, nothing published)
 
