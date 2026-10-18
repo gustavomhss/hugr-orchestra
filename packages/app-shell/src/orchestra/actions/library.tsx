@@ -2,11 +2,12 @@ import type { Actions } from "@orchestra/schema/actions"
 import { createMemo, For, Match, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Empty, Icon, Status } from "./components"
+import type { ActionKey } from "@/i18n/actions"
 import type { Model, Translate, ViewProps } from "./contract"
-import { duration, stamp } from "./format"
+import { duration, relative, shortSHA, stamp } from "./format"
 import { WorkflowTabs } from "./workflow-tabs"
 import { canRequestAction } from "./action-eligibility"
-import { libraryPresentation, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, runIdentity, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 export function Library(props: ViewProps & { embedded?: boolean }) {
   const model = props.model
@@ -19,14 +20,23 @@ export function Library(props: ViewProps & { embedded?: boolean }) {
       <Show when={model.state.binding} fallback={<Empty title={props.t("orchestra.actions.noConnection")} />}>
         {(binding) => <>
           <Show when={!props.embedded}><BindingStrip props={props} binding={binding()} /></Show>
-          <Show when={collection().actualOrchestraCI}>{(workflow) => <button type="button" class="collection-reference"
-            onClick={() => model.navigate({ view: "workflow", workflowID: workflow().id, path: workflow().path, ref: workflow().defaultRef, tab: "graph" })}>
-            <span class="mx-mark"><Icon name="workflow" /></span><span class="collection-reference-copy">
-              <strong>{props.t("orchestra.actions.actualOrchestraCI")} · <bdi>{workflow().name ?? workflow().id}</bdi></strong>
-              <small><bdi>{binding().projectPath}</bdi> · <bdi dir="ltr">{workflow().path}</bdi></small>
-            </span><span class="collection-reference-context">{props.t("orchestra.actions.open")}<Icon name="arrow" /></span>
-          </button>}</Show>
-          <Toolbar t={props.t} query={filters.query} status={filters.status} statuses={collection().statuses} workflows onFilter={setFilters} />
+          <Show when={collection().actualOrchestraCI}>{(workflow) => {
+            // The card opens the latest observed run of this workflow; without one it falls back to the workflow graph.
+            const run = () => collection().latest.get(workflow().id)
+            return <button type="button" class="collection-reference" onClick={() => {
+              const item = run()
+              if (item) return model.navigate({ view: "run", runID: item.id, workflowID: workflow().id, path: workflow().path, ref: item.commit })
+              model.navigate({ view: "workflow", workflowID: workflow().id, path: workflow().path, ref: workflow().defaultRef, tab: "graph" })
+            }}>
+              <span class="mx-mark"><Icon name="workflow" /></span><span class="collection-reference-copy">
+                <strong>{props.t("orchestra.actions.actualOrchestraCI")} · <bdi>{workflow().name ?? workflow().id}</bdi></strong>
+                <small><bdi dir="ltr">{workflow().path}</bdi> · <Show when={run()} fallback={<bdi>{binding().projectPath}</bdi>}>{(item) =>
+                  props.t("orchestra.actions.runAttempt", { run: runIdentity(item()).number, attempt: item().attempt ?? props.t("orchestra.actions.unknown") })}</Show></small>
+              </span><span class="collection-reference-context"><Show when={run()} fallback={props.t("orchestra.actions.open")}>{(item) =>
+                <Status status={item().status} conclusion={item().conclusion} t={props.t} />}</Show><Icon name="arrow" /></span>
+            </button>
+          }}</Show>
+          <Toolbar t={props.t} query={filters.query} status={filters.status} placeholder="orchestra.actions.searchWorkflows" filters={workflowFilters} onFilter={setFilters} />
           <div class="section-title collection-section"><div class="mx-grow">
             <h2>{props.t(binding().provider.kind === "gitlab" ? "orchestra.actions.pipelineConfigurations" : "orchestra.actions.library")}</h2>
             <Show when={model.state.workflows.status === "ready"}><small aria-label={props.t("orchestra.actions.library")}>
@@ -71,16 +81,19 @@ function WorkflowState(props: { props: ViewProps; page: readonly Actions.Workflo
 function RunHistoryView(props: { model: Model; t: Translate; embedded?: boolean; header?: boolean }) {
   const page = createMemo(() => props.model.state.runs.value?.items.filter((item) => item.bindingID === props.model.state.binding?.id
     && (!props.model.state.route.workflowID || item.workflowID === props.model.state.route.workflowID)).slice(0, 100) ?? [])
-  const runs = createMemo(() => filterRuns(page(), props.model.state.filters))
+  const statusFilters = createMemo(() => runFilters(props.model.state.binding?.provider.kind))
+  const status = createMemo(() => selectedFilter(statusFilters(), props.model.state.filters.status))
+  const runs = createMemo(() => filterRuns(page(), { ...props.model.state.filters, status: status() }))
   const refs = createMemo(() => withSelected(options(page().map((run) => run.ref)), props.model.state.filters.ref))
   const events = createMemo(() => withSelected(options(page().map((run) => run.event)), props.model.state.filters.event))
-  const statuses = createMemo(() => options(page().flatMap((run) => [run.status, run.conclusion])))
   return <section class={props.embedded ? "actions-collection collection-runs" : "actions-collection mx-page"} aria-label={props.t("orchestra.actions.runs")}>
     <Show when={props.header !== false}><header class="mx-heading"><div><h2>{props.t("orchestra.actions.runs")}</h2></div><Show when={!props.embedded}><button type="button" class="mx-btn" onClick={() => void props.model.refresh()}>{props.t("orchestra.actions.refresh")}</button></Show></header></Show>
-    <Toolbar t={props.t} query={props.model.state.filters.query} status={props.model.state.filters.status} statuses={statuses()} onFilter={(patch) => props.model.filter(patch)} />
+    <Toolbar t={props.t} query={props.model.state.filters.query} status={status()} placeholder="orchestra.actions.searchRuns"
+      filters={statusFilters()} onFilter={(patch) => props.model.filter(patch)} />
     <div class="mx-toolbar collection-filters">
       <FilterSelect label={props.t("orchestra.actions.ref")} aria={props.t("orchestra.actions.ref")} selected={props.model.state.filters.ref} values={refs()} all={props.t("orchestra.actions.allRefs")} onChange={(value) => props.model.filter({ ref: value })} />
       <FilterSelect label={props.t("orchestra.actions.event")} aria={props.t("orchestra.actions.event")} selected={props.model.state.filters.event} values={events()} all={props.t("orchestra.actions.allEvents")} onChange={(value) => props.model.filter({ event: value })} />
+      <Show when={props.model.state.runs.status === "ready"}><span>{props.t("orchestra.actions.runsCount", { shown: runs().length, loaded: page().length })}</span></Show>
     </div>
     <RunState props={props} page={page()} runs={runs()} />
     <Show when={props.model.state.runs.value?.next}><button type="button" class="mx-btn" onClick={() => void props.model.more("runs")}>{props.t("orchestra.actions.more")}</button></Show>
@@ -105,15 +118,10 @@ function BindingStrip(props: { props: ViewProps; binding: Actions.Binding }) {
   return <div class="repo-strip"><span class="provider-label"><bdi>{props.props.t(props.binding.provider.kind === "github" ? "orchestra.actions.github" : "orchestra.actions.gitlab")}</bdi></span><bdi class="repo-name">{props.binding.projectPath}</bdi><span class="collection-provider-host" dir="ltr">{props.binding.provider.hostname}</span><code dir="ltr">{props.binding.id}</code></div>
 }
 
-function Toolbar(props: { t: Translate; query: string; status: string; statuses: readonly (string | null | undefined)[]; workflows?: boolean; onFilter: (patch: Partial<{ query: string; status: string }>) => void }) {
-  return <div class="collection-toolbar mx-toolbar"><div class="search-wrap"><Icon name="search" /><input type="search" class="mx-search" value={props.query} placeholder={props.t("orchestra.actions.search")} aria-label={props.t("orchestra.actions.search")} onInput={(event) => props.onFilter({ query: event.currentTarget.value })} /></div>
+function Toolbar(props: { t: Translate; query: string; status: string; placeholder: ActionKey; filters: readonly { value: string; label: ActionKey }[]; onFilter: (patch: Partial<{ query: string; status: string }>) => void }) {
+  return <div class="collection-toolbar mx-toolbar"><div class="search-wrap"><Icon name="search" /><input type="search" class="mx-search" value={props.query} placeholder={props.t(props.placeholder)} aria-label={props.t(props.placeholder)} onInput={(event) => props.onFilter({ query: event.currentTarget.value })} /></div>
     <div class="wf-range" role="group" aria-label={props.t("orchestra.actions.status")}>
-      <button type="button" aria-pressed={!props.status} onClick={() => props.onFilter({ status: "" })}>{props.t("orchestra.actions.all")}</button>
-      <For each={options(props.statuses)}>{(value) => <button type="button" aria-pressed={props.status === value} onClick={() => props.onFilter({ status: value })}>
-        <Show when={props.workflows} fallback={<Status status={value} t={props.t} />}>
-          {value === "active" ? props.t("orchestra.actions.active") : value === "disabled" ? props.t("orchestra.actions.disabled") : <bdi>{value}</bdi>}
-        </Show>
-      </button>}</For>
+      <For each={props.filters}>{(filter) => <button type="button" aria-pressed={props.status === filter.value} onClick={() => props.onFilter({ status: filter.value })}>{props.t(filter.label)}</button>}</For>
     </div>
   </div>
 }
@@ -137,26 +145,22 @@ function WorkflowCard(props: { props: ViewProps; workflow: Actions.Workflow; run
     </div><span class={`mx-badge ${status().tone}`} title={status().label ? undefined : props.props.t("orchestra.actions.unknown")}>
       <bdi><Show when={label()} keyed fallback={props.workflow.state || props.props.t("orchestra.actions.unknown")}>{(value) => props.props.t(value)}</Show></bdi>
     </span></div>
-    <Show when={props.workflow.updatedAt}><small><time dateTime={props.workflow.updatedAt}>{stamp(props.workflow.updatedAt)}</time></small></Show>
+    <Show when={props.workflow.updatedAt}><small class="collection-updated"><time dateTime={props.workflow.updatedAt}>{stamp(props.workflow.updatedAt)}</time></small></Show>
     <Show when={props.workflow.triggers?.length}><div class="collection-triggers" aria-label={props.props.t("orchestra.actions.event")}>
       <For each={props.workflow.triggers}>{(event) => <span class="mx-badge"><bdi>{event}</bdi></span>}</For>
     </div></Show>
-    <div class="collection-preview" aria-label={props.props.t("orchestra.actions.nativeMetadata")}>
-      <div class="collection-preview-head"><span>{props.props.t("orchestra.actions.nativeMetadata")}</span>
-        <button type="button" class="title-link mx-link" onClick={source}>{props.props.t("orchestra.actions.yamlSource")}<Icon name="code" /></button></div>
-      <dl class="wf-kv"><dt>{props.props.t("orchestra.actions.ref")}</dt><dd><bdi>{props.workflow.defaultRef ?? props.props.t("orchestra.actions.unknown")}</bdi></dd>
-        <dt>{props.props.t(model.state.binding?.provider.kind === "gitlab" ? "orchestra.actions.dispatchPipeline" : "orchestra.actions.dispatch")}</dt>
-         <dd>{props.props.t(props.workflow.dispatchState === "available" ? "orchestra.actions.available" : props.workflow.dispatchState === "unavailable" ? "orchestra.actions.unavailable" : "orchestra.actions.unknown")}</dd></dl>
-      <small>{props.props.t("orchestra.actions.metadataOnly")}</small>
-    </div>
+    {/* The native list has no job preview; job definitions live behind the graph and source views. */}
+    <div class="collection-preview collection-preview-empty">{props.props.t("orchestra.actions.metadataOnly")}</div>
     <div class="collection-last"><span class="collection-last-label">{props.props.t("orchestra.actions.latestRun")}</span>
       <Switch><Match when={model.state.runs.status === "idle" || model.state.runs.status === "loading"}><span role="status">{props.props.t("orchestra.actions.loading")}</span></Match>
         <Match when={model.state.runs.status === "error"}><span role="alert">{props.props.t(model.state.runs.error?.message ?? "orchestra.actions.unavailable")}</span></Match>
         <Match when={props.run}>{(run) => <>
           <button type="button" class="collection-last-run title-link mx-link" onClick={() => model.navigate({ view: "run", runID: run().id })}>
-            <Status status={run().status} conclusion={run().conclusion} t={props.props.t} /><span><bdi dir="ltr">#{run().id}</bdi> · {stamp(run().createdAt)}</span>
+            <Status status={run().status} conclusion={run().conclusion} t={props.props.t} /><span><bdi dir="ltr">{runIdentity(run()).number}</bdi> · <time dateTime={run().createdAt} title={stamp(run().createdAt)}>{relative(run().createdAt)}</time></span>
           </button><small><bdi>{run().ref}</bdi> · {duration(run().duration)}</small>
-        </>}</Match><Match when={true}><strong>{props.props.t("orchestra.actions.emptyRuns")}</strong></Match></Switch>
+        </>}</Match>
+        {/* Only a bounded recent page is loaded, so a missing run here does not mean the workflow never ran. */}
+        <Match when={true}><strong>{props.props.t("orchestra.actions.noRecentRun")}</strong></Match></Switch>
     </div>
     <footer class="mx-card-foot"><button type="button" class="mx-btn primary" disabled={!allowed()} onClick={() => {
       if (allowed()) model.dialog({ kind: "dispatch", workflowID: props.workflow.id })
@@ -168,7 +172,21 @@ function WorkflowCard(props: { props: ViewProps; workflow: Actions.Workflow; run
 }
 
 function RunTable(props: { model: Model; t: Translate; runs: readonly Actions.Run[] }) {
-  return <div class="mx-table runs-table"><For each={props.runs}>{(run) => <button type="button" class="mx-row run-row" onClick={() => props.model.navigate({ view: "run", runID: run.id })}><span class="mx-grow"><strong><bdi>{run.name ?? run.id}</bdi></strong><small dir="ltr">#{run.id} · {props.t("orchestra.actions.attempt")} {run.attempt ?? props.t("orchestra.actions.unknown")}</small><small><bdi>{run.actor ?? props.t("orchestra.actions.unknown")}</bdi></small></span><span><bdi>{run.ref ?? props.t("orchestra.actions.unknown")}</bdi><small>{run.event}</small></span><Status status={run.status} conclusion={run.conclusion} t={props.t} /><span>{duration(run.duration) ?? props.t("orchestra.actions.unknown")}<small>{stamp(run.updatedAt)}</small></span></button>}</For></div>
+  const unknown = () => props.t("orchestra.actions.unknown")
+  return <div class="collection-run-list">
+    <div class="run-head"><span>{props.t("orchestra.actions.runColumn")}</span><span>{props.t("orchestra.actions.refColumn")}</span>
+      <span>{props.t("orchestra.actions.resultColumn")}</span><span>{props.t("orchestra.actions.timeColumn")}</span></div>
+    <div class="mx-table runs-table"><For each={props.runs}>{(run) => <button type="button" class="mx-row run-row" onClick={() => props.model.navigate({ view: "run", runID: run.id })}>
+      <span class="mx-grow"><strong><bdi>{runIdentity(run).title}</bdi></strong>
+        {/* The workflow name is the secondary line unless it already is the title (runs without a native title). */}
+        <small><Show when={props.model.state.workflows.value?.items.find((item) => item.bindingID === run.bindingID && item.id === run.workflowID && item.name !== runIdentity(run).title)?.name}>{(name) => <><bdi>{name()}</bdi> · </>}</Show><bdi dir="ltr">{runIdentity(run).number}</bdi> · {props.t("orchestra.actions.attempt")} {run.attempt ?? unknown()}</small>
+        <small><bdi>{run.actor ?? unknown()}</bdi></small></span>
+      <span class="collection-run-ref"><span class="ref"><Icon name="branch" /><bdi>{run.ref ?? unknown()}</bdi></span><small><bdi dir="ltr">{shortSHA(run.commit)}</bdi> · <bdi>{run.event}</bdi></small></span>
+      <span class="collection-run-result"><Status status={run.status} conclusion={run.conclusion} t={props.t} /></span>
+      <span class="collection-run-time"><strong>{duration(run.duration)}</strong>
+        <small><time dateTime={run.createdAt ?? run.updatedAt} title={stamp(run.createdAt ?? run.updatedAt)}>{relative(run.createdAt ?? run.updatedAt)}</time></small></span>
+    </button>}</For></div>
+  </div>
 }
 
 function filterRuns(items: readonly Actions.Run[], filters: { query: string; status: string; ref: string; event: string }) {

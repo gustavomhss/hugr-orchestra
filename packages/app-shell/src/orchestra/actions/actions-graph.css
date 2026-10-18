@@ -1,0 +1,39 @@
+/* Actions workflow graph and matrix executions, matched to the approved Actions mock. */
+.actions-page .graph-area { position: relative; min-inline-size: 0; }
+.actions-page .actions-graph .graph-caption { gap: 12px 15px; font-size: 11.5px; }
+.actions-page .actions-graph .graph-caption .actions-icon { fill: none; stroke: currentColor; stroke-width: 1.5; stroke-linecap: round; stroke-linejoin: round; }
+.actions-page .actions-graph .graph-caption strong { font: 500 12px/1.5 var(--mx-emphasis, inherit); color: var(--actions-strong); }
+.actions-page .actions-graph .graph-caption small { margin-inline-start: 5px; color: var(--actions-dim); font-size: 10.5px; }
+
+/* Source notes in user copy; job keys stay monospace. */
+.actions-page .actions-graph-notes { display: flex; flex-direction: column; gap: 4px; margin-block: 0 14px; padding: 0; list-style: none; }
+.actions-page .actions-graph-notes li { display: flex; flex-wrap: wrap; align-items: baseline; gap: 6px; }
+.actions-page .actions-graph-notes code { padding: 0 5px; border: 1px solid var(--actions-line); border-radius: 4px; color: var(--actions-strong); font: 10.5px var(--mx-mono, monospace); }
+
+/* Grouped matrix: a stacked tile with an execution count. */
+.actions-page .actions-matrix-node { isolation: isolate; }
+.actions-page .actions-matrix-node::before, .actions-page .actions-matrix-node::after { content: ""; position: absolute; inset: 0; z-index: -1; border: 1px solid var(--actions-cv-node-line); border-radius: 8px; background: var(--actions-cv-node); pointer-events: none; }
+.actions-page .actions-matrix-node::before { transform: translate(4px, -4px); opacity: .5; }
+.actions-page .actions-matrix-node::after { z-index: -2; transform: translate(8px, -8px); opacity: .22; }
+.actions-page .actions-matrix-count { position: absolute; inset-inline-end: -8px; inset-block-end: -6px; z-index: 3; min-inline-size: 24px; block-size: 17px; padding: 0 4px; border: 1px solid var(--actions-cv-node-line); border-radius: 5px; background: var(--actions-modal); color: var(--actions-blue); font: 10px/15px var(--mx-mono, monospace); cursor: pointer; }
+.actions-page .actions-matrix-count:hover { border-color: var(--actions-blue); }
+.actions-page .actions-matrix-count:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
+.actions-page .actions-node-result { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 2px 6px; margin-block-start: 2px; }
+.actions-page .actions-node-result small { display: inline; }
+
+/* Matrix executions: one box per matrix definition with its runner executions inside. */
+.actions-page .actions-matrix-group.selected { border-color: var(--actions-blue); box-shadow: 0 0 0 1px rgba(154, 191, 229, .15); }
+.actions-page .actions-matrix-group .wf-group-head { cursor: default; }
+.actions-page .actions-matrix-group .wf-group-head > button { min-inline-size: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
+.actions-page .actions-matrix-group .wf-group-head > button:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
+.actions-page .actions-matrix-group .wf-group-head > small { margin-inline-start: auto; }
+.actions-page .actions-matrix-group > .wf-port { top: calc(50% - 4.5px); }
+
+/* The graph sits inside the run detail (or right after the workflow detail); it must not add a second page padding. */
+.actions-page .actions-detail .actions-graph { max-inline-size: none; padding: 0; }
+.actions-page .actions-detail + .actions-graph { padding-block-start: 0; }
+
+@media (max-width: 850px) {
+  .actions-page .actions-graph .graph-caption { flex-wrap: wrap; }
+  .actions-page .actions-graph .graph-caption small { display: none; }
+}

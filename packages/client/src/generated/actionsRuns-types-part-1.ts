@@ -269,6 +269,8 @@ export type ActionsRunsListOutput = {
       readonly bindingID: string
       readonly workflowID: string
       readonly name: string | null
+      readonly title?: string
+      readonly number?: number
       readonly ref: string | null
       readonly commit: string
       readonly event: string
@@ -316,6 +318,8 @@ export type ActionsRunsGetOutput = {
     readonly bindingID: string
     readonly workflowID: string
     readonly name: string | null
+    readonly title?: string
+    readonly number?: number
     readonly ref: string | null
     readonly commit: string
     readonly event: string
