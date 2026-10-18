@@ -94,6 +94,7 @@ A dev run uses configured user data. `ORCHESTRA_DB` selects the Core database; i
 | [`packages/app-shell`](packages/app-shell/README.md) | Shared Solid UI and public `@orchestra/app` exports consumed by Web and Desktop |
 | [`apps/web`](apps/web/README.md) | Browser bootstrap, development server and web distribution |
 | [`packages/cli`](packages/cli/README.md) | Live V2 preview executable, command handlers, daemon, and compiled CLI artifacts |
+| [`packages/tui`](packages/tui/README.md) | Terminal UI (SolidJS/opentui) shared by the legacy and V2 CLIs; English-only for now |
 | `packages/orchestra`       | Legacy server/TUI and product composition; Maestro, Continuity, tools, and plugin integration |
 | [`packages/core`](packages/core/README.md) | Reusable domain/platform services, Session execution/storage, configuration, providers, and plugin hosting |
 | [`packages/schema`](packages/schema/README.md) | Portable contracts, canonical schema identity, and wire/storage datatypes |
