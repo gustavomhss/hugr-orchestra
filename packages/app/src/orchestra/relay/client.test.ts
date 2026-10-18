@@ -97,6 +97,18 @@ describe("authoring routes through the generated client", () => {
     expect(await api.requests[1].json()).toEqual({ document: "hook-1" })
   })
 
+  test("unpublish withdraws the published version under the loaded checksum", async () => {
+    const api = server(() => located(view({ active: false, activeVersionId: null })))
+    const loaded = decodeDocument(view({ active: true, activeVersionId: "v4" }))
+    const result = await api.client.unpublish(loaded)
+    expect([api.requests[0].method, new URL(api.requests[0].url).pathname]).toEqual([
+      "POST",
+      "/api/relay/document/relay-wp-execute/unpublish",
+    ])
+    expect(await api.requests[0].json()).toEqual({ expectedChecksum: "c".repeat(64) })
+    expect(result.activeVersionId).toBeNull()
+  })
+
   test("refusals keep their tag, code and message; only a route the server lacks reads as unsupported", async () => {
     const missing = server(() => new Response("Not Found", { status: 404, headers: { "content-type": "text/plain" } }))
     expect(relayUnsupported(await missing.client.documents().catch((error: unknown) => error))).toBe(true)

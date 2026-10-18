@@ -1,5 +1,7 @@
 import { createEffect, createSignal, For, type JSX, on, onCleanup, Show } from "solid-js"
 import type { Location } from "@solidjs/router"
+import { formatKeybind } from "@/context/command"
+import { showToast } from "@/utils/toast"
 import type { RelayDocument } from "./client"
 import { deleteDocument } from "./drafts"
 import { rememberDocument } from "./cache"
@@ -76,22 +78,34 @@ export function PublishDialog(props: {
   source: RelaySource
   active?: () => boolean
   retain?: () => () => void
+  // A hook that is installed: its install can follow the new version.
+  install?: string
   onClose: () => void
+  onPublished?: (document: RelayDocument) => void
 }) {
   const copy = useRelayCopy()
   const action = createAction()
+  const [follow, setFollow] = createSignal(true)
   const workflow = props.flow.kind === "workflow"
   const publish = () =>
     action.run(() => {
       const release = props.retain?.()
       return props.source.client.publish(props.document).then(async (published) => {
         await rememberDocument(props.source.queryClient(), props.source.key("documents"), published, props.active)
+        // Publishing does not touch an install; it keeps enforcing its pinned version until it is updated.
+        if (props.install && follow())
+          await props.source.client.update(props.install).then(
+            () => props.source.invalidate("installs"),
+            (error: unknown) =>
+              void showToast({ title: copy.t("orchestra.hooks.installFailed"), description: failure(error) }),
+          )
         props.onClose()
+        props.onPublished?.(published)
       }).finally(() => release?.())
     })
   return (
     <RelayDialog
-      title={copy.t("orchestra.workflows.publish.title", { version: props.document.versionCounter })}
+      title={copy.t("orchestra.workflows.publish.title", { name: props.document.name })}
       busy={action.busy()}
       description={copy.t(workflow ? "orchestra.workflows.publish.workflow" : "orchestra.hooks.publish.description")}
       onClose={props.onClose}
@@ -100,7 +114,7 @@ export function PublishDialog(props: {
         <Foot
           busy={action.busy()}
           cancel={copy.t("orchestra.workflows.dialog.cancel")}
-          submit={copy.t("orchestra.workflows.publish.title", { version: props.document.versionCounter })}
+          submit={copy.t("orchestra.workflows.editor.publish")}
           onCancel={props.onClose}
         />
       }
@@ -110,11 +124,9 @@ export function PublishDialog(props: {
         <dd>{props.document.name}</dd>
         <dt>{copy.t("orchestra.workflows.publish.live")}</dt>
         <dd>
-          {props.document.publishedCounter !== undefined
-            ? `v${props.document.publishedCounter}`
-            : props.document.activeVersionId
-              ? copy.t("orchestra.workflows.badge.publishedPlain")
-              : copy.t("orchestra.workflows.publish.nothing")}
+          {props.document.activeVersionId
+            ? copy.t("orchestra.workflows.publish.liveEarlier")
+            : copy.t("orchestra.workflows.publish.nothing")}
         </dd>
         <Show when={workflow}>
           <dt>{copy.t("orchestra.workflows.publish.contents")}</dt>
@@ -140,6 +152,65 @@ export function PublishDialog(props: {
           </dd>
         </Show>
       </dl>
+      <Show when={props.install}>
+        <label class="wf-dialog-switch">
+          <button
+            type="button"
+            class="mx-toggle"
+            role="switch"
+            aria-checked={follow()}
+            disabled={action.busy()}
+            aria-label={copy.t("orchestra.hooks.publish.updateInstall")}
+            onClick={() => setFollow(!follow())}
+          />
+          <span>
+            {copy.t("orchestra.hooks.publish.updateInstall")}
+            <small>{copy.t("orchestra.hooks.publish.updateInstallHint")}</small>
+          </span>
+        </label>
+      </Show>
+      <Show when={action.error()}>
+        <p class="mx-error" role="alert" style={{ margin: "14px 0 0" }}>
+          {action.error()}
+        </p>
+      </Show>
+    </RelayDialog>
+  )
+}
+
+// A yes/no question with a plain action behind it, for changes that are easy to ask for by mistake.
+export function ConfirmDialog(props: {
+  title: string
+  body: string
+  confirm: string
+  onConfirm: () => Promise<unknown> | void
+  onClose: () => void
+}) {
+  const copy = useRelayCopy()
+  const action = createAction()
+  return (
+    <RelayDialog
+      title={props.title}
+      busy={action.busy()}
+      onClose={props.onClose}
+      onSubmit={() =>
+        action.run(async () => {
+          await props.onConfirm()
+          props.onClose()
+        })
+      }
+      foot={
+        <Foot
+          busy={action.busy()}
+          cancel={copy.t("orchestra.workflows.dialog.cancel")}
+          submit={props.confirm}
+          onCancel={props.onClose}
+        />
+      }
+    >
+      <p class="mx-note" style={{ margin: 0 }}>
+        {props.body}
+      </p>
       <Show when={action.error()}>
         <p class="mx-error" role="alert" style={{ margin: "14px 0 0" }}>
           {action.error()}
@@ -238,6 +309,17 @@ const SHORTCUTS = [
   "help",
 ] as const
 
+// These follow the platform's modifier (Command on a Mac, Ctrl elsewhere); the others read the same everywhere.
+const COMBOS = {
+  palette: "mod+k",
+  back: "mod+[",
+  selectAll: "mod+a",
+  undo: "mod+z",
+  redo: "mod+shift+z",
+} as const
+
+const combo = (key: (typeof SHORTCUTS)[number]): key is keyof typeof COMBOS => key in COMBOS
+
 export function ShortcutsDialog(props: { onClose: () => void }) {
   const copy = useRelayCopy()
   return (
@@ -258,7 +340,11 @@ export function ShortcutsDialog(props: { onClose: () => void }) {
             <div class="mx-row">
               <span>{copy.t(`orchestra.workflows.keys.${key}`)}</span>
               <span>
-                <kbd>{copy.t(`orchestra.workflows.keys.${key}.key`)}</kbd>
+                <kbd>
+                  {combo(key)
+                    ? formatKeybind(COMBOS[key], copy.t)
+                    : copy.t(`orchestra.workflows.keys.${key}.key`, { mod: formatKeybind("mod", copy.t) })}
+                </kbd>
               </span>
             </div>
           )}

@@ -1,6 +1,8 @@
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLocation } from "@solidjs/router"
 import { useCommand } from "@/context/command"
+import { useLayout } from "@/context/layout"
+import { useTabs } from "@/context/tabs"
 import { showToast } from "@/utils/toast"
 import { modalActive } from "@/utils/modal-active"
 import { skipToken, useQuery } from "@tanstack/solid-query"
@@ -11,7 +13,7 @@ import { hookOutputs } from "./catalog"
 import { rememberDocument } from "./cache"
 import { documentDiagnostics, type RelayDocument } from "./client"
 import type { RelayRun } from "./runs"
-import { createAction, DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
+import { ConfirmDialog, createAction, DeleteDialog, failure, PublishDialog, ShortcutsDialog } from "./dialogs"
 import { EditorHead } from "./editor-head"
 import { openDraft, profileDrafts } from "./drafts"
 import { CanvasTab } from "./editor-canvas"
@@ -38,6 +40,58 @@ export type EditorProps = {
   openSession: (sessionID: string) => void
   crumbs: (items: string[]) => void
 }
+
+type CopyKey = Parameters<ReturnType<typeof useRelayCopy>["t"]>[0]
+
+// The server's compile messages, matched by their wording, with plain copy for each. `covered` lists the client issues
+// that already say the same thing: the message is then left out of the list.
+const SERVER_ISSUES: { match: RegExp; key: CopyKey; covered?: string[] }[] = [
+  { match: /^Add at least one step/, key: "orchestra.workflows.editor.serverIssue.noSteps", covered: ["no-steps"] },
+  { match: /^Add at least one action/, key: "orchestra.workflows.editor.serverIssue.noAction", covered: ["no-action"] },
+  {
+    match: /^Criterion IDs must be unique/,
+    key: "orchestra.workflows.editor.serverIssue.duplicateCheck",
+    covered: ["check-duplicate"],
+  },
+  { match: /contiguous stretch/, key: "orchestra.workflows.editor.serverIssue.phase" },
+  { match: /cycles/, key: "orchestra.workflows.editor.serverIssue.cycle", covered: ["cycle"] },
+  {
+    match: /^Remove branches|^Relay accepts one sequential output|^A hook output accepts one next step/,
+    key: "orchestra.workflows.editor.serverIssue.branches",
+    covered: ["branches"],
+  },
+  {
+    match: /^Connect every step|^Some steps are disconnected|^A connection points to a missing step|^Connect the event/,
+    key: "orchestra.workflows.editor.serverIssue.loose",
+    covered: ["loose", "hook-loose"],
+  },
+  { match: /^Message must be/, key: "orchestra.workflows.editor.serverIssue.message", covered: ["message-empty"] },
+  {
+    match: /^Criteria must be|^A criterion must be/,
+    key: "orchestra.workflows.editor.serverIssue.checks",
+    covered: ["checklist-invalid"],
+  },
+  { match: /no Relay implementation/, key: "orchestra.workflows.editor.serverIssue.unknownStep" },
+  { match: /retry budget must be/, key: "orchestra.workflows.editor.serverIssue.budget" },
+  { match: /start stays outside every phase/, key: "orchestra.workflows.editor.serverIssue.startPhase" },
+  {
+    match: /^A hook needs exactly one event/,
+    key: "orchestra.workflows.editor.serverIssue.oneEvent",
+    covered: ["no-trigger", "trigger-count"],
+  },
+  {
+    match: /need an event before the effect/,
+    key: "orchestra.workflows.editor.serverIssue.before",
+    covered: ["needs-before"],
+  },
+]
+
+const DRAFT_REASON = {
+  error: "orchestra.workflows.drafts.reason.error",
+  conflict: "orchestra.workflows.drafts.reason.conflict",
+  saving: "orchestra.workflows.drafts.reason.saving",
+  saved: "orchestra.workflows.drafts.reason.unsaved",
+} as const
 
 export function Editor(props: EditorProps) {
   const copy = useRelayCopy()
@@ -86,6 +140,8 @@ export function Editor(props: EditorProps) {
 function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const copy = useRelayCopy()
   const dialogs = useDialog()
+  const tabs = useTabs()
+  const layout = useLayout()
   const duplication = createAction(useLocation())
   const exporting = createAction()
   const kind = props.route.kind
@@ -96,8 +152,14 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       <For each={profileDrafts(props.source)}>{(pending) => (
         <button type="button" class="mx-btn" onClick={() => props.go(relayPath.editor(pending.state.flow.kind, pending.state.base.id))}>
           {pending.state.name}
+          <small class="wf-draft-reason">{copy.t(DRAFT_REASON[pending.state.save.state])}</small>
         </button>
       )}</For>
+      <button type="button" class="mx-btn" onClick={() => props.go(relayPath.library(kind))}>
+        {copy.t("orchestra.workflows.editor.back", {
+          name: copy.t(kind === "workflow" ? "orchestra.workflows.title" : "orchestra.hooks.title"),
+        })}
+      </button>
     </MxPage>
   )
   const base = () => draft.state.base
@@ -118,12 +180,28 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
   const reload = draft.reload
   onCleanup(draft.release)
   const [selected, setSelected] = createSignal<string[]>([])
-  const [dialog, setDialog] = createSignal<"publish" | "delete" | "keys" | "test">()
+  const [dialog, setDialog] = createSignal<"publish" | "unpublish" | "revert" | "delete" | "keys" | "test">()
   const [test, setTest] = createSignal<{ path: string[]; result: string; label: string }>()
   const [install, setInstall] = createSignal(false)
   const outputs = () => (kind === "hook" ? hookOutputs(props.source.nodeTypes.data?.hook) : {})
-  const found = createMemo(() => issues(flow(), [...documentDiagnostics(base())]))
-  const issueList = () => found().map((issue) => ({ text: issueText(copy, flow(), issue), node: issueNode(issue) }))
+  // A workflow from a shipped profile whose tools are missing cannot run, so Publish stays off for it.
+  const unrunnable = () => kind === "workflow" && base().runnable === false
+  const found = createMemo(() =>
+    issues(flow(), [
+      ...(unrunnable() ? [copy.t("orchestra.workflows.editor.notRunnable")] : []),
+      ...documentDiagnostics(base()),
+    ]),
+  )
+  const issueList = () => {
+    const codes = new Set<string>(found().map((issue) => issue.code))
+    return found().flatMap((issue): { text: string; node?: string }[] => {
+      if (issue.code !== "server") return [{ text: issueText(copy, flow(), issue), node: issueNode(issue) }]
+      const known = SERVER_ISSUES.find((entry) => entry.match.test(issue.text))
+      if (!known) return [{ text: issue.text }]
+      if (known.covered?.some((code) => codes.has(code))) return []
+      return [{ text: copy.t(known.key) }]
+    })
+  }
   const runs = () => (props.source.runs.data ?? []).filter((run) => run.documentID === props.id)
   const installed = () => props.source.installs.isSuccess
     ? (props.source.installs.data ?? []).find((item) => item.document === props.id)
@@ -160,8 +238,29 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     staleTime: Infinity,
   }), props.source.queryClient)
   const frozenFlow = createMemo(() => frozen.data ? flowFromDocument(frozen.data, "workflow") : undefined)
+  // Nothing to discard when the draft already says what the published version says.
+  const sameAsPublished = () => {
+    const version = base().activeVersion
+    if (!version) return false
+    return (
+      version.name === name() &&
+      JSON.stringify(documentFields(flow())) === JSON.stringify(documentFields(flowFromDocument(version, kind)))
+    )
+  }
+  const clean = () => !save.dirty && save.state === "saved"
   const canPublish = () =>
-    !props.route.view && !found().length && !save.dirty && save.state === "saved" && base().activeVersionId !== base().versionId
+    !props.route.view && !found().length && clean() && base().activeVersionId !== base().versionId
+  const canDiscard = () =>
+    !props.route.view && !!base().activeVersionId && base().activeVersionId !== base().versionId && !sameAsPublished()
+  // Dialogs act on the saved version, so pending edits (a rename just committed, say) reach the server first.
+  const openPublish = async () => {
+    await flush()
+    if (canPublish()) setDialog("publish")
+  }
+  const openUnpublish = async () => {
+    await flush()
+    if (clean()) setDialog("unpublish")
+  }
 
   // A newer server version (another window, a publish) replaces the copy when nothing local is pending.
   createEffect(
@@ -218,10 +317,41 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (result) showToast({ title: copy.t("orchestra.hooks.installFailed"), description: result })
   }
 
+  // The chat opens as a draft in this project with the workflow named in the prompt; the owner finishes the sentence.
+  const useInChat = (item: RelayDocument) =>
+    void tabs.newDraft(
+      { server: layout.home.selection().server, directory: props.directory },
+      copy.t("orchestra.workflows.useInChat.prompt", { name: item.name, id: item.id }),
+    )
+
+  const unpublish = () => {
+    draft.acquire()
+    return props.source.client
+      .unpublish(base())
+      .then((item) => rememberDocument(props.source.queryClient(), props.source.key("documents"), item, draft.active))
+      .finally(draft.release)
+  }
+
+  // Goes through the draft like any edit, so it saves as usual and Undo brings the discarded changes back.
+  const revert = () => {
+    const version = base().activeVersion
+    if (!version) return
+    if (version.name !== name()) rename(version.name)
+    edit(flowFromDocument(version, kind))
+    setSelected([])
+  }
+
   const duplicate = () =>
     duplication.run(async (current) => {
+      await flush()
+      // Copy what is on screen, even when the last save did not go through.
       const created = await props.source.client
-        .create(copyDocument(base(), copy.t("orchestra.workflows.create.copyName", { name: name() })))
+        .create(
+          copyDocument(
+            { ...base(), ...documentFields(flow()) },
+            copy.t("orchestra.workflows.create.copyName", { name: name() }),
+          ),
+        )
         .catch(
           (error: unknown) =>
             void showToast({ title: copy.t("orchestra.workflows.menu.duplicateFailed"), description: failure(error) }),
@@ -279,6 +409,13 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     },
     { label: copy.t("orchestra.workflows.menu.download"), icon: "download", disabled: exporting.busy(), run: () => void download() },
     "-",
+    ...(canDiscard()
+      ? [{ label: copy.t("orchestra.workflows.editor.discardChanges"), run: () => setDialog("revert") }]
+      : []),
+    ...(kind === "workflow" && base().activeVersionId
+      ? [{ label: copy.t("orchestra.workflows.editor.unpublish"), run: () => void openUnpublish() }]
+      : []),
+    ...(canDiscard() || (kind === "workflow" && base().activeVersionId) ? ["-" as const] : []),
     { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setDialog("delete") },
     ] satisfies MenuItem[] : []),
   ]
@@ -310,22 +447,20 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         title: copy.t("orchestra.palette.publish", { name: name() }),
         category,
         disabled: !canPublish(),
-        onSelect: () => setDialog("publish"),
+        onSelect: () => void openPublish(),
       },
-      {
-        id: "relay.editor.tab",
-        title: copy.t(
-          editorTab
-            ? kind === "workflow"
-              ? "orchestra.palette.showExecutions"
-              : "orchestra.palette.showActivity"
-            : "orchestra.palette.showEditor",
-        ),
-        category,
-        // Workflow runs are hidden until the server has run routes, so a workflow has no second tab to switch to.
-        disabled: kind === "workflow",
-        onSelect: () => props.go(editorTab ? relayPath.history(kind, props.id) : relayPath.editor(kind, props.id)),
-      },
+      // Workflow runs are hidden until the server has run routes, so only a hook has a second tab to switch to.
+      ...(kind === "hook"
+        ? [
+            {
+              id: "relay.editor.tab",
+              title: copy.t(editorTab ? "orchestra.palette.showActivity" : "orchestra.palette.showEditor"),
+              category,
+              onSelect: () =>
+                props.go(editorTab ? relayPath.history(kind, props.id) : relayPath.editor(kind, props.id)),
+            },
+          ]
+        : []),
     ]
   })
 
@@ -397,12 +532,14 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         go={props.go}
         onRename={rename}
         onIssue={(node) => {
-          if (!node) return
-          if (props.route.tab !== "editor") props.go(relayPath.editor(kind, props.id))
+          // A row about a step opens that step; one about the workflow as a whole opens the Add panel.
+          if (!node) return props.go(relayPath.add(kind, props.id))
+          props.go(relayPath.node(kind, props.id, node))
           setSelected([node])
           queueMicrotask(() => api?.center(node))
         }}
-        onPublish={() => setDialog("publish")}
+        onPublish={() => void openPublish()}
+        onUseInChat={() => useInChat(base())}
         onTest={() => setDialog("test")}
         onInstall={(next) => void setInstalled(next)}
         onReload={() => void reload()}
@@ -509,7 +646,34 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
       <Switch>
         <Match when={dialog() === "publish"}>
           <PublishDialog document={base()} flow={flow()} source={props.source} active={draft.active}
-            retain={() => { draft.acquire(); return draft.release }} onClose={() => setDialog(undefined)} />
+            install={kind === "hook" ? installed()?.installID : undefined}
+            retain={() => { draft.acquire(); return draft.release }} onClose={() => setDialog(undefined)}
+            onPublished={(item) => {
+              if (kind !== "workflow") return
+              showToast({
+                variant: "success",
+                title: copy.t("orchestra.workflows.publish.done", { name: item.name }),
+                actions: [{ label: copy.t("orchestra.workflows.editor.useInChat"), onClick: () => useInChat(item) }],
+              })
+            }} />
+        </Match>
+        <Match when={dialog() === "unpublish"}>
+          <ConfirmDialog
+            title={copy.t("orchestra.workflows.unpublish.title", { name: name() })}
+            body={copy.t("orchestra.workflows.unpublish.body")}
+            confirm={copy.t("orchestra.workflows.unpublish.confirm")}
+            onConfirm={unpublish}
+            onClose={() => setDialog(undefined)}
+          />
+        </Match>
+        <Match when={dialog() === "revert"}>
+          <ConfirmDialog
+            title={copy.t("orchestra.workflows.revert.title", { name: name() })}
+            body={copy.t("orchestra.workflows.revert.body")}
+            confirm={copy.t("orchestra.workflows.revert.confirm")}
+            onConfirm={revert}
+            onClose={() => setDialog(undefined)}
+          />
         </Match>
         <Match when={dialog() === "delete"}>
           <DeleteDialog
@@ -517,7 +681,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
             kind={kind}
             source={props.source}
             onClose={() => setDialog(undefined)}
-            onDeleted={() => props.go(relayPath.library(kind))}
+            onDeleted={() => props.go(relayPath.library(kind), true)}
           />
         </Match>
         <Match when={dialog() === "keys"}>

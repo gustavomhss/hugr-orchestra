@@ -123,6 +123,16 @@ export function createRelayClient(input: { sdk: OrchestraClient; directory: stri
           ),
         ),
       ),
+    // Withdraws the published version; the draft is kept.
+    unpublish: async (document: RelayDocument) =>
+      decodeDocument(
+        await body<RelayDocumentView>(
+          relay.publish.unpublish(
+            { documentID: document.id, location, relayUnpublishInput: { expectedChecksum: document.checksum } },
+            off,
+          ),
+        ),
+      ),
     installs: async () => (await body<{ installs: RelayInstall[] }>(relay.hook.list({ location }, off))).installs,
     // The server pins the document's published version; `version` is left out so it never pins anything else.
     install: (documentID: string) =>
