@@ -7,10 +7,14 @@ import { checksum } from "@orchestra/core/util/encode"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 
+// Every result and context character lands in the model's context; the same caps as the V2 core websearch tool.
+const MAX_NUM_RESULTS = 20
+const MAX_CONTEXT_CHARACTERS = 50_000
+
 export const Parameters = Schema.Struct({
   query: Schema.String.annotate({ description: "Websearch query" }),
-  numResults: Schema.optional(Schema.Number).annotate({
-    description: "Number of search results to return (default: 8)",
+  numResults: Schema.optional(Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: MAX_NUM_RESULTS }))).annotate({
+    description: `Number of search results to return (default: 8, maximum: ${MAX_NUM_RESULTS})`,
   }),
   livecrawl: Schema.optional(Schema.Literals(["fallback", "preferred"])).annotate({
     description:
@@ -19,8 +23,10 @@ export const Parameters = Schema.Struct({
   type: Schema.optional(Schema.Literals(["auto", "fast", "deep"])).annotate({
     description: "Search type - 'auto': balanced search (default), 'fast': quick results, 'deep': comprehensive search",
   }),
-  contextMaxCharacters: Schema.optional(Schema.Number).annotate({
-    description: "Maximum characters for context string optimized for LLMs (default: 10000)",
+  contextMaxCharacters: Schema.optional(
+    Schema.Int.check(Schema.isBetween({ minimum: 1, maximum: MAX_CONTEXT_CHARACTERS })),
+  ).annotate({
+    description: `Maximum characters for context string optimized for LLMs (default: 10000, maximum: ${MAX_CONTEXT_CHARACTERS})`,
   }),
 })
 

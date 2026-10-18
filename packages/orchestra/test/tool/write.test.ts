@@ -1,9 +1,10 @@
 import { afterEach, describe, expect } from "bun:test"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, Option } from "effect"
 import path from "path"
 import fs from "fs/promises"
 import { WriteTool } from "../../src/tool/write"
+import { fileLock } from "../../src/tool/edit"
 import { LSP } from "@/lsp/lsp"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
@@ -44,6 +45,8 @@ const it = testEffect(
     ]),
   ),
 )
+
+const posix = process.platform === "win32" ? it.instance.skip : it.instance
 
 const init = Effect.fn("WriteToolTest.init")(function* () {
   const info = yield* WriteTool
@@ -260,6 +263,34 @@ describe("tool.write", () => {
         yield* Effect.promise(() => fs.chmod(readonlyPath, 0o444))
         const exit = yield* run({ filePath: readonlyPath, content: "new content" }).pipe(Effect.exit)
         expect(exit._tag).toBe("Failure")
+      }),
+    )
+  })
+
+  describe("file lock", () => {
+    // File symlinks need elevated rights on Windows.
+    posix("a write through a symlink holds edit's lock of the file it points to", () =>
+      Effect.gen(function* () {
+        const test = yield* TestInstance
+        const target = path.join(test.directory, "target.txt")
+        const link = path.join(test.directory, "link.txt")
+        yield* Effect.promise(() => fs.writeFile(target, "old\n", "utf-8"))
+        yield* Effect.promise(() => fs.symlink(target, link))
+        const real = yield* Effect.promise(() => fs.realpath(target))
+
+        const held: boolean[] = []
+        const probe = {
+          ...ctx,
+          // The permission ask runs between reading the old content and writing, so the shared lock must be taken here.
+          ask: () =>
+            fileLock(real)
+              .withPermitsIfAvailable(1)(Effect.void)
+              .pipe(Effect.map((free) => void held.push(Option.isNone(free)))),
+        }
+        yield* run({ filePath: link, content: "new\n" }, probe)
+
+        expect(held).toEqual([true])
+        expect(yield* Effect.promise(() => fs.readFile(target, "utf-8"))).toBe("new\n")
       }),
     )
   })
