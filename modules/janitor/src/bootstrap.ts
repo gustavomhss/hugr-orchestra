@@ -1,12 +1,13 @@
 import { Effect, Fiber, Ref, Scope } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { AppProcess } from "@orchestra/core/process"
-import { GlobalBus } from "@/bus/global"
 import { defaultConfig, loop, makeState, type ReportEvent, type SchedulerConfig } from "./scheduler"
 import { clearLatestReport, setLatestReport } from "./report-state"
 import { scan } from "./scan"
 
 export const EventType = "janitor.report" as const
+
+export type Sink = (event: ReportEvent) => Effect.Effect<void>
 
 let janitorUsers = 0
 let janitorFiber: ReturnType<typeof Effect.runFork> | undefined
@@ -22,18 +23,9 @@ export function configFromEnv(env: Record<string, string | undefined>): Schedule
   return { ...base, intervalMinutes: raw }
 }
 
-function emit(event: ReportEvent) {
-  return Effect.sync(() => {
-    setLatestReport(event.report)
-    GlobalBus.emit("event", {
-      directory: "global",
-      payload: { type: EventType, properties: event },
-    })
-  })
-}
-
 export const startJanitorLoop = Effect.fn("Janitor.start")(function* (
   scope: Scope.Scope,
+  sink: Sink,
   env: Record<string, string | undefined> = process.env,
 ) {
   if (!enabled(env)) return
@@ -52,6 +44,8 @@ export const startJanitorLoop = Effect.fn("Janitor.start")(function* (
   if (janitorFiber) return
   const config = configFromEnv(env)
   const ref = yield* Ref.make(makeState())
+  const emit = (event: ReportEvent) =>
+    Effect.sync(() => setLatestReport(event.report)).pipe(Effect.andThen(sink(event)))
   janitorFiber = yield* loop(scan(), config, ref, emit).pipe(
     Effect.provide(AppNodeBuilder.build(AppProcess.node)),
     Effect.forkDetach,

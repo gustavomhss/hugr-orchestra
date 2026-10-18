@@ -1,0 +1,14 @@
+{
+  "moves": [
+    { "from": "apps/orchestra/src/janitor/bootstrap.ts", "to": "modules/janitor/src/bootstrap.ts" },
+    { "from": "apps/orchestra/src/janitor/report-state.ts", "to": "modules/janitor/src/report-state.ts" },
+    { "from": "apps/orchestra/src/janitor/scan.ts", "to": "modules/janitor/src/scan.ts" },
+    { "from": "apps/orchestra/src/janitor/scheduler.ts", "to": "modules/janitor/src/scheduler.ts" },
+    { "from": "apps/orchestra/src/janitor/thresholds.ts", "to": "modules/janitor/src/thresholds.ts" },
+    { "from": "apps/orchestra/src/janitor/bootstrap.test.ts", "to": "modules/janitor/src/bootstrap.test.ts" },
+    { "from": "apps/orchestra/src/janitor/report-state.test.ts", "to": "modules/janitor/src/report-state.test.ts" },
+    { "from": "apps/orchestra/src/janitor/scan.test.ts", "to": "modules/janitor/src/scan.test.ts" },
+    { "from": "apps/orchestra/src/janitor/scheduler.test.ts", "to": "modules/janitor/src/scheduler.test.ts" },
+    { "from": "apps/orchestra/src/janitor/README.md", "to": "modules/janitor/README.md" }
+  ]
+}

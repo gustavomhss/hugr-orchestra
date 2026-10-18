@@ -6,11 +6,12 @@ Janitor scans the data directory for growth, keeps the latest report and hands e
 
 Janitor scans the data directory for growth, keeps the latest report and hands each report to a host-supplied sink. Owner: The Janitor owner.
 
-Moves in with card C3 of plan 70-C' B1.
+- Background maintenance: `src/bootstrap.ts`, `src/scan.ts`, `src/scheduler.ts`, `src/thresholds.ts`, `src/report-state.ts`.
+- The desktop binding stays in `apps/desktop/src/main`.
 
 ## Public entry points and consumers
 
-Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server) and apps/cli.
+Exports are explicit keys derived from the source wildcard in the module registry. Consumers are the composition roots: apps/orchestra (legacy server, which passes a sink that publishes on the legacy global bus) and apps/cli. `startJanitorLoop(scope, sink, env)` takes the sink as a parameter; the module never imports a bus.
 
 ## Dependencies and boundaries
 
@@ -22,7 +23,7 @@ None yet.
 
 ## Persistence, identity and lifetime
 
-None of its own; the host owns persistence and process lifetime.
+None of its own; the host owns persistence and process lifetime. Background loops are process-local and must stop on shutdown.
 
 ## Commands
 
