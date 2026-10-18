@@ -9,7 +9,7 @@ import { RuntimeFlags } from "../../src/effect/runtime-flags"
 import { provideTmpdirInstance, testInstanceStoreLayer } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 
-// Conformance of the authored backend specialist skill tree (specs/backend-specialist/contracts/f5-f6-toolkit-skills.md, F6)
+// Conformance of the authored backend specialist skill tree (docs/specs/backend-specialist/contracts/f5-f6-toolkit-skills.md, F6)
 // through the real V1 discovery path: config `skills.paths` (F6.13), scanned and parsed by Skill.Service.
 
 const ROOT = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
@@ -22,7 +22,7 @@ const ENTRY_NAMES = [
   "backend-check",
 ]
 const CARD_HEADINGS = ["Applicability", "Non-trigger", "Inputs", "Steps", "Tools and outputs", "Limits and checks"]
-// Lead ruling S-1 (specs/backend-specialist/contracts/README.md) caps an entry body at 1,000 words, measured in
+// Lead ruling S-1 (docs/specs/backend-specialist/contracts/README.md) caps an entry body at 1,000 words, measured in
 // whitespace words (the unit Atlas uses for its header bound); references carry the detail.
 const MAX_ENTRY_BODY_WORDS = 1000
 

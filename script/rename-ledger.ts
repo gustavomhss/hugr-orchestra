@@ -19,14 +19,10 @@ export const keptPaths: Kept[] = [
     path: /^packages\/app(?:-shell)?\/src\/i18n\/branding\.test\.ts$/,
     reason: "branding detector and its planted old-product counterexamples must keep the name they reject",
   },
-  { path: /^specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
+  { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
     path: /^nix\/W5-readiness\.md$/,
     reason: "Nix readiness record naming the upstream npm packages it pins and replaces",
-  },
-  {
-    path: /^specs\/backend-specialist\/evidence\//,
-    reason: "raw live-model evidence: session exports name the third-party Zen provider and model ids verbatim",
   },
   {
     path: /^(?:packages|modules)\/relay\/docs\/reviews\/[^/]+\.json$/,
