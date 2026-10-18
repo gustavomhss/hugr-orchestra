@@ -26,9 +26,9 @@ export function runClient(server: ServerConnection.Any, directory: string, fetch
   })
 }
 
-// Workflow runs are hidden for launch: the server has no run routes yet (WP17), so nothing asks for them, polls them
-// or counts them. Turn this on with the Executions views when the routes ship.
-export const runsEnabled = false
+// The run routes serve the external runs (Relay for LangGraph) recorded under the location's `.relay/runs`; a server
+// without them answers 404, which the run views report as unsupported.
+export const runsEnabled = true
 
 export type RelaySource = ReturnType<typeof createRelaySource>
 

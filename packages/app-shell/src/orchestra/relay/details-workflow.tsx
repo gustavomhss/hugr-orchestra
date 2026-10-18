@@ -29,7 +29,6 @@ import {
   writeChecklist,
 } from "./graph"
 import { issueText, phaseNames } from "./parts"
-import { runsEnabled } from "./source"
 import { Ic, useRelayCopy } from "./ui"
 
 // The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
@@ -58,9 +57,10 @@ export function WorkflowDetails(props: Props) {
   // Kept out of the JSX: a condition inside a prop compiles to a memo, and NodeDetails reads `next` in its click
   // handler, where that memo has no owner, outlives the layer and throws a stale read when the layer closes.
   const next = () => (index() >= 0 ? order()[index() + 1] : undefined)
-  // The compile summary of Start sits under its parameters while the run columns are hidden.
+  // Per-node run columns stay hidden: the run routes serve only external runs, which have no document to open.
+  // The compile summary of Start sits under its parameters instead.
   const summary = () =>
-    !runsEnabled && props.node.type === START ? (
+    props.node.type === START ? (
       <StartOutput {...props} title={copy.t("orchestra.workflows.details.summary")} />
     ) : undefined
   const kindLabel = () => {
@@ -79,7 +79,7 @@ export function WorkflowDetails(props: Props) {
       kind={kindLabel()}
       previous={order()[index() - 1]}
       next={next()}
-      runs={runsEnabled}
+      runs={false}
       input={<Input {...props} />}
       params={<Params {...props} />}
       output={<Output {...props} />}
