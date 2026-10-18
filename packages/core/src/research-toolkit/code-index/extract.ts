@@ -40,7 +40,7 @@ import { Role } from "./types"
 export const make = Effect.gen(function* () {
   const proc = yield* AppProcess.Service
   return {
-    extract: ((input) => extract(input).pipe(Effect.tapCause((cause) => Effect.sync(() => console.error('X5DEBUG', String(cause)))), Effect.provideService(AppProcess.Service, proc))) satisfies CodeIndexBuild.Extract,
+    extract: ((input) => extract(input).pipe(Effect.provideService(AppProcess.Service, proc))) satisfies CodeIndexBuild.Extract,
     overlay: ((input) => Effect.forEach(input.paths, (file) => outline(input.root, file), { concurrency: 8 })
       .pipe(Effect.map((files) => files.flatMap((file) => file ? [file] : [])))) satisfies CodeIndexQuery.Overlay,
   }

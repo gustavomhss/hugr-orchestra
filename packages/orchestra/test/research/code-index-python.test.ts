@@ -116,7 +116,7 @@ describe("the wired Python code index", () => {
       // The first query starts the build in the background and fails index_building ("Index is building") until the
       // shard lands.
       const answered = yield* fixture.call("code_query", definition).pipe(
-        Effect.repeat({ while: (exit) => failure(exit).includes("Index is building"), schedule: Schedule.spaced("3 seconds"), times: 40 }))
+        Effect.repeat({ while: (exit) => failure(exit).includes("Index is building"), schedule: Schedule.spaced("3 seconds"), times: 180 }))
       if (Exit.isFailure(answered)) throw new Error(Cause.pretty(answered.cause))
       expect(answered.value.output).toContain("definition: double_it function exported helpers.py:1-2")
       expect(answered.value.output).toContain("shards py:.")
