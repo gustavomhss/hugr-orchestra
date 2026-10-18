@@ -1298,6 +1298,12 @@
     },
     {
       "rule": "R5",
+      "file": "apps/orchestra/test/maestro/workflow-continuation.test.ts",
+      "specifier": "../../../../modules/relay/test/arm-harness",
+      "reason": "D8: relative import across a package root; retargets are deferred"
+    },
+    {
+      "rule": "R5",
       "file": "apps/orchestra/test/mcp/omni-stdio.test.ts",
       "specifier": "../../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -2338,6 +2344,12 @@
       "rule": "R7",
       "file": "apps/orchestra/src/maestro/governed-task-reservation.ts",
       "specifier": "@orchestra/core/event/sql",
+      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
+    },
+    {
+      "rule": "R7",
+      "file": "apps/orchestra/src/maestro/governed-task-reservation.ts",
+      "specifier": "@orchestra/core/session/sql",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
     {
