@@ -1,7 +1,7 @@
 import { createEffect, createMemo, Show } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useQuery } from "@tanstack/solid-query"
-import type { Agent, AgentFileInput } from "@orchestra/sdk/v2/client"
+import type { Agent, AgentFileInput } from "@/compat/sdk-v2-client"
 import { getFilename } from "@orchestra/core/util/path"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"

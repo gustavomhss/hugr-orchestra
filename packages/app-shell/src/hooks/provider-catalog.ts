@@ -1,5 +1,5 @@
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/compat/sdk-v2-client"
 import { createMemo, createResource, type Accessor, type Resource, type ResourceActions } from "solid-js"
 import type { ModelKey } from "@/context/models"
 import type { LayoutRoute } from "@/context/layout-route"

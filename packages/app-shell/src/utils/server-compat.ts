@@ -1,6 +1,6 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
-import type { AgentPartInput, FilePartInput, OrchestraClient, Session, TextPartInput } from "@orchestra/sdk/v2/client"
+import type { AgentPartInput, FilePartInput, OrchestraClient, Session, TextPartInput } from "@/compat/sdk-v2-client"
 import type {
   Project,
   ProjectCurrent,
@@ -14,7 +14,7 @@ import type {
   SessionPromptOutput,
   SessionShellInput,
   SessionShellOutput,
-} from "@opencode-ai/client/promise"
+} from "@/compat/vendored-client-promise"
 
 type LegacyClient = OrchestraClient
 type LegacyFor = (directory?: string) => LegacyClient

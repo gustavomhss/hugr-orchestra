@@ -1,4 +1,4 @@
-import type { McpServer } from "@opencode-ai/client/promise"
+import type { McpServer } from "@/compat/vendored-client-promise"
 
 export type McpStatus = McpServer["status"]
 export type McpTransport = "stdio" | "http"
