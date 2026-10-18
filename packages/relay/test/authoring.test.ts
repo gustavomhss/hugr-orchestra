@@ -325,6 +325,8 @@ describe("W7-5: a control with no check is refused", () => {
     for (const check of [{ cmd: "bun test" }, { judge: "reads well" }, { host_check: "tests" }])
       expect(compiled({ id: "wp1-test", ...check })).toHaveProperty("output")
     expect(compiled({ id: "wp1-test", cmd: null })).toHaveProperty("refusal")
+    expect(compiled({ id: "wp1-test", cmd: "" })).toHaveProperty("refusal")
+    expect(compiled({ id: "wp1-test", judge: "" })).toHaveProperty("refusal")
   })
 })
 

@@ -207,6 +207,17 @@ describe("Atlas publication knowledge binding", () => {
     expect(f.calls).toEqual([])
   }))
 
+  it.live("a published control with no check holds before the arm loads it", () => Effect.gen(function* () {
+    const f = yield* fixture
+    const empty = yield* AuthoringGraph.project("Empty control", {
+      work_packages: [{ id: "implement", instructions: "Implement.", checklist: [{ id: "ok", kind: "command" }] }],
+    })
+    // The store keeps bodies as given; only the compiler refuses the control.
+    const saved = yield* f.store.save({ id: f.draft.id, body: empty })
+    yield* f.store.publish(saved.id, saved.versionId)
+    expect(yield* reason(RelayWorkflowBinding.acquire(f.input))).toBe("WORKFLOW_CONTROL_EMPTY")
+  }))
+
   it.live("legacy empty selection retains definition and materialization bytes", () => Effect.gen(function* () {
     const f = yield* fixture
     yield* f.store.publish(f.draft.id, f.draft.versionId)
