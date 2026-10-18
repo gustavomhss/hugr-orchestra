@@ -123,6 +123,8 @@ interface State {
   clients: Record<string, MCPClient>
   defs: Record<string, MCPToolDef[]>
   instructions: Record<string, string>
+  // Bumped by every connect attempt and disconnect; an attempt that finishes under a newer generation is stale.
+  generation: Record<string, number>
 }
 
 export interface ServerInstructions {
@@ -474,6 +476,7 @@ const layer = Layer.effect(
           clients: {},
           defs: {},
           instructions: {},
+          generation: {},
         }
 
         yield* Effect.forEach(
@@ -601,7 +604,16 @@ const layer = Layer.effect(
 
     const createAndStore = Effect.fn("MCP.createAndStore")(function* (name: string, mcp: ConfigMCPV1.Info) {
       const s = yield* InstanceState.get(state)
+      const generation = (s.generation[name] ?? 0) + 1
+      s.generation[name] = generation
       const result = yield* create(name, mcp)
+
+      // A disconnect or a newer connect ran while this one was connecting: committing would undo it.
+      if (s.generation[name] !== generation) {
+        const stale = result.mcpClient
+        if (stale) yield* Effect.tryPromise(() => stale.close()).pipe(Effect.ignore)
+        return s.status[name] ?? result.status
+      }
 
       s.status[name] = result.status
       if (!result.mcpClient) {
@@ -628,6 +640,7 @@ const layer = Layer.effect(
     const disconnect = Effect.fn("MCP.disconnect")(function* (name: string) {
       yield* requireMcpConfig(name)
       const s = yield* InstanceState.get(state)
+      s.generation[name] = (s.generation[name] ?? 0) + 1
       yield* closeClient(s, name)
       delete s.clients[name]
       s.status[name] = { status: "disabled" }

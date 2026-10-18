@@ -1,5 +1,6 @@
 // Per-session continuity state, shared by the service's workers.
-import type { Deferred, Scope, Semaphore } from "effect"
+import type { Deferred, Scope } from "effect"
+import type { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Provider } from "@/provider/provider"
 import type { ResearchExecution } from "@/research/allowance"
@@ -40,7 +41,8 @@ export type Entry = {
 export type State = {
   backends: Map<SessionID, Backend | null>
   epochs: Map<SessionID, number>
-  backendGates: Map<SessionID, Semaphore.Semaphore>
+  /** One backend transition at a time per session; a session's lock is dropped once nothing holds or waits for it. */
+  backendGates: KeyedMutex.KeyedMutex<SessionID>
   sessions: Map<SessionID, Entry>
   contexts: ReturnType<typeof create>
   scope: Scope.Scope
