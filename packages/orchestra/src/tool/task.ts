@@ -4,6 +4,7 @@ import { ToolJsonSchema } from "./json-schema"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { BackgroundJob } from "@/background/job"
 import { Session } from "@/session/session"
+import { SessionStatus } from "@/session/status"
 import { SessionID, MessageID } from "../session/schema"
 import { MessageV2 } from "../session/message-v2"
 import { Agent } from "../agent/agent"
@@ -137,6 +138,7 @@ export const TaskTool = Tool.define(
     const config = yield* Config.Service
     const sessions = yield* Session.Service
     const research = yield* Effect.serviceOption(ResearchExecution.Service)
+    const status = yield* Effect.serviceOption(SessionStatus.Service)
     const researchRecords = yield* Effect.serviceOption(ResearchRecords.Service)
     const scope = yield* Scope.Scope
     const flags = yield* RuntimeFlags.Service
@@ -457,7 +459,12 @@ export const TaskTool = Tool.define(
           assistantMessageID: ctx.messageID, logicalTaskID: logical.taskId,
           writePaths: params.writePaths ?? [], subagentType: params.subagent_type, prompt: params.prompt, model: params.model,
         } } : {}),
-      })
+      }).pipe(Effect.provideService(WorkflowBinding.Activity, (executionSessionID) => Effect.gen(function* () {
+        // A child counts as running while its Task job runs or its Session is busy or retrying in this process.
+        if ((yield* background.get(executionSessionID))?.status === "running") return true
+        if (Option.isNone(status)) return false
+        return (yield* status.value.get(SessionID.make(executionSessionID))).type !== "idle"
+      })))
 
       if (params.governed) {
         const governed = params.governed
@@ -620,10 +627,6 @@ export const TaskTool = Tool.define(
               Effect.asVoid,
             )
           : undefined
-        // Only now, after every hold above, does a workflow arm bind to this child: a dispatch held earlier leaves the arm
-        // free, so the next authorization's child binds the same (content-addressed) token. The prompt loop reads the
-        // binding before the model, so it cannot wait for beforeModel.
-        yield* completion.bindWorkflow(completionReceipt)
         const promptID = MessageID.ascending()
         const prompted = ops.prompt(
           {

@@ -143,10 +143,12 @@ describe("public event manifest", () => {
     expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
     // Research's seven durable-only definitions are already canonical; the two Session settings events add two more,
-    // and Maestro's durable-only workflow review hold and review findings two.
-    expect(EventManifest.Durable.size).toBe(74)
+    // and Maestro's durable-only workflow review hold, workflow rebind and review findings three.
+    expect(EventManifest.Durable.size).toBe(75)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
+    expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)
+    expect(EventManifest.Latest.has("maestro.task.workflow_rebound")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_findings.1")).toBe(MaestroEvent.Task.WorkflowReviewFindings)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_findings")).toBe(false)
   })

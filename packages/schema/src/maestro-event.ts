@@ -637,6 +637,20 @@ export namespace Task {
     },
   })
   export type WorkflowReviewFindings = typeof WorkflowReviewFindings.Type
+  // A workflow arm moved from an execution Session that never ran a provider turn (`from`, whose own WorkflowBound
+  // record stays) to the dispatched child that binds it next (`to`). Durable only, not public.
+  export const WorkflowRebound = Event.define({
+    type: "maestro.task.workflow_rebound",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      from: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      authorityCallID: Schema.NonEmptyString,
+    },
+  })
+  export type WorkflowRebound = typeof WorkflowRebound.Type
 
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
@@ -712,4 +726,5 @@ export const Definitions = Event.inventory(
 )
 
 /** Maestro events stored and replayed by the host but never part of the public event surface. */
-export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld, Task.WorkflowReviewFindings)
+export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld, Task.WorkflowRebound,
+  Task.WorkflowReviewFindings)
