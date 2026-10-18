@@ -116,11 +116,14 @@ const WebSearchOutput = Schema.Struct({ query: Schema.String, results: Schema.Ar
  * jimmy-capture.test.ts). Read keeps original-file lines; Grep, Glob and WebSearch are tool output. Any other shape is
  * refused, so the caller withholds the output instead of retaining a guess.
  */
-export function retained(input: Pick<Captured, "sessionID" | "callID" | "tool" | "response">) {
+export function retained(input: Pick<Captured, "sessionID" | "callID" | "tool" | "response">): Option.Option<{
+  readonly source: ResearchRecords.CaptureInput
+  readonly lines?: { readonly start: number; readonly end: number }
+}> {
   const uri = `native:${input.sessionID}/${input.callID}/${input.tool}`
   const output = (content: string, complete: boolean, json = false) => ({ source: { origin: { kind: "tool-output", uri },
     representation: json ? "structured-json" : "text", mediaType: json ? "application/json" : "text/plain", content, complete,
-  } satisfies ResearchRecords.CaptureInput, lines: undefined })
+  } satisfies ResearchRecords.CaptureInput })
   if (input.tool === "Read") return Schema.decodeUnknownOption(ReadOutput)(input.response).pipe(Option.map((read) => ({
     source: { origin: { kind: "file", uri: read.file.filePath }, representation: "text", mediaType: "text/plain",
       content: read.file.content, complete: read.file.numLines === read.file.totalLines } satisfies ResearchRecords.CaptureInput,
