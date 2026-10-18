@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { createHash } from "node:crypto"
-import { Cause, Effect, Exit, Fiber, Layer, Schema } from "effect"
+import { Cause, Effect, Exit, Fiber, Layer, Option, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { EventTable } from "@orchestra/core/event/sql"
 import { Global } from "@orchestra/core/global"
@@ -104,6 +104,15 @@ it.instance("installed V1 prompt approval awaits real Asked queue; once/always/r
           if (reply !== "reject") yield* exit
           expect(Exit.isSuccess(exit)).toBe(reply !== "reject")
           if (reply === "reject") expect(exit).toMatchObject({ _tag: "Failure" })
+          if (reply === "reject" && Exit.isFailure(exit)) {
+            // The refusal names the hook and carries its words, so the sender can be told who said no.
+            const refusal: unknown = Option.getOrUndefined(Cause.findErrorOption(exit.cause))
+            expect(refusal).toMatchObject({
+              _tag: "ToolSafety.Denied",
+              reason: "approval-native-rejected",
+              hook: { name: "Prompt approval", message: "Owner must decide." },
+            })
+          }
         }
         expect(yield* permissions.list()).toEqual([])
         const decisions = (yield* database.db.select().from(EventTable).all())

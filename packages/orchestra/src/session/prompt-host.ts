@@ -17,6 +17,15 @@ import { PromptAdmission } from "@orchestra/core/v1/prompt-admission"
 import type { Database } from "@orchestra/core/database/database"
 import type { EventV2 } from "@orchestra/core/event"
 
+/**
+ * Run once a prompt is past its installed hooks, which is when a refusal can no longer happen. A caller that returns
+ * before the run ends provides it to tell a refused prompt from an accepted one.
+ */
+export const HooksCleared = Context.Reference<Effect.Effect<unknown> | undefined>(
+  "@orchestra/PromptHost/HooksCleared",
+  { defaultValue: () => undefined },
+)
+
 /** Publish through the native bridge; only the tagged exact winner may turn a losing publication into a retry. */
 export const admit = Effect.fn("PromptHost.publishAdmission")(function* (
   db: Database.Interface["db"],
@@ -75,14 +84,18 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
   const locations = yield* LocationServiceMap.Service
 
   return Effect.fn("PromptHost.admit")(function* (input: SessionPrompt.PromptInput) {
+    const cleared = (yield* HooksCleared) ?? Effect.void
     const messageID = input.messageID ?? MessageID.ascending()
     // Schema.Any metadata can retain caller references; detach before identity and any asynchronous hook.
     const original = structuredClone(Schema.encodeSync(dependencies.schema)(input))
     const identity = PromptIdentity.fromEncoded(original)
     const request = Schema.decodeUnknownSync(dependencies.schema)(original)
     const existing = yield* dependencies.sessions.reconcilePrompt({ sessionID: request.sessionID, messageID, identity })
-    if (existing)
+    if (existing) {
+      // An exact retry is not asked again.
+      yield* cleared
       return request.noReply === true ? existing : yield* dependencies.loop({ sessionID: request.sessionID })
+    }
 
     const session = yield* dependencies.sessions.get(request.sessionID).pipe(Effect.orDie)
     const ctx = yield* InstanceState.context
@@ -120,6 +133,7 @@ export const make = Effect.fn("PromptHost.make")(function* (dependencies: {
         )),
     ])
 
+    yield* cleared
     // Capture only old revert targets: cleanup's live-history query after admission would delete the new prompt.
     const history = session.revert
       ? yield* dependencies.sessions.messages({ sessionID: session.id }).pipe(Effect.orDie)
