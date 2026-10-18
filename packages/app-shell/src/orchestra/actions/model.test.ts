@@ -317,7 +317,7 @@ describe("Actions deep links", () => {
     using scope = fixture(undefined, { route: { view: "run", runID: "101" } })
     await settle(() => scope.model.state.graph.status === "ready")
     expect(scope.model.state.run.status).toBe("ready")
-    expect(scope.model.state.route).toMatchObject({ view: "run", runID: "101", workflowID: "11", ref: run().commit, tab: "graph" })
+    expect(scope.model.state.route).toMatchObject({ view: "run", runID: "101", workflowID: "11", path: workflow().path, ref: run().commit, tab: "graph" })
     expect(scope.model.state.graph.value?.source.path).toBe(workflow().path)
     expect(scope.requests.filter((request) => new URL(request.url).pathname === "/api/actions/run/ab_a/101")).toHaveLength(1)
   })
