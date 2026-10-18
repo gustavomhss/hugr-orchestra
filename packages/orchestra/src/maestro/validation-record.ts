@@ -27,6 +27,7 @@ import {
   type RosterMember,
 } from "./roster"
 import { contextIsCurrent, readContext } from "./context-record"
+import { CodeReview } from "./code-review"
 
 type Check = { id: string; status: "PASS" | "FAIL" | "HOLD"; detail: string }
 type LegacyValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.Recorded.data>
@@ -63,6 +64,7 @@ export type RecordReviewInput = {
   findings: unknown
   artifact: unknown
   checks: unknown
+  stage?: unknown
 }
 
 export type ReviewReceipt = ReviewData & { id: string }
@@ -233,8 +235,10 @@ function validationEventID(input: Pick<RecordValidationInput, "sessionID" | "wor
   return EventV2.ID.make(`evt_maestro_validation_${hash([input.sessionID, input.workCardID])}`)
 }
 
-function reviewEventID(input: Pick<RecordReviewInput, "sessionID" | "validationRecordID">) {
-  return EventV2.ID.make(`evt_maestro_review_${hash([input.sessionID, input.validationRecordID])}`)
+// A plan receipt keeps the pre-stage id, one per validation; each worker result (head) gets its own code receipt.
+function reviewEventID(input: Pick<RecordReviewInput, "sessionID" | "validationRecordID">, codeHead?: string) {
+  const key = [input.sessionID, input.validationRecordID]
+  return EventV2.ID.make(`evt_maestro_review_${hash(codeHead ? [...key, "code", codeHead] : key)}`)
 }
 
 function requireText(value: unknown, reason: string): string {
@@ -486,21 +490,15 @@ export function decodeReview(row: { id: string; type: string; data: unknown }): 
     return { id: row.id, ...Schema.decodeUnknownSync(MaestroEvent.Review.ReceivedV2.data)(row.data) }
   if (row.type !== EventV2.versionedType(MaestroEvent.Review.Received.type, 1)) return undefined
   const legacy = Schema.decodeUnknownSync(MaestroEvent.Review.Received.data)(row.data)
-  return {
-    id: row.id,
-    ...legacy,
-    artifact: {
-      workCardHash: legacy.artifact.workCardHash,
-      sha256: legacy.artifact.sha256,
-      baseSHA: legacy.artifact.baseSHA,
-      headSHA: legacy.artifact.headSHA,
-      worktree: legacy.artifact.worktree,
-      changedPaths: legacy.artifact.changedPaths,
-    },
-  }
+  return { id: row.id, ...legacy, artifact: omit(legacy.artifact, ["bytes"]) }
 }
 
-export const findReview = Effect.fn("MaestroReview.find")(function* (sessionID: string, validationRecordID: string) {
+/** The plan-stage receipt for a validation; `headSHA` selects the code-stage receipt for that worker result. */
+export const findReview = Effect.fn("MaestroReview.find")(function* (
+  sessionID: string,
+  validationRecordID: string,
+  headSHA?: string,
+) {
   const { db } = yield* Database.Service
   const rows = yield* db
     .select({ id: EventTable.id, type: EventTable.type, data: EventTable.data })
@@ -515,7 +513,13 @@ export const findReview = Effect.fn("MaestroReview.find")(function* (sessionID: 
       const { id, ...data } = review
       return [{ id, data }]
     })
-    .find((row) => row.data.validationRecordID === validationRecordID)
+    .find(
+      (row) =>
+        row.data.validationRecordID === validationRecordID &&
+        (headSHA === undefined
+          ? (row.data.stage ?? "plan") === "plan"
+          : row.data.stage === "code" && row.data.artifact.headSHA === headSHA),
+    )
 })
 
 export const recordReview = Effect.fn("MaestroReview.record")(function* (input: RecordReviewInput) {
@@ -531,11 +535,30 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
   if (typeof input.workCard !== "string" || workCardHash(input.workCard) !== record.workCardHash) {
     return yield* new ReviewRejectedError({ reason: "work-card-mismatch" })
   }
-  const reviewed = yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root)
+  const stage =
+    input.stage === undefined || input.stage === "plan" ? "plan" : input.stage === "code" ? "code" : undefined
+  if (!stage) return yield* new ReviewRejectedError({ reason: "malformed-review-stage" })
+  // A code review covers the workers' uncommitted result from where the APPROVE plan review ended.
+  const planned = stage === "code" ? yield* findReview(input.sessionID, input.validationRecordID) : undefined
+  if (stage === "code" && planned?.data.verdict !== "APPROVE")
+    return yield* new ReviewRejectedError({ reason: "code-review-base-mismatch" })
+  const code = planned
+    ? yield* CodeReview.verify(input.artifact, {
+        worktree: trusted.root,
+        base: planned.data.artifact.headSHA,
+        planRevisionID: record.planRevisionID ?? "",
+        workCardHash: record.workCardHash,
+        maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
+      })
+    : undefined
+  if (code && "reason" in code) return yield* new ReviewRejectedError({ reason: code.reason })
+  const reviewed =
+    code ?? (yield* requireArtifact(input.artifact, record.workCardHash, trusted.session.directory, trusted.root))
   const artifact = reviewed.artifact
   if (record.contextRecordID) {
     const context = yield* readContext(record.contextRecordID)
-    if (context?.mode === "GROUNDED" && !(yield* contextIsCurrent(context)))
+    // Workers move HEAD after approval, so only the plan stage needs the recorded context to still be current.
+    if (stage === "plan" && context?.mode === "GROUNDED" && !(yield* contextIsCurrent(context)))
       return yield* new ReviewRejectedError({ reason: "artifact-context-mismatch" })
     if (
       !context ||
@@ -545,9 +568,10 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
       context.planRevisionID !== record.planRevisionID ||
       context.contextHash !== record.contextHash ||
       context.changedPaths.length > 0 ||
-      artifact.headSHA !== context.headSHA ||
-      !("reviewBaseSHA" in record) ||
-      artifact.baseSHA !== record.reviewBaseSHA
+      (stage === "plan" &&
+        (artifact.headSHA !== context.headSHA ||
+          !("reviewBaseSHA" in record) ||
+          artifact.baseSHA !== record.reviewBaseSHA))
     ) {
       return yield* new ReviewRejectedError({ reason: "artifact-context-mismatch" })
     }
@@ -586,12 +610,13 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
     artifact,
     verdict: input.verdict,
     findings,
+    stage,
   }
-  const id = reviewEventID(input)
+  const id = reviewEventID(input, stage === "code" ? artifact.headSHA : undefined)
   const existing = yield* readReview(id)
   if (existing) {
     const { id: existingID, ...recorded } = existing
-    if (isDeepStrictEqual(recorded, wanted)) return existing
+    if (isDeepStrictEqual({ stage: "plan", ...recorded }, wanted)) return existing
     return yield* new ReviewConflictError({ sessionID: input.sessionID, validationRecordID: input.validationRecordID })
   }
   const events = yield* EventV2Bridge.Service
@@ -603,7 +628,7 @@ export const recordReview = Effect.fn("MaestroReview.record")(function* (input: 
         const existing = yield* readReview(id)
         if (!existing) return yield* Effect.failCause(cause)
         const { id: existingID, ...recorded } = existing
-        if (isDeepStrictEqual(recorded, wanted)) return existing
+        if (isDeepStrictEqual({ stage: "plan", ...recorded }, wanted)) return existing
         return yield* new ReviewConflictError({
           sessionID: input.sessionID,
           validationRecordID: input.validationRecordID,
@@ -634,9 +659,7 @@ const requireArtifact = Effect.fn("MaestroReview.requireArtifact")(function* (
     typeof artifact.headSHA !== "string" ||
     typeof artifact.worktree !== "string" ||
     !Array.isArray(artifact.changedPaths) ||
-    Object.keys(artifact).some(
-      (key) => !["baseSHA", "headSHA", "worktree", "changedPaths", "sha256"].includes(key),
-    )
+    Object.keys(artifact).some((key) => !["baseSHA", "headSHA", "worktree", "changedPaths", "sha256"].includes(key))
   ) {
     return yield* new ReviewRejectedError({ reason: "malformed-artifact-evidence" })
   }
@@ -753,36 +776,11 @@ function requireFindings(value: unknown, artifact: ReviewData["artifact"], diff:
     ) {
       throw new ReviewRejectedError({ reason: "malformed-finding" })
     }
-    if (!artifact.changedPaths.includes(finding.path) || !hasAddedLine(diff, finding.path, line)) {
+    if (!artifact.changedPaths.includes(finding.path) || !CodeReview.hasAddedLine(diff, finding.path, line)) {
       throw new ReviewRejectedError({ reason: "finding-not-in-artifact" })
     }
     return { path: finding.path, line, message: finding.message }
   })
-}
-
-function hasAddedLine(diff: string, findingPath: string, findingLine: number) {
-  let file: string | undefined
-  let line: number | undefined
-  for (const value of diff.split("\n")) {
-    if (value.startsWith("+++ b/")) {
-      file = value.slice(6)
-      line = undefined
-      continue
-    }
-    const hunk = /^@@ -\d+(?:,\d+)? \+(\d+)(?:,\d+)? @@/.exec(value)
-    if (hunk) {
-      line = Number(hunk[1])
-      continue
-    }
-    if (line === undefined || file !== findingPath) continue
-    if (value.startsWith("+") && !value.startsWith("+++")) {
-      if (line === findingLine) return true
-      line++
-      continue
-    }
-    if (!value.startsWith("-\\ No newline at end of file") && !value.startsWith("-")) line++
-  }
-  return false
 }
 
 function isCheckStatus(value: unknown): value is Check["status"] {

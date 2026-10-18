@@ -456,6 +456,11 @@ describe("Maestro evidence tools", () => {
         // Lucy reads the diff as text and never receives it as base64 to copy back.
         expect(prompt).toContain(full.text())
         expect(prompt).not.toContain(full.stdout.toString("base64"))
+        // The plan stage judges the plan and its committed spec; the planned implementation is not expected yet.
+        expect(prompt).toContain("Stage: plan")
+        expect(prompt).toContain("is never a finding")
+        expect(prompt).toMatch(/^plan revision JSON: .*review full branch diff/m)
+        expect(prompt).toContain('maestro_record_review exactly once with stage "plan"')
 
         const sessions = yield* Session.Service
         const other = yield* sessions.create({ title: "foreign context" })
@@ -523,6 +528,18 @@ describe("Maestro evidence tools", () => {
         if (Exit.isFailure(dirtyReview))
           expect(Cause.pretty(dirtyReview.cause)).toContain("Review delegation context is stale or dirty")
         yield* fs.writeFileString(first, "first\n")
+        const unapproved = yield* tool.init().pipe(
+          Effect.flatMap((def) =>
+            def.execute(
+              { validationRecordID, workCard, reviewMethodVersion: "review-v1", stage: "code" },
+              { ...caller, sessionID: chat.id },
+            ),
+          ),
+          Effect.exit,
+        )
+        expect(Exit.isFailure(unapproved)).toBe(true)
+        if (Exit.isFailure(unapproved))
+          expect(Cause.pretty(unapproved.cause)).toContain("Code review requires an APPROVE plan review")
         const hookTool = yield* MaestroRequestReviewTool.pipe(
           Effect.provideService(Session.Service, {
             ...sessions,

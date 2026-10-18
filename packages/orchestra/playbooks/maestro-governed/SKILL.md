@@ -19,7 +19,7 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 
 1. Atlas is configured: `maestro_catalog_context` answers without a HOLD.
 2. Clean tree: `git status --porcelain --untracked-files=all` prints nothing. Untracked files count.
-3. Reviewable delta: the cold reviewer (`lucy`) reviews the committed diff from
+3. Reviewable delta: the plan-stage cold review (`lucy`) judges the plan, its workflow and the committed diff from
    `merge-base(HEAD, <primary remote>/HEAD)` to `HEAD`, never your prose. It must be non-empty, and
    `git diff --binary --full-index --no-renames <base> HEAD | wc -c` must be at most 262144. The base is not a
    parameter: when the primary remote points at a large upstream, report the HOLD.
@@ -44,7 +44,9 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
    `stale-run-a1`), the exact card, `routedMemberID` (a roster seat, never `maestro` or `lucy`), `validatorVersion`
    (for example `validation-v1`) and `checks` observed in step 5: `{id, status: PASS | FAIL | HOLD, detail}` with
    unique ids in ascending order, such as `01-baseline`. Only `VALID` continues; keep its Bindings.
-9. `maestro_request_review` with `validationRecordID`, the byte-identical card and `reviewMethodVersion: "review-v1"`.
+9. `maestro_request_review` with `validationRecordID`, the byte-identical card and `reviewMethodVersion: "review-v1"`
+   (stage `plan`, the default). It judges the plan, the workflow binding and the committed diff; the planned
+   implementation is not expected to exist yet.
    A receipt exists only when the output starts with `APPROVE`, `FIX_FIRST` or `REJECT` followed by an
    `evt_maestro_review_` id. `LUCY_ERROR` and `LUCY_NO_RECEIPT` mean no receipt: request once more if the cause looks
    transient, otherwise HOLD.
@@ -61,18 +63,24 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
     `authorizationID`. Any newer user message makes the approval stale.
 13. In the same turn, `task` with `subagent_type`, `prompt` and `model` byte-identical to the approved intent, plus
     `authorizationID`. One authorization allows one dispatch.
-14. Verify the returned work with `maestro-verify`: the chain reviewed the branch before execution, and nothing
-    reviewed what the seat produced.
+14. Workers leave their result uncommitted. When the last work package settles, the gate that grades `cold-review`
+    holds with `WORKFLOW_CODE_REVIEW_REQUIRED` before grading, so no retry is spent, and the Task returns to you. Call
+    `maestro_request_review` with the same `validationRecordID`, card, `reviewMethodVersion` and `stage: "code"`; it
+    reviews the working-tree result from the plan-reviewed `HEAD`. On `APPROVE`, resume the workflow Task with its
+    `task_id` and a prompt that says the code review approved and nothing more may change; the check then passes. On
+    `FIX_FIRST` or `REJECT`, resume it with the findings; the workers fix, the gate holds again, and you review the new
+    result. Never commit the workers' result before the workflow completes. Then verify with `maestro-verify`.
 
 If a synthetic user message (a background-task result or the compaction "Continue...") lands after a presentation,
 present again with a new `methodVersion`.
 
 ## Fix-and-review loop
 
-On `FIX_FIRST` or `REJECT`, fix in normal mode, commit only with the owner's authority, and leave the tree clean at the
-new `HEAD`. Then record a new plan revision, rerun the checks, record a new context and a validation with a new
-`workCardID`, and request review again. A validation has exactly one review receipt. If the fix touched Own-anchored
-files, expect source blob drift until Own is re-materialized.
+On a plan-stage `FIX_FIRST` or `REJECT`, fix in normal mode, commit only with the owner's authority, and leave the tree
+clean at the new `HEAD`. Then record a new plan revision, rerun the checks, record a new context and a validation with a
+new `workCardID`, and request review again. A validation has exactly one plan review receipt, and one code review
+receipt per worker result (step 14). If the fix touched Own-anchored files, expect source blob drift until Own is
+re-materialized.
 
 ## Errors and repeats
 
