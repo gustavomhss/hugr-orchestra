@@ -178,6 +178,10 @@ export const compile = (
           ;["cmd", "judge", "assert"].forEach((field) => {
             if (Object.hasOwn(item, field) && item[field] !== null) text(item[field], field)
           })
+          // TS only (PARITY-EXCEPTIONS W7-5): a control the sprint schema preserves but nothing grades is a gate with
+          // no check, so it never compiles and never publishes.
+          if (!["cmd", "judge", "host_check"].some((field) => Object.hasOwn(item, field) && item[field] != null))
+            refuse(`Control ${id} of ${node.id} has no cmd, judge or host_check`, 400, "control-empty")
         })
         const proposed = get(params, "title", retained ? get(retained, "title", node.name) : node.name)
         // A renamed node renames its WP unless the author also edited the title separately.
