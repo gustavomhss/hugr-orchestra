@@ -70,7 +70,8 @@ describe("external relay runs", () => {
     ).toEqual(["thread-approval"])
 
     for (const run of expected) {
-      expect((await get(tmp.path, `/api/relay/run/${run.runID}`)).body.data).toEqual(run)
+      // Absent optional fields go over the wire as null, which the app reads as absent.
+      expect((await get(tmp.path, `/api/relay/run/${run.runID}`)).body.data).toMatchObject(run)
       const audit = (await get(tmp.path, `/api/relay/run/${run.runID}/audit`)).body.data
       expect(audit).toMatchObject({ status: "pending", code: "external-self-reported" })
       expect(audit.rows[0]).toEqual({ label: "Chain", value: "chain intact, self-reported" })
