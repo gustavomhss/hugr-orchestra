@@ -7,7 +7,7 @@ import { Ic, Menu, type MenuItem, useRelayCopy } from "./ui"
 export type SaveState = { state: "saved" | "saving" | "error" | "conflict"; dirty: boolean; error: string }
 
 // Editor header: back and crumb on the left, Editor / Activity in the middle (hooks only), autosave and Publish on
-// the right, then Test and Install for hooks or a note that Maestro runs workflows.
+// the right, then Test and Install for hooks or Use in chat for a published workflow.
 export function EditorHead(props: {
   kind: RelayKind
   document: RelayDocument
@@ -33,18 +33,32 @@ export function EditorHead(props: {
   onInstall: (next: boolean) => void
   onReload: () => void
   onRetry?: () => void
+  onUseInChat?: () => void
 }) {
   const copy = useRelayCopy()
   const [menu, setMenu] = createSignal<HTMLElement>()
   const [issuesAnchor, setIssuesAnchor] = createSignal<HTMLElement>()
+  let nameInput!: HTMLInputElement
   const workflow = () => props.kind === "workflow"
   const library = () => relayPath.library(props.kind)
   const libraryName = () => copy.t(workflow() ? "orchestra.workflows.title" : "orchestra.hooks.title")
   const published = () => !!props.document.activeVersionId
-  const publishTitle = () => {
+  // Why Publish is off, by what is going on right now.
+  const publishReason = () => {
+    if (props.canPublish || props.readOnly) return undefined
     if (props.issues.length) return copy.t("orchestra.workflows.editor.publishIssues")
-    if (!props.canPublish) return copy.t("orchestra.workflows.editor.publishNothing")
-    return copy.t("orchestra.workflows.editor.publishDraft", { version: props.document.versionCounter })
+    if (props.save.state === "conflict") return copy.t("orchestra.workflows.editor.publishConflict")
+    if (props.save.state === "error") return copy.t("orchestra.workflows.editor.publishNotSaved")
+    if (props.save.state === "saving" || props.save.dirty) return copy.t("orchestra.workflows.editor.publishSaving")
+    return copy.t("orchestra.workflows.editor.publishNothing")
+  }
+  // The name field commits on blur, and pressing Publish blurs it first. The commit marks the draft unsaved, which
+  // switches Publish off before the press completes as a click, so a pending rename is committed and published here.
+  const publishWithRename = () => {
+    const value = nameInput.value.trim()
+    if (props.readOnly || !value || value === props.name || document.activeElement !== nameInput) return
+    props.onRename(value)
+    props.onPublish()
   }
   return (
     <header class="wf-head">
@@ -75,6 +89,7 @@ export function EditorHead(props: {
             /
           </span>
           <input
+            ref={nameInput}
             class="wf-name"
             value={props.name}
             readOnly={props.readOnly}
@@ -149,11 +164,19 @@ export function EditorHead(props: {
             {copy.t("orchestra.hooks.test")}
           </button>
         </Show>
+        <Show when={publishReason()}>
+          {(reason) => (
+            <span class="wf-publish-reason" id="wf-publish-reason" title={reason()}>
+              {reason()}
+            </span>
+          )}
+        </Show>
         <button
           type="button"
-          class="mx-btn"
-          title={publishTitle()}
+          class={props.canPublish ? "mx-btn primary" : "mx-btn"}
+          aria-describedby={publishReason() ? "wf-publish-reason" : undefined}
           disabled={!props.canPublish}
+          onPointerDown={publishWithRename}
           onClick={props.onPublish}
         >
           <Ic name="upload" />
@@ -174,12 +197,27 @@ export function EditorHead(props: {
                 disabled={(!published() && !props.installExists) || props.installBusy}
                 onClick={() => props.onInstall(!props.installed)}
               />
-              {copy.t(props.installed ? "orchestra.hooks.installed" : "orchestra.hooks.notInstalled")}
+              {copy.t(
+                props.installed
+                  ? "orchestra.hooks.installed"
+                  : props.installExists
+                    ? "orchestra.hooks.editor.paused"
+                    : "orchestra.hooks.notInstalled",
+              )}
               </Show>
             </span>
           }
         >
-          <span class="wf-note">{copy.t("orchestra.workflows.editor.maestroRuns")}</span>
+          <Show when={published() && props.onUseInChat}>
+            <button
+              type="button"
+              class={props.canPublish ? "mx-btn" : "mx-btn primary"}
+              title={copy.t("orchestra.workflows.editor.useInChatTitle")}
+              onClick={props.onUseInChat}
+            >
+              {copy.t("orchestra.workflows.editor.useInChat")}
+            </button>
+          </Show>
         </Show>
         <button
           type="button"

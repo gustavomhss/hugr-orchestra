@@ -100,9 +100,14 @@ export const WORKFLOW_ENTRIES: WorkflowEntry[] = [
   { key: "execute", type: "relay.execute", group: "work", glyph: "execute", tone: "execute" },
   { key: "inject", type: "relay.inject", group: "work", glyph: "inject", tone: "inject" },
   { key: "review", type: "relay.review", group: "work", glyph: "review", tone: "review" },
-  { key: "human", type: "relay.human", group: "work", glyph: "human", tone: "human" },
   { key: "gate", type: "relay.gate", group: "gates", glyph: "gate", tone: "gate" },
   { key: "phase", type: "phase", group: "structure", glyph: "phase", tone: "execute" },
+]
+
+// Maestro cannot run a Human approval step, so the add panel no longer offers it. A document that already has one
+// still draws it.
+const RETIRED_ENTRIES: WorkflowEntry[] = [
+  { key: "human", type: "relay.human", group: "work", glyph: "human", tone: "human" },
 ]
 
 const HOOK_ACTIONS: HookEntry[] = [
@@ -168,18 +173,19 @@ export function hookOutputs(types: RelayNodeType[] | undefined): Outputs {
 export function nodeGlyph(node: FlowNode): Glyph {
   if (node.type === START) return "start"
   if (node.type === TRIGGER) return operationGlyph(String(node.parameters.operation ?? "edit"))
-  const entry = [...WORKFLOW_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
+  const entry = [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
   return entry?.glyph ?? "execute"
 }
 
 export function nodeTone(node: FlowNode): Tone {
   if (node.type === START || node.type === TRIGGER) return "start"
-  const entry = [...WORKFLOW_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
+  const entry = [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES, ...HOOK_ACTIONS].find((item) => item.type === node.type)
   return entry?.tone ?? "execute"
 }
 
 // The i18n key suffix for a node type ("execute", "gate", "condition", …).
-export const workflowKey = (type: string) => WORKFLOW_ENTRIES.find((item) => item.type === type)?.key
+export const workflowKey = (type: string) =>
+  [...WORKFLOW_ENTRIES, ...RETIRED_ENTRIES].find((item) => item.type === type)?.key
 export const hookKey = (type: string) => HOOK_ACTIONS.find((item) => item.type === type)?.key
 export const isFileOperation = (value: string): value is "read" | "edit" | "write" | "command" =>
   value === "read" || value === "edit" || value === "write" || value === "command"

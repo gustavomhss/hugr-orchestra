@@ -24,7 +24,10 @@ export const HOOKS_COPY = {
   "orchestra.hooks.installFailed": "Could not change the install",
   "orchestra.hooks.publishFirst": "Publish before installing",
   "orchestra.hooks.publish.description":
-    "Publishing makes this version available to install. Installed copies switch to it.",
+    "Publishing makes this version available to install. An installed copy keeps enforcing its current version until it is updated.",
+  "orchestra.hooks.publish.updateInstall": "Update the installed copy to this version",
+  "orchestra.hooks.publish.updateInstallHint":
+    "Without this, sessions keep enforcing the version that is installed now.",
   "orchestra.hooks.delete.description": "Its versions are removed and it is uninstalled from this profile.",
   "orchestra.hooks.empty.title": "No hooks in this profile yet",
   "orchestra.hooks.empty.body": "A hook listens for one agent event and blocks, asks, allows or runs a check.",
@@ -32,6 +35,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.test": "Test",
   "orchestra.hooks.editor.name": "Hook name",
   "orchestra.hooks.editor.installLabel": "Installed in this profile",
+  "orchestra.hooks.editor.paused": "Paused",
   "orchestra.hooks.editor.missing": "Hook not found",
 
   "orchestra.hooks.activity.empty": "Nothing fired yet",

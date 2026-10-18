@@ -643,6 +643,37 @@ html[data-color-scheme="light"] .wf-editor {
   color: var(--mx-strong);
   font-size: 11.5px;
 }
+/* The visible reason Publish is off; the full text is in the title when the width cuts it. */
+.wf-publish-reason {
+  min-inline-size: 0;
+  max-inline-size: 28ch;
+  overflow: hidden;
+  color: var(--mx-dim);
+  font-size: 11.5px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.wf-dialog-switch {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-block-start: 16px;
+  color: var(--mx-strong);
+  font-size: 12px;
+  cursor: pointer;
+}
+.wf-dialog-switch small {
+  display: block;
+  margin-block-start: 2px;
+  color: var(--mx-dim);
+  font-size: 10.5px;
+  line-height: 1.5;
+}
+.wf-draft-reason {
+  margin-inline-start: 8px;
+  color: var(--mx-dim);
+  font-size: 10.5px;
+}
 .wf-body {
   position: relative;
   display: flex;

@@ -112,7 +112,7 @@ test("canvas: inspect a step, walk to its neighbour and close only the top layer
   await expect(canvas(page).locator(".wf-banner")).toHaveCount(0)
   await expect(canvas(page).locator(".wf-state-badge")).toHaveCount(0)
   await expect(editor(page).getByRole("button", { name: "Run", exact: true })).toHaveCount(0)
-  await expect(editor(page).getByText("Maestro runs workflows from chat.")).toBeVisible()
+  await expect(editor(page).getByRole("button", { name: "Use in chat", exact: true })).toBeVisible()
 
   await canvas(page).locator('.wf-node[data-id="green.implement"] .wf-tile').dblclick()
   await expect(page).toHaveURL(/\/relay-wp-execute\/node\/green\.implement$/)
@@ -174,8 +174,8 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
   await expect(details).toHaveCount(0)
 
   await editor(page).getByRole("button", { name: "Publish", exact: true }).click()
-  const publish = page.getByRole("dialog", { name: /Publish v/ })
-  await publish.getByRole("button", { name: /Publish v/ }).click()
+  const publish = page.getByRole("dialog", { name: /^Publish / })
+  await publish.getByRole("button", { name: "Publish", exact: true }).click()
   await expect(publish).toHaveCount(0)
   const published = state.writes.find((write) => write.path === "/api/relay/document/relay-wp-execute/publish")
   expect(published?.body).toMatchObject({ versionId: expect.stringMatching(/^relay-wp-execute-v\d+$/) })
