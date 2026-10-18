@@ -9,7 +9,7 @@ Start with the recipient's question, not a report template. Help turn a vague in
 
 ## Select purpose and depth separately
 
-Use profile `research` for inquiry and `evaluate` for validating a claim, comparing choices or establishing feasibility. `quick`, `focused` and `deep` describe effort and coverage, not scientific review designs or personas. Simple facts default to quick. Focused work covers decisive alternatives. Deep work follows important dependencies and contraries with recoverable findings, within the same host-bound allowance.
+Use profile `research` for inquiry and `evaluate` for validating a claim, comparing choices or establishing feasibility. `quick`, `focused` and `deep` describe effort and coverage, not scientific review designs or personas. The caller sets the tier (quick when unnamed); work within it and do not escalate. Focused buys breadth across decisive alternatives and a contrary search, within a larger budget. Deep also follows important dependencies and searches contraries for each decisive claim with recoverable findings, within the largest budget the host allows.
 
 Identify the question/decision, source universe and exclusions, relevant version/population/environment, recipient and effort constraint. Do not demand a completed intake form. Ask a discriminating clarification only when its answer changes the work: “compatibility with which version?”, “evidence of efficacy or a map of methods?”, “whose unmet need?” Report material reframing; do not silently add a new mission.
 
@@ -29,13 +29,13 @@ For every task, read shared [evidence](../jimmy-discovery/references/evidence.md
 
 ## Gather what can change the answer
 
-1. Start with a known applicable primary source. When its origin is unknown, use available search to find candidates; read originals instead of treating snippets, vendor summaries or generated overviews as evidence.
+1. Start with a known applicable primary source. When its origin is unknown, use available search to find candidates, issuing independent queries and fetches in parallel; read originals instead of treating snippets, vendor summaries or generated overviews as evidence.
 2. Retain sources through native acquisition/capture. Check actual representation, version, completeness and locators. Abstracts, full text and secondary accounts have different reach. Unsupported PDF/binary extraction is a limitation, not a reason to install an adapter.
 3. Record material propositions with conditions, supporting evidence and contraries. Explain the inference connecting them. Duplicate mirrors are not independent corroboration.
 4. Let reading generate the next discriminating question. Broaden only for a material unresolved issue; do not satisfy source quotas or add an agent panel.
 5. Stop at a supported answer, refuted premise, unavailable indispensable evidence or effort bound. Return partial/blocked coverage and the precise next action when necessary.
 
-For scientific results, methods or benchmark claims, read [study reading and ablations](references/study-reading.md). For technical transfer, read only relevant discovery references: [identity](../jimmy-discovery/references/identity.md), [boundaries](../jimmy-discovery/references/boundaries.md), [transactions](../jimmy-discovery/references/data-transactions.md), [retry](../jimmy-discovery/references/retry-idempotency.md), [lifecycle](../jimmy-discovery/references/lifecycle.md), or [version/config/build](../jimmy-discovery/references/version-config-build.md).
+For scientific results, methods or benchmark claims, read [study reading and ablations](references/study-reading.md). For absence, count, open-defect, gate or test/CI claims, read [calibration](../jimmy-discovery/references/calibration.md). For technical transfer, read only relevant discovery references: [identity](../jimmy-discovery/references/identity.md), [boundaries](../jimmy-discovery/references/boundaries.md), [transactions](../jimmy-discovery/references/data-transactions.md), [retry](../jimmy-discovery/references/retry-idempotency.md), [lifecycle](../jimmy-discovery/references/lifecycle.md), or [version/config/build](../jimmy-discovery/references/version-config-build.md).
 
 ## Compose a cohesive result
 

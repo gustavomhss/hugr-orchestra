@@ -6,6 +6,10 @@ Read before tool use in every task. Tools supply observations and receipts, not 
 
 Use `glob` to find paths, `grep` for exact strings/patterns and `read` for bodies and context. Open callers, branches and source conditions needed for the question; a search hit alone rarely answers it. Use `webfetch` for a known applicable URL and declared format. Available search finds candidate sources, not facts. Do not assume an unexposed browser, bibliography adapter or PDF parser exists.
 
+## Retrieve in parallel
+
+Issue independent searches and reads together in one turn: several `grep` patterns, spelling variants, symbol lookups or file reads whose inputs do not depend on each other. Parallel retrieval is the default, not an optimization; it widens the first pass so the search does not stop at the first plausible hit. Sequence only when one result chooses the next query. Read the returned bodies before narrowing.
+
 Normal approved acquisition may already return native capture references. Reuse actual receipts rather than duplicating acquisition. When retained evidence is needed but no receipt was returned, use exposed `research_capture`; never turn remembered text into claimed captured bytes.
 
 ## `research_capture`
@@ -49,6 +53,12 @@ type ViewInput =
 ## Semantic and historical reads
 
 Use exposed configured LSP/compiler operations only where readiness and support are known. Discovery reuses active clients or owner-configured commands; it does not activate implicit installers. Native coverage names responding servers/document versions, failures/timeouts and omitted results. Complete means that declared query scope, not every language, file or runtime path. Preserve project/config, source revision, exclusions, timeout and partial-index state. Fallback to lexical/static reading when useful; do not label fallback compiler resolution. A syntax match is not execution.
+
+When the host exposes them, `research_capture` history also offers `blame`, range diff and bounded commit search; use the schema the tool returns, not the shape above. Use `blame` to date a line and find the commit that introduced or last changed it, and before calling a reported defect open ([calibration](calibration.md)). Use range diff for what changed between two revisions, and commit search to find candidate commits by message or path within its bound. Each is a lead into history, not a complete causal account.
+
+Use configured LSP callers/callees (incoming/outgoing calls) to follow a resolved symbol's call edges instead of name matches; partial coverage still applies. When exposed, the Arsenal repo-intelligence tools answer structural questions: `repo-mapper` for a bounded path/size/LOC map with named gaps, `move-in` for a scoped read-only symbol map of an unfamiliar territory, `sliceability` for component structure of a supplied symbol graph, `symbol-flow-check` for cross-unit symbol flows, and `repo-hygiene-check` for tri-state Git/filesystem hygiene facts. Their output is advice derived from the scanned scope, not execution evidence.
+
+Results from history, LSP and these tools are citable sources once retained with a returned reference and locator. The host citation check flags any `file:line` or URL citation in the answer that does not map to a retained source, so cite only what was captured.
 
 Use only exposed specialized read-only history queries with bound roots and fixed operations. If unavailable, use admitted patches/history supplied in the mission, or ask Maestro for the missing material. Do not invoke arbitrary shell, Git commands through shell, install engines or use another tool/path to escape a denial.
 
