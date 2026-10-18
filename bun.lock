@@ -266,6 +266,7 @@
         "@ai-sdk/vercel": "2.0.39",
         "@ai-sdk/xai": "3.0.102",
         "@aws-sdk/credential-providers": "3.1057.0",
+        "@bufbuild/protobuf": "2.12.0",
         "@c4312/scip": "0.1.0",
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
