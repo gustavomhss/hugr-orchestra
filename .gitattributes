@@ -30,3 +30,5 @@ packages/httpapi-codegen/test/generated/** text eol=lf
 # writes LF. Keep Windows checkouts LF so that byte contract holds there too.
 packages/client/src/generated/** text eol=lf
 packages/client/src/generated-effect/** text eol=lf
+# Generated schemas are compared byte-for-byte by test/config/schema-files.test.ts: Windows checkouts must not convert to CRLF.
+schema/*.json text eol=lf
