@@ -202,27 +202,55 @@
   A.views.knowledge = (state) => A.views.explore({ ...state, query: { ...state.query, view: state.query.view ?? "list" } })
 
   /* ---------- Genesis: how Atlas learns a repository ---------- */
+  // Genesis is the `atlas mine` command (cli/src/map.ts:133): it proposes claims into staging and never writes knowledge;
+  // `atlas promote` is the separate, governed step that turns staged rows into facts. Stages follow the code in order.
   const stages = () => {
     const files = M().health().index.configured.reduce((n, c) => n + c.files, 0)
     const total = M().facts.length + R().candidates.length
-    const refuted = Object.values(R().reasoning).filter((t) => /refut/i.test(t)).length
     return [
-      { id: "scan", icon: "code", title: "Read the code", n: A.num(files), unit: "files indexed", how: "det", what: "Genesis walks the repository and loads the code index (index.scip). It builds three views of the same tree: where things are, who owns them, and what depends on what.", knobs: [], facts: ["No index, no sites: a repository without index.scip is mined from nothing.", "Deterministic: the same commit always gives the same skeleton."], refs: "genesis/src/rank.ts:194 · adapter-io/src/skeleton-source.ts:152" },
-      { id: "rank", icon: "graph", title: "Pick where to look", n: "200", unit: "sites per kind, at most", how: "det", what: "It starts from the files that change most often or change together in git, then ranks every place with PageRank over the dependency graph. The most connected, most active code goes first.", knobs: ["frontier", "budget"], facts: ["Costs nothing: no model call until a site is visited.", "With a thin git history it falls back to the most-connected files."], refs: "adapter-io/src/git-history.ts:206 · genesis/src/rank.ts:228" },
-      { id: "propose", icon: "sparkle", title: "Ask the model", n: A.num(total), unit: "claims proposed", how: "llm", what: "For each site, in rank order and eight at a time, the model reads the code and answers with one sentence worth knowing, or says there is nothing. It must argue against its own claim before keeping it.", knobs: ["kinds", "enrich", "proposals", "model"], facts: [`${A.num(refuted)} of ${A.num(Object.keys(R().reasoning).length)} stored answers show a self-refutation pass.`, "The model's full answer is kept with every claim."], refs: "adapter-io/src/llm.ts:345 · adapter-io/prompts/propose*.md" },
-      { id: "check", icon: "shield", title: "Check every answer", n: "7", unit: "checks, no model", how: "det", what: "Every answer is checked without a model: format, that a named symbol really exists, that the claim still matches the code, and, for dependencies and counts, an oracle that proves it from the index. Secrets are redacted.", knobs: [], facts: ["For a count or a dependency, the model only picks a name: the number comes from the index.", "An answer that fails abstains with a named reason; nothing is dropped silently."], refs: "cli/src/mine-gate.ts:147 · genesis/src/admit-harness.ts:216" },
-      { id: "stage", icon: "inbox", title: "Wait for review", n: A.num(total), unit: "staged as hints", how: "det", what: "What survives is staged as a hint in the mined group. Agents see none of it. Each site gets a ledger row, and the run proves it accounted for every planned site.", knobs: [], facts: ["A re-run never overwrites a staged claim: the first writer wins.", "Mining can't write knowledge; it can only propose."], refs: "cli/src/mine-decide.ts:107 · genesis/src/coverage.ts:119" },
-      { id: "accept", icon: "check", title: "Accept", n: A.num(M().facts.length), unit: `accepted · ${A.num(R().candidates.length)} waiting`, how: "you", what: "Accepting re-checks every staged claim against today's code, through the same four checks every write passes. Claims whose code moved since mining are refused.", knobs: [], facts: ["Needs an approval key: a person signs off on mined knowledge.", "Only this step turns a suggestion into a fact."], refs: "adapter-io/src/governed-promote.ts:123" },
+      { id: "scan", icon: "code", title: "Read the repository", n: A.num(files), unit: "files in the index", how: "det",
+        what: "Genesis walks the tree and loads <code>.atlas/index.scip</code>, the code index an outside indexer (scip-typescript) produced. From them it builds three axes: where things are, which territory they sit in, and what depends on what.",
+        facts: ["No index means no dependency edges: the dependency and count kinds then have nothing to prove against.", "Deterministic: the same commit gives the same skeleton."],
+        refs: "index/src/types.ts:114 · adapter-io/src/skeleton-source.ts:129" },
+      { id: "rank", icon: "graph", title: "Choose the sites", n: "≤ 200", unit: "sites per kind", how: "det",
+        what: "Sites come from git first: files changed at least twice, or changed together at least twice. PageRank over the dependency graph then puts them in order, and for the provable kinds the sites an oracle can check go first.",
+        facts: ["Thin history (under two commits, a shallow clone) falls back to the most-connected code instead.", "No model call yet: choosing costs nothing.", "Each kind stops at its ceiling: 200 sites, or ATLAS_MINE_BUDGET."],
+        refs: "adapter-io/src/git-history.ts:206 · genesis/src/rank.ts:291,342,396 · run-controller.ts:95" },
+      { id: "propose", icon: "sparkle", title: "Ask the model", n: A.num(total), unit: "claims proposed", how: "llm",
+        what: "One model call per site, no retry. What the model is asked depends on the kind: a free sentence for hints, a name picked from a list the index built for dependencies, counts and definitions, a slot for the semantic pass.",
+        facts: ["Eight calls in flight when the model comes from model.json; otherwise one at a time.", "With no model configured every site abstains and nothing is proposed.", "The model's whole answer is kept with the claim it produced."],
+        refs: "adapter-io/src/llm.ts:345 · genesis/src/drive.ts:32 · cli/src/mine.ts:444" },
+      { id: "check", icon: "shield", title: "Check without the model", n: A.num([...M().facts, ...R().candidates].filter((x) => x.seal === "proven").length), unit: "proven by an oracle", how: "det",
+        what: "Every answer is checked by code: valid text in the expected shape, a name that really exists, and a claim that still re-derives against today's code. For dependencies, counts and definitions an oracle then tries to prove it from the index.",
+        facts: ["Proven: the claim is sealed with its witness, and its sentence is written from the witness, not by the model.", "The oracle can't prove it: the claim still goes on, unsealed, as a hint.", "An answer that fails a check is dropped, with the reason named in the run."],
+        refs: "adapter-io/src/llm.ts:456 · genesis/src/admit-harness.ts:330-403,505 · cli/src/mine-gate.ts:181" },
+      { id: "stage", icon: "inbox", title: "Stage as suggestions", n: A.num(total), unit: "staged as T2 hints", how: "det",
+        what: "Survivors are written to <code>.atlas/staging.N.json</code>, secrets scrubbed, the model's answer stored next to them. Every row is a T2 hint in the <code>atlas:mined</code> group. Agents see none of it.",
+        facts: ["A re-run never rewrites a row already staged: the first writer wins.", "The run accounts for every planned site in its ledger."],
+        refs: "cli/src/mine-decide.ts:107-268 · genesis/src/coverage.ts:166" },
+      { id: "accept", icon: "check", title: "Promote", n: A.num(M().facts.length), unit: `promoted · ${A.num(R().candidates.length)} waiting`, how: "you",
+        what: "<code>atlas promote</code> takes the whole staging at once and sends every row through the same write door as any edit: still true against today's code, you are a writer of <code>atlas:mined</code> in policy.json, no conflict with what is stored, and a ratify token.",
+        facts: ["Promoted facts stay T2: agents get them in the hints band. Rules (T1, T0) come only from ratifying later.", "Rows whose code moved since mining are refused.", "Staging is not emptied afterwards."],
+        refs: "adapter-io/src/governed-promote.ts:121-170 · knowledge/src/bands.ts:41" },
     ]
   }
+  // The five kinds (arms). Defaults run hints, dependencies, counts one after another (mine-proposer.ts:140).
+  const KINDS = [
+    { id: "advisory", name: "Hints", on: true, model: "Writes one free sentence about the site.", check: "Must re-derive against the code.", lands: "Hint (T2)" },
+    { id: "dependency", name: "Dependencies", on: true, model: "Picks which symbol the site depends on, from a list.", check: "An oracle proves the edge from the index.", lands: "Proven, or a hint if unproven" },
+    { id: "count", name: "Counts", on: true, model: "Picks what to count. The number comes from the index.", check: "An oracle recounts it.", lands: "Proven, or a hint if unproven" },
+    { id: "definition", name: "Definitions", on: false, model: "Picks the symbol a name defines.", check: "An oracle finds the definition.", lands: "Proven, or a hint if unproven" },
+    { id: "semantic", name: "Semantic", on: false, model: "Files the claim under one of eight slots (invariant, contract, gotcha…).", check: "Must re-derive; keeps its derivation.", lands: "Justified hint (T2)" },
+  ]
   const knobs = {
-    kinds: ["Kinds", "What to look for. By default three passes run one after another: hints (free sentences), dependencies and counts. Definitions and the eight-slot semantic pass run only when picked.", "ATLAS_MINE_SLOT", [["All three", ""], ["Hints", "advisory"], ["Dependencies", "dependency"], ["Counts", "count"], ["Definitions", "definition"], ["Semantic", "semantic"]]],
-    frontier: ["Where", "Whole files, or also the symbols inside them.", "ATLAS_FRONTIER", [["Files", ""], ["Files and symbols", "symbol"]]],
-    budget: ["Sites per kind", "How many sites the model visits per kind. Default: up to 200.", "ATLAS_MINE_BUDGET", null],
-    enrich: ["Show neighbours", "Also show the model what is already known about the same file, so it adds something new.", "ATLAS_ENRICH", [["Off", ""], ["On", "1"]]],
-    proposals: ["Proposals from", "Use claims an agent already wrote (a JSON file) instead of calling the model. Genesis still checks every one.", "ATLAS_TASK_PROPOSALS", [["The model", ""], ["An agent's file", "proposals.json"]]],
-    model: ["Model", "The command Genesis runs for each site, set in ~/.config/atlas/model.json, outside the repository.", "ATLAS_MODEL_CONFIG", null],
+    kinds: ["Kinds", "One kind, or the default three run one after another.", "ATLAS_MINE_SLOT", [["Default three", ""], ["Hints", "advisory"], ["Dependencies", "dependency"], ["Counts", "count"], ["Definitions", "definition"], ["Semantic", "semantic"]]],
+    budget: ["Sites per kind", "The ceiling for each kind. Default: up to 200.", "ATLAS_MINE_BUDGET", null],
+    enrich: ["Show nearby code", "Also show the model the other code in the same file. Hints only.", "ATLAS_ENRICH", [["Off", ""], ["On", "1"]]],
+    proposals: ["Proposals from", "Use claims an agent already wrote, a JSON file of site → claim, instead of calling the model. Runs hints only, one at a time, Kinds ignored; Genesis still checks every claim.", "ATLAS_TASK_PROPOSALS", [["The model", ""], ["An agent's file", "proposals.json"]]],
+    frontier: ["Symbols in the fallback", "Only matters when git history is too thin: the structural fallback then looks at symbols, not only files. With a normal history it changes nothing.", "ATLAS_FRONTIER", [["Files", ""], ["Symbols", "symbol"]]],
+    model: ["Model", "The command run for each site (<code>roles.propose</code>, 60 s timeout). Read from <code>~/.config/atlas/model.json</code> or <code>$XDG_CONFIG_HOME</code>; <code>ATLAS_MODEL_CONFIG</code> points elsewhere. A file inside the repository is refused.", "ATLAS_MODEL_CONFIG", null],
   }
+
   A.views.genesis = (state) => {
     const st = stages()
     const at = st.find((x) => x.id === state.query.stage) ?? st[2]
@@ -230,34 +258,56 @@
     const env = Object.entries(knobs).filter(([k]) => conf[k]).map(([k, [, , v]]) => `${v}=${conf[k]}`).join(" ")
     const sample = M().live().find((x) => x.why && R().reasoning[x.why] && /refut/i.test(R().reasoning[x.why])) ?? M().live().find((x) => x.why)
     const reason = sample ? R().reasoning[sample.why] : ""
+    const refuted = Object.values(R().reasoning).filter((t) => /refut/i.test(t)).length
+    const all = [...M().facts, ...R().candidates]
+    const proven = all.filter((x) => x.seal === "proven").length
+    const justified = all.filter((x) => x.seal === "justified").length
     const qs = (patch) => `#/genesis?${new URLSearchParams(Object.fromEntries(Object.entries({ stage: at.id, ...Object.fromEntries(Object.entries(conf).map(([k, v]) => [`k-${k}`, v])), ...patch }).filter(([, v]) => v)))}`
-    const how = { det: ["Deterministic", "good"], llm: ["Model", "blue"], you: ["You", "warm"] }
+    const how = { det: ["Code, no model", "good"], llm: ["Model", "blue"], you: ["You", "warm"] }
+    const cmd = `${env ? `${env} ` : ""}atlas mine .`
     return {
       crumbs: [["Atlas", "#/overview"], ["Genesis"]],
       html: `<div class="at-page wide">
-      <section class="at-gen-hero"><div><div class="mx-eyebrow">The engine</div><h1>Genesis</h1><p>How Atlas learns a repository: it reads the code, picks where to look, asks a model one place at a time, checks every answer without the model, and waits for you.</p></div>
-        <div class="heading-actions">${A.btn("Run Genesis…", "mine", { primary: true, icon: "play", write: true })}</div></section>
+      <section class="at-gen-hero"><div><div class="mx-eyebrow">The engine</div><h1>Genesis</h1><p>How Atlas learns a repository. <code>atlas mine</code> picks the places worth knowing, asks a model about each one, checks every answer with code, and stages what survives as suggestions. It never writes knowledge: <code>atlas promote</code> is the step that does, through the same door as any edit.</p></div>
+        <div class="heading-actions">${A.btn("Run atlas mine…", "mine", { primary: true, icon: "play", write: true })}</div></section>
+
       <ol class="at-pipe">${st.map((x, i) => `<li><a class="at-pipe-step ${x.id === at.id ? "on" : ""} ${x.how}" href="${qs({ stage: x.id })}"><span class="at-pipe-ic">${A.icon(x.icon)}</span><span class="at-pipe-n">${x.n}</span><span class="at-pipe-u">${x.unit}</span><strong>${i + 1}. ${x.title}</strong><span class="at-pipe-how ${how[x.how][1]}">${how[x.how][0]}</span></a></li>`).join("")}</ol>
+      <div class="at-gen-split"><span><code>atlas mine</code> proposes</span><span><code>atlas promote</code> writes</span></div>
+
       <section class="at-gen-detail">
         <div><h2>${A.icon(at.icon)}${at.title}</h2><p class="at-lead">${at.what}</p><ul class="at-gen-facts">${at.facts.map((f) => `<li>${A.icon("checkc")}${A.esc(f)}</li>`).join("")}</ul>
-          ${at.knobs.length ? `<p class="mx-note">Set it with ${at.knobs.map((k) => `<a class="mx-link" href="#knob-${k}">${knobs[k][0]}</a>`).join(", ")} below.</p>` : ""}
           ${A.tech([["Code", `<code>${A.esc(at.refs)}</code>`]])}</div>
-        ${at.id === "propose" || at.id === "check" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("fact")}A real claim, and the reasoning behind it</div><p class="at-gen-claim">“${A.esc(sample?.claim ?? "")}”</p><code class="at-mono">${A.esc(sample?.file ?? "")}</code>
-          <div class="at-reasoning short at-gen-reason">${A.esc(reason.slice(0, 900)).replace(/(Refutation pass:?|refut\w*)/i, "<mark>$1</mark>")}${reason.length > 900 ? "…" : ""}</div>${sample ? A.btn("Open this fact", "open-fact-page", { value: sample.key }) : ""}</div>`
-        : at.id === "rank" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("graph")}The most connected code goes first</div><div class="at-graph-host small" id="gen-graph"></div></div>`
-        : at.id === "accept" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("check")}From suggestion to fact</div>${A.bar([["good", M().facts.length], ["blue", R().candidates.length]])}<div class="at-coverage-legend"><span>Accepted <b>${A.num(M().facts.length)}</b></span><span>Waiting <b>${A.num(R().candidates.length)}</b></span></div>${A.btn("Review the waiting ones", "go", { value: "#/review?tab=mined" })}</div>`
-        : `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("info")}What it can't do (yet)</div><p class="mx-note">Mine one folder only, resume a stopped run, stop early when sites stop paying off, or score how obvious a claim is: these exist in the library but no command reaches them.</p></div>`}
+        ${at.id === "propose" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("fact")}A real claim, and the model's answer behind it</div><p class="at-gen-claim">“${A.esc(sample?.claim ?? "")}”</p><code class="at-mono">${A.esc(sample?.file ?? "")}</code>
+          <div class="at-reasoning short at-gen-reason">${A.esc(reason.slice(0, 900)).replace(/(Refutation pass:?|refut\w*)/i, "<mark>$1</mark>")}${reason.length > 900 ? "…" : ""}</div>
+          <p class="mx-note">The prompt asks the model to argue against its own claim; ${A.num(refuted)} of ${A.num(Object.keys(R().reasoning).length)} stored answers show it did. Code doesn't check this: the checks in step 4 do the real filtering.</p>${sample ? A.btn("Open this fact", "open-fact-page", { value: sample.key }) : ""}</div>`
+        : at.id === "rank" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("graph")}How a site is chosen</div><ol class="at-gen-choose">
+            <li><b>Git history healthy?</b><span>Yes: start from files that changed twice or more, or changed together.</span><span class="muted">No: start from the most-connected code (and its symbols, with ATLAS_FRONTIER=symbol).</span></li>
+            <li><b>Order them</b><span>PageRank over the dependency graph, damping 0.85, 64 iterations.</span></li>
+            <li><b>Provable first</b><span>For dependencies, counts and definitions, sites an oracle can check move up.</span></li>
+            <li><b>Stop at the ceiling</b><span>200 sites per kind, or ATLAS_MINE_BUDGET.</span></li></ol></div>`
+        : at.id === "check" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("shield")}Three outcomes</div><div class="at-gen-outcomes">
+            <div class="good"><b>Proven</b><p>An oracle derived it from the index. Sealed with its witness; the sentence is written from the witness.</p><small>${A.num(proven)} in this store</small></div>
+            <div><b>Hint</b><p>Re-derives against the code, but nothing proves it. Staged unsealed.</p><small>${A.num(all.length - proven)} in this store</small></div>
+            <div class="warm"><b>Dropped</b><p>Bad shape, a name that doesn't exist, or a claim that no longer matches. Named in the run report.</p><small>not kept</small></div></div></div>`
+        : at.id === "accept" ? `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("check")}From suggestion to fact</div>${A.bar([["good", M().facts.length], ["blue", R().candidates.length]])}<div class="at-coverage-legend"><span>Promoted <b>${A.num(M().facts.length)}</b></span><span>Waiting <b>${A.num(R().candidates.length)}</b></span></div><p class="mx-note">Promote runs on everything staged; picking rows one by one is new capability · R2.</p>${A.btn("Review the waiting ones", "go", { value: "#/review?tab=mined" })}</div>`
+        : `<div class="at-gen-sample"><div class="at-gen-sample-k">${A.icon("info")}In this store</div><p class="mx-note">${at.id === "scan" ? `${A.num(Object.keys(R().children ?? {}).length)} folders, ${A.num(R().dependentCount ?? 0)} dependency links from the index.` : `${A.num(all.length)} rows staged by past runs; ${A.num(R().candidates.length)} still waiting to be promoted.`}</p></div>`}
       </section>
-      <section class="at-panel at-gen-config"><header class="at-panel-head"><div><h3>${A.icon("settings")}Configuration</h3><small>What the next run will do. Nothing here is saved by Atlas; it travels as environment variables.</small></div></header>
-        <div class="at-knobs">${Object.entries(knobs).map(([k, [label, help, , opts]]) => `<div class="at-knob" id="knob-${k}"><div><strong>${label}</strong><small>${help}</small></div>
-          ${opts ? `<div class="wf-range">${opts.map(([l, v]) => `<button aria-pressed="${conf[k] === v}" data-action="go" data-value="${qs({ [`k-${k}`]: v })}">${l}</button>`).join("")}</div>` : k === "budget" ? `<input class="at-knob-input" type="number" min="1" placeholder="200" value="${A.esc(conf.budget)}" data-knob="budget">` : `<code class="at-mono">~/.config/atlas/model.json · roles.propose</code>`}</div>`).join("")}</div>
-        <div class="at-cmd"><span>Command</span><code>${A.esc(env ? `${env} ` : "")}atlas mine .</code>${A.btn("", "copy", { icon: "copy", value: `${env ? `${env} ` : ""}atlas mine .`, label: "Copy command" })}</div>
-        ${A.tech([["Fixed", "8 sites in flight · PageRank damping 0.85, 64 iterations · churn and co-change ≥ 2"], ["Prints", "<code>genesis: seeded N</code> · <code>cost: llmCalls · budgetSpent</code> · <code>coverage CLOSES — …</code> · one <code>site:</code> line per site"], ["Kept", "staging.json and the model's answer per claim in the store; the run report and its resume point are not kept"], ["Cost cap", "accepted in model.json, not enforced"]])}</section>
+
+      <section class="at-panel at-arch-block"><header class="at-panel-head"><div><h3>${A.icon("stack")}Five kinds of claim</h3><small>Each kind is its own pass over the sites. The model's job shrinks as the kind gets more provable.</small></div></header>
+        <div class="at-kinds"><div class="at-kinds-row head"><span>Kind</span><span>The model</span><span>Code checks</span><span>Lands as</span></div>
+        ${KINDS.map((k) => `<div class="at-kinds-row"><span><b>${k.name}</b> ${k.on ? '<span class="at-own-badge good">default</span>' : '<span class="at-own-badge">opt-in</span>'}<code>${k.id}</code></span><span>${k.model}</span><span>${k.check}</span><span>${k.lands}</span></div>`).join("")}</div>
+        <p class="mx-note">In this store: ${A.num(all.length)} claims staged, ${A.num(proven)} proven by an oracle, ${A.num(justified)} from the semantic pass, the rest hints. Claims about relations, negations and transitions exist in the write door, but mining can't produce them yet.</p></section>
+
+      <section class="at-panel at-gen-config"><header class="at-panel-head"><div><h3>${A.icon("settings")}Configure the next run</h3><small>Environment variables for <code>atlas mine</code>. Atlas saves none of this.</small></div></header>
+        <div class="at-knobs">${Object.entries(knobs).map(([k, [label, help, v, opts]]) => `<div class="at-knob" id="knob-${k}"><div><strong>${label}</strong><small>${help}</small><code class="at-knob-var">${v}</code></div>
+          ${opts ? `<div class="wf-range">${opts.map(([l, val]) => `<button aria-pressed="${conf[k] === val}" data-action="go" data-value="${qs({ [`k-${k}`]: val })}">${l}</button>`).join("")}</div>` : k === "budget" ? `<input class="at-knob-input" type="number" min="1" placeholder="200" value="${A.esc(conf.budget)}" data-knob="budget">` : `<code class="at-mono">model.json · roles.propose</code>`}</div>`).join("")}</div>
+        <div class="at-cmd"><span>Mine</span><code>${A.esc(cmd)}</code>${A.btn("", "copy", { icon: "copy", value: cmd, label: "Copy command" })}</div>
+        <div class="at-cmd"><span>Promote</span><code>ATLAS_RATIFY_TOKEN=… atlas promote</code>${A.btn("", "copy", { icon: "copy", value: "ATLAS_RATIFY_TOKEN=… atlas promote", label: "Copy command" })}</div>
+        ${A.tech([["Path", "<code>atlas mine</code> always mines the current directory at HEAD; the path argument is required but ignored"], ["Prints", "<code>genesis: seeded N</code> · <code>cost: llmCalls · budgetSpent</code> · <code>coverage CLOSES — …</code> · one <code>site:</code> line per site"], ["Cost cap", "accepted in model.json, not enforced"], ["Ratify token", "any non-empty string commits a hint or rule; <code>billy</code> is needed for core"]])}</section>
+
+      <section class="at-panel at-arch-block"><header class="at-panel-head"><div><h3>${A.icon("info")}Built but not reachable from the command</h3><small>Code exists in the library; no command or flag gets to it today.</small></div></header>
+        <div class="at-gen-gaps">${[["Mine one folder", "the scope option is ignored"], ["Resume a stopped run", "kept in memory only"], ["Mine only what changed", "always reports no change"], ["Deepen a productive site", "loops are switched off"], ["Synthesized checks and type oracles", "placeholders that always decline"], ["Relation, negation, transition claims", "parsers never emit them"]].map(([t, d]) => `<div><b>${t}</b><small>${d}</small></div>`).join("")}</div></section>
       </div>`,
-      after: () => {
-        const host = document.querySelector("#gen-graph")
-        if (host) mountUnitGraph(host, { id: "gen", big: 18, length: 90, repel: 900 })
-      },
     }
   }
 
