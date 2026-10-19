@@ -7,8 +7,8 @@
 
 import { foldReview, readReview, reviewLogPath } from "@atlas/adapter-io"
 import type { ReviewFold } from "@atlas/adapter-io"
-import { refusalVerdict } from "./cli-verdict.js"
-import { renderRefusal } from "./render.js"
+import { errorVerdict, refusalVerdict } from "./cli-verdict.js"
+import { renderRefusal, renderVerdict } from "./render.js"
 import type { CliVerdict } from "./render.js"
 
 /** A governed refusal (exit 2): the invocation was well-formed and the review state declined it. */
@@ -27,4 +27,24 @@ export function foldOrRefuse(repoPath: string): { readonly fold: ReviewFold } | 
     }
   }
   return { fold: foldReview(read.records) }
+}
+
+/** The invariant line every review command prints — the property to check its bytes against. */
+export const REVIEW_INVARIANT =
+  "REVIEW-LOG (D14): a review act is one appended, content-keyed record in .atlas/review.jsonl — nothing is edited or removed, and the current state is a fold over the records"
+
+/** A successful review outcome (exit 0) in the CLI's status/next/invariant shape, plus detail lines. */
+export function reviewOutcome(next: string, lines: readonly string[]): CliVerdict {
+  return { exitCode: 0, stdout: `${["status: ok", `next: ${next}`, `invariant: ${REVIEW_INVARIANT}`, ...lines].join("\n")}\n` }
+}
+
+/** A usage error (exit 1): the invocation itself was wrong. */
+export function usageError(message: string): CliVerdict {
+  return renderVerdict(errorVerdict(message))
+}
+
+/** The `--by <actor>` every review write is attributed to, or `undefined` when absent, bare or blank. */
+export function requireBy(flags: Readonly<Record<string, string>>): string | undefined {
+  const by = flags["by"]
+  return by === undefined || by === "true" || by.trim().length === 0 ? undefined : by.trim()
 }

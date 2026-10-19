@@ -7,5 +7,10 @@
 // tested before the task that publishes its command (docs page, README row, map/parse entries).
 
 import type { CommandTable } from "./cli-dispatch.js"
+import { emitCli } from "./cli-verdict.js"
+import { holdPorts, runHold, runRelease } from "./hold-cli.js"
 
-export const REVIEW_COMMANDS: CommandTable = {}
+export const REVIEW_COMMANDS: CommandTable = {
+  hold: (input) => emitCli(runHold(holdPorts(), input.positionals, input.flags)),
+  release: (input) => emitCli(runRelease(holdPorts(), input.positionals, input.flags)),
+}
