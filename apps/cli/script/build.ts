@@ -48,6 +48,10 @@ const { seatSkillsFiles } = await import("@orchestra/maestro/seat-skills-module"
 const seatSkills = await seatSkillsFiles()
 const plugin = createSolidTransformPlugin()
 // Virtual modules (the seat skills) have no file to hash; their bytes are checked by the roster at load.
+const withoutVirtual = <T extends { inputs: Record<string, unknown> }>(meta: T) => ({
+  ...meta,
+  inputs: Object.fromEntries(Object.entries(meta.inputs).filter(([key]) => onDisk(key))),
+})
 const onDisk = (key: string) => !Object.keys(seatSkills).some((virtual) => key.endsWith(virtual))
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
@@ -190,7 +194,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       schema: "orchestra-compile-evidence-v2", bun: process.versions.bun, cwd: await realpath(dir),
       version: Script.version, target: item.target, entrypoints: ["./src/omni-entry.ts"],
       binary: { path: executable, sha256: new Bun.CryptoHasher("sha256").update(await Bun.file(executable).arrayBuffer()).digest("hex") },
-      inputs, metafile, analysisMetafile,
+      inputs, metafile: withoutVirtual(metafile), analysisMetafile: analysisMetafile && withoutVirtual(analysisMetafile),
       transformLedger: { toolchain, scope: "Raw resolved files and audited backing files captured before/after original-plugin compile; JSX effective data is compiler byte-count evidence, not a claimed raw-file hash" },
     }, null, 2))
   }
