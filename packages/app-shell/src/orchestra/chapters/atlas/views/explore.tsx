@@ -9,6 +9,7 @@ import { num, seatName } from "../kit/format"
 import { AtlasLink, Rich } from "../kit/text"
 import { openAtlasSheet } from "../sheets/state"
 import { ExploreMap } from "./explore-map"
+import { ExploreGraph } from "./explore-graph"
 import { EXPLORE_GROUPS, shortUnit, sortUnits, toSort } from "./explore-units"
 import type { AtlasViewProps } from "./index"
 
@@ -131,7 +132,12 @@ export default function AtlasExploreView(props: AtlasViewProps) {
               </div>
             </Match>
             <Match when={view() !== "map" && view() !== "list"}>
-              <p class="mx-empty" data-pending="graph">{language.t("orchestra.atlas.frame.pending")}</p>
+              <ExploreGraph
+                model={props.model}
+                group={group()}
+                selected={props.route.query.unit}
+                onSelect={(id) => atlas.go(href({ unit: id ?? "" }), true)}
+              />
             </Match>
           </Switch>
         }
