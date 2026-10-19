@@ -7,7 +7,7 @@ import { Research } from "@orchestra/schema/research"
 import { CodeIndexBuild } from "@orchestra/core/research-toolkit/code-index/build"
 import { CodeIndexQuery } from "@orchestra/core/research-toolkit/code-index/query"
 import { CodeIndexShard } from "@orchestra/core/research-toolkit/code-index/shard"
-import type { CodeIndexStore } from "@orchestra/core/research-toolkit/code-index/store"
+import { CodeIndexStore } from "@orchestra/core/research-toolkit/code-index/store"
 import type { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
 import { tmpdir } from "./fixture/tmpdir"
 
@@ -380,5 +380,76 @@ describe("code query", () => {
     expect((await failure(f.context, { op: "map", path: "scripts" })).code).toBe("index_unavailable")
     // With an extractor the query starts the first build in the background and says so.
     expect((await failure({ ...f.context, extract: f.built.extract }, { op: "symbols" })).code).toBe("index_building")
+  })
+})
+
+const until = async (done: () => boolean) => {
+  for (let tries = 0; tries < 500; tries++) {
+    if (done()) return
+    await Bun.sleep(10)
+  }
+  throw new Error("timed out waiting for the background build")
+}
+
+describe("failed and concurrent shard builds", () => {
+  // J2.12: a failed first build must say so with its cause instead of reporting index_building forever, and the next
+  // query retries it. Mutation control: stop remembering the failure in CodeIndexStore.singleFlight (tapError).
+  test("a failed build is reported with its cause and the next query retries it", async () => {
+    const f = await fixture()
+    await using _ = f.tmp
+    const state = { fail: true, calls: 0 }
+    const context: CodeIndexQuery.Context = {
+      ...f.context,
+      extract: (input) => {
+        state.calls++
+        return state.fail ? Effect.fail(new Research.Error({ code: "index_unavailable", message: "indexer crashed" })) : f.built.extract(input)
+      },
+    }
+    const plan = await Effect.runPromise(CodeIndexBuild.plan(context))
+    const busy = () => CodeIndexBuild.building(plan.dir) !== undefined || plan.shards.some((planned) => CodeIndexStore.building(context.storeRoot, planned.key))
+    const settle = (calls: number) => until(() => state.calls === calls && !busy())
+
+    expect((await failure(context, { op: "symbols" })).code).toBe("index_building")
+    await settle(2)
+    const failed = await failure(context, { op: "symbols" })
+    expect(failed.code).toBe("index_unavailable")
+    expect(failed.message).toContain("indexer crashed")
+    await settle(4)
+
+    state.fail = false
+    expect((await failure(context, { op: "symbols" })).message).toContain("indexer crashed")
+    await settle(6)
+    expect((await query(context, { op: "definition", name: "assemble" })).resolved?.name).toBe("assemble")
+  })
+
+  // Mutation control: remove the CodeIndexStore.singleFlight wrapper around the extraction in CodeIndexBuild.build.
+  test("two builds of the same commit extract each shard once", async () => {
+    const f = await fixture()
+    await using _ = f.tmp
+    const context = { ...f.context, extract: (input: Parameters<CodeIndexBuild.Extract>[0]) => Effect.andThen(Effect.sleep("50 millis"), f.built.extract(input)) }
+    const results = await Effect.runPromise(Effect.all([CodeIndexBuild.build(context), CodeIndexBuild.build(context)], { concurrency: "unbounded" }))
+    expect(f.built.calls.toSorted()).toEqual(["ts:packages/a", "ts:packages/b"])
+    expect(results.map((result) => result.failed)).toEqual([[], []])
+  })
+})
+
+describe("single flight", () => {
+  // Mutation control: let every caller run the work (drop the `running` join).
+  test("callers of one shard share a single run, and a failure is shared, remembered and then retried", async () => {
+    const root = `flight-${crypto.randomUUID()}`
+    const state = { runs: 0, fail: true }
+    const work = Effect.suspend(() => {
+      state.runs++
+      return Effect.sleep("30 millis").pipe(Effect.andThen(state.fail ? Effect.fail("boom") : Effect.void))
+    })
+    const flight = () => CodeIndexStore.singleFlight(root, "key", work, { describe: (error) => error, join: (reason) => `joined:${reason}` }).pipe(Effect.flip, Effect.orElseSucceed(() => "ok"))
+    expect(await Effect.runPromise(Effect.all([flight(), flight(), flight()], { concurrency: "unbounded" }))).toEqual(["boom", "joined:boom", "joined:boom"])
+    expect(state.runs).toBe(1)
+    expect(CodeIndexStore.failure(root, "key")).toBe("boom")
+    expect(CodeIndexStore.building(root, "key")).toBe(false)
+    state.fail = false
+    await Effect.runPromise(CodeIndexStore.singleFlight(root, "key", work, { describe: (error) => error, join: (reason) => reason }))
+    expect(state.runs).toBe(2)
+    expect(CodeIndexStore.failure(root, "key")).toBeUndefined()
   })
 })

@@ -179,6 +179,11 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
       return yield* new Research.Error({ code: "index_unavailable", message: "No supported language with a ready indexer in this scope" })
     const records = yield* CodeIndexStore.records(plan.dir)
     const skipped: Array<{ path: string; reason: string }> = []
+    // A shard whose last build in this process failed says why, whether or not an older version serves meanwhile.
+    const failed = new Map(shards.flatMap((planned) => {
+      const reason = CodeIndexStore.failure(ctx.storeRoot, planned.key)
+      return reason === undefined ? [] : [[planned.key, reason] as const]
+    }))
     const choices = yield* Effect.forEach(shards, (planned) => Effect.gen(function* () {
       if (yield* CodeIndexStore.exists(plan.dir, planned.key)) return { planned, key: planned.key } satisfies Ready
       const previous = records.flatMap((record) => record.shards
@@ -186,19 +191,28 @@ function open(ctx: Context, plan: CodeIndexBuild.Plan, shards: ReadonlyArray<Cod
         .map((shard) => ({ commit: record.commit, key: shard.key })))
       const present = yield* Effect.forEach(previous, (entry) => CodeIndexStore.exists(plan.dir, entry.key))
       const fallback = previous.find((_, index) => present[index])
+      const reason = failed.get(planned.key)
+      if (reason !== undefined) skipped.push({ path: planned.shard.project, reason: `index-failed: ${reason}` })
       if (fallback) return { planned, key: fallback.key, stale: fallback.commit } satisfies Ready
-      skipped.push({ path: planned.shard.project, reason: "index-building" })
+      if (reason === undefined) skipped.push({ path: planned.shard.project, reason: "index-building" })
       return undefined
     }))
     const missing = choices.some((choice) => choice === undefined || choice.stale)
     const progress = CodeIndexBuild.building(plan.dir)
-    if (missing && !progress && ctx.extract)
+    const building = progress !== undefined || shards.some((planned) => CodeIndexStore.building(ctx.storeRoot, planned.key))
+    // A failed build is retried by the next query that finds the shard still missing; the build is single-flight.
+    if (missing && !building && ctx.extract)
       yield* Effect.forkDetach(CodeIndexBuild.build({ ...ctx, extract: ctx.extract }).pipe(Effect.ignore))
     const ready = choices.filter((choice): choice is NonNullable<typeof choice> => choice !== undefined)
     if (ready.length === 0) {
-      if (progress || ctx.extract)
+      const cause = [...failed.values()][0]
+      if (cause !== undefined && !building)
+        return yield* new Research.Error({ code: "index_unavailable", message:
+          `Index build failed${ctx.extract ? " (retrying)" : ""}: ${cause}` })
+      if (building || ctx.extract)
         return yield* new Research.Error({ code: "index_building", message:
-          `Index is building: shardsDone ${progress?.shardsDone ?? 0} of shardsTotal ${progress?.shardsTotal ?? shards.length}` })
+          `Index is building: shardsDone ${progress?.shardsDone ?? 0} of shardsTotal ${progress?.shardsTotal ?? shards.length}` +
+          (cause === undefined ? "" : `; last attempt failed: ${cause}`) })
       return yield* new Research.Error({ code: "index_unavailable", message: "Index has not been built for this commit" })
     }
     if (!missing) yield* CodeIndexStore.touch(plan.dir, plan.commit)

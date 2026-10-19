@@ -3,7 +3,7 @@ export * as CodeIndexStore from "./store"
 import { createHash, randomUUID } from "node:crypto"
 import { readdir, realpath, rename, rm, stat, mkdir } from "node:fs/promises"
 import path from "node:path"
-import { Effect } from "effect"
+import { Deferred, Effect, Exit } from "effect"
 import { SqlClient } from "effect/unstable/sql"
 import { layer } from "#sqlite"
 import { Research } from "@orchestra/schema/research"
@@ -80,6 +80,47 @@ export const exists = (dir: string, shardKey: string) => Effect.promise(() => Bu
 export const tokens = (name: string) =>
   name.replace(/([a-z0-9])([A-Z])/g, "$1 $2").replace(/([A-Z]+)([A-Z][a-z])/g, "$1 $2")
     .split(/[^A-Za-z0-9]+/).filter(Boolean).map((part) => part.toLowerCase()).join(" ")
+
+// Process-local single flight per shard (store root + shard key): the indexer runs once for a shard whether the
+// warm-up or a query asked for it, and the others await that run. The last failure stays until a build succeeds.
+const flights = new Map<string, Deferred.Deferred<void, string>>()
+const failures = new Map<string, string>()
+const flightKey = (root: string, shardKey: string) => `${root}\0${shardKey}`
+
+/**
+ * Run `work` unless the same shard is already being built in this process, in which case await that build. A failure
+ * is remembered as `failure` (and a joiner fails with `join(reason)`), so the next caller retries and the cause shows.
+ */
+export const singleFlight = <E>(
+  root: string,
+  shardKey: string,
+  work: Effect.Effect<void, E>,
+  adapt: { readonly describe: (error: E) => string; readonly join: (reason: string) => E },
+): Effect.Effect<void, E> =>
+  Effect.gen(function* () {
+    const key = flightKey(root, shardKey)
+    const mine = yield* Deferred.make<void, string>()
+    // Checked and claimed in one synchronous step, so two callers cannot both own the build.
+    const running = yield* Effect.sync(() => {
+      const existing = flights.get(key)
+      if (!existing) flights.set(key, mine)
+      return existing
+    })
+    if (running) return yield* Deferred.await(running).pipe(Effect.mapError(adapt.join))
+    return yield* work.pipe(
+      Effect.tapError((error) => Effect.sync(() => failures.set(key, adapt.describe(error)))),
+      Effect.tap(() => Effect.sync(() => failures.delete(key))),
+      Effect.onExit((exit) => Effect.sync(() => flights.delete(key)).pipe(
+        Effect.andThen(Deferred.done(mine, Exit.isSuccess(exit) ? Exit.succeed(undefined) : Exit.fail(failures.get(key) ?? "interrupted")))),
+      ),
+    )
+  })
+
+/** Whether this process is building the shard now. */
+export const building = (root: string, shardKey: string) => flights.has(flightKey(root, shardKey))
+
+/** Why the shard's last build in this process failed, until a later build succeeds. */
+export const failure = (root: string, shardKey: string) => failures.get(flightKey(root, shardKey))
 
 /** Write a whole shard to a temporary file and rename it into place, as pinned-artifact.ts does (J2.3). */
 export const write = Effect.fn("CodeIndexStore.write")(function* (dir: string, meta: Meta, content: Content) {
