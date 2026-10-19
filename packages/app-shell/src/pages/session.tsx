@@ -560,7 +560,7 @@ export default function Page() {
 
   const turnDiffs = createMemo(() => list(lastUserMessage()?.summary?.diffs))
   // `initGit` is a V1-only route; on V2 the empty review state just says there are no changes.
-  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && sdk().protocolKind() === "v1")
+  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && serverSDK().protocolKind() === "v1")
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
     const project = sync().project

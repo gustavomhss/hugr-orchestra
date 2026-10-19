@@ -92,7 +92,7 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   const v1 = createV1Api(input)
   // The V2 server has no project lookup route; its location answer already carries the resolved project.
   // It has no MCP service yet either: it lists no servers and refuses writes, instead of a 404 per poll.
-  const located = (value?: { location?: { directory: string } }) => ({
+  const located = (value?: { location?: { directory?: string } }) => ({
     directory: value?.location?.directory ?? "",
     project: { id: "", directory: value?.location?.directory ?? "" },
   })
