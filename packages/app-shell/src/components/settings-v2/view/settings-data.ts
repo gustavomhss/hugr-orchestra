@@ -1,22 +1,22 @@
 import type { PermissionActionConfig, PermissionRuleConfig } from "../../../compat/sdk-v2-client"
 import { matchWildcard } from "@/utils/wildcard"
 
-// Sections of the routed Settings view, in navigation order. The first six are the approved
-// mock's; General and Servers keep the remaining real settings reachable.
+// Sections of the routed Settings view, in navigation order: the Settings dialog's tabs first (General, Shortcuts,
+// Servers, Providers, Models), then the sections only the routed view has. General is the default.
 export const SETTINGS_SECTIONS = [
-  "permissions",
+  "general",
+  "shortcuts",
+  "servers",
   "providers",
   "models",
+  "permissions",
   "agents",
   "mcp",
-  "shortcuts",
-  "general",
-  "servers",
 ] as const
 export type SettingsSection = (typeof SETTINGS_SECTIONS)[number]
 
 export function settingsSection(value: unknown): SettingsSection {
-  return SETTINGS_SECTIONS.find((item) => item === value) ?? "permissions"
+  return SETTINGS_SECTIONS.find((item) => item === value) ?? "general"
 }
 
 // The tools the mock lists, in its order.

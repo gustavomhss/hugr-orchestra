@@ -63,7 +63,7 @@ export const before = Effect.fn("ToolSafetyHooks.before")(function* (input: {
   // ToolSafety's construction context: a call's own context may lack the event or Relay service.
   readonly ambient: Context.Context<never>
 }) {
-  if (!input.installs.some((install) => install.enabled)) return undefined
+  if (!input.installs.some((install) => install.enabled && !install.unpublished)) return undefined
   const scope = yield* scoped(input, input.call, yield* invocation(input.call, input.resolve))
   const notes: Array<string> = []
   yield* enforce(scope, "before", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
@@ -80,7 +80,7 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
   readonly profile: ToolSafety.Profile | undefined
   readonly ambient: Context.Context<never>
 }): Effect.fn.Return<ReadonlyArray<string>, ToolSafety.Denied> {
-  if (!input.installs.some((install) => install.enabled)) return []
+  if (!input.installs.some((install) => install.enabled && !install.unpublished)) return []
   const event = input.event
   // There is no tool call: decisions leave out the empty tool and call ID, and hosts bind the Session instead.
   const call = {

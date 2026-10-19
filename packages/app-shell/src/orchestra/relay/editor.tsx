@@ -21,6 +21,7 @@ import { CanvasTab } from "./editor-canvas"
 import { Executions } from "./executions"
 import { newestFirst, runHandle } from "./format"
 import { documentFields, emptiedPhases, type Flow, flowFromDocument, issueNode, issues, layoutWorkflow } from "./graph"
+import { workflowFile } from "./import"
 import { HookActivity, TestDialog } from "./hook-activity"
 import { installNotice, refreshInstalls } from "./hook-install"
 import { HookQueryStatus } from "./hook-status"
@@ -324,6 +325,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     return props.source.client
       .unpublish(base())
       .then((item) => rememberDocument(props.source.queryClient(), props.source.key("documents"), item, draft.active))
+      .then(() => kind === "hook" && props.source.invalidate("installs"))
       .finally(draft.release)
   }
 
@@ -362,7 +364,9 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     if (!draft.active()) return
     if (save.dirty || save.state !== "saved") throw new Error(save.error || copy.t("orchestra.workflows.export.unsaved"))
     const version = base().versionId
-    const value = await props.source.client.definition(props.id)
+    const value = kind === "workflow"
+      ? workflowFile({ ...base(), description: description(), ...documentFields(flow()) })
+      : await props.source.client.definition(props.id)
     if (!value || !draft.active()) return
     if (save.dirty || save.state !== "saved" || base().versionId !== version)
       throw new Error(copy.t("orchestra.workflows.export.unsaved"))
@@ -428,10 +432,10 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
     ...(canDiscard()
       ? [{ label: copy.t("orchestra.workflows.editor.discardChanges"), run: () => setDialog("revert") }]
       : []),
-    ...(kind === "workflow" && base().activeVersionId
+    ...(base().activeVersionId
       ? [{ label: copy.t("orchestra.workflows.editor.unpublish"), run: () => void openUnpublish() }]
       : []),
-    ...(canDiscard() || (kind === "workflow" && base().activeVersionId) ? ["-" as const] : []),
+    ...(canDiscard() || base().activeVersionId ? ["-" as const] : []),
     { label: copy.t("orchestra.workflows.menu.delete"), icon: "trash", danger: true, run: () => setDialog("delete") },
     ] satisfies MenuItem[] : []),
   ]
@@ -715,7 +719,7 @@ function Frame(props: EditorProps & { id: string; initial: RelayDocument }) {
         <Match when={dialog() === "unpublish"}>
           <ConfirmDialog
             title={copy.t("orchestra.workflows.unpublish.title", { name: name() })}
-            body={copy.t("orchestra.workflows.unpublish.body")}
+            body={copy.t(kind === "hook" ? "orchestra.hooks.unpublish.body" : "orchestra.workflows.unpublish.body")}
             confirm={copy.t("orchestra.workflows.unpublish.confirm")}
             onConfirm={unpublish}
             onClose={() => setDialog(undefined)}

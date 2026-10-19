@@ -2,7 +2,7 @@ import { createOrchestraClient } from "../compat/sdk-v2"
 import type { GlobalEvent } from "../compat/sdk-v2"
 import { Flag } from "@orchestra/core/flag/flag"
 import { createSimpleContext } from "./helper"
-import { batch, onCleanup, onMount } from "solid-js"
+import { batch, createSignal, onCleanup, onMount } from "solid-js"
 
 export type EventSource = {
   subscribe: (handler: (event: GlobalEvent) => void) => Promise<() => void>
@@ -31,6 +31,8 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     }
 
     let sdk = createSDK()
+    // True while the event stream is down and being retried. Embedded event sources have no stream to observe.
+    const [offline, setOffline] = createSignal(false)
 
     const handlers = new Set<(event: GlobalEvent) => void>()
     const emitter = {
@@ -88,21 +90,26 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
         while (true) {
           if (abort.signal.aborted || ctrl.signal.aborted) break
 
-          const events = await sdk.global.event({
-            signal: ctrl.signal,
-            sseMaxRetryAttempts: 0,
-          })
+          const events = await sdk.global
+            .event({ signal: ctrl.signal, sseMaxRetryAttempts: 0 })
+            .catch(() => undefined)
 
-          if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
-            // Start syncing workspaces, it's important to do this after
-            // we've started listening to events
-            await sdk.sync.start().catch(() => {})
-          }
+          if (events) {
+            setOffline(false)
+            if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
+              // Start syncing workspaces, it's important to do this after
+              // we've started listening to events
+              await sdk.sync.start().catch(() => {})
+            }
 
-          for await (const event of events.stream) {
-            if (ctrl.signal.aborted) break
-            handleEvent(event)
+            await (async () => {
+              for await (const event of events.stream) {
+                if (ctrl.signal.aborted) break
+                handleEvent(event)
+              }
+            })().catch(() => {})
           }
+          if (!abort.signal.aborted && !ctrl.signal.aborted) setOffline(true)
 
           if (timer) clearTimeout(timer)
           if (queue.length > 0) flush()
@@ -142,6 +149,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       get client() {
         return sdk
       },
+      offline,
       directory: props.directory,
       event: emitter,
       fetch: props.fetch ?? fetch,

@@ -26,6 +26,8 @@ export const HOOKS_COPY = {
   "orchestra.hooks.row.notFired": "Not fired yet",
   "orchestra.hooks.row.noTrigger": "No trigger",
   "orchestra.hooks.row.paused": "Paused",
+  "orchestra.hooks.row.unpublished": "Unpublished",
+  "orchestra.hooks.row.unpublishedHint": "Installed, but it does not fire. Publish it again, or uninstall it.",
   "orchestra.hooks.row.activityUnavailable": "Activity unavailable",
   "orchestra.hooks.row.stale": "Installed v{{installed}} · published v{{published}}",
   "orchestra.hooks.row.staleUnnumbered": "Installed copy is older than the published one",
@@ -65,6 +67,8 @@ export const HOOKS_COPY = {
   "orchestra.hooks.uninstall.body":
     "Agents in this project stop using it right away. The hook stays in your library and you can install it again.",
   "orchestra.hooks.uninstall.confirm": "Uninstall",
+  "orchestra.hooks.unpublish.body":
+    "Its installed copies stop firing right away. They stay installed and fire again when you publish it. Your draft is kept.",
   "orchestra.hooks.order.open": "Order",
   "orchestra.hooks.order.openTitle": "Set the order installed hooks are checked in",
   "orchestra.hooks.order.title": "Hook order",
@@ -208,6 +212,7 @@ export const HOOKS_COPY = {
   "orchestra.hooks.canvas.installed": "Installed in {{profile}} · v{{version}}",
   "orchestra.hooks.canvas.notFired": "not fired yet",
   "orchestra.hooks.canvas.installedEarlier": "Installed in {{profile}} · an earlier version",
+  "orchestra.hooks.canvas.installedUnpublished": "Installed in {{profile}} · unpublished, so it does not fire",
   "orchestra.hooks.canvas.update": "Install the published version",
   "orchestra.hooks.canvas.test": "Draft test · {{label}} → {{result}}",
   "orchestra.hooks.canvas.graphOnly": "Graph only; nothing ran",

@@ -357,12 +357,16 @@ export function HookLibrary(props: Props) {
                   const install = () => installOf(document.id)
                   const fired = () => lastFire(document.id)
                   const enabled = () => !!install()?.enabled
+                  // Installed, but its document was unpublished: the install stays and does not fire.
+                  const withdrawn = () => !!install()?.unpublished
                   const label = () =>
-                    enabled()
-                      ? "orchestra.hooks.installed"
-                      : install()
-                        ? "orchestra.hooks.row.paused"
-                        : "orchestra.hooks.notInstalled"
+                    withdrawn()
+                      ? "orchestra.hooks.row.unpublished"
+                      : enabled()
+                        ? "orchestra.hooks.installed"
+                        : install()
+                          ? "orchestra.hooks.row.paused"
+                          : "orchestra.hooks.notInstalled"
                   // Never published and never installed: the switch cannot work yet.
                   const unpublished = () => !document.activeVersionId && !install()
                   // A newer publish leaves the install on the version it pinned until it is updated.
@@ -429,8 +433,8 @@ export function HookLibrary(props: Props) {
                         />
                         <span>
                           {copy.t(label())}
-                          <Show when={summary()}>
-                            <small>{summary()}</small>
+                          <Show when={withdrawn()} fallback={<Show when={summary()}><small>{summary()}</small></Show>}>
+                            <small>{copy.t("orchestra.hooks.row.unpublishedHint")}</small>
                           </Show>
                           <Show when={stale()}>
                             {(current) => (

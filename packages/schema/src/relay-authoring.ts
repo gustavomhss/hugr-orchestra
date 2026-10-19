@@ -97,7 +97,7 @@ export const Meta = Schema.Struct({ relay: Schema.optionalKey(RelayMeta) }).anno
 })
 export interface Meta extends Schema.Schema.Type<typeof Meta> {}
 
-// Timestamps are ISO-8601 UTC with a `Z` suffix; `versionId` is a fresh UUID per save.
+// Timestamps are ISO-8601 UTC with a `Z` suffix; `versionId` is a fresh UUID per save, the draft revision guard.
 export const Document = Schema.Struct({
   id: Schema.String,
   name: Schema.String,
@@ -117,7 +117,7 @@ export const Document = Schema.Struct({
 }).annotate({ identifier: "RelayAuthoring.Document", ...preserve })
 export interface Document extends Schema.Schema.Type<typeof Document> {}
 
-// The immutable body stored per save in the `versions` table.
+// The immutable body the `versions` table holds: one per publish (older stores also wrote one per save).
 export const Version = Schema.Struct({ ...Document.fields, workflowId: Schema.String }).annotate({
   identifier: "RelayAuthoring.Version",
   ...preserve,

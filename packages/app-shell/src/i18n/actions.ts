@@ -104,6 +104,7 @@ export const dict = {
   "orchestra.actions.artifacts": "Artifacts",
   "orchestra.actions.source": "Source",
   "orchestra.actions.refresh": "Refresh",
+  "orchestra.actions.loadRetry": "Retry",
   "orchestra.actions.connect": "Connect repository",
   "orchestra.actions.disconnect": "Remove connection",
   "orchestra.actions.close": "Close",

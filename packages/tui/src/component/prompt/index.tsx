@@ -397,7 +397,8 @@ export function Prompt(props: PromptProps) {
         hidden: true,
         enabled: status().type !== "idle",
         run: () => {
-          if (auto()?.visible) return
+          // Escape precedence: an open dialog consumes it first, then autocomplete, then shell mode, then interrupt.
+          if (dialog.stack.length > 0 || auto()?.visible) return
           if (!input.focused) return
           // TODO: this should be its own command
           if (store.mode === "shell") {
@@ -418,7 +419,6 @@ export function Prompt(props: PromptProps) {
             })
             setStore("interrupt", 0)
           }
-          dialog.clear()
         },
       },
       {

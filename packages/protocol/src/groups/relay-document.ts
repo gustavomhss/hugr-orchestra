@@ -180,7 +180,7 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
         docs(
           "v2.relay.document.update",
           "Save Relay document",
-          "Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.",
+          "Save the working draft over the loaded one; only publish makes a version. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.",
         ),
       ),
   )
@@ -209,7 +209,7 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
     })
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
-        docs("v2.relay.document.versions", "List document versions", "A document's saved versions, newest first."),
+        docs("v2.relay.document.versions", "List document versions", "A document's published versions, newest first."),
       ),
   )
   .add(
@@ -220,7 +220,7 @@ export const RelayDocumentGroup = HttpApiGroup.make("server.relay.document")
       error: RelayErrors,
     })
       .annotateMerge(locationQueryOpenApi)
-      .annotateMerge(docs("v2.relay.document.version", "Get document version", "One saved version of a document.")),
+      .annotateMerge(docs("v2.relay.document.version", "Get document version", "One published version of a document.")),
   )
   .add(
     HttpApiEndpoint.get("relay.document.sprint", `${document}/sprint`, {

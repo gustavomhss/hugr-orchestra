@@ -1,7 +1,7 @@
 import type { TuiPlugin, TuiPluginApi } from "@orchestra/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo, For, Show, createSignal } from "solid-js"
-import { TodoItem } from "../../component/todo-item"
+import { TodoItem, todoProgress } from "../../component/todo-item"
 
 const id = "internal:sidebar-todo"
 
@@ -19,7 +19,7 @@ function View(props: { api: TuiPluginApi; session_id: string }) {
             <text fg={theme().text}>{open() ? "▼" : "▶"}</text>
           </Show>
           <text fg={theme().text}>
-            <b>Todo</b>
+            <b>Todo</b> {todoProgress(list())}
           </text>
         </box>
         <Show when={list().length <= 2 || open()}>

@@ -52,7 +52,10 @@ export default function PluginsPage(props: ChapterPageProps) {
   // Push the set this page shows when it opens and after every change, one request at a time so the server ends on
   // the latest set. Only the latest request's answer sets the status.
   const push = { latest: 0, queue: Promise.resolve() }
+  // Retry bumps this so the effect pushes the same set again.
+  const [attempt, setAttempt] = createSignal(0)
   createEffect(() => {
+    attempt()
     if (protocol() !== "v2" || store().loading()) return
     const input = {
       location: { directory: directory() },
@@ -213,6 +216,11 @@ export default function PluginsPage(props: ChapterPageProps) {
         {(key) => (
           <p class="mx-note" data-slot="plugins-application">
             {language.t(key())}
+            <Show when={server() === "failed"}>
+              <button type="button" class="mx-btn" data-slot="plugins-sync-retry" onClick={() => setAttempt((count) => count + 1)}>
+                {language.t("orchestra.plugins.syncRetry")}
+              </button>
+            </Show>
           </p>
         )}
       </Show>

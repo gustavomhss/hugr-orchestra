@@ -247,6 +247,14 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   color: var(--orchestra-sidebar-icon);
   fill: currentColor;
 }
+[data-orchestra-palette="github"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+[data-orchestra-palette="github"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
 [data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }

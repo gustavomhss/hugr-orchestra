@@ -494,6 +494,13 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     })
   })
 
+  async function forkSession(sessionID: string): Promise<void> {
+    const result = await sdk.client.session.fork({ sessionID }).catch((error: unknown) => ({ data: undefined, error }))
+    if (result.data?.id) return route.navigate({ type: "session", sessionID: result.data.id })
+    const message = `${result.error ? errorMessage(result.error) : "no response"}. Confirm to retry, or run: orchestra --session ${sessionID} --fork`
+    if (await DialogConfirm.show(dialog, "Failed to fork session", message, "dismiss")) return forkSession(sessionID)
+  }
+
   let continued = false
   createEffect(() => {
     // When using -c, session list is loaded in blocking phase, so we can navigate at "partial"
@@ -504,13 +511,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     if (match) {
       continued = true
       if (args.fork) {
-        void sdk.client.session.fork({ sessionID: match }).then((result) => {
-          if (result.data?.id) {
-            route.navigate({ type: "session", sessionID: result.data.id })
-          } else {
-            toast.show({ message: "Failed to fork session", variant: "error" })
-          }
-        })
+        void forkSession(match)
       } else {
         route.navigate({ type: "session", sessionID: match })
       }
@@ -524,13 +525,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   createEffect(() => {
     if (forked || sync.status !== "complete" || !args.sessionID || !args.fork) return
     forked = true
-    void sdk.client.session.fork({ sessionID: args.sessionID }).then((result) => {
-      if (result.data?.id) {
-        route.navigate({ type: "session", sessionID: result.data.id })
-      } else {
-        toast.show({ message: "Failed to fork session", variant: "error" })
-      }
-    })
+    void forkSession(args.sessionID)
   })
 
   createEffect(
@@ -757,6 +752,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         run: () => {
           dialog.replace(() => <DialogDebug />)
         },
+        category: "System",
+      },
+      {
+        name: "orchestra.getting_started",
+        title: "Show getting started",
+        run: () => kv.set("dismissed_getting_started", false),
         category: "System",
       },
       {

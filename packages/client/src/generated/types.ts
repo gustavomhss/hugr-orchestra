@@ -5851,6 +5851,7 @@ export type RelayHooksListOutput = {
       readonly sha256: string
       readonly order: number
       readonly enabled: boolean
+      readonly unpublished?: true
       readonly installedBy: string
       readonly installedAt: number
       readonly snapshot: {
@@ -5966,6 +5967,7 @@ export type RelayHooksInstallOutput = {
     readonly sha256: string
     readonly order: number
     readonly enabled: boolean
+    readonly unpublished?: true
     readonly installedBy: string
     readonly installedAt: number
     readonly snapshot: {
@@ -6080,6 +6082,7 @@ export type RelayHooksUpdateOutput = {
     readonly sha256: string
     readonly order: number
     readonly enabled: boolean
+    readonly unpublished?: true
     readonly installedBy: string
     readonly installedAt: number
     readonly snapshot: {
@@ -6193,6 +6196,7 @@ export type RelayHooksEnableOutput = {
     readonly sha256: string
     readonly order: number
     readonly enabled: boolean
+    readonly unpublished?: true
     readonly installedBy: string
     readonly installedAt: number
     readonly snapshot: {
@@ -6306,6 +6310,7 @@ export type RelayHooksDisableOutput = {
     readonly sha256: string
     readonly order: number
     readonly enabled: boolean
+    readonly unpublished?: true
     readonly installedBy: string
     readonly installedAt: number
     readonly snapshot: {
@@ -6420,6 +6425,7 @@ export type RelayHooksOrderOutput = {
       readonly sha256: string
       readonly order: number
       readonly enabled: boolean
+      readonly unpublished?: true
       readonly installedBy: string
       readonly installedAt: number
       readonly snapshot: {
@@ -6588,6 +6594,7 @@ export type RelayHooksRepairOutput = {
       readonly sha256: string
       readonly order: number
       readonly enabled: boolean
+      readonly unpublished?: true
       readonly installedBy: string
       readonly installedAt: number
       readonly snapshot: {
