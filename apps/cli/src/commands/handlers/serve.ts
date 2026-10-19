@@ -8,6 +8,8 @@ import * as Effect from "effect/Effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { createRoutes } from "@orchestra/server/routes"
+import { MaestroSeatsV2 } from "@orchestra/maestro/v2/seats"
+import { ClaudeCodeHost } from "@orchestra/engine-claude-code/v2/host"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
@@ -38,7 +40,7 @@ function listen(hostname: string, port: Option.Option<number>, password: string)
 
 function bind(hostname: string, port: number, password: string) {
   return Layer.build(
-    HttpRouter.serve(createRoutes({ password }), { disableListenLog: true, disableLogger: true }).pipe(
+    HttpRouter.serve(createRoutes({ password, host: [MaestroSeatsV2.contribution, ClaudeCodeHost.contribution] }), { disableListenLog: true, disableLogger: true }).pipe(
       Layer.provideMerge(NodeHttpServer.layer(() => createServer(), { port, host: hostname })),
       Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node]))),
     ),
