@@ -107,6 +107,7 @@ export const COMMANDS = [
   "export",
   "import",
   "territory",
+  "own-export",
 ] as const
 export type Command = (typeof COMMANDS)[number]
 
@@ -251,6 +252,8 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   //                       read by `authorityOf` (WRITE_PATHS), with the page stating the honest write it does.
   territory: "atlas-query", // OPS (R4): writes TERRITORY-CATALOG.json through publishTerritoryCatalog and no
   //                           knowledge, so it binds a READ leg — the `export` precedent (a file, never the store).
+  "own-export": "atlas-query", // OPS (R7): reads the live store's `own` briefings and writes a reviewed-snapshot FILE;
+  //                              it never writes the store or OWN-SNAPSHOT.json (the materializer does).
 }
 
 export type Authority = "read" | "write"
