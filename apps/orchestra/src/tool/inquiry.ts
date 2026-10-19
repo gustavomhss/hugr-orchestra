@@ -111,7 +111,8 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
         if (input.action === "close") {
           const refusal = ResearchInquiry.refusal(state, input.sufficiency)
           if (refusal) return yield* refuse(refusal)
-          // The close re-runs the check on the final state; its failures become the card's limitations short of answered.
+          // The close runs the check itself on the final state and answer, so no separate check is needed first; its failures
+          // refuse an answered close by name and become the card's limitations short of answered.
           const outcome = yield* ResearchInquiry.check(state, input, yield* deps)
           if (input.sufficiency === "answered" && outcome.result.verdict !== "pass")
             return yield* refuse(`the closing check failed: ${outcome.result.issues.slice(0, 16).map((issue) =>

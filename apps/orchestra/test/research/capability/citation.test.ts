@@ -43,13 +43,13 @@ describe("JE-AC-I2, I3: an answer needs verified evidence before it is done", ()
     const zero = (yield* test.inquiry({ action: "check" })).output
     expect(zero).toContain("\"verdict\":\"fail\"")
     expect(zero).toContain("answered, but the inquiry has zero claims and zero evidence")
-    expect(yield* test.refused(test.answered("It works."))).toContain("the last check failed")
+    expect(yield* test.refused(test.answered("It works."))).toContain("the closing check failed: R2")
 
     yield* test.inquiry({ action: "claim", subquestion, proposition: "It works.", nature: "observation", evidence: [] })
     const bare = (yield* test.inquiry({ action: "check" })).output
     expect(bare).toContain("claim has no evidence")
     expect(bare).toContain("answered, but no claim has resolved evidence")
-    expect(yield* test.refused(test.answered("It works."))).toContain("the last check failed")
+    expect(yield* test.refused(test.answered("It works."))).toContain("the closing check failed: R2")
 
     const after = yield* test.assemble
     expect(after.outcome).toBeUndefined()

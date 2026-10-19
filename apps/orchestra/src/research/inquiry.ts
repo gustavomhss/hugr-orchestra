@@ -228,13 +228,13 @@ export function drain(
   }))
 }
 
-/** Why the inquiry cannot close now, or undefined. The host refuses to close over an uncovered subquestion (efficiency.md). */
+/**
+ * Why the inquiry cannot close now, or undefined. The host refuses to close over an uncovered subquestion (efficiency.md).
+ * No earlier check is required: close runs the check itself on the final state and answer.
+ */
 export function refusal(state: State, sufficiency: Research.Sufficiency) {
   if (state.phase === "none") return "open the inquiry first"
   if (state.phase === "closed") return "inquiry closed"
-  if (!state.check) return "no check is registered: run inquiry check before close"
-  if (state.stale) return "a write after the last check invalidated it: run inquiry check again"
-  if (sufficiency === "answered" && state.check.verdict !== "pass") return "the last check failed: answered needs a passing check; close partial or blocked, or fix the issues"
   if (sufficiency === "blocked") return undefined
   const open = state.subquestions.filter((sub) => !sub.gap && !state.claims.some((claim) => !claim.dropped && claim.subquestion === sub.ref.id))
   if (open.length) return `subquestion ${open.map((sub) => sub.ref.id).join(", ")} has neither an answering claim nor a declared gap: claim it, or drop it with the reason`
@@ -326,6 +326,6 @@ function next(state: State) {
   const open = state.subquestions.filter((sub) => !sub.gap && !state.claims.some((claim) => !claim.dropped && claim.subquestion === sub.ref.id))
   if (open.length) return `cover ${open.map((sub) => sub.ref.id).join(", ")} with a claim, or drop it with the gap`
   if (state.hypotheses.some((item) => item.status === "open")) return "resolve or drop the open hypotheses"
-  if (!state.check || state.stale) return "inquiry check"
-  return state.check.verdict === "pass" ? "inquiry close" : "fix the check issues, or close partial or blocked"
+  if (state.check && !state.stale && state.check.verdict !== "pass") return "fix the check issues, or close partial or blocked"
+  return "inquiry close; it runs the check and names what to fix"
 }

@@ -98,7 +98,7 @@ const hypothesized = (result: Tool.ExecuteResult) =>
   Schema.decodeUnknownSync(Schema.Struct({ hypothesis: Research.RecordRef }))(result.metadata.inquiry).hypothesis
 
 describe("the inquiry state machine", () => {
-  it.instance("refuses to close over an uncovered subquestion or a stale check, and backs the closed state with the ledger", () =>
+  it.instance("refuses to close over an uncovered subquestion or a failing check, and backs the closed state with the ledger", () =>
     Effect.gen(function* () {
       const fixture = yield* setup()
       yield* fixture.write("a.ts", "export const a = 1\n")
@@ -110,8 +110,6 @@ describe("the inquiry state machine", () => {
       const source = yield* fixture.source("a.ts")
       yield* fixture.inquiry({ action: "claim", subquestion: open.subquestions[0], proposition: "a.ts exports a", nature: "extraction",
         evidence: [{ source, lines: { start: 1, end: 1 } }] })
-      expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "partial", answer: "a.ts:1 exports a." })))
-        .toContain("no check is registered")
       const failed = yield* fixture.inquiry({ action: "check" })
       expect(failed.output).toContain("\"verdict\":\"fail\"")
       expect(failed.output).toContain("\"rule\":\"R7\"")
@@ -119,17 +117,34 @@ describe("the inquiry state machine", () => {
       expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "partial", answer: "a.ts:1 exports a." })))
         .toContain("neither an answering claim nor a declared gap")
       yield* fixture.inquiry({ action: "drop", ref: open.subquestions[1], reason: "a.ts has no default export to inspect" })
-      expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "partial", answer: "a.ts:1 exports a." })))
-        .toContain("invalidated")
-      yield* fixture.inquiry({ action: "check" })
+      // The drop made the last check stale; close runs its own, and R7 still refuses answered over the declared gap.
       expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "answered", answer: "a.ts:1 exports a." })))
-        .toContain("the last check failed")
+        .toContain("the closing check failed: R7")
       expect((yield* fixture.inquiry({ action: "close", sufficiency: "partial", answer: "a.ts:1 exports a." })).output)
         .toContain("\"closed\":\"partial\"")
       // Closed is a ledger fact: every later call of the dispatch is refused, whatever process serves it.
       expect(yield* fixture.refused(fixture.call("read", { filePath: "a.ts" }))).toContain("inquiry closed")
       expect(yield* fixture.refused(fixture.inquiry({ action: "status" }))).toContain("inquiry closed")
       expect(yield* fixture.turn()).toContain("<inquiry state=\"closed\">")
+      yield* fixture.sessions.remove(fixture.authority.id)
+    }))
+
+  // Mutation control: restore the `if (!state.check) return "no check is registered..."` refusal in ResearchInquiry.refusal
+  // (src/research/inquiry.ts); the first close is then refused and this goes red.
+  it.instance("close runs the check itself: an answered close needs no earlier inquiry check", () =>
+    Effect.gen(function* () {
+      const fixture = yield* setup()
+      yield* fixture.write("d.ts", "export const d = 1\n")
+      const open = opened(yield* fixture.inquiry({ action: "open", question: "What does d.ts export?", subquestions: ["Its name"], profile: "understand" }))
+      const source = yield* fixture.source("d.ts")
+      yield* fixture.inquiry({ action: "claim", subquestion: open.subquestions[0], proposition: "d.ts exports d", nature: "extraction",
+        evidence: [{ source, lines: { start: 1, end: 1 } }] })
+      // A failing answer is refused with the violations by rule, still without a separate check.
+      expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "answered", answer: "d.ts:1 and e.ts:4 export d." })))
+        .toContain("the closing check failed: R9")
+      const closed = yield* fixture.inquiry({ action: "close", sufficiency: "answered", answer: "d.ts:1 exports d." })
+      expect(closed.output).toContain("\"closed\":\"answered\"")
+      expect(closed.output).toContain("\"check\":\"pass\"")
       yield* fixture.sessions.remove(fixture.authority.id)
     }))
 
