@@ -11,6 +11,7 @@ export const navigation = [
   { id: "maestro", label: "orchestra.nav.maestro", chapter: undefined },
   // Relay workflows sit next to Maestro, which runs them (owner decision, 2026-10-06).
   { id: "workflows", label: "orchestra.nav.workflows", chapter: "C14" },
+  { id: "atlas", label: "orchestra.nav.atlas", chapter: undefined },
   { id: "mcp", label: "orchestra.nav.mcp", chapter: "C01", wip: true },
   { id: "skills", label: "orchestra.nav.skills", chapter: "C02" },
   { id: "plugins", label: "orchestra.nav.plugins", chapter: "C03" },

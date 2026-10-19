@@ -33,6 +33,7 @@ export const chapterPages: Partial<Record<string, Component<ChapterPageProps>>> 
   settings: lazy(() => import("./chapters/settings")),
   workflows: lazy(() => import("./chapters/workflows")),
   hooks: lazy(() => import("./chapters/hooks")),
+  atlas: lazy(() => import("./chapters/atlas/atlas")),
 }
 
 // These chapters configure the whole server, so they render without a project (with an empty directory).
