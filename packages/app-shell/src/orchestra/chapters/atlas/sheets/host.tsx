@@ -3,6 +3,7 @@ import { Dynamic } from "solid-js/web"
 import { HotsetSheet, RepublishSheet, RespawnSheet, RuleSheet, TerritorySheet, VerifySheet } from "./more-sheets"
 import { MineSheet, ProducersSheet, PromoteAllSheet, PromoteResultSheet, ReconcileSheet } from "./review-sheets"
 import { AddFactSheet, ClassifySheet, EditSheet, LinkSheet, RatifySheet } from "./fact-sheets"
+import { DelegateSheet } from "./delegate-sheet"
 import { type AtlasSheet, type AtlasSheetKind, type AtlasSheetProps, atlasSheetState, closeAtlasSheet, resetAtlasSheets } from "./state"
 
 // Each sheet task adds its own line here: `<kind>: <Component>,` with the component imported from its file.
@@ -14,6 +15,7 @@ export const atlasSheets: { [K in AtlasSheetKind]?: Component<AtlasSheetProps<K>
   respawn: RespawnSheet,
   rule: RuleSheet,
   territory: TerritorySheet,
+  "iv-delegate": DelegateSheet,
   "promote-all": PromoteAllSheet,
   "promote-result": PromoteResultSheet,
   reconcile: ReconcileSheet,

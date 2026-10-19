@@ -240,4 +240,23 @@ export const ATLAS_SHEETS_COPY = {
   "orchestra.atlas.sheets.territory.tech.command": "Command",
   "orchestra.atlas.sheets.territory.tech.command.value":
     "<code>atlas territory <name> <glob...> --owner <seat> --tier <T0|T1|T2></code>, with <code>ATLAS_RATIFY_TOKEN</code>",
+  "orchestra.atlas.sheets.delegate.title.one": "Delegate {{n}} question",
+  "orchestra.atlas.sheets.delegate.title.other": "Delegate {{n}} questions",
+  "orchestra.atlas.sheets.delegate.text":
+    "A model drafts an answer for each one from what Atlas knows about the site. The drafts come back to you: nothing is ratified until you confirm it.",
+  "orchestra.atlas.sheets.delegate.model": "Model",
+  "orchestra.atlas.sheets.delegate.noModel": "No connected model. Connect a provider in Providers first.",
+  "orchestra.atlas.sheets.delegate.more": "and {{n}} more",
+  "orchestra.atlas.sheets.delegate.note":
+    "Each draft carries the model's reasoning. Tier answers stay drafts until a person ratifies them: the only path to T1 or T0 is through you.",
+  "orchestra.atlas.sheets.delegate.tech.runs": "Runs",
+  "orchestra.atlas.sheets.delegate.tech.runs.value": "one model call per question, through Orchestra's provider layer",
+  "orchestra.atlas.sheets.delegate.tech.writes": "Writes",
+  "orchestra.atlas.sheets.delegate.tech.writes.value":
+    "one answer marked drafted per question in .atlas/review.jsonl; the question stays open until you accept it",
+  "orchestra.atlas.sheets.delegate.confirm": "Draft answers",
+  "orchestra.atlas.sheets.delegate.running": "Drafting…",
+  "orchestra.atlas.sheets.delegate.done.one": "{{n}} draft is in. Accept each one you agree with.",
+  "orchestra.atlas.sheets.delegate.done.other": "{{n}} drafts are in. Accept each one you agree with.",
+  "orchestra.atlas.sheets.delegate.partial": "{{n}} drafted · {{failed}} could not be drafted.",
 }

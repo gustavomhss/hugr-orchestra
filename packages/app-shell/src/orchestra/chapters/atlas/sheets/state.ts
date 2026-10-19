@@ -21,6 +21,7 @@ export type AtlasSheet =
   | { kind: "respawn"; member: AtlasMemberId; unit: string }
   | { kind: "rule"; member: AtlasMemberId; proposalId: string; rule: string; scope: string }
   | { kind: "territory"; unit: string }
+  | { kind: "iv-delegate"; questionIds: string[] }
 export type AtlasSheetKind = AtlasSheet["kind"]
 export type AtlasSheetProps<K extends AtlasSheetKind> = { sheet: Extract<AtlasSheet, { kind: K }>; onClose: () => void }
 export type AtlasPromoteResult = Exclude<AtlasOutput<"promote">, { state: "empty" }>

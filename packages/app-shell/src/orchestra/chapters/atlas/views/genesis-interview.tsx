@@ -8,13 +8,14 @@ import { Icon } from "../kit/chips"
 import { Btn, Tech } from "../kit/controls"
 import { num } from "../kit/format"
 import { Rich } from "../kit/text"
+import { openAtlasSheet } from "../sheets/state"
 import { INTERVIEW_CAP, interviewAnswer } from "./genesis-data"
 
 // The ratification interview (specs/atlas-ui/mock/views-explore.js:421-430, app.js:341-383) over the engine's batch
 // (D34): `review().interview`, each question keyed by its engine id. A pick or a typed sentence stays on this screen
 // until Ratify writes one `answer` per question; an answered question drops out of the next read. A model's draft
-// (D33) rides on its question until a person accepts it, which writes the same text as a plain answer. Delegation is
-// still marked (R11) until its sheet exists.
+// (D33) rides on its question until a person accepts it, which writes the same text as a plain answer. Delegate
+// opens the delegate sheet (sheets/delegate-sheet.tsx) with the selected questions.
 const KIND = {
   owner: ["orchestra.atlas.genesis.iv.kind.owner", "orchestra.atlas.genesis.iv.kind.owner.count", "blue"],
   tier: ["orchestra.atlas.genesis.iv.kind.tier", "orchestra.atlas.genesis.iv.kind.tier.count", "good"],
@@ -44,7 +45,6 @@ export function GenesisInterview() {
   const done = () => iv().batch.filter(answered).length
   const count = (kind: AtlasInterviewQuestion["kind"]) => iv().batch.filter((q) => q.kind === kind).length
   const busy = () => atlas.controller.state.pending.includes("answer")
-  const newcap = () => atlas.toast(language.t("orchestra.atlas.genesis.iv.newcap"), "info")
   // One answer per answered question, in batch order; each write rereads the batch (D34). A refused one keeps its pick.
   const ratify = async () => {
     const picked = iv().batch.filter(answered)
@@ -123,9 +123,15 @@ export function GenesisInterview() {
               : language.t("orchestra.atlas.genesis.iv.delegate")
           }
           icon="sparkle"
-          cap="R11"
           onClick={() =>
-            selected() ? newcap() : atlas.toast(language.t("orchestra.atlas.genesis.iv.selectFirst"), "info")
+            selected()
+              ? openAtlasSheet({
+                  kind: "iv-delegate",
+                  questionIds: iv()
+                    .batch.filter((q) => ui.selected[q.id])
+                    .map((q) => q.id),
+                })
+              : atlas.toast(language.t("orchestra.atlas.genesis.iv.selectFirst"), "info")
           }
         />
       </div>

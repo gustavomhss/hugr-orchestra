@@ -205,7 +205,6 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.iv.note":
     "Answer by hand, or select questions and delegate them: a model drafts the answers and you confirm each one. A draft is never ratified on its own. Unanswered questions defer to the next session; an uncovered path stays T0-strict deny.",
   "orchestra.atlas.genesis.iv.ratify": "Ratify the batch",
-  "orchestra.atlas.genesis.iv.newcap": "Delegating to a model is a new capability (R11).",
   "orchestra.atlas.genesis.iv.selectFirst": "Select one or more questions first.",
   "orchestra.atlas.genesis.iv.empty": "No open questions. Answered ones drop out; new ones appear as the store changes.",
   "orchestra.atlas.genesis.iv.nothing": "Answer one or more questions first.",
