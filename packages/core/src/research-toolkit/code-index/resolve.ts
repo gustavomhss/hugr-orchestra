@@ -3,6 +3,8 @@ export * as CodeIndexResolve from "./resolve"
 import path from "path"
 import { Effect } from "effect"
 import type ts from "typescript"
+import { CodeIndexGo } from "./go"
+import { CodeIndexRust } from "./rust"
 import type { CodeIndex } from "./types"
 
 // Import resolution (J2.7), replacing Arsenal onboard/derive.ts resolveSpecifier, which resolved relative paths only.
@@ -62,8 +64,13 @@ export const make = Effect.fn("CodeIndexResolve.make")(function* (root: string) 
     return { kind: dots > 0 ? "unresolved" : "package" }
   }
 
+  const go = CodeIndexGo.resolver(root)
+  const rust = CodeIndexRust.resolver(root)
+
   return {
     resolve(from: string, specifier: string): Resolution {
+      if (from.endsWith(".go")) return go(from, specifier)
+      if (from.endsWith(".rs")) return rust(from, specifier)
       return /\.pyi?$/.test(from) ? python(from, specifier) : script(from, specifier)
     },
   }

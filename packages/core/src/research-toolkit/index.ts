@@ -15,8 +15,7 @@ import { ENGINES, IDS } from "./manifest"
 // Nothing here copies acquisition: `status`, `ensure` and `prefetch` run BackendToolkit's verbs over this toolkit's
 // own root and packs, so installs, launchers, shims, retries and failure causes are the backend's (J6.1).
 
-/** scip-go and rust-analyzer join after the benchmark gate (X6). */
-export type ResearchEngineId = "scip-typescript" | "scip-python" | "typescript"
+export type ResearchEngineId = "scip-typescript" | "scip-python" | "scip-go" | "rust-analyzer" | "typescript"
 
 export type Language = "ts" | "js" | "py" | "go" | "rust"
 

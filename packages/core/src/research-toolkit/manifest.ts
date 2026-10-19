@@ -11,5 +11,7 @@ export const ENGINES: Readonly<Partial<Record<ResearchEngineId, ResearchPack>>> 
 export const IDS = Object.keys({
   "scip-typescript": true,
   "scip-python": true,
+  "scip-go": true,
+  "rust-analyzer": true,
   typescript: true,
 } satisfies Record<ResearchEngineId, true>) as ReadonlyArray<ResearchEngineId>
