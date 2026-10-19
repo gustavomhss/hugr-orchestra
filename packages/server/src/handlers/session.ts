@@ -142,6 +142,20 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         }),
       )
       .handle(
+        "session.rename",
+        Effect.fn(function* (ctx) {
+          yield* session.rename({ sessionID: ctx.params.sessionID, title: ctx.payload.title }).pipe(typedNotFound)
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
+        "session.remove",
+        Effect.fn(function* (ctx) {
+          yield* session.remove(ctx.params.sessionID).pipe(typedNotFound)
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
         "session.switchAgent",
         Effect.fn(function* (ctx) {
           yield* session.switchAgent({ sessionID: ctx.params.sessionID, agent: ctx.payload.agent }).pipe(

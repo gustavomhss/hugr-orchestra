@@ -40,6 +40,7 @@ import { Global } from "./global"
 import type { ToolSafety } from "./tool-safety"
 import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
+import { SessionLegacyRow } from "./session/legacy-row"
 import { SessionSubagentModels } from "./session/subagent-models"
 
 export const RevertState = Revert.State
@@ -134,6 +135,9 @@ export interface Interface {
   readonly create: (input: CreateInput) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly get: (sessionID: SessionSchema.ID) => Effect.Effect<SessionSchema.Info, NotFoundError>
   readonly archive: (input: { sessionID: SessionSchema.ID; archived: boolean }) => Effect.Effect<void, NotFoundError>
+  readonly rename: (input: { sessionID: SessionSchema.ID; title: string }) => Effect.Effect<void, NotFoundError>
+  /** Interrupts the Session, then deletes it with its children and history. */
+  readonly remove: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
   readonly messages: (input: {
     sessionID: SessionSchema.ID
     limit?: number
@@ -331,6 +335,15 @@ const layer = Layer.effect(
       archive: Effect.fn("V2Session.archive")(function* (input) {
         if (!(yield* SessionArchive.set(db, events, input)))
           return yield* new NotFoundError({ sessionID: input.sessionID })
+      }),
+      rename: Effect.fn("V2Session.rename")(function* (input) {
+        if (!(yield* SessionLegacyRow.rename(db, events, input)))
+          return yield* new NotFoundError({ sessionID: input.sessionID })
+      }),
+      remove: Effect.fn("V2Session.remove")(function* (sessionID) {
+        yield* result.get(sessionID)
+        yield* Effect.uninterruptible(execution.interrupt(sessionID))
+        if (!(yield* SessionLegacyRow.remove(db, events, sessionID))) return yield* new NotFoundError({ sessionID })
       }),
       list: (input) => SessionArchive.list(db, input),
       messages: Effect.fn("V2Session.messages")(function* (input) {
