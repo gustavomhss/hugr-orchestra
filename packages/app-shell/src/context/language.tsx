@@ -37,6 +37,8 @@ type PluralKey =
   | "janitor.notify.title"
   | "orchestra.env.preserved"
   | "orchestra.tasks.count"
+  // Atlas views word their counts with orchestra.atlas.<view>.<name>.one / .other (i18n/orchestra-chapters/atlas-*.ts).
+  | `orchestra.atlas.${string}`
 type Source = { dict: Record<string, string> }
 
 function cookie(locale: Locale) {
