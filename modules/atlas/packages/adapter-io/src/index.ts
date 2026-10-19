@@ -139,6 +139,10 @@ export {
 // already follow.
 export { createDurableMemory, memoryLogPath } from "./memory-store.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
+// D14 — the shared review log (`.atlas/review.jsonl`): holds, ratification proposals and decisions, interview answers
+// and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
+export { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
+export type { ReviewBody, ReviewFold, ReviewInput, ReviewOf, ReviewRead, ReviewRecord, ReviewTier } from "./review-log.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,
