@@ -164,4 +164,3 @@ function Pick(props: { model: AtlasModel; unit: AtlasUnit; short: string }) {
     </div>
   )
 }
-PY

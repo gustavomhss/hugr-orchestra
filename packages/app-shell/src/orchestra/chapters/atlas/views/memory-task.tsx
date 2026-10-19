@@ -149,5 +149,3 @@ function Fold(props: { record: AtlasMemoryTask }) {
     </dl>
   )
 }
-EOF
-echo done

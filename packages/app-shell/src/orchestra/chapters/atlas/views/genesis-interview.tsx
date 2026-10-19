@@ -158,5 +158,3 @@ export function GenesisInterview(props: { model: AtlasModel }) {
     </section>
   )
 }
-PY
-echo written
