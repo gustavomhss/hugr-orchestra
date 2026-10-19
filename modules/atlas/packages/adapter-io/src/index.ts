@@ -305,3 +305,8 @@ export { budgetLeg, territoriesLeg, OFF_ATLAS_THRESHOLD } from "./calibration-le
 export type { BudgetLeg, BudgetReport, TerritoriesLeg } from "./calibration-ledger.js"
 export { budgetVerdict, territoriesVerdict } from "./calibration-verdicts.js"
 export type { TerritoriesData, TerritoryRow } from "./calibration-verdicts.js"
+
+// R4 (D22) — `atlas territory`: add or replace one territory in TERRITORY-CATALOG.json through
+// `publishTerritoryCatalog` (lane B-O; specs/atlas-ui/build/issues/b-o.md item 3).
+export { declareTerritory, TERRITORY_CATALOG_FILE } from "./territory-write.js"
+export type { TerritoryDeclaration, TerritoryWrite } from "./territory-write.js"
