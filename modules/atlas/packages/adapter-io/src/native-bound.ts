@@ -8,7 +8,7 @@
 // `AtlasBinding` — and the types a host needs to persist its receipts. The owner and storage root stay forced from
 // the binding; nothing reachable through this entry lets a caller name another owner or root.
 
-export { createNativeMemory } from "./native-memory.js"
+export { createNativeMemory, proposeProjectRule } from "./native-memory.js"
 export type {
   AtlasBinding,
   BoundEntry,
@@ -18,6 +18,7 @@ export type {
   FoldVerdict,
   NativeMemory,
   ProjectRuleProposal,
+  ProposalVerdict,
   ReconcileVerdict,
   RecordRef,
   ResumableList,
