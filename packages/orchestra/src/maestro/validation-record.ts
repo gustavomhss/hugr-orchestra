@@ -182,6 +182,8 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["2651606b1bc8c46808086482c7b71297733573306096b641a6e24c7efe78382f", ROSTER_V2],
   // Before jimmy took its effort tier from the caller, retrieved in parallel and committed its verified file:line basis.
   ["21de782c4f626aa289a129f2147ace8bb82ef786fc02d6c7b629169a6f95cb05", ROSTER_V2],
+  // Before jimmy took the jimmy-engine method: a short prompt, the card from inquiry close and one reference skill.
+  ["06cd43178bba652b3c5ee3676472b8f4acee93b391b02512b1e4b54184354a10", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
