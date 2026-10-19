@@ -141,12 +141,12 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
-  ServerProjectListOutput,
-  ServerProjectDirectoriesInput,
-  ServerProjectDirectoriesOutput,
-  ServerConfigGetOutput,
-  ServerConfigUpdateInput,
-  ServerConfigUpdateOutput,
+  ProjectsListOutput,
+  ProjectsDirectoriesInput,
+  ProjectsDirectoriesOutput,
+  ConfigGetOutput,
+  ConfigUpdateInput,
+  ConfigUpdateOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -1277,14 +1277,14 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
-    "server.project": {
+    projects: {
       list: (requestOptions?: RequestOptions) =>
-        request<ServerProjectListOutput>(
+        request<ProjectsListOutput>(
           { method: "GET", path: `/api/project`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
           requestOptions,
         ),
-      directories: (input: ServerProjectDirectoriesInput, requestOptions?: RequestOptions) =>
-        request<ServerProjectDirectoriesOutput>(
+      directories: (input: ProjectsDirectoriesInput, requestOptions?: RequestOptions) =>
+        request<ProjectsDirectoriesOutput>(
           {
             method: "GET",
             path: `/api/project/${encodeURIComponent(input.projectID)}/directories`,
@@ -1295,14 +1295,14 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
-    "server.config": {
+    config: {
       get: (requestOptions?: RequestOptions) =>
-        request<ServerConfigGetOutput>(
+        request<ConfigGetOutput>(
           { method: "GET", path: `/api/config`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
           requestOptions,
         ),
-      update: (input?: ServerConfigUpdateInput, requestOptions?: RequestOptions) =>
-        request<ServerConfigUpdateOutput>(
+      update: (input?: ConfigUpdateInput, requestOptions?: RequestOptions) =>
+        request<ConfigUpdateOutput>(
           {
             method: "PATCH",
             path: `/api/config`,
