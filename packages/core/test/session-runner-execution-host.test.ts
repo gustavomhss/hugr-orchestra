@@ -167,7 +167,7 @@ describe("SessionRunner execution host", () => {
       expect(seen).toHaveLength(1)
       expect(seen[0]).toMatchObject({ allowed: true, denied: true })
       expect(seen[0]?.tools).toContain("echo")
-      expect(asked.map((input) => ({ agent: input.agent, action: input.action, resources: input.resources }))).toEqual([
+      expect(asked.map((input) => ({ agent: String(input.agent), action: input.action, resources: input.resources }))).toEqual([
         { agent: "maestro", action: "bash", resources: ["ls"] },
         { agent: "maestro", action: "bash", resources: ["rm -rf /"] },
       ])
