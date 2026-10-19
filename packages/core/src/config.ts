@@ -264,7 +264,7 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
 export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
   const document = settings((yield* globalDocument()).text ?? "{}")
   return {
-    model: typeof document.model === "string" ? document.model : undefined,
+    ...(typeof document.model === "string" ? { model: document.model } : {}),
     disabledProviders: [
       ...new Set([
         ...document.policies.filter(providerDenial).map((item) => item.resource),
