@@ -322,4 +322,6 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const services = yield* Layer.buildWithMemoMap(layer, memoMap, scope)
   return yield* proof.pipe(Effect.provide(services))
 })))
-console.log(`PACKAGED_RESEARCH=${JSON.stringify(result)}`)
+// The marker line now carries several inquiry turns; wait for the pipe to take all of it before the runtime may exit.
+await new Promise<void>((resolve, reject) =>
+  process.stdout.write(`PACKAGED_RESEARCH=${JSON.stringify(result)}\n`, (error) => error ? reject(error) : resolve()))
