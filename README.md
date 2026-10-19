@@ -25,7 +25,7 @@ An unsigned build makes the system ask before the first launch. On macOS, open S
 ### Command line
 
 ```bash
-npm install -g @humangr/cli
+npm install -g @humanguardrail/cli
 ```
 
 Each release also attaches per-platform `.tar.gz` archives, `SHA256SUMS` and `install.sh`. Download an archive and its digest from `SHA256SUMS`, then run:

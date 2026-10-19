@@ -40,7 +40,7 @@ export async function qualifyProvider(input: {
   if (input.compiler.version !== input.version || sha256(await readFile(join(payload, "bin/orchestra"))) !== input.compiler.binarySHA256)
     throw new Error("PROVIDER_INSTALLED_COMPILER_BINARY_MISMATCH")
   const publicPath = await realpath(launcher)
-  expect(publicPath).toBe(await realpath(join(modules, "@humangr/cli/bin/orchestra.cjs")))
+  expect(publicPath).toBe(await realpath(join(modules, "@humanguardrail/cli/bin/orchestra.cjs")))
   if (!payload.startsWith((await realpath(input.box.directory)) + sep)) throw new Error("PROVIDER_PAYLOAD_OUTSIDE_OWNED_NPM_BOX")
   const stage = join(input.evidence, input.stage)
   await mkdir(stage)

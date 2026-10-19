@@ -202,7 +202,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     `./dist/${name}/package.json`,
     JSON.stringify(
       {
-        name: `@humangr/${name}`,
+        name: `@humanguardrail/${name}`,
         version: Script.version,
         license: "MIT",
         repository: { type: "git", url: "git+https://github.com/gustavomhss/hugr-orchestra.git" },

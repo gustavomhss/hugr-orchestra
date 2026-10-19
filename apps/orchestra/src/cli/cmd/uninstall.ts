@@ -129,10 +129,10 @@ async function showRemovalSummary(targets: RemovalTargets, method: Installation.
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string> = {
-      npm: "npm uninstall -g @humangr/cli",
-      pnpm: "pnpm uninstall -g @humangr/cli",
-      bun: "bun remove -g @humangr/cli",
-      yarn: "yarn global remove @humangr/cli",
+      npm: "npm uninstall -g @humanguardrail/cli",
+      pnpm: "pnpm uninstall -g @humanguardrail/cli",
+      bun: "bun remove -g @humanguardrail/cli",
+      yarn: "yarn global remove @humanguardrail/cli",
       choco: "choco uninstall orchestra",
       scoop: "scoop uninstall orchestra",
     }
@@ -146,10 +146,10 @@ async function executeUninstall(method: Installation.Method, targets: RemovalTar
 
   if (method !== "curl" && method !== "unknown") {
     const cmds: Record<string, string[]> = {
-      npm: ["npm", "uninstall", "-g", "@humangr/cli"],
-      pnpm: ["pnpm", "uninstall", "-g", "@humangr/cli"],
-      bun: ["bun", "remove", "-g", "@humangr/cli"],
-      yarn: ["yarn", "global", "remove", "@humangr/cli"],
+      npm: ["npm", "uninstall", "-g", "@humanguardrail/cli"],
+      pnpm: ["pnpm", "uninstall", "-g", "@humanguardrail/cli"],
+      bun: ["bun", "remove", "-g", "@humanguardrail/cli"],
+      yarn: ["yarn", "global", "remove", "@humanguardrail/cli"],
       choco: ["choco", "uninstall", "orchestra"],
       scoop: ["scoop", "uninstall", "orchestra"],
     }
