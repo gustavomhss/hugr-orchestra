@@ -8,7 +8,7 @@ import { type McpEntry, mcpEntry, type McpServerConfig, type McpStatus } from ".
 type Fetch = (url: URL, init: RequestInit) => Promise<Response>
 
 // One profile's MCP reads and writes. V1 servers expose status, config, tools and profile config
-// writes; V2 servers expose status, connection and config writes through the current API.
+// writes; V2 servers have no MCP service yet, so the compatible API lists nothing and refuses writes.
 // Query functions return null, never undefined, when the server cannot answer.
 export function createMcpSource(input: {
   server: ServerConnection.Any
@@ -19,7 +19,7 @@ export function createMcpSource(input: {
 }) {
   const v1 = () => input.serverSDK.protocol.then((protocol) => protocol === "v1")
   const location = { directory: input.directory }
-  const api = () => input.serverSDK.currentApi.mcp
+  const api = () => input.serverSDK.api.mcp
 
   return {
     v1,
