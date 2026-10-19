@@ -7,7 +7,7 @@ export function promoteSummary(record: AtlasPromoteRecord) {
   const rows = record.run.rows
   const staged = (key: string) => record.staged.includes(key)
   const refused = rows.filter((row) => !row.settled)
-  const code = (row: { rejected?: string }) => row.rejected ?? "unknown"
+  const code = (row: { rejected?: string | null }) => row.rejected ?? "unknown"
   return {
     fresh: rows.filter((row) => row.settled && staged(row.nodeKey)).length,
     again: rows.filter((row) => row.settled && !staged(row.nodeKey)).length,

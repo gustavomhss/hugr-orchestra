@@ -53,7 +53,7 @@ const liveA = {
   uses: [],
   usedBy: ["packages/b"],
   people: ["seat:orchestrator"],
-  state: "live-drifted",
+  state: "live-drifted" as const,
 }
 const liveB = {
   id: "packages/b",
@@ -66,7 +66,7 @@ const liveB = {
   uses: ["packages/a"],
   usedBy: [],
   people: ["seat:orchestrator"],
-  state: "live",
+  state: "live" as const,
 }
 
 describe("atlas ownership data", () => {

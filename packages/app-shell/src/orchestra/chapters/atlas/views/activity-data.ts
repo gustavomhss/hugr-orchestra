@@ -29,21 +29,24 @@ export function shownRows(rows: ActivityRow[], show: ActivityShow) {
 export const countRows = (rows: ActivityRow[], show: Exclude<ActivityShow, "all">) => shownRows(rows, show).length
 
 // An event's sentence, as a copy key and its parameters (mock model.js:310-322). The view translates it.
+// Every branch's params widen to one shape, so the union carries no optional `undefined` keys into language.t.
+type EventParams = Record<string, string | number>
+
 export function eventText(event: AtlasEvent) {
   const name = seatName(event.who)
-  if (event.kind === "memory" && event.recall) return { key: "orchestra.atlas.activity.event.recalled", params: { name } } as const
-  if (event.kind === "memory" && event.ok) return { key: "orchestra.atlas.activity.event.saved", params: { name } } as const
-  if (event.kind === "memory") return { key: "orchestra.atlas.activity.event.notSaved", params: { name } } as const
-  if (event.kind === "resume" && event.ok) return { key: "orchestra.atlas.activity.event.resumed", params: { name } } as const
-  if (event.kind === "resume") return { key: "orchestra.atlas.activity.event.noCheckpoint", params: { name } } as const
-  if (event.kind === "hold") return { key: "orchestra.atlas.activity.event.held", params: { name } } as const
+  if (event.kind === "memory" && event.recall) return { key: "orchestra.atlas.activity.event.recalled", params: { name } as EventParams } as const
+  if (event.kind === "memory" && event.ok) return { key: "orchestra.atlas.activity.event.saved", params: { name } as EventParams } as const
+  if (event.kind === "memory") return { key: "orchestra.atlas.activity.event.notSaved", params: { name } as EventParams } as const
+  if (event.kind === "resume" && event.ok) return { key: "orchestra.atlas.activity.event.resumed", params: { name } as EventParams } as const
+  if (event.kind === "resume") return { key: "orchestra.atlas.activity.event.noCheckpoint", params: { name } as EventParams } as const
+  if (event.kind === "hold") return { key: "orchestra.atlas.activity.event.held", params: { name } as EventParams } as const
   if (event.action === "anchor")
     return {
       key: "orchestra.atlas.activity.event.froze",
-      params: { name, count: event.units?.length ?? 0, target: event.target ?? "" },
+      params: { name, count: event.units?.length ?? 0, target: event.target ?? "" } as EventParams,
     } as const
-  if (event.action === "catalog") return { key: "orchestra.atlas.activity.event.catalog", params: { name } } as const
-  return { key: "orchestra.atlas.activity.event.briefing", params: { name, unit: event.target ?? "" } } as const
+  if (event.action === "catalog") return { key: "orchestra.atlas.activity.event.catalog", params: { name } as EventParams } as const
+  return { key: "orchestra.atlas.activity.event.briefing", params: { name, unit: event.target ?? "" } as EventParams } as const
 }
 
 // The mock's time(ms): "Oct 11 · 14:05 UTC", always in UTC.

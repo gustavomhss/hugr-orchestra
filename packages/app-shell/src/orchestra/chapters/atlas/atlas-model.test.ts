@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { createAtlasModel } from "./atlas-model"
+import { type AtlasTerritory, createAtlasModel } from "./atlas-model"
 import { atlasFixture } from "./atlas-model.fixture"
 
 const keys = (items: readonly { key: string }[]) => items.map((item) => item.key)
@@ -267,7 +267,8 @@ describe("atlas model: committed Own snapshot, memory and territories (D3b)", ()
   test("reads territories from the catalog and finds a unit's territory", () => {
     const model = createAtlasModel({
       ...atlasFixture(),
-      territories: [territory, { name: "loose", owner: "nobody", tier: "BAD", globs: [] }],
+      // The second row carries an unknown tier, as a hand-edited catalog can.
+      territories: [territory, { name: "loose", owner: "nobody", tier: "BAD" as AtlasTerritory["tier"], globs: [] }],
     })
     expect(model.territories()).toEqual([territory, { name: "loose", owner: "nobody", tier: "T2", globs: [] }])
     expect(model.territoryOf("packages/a")?.name).toBe("billing")
