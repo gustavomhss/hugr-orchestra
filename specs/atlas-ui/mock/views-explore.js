@@ -137,7 +137,7 @@
     const group = q.group ?? ""
     const units = M().units().filter((u) => !group || u.group === group)
     const s = M().stats()
-    const href = (patch) => `#/explore?${new URLSearchParams(Object.fromEntries(Object.entries({ view, group, sort: q.sort ?? "", shape: q.shape ?? "", ...patch }).filter(([, v]) => v)))}`
+    const href = (patch) => `#/explore?${new URLSearchParams(Object.fromEntries(Object.entries({ view, group, sort: q.sort ?? "", ...patch }).filter(([, v]) => v)))}`
     const toolbar = `<div class="at-explore-bar">
       <div class="wf-range">${[["graph", "Graph", "graph"], ["map", "Map", "stack"], ["list", "List", "list"]].map(([id, l, ic]) => `<button aria-pressed="${view === id}" data-action="go" data-value="${href({ view: id })}">${A.icon(ic)}${l}</button>`).join("")}</div>
       <div class="at-typechips">${[["", "All"], ["code", "Code"], ["docs", "Docs"], ["harness", "Harness"], ["root", "Root"]].map(([g, l]) => `<button class="at-typechip ${group === g ? "on" : ""}" data-action="go" data-value="${href({ group: g })}">${l}<span>${M().units().filter((u) => !g || u.group === g).length}</span></button>`).join("")}</div>
@@ -151,16 +151,15 @@
     const sort = q.sort ?? "facts"
     const sorted = [...units].sort(sort === "changed" ? (a, b) => b.drifted - a.drifted || b.facts - a.facts : sort === "share" ? (a, b) => b.drifted / b.facts - a.drifted / a.facts || b.facts - a.facts : sort === "name" ? (a, b) => short(a.id).localeCompare(short(b.id)) : (a, b) => b.facts - a.facts)
     const sortBar = `<div class="at-sortbar"><span>Sort</span><div class="wf-range">${[["facts", "Most facts"], ["changed", "Most changed"], ["share", "Most drift (%)"], ["name", "Name"]].map(([k, l]) => `<button aria-pressed="${sort === k}" data-action="go" data-value="${href({ sort: k === "facts" ? "" : k })}">${l}</button>`).join("")}</div></div>`
-    const shape = q.shape ?? "cells"
-    const body = view === "map" ? `<div class="at-sortbar"><span>Shape</span><div class="wf-range">${[["cells", "Cells"], ["circles", "Circles"]].map(([k, l]) => `<button aria-pressed="${shape === k}" data-action="go" data-value="${href({ shape: k === "cells" ? "" : k })}">${l}</button>`).join("")}</div></div><div class="at-pack" id="explore-pack" data-shape="${shape}"></div><div class="at-tm-scale"><span>Area: how much Atlas knows</span><span class="grow"></span><span><b class="sw hold"></b>still holds</span><span><b class="sw moved"></b>code moved</span></div>` : view === "list" ? sortBar + cards(sorted) : `<div class="at-explore-graph"><div class="at-graph-host tall" id="explore-graph"></div>
+    const body = view === "map" ? `<div class="at-map" id="explore-map"></div>` : view === "list" ? sortBar + cards(sorted) : `<div class="at-explore-graph"><div class="at-graph-host tall" id="explore-graph"></div>
         <div class="at-graph-zoom">${A.btn("", "graph-zoom", { icon: "plus", value: "1.25", label: "Zoom in" })}${A.btn("", "graph-zoom", { icon: "minus", value: "0.8", label: "Zoom out" })}${A.btn("", "graph-fit", { icon: "expand", label: "Fit" })}</div>
         <div class="at-graph-legend floating"><span><i class="lg good"></i>holds</span><span><i class="lg warm"></i>code moved</span><span><i class="lg edge"></i>depends on</span><span><i class="lg hot"></i>depends on the selection</span></div>
         <aside class="at-graph-side" id="explore-pick">${q.unit ? pick(q.unit) : pickEmpty}</aside></div>`
     return {
       crumbs: [["Atlas", "#/overview"], ["Explore"]],
       after: () => {
-        const pack = document.querySelector("#explore-pack")
-        if (pack) return pack.dataset.shape === "circles" ? mountPack(pack, units) : mountCells(pack, units)
+        const map = document.querySelector("#explore-map")
+        if (map) return mountMap(map, units)
         const host = document.querySelector("#explore-graph")
         if (!host) return
         A.exploreGraph = mountUnitGraph(host, { id: "explore", group, selected: q.unit, big: 26, onSelect: (id) => {
@@ -173,9 +172,7 @@
   }
   const head = (s) => `<div class="mx-heading"><div><div class="mx-eyebrow">Atlas</div><h1>Explore</h1><p>${plural(M().units().length, "unit")} · ${plural(s.facts, "fact")} · ${A.num(M().unitGraph().edges.length)} dependency links</p></div><div class="heading-actions">${A.btn("Check a claim…", "verify", { icon: "shield" })}</div></div>`
 
-  // The map: a zoomable circle pack (d3-hierarchy). Units hold folders hold files; area = facts, colour = share still
-  // holding. Click a circle to zoom into it, the background to step back out.
-  const holdHue = (facts, drifted) => Math.round(32 + Math.max(0, Math.min(1, ((facts - drifted) / facts - 0.66) / 0.34)) * 110)
+  // Units hold folders hold files; each file counts its facts and how many changed.
   const packTree = (units) => {
     const ids = new Set(units.map((u) => u.id))
     const root = { name: "atlas", path: "", children: [] }
@@ -197,133 +194,73 @@
     })
     return root
   }
-  const mountPack = (host, units) => {
-    if (!window.d3?.hierarchy) { host.innerHTML = '<div class="at-band-empty">The map library did not load (offline?).</div>'; return }
-    const size = 1000
-    const root = window.d3.pack().size([size, size]).padding((d) => (d.depth === 0 ? 14 : d.depth === 1 ? 8 : 3))(
-      window.d3.hierarchy(packTree(units)).sum((d) => (d.leaf ? d.facts : 0)).sort((a, b) => b.value - a.value))
-    root.each((d) => {
-      d.facts = d.leaf ? d.data.facts : d.value
-      d.drifted = d.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0)
-    })
-    const nodes = root.descendants().filter((d) => d.depth > 0)
-    const fill = (d) => {
-      const hue = holdHue(d.facts, d.drifted)
-      if (d.data.leaf) return `hsl(${hue} 55% 52%)`
-      return d.depth === 1 ? `hsl(${hue} 45% 45% / .16)` : `hsl(${hue} 30% 60% / .08)`
-    }
-    host.innerHTML = `<svg class="at-pack-svg" viewBox="0 0 ${size} ${size}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of what Atlas knows">
-      <rect class="at-pack-bg" width="${size}" height="${size}" fill="transparent"></rect>
-      ${nodes.map((d, i) => `<circle data-i="${i}" class="${d.data.leaf ? "leaf" : `dir d${Math.min(d.depth, 3)}`}" fill="${fill(d)}"><title>${A.esc(d.data.path)} · ${A.num(d.facts)} ${d.facts === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}</title></circle>`).join("")}
-      ${nodes.map((d, i) => `<text data-i="${i}" class="at-pack-label ${d.data.leaf ? "leaf" : ""}">${A.esc(d.data.name)}</text>`).join("")}
-    </svg><aside class="at-pack-side" id="pack-side"></aside>`
-    const svg = host.querySelector("svg")
-    const circles = [...svg.querySelectorAll("circle")]
-    const labels = [...svg.querySelectorAll("text")]
-    const side = host.querySelector("#pack-side")
-    let focus = root
-    let view = [root.x, root.y, root.r * 2]
-    const place = (v) => {
-      const k = size / v[2]
-      nodes.forEach((d, i) => {
-        const x = (d.x - v[0]) * k + size / 2, y = (d.y - v[1]) * k + size / 2
-        circles[i].setAttribute("cx", x); circles[i].setAttribute("cy", y); circles[i].setAttribute("r", d.r * k)
-        labels[i].setAttribute("x", x); labels[i].setAttribute("y", y)
-      })
-    }
-    const showLabels = () => {
-      // Children of the focus are named, sized in screen pixels; circles too small on screen stay unnamed.
-      const sc = (svg.getBoundingClientRect().width || size) / size
-      nodes.forEach((d, i) => {
-        const px = d.r * (size / view[2]) * sc
-        const on = (d.parent === focus || (focus === root && d.depth === 1)) && px > 16
-        labels[i].style.display = on ? "" : "none"
-        labels[i].style.fontSize = `${Math.max(10.5, Math.min(18, px / 3.2)) / sc}px`
-        labels[i].style.strokeWidth = `${3 / sc}px`
-      })
-    }
-    const crumbs = (d) => d.ancestors().reverse().slice(1)
-    const info = (d) => {
-      const hold = d.facts ? Math.round(((d.facts - d.drifted) / d.facts) * 100) : 100
-      side.innerHTML = `<div class="at-pack-crumbs"><button data-pack="root">All</button>${crumbs(d).map((c) => `<span>/</span><button data-pack="${nodes.indexOf(c)}">${A.esc(c.data.name)}</button>`).join("")}</div>
-        <strong>${A.esc(d === root ? "Everything Atlas knows" : d.data.path)}</strong>
-        <div class="at-pack-stats"><div><b>${A.num(d.facts)}</b><small>facts</small></div><div><b class="${d.drifted ? "warm" : ""}">${A.num(d.drifted)}</b><small>changed</small></div><div><b>${hold}%</b><small>still hold</small></div></div>
-        ${d === root ? '<p class="mx-note">Each circle is a unit; inside are its folders and files. Bigger means Atlas knows more there; amber means the code moved under it. Click to zoom in.</p>' : A.btn(d.data.leaf ? "Open this file" : "Open", "go", { value: unitHref(d.data.path), primary: true })}`
-      side.querySelectorAll("[data-pack]").forEach((b) => b.addEventListener("click", () => zoom(b.dataset.pack === "root" ? root : nodes[+b.dataset.pack])))
-    }
-    const zoom = (d) => {
-      focus = d
-      const from = view, to = [d.x, d.y, d.r * 2 + (d === root ? 0 : d.r * 0.25)]
-      const t0 = performance.now()
-      const step = (now) => {
-        const t = Math.min(1, (now - t0) / 650), e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
-        view = from.map((v, i) => v + (to[i] - v) * e)
-        place(view)
-        if (t < 1) requestAnimationFrame(step)
-        else showLabels()
-      }
-      labels.forEach((l) => (l.style.display = "none"))
-      requestAnimationFrame(step)
-      circles.forEach((c, i) => c.classList.toggle("in", nodes[i] === d || nodes[i].ancestors().includes(d)))
-      info(d)
-    }
-    svg.addEventListener("click", (ev) => {
-      const i = ev.target.closest("circle")?.dataset.i
-      if (i === undefined) return zoom(focus.parent ?? root)
-      const d = nodes[+i]
-      // A leaf opens its file only once you are already looking at its folder.
-      if (d.data.leaf && focus === d.parent) return A.go(unitHref(d.data.path))
-      zoom(d.data.leaf ? d.parent : d)
-    })
-    place(view); showLabels(); info(root)
-  }
-  // The map as cells: a Voronoi treemap (Kcnarf/d3-voronoi-treemap, BSD-3) clipped to a hexagon. Units are the big
-  // cells, files the small ones inside; area = facts, colour = share still holding. Click a unit to open it up.
-  const hexagon = (cx, cy, r) => Array.from({ length: 6 }, (_, i) => [cx + r * Math.cos((Math.PI / 3) * i + Math.PI / 6), cy + r * Math.sin((Math.PI / 3) * i + Math.PI / 6)])
-  const seeded = (seed) => () => ((seed = (seed * 16807) % 2147483647) - 1) / 2147483646
-  const mountCells = (host, units) => {
+  // The map: three linked views of one scope. Rings (a d3 sunburst) pick the scope, bars rank what is inside it, dots
+  // show its facts one by one. Green holds, amber is where the code moved. Click a ring or a bar to go in, the centre to
+  // step back out, a dot to read the fact.
+  const HOLD = "hsl(158 34% 38%)", MOVED = "hsl(34 78% 54%)"
+  const mountMap = (host, units) => {
     const d3 = window.d3
-    if (!d3?.voronoiTreemap) { host.innerHTML = '<div class="at-band-empty">The map library did not load (offline?).</div>'; return }
-    const size = 1000
-    // Units hold their files directly; folders would make cells too small to read.
-    const tree = packTree(units)
-    const flat = (n) => (n.leaf ? [n] : n.children.flatMap(flat))
-    const data = { name: "atlas", path: "", children: tree.children.map((u) => ({ ...u, children: u.children.flatMap(flat) })) }
-    host.innerHTML = `<svg class="at-pack-svg at-cells-svg" viewBox="0 0 ${size} ${size}" role="img" aria-label="Map of what Atlas knows"></svg><aside class="at-pack-side" id="pack-side"></aside>`
+    if (!d3?.partition) { host.innerHTML = '<div class="at-band-empty">The map library did not load (offline?).</div>'; return }
+    const root = d3.partition().size([2 * Math.PI, 4])(d3.hierarchy(packTree(units)).sum((d) => (d.leaf ? d.facts : 0)).sort((a, b) => b.value - a.value))
+    root.each((d) => { d.drifted = d.data.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0) })
+    const live = M().live()
+    const size = 600, R = size / 2, ring = R / 3.15
+    host.innerHTML = `<div class="at-map-rings"><svg viewBox="${-R} ${-R} ${size} ${size}" role="img" aria-label="Rings: units, folders, files"></svg></div>
+      <div class="at-map-side"><div class="at-pack-crumbs" id="map-crumbs"></div><div class="at-map-title" id="map-title"></div><div class="at-map-bars" id="map-bars"></div></div>
+      <div class="at-map-dots"><div class="at-map-dots-head" id="map-dots-head"></div><div class="at-map-dotgrid" id="map-dots"></div></div>`
     const svg = host.querySelector("svg")
-    const side = host.querySelector("#pack-side")
-    const draw = (scope) => {
-      const root = d3.hierarchy(scope).sum((d) => (d.leaf ? d.facts : 0))
-      root.each((d) => { d.facts = d.value; d.drifted = d.data.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0) })
-      d3.voronoiTreemap().clip(hexagon(size / 2, size / 2, size / 2 - 8)).prng(seeded(7)).convergenceRatio(0.02).maxIterationCount(60)(root)
-      // Calm when everything holds (more facts, a touch brighter); amber that pops where the code moved.
-      const fill = (d) => (d.drifted ? `hsl(34 ${55 + Math.round((d.drifted / d.facts) * 30)}% ${46 + Math.round((d.drifted / d.facts) * 10)}%)` : `hsl(158 28% ${24 + Math.min(14, Math.round(Math.sqrt(d.facts) * 3))}%)`)
-      const path = (d) => `M${d.polygon.map((p) => p.join(",")).join("L")}Z`
-      const nodes = root.descendants().filter((d) => d.depth > 0 && d.polygon)
-      const top = nodes.filter((d) => d.depth === 1)
-      svg.innerHTML = `${nodes.filter((d) => d.data.leaf).map((d) => `<path class="cell leaf" d="${path(d)}" fill="${fill(d)}" data-i="${nodes.indexOf(d)}"><title>${A.esc(d.data.path)} · ${A.num(d.facts)} ${d.facts === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}</title></path>`).join("")}
-        ${top.filter((d) => !d.data.leaf).map((d) => `<path class="cell unit" d="${path(d)}" data-i="${nodes.indexOf(d)}"><title>${A.esc(d.data.path)} · ${A.num(d.facts)} facts${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}</title></path>`).join("")}
-        ${(scope === data ? top : nodes.filter((d) => d.data.leaf)).map((d) => { const [x, y] = d3.polygonCentroid(d.polygon); const a = Math.abs(d3.polygonArea(d.polygon)); const name = scope === data ? d.data.name : d.data.name.replace(/\.[a-z]+$/, ""); const fs = Math.max(13, Math.min(34, Math.sqrt(a) / 7)); return a < 2600 || name.length * fs * 0.55 > Math.sqrt(a) * 1.15 ? "" : `<text class="at-pack-label" x="${x}" y="${y}" style="font-size:${fs}px">${A.esc(name)}</text>` }).join("")}`
-      svg.querySelectorAll(".cell").forEach((el) => el.addEventListener("click", (ev) => {
-        ev.stopPropagation()
-        const d = nodes[+el.dataset.i]
-        if (scope === data) return open(d.depth === 1 ? d : d.parent)
-        A.go(unitHref(d.data.path))
-      }))
-      info(scope === data ? root : root, scope)
+    const tip = (d) => `${d.data.path || "Everything"} · ${A.num(d.value)} ${d.value === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}`
+    // Three steps, not a blend: blends of green and amber read as mud.
+    const color = (d) => (d.drifted / d.value >= 0.25 ? MOVED : d.drifted / d.value >= 0.08 ? "hsl(34 42% 40%)" : HOLD)
+    const go = (d) => (d.data.leaf ? A.go(unitHref(d.data.path)) : show(d))
+    const show = (focus) => {
+      // Rings: the focus in the middle, then two levels below it.
+      const arc = d3.arc().startAngle((d) => d.a0).endAngle((d) => d.a1).padAngle((d) => Math.min((d.a1 - d.a0) / 2, 0.006)).padRadius(R)
+        .innerRadius((d) => d.r0 * ring).outerRadius((d) => Math.max(d.r0 * ring, d.r1 * ring - 2))
+      const span = focus.x1 - focus.x0
+      const shown = focus.descendants().filter((d) => d !== focus && d.depth - focus.depth <= 2).map((d) => {
+        const a0 = ((d.x0 - focus.x0) / span) * 2 * Math.PI, a1 = ((d.x1 - focus.x0) / span) * 2 * Math.PI
+        return Object.assign(d, { a0, a1, r0: d.depth - focus.depth, r1: d.depth - focus.depth + 1 })
+      }).filter((d) => d.a1 - d.a0 > 0.002)
+      svg.innerHTML = `${shown.map((d, i) => `<path class="at-map-arc d${d.r0}" d="${arc(d)}" fill="${color(d)}" data-i="${i}"><title>${A.esc(tip(d))}</title></path>`).join("")}
+        ${shown.filter((d) => d.r0 === 1 && d.a1 - d.a0 > 0.22).map((d) => { const a = (d.a0 + d.a1) / 2, r = ring * 1.5; const deg = (a * 180) / Math.PI - 90; return `<text class="at-map-label" transform="rotate(${deg}) translate(${r},0) rotate(${deg > 90 ? 180 : 0})">${A.esc(d.data.name.length > 14 ? `${d.data.name.slice(0, 13)}…` : d.data.name)}</text>` }).join("")}
+        <circle class="at-map-centre" r="${ring - 4}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
+        <text class="at-map-centre-n" y="6">${A.num(focus.value)}</text><text class="at-map-centre-u" y="40">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>`
+      svg.querySelectorAll(".at-map-arc").forEach((el) => {
+        const d = shown[+el.dataset.i]
+        el.addEventListener("click", () => go(d))
+        el.addEventListener("mouseenter", () => mark(d))
+        el.addEventListener("mouseleave", () => mark(null))
+      })
+      svg.querySelector(".at-map-centre").addEventListener("click", () => focus.parent && show(focus.parent))
+      // Crumbs and title.
+      host.querySelector("#map-crumbs").innerHTML = `<button data-map="root">All</button>${focus.ancestors().reverse().slice(1).map((a) => `<span>/</span><button data-map="${a.data.path}">${A.esc(a.data.name)}</button>`).join("")}`
+      host.querySelectorAll("[data-map]").forEach((b) => b.addEventListener("click", () => show(b.dataset.map === "root" ? root : root.find((n) => n.data.path === b.dataset.map))))
+      const hold = Math.round(((focus.value - focus.drifted) / focus.value) * 100)
+      host.querySelector("#map-title").innerHTML = `<strong>${A.esc(focus === root ? "Everything Atlas knows" : focus.data.path)}</strong>
+        <div class="at-pack-stats"><div><b>${A.num(focus.value)}</b><small>facts</small></div><div><b class="${focus.drifted ? "warm" : ""}">${A.num(focus.drifted)}</b><small>changed</small></div><div><b>${hold}%</b><small>still hold</small></div></div>
+        ${focus === root ? "" : A.btn(focus.depth === 1 ? "Open the unit" : "Open", "go", { value: unitHref(focus.data.path) })}`
+      // Bars: what is inside, ranked by facts; the amber end is the share that changed.
+      const kids = [...(focus.children ?? [])].sort((a, b) => b.value - a.value)
+      const max = kids[0]?.value ?? 1
+      host.querySelector("#map-bars").innerHTML = `<div class="at-map-bars-k">Inside, by facts</div>${kids.slice(0, 14).map((d, i) => `<button class="at-map-bar" data-k="${i}"><span class="n">${A.esc(d.data.name)}</span><span class="track"><i style="width:${((d.value - d.drifted) / max) * 100}%;background:${HOLD}"></i><i style="width:${(d.drifted / max) * 100}%;background:${MOVED}"></i></span><span class="v">${A.num(d.value)}</span></button>`).join("")}${kids.length > 14 ? `<p class="muted">and ${kids.length - 14} more</p>` : ""}`
+      host.querySelectorAll(".at-map-bar").forEach((b) => {
+        const d = kids[+b.dataset.k]
+        b.addEventListener("click", () => go(d))
+        b.addEventListener("mouseenter", () => mark(d))
+        b.addEventListener("mouseleave", () => mark(null))
+      })
+      // Dots: every fact in scope, grouped by what is inside, in the same order as the bars.
+      const scoped = (d) => live.filter((x) => x.file === d.data.path || x.file.startsWith(`${d.data.path}/`) || (d.data.unit === "(root)" && M().unitOf(x.file) === "(root)"))
+      const groups = focus === root ? kids.map((d) => [d, live.filter((x) => M().unitOf(x.file) === d.data.unit)]) : kids.length ? kids.map((d) => [d, scoped(d)]) : [[focus, scoped(focus)]]
+      host.querySelector("#map-dots-head").innerHTML = `<b>${A.num(focus.value)} facts, one dot each</b><span class="grow"></span><span><b class="sw hold"></b>still holds</span><span><b class="sw moved"></b>code moved</span>`
+      host.querySelector("#map-dots").innerHTML = groups.map(([d, xs]) => `<div class="at-map-dotgroup" data-p="${A.esc(d.data.path)}"><small>${A.esc(d.data.name)}</small><div>${xs.map((x) => `<a class="at-dot ${M().state(x) === "drifted" ? "moved" : ""}" href="#/fact/${x.key}" title="${A.esc(x.claim.slice(0, 160))}"></a>`).join("")}</div></div>`).join("")
     }
-    const info = (d, scope) => {
-      const hold = d.facts ? Math.round(((d.facts - d.drifted) / d.facts) * 100) : 100
-      const isAll = scope === data
-      side.innerHTML = `<div class="at-pack-crumbs"><button data-cells="root">All</button>${isAll ? "" : `<span>/</span><span>${A.esc(scope.name)}</span>`}</div>
-        <strong>${A.esc(isAll ? "Everything Atlas knows" : scope.path)}</strong>
-        <div class="at-pack-stats"><div><b>${A.num(d.facts)}</b><small>facts</small></div><div><b class="${d.drifted ? "warm" : ""}">${A.num(d.drifted)}</b><small>changed</small></div><div><b>${hold}%</b><small>still hold</small></div></div>
-        ${isAll ? '<p class="mx-note">Each outlined cell is a unit; the small cells inside are its files. Bigger means Atlas knows more there; amber means the code moved under it. Click a unit to open it up.</p>' : `<p class="mx-note">Each cell is a file. Click one to read its facts.</p>${A.btn("Open the unit", "go", { value: unitHref(scope.path), primary: true })}`}`
-      side.querySelector('[data-cells="root"]').addEventListener("click", () => draw(data))
+    const mark = (d) => {
+      host.classList.toggle("marking", !!d)
+      host.querySelectorAll(".at-map-dotgroup").forEach((g) => g.classList.toggle("on", !!d && (g.dataset.p === d.data.path)))
     }
-    const open = (d) => draw({ ...d.data, children: d.data.children })
-    svg.addEventListener("click", () => draw(data))
-    draw(data)
+    show(root)
   }
   const cards = (units) => {
     const owner = (u) => { const t = M().territoryOf(u.id); return t ? `${A.esc(t.name)} · ${A.esc(names[t.owner] ?? t.owner)}` : "No territory" }
