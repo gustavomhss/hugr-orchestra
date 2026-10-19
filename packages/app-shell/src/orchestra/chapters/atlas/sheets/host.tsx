@@ -1,10 +1,17 @@
 import { type Component, onCleanup, Show } from "solid-js"
 import { Dynamic } from "solid-js/web"
+import { AddFactSheet, ClassifySheet, EditSheet, LinkSheet, RatifySheet } from "./fact-sheets"
 import { type AtlasSheet, type AtlasSheetKind, type AtlasSheetProps, atlasSheetState, closeAtlasSheet, resetAtlasSheets } from "./state"
 
 // Each sheet task adds its own line here: `<kind>: <Component>,` with the component imported from its file.
 // A kind without a line opens nothing.
-export const atlasSheets: { [K in AtlasSheetKind]?: Component<AtlasSheetProps<K>> } = {}
+export const atlasSheets: { [K in AtlasSheetKind]?: Component<AtlasSheetProps<K>> } = {
+  ratify: RatifySheet,
+  edit: EditSheet,
+  classify: ClassifySheet,
+  link: LinkSheet,
+  "add-fact": AddFactSheet,
+}
 
 // Mounted once by the chapter frame. `keyed` remounts the dialog when one sheet replaces another, so each opens
 // with showModal and its own fresh state.
