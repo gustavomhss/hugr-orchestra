@@ -205,6 +205,12 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   await page.goto("/orchestra/atlas/unit/packages%2Fa", { waitUntil: "domcontentloaded" })
   await expect(main).toContainText("Writes are atomic.")
   await expect(main).not.toContainText(pending)
+  await main.getByRole("button", { name: "Declare territory" }).click()
+  await expect(dialog.locator("h2")).toHaveText("Declare territory")
+  await expect(dialog.getByRole("button", { name: "Declare", exact: true })).toBeDisabled()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
+
   await page.goto("/orchestra/atlas/fact/k1", { waitUntil: "domcontentloaded" })
   await expect(main).toContainText("Writes are atomic.")
   await expect(main).not.toContainText(pending)

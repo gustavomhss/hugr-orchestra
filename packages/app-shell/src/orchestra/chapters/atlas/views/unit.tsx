@@ -3,7 +3,7 @@ import { useLanguage } from "@/context/language"
 import { useAtlas } from "../atlas-context"
 import type { AtlasFact, AtlasOwnPack } from "../atlas-model"
 import { atlasHref } from "../atlas-route"
-import { type AtlasReq, Help, Icon, Seat, useAtlasWords } from "../kit/chips"
+import { Help, Icon, Seat } from "../kit/chips"
 import { Acc, Btn, FactRow, Kpi, rememberOpen, Seven, Tech } from "../kit/controls"
 import { num } from "../kit/format"
 import { AtlasLink, Rich } from "../kit/text"
@@ -33,10 +33,6 @@ export default function AtlasUnitView(props: AtlasViewProps) {
 function UnitPage(props: AtlasViewProps & { path: string }) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const words = useAtlasWords()
-  // D13: Declare territory has no sheet (issues/a-u-views-2.md item 8), so it toasts what it needs.
-  const needs = (id: AtlasReq) =>
-    atlas.toast(language.t("orchestra.atlas.kit.newcap.tip", { id, text: words.requirement(id) }), "sparkle")
   const path = props.path
   const isRoot = path === "(root)"
   const leaf = path.split("/").at(-1) ?? path
@@ -165,7 +161,10 @@ function UnitPage(props: AtlasViewProps & { path: string }) {
         </div>
         <span class="grow" />
         <Show when={!territory()}>
-          <Btn label={language.t("orchestra.atlas.unit.declare")} cap="R4" onClick={() => needs("R4")} />
+          <Btn
+            label={language.t("orchestra.atlas.unit.declare")}
+            onClick={() => openAtlasSheet({ kind: "territory", unit: unitId() })}
+          />
         </Show>
         <Btn label={language.t("orchestra.atlas.unit.addFact")} icon="plus" write onClick={() => openAtlasSheet({ kind: "add-fact", path })} />
       </div>

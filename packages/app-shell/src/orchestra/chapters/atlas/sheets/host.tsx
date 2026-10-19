@@ -1,6 +1,6 @@
 import { type Component, onCleanup, Show } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import { HotsetSheet, RepublishSheet, RespawnSheet, RuleSheet, VerifySheet } from "./more-sheets"
+import { HotsetSheet, RepublishSheet, RespawnSheet, RuleSheet, TerritorySheet, VerifySheet } from "./more-sheets"
 import { MineSheet, ProducersSheet, PromoteAllSheet, PromoteResultSheet, ReconcileSheet } from "./review-sheets"
 import { AddFactSheet, ClassifySheet, EditSheet, LinkSheet, RatifySheet } from "./fact-sheets"
 import { type AtlasSheet, type AtlasSheetKind, type AtlasSheetProps, atlasSheetState, closeAtlasSheet, resetAtlasSheets } from "./state"
@@ -13,6 +13,7 @@ export const atlasSheets: { [K in AtlasSheetKind]?: Component<AtlasSheetProps<K>
   republish: RepublishSheet,
   respawn: RespawnSheet,
   rule: RuleSheet,
+  territory: TerritorySheet,
   "promote-all": PromoteAllSheet,
   "promote-result": PromoteResultSheet,
   reconcile: ReconcileSheet,

@@ -9,10 +9,11 @@ import { AtDialog, AtDialogFoot } from "../kit/dialog"
 import { num, seatName } from "../kit/format"
 import type { AtlasIconName } from "../kit/icons"
 import { Rich } from "../kit/text"
+import { WritingAs } from "./parts"
 import type { AtlasSheetProps } from "./state"
 
-// Check a claim, the hot set budget, and the three sheets whose action is a new capability (R7, R5, R1)
-// (specs/atlas-ui/mock/app.js:249-263, :279-293, :310-313, :429-447, :491-519).
+// Check a claim, the hot set budget, Declare territory (R4) and the three sheets whose action is a new capability
+// (R7, R5, R1) (specs/atlas-ui/mock/app.js:249-263, :279-293, :310-313, :429-447, :491-519).
 
 type ResultRow = { tone: string; icon: AtlasIconName; text: string }
 
@@ -300,6 +301,115 @@ export function RespawnSheet(props: AtlasSheetProps<"respawn">) {
           [
             language.t("orchestra.atlas.sheets.respawn.tech.compaction"),
             language.t("orchestra.atlas.sheets.respawn.tech.compaction.value"),
+          ],
+        ]}
+      />
+    </AtDialog>
+  )
+}
+
+// Declare territory (specs/atlas-ui/mock/app.js:261-263): `atlas territory` through the surface (D22, D31). It
+// writes TERRITORY-CATALOG.json at tier human-ratified and needs the approval key; core (T0) names the ratifier.
+const TERRITORY_TIERS = [
+  ["T2", "orchestra.atlas.sheets.territory.tier.T2"],
+  ["T1", "orchestra.atlas.sheets.territory.tier.T1"],
+  ["T0", "orchestra.atlas.sheets.territory.tier.T0"],
+] as const
+
+export function TerritorySheet(props: AtlasSheetProps<"territory">) {
+  const atlas = useAtlas()
+  const language = useLanguage()
+  const [form, setForm] = createStore({
+    name: props.sheet.unit.split("/").at(-1) ?? "",
+    owner: "",
+    globs: `${props.sheet.unit}/**`,
+    tier: "T2" as (typeof TERRITORY_TIERS)[number][0],
+    token: "",
+    refused: "",
+  })
+  const globs = () => form.globs.split(/\s+/).filter(Boolean)
+  const ready = () => !!form.name.trim() && !!form.owner.trim() && globs().length > 0
+  const declare = async () => {
+    const result = await atlas.controller.territory({
+      name: form.name.trim(),
+      owner: form.owner.trim(),
+      tier: form.tier,
+      globs: globs(),
+      token: form.token,
+    })
+    if (!result || isAtlasEmpty(result)) return
+    if (!result.ok) return setForm("refused", result.rejected ?? "unknown")
+    props.onClose()
+    atlas.toast(language.t("orchestra.atlas.sheets.territory.done", { name: form.name.trim() }), "territory")
+  }
+  return (
+    <AtDialog
+      title={language.t("orchestra.atlas.sheets.territory.title")}
+      text={language.t("orchestra.atlas.sheets.territory.text")}
+      onClose={props.onClose}
+      footer={
+        <AtDialogFoot
+          label={language.t("orchestra.atlas.sheets.territory.confirm")}
+          disabled={!ready() || atlas.controller.state.pending.includes("territory")}
+          onCancel={props.onClose}
+          onConfirm={() => void declare()}
+        />
+      }
+    >
+      <div class="mx-fields">
+        <label class="mx-field">
+          <span>{language.t("orchestra.atlas.sheets.territory.name")}</span>
+          <input value={form.name} onInput={(event) => setForm("name", event.currentTarget.value)} />
+        </label>
+        <label class="mx-field">
+          <span>{language.t("orchestra.atlas.sheets.territory.owner")}</span>
+          <input
+            value={form.owner}
+            placeholder={language.t("orchestra.atlas.sheets.territory.owner.placeholder")}
+            onInput={(event) => setForm("owner", event.currentTarget.value)}
+          />
+        </label>
+      </div>
+      <label class="mx-field">
+        <span>{language.t("orchestra.atlas.sheets.territory.covers")}</span>
+        <input
+          value={form.globs}
+          placeholder={language.t("orchestra.atlas.sheets.territory.covers.placeholder")}
+          onInput={(event) => setForm("globs", event.currentTarget.value)}
+        />
+      </label>
+      <label class="mx-field">
+        <span>{language.t("orchestra.atlas.sheets.territory.tier")}</span>
+        <select
+          onChange={(event) =>
+            setForm("tier", TERRITORY_TIERS.find((tier) => tier[0] === event.currentTarget.value)?.[0] ?? "T2")
+          }
+        >
+          <For each={TERRITORY_TIERS}>
+            {(tier) => (
+              <option value={tier[0]} selected={form.tier === tier[0]}>
+                {language.t(tier[1])}
+              </option>
+            )}
+          </For>
+        </select>
+      </label>
+      <WritingAs core={form.tier === "T0"} token={form.token} onToken={(token) => setForm("token", token)} />
+      <Show when={form.refused}>
+        <div class="ins-note">
+          <Icon name="xc" />
+          <span>{language.t("orchestra.atlas.sheets.territory.refused", { reason: form.refused })}</span>
+        </div>
+      </Show>
+      <Tech
+        rows={[
+          [
+            language.t("orchestra.atlas.sheets.territory.tech.file"),
+            language.t("orchestra.atlas.sheets.territory.tech.file.value"),
+          ],
+          [
+            language.t("orchestra.atlas.sheets.territory.tech.command"),
+            <Rich text={language.t("orchestra.atlas.sheets.territory.tech.command.value")} />,
           ],
         ]}
       />
