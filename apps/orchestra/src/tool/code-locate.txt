@@ -1,8 +1,8 @@
-Locate code for a question in one call: the host runs many searches, fuses them, rereads every range on disk and returns verified file:line ranges. No model runs inside it.
+Start here for where, how and why questions about code. One call runs many searches (ripgrep and the code index), fuses them, rereads every range on disk and returns ranked file:line ranges with their lines.
 
-Give at least one of: terms (up to 16), symbols (up to 16, e.g. DiscoveryResult.assemble), question (plain words). paths (globs) narrows; limit defaults to 12, max 40. Batch everything you know in one call.
+Give everything you know in one call: terms (up to 16), symbols (up to 16, e.g. DiscoveryResult.assemble), question (plain words). paths (globs) narrows; limit defaults to 12, max 40.
 
-Lines: ranges carry original 1-based, inclusive startLine and endLine.
+Lines: original 1-based, inclusive startLine and endLine; a long range shows its first 40 lines.
 Empty: no range matched; check searches and basis.coverage.complete before claiming absence.
-Retains: one snapshot holding every range's lines, citable by those lines.
+Retains: one snapshot of every range, citable by its ref and original lines, with no further capture.
 Fails: index_unavailable (no ripgrep), unsupported (no input, or outside a research dispatch).
