@@ -153,11 +153,9 @@ for (const engine of ["claude-code", "orchestra"] as const)
     if (engine === "claude-code") {
       expect(result).toEqual(Exit.succeed(true))
       expect(queries).toHaveLength(1)
-      expect(denied).toMatchObject([{ hookSpecificOutput: { permissionDecision: "deny",
-        permissionDecisionReason: expect.stringContaining("binding_missing") } }])
       // The refusal names the dispatches that bind, instead of only the code.
-      expect(denied).toMatchObject([{ hookSpecificOutput: {
-        permissionDecisionReason: expect.stringContaining('subagent_type "orchestra:jimmy-quick"') } }])
+      expect(denied).toMatchObject([{ hookSpecificOutput: { permissionDecision: "deny",
+        permissionDecisionReason: expect.stringMatching(/^binding_missing: .*subagent_type "orchestra:jimmy-quick".*task tool/) } }])
       expect(yield* LogicalTask.read(child.id)).toBeUndefined()
       const missing = yield* Effect.exit(execution.tool(child.id, "unbound-call", "research_view", Effect.void))
       expect(Exit.isFailure(missing)).toBe(true)
