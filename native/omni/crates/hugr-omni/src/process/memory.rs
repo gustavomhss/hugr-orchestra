@@ -1,8 +1,13 @@
 //! The memory cap of a tree (`max_rss_bytes`): while the tree lives, its resident memory is sampled every
 //! `PERIOD`, and above the cap the whole tree is killed with the cause `MemoryExceeded`, apart from `Timeout` and
-//! the root's own `Exit`. Like the deadline, it is armed for every child (`spawn()` and `run()` alike), never blocks
+//! the root's own `Exit`. The sample counts every descendant of the tree's members, also one that left their session:
+//! a jail such as bubblewrap (`--new-session`) runs its workload in a session of its own, and only the jail itself
+//! would count otherwise. Killing the tree ends such a workload only through its jail (bubblewrap's
+//! `--die-with-parent` and PID namespace); a descendant that escapes on its own is outside the stop, as for a
+//! deadline. Like the deadline, it is armed for every child (`spawn()` and `run()` alike), never blocks
 //! an executor, and holds nothing once the child is dropped or its tree is gone.
 
+use std::collections::{HashMap, HashSet};
 use std::sync::{Arc, Weak};
 use std::time::Duration;
 
@@ -50,16 +55,32 @@ async fn watch(child: Weak<Inner>, cap: u64) {
     }
 }
 
-/// The resident bytes of `pids` together; a process that is gone by now counts 0.
-fn resident(pids: &[Pid]) -> u64 {
+/// The resident bytes of `roots` and every descendant of theirs together; a process gone by now counts 0.
+fn resident(roots: &[Pid]) -> u64 {
     let mut system = System::new();
+    // Tasks off: on Linux each thread would be listed with its process' whole RSS.
     system.refresh_processes_specifics(
-        ProcessesToUpdate::Some(pids),
+        ProcessesToUpdate::All,
         true,
-        ProcessRefreshKind::nothing().with_memory(),
+        ProcessRefreshKind::nothing().without_tasks().with_memory(),
     );
-    pids.iter()
-        .filter_map(|pid| system.process(*pid))
+    let processes = system.processes();
+    let mut children: HashMap<Pid, Vec<Pid>> = HashMap::new();
+    for process in processes.values() {
+        if let Some(parent) = process.parent() {
+            children.entry(parent).or_default().push(process.pid());
+        }
+    }
+    let mut counted = HashSet::new();
+    let mut pending = roots.to_vec();
+    while let Some(pid) = pending.pop() {
+        if counted.insert(pid) {
+            pending.extend(children.get(&pid).into_iter().flatten().copied());
+        }
+    }
+    counted
+        .iter()
+        .filter_map(|pid| processes.get(pid))
         .map(sysinfo::Process::memory)
         .sum()
 }
