@@ -163,7 +163,7 @@ describe("SessionRunnerLLM policy", () => {
       expect(authorizations).toHaveLength(1)
       expect(authorizations[0]?.model).toEqual(captured)
       // The denied drain left a failed step; the two turns that ran used the deployment.
-      expect((yield* session.context(sessionID)).filter((message) => message.type === "assistant" && message.error === undefined).map((message) => String(message.model.id))).toEqual(["api-deployment", "api-deployment"])
+      expect((yield* session.context(sessionID)).flatMap((message) => (message.type === "assistant" && message.error === undefined ? [String(message.model.id)] : []))).toEqual(["api-deployment", "api-deployment"])
     }),
   )
 
