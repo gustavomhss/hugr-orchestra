@@ -18,6 +18,7 @@ import {
   taskLog,
   taskStatus,
 } from "./memory-data"
+import { MemoryTask } from "./memory-task"
 
 // Memory, per member (specs/atlas-ui/mock/views-memory.js): project memory (scoped rules carried into every turn,
 // proposed then indexed) and the memory log (one entry per task or PR), from .atlas/memory.jsonl.
@@ -59,8 +60,7 @@ export default function AtlasMemoryView(props: AtlasViewProps) {
         </Show>
       }
     >
-      {/* A31B: the task page goes here. */}
-      <div class="at-page narrow" />
+      <MemoryTask model={props.model} member={member()} unit={unit()} />
     </Show>
   )
 }
