@@ -558,8 +558,7 @@ export default function Page() {
     const git = sync().project?.vcs === "git" || !!vcs?.branch
     if (git) list.push("git")
     if (git && vcs?.branch && vcs?.default_branch && vcs.branch !== vcs.default_branch) list.push("branch")
-    // The V2 server records no per-turn diffs: in a repository its last-turn view would always read empty, and a
-    // mode that fell back to it would survive a reload as zero changes.
+    // V2 records no per-turn diffs: in a repository that view reads empty, and a fallback to it outlives a reload.
     if (!git || serverSDK().protocolKind() !== "v2") list.push("turn")
     return list
   })
