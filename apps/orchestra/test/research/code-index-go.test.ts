@@ -37,8 +37,8 @@ import { testEffect } from "../lib/effect"
 
 // X6, Go: for a Go function used across packages, the wired index finds its definition and its references. The research
 // toolkit acquires the scip-go pack (built from source on the private Go runtime), the indexer drives the host's `go`
-// confined through omni, and code_query reads the shard as the seat's own tool. A host without `go` keeps the
-// tree-sitter layer: the definition still answers, and the basis names why the references are missing.
+// confined through omni, and code_query reads the shard as the seat's own tool. Non-ASCII text before the call site
+// checks that scip-go's byte columns reach the index as UTF-16 units.
 
 const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   Agent.node, Config.node, Git.node, Session.node, SessionProjector.node, Database.node, Permission.node, FSUtil.node,
@@ -49,11 +49,11 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
 
 const model = { providerID: ProviderV2.ID.make("openai"), modelID: ModelV2.ID.make("gpt-test") }
 
-// `DoubleIt` is defined in one package and called from another.
+// `DoubleIt` is defined in one package and called from another, after a non-ASCII string on the same line.
 const REPO: Record<string, string> = {
   "go.mod": "module example.com/indexgo\n\ngo 1.21\n",
   "helpers/helpers.go": "package helpers\n\nfunc DoubleIt(value int) int {\n\treturn value * 2\n}\n",
-  "main.go": "package main\n\nimport \"example.com/indexgo/helpers\"\n\nfunc run() int {\n\treturn helpers.DoubleIt(21)\n}\n\nfunc main() { run() }\n",
+  "main.go": "package main\n\nimport \"example.com/indexgo/helpers\"\n\nfunc run() int {\n\tlabel := \"ünï→✓\"; return helpers.DoubleIt(len(label))\n}\n\nfunc main() { run() }\n",
 }
 
 const repo = (directory: string) => Effect.promise(async () => {
@@ -126,18 +126,19 @@ describe("the wired Go code index", () => {
         Effect.repeat({ while: (exit) => failure(exit).includes("Index is building"), schedule: Schedule.spaced("3 seconds"), times: 280 }))
       if (Exit.isFailure(answered)) throw new Error(Cause.pretty(answered.cause))
       expect(answered.value.output).toContain("definition: DoubleIt function exported helpers/helpers.go:3-5")
-      expect(answered.value.output).toContain("shards go:.")
+      // GitHub's runners have go: the precise indexer must have built the shard, not the tree-sitter fallback.
+      expect(answered.value.output).toContain("shards go:.@scip-go")
 
       const references = yield* fixture.call("code_query", { op: "references", name: "DoubleIt" } satisfies CodeIndex.CodeQuery)
       if (Exit.isFailure(references)) throw new Error(Cause.pretty(references.cause))
-      if (!Bun.which("go")) {
-        // No toolchain: the shard is structural, and its basis says so instead of answering an empty, complete list.
-        expect(references.value.output).toContain("INCOMPLETE")
-        expect(references.value.output).toContain(". (structural-only:toolchain-missing:go)")
-        return yield* fixture.cleanup
-      }
       // The call site on main.go:6, which only the scip-go layer can attribute to the function defined in helpers.
       expect(references.value.output).toContain("main.go:6")
+
+      // `DoubleIt` starts at UTF-16 column 35 of main.go:6; in UTF-8 bytes it would start at 41, past this column.
+      // Mutation control: skip the column conversion in Scip.readScip and this resolves to `run` instead.
+      const at = yield* fixture.call("code_query", { op: "definition", at: { path: "main.go", line: 6, column: 35 } } satisfies CodeIndex.CodeQuery)
+      if (Exit.isFailure(at)) throw new Error(Cause.pretty(at.cause))
+      expect(at.value.output).toContain("definition: DoubleIt function exported helpers/helpers.go:3-5")
 
       const callers = yield* fixture.call("code_query", { op: "callers", name: "DoubleIt" } satisfies CodeIndex.CodeQuery)
       if (Exit.isFailure(callers)) throw new Error(Cause.pretty(callers.cause))

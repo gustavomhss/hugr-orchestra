@@ -157,7 +157,7 @@ const extract = Effect.fn("CodeIndexExtract.extract")(function* (
     text(input.root, file.path).pipe(Effect.map((content) => ({ ...file, text: content }))), { concurrency: 16 })
   const sources = read.flatMap((file) => file.text === undefined ? [] : [{ path: file.path, grammar: file.grammar, text: file.text }])
   const outlines = yield* Effect.forEach(sources, (file) => CodeIndexTreeSitter.extract(file.path, file.text, file.grammar), { concurrency: 8 })
-  const dump: Scip.Index = input.indexer.id === STRUCTURAL ? { indexer: undefined, documents: [], malformed: 0 } : yield* scip(input, launch)
+  const dump: Scip.Index = input.indexer.id === STRUCTURAL ? { indexer: undefined, documents: [], malformed: 0 } : yield* scip(input, launch, new Map(sources.map((file) => [file.path, file.text])))
   const resolver = yield* CodeIndexResolve.make(input.root)
   return assemble({
     sources, outlines, dump,
@@ -180,7 +180,9 @@ const extract = Effect.fn("CodeIndexExtract.extract")(function* (
  */
 const scip = Effect.fn("CodeIndexExtract.scip")(function* (
   input: Parameters<CodeIndexBuild.Extract>[0],
-  launch?: { readonly executable: string; readonly memoryBytes: number },
+  launch: { readonly executable: string; readonly memoryBytes: number } | undefined,
+  // The shard's source text by repository-relative path, for dumps whose columns are not UTF-16.
+  texts: ReadonlyMap<string, string>,
 ) {
   const proc = yield* AppProcess.Service
   const caps = yield* ResearchToolkit.Caps
@@ -216,7 +218,7 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (
     if (result.exitCode !== 0)
       return yield* failed(`exit ${result.exitCode}: ${(result.stderr.toString("utf8") || result.stdout.toString("utf8")).trim().slice(0, 500)}`)
     return yield* Effect.try({
-      try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project }),
+      try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project, source: (file) => texts.get(file) }),
       catch: (cause) => failed(`dump unreadable: ${String(cause)}`),
     })
   }).pipe(Effect.scoped)

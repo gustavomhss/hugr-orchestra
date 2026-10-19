@@ -80,7 +80,8 @@ function basis(value: CodeIndex.Basis) {
   const skipped = value.coverage.skipped.slice(0, 5).map((item) => `${item.path} (${item.reason})`)
   return [
     `basis: commit ${value.basis.commit.slice(0, 12)}${value.basis.dirtyDigest ? "+dirty" : ""}`,
-    `shards ${value.basis.shards.map((shard) => `${shard.language}:${shard.project}`).join(",") || "none"}`,
+    // The indexer tells a precise shard from a structural one (`tree-sitter`), which has no references.
+    `shards ${value.basis.shards.map((shard) => `${shard.language}:${shard.project}@${shard.indexer}`).join(",") || "none"}`,
     `${value.execution.op} ${value.execution.ms}ms`,
     `docs ${value.coverage.documents}${value.coverage.complete ? "" : " INCOMPLETE"}`,
     ...(value.coverage.languagesMissing.length ? [`missing ${value.coverage.languagesMissing.join(",")}`] : []),
