@@ -990,15 +990,9 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-explore-graph { position: relative; border: 1px solid var(--mx-line); border-radius: 16px; background: radial-gradient(100% 80% at 60% 30%, rgba(90,140,255,.08), transparent 60%), var(--mx-raised); overflow: hidden; }
 .at-graph-zoom { position: absolute; inset-inline-start: 12px; inset-block-start: 12px; display: flex; flex-direction: column; gap: 4px; }
 .at-graph-side { position: absolute; inset-inline-end: 12px; inset-block-start: 12px; inline-size: min(360px, 42%); padding: 14px; border: 1px solid var(--mx-line); border-radius: 12px; background: var(--mx-raised); box-shadow: var(--mx-pop-shadow, 0 8px 24px rgba(0,0,0,.3)); }
-.at-treemap { position: relative; block-size: calc(100vh - 290px); min-block-size: 460px; border-radius: 14px; overflow: hidden; border: 1px solid var(--mx-line); }
-.at-tm { position: absolute; box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--mx-raised); color: var(--mx-strong); text-decoration: none; overflow: hidden; display: flex; flex-direction: column; gap: 2px;
   background: hsl(var(--hue) 48% 40% / .42); transition: filter .15s; }
 .at-tm-scale { display: flex; align-items: center; gap: 8px; margin-block-start: 10px; font-size: 11px; color: var(--mx-dim); }
 .at-tm-scale i { inline-size: 120px; block-size: 8px; border-radius: 4px; background: linear-gradient(90deg, hsl(32 48% 40% / .7), hsl(90 48% 40% / .7), hsl(142 48% 40% / .7)); }
-.at-tm:hover { filter: brightness(1.18); z-index: 1; }
-.at-tm strong { font: 600 12.5px var(--mx-emphasis); }
-.at-tm small { font-size: 10.5px; color: var(--mx-dim); }
-.at-tm small span { color: var(--mx-warm); }
 .at-hint.center { display: block; text-align: center; margin-block-start: 10px; }
 
 /* Genesis */
@@ -1414,3 +1408,23 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-owndoc-front { margin: 10px 0 4px; padding: 8px 10px; border-radius: 8px; background: var(--mx-raised); font: 11.5px/1.5 var(--mx-mono); color: var(--mx-dim); white-space: pre-wrap; }
 .at-gen-hero p + p { margin-top: 8px; }
 .at-owner-ptr { display: block; padding: 3px 0; font: 12px var(--mx-mono); color: var(--mx-blue); }
+/* Explore · map (circle pack) */
+.at-pack { position: relative; display: grid; grid-template-columns: 1fr 280px; gap: 14px; block-size: calc(100vh - 290px); min-block-size: 480px; }
+.at-pack-svg { inline-size: 100%; block-size: 100%; border: 1px solid var(--mx-line); border-radius: 14px; background: radial-gradient(90% 90% at 50% 40%, rgba(90,140,255,.07), transparent 70%), var(--mx-raised); cursor: zoom-in; }
+.at-pack-svg circle { transition: stroke .15s, opacity .2s; }
+.at-pack-svg circle.dir { stroke: var(--mx-line); stroke-width: 1; }
+.at-pack-svg circle.d1 { stroke: rgba(255,255,255,.14); stroke-width: 1.4; }
+.at-pack-svg circle.leaf { stroke: rgba(0,0,0,.25); stroke-width: .6; }
+.at-pack-svg circle:hover { stroke: var(--mx-strong); stroke-width: 1.6; }
+.at-pack-label { fill: var(--mx-strong); text-anchor: middle; dominant-baseline: middle; pointer-events: none; font-weight: 600; paint-order: stroke; stroke: rgba(10,12,16,.75); stroke-width: 3px; stroke-linejoin: round; }
+.at-pack-label.leaf { font-weight: 500; }
+.at-pack-side { display: flex; flex-direction: column; gap: 10px; padding: 14px; border: 1px solid var(--mx-line); border-radius: 14px; background: var(--mx-raised); align-self: start; }
+.at-pack-side strong { font-size: 14px; word-break: break-all; }
+.at-pack-crumbs { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: 11.5px; color: var(--mx-dim); }
+.at-pack-crumbs button { border: 0; background: none; padding: 0; color: var(--mx-blue); font: inherit; cursor: pointer; }
+.at-pack-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.at-pack-stats div { display: flex; flex-direction: column; padding: 8px; border-radius: 10px; background: var(--mx-soft); }
+.at-pack-stats b { font-size: 18px; } .at-pack-stats b.warm { color: var(--mx-warm); }
+.at-pack-stats small { font-size: 11px; color: var(--mx-dim); }
+.at-sortbar { display: flex; align-items: center; gap: 10px; margin-block-end: 12px; font-size: 12px; color: var(--mx-dim); }
+@media (max-width: 900px) { .at-pack { grid-template-columns: 1fr; block-size: auto; } .at-pack-svg { aspect-ratio: 1; block-size: auto; } }

@@ -137,7 +137,7 @@
     const group = q.group ?? ""
     const units = M().units().filter((u) => !group || u.group === group)
     const s = M().stats()
-    const href = (patch) => `#/explore?${new URLSearchParams(Object.fromEntries(Object.entries({ view, group, ...patch }).filter(([, v]) => v)))}`
+    const href = (patch) => `#/explore?${new URLSearchParams(Object.fromEntries(Object.entries({ view, group, sort: q.sort ?? "", ...patch }).filter(([, v]) => v)))}`
     const toolbar = `<div class="at-explore-bar">
       <div class="wf-range">${[["graph", "Graph", "graph"], ["map", "Map", "stack"], ["list", "List", "list"]].map(([id, l, ic]) => `<button aria-pressed="${view === id}" data-action="go" data-value="${href({ view: id })}">${A.icon(ic)}${l}</button>`).join("")}</div>
       <div class="at-typechips">${[["", "All"], ["code", "Code"], ["docs", "Docs"], ["harness", "Harness"], ["root", "Root"]].map(([g, l]) => `<button class="at-typechip ${group === g ? "on" : ""}" data-action="go" data-value="${href({ group: g })}">${l}<span>${M().units().filter((u) => !g || u.group === g).length}</span></button>`).join("")}</div>
@@ -148,13 +148,18 @@
       const results = M().live().filter((x) => `${x.claim} ${x.file}`.toLowerCase().includes(text))
       return { crumbs: [["Atlas", "#/overview"], ["Explore"]], html: `<div class="at-page wide">${head(s)}${toolbar}<section class="at-panel"><header class="at-panel-head"><h3>${plural(results.length, "fact")} match</h3>${A.btn("Clear", "go", { value: href({ q: "" }) })}</header>${A.seven(results, "search", (x) => A.factRow(x, state), 25) || '<div class="at-band-empty">Nothing matches.</div>'}</section></div>` }
     }
-    const body = view === "map" ? treemap(units) : view === "list" ? cards(units) : `<div class="at-explore-graph"><div class="at-graph-host tall" id="explore-graph"></div>
+    const sort = q.sort ?? "facts"
+    const sorted = [...units].sort(sort === "changed" ? (a, b) => b.drifted - a.drifted || b.facts - a.facts : sort === "share" ? (a, b) => b.drifted / b.facts - a.drifted / a.facts || b.facts - a.facts : sort === "name" ? (a, b) => short(a.id).localeCompare(short(b.id)) : (a, b) => b.facts - a.facts)
+    const sortBar = `<div class="at-sortbar"><span>Sort</span><div class="wf-range">${[["facts", "Most facts"], ["changed", "Most changed"], ["share", "Most drift (%)"], ["name", "Name"]].map(([k, l]) => `<button aria-pressed="${sort === k}" data-action="go" data-value="${href({ sort: k === "facts" ? "" : k })}">${l}</button>`).join("")}</div></div>`
+    const body = view === "map" ? `<div class="at-pack" id="explore-pack"></div><div class="at-tm-scale"><span>Area: how much Atlas knows</span><span class="grow"></span><span>a third changed</span><i></i><span>all hold</span></div>` : view === "list" ? sortBar + cards(sorted) : `<div class="at-explore-graph"><div class="at-graph-host tall" id="explore-graph"></div>
         <div class="at-graph-zoom">${A.btn("", "graph-zoom", { icon: "plus", value: "1.25", label: "Zoom in" })}${A.btn("", "graph-zoom", { icon: "minus", value: "0.8", label: "Zoom out" })}${A.btn("", "graph-fit", { icon: "expand", label: "Fit" })}</div>
         <div class="at-graph-legend floating"><span><i class="lg good"></i>holds</span><span><i class="lg warm"></i>code moved</span><span><i class="lg edge"></i>depends on</span><span><i class="lg hot"></i>depends on the selection</span></div>
         <aside class="at-graph-side" id="explore-pick">${q.unit ? pick(q.unit) : pickEmpty}</aside></div>`
     return {
       crumbs: [["Atlas", "#/overview"], ["Explore"]],
       after: () => {
+        const pack = document.querySelector("#explore-pack")
+        if (pack) return mountPack(pack, units)
         const host = document.querySelector("#explore-graph")
         if (!host) return
         A.exploreGraph = mountUnitGraph(host, { id: "explore", group, selected: q.unit, big: 26, onSelect: (id) => {
@@ -167,32 +172,109 @@
   }
   const head = (s) => `<div class="mx-heading"><div><div class="mx-eyebrow">Atlas</div><h1>Explore</h1><p>${plural(M().units().length, "unit")} · ${plural(s.facts, "fact")} · ${A.num(M().unitGraph().edges.length)} dependency links</p></div><div class="heading-actions">${A.btn("Check a claim…", "verify", { icon: "shield" })}</div></div>`
 
-  // A squarified treemap: area = facts, colour = share still holding.
-  const treemap = (units) => {
-    const W = 1000, H = 560
-    const total = units.reduce((n, u) => n + u.facts, 0)
-    const items = units.map((u) => ({ u, a: (u.facts / total) * W * H })).sort((a, b) => b.a - a.a)
-    const rects = []
-    const worst = (row, w) => { const s = row.reduce((n, r) => n + r.a, 0); const mx = Math.max(...row.map((r) => r.a)), mn = Math.min(...row.map((r) => r.a)); return Math.max((w * w * mx) / (s * s), (s * s) / (w * w * mn)) }
-    let x = 0, y = 0, w = W, h = H, row = []
-    const layout = (row) => {
-      const s = row.reduce((n, r) => n + r.a, 0)
-      if (w >= h) { const cw = s / h; let cy = y; row.forEach((r) => { const rh = r.a / cw; rects.push({ ...r, x, y: cy, w: cw, h: rh }); cy += rh }); x += cw; w -= cw }
-      else { const ch = s / w; let cx = x; row.forEach((r) => { const rw = r.a / ch; rects.push({ ...r, x: cx, y, w: rw, h: ch }); cx += rw }); y += ch; h -= ch }
-    }
-    items.forEach((it) => {
-      const side = Math.min(w, h)
-      if (!row.length || worst([...row, it], side) <= worst(row, side)) row.push(it)
-      else { layout(row); row = [it] }
+  // The map: a zoomable circle pack (d3-hierarchy). Units hold folders hold files; area = facts, colour = share still
+  // holding. Click a circle to zoom into it, the background to step back out.
+  const holdHue = (facts, drifted) => Math.round(32 + Math.max(0, Math.min(1, ((facts - drifted) / facts - 0.66) / 0.34)) * 110)
+  const packTree = (units) => {
+    const ids = new Set(units.map((u) => u.id))
+    const root = { name: "atlas", path: "", children: [] }
+    const unitNodes = new Map(units.map((u) => { const n = { name: u.id === "(root)" ? "top-level" : short(u.id), path: u.id, unit: u.id, children: [] }; root.children.push(n); return [u.id, n] }))
+    M().live().forEach((x) => {
+      const unit = M().unitOf(x.file)
+      if (!ids.has(unit)) return
+      const rest = unit === "(root)" ? x.file.split("/") : x.file.slice(unit.length + 1).split("/")
+      let node = unitNodes.get(unit)
+      rest.forEach((part, i) => {
+        const path = unit === "(root)" ? rest.slice(0, i + 1).join("/") : `${unit}/${rest.slice(0, i + 1).join("/")}`
+        let next = node.children.find((c) => c.name === part)
+        if (!next) { next = { name: part, path, children: [], facts: 0, drifted: 0 }; node.children.push(next) }
+        node = next
+      })
+      node.leaf = true
+      node.facts++
+      if (M().state(x) === "drifted") node.drifted++
     })
-    if (row.length) layout(row)
-    return `<div class="at-treemap">${rects.map((r) => {
-      const hold = (r.u.facts - r.u.drifted) / r.u.facts
-      // Amber when a third or more changed, green when everything holds; most units sit near the top, so stretch it.
-      const hue = Math.round(32 + Math.max(0, Math.min(1, (hold - 0.66) / 0.34)) * 110)
-      return `<a class="at-tm ${toneOf(r.u)}" href="${unitHref(r.u.id)}" style="left:${(r.x / W) * 100}%;top:${(r.y / H) * 100}%;width:${(r.w / W) * 100}%;height:${(r.h / H) * 100}%;--hue:${hue}" data-tip="${A.esc(short(r.u.id))} · ${r.u.facts} facts${r.u.drifted ? ` · ${r.u.drifted} changed` : ""}">
-        ${r.w > 70 && r.h > 34 ? `<strong>${A.esc(short(r.u.id))}</strong><small>${r.u.facts}${r.u.drifted ? ` · <span>${r.u.drifted} changed</span>` : ""}</small>` : ""}</a>`
-    }).join("")}</div><div class="at-tm-scale"><span>Area: how much Atlas knows</span><span class="grow"></span><span>a third changed</span><i></i><span>all hold</span></div>`
+    return root
+  }
+  const mountPack = (host, units) => {
+    if (!window.d3?.hierarchy) { host.innerHTML = '<div class="at-band-empty">The map library did not load (offline?).</div>'; return }
+    const size = 1000
+    const root = window.d3.pack().size([size, size]).padding((d) => (d.depth === 0 ? 14 : d.depth === 1 ? 8 : 3))(
+      window.d3.hierarchy(packTree(units)).sum((d) => (d.leaf ? d.facts : 0)).sort((a, b) => b.value - a.value))
+    root.each((d) => {
+      d.facts = d.leaf ? d.data.facts : d.value
+      d.drifted = d.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0)
+    })
+    const nodes = root.descendants().filter((d) => d.depth > 0)
+    const fill = (d) => {
+      const hue = holdHue(d.facts, d.drifted)
+      if (d.data.leaf) return `hsl(${hue} 55% 52%)`
+      return d.depth === 1 ? `hsl(${hue} 45% 45% / .16)` : `hsl(${hue} 30% 60% / .08)`
+    }
+    host.innerHTML = `<svg class="at-pack-svg" viewBox="0 0 ${size} ${size}" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Map of what Atlas knows">
+      <rect class="at-pack-bg" width="${size}" height="${size}" fill="transparent"></rect>
+      ${nodes.map((d, i) => `<circle data-i="${i}" class="${d.data.leaf ? "leaf" : `dir d${Math.min(d.depth, 3)}`}" fill="${fill(d)}"><title>${A.esc(d.data.path)} · ${A.num(d.facts)} ${d.facts === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}</title></circle>`).join("")}
+      ${nodes.map((d, i) => `<text data-i="${i}" class="at-pack-label ${d.data.leaf ? "leaf" : ""}">${A.esc(d.data.name)}</text>`).join("")}
+    </svg><aside class="at-pack-side" id="pack-side"></aside>`
+    const svg = host.querySelector("svg")
+    const circles = [...svg.querySelectorAll("circle")]
+    const labels = [...svg.querySelectorAll("text")]
+    const side = host.querySelector("#pack-side")
+    let focus = root
+    let view = [root.x, root.y, root.r * 2]
+    const place = (v) => {
+      const k = size / v[2]
+      nodes.forEach((d, i) => {
+        const x = (d.x - v[0]) * k + size / 2, y = (d.y - v[1]) * k + size / 2
+        circles[i].setAttribute("cx", x); circles[i].setAttribute("cy", y); circles[i].setAttribute("r", d.r * k)
+        labels[i].setAttribute("x", x); labels[i].setAttribute("y", y)
+      })
+    }
+    const showLabels = () => {
+      // Children of the focus are named, sized in screen pixels; circles too small on screen stay unnamed.
+      const sc = (svg.getBoundingClientRect().width || size) / size
+      nodes.forEach((d, i) => {
+        const px = d.r * (size / view[2]) * sc
+        const on = (d.parent === focus || (focus === root && d.depth === 1)) && px > 16
+        labels[i].style.display = on ? "" : "none"
+        labels[i].style.fontSize = `${Math.max(10.5, Math.min(18, px / 3.2)) / sc}px`
+        labels[i].style.strokeWidth = `${3 / sc}px`
+      })
+    }
+    const crumbs = (d) => d.ancestors().reverse().slice(1)
+    const info = (d) => {
+      const hold = d.facts ? Math.round(((d.facts - d.drifted) / d.facts) * 100) : 100
+      side.innerHTML = `<div class="at-pack-crumbs"><button data-pack="root">All</button>${crumbs(d).map((c) => `<span>/</span><button data-pack="${nodes.indexOf(c)}">${A.esc(c.data.name)}</button>`).join("")}</div>
+        <strong>${A.esc(d === root ? "Everything Atlas knows" : d.data.path)}</strong>
+        <div class="at-pack-stats"><div><b>${A.num(d.facts)}</b><small>facts</small></div><div><b class="${d.drifted ? "warm" : ""}">${A.num(d.drifted)}</b><small>changed</small></div><div><b>${hold}%</b><small>still hold</small></div></div>
+        ${d === root ? '<p class="mx-note">Each circle is a unit; inside are its folders and files. Bigger means Atlas knows more there; amber means the code moved under it. Click to zoom in.</p>' : A.btn(d.data.leaf ? "Open this file" : "Open", "go", { value: unitHref(d.data.path), primary: true })}`
+      side.querySelectorAll("[data-pack]").forEach((b) => b.addEventListener("click", () => zoom(b.dataset.pack === "root" ? root : nodes[+b.dataset.pack])))
+    }
+    const zoom = (d) => {
+      focus = d
+      const from = view, to = [d.x, d.y, d.r * 2 + (d === root ? 0 : d.r * 0.25)]
+      const t0 = performance.now()
+      const step = (now) => {
+        const t = Math.min(1, (now - t0) / 650), e = t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2
+        view = from.map((v, i) => v + (to[i] - v) * e)
+        place(view)
+        if (t < 1) requestAnimationFrame(step)
+        else showLabels()
+      }
+      labels.forEach((l) => (l.style.display = "none"))
+      requestAnimationFrame(step)
+      circles.forEach((c, i) => c.classList.toggle("in", nodes[i] === d || nodes[i].ancestors().includes(d)))
+      info(d)
+    }
+    svg.addEventListener("click", (ev) => {
+      const i = ev.target.closest("circle")?.dataset.i
+      if (i === undefined) return zoom(focus.parent ?? root)
+      const d = nodes[+i]
+      // A leaf opens its file only once you are already looking at its folder.
+      if (d.data.leaf && focus === d.parent) return A.go(unitHref(d.data.path))
+      zoom(d.data.leaf ? d.parent : d)
+    })
+    place(view); showLabels(); info(root)
   }
   const cards = (units) => {
     const owner = (u) => { const t = M().territoryOf(u.id); return t ? `${A.esc(t.name)} · ${A.esc(names[t.owner] ?? t.owner)}` : "No territory" }
