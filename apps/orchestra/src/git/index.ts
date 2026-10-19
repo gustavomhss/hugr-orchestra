@@ -96,6 +96,8 @@ export interface Result {
 export interface Options {
   readonly cwd: string
   readonly env?: Record<string, string>
+  /** False runs Git with `env` alone; default true layers `env` over the process environment. */
+  readonly extendEnv?: boolean
   readonly maxOutputBytes?: number
   readonly timeout?: Duration.Input
   readonly stdin?: ChildProcess.CommandInput
@@ -219,7 +221,7 @@ const layer = Layer.effect(
           ChildProcess.make("git", [...cfg, ...args], {
             cwd: opts.cwd,
             env: opts.env,
-            extendEnv: true,
+            extendEnv: opts.extendEnv ?? true,
             stdin: opts.stdin ?? "ignore",
             stdout: "pipe",
             stderr: "pipe",

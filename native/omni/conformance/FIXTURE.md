@@ -31,6 +31,8 @@ escapes `\n \r \t \\ \xHH` (`\xHH` writes a raw byte, so invalid UTF-8 is expres
 | `on-term=<text>` | on a graceful stop request: print `text`, exit 0 |
 | `tree=<n>[:resist]` | start a chain of `n` descendants (child, grandchild, ...); each prints `PID <level> <pid>` (level 1..n) once running, then hangs; `:resist` makes them `ignore-term` |
 | `hold=<ms>` | start one descendant that keeps the fixture's stdout and stderr open for `ms`, printing nothing |
+| `alloc=<MiB>` | allocate `MiB` mebibytes and touch every page, so they count as resident memory; keep them until it exits |
+| `alloc-child=<MiB>` | start one descendant that does `alloc=<MiB>` and hangs |
 | `escape` | Unix: start a descendant that calls `setsid`, prints `ESCAPED <pid>`, hangs. Windows: try `CREATE_BREAKAWAY_FROM_JOB`; print `ESCAPED <pid>` if it was created, else `ESCAPE-REFUSED` |
 | `pidlog=<path>` | append its pid and a newline to `path` (the QA orphan oracle); every descendant started after it (`tree`, `hold`, `escape`) appends its own pid there too |
 | `watch=<stdout\|stderr>:<n>:<path>` | wait until `path` holds `n` complete lines, then print `LOGGED <line>` for each (C-TMO-02, C-RUN-01, C-IO-02: an external marker for a process the scenario cannot read, e.g. a `run`) |

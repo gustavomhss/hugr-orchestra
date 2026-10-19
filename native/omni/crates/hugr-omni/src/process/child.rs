@@ -7,7 +7,7 @@ use std::time::Duration;
 use tokio::runtime::Handle;
 
 use super::life::{self, Life};
-use super::{Options, deadline};
+use super::{Options, deadline, memory};
 use crate::client::{self, HostStdio, Spawned};
 use crate::error::Error;
 use crate::io::{Lines, Output, Pumps, Source, Stdin};
@@ -226,6 +226,7 @@ pub(crate) fn spawn_pipe(req: &Request, opts: &Options) -> Result<PipeChild, Err
         child.inner.pumps.hold(); // before anyone can claim the output
     }
     deadline::arm(rt.handle(), &child.inner, req.timeout, opts.cancel.clone());
+    memory::arm(rt.handle(), &child.inner, req.max_rss_bytes);
     Ok(PipeChild { child })
 }
 
@@ -241,5 +242,6 @@ pub(crate) fn spawn_pty(req: &Request, opts: &Options) -> Result<PtyChild, Error
     let child = Child::start(rt.handle(), spawned, opts.text, spec.grace)?;
     child.inner.life.go()?;
     deadline::arm(rt.handle(), &child.inner, req.timeout, opts.cancel.clone());
+    memory::arm(rt.handle(), &child.inner, req.max_rss_bytes);
     Ok(PtyChild { child })
 }

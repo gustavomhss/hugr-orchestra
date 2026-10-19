@@ -320,6 +320,15 @@ exports[`tool parameters JSON Schema (wire shape) task 1`] = `
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "properties": {
+    "allowedDomains": {
+      "description": "jimmy only: lower-case host names its web search may return for this dispatch, e.g. ["docs.python.org"]; subdomains included, 1-32 names. Absent leaves web search unrestricted. Ignored for other teammates.",
+      "items": {
+        "type": "string",
+      },
+      "maxItems": 32,
+      "minItems": 1,
+      "type": "array",
+    },
     "authorizationID": {
       "description": "AuthorizationGranted ID for current team dispatch.",
       "type": "string",

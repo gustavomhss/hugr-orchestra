@@ -359,7 +359,7 @@
             "src/reference.ts"
           ]
         },
-        "research": { "kind": "platform", "patterns": ["src/research/"] },
+        "research": { "kind": "platform", "patterns": ["src/research/", "src/research-toolkit/"] },
         "backend-toolkit": {
           "kind": "platform",
           "entry": "src/backend-toolkit/index.ts",

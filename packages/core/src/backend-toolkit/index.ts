@@ -31,15 +31,19 @@ export type EngineState =
   | { readonly status: "failed"; readonly cause: string; readonly at: number }
   | { readonly status: "unsupported"; readonly reason: string }
 
-/** One engine's state on one target; `target` is absent only when the host has no supported target. */
-export type State = { readonly engine: EngineId; readonly version: string; readonly target?: TargetId } & EngineState
+/**
+ * One engine's state on one target; `target` is absent only when the host has no supported target. Generic over the
+ * engine id so another toolkit (the discovery seat's research toolkit, J6.1) runs this lifecycle over its own manifest.
+ */
+export type State<Id extends string = EngineId> = { readonly engine: Id; readonly version: string; readonly target?: TargetId } & EngineState
 
 /** Cache root holding one install directory per engine version and target. */
 export const Root = Context.Reference<string>("@orchestra/BackendToolkit/Root", {
   defaultValue: () => process.env.BACKEND_TOOLKIT_ROOT ?? path.join(Global.Path.cache, "backend-toolkit"),
 })
 
-export const Manifest = Context.Reference<Readonly<Record<EngineId, Engine>>>("@orchestra/BackendToolkit/Manifest", {
+/** The engines this lifecycle serves; a toolkit over other ids provides its own manifest together with its own Root. */
+export const Manifest = Context.Reference<Readonly<Record<string, Engine>>>("@orchestra/BackendToolkit/Manifest", {
   defaultValue: () => ENGINES,
 })
 
@@ -60,34 +64,35 @@ export const Machine = Context.Reference<Host>("@orchestra/BackendToolkit/Machin
 // Acquisition outlives a shell call. A cold source build must not consume an entire model scenario in silence.
 const PREPARE_MS = 60_000
 
-export const status = Effect.fn("BackendToolkit.status")(function* (engine?: EngineId) {
+export const status = Effect.fn("BackendToolkit.status")(function* <Id extends string = EngineId>(engine?: Id) {
   const manifest = yield* Manifest
   const host = yield* Target
-  const ids = engine ? [engine] : Object.values(manifest).map((item) => item.id)
+  // The caller names the id type of the manifest it provides.
+  const ids = engine ? [engine] : Object.values(manifest).map((item) => item.id as Id)
   if ("unsupported" in host)
     return ids.map(
-      (id): State => ({ engine: id, version: manifest[id].version, status: "unsupported", reason: host.unsupported }),
+      (id): State<Id> => ({ engine: id, version: manifest[id].version, status: "unsupported", reason: host.unsupported }),
     )
   return yield* states(ids, host.target)
 })
 
 /** The host-target executable of a ready engine, fetching it first when absent. */
-export const ensure = Effect.fn("BackendToolkit.ensure")(function* (engine: EngineId) {
+export const ensure = Effect.fn("BackendToolkit.ensure")(function* <Id extends string = EngineId>(engine: Id) {
   const host = yield* Target
   if ("unsupported" in host) return yield* new NotReady({ reason: `unsupported-target:${host.unsupported}` })
   return yield* request(engine, host.target, true)
 })
 
 /** Fetch engines (all by default) for a target (the host's by default); shims are written only for the host target. */
-export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* (
-  engines?: ReadonlyArray<EngineId>,
+export const prefetch = Effect.fn("BackendToolkit.prefetch")(function* <Id extends string = EngineId>(
+  engines?: ReadonlyArray<Id>,
   target?: TargetId,
-) {
+): Effect.fn.Return<ReadonlyArray<State<Id>>> {
   const manifest = yield* Manifest
   const host = yield* Target
-  const ids = engines ?? Object.values(manifest).map((item) => item.id)
+  const ids = engines ?? Object.values(manifest).map((item) => item.id as Id)
   const chosen = target ?? ("target" in host ? host.target : undefined)
-  if (!chosen) return yield* status().pipe(Effect.map((all) => all.filter((state) => ids.includes(state.engine))))
+  if (!chosen) return yield* status<Id>().pipe(Effect.map((all) => all.filter((state) => ids.includes(state.engine))))
   yield* Effect.forEach(ids, (id) => request(id, chosen, "target" in host && host.target === chosen).pipe(Effect.ignore), {
     concurrency: "unbounded",
     discard: true,
@@ -129,10 +134,10 @@ export const prepare = Effect.fn("BackendToolkit.prepare")(function* (command: s
 })
 
 /** Validate the reachable graph before fetching any bytes; postorder puts each owned dependency before its caller. */
-export function dependencyOrder(manifest: Readonly<Record<EngineId, Engine>>, id: EngineId): EngineId[] | string {
+export function dependencyOrder(manifest: Readonly<Record<string, Engine>>, id: string): string[] | string {
   const active = new Set<string>()
   const done = new Set<string>()
-  const ordered: EngineId[] = []
+  const ordered: string[] = []
   const visit = (current: string): string | undefined => {
     const engine = Object.entries(manifest).find(([key]) => key === current)?.[1]
     if (!engine) return `toolkit-dependency-missing:${current}`
@@ -155,9 +160,9 @@ export function dependencyOrder(manifest: Readonly<Record<EngineId, Engine>>, id
  * e.g. `glibc-below-2.34`. Each pack records only what its own binaries need, so the engine's floor is the maximum.
  */
 function belowFloor(
-  manifest: Readonly<Record<EngineId, Engine>>,
+  manifest: Readonly<Record<string, Engine>>,
   runtimes: Readonly<Record<RuntimeId, Runtime>>,
-  id: EngineId,
+  id: string,
   target: TargetId,
   machine: Host,
 ) {
@@ -172,7 +177,7 @@ function belowFloor(
     .find((reason) => reason !== undefined)
 }
 
-const request = Effect.fnUntraced(function* (id: EngineId, target: TargetId, host: boolean) {
+const request = Effect.fnUntraced(function* (id: string, target: TargetId, host: boolean) {
   const root = yield* Root
   const manifest = yield* Manifest
   const runtimes = yield* Runtimes
@@ -218,7 +223,7 @@ const acquire = Effect.fnUntraced(function* (root: string, engine: Engine, runti
   return { executable: executable(engine, directory, target) }
 })
 
-const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target: TargetId) {
+const states = Effect.fnUntraced(function* <Id extends string>(ids: ReadonlyArray<Id>, target: TargetId) {
   const root = yield* Root
   const manifest = yield* Manifest
   const runtimes = yield* Runtimes
@@ -231,29 +236,29 @@ const states = Effect.fnUntraced(function* (ids: ReadonlyArray<EngineId>, target
       const directory = path.join(root, "engines", id, `${engine.version}-${target}`)
       const base = { engine: id, version: engine.version, target }
       const dependencies = dependencyOrder(manifest, id)
-      if (typeof dependencies === "string") return { ...base, status: "failed", cause: dependencies, at: 0 } satisfies State
+      if (typeof dependencies === "string") return { ...base, status: "failed", cause: dependencies, at: 0 } satisfies State<Id>
       const unsupported = "runtime" in engine ? engine.unsupported?.[target] : undefined
-      if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State
+      if (unsupported) return { ...base, status: "unsupported", reason: unsupported } satisfies State<Id>
       const floor = local ? belowFloor(manifest, runtimes, id, target, machine) : undefined
-      if (floor) return { ...base, status: "unsupported", reason: floor } satisfies State
+      if (floor) return { ...base, status: "unsupported", reason: floor } satisfies State<Id>
       // A complete parent artifact cannot hide a failed request, missing dependency, launcher or host shim.
       for (const dependency of [id, ...dependencies]) {
         const item = manifest[dependency]
         const install = path.join(root, "engines", dependency, `${item.version}-${target}`)
         const excluded = "runtime" in item ? item.unsupported?.[target] : undefined
-        if (excluded) return { ...base, status: "unsupported", reason: excluded } satisfies State
+        if (excluded) return { ...base, status: "unsupported", reason: excluded } satisfies State<Id>
         for (const key of [requestKey(install, local), install]) {
           const attempt = attempts.get(key)
-          if (attempt && "running" in attempt) return { ...base, status: "fetching", at: attempt.at, budgetMs: INSTALL_MS } satisfies State
+          if (attempt && "running" in attempt) return { ...base, status: "fetching", at: attempt.at, budgetMs: INSTALL_MS } satisfies State<Id>
           if (attempt && "failed" in attempt) {
             const prefix = `toolkit-not-ready:failed:${id}:`
             return { ...base, status: "failed", cause: dependency !== id ? `dependency:${dependency}:${attempt.failed}`
-              : attempt.failed.startsWith(prefix) ? attempt.failed.slice(prefix.length) : attempt.failed, at: attempt.at } satisfies State
+              : attempt.failed.startsWith(prefix) ? attempt.failed.slice(prefix.length) : attempt.failed, at: attempt.at } satisfies State<Id>
           }
         }
-        if (yield* readiness(root, item, runtimes, install, target, local)) return { ...base, status: "absent" } satisfies State
+        if (yield* readiness(root, item, runtimes, install, target, local)) return { ...base, status: "absent" } satisfies State<Id>
       }
-      return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State
+      return { ...base, status: "ready", directory, executable: executable(engine, directory, target) } satisfies State<Id>
     }),
   )
 })

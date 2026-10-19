@@ -52,7 +52,8 @@ export const setup = Effect.fn("DelegationTerminalFixture.setup")(function* (
   })
   const fire = (hook: HookInput) => Effect.promise(() => hooks[hook.hook_event_name]![0].hooks[0](hook, undefined, { signal: abort.signal }))
   const admit = Effect.fn("DelegationTerminalFixture.admit")(function* (callID = "service-agent", seat = "jimmy", background = false) {
-    const args = { subagent_type: `orchestra:${seat}`, description: "Unit delegated research", prompt: "Keep applicability conditions.",
+    // jimmy is dispatched by tier (J1.4); the focused tier is the plain research dispatch.
+    const args = { subagent_type: seat === "jimmy" ? "orchestra:jimmy-focused" : `orchestra:${seat}`, description: "Unit delegated research", prompt: "Keep applicability conditions.",
       run_in_background: background }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: fixture.parent.id, messageID: assistant.id, type: "tool",
       tool: "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } } })
@@ -142,21 +143,23 @@ export const retain = Effect.fn("DelegationTerminalFixture.retain")(function* (
     "Declared: release 1 enabled mode works.\nContrary: disabled mode rejects requests.\n"))
   const source = Schema.decodeUnknownSync(Research.SourceReceipt)((yield* run("research_capture",
     { kind: "file", path: "conditional-source.txt" }, "capture")).metadata.researchSource)
-  const evidence: Research.EvidenceRef = { source: source.ref, locator: { kind: "lines", start: 1, end: 1 } }
-  const mutation = yield* run("research_record", {
-    action: "finding", proposition: "Support requires release 1 and enabled mode", nature: "extraction",
-    conditions: ["release 1", "enabled mode only"], evidence: [evidence],
-    contrary: [{ source: source.ref, locator: { kind: "lines", start: 2, end: 2 } }], reason: "Declaration is not runtime observation",
-  }, "finding")
-  const finding = Schema.decodeUnknownSync(Schema.Struct({ record: Research.FindingRecord }))(mutation.metadata.research).record
+  // The card is the host's, assembled on inquiry close from the claim; the worker's text carries none.
+  const opened = Schema.decodeUnknownSync(Schema.Struct({ subquestions: Schema.Array(Research.RecordRef) }))((yield* run("inquiry", {
+    action: "open", question: "When does support hold?", subquestions: ["Which conditions apply"], profile: "understand" }, "open")).metadata.inquiry)
+  const claim = Schema.decodeUnknownSync(Schema.Struct({ claim: Research.RecordRef }))((yield* run("inquiry", { action: "claim",
+    subquestion: opened.subquestions[0], proposition: "Support requires release 1 and enabled mode", nature: "extraction",
+    conditions: ["release 1", "enabled mode only"], evidence: [{ source: source.ref, quote: "release 1 enabled mode works" }],
+    contrary: [{ source: source.ref, quote: "disabled mode rejects requests" }] }, "finding")).metadata.inquiry).claim
+  // Published before the check: any write after it invalidates the check. Close carries it on the card.
   const document = yield* run("research_record", {
-    action: "document", document: { genre: "answer", title: "Qualified answer", body: "Only enabled release 1 [source](research:declared).",
-      findingRefs: [{ id: finding.id, revision: finding.revision }], citations: { declared: evidence } },
+    action: "document", document: { genre: "answer", title: "Qualified answer", body: "Enabled release 1 [source](research:declared).",
+      findingRefs: [claim], citations: { declared: { source: source.ref, locator: { kind: "quote", exact: "release 1 enabled mode works" } } } },
   }, "document")
   const published = Schema.decodeUnknownSync(Schema.Struct({ document: Research.DocumentReceipt }))(document.metadata.research).document
-  const card: Research.Card = { answer: "Only enabled release 1.", profile: "understand", depth: "quick", sufficiency: "answered",
-    findingRefs: [{ id: finding.id, revision: finding.revision }], evidenceRefs: [evidence], documentRefs: [published.ref],
-    coverage: { examined: ["unit conditional source"], excluded: ["runtime"], failures: [] }, limitations: ["No runtime observation"], nextActions: [] }
-  const text = `café\r\n  Preserve spacing and conditions [source](research:declared).\n\n\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060\n`
-  return { text, card, finding, source, document: published, binding, records }
+  yield* run("inquiry", { action: "check" }, "check")
+  yield* run("inquiry", { action: "close", sufficiency: "answered", answer: "Support requires enabled release 1.",
+    limitations: ["No runtime observation"] }, "close")
+  const finding = yield* records.view(binding, { action: "record", ref: claim })
+  const text = "café\r\n  Preserve spacing and conditions.\n"
+  return { text, claim, finding, source, document: published, binding, records }
 })

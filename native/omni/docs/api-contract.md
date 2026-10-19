@@ -18,6 +18,7 @@ interface CommonOptions {
   env?: Record<string, string | null>;          // merged over the inherited env; null removes a variable
   inheritEnv?: boolean;                         // default true; false = only `env` (+ OS-required vars on Windows)
   timeoutMs?: number;                           // whole-run deadline; on expiry the tree is stopped, reason "timeout"
+  maxRssBytes?: number;                         // memory cap: RSS of the whole tree, sampled every 250 ms; above it the tree is killed, reason "memory_exceeded"
   graceMs?: number;                             // default 2000; how long the tree gets to wind down (see §5)
   signal?: AbortSignal;                         // cancellation (see §8)
   text?: boolean;                               // default true: UTF-8 strings; false: Uint8Array, lossless
@@ -54,7 +55,7 @@ interface ProcessInfo { pid: number; parentPid: number | null; name: string | nu
 interface Exit {
   exitCode: number | null;                      // null only when a Unix process was ended by a signal
   signal: string | null;                        // Unix signal name; always null on Windows
-  reason: "exit" | "signal" | "killed" | "timeout" | "aborted";
+  reason: "exit" | "signal" | "killed" | "timeout" | "aborted" | "memory_exceeded";
   success: boolean;                             // reason === "exit" && exitCode === 0
 }
 interface RunResult extends Exit {
@@ -87,7 +88,7 @@ Exit / RunResult · OmniError.
   thrown synchronously by `spawn()` and reject `run()`. The rules:
   - `timeoutMs`, `graceMs`: finite, ≥ 0, ≤ 4294967295; a fraction rounds up to the next millisecond; `0` means at
     once.
-  - `maxOutputBytes`: an integer ≥ 0.
+  - `maxOutputBytes`, `maxRssBytes`: an integer ≥ 0.
   - PTY `cols`/`rows`: integers from 1 to 32767.
   - Strings (`command`, `args`, `cwd`, `env` keys and values) must not contain NUL; an `env` key must not be empty
     or contain `=`.
@@ -161,10 +162,10 @@ Exit / RunResult · OmniError.
 ## 7. Exit and termination cause
 
 - Valid combinations: `exit` → exitCode number, signal null · `signal` → Unix only, exitCode null, signal
-  name · `killed` / `timeout` / `aborted` → the native status is still reported in exitCode/signal.
+  name · `killed` / `timeout` / `aborted` / `memory_exceeded` → the native status is still reported in exitCode/signal.
 - **The cause is committed when the library acts:** if the root's exit was observed before the library sent
   any termination, the reason is `exit` or `signal`; otherwise it is the first of `killed` (stop/dispose),
-  `timeout` or `aborted` that the library acted on. A child that handles SIGTERM and exits 0 after `stop()`
+  `timeout`, `aborted` or `memory_exceeded` that the library acted on. A child that handles SIGTERM and exits 0 after `stop()`
   reports `reason: "killed"`, `exitCode: 0`, `success: false`. A `stop()` after the root exited only cleans up
   descendants and never changes the recorded `Exit`.
 - Windows exit codes are reported as non-negative integers (e.g. `0xC000013A` = 3221225786).
@@ -177,6 +178,7 @@ Exit / RunResult · OmniError.
 | `signal` already aborted | throws `ABORTED`; nothing runs | rejects `ABORTED`; nothing runs |
 | Cancelled after launch | tree stopped; `wait()` resolves `reason: "aborted"` — or, if the root had already exited, keeps the root's recorded `Exit` (only descendants are stopped) | tree stopped, then rejects `ABORTED` with `error.result` |
 | Timeout | tree stopped; `wait()` resolves `reason: "timeout"` — or keeps the root's recorded `Exit` if it had already exited | resolves with `reason: "timeout"`, `success: false` and the output collected (root's native status kept, §6) |
+| Memory above `maxRssBytes` | tree killed at once (no grace); `wait()` resolves `reason: "memory_exceeded"` | resolves with `reason: "memory_exceeded"`, `success: false` and the output collected |
 | Output above the limit | n/a (streaming has no limit; see §4 buffering) | tree stopped, then rejects `OUTPUT_LIMIT` with `error.result` |
 | Non-zero exit | `wait()` resolves, `success: false` | resolves, `success: false` |
 | I/O failure while reading | `output` throws `IO` | tree stopped, then rejects `IO` with `error.result` |

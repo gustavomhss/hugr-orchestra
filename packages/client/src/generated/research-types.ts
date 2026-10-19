@@ -74,7 +74,12 @@ export type ResearchArtifactOutput = {
               readonly digest: string
             }
             readonly locator:
-              | { readonly kind: "lines"; readonly start: number; readonly end: number }
+              | {
+                  readonly kind: "lines"
+                  readonly start: number
+                  readonly end: number
+                  readonly basis?: "original" | "retained"
+                }
               | { readonly kind: "quote"; readonly exact: string; readonly prefix?: string; readonly suffix?: string }
               | { readonly kind: "json"; readonly pointer: string }
           }

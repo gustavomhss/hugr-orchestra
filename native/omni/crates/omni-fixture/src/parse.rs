@@ -39,6 +39,8 @@ pub enum Step {
         resist: bool,
     },
     Hold(u64),
+    Alloc(u64),
+    AllocChild(u64),
     Escape,
     /// Internal: the descendant started by `escape`.
     Escaped,
@@ -124,6 +126,8 @@ fn step(arg: &str) -> Result<Step, String> {
             })
         }
         "hold" => Ok(Step::Hold(number(need()?)?)),
+        "alloc" => Ok(Step::Alloc(number(need()?)?)),
+        "alloc-child" => Ok(Step::AllocChild(number(need()?)?)),
         "escape" => bare(Step::Escape),
         "_escaped" => bare(Step::Escaped),
         "pidlog" => Ok(Step::Pidlog(PathBuf::from(need()?))),

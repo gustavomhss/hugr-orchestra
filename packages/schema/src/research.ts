@@ -46,6 +46,8 @@ export const Tiers = Object.freeze({
   focused: Object.freeze({ providerCalls: 48, toolCalls: 128, capturedBytes: 128 * 1024 * 1024, deadlineSeconds: 1200 }),
   deep: Object.freeze({ providerCalls: 96, toolCalls: 256, capturedBytes: 256 * 1024 * 1024, deadlineSeconds: 2400 }),
 })
+/** Probe wall-clock seconds per tier (J1.10); kept apart from Tiers, whose spread shapes are consumed as-is. */
+export const ProbeSeconds = Object.freeze({ quick: 120, focused: 600, deep: 1800 })
 
 export const Binding = struct("Research.Binding", {
   projectID: Project.ID,
@@ -68,7 +70,10 @@ export const Selection = struct("Research.Selection", {
 export type Selection = typeof Selection.Type
 
 export const Locator = Schema.Union([
-  struct("Research.LineLocator", { kind: Schema.Literal("lines"), start: PositiveInt, end: PositiveInt }),
+  // An absent basis is "retained": historical rows decode, and their canonical digests stay unchanged (J5.3).
+  struct("Research.LineLocator", {
+    kind: Schema.Literal("lines"), start: PositiveInt, end: PositiveInt, basis: optional(Schema.Literals(["original", "retained"])),
+  }),
   struct("Research.QuoteLocator", {
     kind: Schema.Literal("quote"),
     exact: text(8192),
@@ -207,6 +212,12 @@ export type RecordInput = typeof RecordInput.Type
 
 const GitRevision = Schema.String.check(Schema.isPattern(/^(?:[0-9a-f]{40}|[0-9a-f]{64})(?![\s\S])/))
 const historyFields = { kind: Schema.Literal("history"), path: text(8192), revision: optional(GitRevision) }
+/** J5.15: resolve one ref to its full commit hash; status reads HEAD, branch and dirty paths. */
+export const HistoryResolve = struct("Research.HistoryResolve", {
+  kind: Schema.Literal("history"), operation: Schema.Literal("resolve"),
+  ref: Schema.String.check(Schema.isPattern(/^(?!-)[A-Za-z0-9._/~^@{}-]{1,256}(?![\s\S])/)),
+})
+export const HistoryStatus = struct("Research.HistoryStatus", { kind: Schema.Literal("history"), operation: Schema.Literal("status") })
 export const HistoryInput = Schema.Union([
   struct("Research.HistoryLog", { ...historyFields, operation: Schema.Literal("log"), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))) }),
   struct("Research.HistoryShow", { ...historyFields, operation: Schema.Literal("show") }),
@@ -220,6 +231,8 @@ export const HistoryInput = Schema.Union([
     kind: Schema.Literal("history"), operation: Schema.Literal("search"), revision: optional(GitRevision),
     message: optional(text(256)), path: optional(text(8192)), limit: optional(PositiveInt.check(Schema.isLessThanOrEqualTo(50))),
   }),
+  HistoryResolve,
+  HistoryStatus,
 ])
 export type HistoryInput = typeof HistoryInput.Type
 
@@ -275,6 +288,8 @@ export class Error extends Schema.TaggedErrorClass<Error>()("Research.Error", {
   code: Schema.Literals([
     "binding_missing", "binding_mismatch", "not_found", "conflict", "over_cap", "reference_invalid",
     "locator_ambiguous", "source_unavailable", "publication_uncertain", "budget_exhausted", "unsupported",
+    "index_unavailable", "index_stale", "index_building", "probe_denied", "probe_unsupported_platform", "probe_timeout",
+    "probe_memory", "blocked_by_repo_guard", "domain_denied", "inquiry_state",
   ]),
   message: Schema.String,
 }) {}
@@ -288,6 +303,7 @@ export const Allowance = struct("Research.Allowance", {
   toolLimit: PositiveInt,
   byteLimit: PositiveInt,
   deadlineSeconds: PositiveInt.pipe(Schema.withDecodingDefaultKey(Effect.succeed(Tiers.quick.deadlineSeconds))),
+  probeSecondsLimit: PositiveInt.pipe(Schema.withDecodingDefaultKey(Effect.succeed(ProbeSeconds.quick))),
 })
 export type Allowance = typeof Allowance.Type
 
@@ -298,3 +314,88 @@ export const MutationReceipt = struct("Research.MutationReceipt", {
   eventID: text(256),
 })
 export type MutationReceipt = typeof MutationReceipt.Type
+
+// J5: the inquiry the host runs over the existing records, the check before the card, and card v2.
+const LineSpan = struct("Research.LineSpan", { start: PositiveInt, end: PositiveInt })
+/** Evidence the seat cites; lines are original-file coordinates, quote is literal in the retained bytes, pointer is JSON. */
+export const Evidence = Schema.Union([
+  struct("Research.LinesEvidence", { source: SourceRef, lines: LineSpan }),
+  struct("Research.QuoteEvidence", { source: SourceRef, quote: text(8192) }),
+  struct("Research.PointerEvidence", { source: SourceRef, pointer: Schema.String.check(Schema.isMaxLength(2048)) }),
+])
+export type Evidence = typeof Evidence.Type
+export const Sufficiency = Schema.Literals(["answered", "partial", "blocked"])
+export type Sufficiency = typeof Sufficiency.Type
+
+export const InquiryInput = Schema.Union([
+  struct("Research.InquiryOpen", {
+    action: Schema.Literal("open"), question: text(8192), subquestions: list(text(4096), 6).check(Schema.isMinLength(1)),
+    profile: Profile, genre: optional(Genre),
+  }),
+  struct("Research.InquiryHypothesize", { action: Schema.Literal("hypothesize"), subquestion: RecordRef, proposition: text(8192) }),
+  struct("Research.InquiryClaim", {
+    action: Schema.Literal("claim"), subquestion: RecordRef, proposition: text(8192),
+    nature: Schema.Literals(["extraction", "observation", "inference"]), evidence: list(Evidence), contrary: optional(list(Evidence)),
+    conditions: optional(list(text(4096))), scope: optional(Schema.Literals(["universal", "existential"])),
+  }),
+  struct("Research.InquiryResolve", {
+    action: Schema.Literal("resolve"), hypothesis: RecordRef, status: Schema.Literals(["confirmed", "refuted"]), evidence: list(Evidence),
+  }),
+  struct("Research.InquiryDrop", { action: Schema.Literal("drop"), ref: RecordRef, reason: text(4096) }),
+  struct("Research.InquiryCheck", { action: Schema.Literal("check") }),
+  struct("Research.InquiryClose", {
+    action: Schema.Literal("close"), sufficiency: Sufficiency, answer: text(32768),
+    limitations: optional(list(text(4096))), nextActions: optional(list(text(4096))),
+  }),
+  struct("Research.InquiryStatus", { action: Schema.Literal("status") }),
+])
+export type InquiryInput = typeof InquiryInput.Type
+
+export const CheckRule = Schema.Literals(["R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8", "R9", "R10", "R11"])
+export const UrlStatus = Schema.Literals(["LIVE", "DEAD", "LIKELY_HALLUCINATED", "UNKNOWN"])
+const UrlCheck = struct("Research.UrlCheck", { url: text(8192), status: UrlStatus, httpStatus: optional(Schema.Int) })
+export const CheckResult = struct("Research.CheckResult", {
+  verdict: Schema.Literals(["pass", "fail"]),
+  rules: list(struct("Research.RuleResult", { id: CheckRule, checked: NonNegativeInt, failed: NonNegativeInt }), 11),
+  issues: list(struct("Research.CheckIssue", {
+    rule: CheckRule, ref: optional(RecordRef), citation: optional(text(8192)), reason: text(4096),
+  }), 256),
+  urls: list(UrlCheck, 256),
+})
+export type CheckResult = typeof CheckResult.Type
+
+/** Assembled by the host on close; the model never writes card JSON (J5.12). */
+export const CardV2 = struct("Research.CardV2", {
+  schema: Schema.Literal("jimmy-card-v2"),
+  answer: Schema.String.check(Schema.isMaxLength(32768)),
+  profile: Profile,
+  depth: Depth,
+  sufficiency: Sufficiency,
+  subquestions: list(struct("Research.CardSubquestion", {
+    ref: RecordRef, question: text(4096), status: Schema.Literals(["answered", "partial", "uncovered"]),
+  }), 6),
+  claims: list(struct("Research.CardClaim", {
+    ref: RecordRef, proposition: text(8192), nature: text(256), evidence: list(EvidenceRef), contrary: list(EvidenceRef),
+    conditions: list(text(4096)),
+  }), 256),
+  hypotheses: list(struct("Research.CardHypothesis", {
+    ref: RecordRef, proposition: text(8192), status: Schema.Literals(["confirmed", "refuted", "open"]), probes: list(text(256), 64),
+  }), 256),
+  probes: list(struct("Research.CardProbe", { probeID: text(256), verdict: text(256), source: SourceRef }), 256),
+  sources: struct("Research.CardSources", {
+    total: NonNegativeInt, shown: list(struct("Research.CardSource", { ref: SourceRef, origin: text(256), uri: text(8192) }), 50),
+  }),
+  searches: NonNegativeInt,
+  web: struct("Research.CardWeb", { domains: Schema.Union([list(text(256), 256), Schema.Literal("unrestricted")]), urls: list(UrlCheck, 256) }),
+  coverage: struct("Research.CardCoverage", { examined: list(text(4096), 256), excluded: list(text(4096), 256), failures: list(text(4096), 256) }),
+  limitations: list(text(4096), 256),
+  nextActions: list(text(4096)),
+  documentRefs: list(DocumentRef),
+  check: CheckResult,
+})
+export type CardV2 = typeof CardV2.Type
+
+/** Payloads of the ledger events I1 defines as research.inquiry.{opened,checked,closed} (J5.1). */
+export const InquiryOpened = struct("Research.InquiryOpened", { binding: Binding, question: RecordRef, subquestions: list(RecordRef, 6) })
+export const InquiryChecked = struct("Research.InquiryChecked", { binding: Binding, check: CheckResult })
+export const InquiryClosed = struct("Research.InquiryClosed", { binding: Binding, card: CardV2 })

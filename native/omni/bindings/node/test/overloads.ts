@@ -93,6 +93,7 @@ function reasonText(reason: Exit["reason"]): string {
     case "killed":
     case "timeout":
     case "aborted":
+    case "memory_exceeded":
       return reason;
     default: {
       const unreachable: never = reason;

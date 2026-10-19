@@ -6,7 +6,7 @@ import { access, chmod, mkdir, readFile, rename, rm, stat, writeFile } from "fs/
 import { constants } from "fs"
 import { Effect } from "effect"
 import { PinnedArtifact } from "../pinned-artifact"
-import type { Engine, EngineId, Runtime, RuntimeId } from "./manifest"
+import type { Engine, Runtime, RuntimeId } from "./manifest"
 import type { TargetId } from "./target"
 
 export function executable(engine: Engine, directory: string, target: TargetId) {
@@ -46,7 +46,7 @@ function launcher(windows: boolean, command: ReadonlyArray<string>, env: Readonl
 }
 
 /** Write an engine's `<root>/bin` launcher through a temp file and one rename, skipping it when it is already current. */
-export function shim(root: string, id: EngineId, text: string, bin = path.join(root, "bin")) {
+export function shim(root: string, id: string, text: string, bin = path.join(root, "bin")) {
   return Effect.tryPromise({
     try: async () => {
       const file = path.join(bin, process.platform === "win32" ? `${id}.cmd` : id)

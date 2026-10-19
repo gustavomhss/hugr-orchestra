@@ -352,6 +352,7 @@
         "@orchestra/continuity": "workspace:*",
         "@orchestra/core": "workspace:*",
         "@orchestra/llm": "workspace:*",
+        "@orchestra/schema": "workspace:*",
         "effect": "catalog:",
       },
       "devDependencies": {
@@ -570,6 +571,8 @@
         "@ai-sdk/vercel": "2.0.39",
         "@ai-sdk/xai": "3.0.102",
         "@aws-sdk/credential-providers": "3.1057.0",
+        "@bufbuild/protobuf": "2.12.0",
+        "@c4312/scip": "0.1.0",
         "@effect/opentelemetry": "catalog:",
         "@effect/platform-node": "catalog:",
         "@effect/sql-sqlite-bun": "catalog:",
@@ -615,8 +618,13 @@
         "minimatch": "10.2.5",
         "npm-package-arg": "13.0.2",
         "semver": "^7.6.3",
+        "tree-sitter-javascript": "0.23.1",
+        "tree-sitter-python": "0.25.0",
+        "tree-sitter-typescript": "0.23.2",
         "turndown": "7.2.0",
+        "typescript": "catalog:",
         "venice-ai-sdk-provider": "2.1.1",
+        "web-tree-sitter": "0.25.10",
         "which": "6.0.1",
         "xdg-basedir": "5.1.0",
         "yaml": "2.8.2",
@@ -1283,6 +1291,8 @@
     "@bufbuild/protobuf": ["@bufbuild/protobuf@2.12.0", "", {}, "sha512-B/XlCaFIP8LOwzo+bz5uFzATYokcwCKQcghqnlfwSmM5eX/qTkvDBnDPs+gXtX/RyjxJ4DRikECcPJbyALA8FA=="],
 
     "@bufbuild/protoplugin": ["@bufbuild/protoplugin@2.12.0", "", { "dependencies": { "@bufbuild/protobuf": "2.12.0", "@typescript/vfs": "^1.6.2", "typescript": "5.4.5" } }, "sha512-ORlDITp8AFUXzIhLRoMCG+ud+D3MPKWb5HQXBoskMMnjeyEjE1H1qLonVNPyOr8lkx3xSfYUo8a0dvOZJVAzow=="],
+
+    "@c4312/scip": ["@c4312/scip@0.1.0", "", { "dependencies": { "@bufbuild/protobuf": "^2.0.0" } }, "sha512-V1VIq3rB1tIj7n3NHIg+VgbKEYl75O+yM30GD4K5wQgdgC7taOsJU7itQdMvtkKhyCWHHuR3WZ0ijUUqPELR3g=="],
 
     "@clack/core": ["@clack/core@1.0.0-alpha.1", "", { "dependencies": { "picocolors": "^1.0.0", "sisteransi": "^1.0.5" } }, "sha512-rFbCU83JnN7l3W1nfgCqqme4ZZvTTgsiKQ6FM0l+r0P+o2eJpExcocBUWUIwnDzL76Aca9VhUdWmB2MbUv+Qyg=="],
 

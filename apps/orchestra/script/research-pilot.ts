@@ -198,7 +198,7 @@ if (process.platform === "darwin" && (await Promise.all([
   throw error
 })))).some(Boolean)) throw new Error("Pilot cannot isolate native macOS managed preferences on this host")
 const skillFiles = (await git(["ls-files", "packages/jimmy-specialist/skills"])).split("\n").filter(Boolean)
-if (!["jimmy-discovery", "jimmy-research"].every((skill) => skillFiles.includes(`packages/jimmy-specialist/skills/${skill}/SKILL.md`)))
+if (!["jimmy-reference"].every((skill) => skillFiles.includes(`packages/jimmy-specialist/skills/${skill}/SKILL.md`)))
   throw new Error("Pilot cannot identify the declared source skill entries")
 const { Research } = await import("@orchestra/schema/research")
 const identity = {

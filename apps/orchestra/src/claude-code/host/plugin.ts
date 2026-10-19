@@ -5,7 +5,7 @@ export * as ClaudeHostPlugin from "./plugin"
 // (ClaudeHostMcp.prepare), and their skills plus Maestro's playbooks. Plugin files are never committed: they are
 // written into an Orchestra-owned cache directory named by their content hash, so a build writes only when the
 // content changed. Claude Code loads it with `plugins: [{ type: "local", path }]` and addresses each seat as
-// `orchestra:<seat>`.
+// `orchestra:<seat>`, and the research seat as `orchestra:jimmy-<tier>`.
 //
 // There is no hooks/hooks.json: every record is written by the in-process SDK hooks (host/hooks.ts), and no
 // record-free policy needs a plugin hook today.
@@ -14,10 +14,12 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import type { AgentDefinition } from "@anthropic-ai/claude-agent-sdk"
 import { Global } from "@orchestra/core/global"
+import { Schema } from "effect"
 import { Research } from "@orchestra/schema/research"
 import type { Agent } from "@/agent/agent"
 import { Seats } from "@orchestra/maestro/seats"
 import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Skill } from "@/skill"
 import { ClaudeHostMcp } from "./mcp"
 import { ClaudeHostProcess } from "./process-tool"
@@ -44,14 +46,20 @@ export type Input = {
 }
 
 /**
- * Seats whose every source read must go through Orchestra's capture tools, so the research corpus records provenance
- * (21-jimmy-seat-facts). Their allow-list names these MCP tools and none of the built-ins that read sources. This is
- * per-subagent tool scoping; the built-ins stay on for the session.
+ * The plugin agents of a seat: one per research tier for the research seat (J1.4), so the tier travels in the Agent
+ * call's `subagent_type` and each definition carries its own `maxTurns`; one agent named by its id for any other seat.
  */
-export const CAPTURE: Readonly<Record<string, readonly string[]>> = Object.freeze({
-  jimmy: ["research_capture", "research_view", "research_record", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "skill",
-    "repo_map", "repo_symbols", "repo_git_state"],
-})
+export function agents(seat: string): readonly { readonly name: string; readonly tier?: Research.Depth }[] {
+  if (seat !== ResearchSeatTools.SEAT) return [{ name: seat }]
+  return Research.Depth.literals.map((tier) => ({ name: `${seat}-${tier}`, tier }))
+}
+
+/** The seat and research tier a plugin agent name addresses: `jimmy-focused` is the research seat at `focused`. */
+export function agent(name: string) {
+  const match = /^(.+)-([a-z]+)$/.exec(name)
+  if (match?.[1] === ResearchSeatTools.SEAT && Schema.is(Research.Depth)(match[2])) return { seat: match[1], tier: match[2] }
+  return { seat: name, tier: undefined }
+}
 
 /**
  * Seat prompt text that describes Orchestra's own loop, and its Claude Code equivalent. Nothing else in a seat prompt
@@ -66,36 +74,42 @@ export async function build(input: Input) {
     const seat = Seats.find(agent.id)
     return seat && agent.native === true ? [{ agent, seat }] : []
   }).toSorted((a, b) => a.seat.id.localeCompare(b.seat.id))
-  const defined = seats.map((item) => ({ id: item.seat.id, definition: definition(item.agent, item.seat.id, input.tools[item.seat.id] ?? []) }))
+  const defined = seats.flatMap((item) => agents(item.seat.id).map((entry) => ({ id: item.seat.id, name: entry.name,
+    definition: definition(item.agent, item.seat.id, input.tools[item.seat.id] ?? [], entry.tier) })))
   const files = new Map<string, Uint8Array>([
     [".claude-plugin/plugin.json", encode(JSON.stringify({
       name: NAME,
       description: "Orchestra's native team seats, their skills and Maestro's playbooks.",
     }, null, 2) + "\n")],
-    ...defined.filter((item) => !input.sdk?.[item.id]).map((item) => [`agents/${item.id}.md`, encode(markdown(item.id, item.definition))] as const),
+    ...defined.filter((item) => !input.sdk?.[item.id]).map((item) => [`agents/${item.name}.md`, encode(markdown(item.id, item.name, item.definition))] as const),
     ...await skills(seats.map((item) => item.seat.id), input.playbooks ?? Skill.PLAYBOOKS_DIR),
   ])
   return {
     path: await publish(input.root ?? ROOT, files),
-    seats: Object.fromEntries(defined.map((item) => [`${NAME}:${item.id}`, item.id])),
+    seats: Object.fromEntries(defined.map((item) => [`${NAME}:${item.name}`, item.id])),
     sdkAgents: Object.fromEntries(defined.flatMap((item) => {
       const sdk = input.sdk?.[item.id]
-      return sdk ? [[`${NAME}:${item.id}`, { ...item.definition, ...sdk } satisfies AgentDefinition]] : []
+      return sdk ? [[`${NAME}:${item.name}`, { ...item.definition, ...sdk } satisfies AgentDefinition]] : []
     })),
   }
 }
 
-/** A seat's Claude Code tool allow-list: built-in names for built-in duplicates, `mcp__orchestra__*` for the rest. */
+/**
+ * A seat's Claude Code tool allow-list: built-in names for built-in duplicates, `mcp__orchestra__*` for the rest. The
+ * research seat keeps only its descriptor's tools (J1.6) plus its native readers and search, whose output PostToolUse
+ * retains (J1.7); WebFetch returns a model-made summary rather than received bytes, so it is never among them.
+ */
 export function tools(seat: string, granted: readonly string[]) {
-  const capture = CAPTURE[seat]
-  const names = granted.filter((id) => !capture || capture.includes(id)).flatMap((id) => {
+  const research = seat === ResearchSeatTools.SEAT
+  const scope: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
+  const names = granted.filter((id) => !research || scope.includes(id)).flatMap((id) => {
     if (Object.hasOwn(ClaudeHostMcp.BUILTINS, id)) return ClaudeHostMcp.BUILTINS[id]
     return ClaudeHostMcp.servable(id) ? [`mcp__${ClaudeHostMcp.NAME}__${id}`] : []
   })
-  return [...new Set(names)].toSorted()
+  return [...new Set([...names, ...(research ? ResearchSeatTools.CLAUDE : [])])].toSorted()
 }
 
-function definition(agent: Agent.Info, seat: string, granted: readonly string[]) {
+function definition(agent: Agent.Info, seat: string, granted: readonly string[], tier: Research.Depth | undefined) {
   const allowed = tools(seat, granted)
   // An empty allow-list would read as "inherit every tool": fail instead of widening the seat.
   if (allowed.length === 0) throw new Error(`Seat ${seat} has no tools to give Claude Code`)
@@ -111,27 +125,22 @@ function definition(agent: Agent.Info, seat: string, granted: readonly string[])
     ].join(" "),
   ].join("\n") : undefined
   return {
-    description: agent.description,
-    prompt: [LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), agent.prompt.trim()), note, ...(CAPTURE[seat] ? [
-      "Source access in this host is scoped to Orchestra MCP capture tools. Use research_capture for files, URLs and " +
-        "committed history, and research_view to reopen retained evidence. Claude Code built-in source readers are outside " +
-        "this seat’s scope. End with the native return card; the host appends retained finding qualifications.",
-    ] : [])]
+    description: tier ? `${agent.description.trim()} Research tier ${tier}: up to ${Research.Tiers[tier].providerCalls} turns.`
+      : agent.description,
+    prompt: [LOOP_TEXT.reduce((text, [from, to]) => text.replaceAll(from, to), agent.prompt.trim()), note]
       .filter(Boolean).join("\n\n") + "\n",
     tools: allowed,
     skills: Seats.find(seat)?.skills.slice(),
-    // The SDK's Agent input has no per-call maxTurns, so the static definition carries the deepest tier's ceiling.
-    // The host's ledger stops each dispatch at its own bound tier (ClaudeHostResearch observe and PreToolUse holds).
-    ...(seat === "jimmy" ? { maxTurns: Research.Tiers.deep.providerCalls } : {}),
+    ...(tier ? { maxTurns: Research.Tiers[tier].providerCalls } : {}),
     model: agent.model?.providerID === "anthropic" ? agent.model.modelID : "inherit",
   } satisfies AgentDefinition
 }
 
 // JSON strings are valid YAML double-quoted scalars, so no seat text can break the frontmatter.
-function markdown(id: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">> & Pick<AgentDefinition, "maxTurns">) {
+function markdown(id: string, name: string, definition: Required<Pick<AgentDefinition, "description" | "prompt" | "tools" | "model">> & Pick<AgentDefinition, "maxTurns">) {
   return [
     "---",
-    `name: ${id}`,
+    `name: ${name}`,
     `description: ${JSON.stringify(definition.description)}`,
     `tools: ${definition.tools.join(", ")}`,
     `model: ${JSON.stringify(definition.model)}`,

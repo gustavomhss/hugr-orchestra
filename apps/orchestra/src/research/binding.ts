@@ -1,6 +1,7 @@
 export * as ResearchTools from "./binding"
 
 import { Effect } from "effect"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Project } from "@orchestra/schema/project"
 import { SessionID } from "@orchestra/schema/session-id"
@@ -18,16 +19,16 @@ import { Database } from "@orchestra/core/database/database"
 
 export function run<A, E, R>(ctx: Tool.Context, name: string, use: (binding: Research.Binding, context: Parameters<typeof ResearchBinding.require>[1]) => Effect.Effect<A, E, R>, ask = true) {
   return Effect.gen(function* () {
-    if (ctx.agentID !== "jimmy" || !ctx.callID)
+    if (ctx.agentID !== ResearchSeatTools.SEAT || !ctx.callID)
       return yield* new Research.Error({ code: "binding_missing", message: "Native discovery invocation is required" })
     const agents = yield* Agent.Service
     const agent = yield* agents.get(ctx.agentID)
-    if (!agent?.native || agent.id !== "jimmy")
+    if (!agent?.native || agent.id !== ResearchSeatTools.SEAT)
       return yield* new Research.Error({ code: "binding_mismatch", message: "Discovery owner is not native" })
-    if (ask) yield* ctx.ask({ permission: name, patterns: ["jimmy"], always: ["jimmy"], metadata: {} })
+    if (ask) yield* ctx.ask({ permission: name, patterns: [ResearchSeatTools.SEAT], always: [ResearchSeatTools.SEAT], metadata: {} })
     const placement = yield* InstanceState.context
     const context = {
-      sessionID: SessionID.make(ctx.sessionID), agent: AgentV2.ID.make("jimmy"),
+      sessionID: SessionID.make(ctx.sessionID), agent: AgentV2.ID.make(ResearchSeatTools.SEAT),
       assistantMessageID: SessionMessage.ID.make(ctx.messageID), toolCallID: ctx.callID,
     }
     const binding = yield* ResearchBinding.resolve(context.sessionID, Project.ID.make(placement.project.id))

@@ -31,6 +31,7 @@ import { Seats } from "@orchestra/maestro/seats"
 import { WriteRoots } from "@/maestro/write-roots"
 import { WorkflowBinding } from "@/maestro/workflow-binding"
 import { Permission } from "@/permission"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { MessageID, type SessionID } from "@/session/schema"
 import { Session } from "@/session/session"
 import { ToolSafetyPlacement } from "@orchestra/core/tool-safety-placement"
@@ -155,9 +156,10 @@ export const PROCESS = ClaudeHostProcess.ID
  */
 export function scope(granted: Ports["granted"], actor: Actor, name: string, input: Input) {
   const own = ClaudeCodeTools.orchestra(name)
-  const capture = ClaudeHostPlugin.CAPTURE[actor.seat]
-  if (capture && !(own && capture.includes(own)) && !(name === "Skill" && capture.includes("skill")))
-    return `${actor.seat} source access is scoped to Orchestra capture tools; ${name} did not run.`
+  // The research seat reaches only its descriptor's tools (J1.6): never WebFetch, Bash, LSP or Agent.
+  const scope: readonly string[] = own ? [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP] : ResearchSeatTools.CLAUDE
+  if (actor.seat === ResearchSeatTools.SEAT && !scope.includes(own ?? name))
+    return `${actor.seat} may use only its research tools; ${name} did not run.`
   if (own) {
     // A write grant is part of delegating, so it goes to the agents that may delegate.
     const allowed = granted[actor.seat]?.includes(own === ClaudeHostMcp.GRANT ? "task" : own)
@@ -224,7 +226,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
     const messageID = part?.messageID ?? MessageID.ascending()
     return {
       sessionID: actor.sessionID, messageID, callID: toolUseID, agent: actor.seat, agentID: actor.seat, abort: input.abort,
-      messages: [], extra: { claudeCode: true }, metadata: () => Effect.void,
+      messages: [], extra: { claudeCode: true, callKey: toolUseID }, metadata: () => Effect.void,
       ask: (request) => Effect.gen(function* () {
         const windows = process.platform === "win32" && request.permission === "external_directory"
         // Expand lexical 8.3 names without following junctions. Original lexical and physical checks remain;
@@ -336,7 +338,7 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
       // Delegation is Orchestra's `task` permission on the seat, as Task asks it.
       if (agentCall(name)) {
         const route = text(args, "subagent_type") ?? "*"
-        const seat = route.startsWith("orchestra:") ? Seats.find(route.slice("orchestra:".length))?.id ?? route : route
+        const seat = route.startsWith("orchestra:") ? Seats.find(ClaudeHostPlugin.agent(route.slice("orchestra:".length)).seat)?.id ?? route : route
         return yield* ctx.ask({ permission: "task", patterns: [seat], always: ["*"],
           metadata: { description: text(args, "description"), subagent_type: route } })
       }

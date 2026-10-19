@@ -8,6 +8,9 @@ import { AppProcess, collectStream, waitForAbort } from "./process"
 import { NonNegativeInt, PositiveInt, RelativePath } from "./schema"
 import { RipgrepBinary } from "./ripgrep/binary"
 
+// The bundled binary, re-exported so a caller that runs ripgrep with its own argv imports this entry.
+export { RipgrepBinary }
+
 /**
  * Small core-owned ripgrep execution adapter. It deliberately exposes raw
  * process-oriented rows, not model text or permission behavior. Search maps

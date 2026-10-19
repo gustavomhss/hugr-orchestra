@@ -24,6 +24,7 @@
     "@orchestra/continuity": "workspace:*",
     "@orchestra/core": "workspace:*",
     "@orchestra/llm": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "effect": "catalog:"
   },
   "devDependencies": {

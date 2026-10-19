@@ -103,7 +103,7 @@ files directly.
 - `plugin-host` — platform — `src/plugin/`, `src/plugin.ts` — packages/core
 - `identity` — platform — `src/account/`, `src/account.ts`, `src/credential/`, `src/credential.ts`, `src/oauth/`, `src/integration/`, `src/integration.ts`, `src/share/` — packages/core
 - `instruction` — platform — `src/skill/`, `src/skill.ts`, `src/packaged-skills.ts`, `src/instruction-context.ts`, `src/command.ts`, `src/reference/`, `src/reference.ts` — packages/core
-- `research` — platform — `src/research/` — packages/core
+- `research` — platform — `src/research/`, `src/research-toolkit/` — packages/core
 - `backend-toolkit` — platform — `src/backend-toolkit/`, `src/pinned-artifact.ts` — packs move to modules/backend-toolkit after the 70-C' cut
 - `control-plane` — platform — `src/control-plane/` — packages/core
 - `capability` — platform — `src/capability/` — packages/core

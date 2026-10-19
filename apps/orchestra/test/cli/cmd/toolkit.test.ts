@@ -5,6 +5,7 @@ import { Effect } from "effect"
 import type { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "@orchestra/core/backend-toolkit/target"
+import { ResearchToolkitManifest } from "@orchestra/core/research-toolkit/manifest"
 import { cliIt } from "../../lib/cli-process"
 
 // Network-free: an empty root only reads state, and a root that is a regular file fails before any download starts.
@@ -18,7 +19,7 @@ describe("toolkit command", () => {
           env: { BACKEND_TOOLKIT_ROOT: path.join(home, "toolkit") },
         })
         // An engine can be unsupported on a target the host supports (sqlx needs the MSVC linker on Windows).
-        const expected: BackendToolkit.State[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
+        const expected: BackendToolkit.State<string>[] = Object.values<BackendToolkitManifest.Engine>(BackendToolkitManifest.ENGINES).map((engine) => {
           if (!("target" in detected))
             return { engine: engine.id, version: engine.version, status: "unsupported", reason: detected.unsupported }
           const reason = "runtime" in engine ? engine.unsupported?.[detected.target] : undefined
@@ -27,6 +28,25 @@ describe("toolkit command", () => {
         })
         orchestra.expectExit(result, expected.some((state) => state.status === "unsupported") ? 1 : 0, "toolkit status --json")
         expect(JSON.parse(result.stdout)).toEqual(expected)
+      }),
+    60_000,
+  )
+
+  cliIt.live(
+    "status --research --json prints the research engines and the worktree's shards",
+    ({ home, orchestra }) =>
+      Effect.gen(function* () {
+        const result = yield* orchestra.spawn(["toolkit", "status", "--research", "--json"], {
+          env: { RESEARCH_TOOLKIT_ROOT: path.join(home, "research-toolkit") },
+        })
+        orchestra.expectExit(result, 0, "toolkit status --research --json")
+        // Every research pack ships; an empty root has installed none of them and holds no shard.
+        const detected = BackendToolkitTarget.detect()
+        expect(JSON.parse(result.stdout)).toEqual({
+          engines: ResearchToolkitManifest.IDS.map((engine) => ({ engine, version: ResearchToolkitManifest.ENGINES[engine]?.version,
+            target: "target" in detected ? detected.target : undefined, status: "absent" })),
+          shards: [],
+        })
       }),
     60_000,
   )

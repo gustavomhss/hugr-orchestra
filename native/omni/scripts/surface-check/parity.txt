@@ -35,7 +35,7 @@ spawn | spawn, SpawnOptions, PipeChild, configure, ConfigureOptions, ConfigureOp
 cwd | CommonOptions.cwd | Command::cwd
 environment | CommonOptions.env, CommonOptions.inheritEnv | Command::env, Command::env_remove, Command::inherit_env
 terminal | RunOptions.pty, SpawnOptions.pty, spawn.pty, PtyOption, PtyOption.cols, PtyOption.rows, PtyChild, PtyChild.resize | Command::pty, PtySize, PtySize.cols, PtySize.rows, PtyChild, PtyChild::resize
-timeout | CommonOptions.timeoutMs | Command::timeout
+timeout | CommonOptions.timeoutMs, CommonOptions.maxRssBytes | Command::timeout, Command::max_rss_bytes
 grace | CommonOptions.graceMs, Child.stop.graceMs | Command::grace
 cancellation | CommonOptions.signal | Command::cancel_on, CancellationToken
 stdin | RunOptions.input, SpawnOptions.stdin, Child.write, PipeChild.closeStdin | Command::input, Command::stdin, Stdin, Child::write, PipeChild::close_stdin

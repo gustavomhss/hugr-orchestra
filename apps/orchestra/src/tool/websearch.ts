@@ -3,6 +3,7 @@ import { HttpClient } from "effect/unstable/http"
 import * as Tool from "./tool"
 import * as McpWebSearch from "./mcp-websearch"
 import { ToolText } from "@orchestra/core/tool/text"
+import { AllowedDomains, parallelQueries, restrict } from "@orchestra/core/tool/websearch"
 import { checksum } from "@orchestra/core/util/encode"
 import { InstallationVersion } from "@orchestra/core/installation/version"
 import { RuntimeFlags } from "@/effect/runtime-flags"
@@ -68,6 +69,7 @@ function callProvider(
   provider: WebSearchProvider,
   params: Schema.Schema.Type<typeof Parameters>,
   ctx: Tool.Context,
+  domains: ReadonlyArray<string> | undefined,
 ) {
   if (provider === "parallel") {
     return McpWebSearch.call(
@@ -77,7 +79,7 @@ function callProvider(
       McpWebSearch.ParallelSearchArgs,
       {
         objective: params.query,
-        search_queries: [params.query],
+        search_queries: parallelQueries(params.query, domains),
         session_id: ctx.sessionID,
         model_name: webSearchModelName(ctx.extra),
       },
@@ -115,6 +117,7 @@ export const WebSearchTool = Tool.define(
       parameters: Parameters,
       execute: (params: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context) =>
         Effect.gen(function* () {
+          const domains = yield* AllowedDomains
           const provider = selectWebSearchProvider(ctx.sessionID, {
             exa: flags.enableExa,
             parallel: flags.enableParallel,
@@ -133,15 +136,17 @@ export const WebSearchTool = Tool.define(
               type: params.type,
               contextMaxCharacters: params.contextMaxCharacters,
               provider,
+              ...(domains ? { allowedDomains: domains } : {}),
             },
           })
 
-          const result = yield* callProvider(http, provider, params, ctx)
+          const result = (yield* callProvider(http, provider, params, ctx, domains)) ?? "No search results found. Please try a different query."
+          const restricted = domains ? restrict(provider, result, domains) : undefined
 
           return {
-            output: result ?? "No search results found. Please try a different query.",
+            output: restricted?.text ?? result,
             title: `${title}: ${params.query}`,
-            metadata: { provider },
+            metadata: { provider, ...(domains ? { allowedDomains: domains, withheld: restricted?.withheld ?? null } : {}) },
           }
         }).pipe(Effect.orDie),
     }
