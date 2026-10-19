@@ -200,7 +200,9 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     count("R1")
     const primary = good.some((item) => {
       const origin = receipts.get(ResearchLedger.canonical(item.source))!.origin
+      // Git history the host queried itself (research_capture kind "history") is primary for what the history says.
       return origin.kind === "file" || origin.kind === "url" || (origin.kind === "tool-output" && origin.uri.startsWith("probe:"))
+        || (origin.kind === "tool-output" && /^native:[^/]+\/[^/]+\/[^/]+\/git-[a-z]+$/.test(origin.uri))
     })
     if (good.length && !primary) fail("R1", "no primary source: tool output and atlas-own memory cannot be a claim's only evidence", at)
     // A declared scope decides; the wording only flags a claim that declared none.

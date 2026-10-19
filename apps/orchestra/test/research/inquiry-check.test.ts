@@ -179,6 +179,16 @@ describe("InquiryCheck.run", () => {
     expect(reasons(await run(base({ claims: gap, answer: "see src/a.ts:2-7" })), "R9")[0]).toContain("outside the evidence held")
   })
 
+  // Mutation control: drop the git-history clause of `primary` in src/research/inquiry-check.ts; the blame claim fails R1.
+  test("R1 takes a host git history capture as primary, but not a native tool's displayed output", async () => {
+    const blame = receipt("blame", { kind: "tool-output", uri: "native:s/m/c/git-blame" }, { mediaType: "application/json" })
+    const quote = (source: Research.SourceRef) => cast<Research.Evidence>({ source, quote: "x" })
+    const history = await run(base({ sources: [file, page, output, blame], claims: [claim([quote(blame.ref)])] }))
+    expect(reasons(history, "R1")).toEqual([])
+    const grep = await run(base({ claims: [claim([quote(output.ref)])] }))
+    expect(reasons(grep, "R1")[0]).toContain("no primary source")
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))
