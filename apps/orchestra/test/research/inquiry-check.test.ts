@@ -171,6 +171,14 @@ describe("InquiryCheck.run", () => {
     expect(rule(await run(base({ tier: "quick", claims: [{ ...worded, scope: "universal" }] })), "R5").failed).toBe(1)
   })
 
+  // Mutation control: restore the single-span containment of R9 in src/research/inquiry-check.ts; the joined range fails.
+  test("R9 accepts a cited range that adjacent evidence of the same file covers together, and nothing with a gap", async () => {
+    const split = [claim([lines(file.ref, 1, 4), lines(file.ref, 5, 8)])]
+    expect(rule(await run(base({ claims: split, answer: "see src/a.ts:2-7" })), "R9")).toMatchObject({ checked: 1, failed: 0 })
+    const gap = [claim([lines(file.ref, 1, 3), lines(file.ref, 5, 8)])]
+    expect(reasons(await run(base({ claims: gap, answer: "see src/a.ts:2-7" })), "R9")[0]).toContain("outside the evidence held")
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))

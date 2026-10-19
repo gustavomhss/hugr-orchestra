@@ -265,7 +265,10 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
       : span.file !== undefined && exact!.has(normal(span.file)))
     if (!lined) return rematched.length ? undefined : fail("R9", "no evidence for this path", at)
     if (!rematched.length) return fail("R9", "no evidence for this path or URL", at)
-    if (!rematched.some((span) => span.start <= citation.start! && citation.end! <= span.end))
+    // Adjacent or overlapping evidence of the same file covers a range together; the first line no span covers decides.
+    const uncovered = rematched.toSorted((a, b) => a.start - b.start)
+      .reduce((next, span) => span.start <= next && next <= span.end ? span.end + 1 : next, citation.start!)
+    if (uncovered <= citation.end!)
       fail("R9", `lines ${citation.start}-${citation.end} are outside the evidence held (${rematched.map((span) => `${span.start}-${span.end}`).join(", ")})`, at)
   }))
 
