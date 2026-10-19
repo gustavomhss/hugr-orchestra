@@ -212,22 +212,24 @@
     const go = (d) => (d.data.leaf ? A.go(unitHref(d.data.path)) : show(d))
     let current = []
     const show = (focus) => {
-      // Rings: the focus in the middle, its children, then theirs. Each child of the focus takes one colour from a
-      // sweep between two kit tokens (--mx-blue to --mx-good); its own children reuse it, lighter. Colour says where,
-      // not health: health is the thin outer band, sand for the share of facts whose code moved.
+      // Rings: the focus in the middle, its children, then theirs. Each child of the focus takes one of five kit-derived
+      // tones in turn; its own children reuse it, lighter. Colour says where, not health: health is the thin outer band,
+      // sand for the share of facts whose code moved.
       const arc = d3.arc().startAngle((d) => d.a0).endAngle((d) => d.a1).padAngle(0.012).padRadius(R * 0.6).cornerRadius(5)
         .innerRadius((d) => d.ri).outerRadius((d) => d.ro)
       const span = focus.x1 - focus.x0
       const ringKids = [...(focus.children ?? [])].sort((a, b) => a.x0 - b.x0)
-      const sweep = new Map(ringKids.map((c, n) => [c, Math.round((n / Math.max(1, ringKids.length - 1)) * 100)]))
+      // Neighbours never share a tone: five distinct colours, all mixed from kit tokens (sand stays reserved for drift).
+      const TONES = ["var(--mx-blue)", "var(--mx-good)", "color-mix(in srgb, var(--mx-blue) 55%, var(--mx-bad))", "color-mix(in srgb, var(--mx-good) 45%, var(--mx-blue))", "color-mix(in srgb, var(--mx-dim) 70%, var(--mx-strong))"]
+      const sweep = new Map(ringKids.map((c, n) => [c, TONES[(n % TONES.length === 0 && n === ringKids.length - 1 && n > 0) ? 2 : n % TONES.length]]))
       const band = (d) => d.depth - focus.depth
       const radii = { 1: [ring + 4, ring * 2.05], 2: [ring * 2.05 + 5, ring * 2.85] }
       const shown = focus.descendants().filter((d) => d !== focus && band(d) <= 2).map((d) => {
         const a0 = ((d.x0 - focus.x0) / span) * 2 * Math.PI, a1 = ((d.x1 - focus.x0) / span) * 2 * Math.PI
         const top = band(d) === 1 ? d : d.parent
-        return Object.assign(d, { a0, a1, r0: band(d), ri: radii[band(d)][0], ro: radii[band(d)][1], hue: sweep.get(top) ?? 50 })
+        return Object.assign(d, { a0, a1, r0: band(d), ri: radii[band(d)][0], ro: radii[band(d)][1], hue: sweep.get(top) ?? TONES[0] })
       }).filter((d) => d.a1 - d.a0 > (d.r0 === 1 ? 0.01 : 0.02))
-      const fill = (d) => `color-mix(in srgb, var(--mx-blue) ${d.hue}%, var(--mx-good))`
+      const fill = (d) => d.hue
       const driftArc = d3.arc().innerRadius(ring * 2.85 + 9).outerRadius(ring * 2.85 + 15).cornerRadius(3)
       const tops = shown.filter((d) => d.r0 === 1)
       current = shown
@@ -255,7 +257,7 @@
       // Bars: what is inside, ranked by facts; the amber end is the share that changed.
       const kids = [...(focus.children ?? [])].sort((a, b) => b.value - a.value)
       const max = kids[0]?.value ?? 1
-      host.querySelector("#map-bars").innerHTML = `<div class="at-map-bars-k"><span>Inside, by facts</span><span>facts · changed</span></div>${kids.slice(0, 14).map((d, i) => `<button class="at-map-bar" data-k="${i}"><span class="n">${A.esc(d.data.name)}</span><span class="track"><i class="hold" style="width:${((d.value - d.drifted) / max) * 100}%"></i><i class="much" style="width:${(d.drifted / max) * 100}%"></i></span><span class="v">${A.num(d.value)}${d.drifted ? `<small>${Math.round((d.drifted / d.value) * 100)}%</small>` : ""}</span></button>`).join("")}${kids.length > 14 ? `<p class="muted">and ${kids.length - 14} more</p>` : ""}`
+      host.querySelector("#map-bars").innerHTML = `<div class="at-map-bars-k"><span>Inside, by facts</span><span>facts · changed</span></div>${kids.slice(0, 14).map((d, i) => `<button class="at-map-bar" data-k="${i}"><span class="n"><i class="at-map-sw" style="background:${sweep.get(d) ?? "var(--mx-dim)"}"></i>${A.esc(d.data.name)}</span><span class="track"><i class="hold" style="width:${((d.value - d.drifted) / max) * 100}%"></i><i class="much" style="width:${(d.drifted / max) * 100}%"></i></span><span class="v">${A.num(d.value)}${d.drifted ? `<small>${Math.round((d.drifted / d.value) * 100)}%</small>` : ""}</span></button>`).join("")}${kids.length > 14 ? `<p class="muted">and ${kids.length - 14} more</p>` : ""}`
       host.querySelectorAll(".at-map-bar").forEach((b) => {
         const d = kids[+b.dataset.k]
         b.addEventListener("click", () => go(d))

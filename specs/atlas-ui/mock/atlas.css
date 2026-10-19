@@ -1423,7 +1423,7 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-map-rings svg { display: block; inline-size: min(100%, 540px); block-size: auto; overflow: visible; }
 .at-map-hint { position: absolute; inset-block-end: 14px; inset-inline: 0; text-align: center; font-size: 11px; color: var(--mx-dim); }
 .at-map-arc { stroke: none; cursor: pointer; transition: opacity .2s ease; animation: at-map-in .5s ease-out both; }
-.at-map-arc.d1 { opacity: .92; } .at-map-arc.d2 { opacity: .42; }
+.at-map-arc.d1 { opacity: .95; } .at-map-arc.d2 { opacity: .5; }
 .at-map-arc:hover { opacity: 1; }
 .at-map.marking .at-map-arc:not(.on) { opacity: .14; }
 .at-map-arc.on { opacity: 1; }
@@ -1468,3 +1468,4 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-dot.moved { background: var(--much); }
 .at-dot:hover, .at-dot:focus-visible { transform: scale(1.7); box-shadow: 0 0 0 1.5px var(--mx-strong); outline: none; }
 @media (max-width: 900px) { .at-map { grid-template-columns: 1fr; } }
+.at-map-sw { display: inline-block; inline-size: 8px; block-size: 8px; margin-inline-end: 7px; border-radius: 2px; vertical-align: 0; }
