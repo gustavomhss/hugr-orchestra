@@ -1,5 +1,6 @@
-// The Location's MCP service: a stdio server from a V1-shaped profile config connects through omni and its tools join
-// the Location's tool registry; disconnect removes them; add and remove edit the profile's own config file.
+// The Location's MCP service: a stdio server from a V1-shaped profile config connects through omni, its tools join
+// the Location's tool registry and its resources list; disconnect removes them; add and remove edit the profile's own
+// config file; OAuth is refused for a local server and for a server that is not configured.
 import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
@@ -52,7 +53,15 @@ describe("Mcp", () => {
             yield* Effect.promise(() =>
               Bun.write(
                 path.join(dir.path, "orchestra.json"),
-                JSON.stringify({ mcp: { fixture: { type: "local", command: [process.execPath, fixture, "probe"] } } }),
+                JSON.stringify({
+                  mcp: {
+                    fixture: {
+                      type: "local",
+                      command: [process.execPath, fixture, "probe"],
+                      environment: { MCP_OMNI_RESOURCE: "fixture://note" },
+                    },
+                  },
+                }),
               ),
             )
             yield* Effect.gen(function* () {
@@ -67,10 +76,17 @@ describe("Mcp", () => {
               })
               expect(yield* status("fixture")).toBe("connected")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeDefined()
+              expect(yield* mcp.resources()).toEqual({
+                resources: [{ server: "fixture", name: "fixture note", uri: "fixture://note", mimeType: "text/plain" }],
+                templates: [{ server: "fixture", name: "fixture notes", uriTemplate: "fixture://note/{id}" }],
+              })
+              expect(yield* mcp.startAuth("fixture").pipe(Effect.flip)).toBeInstanceOf(Mcp.AuthError)
+              expect(yield* mcp.removeAuth("missing").pipe(Effect.flip)).toBeInstanceOf(Mcp.NotFoundError)
 
               yield* mcp.disconnect("fixture")
               expect(yield* status("fixture")).toBe("disabled")
               expect((yield* registry.materialize()).definition("fixture_probe")).toBeUndefined()
+              expect((yield* mcp.resources()).resources).toEqual([])
 
               yield* mcp.add("saved", new ConfigMCP.Local({ type: "local", command: ["bun", "--version"], disabled: true }))
               expect(yield* status("saved")).toBe("disabled")

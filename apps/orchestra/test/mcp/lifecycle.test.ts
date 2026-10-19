@@ -18,7 +18,7 @@ import { Cause, Effect, Exit, Fiber } from "effect"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
 import type { MCP as MCPNS } from "../../src/mcp/index"
 import { MCP } from "../../src/mcp/index"
-import { McpOAuthCallback } from "../../src/mcp/oauth-callback"
+import { McpOAuthCallback } from "@orchestra/core/mcp/oauth-callback"
 import { TestInstance } from "../fixture/fixture"
 import { pollWithTimeout, testEffect } from "../lib/effect"
 

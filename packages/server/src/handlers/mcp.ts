@@ -8,6 +8,7 @@ import { response } from "../location"
 export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
   handlers
     .handle("mcp.list", () => response(Mcp.Service.use((mcp) => mcp.list())))
+    .handle("mcp.resource.catalog", () => response(Mcp.Service.use((mcp) => mcp.resources())))
     .handle(
       "mcp.add",
       Effect.fn(function* (ctx) {
@@ -38,6 +39,33 @@ export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
         const mcp = yield* Mcp.Service
         yield* mcp.disconnect(ctx.params.server).pipe(Effect.catchTag("Mcp.NotFoundError", notFound))
       }),
+    )
+    .handle(
+      "mcp.auth.start",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        return yield* mcp.startAuth(ctx.params.server).pipe(
+          Effect.catchTag("Mcp.NotFoundError", notFound),
+          Effect.catchTag("Mcp.AuthError", (error) => Effect.fail(invalid(error))),
+        )
+      }),
+    )
+    .handle(
+      "mcp.auth.callback",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        return yield* mcp.finishAuth(ctx.params.server, ctx.payload.code).pipe(
+          Effect.catchTag("Mcp.NotFoundError", notFound),
+          Effect.catchTag("Mcp.AuthError", (error) => Effect.fail(invalid(error))),
+        )
+      }),
+    )
+    .handle(
+      "mcp.auth.remove",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        yield* mcp.removeAuth(ctx.params.server).pipe(Effect.catchTag("Mcp.NotFoundError", notFound))
+      }),
     ),
 )
 
@@ -45,6 +73,6 @@ function notFound(error: Mcp.NotFoundError) {
   return Effect.fail(new McpServerNotFoundError({ server: error.name, message: `MCP server not found: ${error.name}` }))
 }
 
-function invalid(error: Mcp.ConfigError) {
+function invalid(error: Mcp.ConfigError | Mcp.AuthError) {
   return new InvalidRequestError({ message: error.message })
 }

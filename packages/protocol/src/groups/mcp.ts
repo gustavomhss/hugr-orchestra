@@ -24,6 +24,20 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
       ),
   )
   .add(
+    HttpApiEndpoint.get("mcp.resource.catalog", "/api/mcp/resource", {
+      query: LocationQuery,
+      success: Location.response(Mcp.ResourceCatalog),
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.resource.catalog",
+          summary: "List MCP resources",
+          description: "List the resources and resource templates of the Location's connected MCP servers.",
+        }),
+      ),
+  )
+  .add(
     HttpApiEndpoint.put("mcp.add", "/api/mcp/:server", {
       params: ServerParams,
       query: LocationQuery,
@@ -85,6 +99,56 @@ export const McpGroup = HttpApiGroup.make("server.mcp")
           identifier: "v2.mcp.disconnect",
           summary: "Disconnect MCP server",
           description: "Disconnect one configured MCP server and remove its tools.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("mcp.auth.start", "/api/mcp/:server/auth", {
+      params: ServerParams,
+      query: LocationQuery,
+      success: Mcp.AuthStart,
+      error: [McpServerNotFoundError, InvalidRequestError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.auth.start",
+          summary: "Start MCP OAuth",
+          description:
+            "Start an OAuth sign-in for a remote MCP server and return the authorization URL to open. The local callback completes the sign-in and reconnects the server; an empty URL means it was already authorized.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.post("mcp.auth.callback", "/api/mcp/:server/auth/callback", {
+      params: ServerParams,
+      query: LocationQuery,
+      payload: Schema.Struct({ code: Schema.String }),
+      success: Mcp.Status,
+      error: [McpServerNotFoundError, InvalidRequestError],
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.auth.callback",
+          summary: "Complete MCP OAuth",
+          description: "Complete a started OAuth sign-in with its authorization code and reconnect the server.",
+        }),
+      ),
+  )
+  .add(
+    HttpApiEndpoint.delete("mcp.auth.remove", "/api/mcp/:server/auth", {
+      params: ServerParams,
+      query: LocationQuery,
+      success: HttpApiSchema.NoContent,
+      error: McpServerNotFoundError,
+    })
+      .annotateMerge(locationQueryOpenApi)
+      .annotateMerge(
+        OpenApi.annotations({
+          identifier: "v2.mcp.auth.remove",
+          summary: "Remove MCP OAuth",
+          description: "Forget an MCP server's stored OAuth credentials and cancel a sign-in in progress.",
         }),
       ),
   )
