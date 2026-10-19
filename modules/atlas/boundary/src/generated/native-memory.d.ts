@@ -522,5 +522,27 @@ export declare function createNativeMemory(input: AtlasBinding): NativeMemory;
  * indexing. An identical OPEN proposal by the same owner reconciles to its id. `at` is the host's clock (ISO-8601).
  */
 export declare function proposeProjectRule(input: AtlasBinding, entry: unknown, at: string): ProposalVerdict;
+/** R1 (D30): what a person's decision on a memory proposal did. A refused `indexed` write is the door's own refusal. */
+export type DecisionVerdict = {
+	readonly ok: true;
+	readonly decisionId: string;
+	readonly ref?: RecordRef;
+} | MemoryRejected | {
+	readonly ok: false;
+	readonly refusal: "proposal-not-open";
+	readonly reason: string;
+};
+export type ProjectRuleDecision = {
+	readonly proposalId: string;
+	readonly verdict: "indexed" | "discarded";
+	readonly rule?: string;
+	readonly scope?: string;
+	readonly by: string;
+};
+/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
+ *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
+ *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
+ *  storage root and the scanner; its `memoryOwner` never writes. */
+export declare function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict;
 
 export {};

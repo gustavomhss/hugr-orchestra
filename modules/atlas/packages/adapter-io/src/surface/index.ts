@@ -22,7 +22,8 @@
 // synchronous `composeRuntime` call and restores the previous value before anything else can run.
 //
 // A repository with no `.atlas/` directory answers `{ state: "empty" }` from every method, checked on each call.
-import { existsSync } from "node:fs"import { basename, join } from "node:path"
+import { existsSync } from "node:fs"
+import { basename, join } from "node:path"
 import { asHash } from "@atlas/kernel"
 import type { EmitOut, LinkOut, Verdict } from "@atlas/tools"
 import { checkVerdict, draftVerdict } from "../author-verdicts.js"

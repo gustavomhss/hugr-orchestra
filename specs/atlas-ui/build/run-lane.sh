@@ -18,6 +18,8 @@ for id in "$@"; do
   git -C "$tree" add -A
   # Executors sometimes leave shell heredoc ends or tool-call markup inside source files; refuse those commits.
   junk="$(git -C "$tree" diff --cached --name-only | grep -v '\.\(md\|sh\)$' | (cd "$tree" && xargs -r grep -lE '^(PY|EOF|echo (done|written))$|<\|start\|>|rfl:parameter|</write>' 2>/dev/null))"
+  # Two statements glued on one line (a lost newline), as in `from "x"import { y }`.
+  junk="$junk$(git -C "$tree" diff --cached --name-only | grep -E '\.(ts|tsx|js|mjs)$' | (cd "$tree" && xargs -r grep -lE '(["'"'"')}];?)(import|export) ' 2>/dev/null))"
   if [ -n "$junk" ]; then
     echo "LANE STOP $id: leftover shell or tool markup in: $junk"
     exit 1

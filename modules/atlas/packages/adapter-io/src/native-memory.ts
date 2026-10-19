@@ -1,13 +1,11 @@
 // @atlas/adapter-io — src/native-memory.ts  (the BOUND Memory composition — F3 work package A1)
 //
-// ── REFERENCE MODEL — NO PRODUCTION CALLERS INSIDE THIS TREE ─────────────────────────────────────────────
-// Declared in `harness/gates/reference-model-guard.mjs`. Its consumer is a HARNESS outside the Atlas tree
-// (Orchestra's backend specialist, through the installed boundary package — F3 clause 27, work package A3), so no
-// module under `packages/*/src` calls it and none should: the CLI/MCP doors compose Memory through
-// `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3 clause 4 forbids
-// exactly that route here. The entry goes stale when an in-tree caller appears, and the gate says so.
-// One in-tree caller exists by design: the Atlas screen's surface (`surface/review.ts`) calls `decideProjectRule`,
-// which writes as the PROPOSAL's member and never as the surface's resolved actor, so clause 4 still holds.
+// ── CALLERS ──────────────────────────────────────────────────────────────────────────────────────────────
+// Orchestra's backend specialist composes this through the installed boundary package (F3 clause 27). The CLI/MCP
+// doors compose Memory through `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3
+// clause 4 forbids exactly that route here. The one in-tree caller is the Atlas screen's surface
+// (`surface/review.ts`), which calls `decideProjectRule`; it writes as the PROPOSAL's member and never as the
+// surface's resolved actor, so clause 4 still holds.
 //
 // ── WHAT THIS FILE IS ────────────────────────────────────────────────────────────────────────────────────
 // The four Memory doors (`createDurableMemory`, `createMemoryRead`, `createMemoryEmit`, the scanner) composed

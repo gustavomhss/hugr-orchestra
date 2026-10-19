@@ -66,6 +66,124 @@ export interface AtlasTerritory {
 	readonly tier: string;
 	readonly globs: readonly string[];
 }
+/** One open ratification proposal (`ReviewOf<\"proposal\">`). */
+export interface AtlasReviewProposal {
+	readonly id: string;
+	readonly nodeKey: string;
+	readonly toTier: "T1" | "T0";
+	readonly reason: string;
+	readonly by: string;
+	readonly at: string;
+}
+/** One open memory proposal (`ReviewOf<\"memory-proposal\">`): a seat's project rule waiting for a person. */
+export interface AtlasMemoryProposal {
+	readonly id: string;
+	readonly member: string;
+	readonly rule: string;
+	readonly scope: string;
+	readonly by: string;
+	readonly at: string;
+}
+/** A model's drafted answer (`InterviewQuestion.draft`). The question stays open until a person answers it. */
+export interface AtlasInterviewDraft {
+	readonly answer: string;
+	readonly model: string;
+	readonly why: string;
+	readonly by: string;
+	readonly at: string;
+}
+/** One interview question (`InterviewQuestion`). `site` is the anchored path (`OpenQ.site.qualifiedPath`). */
+export interface AtlasInterviewQuestion {
+	readonly id: string;
+	readonly kind: "owner" | "tier" | "contested" | "intent";
+	readonly subject: string;
+	readonly ask: string;
+	readonly rank: number;
+	readonly site: string;
+	readonly options: readonly string[] | null;
+	readonly nodeKey: string | null;
+	readonly draft: AtlasInterviewDraft | null;
+}
+/** `review()`. `unreadable`: the review log has lines that do not verify, or cannot be read at all — what did verify
+ *  is still served, and every review write refuses until the log is repaired. */
+export interface AtlasReview {
+	readonly state: "ok";
+	readonly unreadable: boolean;
+	/** The staged candidates' nodeKeys every `promote` skips, sorted. */
+	readonly held: readonly string[];
+	readonly proposals: readonly AtlasReviewProposal[];
+	readonly memoryProposals: readonly AtlasMemoryProposal[];
+	readonly interview: {
+		readonly batch: readonly AtlasInterviewQuestion[];
+		readonly deferred: number;
+	};
+}
+/** What a review write returns as `data`: the appended record's id (the catalog path for `territory`). */
+export interface AtlasReviewWriteOut {
+	readonly id: string;
+}
+/** `atlas hold <nodeKey>`. */
+export interface AtlasHoldInput {
+	readonly nodeKey: string;
+}
+/** `atlas release <nodeKey>`. */
+export interface AtlasReleaseInput {
+	readonly nodeKey: string;
+}
+/** `atlas propose <nodeKey> <T1|T0> <reason...>`. */
+export interface AtlasProposeInput {
+	readonly nodeKey: string;
+	readonly toTier: "T1" | "T0";
+	readonly reason: string;
+}
+/** `atlas decide <proposalId> ratify|reject <reason...>`. `token` is the ratify token for a ratification. */
+export interface AtlasDecideInput {
+	readonly proposalId: string;
+	readonly verdict: "ratified" | "rejected";
+	readonly reason: string;
+	readonly token?: string;
+}
+/** `atlas answer <questionId> <answer...>`. `drafted` marks a model's draft, which never proposes. */
+export interface AtlasAnswerInput {
+	readonly questionId: string;
+	readonly answer: string;
+	readonly drafted?: {
+		readonly model: string;
+		readonly why: string;
+	};
+}
+/** A person's decision on a memory proposal. A non-empty `rule`/`scope` replaces the proposal's text. */
+export interface AtlasMemoryDecideInput {
+	readonly proposalId: string;
+	readonly verdict: "indexed" | "discarded";
+	readonly rule?: string;
+	readonly scope?: string;
+}
+/** `atlas territory <name> <glob...> --owner --tier [--project]`. `projectId` is required only for the first catalog
+ *  (the Orchestra project id; issues/c-engine.md item 2). `token` is the ratify token, else the process's own. */
+export interface AtlasTerritoryInput {
+	readonly name: string;
+	readonly owner: string;
+	readonly tier: "T0" | "T1" | "T2";
+	readonly globs: readonly string[];
+	readonly token?: string;
+	readonly projectId?: string;
+}
+/** The host-only interview delegation (D33): one model drafts an answer per question id. */
+export interface AtlasDelegateInput {
+	readonly questionIds: readonly string[];
+	readonly providerID: string;
+	readonly modelID: string;
+}
+/** What the delegation drafted: one row per question id, `rejected` naming why a draft was not written. */
+export interface AtlasDelegateOut {
+	readonly state: "ok";
+	readonly drafted: readonly {
+		readonly questionId: string;
+		readonly ok: boolean;
+		readonly rejected: string | null;
+	}[];
+}
 /** A repository with no `.atlas/` directory. Every read and every write answers this. */
 export interface AtlasEmpty {
 	readonly state: "empty";
@@ -302,6 +420,10 @@ export interface AtlasPromote {
 	readonly promoted: number;
 	readonly refused: number;
 	readonly rows: readonly AtlasPromoteRow[];
+	/** R2: staged rows this pass skipped because a curator holds them (`PromoteOut.held`). Absent when none. */
+	readonly held?: readonly string[];
+	/** R2: named nodeKeys no staged row carries (`PromoteOut.unknown`). Absent when every named key was staged. */
+	readonly unknown?: readonly string[];
 }
 export type AtlasPromoteResult = AtlasEmpty | AtlasPromote;
 /** `atlas draft` (`DraftOut`). `fact` is the drafted `GroundedFact`; pass it back unchanged to `emit`. */
@@ -356,8 +478,13 @@ export type AtlasDraftResult = AtlasEmpty | AtlasVerdict<AtlasDraftData>;
 export type AtlasEmitResult = AtlasEmpty | AtlasVerdict<AtlasEmitOut>;
 export type AtlasLinkResult = AtlasEmpty | AtlasVerdict<AtlasLinkOut>;
 export type AtlasVerifyResult = AtlasEmpty | AtlasVerdict<AtlasVerifyOut>;
+export type AtlasReviewResult = AtlasEmpty | AtlasReview;
+export type AtlasReviewWriteResult = AtlasEmpty | AtlasVerdict<AtlasReviewWriteOut>;
+export type AtlasDelegateResult = AtlasEmpty | AtlasDelegateOut;
 /** `token` is the ratify token (`ATLAS_RATIFY_TOKEN`) for this one write; absent ⇒ the process's own. */
 export interface AtlasPromoteInput {
+	/** D36: settle only these staged rows; absent or empty ⇒ every staged row. A held row is always skipped. */
+	readonly nodeKeys?: readonly string[];
 	readonly token?: string;
 }
 /** `atlas draft <anchor> <slot> <claim>` and its dry run. `supersede` drafts a retirement (`draftSupersede`). */
@@ -400,6 +527,14 @@ export interface AtlasSurface {
 	readonly emit: (input: AtlasEmitInput) => AtlasEmitResult;
 	readonly link: (input: AtlasLinkInput) => AtlasLinkResult;
 	readonly verify: (input: AtlasVerifyInput) => AtlasVerifyResult;
+	readonly review: () => AtlasReviewResult;
+	readonly hold: (input: AtlasHoldInput) => AtlasReviewWriteResult;
+	readonly release: (input: AtlasReleaseInput) => AtlasReviewWriteResult;
+	readonly propose: (input: AtlasProposeInput) => AtlasReviewWriteResult;
+	readonly decide: (input: AtlasDecideInput) => AtlasReviewWriteResult;
+	readonly answer: (input: AtlasAnswerInput) => AtlasReviewWriteResult;
+	readonly memoryDecide: (input: AtlasMemoryDecideInput) => AtlasReviewWriteResult;
+	readonly territory: (input: AtlasTerritoryInput) => AtlasReviewWriteResult;
 }
 /** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */
 export declare function openSurface(repoPath: string): AtlasSurface;
