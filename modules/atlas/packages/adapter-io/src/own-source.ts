@@ -151,7 +151,7 @@ function terrainTier(rows: readonly Row[]): Tier {
  * `.atlas/policy.json` the write door gates on, so "who owns this" and "who may write this" are one answer.
  * Empty when no declared scope covers the unit — the fail-closed default, where nobody may write anything.
  */
-function terrainOwner(policy: AtlasPolicy, scope: string): string {
+export function terrainOwner(policy: AtlasPolicy, scope: string): string {
   const covering = Object.keys(policy.authz.scopes)
     .filter((key) => underScope(scope, key))
     .sort((a, b) => (b.length - a.length !== 0 ? b.length - a.length : a < b ? -1 : 1))

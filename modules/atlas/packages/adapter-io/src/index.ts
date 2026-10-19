@@ -146,6 +146,8 @@ export type { ReviewBody, ReviewFold, ReviewInput, ReviewOf, ReviewRead, ReviewR
 // R2/R3 — the store reads the review commands check against (staged keys; B-R3-01 adds the current fact by nodeKey).
 export { currentFactOf, stagedNodeKeys } from "./review-store.js"
 export type { CurrentFact } from "./review-store.js"
+// R11 — the store feed for the ratification interview (`atlas interview` / `atlas answer`).
+export { openQuestionsOf } from "./open-questions-source.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,
