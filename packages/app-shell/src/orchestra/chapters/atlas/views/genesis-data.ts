@@ -1,5 +1,4 @@
-import type { useLanguage } from "@/context/language"
-import type { AtlasFact, AtlasModel } from "../atlas-model"
+import type { AtlasModel } from "../atlas-model"
 import type { AtlasInterviewQuestion } from "../atlas-types"
 import { num } from "../kit/format"
 
@@ -7,19 +6,6 @@ import { num } from "../kit/format"
 // knowledge; `atlas promote` is the separate, governed step that turns staged rows into facts. This file is the pure
 // port of specs/atlas-ui/mock/views-explore.js:288-372 for views/genesis.tsx. Every visible word is a copy key
 // (i18n/orchestra-chapters/atlas-genesis.ts); `refs`, `env` and option values are machine text.
-type CopyKey = Parameters<ReturnType<typeof useLanguage>["t"]>[0]
-export type GenesisCopy = { key: CopyKey; params: Record<string, string> }
-export type GenesisQuestion = {
-  kind: "owner" | "tier" | "contested" | "intent"
-  site: string
-  // The fact the question is about (tier and contested only).
-  key?: string
-  ask: GenesisCopy
-  why: GenesisCopy
-  // The answers to pick from; null asks for one sentence instead (intent).
-  options: GenesisCopy[] | null
-  rank: number
-}
 
 // genesis/src/align.ts: at most 20 questions are served per session; the tail waits for the next one.
 export const INTERVIEW_CAP = 20
@@ -292,92 +278,4 @@ export function markRefutation(text: string) {
   const at = match?.index ?? head.length
   const mark = match?.[0] ?? ""
   return { before: head.slice(0, at), mark, after: head.slice(at + mark.length), more: text.length > 900 }
-}
-
-const WEIGHT: Record<string, number> = { T0: 3, T1: 2, T2: 1 }
-const RULE_SLOTS = ["invariant", "contract", "security-property"]
-const copy = (key: CopyKey, params: Record<string, string> = {}): GenesisCopy => ({ key, params })
-
-// The ratification interview (genesis/src/align.ts, atlas-genesis S3): open questions of four kinds, ranked by
-// blast × tier weight, where blast is how many files depend on the site. The top INTERVIEW_CAP form this session's
-// batch; the rest are deferred. Nothing serves assembleInterview yet (R11), so the questions are drafted from the store.
-export function openQuestions(model: AtlasModel) {
-  const blast = (file: string) => (model.R.dependents[file] ?? []).length
-  const unitBlast = (files: Set<string>) => [...files].reduce((n, file) => n + blast(file), 0)
-  const live = model.live()
-  const units = model.units().filter((u) => u.id !== "(root)")
-  const owner = units
-    .filter((u) => !model.territoryOf(u.id)?.owner)
-    .map(
-      (u): GenesisQuestion => ({
-        kind: "owner",
-        site: u.id,
-        ask: copy("orchestra.atlas.genesis.iv.owner.ask", { unit: u.id }),
-        why: copy("orchestra.atlas.genesis.iv.owner.why", { facts: num(u.facts), blast: num(unitBlast(u.files)) }),
-        options: [
-          copy("orchestra.atlas.genesis.iv.owner.option.seat", { seat: model.actor }),
-          copy("orchestra.atlas.genesis.iv.owner.option.person"),
-          copy("orchestra.atlas.genesis.iv.owner.option.nobody"),
-        ],
-        rank: unitBlast(u.files),
-      }),
-    )
-  const tier = live
-    .filter((x) => x.tier === "T2" && RULE_SLOTS.includes(x.slot ?? ""))
-    .map(
-      (x): GenesisQuestion => ({
-        kind: "tier",
-        site: x.file,
-        key: x.key,
-        ask: copy("orchestra.atlas.genesis.iv.tier.ask", { claim: x.claim.length > 200 ? `${x.claim.slice(0, 199)}…` : x.claim }),
-        why: copy("orchestra.atlas.genesis.iv.tier.why", { slot: x.slot ?? "", blast: num(blast(x.file)) }),
-        options: [
-          copy("orchestra.atlas.genesis.iv.tier.option.rule"),
-          copy("orchestra.atlas.genesis.iv.tier.option.core"),
-          copy("orchestra.atlas.genesis.iv.tier.option.hint"),
-        ],
-        rank: blast(x.file) * WEIGHT.T0,
-      }),
-    )
-  // Live facts on one file in one slot, in first-seen order.
-  const groups = live.reduce(
-    (map, x) => map.set(`${x.file}|${x.slot}`, [...(map.get(`${x.file}|${x.slot}`) ?? []), x]),
-    new Map<string, AtlasFact[]>(),
-  )
-  const contested = [...groups.values()]
-    .filter((xs) => xs.length > 1 && xs[0].slot)
-    .map(
-      (xs): GenesisQuestion => ({
-        kind: "contested",
-        site: xs[0].file,
-        key: xs[0].key,
-        ask: copy("orchestra.atlas.genesis.iv.contested.ask", { slot: xs[0].slot ?? "", file: xs[0].file.split("/").at(-1) ?? "" }),
-        why: copy("orchestra.atlas.genesis.iv.contested.why", { n: num(xs.length) }),
-        options: [
-          copy("orchestra.atlas.genesis.iv.contested.option", { claim: xs[0].claim.slice(0, 70) }),
-          copy("orchestra.atlas.genesis.iv.contested.option", { claim: xs[1].claim.slice(0, 70) }),
-          copy("orchestra.atlas.genesis.iv.contested.option.both"),
-        ],
-        rank: blast(xs[0].file) * Math.max(...xs.map((x) => WEIGHT[x.tier] ?? 1)),
-      }),
-    )
-  const intent = units
-    .filter((u) => !live.some((x) => model.unitOf(x.file) === u.id && x.slot === "rationale"))
-    .map(
-      (u): GenesisQuestion => ({
-        kind: "intent",
-        site: u.id,
-        ask: copy("orchestra.atlas.genesis.iv.intent.ask", { unit: u.id }),
-        why: copy("orchestra.atlas.genesis.iv.intent.why", { facts: num(u.facts) }),
-        options: null,
-        rank: unitBlast(u.files),
-      }),
-    )
-  // Array sort is stable: equal ranks keep the order owner, tier, contested, intent.
-  const open = [...owner, ...tier, ...contested, ...intent].sort((a, b) => b.rank - a.rank)
-  return {
-    batch: open.slice(0, INTERVIEW_CAP),
-    deferred: open.slice(INTERVIEW_CAP),
-    counts: { owner: owner.length, tier: tier.length, contested: contested.length, intent: intent.length },
-  }
 }
