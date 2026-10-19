@@ -1401,7 +1401,7 @@ const adaptClient = (raw: RawClient) => ({
   permissions: adaptGroup10(raw["server.permission"]),
   files: adaptGroup11(raw["server.fs"]),
   commands: adaptGroup12(raw["server.command"]),
-  "server.mcp": adaptGroup13(raw["server.mcp"]),
+  mcp: adaptGroup13(raw["server.mcp"]),
   skills: adaptGroup14(raw["server.skill"]),
   behaviors: adaptGroup15(raw["server.behavior"]),
   events: adaptGroup16(raw["server.event"]),

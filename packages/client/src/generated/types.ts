@@ -2400,13 +2400,13 @@ export type CommandsListOutput = {
   }>
 }
 
-export type ServerMcpListInput = {
+export type McpListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
 }
 
-export type ServerMcpListOutput = {
+export type McpListOutput = {
   readonly location: {
     readonly directory: string
     readonly workspaceID?: string
@@ -2423,7 +2423,7 @@ export type ServerMcpListOutput = {
   }>
 }
 
-export type ServerMcpAddInput = {
+export type McpAddInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -2462,34 +2462,34 @@ export type ServerMcpAddInput = {
   }["config"]
 }
 
-export type ServerMcpAddOutput = void
+export type McpAddOutput = void
 
-export type ServerMcpRemoveInput = {
+export type McpRemoveInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
 }
 
-export type ServerMcpRemoveOutput = void
+export type McpRemoveOutput = void
 
-export type ServerMcpConnectInput = {
+export type McpConnectInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
 }
 
-export type ServerMcpConnectOutput = void
+export type McpConnectOutput = void
 
-export type ServerMcpDisconnectInput = {
+export type McpDisconnectInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
   }["location"]
 }
 
-export type ServerMcpDisconnectOutput = void
+export type McpDisconnectOutput = void
 
 export type SkillsListInput = {
   readonly location?: {

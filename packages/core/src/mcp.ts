@@ -18,7 +18,7 @@ import {
 import { ToolFailure, type ToolContent } from "@orchestra/llm"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { Mcp } from "@orchestra/schema/mcp"
-import { Context, Duration, Effect, Exit, Layer, Schema, Scope } from "effect"
+import { Context, Deferred, Duration, Effect, Exit, Layer, Schema, Scope } from "effect"
 import { Config } from "./config"
 import { makeLocationNode } from "./effect/app-node"
 import { FSUtil } from "./fs-util"
@@ -43,6 +43,11 @@ export class ConfigError extends Schema.TaggedErrorClass<ConfigError>()("Mcp.Con
 }) {}
 
 export interface Interface {
+  /**
+   * Starts the configured servers on first use and waits until each one connected or failed. Servers start lazily, as
+   * in V1, so a process that opens Locations without running V2 turns, such as the V1 server, never spawns them.
+   */
+  readonly ready: () => Effect.Effect<void>
   readonly list: () => Effect.Effect<Mcp.Server[]>
   readonly connect: (name: string) => Effect.Effect<void, NotFoundError>
   readonly disconnect: (name: string) => Effect.Effect<void, NotFoundError>
@@ -169,11 +174,16 @@ const layer = Layer.effect(
         if (client) yield* Effect.promise(() => client.close().catch(() => undefined))
         return
       }
-      current.status = opened.status
-      if (!client) return
-      current.client = client
+      if (!client) {
+        current.status = opened.status
+        return
+      }
       const listed = client.getServerCapabilities()?.tools ? yield* McpCatalog.defs(client, request) : []
+      if (current.generation !== generation) return yield* Effect.promise(() => client.close().catch(() => undefined))
+      // Connected is reported only once the server's tools are in the registry.
+      current.client = client
       current.tools = yield* register(name, client, listed ?? [], request)
+      current.status = opened.status
       client.onclose = () => {
         if (current.client !== client) return
         const scope = current.tools
@@ -256,6 +266,7 @@ const layer = Layer.effect(
     })
 
     const list = Effect.fn("Mcp.list")(function* () {
+      yield* ready()
       return Array.from((yield* configured()).servers.keys(), (name) => ({
         name,
         status: entries.get(name)?.status ?? { status: "disabled" as const },
@@ -292,14 +303,28 @@ const layer = Layer.effect(
     yield* Effect.addFinalizer(() =>
       Effect.forEach(entries.values(), (current) => release(current), { concurrency: "unbounded", discard: true }),
     )
-    // Servers connect in the background so a slow server never delays the Location's other services.
-    yield* Effect.forEach(
-      (yield* configured()).servers.keys(),
-      (name) => connect(name).pipe(Effect.ignore),
-      { concurrency: "unbounded", discard: true },
-    ).pipe(Effect.forkScoped)
+    const layerScope = yield* Scope.Scope
+    const started = yield* Deferred.make<void>()
+    let starting = false
+    // The first caller forks the start into the Location's scope, so its interruption never abandons a half start.
+    const ready = () =>
+      Effect.suspend(() => {
+        if (starting) return Deferred.await(started)
+        starting = true
+        return configured().pipe(
+          Effect.flatMap((found) =>
+            Effect.forEach(found.servers.keys(), (name) => connect(name).pipe(Effect.ignore), {
+              concurrency: "unbounded",
+              discard: true,
+            }),
+          ),
+          Effect.ensuring(Deferred.succeed(started, undefined)),
+          Effect.forkIn(layerScope),
+          Effect.andThen(Deferred.await(started)),
+        )
+      })
 
-    return Service.of({ list, connect, disconnect, add, remove })
+    return Service.of({ ready, list, connect, disconnect, add, remove })
   }),
 )
 

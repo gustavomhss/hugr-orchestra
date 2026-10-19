@@ -25,6 +25,7 @@ import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
 import { ReferenceGuidance } from "../../reference/guidance"
 import { ToolRegistry } from "../../tool/registry"
+import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionContextEpoch } from "../context-epoch"
 import { SessionCompaction } from "../compaction"
@@ -103,6 +104,7 @@ const layer = Layer.effect(
     const llm = yield* LLMClient.Service
     const agents = yield* AgentV2.Service
     const tools = yield* ToolRegistry.Service
+    const mcp = yield* Mcp.Service
     const models = yield* SessionRunnerModel.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
@@ -231,6 +233,7 @@ const layer = Layer.effect(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
+      if (!isLastStep) yield* mcp.ready()
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
@@ -527,6 +530,7 @@ export const node = makeLocationNode({
     llmClient,
     AgentV2.node,
     ToolRegistry.node,
+    Mcp.node,
     SessionRunnerModel.node,
     SessionSubagentModels.node,
     SessionStore.node,

@@ -106,16 +106,16 @@ import type {
   FilesFindOutput,
   CommandsListInput,
   CommandsListOutput,
-  ServerMcpListInput,
-  ServerMcpListOutput,
-  ServerMcpAddInput,
-  ServerMcpAddOutput,
-  ServerMcpRemoveInput,
-  ServerMcpRemoveOutput,
-  ServerMcpConnectInput,
-  ServerMcpConnectOutput,
-  ServerMcpDisconnectInput,
-  ServerMcpDisconnectOutput,
+  McpListInput,
+  McpListOutput,
+  McpAddInput,
+  McpAddOutput,
+  McpRemoveInput,
+  McpRemoveOutput,
+  McpConnectInput,
+  McpConnectOutput,
+  McpDisconnectInput,
+  McpDisconnectOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -1046,9 +1046,9 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
-    "server.mcp": {
-      list: (input?: ServerMcpListInput, requestOptions?: RequestOptions) =>
-        request<ServerMcpListOutput>(
+    mcp: {
+      list: (input?: McpListInput, requestOptions?: RequestOptions) =>
+        request<McpListOutput>(
           {
             method: "GET",
             path: `/api/mcp`,
@@ -1059,8 +1059,8 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
-      add: (input: ServerMcpAddInput, requestOptions?: RequestOptions) =>
-        request<ServerMcpAddOutput>(
+      add: (input: McpAddInput, requestOptions?: RequestOptions) =>
+        request<McpAddOutput>(
           {
             method: "PUT",
             path: `/api/mcp/${encodeURIComponent(input.server)}`,
@@ -1072,8 +1072,8 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
-      remove: (input: ServerMcpRemoveInput, requestOptions?: RequestOptions) =>
-        request<ServerMcpRemoveOutput>(
+      remove: (input: McpRemoveInput, requestOptions?: RequestOptions) =>
+        request<McpRemoveOutput>(
           {
             method: "DELETE",
             path: `/api/mcp/${encodeURIComponent(input.server)}`,
@@ -1084,8 +1084,8 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
-      connect: (input: ServerMcpConnectInput, requestOptions?: RequestOptions) =>
-        request<ServerMcpConnectOutput>(
+      connect: (input: McpConnectInput, requestOptions?: RequestOptions) =>
+        request<McpConnectOutput>(
           {
             method: "POST",
             path: `/api/mcp/${encodeURIComponent(input.server)}/connect`,
@@ -1096,8 +1096,8 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
-      disconnect: (input: ServerMcpDisconnectInput, requestOptions?: RequestOptions) =>
-        request<ServerMcpDisconnectOutput>(
+      disconnect: (input: McpDisconnectInput, requestOptions?: RequestOptions) =>
+        request<McpDisconnectOutput>(
           {
             method: "POST",
             path: `/api/mcp/${encodeURIComponent(input.server)}/disconnect`,

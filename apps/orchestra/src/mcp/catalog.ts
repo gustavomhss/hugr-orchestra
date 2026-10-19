@@ -1,5 +1,5 @@
 export * as McpCatalog from "./catalog"
-export * from "@orchestra/core/mcp/catalog"
+export { defs, fetch, paginate, prompts, resources, resourceTemplates, sanitize, toolName } from "@orchestra/core/mcp/catalog"
 
 import type { Client } from "@modelcontextprotocol/sdk/client/index.js"
 import { CallToolResultSchema, type Tool as MCPToolDef } from "@modelcontextprotocol/sdk/types.js"
