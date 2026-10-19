@@ -355,6 +355,7 @@
             "src/packaged-skills.ts",
             "src/instruction-context.ts",
             "src/command.ts",
+            "src/slash-command.ts",
             "src/reference/",
             "src/reference.ts"
           ]

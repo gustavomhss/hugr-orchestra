@@ -1,4 +1,7 @@
 import { describe, expect, test } from "bun:test"
+import { PromptInput } from "@orchestra/schema/prompt-input"
+import { SessionInput } from "@orchestra/schema/session-input"
+import { Schema } from "effect"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
 import { normalizeSessionInfo } from "./session"
@@ -31,13 +34,14 @@ function setup(
       }
       if (request.method === "POST" && request.url.endsWith("/prompt")) {
         return Response.json({
-          admittedSeq: 1,
-          id: "msg_1",
-          sessionID: "ses_1",
-          timeCreated: 1,
-          type: "user",
-          data: { text: "hello" },
-          delivery: "steer",
+          data: {
+            admittedSeq: 1,
+            id: "msg_1",
+            sessionID: "ses_1",
+            prompt: { text: "hello" },
+            delivery: "steer",
+            timeCreated: 1,
+          },
         })
       }
       if (request.method === "GET" && new URL(request.url).pathname === "/vcs")
@@ -125,6 +129,42 @@ describe("createCompatibleApi", () => {
     expect(await requests[0]!.json()).toMatchObject({ time: { archived: expect.any(Number) } })
   })
   */
+
+  test("sends V2 prompts in the server's canonical body", async () => {
+    const { api, requests } = setup("v2")
+    const admitted = await api.session.prompt({
+      sessionID: "ses_1",
+      id: "msg_1",
+      text: "hello @src/index.ts",
+      files: [
+        { uri: "file:///repo/src/index.ts", name: "index.ts", mention: { text: "@src/index.ts", start: 6, end: 19 } },
+      ],
+      agents: [{ name: "explore", mention: { text: "@explore", start: 20, end: 28 } }],
+      delivery: "queue",
+    })
+
+    expect(new URL(requests[0]!.url).pathname).toBe("/api/session/ses_1/prompt")
+    const body = await requests[0]!.json()
+    // The protocol's `session.prompt` payload (packages/protocol/src/groups/session.ts).
+    const payload = Schema.Struct({
+      id: Schema.String.pipe(Schema.optional),
+      prompt: PromptInput.Prompt,
+      delivery: SessionInput.Delivery.pipe(Schema.optional),
+      resume: Schema.Boolean.pipe(Schema.optional),
+    })
+    expect(Schema.decodeUnknownSync(payload, { onExcessProperty: "error" })(body)).toEqual({
+      id: "msg_1",
+      prompt: {
+        text: "hello @src/index.ts",
+        files: [
+          { uri: "file:///repo/src/index.ts", name: "index.ts", source: { text: "@src/index.ts", start: 6, end: 19 } },
+        ],
+        agents: [{ name: "explore", source: { text: "@explore", start: 20, end: 28 } }],
+      },
+      delivery: "queue",
+    })
+    expect(admitted).toMatchObject({ admittedSeq: 1, id: "msg_1", sessionID: "ses_1", delivery: "steer" })
+  })
 
   test("converts current prompts to the V1 prompt contract", async () => {
     const { api, requests } = setup("v1")

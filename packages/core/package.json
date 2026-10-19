@@ -248,6 +248,7 @@
     "./session/todo": "./src/session/todo.ts",
     "./share/sql": "./src/share/sql.ts",
     "./shell": "./src/shell.ts",
+    "./slash-command": "./src/slash-command.ts",
     "./skill": "./src/skill.ts",
     "./skill/discovery": "./src/skill/discovery.ts",
     "./skill/file": "./src/skill/file.ts",

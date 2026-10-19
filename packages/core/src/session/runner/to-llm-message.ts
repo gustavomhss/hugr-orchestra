@@ -10,13 +10,21 @@ import {
 import { SessionMessage } from "../message"
 import type { FileAttachment } from "../prompt"
 
-const media = (file: FileAttachment): ContentPart => ({
-  type: "media",
-  mediaType: file.mime,
-  data: file.uri,
-  filename: file.name,
-  metadata: file.description === undefined ? undefined : { description: file.description },
-})
+// Only inline bytes reach the provider as media. A file or MCP resource URI is named here; the runner recorded what it
+// points at as a synthetic message when it promoted the prompt. Inline text is sent as text.
+const media = (file: FileAttachment): ContentPart => {
+  if (!file.uri.startsWith("data:")) return { type: "text", text: `[Attached ${file.mime}: ${file.name ?? file.uri}]` }
+  const text = file.mime.startsWith("text/") ? /^data:[^,]*;base64,(.*)$/s.exec(file.uri)?.[1] : undefined
+  if (text !== undefined)
+    return { type: "text", text: `${file.name ?? "Attached text"}:\n${Buffer.from(text, "base64").toString("utf8")}` }
+  return {
+    type: "media",
+    mediaType: file.mime,
+    data: file.uri,
+    filename: file.name,
+    metadata: file.description === undefined ? undefined : { description: file.description },
+  }
+}
 
 const toolInput = (tool: SessionMessage.AssistantTool) => {
   if (tool.state.status !== "pending") return tool.state.input

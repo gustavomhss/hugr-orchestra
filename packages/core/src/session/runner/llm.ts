@@ -32,7 +32,7 @@ import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
 import { SessionHistory } from "../history"
 import { SessionInput } from "../input"
-import type { SessionMessage } from "../message"
+import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
 import { SessionSubagentModels } from "../subagent-models"
@@ -41,6 +41,8 @@ import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
+import { SessionMentions } from "./mentions"
+import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
@@ -105,6 +107,7 @@ const layer = Layer.effect(
     const agents = yield* AgentV2.Service
     const tools = yield* ToolRegistry.Service
     const mcp = yield* Mcp.Service
+    const reader = yield* ReadToolFileSystem.Service
     const models = yield* SessionRunnerModel.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
@@ -215,7 +218,20 @@ const layer = Layer.effect(
           promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
           promoted += yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
         }
-        if (promoted > 0) currentStep = 1
+        if (promoted > 0) {
+          currentStep = 1
+          // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
+          for (const input of yield* SessionInput.promotedAfter(db, session.id, cutoff)) {
+            const text = yield* SessionMentions.read({ reader, mcp }, input.prompt)
+            if (text)
+              yield* events.publish(SessionEvent.Synthetic, {
+                sessionID: session.id,
+                messageID: SessionMessage.ID.create(),
+                timestamp: yield* DateTime.now,
+                text,
+              })
+          }
+        }
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(agent), session.id))
@@ -531,6 +547,7 @@ export const node = makeLocationNode({
     AgentV2.node,
     ToolRegistry.node,
     Mcp.node,
+    ReadToolFileSystem.node,
     SessionRunnerModel.node,
     SessionSubagentModels.node,
     SessionStore.node,

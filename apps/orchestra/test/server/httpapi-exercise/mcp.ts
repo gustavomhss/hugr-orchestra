@@ -89,6 +89,16 @@ export const mcpScenarios: Scenario[] = [
     .at((ctx) => ({ path: route("/mcp/{name}/config", { name: "httpapi-missing" }), headers: ctx.headers() }))
     .json(404, object, "status"),
   // V2 routes: the Location's MCP service.
+  // A session command runs a configured command or an MCP prompt; an unknown name is refused before admission.
+  http.protected
+    .post("/api/session/{sessionID}/command", "v2.session.command.missing")
+    .seeded((ctx) => ctx.session({ title: "Missing command owner" }))
+    .at((ctx) => ({
+      path: route("/api/session/{sessionID}/command", { sessionID: ctx.state.id }),
+      headers: ctx.headers(),
+      body: { command: "httpapi-missing" },
+    }))
+    .json(400, object, "status"),
   http.protected.get("/api/mcp", "v2.mcp.list").json(200, locationData(array)),
   http.protected.get("/api/mcp/resource", "v2.mcp.resource.catalog").json(200, locationData(object)),
   http.protected

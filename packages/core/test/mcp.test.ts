@@ -1,6 +1,6 @@
 // The Location's MCP service: a stdio server from a V1-shaped profile config connects through omni, its tools join
-// the Location's tool registry and its resources list; disconnect removes them; add and remove edit the profile's own
-// config file; OAuth is refused for a local server and for a server that is not configured.
+// the Location's tool registry, its resources list and read, and its prompts become commands; disconnect removes them;
+// add and remove edit the profile's own config file; OAuth is refused for a local server and for one not configured.
 import fs from "fs/promises"
 import path from "path"
 import { describe, expect } from "bun:test"
@@ -9,10 +9,12 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { Location } from "@orchestra/core/location"
+import { CommandV2 } from "@orchestra/core/command"
 import { Mcp } from "@orchestra/core/mcp"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { SessionV2 } from "@orchestra/core/session"
+import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { expectSpawn } from "./fixture/omni-expect"
@@ -80,6 +82,28 @@ describe("Mcp", () => {
                 resources: [{ server: "fixture", name: "fixture note", uri: "fixture://note", mimeType: "text/plain" }],
                 templates: [{ server: "fixture", name: "fixture notes", uriTemplate: "fixture://note/{id}" }],
               })
+              expect(yield* mcp.readResource("fixture://note")).toEqual([
+                { uri: "fixture://note", mimeType: "text/plain", text: "text of fixture://note" },
+              ])
+              expect(yield* mcp.readResource("fixture://unlisted")).toBeUndefined()
+              expect((yield* mcp.prompts()).map((prompt) => [prompt.server, prompt.name])).toEqual([["fixture", "greet"]])
+              expect(yield* mcp.getPrompt("fixture", "greet", { name: "Ada" })).toBe("Greet Ada")
+              expect(yield* mcp.getPrompt("missing", "greet", {}).pipe(Effect.flip)).toBeInstanceOf(Mcp.NotFoundError)
+
+              // MCP prompts are commands named `server:prompt` beside the configured ones, and render like them.
+              const commands = yield* CommandV2.Service
+              yield* commands.transform((draft) => draft.update("hello", (command) => void (command.template = "Say $1")))
+              const listed = yield* SlashCommand.list()
+              expect(listed.filter((command) => command.name === "hello" || command.name.includes(":"))).toEqual([
+                { name: "hello", template: "Say $1" },
+                { name: "fixture:greet", template: "", description: "Greets someone" },
+              ])
+              expect(yield* SlashCommand.render("hello", "hi there")).toBe("Say hi there")
+              expect(yield* SlashCommand.render("fixture:greet", "Ada Lovelace")).toBe("Greet Ada Lovelace")
+              expect(yield* SlashCommand.render("missing", "").pipe(Effect.flip)).toBeInstanceOf(
+                SlashCommand.NotFoundError,
+              )
+
               expect(yield* mcp.startAuth("fixture").pipe(Effect.flip)).toBeInstanceOf(Mcp.AuthError)
               expect(yield* mcp.removeAuth("missing").pipe(Effect.flip)).toBeInstanceOf(Mcp.NotFoundError)
 
