@@ -166,27 +166,28 @@ describe("openSurface — the Atlas screen's API over the composed runtime", () 
   })
 
   it("hands a write's ratify token to the composed door for that one call, then restores the variable", () => {
-    const repoPath = governedRepo({ core: ["alice"], src: ["alice"] })
     process.env.ATLAS_ACTOR = "alice"
-    const surface = openSurface(repoPath)
     // A draft is always a grounded T2 advisory, which the fast path auto-accepts with or without a token. A declared
-    // T1 create routes to full ratification, so its emit is what shows whether the token reached the door.
-    const emit = (scope: string, token: string | undefined) =>
-      ok(
-        surface.emit({
-          fact: { ...(groundedFact(repoPath, scope) as object), tier: "T1" },
+    // T1 create routes to full ratification, so its emit is what shows whether the token reached the door. Each case
+    // gets its own repository, so no earlier write sits at the same anchor.
+    const emit = (token: string | undefined) => {
+      const repoPath = governedRepo({ core: ["alice"] })
+      return ok(
+        openSurface(repoPath).emit({
+          fact: { ...(groundedFact(repoPath, "core") as object), tier: "T1" },
           at: "cafe",
           ...(token === undefined ? {} : { token }),
         }),
       ).data
+    }
     delete process.env.ATLAS_RATIFY_TOKEN
-    const refused = emit("core", undefined)
+    const refused = emit(undefined)
     expect(refused?.emitted).toBe(false)
     expect(refused?.rejected).toContain("unratified")
-    expect(emit("core", "t1")?.emitted).toBe(true)
+    expect(emit("t1")?.emitted).toBe(true)
     expect(process.env.ATLAS_RATIFY_TOKEN).toBeUndefined()
     process.env.ATLAS_RATIFY_TOKEN = "before"
-    expect(emit("src", "t2")?.emitted).toBe(true)
+    expect(emit("t2")?.emitted).toBe(true)
     expect(process.env.ATLAS_RATIFY_TOKEN).toBe("before")
   })
 })
