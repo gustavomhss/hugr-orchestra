@@ -17,7 +17,8 @@ import { tmpdir } from "./fixture/tmpdir"
 import { Harness, sessionID } from "./session-runner-harness"
 
 // A promoted prompt's file, directory and MCP resource mentions reach the provider as the text they pointed at when
-// the prompt was promoted, recorded once as a synthetic message; the prompt keeps its URIs and sends no file media.
+// the prompt was promoted, recorded once as a synthetic message; mentioned images and PDFs ride on it as media. The
+// prompt keeps its URIs.
 
 const fixture = path.join(import.meta.dir, "..", "..", "..", "apps", "orchestra", "test", "fixture", "mcp-omni-stdio.ts")
 const requests: LLMRequest[] = []
@@ -85,6 +86,12 @@ describe("SessionRunner mentions", () => {
             const notes = path.join(dir.path, "notes.txt")
             yield* Effect.promise(() => Bun.write(notes, "line one\nline two\nline three\nline four\n"))
             yield* Effect.promise(() => Bun.write(path.join(dir.path, "nested", "inner.txt"), "inner"))
+            const image = path.join(dir.path, "pixel.png")
+            yield* Effect.promise(() =>
+              Bun.write(image, new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0])),
+            )
+            const pdf = path.join(dir.path, "paper.pdf")
+            yield* Effect.promise(() => Bun.write(pdf, "%PDF-1.4\n%%EOF\n"))
             yield* Harness.setup
             const session = yield* SessionV2.Service
             const files = [
@@ -92,6 +99,8 @@ describe("SessionRunner mentions", () => {
               { uri: pathToFileURL(path.join(dir.path, "nested")).href + "/", name: "nested" },
               { uri: "fixture://note", name: "fixture note" },
               { uri: pathToFileURL(path.join(dir.path, "missing.txt")).href, name: "missing.txt" },
+              { uri: pathToFileURL(image).href, name: "pixel.png" },
+              { uri: pathToFileURL(pdf).href, name: "paper.pdf" },
             ]
             yield* session.prompt({ sessionID, prompt: { text: "Look at these", files }, resume: false })
             yield* session.resume(sessionID)
@@ -99,7 +108,10 @@ describe("SessionRunner mentions", () => {
             expect(requests).toHaveLength(1)
             const user = requests[0]!.messages.filter((message) => message.role === "user")
             const content = user.flatMap((message) => message.content)
-            expect(content.some((part) => part.type === "media")).toBe(false)
+            expect(content.flatMap((part) => (part.type === "media" ? [part.mediaType] : []))).toEqual([
+              "image/png",
+              "application/pdf",
+            ])
             const text = content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
             expect(text).toContain("Look at these")
             expect(text).toContain(`Attached ${notes}. Its content as of when it was sent:\nline two\nline three`)
@@ -112,6 +124,10 @@ describe("SessionRunner mentions", () => {
             const context = yield* session.context(sessionID)
             expect(context.map((message) => message.type)).toEqual(["user", "synthetic", "assistant"])
             expect(context[0]).toMatchObject({ type: "user", files: files.map((file) => ({ uri: file.uri })) })
+            expect(context[1]).toMatchObject({
+              type: "synthetic",
+              files: [{ mime: "image/png", name: "pixel.png" }, { mime: "application/pdf", name: "paper.pdf" }],
+            })
           }),
         ),
       ),

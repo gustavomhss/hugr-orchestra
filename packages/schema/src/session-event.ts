@@ -133,6 +133,8 @@ export const Synthetic = Event.define({
     ...Base,
     messageID: SessionMessage.ID,
     text: Schema.String,
+    /** Inline media read for the context, such as a mentioned image or PDF. */
+    files: Schema.Array(FileAttachment).pipe(optional),
   },
 })
 export type Synthetic = typeof Synthetic.Type

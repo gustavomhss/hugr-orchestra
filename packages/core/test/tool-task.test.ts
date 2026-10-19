@@ -101,6 +101,8 @@ const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* ()
     ),
     wake: coordinator.wake,
     interrupt: coordinator.interrupt,
+    exclusive: coordinator.exclusive,
+    withRunner: (_, use) => Deferred.await(harness.runner).pipe(Effect.flatMap(use)),
   })
 })).pipe(Layer.provide(harnessLayer))
 

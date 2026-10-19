@@ -7,7 +7,9 @@ import { Catalog } from "@orchestra/core/catalog"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -40,10 +42,13 @@ type Locations = LayerMap.LayerMap<Location.Ref, LocationServices, LocationError
 
 function serve(input: { config: string; locations: Locations }) {
   return Effect.gen(function* () {
-    const services = AppNodeBuilder.build(LayerNode.group([ProjectV2.node, FSUtil.node, Global.node, Database.node]), [
-      [Database.node, Database.layerFromPath(":memory:")],
-      [Global.node, Global.layerWith({ config: input.config })],
-    ])
+    const services = AppNodeBuilder.build(
+      LayerNode.group([ProjectV2.node, FSUtil.node, Global.node, Database.node, EventV2.node, GitCli.node]),
+      [
+        [Database.node, Database.layerFromPath(":memory:")],
+        [Global.node, Global.layerWith({ config: input.config })],
+      ],
+    )
     const context = yield* Layer.build(services)
     const routes = HttpApiBuilder.layer(api).pipe(
       Layer.provide(Layer.mergeAll(ProjectHandler, ConfigHandler)),

@@ -199,10 +199,11 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       if (reply) return json(route, reply.body, undefined, reply.status)
     }
     if (path === "/api/vcs")
-      return json(route, { location: location(config), data: { branch: "main", defaultBranch: "main" } })
+      return json(route, { location: location(config), data: { branch: "main", default_branch: "main" } })
     if (path === "/api/vcs/status") return json(route, { location: location(config), data: [] })
     if (path === "/api/vcs/diff") return json(route, { location: location(config), data: config.vcsDiff ?? [] })
     if (path === "/api/pty/shells") return json(route, { location: location(config), data: [] })
+    if (path === "/api/config/shells") return json(route, [])
     if (/^\/api\/pty\/[^/]+\/connect-token$/.test(path))
       return json(route, { location: location(config), data: { ticket: "e2e-ticket", expires_in: 60 } })
     if (emptyObject.has(path)) return json(route, {})
@@ -278,7 +279,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       return json(route, true)
     }
     if (
-      /^\/api\/session\/[^/]+\/(archive|rename|interrupt|revert\/clear|revert\/commit)$/.test(path) &&
+      /^\/api\/session\/[^/]+\/(archive|rename|interrupt|agent|model|revert\/clear|revert\/commit)$/.test(path) &&
       route.request().method() === "POST"
     ) {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })

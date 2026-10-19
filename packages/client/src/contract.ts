@@ -29,6 +29,7 @@ export const groupNames = {
   "server.credential": "credentials",
   "server.permission": "permissions",
   "server.fs": "files",
+  "server.vcs": "vcs",
   "server.command": "commands",
   "server.mcp": "mcp",
   "server.skill": "skills",

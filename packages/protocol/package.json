@@ -44,6 +44,7 @@
     "./groups/schedule": "./src/groups/schedule.ts",
     "./groups/session": "./src/groups/session.ts",
     "./groups/skill": "./src/groups/skill.ts",
+    "./groups/vcs": "./src/groups/vcs.ts",
     "./middleware/authorization": "./src/middleware/authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts"
   },

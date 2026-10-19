@@ -220,6 +220,17 @@ export function executionStatus(event: ServerCurrentEvent) {
     return "idle" as const
 }
 
+/** A session after the V2 server switched its agent or model, which it announces by event, not `session.updated`. */
+export function sessionSelection<Info extends { agent?: string; model?: unknown; time: { updated: number } }>(
+  info: Info,
+  event: ServerCurrentEvent,
+): Info | undefined {
+  if (event.type === "session.model.selected")
+    return { ...info, model: { ...event.data.model }, time: { ...info.time, updated: event.created } }
+  if (event.type === "session.agent.selected")
+    return { ...info, agent: event.data.agent, time: { ...info.time, updated: event.created } }
+}
+
 type Usage = {
   cost?: number
   tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } }

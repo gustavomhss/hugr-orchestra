@@ -133,12 +133,19 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
   const session = createServerSession(serverSDK.client, serverSDK.api.session, serverSDK.api.message, {
     protocol: serverSDK.protocol,
+    todo: (sessionID) => serverSDK.orchestra.sessions.todo({ sessionID }),
   })
   // V2 keeps only the settings the app writes (default model, disabled providers) in its global config document.
   const readV2Config = () =>
     serverSDK.orchestra.config
       .get()
-      .then((settings): Config => ({ model: settings.model, disabled_providers: [...settings.disabledProviders] }))
+      .then(
+        (settings): Config => ({
+          model: settings.model,
+          shell: settings.shell,
+          disabled_providers: [...settings.disabledProviders],
+        }),
+      )
   const queryOptionsApi = makeQueryOptionsApi(
     serverSDK.scope,
     () => serverSDK.client,
@@ -409,6 +416,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         queryClient,
         session,
         protocol: serverSDK.protocol,
+        branches: (value) => serverSDK.orchestra.vcs.get(value),
       })
     })
 
@@ -604,9 +612,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const updateConfigMutation = useMutation(() => ({
     mutationFn: async (config: Config) => {
       if ((await serverSDK.protocol) === "v1") return serverSDK.client.global.config.update({ config })
-      // V2 keeps the default model, per-agent engines and disabled providers in its global config document.
+      // V2 keeps the default model, shell, per-agent engines and disabled providers in its global config document.
       return serverSDK.orchestra.config.update({
         model: config.model,
+        shell: config.shell,
         disabledProviders: config.disabled_providers,
         agents:
           config.agent &&

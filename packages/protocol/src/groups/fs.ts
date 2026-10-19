@@ -1,8 +1,8 @@
 import { FileSystem } from "@orchestra/schema/filesystem"
 import { Location } from "@orchestra/schema/location"
 import { PositiveInt, RelativePath } from "@orchestra/schema/schema"
-import { Schema } from "effect"
-import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
+import { type Context, Schema } from "effect"
+import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
 const ListQuery = Schema.Struct({
@@ -17,12 +17,16 @@ const FindQuery = Schema.Struct({
   limit: Schema.NumberFromString.pipe(Schema.decodeTo(PositiveInt), Schema.optional),
 })
 
-export const FileSystemGroup = HttpApiGroup.make("server.fs")
+// Listing is served from the filesystem alone, so browsing folders never starts a Location's services; reading and
+// searching run in the Location.
+export const makeFileSystemGroup = <I extends HttpApiMiddleware.AnyId, S>(locationMiddleware: Context.Key<I, S>) =>
+  HttpApiGroup.make("server.fs")
   .add(
     HttpApiEndpoint.get("fs.read", "/api/fs/read/*", {
       query: LocationQuery,
       success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()),
     })
+      .middleware(locationMiddleware)
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
         OpenApi.annotations({
@@ -51,6 +55,7 @@ export const FileSystemGroup = HttpApiGroup.make("server.fs")
       query: FindQuery,
       success: Location.response(Schema.Array(FileSystem.Entry)),
     })
+      .middleware(locationMiddleware)
       .annotateMerge(locationQueryOpenApi)
       .annotateMerge(
         OpenApi.annotations({

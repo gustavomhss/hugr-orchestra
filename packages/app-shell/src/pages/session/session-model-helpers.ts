@@ -1,3 +1,4 @@
+import { createEffect, on } from "solid-js"
 import type { UserMessage } from "../../compat/sdk-v2"
 
 type Local = {
@@ -32,6 +33,47 @@ export const resetSessionModel = (local: Local) => {
 
 export const syncSessionModel = (local: Local, msg: UserMessage) => {
   local.session.restore(msg)
+}
+
+/**
+ * The composer follows the Session: the model of its last user message when it has no choice of its own, and a model
+ * the server switched the Session to (a command's own model, another client). Only a change of the Session's recorded
+ * model moves it, never a pick in the composer.
+ */
+export const followSessionModel = (
+  local: Local & ModelSelection,
+  session: {
+    lastUserMessage: () => UserMessage | undefined
+    model: () => { providerID: string; id: string } | undefined
+    sessionID: () => string | undefined
+  },
+) => {
+  createEffect(
+    on(
+      () => session.lastUserMessage()?.id,
+      () => {
+        const msg = session.lastUserMessage()
+        if (!msg) return
+        syncSessionModel(local, msg)
+      },
+    ),
+  )
+  createEffect(
+    on(
+      () => {
+        const model = session.model()
+        return model ? { sessionID: session.sessionID(), providerID: model.providerID, id: model.id } : undefined
+      },
+      (next, previous) => {
+        if (!next || !previous || next.sessionID !== previous.sessionID) return
+        if (next.providerID === previous.providerID && next.id === previous.id) return
+        const current = local.model.current()
+        if (current?.provider.id === next.providerID && current.id === next.id) return
+        local.model.set({ providerID: next.providerID, modelID: next.id })
+      },
+      { defer: true },
+    ),
+  )
 }
 
 export const syncPromptModel = (local: ModelSelection, prompt: PromptState) => {

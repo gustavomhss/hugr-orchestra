@@ -11,7 +11,7 @@ import { SessionMessage } from "../message"
 import type { FileAttachment } from "../prompt"
 
 // Only inline bytes reach the provider as media. A file or MCP resource URI is named here; the runner recorded what it
-// points at as a synthetic message when it promoted the prompt. Inline text is sent as text.
+// points at as a synthetic message, with any image or PDF inline, when it promoted the prompt. Inline text is sent as text.
 const media = (file: FileAttachment): ContentPart => {
   if (!file.uri.startsWith("data:")) return { type: "text", text: `[Attached ${file.mime}: ${file.name ?? file.uri}]` }
   const text = file.mime.startsWith("text/") ? /^data:[^,]*;base64,(.*)$/s.exec(file.uri)?.[1] : undefined
@@ -137,6 +137,11 @@ function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] 
               type: "text" as const,
               text: `Hook reminder:\n${note}`,
             })),
+            // As V1: a mentioned agent (or a subtask command's agent) is the task tool's subagent for this request.
+            ...(message.agents ?? []).map((agent) => ({
+              type: "text" as const,
+              text: `Use the above message and context to generate a prompt and call the task tool with subagent: ${agent.name}`,
+            })),
           ],
           metadata: {
             ...message.metadata,
@@ -145,7 +150,14 @@ function toLLMMessage(message: SessionMessage.Message, model: Model): Message[] 
         }),
       ]
     case "synthetic":
-      return [Message.make({ id: message.id, role: "user", content: message.text, metadata: message.metadata })]
+      return [
+        Message.make({
+          id: message.id,
+          role: "user",
+          content: [{ type: "text", text: message.text }, ...(message.files ?? []).map(media)],
+          metadata: message.metadata,
+        }),
+      ]
     case "system":
       return [Message.system(message.text)]
     case "shell":

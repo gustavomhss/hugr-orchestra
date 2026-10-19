@@ -118,22 +118,24 @@ export function KpiDashboard(props: {
     setRepository({ status: "loading" })
     setPulls({ status: "loading" })
     setState("expanded", false)
-    void cached("activity", period, (abort) =>
-      outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
+    // The V2 server answers through its own routes; a V1 sidecar through the legacy SDK.
+    const v2 = props.sdk.protocol.then((kind) => kind !== "v1")
+    const location = { directory: props.directory }
+    void cached("activity", period, async (abort) =>
+      (await v2)
+        ? current(props.sdk.orchestra.vcs.sessionActivity({ location, period }, { signal: abort }), parseActivity)
+        : outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
     ).then((result) => {
       if (!signal.aborted) setActivity(result)
     })
     // The git read covers the previous window in any time zone; days outside the window are not counted.
     const now = Date.now()
     const days = { "7d": 7, "30d": 30, "90d": 90, all: undefined }[period]
-    void cached("vcs", period, (abort) =>
-      outcome(
-        client.vcs.activity(
-          { directory: props.directory, since: days === undefined ? 0 : now - (2 * days + 2) * 86_400_000, until: now },
-          { signal: abort },
-        ),
-        parseGit,
-      ),
+    const since = days === undefined ? 0 : now - (2 * days + 2) * 86_400_000
+    void cached("vcs", period, async (abort) =>
+      (await v2)
+        ? current(props.sdk.orchestra.vcs.activity({ location, since, until: now }, { signal: abort }), parseGit)
+        : outcome(client.vcs.activity({ directory: props.directory, since, until: now }, { signal: abort }), parseGit),
     ).then((result) => {
       if (!signal.aborted) setRepository(result)
     })
@@ -149,10 +151,14 @@ export function KpiDashboard(props: {
     ).then((result) => {
       if (!signal.aborted) setPulls(result)
     })
-    void client.vcs
-      .get({ directory: props.directory }, { signal })
-      .then((result) => {
-        if (!signal.aborted && typeof result.data?.branch === "string") setState("branch", result.data.branch)
+    void v2
+      .then((served) =>
+        served
+          ? props.sdk.orchestra.vcs.get({ location }, { signal }).then((result) => result.data.branch)
+          : client.vcs.get({ directory: props.directory }, { signal }).then((result) => result.data?.branch),
+      )
+      .then((branch) => {
+        if (!signal.aborted && typeof branch === "string") setState("branch", branch)
       })
       .catch(() => undefined)
   }
@@ -643,6 +649,22 @@ export function KpiDashboard(props: {
       </div>
     </section>
   )
+}
+
+// Maps a V2 read to complete data, a missing route, or an error. Malformed data is an error.
+async function current<T>(call: Promise<{ data: unknown }>, parse: (value: unknown) => T | undefined): Promise<Outcome<T>> {
+  const result = await call.then(
+    (value) => ({ data: parse(value.data) }),
+    (error: unknown) => ({ status: error instanceof Error && isRecord(error.cause) ? error.cause.status : undefined }),
+  )
+  if ("status" in result && typeof result.status === "number" && [404, 405, 501].includes(result.status))
+    return { status: "unavailable" }
+  if (!("data" in result) || !result.data) return { status: "error" }
+  return { status: "complete", data: result.data }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
 }
 
 // Maps a legacy SDK call to complete data, a missing endpoint, or an error. Malformed data is an error.

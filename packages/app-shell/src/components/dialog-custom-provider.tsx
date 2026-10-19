@@ -130,9 +130,26 @@ export function CustomProviderForm(props: { autofocus?: boolean } = {}) {
 
   const saveMutation = useMutation(() => ({
     mutationFn: async (result: NonNullable<ReturnType<typeof validate>>) => {
-      if ((await serverSDK().protocol) !== "v1") throw new Error(language.t("provider.custom.unavailable"))
       const disabledProviders = serverSync().data.config.disabled_providers ?? []
       const nextDisabled = disabledProviders.filter((id) => id !== result.providerID)
+      if ((await serverSDK().protocol) !== "v1") {
+        // V2 keeps the key as the provider's credential and the definition in the global config document.
+        if (result.key)
+          await serverSDK().currentApi.integration.connect.key({ integrationID: result.providerID, key: result.key })
+        await serverSDK().orchestra.config.update({
+          providers: {
+            [result.providerID]: {
+              name: result.config.name,
+              ...(result.config.env ? { env: result.config.env } : {}),
+              api: { type: "aisdk", package: result.config.npm, url: result.config.options.baseURL },
+              ...(result.config.options.headers ? { request: { headers: result.config.options.headers } } : {}),
+              models: result.config.models,
+            },
+          },
+        })
+        await serverSync().updateConfig({ disabled_providers: nextDisabled })
+        return result
+      }
 
       if (result.key) {
         await serverSDK().client.auth.set({

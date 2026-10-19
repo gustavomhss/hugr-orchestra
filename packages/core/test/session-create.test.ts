@@ -306,20 +306,33 @@ describe("SessionV2.create", () => {
     }),
   )
 
-  it.effect("reports unfinished Session operations as unavailable", () =>
+  it.effect("forks the history before a message into a retitled Session", () =>
     Effect.gen(function* () {
       const session = yield* SessionV2.Service
       const created = yield* session.create({ location })
-      const unavailable = (
-        effect: Effect.Effect<void, SessionV2.NotFoundError | SessionV2.OperationUnavailableError>,
-      ) =>
-        effect.pipe(
-          Effect.flip,
-          Effect.map((error) => (error instanceof SessionV2.OperationUnavailableError ? error.operation : "not-found")),
-        )
+      const first = yield* session.synthetic({ sessionID: created.id, text: "first", resume: false })
+      const second = yield* session.synthetic({ sessionID: created.id, text: "second", resume: false })
 
-      expect(yield* unavailable(session.shell({ sessionID: created.id, command: "pwd" }))).toBe("shell")
-      expect(yield* unavailable(session.skill({ sessionID: created.id, skill: "review" }))).toBe("skill")
+      const forked = yield* session.fork({ sessionID: created.id, messageID: second })
+      const copied = yield* session.messages({ sessionID: forked.id, order: "asc" })
+
+      expect(forked.id).not.toBe(created.id)
+      expect(forked.title).toBe(`${created.title} (fork #1)`)
+      expect(copied).toMatchObject([{ type: "synthetic", text: "first", sessionID: forked.id }])
+      expect(copied[0]?.id).not.toBe(first)
+      expect(yield* session.messages({ sessionID: created.id })).toHaveLength(2)
+    }),
+  )
+
+  it.effect("moves a Session within its project", () =>
+    Effect.gen(function* () {
+      const session = yield* SessionV2.Service
+      const created = yield* session.create({ location })
+      const target = Location.Ref.make({ directory: AbsolutePath.make("/project/sub") })
+
+      yield* session.move({ sessionID: created.id, location: target })
+
+      expect((yield* session.get(created.id)).location.directory).toBe(target.directory)
     }),
   )
 

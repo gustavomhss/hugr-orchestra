@@ -179,25 +179,29 @@ export const buildPrompt = (input: { readonly previousSummary?: string; readonly
 
 export const make = (dependencies: Dependencies) => {
   const config = settings(dependencies.config)
-  const compactAfterOverflow = Effect.fn("SessionCompaction.compactAfterOverflow")(function* (input: Input) {
+  const summarize = Effect.fnUntraced(function* (input: Input, reason: "auto" | "manual") {
     const context = input.model.route.defaults.limits?.context
-    if (context === undefined || context <= 0) return false
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
-    const selected = select(input.entries, config.tokens)
     const previousSummary = input.entries.find((entry) => entry.message.type === "compaction")?.message
+    const kept = select(input.entries, config.tokens)
+    // A requested compaction of a conversation shorter than the kept tail summarizes all of it.
+    const selected =
+      reason === "manual" && kept?.head.length === 0 && previousSummary?.type !== "compaction"
+        ? select(input.entries, 0)
+        : kept
     if (!selected || (selected.head.length === 0 && previousSummary?.type !== "compaction")) return false
     const summaryPrompt = buildPrompt({
       previousSummary: previousSummary?.type === "compaction" ? previousSummary.summary : undefined,
       context: [previousSummary?.type === "compaction" ? previousSummary.recent : "", selected.head].filter(Boolean),
     })
     const summaryOutput = Math.min(output || SUMMARY_OUTPUT_TOKENS, SUMMARY_OUTPUT_TOKENS)
-    if (Token.estimate(summaryPrompt) > context - summaryOutput) return false
+    if (context !== undefined && context > 0 && Token.estimate(summaryPrompt) > context - summaryOutput) return false
     const messageID = SessionMessage.ID.create()
     yield* dependencies.events.publish(SessionEvent.Compaction.Started, {
       sessionID: input.sessionID,
       messageID,
       timestamp: yield* DateTime.now,
-      reason: "auto",
+      reason,
     })
 
     const chunks: string[] = []
@@ -228,12 +232,19 @@ export const make = (dependencies: Dependencies) => {
       sessionID: input.sessionID,
       messageID,
       timestamp: yield* DateTime.now,
-      reason: "auto",
+      reason,
       text: summary,
       recent: selected.recent,
     })
     return true
   })
+  const compactAfterOverflow = Effect.fn("SessionCompaction.compactAfterOverflow")(function* (input: Input) {
+    const context = input.model.route.defaults.limits?.context
+    if (context === undefined || context <= 0) return false
+    return yield* summarize(input, "auto")
+  })
+  /** Compacts on request, whatever the context size; false when there is nothing to summarize or the summary failed. */
+  const compact = Effect.fn("SessionCompaction.compact")((input: Input) => summarize(input, "manual"))
   const compactIfNeeded = Effect.fn("SessionCompaction.compactIfNeeded")(function* (input: Input) {
     if (!config.auto) return false
     const context = input.model.route.defaults.limits?.context
@@ -247,6 +258,7 @@ export const make = (dependencies: Dependencies) => {
     return yield* compactAfterOverflow(input)
   })
   return {
+    compact,
     compactIfNeeded,
     compactAfterOverflow,
   }

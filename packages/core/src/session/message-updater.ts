@@ -268,6 +268,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
           SessionMessage.Synthetic.make({
             sessionID: event.data.sessionID,
             text: event.data.text,
+            ...(event.data.files === undefined ? {} : { files: event.data.files }),
             id: event.data.messageID,
             type: "synthetic",
             time: { created: event.data.timestamp },

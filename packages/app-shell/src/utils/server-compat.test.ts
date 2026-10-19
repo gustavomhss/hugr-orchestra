@@ -44,6 +44,8 @@ function setup(
           },
         })
       }
+      if (request.method === "POST" && request.url.endsWith("/compact"))
+        return Response.json({ data: { compacted: true } })
       if (request.method === "GET" && new URL(request.url).pathname === "/vcs")
         return Response.json(responses?.vcs ?? {})
       if (new URL(request.url).pathname === "/api/project/current") return new Response("not found", { status: 404 })
@@ -164,6 +166,33 @@ describe("createCompatibleApi", () => {
       delivery: "queue",
     })
     expect(admitted).toMatchObject({ admittedSeq: 1, id: "msg_1", sessionID: "ses_1", delivery: "steer" })
+  })
+
+  test("switches a V2 Session to the composer's agent and model, then compacts and moves it on V2 routes", async () => {
+    const { api, requests } = setup("v2")
+    await api.session.prompt({
+      sessionID: "ses_1",
+      text: "hello",
+      agent: "build",
+      model: { providerID: "provider", modelID: "model" },
+      variant: "high",
+    })
+    await api.session.compact({ sessionID: "ses_1", model: { providerID: "provider", modelID: "model" } })
+    await api.session.move({ sessionID: "ses_1", directory: "/repo/sub" })
+
+    const sent = await Promise.all(
+      requests.map(async (request) => [new URL(request.url).pathname, await request.text()] as const),
+    )
+    expect(sent.map(([path]) => path)).toEqual([
+      "/api/session/ses_1/agent",
+      "/api/session/ses_1/model",
+      "/api/session/ses_1/prompt",
+      "/api/session/ses_1/model",
+      "/api/session/ses_1/compact",
+      "/api/session/ses_1/move",
+    ])
+    expect(JSON.parse(sent[1]![1])).toEqual({ model: { providerID: "provider", id: "model", variant: "high" } })
+    expect(JSON.parse(sent[5]![1])).toEqual({ location: { directory: "/repo/sub" } })
   })
 
   test("converts current prompts to the V1 prompt contract", async () => {

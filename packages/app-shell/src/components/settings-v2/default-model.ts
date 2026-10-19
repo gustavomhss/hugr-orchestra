@@ -25,7 +25,8 @@ export function createDefaultModelController(directory: Accessor<string | null |
   )
 
   return {
-    writable: () => protocol() === "v1",
+    // V1 writes the model into its config; V2 into its global config document.
+    writable: () => protocol() !== undefined,
     isDefault: (key: ModelKey) => current()?.providerID === key.providerID && current()?.modelID === key.modelID,
     set: (key: ModelKey) => {
       const model = `${key.providerID}/${key.modelID}`

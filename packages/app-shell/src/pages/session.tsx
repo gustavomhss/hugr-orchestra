@@ -75,7 +75,7 @@ import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evide
 import { createTimelineModel } from "@/pages/session/timeline/model"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
-import { restorePromptModel, syncPromptModel, syncSessionModel } from "@/pages/session/session-model-helpers"
+import { followSessionModel, restorePromptModel, syncPromptModel } from "@/pages/session/session-model-helpers"
 import { SESSION_PANEL_WIDTH_MIN } from "@/pages/session/session-panel-width"
 import { SessionSidePanel } from "@/pages/session/session-side-panel"
 import { sessionPanelLayout } from "@/pages/session/session-panel-layout"
@@ -484,16 +484,7 @@ export default function Page() {
     if (path) void file.load(path)
   })
 
-  createEffect(
-    on(
-      () => lastUserMessage()?.id,
-      () => {
-        const msg = lastUserMessage()
-        if (!msg) return
-        syncSessionModel(local, msg)
-      },
-    ),
-  )
+  followSessionModel(local, { lastUserMessage, model: () => info()?.model, sessionID: () => params.id })
 
   let restoredModelSession: string | undefined
   createEffect(() => {
@@ -559,8 +550,7 @@ export default function Page() {
   }, desktopReviewOpen())
 
   const turnDiffs = createMemo(() => list(lastUserMessage()?.summary?.diffs))
-  // `initGit` is a V1-only route; on V2 the empty review state just says there are no changes.
-  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && serverSDK().protocolKind() === "v1")
+  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().protocolKind())
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
     const project = sync().project
@@ -684,7 +674,12 @@ export default function Page() {
   }
 
   const gitMutation = useMutation(() => ({
-    mutationFn: () => sdk().client.project.initGit(),
+    mutationFn: async () =>
+      (await sdk().protocol) === "v1"
+        ? sdk().client.project.initGit()
+        : serverSDK()
+            .orchestra.projects.initGit({ location: { directory: sdk().directory } })
+            .then((result) => ({ data: result.data && { ...result.data, sandboxes: [...result.data.sandboxes] } })),
     onSuccess: (x) => {
       if (!x.data) return
       upsert(x.data)

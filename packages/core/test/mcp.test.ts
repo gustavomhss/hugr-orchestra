@@ -98,8 +98,8 @@ describe("Mcp", () => {
                 { name: "hello", template: "Say $1" },
                 { name: "fixture:greet", template: "", description: "Greets someone" },
               ])
-              expect(yield* SlashCommand.render("hello", "hi there")).toBe("Say hi there")
-              expect(yield* SlashCommand.render("fixture:greet", "Ada Lovelace")).toBe("Greet Ada Lovelace")
+              expect(yield* SlashCommand.render("hello", "hi there")).toEqual({ text: "Say hi there" })
+              expect(yield* SlashCommand.render("fixture:greet", "Ada Lovelace")).toEqual({ text: "Greet Ada Lovelace" })
               expect(yield* SlashCommand.render("missing", "").pipe(Effect.flip)).toBeInstanceOf(
                 SlashCommand.NotFoundError,
               )

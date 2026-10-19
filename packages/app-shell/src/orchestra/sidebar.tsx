@@ -160,12 +160,13 @@ export function OrchestraSidebar(props: {
       queryKey: ["orchestra-profile-branch", target.server, directory],
       queryFn:
         conn && target.project && directory
-          ? () =>
-              global
-                .ensureServerCtx(conn)
-                .sdk.createClient({ directory, throwOnError: true })
-                .vcs.get()
-                .then((result) => result.data?.branch ?? null)
+          ? async () => {
+              const sdk = global.ensureServerCtx(conn).sdk
+              if ((await sdk.protocol) !== "v1")
+                return (await sdk.orchestra.vcs.get({ location: { directory } })).data.branch ?? null
+              const result = await sdk.createClient({ directory, throwOnError: true }).vcs.get()
+              return result.data?.branch ?? null
+            }
           : skipToken,
       retry: false,
     }

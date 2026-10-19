@@ -453,6 +453,22 @@ describe("SessionRunnerModel", () => {
         ),
       ).toBe(false)
       expect(SessionRunnerModel.supported(model({ type: "native", settings: {} }))).toBe(false)
+      expect(
+        SessionRunnerModel.supported(model({ type: "native", url: "https://native.example/v1", settings: {} })),
+      ).toBe(true)
+    }),
+  )
+
+  it.effect("maps a native catalog model with an endpoint to the OpenAI-compatible chat route, as V1 did", () =>
+    Effect.gen(function* () {
+      const resolved = yield* SessionRunnerModel.fromCatalogModel(
+        model({ type: "native", url: "https://native.example/v1", settings: {} }),
+      )
+
+      expect(resolved.route).toMatchObject({
+        id: "openai-compatible-chat",
+        endpoint: { baseURL: "https://native.example/v1" },
+      })
     }),
   )
 })

@@ -110,6 +110,7 @@ describe("toLLMMessages", () => {
           type: "synthetic",
           sessionID: SessionV2.ID.make("ses_translate"),
           text: "Synthetic context",
+          files: [file],
           time: { created },
         }),
         SessionMessage.Shell.make({
@@ -141,12 +142,19 @@ describe("toLLMMessages", () => {
         content: [
           { type: "text", text: "Inspect this image" },
           { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
+          {
+            type: "text",
+            text: "Use the above message and context to generate a prompt and call the task tool with subagent: explore",
+          },
         ],
         metadata: { agents: [{ name: "explore" }] },
       }),
     )
     expect(messages.slice(2).map((message) => message.content)).toEqual([
-      [{ type: "text", text: "Synthetic context" }],
+      [
+        { type: "text", text: "Synthetic context" },
+        { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
+      ],
       [{ type: "text", text: "Shell command: pwd\n\n/project" }],
       [
         {

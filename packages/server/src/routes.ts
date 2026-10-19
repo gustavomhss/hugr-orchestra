@@ -5,6 +5,8 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { AppProcess } from "@orchestra/core/process"
+import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
 import { ProjectV2 } from "@orchestra/core/project"
 import { Host } from "@orchestra/core/host"
@@ -48,6 +50,8 @@ const applicationServices = LayerNode.group([
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
+  AppProcess.node,
+  GitCli.node,
   Global.node,
   ProjectV2.node,
 ])

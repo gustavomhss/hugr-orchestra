@@ -502,9 +502,13 @@ describe("prompt dispatch and cancellation", () => {
       expect(requests.map((request) => new URL(request.url).pathname)).toEqual([interrupt])
 
       await submit.handleSubmit(event)
-      const prompt = kind === "v1" ? "/session/session-1/prompt_async" : "/api/session/session-1/prompt"
-      expect(requests.map((request) => new URL(request.url).pathname)).toEqual([interrupt, prompt])
-      expect(requests[1].signal.aborted).toBe(false)
+      // V2 switches the Session to the composer's agent and model before the prompt.
+      const prompt =
+        kind === "v1"
+          ? ["/session/session-1/prompt_async"]
+          : ["/api/session/session-1/agent", "/api/session/session-1/model", "/api/session/session-1/prompt"]
+      expect(requests.map((request) => new URL(request.url).pathname)).toEqual([interrupt, ...prompt])
+      expect(requests.at(-1)?.signal.aborted).toBe(false)
     },
   )
 

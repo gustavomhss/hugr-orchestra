@@ -60,14 +60,62 @@ export function createApiForServer(input: {
   }
   const api = OpenCode.make(options)
   // The bundled client sends the prompt flat (`text`, `files`, `agents`); the Orchestra V2 server takes it nested under
-  // `prompt` with `source` for mentions, so prompts go through the repo's own client.
+  // `prompt` with `source` for mentions, so prompts go through the repo's own client. So do the routes whose bodies or
+  // answers differ from the bundled contract (compact, move, synthetic).
   const orchestra = Orchestra.make(options)
+  // The composer sends its agent and model with each request, as V1 took them per message; the V2 Session keeps one
+  // selection, so it is switched first. The server records nothing when the selection is unchanged.
+  const select = async (sessionID: string, value: object, requestOptions?: { signal?: AbortSignal }) => {
+    if ("agent" in value && typeof value.agent === "string" && value.agent)
+      await orchestra.sessions.switchAgent({ sessionID, agent: value.agent }, requestOptions)
+    const model = "model" in value ? selectedModel(value.model, "variant" in value ? value.variant : undefined) : undefined
+    if (model) await orchestra.sessions.switchModel({ sessionID, model }, requestOptions)
+  }
   return {
     ...api,
     session: {
       ...api.session,
-      prompt: (value, requestOptions) =>
+      command: async (value, requestOptions) => {
+        await select(value.sessionID, value, requestOptions)
+        return api.session.command(value, requestOptions)
+      },
+      compact: async (value) => {
+        await select(value.sessionID, value)
+        await orchestra.sessions.compact({ sessionID: value.sessionID })
+        return {
+          admittedSeq: 0,
+          id: value.id ?? "",
+          sessionID: value.sessionID,
+          timeCreated: Date.now(),
+          type: "compaction" as const,
+        }
+      },
+      move: (value, requestOptions) =>
+        orchestra.sessions.move(
+          {
+            sessionID: value.sessionID,
+            location: { directory: value.directory, workspaceID: value.workspaceID },
+          },
+          requestOptions,
+        ),
+      synthetic: (value, requestOptions) =>
         orchestra.sessions
+          .synthetic(
+            { sessionID: value.sessionID, id: value.id ?? undefined, text: value.text, resume: value.resume ?? undefined },
+            requestOptions,
+          )
+          .then((recorded) => ({
+            admittedSeq: 0,
+            id: recorded.id,
+            sessionID: value.sessionID,
+            timeCreated: Date.now(),
+            type: "synthetic" as const,
+            data: { text: value.text },
+            delivery: value.delivery ?? "steer",
+          })),
+      prompt: async (value, requestOptions) => {
+        await select(value.sessionID, value, requestOptions)
+        return orchestra.sessions
           .prompt(
             {
               sessionID: value.sessionID,
@@ -95,9 +143,19 @@ export function createApiForServer(input: {
             type: "user" as const,
             data: { text: value.text },
             delivery: admitted.delivery,
-          })),
+          }))
+      },
     },
   }
+}
+
+// `{ providerID, modelID }` from the composer or `{ providerID, id, variant }` from a command.
+function selectedModel(value: unknown, variant: unknown) {
+  if (!value || typeof value !== "object" || !("providerID" in value) || typeof value.providerID !== "string") return
+  const id = "id" in value && typeof value.id === "string" ? value.id : "modelID" in value ? value.modelID : undefined
+  if (typeof id !== "string") return
+  const chosen = "variant" in value && typeof value.variant === "string" ? value.variant : variant
+  return { providerID: value.providerID, id, ...(typeof chosen === "string" ? { variant: chosen } : {}) }
 }
 
 export type ServerApi = OpenCodeClient

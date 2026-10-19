@@ -120,15 +120,14 @@ export default function Workspaces(props: ChapterPageProps) {
     return result.data ?? []
   }
 
-  // Only V1 reports a branch per directory; V2 has no branch endpoint, so its cards omit the badge.
   async function readBranches(protocol: "v1" | "v2", workspaces: readonly { directory: string }[]) {
-    if (protocol !== "v1") return {}
     const entries = await Promise.all(
       workspaces.map((item) =>
-        serverSDK()
-          .client.vcs.get({ directory: item.directory })
-          .then(
-            (result) => [pathKey(item.directory), result.data?.branch ?? undefined] as const,
+        (protocol === "v1"
+          ? serverSDK().client.vcs.get({ directory: item.directory }).then((result) => result.data?.branch)
+          : serverSDK().orchestra.vcs.get({ location: { directory: item.directory } }).then((result) => result.data.branch)
+        ).then(
+            (branch) => [pathKey(item.directory), branch ?? undefined] as const,
             () => [pathKey(item.directory), undefined] as const,
           ),
       ),

@@ -2,6 +2,7 @@ import { Config as EffectConfig, Context, Effect, Layer } from "effect"
 import { HttpApiBuilder, OpenApi } from "effect/unstable/httpapi"
 import { HttpMiddleware, HttpRouter, HttpServer, HttpServerResponse } from "effect/unstable/http"
 import * as Socket from "effect/unstable/socket/Socket"
+import { AppProcess } from "@orchestra/core/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import * as Observability from "@orchestra/core/observability"
 import { Agent } from "@/agent/agent"
@@ -223,6 +224,7 @@ type RouteRequirements =
 const app = LayerNode.group([
   Npm.node,
   FSUtil.node,
+  AppProcess.node,
   Database.node,
   ResearchArtifacts.node,
   Auth.node,
