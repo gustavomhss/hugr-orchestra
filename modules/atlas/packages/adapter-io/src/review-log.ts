@@ -138,6 +138,43 @@ export function foldReview(records: readonly ReviewRecord[]): ReviewFold {
   }
 }
 
+/** The invariant line every review act reports, in the CLI and on the Atlas screen alike. */
+export const REVIEW_INVARIANT =
+  "REVIEW-LOG (D14): a review act is one appended, content-keyed record in .atlas/review.jsonl — nothing is edited or removed, and the current state is a fold over the records"
+
+/**
+ * A review act a helper declined. `invalid`: the request itself is wrong (the CLI's exit 1). `governed`: the log or
+ * the store declined it (exit 2). `reason` is the exact text the CLI prints and the Atlas screen shows.
+ */
+export interface ReviewRefusal {
+  readonly ok: false
+  readonly refusal: "invalid" | "governed"
+  readonly reason: string
+}
+
+/** The folded review state, or the governed refusal when the log has lines that do not verify: a decision taken over
+ *  a log that cannot be fully read could miss the very hold or decision a torn line held. */
+export function foldReviewLog(repoPath: string): { readonly fold: ReviewFold } | ReviewRefusal {
+  const read = readReview(repoPath)
+  if (read.unreadable !== true && read.rejected === 0) return { fold: foldReview(read.records) }
+  const why =
+    read.unreadable === true
+      ? "could not be read"
+      : `has ${read.rejected} line(s) that do not verify (torn, edited, or not a review record)`
+  return {
+    ok: false,
+    refusal: "governed",
+    reason: `the review log ${reviewLogPath(repoPath)} ${why}, so a hold or a decision in it could be missed — repair or remove those lines, then re-run`,
+  }
+}
+
+/** `wanted` as an exact id, or as a prefix of at least 8 characters that matches exactly one id; else `undefined`. */
+export function resolveReviewId(ids: readonly string[], wanted: string): string | undefined {
+  if (ids.includes(wanted)) return wanted
+  const hits = wanted.length >= 8 ? ids.filter((id) => id.startsWith(wanted)) : []
+  return hits.length === 1 ? hits[0] : undefined
+}
+
 const isText = (v: unknown): v is string => typeof v === "string" && v.length > 0
 const isOptionalText = (v: unknown): v is string | undefined => v === undefined || isText(v)
 

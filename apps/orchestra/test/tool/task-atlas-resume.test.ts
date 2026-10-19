@@ -19,12 +19,14 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Config } from "@/config/config"
 import { Git } from "@/git"
 import { AtlasMemory } from "@/maestro/atlas-memory"
+import { AtlasResume } from "@/maestro/atlas-resume"
 import { Session } from "@/session/session"
 import { MessageID, PartID, type SessionID } from "../../src/session/schema"
 import { SessionRunState } from "@/session/run-state"
 import { SessionStatus } from "@/session/status"
 import { TaskTool, type TaskPromptOps } from "../../src/tool/task"
 import { Truncate } from "@/tool/truncate"
+import type { Tool } from "@/tool/tool"
 import { ToolRegistry } from "@/tool/registry"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
@@ -391,6 +393,43 @@ describe("tool.task Atlas resume admission", () => {
         expect(admissions[0]!.text.toLowerCase()).not.toContain("closing")
         // The persisted part keeps the Admission text byte for byte.
         expect(yield* childAdmissions(child.sessionID)).toEqual(admissions)
+      }),
+    { git: true },
+  )
+
+  it.instance(
+    "an explicit ref admits the picked record where two own records and no receipt would be ambiguous",
+    () =>
+      Effect.gen(function* () {
+        const store = yield* remember(OLDER, NEWER)
+        const [older] = store.refs as [RecordRef, RecordRef]
+        const seeded = yield* seed()
+        const agents = yield* Agent.Service
+        const agent = yield* agents.get("backend")
+        const ctx: Tool.Context = {
+          sessionID: seeded.chat.id,
+          messageID: seeded.assistant.id,
+          callID: "call_explicit",
+          agent: "maestro",
+          agentID: "maestro",
+          abort: new AbortController().signal,
+          messages: [],
+          metadata: () => Effect.void,
+          ask: () => Effect.void,
+        }
+        const picked = yield* offline(AtlasResume.admit({ agent, sessionID: seeded.chat.id, unit: UNIT, ctx, ref: older }))
+        const admissions = admissionsOf(picked)
+        expect(admissions).toMatchObject([
+          { key: key(store.projectID, seeded.chat, "call_explicit"), verdict: { ok: true, ref: older } },
+        ])
+        expect(admissions[0]!.text).toContain(OLDER.stoppedAt)
+        expect(admissions[0]!.text).not.toContain(NEWER.stoppedAt)
+        // A ref no record carries is refused by Atlas, never replaced by another checkpoint.
+        const missing = { contentHash: "0".repeat(64), eventId: "0".repeat(64) }
+        const refused = yield* offline(
+          AtlasResume.admit({ agent, sessionID: seeded.chat.id, unit: UNIT, ctx: { ...ctx, callID: "call_missing" }, ref: missing }),
+        )
+        expect(admissionsOf(refused)).toMatchObject([{ verdict: { ok: false, refusal: "record-not-found" } }])
       }),
     { git: true },
   )

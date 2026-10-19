@@ -147,6 +147,8 @@ const BUILTIN_LEDGER = {
   // count as a caller, so the row grows here and no new row appears. dead-value-exports 144 → 145.
   // 3 → 4: `proposeProjectRule` joined it (R1, specs/atlas-ui/build DECISIONS.md D18). Its consumer is the same
   // host, through the `./native-memory` boundary subpath (`native-bound.ts` re-exports it). dead-value-exports +1.
+  // `decideProjectRule` (R1, D30) is NOT counted: `surface/review.ts` calls it — a person's decision writes as the
+  // PROPOSAL's member, never as a resolved actor, so clause 4 still holds. The four values above remain dead.
   "packages/adapter-io/src/native-memory.ts": { values: 4, shipped: null, banner: true },
   // #95 WP-TV-2 landed: `test-vacuity-source.ts` (the PRODUCER + READ leg + units feed) and `read/test-vacuity.ts`
   // (`testVacuitiesOf`) BOTH moved dead → live and were REMOVED here — exactly the own.ts / relation-derive.ts

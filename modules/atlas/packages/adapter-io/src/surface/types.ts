@@ -10,18 +10,28 @@
 // `{ state: "empty" }` from every method.
 //
 // The Atlas outputs a write returns (`EmitOut`, `LinkOut`, `DraftOut`, `CheckOut`, `PromoteOut`, `VerifyFactData`)
-// are MIRRORED here field for field rather than imported: this file imports only its sibling ./types-memory.ts, so the
+// are MIRRORED here field for field rather than imported: this file imports only its siblings ./types-memory.ts and ./types-review.ts, so the
 // boundary declaration bundle that inlines it stays free of the engine's internal types. A mirror that drifts from its source fails the
 // adapter-io typecheck, because ./index.ts assigns each source value to its mirror.
 //
 // Lead decision D3b adds four keys to the snapshot — `own`, `memory`, `orientation`, `territories` — whose shapes
 // live in ./types-memory.ts, the one file this one imports from.
-
 import type { AtlasMemoryRecord, AtlasOrientationEvent, AtlasOwnSnapshot, AtlasTerritory } from "./types-memory.js"
+import type {
+  AtlasAnswerInput,
+  AtlasDecideInput,
+  AtlasDelegateOut,
+  AtlasHoldInput,
+  AtlasMemoryDecideInput,
+  AtlasProposeInput,
+  AtlasReleaseInput,
+  AtlasReview,
+  AtlasReviewWriteOut,
+  AtlasTerritoryInput,
+} from "./types-review.js"
 
 /** A repository with no `.atlas/` directory. Every read and every write answers this. */
-export interface AtlasEmpty {
-  readonly state: "empty"
+export interface AtlasEmpty {  readonly state: "empty"
 }
 
 // ── the snapshot (extract.py) ────────────────────────────────────────────────────────────────────────────────────
@@ -279,6 +289,10 @@ export interface AtlasPromote {
   readonly promoted: number
   readonly refused: number
   readonly rows: readonly AtlasPromoteRow[]
+        /** R2: staged rows this pass skipped because a curator holds them (`PromoteOut.held`). Absent when none. */
+        readonly held?: readonly string[]
+        /** R2: named nodeKeys no staged row carries (`PromoteOut.unknown`). Absent when every named key was staged. */
+        readonly unknown?: readonly string[]
 }
 
 export type AtlasPromoteResult = AtlasEmpty | AtlasPromote
@@ -342,9 +356,13 @@ export type AtlasDraftResult = AtlasEmpty | AtlasVerdict<AtlasDraftData>
 export type AtlasEmitResult = AtlasEmpty | AtlasVerdict<AtlasEmitOut>
 export type AtlasLinkResult = AtlasEmpty | AtlasVerdict<AtlasLinkOut>
 export type AtlasVerifyResult = AtlasEmpty | AtlasVerdict<AtlasVerifyOut>
-
+export type AtlasReviewResult = AtlasEmpty | AtlasReview
+export type AtlasReviewWriteResult = AtlasEmpty | AtlasVerdict<AtlasReviewWriteOut>
+export type AtlasDelegateResult = AtlasEmpty | AtlasDelegateOut
 /** `token` is the ratify token (`ATLAS_RATIFY_TOKEN`) for this one write; absent ⇒ the process's own. */
 export interface AtlasPromoteInput {
+  /** D36: settle only these staged rows; absent or empty ⇒ every staged row. A held row is always skipped. */
+  readonly nodeKeys?: readonly string[]
   readonly token?: string
 }
 
@@ -394,4 +412,12 @@ export interface AtlasSurface {
   readonly emit: (input: AtlasEmitInput) => AtlasEmitResult
   readonly link: (input: AtlasLinkInput) => AtlasLinkResult
   readonly verify: (input: AtlasVerifyInput) => AtlasVerifyResult
+  readonly review: () => AtlasReviewResult
+    readonly hold: (input: AtlasHoldInput) => AtlasReviewWriteResult
+    readonly release: (input: AtlasReleaseInput) => AtlasReviewWriteResult
+    readonly propose: (input: AtlasProposeInput) => AtlasReviewWriteResult
+    readonly decide: (input: AtlasDecideInput) => AtlasReviewWriteResult
+    readonly answer: (input: AtlasAnswerInput) => AtlasReviewWriteResult
+    readonly memoryDecide: (input: AtlasMemoryDecideInput) => AtlasReviewWriteResult
+    readonly territory: (input: AtlasTerritoryInput) => AtlasReviewWriteResult
 }

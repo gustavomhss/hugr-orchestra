@@ -6,6 +6,8 @@
 // module under `packages/*/src` calls it and none should: the CLI/MCP doors compose Memory through
 // `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3 clause 4 forbids
 // exactly that route here. The entry goes stale when an in-tree caller appears, and the gate says so.
+// One in-tree caller exists by design: the Atlas screen's surface (`surface/review.ts`) calls `decideProjectRule`,
+// which writes as the PROPOSAL's member and never as the surface's resolved actor, so clause 4 still holds.
 //
 // ── WHAT THIS FILE IS ────────────────────────────────────────────────────────────────────────────────────
 // The four Memory doors (`createDurableMemory`, `createMemoryRead`, `createMemoryEmit`, the scanner) composed
@@ -385,6 +387,38 @@ export function proposeProjectRule(input: AtlasBinding, entry: unknown, at: stri
   if (blocked !== undefined) return blocked
   const body = { kind: "memory-proposal", member: owner, rule: complete.rule, scope: complete.scope } as const
   return { ok: true, proposalId: appendReview(root, { ...body, at, by: owner }).id }
+}
+
+/** R1 (D30): what a person's decision on a memory proposal did. A refused `indexed` write is the door's own refusal. */
+export type DecisionVerdict =
+  | { readonly ok: true; readonly decisionId: string; readonly ref?: RecordRef }
+  | MemoryRejected
+  | { readonly ok: false; readonly refusal: "proposal-not-open"; readonly reason: string }
+export type ProjectRuleDecision = { readonly proposalId: string; readonly verdict: "indexed" | "discarded"; readonly rule?: string; readonly scope?: string; readonly by: string }
+
+/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
+ *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
+ *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
+ *  storage root and the scanner; its `memoryOwner` never writes. */
+export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict {
+  const binding = freezeBinding(input)
+  const root = binding.storage.root
+  const read = readReview(root)
+  if (read.unreadable === true || read.rejected > 0) {
+    const reason = `the review log at '${reviewLogPath(root)}' cannot be fully read, so the proposal's state is unknown`
+    return { ok: false, refusal: read.unreadable === true ? "store-unavailable" : "store-partial", reason }
+  }
+  const proposal = foldReview(read.records).openMemoryProposals.find((p) => p.id === decision.proposalId)
+  if (proposal === undefined) return { ok: false, refusal: "proposal-not-open", reason: `no open memory proposal has id '${decision.proposalId}'` }
+  const decided = (verdict: "indexed" | "discarded") =>
+    appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
+      ...(decision.scope ? { scope: decision.scope } : {}), at, by: decision.by }).id
+  if (decision.verdict === "discarded") return { ok: true, decisionId: decided("discarded") }
+  const member = { storage: binding.storage, source: binding.source, memoryOwner: proposal.member, execution: binding.execution }
+  const entry = { rule: decision.rule || proposal.rule, scope: decision.scope || proposal.scope }
+  const written = createNativeMemory({ ...member, ...(binding.scanner ? { scanner: binding.scanner } : {}) }).write(entry)
+  if (!written.ok) return written
+  return { ok: true, decisionId: decided("indexed"), ref: written.ref }
 }
 
 /** The proposal's own two fields, or why it is not one. D14's memory-proposal record has no `grounding`. */

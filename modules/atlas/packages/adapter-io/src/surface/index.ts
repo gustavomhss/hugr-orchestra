@@ -12,23 +12,24 @@
 // is `ComposedRuntime.promote`, `draft` is `draftVerdict` + `checkVerdict` over `ComposedRuntime.draft`/`check`, `emit`
 // and `link` are `handler.handle` on `atlas-emit` and `atlas-link`. `verify` is `verifyFactVerdict` over the verify-fact
 // leg built exactly as compose.ts builds it; it reads the code index and nothing else, so it composes nothing more.
+// REVIEW (D31): `review` and the review writes live in ./review.ts and act through the same adapter-io helpers the
+// CLI's review commands call (D29), so the screen and the CLI cannot diverge.
 //
 // COST, STATED: `own`, `health` and every write call `composeRuntime`, which walks the tracked tree and decodes the
 // SCIP index, once per call. `snapshot`, `reasoning` and `verify` do not compose. Every method is synchronous.
-//
 // THE RATIFY TOKEN. `composeRuntime` reads `ATLAS_RATIFY_TOKEN` from the environment once, synchronously, while it
 // composes (compose.ts:175), and closes over it. A write that carries `token` sets the variable for exactly that one
 // synchronous `composeRuntime` call and restores the previous value before anything else can run.
 //
 // A repository with no `.atlas/` directory answers `{ state: "empty" }` from every method, checked on each call.
-
-import { existsSync } from "node:fs"
-import { basename, join } from "node:path"
+import { existsSync } from "node:fs"import { basename, join } from "node:path"
 import { asHash } from "@atlas/kernel"
 import type { EmitOut, LinkOut, Verdict } from "@atlas/tools"
 import { checkVerdict, draftVerdict } from "../author-verdicts.js"
 import { composeRuntime, gitUserEmail } from "../compose.js"
-import type { ComposedRuntime } from "../compose.js"
+import { composeWith } from "./compose-with.js"
+import { foldReviewLog } from "../review-log.js"
+import type { AtlasPromoteInput, AtlasPromoteResult } from "./types.js"
 import { reportIndexPlan } from "../indexer-report.js"
 import { headSha } from "../run-git.js"
 import { readScipIndexerName, readScipOrEmpty, SCIP_INDEX_REL } from "../scip.js"
@@ -38,9 +39,9 @@ import { childrenOf, headShort, langCounts, trackedFiles, trackedStore, withDrif
 import { readDependents } from "./read-index.js"
 import { readMemory, readOrientation, readOwn, readTerritories } from "./read-own-memory.js"
 import { pendingFacts, readReasoning, readStoreFiles, storeSummary } from "./read-store.js"
+import { answer, decide, hold, memoryDecide, propose, release, review, territory } from "./review.js"
 import type {
-  AtlasDraftInput,
-  AtlasDraftResult,
+  AtlasDraftInput,  AtlasDraftResult,
   AtlasEmitInput,
   AtlasEmitResult,
   AtlasEmpty,
@@ -60,9 +61,9 @@ export type {
   AtlasCasIntegrity,
   AtlasCheckOut,
   AtlasClaimProvenance,
+  AtlasDelegateResult,
   AtlasDraftData,
-  AtlasDraftInput,
-  AtlasDraftOut,
+  AtlasDraftInput,  AtlasDraftOut,
   AtlasDraftResult,
   AtlasDrift,
   AtlasDriftHunk,
@@ -91,9 +92,10 @@ export type {
   AtlasReasoning,
   AtlasReasoningMissing,
   AtlasReasoningResult,
+  AtlasReviewResult,
+  AtlasReviewWriteResult,
   AtlasScipState,
-  AtlasSnapshot,
-  AtlasSnapshotResult,
+  AtlasSnapshot,  AtlasSnapshotResult,
   AtlasSurface,
   AtlasTracked,
   AtlasVerdict,
@@ -109,9 +111,25 @@ export type {
   AtlasOwnSnapshot,
   AtlasTerritory,
 } from "./types-memory.js"
+export type {
+  AtlasAnswerInput,
+  AtlasDecideInput,
+  AtlasDelegateInput,
+  AtlasDelegateOut,
+  AtlasHoldInput,
+  AtlasInterviewDraft,
+  AtlasInterviewQuestion,
+  AtlasMemoryDecideInput,
+  AtlasMemoryProposal,
+  AtlasProposeInput,
+  AtlasReleaseInput,
+  AtlasReview,
+  AtlasReviewProposal,
+  AtlasReviewWriteOut,
+  AtlasTerritoryInput,
+} from "./types-review.js"
 
 const EMPTY: AtlasEmpty = { state: "empty" }
-
 /** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */
 export function openSurface(repoPath: string): AtlasSurface {
   const absent = () => !existsSync(join(repoPath, ".atlas"))
@@ -120,14 +138,19 @@ export function openSurface(repoPath: string): AtlasSurface {
     reasoning: (id) => (absent() ? EMPTY : readReasoning(readStoreFiles(repoPath), id)),
     own: (scope) => (absent() ? EMPTY : own(repoPath, scope)),
     health: () => (absent() ? EMPTY : health(repoPath)),
-    promote: (input) =>
-      absent()
-        ? EMPTY
-        : { state: "ok", ...composeWith(repoPath, input.token).promote(asHash(headSha(repoPath) ?? "")) },
+    promote: (input) => (absent() ? EMPTY : promote(repoPath, input)),
     draft: (input) => (absent() ? EMPTY : draft(repoPath, input)),
     emit: (input) => (absent() ? EMPTY : emit(repoPath, input)),
     link: (input) => (absent() ? EMPTY : link(repoPath, input)),
     verify: (input) => (absent() ? EMPTY : verify(repoPath, input)),
+    review: () => (absent() ? EMPTY : review(repoPath)),
+      hold: (input) => (absent() ? EMPTY : hold(repoPath, input)),
+      release: (input) => (absent() ? EMPTY : release(repoPath, input)),
+      propose: (input) => (absent() ? EMPTY : propose(repoPath, input)),
+      decide: (input) => (absent() ? EMPTY : decide(repoPath, input)),
+      answer: (input) => (absent() ? EMPTY : answer(repoPath, input)),
+      memoryDecide: (input) => (absent() ? EMPTY : memoryDecide(repoPath, input)),
+      territory: (input) => (absent() ? EMPTY : territory(repoPath, input)),
   }
 }
 
@@ -182,8 +205,20 @@ function health(repoPath: string): AtlasHealthResult {
   }
 }
 
-/** `atlas draft`, then `atlas check` of the drafted fact at the draft's own rev, over ONE composed runtime. */
-function draft(repoPath: string, input: AtlasDraftInput): AtlasDraftResult {
+/** `atlas promote [nodeKey...]` (D15, D36): with keys only those staged rows, and a row the review log holds is ALWAYS
+ *  skipped. A log that does not verify could hide a hold, so the pass is refused before staging is read, as
+ *  `atlas promote` refuses it; nothing is presented. */
+function promote(repoPath: string, input: AtlasPromoteInput): AtlasPromoteResult {
+  const review = foldReviewLog(repoPath)
+  if ("refusal" in review) {
+    return { state: "ok", read: false, refusal: "unreadable", candidates: 0, promoted: 0, refused: 0, rows: [] }
+  }
+  const held = review.fold.held
+  const select = input.nodeKeys === undefined || input.nodeKeys.length === 0 ? { held } : { only: input.nodeKeys, held }
+  return { state: "ok", ...composeWith(repoPath, input.token).promote(asHash(headSha(repoPath) ?? ""), select) }
+}
+
+/** `atlas draft`, then `atlas check` of the drafted fact at the draft's own rev, over ONE composed runtime. */function draft(repoPath: string, input: AtlasDraftInput): AtlasDraftResult {
   const runtime = composeWith(repoPath, input.token)
   const drafted = draftVerdict(
     input.supersede === true ? runtime.draftSupersede : runtime.draft,
@@ -233,24 +268,4 @@ function verify(repoPath: string, input: AtlasVerifyInput): AtlasVerifyResult {
     exact: input.exact === true,
   })
   return { state: "ok", ...verdict }
-}
-
-/** `composeRuntime`, with `ATLAS_RATIFY_TOKEN` set to `token` for that one synchronous call when a token is given. */
-function composeWith(repoPath: string, token: string | undefined): ComposedRuntime {
-  if (token === undefined) return composeRuntime(repoPath)
-  const prior = process.env.ATLAS_RATIFY_TOKEN
-  process.env.ATLAS_RATIFY_TOKEN = token
-  try {
-    return composeRuntime(repoPath)
-  } finally {
-    restoreToken(prior)
-  }
-}
-
-function restoreToken(prior: string | undefined): void {
-  if (prior === undefined) {
-    delete process.env.ATLAS_RATIFY_TOKEN
-    return
-  }
-  process.env.ATLAS_RATIFY_TOKEN = prior
 }

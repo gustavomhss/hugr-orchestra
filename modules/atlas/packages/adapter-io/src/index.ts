@@ -141,13 +141,37 @@ export { createDurableMemory, memoryLogPath } from "./memory-store.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
 // D14 — the shared review log (`.atlas/review.jsonl`): holds, ratification proposals and decisions, interview answers
 // and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
-export { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
-export type { ReviewBody, ReviewFold, ReviewInput, ReviewOf, ReviewRead, ReviewRecord, ReviewTier } from "./review-log.js"
+export {
+  appendReview,
+  foldReview,
+  foldReviewLog,
+  readReview,
+  resolveReviewId,
+  REVIEW_INVARIANT,
+  reviewLogPath,
+} from "./review-log.js"
+export type {
+  ReviewBody,
+  ReviewFold,
+  ReviewInput,
+  ReviewOf,
+  ReviewRead,
+  ReviewRecord,
+  ReviewRefusal,
+  ReviewTier,
+} from "./review-log.js"
 // R2/R3 — the store reads the review commands check against (staged keys; B-R3-01 adds the current fact by nodeKey).
 export { currentFactOf, stagedNodeKeys } from "./review-store.js"
 export type { CurrentFact } from "./review-store.js"
+// R3 (D29) — the decision half of `atlas decide`, shared by the CLI runner and the Atlas screen's surface.
+export { decideProposal, emitOutcomeOf } from "./review-decide.js"
+export type { DecideInput, DecideResult, EmitOutcome } from "./review-decide.js"
 // R11 — the store feed for the ratification interview (`atlas interview` / `atlas answer`).
-export { openQuestionsOf } from "./open-questions-source.js"
+export { interviewOf, openQuestionsOf } from "./open-questions-source.js"
+export type { InterviewQuestion } from "./open-questions-source.js"
+// R11 (D29) — the answer half of `atlas answer`, shared by the CLI runner and the Atlas screen's surface.
+export { answerQuestion } from "./review-answer.js"
+export type { AnswerInput, AnswerResult } from "./review-answer.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,

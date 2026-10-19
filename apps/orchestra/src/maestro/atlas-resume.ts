@@ -1,4 +1,4 @@
-import type { FoldVerdict, ResumeUnit } from "@orchestra/atlas-boundary/native-memory"
+import type { FoldVerdict, RecordRef, ResumeUnit } from "@orchestra/atlas-boundary/native-memory"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect, Schema } from "effect"
 import type { Agent } from "@/agent/agent"
@@ -10,7 +10,7 @@ import { AtlasMemory } from "./atlas-memory"
 import { LogicalTask } from "./logical-task"
 
 // When Maestro dispatches a supported native Atlas resume for a unit, the host pushes that
-// unit's latest admitted checkpoint into the child Session once per logical resume. Every verdict, a fold or a refusal,
+// unit's latest admitted checkpoint (or the one an explicit ref names) into the child Session once per logical resume. Every verdict, a fold or a refusal,
 // becomes one synthetic part whose metadata carries the Admission with the exact text the seat reads.
 
 export const Param = AtlasMemory.UnitParam.annotate({
@@ -23,6 +23,8 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
   sessionID: SessionID
   unit: Schema.Schema.Type<typeof Param>
   ctx: Tool.Context
+  // R5 (D23): the checkpoint a person picked from the owner's own list. Atlas still checks owner, kind and unit.
+  ref?: RecordRef
 }) {
   const unit = input.unit
   const callID = input.ctx.callID
@@ -48,7 +50,7 @@ export const admit = Effect.fn("AtlasResume.admit")(function* (input: {
     "unavailable" in memory
       ? { ok: false, refusal: "store-unavailable", reason: memory.unavailable }
       : yield* Effect.try({
-          try: () => memory.resolveFold(unit, selectedRef(history, key)),
+          try: () => memory.resolveFold(unit, input.ref ?? selectedRef(history, key)),
           catch: (cause) => cause,
         }).pipe(
           Effect.catch((cause) =>
