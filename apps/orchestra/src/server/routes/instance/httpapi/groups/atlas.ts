@@ -8,6 +8,16 @@ import {
   WorkspaceRoutingQuery,
   WorkspaceRoutingQueryFields,
 } from "../middleware/workspace-routing"
+import {
+  AtlasAnswerInput,
+  AtlasDecideInput,
+  AtlasHoldInput,
+  AtlasMemoryDecideInput,
+  AtlasProposeInput,
+  AtlasReleaseInput,
+  AtlasReview,
+  AtlasTerritoryInput,
+} from "./atlas-review"
 
 // The Atlas screen's routes: reads and writes over the instance's Atlas store through the boundary's `./surface`
 // entry (maestro/atlas-surface.ts). The schemas transcribe modules/atlas/packages/adapter-io/src/surface/types.ts and
@@ -25,6 +35,14 @@ export const AtlasPaths = {
   emit: `${root}/emit`,
   link: `${root}/link`,
   verify: `${root}/verify`,
+  review: `${root}/review`,
+  hold: `${root}/hold`,
+  release: `${root}/release`,
+  propose: `${root}/propose`,
+  decide: `${root}/decide`,
+  answer: `${root}/answer`,
+  memoryDecide: `${root}/memory-decide`,
+  territory: `${root}/territory`,
 } as const
 
 export const AtlasEmpty = Schema.Struct({ state: Schema.Literal("empty") }).annotate({ identifier: "AtlasEmpty" })
@@ -233,6 +251,8 @@ export const AtlasPromoteResult = Schema.Union([
         rejected: Schema.optional(Schema.String),
       }),
     ),
+    held: Schema.optional(Strings),
+    unknown: Schema.optional(Strings),
   }).annotate({ identifier: "AtlasPromote" }),
 ]).annotate({ identifier: "AtlasPromoteResult" })
 
@@ -323,8 +343,22 @@ export const AtlasVerifyResult = Schema.Union([
   }).annotate({ identifier: "AtlasVerify" }),
 ]).annotate({ identifier: "AtlasVerifyResult" })
 
+export const AtlasReviewResult = Schema.Union([AtlasEmpty, AtlasReview]).annotate({ identifier: "AtlasReviewResult" })
+
+/** Every review write (hold, release, propose, decide, answer, memory-decide, territory) answers this verdict. */
+export const AtlasReviewWriteResult = Schema.Union([
+  AtlasEmpty,
+  Schema.Struct({
+    ...VerdictFields,
+    data: Schema.optional(Schema.Struct({ id: Schema.String })),
+  }).annotate({ identifier: "AtlasReviewWrite" }),
+]).annotate({ identifier: "AtlasReviewWriteResult" })
+
 export const AtlasOwnQuery = Schema.Struct({ ...WorkspaceRoutingQueryFields, scope: Schema.String })
-export const AtlasPromoteInput = Schema.Struct({ token: Schema.optional(Schema.String) })
+export const AtlasPromoteInput = Schema.Struct({
+  token: Schema.optional(Schema.String),
+  nodeKeys: Schema.optional(Schema.Array(Schema.String)),
+})
 export const AtlasDraftInput = Schema.Struct({
   anchor: Schema.String,
   slot: Schema.String,
@@ -462,6 +496,89 @@ export const AtlasApi = HttpApi.make("atlas")
             "atlas.verify",
             "Verify a claim against the code index",
             "Prove, refute or abstain on a dependency, count, definition or negation claim; nothing is written.",
+          ),
+        ),
+        HttpApiEndpoint.get("review", AtlasPaths.review, {
+          query: WorkspaceRoutingQuery,
+          success: AtlasReviewResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.review",
+            "Get the Atlas review queue",
+            "Held candidates, open tier proposals, open memory proposals and the interview batch with its drafts.",
+          ),
+        ),
+        HttpApiEndpoint.post("hold", AtlasPaths.hold, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasHoldInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc("atlas.hold", "Hold a staged Atlas candidate", "Every promote skips a held candidate until it is released."),
+        ),
+        HttpApiEndpoint.post("release", AtlasPaths.release, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasReleaseInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc("atlas.release", "Release a held Atlas candidate", "The next promote presents the candidate again."),
+        ),
+        HttpApiEndpoint.post("propose", AtlasPaths.propose, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasProposeInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc("atlas.propose", "Propose an Atlas tier raise", "Record a proposal to raise a fact to T1 or T0 for a person to decide."),
+        ),
+        HttpApiEndpoint.post("decide", AtlasPaths.decide, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasDecideInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.decide",
+            "Decide an Atlas tier proposal",
+            "Ratify a proposal, re-emitting the fact at its tier through the governed emit door, or reject it.",
+          ),
+        ),
+        HttpApiEndpoint.post("answer", AtlasPaths.answer, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasAnswerInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.answer",
+            "Answer an Atlas interview question",
+            "Record a person's answer, or a model's draft that keeps the question open until a person accepts it.",
+          ),
+        ),
+        HttpApiEndpoint.post("memoryDecide", AtlasPaths.memoryDecide, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasMemoryDecideInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.memoryDecide",
+            "Decide an Atlas memory proposal",
+            "Index a proposed project rule into the member's memory, or discard it.",
+          ),
+        ),
+        HttpApiEndpoint.post("territory", AtlasPaths.territory, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasTerritoryInput,
+          success: AtlasReviewWriteResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.territory",
+            "Declare an Atlas territory",
+            "Write a territory, its owner, tier and globs to the territory catalog.",
           ),
         ),
       )
