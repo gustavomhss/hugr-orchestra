@@ -338,7 +338,8 @@
     "./research-toolkit/locate": "./src/research-toolkit/locate.ts",
     "./research-toolkit/probe/run": "./src/research-toolkit/probe/run.ts",
     "./research-toolkit/probe/types": "./src/research-toolkit/probe/types.ts",
-    "./research-toolkit/search": "./src/research-toolkit/search.ts"
+    "./research-toolkit/search": "./src/research-toolkit/search.ts",
+    "./research-toolkit/manifest": "./src/research-toolkit/manifest.ts"
   },
   "imports": {
     "#sqlite": {

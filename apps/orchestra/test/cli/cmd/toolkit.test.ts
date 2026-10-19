@@ -5,6 +5,7 @@ import { Effect } from "effect"
 import type { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest"
 import { BackendToolkitTarget } from "@orchestra/core/backend-toolkit/target"
+import { ResearchToolkitManifest } from "@orchestra/core/research-toolkit/manifest"
 import { cliIt } from "../../lib/cli-process"
 
 // Network-free: an empty root only reads state, and a root that is a regular file fails before any download starts.
@@ -39,9 +40,11 @@ describe("toolkit command", () => {
           env: { RESEARCH_TOOLKIT_ROOT: path.join(home, "research-toolkit") },
         })
         orchestra.expectExit(result, 0, "toolkit status --research --json")
-        // No research pack is shipped yet and no index builder is wired, so every engine is named unsupported.
+        // Every research pack ships; an empty root has installed none of them and holds no shard.
+        const detected = BackendToolkitTarget.detect()
         expect(JSON.parse(result.stdout)).toEqual({
-          engines: ["scip-typescript", "scip-python", "typescript"].map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
+          engines: ResearchToolkitManifest.IDS.map((engine) => ({ engine, version: ResearchToolkitManifest.ENGINES[engine]?.version,
+            target: "target" in detected ? detected.target : undefined, status: "absent" })),
           shards: [],
         })
       }),

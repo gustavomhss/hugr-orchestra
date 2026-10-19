@@ -64,7 +64,7 @@ it.live("a shard whose engine is missing is reported skipped with the toolkit bl
 // Mutation control: change a pack's license to a copyleft one.
 test("every shipped research pack is pinned to an exact version with an allowed license and a scriptless lock", () => {
   const packs = Object.values(ResearchToolkitManifest.ENGINES)
-  expect(packs.map((pack) => pack.id).toSorted()).toEqual(["scip-typescript", "typescript"])
+  expect(packs.map((pack) => pack.id).toSorted()).toEqual(["scip-python", "scip-typescript", "typescript"])
   for (const pack of packs) {
     expect([pack.id, pack.version]).toEqual([pack.id, expect.stringMatching(/^\d+\.\d+\.\d+$/)])
     expect([pack.id, /^(MIT|Apache-2\.0|BSD-[23]-Clause)$/.test(pack.license)]).toEqual([pack.id, true])
