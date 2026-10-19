@@ -18,6 +18,8 @@ import { LocationHandler } from "./handlers/location"
 import { IntegrationHandler } from "./handlers/integration"
 import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
+import { ProjectHandler } from "./handlers/project"
+import { ConfigHandler } from "./handlers/config"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
 import { RelayRunHandler } from "./handlers/relay-run"
@@ -54,6 +56,8 @@ export const handlers = Layer.mergeAll(
   QuestionHandler,
   ReferenceHandler,
   ProjectCopyHandler,
+  ProjectHandler,
+  ConfigHandler,
   RelayDocumentHandler,
   RelayPublishHandler,
   RelayHookHandler,

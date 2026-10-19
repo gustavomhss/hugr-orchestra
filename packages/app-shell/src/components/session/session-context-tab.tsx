@@ -17,6 +17,7 @@ import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from
 import { useLanguage } from "@/context/language"
 import { useProviders } from "@/hooks/use-providers"
 import { useSDK } from "@/context/sdk"
+import { useServerProtocol } from "@/context/server-sdk"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { getSessionContext, getSessionCost } from "./session-context-metrics"
 import { estimateSessionContextBreakdown, type SessionContextBreakdownKey } from "./session-context-breakdown"
@@ -224,6 +225,8 @@ export function SessionContextTab() {
     { label: "context.stats.lastActivity", value: () => formatter().time(ctx()?.message.time.created) },
   ] satisfies { label: string; value: () => JSX.Element }[]
 
+  // The export file mirrors the V1 CLI format, which only the V1 server can produce.
+  const protocol = useServerProtocol()
   const exportSession = async () => {
     const sessionID = params.id
     if (!sessionID) return
@@ -359,15 +362,17 @@ export function SessionContextTab() {
         <div class="flex flex-col gap-2">
           <div class="flex items-center justify-between">
             <div class="text-12-regular text-text-weak">{language.t("context.rawMessages.title")}</div>
-            <Button
-              size="small"
-              variant="ghost"
-              class="gap-1.5 px-2 text-text-weak hover:text-text-base"
-              onClick={exportSession}
-            >
-              <Icon name="download" size="small" />
-              <span>{language.t("context.export.session")}</span>
-            </Button>
+            <Show when={protocol() === "v1"}>
+              <Button
+                size="small"
+                variant="ghost"
+                class="gap-1.5 px-2 text-text-weak hover:text-text-base"
+                onClick={exportSession}
+              >
+                <Icon name="download" size="small" />
+                <span>{language.t("context.export.session")}</span>
+              </Button>
+            </Show>
           </div>
           <Accordion multiple>
             <For each={messages()}>

@@ -595,7 +595,21 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   }
 
   const updateConfigMutation = useMutation(() => ({
-    mutationFn: (config: Config) => serverSDK.client.global.config.update({ config }),
+    mutationFn: async (config: Config) => {
+      if ((await serverSDK.protocol) === "v1") return serverSDK.client.global.config.update({ config })
+      // V2 stores the same settings per agent and per provider in its global config document.
+      return serverSDK.orchestra["server.config"].update({
+        model: config.model,
+        agents:
+          config.agent &&
+          Object.fromEntries(
+            Object.entries(config.agent).flatMap(([id, agent]) => (agent?.engine ? [[id, { engine: agent.engine }]] : [])),
+          ),
+        providers:
+          config.disabled_providers &&
+          Object.fromEntries(config.disabled_providers.map((id) => [id, { disabled: true }])),
+      })
+    },
     onSuccess: () => {
       bootstrap.refetch()
       // Invalidate all provider queries so newly configured custom providers

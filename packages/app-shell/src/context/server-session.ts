@@ -26,6 +26,7 @@ import {
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
+import { executionStatus } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
 import type { ServerApi } from "@/utils/server"
@@ -911,13 +912,8 @@ export function createServerSession(
     //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
     //   evict([sessionID])
     // }
-    if (event.type === "session.execution.started") setData("session_status", sessionID, { type: "busy" })
-    if (
-      event.type === "session.execution.succeeded" ||
-      event.type === "session.execution.failed" ||
-      event.type === "session.execution.interrupted"
-    )
-      setData("session_status", sessionID, { type: "idle" })
+    const status = executionStatus(event)
+    if (status) setData("session_status", sessionID, { type: status })
     if (event.type === "session.retry.scheduled")
       setData("session_status", sessionID, {
         type: "retry",
