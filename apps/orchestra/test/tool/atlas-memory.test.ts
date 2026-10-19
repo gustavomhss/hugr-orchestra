@@ -1,5 +1,6 @@
 import { expect } from "bun:test"
 import { mkdir } from "node:fs/promises"
+import { readFileSync } from "node:fs"
 import path from "node:path"
 import { createNativeMemory } from "@orchestra/atlas-boundary/native-memory"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
@@ -303,6 +304,29 @@ it.instance(
       const result = yield* t.emit(TASK).pipe(Effect.provideService(ToolSafety.RuntimeProfile, profile))
       expect(receiptOf(result)).toMatchObject({ op: "emit", outcome: "admitted" })
       expect(yield* lines).toBe(1)
+    }).pipe(Effect.provide(layer)),
+  { git: true },
+)
+
+it.instance(
+  "a project rule is proposed to the steward and never written to memory",
+  () =>
+    Effect.gen(function* () {
+      const directory = (yield* TestInstance).directory
+      const t = yield* tools("clean")
+      const rule = { rule: "run go vet before the handler tests", scope: "packages/api" }
+      const first = yield* t.emit(rule)
+      const receipt = receiptOf(first)
+      expect(receipt).toMatchObject({ op: "emit", outcome: "proposed" })
+      expect(typeof receipt.proposalId).toBe("string")
+      expect(JSON.parse(first.output).note).toBe("Proposed for the steward; it joins your rules only once a person indexes it.")
+      expect(yield* lines).toBe(0)
+      const again = receiptOf(yield* t.emit(rule))
+      expect(again).toMatchObject({ outcome: "proposed", proposalId: receipt.proposalId, reconciled: true })
+      const review = readFileSync(path.join(directory, ".atlas/review.jsonl"), "utf8").split("\n").filter(Boolean)
+      expect(review).toHaveLength(1)
+      const grounded = receiptOf(yield* t.emit({ ...rule, grounding: "packages/api@abc" }))
+      expect(grounded).toMatchObject({ outcome: "refused", refusal: { ok: false, refusal: "template-invalid" } })
     }).pipe(Effect.provide(layer)),
   { git: true },
 )

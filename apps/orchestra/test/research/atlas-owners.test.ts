@@ -58,6 +58,14 @@ function receipt(result: Tool.ExecuteResult) {
   return value
 }
 
+// R1: the emit tool only proposes a rule; indexing writes it as the member through the bound Memory, as here.
+const indexRule = Effect.fn("AtlasOwnersTest.indexRule")(function* (member: "backend" | "jimmy" | "archie", rule: string) {
+  const memory = yield* AtlasMemory.open(execution, { id: member, native: true })
+  if ("unavailable" in memory) throw new Error(memory.unavailable)
+  const written = memory.write({ rule, scope: "source" })
+  if (!written.ok) throw new Error(JSON.stringify(written))
+})
+
 it.instance("native identity survives rename; tools isolate owners and reconcile actual admissions", () =>
   Effect.gen(function* () {
     const agents = yield* Agent.Service
@@ -100,8 +108,9 @@ it.instance("native identity survives rename; tools isolate owners and reconcile
     expect(new Set(refs.map((ref) => JSON.stringify(ref))).size).toBe(3)
     // Keep all owners' rules fresh together: unrelated task/PR appends also advance Atlas's decay wave.
     yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
-      const rule = yield* emit.execute({ entry: { rule: `${member} rule only`, scope: "source" } }, context(member))
-      expect(receipt(rule).outcome).toBe("admitted")
+      const proposed = yield* emit.execute({ entry: { rule: `${member} rule only`, scope: "source" } }, context(member))
+      expect(receipt(proposed).outcome).toBe("proposed")
+      yield* indexRule(member, `${member} rule only`)
     }))
     yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {
       const agent = yield* agents.get(member)
@@ -157,7 +166,7 @@ it.instance("original backend rule retention survives the original Jimmy task an
       const ctx = context(member)
       expect(receipt(yield* emit.execute({ entry: { ...task, lesson: `${member} observed source` } }, ctx)).outcome).toBe("admitted")
       expect(receipt(yield* emit.execute({ entry: { prId: "interleaved-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)).outcome).toBe("admitted")
-      expect(receipt(yield* emit.execute({ entry: { rule: `${member} interleaved rule`, scope: "source" } }, ctx)).outcome).toBe("admitted")
+      yield* indexRule(member, `${member} interleaved rule`)
     }))
     const agents = yield* Agent.Service
     const backend = yield* agents.get("backend")
@@ -179,7 +188,7 @@ it.instance("a third interleaved owner ages backend's rule out of the shared led
       const ctx = context(member)
       expect(receipt(yield* emit.execute({ entry: { ...task, lesson: `${member} observed source` } }, ctx)).outcome).toBe("admitted")
       expect(receipt(yield* emit.execute({ entry: { prId: "interleaved-pr", decisions: [member], reviewOutcomes: [], knowledgeDelta: [] } }, ctx)).outcome).toBe("admitted")
-      expect(receipt(yield* emit.execute({ entry: { rule: `${member} interleaved rule`, scope: "source" } }, ctx)).outcome).toBe("admitted")
+      yield* indexRule(member, `${member} interleaved rule`)
     })
     const header = Effect.fnUntraced(function* (member: "backend" | "jimmy" | "archie") {
       const rendered = yield* AtlasHeader.render(yield* agents.get(member))

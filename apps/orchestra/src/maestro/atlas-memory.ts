@@ -38,7 +38,7 @@ export const UnitParam = Schema.optional(
 
 export type Execution = { sessionID: string; callID: string; assistantMessageID: string }
 
-export type MemoryOutcome = "admitted" | "refused" | "unavailable" | "uncertain"
+export type MemoryOutcome = "admitted" | "proposed" | "refused" | "unavailable" | "uncertain"
 
 export type Receipt = {
   schema: "atlas-memory-receipt-v1"
@@ -46,6 +46,7 @@ export type Receipt = {
   outcome: MemoryOutcome | "read"
   binding: { projectID: string; root: string; memoryOwner: Owner } & Execution
   ref?: RecordRef
+  proposalId?: string
   reconciled?: true
   refusal?: MemoryRejected
   store?: StoreState
