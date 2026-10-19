@@ -109,6 +109,8 @@ it.live("research packs install on the backend lifecycle under the research root
     expect(states.map((state) => [state.engine, state.status])).toEqual([
       ["scip-typescript", "ready"],
       ["scip-python", "failed"],
+      ["scip-go", "unsupported"],
+      ["rust-analyzer", "unsupported"],
       ["typescript", "unsupported"],
     ])
     expect(f.hits).toEqual({ ["/" + file("scip-typescript")]: 1, ["/missing/" + file("scip-python")]: 1 })

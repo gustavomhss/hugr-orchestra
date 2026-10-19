@@ -11,6 +11,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
 import type { CodeIndex } from "@orchestra/core/research-toolkit/code-index/types"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { ResearchToolkit } from "@orchestra/core/research-toolkit/index"
 import { RipgrepBinary } from "@orchestra/core/ripgrep/binary"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { Agent } from "@/agent/agent"
@@ -100,6 +101,13 @@ const setup = Effect.fn("CodeIndexGoTest.setup")(function* () {
 
 const failure = (exit: Exit.Exit<unknown, unknown>) => Exit.isFailure(exit) ? Cause.pretty(exit.cause) : ""
 
+// Building the scip-go pack fills a Go module cache under the toolkit root, and Go writes that cache read-only; the
+// suite's data directory could then not be removed after the run.
+const writableModuleCache = Effect.gen(function* () {
+  const root = yield* ResearchToolkit.Root
+  yield* Effect.promise(() => $`chmod -R u+w ${path.join(root, "cache", "go")}`.nothrow().quiet())
+})
+
 describe("the wired Go code index", () => {
   it.instance("code_query finds a function's definition and its references across packages from the real build", () =>
     Effect.gen(function* () {
@@ -135,5 +143,5 @@ describe("the wired Go code index", () => {
       if (Exit.isFailure(callers)) throw new Error(Cause.pretty(callers.cause))
       expect(callers.value.output).toContain("call in run")
       yield* fixture.cleanup
-    }), { git: true, init: repo }, 900_000)
+    }).pipe(Effect.ensuring(writableModuleCache)), { git: true, init: repo }, 900_000)
 })
