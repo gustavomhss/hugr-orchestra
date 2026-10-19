@@ -153,10 +153,17 @@ test("compiled native CLI exposes owned help/version and isolated service/serve 
       const address = /server listening on (http:\/\/\S+)/.exec(output)
       if (!address) throw new Error("Missing foreground address")
       await authenticatedHealth(address[1], password.stdout, child.pid)
+      // The packaged seat skills let the roster load, so the native seats are registered as agents.
+      const agents = await fetch(new URL(`/api/agent?location[directory]=${encodeURIComponent(home)}`, address[1]), {
+        headers: { authorization: `Basic ${Buffer.from(`orchestra:${password.stdout}`).toString("base64")}` },
+        signal: AbortSignal.timeout(30_000),
+      })
+      expect(agents.status).toBe(200)
+      expect(((await agents.json()) as { data: { id: string }[] }).data.map((agent) => agent.id)).toContain("backend")
     } finally {
       child.kill()
       await child.exited
-      await errors
+      expect(await errors).not.toContain("native seats unavailable")
     }
   } finally {
     const stop = await run([binary, "service", "stop"])

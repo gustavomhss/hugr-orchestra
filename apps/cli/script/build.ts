@@ -44,7 +44,15 @@ const { copyTreeSitter, resolveTreeSitter } = await import("@orchestra/script/tr
 const { RipgrepBundle } = await import("@orchestra/core/ripgrep/bundle")
 const { packagedSkills } = await import("./packaged-skills")
 const skillTrees = await packagedSkills()
+const { seatSkillsFiles } = await import("@orchestra/maestro/seat-skills-module")
+const seatSkills = await seatSkillsFiles()
 const plugin = createSolidTransformPlugin()
+// Virtual modules (the seat skills) have no file to hash; their bytes are checked by the roster at load.
+const withoutVirtual = <T extends { inputs: Record<string, unknown> }>(meta: T) => ({
+  ...meta,
+  inputs: Object.fromEntries(Object.entries(meta.inputs).filter(([key]) => onDisk(key))),
+})
+const onDisk = (key: string) => !Object.keys(seatSkills).some((virtual) => key.endsWith(virtual))
 if (!targetArgs.length) await rm("dist", { recursive: true, force: true })
 
 // Resolved before anything is built, so a release build with a missing omni artifact fails at once.
@@ -88,7 +96,10 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     minify: true,
     sourcemap: sourcemapsFlag ? "linked" : "none",
     splitting: true,
+    // The roster loads the seat skill trees from this virtual module (seat-skill-root.ts) instead of the source checkout.
+    files: seatSkills,
     define: {
+      ORCHESTRA_SEAT_SKILLS_EMBEDDED: "true",
       // Noncompile analysis needs the same native constants as --compile so
       // foreign optional dependency branches disappear before resolution.
       "process.platform": JSON.stringify(item.os),
@@ -115,7 +126,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
   const analysisMetafile = analysis?.metafile
   if (analysis && (!analysis.success || !analysisMetafile || !Object.keys(analysisMetafile.inputs).length))
     throw new Error("CLI_COMPILER_ANALYSIS_FAILED_OR_EMPTY")
-  const before = analysisMetafile ? await Promise.all(Object.keys(analysisMetafile.inputs).map(async (key): Promise<CompilerInput> => {
+  const before = analysisMetafile ? await Promise.all(Object.keys(analysisMetafile.inputs).filter(onDisk).map(async (key): Promise<CompilerInput> => {
     const source = await sourceFile(path.resolve(dir, key))
     const replacement = /[/\\]node_modules[/\\]solid-js[/\\]dist[/\\]server\.js$/.test(source.path)
       ? "solid.js"
@@ -155,7 +166,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
     const metafile = result.metafile
     if (!metafile || !Object.keys(metafile.inputs).length || !Object.keys(metafile.outputs).length)
       throw new Error("CLI_COMPILE_METAFILE_MISSING_OR_EMPTY")
-    const inputs = await Promise.all(Object.keys(metafile.inputs).map(async (key) => {
+    const inputs = await Promise.all(Object.keys(metafile.inputs).filter(onDisk).map(async (key) => {
       const canonical = await realpath(path.resolve(dir, key)).catch((cause: unknown) => {
         throw new Error(`CLI_COMPILER_INPUT_NOT_OBSERVED: ${key}`, { cause })
       })
@@ -183,7 +194,7 @@ for (const { item, name, omni, omniFiles, treeSitter } of prepared) {
       schema: "orchestra-compile-evidence-v2", bun: process.versions.bun, cwd: await realpath(dir),
       version: Script.version, target: item.target, entrypoints: ["./src/omni-entry.ts"],
       binary: { path: executable, sha256: new Bun.CryptoHasher("sha256").update(await Bun.file(executable).arrayBuffer()).digest("hex") },
-      inputs, metafile, analysisMetafile,
+      inputs, metafile: withoutVirtual(metafile), analysisMetafile: analysisMetafile && withoutVirtual(analysisMetafile),
       transformLedger: { toolchain, scope: "Raw resolved files and audited backing files captured before/after original-plugin compile; JSX effective data is compiler byte-count evidence, not a claimed raw-file hash" },
     }, null, 2))
   }
