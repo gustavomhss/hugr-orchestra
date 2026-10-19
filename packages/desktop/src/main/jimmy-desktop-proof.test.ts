@@ -234,7 +234,7 @@ async function runProof(root: string, install: string, electron: string, mutant:
   const state: { parent?: string; child?: string; source?: Research.SourceReceipt; finding?: typeof Research.FindingRecord.Type; document?: Research.DocumentReceipt; page?: Research.ArtifactPage } = {}
   const requests: { path: string; tools: string[]; toolResponses: string[] }[] = []
   const errors: string[] = []
-  const skills = ["jimmy-discovery", "jimmy-research"]
+  const skills = ["jimmy-reference"]
   const provider = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
     try {
       const payload = json(Schema.Struct({ model: Schema.Literal("test-model"), stream: Schema.Literal(true), tools: Schema.Array(Schema.Struct({ function: Schema.Struct({ name: Schema.String }) })), messages: Schema.Array(Schema.Struct({ role: Schema.String, content: Schema.Unknown })) }), await request.json())
@@ -242,9 +242,9 @@ async function runProof(root: string, install: string, electron: string, mutant:
       requests.push({ path: new URL(request.url).pathname, tools: payload.tools.map((tool) => tool.function.name), toolResponses: payload.messages.flatMap((message) => message.role === "tool" && typeof message.content === "string" ? [message.content] : []) })
       const tool = (name: string, input: unknown) => reply().tool(name, input)
       const output = await (async () => {
-        if (turns === 0) return tool("task", { description: "Inspect conditional behavior", prompt: "Load Jimmy skills, read task-evidence.txt, retain both branches, publish qualified answer, close the inquiry.", subagent_type: "jimmy" })
-        if (turns === 1 || turns === 2) return tool("skill", { name: skills[turns - 1] })
-        if (turns === 3) return tool("read", { filePath: "task-evidence.txt" })
+        if (turns === 0) return tool("task", { description: "Inspect conditional behavior", prompt: "Load the jimmy skill, read task-evidence.txt, retain both branches, publish qualified answer, close the inquiry.", subagent_type: "jimmy" })
+        if (turns === 1) return tool("skill", { name: skills[0] })
+        if (turns === 2) return tool("read", { filePath: "task-evidence.txt" })
         if (!state.parent) throw new Error("Native parent session missing")
         const children = json(Schema.Array(Schema.Struct({ id: Schema.String, parentID: Schema.String })), await api(`/session/${state.parent}/children`))
         expect(children).toHaveLength(1)
@@ -253,32 +253,32 @@ async function runProof(root: string, install: string, electron: string, mutant:
         const parts = history.flatMap((message) => message.parts).map(object)
         const completed = parts.filter((part) => part.type === "tool" && object(part.state).status === "completed")
         const latest = object(completed.at(-1)?.state)
-        if (turns === 4) {
+        if (turns === 3) {
           state.source = json(Research.SourceReceipt, object(latest.metadata).researchSource)
           await rm(path.join(project, "task-evidence.txt"))
           return tool("research_record", { action: "finding", proposition: "Version 1 is supported only when enabled", nature: "extraction", conditions: ["version 1", "enabled"], evidence: [{ source: state.source.ref, locator: { kind: "quote", exact: "Version 1 only." } }], contrary: [{ source: state.source.ref, locator: { kind: "quote", exact: "Disabled rejects operation." } }] })
         }
-        if (turns === 5) {
+        if (turns === 4) {
           state.finding = json(Research.FindingRecord, object(parse(String(latest.output))).record)
           return tool("research_record", { action: "document", document: { title: "Native desktop conditional answer", genre: "answer", body, findingRefs: [{ id: state.finding.id, revision: state.finding.revision }], citations: { supported: state.finding.evidence[0], disabled: state.finding.contrary[0] } } })
         }
-        if (turns === 6) {
+        if (turns === 5) {
           state.document = json(Research.DocumentReceipt, object(parse(String(latest.output))).document)
           return tool("research_view", { action: "document", ref: state.document.ref })
         }
-        if (turns === 7) {
+        if (turns === 6) {
           state.page = json(Research.ArtifactPage, parse(String(latest.output)))
           return tool("inquiry", { action: "open", question: "When is version 1 supported?", subquestions: ["Which condition enables version 1"], profile: "understand" })
         }
         // The host assembles the card on inquiry close; the open reply's first line names the subquestion to claim.
-        if (turns === 8) {
+        if (turns === 7) {
           const opened = json(Schema.Struct({ subquestions: Schema.NonEmptyArray(Research.RecordRef) }), parse(String(latest.output).split("\n")[0]))
           return tool("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "Version 1 is supported when enabled", nature: "extraction", conditions: ["version 1", "enabled"], evidence: [{ source: state.source?.ref, quote: "Version 1 only." }], contrary: [{ source: state.source?.ref, quote: "Disabled rejects operation." }] })
         }
-        if (turns === 9) return tool("inquiry", { action: "check" })
-        if (turns === 10) return tool("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.", limitations: ["Scripted static-source mechanics only"] })
-        if (turns === 11) return reply().text("Inquiry closed.").stop()
-        if (turns === 12) return reply().text("Native discovery returned with verified admitted references.").stop()
+        if (turns === 8) return tool("inquiry", { action: "check" })
+        if (turns === 9) return tool("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.", limitations: ["Scripted static-source mechanics only"] })
+        if (turns === 10) return reply().text("Inquiry closed.").stop()
+        if (turns === 11) return reply().text("Native discovery returned with verified admitted references.").stop()
         throw new Error(`Unexpected provider turn ${turns}`)
       })()
       const item = output.item()
@@ -364,8 +364,8 @@ async function runProof(root: string, install: string, electron: string, mutant:
     state.parent = String(object(await api("/session", { title: "Desktop native Task authority", agent: "maestro" })).id)
     await api(`/session/${state.parent}/message`, { agent: "maestro", model: { providerID: "test", modelID: "test-model" }, parts: [{ type: "text", text: "Delegate conditional source research to jimmy and receive verified document references." }] })
     expect(errors).toEqual([])
-    expect(requests).toHaveLength(13)
-    requests.slice(1, 12).forEach((request) => {
+    expect(requests).toHaveLength(12)
+    requests.slice(1, 11).forEach((request) => {
       expect(request.path).toBe("/v1/chat/completions")
       expect(request.tools).toContain("research_record")
       expect(request.tools).toContain("research_view")
@@ -377,8 +377,8 @@ async function runProof(root: string, install: string, electron: string, mutant:
     const childHistory = json(historySchema, await api(`/session/${state.child}/message`))
     const parts = childHistory.flatMap((message) => message.parts).map(object)
     const calls = parts.filter((part) => part.type === "tool")
-    expect(calls.map((part) => ({ tool: part.tool, status: object(part.state).status }))).toEqual(["skill", "skill", "read", "research_record", "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"].map((tool) => ({ tool, status: "completed" })))
-    const loaded = await Promise.all(calls.slice(0, 2).map(async (part, index) => {
+    expect(calls.map((part) => ({ tool: part.tool, status: object(part.state).status }))).toEqual(["skill", "read", "research_record", "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"].map((tool) => ({ tool, status: "completed" })))
+    const loaded = await Promise.all(calls.slice(0, 1).map(async (part, index) => {
       const metadata = object(object(part.state).metadata)
       const location = path.join(String(metadata.dir), "SKILL.md")
       expect(location.startsWith(path.join(owned, "cache") + path.sep)).toBe(true)
@@ -418,12 +418,12 @@ async function runProof(root: string, install: string, electron: string, mutant:
     expect(transport[0]).toEqual({ url: `${baseUrl}/api/session/${state.child}/research/${state.document.artifact.id}?revision=${state.document.artifact.revision}`, status: 200 })
     expect(state.document.bytes).toBe(Buffer.byteLength(body))
     expect(state.document.digest).toBe(hash(body))
-    expect(requests[4].toolResponses.join("\n")).toContain(state.source.ref.digest)
-    expect(requests[5].toolResponses.join("\n")).toContain(state.finding.id)
-    expect(requests[6].toolResponses.join("\n")).toContain(state.document.digest)
-    expect(requests[7].toolResponses.join("\n")).toContain(body.trim())
-    expect(requests[11].toolResponses.join("\n")).toContain("\"closed\":\"answered\"")
-    expect(requests[12].toolResponses.join("\n")).toContain("Inquiry check: pass")
+    expect(requests[3].toolResponses.join("\n")).toContain(state.source.ref.digest)
+    expect(requests[4].toolResponses.join("\n")).toContain(state.finding.id)
+    expect(requests[5].toolResponses.join("\n")).toContain(state.document.digest)
+    expect(requests[6].toolResponses.join("\n")).toContain(body.trim())
+    expect(requests[10].toolResponses.join("\n")).toContain("\"closed\":\"answered\"")
+    expect(requests[11].toolResponses.join("\n")).toContain("Inquiry check: pass")
     const sibling = String(object(await api("/session", { agent: "jimmy", parentID: state.parent })).id)
     const siblingError = await client.research.artifact({ sessionID: sibling, artifactID: state.document.artifact.id, revision: state.document.artifact.revision }).then(() => undefined, (error: unknown) => object(error))
     expect(siblingError).toMatchObject({ _tag: "ResearchArtifactNotFoundError", message: "Research artifact not found" })
@@ -450,7 +450,7 @@ async function runProof(root: string, install: string, electron: string, mutant:
         // Read admissions and immutable blobs from the host, independently of HTTP/tool metadata.
         const admitted = json(Schema.Array(Schema.Struct({ sessionID: Schema.String, binding: Research.Binding, receipt: Research.SourceReceipt })), json(Schema.Array(Schema.Struct({ data: Schema.String })), database.query("SELECT data FROM event WHERE aggregate_id = ? AND type = 'research.source.admitted.1'").all(childID)).map((row) => parse(row.data)))
         expect(admitted).toHaveLength(2)
-        const readMetadata = object(object(calls[2].state).metadata)
+        const readMetadata = object(object(calls[1].state).metadata)
         return await Promise.all(["received", "text"].map(async (representation) => {
           const events = admitted.filter((event) => event.receipt.ref.representation === representation)
           expect(events).toHaveLength(1)
