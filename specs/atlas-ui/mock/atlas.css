@@ -1419,19 +1419,28 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-map { --hold: color-mix(in srgb, var(--mx-good) 64%, transparent); --some: color-mix(in srgb, var(--mx-warm) 58%, transparent); --much: var(--mx-warm);
   display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 12px; }
 .at-map-rings, .at-map-side, .at-map-dots { border: 1px solid var(--mx-line); border-radius: 11px; background: var(--mx-raised); box-shadow: var(--mx-highlight); }
-.at-map-rings { position: relative; display: grid; place-items: center; padding: 18px 18px 34px;
-  background: radial-gradient(60% 55% at 50% 48%, color-mix(in srgb, var(--mx-blue) 7%, transparent), transparent 72%), var(--mx-raised); }
+.at-map-rings { position: relative; display: grid; place-items: center; padding: 18px 18px 34px; overflow: hidden;
+  background: radial-gradient(38% 34% at 32% 30%, color-mix(in srgb, var(--mx-good) 16%, transparent), transparent 70%),
+    radial-gradient(34% 30% at 70% 72%, color-mix(in srgb, var(--mx-warm) 13%, transparent), transparent 70%),
+    radial-gradient(60% 55% at 50% 48%, color-mix(in srgb, var(--mx-blue) 9%, transparent), transparent 72%), var(--mx-raised); }
 .at-map-rings svg { display: block; inline-size: min(100%, 520px); block-size: auto; overflow: visible; }
 .at-map-hint { position: absolute; inset-block-end: 12px; inset-inline: 0; text-align: center; font-size: 11px; color: var(--mx-dim); }
-.at-map-arc { stroke: var(--mx-modal); stroke-width: 1.5; stroke-linejoin: round; cursor: pointer; transition: opacity .18s, filter .18s; animation: at-map-in .45s ease-out both; }
-.at-map-arc.hold { fill: var(--hold); } .at-map-arc.some { fill: var(--some); } .at-map-arc.much { fill: var(--much); }
-.at-map-arc.d2 { opacity: .72; }
-.at-map-arc:hover { opacity: 1; filter: brightness(1.18) saturate(1.1); }
+/* Glass: each tone is a translucent radial gradient, denser at the rim, with a bright hairline edge and one shared sheen. */
+.at-map-arc { stroke: color-mix(in srgb, var(--mx-strong) 22%, transparent); stroke-width: 1; stroke-linejoin: round; cursor: pointer; transition: opacity .18s, filter .18s; animation: at-map-in .5s ease-out both; }
+.at-map-arc.hold { fill: url(#gl-hold); } .at-map-arc.some { fill: url(#gl-some); } .at-map-arc.much { fill: url(#gl-much); filter: drop-shadow(0 0 7px color-mix(in srgb, var(--mx-warm) 45%, transparent)); }
+.gs-hold.a { stop-color: var(--mx-good); stop-opacity: .16; } .gs-hold.b { stop-color: var(--mx-good); stop-opacity: .62; }
+.gs-some.a { stop-color: var(--mx-warm); stop-opacity: .14; } .gs-some.b { stop-color: var(--mx-warm); stop-opacity: .5; }
+.gs-much.a { stop-color: var(--mx-warm); stop-opacity: .35; } .gs-much.b { stop-color: var(--mx-warm); stop-opacity: .92; }
+.gs-sheen.a { stop-color: #fff; stop-opacity: .16; } .gs-sheen.b { stop-color: #fff; stop-opacity: .03; } .gs-sheen.c { stop-color: #fff; stop-opacity: 0; }
+.gs-core.a { stop-color: var(--mx-strong); stop-opacity: .1; } .gs-core.b { stop-color: var(--mx-strong); stop-opacity: .02; }
+.at-map-sheen { fill: url(#gl-sheen); pointer-events: none; mix-blend-mode: screen; }
+.at-map-arc.d2 { opacity: .8; }
+.at-map-arc:hover { opacity: 1; filter: brightness(1.35) drop-shadow(0 0 10px color-mix(in srgb, var(--mx-strong) 30%, transparent)); stroke: color-mix(in srgb, var(--mx-strong) 60%, transparent); }
 .at-map.marking .at-map-arc:not(:hover) { opacity: .35; }
 @keyframes at-map-in { from { opacity: 0; } }
 .at-map-label { fill: var(--mx-strong); font: 500 21px var(--mx-emphasis); letter-spacing: -.01em; text-anchor: middle; dominant-baseline: middle; pointer-events: none;
   paint-order: stroke; stroke: color-mix(in srgb, var(--mx-modal) 70%, transparent); stroke-width: 4px; stroke-linejoin: round; }
-.at-map-centre { fill: var(--mx-modal); stroke: var(--mx-line); stroke-width: 1.5; }
+.at-map-centre { fill: color-mix(in srgb, var(--mx-modal) 82%, transparent); stroke: color-mix(in srgb, var(--mx-strong) 18%, transparent); stroke-width: 1.2; filter: drop-shadow(0 10px 24px rgba(0,0,0,.35)); }
 .at-map-centre.up { cursor: pointer; } .at-map-centre.up:hover { stroke: var(--mx-blue); }
 .at-map-centre-k { fill: var(--mx-dim); font: 500 17px var(--mx-sans); letter-spacing: .06em; text-transform: uppercase; text-anchor: middle; pointer-events: none; }
 .at-map-centre-n { fill: var(--mx-strong); font: 600 60px var(--mx-emphasis); letter-spacing: -.03em; text-anchor: middle; pointer-events: none; }

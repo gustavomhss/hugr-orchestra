@@ -221,8 +221,12 @@
         const a0 = ((d.x0 - focus.x0) / span) * 2 * Math.PI, a1 = ((d.x1 - focus.x0) / span) * 2 * Math.PI
         return Object.assign(d, { a0, a1, r0: d.depth - focus.depth, r1: d.depth - focus.depth + 1 })
       }).filter((d) => d.a1 - d.a0 > (d.r0 === 1 ? 0.004 : 0.012))
-      svg.innerHTML = `${shown.map((d, i) => `<path class="at-map-arc d${d.r0} ${tone(d)}" d="${arc(d)}" data-i="${i}" style="animation-delay:${Math.round((d.a0 / (2 * Math.PI)) * 220)}ms"><title>${A.esc(tip(d))}</title></path>`).join("")}
+      const outer = 3 * ring - 2
+      const glass = ["hold", "some", "much"].map((t) => `<radialGradient id="gl-${t}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${outer}"><stop offset="${(ring / outer).toFixed(2)}" class="gs-${t} a"/><stop offset="1" class="gs-${t} b"/></radialGradient>`).join("")
+      const annulus = `M0,${-outer}A${outer},${outer} 0 1 1 0,${outer}A${outer},${outer} 0 1 1 0,${-outer}ZM0,${-ring}A${ring},${ring} 0 1 0 0,${ring}A${ring},${ring} 0 1 0 0,${-ring}Z`
+      svg.innerHTML = `<defs>${glass}<linearGradient id="gl-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="gs-sheen a"/><stop offset=".45" class="gs-sheen b"/><stop offset="1" class="gs-sheen c"/></linearGradient><radialGradient id="gl-core" cx=".5" cy=".35" r=".75"><stop offset="0" class="gs-core a"/><stop offset="1" class="gs-core b"/></radialGradient></defs>${shown.map((d, i) => `<path class="at-map-arc d${d.r0} ${tone(d)}" d="${arc(d)}" data-i="${i}" style="animation-delay:${Math.round((d.a0 / (2 * Math.PI)) * 220)}ms"><title>${A.esc(tip(d))}</title></path>`).join("")}
         ${shown.filter((d) => d.r0 === 1 && d.a1 - d.a0 > 0.22).map((d) => { const a = (d.a0 + d.a1) / 2, r = ring * 1.5; const deg = (a * 180) / Math.PI - 90; return `<text class="at-map-label" transform="rotate(${deg}) translate(${r},0) rotate(${deg > 90 ? 180 : 0})">${A.esc(d.data.name.length > 14 ? `${d.data.name.slice(0, 13)}…` : d.data.name)}</text>` }).join("")}
+        <path class="at-map-sheen" d="${annulus}" fill-rule="evenodd"/>
         <circle class="at-map-centre ${focus === root ? "" : "up"}" r="${ring - 6}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
         <text class="at-map-centre-k" y="-34">${A.esc(focus === root ? "all facts" : focus.data.name.length > 16 ? `${focus.data.name.slice(0, 15)}…` : focus.data.name)}</text>
         <text class="at-map-centre-n" y="12">${A.num(focus.value)}</text><text class="at-map-centre-u ${focus.drifted ? "warm" : ""}" y="44">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>
