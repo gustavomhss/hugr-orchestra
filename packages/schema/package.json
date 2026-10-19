@@ -71,6 +71,7 @@
     "./reference": "./src/reference.ts",
     "./relay-arm": "./src/relay-arm.ts",
     "./relay-authoring": "./src/relay-authoring.ts",
+    "./relay-external": "./src/relay-external.ts",
     "./relay-hook": "./src/relay-hook.ts",
     "./relay-ledger": "./src/relay-ledger.ts",
     "./relay-run": "./src/relay-run.ts",

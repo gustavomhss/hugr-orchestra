@@ -32,6 +32,8 @@ export function Receipt(props: {
     props.source.queryClient,
   )
   const step = (wp: string) => props.run.steps.find((item) => item.wp === wp)
+  // An external run (Relay for LangGraph) has no document of its own, so there is no canvas to open.
+  const external = () => props.run.documentID.startsWith("external:")
   const at = () => nodeOf(props.flow, props.run.position)
   const budget = () => retryBudget(props.flow)
   const sessionOf = (wp: string | undefined) =>
@@ -81,6 +83,9 @@ export function Receipt(props: {
           <h2>
             {copy.t("orchestra.workflows.receipt.title", { id: runHandle(props.run.runID) })}
             <RunBadge run={props.run} />
+            <Show when={external()}>
+              <span class="mx-badge">{copy.t("orchestra.workflows.receipt.external")}</span>
+            </Show>
           </h2>
           <p>
             {[
@@ -104,10 +109,12 @@ export function Receipt(props: {
           <Show
             when={props.run.position && props.run.status !== "completed" ? props.run.position : undefined}
             fallback={
-              <button type="button" class="mx-btn" onClick={props.onCanvas}>
-                <Ic name="open" />
-                {copy.t("orchestra.workflows.receipt.canvas")}
-              </button>
+              <Show when={!external()}>
+                <button type="button" class="mx-btn" onClick={props.onCanvas}>
+                  <Ic name="open" />
+                  {copy.t("orchestra.workflows.receipt.canvas")}
+                </button>
+              </Show>
             }
           >
             {(position) => (
@@ -351,7 +358,9 @@ export function Receipt(props: {
             anchor={anchor()}
             label={copy.t("orchestra.workflows.receipt.more", { id: runHandle(props.run.runID) })}
             items={[
-              { label: copy.t("orchestra.workflows.receipt.canvas"), icon: "open", run: props.onCanvas },
+              ...(external()
+                ? []
+                : [{ label: copy.t("orchestra.workflows.receipt.canvas"), icon: "open" as const, run: props.onCanvas }]),
               {
                 label: copy.t("orchestra.workflows.receipt.openSession"),
                 icon: "next",

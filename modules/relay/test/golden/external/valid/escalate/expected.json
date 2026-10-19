@@ -1,0 +1,36 @@
+{
+  "verify": {
+    "exit": 0,
+    "line": null
+  },
+  "run": {
+    "runID": "t_e3ad9145f8ade9db315e04568587949f",
+    "documentID": "external:fixer",
+    "status": "failed",
+    "position": "fix",
+    "failing": [
+      "lint"
+    ],
+    "reason": "retry budget exhausted (2/2)",
+    "label": "fixer",
+    "agent": "langgraph",
+    "startedAt": 1700000000000,
+    "endedAt": 1700000007000,
+    "steps": [
+      {
+        "wp": "fix",
+        "status": "escalated",
+        "attempts": 2,
+        "startedAt": 1700000001000,
+        "endedAt": 1700000006000,
+        "checks": [
+          {
+            "id": "lint",
+            "verdict": "fail",
+            "output": "lint: 1 error"
+          }
+        ]
+      }
+    ]
+  }
+}

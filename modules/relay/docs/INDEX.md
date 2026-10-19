@@ -5,9 +5,9 @@ Audience: agents. Status: current.
 Integrity manifest for the Relay documentation set. Each hash is SHA-256 of the file's bytes.
 Regenerate after any documentation change (`bin/gen-doc-index.py`).
 
-- **Generated:** 2026-10-19T00:21:29Z
-- **Files:** 74
-- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `c5a4b0f462fdb68553b553a691e7cf53d8ce59700a3da8b8606a7a48e30bf379`
+- **Generated:** 2026-10-19T00:44:56Z
+- **Files:** 75
+- **Root hash** (SHA-256 of the sorted `<sha256>  <path>` manifest): `b1f0b48aa9d6e2ede55a3099956c443841f0ffdc1174b8ef2bf0881d02dedb6b`
 
 | File | Lines | Bytes | SHA-256 |
 |---|---|---|---|
@@ -72,6 +72,7 @@ Regenerate after any documentation change (`bin/gen-doc-index.py`).
 | `docs/skills/relay-gate-core/SKILL.md` | 125 | 17366 | `10b212690f43852d573e83a67992a42d66da0433414485449424a72ea4e82b77` |
 | `docs/skills/relay-integration/SKILL.md` | 250 | 19454 | `67602443d4834ab66f090df5c2711f3983a741aa6190848e2311883a0f93302e` |
 | `docs/skills/relay-judge/SKILL.md` | 136 | 10357 | `6425ae13fe4a13953a4652afe81af0de45868b7588693e4113c1672603de6f38` |
+| `docs/skills/relay-langgraph/SKILL.md` | 23 | 965 | `3d3361fa63826f4b2e5c16aba3b50d0223c5b92e76523ef01a70a9b9e974cbdf` |
 | `docs/skills/relay-maintenance/SKILL.md` | 134 | 11001 | `714ddde66e3e7046c10be48c03554cb10cae966404426a9b34365ae20bd93ad1` |
 | `docs/skills/relay-ownership/SKILL.md` | 109 | 9430 | `7be97798d0e82dae9f80c95a86caf4f9aa9ed87fdf96c41166719fb2be025967` |
 | `docs/skills/relay-planning/SKILL.md` | 100 | 8782 | `9a3461e0b7d46018a2e5e572aae70da7009dabf7d6f5ce822766b03255fc2fea` |
