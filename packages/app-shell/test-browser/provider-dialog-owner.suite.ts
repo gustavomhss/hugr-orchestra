@@ -195,6 +195,7 @@ const imports: Record<string, string> = {
   "@orchestra/ui/context/dialog": subject("../../ui/src/context/dialog.tsx"),
   "@/context/server-sdk": subject("../src/context/server-sdk.tsx"),
   "@/context/server-sync": subject("../src/context/server-sync.tsx"),
+  "@/components/server-unavailable": subject("../src/components/server-unavailable.tsx"),
   "@/context/models": subject("../src/context/models.tsx"),
   "@/utils/persist": subject("../src/utils/persist.ts"),
   "@/hooks/use-providers": subject("../src/hooks/use-providers.ts"),

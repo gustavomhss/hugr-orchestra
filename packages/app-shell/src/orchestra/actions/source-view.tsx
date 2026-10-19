@@ -109,7 +109,7 @@ export function SourceView(props: ViewProps) {
       }}>{props.t("orchestra.actions.confirm")}</button>
     </div></Show>
     <Switch>
-      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")} error={sourceError()} /></Match>
+      <Match when={state.source.status === "error"}><Empty title={props.t("orchestra.actions.noSource")} error={sourceError()} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} /></Match>
       <Match when={originalSource() || draftOnly()}>
         <textarea class="source-editor" id="source-editor" aria-label={props.t("orchestra.actions.source")} spellcheck={false}
           dir="ltr" readOnly={!editable() || view.discard} value={immutableSource(state, originalSource() ?? state.draftBase) ? originalSource()?.text ?? "" : state.draft}

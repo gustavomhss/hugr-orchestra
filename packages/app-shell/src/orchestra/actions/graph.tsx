@@ -153,13 +153,13 @@ function GraphState(props: { model: Model; t: Translate; graph: Actions.Graph | 
   return (
     <Switch fallback={<Empty title={props.t("orchestra.actions.noSource")} />}>
       <Match when={state().unsupported}>
-        <Empty title={props.t("orchestra.actions.unavailable")} />
+        <Empty title={props.t("orchestra.actions.unavailable")} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} />
       </Match>
       <Match when={state().graph.status === "loading" || state().source.status === "loading"}>
         <Empty title={props.t("orchestra.actions.loading")} />
       </Match>
       <Match when={state().graph.status === "error" || state().source.status === "error"}>
-        <Empty title={props.t("orchestra.actions.unavailable")} error={props.t(state().graph.error?.message ?? state().source.error?.message ?? "orchestra.actions.unavailable")} />
+        <Empty title={props.t("orchestra.actions.unavailable")} error={props.t(state().graph.error?.message ?? state().source.error?.message ?? "orchestra.actions.unavailable")} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} />
       </Match>
       <Match when={props.graph}>
         <Show when={props.graph?.state !== "complete"}>

@@ -38,7 +38,7 @@ export function Logs(props: ViewProps) {
         <Empty title={props.t("orchestra.actions.loading")} busy />
       </Match>
       <Match when={state.jobs.status === "error" || state.run.status === "error"}>
-        <Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.jobs.error ?? state.run.error)} />
+        <Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.jobs.error ?? state.run.error)} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} />
       </Match>
       <Match when={!run() || !jobs().length}><Empty title={props.t("orchestra.actions.noLog")} /></Match>
       <Match when={run()}>
@@ -64,7 +64,7 @@ export function Logs(props: ViewProps) {
             <Switch>
               <Match when={!readable()}><Empty title={props.t("orchestra.actions.noLog")} detail={props.t("orchestra.actions.unavailable")} /></Match>
               <Match when={state.log.status === "loading" || state.log.status === "idle"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
-              <Match when={state.log.status === "error"}><Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.log.error)} /></Match>
+              <Match when={state.log.status === "error"}><Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.log.error)} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} /></Match>
               <Match when={state.log.status === "ready"}>
                 <Show when={state.logTruncated || lines().length > 400}><p class="provider-note" role="status">{props.t("orchestra.actions.logTruncated")}</p></Show>
                 <Show when={lines().length} fallback={<Empty title={props.t("orchestra.actions.noMatches")} />}>
@@ -93,7 +93,7 @@ export function Artifacts(props: ViewProps) {
     <Switch>
       <Match when={state.artifacts.status === "loading" || state.run.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
       <Match when={state.artifacts.status === "error" || state.run.status === "error"}>
-        <Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.artifacts.error ?? state.run.error)} />
+        <Empty title={props.t("orchestra.actions.providerRequestFailed")} error={errorCopy(props.t, state.artifacts.error ?? state.run.error)} retry={{ label: props.t("orchestra.actions.loadRetry"), run: () => void props.model.refresh() }} />
       </Match>
       <Match when={!run() || !items().length}><Empty title={props.t("orchestra.actions.emptyArtifacts")} detail={props.t("orchestra.actions.artifacts.emptyDetail")} /></Match>
       <Match when={items().length}>

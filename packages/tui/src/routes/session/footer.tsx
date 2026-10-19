@@ -5,10 +5,12 @@ import { useDirectory } from "../../context/directory"
 import { useConnected } from "../../component/use-connected"
 import { createStore } from "solid-js/store"
 import { useRoute } from "../../context/route"
+import { useSDK } from "../../context/sdk"
 
 export function Footer() {
   const { theme } = useTheme()
   const sync = useSync()
+  const sdk = useSDK()
   const route = useRoute()
   const mcp = createMemo(() => Object.values(sync.data.mcp).filter((x) => x.status === "connected").length)
   const mcpError = createMemo(() => Object.values(sync.data.mcp).some((x) => x.status === "failed"))
@@ -57,6 +59,11 @@ export function Footer() {
     <box flexDirection="row" justifyContent="space-between" gap={1} flexShrink={0}>
       <text fg={theme.textMuted}>{directory()}</text>
       <box gap={2} flexDirection="row" flexShrink={0}>
+        <Show when={sdk.offline()}>
+          <text fg={theme.error}>
+            <span style={{ fg: theme.error }}>●</span> Offline, reconnecting
+          </text>
+        </Show>
         <Switch>
           <Match when={store.welcome}>
             <text fg={theme.text}>

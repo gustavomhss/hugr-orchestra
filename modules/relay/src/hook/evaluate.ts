@@ -39,14 +39,14 @@ export interface Step {
 }
 
 /**
- * Enabled installs in install order; each graph walked from its trigger, a condition taking its Yes or No port, actions
- * in edge order. A Verify's Pass port continues the walk; its Fail port runs only when the check fails. Block has no
+ * Enabled installs in install order, leaving out those of an unpublished document; each graph walked from its trigger,
+ * a condition taking its Yes or No port, actions in edge order. A Verify's Pass port continues the walk; its Fail port runs only when the check fails. Block has no
  * outputs, so it ends its branch. The install writer refuses fan-out (one next step per output), so an install's steps
  * after its Verify are exactly that Verify's Pass continuation.
  */
 export const plan = (installs: ReadonlyArray<RelayHook.Install>, invocation: Invocation): ReadonlyArray<Step> =>
   installs
-    .filter((install) => install.enabled)
+    .filter((install) => install.enabled && !install.unpublished)
     .toSorted((a, b) => a.order - b.order)
     .flatMap((install) => fire(install, invocation))
 

@@ -8,6 +8,8 @@ import path from "path"
 import { RelayForbiddenError } from "@orchestra/protocol/groups/relay-document"
 import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
 import { AuthoringHook } from "@orchestra/relay/authoring/hook"
+import { AuthoringStore } from "@orchestra/relay/authoring/store"
+import type { RelayAuthoring } from "@orchestra/schema/relay-authoring"
 import { Effect, Layer, Struct } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -180,6 +182,54 @@ export const RelayDocumentHandler = HttpApiBuilder.group(Api, "server.relay.docu
 export const RelayPublishHandler = HttpApiBuilder.group(Api, "server.relay.publish", (handlers) =>
   Effect.gen(function* () {
     const documents = yield* RelayDocuments.Service
+    const fs = yield* FSUtil.Service
+    // Unpublishing a hook stops its installs firing; publishing it lets them fire their pinned version again, as a
+    // pinned workflow run holds while its workflow is unpublished. hooks.json and the store cannot share a transaction,
+    // so the installs change first, and only for a request the store will accept: a stale one is refused by the store
+    // with nothing changed. Receipts follow the store write.
+    const withInstalls = <A>(input: {
+      readonly document: RelayAuthoring.Document
+      readonly published: boolean
+      readonly fresh: boolean
+      readonly principal: string
+      readonly commit: Effect.Effect<A, AuthoringGraph.Refusal>
+    }) =>
+      Effect.gen(function* () {
+        const relay = yield* Relay.Service
+        const location = yield* Location.Service
+        const changes =
+          AuthoringHook.isHook(input.document) && input.fresh
+            ? yield* RelayHookInstall.setPublished({
+                data: path.dirname(path.dirname(relay.paths.root)),
+                projectID: location.project.id,
+                document: input.document.id,
+                published: input.published,
+                principal: input.principal,
+              }).pipe(
+                Effect.provideService(FSUtil.Service, fs),
+                Effect.mapError((error) =>
+                  RelayDocuments.refusal(
+                    `The installed copies of this hook could not be ${input.published ? "resumed" : "stopped"}, so nothing changed: ${error.message}`,
+                    503,
+                    error.reason,
+                  ),
+                ),
+              )
+            : []
+        const committed = yield* input.commit
+        yield* Effect.forEach(changes, (change) =>
+          relay.record(change.install.installID, change.receipt).pipe(
+            Effect.mapError(() =>
+              RelayDocuments.refusal(
+                `The hook changed, but its ${change.receipt.event} receipt could not be recorded.`,
+                503,
+                "receipt-unrecorded",
+              ),
+            ),
+          ),
+        )
+        return committed
+      })
     return handlers
       .handle("relay.publish.publish", (ctx) =>
         RelayDocuments.respond(
@@ -192,12 +242,19 @@ export const RelayPublishHandler = HttpApiBuilder.group(Api, "server.relay.publi
                 // Python's publish: what does not compile is not published. Nor is a workflow Maestro cannot run.
                 yield* RelayDocuments.compile(document, skills)
                 if (!AuthoringHook.isHook(document)) yield* RelayWorkflowBinding.admission(document, skills)
-                const published = yield* store.publish(
-                  ctx.params.documentID,
-                  ctx.payload.versionId,
-                  ctx.payload.expectedChecksum,
-                  Principal.of(ctx.request),
-                )
+                const principal = Principal.of(ctx.request)
+                const published = yield* withInstalls({
+                  document,
+                  published: true,
+                  fresh: document.versionId === ctx.payload.versionId && fresh(document, ctx.payload.expectedChecksum),
+                  principal,
+                  commit: store.publish(
+                    ctx.params.documentID,
+                    ctx.payload.versionId,
+                    ctx.payload.expectedChecksum,
+                    principal,
+                  ),
+                })
                 return yield* RelayDocuments.view(store, published)
               }),
             )
@@ -207,11 +264,25 @@ export const RelayPublishHandler = HttpApiBuilder.group(Api, "server.relay.publi
       .handle("relay.publish.unpublish", (ctx) =>
         RelayDocuments.respond(
           documents.use((store) =>
-            store
-              .unpublish(ctx.params.documentID, ctx.payload.expectedChecksum, Principal.of(ctx.request))
-              .pipe(Effect.flatMap((document) => RelayDocuments.view(store, document))),
+            Effect.gen(function* () {
+              const document = yield* store.get(ctx.params.documentID)
+              const principal = Principal.of(ctx.request)
+              const unpublished = yield* withInstalls({
+                document,
+                published: false,
+                fresh: fresh(document, ctx.payload.expectedChecksum),
+                principal,
+                commit: store.unpublish(ctx.params.documentID, ctx.payload.expectedChecksum, principal),
+              })
+              return yield* RelayDocuments.view(store, unpublished)
+            }),
           ),
         ),
       )
   }),
 ).pipe(Layer.provide(RelayDocuments.layer))
+
+// What the store's checksum guard accepts.
+function fresh(document: RelayAuthoring.Document, expectedChecksum: string | undefined) {
+  return expectedChecksum === undefined || expectedChecksum === AuthoringStore.checksum(document)
+}

@@ -292,6 +292,12 @@ describe("installs", () => {
     expect(fired(installs, call("read.before"))).toEqual(["a1:r", "a2:r", "b:r", "c:r"])
   })
 
+  test("N-14: an enabled install of an unpublished document does not fire", () => {
+    const live = install("live", "read.before", { r: record("live") }, "t>r")
+    const withdrawn = { ...install("withdrawn", "read.before", { r: record("withdrawn") }, "t>r"), unpublished: true as const }
+    expect(fired([withdrawn, live], call("read.before"))).toEqual(["live:r"])
+  })
+
   test("the plan is pure: frozen input, same answer every time", () => {
     const deepFreeze = <T>(value: T): T => {
       if (value && typeof value === "object") Object.values(value).forEach(deepFreeze)

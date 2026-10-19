@@ -221,6 +221,8 @@ export type ElectronAPI = import("@orchestra/app/app-dock-linux").AppDockLinuxAP
   onZoomFactorChanged: (cb: (factor: number) => void) => () => void
   setTitlebar: (theme: TitlebarTheme) => Promise<void>
   setTitlebarFrame: (frame?: NativeTitlebarFrame) => Promise<void>
+  /** Report which menu commands are currently available so the native menu can enable or disable them */
+  setMenuAvailability: (commands: string[]) => void
   runDesktopMenuAction: (action: DesktopMenuAction) => Promise<void>
   setBackgroundColor: (color: string) => Promise<void>
   exportDebugLogs: () => Promise<string>

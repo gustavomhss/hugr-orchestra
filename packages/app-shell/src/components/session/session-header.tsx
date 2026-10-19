@@ -4,16 +4,21 @@ import { Keybind } from "@orchestra/ui/keybind"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { getFilename } from "@orchestra/core/util/path"
 import { createMemo, createSignal, onMount, Show } from "solid-js"
+import { useNavigate } from "@solidjs/router"
 import { createMediaQuery } from "@solid-primitives/media"
 import { Portal } from "solid-js/web"
 import { useCommand } from "@/context/command"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
+import { useServer } from "@/context/server"
 import { useSettings } from "@/context/settings"
+import { useSync } from "@/context/sync"
 import { useTerminal } from "@/context/terminal"
 import { focusTerminalById } from "@/pages/session/helpers"
 import { useSessionLayout } from "@/pages/session/session-layout"
+import { SessionCrumbs } from "@/orchestra/crumbs"
 import { decode64 } from "@/utils/base64"
+import { requireServerKey } from "@/utils/session-route"
 import { StatusPopoverV2 } from "../status-popover"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
@@ -28,9 +33,12 @@ export function SessionHeader() {
   const language = useLanguage()
   const settings = useSettings()
   const terminal = useTerminal()
+  const server = useServer()
+  const sync = useSync()
+  const navigate = useNavigate()
   const { params, view } = useSessionLayout()
 
-  const projectDirectory = createMemo(() => decode64(params.dir) ?? "")
+  const projectDirectory = createMemo(() => decode64(params.dir) || sync().project?.worktree || "")
   const project = createMemo(() => {
     const directory = projectDirectory()
     if (!directory) return
@@ -41,6 +49,19 @@ export function SessionHeader() {
     if (current) return current.name || getFilename(current.worktree)
     return getFilename(projectDirectory())
   })
+  const title = createMemo(
+    () => (params.id ? sync().session.get(params.id)?.title : undefined) || language.t("command.session.new"),
+  )
+  // The titlebar's breadcrumb links the project back to Home with that project selected.
+  const openProject = () => {
+    const current = project()
+    if (current)
+      layout.home.setSelection({
+        server: params.serverKey ? requireServerKey(params.serverKey) : server.key,
+        directory: current.worktree,
+      })
+    navigate("/")
+  }
   const hotkey = createMemo(() => command.keybind("file.open"))
   const search = settings.general.showSearch
   const status = settings.general.showStatus
@@ -78,6 +99,7 @@ export function SessionHeader() {
 
   return (
     <>
+      <SessionCrumbs project={name() ? { label: name(), onSelect: openProject } : undefined} title={title()} />
       <Show when={centerMount()} keyed>
         {(mount) => (
           <Portal mount={mount}>
