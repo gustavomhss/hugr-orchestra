@@ -536,7 +536,7 @@ function checkLocator(text: string, representation: typeof Research.Representati
     if (!matches.length) throw new Research.Error({ code: "reference_invalid", message: "Quote does not match admitted representation" })
     return
   }
-  if (representation !== "structured-json") throw new Research.Error({ code: "reference_invalid", message: "JSON locator requires structured-json representation" })
+  if (representation !== "structured-json") throw new Research.Error({ code: "reference_invalid", message: "JSON locator requires structured-json representation; cite a text source by lines or quote" })
   const parsed = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
   if (parsed._tag === "None") throw new Research.Error({ code: "source_unavailable", message: "Admitted JSON representation cannot be decoded" })
   if (locator.pointer !== "" && (!locator.pointer.startsWith("/") || /~(?:[^01]|$)/.test(locator.pointer)))
