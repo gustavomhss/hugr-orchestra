@@ -31,6 +31,7 @@
     "modules/atlas/vitest.workspace.ts": ["StdioClientTransport"],
     "modules/atlas/boundary/src/generated/native-header.js": ["child_process"],
     "modules/atlas/boundary/src/generated/native-memory.js": ["child_process"],
+    "modules/atlas/boundary/src/generated/surface.js": ["child_process"],
     "packages/cli/bin/orchestra.cjs": ["child_process"],
     "packages/cli/script/runtime-proof.ts": ["child_process"],
     "packages/cli/src/services/daemon.ts": ["child_process"],
