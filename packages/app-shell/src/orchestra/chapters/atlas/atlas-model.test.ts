@@ -92,3 +92,84 @@ describe("atlas model: read side", () => {
     expect(model.territories()).toEqual([])
   })
 })
+
+describe("atlas model: write path, health, memory and graphs", () => {
+  test("runs the check gates in order and stops at the first refusal", () => {
+    const model = createAtlasModel(atlasFixture())
+    const gates = (key: string, options: Parameters<typeof model.checks>[1]) =>
+      model.checks(model.byKey[key], options).gates.map((gate) => [gate.gate, gate.pass, gate.reached])
+    expect(model.checks(model.byKey.k4, { tier: "T0", token: "billy" }).wouldEmit).toBe(true)
+    expect(gates("k2", { tier: "T1", token: "k" })).toEqual([
+      ["shape", true, true], ["truth", false, true], ["authz", true, false], ["ratify", true, false],
+    ])
+    const downgrade = model.checks(model.byKey.k1, { promote: true, token: "k" })
+    expect(downgrade.wouldEmit).toBe(false)
+    expect(downgrade.gates[2]).toEqual({ gate: "authz", pass: false, reason: "governance-downgrade", remedy: "raise-tier", reached: true })
+    const draft = model.checks(model.byKey.k4, { draft: true, regrounds: true, token: "k" })
+    expect(draft.gates[2]).toEqual({ gate: "authz", pass: false, reason: "unauthorized", remedy: "grant-scope", scope: "README.md", reached: true })
+    expect(model.checks(model.byKey.k4, { tier: "T0", token: "k" }).gates[3]).toEqual({ gate: "ratify", pass: false, reason: "unratified", remedy: "token-billy", reached: true })
+  })
+
+  test("re-presents every staging row on promote, and refuses on a store in git", () => {
+    const model = createAtlasModel(atlasFixture())
+    const run = model.promoteRun("k")
+    expect(run.rows.map((row) => [row.nodeKey, row.settled, row.rejected])).toEqual([
+      ["k1", false, "governance-downgrade"], ["k2", false, "ungrounded"], ["k3", false, "governance-downgrade"], ["k4", true, undefined], ["k5", true, undefined],
+    ])
+    expect([run.read, run.candidates, run.promoted, run.refused]).toEqual([true, 5, 2, 3])
+    const tracked = atlasFixture()
+    const locked = createAtlasModel({ ...tracked, tracked: { ...tracked.tracked, cas: 3 } })
+    expect(locked.writable()).toBe(false)
+    expect(locked.promoteRun("k")).toEqual({ read: false, refusal: "untrusted", candidates: 0, promoted: 0, refused: 0, rows: [] })
+    expect(locked.reconcile()).toEqual({ base: "927f47e8", drift: [], mechanical: [], semantic: [], regroundedCount: 0, reauthorCount: 0, exitCode: 0, blind: true })
+  })
+
+  test("reconciles drifted facts as semantic and plans their retirement", () => {
+    const model = createAtlasModel(atlasFixture())
+    const result = model.reconcile()
+    expect([result.drift.map((item) => item.fact.key), result.reauthorCount, result.exitCode]).toEqual([["k2"], 1, 2])
+    expect(model.why(model.byKey.k2)).toEqual({ class: "semantic", plan: "retire" })
+    expect(model.why(model.byKey.k1)).toBeUndefined()
+  })
+
+  test("reports health from the store's own files", () => {
+    expect(createAtlasModel(atlasFixture()).health()).toEqual({
+      provenance: "trusted",
+      cas: { objects: 5, referenced: 4, missing: 0, orphan: 1, corrupt: 0, unreadable: 0, sound: true },
+      proofs: { sealedProven: 0, reProven: 0, broken: 0, unverifiable: 0, dangling: 0 },
+      index: {
+        scip: true,
+        configured: [
+          { lang: "ts", tool: "scip-typescript", version: "0.4.0", files: 4 },
+          { lang: "py", tool: "scip-python", version: "0.6.6", files: 2 },
+        ],
+        holes: [],
+      },
+      generations: ["projection.json", "staging.json"],
+      hotSet: 4,
+    })
+  })
+
+  test("builds the unseeded header block and empty memory", () => {
+    const model = createAtlasModel(atlasFixture())
+    expect(model.headerText("jimmy")).toBe(
+      '<atlas-header member="jimmy" rules="0" rule-words="0">\nAwareness:\n- mission: unseeded\n- constitution: unseeded\n- terrain: unseeded\n- ontology: unseeded\n- taste: unseeded\nOrientation: none recorded\nProject rules: none recorded\n</atlas-header>',
+    )
+    expect(model.memory.maestro.bound).toBe(false)
+    expect(model.memory.backend).toEqual({ bound: true, tasks: [], prs: [], rules: [] })
+    expect(model.header("backend")).toEqual({ injected: [], evicted: [] })
+    expect(model.words("  a b  c ")).toBe(3)
+    expect(model.frecency({ rule: "x", scope: "s", age: 2, from: "x" })).toBe(0.25)
+    expect(model.activity()).toEqual([])
+  })
+
+  test("draws the unit graph and one unit's file graph", () => {
+    const model = createAtlasModel(atlasFixture())
+    expect(model.unitGraph().edges).toEqual([{ source: "packages/b", target: "packages/a", w: 1 }])
+    expect(model.fileGraph("packages/a")).toEqual({
+      files: ["packages/a/src/x.ts"],
+      outside: [["packages/b", 1]],
+      edges: [{ source: "unit:packages/b", target: "packages/a/src/x.ts", w: 1 }],
+    })
+  })
+})

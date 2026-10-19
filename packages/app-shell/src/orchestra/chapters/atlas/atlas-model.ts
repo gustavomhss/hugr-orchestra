@@ -485,7 +485,152 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     return [...map.values()].sort((a, b) => b.facts.length - a.facts.length)
   }
 
-  // A15B: the write path, health, memory, activity and graphs go here.
+  const memory: Record<AtlasMemberId, AtlasMember> = {
+    backend: { bound: true, tasks: [], prs: [], rules: [] },
+    jimmy: { bound: true, tasks: [], prs: [], rules: [] },
+    archie: { bound: true, tasks: [], prs: [], rules: [] },
+    maestro: { bound: false, tasks: [], prs: [], rules: [], logbook: [] },
+  }
+  const frecency = (r: AtlasMemoryRule) => Math.pow(0.5, r.age)
+  const header = (member: AtlasMemberId) => {
+    const ranked = [...memory[member].rules].sort((a, b) => frecency(b) - frecency(a) || a.rule.localeCompare(b.rule))
+    const injected = ranked.filter((r) => frecency(r) >= 0.1).slice(0, 12)
+    return { injected, evicted: ranked.filter((r) => !injected.includes(r)) }
+  }
+  const appendRecord = () => Object.values(memory).forEach((m) => m.rules.forEach((r) => r.age++))
+  const awareness: AtlasAwareness[] = [
+    { facet: "mission", state: "UN-SEEDED", source: "orchestra.atlas.kit.awareness.noSource" },
+    { facet: "constitution", state: "UN-SEEDED", source: "orchestra.atlas.kit.awareness.noT0" },
+    { facet: "terrain", state: "UN-SEEDED", source: "orchestra.atlas.kit.awareness.noSource" },
+    { facet: "ontology", state: "UN-SEEDED", source: "orchestra.atlas.kit.awareness.noSource" },
+    { facet: "taste", state: "UN-SEEDED", source: "orchestra.atlas.kit.awareness.noConventions" },
+  ]
+  const words = (text: string) => (text.trim() ? text.trim().split(/\s+/).length : 0)
+  const headerText = (member: AtlasMemberId) => {
+    const rules = header(member).injected
+    return [
+      `<atlas-header member="${member}" rules="${rules.length}" rule-words="${rules.reduce((n, r) => n + words(r.rule), 0)}">`,
+      "Awareness:",
+      ...awareness.map((f) => (f.state === "UN-SEEDED" ? `- ${f.facet}: unseeded` : `- ${f.facet} (${f.state}): ${f.text}`)),
+      "Orientation: none recorded",
+      rules.length ? "Project rules:" : "Project rules: none recorded",
+      ...rules.map((r) => `- [${r.scope}] ${r.rule}`),
+      "</atlas-header>",
+    ].join("\n")
+  }
+
+  const actor = "seat:orchestrator"
+  const writable = () => provenance() === "trusted"
+  const checks = (x: AtlasFact, opts: AtlasCheckOptions = {}): AtlasChecks => {
+    const tier = opts.tier ?? "T2"
+    const truth = opts.regrounds || !x.drift
+    const scope = opts.draft ? x.file.split("/")[0] : x.scope
+    const downgrade = (opts.draft || opts.promote) && (x.tier ?? "T2") !== "T2" && tier === "T2"
+    const inScope = (R.policy[scope] ?? []).includes(actor)
+    const authz = inScope && !downgrade
+    const token = opts.token ?? ""
+    const ratify = tier === "T0" ? token === "billy" : token !== ""
+    const gates: Omit<AtlasGate, "reached">[] = [
+      { gate: "shape", pass: true },
+      { gate: "truth", pass: !!truth, reason: "ungrounded", remedy: "reground" },
+      inScope
+        ? { gate: "authz", pass: authz, reason: "governance-downgrade", remedy: "raise-tier" }
+        : { gate: "authz", pass: authz, reason: "unauthorized", remedy: "grant-scope", scope },
+      { gate: "ratify", pass: ratify, reason: "unratified", remedy: tier === "T0" ? "token-billy" : "token" },
+    ]
+    const first = gates.findIndex((g) => !g.pass)
+    return { wouldEmit: first < 0, gates: gates.map((g, i) => ({ ...g, reached: first < 0 || i <= first })) }
+  }
+  const promoteRun = (token: string): AtlasPromoteRun => {
+    if (!writable()) return { read: false, refusal: "untrusted", candidates: 0, promoted: 0, refused: 0, rows: [] }
+    const rows = [...facts, ...candidates].map((x) => {
+      const failed = checks(x, { token, promote: true }).gates.find((g) => !g.pass)
+      return { x, nodeKey: x.key, settled: !failed, rejected: failed?.reason }
+    })
+    const refused = rows.filter((r) => !r.settled).length
+    return { read: true, candidates: rows.length, promoted: rows.length - refused, refused, rows }
+  }
+  const reconcile = (): AtlasReconcile => {
+    if (provenance() !== "trusted")
+      return { base: R.builtAt, drift: [], mechanical: [], semantic: [], regroundedCount: 0, reauthorCount: 0, exitCode: 0, blind: true }
+    const drift = facts.filter((x) => state(x) === "drifted").map((x) => ({ fact: x, class: "semantic" as const }))
+    return {
+      base: R.builtAt,
+      drift,
+      mechanical: [],
+      semantic: drift,
+      regroundedCount: 0,
+      reauthorCount: drift.length,
+      exitCode: drift.length ? 2 : 0,
+    }
+  }
+  const why = (x: AtlasFact) => (x.drift ? { class: "semantic" as const, plan: "retire" as const } : undefined)
+
+  const health = (): AtlasHealth => {
+    const configured: Record<string, [string, string]> = { ts: ["scip-typescript", "0.4.0"], py: ["scip-python", "0.6.6"] }
+    const EXT: Record<string, string> = { ts: "ts", tsx: "ts", mts: "ts", cts: "ts", js: "ts", jsx: "ts", mjs: "ts", cjs: "ts", py: "py", pyi: "py", go: "go", java: "java", rs: "rust", rb: "rb" }
+    const langs = Object.entries(R.langs).reduce<Record<string, number>>(
+      (o, entry) => (EXT[entry[0]] ? { ...o, [EXT[entry[0]]]: (o[EXT[entry[0]]] ?? 0) + entry[1] } : o),
+      {},
+    )
+    return {
+      provenance: provenance(),
+      cas: { ...R.casAudit, corrupt: 0, unreadable: 0, sound: R.casAudit.missing === 0 },
+      proofs: { sealedProven: R.sealed, reProven: 0, broken: 0, unverifiable: 0, dangling: 0 },
+      index: {
+        scip: R.scip,
+        configured: Object.entries(langs)
+          .filter((entry) => configured[entry[0]])
+          .map((entry) => ({ lang: entry[0], tool: configured[entry[0]][0], version: configured[entry[0]][1], files: entry[1] })),
+        holes: Object.entries(langs)
+          .filter((entry) => !configured[entry[0]])
+          .map((entry) => ({ lang: entry[0], files: entry[1] })),
+      },
+      generations: R.generations,
+      hotSet: facts.length,
+    }
+  }
+
+  const activity = (): AtlasEvent[] => []
+
+  const unitGraph = (): AtlasUnitGraph => {
+    const us = units()
+    const ids = new Set(us.map((u) => u.id))
+    const w = new Map<string, number>()
+    Object.entries(R.dependents).forEach((entry) =>
+      entry[1].forEach((user) => {
+        const a = unitOf(user)
+        const b = unitOf(entry[0])
+        if (a === b || !ids.has(a) || !ids.has(b)) return
+        w.set(`${a}|${b}`, (w.get(`${a}|${b}`) ?? 0) + 1)
+      }),
+    )
+    return {
+      units: us,
+      edges: [...w].map((entry) => {
+        const ends = entry[0].split("|")
+        return { source: ends[0], target: ends[1], w: entry[1] }
+      }),
+    }
+  }
+  const fileGraph = (unitId: string): AtlasFileGraph => {
+    const files = [...new Set(live().filter((x) => unitOf(x.file) === unitId).map((x) => x.file))]
+    const inside = new Set(files)
+    const edges: AtlasGraphEdge[] = []
+    const outside = new Map<string, number>()
+    Object.entries(R.dependents).forEach((entry) => {
+      const target = entry[0]
+      if (!inside.has(target)) return
+      entry[1].forEach((user) => {
+        if (inside.has(user)) return edges.push({ source: user, target, w: 1 })
+        const u = unitOf(user)
+        if (u === unitId) return
+        outside.set(u, (outside.get(u) ?? 0) + 1)
+        edges.push({ source: `unit:${u}`, target, w: 1 })
+      })
+    })
+    return { files, outside: [...outside], edges }
+  }
 
   return {
     R,
@@ -519,5 +664,22 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     stats,
     curationCount,
     codeChanges,
+    memory,
+    frecency,
+    header,
+    appendRecord,
+    awareness,
+    words,
+    headerText,
+    actor,
+    writable,
+    checks,
+    promoteRun,
+    reconcile,
+    why,
+    health,
+    activity,
+    unitGraph,
+    fileGraph,
   }
 }
