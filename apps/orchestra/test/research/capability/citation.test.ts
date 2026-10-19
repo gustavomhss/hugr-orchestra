@@ -43,7 +43,8 @@ describe("JE-AC-I2, I3: an answer needs verified evidence before it is done", ()
     const zero = (yield* test.inquiry({ action: "check" })).output
     expect(zero).toContain("\"verdict\":\"fail\"")
     expect(zero).toContain("answered, but the inquiry has zero claims and zero evidence")
-    expect(yield* test.refused(test.answered("It works."))).toContain("the closing check failed: R2")
+    // With no claim the subquestion is uncovered, which close refuses before it runs the check.
+    expect(yield* test.refused(test.answered("It works."))).toContain("neither an answering claim nor a declared gap")
 
     yield* test.inquiry({ action: "claim", subquestion, proposition: "It works.", nature: "observation", evidence: [] })
     const bare = (yield* test.inquiry({ action: "check" })).output
