@@ -11,9 +11,9 @@ const IMPLEMENTATION = join(ROOT, "packages", "retrieval", "dist", "src", "own-s
 const contract = await import(pathToFileURL(IMPLEMENTATION).href)
 let root
 
-function runGate() {
+function runGate(args = []) {
   try {
-    const out = execFileSync(process.execPath, [GATE], {
+    const out = execFileSync(process.execPath, [GATE, ...args], {
       encoding: "utf8",
       env: { ...process.env, OWN_SNAPSHOT_GUARD_ROOT: root, OWN_SNAPSHOT_GUARD_IMPL: IMPLEMENTATION },
       stdio: ["ignore", "pipe", "pipe"],
@@ -108,6 +108,32 @@ describe("own-snapshot-guard", () => {
     write("packages/genesis/src/index.ts", "export const genesis = false;\n")
     expect(runGate().out).toMatch(/source blob drift: packages\/genesis -> packages\/genesis\/src\/index.ts/)
   })
+    it("writes an empty worklist for a clean snapshot and still passes", () => {
+      const file = join(root, "worklist.json")
+      expect(runGate(["--worklist", file])).toMatchObject({ code: 0 })
+      expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({ units: [] })
+    })
+    it("writes the stale unit and path, then fails as before", () => {
+      write("packages/genesis/src/index.ts", "export const genesis = false;\n")
+      const file = join(root, "worklist.json")
+      const result = runGate(["--worklist", file])
+      expect(result.code).toBe(1)
+      expect(result.out).toMatch(/source blob drift: packages\/genesis -> packages\/genesis\/src\/index.ts/)
+      expect(JSON.parse(readFileSync(file, "utf8"))).toEqual({
+        units: [{ unit: "packages/genesis", stale: ["packages/genesis/src/index.ts"] }],
+      })
+    })
+    it("lists a missing anchor as stale", () => {
+      rmSync(join(root, "packages/genesis/src/index.ts"))
+      const file = join(root, "worklist.json")
+      expect(runGate(["--worklist", file]).code).toBe(1)
+      expect(JSON.parse(readFileSync(file, "utf8")).units[0].stale).toEqual(["packages/genesis/src/index.ts"])
+    })
+    it("refuses any other argument form", () => {
+      expect(runGate(["--worklist"]).out).toMatch(/usage: own-snapshot-guard \[--worklist <file>\]/)
+      expect(runGate(["--bogus"]).out).toMatch(/usage: own-snapshot-guard \[--worklist <file>\]/)
+      expect(runGate(["--worklist", "--bogus"]).code).toBe(1)
+    })
   it("fails symlinked source anchor before hashing it", () => {
     write("packages/genesis/src/linked.ts", "export const genesis = true;\n")
     rmSync(join(root, "packages/genesis/src/index.ts"))

@@ -2,10 +2,13 @@
 // OWN-SNAPSHOT is Genesis-owned source of truth for static Own skills. This gate recomposes every byte;
 // receipts never certify themselves. It rejects missing/empty snapshots, output drift, stale source blobs,
 // and files outside snapshot projection. It does not judge fact quality.
+// `--worklist <file>` (R9, D24) also writes the deterministic stale-source worklist — {units: [{unit, stale: [path]}]},
+// sorted — as soon as the snapshot parses, so a repair run (`atlas repair --worklist`) has its input even when the
+// gate then fails. The verdict and exit code are the same with or without it.
 
 import { execFileSync } from "node:child_process"
-import { existsSync, lstatSync, readdirSync, readFileSync } from "node:fs"
-import { join, relative } from "node:path"
+import { existsSync, lstatSync, readdirSync, readFileSync, writeFileSync } from "node:fs"
+import { join, relative, resolve } from "node:path"
 import { pathToFileURL, fileURLToPath } from "node:url"
 import { atlasRevisionSource } from "../../scripts/git-source-root.mjs"
 
@@ -61,6 +64,21 @@ function fail(issues) {
   process.exit(1)
 }
 
+// The only argument form: none, or exactly `--worklist <file>`. Anything else is a usage failure, not ignored.
+const argv = process.argv.slice(2)
+if (!(argv.length === 0 || (argv.length === 2 && argv[0] === "--worklist" && argv[1] !== "" && !argv[1].startsWith("-")))) {
+  fail(["usage: own-snapshot-guard [--worklist <file>]"])
+}
+const WORKLIST = argv.length === 2 ? resolve(process.cwd(), argv[1]) : undefined
+
+function regularFile(path) {
+  try {
+    return lstatSync(join(ROOT, path)).isFile()
+  } catch {
+    return false
+  }
+}
+
 if (!existsSync(SNAPSHOT)) fail([`missing ${SNAPSHOT_REL}; no static Own projection oracle exists`])
 if (!existsSync(IMPLEMENTATION))
   fail([
@@ -78,6 +96,21 @@ const snapshot = contract.parseOwnSnapshot(readFileSync(SNAPSHOT, "utf8"))
 if (snapshot === undefined) fail([`${SNAPSHOT_REL} is malformed, empty, or has invalid units/source blobs`])
 if (!/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/.test(snapshot.sourceRevision))
   fail([`snapshot sourceRevision is not an immutable lowercase full Git OID: ${snapshot.sourceRevision}`])
+
+if (WORKLIST !== undefined) {
+  const units = snapshot.units
+    .map((entry) => ({
+      unit: entry.unit.id,
+      stale: Object.entries(entry.sourceBlobs)
+        .filter(([path, blob]) => !regularFile(path) || currentBlob(path) !== blob)
+        .map(([path]) => path)
+        .sort(),
+    }))
+    .filter((entry) => entry.stale.length > 0)
+    .sort((a, b) => (a.unit < b.unit ? -1 : a.unit > b.unit ? 1 : 0))
+  writeFileSync(WORKLIST, `${JSON.stringify({ units }, null, 2)}\n`)
+  console.log(`own-snapshot-guard: worklist — ${units.length} stale unit(s) written to ${WORKLIST}`)
+}
 
 try {
   execFileSync("git", ["--no-replace-objects", "-C", ROOT, "cat-file", "-e", `${snapshot.sourceRevision}^{commit}`], { stdio: "ignore" })
