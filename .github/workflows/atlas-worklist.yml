@@ -1,0 +1,71 @@
+name: atlas-worklist
+
+# R9 (specs/atlas-ui/build/DECISIONS.md D24): after a merge to dev, list the Own units whose anchored source changed.
+# CI has no Atlas store, so this only uploads the deterministic worklist (`own-snapshot-guard --worklist`) as the
+# `atlas-worklist` artifact; a maintainer with the store runs `atlas repair --worklist <file>`, which opens the repair
+# PR. A deliberate exception to the per-epic CI cadence (AGENTS.md "CI Cadence"): one light job per push to dev.
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+concurrency:
+  group: atlas-worklist-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  worklist:
+    name: atlas own worklist
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # The guard checks that the snapshot's sourceRevision is an ancestor of HEAD.
+          fetch-depth: 0
+
+      - name: Setup Node
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+
+      - name: Install Atlas dependencies
+        run: npm ci
+
+      # The guard loads the compiled Own snapshot contract (packages/retrieval/dist/src/own-snapshot.js).
+      - name: Build the Own snapshot contract
+        run: npx tsc -b packages/retrieval
+
+      - name: Write the stale-source worklist
+        run: |
+          set +e
+          node harness/gates/own-snapshot-guard.mjs --worklist "$RUNNER_TEMP/atlas-worklist.json"
+          status=$?
+          set -e
+          # A stale unit makes the guard exit 1 after writing the worklist; that is this job's normal output.
+          # No worklist at all means the snapshot itself is missing or malformed, which is a real failure.
+          if [ ! -f "$RUNNER_TEMP/atlas-worklist.json" ]; then
+            echo "own-snapshot-guard exited $status and wrote no worklist" >&2
+            exit 1
+          fi
+          node -e 'const w = JSON.parse(require("node:fs").readFileSync(process.argv[1], "utf8")); const lines = w.units.map((u) => `- \`${u.unit}\`: ${u.stale.join(", ")}`); console.log(lines.length === 0 ? "No Own unit is stale." : ["Stale Own units (run `atlas repair --worklist <file>` where the store exists):", ...lines].join("\n"))' "$RUNNER_TEMP/atlas-worklist.json" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload the worklist
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: atlas-worklist
+          path: ${{ runner.temp }}/atlas-worklist.json
+          if-no-files-found: error
+          retention-days: 30
