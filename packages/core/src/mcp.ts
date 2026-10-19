@@ -469,6 +469,8 @@ const layer = Layer.effect(
     const started = yield* Deferred.make<void>()
     let starting = false
     // The first caller forks the start into the Location's scope, so its interruption never abandons a half start.
+    // The fork starts immediately: with no server to connect, the start finishes without a scheduler hop, so a
+    // drain woken by a prompt still reaches its provider turn before the prompt returns.
     const ready = () =>
       Effect.suspend(() => {
         if (starting) return Deferred.await(started)
@@ -481,7 +483,7 @@ const layer = Layer.effect(
             }),
           ),
           Effect.ensuring(Deferred.succeed(started, undefined)),
-          Effect.forkIn(layerScope),
+          Effect.forkIn(layerScope, { startImmediately: true }),
           Effect.andThen(Deferred.await(started)),
         )
       })
