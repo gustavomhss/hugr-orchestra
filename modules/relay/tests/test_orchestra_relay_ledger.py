@@ -34,7 +34,7 @@ def golden_run(project):
     graph = gated(builder, {
         "write_code": "test -f flag || { touch flag; echo not yet; exit 1; }",
         "deploy": {"check": "echo deployed", "judge": "the deploy is safe", "approve": True},
-    }).compile(checkpointer=InMemorySaver())
+    }).compile(checkpointer=InMemorySaver(), name="LangGraph")
     config = {"configurable": {"thread_id": "golden-python"}}
     graph.invoke({"n": 0}, config)
     graph.invoke(Command(resume={"decision": "approve", "note": "looks good"}), config)
