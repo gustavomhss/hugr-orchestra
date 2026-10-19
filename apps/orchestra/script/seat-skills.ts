@@ -1,36 +1,3 @@
-import { Seats } from "@orchestra/maestro/seats"
-import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
-import { PlaybookContent } from "@orchestra/maestro/playbook-content"
-import { fileURLToPath } from "node:url"
+import { seatSkillsFiles, seatSkillsModule } from "@orchestra/maestro/seat-skills-module"
 
-// Every seat's packaged skills (F6.12) as one generated module: seat id -> tree-relative path -> file text. Both the
-// Bun binary (script/build.ts) and the desktop Node sidecar (script/build-node.ts) embed it; modules/maestro/coordination/src/seat-skill-root.ts
-// extracts each tree to a real directory at runtime.
-export async function seatSkillsModule() {
-  const trees = await Promise.all(
-    Object.values(Seats.all)
-      .filter((seat) => seat.skills.length > 0)
-      .map(async (seat) => {
-        const root = Seats.skillSource(seat.id)
-        const files = await SeatSkillContent.read(seat.id, root, seat.skills)
-        const entries = Object.keys(files).toSorted().map((file) => `    [${JSON.stringify(file)}]: ${JSON.stringify(files[file])},`)
-        return [`  ${JSON.stringify(seat.id)}: {`, ...entries, "  },"]
-      }),
-  )
-  const playbooks = await PlaybookContent.read(fileURLToPath(new URL("../playbooks", import.meta.url)))
-  return [
-    "export default {",
-    ...trees.flat(),
-    '  "maestro": {',
-    ...Object.keys(playbooks)
-      .toSorted()
-      .map((file) => `    [${JSON.stringify(file)}]: ${JSON.stringify(playbooks[file])},`),
-    "  },",
-    "}",
-  ].join("\n")
-}
-
-/** The exact virtual files map shared by both production build lanes and their proofs. */
-export async function seatSkillsFiles() {
-  return { "orchestra-seat-skills.gen.ts": await seatSkillsModule() }
-}
+export { seatSkillsFiles, seatSkillsModule }
