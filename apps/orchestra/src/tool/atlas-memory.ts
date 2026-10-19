@@ -1,3 +1,4 @@
+import { proposeProjectRule } from "@orchestra/atlas-boundary/native-memory"
 import type { BoundEntry } from "@orchestra/atlas-boundary/native-memory"
 import { Context, Effect, Schema } from "effect"
 import { Agent } from "@/agent/agent"
@@ -99,7 +100,7 @@ export const AtlasMemoryEmitTool = Tool.define(
       parameters: EmitParameters,
       jsonSchema: { ...ToolJsonSchema.fromSchema(EmitParameters), additionalProperties: false },
       description:
-        'Record one Atlas Memory entry as your own: {"entry": ...}, a task entry {taskId, attempted[], failedWith[], stoppedAt, lesson, ref?}, a PR entry {prId, decisions[], reviewOutcomes[], knowledgeDelta[], ref?} or a project rule {rule, scope, grounding?} (never set frecency). Atlas\'s closed templates judge the entry: use exactly the template keys, with no owner, status, session or provenance field. The host binds owner and storage. The tool reconciles before writing, so an identical resubmission writes nothing new; after an uncertain outcome resubmit the identical entry, never a variant. Outcomes: admitted (with its record ref), refused (the Atlas refusal verbatim; not remembered), unavailable or uncertain (not confirmed as remembered). A memory outcome never changes the outcome of your work.',
+        'Record one Atlas Memory entry as your own: {"entry": ...}, a task entry {taskId, attempted[], failedWith[], stoppedAt, lesson, ref?}, a PR entry {prId, decisions[], reviewOutcomes[], knowledgeDelta[], ref?} or a project rule {rule, scope} (never set frecency or grounding). A project rule is not written: it is proposed to the steward and joins your rules only once a person indexes it. Atlas\'s closed templates judge the entry: use exactly the template keys, with no owner, status, session or provenance field. The host binds owner and storage. The tool reconciles before writing, so an identical resubmission writes nothing new; after an uncertain outcome resubmit the identical entry, never a variant. Outcomes: admitted (with its record ref), proposed (a project rule, with its proposal id), refused (the Atlas refusal verbatim; not remembered), unavailable or uncertain (not confirmed as remembered). A memory outcome never changes the outcome of your work.',
       execute: (input: Schema.Schema.Type<typeof EmitParameters>, ctx: Tool.Context) =>
         Effect.gen(function* () {
           const caller = yield* nativeCaller(ctx, agents)
@@ -122,6 +123,16 @@ export const AtlasMemoryEmitTool = Tool.define(
                     const reconciled = memory.reconcile(entry)
                     if (reconciled.present) return { outcome: "admitted", ref: reconciled.ref, reconciled: true }
                     if (reconciled.store === "unavailable") return { outcome: "unavailable", store: "unavailable" }
+                    // R1 (D18): a project rule is proposed for the steward; the member never writes it itself.
+                    if (Object.hasOwn(input.entry, "rule")) {
+                      const proposed = proposeProjectRule(memory.binding, input.entry, new Date().toISOString())
+                      if (!proposed.ok) return { outcome: "refused", refusal: proposed }
+                      return {
+                        outcome: "proposed",
+                        proposalId: proposed.proposalId,
+                        ...(proposed.reconciled && { reconciled: true as const }),
+                      }
+                    }
                     const written = memory.write(entry)
                     if (written.ok) return { outcome: "admitted", ref: written.ref }
                     return { outcome: "refused", refusal: written }
@@ -142,6 +153,7 @@ export const AtlasMemoryEmitTool = Tool.define(
             outcome: verdict.outcome,
             binding: bound.binding,
             ...(verdict.ref && { ref: verdict.ref }),
+            ...(verdict.proposalId && { proposalId: verdict.proposalId }),
             ...(verdict.reconciled && { reconciled: verdict.reconciled }),
             ...(verdict.refusal && { refusal: verdict.refusal }),
             ...(verdict.store && { store: verdict.store }),
@@ -155,9 +167,13 @@ export const AtlasMemoryEmitTool = Tool.define(
                   ? verdict.reconciled
                     ? "Already recorded; nothing new was written."
                     : "Remembered."
-                  : verdict.outcome === "refused"
-                    ? "Not remembered."
-                    : "Not confirmed as remembered.",
+                  : verdict.outcome === "proposed"
+                    ? verdict.reconciled
+                      ? "Already proposed; nothing new was written. It joins your rules only once a person indexes it."
+                      : "Proposed for the steward; it joins your rules only once a person indexes it."
+                    : verdict.outcome === "refused"
+                      ? "Not remembered."
+                      : "Not confirmed as remembered.",
             }),
             metadata: { [AtlasMemory.RECEIPT_KEY]: receipt },
           }
