@@ -91,30 +91,9 @@ export async function spawnLocalServer(
   const defaultSidecar = join(outDir, "sidecar.js")
   const sidecar = options.sidecarPath ? validateSidecarPath(options.sidecarPath) : defaultSidecar
   await access(sidecar)
-  const claudeExecutable = join(
-    app.isPackaged ? process.resourcesPath : resolve(outDir, "../../resources"),
-    "claude-code",
-    process.platform === "win32" ? "claude.exe" : "claude",
-  )
-  await access(claudeExecutable)
   const child = utilityProcess.fork(sidecar, [], {
     cwd: process.cwd(),
-    env: {
-      ...createSidecarEnv(options.candidateProfile),
-      ...OmniHost.sidecarEnv(),
-      // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
-      ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
-      ...ripgrepEnv(app.isPackaged, process.resourcesPath),
-      ORCHESTRA_CLAUDE_CODE_RESOURCES: app.isPackaged
-        ? join(process.resourcesPath, "claude-code")
-        : resolve(outDir, "../../../orchestra/dist/node/claude-code"),
-      ORCHESTRA_LINUX_ROOT: join(options.userDataPath, "app-dock-linux"),
-      // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
-      // repository copy, since the bundled server cannot locate it from its own path.
-      ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
-        ? join(process.resourcesPath, "playbooks")
-        : resolve(outDir, "../../../orchestra/playbooks"),
-    },
+    env: { ...(await sidecarLaunchEnv(options.userDataPath, options.candidateProfile)), ...OmniHost.sidecarEnv() },
     serviceName: SIDECAR_SERVICE_NAME,
     stdio: "pipe",
   })
@@ -249,6 +228,32 @@ export async function spawnLocalServer(
       },
     },
     health: { wait },
+  }
+}
+
+/** The per-launch environment of a desktop-owned server, shared by the V1 sidecar and the owned `orchestra serve`. */
+export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: CandidateProfile) {
+  const outDir = dirname(fileURLToPath(import.meta.url))
+  const claudeExecutable = join(
+    app.isPackaged ? process.resourcesPath : resolve(outDir, "../../resources"),
+    "claude-code",
+    process.platform === "win32" ? "claude.exe" : "claude",
+  )
+  await access(claudeExecutable)
+  return {
+    ...createSidecarEnv(candidateProfile),
+    // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
+    ORCHESTRA_CLAUDE_CODE_EXECUTABLE: claudeExecutable,
+    ...ripgrepEnv(app.isPackaged, process.resourcesPath),
+    ORCHESTRA_CLAUDE_CODE_RESOURCES: app.isPackaged
+      ? join(process.resourcesPath, "claude-code")
+      : resolve(outDir, "../../../orchestra/dist/node/claude-code"),
+    ORCHESTRA_LINUX_ROOT: join(userDataPath, "app-dock-linux"),
+    // Maestro's playbooks ship outside the app archive, where every tool can read them. Dev runs read the
+    // repository copy, since the bundled server cannot locate it from its own path.
+    ORCHESTRA_PLAYBOOKS_DIR: app.isPackaged
+      ? join(process.resourcesPath, "playbooks")
+      : resolve(outDir, "../../../orchestra/playbooks"),
   }
 }
 

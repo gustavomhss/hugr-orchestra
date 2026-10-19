@@ -18,26 +18,7 @@ type Logger = {
 }
 
 export async function startBackgroundCli(logger: Logger, shellStateHome?: string) {
-  const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
-  const target = nativeCliTarget(process.platform, process.arch)
-  const artifact = app.isPackaged
-    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"), {
-        // The installed copy takes the bundle's rg along; signed, it must still carry a valid signature.
-        signature: async (file) => {
-          const check = signatureCheck(target, file)
-          if (!check) return false
-          return execFileAsync(check.command, check.args, { windowsHide: true }).then(
-            (result) => check.valid(result.stdout),
-            () => false,
-          )
-        },
-      })
-    : await verifyCliArtifact(directory, target)
-  const binary = artifact.path
-  logger.log("v2 CLI executable resolved", { binary, version: artifact.version, packaged: app.isPackaged })
-  if ((await run(binary, ["--version"], logger)) !== artifact.version)
-    throw new Error("Owned CLI executable version differs from its manifest")
-
+  const binary = await resolveCliBinary(logger)
   const candidates = [
     ...new Set([stateHome, shellStateHome, ...desktopStateNames.map((name) => join(app.getPath("appData"), name))]),
   ].filter((candidate) => candidate === undefined || existsSync(candidate))
@@ -70,6 +51,30 @@ export async function startBackgroundCli(logger: Logger, shellStateHome?: string
     password,
   }
 }
+
+/** The bundled CLI, verified against its manifest (packaged builds run an installed, signature-checked copy). */
+export async function resolveCliBinary(logger: Logger) {
+  const directory = app.isPackaged ? join(process.resourcesPath, "cli") : join(root, "../../resources/cli")
+  const target = nativeCliTarget(process.platform, process.arch)
+  const artifact = app.isPackaged
+    ? await installCliArtifact(directory, target, join(app.getPath("userData"), "cli"), {
+        // The installed copy takes the bundle's rg along; signed, it must still carry a valid signature.
+        signature: async (file) => {
+          const check = signatureCheck(target, file)
+          if (!check) return false
+          return execFileAsync(check.command, check.args, { windowsHide: true }).then(
+            (result) => check.valid(result.stdout),
+            () => false,
+          )
+        },
+      })
+    : await verifyCliArtifact(directory, target)
+  logger.log("v2 CLI executable resolved", { binary: artifact.path, version: artifact.version, packaged: app.isPackaged })
+  if ((await run(artifact.path, ["--version"], logger)) !== artifact.version)
+    throw new Error("Owned CLI executable version differs from its manifest")
+  return artifact.path
+}
+
 
 async function run(
   binary: string,
