@@ -422,14 +422,19 @@ describe("failed and concurrent shard builds", () => {
     expect((await query(context, { op: "definition", name: "assemble" })).resolved?.name).toBe("assemble")
   })
 
+  // The warm-up builds shards through the same single flight (ResearchToolkit.warm), so a query-side build awaits it.
   // Mutation control: remove the CodeIndexStore.singleFlight wrapper around the extraction in CodeIndexBuild.build.
-  test("two builds of the same commit extract each shard once", async () => {
+  test("a build awaits a shard another caller is already building instead of extracting it again", async () => {
     const f = await fixture()
     await using _ = f.tmp
-    const context = { ...f.context, extract: (input: Parameters<CodeIndexBuild.Extract>[0]) => Effect.andThen(Effect.sleep("50 millis"), f.built.extract(input)) }
-    const results = await Effect.runPromise(Effect.all([CodeIndexBuild.build(context), CodeIndexBuild.build(context)], { concurrency: "unbounded" }))
-    expect(f.built.calls.toSorted()).toEqual(["ts:packages/a", "ts:packages/b"])
-    expect(results.map((result) => result.failed)).toEqual([[], []])
+    const plan = await Effect.runPromise(CodeIndexBuild.plan(f.context))
+    const warming = plan.shards.find((planned) => planned.shard.id === "ts:packages/a")!
+    const warm = CodeIndexStore.singleFlight<Research.Error>(f.context.storeRoot, warming.key, Effect.sleep("200 millis"), {
+      describe: (error) => error.message, join: (message) => new Research.Error({ code: "index_unavailable", message }),
+    })
+    const [, built] = await Effect.runPromise(Effect.all([warm, Effect.andThen(Effect.sleep("20 millis"), CodeIndexBuild.build({ ...f.context, extract: f.built.extract }))], { concurrency: "unbounded" }))
+    expect(f.built.calls).toEqual(["ts:packages/b"])
+    expect(built.failed).toEqual([])
   })
 })
 
