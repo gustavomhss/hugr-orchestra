@@ -39,7 +39,8 @@ export function createSessionVcsReview(input: {
   const query = createQuery(() => {
     const value = mode()
     const client = sdk()
-    const enabled = input.wantsReview() && sync().project?.vcs === "git"
+    // A branch read only answers inside a repository, so it counts while the project record catches up.
+    const enabled = input.wantsReview() && (sync().project?.vcs === "git" || !!sync().data.vcs?.branch)
 
     return {
       queryKey: [...key(), value] as const,

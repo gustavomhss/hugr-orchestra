@@ -37,7 +37,7 @@ export default function LeanPage(props: ChapterPageProps) {
     }
     return { message: formatServerError(error, language.t, language.t("error.chain.unknown")) }
   })
-  void controller.select({ server: ServerConnection.key(props.server), directory: props.directory, transport: createLeanAPI(sdk()) })
+  void controller.select({ server: ServerConnection.key(props.server), directory: props.directory, transport: createLeanAPI(sdk(), serverSDK().orchestra) })
   onCleanup(() => controller.dispose())
   onCleanup(serverSDK().event.listen((event) => {
     if (event.name !== "global" && pathKey(event.name) !== key) return

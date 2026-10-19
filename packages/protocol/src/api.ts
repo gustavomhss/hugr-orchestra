@@ -25,6 +25,7 @@ import { IntegrationGroup } from "./groups/integration"
 import { CredentialGroup } from "./groups/credential"
 import { ProjectCopyGroup } from "./groups/project-copy"
 import { ProjectGroup } from "./groups/project"
+import { LeanGroup } from "./groups/lean"
 import { ConfigGroup } from "./groups/config"
 import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
 import { RelayHookGroup } from "./groups/relay-hook"
@@ -78,6 +79,7 @@ const makeApiFromGroup = <
     .add(ReferenceGroup.middleware(locationMiddleware))
     .add(ProjectCopyGroup.middleware(locationMiddleware))
     .add(ProjectGroup)
+    .add(LeanGroup.middleware(locationMiddleware))
     .add(ConfigGroup)
     .add(RelayDocumentGroup.middleware(locationMiddleware))
     .add(RelayPublishGroup.middleware(locationMiddleware))

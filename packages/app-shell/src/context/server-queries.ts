@@ -91,10 +91,16 @@ export const loadMcpResourcesQuery = (
     placeholderData: {},
   })
 
-export const loadLspQuery = (scope: ServerScope, directory: string, sdk: OrchestraClient) =>
+// The V2 server runs no language servers yet (its edit and write tools leave LSP for later), so it is not asked.
+export const loadLspQuery = (
+  scope: ServerScope,
+  directory: string,
+  sdk: OrchestraClient,
+  protocol?: Promise<"v1" | "v2">,
+) =>
   queryOptions({
     queryKey: [scope, directory, "lsp"] as const,
-    queryFn: () => sdk.lsp.status().then((r) => r.data ?? []),
+    queryFn: async () => ((await protocol) === "v2" ? [] : sdk.lsp.status().then((r) => r.data ?? [])),
   })
 
 export function makeQueryOptionsApi(
@@ -118,7 +124,7 @@ export function makeQueryOptionsApi(
     mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
     mcpResources: (directory: PathKey) =>
       loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory)),
+    lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory), protocol),
     sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
   }
 }

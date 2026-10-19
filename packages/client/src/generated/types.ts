@@ -3485,6 +3485,385 @@ export type ProjectsInitGitOutput = {
   } | null
 }
 
+export type LeanGetInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type LeanGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly scope: { readonly profileID: string; readonly projectID: string; readonly directory: string }
+    readonly engine: string
+    readonly enabled: boolean
+    readonly coverage: "saved-profile-history"
+    readonly complete: boolean
+    readonly savings: {
+      readonly bytesSaved: number | null
+      readonly tokensSaved: number | null
+      readonly calls: number
+      readonly tokenCalls: number
+    }
+    readonly items: ReadonlyArray<{
+      readonly id:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+        | "shell"
+        | "read"
+        | "webfetch"
+        | "glob"
+        | "grep"
+      readonly enabled: boolean
+      readonly savings: {
+        readonly bytesSaved: number | null
+        readonly tokensSaved: number | null
+        readonly calls: number
+        readonly tokenCalls: number
+      }
+    }>
+  }
+}
+
+export type LeanUpdateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly itemID?: {
+    readonly itemID?:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
+      | undefined
+    readonly enabled: boolean
+  }["itemID"]
+  readonly enabled: {
+    readonly itemID?:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
+      | undefined
+    readonly enabled: boolean
+  }["enabled"]
+}
+
+export type LeanUpdateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly scope: { readonly profileID: string; readonly projectID: string; readonly directory: string }
+    readonly engine: string
+    readonly enabled: boolean
+    readonly coverage: "saved-profile-history"
+    readonly complete: boolean
+    readonly savings: {
+      readonly bytesSaved: number | null
+      readonly tokensSaved: number | null
+      readonly calls: number
+      readonly tokenCalls: number
+    }
+    readonly items: ReadonlyArray<{
+      readonly id:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+        | "shell"
+        | "read"
+        | "webfetch"
+        | "glob"
+        | "grep"
+      readonly enabled: boolean
+      readonly savings: {
+        readonly bytesSaved: number | null
+        readonly tokensSaved: number | null
+        readonly calls: number
+        readonly tokenCalls: number
+      }
+    }>
+  }
+}
+
+export type LeanHistoryInput = {
+  readonly itemID: {
+    readonly itemID:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
+  }["itemID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type LeanHistoryOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly scope: { readonly profileID: string; readonly projectID: string; readonly directory: string }
+    readonly itemID:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
+    readonly complete: boolean
+    readonly executions: ReadonlyArray<{
+      readonly sessionID: string
+      readonly messageID: string
+      readonly partID: string
+      readonly callID: string
+      readonly itemID:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+        | "shell"
+        | "read"
+        | "webfetch"
+        | "glob"
+        | "grep"
+      readonly command: string
+      readonly commandTruncated: boolean
+      readonly status: "completed" | "error"
+      readonly exit: number | null
+      readonly time: number
+      readonly bytesSaved: number | null
+      readonly tokensSaved: number | null
+    }>
+  }
+}
+
 export type ConfigGetOutput = {
   readonly model?: string | undefined
   readonly shell?: string | undefined
