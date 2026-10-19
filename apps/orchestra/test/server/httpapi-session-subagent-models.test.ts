@@ -6,7 +6,9 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { EventV2 } from "@orchestra/core/event"
 import { EventTable } from "@orchestra/core/event/sql"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { LocationServiceMap } from "@orchestra/core/location-services"
+import { AppProcess } from "@orchestra/core/process"
 import { ProjectV2 } from "@orchestra/core/project"
 import { ProjectTable } from "@orchestra/core/project/sql"
 import { AbsolutePath } from "@orchestra/core/schema"
@@ -40,7 +42,15 @@ const services = Layer.unwrap(
     const directory = yield* tmpdirScoped()
     const database = Database.layerFromPath(path.join(directory, "policy.sqlite"))
     return AppNodeBuilder.build(
-      LayerNode.group([Database.node, SessionV2.node, SessionExecution.node, SessionSubagentModels.node, LocationServiceMap.node]),
+      LayerNode.group([
+        Database.node,
+        SessionV2.node,
+        SessionExecution.node,
+        SessionSubagentModels.node,
+        LocationServiceMap.node,
+        AppProcess.node,
+        FSUtil.node,
+      ]),
       [
         [Database.node, database],
         // One closed canonical producer prevents DB replacement from cloning Event descriptors across registry branches.
