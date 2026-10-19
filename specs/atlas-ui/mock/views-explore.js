@@ -203,34 +203,41 @@
     const root = d3.partition().size([2 * Math.PI, 4])(d3.hierarchy(packTree(units)).sum((d) => (d.leaf ? d.facts : 0)).sort((a, b) => b.value - a.value))
     root.each((d) => { d.drifted = d.data.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0) })
     const live = M().live()
-    const size = 600, R = size / 2, ring = R / 3.15
-    host.innerHTML = `<div class="at-map-rings"><svg viewBox="${-R} ${-R} ${size} ${size}" role="img" aria-label="Rings: units, folders, files"></svg><div class="at-map-hint">Click a ring to go in · the centre steps back</div></div>
+    const size = 600, R = size / 2, ring = R / 3.6
+    host.innerHTML = `<div class="at-map-rings"><svg viewBox="${-R} ${-R} ${size} ${size}" role="img" aria-label="Rings: units, folders, files"></svg><div class="at-map-hint">Hover to name a slice · click to go in · the centre steps back</div></div>
       <div class="at-map-side"><div class="at-pack-crumbs" id="map-crumbs"></div><div class="at-map-title" id="map-title"></div><div class="at-map-bars" id="map-bars"></div></div>
       <div class="at-map-dots"><div class="at-map-dots-head" id="map-dots-head"></div><div class="at-map-dotgrid" id="map-dots"></div></div>`
     const svg = host.querySelector("svg")
     const tip = (d) => `${d.data.path || "Everything"} · ${A.num(d.value)} ${d.value === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}`
-    // Three steps in the HuGR palette (--mx-good, --mx-warm), never a blend: blends of the two read as mud.
-    const tone = (d) => (d.drifted / d.value >= 0.25 ? "much" : d.drifted / d.value >= 0.08 ? "some" : "hold")
     const go = (d) => (d.data.leaf ? A.go(unitHref(d.data.path)) : show(d))
+    let current = []
     const show = (focus) => {
-      // Rings: the focus in the middle, then two levels below it.
-      const arc = d3.arc().startAngle((d) => d.a0).endAngle((d) => d.a1).padAngle((d) => Math.min((d.a1 - d.a0) / 2, 0.006)).padRadius(R)
-        .innerRadius((d) => d.r0 * ring).outerRadius((d) => Math.max(d.r0 * ring, d.r1 * ring - 2))
+      // Rings: the focus in the middle, its children, then theirs. Each child of the focus takes one colour from a
+      // sweep between two kit tokens (--mx-blue to --mx-good); its own children reuse it, lighter. Colour says where,
+      // not health: health is the thin outer band, sand for the share of facts whose code moved.
+      const arc = d3.arc().startAngle((d) => d.a0).endAngle((d) => d.a1).padAngle(0.012).padRadius(R * 0.6).cornerRadius(5)
+        .innerRadius((d) => d.ri).outerRadius((d) => d.ro)
       const span = focus.x1 - focus.x0
-      const shown = focus.descendants().filter((d) => d !== focus && d.depth - focus.depth <= 2).map((d) => {
+      const ringKids = [...(focus.children ?? [])].sort((a, b) => a.x0 - b.x0)
+      const sweep = new Map(ringKids.map((c, n) => [c, Math.round((n / Math.max(1, ringKids.length - 1)) * 100)]))
+      const band = (d) => d.depth - focus.depth
+      const radii = { 1: [ring + 4, ring * 2.05], 2: [ring * 2.05 + 5, ring * 2.85] }
+      const shown = focus.descendants().filter((d) => d !== focus && band(d) <= 2).map((d) => {
         const a0 = ((d.x0 - focus.x0) / span) * 2 * Math.PI, a1 = ((d.x1 - focus.x0) / span) * 2 * Math.PI
-        return Object.assign(d, { a0, a1, r0: d.depth - focus.depth, r1: d.depth - focus.depth + 1 })
-      }).filter((d) => d.a1 - d.a0 > (d.r0 === 1 ? 0.004 : 0.012))
-      const outer = 3 * ring - 2
-      const glass = ["hold", "some", "much"].map((t) => `<radialGradient id="gl-${t}" gradientUnits="userSpaceOnUse" cx="0" cy="0" r="${outer}"><stop offset="${(ring / outer).toFixed(2)}" class="gs-${t} a"/><stop offset="1" class="gs-${t} b"/></radialGradient>`).join("")
-      const annulus = `M0,${-outer}A${outer},${outer} 0 1 1 0,${outer}A${outer},${outer} 0 1 1 0,${-outer}ZM0,${-ring}A${ring},${ring} 0 1 0 0,${ring}A${ring},${ring} 0 1 0 0,${-ring}Z`
-      svg.innerHTML = `<defs>${glass}<linearGradient id="gl-sheen" x1="0" y1="0" x2="0" y2="1"><stop offset="0" class="gs-sheen a"/><stop offset=".45" class="gs-sheen b"/><stop offset="1" class="gs-sheen c"/></linearGradient><radialGradient id="gl-core" cx=".5" cy=".35" r=".75"><stop offset="0" class="gs-core a"/><stop offset="1" class="gs-core b"/></radialGradient></defs>${shown.map((d, i) => `<path class="at-map-arc d${d.r0} ${tone(d)}" d="${arc(d)}" data-i="${i}" style="animation-delay:${Math.round((d.a0 / (2 * Math.PI)) * 220)}ms"><title>${A.esc(tip(d))}</title></path>`).join("")}
-        ${shown.filter((d) => d.r0 === 1 && d.a1 - d.a0 > 0.22).map((d) => { const a = (d.a0 + d.a1) / 2, r = ring * 1.5; const deg = (a * 180) / Math.PI - 90; return `<text class="at-map-label" transform="rotate(${deg}) translate(${r},0) rotate(${deg > 90 ? 180 : 0})">${A.esc(d.data.name.length > 14 ? `${d.data.name.slice(0, 13)}…` : d.data.name)}</text>` }).join("")}
-        <path class="at-map-sheen" d="${annulus}" fill-rule="evenodd"/>
-        <circle class="at-map-centre ${focus === root ? "" : "up"}" r="${ring - 6}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
-        <text class="at-map-centre-k" y="-34">${A.esc(focus === root ? "all facts" : focus.data.name.length > 16 ? `${focus.data.name.slice(0, 15)}…` : focus.data.name)}</text>
-        <text class="at-map-centre-n" y="12">${A.num(focus.value)}</text><text class="at-map-centre-u ${focus.drifted ? "warm" : ""}" y="44">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>
-        ${focus === root ? "" : `<text class="at-map-centre-back" y="76">↑ back</text>`}`
+        const top = band(d) === 1 ? d : d.parent
+        return Object.assign(d, { a0, a1, r0: band(d), ri: radii[band(d)][0], ro: radii[band(d)][1], hue: sweep.get(top) ?? 50 })
+      }).filter((d) => d.a1 - d.a0 > (d.r0 === 1 ? 0.01 : 0.02))
+      const fill = (d) => `color-mix(in srgb, var(--mx-blue) ${d.hue}%, var(--mx-good))`
+      const driftArc = d3.arc().innerRadius(ring * 2.85 + 9).outerRadius(ring * 2.85 + 15).cornerRadius(3)
+      const tops = shown.filter((d) => d.r0 === 1)
+      current = shown
+      svg.innerHTML = `<circle class="at-map-track" r="${ring * 2.85 + 12}"/>
+        ${tops.filter((d) => d.drifted).map((d) => `<path class="at-map-drift" d="${driftArc({ startAngle: d.a0 + 0.006, endAngle: d.a0 + 0.006 + Math.max(0.02, (d.a1 - d.a0 - 0.012) * (d.drifted / d.value)) })}"><title>${A.esc(`${d.data.name} · ${A.num(d.drifted)} of ${A.num(d.value)} changed`)}</title></path>`).join("")}
+        ${shown.map((d, i) => `<path class="at-map-arc d${d.r0}" d="${arc(d)}" data-i="${i}" style="fill:${fill(d)};animation-delay:${Math.round((d.a0 / (2 * Math.PI)) * 260)}ms"><title>${A.esc(tip(d))}</title></path>`).join("")}
+        <circle class="at-map-centre ${focus === root ? "" : "up"}" r="${ring - 4}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
+        <text class="at-map-centre-k" y="-30" data-k="${A.esc(focus === root ? "All facts" : focus.data.name.length > 16 ? `${focus.data.name.slice(0, 15)}…` : focus.data.name)}">${A.esc(focus === root ? "All facts" : focus.data.name.length > 16 ? `${focus.data.name.slice(0, 15)}…` : focus.data.name)}</text>
+        <text class="at-map-centre-n" y="14" data-k="${A.num(focus.value)}">${A.num(focus.value)}</text><text class="at-map-centre-u ${focus.drifted ? "warm" : ""}" y="44" data-k="${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}" data-w="${focus.drifted ? 1 : 0}">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>
+        ${focus === root ? "" : `<text class="at-map-centre-back" y="72">Back</text>`}`
       svg.querySelectorAll(".at-map-arc").forEach((el) => {
         const d = shown[+el.dataset.i]
         el.addEventListener("click", () => go(d))
@@ -263,6 +270,10 @@
     }
     const mark = (d) => {
       host.classList.toggle("marking", !!d)
+      host.querySelectorAll(".at-map-arc").forEach((el) => { const x = current[+el.dataset.i]; el.classList.toggle("on", !!d && (x === d || x.parent === d)) })
+      const k = host.querySelector(".at-map-centre-k"), n = host.querySelector(".at-map-centre-n"), u = host.querySelector(".at-map-centre-u")
+      if (k && d) { k.textContent = d.data.name.length > 16 ? `${d.data.name.slice(0, 15)}…` : d.data.name; n.textContent = A.num(d.value); u.textContent = d.drifted ? `${A.num(d.drifted)} changed` : "all hold"; u.classList.toggle("warm", !!d.drifted) }
+      if (k && !d) { k.textContent = k.dataset.k; n.textContent = n.dataset.k; u.textContent = u.dataset.k; u.classList.toggle("warm", u.dataset.w === "1") }
       host.querySelectorAll(".at-map-dotgroup").forEach((g) => g.classList.toggle("on", !!d && (g.dataset.p === d.data.path)))
     }
     show(root)
