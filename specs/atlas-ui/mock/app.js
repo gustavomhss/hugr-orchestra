@@ -328,6 +328,13 @@
     "toggle-why": () => A.go(withQuery({ why: A.state.query.why === "all" ? null : "all" })),
     "copy-link": (v) => copy(`${location.href.split("#")[0]}#/fact/${v}`, "Link copied"),
     copy: (v) => copy(v, "Copied"),
+    "iv-pick": (v) => {
+      const [i, j] = v.split("|")
+      document.querySelectorAll(`[data-action="iv-pick"][data-value^="${i}|"]`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === `${i}|${j}`)))
+      document.querySelector(`[data-iv="${i}"]`)?.classList.add("done")
+      const n = document.querySelector("#iv-done")
+      if (n) n.textContent = document.querySelectorAll(".at-gen-iv-q.done").length
+    },
     toast: (v) => A.toast(A.esc(v), "info"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },
     event: (v) => dialog(A.eventSheet(v)),

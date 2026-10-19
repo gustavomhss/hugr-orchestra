@@ -145,6 +145,9 @@ window.Atlas = window.Atlas || {}
     R6: "Retiring withdraws a fact from what agents read. Today it is tagged SUPERSEDED but still served.",
     R7: "Rebuild the Own snapshot from the app, so live changes reach agents. Today a maintainer re-materializes it from a reviewed snapshot JSON, never from the live store.",
     R8: "Replace a fact's claim. Today a same-tier rewrite adds the new claim to the set and the old one stays served; only a tier raise replaces claims.",
+    R9: "An automatic Atlas repair pull request after a merge that left skills stale. Today the guard detects it and Orchestra holds, but nobody opens the repair.",
+    R10: "The Atlas guard on every pull request that touches covered code. Today it runs only on epic pull requests or on demand.",
+    R11: "The ratification interview: open questions served as one ranked batch of at most 20, answered by a person. Today the batch is assembled in the library (genesis/src/align.ts) but no command or tool serves it.",
   }
   // The full label appears once, in the footer of the sheet the action opens; buttons carry only a dot.
   A.newcap = (id) => `<span class="at-newcap" data-tip="Requires a new capability · ${id}: ${A.esc(A.REQS[id])}">${A.icon("sparkle")}New capability · ${id}</span>`

@@ -316,7 +316,7 @@
         refs: "cli/src/mine-decide.ts:107-268 · genesis/src/coverage.ts:166" },
       { id: "accept", icon: "check", title: "Promote", n: A.num(M().facts.length), unit: `promoted · ${A.num(R().candidates.length)} waiting`, how: "you",
         what: "<code>atlas promote</code> takes the whole staging at once and sends every row through the same write door as any edit: still true against today's code, you are a writer of <code>atlas:mined</code> in policy.json, no conflict with what is stored, and a ratify token.",
-        facts: ["Promoted facts stay T2: agents get them in the hints band. Rules (T1, T0) come only from ratifying later.", "Rows whose code moved since mining are refused.", "Staging is not emptied afterwards."],
+        facts: ["Promoted facts stay T2: agents get them in the hints band. Rules (T1, T0) come only from the ratification interview below.", "Rows whose code moved since mining are refused.", "Staging is not emptied afterwards."],
         refs: "adapter-io/src/governed-promote.ts:121-170 · knowledge/src/bands.ts:41" },
     ]
   }
@@ -336,6 +336,31 @@
     frontier: ["Symbols in the fallback", "Only matters when git history is too thin: the structural fallback then looks at symbols, not only files. With a normal history it changes nothing.", "ATLAS_FRONTIER", [["Files", ""], ["Symbols", "symbol"]]],
     model: ["Model", "The command run for each site (<code>roles.propose</code>, 60 s timeout). Read from <code>~/.config/atlas/model.json</code> or <code>$XDG_CONFIG_HOME</code>; <code>ATLAS_MODEL_CONFIG</code> points elsewhere. A file inside the repository is refused.", "ATLAS_MODEL_CONFIG", null],
   }
+
+  // The ratification interview (genesis/src/align.ts, atlas-genesis S3): open questions of four kinds, ranked by
+  // blast × tier, served together, at most INTERVIEW_CAP = 20 per session; the tail waits for the next session.
+  // Nothing calls assembleInterview outside the library, so the questions here are drafted from this store (R11).
+  const INTERVIEW_CAP = 20
+  const interview = () => {
+    const blast = (file) => (R().dependents?.[file] ?? []).length
+    const weight = { T0: 3, T1: 2, T2: 1 }
+    const live = M().live()
+    const owner = M().units().filter((u) => u.id !== "(root)" && !M().territoryOf(u.id)?.owner).map((u) => {
+      const b = [...u.files].reduce((n, f) => n + blast(f), 0)
+      return { kind: "owner", site: u.id, ask: `Who owns ${u.id}?`, options: ["seat:orchestrator", "a person on the team", "nobody yet"], rank: b, why: `${A.num(u.facts)} facts, ${A.num(b)} files depend on it, no owner named` }
+    })
+    const tier = live.filter((x) => x.tier === "T2" && x.slot && ["invariant", "contract", "security-property"].includes(x.slot)).map((x) => ({
+      kind: "tier", site: x.file, key: x.key, ask: `Make this a rule? “${x.claim.length > 200 ? `${x.claim.slice(0, 199)}…` : x.claim}”`, options: ["Rule · T1", "Core · T0", "Keep as a hint"], rank: blast(x.file) * weight.T0, why: `${x.slot}, ${A.num(blast(x.file))} files depend on its file` }))
+    const same = Object.values(live.reduce((m, x) => ((m[`${x.file}|${x.slot}`] ??= []).push(x), m), {})).filter((xs) => xs.length > 1 && xs[0].slot)
+    const contested = same.map((xs) => ({ kind: "contested", site: xs[0].file, key: xs[0].key, ask: `Two ${xs[0].slot} claims on ${xs[0].file.split("/").pop()}: which holds?`, options: [`“${xs[0].claim.slice(0, 70)}…”`, `“${xs[1].claim.slice(0, 70)}…”`, "Both"], rank: blast(xs[0].file) * Math.max(...xs.map((x) => weight[x.tier] ?? 1)), why: `${xs.length} claims share one slot` }))
+    const intent = M().units().filter((u) => u.id !== "(root)" && !live.some((x) => M().unitOf(x.file) === u.id && x.slot === "rationale")).map((u) => {
+      const b = [...u.files].reduce((n, f) => n + blast(f), 0)
+      return { kind: "intent", site: u.id, ask: `What is ${u.id} for?`, options: null, rank: b, why: `no rationale among its ${A.num(u.facts)} facts` }
+    })
+    const open = [...owner, ...tier, ...contested, ...intent].sort((a, b) => b.rank - a.rank)
+    return { batch: open.slice(0, INTERVIEW_CAP), deferred: open.slice(INTERVIEW_CAP), counts: { owner: owner.length, tier: tier.length, contested: contested.length, intent: intent.length } }
+  }
+  const IV_KIND = { owner: ["Owner", "blue"], tier: ["Tier", "good"], contested: ["Contested", "warm"], intent: ["Intent", ""] }
 
   A.views.genesis = (state) => {
     const st = stages()
@@ -383,6 +408,16 @@
         <div class="at-kinds"><div class="at-kinds-row head"><span>Kind</span><span>The model</span><span>Code checks</span><span>Lands as</span></div>
         ${KINDS.map((k) => `<div class="at-kinds-row"><span><b>${k.name}</b> ${k.on ? '<span class="at-own-badge good">default</span>' : '<span class="at-own-badge">opt-in</span>'}<code>${k.id}</code></span><span>${k.model}</span><span>${k.check}</span><span>${k.lands}</span></div>`).join("")}</div>
         <p class="mx-note">In this store: ${A.num(all.length)} claims staged, ${A.num(proven)} proven by an oracle, ${A.num(justified)} from the semantic pass, the rest hints. Claims about relations, negations and transitions exist in the write door, but mining can't produce them yet.</p></section>
+
+      ${(() => { const iv = interview(); return `<section class="at-panel at-gen-iv" id="interview"><header class="at-panel-head"><div><h3>${A.icon("check")}The ratification interview</h3><small>Genesis only writes suggestions. A rule (T1) or a core fact (T0) needs a person, and Atlas asks once: one batch of the questions that matter most, ranked by how much code depends on the answer. ${A.newcap("R11")}</small></div>
+          <div class="at-gen-iv-count"><b id="iv-done">0</b><span>of ${iv.batch.length} answered</span></div></header>
+        <div class="at-gen-iv-kinds">${Object.entries(IV_KIND).map(([k, [l, tone]]) => `<span class="at-own-badge ${tone}">${l} · ${A.num(iv.counts[k])}</span>`).join("")}<span class="grow"></span><span class="muted">${A.num(iv.batch.length + iv.deferred.length)} open · top ${INTERVIEW_CAP} this session · ${A.num(iv.deferred.length)} wait for the next</span></div>
+        <ol class="at-gen-iv-list">${iv.batch.map((q, i) => `<li class="at-gen-iv-q" data-iv="${i}"><span class="at-gen-iv-n">${i + 1}</span><div><div class="at-gen-iv-head"><span class="at-own-badge ${IV_KIND[q.kind][1]}">${IV_KIND[q.kind][0]}</span><code>${A.esc(q.site)}</code></div>
+          <p>${A.esc(q.ask)}</p><small>Ranked: ${A.esc(q.why)}</small>
+          ${q.options ? `<div class="wf-range">${q.options.map((o, j) => `<button aria-pressed="false" data-action="iv-pick" data-value="${i}|${j}">${A.esc(o)}</button>`).join("")}</div>` : `<input class="at-knob-input at-gen-iv-text" placeholder="One sentence, in your words" data-iv-text="${i}" oninput="this.closest('.at-gen-iv-q').classList.toggle('done', !!this.value.trim()); document.querySelector('#iv-done').textContent = document.querySelectorAll('.at-gen-iv-q.done').length">`}</div></li>`).join("")}</ol>
+        <footer class="at-gen-iv-foot"><p class="mx-note">Unanswered questions defer to the next session; an uncovered path stays T0-strict deny. Nothing is promoted without this step: there is no automatic path from suggestion to rule.</p>
+          ${A.btn("Ratify the batch", "toast", { primary: true, icon: "check", write: true, value: "Serving the interview is a new capability (R11)." })}</footer>
+        ${A.tech([["Code", "<code>genesis/src/align.ts</code> · assembleInterview · INTERVIEW_CAP = 20 · ROUTER_EDGES"], ["Question kinds", "owner · tier · contested · intent (genesis/src/types.ts OpenQ)"], ["Today", "the library assembles the batch and feeds a Ratifier; no command, tool or flag reaches it"], ["Here", "questions drafted from this store: units with no owner, invariants and contracts still hints, two claims in one slot, units with no rationale"]])}</section>` })()}
 
       <section class="at-panel at-gen-config"><header class="at-panel-head"><div><h3>${A.icon("settings")}Configure the next run</h3><small>Environment variables for <code>atlas mine</code>. Atlas saves none of this.</small></div></header>
         <div class="at-knobs">${Object.entries(knobs).map(([k, [label, help, v, opts]]) => `<div class="at-knob" id="knob-${k}"><div><strong>${label}</strong><small>${help}</small><code class="at-knob-var">${v}</code></div>
