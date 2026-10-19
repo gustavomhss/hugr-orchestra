@@ -360,6 +360,8 @@ describe("documents", () => {
         expect(yield* refused(store.get("missing"))).toEqual(NOT_FOUND)
         expect(yield* refused(store.save({ id: "missing", body: draft("A") }))).toEqual(NOT_FOUND)
         expect(yield* refused(store.version(a.id, "missing"))).toEqual(NOT_FOUND)
+        // Saves are drafts; only a published version has a row another document's ID can collide with.
+        yield* store.publish(b.id, b.versionId)
         expect(yield* refused(store.version(a.id, b.versionId))).toEqual({
           status: 404,
           code: "not-found",
