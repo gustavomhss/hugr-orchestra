@@ -50,7 +50,9 @@ const importSession = Effect.fnUntraced(function* (
     .pipe(Effect.orDie)
   const converted = messages.flatMap((row) => {
     const info = { ...row.data, id: row.id, sessionID } as Info
-    const own = parts.filter((part) => part.message_id === row.id).map((part) => part.data as Part)
+    const own = parts
+      .filter((part) => part.message_id === row.id)
+      .map((part) => ({ ...part.data, id: part.id, messageID: part.message_id, sessionID }) as Part)
     return Option.toArray(decode(info.role === "user" ? user(info, own) : assistant(info, own)))
   })
   if (converted.length === 0) return

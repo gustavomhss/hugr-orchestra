@@ -38,7 +38,7 @@ describe("SessionV2 rename and remove", () => {
       const renamed = yield* session.get(created.id)
       expect(renamed.title).toBe("Renamed")
       expect(renamed.projectID).toBe(created.projectID)
-      expect(renamed.time.created).toBe(created.time.created)
+      expect(renamed.time.created).toEqual(created.time.created)
     }),
   )
 

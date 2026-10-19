@@ -77,7 +77,7 @@ describe("Config.updateGlobal", () => {
               JSON.stringify({
                 experimental: {
                   policies: [
-                    { action: "tool.custom", effect: "deny", resource: "*" },
+                    { action: "provider.use", effect: "allow", resource: "anthropic" },
                     { action: "provider.use", effect: "deny", resource: "mistral" },
                   ],
                 },
@@ -94,7 +94,7 @@ describe("Config.updateGlobal", () => {
           expect((yield* Config.readGlobal()).disabledProviders).toEqual(["openai"])
           expect(yield* policy.evaluate("provider.use", "openai", "allow")).toBe("deny")
           expect(yield* policy.evaluate("provider.use", "mistral", "allow")).toBe("allow")
-          expect(yield* policy.evaluate("tool.custom", "x", "allow")).toBe("deny")
+          expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toContain("anthropic")
         }).pipe(
           Effect.provide(
             AppNodeBuilder.build(LayerNode.group([Config.node, Policy.node, FSUtil.node, Global.node]), [
