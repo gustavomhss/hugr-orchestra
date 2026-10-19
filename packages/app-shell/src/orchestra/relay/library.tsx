@@ -604,7 +604,8 @@ export function AllRuns(props: {
                   </span>
                   <div class="mx-grow">
                     <strong>
-                      #{runHandle(run.runID)} · {name()}
+                      {/* An external run ID is the thread the user chose, so it shows whole. */}
+                      #{external ? run.runID : runHandle(run.runID)} · {name()}
                       <Show when={external}>
                         {" "}
                         <span class="mx-badge">{copy.t("orchestra.workflows.receipt.external")}</span>

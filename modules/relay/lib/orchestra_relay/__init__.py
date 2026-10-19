@@ -76,7 +76,10 @@ def project_root():
 
 def _gate(builder, root, graph, node, gate):
     if node not in builder.nodes:
-        raise RelayError(f'relay: no node "{node}" in this graph. Gated nodes: add_node("{node}", ...) first.')
+        raise RelayError(
+            f'relay: no node "{node}" in this graph.\n'
+            f'       Nodes in this graph: {", ".join(n for n in builder.nodes if "__relay_" not in n)}'
+        )
     if builder.branches.get(node) or builder.nodes[node].ends or any(node in s for s, _ in builder.waiting_edges):
         raise RelayError(
             f'relay: node "{node}" has conditional edges, Command destinations or a join edge.\n'
@@ -190,6 +193,7 @@ def _finish(root, graph, config):
 
 def _escalate(ledger, thread, node, reason):
     _append(ledger, {"event": "escalate", "key": f"{thread}/__end__/0/escalate", "reason": reason, "node": node})
+    _say(node, "run", f"STOPPED  ({reason}; nothing after it ran)")
     _summary(ledger)
 
 

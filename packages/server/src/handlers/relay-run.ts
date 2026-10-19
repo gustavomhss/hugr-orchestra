@@ -37,7 +37,8 @@ export const RelayRunHandler = HttpApiBuilder.group(Api, "server.relay.run", (ha
 )
 
 const load = Effect.fnUntraced(function* (runID: string) {
-  const entries = yield* LedgerRead.entries(yield* ledgerOf(runID)).pipe(
+  const ledger = yield* ledgerOf(runID)
+  const entries = yield* LedgerRead.entries(ledger).pipe(
     Effect.mapError(
       (error) => new RelayConflictError({ code: "ledger-invalid", message: `The run ledger cannot be read: ${error._tag}` }),
     ),
@@ -49,7 +50,20 @@ const load = Effect.fnUntraced(function* (runID: string) {
       code: "ledger-invalid",
       message: `The ledger of ${runID} is not an external run that starts with run.start.`,
     })
-  return { entries, run }
+  // A broken chain makes its self-reported steps untrustworthy, so the run shows only that it is broken.
+  const verified = yield* LedgerVerify.verify(ledger)
+  if (verified.exit === 0) return { entries, run }
+  return {
+    entries,
+    run: {
+      ...run,
+      status: "failed" as const,
+      failing: [],
+      reason: `Ledger broken: ${`${verified.stdout}${verified.stderr}`.split("\n")[0]}`,
+      endedAt: run.endedAt ?? run.startedAt,
+      steps: [],
+    },
+  }
 })
 
 // The external process records its own checks, so an intact chain proves only that nothing changed afterwards.

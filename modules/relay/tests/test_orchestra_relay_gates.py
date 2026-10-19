@@ -86,7 +86,8 @@ def test_static_out_edge_never_runs_on_unchecked_output(project, capsys):
     assert calls == ["write", "write"]
     assert events(project, "blocked")[-1] == "escalate"
     # A failing check shows why in the terminal, and the run is named after the project folder.
-    assert "│ no labeler module" in capsys.readouterr().err
+    err = capsys.readouterr().err
+    assert "│ no labeler module" in err and "STOPPED  (check failed 2 of 2 times" in err
     assert json.loads(ledger(project, "blocked").read_text().splitlines()[0])["graph"] == project.name
     assert main(["verify", str(ledger(project, "blocked").parent)]) == 0
 
@@ -160,3 +161,8 @@ def test_conditional_out_edges_are_refused():
     builder.add_conditional_edges("ship", lambda state: END, [END])
     with pytest.raises(orchestra_relay.RelayError, match='node "ship" has conditional edges'):
         gated(builder, {"ship": PASS})
+
+
+def test_a_gate_on_a_missing_node_names_the_graph_nodes():
+    with pytest.raises(orchestra_relay.RelayError, match='no node "shipp" in this graph.\\n.*Nodes in this graph: write, ship'):
+        gated(build([]), {"write": PASS, "shipp": PASS})
