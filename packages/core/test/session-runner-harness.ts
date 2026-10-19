@@ -69,7 +69,10 @@ export function make(input: {
   skillGuidance: Layer.Layer<SkillGuidance.Service>
   /** Execution hosts the runner may select by agent engine; default none. */
   hosts?: Layer.Layer<ExecutionHost.Service>
+  /** Replaces the fail-closed permission fixture. */
+  permissions?: Layer.Layer<PermissionV2.Service>
 }) {
+  const permissions = input.permissions ?? PermissionFixture.normalLayer
   const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [
@@ -80,7 +83,7 @@ export function make(input: {
     [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],
     [SkillGuidance.node, input.skillGuidance],
     [ReferenceGuidance.node, referenceGuidance],
-    [PermissionV2.node, PermissionFixture.normalLayer],
+    [PermissionV2.node, permissions],
     [Config.node, config],
     ...hosts,
   ])
@@ -125,7 +128,7 @@ export function make(input: {
       ]),
       [
         [LayerNodePlatform.llmClient, input.client],
-        [PermissionV2.node, PermissionFixture.normalLayer],
+        [PermissionV2.node, permissions],
         [SessionRunnerModel.node, input.models],
         [SystemContextRegistry.node, input.systemContext],
         [Location.node, Location.boundNode({ directory: AbsolutePath.make("/project") })],

@@ -1,12 +1,14 @@
 export * as ClaudeCodeHost from "./host"
 
-import type { SDKMessage } from "@anthropic-ai/claude-agent-sdk"
+import { createSdkMcpServer, type CanUseTool, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
+import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
-import { LLMEvent } from "@orchestra/llm"
+import { LLMEvent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
 import { Effect, Layer, Stream } from "effect"
-import { createHash } from "node:crypto"
+import { createHash, randomUUID } from "node:crypto"
+import path from "node:path"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
@@ -14,6 +16,29 @@ import { ClaudeCodeTranscript } from "../transcript"
 export const ID = "claude-code"
 /** V1's `session.metadata` key (`host/session.ts`), so V1-era Claude-hosted sessions resume on V2. */
 export const STATE_KEY = "claudeCode"
+/** The in-process MCP server that serves the Location's Orchestra tools to Claude Code. */
+export const MCP_SERVER = "orchestra"
+const MCP_PREFIX = `mcp__${MCP_SERVER}__`
+
+/** Orchestra tools Claude Code has as built-ins, or that belong to Orchestra's own loop: never served (as V1). */
+const UNSERVED = new Set([
+  "bash", "read", "write", "edit", "apply_patch", "grep", "glob", "webfetch", "websearch", "task", "todowrite",
+  "question", "skill", "lsp", "invalid", "context_compact", "execute",
+])
+
+/** How a Claude Code built-in maps to a V2 permission: its action and the input field that names the resource. */
+const PERMISSIONS: Readonly<Record<string, { action: string; field: string; path?: boolean }>> = {
+  Bash: { action: "bash", field: "command" },
+  Read: { action: "read", field: "file_path", path: true },
+  Write: { action: "edit", field: "file_path", path: true },
+  Edit: { action: "edit", field: "file_path", path: true },
+  MultiEdit: { action: "edit", field: "file_path", path: true },
+  NotebookEdit: { action: "edit", field: "notebook_path", path: true },
+  Glob: { action: "glob", field: "pattern" },
+  Grep: { action: "grep", field: "pattern" },
+  WebFetch: { action: "webfetch", field: "url" },
+  WebSearch: { action: "websearch", field: "query" },
+}
 
 /**
  * One Claude Code SDK turn (prompt sent → `result` frame) is one provider turn of the V2 runner. Claude Code keeps its
@@ -39,6 +64,24 @@ export const make = Effect.gen(function* () {
           const prompt = pending.map((message) => message.text).join("\n\n").trim()
           if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
+          const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
+          // Claude Code's tool_use id for an Orchestra tool, learned in canUseTool; the MCP request does not carry it.
+          const callIDs = new Map<string, string[]>()
+          const canUseTool: CanUseTool = (tool, input, options) => {
+            if (tool.startsWith(MCP_PREFIX)) {
+              const name = tool.slice(MCP_PREFIX.length)
+              callIDs.set(name, [...(callIDs.get(name) ?? []), options.toolUseID])
+              // The registry settles the Orchestra tool's own permissions when the runner executes it.
+              return Promise.resolve({ behavior: "allow" as const, updatedInput: input })
+            }
+            return Effect.runPromise(
+              turn.authorize({ callID: options.toolUseID, tool, ...permission(tool, input, turn.session.location.directory) }).pipe(
+                Effect.as({ behavior: "allow" as const, updatedInput: input }),
+                Effect.catch((error) => Effect.succeed({ behavior: "deny" as const, message: denial(error) })),
+              ),
+              { signal: options.signal },
+            )
+          }
           const lifetime = ClaudeCodeSDK.processLifetime({
             cwd: turn.session.location.directory,
             ...(turn.model?.providerID === "anthropic" ? { model: turn.model.id } : {}),
@@ -47,11 +90,17 @@ export const make = Effect.gen(function* () {
             systemPrompt: { type: "preset", preset: "claude_code", append: turn.system.join("\n\n") },
             settingSources: ["project"],
             permissionMode: "default",
+            canUseTool,
+            ...(served.length
+              ? { mcpServers: { [MCP_SERVER]: server(served, (name) => callIDs.get(name)?.shift() ?? `orchestra_${randomUUID()}`, turn.execute) } }
+              : {}),
             env: ClaudeHostOptions.environment(env),
             abortController: abort,
           })
           const query = yield* Effect.acquireRelease(
-            Effect.sync(() => sdk.query({ prompt, options: lifetime.options })),
+            // Streaming input, which in-process MCP servers need; the turn ends at the `result` frame and the finalizer
+            // closes the input with the query.
+            Effect.sync(() => sdk.query({ prompt: input(prompt, abort.signal), options: lifetime.options })),
             () =>
               Effect.sync(() => abort.abort()).pipe(
                 Effect.andThen(Effect.promise(() => lifetime.join().catch(() => undefined))),
@@ -59,6 +108,7 @@ export const make = Effect.gen(function* () {
           )
           const names = new Map<string, string>()
           const frames = Stream.fromAsyncIterable(query, (error) => error).pipe(
+            Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
                 if (message.type === "system" && message.subtype === "init")
@@ -103,7 +153,8 @@ function events(message: SDKMessage, names: Map<string, string>): LLMEvent[] {
         return [LLMEvent.textStart({ id }), LLMEvent.textDelta({ id, text: block.text }), LLMEvent.textEnd({ id })]
       if (block.type === "thinking")
         return [LLMEvent.reasoningStart({ id }), LLMEvent.reasoningDelta({ id, text: block.thinking }), LLMEvent.reasoningEnd({ id })]
-      if (block.type !== "tool_use") return []
+      // Orchestra tools are recorded by the runner through `turn.execute`, never by the host.
+      if (block.type !== "tool_use" || block.name.startsWith(MCP_PREFIX)) return []
       names.set(block.id, block.name)
       return [LLMEvent.toolCall({ id: block.id, name: block.name, input: block.input, providerExecuted: true })]
     })
@@ -138,6 +189,51 @@ function events(message: SDKMessage, names: Map<string, string>): LLMEvent[] {
       outputTokens: message.usage.output_tokens,
     },
   })]
+}
+
+/** The `orchestra` MCP server: lists the served tools and settles each call through the runner. */
+function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => string, execute: ExecutionHost.Turn["execute"]) {
+  const mcp = createSdkMcpServer({ name: MCP_SERVER, tools: [] })
+  mcp.instance.server.setRequestHandler(ListToolsRequestSchema, async () => ({
+    tools: tools.map((tool) => ({ name: tool.name, description: tool.description, inputSchema: { ...tool.inputSchema, type: "object" as const } })),
+  }))
+  mcp.instance.server.setRequestHandler(CallToolRequestSchema, async (request) => {
+    const tool = tools.find((item) => item.name === request.params.name)
+    if (!tool) return { content: [{ type: "text" as const, text: `Orchestra tool ${request.params.name} is not available.` }], isError: true }
+    const settlement = await Effect.runPromise(
+      execute({ id: callID(tool.name), name: tool.name, input: request.params.arguments ?? {} }),
+    )
+    return {
+      content: [{ type: "text" as const, text: modelText(settlement.result) }],
+      ...(settlement.result.type === "error" ? { isError: true } : {}),
+    }
+  })
+  return mcp
+}
+
+function modelText(result: ToolResultValue) {
+  if (result.type === "content") return result.value.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
+  return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
+}
+
+async function* input(text: string, signal: AbortSignal): AsyncGenerator<SDKUserMessage> {
+  yield { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null }
+  await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }))
+}
+
+function permission(tool: string, input: Record<string, unknown>, directory: string) {
+  const rule = PERMISSIONS[tool]
+  const value = rule ? input[rule.field] : undefined
+  if (!rule || typeof value !== "string") return { action: tool.toLowerCase(), resources: ["*"] }
+  if (!rule.path || !path.isAbsolute(value)) return { action: rule.action, resources: [value] }
+  const relative = path.relative(directory, value)
+  return { action: rule.action, resources: [relative.startsWith("..") || path.isAbsolute(relative) ? value : relative] }
+}
+
+function denial(error: { readonly _tag: string }) {
+  if ("feedback" in error && typeof error.feedback === "string") return error.feedback
+  if (error._tag === "PermissionV2.DeclinedError") return "The owner declined this call."
+  return "Orchestra's permission rules deny this call."
 }
 
 /** Claude Code's session id for an Orchestra session: a name-based (v5) UUID, stable across restarts (as V1). */

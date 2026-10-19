@@ -1,12 +1,14 @@
 export * as ExecutionHost from "./execution-host"
 
-import type { LLMError, LLMEvent } from "@orchestra/llm"
+import type { LLMError, LLMEvent, ToolDefinition } from "@orchestra/llm"
 import { eq } from "drizzle-orm"
 import { Context, Effect, Layer, type Stream } from "effect"
 import type { AgentV2 } from "../../agent"
 import type { Database } from "../../database/database"
 import { makeLocationNode } from "../../effect/app-node"
 import type { ModelV2 } from "../../model"
+import type { PermissionV2 } from "../../permission"
+import type { ToolRegistry } from "../../tool/registry"
 import type { SessionMessage } from "../message"
 import type { SessionSchema } from "../schema"
 import { SessionTable } from "../sql"
@@ -24,6 +26,20 @@ export interface Turn {
   readonly system: ReadonlyArray<string>
   /** Projected history the runner reloaded for this turn. */
   readonly history: ReadonlyArray<SessionMessage.Message>
+  /** The agent's permission-filtered Orchestra tools, for the host to offer its engine. */
+  readonly tools: ReadonlyArray<ToolDefinition>
+  /**
+   * Runs an Orchestra tool the engine invoked: the runner records the call (provider-executed, executor "orchestra"),
+   * settles it through the Location registry and records the result. The host never emits these calls itself.
+   */
+  readonly execute: (call: { readonly id: string; readonly name: string; readonly input: unknown }) => Effect.Effect<ToolRegistry.Settlement>
+  /** V2 permission for a call the engine runs itself; an ask waits for the owner's reply, a deny or decline fails. */
+  readonly authorize: (input: {
+    readonly callID: string
+    readonly tool: string
+    readonly action: string
+    readonly resources: ReadonlyArray<string>
+  }) => Effect.Effect<void, PermissionV2.Error | PermissionV2.DeclinedError>
   /** The host's durable state, `session.metadata[host.stateKey]`. */
   readonly state: {
     readonly get: Effect.Effect<unknown>

@@ -7,6 +7,7 @@ import {
   SystemPart,
   isContextOverflowFailure,
   type ProviderErrorEvent,
+  type ToolCall,
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
 import { AgentV2 } from "../../agent"
@@ -30,6 +31,7 @@ import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
 import { SessionHistory } from "../history"
 import { SessionInput } from "../input"
+import type { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
 import { SessionSubagentModels } from "../subagent-models"
@@ -112,6 +114,7 @@ const layer = Layer.effect(
     const snapshots = yield* Snapshot.Service
     const database = yield* Database.Service
     const hosts = yield* ExecutionHost.Service
+    const permissions = yield* PermissionV2.Service
     const workflowHosts = yield* RelayWorkflowSession.Service
     const nativeHost = yield* RelayWorkflowSession.NativeHost
     const workflowContext = Context.make(Database.Service, database).pipe(
@@ -228,7 +231,7 @@ const layer = Layer.effect(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
-      const toolMaterialization = isLastStep || host ? undefined : yield* tools.materialize(effectiveRules)
+      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
       const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
         (part): part is string => part !== undefined && part.length > 0,
@@ -266,6 +269,52 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
+      const settle = (call: ToolCall, assistantMessageID: SessionMessage.ID, materialization: ToolRegistry.Materialization) =>
+        CapabilityInvocation.withContext(
+          {
+            issuer: "core",
+            owner: {
+              projectID: location.project.id,
+              location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+              sessionID: session.id,
+              agentID: agent.id,
+            },
+            invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: call.id },
+            rootToolName: call.name,
+            effectiveRules,
+            // Core selection has configured permissions, not a separate native Permission floor.
+            nativeDenyFloor: [],
+          },
+          materialization.settle({ sessionID: session.id, agent: agent.id, model: modelRef, assistantMessageID, call }),
+        ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error)))
+      // An Orchestra tool the host's engine invokes: recorded before side effects, settled through the registry like a
+      // local call, persisted provider-executed so no continuation turn is scheduled for it.
+      const execute: ExecutionHost.Turn["execute"] = (input) =>
+        Effect.gen(function* () {
+          if (!toolMaterialization) return { result: { type: "error" as const, value: "Tools are disabled after the maximum agent steps" } }
+          const call = LLMEvent.toolCall({ ...input, providerExecuted: true, providerMetadata: { orchestra: { executor: "orchestra" } } })
+          yield* publish(call)
+          const settled = yield* settle(call, yield* publisher.assistantMessageID(call.id), toolMaterialization).pipe(Effect.exit)
+          const settlement: ToolRegistry.Settlement =
+            settled._tag === "Success"
+              ? settled.value
+              : { result: { type: "error", value: `Tool execution failed: ${messageOf(Cause.squash(settled.cause))}` } }
+          yield* publish(
+            LLMEvent.toolResult({ id: call.id, name: call.name, result: settlement.result, output: settlement.output, providerExecuted: true }),
+            settlement.outputPaths ?? [],
+          )
+          return settlement
+        })
+      // Permission for a call the host's engine runs itself, with the agent's and Session's rules: an ask is an ordinary
+      // V2 permission request the app answers.
+      const authorize: ExecutionHost.Turn["authorize"] = (input) =>
+        permissions.authorize({
+          sessionID: session.id,
+          agent: agent.id,
+          action: input.action,
+          resources: [...input.resources],
+          metadata: { tool: input.tool, callID: input.callID },
+        }).pipe(Effect.catchTag("Session.NotFoundError", (error) => Effect.die(error)))
       const source = request
         ? llm.stream(request)
         : host && agent.info
@@ -275,6 +324,9 @@ const layer = Layer.effect(
               model: modelRef,
               system: systemText,
               history: context,
+              tools: toolMaterialization?.definitions ?? [],
+              execute,
+              authorize,
               state: ExecutionHost.state(db, session.id, host.stateKey),
             })
           : Stream.die("SessionRunner: no provider for this turn")
@@ -290,7 +342,7 @@ const layer = Layer.effect(
             }
             yield* publish(event)
             if (event.type !== "tool-call" || event.providerExecuted) return
-            if (!toolMaterialization) {
+            if (host || !toolMaterialization) {
               yield* withPublication(
                 publisher.failUnsettledTools(
                   host ? "Execution host emitted an unsettled call" : "Tools are disabled after the maximum agent steps",
@@ -301,30 +353,7 @@ const layer = Layer.effect(
             needsContinuation = true
             const assistantMessageID = yield* publisher.assistantMessageID(event.id)
             yield* Effect.uninterruptibleMask((restore) =>
-              restore(
-                CapabilityInvocation.withContext(
-                  {
-                    issuer: "core",
-                    owner: {
-                      projectID: location.project.id,
-                      location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
-                      sessionID: session.id,
-                      agentID: agent.id,
-                    },
-                    invocation: { sessionID: session.id, agentID: agent.id, assistantMessageID, callID: event.id },
-                    rootToolName: event.name,
-                    effectiveRules,
-                    // Core selection has configured permissions, not a separate native Permission floor.
-                    nativeDenyFloor: [],
-                  },
-                  toolMaterialization.settle({
-                    sessionID: session.id,
-                    agent: agent.id,
-                    model: modelRef,
-                    assistantMessageID,
-                    call: event,
-                  }),
-                ).pipe(Effect.catchTag("Capability.Failure", (error) => Effect.die(error))),
+              restore(settle(event, assistantMessageID, toolMaterialization)
               ).pipe(
                 Effect.flatMap((settlement) =>
                   publish(
@@ -510,5 +539,10 @@ export const node = makeLocationNode({
     Database.node,
     RelayWorkflowSession.node,
     ExecutionHost.node,
+    PermissionV2.node,
   ],
 })
+
+function messageOf(failure: unknown) {
+  return failure instanceof Error ? failure.message : String(failure)
+}

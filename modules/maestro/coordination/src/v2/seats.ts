@@ -6,15 +6,16 @@ import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import type { Host } from "@orchestra/core/host"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { ArsenalNative } from "../arsenal-native"
-import { renderPrompt, roster } from "../roster"
+import { nativeProfiles, renderPrompt, roster } from "../roster"
 import { Seats } from "../seats"
 
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
 /**
  * Projects every native seat of the roster into the Location's V2 agents as a subagent with its charter and task-tool
- * description. Maestro itself is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps
- * its prompt and description, and the seat's engine, model and display label stay the owner's settings.
+ * description, and its native profile as the last rules, so configuration cannot widen it (findLast wins). Maestro itself
+ * is core's default agent; configuration (`agent.<id>`) installed before this plugin keeps its prompt and description,
+ * and the seat's engine, model and display label stay the owner's settings.
  */
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -31,6 +32,7 @@ const layer = Layer.effectDiscard(
               agent.system ??= renderPrompt(member, member.displayName)
               agent.description ??= seat.description
               agent.mode = "subagent"
+              agent.permissions.push(...floor(member.nativeProfile))
             })
           }),
         )
@@ -38,6 +40,15 @@ const layer = Layer.effectDiscard(
     )
   }),
 )
+
+/** A roster profile (`{ action: effect | { resource: effect } }`) as V2 rules, in the profile's order. */
+export function floor(profile: string | undefined) {
+  return Object.entries(nativeProfiles[profile ?? ""] ?? {}).flatMap(([action, value]) =>
+    typeof value === "string"
+      ? [{ action, resource: "*", effect: value }]
+      : Object.entries(value).map(([resource, effect]) => ({ action, resource, effect })),
+  )
+}
 
 export const node = makeLocationNode({ name: "maestro/seats", layer, deps: [PluginV2.node, AgentV2.node] })
 
