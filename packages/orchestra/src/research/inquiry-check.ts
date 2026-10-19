@@ -192,9 +192,13 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     count("R2")
     if (!claim.evidence.length) fail("R2", "claim has no evidence", at)
     const good = claim.evidence.filter((item, index) => results[index])
-    // Tool output and atlas-own memory are never primary; a claim needs at least one file or URL source of its own.
+    // Tool output and atlas-own memory are never primary; a claim needs a file, URL or probe source of its own. A probe receipt
+    // is primary: the host ran it in a jail and recorded the verdict itself.
     count("R1")
-    const primary = good.some((item) => ["file", "url"].includes(receipts.get(ResearchLedger.canonical(item.source))!.origin.kind))
+    const primary = good.some((item) => {
+      const origin = receipts.get(ResearchLedger.canonical(item.source))!.origin
+      return origin.kind === "file" || origin.kind === "url" || (origin.kind === "tool-output" && origin.uri.startsWith("probe:"))
+    })
     if (good.length && !primary) fail("R1", "no primary source: tool output and atlas-own memory cannot be a claim's only evidence", at)
     const universal = claim.scope === "universal" || UNIVERSAL.test(claim.proposition)
     const absence = ABSENCE.test(claim.proposition)

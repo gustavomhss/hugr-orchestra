@@ -160,10 +160,9 @@ describe("probe_run", () => {
       const { result, receipt } = yield* fixture.probe(script(REPRO, { expect: { stdoutIncludes: "DEFECT" }, hypothesis }))
       expect(result.verdict, result.stderr.tail).toBe("reproduced")
       expect(result.script?.representation).toBe("text")
-      // Tool output is never a claim's only evidence (R1): the claim pairs the probe with the line it observed.
-      const code = Schema.decodeUnknownSync(Research.SourceReceipt)((yield* fixture.call("read", { filePath: "src/clamp.ts" })).metadata.researchSource).ref
+      // A probe receipt is primary evidence on its own (R1). Mutation control: drop the probe branch from R1 and the check fails.
       yield* inquiry({ action: "claim", subquestion: open.subquestions[0], proposition: "clamp(10, 0, 10) returns 9", nature: "observation",
-        evidence: [{ source: receipt.ref, pointer: "/verdict" }, { source: code, lines: { start: 5, end: 5 } }] })
+        evidence: [{ source: receipt.ref, pointer: "/verdict" }] })
       const check = yield* inquiry({ action: "check" })
       expect(check.output).toContain("\"verdict\":\"pass\"")
       // The host already resolved the hypothesis from the probe (J4.10), so it is no longer open.
