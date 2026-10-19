@@ -345,7 +345,10 @@ export const live = Effect.fn("ClaudeHostGate.live")(function* (input: {
       if (["Read", "Write", "Edit", "MultiEdit", "NotebookEdit"].includes(name)) {
         const target = text(args, "file_path") ?? text(args, "notebook_path")
         if (!target) return yield* Effect.fail(new Error(`HOLD: ${name} has no file path.`))
-        const filepath = path.resolve(instance.directory, FSUtil.windowsPath(target))
+        const requested = path.resolve(instance.directory, FSUtil.windowsPath(target))
+        // Claude Code serves a seat's skills from the published plugin copy. Reading it is checked as reading the
+        // source, so the seat's skill-root rules decide; writes to the copy stay external.
+        const filepath = (name === "Read" ? ClaudeHostPlugin.source(requested) : undefined) ?? requested
         // Expand lexical names before resolving links, and use the same spellings for both containment roots.
         const locations = process.platform === "win32" ? yield* Effect.tryPromise({
           try: () => Promise.all([filepath, instance.directory, projectDirectory].map(async (target) => {

@@ -55,7 +55,7 @@ jobs:
             host: ubuntu-latest
             cpu: X64
             platform: linux
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-recipes.test.ts, ./test/distribution-recipes-paths.test.ts, ./test/distribution-native.test.ts, ./test/build-runtime.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-install.test.ts, ./test/distribution-install-preservation.test.ts, ./test/distribution-npm.test.ts, ./test/distribution-native.test.ts, ./test/build-runtime.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - lane: regression
             package: cli
             host: windows-latest
@@ -92,25 +92,13 @@ jobs:
             host: macos-14
             cpu: ARM64
             platform: darwin
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - lane: regression
             package: cli
             host: macos-15-intel
             cpu: X64
             platform: darwin
-            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/distribution-homebrew.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
-          - lane: aur
-            package: cli
-            host: ubuntu-latest
-            cpu: X64
-            platform: linux
-            files: [./test/distribution-aur.test.ts]
-          - lane: aur
-            package: cli
-            host: ubuntu-24.04-arm
-            cpu: ARM64
-            platform: linux
-            files: [./test/distribution-aur.test.ts]
+            files: [./test/distribution-payload.test.ts, ./test/distribution-payload-integrity.test.ts, ./test/distribution-launcher.test.ts, ./test/distribution-native.test.ts, ./test/packaged-skills-build.test.ts, ./test/distribution-process.test.ts]
           - lane: musl
             package: cli
             host: ubuntu-latest
@@ -165,7 +153,7 @@ jobs:
           import { validateRequest } from './script/test-ci-request.ts'
           // bundle-program:begin
           const row = JSON.parse(process.env.ROW)
-          if (!['regression', 'aur', 'musl', 'provider'].includes(row.lane)) throw new Error('BUNDLE_LANE_INVALID')
+          if (!['regression', 'musl', 'provider'].includes(row.lane)) throw new Error('BUNDLE_LANE_INVALID')
           const arch = { X64: 'x64', ARM64: 'arm64' }[row.cpu]
           const os = { linux: 'Linux', win32: 'Windows', darwin: 'macOS' }[row.platform]
           if (!arch || !os || process.arch !== arch || process.platform !== row.platform || process.env.RUNNER_ARCH !== row.cpu || process.env.RUNNER_OS !== os)
@@ -254,7 +242,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p ../../distribution-logs
-          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-aur/sandbox-evidence.test.ts ./test/fixture/distribution-aur/bootstrap-config.test.ts ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
+          GITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ./test/fixture/distribution-provider/compiler-edge.test.ts ./test/fixture/distribution-provider/tool-result.test.ts ./test/fixture/distribution-provider/capture-bytes.test.ts ./test/fixture/distribution-provider/provenance.test.ts 2>&1 | tee ../../distribution-logs/localized-oracles.log
       - name: Run tests
         working-directory: ${{ env.PACKAGE_DIR }}
         run: |

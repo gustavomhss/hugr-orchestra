@@ -1,5 +1,5 @@
 import { readlink, realpath } from "node:fs/promises"
-import { basename, dirname, resolve, join } from "node:path"
+import { dirname, resolve, join } from "node:path"
 import { Cause, Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "@orchestra/core/process"
@@ -74,7 +74,7 @@ export async function command(args: string[], box: Box, timeout = 90_000, owner?
     // Do not expose daemon stdout/password or a native error containing its output.
     Effect.catchCause((cause) => Effect.fail(new Error(`NATIVE_COMMAND_PROCESS_OR_TIMEOUT_FAILURE: ${args[0]}${diagnostic
       ? `\n${JSON.stringify({ ...diagnostic, elapsedMs: Math.round(performance.now() - started) })}${safeCause ? `\n${Cause.pretty(cause)}` : ""}`
-      : basename(args[0]) === "brew" ? ` ${args.slice(1).join(" ")}\n${Cause.pretty(cause)}` : ""}`))),
+      : ""}`))),
   ))
   if (diagnostic) console.error(`NATIVE_COMMAND_EXIT ${JSON.stringify({ ...diagnostic,
     elapsedMs: Math.round(performance.now() - started), code: result.exitCode,

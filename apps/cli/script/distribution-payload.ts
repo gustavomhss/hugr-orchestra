@@ -201,7 +201,7 @@ function verifyCaptured(captured: Captured, expected?: { version?: string; targe
 function requirePayload(captured: Captured, target: string, version: string) {
   const tuple = requireTarget(target, version)
   const metadata = JSON.parse(captured.get("package.json")?.bytes.toString("utf8") ?? "null")
-  if (!metadata || metadata.name !== `@hugr/cli-${target}` || metadata.version !== version || JSON.stringify(metadata.os) !== JSON.stringify([tuple.os]) || JSON.stringify(metadata.cpu) !== JSON.stringify([tuple.arch]))
+  if (!metadata || metadata.name !== `@humanguardrail/cli-${target}` || metadata.version !== version || JSON.stringify(metadata.os) !== JSON.stringify([tuple.os]) || JSON.stringify(metadata.cpu) !== JSON.stringify([tuple.arch]))
     throw new Error("Distribution package tuple/version mismatch")
   const omni = omniTargets[target]
   if (!omni) throw new Error("Missing omni target row")

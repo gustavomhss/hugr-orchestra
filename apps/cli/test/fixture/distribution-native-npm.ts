@@ -69,12 +69,12 @@ export async function npmChannel(
         })
         packages.set(metadata.name, entries)
         blobs.set(packed[0].filename, tarball)
-        const destination = join(modules, "@hugr", name)
+        const destination = join(modules, "@humanguardrail", name)
         await mkdir(destination, { recursive: true })
         // Actual npm tarball extraction preserves archive modes; no fabricated bin.
         await successful([tar, "-xzf", tarball, "--strip-components=1", "-C", destination], box)
         if (name === "cli") {
-          expect(metadata.optionalDependencies).toEqual({ [`@hugr/cli-${target}`]: payload.version })
+          expect(metadata.optionalDependencies).toEqual({ [`@humanguardrail/cli-${target}`]: payload.version })
           continue
         }
         const manifest = await verifyDistribution(source, { version: payload.version, target })
@@ -87,7 +87,7 @@ export async function npmChannel(
           ...manifest.files.map((file) => `package/${file.path}`), "package/distribution.json", "package/checksums.sha256",
         ].sort())
         extracted.push({ version: payload.version, modules, payload: destination, manifest,
-          snapshot: await snapshot(destination), wrapper: await snapshot(join(modules, "@hugr/cli")) })
+          snapshot: await snapshot(destination), wrapper: await snapshot(join(modules, "@humanguardrail/cli")) })
       }
     }
     expect(extracted).toHaveLength(2)
@@ -95,23 +95,23 @@ export async function npmChannel(
       await stopServices()
       // Async child lets the same-loop registry serve metadata and tarballs.
       await successful(["npm", "install", "--no-audit", "--no-fund", "--save-exact", "--include=optional",
-        "--prefix", prefix, "--registry", registry, `@hugr/cli@${payload.version}`], npmBox, 180_000)
+        "--prefix", prefix, "--registry", registry, `@humanguardrail/cli@${payload.version}`], npmBox, 180_000)
       const modules = join(prefix, "node_modules")
-      const platform = join(modules, "@hugr", `cli-${target}`)
+      const platform = join(modules, "@humanguardrail", `cli-${target}`)
       const expected = extracted.find((entry) => entry.version === payload.version)
       if (!expected) throw new Error("EXTRACTED_VERSION_MISSING")
-      const registered = packages.get(`@hugr/cli-${target}`)?.get(payload.version)
-      const wrapper = packages.get("@hugr/cli")?.get(payload.version)
+      const registered = packages.get(`@humanguardrail/cli-${target}`)?.get(payload.version)
+      const wrapper = packages.get("@humanguardrail/cli")?.get(payload.version)
       if (!registered || !wrapper) throw new Error("REGISTRY_VERSION_MISSING")
-      expect((await Bun.file(join(prefix, "package.json")).json()).dependencies["@hugr/cli"]).toBe(payload.version)
+      expect((await Bun.file(join(prefix, "package.json")).json()).dependencies["@humanguardrail/cli"]).toBe(payload.version)
       const lock = await Bun.file(join(prefix, "package-lock.json")).json()
-      expect(lock.packages["node_modules/@hugr/cli"].version).toBe(payload.version)
-      expect(lock.packages["node_modules/@hugr/cli"].integrity).toBe(wrapper.dist.integrity)
-      expect(lock.packages[`node_modules/@hugr/cli-${target}`].version).toBe(payload.version)
-      expect(lock.packages[`node_modules/@hugr/cli-${target}`].integrity).toBe(registered.dist.integrity)
-      expect((await Bun.file(join(modules, "@hugr/cli/package.json")).json()).version).toBe(payload.version)
+      expect(lock.packages["node_modules/@humanguardrail/cli"].version).toBe(payload.version)
+      expect(lock.packages["node_modules/@humanguardrail/cli"].integrity).toBe(wrapper.dist.integrity)
+      expect(lock.packages[`node_modules/@humanguardrail/cli-${target}`].version).toBe(payload.version)
+      expect(lock.packages[`node_modules/@humanguardrail/cli-${target}`].integrity).toBe(registered.dist.integrity)
+      expect((await Bun.file(join(modules, "@humanguardrail/cli/package.json")).json()).version).toBe(payload.version)
       expect((await Bun.file(join(platform, "package.json")).json()).version).toBe(payload.version)
-      expect(await snapshot(join(modules, "@hugr/cli"))).toEqual(expected.wrapper)
+      expect(await snapshot(join(modules, "@humanguardrail/cli"))).toEqual(expected.wrapper)
       expect(await verifyDistribution(platform, { version: payload.version, target })).toEqual(expected.manifest)
       expect(await snapshot(platform)).toEqual(expected.snapshot)
       if (process.platform === "win32") {
@@ -134,22 +134,22 @@ export async function npmChannel(
       for (const [old, expected] of skills) expect(await snapshot(old)).toEqual(expected)
       for (const old of extracted) {
         expect(await snapshot(old.payload)).toEqual(old.snapshot)
-        expect(await snapshot(join(old.modules, "@hugr/cli"))).toEqual(old.wrapper)
+        expect(await snapshot(join(old.modules, "@humanguardrail/cli"))).toEqual(old.wrapper)
       }
       if (process.platform === "win32")
         for (const source of built.payloads) expect(await snapshot(source.payload)).toEqual(source.snapshot)
     }
     // Retained old npm-extracted closures must still run through their public wrapper.
     for (const old of extracted) {
-      await qualify({ launcher: join(old.modules, "@hugr/cli/bin/orchestra.cjs"), payload: old.payload,
+      await qualify({ launcher: join(old.modules, "@humanguardrail/cli/bin/orchestra.cjs"), payload: old.payload,
         version: old.version, box, oracle: built.oracle })
       expect(await snapshot(old.payload)).toEqual(old.snapshot)
-      expect(await snapshot(join(old.modules, "@hugr/cli"))).toEqual(old.wrapper)
+      expect(await snapshot(join(old.modules, "@humanguardrail/cli"))).toEqual(old.wrapper)
       for (const [root, expected] of skills) expect(await snapshot(root)).toEqual(expected)
     }
     expect((await readdir(box.namespace)).sort()).toEqual(built.payloads.map((payload) => skillIdentity(payload.version, built.oracle)).sort())
-    expect(requests).toContain("@hugr/cli")
-    expect(requests).toContain(`@hugr/cli-${target}`)
+    expect(requests).toContain("@humanguardrail/cli")
+    expect(requests).toContain(`@humanguardrail/cli-${target}`)
     for (const filename of blobs.keys()) expect(requests).toContain(filename)
   } finally { await stopServices().finally(() => server.stop(true)) }
 }
