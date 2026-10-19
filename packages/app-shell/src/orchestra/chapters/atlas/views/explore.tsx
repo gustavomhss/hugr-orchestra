@@ -8,6 +8,7 @@ import { Btn, FactRow, Seven } from "../kit/controls"
 import { num, seatName } from "../kit/format"
 import { AtlasLink, Rich } from "../kit/text"
 import { openAtlasSheet } from "../sheets/state"
+import { ExploreMap } from "./explore-map"
 import { EXPLORE_GROUPS, shortUnit, sortUnits, toSort } from "./explore-units"
 import type { AtlasViewProps } from "./index"
 
@@ -106,7 +107,7 @@ export default function AtlasExploreView(props: AtlasViewProps) {
         fallback={
           <Switch>
             <Match when={view() === "map"}>
-              <p class="mx-empty" data-pending="map">{language.t("orchestra.atlas.frame.pending")}</p>
+              <ExploreMap model={props.model} units={units()} />
             </Match>
             <Match when={view() === "list"}>
               <div class="at-sortbar">
