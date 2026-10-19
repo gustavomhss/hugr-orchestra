@@ -6,7 +6,7 @@ import { createHash } from "node:crypto"
 import { Schema } from "effect"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Provider } from "@/provider/provider"
-import { RequestSource } from "@/continuity/request-source"
+import { RequestSource } from "@orchestra/continuity/request-source"
 import { MessageID } from "@/session/schema"
 
 export const File = Schema.Struct({ path: Schema.NonEmptyString, sha256: Schema.String.check(Schema.isPattern(/^[a-f0-9]{64}$/)) })

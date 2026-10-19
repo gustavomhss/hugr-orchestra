@@ -360,7 +360,7 @@ const { Agent } = await import(job.candidate + "/apps/orchestra/src/agent/agent.
 const { Session } = await import(job.candidate + "/apps/orchestra/src/session/session.ts")
 const { SessionPrompt } = await import(job.candidate + "/apps/orchestra/src/session/prompt.ts")
 const { ToolRegistry } = await import(job.candidate + "/apps/orchestra/src/tool/registry.ts")
-const { Seats } = await import(job.candidate + "/apps/orchestra/src/maestro/seats/index.ts")
+const { Seats } = await import(job.candidate + "/modules/maestro/coordination/src/seats/index.ts")
 const { Permission } = await import(job.candidate + "/apps/orchestra/src/permission/index.ts")
 const { WriteRoots } = await import(job.candidate + "/apps/orchestra/src/maestro/write-roots.ts")
 const { PromptGuard } = await import(job.candidate + "/apps/orchestra/src/session/prompt-guard.ts")
@@ -476,7 +476,7 @@ process.exit(process.exitCode ?? 0)
 }
 async function verifyDirect(path: string, sessionID: string, project: string, model: string, assignment: string, worktree: string, candidate: string, workResult: unknown) {
   await canonical(path, false)
-  const { UpstreamResult } = await import(join(candidate, "apps/orchestra/src/maestro/upstream-result.ts"))
+  const { UpstreamResult } = await import(join(candidate, "modules/maestro/coordination/src/upstream-result.ts"))
   const db = new Database(path, { readonly: true, strict: true })
   try {
     const session = decode(Schema.Struct({ id: Schema.String, project_id: Schema.String, parent_id: Schema.NullOr(Schema.String), directory: Schema.String, agent: Schema.NullOr(Schema.String), permission: Schema.String }),

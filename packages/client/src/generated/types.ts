@@ -6760,6 +6760,132 @@ export type PullRequestsCreateOutput = {
   }
 }
 
+export type RelayRunsListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly document?: string | undefined
+  }["location"]
+  readonly document?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly document?: string | undefined
+  }["document"]
+}
+
+export type RelayRunsListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly runID: string
+    readonly documentID: string
+    readonly version?: string | null
+    readonly status: "running" | "parked" | "completed" | "failed"
+    readonly position?: string | null
+    readonly failing: ReadonlyArray<string>
+    readonly reason?: string | null
+    readonly label: string
+    readonly agent: "langgraph"
+    readonly startedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+    readonly steps: ReadonlyArray<{
+      readonly wp: string
+      readonly status: "running" | "passed" | "failed" | "escalated"
+      readonly attempts: number | "Infinity" | "-Infinity" | "NaN"
+      readonly startedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly checks: ReadonlyArray<{
+        readonly id: string
+        readonly verdict: "pass" | "fail" | "advisory"
+        readonly output: string
+      }>
+      readonly note?: string | null
+    }>
+  }>
+}
+
+export type RelayRunsGetInput = {
+  readonly runID: { readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayRunsGetOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly runID: string
+    readonly documentID: string
+    readonly version?: string | null
+    readonly status: "running" | "parked" | "completed" | "failed"
+    readonly position?: string | null
+    readonly failing: ReadonlyArray<string>
+    readonly reason?: string | null
+    readonly label: string
+    readonly agent: "langgraph"
+    readonly startedAt: number | "Infinity" | "-Infinity" | "NaN"
+    readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+    readonly steps: ReadonlyArray<{
+      readonly wp: string
+      readonly status: "running" | "passed" | "failed" | "escalated"
+      readonly attempts: number | "Infinity" | "-Infinity" | "NaN"
+      readonly startedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly endedAt?: number | "Infinity" | "-Infinity" | "NaN" | null
+      readonly checks: ReadonlyArray<{
+        readonly id: string
+        readonly verdict: "pass" | "fail" | "advisory"
+        readonly output: string
+      }>
+      readonly note?: string | null
+    }>
+  }
+}
+
+export type RelayRunsAuditInput = {
+  readonly runID: { readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type RelayRunsAuditOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly status: "pass" | "fail" | "pending"
+    readonly code: string
+    readonly rows: ReadonlyArray<{ readonly label: string; readonly value: string }>
+  }
+}
+
+export type RelayRunsLedgerInput = {
+  readonly runID: { readonly runID: string }["runID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: number | undefined
+  }["location"]
+  readonly after?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly after?: number | undefined
+  }["after"]
+}
+
+export type RelayRunsLedgerOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{ readonly [x: string]: JsonValue }>
+}
 export {
   type UnauthorizedError,
   isUnauthorizedError,

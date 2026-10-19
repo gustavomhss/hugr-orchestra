@@ -5,7 +5,7 @@ import { Effect, Schema } from "effect"
 import { InstanceRef } from "@/effect/instance-ref"
 import type { Tool } from "@/tool/tool"
 import { LogicalTask } from "./logical-task"
-import { SessionAuthority } from "./session-authority"
+import { SessionAuthority } from "@orchestra/maestro/session-authority"
 import { Session } from "@/session/session"
 
 export class Denied extends Schema.TaggedErrorClass<Denied>()("InvocationBindingDenied", {

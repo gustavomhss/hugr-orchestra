@@ -12,7 +12,7 @@ import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
 import { readPlanRevision } from "./plan-revision"
 import { AtlasContextHeld, loadAtlasSkills, readAtlasSource } from "./atlas-source"
-import { compileContextToolPlan } from "./context-tool-plan"
+import { compileContextToolPlan } from "@orchestra/maestro/context-tool-plan"
 import { ConfigMarkdown } from "@/config/markdown"
 import { WorktreeEvidence } from "./worktree-evidence"
 

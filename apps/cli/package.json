@@ -20,6 +20,8 @@
     "@effect/platform-node": "catalog:",
     "@orchestra/client": "workspace:*",
     "@orchestra/core": "workspace:*",
+    "@orchestra/engine-claude-code": "workspace:*",
+    "@orchestra/maestro": "workspace:*",
     "@orchestra/sdk": "workspace:*",
     "@orchestra/server": "workspace:*",
     "@orchestra/tui": "workspace:*",

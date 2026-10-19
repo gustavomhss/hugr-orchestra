@@ -1,0 +1,32 @@
+{
+  "moves": [
+    {
+      "from": "apps/orchestra/src/claude-code/sdk.ts",
+      "to": "modules/engine-adapters/claude-code/src/sdk.ts"
+    },
+    {
+      "from": "apps/orchestra/src/claude-code/executable.ts",
+      "to": "modules/engine-adapters/claude-code/src/executable.ts"
+    },
+    {
+      "from": "apps/orchestra/src/claude-code/transcript.ts",
+      "to": "modules/engine-adapters/claude-code/src/transcript.ts"
+    },
+    {
+      "from": "apps/orchestra/src/claude-code/host/admission.ts",
+      "to": "modules/engine-adapters/claude-code/src/host/admission.ts"
+    },
+    {
+      "from": "apps/orchestra/src/claude-code/host/join.ts",
+      "to": "modules/engine-adapters/claude-code/src/host/join.ts"
+    },
+    {
+      "from": "apps/orchestra/src/claude-code/host/options.ts",
+      "to": "modules/engine-adapters/claude-code/src/host/options.ts"
+    },
+    {
+      "from": "apps/orchestra/test/claude-code/preset-guard.test.ts",
+      "to": "modules/engine-adapters/claude-code/test/preset-guard.test.ts"
+    }
+  ]
+}

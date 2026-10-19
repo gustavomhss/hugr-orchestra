@@ -1,0 +1,25 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/app-dock",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./app-dock": "./src/app-dock.ts",
+    "./app-dock-linux": "./src/app-dock-linux.ts",
+    "./linux-workspace": "./src/linux-workspace.ts"
+  },
+  "scripts": {
+    "test": "bun test --timeout 30000",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@orchestra/plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

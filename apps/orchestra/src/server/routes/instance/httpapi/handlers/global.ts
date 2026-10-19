@@ -12,7 +12,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import * as Sse from "effect/unstable/encoding/Sse"
 import { RootHttpApi } from "../api"
 import { GlobalUpgradeInput } from "../groups/global"
-import { clearLatestReport, getLatestReport } from "@/janitor/report-state"
+import { clearLatestReport, getLatestReport } from "@orchestra/janitor/report-state"
 
 function eventData(data: unknown): Sse.Event {
   return {

@@ -6,7 +6,7 @@ import { createHash } from "node:crypto"
 import { isDeepStrictEqual } from "node:util"
 import { Effect, Schema } from "effect"
 import { eq } from "drizzle-orm"
-import { decideAdmission, isIntentAssessment } from "./admit-request"
+import { decideAdmission, isIntentAssessment } from "@orchestra/maestro/admit-request"
 import { EventV2Bridge } from "@/event-v2-bridge"
 
 export type RecordAdmissionInput = {

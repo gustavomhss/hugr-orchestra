@@ -195,7 +195,7 @@ test("Bun inventory reaches planted package source, script and Desktop test read
     [Symbol.asyncDispose]() { return rm(this.root, { recursive: true, force: true }) },
   }
   const planted = [
-    { file: "apps/orchestra/src/claude-code/sdk.ts", text: 'fs.readFile("settings", () => console.log(".credentials.json"))' },
+    { file: "modules/engine-adapters/claude-code/src/sdk.ts", text: 'fs.readFile("settings", () => console.log(".credentials.json"))' },
     { file: "apps/desktop/src/main/credential-control.test.ts", text: 'Bun["file"](".credentials.json")' },
     { file: "apps/desktop/script/credential-control.cjs", text: '(readFileSync)(".credentials.json")' },
     { file: "apps/desktop/src/main/noop.ts", text: '// Bun["file"](".credentials.json")' },
@@ -220,7 +220,7 @@ test("Bun inventory reaches planted package source, script and Desktop test read
 test("package sources and scripts contain no declared credential access constructs or raw non-JS indicators", async () => {
   const scanned = await inventory(ROOT)
   // Positive controls: the scan reaches Claude mode's spawn seam and a broad slice of the repository.
-  expect(scanned).toContain("apps/orchestra/src/claude-code/sdk.ts")
+  expect(scanned).toContain("modules/engine-adapters/claude-code/src/sdk.ts")
   expect(scanned).toContain("apps/desktop/src/main/index.ts")
   expect(scanned).toContain("modules/capability-assets/src/catalog.ts")
   expect(scanned).toContain("modules/relay/src/arm/evaluate.ts")
@@ -231,7 +231,7 @@ test("package sources and scripts contain no declared credential access construc
   const found = (await Promise.all(scanned.map(async (file) => hits(file, await Bun.file(path.join(ROOT, file)).text())))).flat()
   if (found.length) throw new Error(["Credential access constructs or raw non-JS indicators found:", ...found].join("\n"))
   // Real-source teeth in both SDK and Desktop: no source-directory or test-fixture exemptions.
-  for (const file of ["apps/orchestra/src/claude-code/sdk.ts", "apps/desktop/src/main/index.ts", "modules/capability-assets/src/catalog.ts"]) {
+  for (const file of ["modules/engine-adapters/claude-code/src/sdk.ts", "apps/desktop/src/main/index.ts", "modules/capability-assets/src/catalog.ts"]) {
     const text = await Bun.file(path.join(ROOT, file)).text()
     expect(hits(file, `${text}\n// readFileSync(".credentials.json")`)).toEqual([])
     expect(hits(file, `${text}\nreadFileSync(".credentials.json")`)).toHaveLength(1)

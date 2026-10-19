@@ -4,11 +4,11 @@ import { constants, type Stats } from "node:fs"
 import { randomUUID } from "node:crypto"
 import path from "node:path"
 import { parseArgs } from "node:util"
-import { define, validateInstalled } from "../src/maestro/seats/seat"
-import { canonicalMemberId } from "../src/maestro/roster"
+import { define, validateInstalled } from "@orchestra/maestro/seats/seat"
+import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 // Source scaffold only. Registration is the existing barrel, not a runtime plugin loader.
-export async function add(id: string, role: string, directory = path.resolve(import.meta.dirname, "..")) {
+export async function add(id: string, role: string, directory = path.resolve(import.meta.dirname, "../../../modules/maestro/coordination")) {
   if (canonicalMemberId(id) !== id) throw new Error(`Native seat id must be canonical: ${id}`)
   if (!role.trim() || /[\p{Cc}\p{Zl}\p{Zp}]/u.test(role)) throw new Error("Seat role must be nonempty and single-line")
   const seat = define({
@@ -19,10 +19,10 @@ export async function add(id: string, role: string, directory = path.resolve(imp
     workResult: `${id}-work-result-v1`, writeRoots: true, strictResume: true, atlasMemory: false, toolkit: false,
   })
   const root = path.resolve(directory)
-  const definition = path.join(root, "src/maestro/seats", `${id}.ts`)
-  const prompt = path.join(root, "src/agent/prompt", `${id}.txt`)
-  const tree = path.resolve(root, "../../packages", `${id}-specialist`)
-  const index = path.join(root, "src/maestro/seats/index.ts")
+  const definition = path.join(root, "src/seats", `${id}.ts`)
+  const prompt = path.join(root, "src/seats/prompt", `${id}.txt`)
+  const tree = path.resolve(root, "../../../packages", `${id}-specialist`)
+  const index = path.join(root, "src/seats/index.ts")
   const parents = [...new Set([root, path.dirname(definition), path.dirname(prompt), path.dirname(tree)])]
   for (const parent of parents) await requireCanonicalDirectory(parent)
   const original = await readRegular(index)
@@ -46,7 +46,7 @@ export async function add(id: string, role: string, directory = path.resolve(imp
     await own(stagedTree)
     await fs.mkdir(path.join(stagedTree, "skills", seat.skills[0], "references"), { recursive: true })
     const definitionText = [
-      `import PROMPT from "../../agent/prompt/${id}.txt"`,
+      `import PROMPT from "./prompt/${id}.txt"`,
       'import { define } from "./seat"', "", "export default define({",
       ...Object.entries(seat).map(([key, value]) => `  ${key}: ${key === "prompt" ? "PROMPT" : JSON.stringify(value)},`),
       "})", "",

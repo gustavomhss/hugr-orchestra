@@ -16,8 +16,8 @@ import { MessageV2 } from "@/session/message-v2"
 import { Session } from "@/session/session"
 import { MessageID, SessionID } from "@/session/schema"
 import { NotFoundError } from "@/storage/storage"
-import { canonicalMemberId } from "./roster"
-import { SessionAuthority } from "./session-authority"
+import { canonicalMemberId } from "@orchestra/maestro/roster"
+import { SessionAuthority } from "@orchestra/maestro/session-authority"
 
 // F2.11: the logical task an execution Session carries. The Task `task_id` the model sees for a bound Session is this
 // `taskId`, never the child Session ID; the binding is host-written and durable, so a resume or a replay finds it.

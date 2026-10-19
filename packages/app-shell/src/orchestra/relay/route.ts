@@ -10,8 +10,8 @@ import type { RelayKind } from "./client"
 //   …/<id>/run/<run>[/node/<node>]              canvas and details showing one run (workflows)
 //   …/<id>/executions[/<run>]                   executions and receipt   …/<id>/activity (hooks)
 // Document IDs are server-made UUIDs, so they never collide with the reserved words.
-// Workflow runs are hidden while the server has no run routes (WP17): their executions and run URLs still parse, to
-// the library and to the canvas, so a bookmark or a palette command never lands on a missing page.
+// A workflow's own executions and run URLs still parse to the canvas, so a bookmark or a palette command never lands
+// on a missing page; the library's executions list is shown.
 
 export type RelayRoute =
   | { page: "library"; kind: RelayKind; tab: "list" | "runs"; create: boolean }
@@ -49,7 +49,7 @@ export function parseRelayRoute(kind: RelayKind, rest: string): RelayRoute {
     return {
       page: "library",
       kind,
-      tab: first === runsWord(kind) && runsShown(kind) ? "runs" : "list",
+      tab: first === runsWord(kind) ? "runs" : "list",
       create: first === "new",
     }
   const route: Extract<RelayRoute, { page: "editor" }> = { page: "editor", kind, id: first, tab: "editor", add: false }

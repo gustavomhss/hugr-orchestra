@@ -138,7 +138,7 @@ test("owned Claude roots propagate through the native process boundary without r
   run(resolve(import.meta.dir, "../../../orchestra"), `
     import assert from "node:assert/strict";
     const env = ${JSON.stringify(env)};
-    const build = await Bun.build({ entrypoints: ["./src/claude-code/sdk.ts"], target: "node" });
+    const build = await Bun.build({ entrypoints: ["../../modules/engine-adapters/claude-code/src/sdk.ts"], target: "node" });
     assert.equal(build.success, true, build.logs.join("\\n"));
     await Bun.write(${JSON.stringify(join(env.TMPDIR, "sdk-boundary.mjs"))}, build.outputs[0]);
     const node = Bun.spawnSync(["node", "--input-type=module", "--eval", ${JSON.stringify(`

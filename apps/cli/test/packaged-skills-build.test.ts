@@ -3,8 +3,8 @@ import fs from "node:fs/promises"
 import { tmpdir } from "node:os"
 import path from "node:path"
 import { packagedSkills } from "../script/packaged-skills"
-import { Seats } from "../../orchestra/src/maestro/seats"
-import { SeatSkillContent } from "../../orchestra/src/maestro/seat-skill-content"
+import { Seats } from "@orchestra/maestro/seats"
+import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
 
 test("CLI build producer includes every canonical seat, entry and reference byte", async () => {
   const trees = await packagedSkills()

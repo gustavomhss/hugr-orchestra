@@ -20,7 +20,7 @@ import { Agent } from "@/agent/agent"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
 import { ClaudeHostProcess } from "@/claude-code/host/process-tool"
-import { Seats } from "@/maestro/seats"
+import { Seats } from "@orchestra/maestro/seats"
 import { TestInstance, tmpdirScoped } from "../../fixture/fixture"
 import { expectSpawn } from "../../../../../packages/core/test/fixture/omni-expect"
 

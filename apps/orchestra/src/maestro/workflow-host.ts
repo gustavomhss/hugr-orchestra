@@ -31,9 +31,9 @@ import { recordApproval } from "./approval-record"
 import { readAuthorization } from "./authorization"
 import { contextIsCurrent, readContext } from "./context-record"
 import { readWorkflowRevision } from "./plan-revision"
-import { canonicalMemberId, nativeProfiles, roster } from "./roster"
+import { canonicalMemberId, nativeProfiles, roster } from "@orchestra/maestro/roster"
 import { CodeReview } from "./code-review"
-import { taskHash } from "./task-hash"
+import { taskHash } from "@orchestra/maestro/task-hash"
 import { UpstreamProvenance } from "./upstream-provenance"
 import {
   findReview,

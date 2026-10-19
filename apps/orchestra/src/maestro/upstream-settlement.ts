@@ -20,7 +20,7 @@ import { Session } from "@/session/session"
 import type { TaskPromptOps } from "@/tool/task"
 import type { SessionPrompt } from "@/session/prompt"
 import type { BackendResult } from "./backend-result"
-import { UpstreamResult } from "./upstream-result"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
 import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
 
 export type Capture = {

@@ -10,7 +10,7 @@ import { decodeReview, readValidation, validationRecordHash } from "./validation
 import { recordApproval } from "./approval-record"
 import { readPlanRevision } from "./plan-revision"
 import { contextIsCurrent, DIRTY_CONTEXT_NEXT_STEP, readContext, STALE_CONTEXT_NEXT_STEP } from "./context-record"
-import { canonicalMemberId } from "./roster"
+import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 export class AuthorizationRejectedError extends Schema.TaggedErrorClass<AuthorizationRejectedError>()(
   "MaestroAuthorizationRejected",

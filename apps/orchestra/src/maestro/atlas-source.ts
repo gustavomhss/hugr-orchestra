@@ -10,7 +10,7 @@ import { Filesystem } from "../util/filesystem"
 import { Git } from "../git"
 import type { Session } from "../session/session"
 import { Skill } from "../skill"
-import { compileContextToolPlan, type ContextToolPlan } from "./context-tool-plan"
+import { compileContextToolPlan, type ContextToolPlan } from "@orchestra/maestro/context-tool-plan"
 
 export class AtlasContextHeld extends Schema.TaggedErrorClass<AtlasContextHeld>()("AtlasContextHeld", {
   reason: Schema.String,

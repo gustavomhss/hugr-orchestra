@@ -14,7 +14,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Git } from "@/git"
 import { Session } from "@/session/session"
 import { SessionID } from "@/session/schema"
-import { lookupRouteGrant } from "./route-grant"
+import { lookupRouteGrant } from "@orchestra/maestro/route-grant"
 import { omit, pick } from "remeda"
 import {
   canonicalMemberId,
@@ -25,7 +25,7 @@ import {
   roster,
   type Roster,
   type RosterMember,
-} from "./roster"
+} from "@orchestra/maestro/roster"
 import { contextIsCurrent, readContext } from "./context-record"
 import { CodeReview } from "./code-review"
 

@@ -11,6 +11,7 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionStore } from "@orchestra/core/session/store"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ArsenalApproval } from "@/maestro/arsenal-approval"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceRef } from "@/effect/instance-ref"
 import { Permission } from "@/permission"
@@ -70,7 +71,7 @@ it.live(
             const placement = { sessionID: session.id, directory: tmp.path, projectID: session.projectID }
             const locations = yield* LocationServiceMap.Service
             yield* Effect.gen(function* () {
-              const host = yield* ArsenalApproval.makeV2ApprovalHost
+              const host = yield* ArsenalNative.makeV2ApprovalHost
               const permissions = yield* PermissionV2.Service
               const asked = (find: (request: PermissionV2.Request) => boolean) =>
                 pollWithTimeout(permissions.list().pipe(Effect.map((items) => items.find(find))), "Hook ask missing")

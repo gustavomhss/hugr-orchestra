@@ -10,7 +10,7 @@ import { BackgroundJob } from "@/background/job"
 import { BackgroundProcess } from "@/background/process"
 import { Command } from "@/command"
 import { Config } from "@/config/config"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import { HostCatalog } from "./handlers/catalog"
 import { HostAgentExecution } from "./handlers/agent-execution"
 import { Credential } from "@orchestra/core/credential"
@@ -109,9 +109,10 @@ import { tuiHandlers } from "./handlers/tui"
 import { handlers } from "@orchestra/server/handlers"
 import { buildLocationServiceMap, LocationServiceMap } from "@orchestra/core/location-services"
 import { ArsenalBindings } from "@/maestro/arsenal-bindings"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { layer as locationLayer } from "@orchestra/server/location"
 import { sessionLocationLayer } from "@orchestra/server/middleware/session-location"
-import { PtyEnvironment } from "@orchestra/server/pty-environment"
+import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { schemaErrorLayer as v2SchemaErrorLayer } from "@orchestra/server/middleware/schema-error"
 import { workspaceHandlers } from "./handlers/workspace"
 import { instanceContextLayer } from "./middleware/instance-context"
@@ -283,7 +284,7 @@ const app = LayerNode.group([
 export function createRoutes(
   corsOptions?: CorsOptions,
 ): Layer.Layer<never, EffectConfig.ConfigError, RouteRequirements> {
-  const locationServiceMapV2 = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
+  const locationServiceMapV2 = buildLocationServiceMap(ArsenalNative.nativeRegistryReplacements)
   // One root owns native Session execution, scheduled drains, legacy bootstrap,
   // and every Location map captured by either protocol's constructors.
   const services = AppNodeBuilderV1.build(

@@ -17,7 +17,7 @@ import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import type { Snapshot } from "@/snapshot"
 import type { Agent } from "@/agent/agent"
-import { ClaudeCodeTranscript } from "./transcript"
+import { ClaudeCodeTranscript } from "@orchestra/engine-claude-code/transcript"
 import { ClaudeCodeTools } from "./tools"
 
 /** Claude Code tool names shown under Orchestra's own names, so the UI renders them with its tool views. */

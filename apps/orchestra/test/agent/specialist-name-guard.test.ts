@@ -1,13 +1,13 @@
 import { describe, expect, test } from "bun:test"
 import { createHash } from "node:crypto"
-import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL } from "@orchestra/maestro/roster"
 
 // Owner rule: the backend seat's former personal name survives in exactly one tracked line, the default display
 // label. The search target is that label lowercased (matched case-insensitively), so this file never spells the name;
 // the digest pins which word it is, so changing the default label fails here instead of silently retargeting the scan.
 const NAME = BACKEND_DEFAULT_LABEL.toLowerCase()
 const NAME_SHA256 = "b9dd960c1753459a78115d3cb845a57d924b6877e805b08bd01086ccdf34433c"
-const ALLOWED_FILE = "apps/orchestra/src/maestro/roster.ts"
+const ALLOWED_FILE = "modules/maestro/coordination/src/roster.ts"
 const ALLOWED_LINE = /^export const BACKEND_DEFAULT_LABEL = "[^"]+"$/
 // Positive control: this file is tracked, so the same search must find this constant's own line.
 const SENTINEL = "Specialist-Name-Guard-Positive-Control"

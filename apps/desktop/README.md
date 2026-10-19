@@ -55,7 +55,7 @@ entire Electron profile, its settings, or other desktop state.
 ## Module contract
 - Package: `@orchestra/desktop` at `apps/desktop` (alias `desktop`)
 - Summary: The Electron host for the shared Solid application.
-- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `composition`, `ui`, `terminal-ui`
+- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `product`, `composition`, `ui`, `terminal-ui`
 - Status: `canonical`
 - Owner: desktop maintainer
 - Public entry: `main` field (`./out/main/index.js`)

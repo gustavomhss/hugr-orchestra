@@ -1,6 +1,6 @@
 import { EventEmitter } from "node:events"
 import type { ToolContext } from "@orchestra/plugin"
-import { createAppDockHooks } from "../../../orchestra/src/plugin/app-dock"
+import { createAppDockHooks } from "@orchestra/app-dock/app-dock"
 import type { AppDockAPI, NativeWorkspacePlacement } from "./app-dock-api"
 import { AppDockRPC, type WorkspacePreparation } from "./app-dock-rpc"
 import type { NativeDock } from "./app-dock-native"

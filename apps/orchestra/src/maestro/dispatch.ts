@@ -10,7 +10,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { readAuthorization } from "./authorization"
 import { contextIsCurrent, readContext } from "./context-record"
 import { readValidation } from "./validation-record"
-import { canonicalMemberId } from "./roster"
+import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 export class DispatchRejectedError extends Schema.TaggedErrorClass<DispatchRejectedError>()("MaestroDispatchRejected", {
   reason: Schema.String,

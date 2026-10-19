@@ -1,10 +1,10 @@
 import { expect, test } from "bun:test"
-import { aliases } from "@/continuity/alias"
+import { aliases } from "@orchestra/continuity/alias"
 import { create } from "@/continuity/context"
 import { completeSnapshot } from "@/continuity/fork"
 import { decode, index } from "@/continuity/memory"
 import { fingerprint } from "@/continuity/model"
-import { RawPayload } from "@/continuity/raw-payload"
+import { RawPayload } from "@orchestra/continuity/raw-payload"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 import { messages, host, model, producerID } from "./memory-fixture"
 

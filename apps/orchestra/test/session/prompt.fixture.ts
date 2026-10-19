@@ -54,7 +54,7 @@ import { EffectFlock } from "@orchestra/core/util/effect-flock"
 import { AppProcess } from "@orchestra/core/process"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { filesystem } from "@orchestra/core/effect/app-node-platform"
-import { ArsenalObservations } from "@/maestro/arsenal-observations"
+import { ArsenalObservations } from "@orchestra/maestro/arsenal-observations"
 import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 
 const summary = Layer.succeed(

@@ -11,8 +11,8 @@ import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Effect, Schema } from "effect"
 import { InstanceRef } from "@/effect/instance-ref"
 import { Git } from "@/git"
-import { LEGACY_BACKEND_ID } from "./roster"
-import { Seats } from "./seats"
+import { LEGACY_BACKEND_ID } from "@orchestra/maestro/roster"
+import { Seats } from "@orchestra/maestro/seats"
 
 // The host side of native seats' bound Atlas Memory: one binding per tool execution, the receipt every
 // recall/emit persists in its tool part, and the once-only resume admission a logical resume leaves in the Session.

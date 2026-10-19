@@ -359,12 +359,12 @@ function withCurrentSessions<A, E>(
     )
     const { LayerNode } = yield* Effect.promise(() => import("@orchestra/core/effect/layer-node"))
     const { AppNodeBuilderV1 } = yield* Effect.promise(() => import("../../../src/effect/app-node-builder-v1"))
-    const { ArsenalBindings } = yield* Effect.promise(() => import("../../../src/maestro/arsenal-bindings"))
+    const { ArsenalNative } = yield* Effect.promise(() => import("@orchestra/maestro/arsenal-native"))
     const modules = yield* Effect.promise(() => runtime())
     const scope = yield* Scope.Scope
     const services = yield* Layer.buildWithMemoMap(
       AppNodeBuilderV1.build(LayerNode.group([SessionV2.node, SessionSubagentModels.node]), [
-        [LocationServiceMap.node, buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)],
+        [LocationServiceMap.node, buildLocationServiceMap(ArsenalNative.nativeRegistryReplacements)],
         [SessionExecution.node, SessionExecutionLocal.node],
       ]),
       modules.memoMap,

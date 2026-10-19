@@ -4,11 +4,11 @@ import type { Node, ParseError } from "jsonc-parser"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { SessionID } from "@/session/schema"
 import { Token } from "@/util/token"
-import { aliases, child, marker, type Source } from "./alias"
-import { KEY_ARGS, signature } from "./masking"
+import { aliases, child, marker, type Source } from "@orchestra/continuity/alias"
+import { KEY_ARGS, signature } from "@orchestra/continuity/masking"
 import { fingerprint, nonempty, singleLine, tailIndex, validSnapshot } from "./model"
 import { SECTIONS, type Host, type MemoryArtifact, type MemoryItem, type MemorySnapshot, type Now, type Section } from "./memory-types"
-import { RawPayload } from "./raw-payload"
+import { RawPayload } from "@orchestra/continuity/raw-payload"
 
 /** The closed producer contract: required and optional fields per section, and closed labels. */
 const FIELDS: Record<Section, { required: string[]; optional: string[]; labels?: Record<string, readonly string[]> }> = {

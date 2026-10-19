@@ -12,7 +12,7 @@ import { OutputInspector } from "@orchestra/core/output-inspector"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import { ResearchSourceCapture } from "@/research/source-capture"
-import { TRUNCATION_DIR } from "./truncation-dir"
+import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 
 const DEFAULT_READ_LIMIT = 2000
 const MAX_LINE_LENGTH = 2000

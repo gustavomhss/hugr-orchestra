@@ -17,7 +17,7 @@ import { Agent } from "../../src/agent/agent"
 import { InstanceRef } from "../../src/effect/instance-ref"
 import { InstanceStore } from "../../src/project/instance-store"
 import { AppNodeBuilderV1 } from "../../src/effect/app-node-builder-v1"
-import { ArsenalBindings } from "../../src/maestro/arsenal-bindings"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { Process } from "../../src/util/process"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -198,7 +198,7 @@ class EarlyLocation extends Context.Service<
         (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
       )
       const ref = Location.Ref.make({ directory: AbsolutePath.make(tmp.path) })
-      const map = buildLocationServiceMap(ArsenalBindings.nativeRegistryReplacements)
+      const map = buildLocationServiceMap(ArsenalNative.nativeRegistryReplacements)
       const concrete = makeGlobalNode({ service: LocationServiceMap.Service, layer: map, deps: [] })
       const early = makeGlobalNode({
         service: EarlyLocation,

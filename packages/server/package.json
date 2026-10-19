@@ -6,10 +6,8 @@
   "type": "module",
   "license": "MIT",
   "exports": {
-    "./agent-execution": "./src/agent-execution.ts",
     "./api": "./src/api.ts",
     "./auth": "./src/auth.ts",
-    "./catalog-availability": "./src/catalog-availability.ts",
     "./cors": "./src/cors.ts",
     "./handlers": "./src/handlers.ts",
     "./handlers/agent": "./src/handlers/agent.ts",
@@ -19,7 +17,6 @@
     "./middleware/authorization": "./src/middleware/authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts",
     "./middleware/session-location": "./src/middleware/session-location.ts",
-    "./pty-environment": "./src/pty-environment.ts",
     "./routes": "./src/routes.ts"
   },
   "scripts": {

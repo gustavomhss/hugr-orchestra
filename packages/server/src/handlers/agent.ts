@@ -6,7 +6,7 @@ import { ConflictError, InvalidRequestError, UnknownError } from "@orchestra/pro
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
-import { AgentExecution } from "../agent-execution"
+import { AgentExecution } from "@orchestra/core/host/agent-execution"
 import { response } from "../location"
 
 export const AgentHandler = HttpApiBuilder.group(Api, "server.agent", (handlers) =>

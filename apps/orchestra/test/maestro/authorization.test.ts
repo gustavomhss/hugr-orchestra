@@ -20,10 +20,10 @@ import { grantAuthorization, readAuthorization } from "../../src/maestro/authori
 import { reserveDispatch } from "../../src/maestro/dispatch"
 import { recordValidation, validationRecordHash } from "../../src/maestro/validation-record"
 import { presentApprovalFromSession, recordApproval } from "../../src/maestro/approval-record"
-import { renderPresentation } from "../../src/maestro/approval"
+import { renderPresentation } from "@orchestra/maestro/approval"
 import { Git } from "../../src/git"
 import { recordContext } from "../../src/maestro/context-record"
-import { LEGACY_BACKEND_ID } from "../../src/maestro/roster"
+import { LEGACY_BACKEND_ID } from "@orchestra/maestro/roster"
 import { disposeAllInstances, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

@@ -5,7 +5,7 @@ import { MaestroContext } from "@orchestra/schema/maestro-context"
 import { publishTerritoryCatalog, verifyHostContext } from "@orchestra/atlas-boundary"
 import type { VerifiedHostContext, VerifiedOwnUnit } from "@orchestra/atlas-boundary"
 import { materializeStaticOwnSnapshot, parseOwnSnapshot } from "@orchestra/atlas-boundary/materialize"
-import { compileContextToolPlan } from "../../src/maestro/context-tool-plan"
+import { compileContextToolPlan } from "@orchestra/maestro/context-tool-plan"
 
 const unitIds = ["crates/billing", "services/billing", "crates/billing/invoices"] as const
 const sourceRevision = "a".repeat(40)

@@ -2,8 +2,8 @@ export * as ClaudeHostProvider from "./provider"
 
 import { Effect } from "effect"
 import type { AccountInfo, SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
-import { ClaudeCodeSDK } from "../sdk"
-import { ClaudeHostOptions } from "./options"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
+import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
 
 /** What the app may show about the binary's sign-in: no token, key or credential source. */
 export type Account = { signedIn: boolean; email?: string; subscription?: string }
@@ -39,7 +39,7 @@ export const signedIn = account.pipe(Effect.map((info) => info.signedIn))
 /** Start `claude auth login` on the deployed executable with the environment every Claude-mode run gets. */
 export const startLogin = Effect.gen(function* () {
   const { ClaudeCodeLogin } = yield* Effect.promise(() => import("../login"))
-  const { ClaudeCodeExecutable } = yield* Effect.promise(() => import("../executable"))
+  const { ClaudeCodeExecutable } = yield* Effect.promise(() => import("@orchestra/engine-claude-code/executable"))
   const env = ClaudeHostOptions.environment(yield* ClaudeCodeSDK.Environment)
   return yield* Effect.try({
     try: () => ClaudeCodeLogin.start({ executable: ClaudeCodeExecutable.command(env), env }),

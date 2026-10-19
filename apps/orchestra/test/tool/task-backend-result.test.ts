@@ -1,7 +1,7 @@
 import { afterEach, describe, expect } from "bun:test"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { Cause, Effect, Exit } from "effect"
-import { BACKEND_DEFAULT_LABEL } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL } from "@orchestra/maestro/roster"
 import { Session } from "@/session/session"
 import { MessageID, PartID } from "../../src/session/schema"
 import { PermissionV1 } from "@orchestra/core/v1/permission"

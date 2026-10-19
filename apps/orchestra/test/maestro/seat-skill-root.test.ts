@@ -1,8 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import fs from "node:fs/promises"
 import path from "node:path"
-import { SeatSkillRoot } from "@/maestro/seat-skill-root"
-import { backendSkills } from "@/maestro/roster"
+import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
+import { backendSkills } from "@orchestra/maestro/roster"
 import { tmpdir } from "../fixture/fixture"
 
 const SOURCE = path.resolve(import.meta.dir, "../../../../modules/specialists/backend/skills")
@@ -131,7 +131,7 @@ describe("backend skill root", () => {
   test("competing process starts acquire one valid tree without removing its publication", async () => {
     await using tmp = await tmpdir()
     const files = Object.fromEntries(Array.from({ length: 128 }, (_, index) => [`a/references/${index}.md`, `日本語 ${index}\r\n`]))
-    const module = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts")
+    const module = path.resolve(import.meta.dir, "../../../../modules/maestro/coordination/src/seat-skill-root.ts")
     const children = Array.from({ length: 4 }, () => Bun.spawn([process.execPath, "--eval", `
       import fs from "node:fs/promises";
       const { SeatSkillRoot } = await import(${JSON.stringify(module)});
@@ -157,7 +157,7 @@ describe("backend skill root", () => {
     if (operation === "readFile") await Bun.write(obsolete, "old copy")
     if (operation === "readdir") await fs.mkdir(obsolete)
     expect((await fs.lstat(obsolete))[operation === "readFile" ? "isFile" : "isDirectory"]()).toBe(true)
-    const module = path.resolve(import.meta.dir, "../../src/maestro/seat-skill-root.ts")
+    const module = path.resolve(import.meta.dir, "../../../../modules/maestro/coordination/src/seat-skill-root.ts")
     // Insert a scheduling barrier only. Both verification and replacement still execute the real filesystem calls:
     // the reader has enumerated an old entry, then another process repairs the corrupt tree before that entry is read.
     const observation = `

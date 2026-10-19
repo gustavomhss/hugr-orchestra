@@ -319,7 +319,12 @@
     "./v1/prompt-admission.sql": "./src/v1/prompt-admission.sql.ts",
     "./v1/session": "./src/v1/session.ts",
     "./v2-schema": "./src/v2-schema.ts",
-    "./workspace": "./src/workspace.ts"
+    "./workspace": "./src/workspace.ts",
+    "./host": "./src/host.ts",
+    "./host/agent-execution": "./src/host/agent-execution.ts",
+    "./host/catalog-availability": "./src/host/catalog-availability.ts",
+    "./host/pty-environment": "./src/host/pty-environment.ts",
+    "./tool/truncation-dir": "./src/tool/truncation-dir.ts"
   },
   "imports": {
     "#sqlite": {
