@@ -7,6 +7,11 @@ import type { TaskPromptOps } from "@/tool/task"
 import { Tool } from "@/tool/tool"
 import { MaestroRecordReviewTool } from "@/tool/maestro-validation"
 import { ContextRecallTool } from "@/tool/context-recall"
+import { MaestroWorkflowsTool } from "@/tool/maestro-workflows"
+import { ArsenalCompletion } from "@/maestro/arsenal-completion"
+import { LocationServiceMap } from "@orchestra/core/location-services"
+import { AuthoringGraph } from "@orchestra/relay/authoring/graph"
+import { AuthoringStore } from "@orchestra/relay/authoring/store"
 import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ModelV2 } from "@orchestra/core/model"
@@ -294,3 +299,26 @@ it.instance("served tools run with the latest turn's prompt executor, which the 
   expect(append).toContain("dispatched with `mcp__orchestra__task`, never `Agent`")
   expect(append).not.toContain("requires Orchestra's prompt executor")
 }), 60_000)
+
+// Claude mode reads the catalog through the NativeHost publication `withSession` provides, the same one native Maestro reads.
+it.instance("maestro_workflows served over the bridge lists a Relay workflow published in the project", () => Effect.gen(function* () {
+  const f = yield* BridgeFixture.make()
+  const locations = yield* LocationServiceMap.Service
+  const relay = yield* ArsenalCompletion.locationRelay((ref) => locations.get(ref))({ directory: f.ctx.directory })
+  const published = yield* Effect.scoped(Effect.gen(function* () {
+    const store = yield* AuthoringStore.open(relay.paths.root, f.parent.projectID)
+    const saved = yield* store.save({ body: yield* AuthoringGraph.project("Bridged", { work_packages: [
+      { id: "implement", instructions: "Implement.", checklist: [{ id: "implement-check", cmd: "true" }] },
+    ] }) })
+    yield* store.publish(saved.id, saved.versionId)
+    return saved
+  }))
+  yield* f.call({ id: "list_workflows", tool: "maestro_workflows", args: {} })
+  const client = yield* f.client([yield* Effect.flatMap(MaestroWorkflowsTool, Tool.init)])
+  const result = Schema.decodeUnknownSync(Text)(yield* Effect.promise(() =>
+    client.callTool({ name: "maestro_workflows", arguments: f.arguments("list_workflows") })))
+  expect(result.isError).toBeUndefined()
+  expect(JSON.parse(result.content[0].text).workflows).toEqual([
+    { id: published.id, name: "Bridged", description: "", publishedVersionID: published.versionId },
+  ])
+}), { git: true }, 120_000)
