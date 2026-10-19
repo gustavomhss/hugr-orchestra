@@ -72,6 +72,12 @@ export interface WriteRequest {
   //    `atlas emit`/`atlas link`. Does NOT enter `nodeKey` (a provenance receipt is not an identity). NOT
   //    ROUTED. See docs/design/195-answer-provenance-contract.md.
   readonly answerRef?: string
+  // ── REPLACE (ADDITIVE, OPTIONAL — R8, D20) — `true` makes a same-tier UPDATE REPLACE the node's claim set with this
+  //    write's claim instead of adding it, with claim provenance pruned the way a governing tier-raise prunes it. Set
+  //    only by the governed emit door when the operator asked for it (`atlas emit --replace`). NOT ROUTED: it changes
+  //    which claims survive an UPDATE, never which cell of the KNOW-4 table a write lands in, and it opens no authority
+  //    the write does not already hold (`authorityRefusal` still runs first; a T0 still needs billy at the door).
+  readonly replace?: true
 }
 
 /** A current node in the territory projection. Exactly one lives per `nodeKey` (KNOW-4g). */
