@@ -94,10 +94,11 @@ describe("atlas HttpApi", () => {
       call(AtlasPaths.answer, tmp.path, { body: { questionId: "q1", answer: "a" } }),
       call(AtlasPaths.memoryDecide, tmp.path, { body: { proposalId: "p1", verdict: "discarded" } }),
       call(AtlasPaths.territory, tmp.path, { body: { name: "t", owner: "o", tier: "T1", globs: ["src/**"] } }),
+      call(AtlasPaths.delegate, tmp.path, { body: { questionIds: ["q1"], providerID: "openai", modelID: "gpt-5.2" } }),
     ])
-    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: 17 }, () => 200))
+    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: 18 }, () => 200))
     expect(await Promise.all(responses.map((response) => response.json()))).toEqual(
-      Array.from({ length: 17 }, () => ({ state: "empty" })),
+      Array.from({ length: 18 }, () => ({ state: "empty" })),
     )
   })
 

@@ -81,3 +81,16 @@ export const AtlasTerritoryInput = Schema.Struct({
   globs: Schema.Array(Schema.String),
   token: Schema.optional(Schema.String),
 })
+
+export const AtlasDelegateInput = Schema.Struct({
+  questionIds: Schema.Array(Schema.String),
+  providerID: Schema.String,
+  modelID: Schema.String,
+})
+
+export const AtlasDelegateOk = Schema.Struct({
+  state: Schema.Literal("ok"),
+  drafted: Schema.Array(
+    Schema.Struct({ questionId: Schema.String, ok: Schema.Boolean, rejected: Schema.NullOr(Schema.String) }),
+  ),
+}).annotate({ identifier: "AtlasDelegate" })

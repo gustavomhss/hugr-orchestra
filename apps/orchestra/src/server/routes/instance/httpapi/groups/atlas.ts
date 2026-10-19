@@ -11,6 +11,8 @@ import {
 import {
   AtlasAnswerInput,
   AtlasDecideInput,
+  AtlasDelegateInput,
+  AtlasDelegateOk,
   AtlasHoldInput,
   AtlasMemoryDecideInput,
   AtlasProposeInput,
@@ -43,6 +45,7 @@ export const AtlasPaths = {
   answer: `${root}/answer`,
   memoryDecide: `${root}/memory-decide`,
   territory: `${root}/territory`,
+  delegate: `${root}/delegate`,
 } as const
 
 export const AtlasEmpty = Schema.Struct({ state: Schema.Literal("empty") }).annotate({ identifier: "AtlasEmpty" })
@@ -354,6 +357,10 @@ export const AtlasReviewWriteResult = Schema.Union([
   }).annotate({ identifier: "AtlasReviewWrite" }),
 ]).annotate({ identifier: "AtlasReviewWriteResult" })
 
+export const AtlasDelegateResult = Schema.Union([AtlasEmpty, AtlasDelegateOk]).annotate({
+  identifier: "AtlasDelegateResult",
+})
+
 export const AtlasOwnQuery = Schema.Struct({ ...WorkspaceRoutingQueryFields, scope: Schema.String })
 export const AtlasPromoteInput = Schema.Struct({
   token: Schema.optional(Schema.String),
@@ -579,6 +586,18 @@ export const AtlasApi = HttpApi.make("atlas")
             "atlas.territory",
             "Declare an Atlas territory",
             "Write a territory, its owner, tier and globs to the territory catalog.",
+          ),
+        ),
+        HttpApiEndpoint.post("delegate", AtlasPaths.delegate, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasDelegateInput,
+          success: AtlasDelegateResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.delegate",
+            "Delegate Atlas interview questions to a model",
+            "A model drafts an answer to each open question; each draft keeps its question open until a person accepts it.",
           ),
         ),
       )

@@ -103,4 +103,13 @@ export const atlasScenarios: Scenario[] = [
       body: { name: "t", owner: "o", tier: "T1", globs: ["src/**"] },
     }))
     .json(200, empty, "status"),
+  http.protected
+    .post("/atlas/delegate", "atlas.delegate")
+    .mutating()
+    .at((ctx) => ({
+      path: "/atlas/delegate",
+      headers: ctx.headers(),
+      body: { questionIds: ["q1"], providerID: "openai", modelID: "gpt-5.2" },
+    }))
+    .json(200, empty, "status"),
 ]

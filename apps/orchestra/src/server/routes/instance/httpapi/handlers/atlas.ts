@@ -2,12 +2,17 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Effect, Layer } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { AtlasSurface } from "@/maestro/atlas-surface"
+import { AtlasDelegate } from "@/maestro/atlas-delegate"
+import { Provider } from "@/provider/provider"
+import { LLM } from "@/session/llm"
 import { InstanceHttpApi } from "../api"
 import { ServiceUnavailableError } from "../errors"
 
 export const atlasHandlers = HttpApiBuilder.group(InstanceHttpApi, "atlas", (handlers) =>
   Effect.gen(function* () {
     const atlas = yield* AtlasSurface.Service
+    const llm = yield* LLM.Service
+    const provider = yield* Provider.Service
     const unavailable = (error: AtlasSurface.Unavailable) =>
       new ServiceUnavailableError({ service: "atlas", message: error.message })
 
@@ -28,6 +33,9 @@ export const atlasHandlers = HttpApiBuilder.group(InstanceHttpApi, "atlas", (han
       .handle("decide", (ctx) => atlas.decide(ctx.payload).pipe(Effect.mapError(unavailable)))
       .handle("answer", (ctx) => atlas.answer(ctx.payload).pipe(Effect.mapError(unavailable)))
       .handle("memoryDecide", (ctx) => atlas.memoryDecide(ctx.payload).pipe(Effect.mapError(unavailable)))
+      .handle("delegate", (ctx) =>
+        AtlasDelegate.delegate({ atlas, llm, provider }, ctx.payload).pipe(Effect.mapError(unavailable)),
+      )
       .handle("territory", (ctx) => atlas.territory(ctx.payload).pipe(Effect.mapError(unavailable)))
   }),
 ).pipe(Layer.provide(LayerNode.compile(AtlasSurface.node)))
