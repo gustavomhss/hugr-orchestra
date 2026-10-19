@@ -1,4 +1,4 @@
-import type { FilePartSource } from "@orchestra/sdk/v2/client"
+import type { FilePartSource } from "../../../compat/sdk-v2-client"
 
 type PromptInputV2PartBase = {
   content: string

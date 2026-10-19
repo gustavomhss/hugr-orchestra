@@ -10,7 +10,7 @@ frontmatter IDs and configured lookup precedence.
 Keep documentation outside `skills/`; every companion enters the shipped payload. Native agent
 configuration, dispatch authority and runtime lifetime remain owned by Orchestra/Core rather than
 this data tree. Source attribution and authoring contracts remain with their existing references and
-[specs/upstream-specialist](../../../specs/upstream-specialist).
+[docs/specs/upstream-specialist](../../../docs/specs/upstream-specialist).
 
 From the repository root:
 

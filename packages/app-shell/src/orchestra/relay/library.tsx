@@ -7,6 +7,7 @@ import { documentProfile, type RelayDocument } from "./client"
 import { rememberDocument } from "./cache"
 import { CreateWorkflowDialog, templates } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
+import { ImportWorkflowDialog } from "./import-dialog"
 import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
 import {
@@ -28,6 +29,8 @@ type Props = {
   source: RelaySource
   route: Extract<RelayRoute, { page: "library" }>
   profile: string
+  // The folder is outside git: its workflows would be shared by every such folder, so nothing new is made here.
+  shared: boolean
   // The chapter keeps the view, so search and filter survive a round trip through an editor.
   view?: LibraryView
   go: (path: string, replace?: boolean) => void
@@ -49,6 +52,7 @@ export function WorkflowLibrary(props: Props) {
   const duplication = createAction(useLocation())
   const [view, setView] = props.view ?? createLibraryView()
   const [template, setTemplate] = createSignal<string>()
+  const [importing, setImporting] = createSignal(false)
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
   const [dialog, setDialog] = createSignal<{ type: "delete" | "rename"; document: RelayDocument }>()
   const flows = createMemo(
@@ -112,7 +116,7 @@ export function WorkflowLibrary(props: Props) {
     {
       label: copy.t("orchestra.workflows.menu.duplicate"),
       icon: "workflows",
-      disabled: duplication.busy(),
+      disabled: duplication.busy() || props.shared,
       run: () => void duplicate(document),
     },
     "-",
@@ -131,18 +135,25 @@ export function WorkflowLibrary(props: Props) {
       title={copy.t("orchestra.workflows.title")}
       description={copy.t("orchestra.workflows.description")}
       action={
-        <button
-          type="button"
-          class="mx-btn primary"
-          disabled={!loaded()}
-          onClick={() => openTemplate("blank")}
-        >
-          <Ic name="plus" />
-          {copy.t("orchestra.workflows.new")}
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button type="button" class="mx-btn" disabled={!loaded() || props.shared} onClick={() => setImporting(true)}>
+            <Ic name="download" />
+            {copy.t("orchestra.workflows.import")}
+          </button>
+          <button
+            type="button"
+            class="mx-btn primary"
+            disabled={!loaded() || props.shared}
+            onClick={() => openTemplate("blank")}
+          >
+            <Ic name="plus" />
+            {copy.t("orchestra.workflows.new")}
+          </button>
+        </div>
       }
     >
       <p class="wf-xlink">
+        <Show when={!props.shared}>{copy.t("orchestra.workflows.scope", { project: props.profile })} </Show>
         <a
           href={relayPath.library("hook")}
           onClick={(event) => {
@@ -151,8 +162,22 @@ export function WorkflowLibrary(props: Props) {
           }}
         >
           {copy.t("orchestra.workflows.xlink")}
+        </a>{" "}
+        <a
+          href={relayPath.runs("workflow")}
+          onClick={(event) => {
+            event.preventDefault()
+            props.go(relayPath.runs("workflow"))
+          }}
+        >
+          {copy.t("orchestra.palette.executions")}
         </a>
       </p>
+      <Show when={props.shared}>
+        <p class="wf-retained" role="status" data-slot="relay-repository-required">
+          <span>{copy.t("orchestra.workflows.scope.repositoryRequired")}</span>
+        </p>
+      </Show>
       <RetainedDrafts source={props.source} kind="workflow" go={props.go} />
       <Switch>
         <Match when={props.source.documents.isPending}>
@@ -167,6 +192,19 @@ export function WorkflowLibrary(props: Props) {
           <button type="button" class="mx-btn" onClick={() => void props.source.documents.refetch()}>
             {copy.t("orchestra.workflows.retry")}
           </button>
+        </Match>
+        <Match when={props.route.tab === "runs" && props.source.runsState() !== "ready"}>
+          <RunsUnavailable source={props.source} />
+        </Match>
+        <Match when={props.route.tab === "runs"}>
+          <AllRuns
+            runs={(props.source.runs.data ?? []).filter(
+              (run) => flows().has(run.documentID) || run.documentID.startsWith("external:"),
+            )}
+            flows={flows()}
+            source={props.source}
+            go={props.go}
+          />
         </Match>
         <Match when={true}>
           <Show when={props.source.documents.isError}>
@@ -188,7 +226,12 @@ export function WorkflowLibrary(props: Props) {
                     : "orchestra.workflows.empty.bodyBlank",
                 )}
                 <br />
-                <button type="button" class="mx-btn primary" onClick={() => openTemplate("blank")}>
+                <button
+                  type="button"
+                  class="mx-btn primary"
+                  disabled={props.shared}
+                  onClick={() => openTemplate("blank")}
+                >
                   <Ic name="plus" />
                   {copy.t("orchestra.workflows.template.blank")}
                 </button>
@@ -293,13 +336,20 @@ export function WorkflowLibrary(props: Props) {
               <span class="mx-meta">{copy.t("orchestra.workflows.templates.meta")}</span>
             </div>
             <div class="wf-tpl-grid">
-              <TemplateCard id="blank" flows={flows()} documents={props.source.list()} onPick={openTemplate} />
+              <TemplateCard
+                id="blank"
+                flows={flows()}
+                documents={props.source.list()}
+                disabled={props.shared}
+                onPick={openTemplate}
+              />
               <For each={templates(props.source.list())}>
                 {(document) => (
                   <TemplateCard
                     id={document.id}
                     flows={flows()}
                     documents={props.source.list()}
+                    disabled={props.shared}
                     onPick={openTemplate}
                   />
                 )}
@@ -308,13 +358,20 @@ export function WorkflowLibrary(props: Props) {
           </Show>
         </Match>
       </Switch>
-      <Show when={props.route.create && loaded()}>
+      <Show when={props.route.create && loaded() && !props.shared}>
         <CreateWorkflowDialog
           source={props.source}
           flows={flows()}
           initial={template() ?? "blank"}
           onClose={() => props.close(relayPath.library("workflow"))}
           onCreated={(id) => props.go(relayPath.editor("workflow", id), true)}
+        />
+      </Show>
+      <Show when={importing() && loaded() && !props.shared}>
+        <ImportWorkflowDialog
+          source={props.source}
+          onClose={() => setImporting(false)}
+          onCreated={(id) => (setImporting(false), props.go(relayPath.editor("workflow", id), true))}
         />
       </Show>
       <Show when={menu()}>
@@ -402,7 +459,7 @@ function RenameDialog(props: { document: RelayDocument; source: RelaySource; onC
   )
 }
 
-// LiveRow and AllRuns wait for the run routes (WP17): the library does not render them while runs are hidden.
+// LiveRow waits for native run routes (WP17); AllRuns is the library's executions list.
 function LiveRow(props: { run: RelayRun; flows: Map<string, Flow>; source: RelaySource; go: (path: string) => void }) {
   const copy = useRelayCopy()
   const document = () => props.source.list().find((item) => item.id === props.run.documentID)
@@ -526,8 +583,13 @@ export function AllRuns(props: {
         <div class="mx-table" role="list" aria-label={copy.t("orchestra.workflows.tab.runs")}>
           <For each={shown()}>
             {(run) => {
-              const name = () => props.source.list().find((item) => item.id === run.documentID)?.name ?? ""
-              const open = () => props.go(relayPath.history("workflow", run.documentID, run.runID))
+              // An external run (Relay for LangGraph) has no document to open: it reads inline, failing checks included.
+              const external = run.documentID.startsWith("external:")
+              const name = () =>
+                external ? run.label : props.source.list().find((item) => item.id === run.documentID)?.name ?? ""
+              const open = () => {
+                if (!external) props.go(relayPath.history("workflow", run.documentID, run.runID))
+              }
               return (
                 <div
                   class="mx-row wf-lrow"
@@ -543,9 +605,18 @@ export function AllRuns(props: {
                   <div class="mx-grow">
                     <strong>
                       #{runHandle(run.runID)} · {name()}
+                      <Show when={external}>
+                        {" "}
+                        <span class="mx-badge">{copy.t("orchestra.workflows.receipt.external")}</span>
+                      </Show>
                     </strong>
                     <small>
-                      {[run.label, run.version !== undefined ? `v${run.version}` : undefined, run.agent]
+                      {[
+                        run.label,
+                        run.version !== undefined ? `v${run.version}` : undefined,
+                        run.agent,
+                        external ? run.failing.join(" ") : undefined,
+                      ]
                         .filter(Boolean)
                         .join(" · ")}
                     </small>
@@ -563,14 +634,16 @@ export function AllRuns(props: {
                     </span>
                   </div>
                   <div class="wf-actions">
-                    <button
-                      type="button"
-                      class="mx-btn icon"
-                      aria-label={copy.t("orchestra.workflows.runs.open", { id: runHandle(run.runID) })}
-                      onClick={(event) => (event.stopPropagation(), open())}
-                    >
-                      <Ic name="next" />
-                    </button>
+                    <Show when={!external}>
+                      <button
+                        type="button"
+                        class="mx-btn icon"
+                        aria-label={copy.t("orchestra.workflows.runs.open", { id: runHandle(run.runID) })}
+                        onClick={(event) => (event.stopPropagation(), open())}
+                      >
+                        <Ic name="next" />
+                      </button>
+                    </Show>
                   </div>
                 </div>
               )

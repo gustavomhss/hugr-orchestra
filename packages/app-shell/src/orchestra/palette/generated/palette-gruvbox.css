@@ -241,6 +241,14 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme][dir="rtl"] body[data-n
   color: var(--orchestra-sidebar-icon);
   fill: currentColor;
 }
+[data-orchestra-palette="gruvbox"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+[data-orchestra-palette="gruvbox"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
 [data-orchestra-palette="gruvbox"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }
@@ -1151,7 +1159,8 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme][dir="rtl"] body[data-n
   color: var(--orchestra-warm);
 }
 /* orchestra/chapters/kit.css */
-html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] {
+html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout],
+html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-mx-kit] {
   --mx-line: rgba(194, 181, 149, 0.14);
   --mx-soft: rgba(199, 186, 152, 0.055);
   --mx-raised: rgba(56, 55, 52, 0.55);
@@ -1393,7 +1402,7 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
   color: #baaf94;
 }
 [data-orchestra-palette="gruvbox"] .home-kpi-value[data-state="loading"]::before {
-  background: rgba(136, 168, 156, 0.12);
+  background: rgba(136, 168, 156, 0.2);
 }
 [data-orchestra-palette="gruvbox"] .home-kpi-foot {
   color: var(--mx-dim);
@@ -1600,15 +1609,12 @@ html[data-orchestra-palette="gruvbox"][data-color-scheme] body[data-new-layout] 
 [data-orchestra-palette="gruvbox"] .providers-route-label {
   color: var(--mx-dim);
 }
-[data-orchestra-palette="gruvbox"] .mx-page .mx-row > .mx-brand {
+[data-orchestra-palette="gruvbox"] .mx-row > .mx-brand {
   color: var(--orchestra-text);
 }
 [data-orchestra-palette="gruvbox"] .providers-close {
   fill: none;
   stroke: currentColor;
-}
-[data-orchestra-palette="gruvbox"] .providers-dialog .providers-authorize .mx-link {
-  text-decoration: underline;
 }
 [data-orchestra-palette="gruvbox"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .providers-dialog) {
   background: var(--mx-backdrop);

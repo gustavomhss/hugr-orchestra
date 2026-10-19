@@ -7,13 +7,13 @@ import { usePlatform } from "@/context/platform"
 import { useLanguage } from "@/context/language"
 import { useSettings } from "@/context/settings"
 import { decode64 } from "@/utils/base64"
-import { EventSessionError } from "@orchestra/sdk/v2"
+import { EventSessionError } from "../compat/sdk-v2"
 import { Persist, persisted } from "@/utils/persist"
 import { playSoundById } from "@/utils/sound"
 import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
 import { type DraftTab, useTabs } from "./tabs"
-import { requireServerKey, sessionHref } from "@/utils/session-route"
+import { parseServerKey, sessionHref } from "@/utils/session-route"
 import type { ServerScope } from "@/utils/server-scope"
 
 type NotificationBase = {
@@ -124,7 +124,8 @@ export const { use: useNotification, provider: NotificationProvider } = createSi
     const states = new Map<ServerScope, { sdk: ServerSDK; dispose: () => void; state: NotificationState }>()
 
     const activeServer = createMemo(() => {
-      if (params.serverKey) return requireServerKey(params.serverKey)
+      const routed = parseServerKey(params.serverKey)
+      if (routed) return routed
       if (search.draftId) {
         const draft = tabs.store.find((tab): tab is DraftTab => tab.type === "draft" && tab.draftID === search.draftId)
         if (draft) return draft.server

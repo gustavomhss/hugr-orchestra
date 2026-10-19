@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/continuity",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "exports": {
+    "./alias": "./src/alias.ts",
+    "./archive-search": "./src/archive-search.ts",
+    "./dry-transport": "./src/dry-transport.ts",
+    "./masking": "./src/masking.ts",
+    "./raw-payload": "./src/raw-payload.ts",
+    "./request-source": "./src/request-source.ts"
+  },
+  "scripts": {
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@orchestra/core": "workspace:*",
+    "effect": "catalog:",
+    "jsonc-parser": "3.3.1"
+  },
+  "devDependencies": {
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

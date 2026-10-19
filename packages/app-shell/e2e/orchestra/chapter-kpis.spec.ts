@@ -584,10 +584,7 @@ async function setup(
   })
   await page.addInitScript(
     ({ directory, serverA, serverB, secondServer, secondDirectory, noSelection, scheme, locale }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("orchestra.global.dat:language", JSON.stringify({ locale }))

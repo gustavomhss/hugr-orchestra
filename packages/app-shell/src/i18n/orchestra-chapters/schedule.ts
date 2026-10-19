@@ -13,6 +13,9 @@ export const SCHEDULE_COPY = {
     "Saved on this device for this profile · due tasks run only while this page is open; a run more than a day late, or overtaken by the next one, is marked Missed.",
   "orchestra.schedule.loading": "Loading scheduled tasks…",
   "orchestra.schedule.loadError": "Could not load scheduled tasks from the server.",
+  "orchestra.schedule.refreshError":
+    "Could not refresh scheduled tasks from the server. The list below may be out of date.",
+  "orchestra.schedule.retry": "Retry",
   "orchestra.schedule.migrateError": "Could not move the tasks saved on this device to the server: {{detail}}",
   "orchestra.schedule.cadence.once": "Once",
   "orchestra.schedule.cadence.hourly": "Every hour",

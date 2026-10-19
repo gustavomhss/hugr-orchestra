@@ -24,28 +24,6 @@ export const SETTINGS_COPY = {
     "A later rule in the server config overrides this tool. Edit the config file to change it.",
   "orchestra.settings.providers.description": "Choose how this server reaches its models.",
   "orchestra.settings.providers.connect": "Connect provider",
-  "orchestra.settings.providers.route": "Route for new turns (all repositories)",
-  "orchestra.settings.providers.routeReadOnly": "This server does not let the app change its default model.",
-  "orchestra.settings.providers.routeNone": "Connect a provider to choose a route.",
-  "orchestra.settings.providers.routeEmpty": "Choose a connected provider",
-  "orchestra.settings.providers.connected": "Connected",
-  "orchestra.settings.providers.model": "1 model",
-  "orchestra.settings.providers.models": "{{count}} models",
-  "orchestra.settings.providers.allListed": "All popular providers are listed above.",
-  "orchestra.settings.providers.loading": "Loading providers…",
-  "orchestra.settings.providers.remove": "Remove",
-  "orchestra.settings.providers.removeAll.title": "Remove {{count}} credentials for {{provider}}?",
-  "orchestra.settings.providers.removeAll.description":
-    "This removes {{labels}} from this server, for every repository.",
-  "orchestra.settings.providers.env.title": "{{provider}} stays connected",
-  "orchestra.settings.providers.env.description":
-    "It connects through {{names}} in the server's environment. Remove the variable to disconnect it.",
-  "orchestra.settings.providers.labelled.title": "{{provider}} has no default key",
-  "orchestra.settings.providers.labelled.description":
-    "Its keys are labelled ({{labels}}). Disconnect each one from its own entry.",
-  "orchestra.settings.providers.none.title": "Nothing stored for {{provider}}",
-  "orchestra.settings.providers.none.description":
-    "Its connection comes from the server config, not from a stored credential.",
   "orchestra.settings.models.description": "Choose which models appear in the composer.",
   "orchestra.settings.models.search": "Search models",
   "orchestra.settings.models.noMatches": "No models match your search.",
@@ -53,6 +31,14 @@ export const SETTINGS_COPY = {
   "orchestra.settings.models.enable": "Enable {{model}}",
   "orchestra.settings.models.empty": "No models yet. Connect a provider to choose its models.",
   "orchestra.settings.models.loading": "Loading models…",
+  "orchestra.settings.models.default": "Default",
+  "orchestra.settings.models.makeDefault": "Set as default",
+  "orchestra.settings.models.makeDefaultLabel": "Use {{model}} as the default model",
+  "orchestra.settings.models.done": "Done",
+  "orchestra.settings.scope.server": "Changes here apply to {{server}}.",
+  "orchestra.settings.servers.remove.title": "Delete {{server}}?",
+  "orchestra.settings.servers.remove.description":
+    "This removes the saved connection, its password and the tabs open on it from this app.",
   "orchestra.settings.agents.description": "Configure this profile's agents.",
   "orchestra.settings.agents.create": "Create agent",
   "orchestra.settings.agents.loading": "Loading agents…",
@@ -76,7 +62,16 @@ export const SETTINGS_COPY = {
   "orchestra.settings.mcp.status.disabled": "Disabled",
   "orchestra.settings.mcp.status.pending": "Connecting",
   "orchestra.settings.shortcuts.description": "Make the workspace feel like yours.",
-  "orchestra.settings.shortcuts.edit": "Edit {{name}}",
   "orchestra.settings.general.shellError": "Could not load the shells on this server.",
   "orchestra.settings.general.shellRetry": "Try again",
+  "orchestra.settings.general.updates.downloading": "Downloading… {{percent}}%",
+  "orchestra.settings.general.updates.available":
+    "Version {{version}} is available. Download it from its release page and install it.",
+  "orchestra.settings.general.updates.download": "Download",
+  "orchestra.settings.general.updates.failed": "The last check for updates failed.",
+  "orchestra.settings.general.updates.retry": "Try again",
+  "orchestra.settings.general.autoAccept.description":
+    "Approve permission requests automatically in this session only. Other sessions are not affected.",
+  "orchestra.settings.general.autoAccept.unavailable":
+    "Open a session to turn this on. It applies to that session only.",
 }

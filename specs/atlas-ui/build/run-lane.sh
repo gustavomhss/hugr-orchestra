@@ -7,8 +7,8 @@ here="$(cd "$(dirname "$0")" && pwd)"
 for id in "$@"; do
   "$here/run-task.sh" "$id" || { echo "LANE STOP $id: runner failed"; exit 1; }
   out="$here/runs/$id.out"
-  if ! tail -5 "$out" | grep -q '^RESULT: DONE'; then
-    echo "LANE STOP $id: $(tail -5 "$out" | grep '^RESULT:' || echo 'no RESULT line')"
+  if ! tail -5 "$out" | grep -q 'RESULT: DONE'; then
+    echo "LANE STOP $id: $(tail -5 "$out" | grep -o 'RESULT:.*' || echo 'no RESULT line')"
     exit 1
   fi
   lane="$(sed -n 's/^Lane: \([A-Za-z-]*\).*/\1/p' "$here/tasks/$id.md" | head -1 | tr '[:upper:]' '[:lower:]')"

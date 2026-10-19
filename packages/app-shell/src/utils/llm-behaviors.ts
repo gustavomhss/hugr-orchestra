@@ -1,6 +1,10 @@
 import { pathKey } from "./path-key"
 
 export const CAVEMAN_ID = "caveman"
+// The English text a new profile stores for the built-in behavior; the Plugins page shows it in the reader's language
+// for as long as it is unedited (`seedText`).
+const CAVEMAN_NAME = "Caveman"
+const CAVEMAN_DESCRIPTION = "Technical substance stays. Fluff goes."
 export const INTENSITIES = ["lite", "full", "ultra"] as const
 
 export type Intensity = (typeof INTENSITIES)[number]
@@ -33,8 +37,8 @@ export function defaultBehaviorState(): LlmBehaviorState {
     behaviors: [
       {
         id: CAVEMAN_ID,
-        name: "Caveman",
-        description: "Technical substance stays. Fluff goes.",
+        name: CAVEMAN_NAME,
+        description: CAVEMAN_DESCRIPTION,
         instructions: "Respond terse like smart caveman. Preserve technical accuracy.",
         enabled: false,
         intensity: "full",
@@ -53,7 +57,7 @@ export function sanitizeBehaviorState(value: unknown): LlmBehaviorState {
 // them per project and applies each one to every turn.
 export function behaviorInstructions(behaviors: LlmBehavior[]) {
   return behaviors
-    .filter((behavior) => behavior.enabled && (behavior.id === CAVEMAN_ID || behavior.instructions.trim()))
+    .filter((behavior) => behavior.enabled && sendsInstructions(behavior))
     .map((behavior) => ({
       id: behavior.id,
       name: behavior.id === CAVEMAN_ID ? `${behavior.name} (intensity: ${intensity(behavior)})` : behavior.name,
@@ -75,9 +79,23 @@ export function behaviorSystem(behaviors: LlmBehavior[]) {
   ].join("\n\n")
 }
 
+// Caveman always sends its intensity rule; any other behavior sends nothing until it has instructions.
+export function sendsInstructions(behavior: LlmBehavior) {
+  return behavior.id === CAVEMAN_ID || behavior.instructions.trim() !== ""
+}
+
+// A behavior's stored text, except that the built-in Caveman still carrying its English seed shows `localized`.
+export function seedText(behavior: LlmBehavior, field: "name" | "description", localized: string) {
+  const seed = field === "name" ? CAVEMAN_NAME : CAVEMAN_DESCRIPTION
+  return behavior.id === CAVEMAN_ID && behavior[field] === seed ? localized : behavior[field]
+}
+
 export type BehaviorCardLabels = {
   kind: string
   custom: string
+  name: (behavior: LlmBehavior) => string
+  description: (behavior: LlmBehavior) => string
+  intensity: (level: Intensity) => string
   status: (behavior: LlmBehavior) => string
   configure: string
 }
@@ -85,10 +103,10 @@ export type BehaviorCardLabels = {
 // The text a behavior card shows, in reading order; search matches exactly what the user sees.
 export function behaviorCardText(behavior: LlmBehavior, labels: BehaviorCardLabels) {
   return [
-    behavior.name,
-    behavior.description,
+    labels.name(behavior),
+    labels.description(behavior),
     labels.kind,
-    behavior.intensity ?? labels.custom,
+    behavior.intensity ? labels.intensity(behavior.intensity) : labels.custom,
     labels.status(behavior),
     labels.configure,
   ].join(" ")

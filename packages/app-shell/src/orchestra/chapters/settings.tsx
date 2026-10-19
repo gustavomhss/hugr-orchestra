@@ -2,7 +2,9 @@ import { SettingsView } from "@/components/settings-v2/view/settings-view"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { For, Match, Show, Switch } from "solid-js"
 import { useSearchParams } from "@solidjs/router"
+import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
+import { createHomeController } from "@/pages/home/home-controller"
 import { SettingsGeneralV2 } from "@/components/settings-v2/general"
 import { SettingsServersV2 } from "@/components/settings-v2/servers"
 import { ShortcutsSection } from "@/components/settings-v2/view/shortcuts-section"
@@ -11,6 +13,7 @@ import { SETTINGS_SECTIONS } from "@/components/settings-v2/view/settings-data"
 // Routed Settings view (`/orchestra/settings?section=<id>`), registered in chapterPages by the shell.
 export default function SettingsPage(props: ChapterPageProps) {
   const language = useLanguage()
+  const home = createHomeController()
   const [params, setParams] = useSearchParams<{ section?: string }>()
   const labels = {
     general: "settings.tab.general",
@@ -35,6 +38,7 @@ export default function SettingsPage(props: ChapterPageProps) {
                   {(item) => (
                     <button
                       type="button"
+                      classList={{ on: (params.section ?? "general") === item }}
                       aria-current={(params.section ?? "general") === item ? "page" : undefined}
                       onClick={() => setParams({ section: item }, { replace: true })}
                     >
@@ -44,7 +48,17 @@ export default function SettingsPage(props: ChapterPageProps) {
                 </For>
               </nav>
               <div class="settings-body settings-inherited">
-                <Switch fallback={<p role="status">{language.t("orchestra.shell.settings.repository")}</p>}>
+                <Switch
+                  fallback={
+                    <div class="mx-empty" role="status">
+                      {language.t("orchestra.shell.settings.repository")}
+                      <br />
+                      <ButtonV2 class="mt-3" variant="contrast" icon="plus" onClick={() => home.project.choose(props.server)}>
+                        {language.t("command.project.open")}
+                      </ButtonV2>
+                    </div>
+                  }
+                >
                   <Match when={!params.section || params.section === "general"}>
                     <SettingsGeneralV2 />
                   </Match>

@@ -67,7 +67,7 @@ function parse(tip: string): TipPart[] {
   return parts
 }
 
-const NO_MODELS_TIP = "Run {highlight}/connect{/highlight} to add an AI provider and start coding"
+const NO_MODELS_TIP = "Run {highlight}/connect{/highlight} to add an AI provider, such as Claude, GPT or Gemini"
 const NO_MODELS_PARTS = parse(NO_MODELS_TIP)
 
 function shortcutText(value: string) {
@@ -93,7 +93,7 @@ function configShortcut(api: TuiPluginApi, command: string): TipShortcut {
       .join(", ")
 }
 
-export function Tips(props: { api: TuiPluginApi; connected?: boolean }) {
+export function Tips(props: { api: TuiPluginApi; connected?: boolean; step?: number }) {
   const theme = useTheme().theme
   const tipOffset = Math.random()
   const shortcuts: Shortcuts = {
@@ -136,7 +136,7 @@ export function Tips(props: { api: TuiPluginApi; connected?: boolean }) {
       const value = typeof item === "string" ? item : item(shortcuts)
       return value ? [value] : []
     })
-    return tips[Math.floor(tipOffset * tips.length)] ?? NO_MODELS_TIP
+    return tips[(Math.floor(tipOffset * tips.length) + (props.step ?? 0)) % tips.length] ?? NO_MODELS_TIP
   }, NO_MODELS_TIP)
   // Solid can expose a memo's initial value while a pure computation is pending.
   const parts = createMemo(() => {
@@ -192,7 +192,10 @@ const TIPS: Tip[] = [
   (shortcuts) => press(shortcuts.messagesFirst(), "to jump to the beginning of the conversation"),
   (shortcuts) => press(shortcuts.messagesLast(), "to jump to the most recent message"),
   (shortcuts) => press(shortcuts.inputNewline(), "to add newlines in your prompt"),
-  (shortcuts) => press(shortcuts.inputClear(), "when typing to clear the input field"),
+  (shortcuts) =>
+    shortcuts.inputClear()
+      ? `Press ${shortcutText(shortcuts.inputClear())} to clear the input field when it has text; press it again on an empty prompt to exit`
+      : undefined,
   (shortcuts) => press(shortcuts.sessionInterrupt(), "to stop the AI mid-response"),
   "Use {highlight}@agent-name{/highlight} in prompts to invoke specialized subagents",
   (shortcuts) => {

@@ -11,21 +11,21 @@ member the rule waits for the steward (D18). Task and PR entries are unchanged. 
 
 ## Read first
 - `specs/atlas-ui/build/DECISIONS.md` D14, D18; `specs/atlas-ui/build/issues/b-o.md` item 5.
-- `packages/orchestra/src/tool/atlas-memory.ts:1-8` (imports) and `:93-167` (`AtlasMemoryEmitTool`).
-- `packages/orchestra/src/maestro/atlas-memory.ts:39-53` (`MemoryOutcome`, `Receipt`).
+- `apps/orchestra/src/tool/atlas-memory.ts:1-8` (imports) and `:93-167` (`AtlasMemoryEmitTool`).
+- `apps/orchestra/src/maestro/atlas-memory.ts:39-53` (`MemoryOutcome`, `Receipt`).
 - `modules/atlas/boundary/src/generated/native-memory.d.ts`: confirm it declares `proposeProjectRule(input: AtlasBinding,
   entry: unknown, at: string): ProposalVerdict` (C01 regenerated it). If it does not, stop and report.
-- `packages/orchestra/test/tool/atlas-memory.test.ts:1-110` (the `tools(scanner)` fixture, `lines`, `receiptOf`) and
+- `apps/orchestra/test/tool/atlas-memory.test.ts:1-110` (the `tools(scanner)` fixture, `lines`, `receiptOf`) and
   `:150-200`.
-- `packages/orchestra/test/research/atlas-owners.test.ts:28-60` (fixtures), `:100-105`, `:150-200`.
+- `apps/orchestra/test/research/atlas-owners.test.ts:28-60` (fixtures), `:100-105`, `:150-200`.
 - `packages/jimmy-specialist/skills/jimmy-discovery/references/atlas.md:25-36`.
 
 ## Change
-1. `packages/orchestra/src/maestro/atlas-memory.ts`:
+1. `apps/orchestra/src/maestro/atlas-memory.ts`:
    a. Replace `export type MemoryOutcome = "admitted" | "refused" | "unavailable" | "uncertain"` with
       `export type MemoryOutcome = "admitted" | "proposed" | "refused" | "unavailable" | "uncertain"`.
    b. In `export type Receipt = {`, after the line `  ref?: RecordRef` add `  proposalId?: string`.
-2. `packages/orchestra/src/tool/atlas-memory.ts`:
+2. `apps/orchestra/src/tool/atlas-memory.ts`:
    a. Before the line `import type { BoundEntry } from "@orchestra/atlas-boundary/native-memory"` add
       `import { proposeProjectRule } from "@orchestra/atlas-boundary/native-memory"`.
    b. In the `description:` string of `AtlasMemoryEmitTool`, replace
@@ -70,7 +70,7 @@ member the rule waits for the steward (D18). Task and PR entries are unchanged. 
       `- Project: \`rule\`, \`scope\`. A project rule is a proposal: a person indexes or discards it, and it reaches your header only once indexed.`
    b. In the line starting `Reconcile-before-write is native.`, replace `Preserve \`admitted\`, \`refused\`,` with
       `Preserve \`admitted\`, \`proposed\`, \`refused\`,`.
-4. `packages/orchestra/test/tool/atlas-memory.test.ts`: add `import { readFileSync } from "node:fs"` after
+4. `apps/orchestra/test/tool/atlas-memory.test.ts`: add `import { readFileSync } from "node:fs"` after
    `import { mkdir } from "node:fs/promises"`, and append this case at the end of the file:
    ```ts
    it.instance(
@@ -96,7 +96,7 @@ member the rule waits for the steward (D18). Task and PR entries are unchanged. 
      { git: true },
    )
    ```
-5. `packages/orchestra/test/research/atlas-owners.test.ts` (rules reach a header only once indexed, so the tests that
+5. `apps/orchestra/test/research/atlas-owners.test.ts` (rules reach a header only once indexed, so the tests that
    need a rule in the header write it as the steward's host action would, through `memory.write`):
    a. After the `function receipt(result: Tool.ExecuteResult) {…}` block add:
       ```ts
@@ -130,16 +130,16 @@ member the rule waits for the steward (D18). Task and PR entries are unchanged. 
       (Each write still appends one memory line, so the decay waves and the `lines` count of 9 are unchanged.)
 
 ## Touch only
-- `packages/orchestra/src/maestro/atlas-memory.ts`
-- `packages/orchestra/src/tool/atlas-memory.ts`
+- `apps/orchestra/src/maestro/atlas-memory.ts`
+- `apps/orchestra/src/tool/atlas-memory.ts`
 - `packages/jimmy-specialist/skills/jimmy-discovery/references/atlas.md`
-- `packages/orchestra/test/tool/atlas-memory.test.ts`
-- `packages/orchestra/test/research/atlas-owners.test.ts`
+- `apps/orchestra/test/tool/atlas-memory.test.ts`
+- `apps/orchestra/test/research/atlas-owners.test.ts`
 
 ## Done when
-- `grep -n "proposeProjectRule" packages/orchestra/src/tool/atlas-memory.ts` prints 2 lines.
-- `grep -n "\"proposed\"" packages/orchestra/src/maestro/atlas-memory.ts packages/orchestra/src/tool/atlas-memory.ts` prints 3 lines.
-- `grep -n "interleaved rule\`, scope: \"source\" } }, ctx" packages/orchestra/test/research/atlas-owners.test.ts` prints nothing.
+- `grep -n "proposeProjectRule" apps/orchestra/src/tool/atlas-memory.ts` prints 2 lines.
+- `grep -n "\"proposed\"" apps/orchestra/src/maestro/atlas-memory.ts apps/orchestra/src/tool/atlas-memory.ts` prints 3 lines.
+- `grep -n "interleaved rule\`, scope: \"source\" } }, ctx" apps/orchestra/test/research/atlas-owners.test.ts` prints nothing.
 - Lead acceptance: `bun run test:ci orchestra test/tool/atlas-memory.test.ts test/research/atlas-owners.test.ts
   test/tool/task-atlas-resume.test.ts test/maestro/backend-memory-result.test.ts` is green, and
   `gh workflow run typecheck.yml --ref <branch>` is green.

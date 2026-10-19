@@ -1,7 +1,9 @@
 import type { Actions } from "@orchestra/schema/actions"
 import { For, Match, Show, Switch } from "solid-js"
 import { Empty, Icon } from "./components"
+import type { ActionKey } from "@/i18n/actions"
 import type { Model, State, Translate, ViewProps } from "./contract"
+import { bytes, relative } from "./format"
 import { ArtifactRow } from "./output-views"
 import { canRequest } from "./request-policy"
 import { ResourceScopeField } from "./resource-scopes-field"
@@ -11,166 +13,201 @@ type Data = Record<string, unknown>
 type Kind = Extract<Actions.ResourceKind, "artifacts" | "environments" | "variables" | "runners" | "caches" | "schedules">
 type CreateKind = "create-variable" | "create-environment" | "create-runner" | "create-schedule"
 type Run = Actions.Run
-const tabs = [
-  ["artifacts", "orchestra.actions.artifacts", "box"],
-  ["environments", "orchestra.actions.environments", "upload"],
-  ["variables", "orchestra.actions.variables", "lock"],
-  ["runners", "orchestra.actions.runners", "server"],
-  ["caches", "orchestra.actions.caches", "box"],
-  ["schedules", "orchestra.actions.schedules", "clock"],
-] as const
+const kinds = ["artifacts", "environments", "variables", "runners", "caches", "schedules"] as const
 
+// The context sidebar is the only resource navigation, as in the approved mock.
 export function Resources(props: ViewProps) {
   const state = () => props.model.state
-  const kind = () => tabs.find((tab) => tab[0] === state().route.resourceKind)?.[0] ?? "artifacts"
+  const kind = () => kinds.find((item) => item === state().route.resourceKind) ?? "artifacts"
   const page = () => state().resources
   const items = () => (page().value?.items ?? []).filter(
     (item) => item.kind === kind() && item.bindingID === state().binding?.id,
   )
   const ready = () => page().status === "ready" && Boolean(state().binding) && !state().unsupported
-  const title = () => state().unsupported
-    ? "orchestra.actions.unsupported"
-    : !state().binding
-      ? "orchestra.actions.noConnection"
-      : page().status === "error"
-        ? "orchestra.actions.providerRequestFailed"
-        : page().status === "idle"
-          ? "orchestra.actions.idle"
-          : "orchestra.actions.loading"
+  // Getters keep spread props reactive.
+  const rp: RP = { get model() { return props.model }, get t() { return props.t }, get state() { return state() }, get items() { return items() } }
+  const head = () => headFor(rp, kind())
 
   return (
     <div class="actions-resources resources-layout">
-      <nav class="resource-nav wf-range" aria-label={props.t("orchestra.actions.projectResources")}>
-        <For each={tabs}>
-          {(tab) => (
-            <button
-              type="button"
-              aria-current={kind() === tab[0] ? "page" : "false"}
-              aria-pressed={kind() === tab[0]}
-              onClick={() => props.model.navigate({ view: "resources", resourceKind: tab[0] })}
-            >
-              <Glyph name={tab[2]} size={16} />
-              {props.t(tab[1])}
-            </button>
-          )}
-        </For>
-      </nav>
-      <section class="resource-body">
-        <Show when={kind() === "variables" && state().binding && !state().unsupported}>
-          <ResourceScopeField {...props} filter value={state().filters.scope} disabled={state().submitting}
-            onChange={(scope) => props.model.filter({ scope: scope || undefined })} />
-        </Show>
+      <Show when={state().binding && !state().unsupported} fallback={
+        <Empty title={props.t(state().unsupported ? "orchestra.actions.unsupported" : "orchestra.actions.noConnection")} />}>
         <Show keyed when={`${state().binding?.id ?? ""}:${state().binding?.revision ?? ""}:${kind()}`}>
           {(_owner) => (
-            <Show when={ready()} fallback={<Empty title={props.t(title())} error={page().status === "error" ? props.t(page().error?.message ?? "orchestra.actions.unavailable") : undefined} busy={page().status === "loading"} />}>
-              <Switch>
-                <Match when={kind() === "artifacts"}><Artifacts {...props} state={state()} items={items()} /></Match>
-                <Match when={kind() === "environments"}><Environments {...props} state={state()} items={items()} /></Match>
-                <Match when={kind() === "variables"}><Variables {...props} state={state()} items={items()} /></Match>
-                <Match when={kind() === "runners"}><Runners {...props} state={state()} items={items()} /></Match>
-                <Match when={kind() === "caches"}><Caches {...props} state={state()} items={items()} /></Match>
-                <Match when={kind() === "schedules"}><Schedules {...props} state={state()} items={items()} /></Match>
-              </Switch>
-            </Show>
+            <section class={`ar-surface ar-${kind()}`}>
+              <Show when={head()}>{(copy) => <Head {...rp} title={copy().title} detail={copy().detail} glyph={copy().glyph}
+                summary={ready() ? copy().summary : ""} create={copy().create} createKind={copy().createKind}
+                topAction={copy().topAction} topPath={copy().topPath} />}</Show>
+              <Show when={kind() === "variables"}>
+                <ResourceScopeField {...props} filter value={state().filters.scope} disabled={state().submitting}
+                  onChange={(scope) => props.model.filter({ scope: scope || undefined })} />
+              </Show>
+              <Show when={ready()} fallback={<Pending {...rp} title={head()?.title ?? props.t("orchestra.actions.artifacts")} />}>
+                <Switch>
+                  <Match when={kind() === "artifacts"}><Artifacts {...rp} /></Match>
+                  <Match when={kind() === "environments"}><Environments {...rp} /></Match>
+                  <Match when={kind() === "variables"}><Variables {...rp} /></Match>
+                  <Match when={kind() === "runners"}><Runners {...rp} /></Match>
+                  <Match when={kind() === "caches"}><Caches {...rp} /></Match>
+                  <Match when={kind() === "schedules"}><Schedules {...rp} /></Match>
+                </Switch>
+              </Show>
+            </section>
           )}
         </Show>
-      </section>
+      </Show>
     </div>
   )
 }
 
 type RP = { model: Model; t: Translate; state: State; items: readonly Item[] }
-type SurfaceProps = RP & {
-  kind: Kind
+type HeadCopy = {
   title: string
   detail: string
   summary: string
+  glyph: GlyphName
+  create?: string
+  createKind?: CreateKind
+  topAction?: string
+  topPath?: string
+}
+type SurfaceProps = RP & {
+  kind: Kind
+  label: string
   noteTitle: string
   note: string
   emptyTitle: string
   emptyDetail: string
   headers: readonly string[]
-  glyph: GlyphName
-  create?: string
-  createKind?: CreateKind
   waiting?: Run
-  topAction?: string
-  topPath?: string
+}
+
+// Idle and loading both read as loading; the internal slot state is never page content.
+function Pending(p: RP & { title: string }) {
+  const message = () => p.state.resources.error?.message
+  return <Show when={p.state.resources.status === "error"} fallback={<Empty title={p.t("orchestra.actions.loading")} busy />}>
+    <section class="actions-empty ar-state" role="alert">
+      <strong>{p.t("orchestra.actions.resources.failed", { resource: p.title })}</strong>
+      <Show when={message() === "orchestra.actions.unavailable" ? undefined : message()}>
+        {(key) => <p>{p.t(key())}</p>}
+      </Show>
+      <p>{p.t("orchestra.actions.resources.failedDetail")}</p>
+      <button type="button" class="mx-btn" disabled={p.state.submitting} onClick={() => void p.model.refresh()}>
+        <Icon name="refresh" size={16} />{p.t("orchestra.actions.refresh")}
+      </button>
+    </section>
+  </Show>
+}
+
+function headFor(p: RP, kind: Kind): HeadCopy | undefined {
+  const github = p.state.binding?.provider.kind === "github"
+  if (kind === "environments") return { title: p.t("orchestra.actions.environments"), detail: p.t("orchestra.actions.environments.detail"),
+    summary: p.t("orchestra.actions.environments.summary", { count: p.items.length }), glyph: "write",
+    create: p.t("orchestra.actions.newEnvironment"), createKind: "create-environment" }
+  if (kind === "variables") {
+    const secrets = p.items.filter((r) => sensitive(r, json(r.data))).length
+    return { title: p.t("orchestra.actions.variables"), detail: p.t("orchestra.actions.variables.detail"),
+      summary: p.t("orchestra.actions.variables.summary", { sensitive: secrets, readable: p.items.length - secrets }), glyph: "verify",
+      create: p.t("orchestra.actions.newSecretVariable"), createKind: "create-variable" }
+  }
+  if (kind === "runners") {
+    const inherited = p.items.filter((r) => {
+      const d = json(r.data)
+      return d.inherited === true || text(d, "origin").startsWith("Inherited")
+    }).length
+    return { title: p.t("orchestra.actions.runners"), detail: p.t("orchestra.actions.runners.detail"),
+      summary: p.t("orchestra.actions.runners.summary", { project: p.items.length - inherited, inherited }), glyph: "execute",
+      create: p.t("orchestra.actions.addRunner"), createKind: "create-runner" }
+  }
+  if (kind === "caches" && !github) return { title: p.t("orchestra.actions.runnerCaches"), detail: p.t("orchestra.actions.runnerCaches.detail"),
+    summary: p.t("orchestra.actions.runnerCaches.summary"), glyph: "read" }
+  if (kind === "caches") return { title: p.t("orchestra.actions.dependencyCaches"), detail: p.t("orchestra.actions.caches.detail"),
+    summary: p.t("orchestra.actions.caches.summary", { count: p.items.length }), glyph: "read" }
+  // GitHub schedules live in workflow YAML: the mock offers a source edit there, never a separate schedule object.
+  if (kind === "schedules") return { title: p.t("orchestra.actions.schedules"),
+    detail: p.t(github ? "orchestra.actions.schedules.githubDetail" : "orchestra.actions.schedules.gitlabDetail"),
+    summary: p.t("orchestra.actions.schedules.summary", { count: p.items.length, provider: p.t(github ? "orchestra.actions.workflowYaml" : "orchestra.actions.projectOwned") }),
+    glyph: "command", ...(github
+      ? { topAction: p.t("orchestra.actions.editScheduleInYaml"), topPath: p.items.map((r) => text(json(r.data), "path")).find(Boolean) }
+      : { create: p.t("orchestra.actions.newSchedule"), createKind: "create-schedule" as const }) }
+  return undefined
 }
 
 function Artifacts(p: RP) {
-  return <section class="actions-detail detail-artifacts ar-surface" aria-label={p.t("orchestra.actions.artifacts")}>
+  return <section class="actions-detail detail-artifacts" aria-label={p.t("orchestra.actions.artifacts")}>
     <header class="section-title collection-section">
       <div><h2>{p.t("orchestra.actions.artifacts")}</h2><small>{p.t("orchestra.actions.artifacts.detail")}</small></div>
       <Badge value={p.t("orchestra.actions.outputs", { count: p.items.length })} />
     </header>
-    <div class="mx-table ar-table" role="table" aria-label={p.t("orchestra.actions.artifacts")}>
-      <For each={p.items}>{(item) => <ArtifactRow model={p.model} t={p.t} item={item} />}</For>
-    </div>
-    <Show when={!p.items.length}><Empty title={p.t("orchestra.actions.emptyArtifacts")} detail={p.t("orchestra.actions.artifacts.emptyDetail")} /></Show>
+    <Show when={p.items.length} fallback={<Empty title={p.t("orchestra.actions.emptyArtifacts")} detail={p.t("orchestra.actions.artifacts.emptyDetail")} />}>
+      <div class="mx-table ar-table" role="table" aria-label={p.t("orchestra.actions.artifacts")}>
+        <For each={p.items}>{(item) => <ArtifactRow model={p.model} t={p.t} item={item} />}</For>
+      </div>
+    </Show>
   </section>
 }
 
 function Environments(p: RP) {
   const github = () => p.state.binding?.provider.kind === "github"
-  return <Surface {...p} kind="environments" title={p.t("orchestra.actions.environments")} detail={p.t("orchestra.actions.environments.detail")} summary={p.t("orchestra.actions.environments.summary", { count: p.items.length })} noteTitle={p.t("orchestra.actions.environments.noteTitle")} note={p.t(github() ? "orchestra.actions.environments.githubNote" : "orchestra.actions.environments.gitlabNote")} emptyTitle={p.t("orchestra.actions.emptyEnvironments")} emptyDetail={p.t("orchestra.actions.emptyEnvironments.detail")} headers={[p.t("orchestra.actions.environments.header"), p.t("orchestra.actions.deploymentState"), p.t("orchestra.actions.manage")]} glyph="write" create={p.t("orchestra.actions.newEnvironment")} createKind="create-environment" waiting={waitingRun(p.state)} />
+  return <Surface {...p} kind="environments" label={p.t("orchestra.actions.environments")} noteTitle={p.t("orchestra.actions.environments.noteTitle")} note={p.t(github() ? "orchestra.actions.environments.githubNote" : "orchestra.actions.environments.gitlabNote")} emptyTitle={p.t("orchestra.actions.emptyEnvironments")} emptyDetail={p.t("orchestra.actions.emptyEnvironments.detail")} headers={[p.t("orchestra.actions.environments.header"), p.t("orchestra.actions.deploymentState"), p.t("orchestra.actions.manage")]} waiting={waitingRun(p.state)} />
 }
 function Variables(p: RP) {
   const github = () => p.state.binding?.provider.kind === "github"
-  const secrets = () => p.items.filter((r) => sensitive(r, json(r.data))).length
-  return <Surface {...p} kind="variables" title={p.t("orchestra.actions.variables")} detail={p.t("orchestra.actions.variables.detail")} summary={p.t("orchestra.actions.variables.summary", { sensitive: secrets(), readable: p.items.length - secrets() })} noteTitle={p.t("orchestra.actions.variables.noteTitle")} note={p.t(github() ? "orchestra.actions.variables.githubNote" : "orchestra.actions.variables.gitlabNote")} emptyTitle={p.t("orchestra.actions.emptyVariables")} emptyDetail={p.t("orchestra.actions.emptyVariables.detail")} headers={[p.t("orchestra.actions.variables.header"), p.t("orchestra.actions.valueControls"), p.t("orchestra.actions.manage")]} glyph="verify" create={p.t("orchestra.actions.newSecretVariable")} createKind="create-variable" />
+  return <Surface {...p} kind="variables" label={p.t("orchestra.actions.variables")} noteTitle={p.t("orchestra.actions.variables.noteTitle")} note={p.t(github() ? "orchestra.actions.variables.githubNote" : "orchestra.actions.variables.gitlabNote")} emptyTitle={p.t("orchestra.actions.emptyVariables")} emptyDetail={p.t("orchestra.actions.emptyVariables.detail")} headers={[p.t("orchestra.actions.variables.header"), p.t("orchestra.actions.valueControls"), p.t("orchestra.actions.manage")]} />
 }
 function Runners(p: RP) {
-  const inherited = () => p.items.filter((r) => {
-    const d = json(r.data)
-    return d.inherited === true || text(d, "origin").startsWith("Inherited")
-  }).length
-  return <Surface {...p} kind="runners" title={p.t("orchestra.actions.runners")} detail={p.t("orchestra.actions.runners.detail")} summary={p.t("orchestra.actions.runners.summary", { project: p.items.length - inherited(), inherited: inherited() })} noteTitle={p.t("orchestra.actions.runners.noteTitle")} note={p.t("orchestra.actions.runners.note")} emptyTitle={p.t("orchestra.actions.emptyRunners")} emptyDetail={p.t("orchestra.actions.emptyRunners.detail")} headers={[p.t("orchestra.actions.runners.header"), p.t("orchestra.actions.statusOwnership"), p.t("orchestra.actions.manage")]} glyph="execute" create={p.t("orchestra.actions.addRunner")} createKind="create-runner" />
+  return <Surface {...p} kind="runners" label={p.t("orchestra.actions.runners")} noteTitle={p.t("orchestra.actions.runners.noteTitle")} note={p.t("orchestra.actions.runners.note")} emptyTitle={p.t("orchestra.actions.emptyRunners")} emptyDetail={p.t("orchestra.actions.emptyRunners.detail")} headers={[p.t("orchestra.actions.runners.header"), p.t("orchestra.actions.statusOwnership"), p.t("orchestra.actions.manage")]} />
 }
 function Caches(p: RP) {
-  if (p.state.binding?.provider.kind === "gitlab") return <section class="ar-surface">
-    <Head {...p} title={p.t("orchestra.actions.runnerCaches")} detail={p.t("orchestra.actions.runnerCaches.detail")} summary={p.t("orchestra.actions.runnerCaches.summary")} glyph="read" />
-    <article class="mx-card ar-cache-card">
-      <div class="mx-card-top"><span class="mx-mark ar-mark"><Glyph name="read" size={24} /></span><div><h3>{p.t("orchestra.actions.freshCacheNamespace")}</h3><small>{p.t("orchestra.actions.gitlabRunnerCaches")}</small></div><Badge value={p.t("orchestra.actions.projectWide")} tone="warm" /></div>
-      <p>{p.t("orchestra.actions.clearCaches.detail")}</p>
-      <dl class="wf-kv ar-facts"><dt>{p.t("orchestra.actions.scope")}</dt><dd>{p.t("orchestra.actions.everyCacheKey")}</dd><dt>{p.t("orchestra.actions.storage")}</dt><dd>{p.t("orchestra.actions.existingBlobsRetained")}</dd><dt>{p.t("orchestra.actions.inventory")}</dt><dd>{p.t("orchestra.actions.cacheInventoryUnavailable")}</dd></dl>
-      <div class="mx-card-foot"><small>{p.t("orchestra.actions.futureJobs")}</small><ActionButton action="clear" icon="refresh" label={p.t("orchestra.actions.clearProjectRunnerCaches")} disabled={!allowedState(p.state, "cache.clear")} onClick={() => p.model.dialog({ kind: "clear-caches" })} /></div>
-    </article>
-  </section>
-  return <Surface {...p} kind="caches" title={p.t("orchestra.actions.dependencyCaches")} detail={p.t("orchestra.actions.caches.detail")} summary={p.t("orchestra.actions.caches.summary", { count: p.items.length })} noteTitle={p.t("orchestra.actions.cacheUsage")} note={p.t("orchestra.actions.cacheUsage.note")} emptyTitle={p.t("orchestra.actions.emptyCaches")} emptyDetail={p.t("orchestra.actions.emptyCaches.detail")} headers={[p.t("orchestra.actions.cacheKeyRef"), p.t("orchestra.actions.storageLastUsed"), p.t("orchestra.actions.manage")]} glyph="read" />
+  if (p.state.binding?.provider.kind === "gitlab") return <article class="mx-card ar-cache-card">
+    <div class="mx-card-top"><span class="mx-mark ar-mark"><Glyph name="read" size={24} /></span><div><h3>{p.t("orchestra.actions.freshCacheNamespace")}</h3><small>{p.t("orchestra.actions.gitlabRunnerCaches")}</small></div><Badge value={p.t("orchestra.actions.projectWide")} tone="warm" /></div>
+    <p>{p.t("orchestra.actions.clearCaches.detail")}</p>
+    <dl class="wf-kv ar-facts"><dt>{p.t("orchestra.actions.scope")}</dt><dd>{p.t("orchestra.actions.everyCacheKey")}</dd><dt>{p.t("orchestra.actions.storage")}</dt><dd>{p.t("orchestra.actions.existingBlobsRetained")}</dd><dt>{p.t("orchestra.actions.inventory")}</dt><dd>{p.t("orchestra.actions.cacheInventoryUnavailable")}</dd></dl>
+    <div class="mx-card-foot"><small>{p.t("orchestra.actions.futureJobs")}</small><ActionButton action="clear" icon="refresh" label={p.t("orchestra.actions.clearProjectRunnerCaches")} disabled={!allowedState(p.state, "cache.clear")} onClick={() => p.model.dialog({ kind: "clear-caches" })} /></div>
+  </article>
+  // Prefer GitHub's repository-wide usage; otherwise total the listed keys only when every size is native.
+  const usage = () => json(json(p.items[0]?.data).usage)
+  const sizes = () => p.items.map((r) => amount(json(r.data).sizeInBytes))
+  const total = () => {
+    const native = amount(usage().sizeInBytes)
+    const count = amount(usage().count)
+    if (native !== undefined && count !== undefined)
+      return p.t(count === 1 ? "orchestra.actions.cacheUsage.totalOne" : "orchestra.actions.cacheUsage.total", { size: bytes(native), count })
+    const known = sizes().filter((size): size is number => size !== undefined)
+    return known.length && known.length === sizes().length
+      ? p.t("orchestra.actions.cacheUsage.listed", { size: bytes(known.reduce((sum, size) => sum + size, 0)) }) : ""
+  }
+  return <Surface {...p} kind="caches" label={p.t("orchestra.actions.dependencyCaches")} noteTitle={p.t("orchestra.actions.cacheUsage")} note={[total(), p.t("orchestra.actions.cacheUsage.note")].filter(Boolean).join(" ")} emptyTitle={p.t("orchestra.actions.emptyCaches")} emptyDetail={p.t("orchestra.actions.emptyCaches.detail")} headers={[p.t("orchestra.actions.cacheKeyRef"), p.t("orchestra.actions.storageLastUsed"), p.t("orchestra.actions.manage")]} />
 }
 function Schedules(p: RP) {
   const github = () => p.state.binding?.provider.kind === "github"
-  const path = () => github() ? p.items.map((r) => text(json(r.data), "path")).find(Boolean) : undefined
-  return <section class="ar-surface ar-schedules">
-    <Head {...p} title={p.t("orchestra.actions.schedules")} detail={p.t(github() ? "orchestra.actions.schedules.githubDetail" : "orchestra.actions.schedules.gitlabDetail")} summary={p.t("orchestra.actions.schedules.summary", { count: p.items.length, provider: p.t(github() ? "orchestra.actions.workflowYaml" : "orchestra.actions.projectOwned") })} glyph="command" topAction={github() ? p.t("orchestra.actions.editScheduleInYaml") : undefined} topPath={path()} create={!github() ? p.t("orchestra.actions.newSchedule") : undefined} createKind={!github() ? "create-schedule" : undefined} />
+  return <>
     <Table {...p} kind="schedules" label={p.t("orchestra.actions.schedules")} headers={[p.t("orchestra.actions.schedules.header"), p.t("orchestra.actions.refExecutionIdentity"), p.t("orchestra.actions.manage")]} emptyTitle={p.t("orchestra.actions.emptySchedules")} emptyDetail={p.t(github() ? "orchestra.actions.emptySchedules.githubDetail" : "orchestra.actions.emptySchedules.gitlabDetail")} />
-    <aside class="ar-note"><Glyph name="lock" size={16} /><div><strong>{p.t(github() ? "orchestra.actions.schedules.githubNoteTitle" : "orchestra.actions.schedules.gitlabNoteTitle")}</strong><p>{p.t(github() ? "orchestra.actions.schedules.githubNote" : "orchestra.actions.schedules.gitlabNote")}</p></div></aside>
-  </section>
+    <aside class="ar-note"><Glyph name={github() ? "code" : "lock"} size={16} /><div><strong>{p.t(github() ? "orchestra.actions.schedules.githubNoteTitle" : "orchestra.actions.schedules.gitlabNoteTitle")}</strong><p>{p.t(github() ? "orchestra.actions.schedules.githubNote" : "orchestra.actions.schedules.gitlabNote")}</p></div></aside>
+  </>
 }
 function Surface(p: SurfaceProps) {
   return (
-    <section class={`ar-surface ar-${p.kind}`}>
-      <Head {...p} />
+    <>
       <aside class="ar-note">
-        <Glyph name={p.kind === "runners" ? "server" : "lock"} size={16} />
+        <Glyph name={p.kind === "runners" ? "server" : p.kind === "caches" ? "box" : "lock"} size={16} />
         <div>
           <strong>{p.noteTitle}</strong>
           <p>{p.note}</p>
         </div>
       </aside>
-      <Table {...p} label={p.title} />
-    </section>
+      <Table {...p} />
+    </>
   )
 }
-function Head(p: RP & Pick<SurfaceProps, "title" | "detail" | "summary" | "glyph" | "create" | "createKind" | "topAction" | "topPath">) {
+function Head(p: RP & HeadCopy) {
   return (
     <header class="ar-head">
       <span class="mx-mark ar-mark"><Glyph name={p.glyph} size={24} /></span>
       <div class="ar-head-copy">
         <h2>{p.title}</h2>
         <p>{p.detail}</p>
-        <div class="ar-summary">{p.summary}</div>
+        <Show when={p.summary}><div class="ar-summary">{p.summary}</div></Show>
       </div>
       <Show when={p.createKind}>
         <ActionButton
@@ -221,7 +258,7 @@ function Row(p: RP & { kind: Kind; waiting?: Run; resource: Item; headers: reado
       <div class="ar-identity" role="cell">
         <span class="mx-mark"><Glyph name={identity().glyph} size={16} /></span>
         <div>
-          <strong><bdi>{resource.name}</bdi></strong>
+          <strong title={p.kind === "caches" ? resource.name : undefined} tabIndex={p.kind === "caches" ? 0 : undefined}><bdi>{resource.name}</bdi></strong>
           <small><bdi>{identity().detail}</bdi></small>
           <div class="ar-tags">{identity().tags}</div>
         </div>
@@ -289,8 +326,8 @@ function identityFor(p: { kind: Kind; state: State; t: Translate }, r: Item, d: 
   }
   return {
     glyph: "clock" as const,
-    detail: `${text(d, "cron")} · ${text(d, "zone")}`,
-    tags: <Badge value={p.t(enabled(d, r.status)
+    detail: text(d, "cron") ? [text(d, "cron"), text(d, "zone")].filter(Boolean).join(" · ") : "",
+    tags: unreadable(d, r.status) ? <Badge value={p.t("orchestra.actions.unavailable")} tone="warm" /> : <Badge value={p.t(enabled(d, r.status)
       ? "orchestra.actions.active"
       : "orchestra.actions.paused")} tone={enabled(d, r.status) ? "good" : ""} />,
   }
@@ -302,7 +339,10 @@ function Meta(p: RP & { kind: Kind; resource: Item; data: Data; status: string; 
     const tone = p.status === "Online" || p.status === "Available" ? "good" : p.status === "Busy" ? "blue" : "warm"
     return <><Badge value={p.status} tone={tone} /><small>{text(p.data, "origin")}</small></>
   }
-  if (p.kind === "caches") return <><strong>{text(p.data, "size")}</strong><small>{p.t("orchestra.actions.lastUsed", { age: text(p.data, "age") })}</small></>
+  if (p.kind === "caches") return <><strong>{bytes(amount(p.data.sizeInBytes) ?? amount(p.data.size))}</strong><small>{p.t("orchestra.actions.lastUsed", { age: relative(text(p.data, "lastAccessedAt") || text(p.data, "age")) })}</small></>
+  // A schedule whose workflow could not be read keeps its row and states the problem there.
+  if (p.kind === "schedules" && unreadable(p.data, p.resource.status))
+    return <><strong>{p.t("orchestra.actions.scheduleUnreadable")}</strong><small><bdi>{scheduleProblem(p.data, p.t)}</bdi></small></>
   const owner = p.resource.owner || text(p.data, "owner") || text(p.data, "actor")
   if (p.kind === "schedules" && p.state.binding?.provider.kind === "github") {
     return <><code dir="ltr">{text(p.data, "ref")}</code><small>{p.t("orchestra.actions.defaultBranchWorkflowSource")}</small></>
@@ -319,7 +359,7 @@ function Operations(p: RP & { kind: Kind; resource: Item; data: Data; inherited:
   const path = text(p.data, "path")
   const workflowID = text(p.data, "workflowID") || text(p.data, "workflowId")
   const ref = text(p.data, "ref")
-  if (github) return <ActionButton action="source" icon="code" label={p.t("orchestra.actions.editYaml")} disabled={!path} onClick={() => path && p.model.navigate({ view: "source", path, workflowID, ref })} />
+  if (github) return <ActionButton action="source" icon="code" label={p.t("orchestra.actions.editYaml")} disabled={!path} onClick={() => path && p.model.navigate({ view: "source", path, workflowID, ref: ref || undefined })} />
   const active = enabled(p.data, r.status)
   return <><ActionButton action="edit" icon="settings" label={p.t("orchestra.actions.edit")} disabled={!allowed(p.state, "resource.update", r)} onClick={() => p.model.dialog({ kind: "edit-schedule", id: r.id, scope: r.scope })} /><ActionButton action="run" icon="play" label={p.t("orchestra.actions.runNow")} disabled={!allowed(p.state, "schedule.play", r)} onClick={() => p.model.resourceAction("play", r)} /><ActionButton action={active ? "pause" : "resume"} label={p.t(active ? "orchestra.actions.pause" : "orchestra.actions.resume")} disabled={!allowed(p.state, "resource.update", r)} onClick={() => p.model.resourceAction("pause", r)} /><ActionButton action="delete" icon="trash" label={p.t("orchestra.actions.delete")} disabled={!allowed(p.state, "resource.delete", r)} onClick={() => p.model.dialog({ kind: "delete-schedule", id: r.id, scope: r.scope })} /></>
 }
@@ -344,6 +384,22 @@ function enabled(d: Data, status?: string) { return d.enabled === true || status
 function flags(d: Data) { const value = d.flags; const values = Array.isArray(value) ? value.filter((item): item is string => typeof item === "string") : typeof value === "string" ? value.split(/[·,\s]+/).filter(Boolean) : []; return [...new Set(values.filter((item) => ["Protected", "Masked", "Hidden"].includes(item)))] }
 function flagKey(flag: string) { return flag === "Protected" ? "orchestra.actions.protected" : flag === "Masked" ? "orchestra.actions.masked" : "orchestra.actions.hidden" }
 function sensitive(r: Item, d: Data) { return r.sensitive === true || text(d, "type") === "Secret" || flags(d).some((flag) => flag === "Masked" || flag === "Hidden") }
+// A workflow whose YAML could not be read keeps its row; the problem replaces cron and ref.
+function unreadable(d: Data, status?: string) { return d.unreadable === true || status === "Unreadable" || Boolean(problem(d)) }
+function problem(d: Data) { return text(d, "problem") || text(d, "error") || text(json(d.error), "message") }
+// Core's problem text is an English diagnostic; known kinds read as translated copy.
+function scheduleProblem(d: Data, t: Translate) {
+  const kind = text(d, "problemKind")
+  return Object.hasOwn(scheduleProblems, kind) ? t(scheduleProblems[kind]) : problem(d)
+}
+const scheduleProblems: Record<string, ActionKey> = {
+  not_found: "orchestra.actions.scheduleProblem.not_found",
+  source_unresolved: "orchestra.actions.scheduleProblem.source_unresolved",
+  source_conflict: "orchestra.actions.scheduleProblem.source_conflict",
+  metadata_truncated: "orchestra.actions.scheduleProblem.metadata_truncated",
+  invalid_input: "orchestra.actions.scheduleProblem.invalid_input",
+}
+function amount(value: unknown) { return typeof value === "number" && Number.isFinite(value) && value >= 0 ? value : undefined }
 function json(value: unknown): Data { return isData(value) ? value : {} }
 function isData(value: unknown): value is Data { return typeof value === "object" && value !== null && !Array.isArray(value) }
 function text(data: Data, key: string) { const value = data[key]; if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") return String(value); return Array.isArray(value) ? value.filter((item): item is string => typeof item === "string").join(" · ") : "" }

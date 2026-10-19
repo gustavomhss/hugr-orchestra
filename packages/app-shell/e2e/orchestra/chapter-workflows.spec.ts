@@ -51,10 +51,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(rows.locator("strong")).toHaveText(["Relay · tdd_feature"])
 
     await expect(view.getByRole("tab", { name: /Executions/ })).toHaveCount(0)
-    // A bookmarked executions URL opens the library.
+    // The executions URL opens all executions, which lists external runs; with none it says so.
     await page.goto("/orchestra/workflows/executions", { waitUntil: "domcontentloaded" })
     await expect(view.locator("h1")).toHaveText("Workflows")
-    await expect(view.getByRole("listitem").locator("strong")).toHaveText(["Relay · tdd_feature", "Relay · design"])
+    await expect(view.getByText("No runs yet", { exact: true })).toBeVisible()
   })
 }
 
@@ -155,6 +155,21 @@ test("a server without the Relay routes says so on both chapters", async ({ page
   )
   await sidebar(page).getByRole("button", { name: "Hooks", exact: true }).click()
   await expect(page.locator('[data-slot="relay-unsupported"]')).toHaveText("This server does not support hooks yet.")
+})
+
+test("outside git the library refuses new workflows and says why, even on the New workflow route", async ({ page }) => {
+  await setupRelay(page)
+  // Every folder outside git resolves to the one global project those folders share.
+  await page.route("**/api/project/current**", (route) => route.fulfill({ json: { id: "global", directory: "/" } }))
+  await page.goto("/orchestra/workflows/new")
+  const view = page.locator('[data-mx-page="orchestra-workflows"]')
+  await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(
+    "Hooks and workflows need a git repository with at least one commit. This folder has no repository or no first commit yet, so they would apply to every such folder.",
+  )
+  await expect(view.locator(".wf-xlink")).not.toContainText("Available to every agent session")
+  await expect(page.getByRole("dialog", { name: "New workflow" })).toHaveCount(0)
+  await expect(view.getByRole("button", { name: "New workflow", exact: true })).toBeDisabled()
+  await expect(view.locator(".wf-tpl-grid .wf-tpl").first()).toBeDisabled()
 })
 
 test("a template that can run is copied as the user's own workflow; one that cannot is not offered", async ({ page }) => {
@@ -272,6 +287,7 @@ test("edit: a step added from the panel autosaves the loaded version with whole-
   } & Record<string, unknown>
   expect(Object.keys(body).toSorted()).toEqual([
     "connections",
+    "description",
     "expectedChecksum",
     "name",
     "nodeGroups",

@@ -5,10 +5,10 @@ import type {
   Project,
   ProviderAuthResponse,
   SessionStatus,
-} from "@orchestra/sdk/v2/client"
+} from "../compat/sdk-v2-client"
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
-import { type Accessor, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
+import { type Accessor, type ParentProps, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import type { InitError } from "../pages/error"
@@ -31,11 +31,12 @@ import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
 import { ServerConnection, useServer } from "./server"
+import { ServerRequired } from "@/components/server-unavailable"
 import { retry } from "@orchestra/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { SessionActiveOutput } from "@opencode-ai/client/promise"
+import type { SessionActiveOutput } from "../compat/vendored-client-promise"
 import { toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
@@ -673,7 +674,7 @@ export function createServerSyncContext(serverSDK: ServerSDK) {
 
 export type ServerSync = ReturnType<typeof createServerSyncContext>
 
-export const { use: useServerSync, provider: ServerSyncProvider } = createSimpleContext({
+const ServerSyncContext = createSimpleContext({
   name: "ServerSync",
   // Returns an accessor so the resolved server can change reactively without
   // re-instantiating the subtree (mirrors useServerSDK).
@@ -681,16 +682,26 @@ export const { use: useServerSync, provider: ServerSyncProvider } = createSimple
     const captured = props.value
     if (captured) return () => captured
     const global = useGlobal()
-    const language = useLanguage()
     const server = useServer()
 
     return createMemo<ServerSync>(() => {
       const conn = props.server?.() ?? server.current
-      if (!conn) throw new Error(language.t("error.serverSDK.noServerAvailable"))
+      // ServerRequired renders the unavailable state before this provider mounts without a connection.
+      if (!conn) throw new Error("No server connection resolved")
       return global.ensureServerCtx(conn).sync
     })
   },
 })
+
+export const useServerSync = ServerSyncContext.use
+
+export function ServerSyncProvider(props: ParentProps<Parameters<typeof ServerSyncContext.provider>[0]>) {
+  return (
+    <ServerRequired server={props.server} value={props.value}>
+      <ServerSyncContext.provider {...props}>{props.children}</ServerSyncContext.provider>
+    </ServerRequired>
+  )
+}
 
 export function useQueryOptions() {
   const sync = useServerSync()

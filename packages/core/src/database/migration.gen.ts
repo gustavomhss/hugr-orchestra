@@ -47,5 +47,6 @@ export const migrations = (
     import("./migration/20261010135215_project_checkpoints"),
     import("./migration/20261012115744_actions-operation"),
     import("./migration/20261012134025_session_subagent_models"),
+    import("./migration/20261018031800_session_list_indexes"),
   ])
 ).map((module) => module.default) satisfies DatabaseMigration.Migration[]

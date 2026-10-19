@@ -1,5 +1,5 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, Show } from "solid-js"
-import type { SessionStatus } from "@orchestra/sdk/v2/client"
+import type { SessionStatus } from "../compat/sdk-v2-client"
 import { useI18n } from "@orchestra/ui/context/i18n"
 import { Card } from "@orchestra/ui/card"
 import { Tooltip } from "@orchestra/ui/tooltip"

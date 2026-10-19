@@ -239,7 +239,8 @@ describe("documents", () => {
         expect(document.id).toMatch(UUID)
         expect(document.versionId).toMatch(UUID)
         expect(yield* store.get(document.id)).toEqual(document)
-        expect(yield* store.versions(document.id)).toEqual([{ ...document, workflowId: document.id }])
+        // A save is the working draft; only a publish makes a version.
+        expect(yield* store.versions(document.id)).toEqual([])
         // Python's isoformat drops a fraction that is all zeros.
         yield* TestClock.setTime(1_700_000_000_000)
         expect((yield* store.save({ body: draft("B") })).createdAt).toBe("2023-11-14T22:13:20Z")
@@ -258,7 +259,7 @@ describe("documents", () => {
     )
   })
 
-  test("a save under the current version and checksum makes the next version", async () => {
+  test("a save under the current version and checksum makes the next draft revision", async () => {
     const dir = fresh()
     await run(
       Effect.gen(function* () {
@@ -280,11 +281,8 @@ describe("documents", () => {
           versionCounter: 2,
         })
         expect(second.versionId).not.toBe(first.versionId)
-        expect((yield* store.versions(first.id)).map((version) => version.versionId)).toEqual([
-          second.versionId,
-          first.versionId,
-        ])
-        expect(yield* store.version(first.id, first.versionId)).toEqual({ ...first, workflowId: first.id })
+        expect(yield* store.versions(first.id)).toEqual([])
+        expect(yield* refused(store.version(first.id, first.versionId))).toEqual(NOT_FOUND)
       }),
     )
   })
@@ -308,7 +306,7 @@ describe("documents", () => {
         // Python compares any checksum it is given, an empty one included.
         expect(yield* refused(store.save({ id: first.id, body: draft("C"), expectedChecksum: "" }))).toEqual(CHANGED)
         expect(yield* store.get(first.id)).toEqual(second)
-        expect(yield* store.versions(first.id)).toHaveLength(2)
+        expect(yield* store.versions(first.id)).toEqual([])
       }),
     )
   })
@@ -362,11 +360,14 @@ describe("documents", () => {
         expect(yield* refused(store.get("missing"))).toEqual(NOT_FOUND)
         expect(yield* refused(store.save({ id: "missing", body: draft("A") }))).toEqual(NOT_FOUND)
         expect(yield* refused(store.version(a.id, "missing"))).toEqual(NOT_FOUND)
+        // Saves are drafts; only a published version has a row another document's ID can collide with.
+        yield* store.publish(b.id, b.versionId)
         expect(yield* refused(store.version(a.id, b.versionId))).toEqual({
           status: 404,
           code: "not-found",
           message: "Version not found",
         })
+        yield* store.publish(a.id, a.versionId)
         yield* store.remove(a.id)
         expect(yield* refused(store.get(a.id))).toEqual(NOT_FOUND)
         expect(yield* refused(store.remove(a.id))).toEqual(NOT_FOUND)
@@ -402,8 +403,8 @@ describe("publish", () => {
         })
         expect(Object.keys(published)).toEqual(KEYS)
         expect(yield* store.get(document.id)).toEqual(published)
-        // Publishing names a version; it makes none.
-        expect(yield* store.versions(document.id)).toHaveLength(1)
+        // Publishing freezes the draft it names as a version.
+        expect(yield* store.versions(document.id)).toEqual([{ ...document, workflowId: document.id }])
         expect(yield* refused(store.unpublish(document.id, AuthoringStore.checksum(document)))).toEqual(CHANGED)
         yield* TestClock.setTime(1_700_000_003_000)
         const unpublished = yield* store.unpublish(document.id, AuthoringStore.checksum(published))
@@ -415,6 +416,58 @@ describe("publish", () => {
         })
         expect(yield* store.unpublish(document.id)).toMatchObject({ active: false, activeVersionId: null })
         expect(yield* refused(store.unpublish("missing"))).toEqual(NOT_FOUND)
+      }),
+    )
+  })
+
+  test("R2-21: autosaves rewrite the draft and make no version; a publish freezes one", async () => {
+    const dir = fresh()
+    await run(
+      Effect.gen(function* () {
+        const store = yield* AuthoringStore.open(dir, "w")
+        const first = yield* store.save({ body: draft("A") })
+        const second = yield* store.save({ id: first.id, body: draft("B"), expectedVersion: first.versionId })
+        const third = yield* store.save({
+          id: first.id,
+          body: draft("C"),
+          expectedVersion: second.versionId,
+          expectedChecksum: AuthoringStore.checksum(second),
+        })
+        // Two autosaves: the draft moved on, its revision guard with it, and still no version exists.
+        expect([third.versionCounter, third.name]).toEqual([3, "C"])
+        expect(yield* store.versions(first.id)).toEqual([])
+        expect(yield* refused(store.save({ id: first.id, body: draft("D"), expectedVersion: second.versionId }))).toEqual(
+          CHANGED,
+        )
+
+        const published = yield* store.publish(first.id, third.versionId)
+        expect((yield* store.versions(first.id)).map((version) => [version.versionId, version.name])).toEqual([
+          [third.versionId, "C"],
+        ])
+        // Autosaving after the publish leaves the published version as it was.
+        const fourth = yield* store.save({ id: first.id, body: draft("D"), expectedVersion: published.versionId })
+        expect(yield* store.versions(first.id)).toHaveLength(1)
+        expect((yield* store.version(first.id, third.versionId)).name).toBe("C")
+
+        // Publishing the same version again after an unpublish keeps its frozen row, though the draft row changed.
+        yield* store.publish(first.id, fourth.versionId)
+        const frozen = raw(dir, "SELECT body FROM versions WHERE id=?", fourth.versionId)
+        yield* store.unpublish(first.id)
+        yield* store.publish(first.id, fourth.versionId)
+        expect(raw(dir, "SELECT body FROM versions WHERE id=?", fourth.versionId)).toEqual(frozen)
+        expect(yield* store.versions(first.id)).toHaveLength(2)
+
+        // A version an older store wrote per save stays readable.
+        raw(
+          dir,
+          "INSERT INTO versions(workspace,document_id,id,body) VALUES(?,?,?,?)",
+          "w",
+          first.id,
+          "legacy",
+          JSON.stringify({ ...first, versionId: "legacy", workflowId: first.id }),
+        )
+        expect((yield* store.version(first.id, "legacy")).versionId).toBe("legacy")
+        expect(yield* store.versions(first.id)).toHaveLength(3)
       }),
     )
   })
@@ -555,7 +608,8 @@ describe("seeding", () => {
         yield* AuthoringStore.seedProfiles(store)
         const outcomes = yield* Effect.forEach(yield* store.documents(), (document) =>
           Effect.gen(function* () {
-            const version = (yield* store.versions(document.id))[0]!
+            // Seeds are drafts: what a published version of each would hold.
+            const version = { ...document, workflowId: document.id }
             return [document.meta.relay?.profile, yield* admission(document), yield* admission(version)]
           }),
         )

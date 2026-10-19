@@ -36,8 +36,8 @@ Paths below use the native `/api/relay` prefix. Consult Protocol for payloads an
 | Method and path | Result |
 |---|---|
 | `GET/POST /document`, `GET/PATCH/DELETE /document/:documentID` | List, create, read, save or remove workflow/hook drafts |
-| `GET /document/:documentID/version[/:versionID]` | Saved versions |
-| `POST /document/:documentID/publish`, `/unpublish` | Publish a compiled current version or withdraw publication |
+| `GET /document/:documentID/version[/:versionID]` | Published versions (and per-save versions older stores wrote) |
+| `POST /document/:documentID/publish`, `/unpublish` | Publish (freeze) the compiled draft as a version, or withdraw publication |
 | `GET /document/:documentID/sprint`, `/export` | Compiled sprint with binding digests, or workflow/hook definition |
 | `POST /document/:documentID/check` | 403 `maestro-execution-required`; executable workflow checks are owned by Maestro |
 | `GET /node-types` | Workflow and hook catalogs |
@@ -81,9 +81,12 @@ Paths below use the native `/api/relay` prefix. Consult Protocol for payloads an
 ## Native save and execution boundary
 
 Native updates require `versionId` or `expectedChecksum`, unless payload `force` is true.
-Stale guards return 409; an unguarded, unforced update returns 400. Saves do not publish.
+Stale guards return 409; an unguarded, unforced update returns 400. A save rewrites the one working draft and
+makes no version; publishing freezes the draft as an immutable version.
 Publishing compiles first and records the signed-in principal. Installing a hook pins its published
 version; republishing or editing the document does not update an existing install automatically.
+Unpublishing a hook marks its installs `unpublished`: they keep their pin and are listed, but do not fire
+until the hook is published again. Unpublishing a workflow holds runs bound to its pinned version.
 
 Authoring routes do not provide the Python host's `bootstrap`, SSE, execution-retry or skill-upload
 API. Use the host's Skill catalog and approved native execution binding. Profiles requiring tools

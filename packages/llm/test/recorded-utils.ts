@@ -49,6 +49,45 @@ export const matchesSelected = (input: {
   return true
 }
 
+// Recorded cases that have no cassette yet, each with its reason. Replay fails a case whose cassette is missing unless
+// it is here, and fails an entry here whose cassette now exists. Shrink-only: record a case (RECORD=true) and delete
+// its entry. Until this ledger existed these cases skipped silently, so a deleted or renamed cassette looked green.
+const renamed =
+  "the case was renamed after recording: a cassette under its older name sits in the same prefix, unverified as matching this request; re-record"
+const never = "never recorded: no cassette was committed for this case"
+export const unrecorded: Record<string, string> = {
+  "anthropic-messages/rejects-malformed-assistant-tool-order": renamed,
+  "bedrock-converse-cache/writes-then-reads-cachepoint-on-identical-second-call": never,
+  "openai-chat/openai-chat-gpt-4o-mini-text": renamed,
+  "openai-chat/openai-chat-gpt-4o-mini-tool-call": renamed,
+  "openai-chat/openai-chat-gpt-4o-mini-tool-loop": renamed,
+  "openai-chat/openai-chat-gpt-4o-mini-image-tool-result": never,
+  "openai-responses/openai-responses-gpt-5-5-text": renamed,
+  "openai-responses/openai-responses-gpt-5-5-tool-call": renamed,
+  "openai-responses/openai-responses-gpt-5-5-tool-loop": renamed,
+  "openai-responses-websocket/openai-responses-websocket-gpt-4-1-mini-tool-loop": never,
+  "anthropic-messages/anthropic-haiku-4-5-text": renamed,
+  "anthropic-messages/anthropic-haiku-4-5-tool-call": renamed,
+  "anthropic-messages/anthropic-opus-4-7-tool-loop": renamed,
+  "gemini/gemini-2-5-flash-text": renamed,
+  "gemini/gemini-2-5-flash-tool-call": renamed,
+  "gemini/gemini-2-5-flash-image-tool-result": never,
+  "xai/xai-grok-3-mini-text": never,
+  "xai/xai-grok-3-mini-tool-call": never,
+  "xai/xai-grok-4-3-tool-loop": never,
+  "openai-compatible-chat/deepseek-chat-text": renamed,
+  "openai-compatible-chat/togetherai-llama-3-3-70b-text": renamed,
+  "openai-compatible-chat/togetherai-llama-3-3-70b-tool-call": renamed,
+  "openai-compatible-chat/groq-llama-3-3-70b-text": renamed,
+  "openai-compatible-chat/groq-llama-3-3-70b-tool-call": renamed,
+  "openai-compatible-chat/groq-llama-3-3-70b-tool-loop": renamed,
+  "openai-compatible-chat/openrouter-gpt-4o-mini-text": renamed,
+  "openai-compatible-chat/openrouter-gpt-4o-mini-tool-call": renamed,
+  "openai-compatible-chat/openrouter-gpt-4o-mini-tool-loop": renamed,
+  "openai-compatible-chat/openrouter-gpt-5-5-tool-loop": renamed,
+  "openai-compatible-chat/openrouter-claude-opus-4-7-tool-loop": renamed,
+}
+
 export const cassetteName = (
   prefix: string,
   name: string,

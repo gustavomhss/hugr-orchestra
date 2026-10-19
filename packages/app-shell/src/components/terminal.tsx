@@ -227,7 +227,6 @@ export const Terminal = (props: TerminalProps) => {
   const terminalTheme = createTerminalTheme({
     mode: theme.mode,
     theme: () => theme.themes()[theme.themeId()],
-    newLayout: settings.general.newLayoutDesigns,
   })
 
   const scheduleFit = () => {

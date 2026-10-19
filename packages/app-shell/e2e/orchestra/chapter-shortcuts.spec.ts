@@ -222,10 +222,7 @@ async function setup(page: Page, scheme: "dark" | "light") {
       if (sessionStorage.getItem("shortcuts-seeded")) return
       sessionStorage.setItem("shortcuts-seeded", "1")
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem(
         "orchestra.global.dat:server",

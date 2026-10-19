@@ -8,7 +8,7 @@ import { createServer } from "node:net"
 import { tmpdir } from "node:os"
 import { dirname, join, relative, resolve } from "node:path"
 import { isDeepStrictEqual, parseArgs } from "node:util"
-import type { HookCallbackMatcher, HookEvent, Query, SpawnedProcess, query } from "../../packages/orchestra/script/archie-host-sdk"
+import type { HookCallbackMatcher, HookEvent, Query, SpawnedProcess, query } from "../../apps/orchestra/script/archie-host-sdk"
 import type { Plan } from "./archie-host-plan"
 import { billingDiagnostic, claimOutput, requireOrdinaryLoginEnvironment, stopOwned } from "./archie-host-process"
 import { assignmentMatches, demandFence, nativeEvidence, requestedModelsMatch } from "./archie-host-evidence"
@@ -125,7 +125,7 @@ export function launch(plan: Plan, mode: "backend" | "verify" | "s14-observe") {
         .map(([key, value]) => `${key}=${value}`),
       process.execPath,
       "--tsconfig-override",
-      join(repo, "packages/orchestra/tsconfig.json"),
+      join(repo, "apps/orchestra/tsconfig.json"),
       entry,
       "--internal",
       mode,
@@ -135,7 +135,7 @@ export function launch(plan: Plan, mode: "backend" | "verify" | "s14-observe") {
       plan.repo,
       ...(mode === "backend" ? ["--run"] : []),
     ],
-    { cwd: join(repo, "packages/orchestra"), stdio: ["ignore", "pipe", "pipe"] },
+    { cwd: join(repo, "apps/orchestra"), stdio: ["ignore", "pipe", "pipe"] },
   )
   const exited = new Promise<number | null>((done) => {
     child.once("error", (error) => {
@@ -321,8 +321,8 @@ async function tree(root: string, prefix = ""): Promise<Record<string, string>> 
 // Instrumentation only: wraps the installed real query and callbacks. No fabricated SDK frames or permissions.
 async function observe(plan: Plan) {
   const { mock } = await import("bun:test")
-  const sdkPath = createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("@anthropic-ai/claude-agent-sdk")
-  const sdk = (await import(sdkPath)) as typeof import("../../packages/orchestra/script/archie-host-sdk")
+  const sdkPath = createRequire(join(plan.repo, "apps/orchestra/package.json")).resolve("@anthropic-ai/claude-agent-sdk")
+  const sdk = (await import(sdkPath)) as typeof import("../../apps/orchestra/script/archie-host-sdk")
   const realQuery = sdk.query
   const write = (name: string, value: unknown) => appendFileSync(join(plan.out, name), JSON.stringify(value) + "\n")
   const halt = (reason: string, evidence: unknown, abort?: AbortController): never => {
@@ -471,16 +471,16 @@ async function verify(plan: Plan) {
       after,
     },
   }
-  const { Effect, Option, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
-  const { AppRuntime } = (await import(join(plan.repo, "packages/orchestra/src/effect/app-runtime.ts"))) as typeof import("../../packages/orchestra/src/effect/app-runtime")
-  const { InstanceStore } = (await import(join(plan.repo, "packages/orchestra/src/project/instance-store.ts"))) as typeof import("../../packages/orchestra/src/project/instance-store")
-  const { InstanceRef } = (await import(join(plan.repo, "packages/orchestra/src/effect/instance-ref.ts"))) as typeof import("../../packages/orchestra/src/effect/instance-ref")
-  const { Agent } = (await import(join(plan.repo, "packages/orchestra/src/agent/agent.ts"))) as typeof import("../../packages/orchestra/src/agent/agent")
-  const { Session } = (await import(join(plan.repo, "packages/orchestra/src/session/session.ts"))) as typeof import("../../packages/orchestra/src/session/session")
-  const { SessionID } = (await import(join(plan.repo, "packages/orchestra/src/session/schema.ts"))) as typeof import("../../packages/orchestra/src/session/schema")
-  const { LogicalTask } = (await import(join(plan.repo, "packages/orchestra/src/maestro/logical-task.ts"))) as typeof import("../../packages/orchestra/src/maestro/logical-task")
-  const { WriteRoots } = (await import(join(plan.repo, "packages/orchestra/src/maestro/write-roots.ts"))) as typeof import("../../packages/orchestra/src/maestro/write-roots")
-  const UpstreamProvenance = (await import(join(plan.repo, "packages/orchestra/src/maestro/upstream-provenance.ts"))) as typeof import("../../packages/orchestra/src/maestro/upstream-provenance")
+  const { Effect, Option, Schema } = (await import(createRequire(join(plan.repo, "apps/orchestra/package.json")).resolve("effect"))) as typeof import("../../apps/orchestra/script/archie-host-effect")
+  const { AppRuntime } = (await import(join(plan.repo, "apps/orchestra/src/effect/app-runtime.ts"))) as typeof import("../../apps/orchestra/src/effect/app-runtime")
+  const { InstanceStore } = (await import(join(plan.repo, "apps/orchestra/src/project/instance-store.ts"))) as typeof import("../../apps/orchestra/src/project/instance-store")
+  const { InstanceRef } = (await import(join(plan.repo, "apps/orchestra/src/effect/instance-ref.ts"))) as typeof import("../../apps/orchestra/src/effect/instance-ref")
+  const { Agent } = (await import(join(plan.repo, "apps/orchestra/src/agent/agent.ts"))) as typeof import("../../apps/orchestra/src/agent/agent")
+  const { Session } = (await import(join(plan.repo, "apps/orchestra/src/session/session.ts"))) as typeof import("../../apps/orchestra/src/session/session")
+  const { SessionID } = (await import(join(plan.repo, "apps/orchestra/src/session/schema.ts"))) as typeof import("../../apps/orchestra/src/session/schema")
+  const { LogicalTask } = (await import(join(plan.repo, "apps/orchestra/src/maestro/logical-task.ts"))) as typeof import("../../apps/orchestra/src/maestro/logical-task")
+  const { WriteRoots } = (await import(join(plan.repo, "apps/orchestra/src/maestro/write-roots.ts"))) as typeof import("../../apps/orchestra/src/maestro/write-roots")
+  const UpstreamProvenance = (await import(join(plan.repo, "apps/orchestra/src/maestro/upstream-provenance.ts"))) as typeof import("../../apps/orchestra/src/maestro/upstream-provenance")
   const { SessionMessage } = (await import(join(plan.repo, "packages/schema/src/session-message.ts"))) as typeof import("../../packages/schema/src/session-message")
   const { UpstreamAttribution } = (await import(join(plan.repo, "packages/schema/src/upstream-attribution.ts"))) as typeof import("../../packages/schema/src/upstream-attribution")
   const dispatchSchema = Schema.Struct({
@@ -732,8 +732,8 @@ async function dispatch() {
   if (args.internal === "backend") {
     requireFact(args.run, "Backend execution requires --run")
     await observe(plan)
-    process.argv = [process.execPath, join(repo, "packages/orchestra/src/index.ts"), "serve", "--hostname", "127.0.0.1", "--port", String(plan.port), "--print-logs"]
-    await import(join(repo, "packages/orchestra/src/index.ts"))
+    process.argv = [process.execPath, join(repo, "apps/orchestra/src/index.ts"), "serve", "--hostname", "127.0.0.1", "--port", String(plan.port), "--print-logs"]
+    await import(join(repo, "apps/orchestra/src/index.ts"))
   }
 }
 

@@ -1,0 +1,714 @@
+import { afterEach, describe, expect, test } from "bun:test"
+import { Database } from "bun:sqlite"
+import { createHash } from "crypto"
+import fs from "fs/promises"
+import os from "os"
+import path from "path"
+import { createServer } from "node:http"
+import { ConfigProvider, Context, Layer } from "effect"
+import { HttpRouter } from "effect/unstable/http"
+import { Global } from "@orchestra/core/global"
+import { RelayHookInstall } from "@orchestra/core/relay-hook-install"
+import { HttpApiApp } from "../../src/server/routes/instance/httpapi/server"
+import { resetDatabase } from "../fixture/db"
+import { disposeAllInstances, tmpdir } from "../fixture/fixture"
+
+// The Relay document, publish and hook routes through the whole V2 server: Location resolution, the project's
+// authoring store and Relay data under Global.data, hooks.json in the ToolSafety profile, receipts in install ledgers.
+// This server has no password, so the Authorization middleware lets every request through and a Basic credential only
+// names who acts.
+
+const context = Context.empty() as Context.Context<unknown>
+const ALICE = { authorization: `Basic ${Buffer.from("alice:secret").toString("base64")}` }
+
+type Json = Record<string, any>
+
+async function call(
+  directory: string,
+  method: string,
+  route: string,
+  body?: unknown,
+  headers?: Json,
+  web = HttpApiApp.webHandler(),
+) {
+  const sent = new Headers(headers)
+  sent.set("x-orchestra-directory", directory)
+  if (body !== undefined) sent.set("content-type", "application/json")
+  const response = await web.handler(
+    new Request(`http://localhost${route}`, {
+      method,
+      headers: sent,
+      body: body === undefined ? undefined : JSON.stringify(body),
+    }),
+    context,
+  )
+  const text = await response.text()
+  return { status: response.status, body: (text ? JSON.parse(text) : undefined) as Json }
+}
+
+// The `data` of a Location envelope, after asserting the status.
+async function ok(directory: string, method: string, route: string, body?: unknown, headers?: Json) {
+  const result = await call(directory, method, route, body, headers)
+  if (result.status !== 200) throw new Error(`${method} ${route}: ${result.status} ${JSON.stringify(result.body)}`)
+  return result.body.data
+}
+
+async function refused(directory: string, method: string, route: string, body?: unknown) {
+  const result = await call(directory, method, route, body)
+  return { status: result.status, tag: result.body?._tag, code: result.body?.code, message: result.body?.message }
+}
+
+async function relayRoot(directory: string) {
+  const location = (await call(directory, "GET", "/api/relay/scope")).body.location
+  const data = await fs.realpath(Global.Path.data)
+  return { projectID: location.project.id as string, data, root: path.join(data, "relay", location.project.id) }
+}
+
+async function ledger(root: string, installID: string) {
+  const text = await fs.readFile(path.join(root, "hooks", installID, "ledger.jsonl"), "utf8")
+  return text
+    .split("\n")
+    .filter(Boolean)
+    .map((line) => JSON.parse(line) as Json)
+}
+
+function hookDocument(message: string) {
+  return {
+    name: "No generated edits",
+    // Canvas positions arrive fractional; ledgers and exports carry whole numbers.
+    nodes: [
+      node("event", "Before edit", "relay.hookEventTrigger", [0.4, 10.6], { operation: "edit", timing: "before" }),
+      node("generated", "Generated path", "relay.hookCondition", [224, 0], {
+        field: "path",
+        pattern: "src/generated/**",
+      }),
+      node("block", "Block generated edits", "relay.hookBlock", [448, 0], { message }),
+    ],
+    connections: { "Before edit": edge("Generated path"), "Generated path": edge("Block generated edits") },
+    meta: { relay: { kind: "hook" } },
+  }
+}
+
+function workflowDocument(cmd: string, skill = "") {
+  return {
+    name: "Ship it",
+    nodes: [
+      node("start", "Workflow start", "relay.startTrigger", [0, 0], { relayBrief: "Ship it", relayRetryBudget: 2 }),
+      node("build", "Build", "relay.execute", [224, 0], {
+        instructions: "Build it",
+        checklist: JSON.stringify([{ id: "marker", cmd }]),
+        skill,
+        skillMode: "combine",
+      }),
+    ],
+    connections: { "Workflow start": edge("Build") },
+  }
+}
+
+function node(id: string, name: string, type: string, position: number[], parameters: Json) {
+  return { id, name, type, position, parameters }
+}
+
+function edge(target: string) {
+  return { main: [[{ node: target, type: "main", index: 0 }]] }
+}
+
+afterEach(async () => {
+  await disposeAllInstances()
+  await resetDatabase()
+})
+
+describe("relay documents", () => {
+  test("the shipped profiles are listed once, with the four that cannot run marked so", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const listed = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    const profiles = Object.fromEntries(
+      listed.filter((item) => item.id.startsWith("relay-")).map((item) => [item.id, item.runnable]),
+    )
+    expect(profiles).toEqual({
+      "relay-design": false,
+      "relay-planning": false,
+      "relay-research-v2": false,
+      "relay-spec-decompose": false,
+      "relay-tdd_feature": true,
+      "relay-wp-execute": true,
+    })
+    // Seeding happens once per server: a removed profile does not come back on the next list.
+    expect((await call(tmp.path, "DELETE", "/api/relay/document/relay-design")).status).toBe(204)
+    const again = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    expect(again.map((item) => item.id)).not.toContain("relay-design")
+  })
+
+  test("a stored document that no longer validates is left out of the list instead of failing it", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const before = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    const relay = await relayRoot(tmp.path)
+    const db = new Database(path.join(relay.root, "authoring.sqlite3"))
+    db.query("INSERT INTO documents(workspace,id,body) VALUES(?,?,?)").run(
+      relay.projectID,
+      "broken",
+      JSON.stringify({ id: "broken", name: "Broken", nodes: "not a list" }),
+    )
+    db.close()
+    const after = (await ok(tmp.path, "GET", "/api/relay/document")) as Json[]
+    expect(after.map((item) => item.id)).toEqual(before.map((item) => item.id))
+  })
+
+  test("publish refuses a workflow Maestro cannot run, and says why", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const design = await ok(tmp.path, "GET", "/api/relay/document/relay-design")
+    expect(
+      await refused(tmp.path, "POST", "/api/relay/document/relay-design/publish", { versionId: design.versionId }),
+    ).toMatchObject({ status: 409, code: "profile-tools-missing" })
+    const base = workflowDocument("true")
+    const signed = await ok(tmp.path, "POST", "/api/relay/document", {
+      ...base,
+      nodes: [...base.nodes, node("sign", "Sign off", "relay.human", [448, 0], { instructions: "Sign off" })],
+      connections: { ...base.connections, Build: edge("Sign off") },
+    })
+    expect(
+      await refused(tmp.path, "POST", `/api/relay/document/${signed.id}/publish`, { versionId: signed.versionId }),
+    ).toMatchObject({
+      status: 409,
+      code: "step-unsupported",
+      message: "Human approval steps cannot run yet. Remove them to run this workflow.",
+    })
+  })
+
+  test("a save rounds positions, keeps an uncompilable draft with its diagnostic, and guards its version", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const draft = await ok(tmp.path, "POST", "/api/relay/document", { name: "Empty" })
+    expect(draft).toMatchObject({ versionCounter: 1, active: false, activeVersionId: null, runnable: true })
+    expect(draft.meta.relay.diagnostics).toEqual(["Add at least one step before running"])
+
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Regenerate the SDK"))
+    expect(hook.nodes[0].position).toEqual([0, 11])
+    expect(hook.meta.relay).toMatchObject({ kind: "hook", diagnostics: [] })
+
+    const route = `/api/relay/document/${hook.id}`
+    expect(await refused(tmp.path, "PATCH", route, { name: "Unguarded" })).toMatchObject({
+      status: 400,
+      tag: "RelayInvalidError",
+    })
+    expect(await refused(tmp.path, "PATCH", route, { name: "Stale", versionId: "other" })).toMatchObject({
+      status: 409,
+      tag: "RelayConflictError",
+      code: "version-conflict",
+    })
+    expect(await refused(tmp.path, "PATCH", route, { name: "Stale", expectedChecksum: "0".repeat(64) })).toMatchObject({
+      status: 409,
+      code: "version-conflict",
+    })
+    const saved = await ok(tmp.path, "PATCH", route, {
+      name: "Renamed",
+      versionId: hook.versionId,
+      expectedChecksum: hook.checksum,
+    })
+    expect(saved).toMatchObject({ name: "Renamed", versionCounter: 2 })
+    // The old version is stale now; only force overwrites it.
+    expect((await call(tmp.path, "PATCH", route, { name: "Again", versionId: hook.versionId })).status).toBe(409)
+    expect(
+      await ok(tmp.path, "PATCH", route, { name: "Forced", versionId: hook.versionId, force: true }),
+    ).toMatchObject({
+      name: "Forced",
+      versionCounter: 3,
+    })
+    // Saves rewrite the working draft; none of them is a version.
+    expect(await ok(tmp.path, "GET", `${route}/version`)).toEqual([])
+    expect(await refused(tmp.path, "GET", "/api/relay/document/missing")).toMatchObject({
+      status: 404,
+      tag: "RelayNotFoundError",
+      code: "not-found",
+    })
+  })
+
+  test("publish records the machine user, never the shared credential name, and refuses a stale version or checksum", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const empty = await ok(tmp.path, "POST", "/api/relay/document", { name: "Empty" })
+    // What does not compile is not published.
+    expect(
+      await refused(tmp.path, "POST", `/api/relay/document/${empty.id}/publish`, { versionId: empty.versionId }),
+    ).toMatchObject({ status: 400, message: "Add at least one step before running" })
+
+    const document = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))
+    const route = `/api/relay/document/${document.id}`
+    expect(await refused(tmp.path, "POST", `${route}/publish`, { versionId: "other" })).toMatchObject({
+      status: 409,
+      code: "version-conflict",
+    })
+    expect(
+      await refused(tmp.path, "POST", `${route}/publish`, {
+        versionId: document.versionId,
+        expectedChecksum: "0".repeat(64),
+      }),
+    ).toMatchObject({ status: 409, code: "version-conflict" })
+    const published = await ok(
+      tmp.path,
+      "POST",
+      `${route}/publish`,
+      { versionId: document.versionId, expectedChecksum: document.checksum },
+      ALICE,
+    )
+    expect(published).toMatchObject({
+      active: true,
+      activeVersionId: document.versionId,
+      publishedBy: os.userInfo().username,
+    })
+    expect(published.activeVersion).toMatchObject({ versionId: document.versionId, workflowId: document.id })
+    expect(await ok(tmp.path, "GET", route)).toMatchObject({ publishedBy: os.userInfo().username })
+
+    // Without a credential, the account the server runs as is the one acting.
+    const unpublished = await ok(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: published.checksum })
+    expect(unpublished).toMatchObject({ active: false, activeVersionId: null, unpublishedBy: os.userInfo().username })
+    expect(unpublished.publishedBy).toBeUndefined()
+  })
+
+  test("R2-21: autosaves keep one working draft and make no version; only publish makes one", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const document = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))
+    const route = `/api/relay/document/${document.id}`
+    const versions = async () => (await ok(tmp.path, "GET", `${route}/version`)) as Json[]
+    expect(await versions()).toEqual([])
+    const first = await ok(tmp.path, "PATCH", route, { name: "Once", versionId: document.versionId })
+    const second = await ok(tmp.path, "PATCH", route, {
+      name: "Twice",
+      versionId: first.versionId,
+      expectedChecksum: first.checksum,
+    })
+    expect(second).toMatchObject({ name: "Twice", versionCounter: 3 })
+    expect(await versions()).toEqual([])
+    // The draft keeps its revision guard: a save of the replaced revision is still a conflict.
+    expect(await refused(tmp.path, "PATCH", route, { name: "Stale", versionId: first.versionId })).toMatchObject({
+      status: 409,
+      code: "version-conflict",
+    })
+
+    const published = await ok(tmp.path, "POST", `${route}/publish`, { versionId: second.versionId })
+    expect((await versions()).map((item) => [item.versionId, item.name])).toEqual([[second.versionId, "Twice"]])
+    expect(published.activeVersion).toMatchObject({ versionId: second.versionId, name: "Twice" })
+    const edited = await ok(tmp.path, "PATCH", route, { name: "Edited", versionId: published.versionId })
+    expect(await versions()).toHaveLength(1)
+    expect(await ok(tmp.path, "GET", `${route}/version/${second.versionId}`)).toMatchObject({ name: "Twice" })
+    await ok(tmp.path, "POST", `${route}/publish`, { versionId: edited.versionId })
+    expect((await versions()).map((item) => item.name)).toEqual(["Edited", "Twice"])
+  })
+
+  test("export, sprint and node types compile with the skill catalog", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const workflow = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))
+    const sprint = await ok(tmp.path, "GET", `/api/relay/document/${workflow.id}/sprint`)
+    expect(sprint.sprint).toMatchObject({ brief: "Ship it", retry_budget: 2, work_packages: [{ id: "build" }] })
+    expect(sprint.skillBindings).toEqual([])
+    expect(await ok(tmp.path, "GET", `/api/relay/document/${workflow.id}/export`)).toMatchObject({
+      kind: "workflow",
+      definition: { work_packages: [{ id: "build", kind: "execute" }] },
+    })
+
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Regenerate the SDK"))
+    const exported = await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/export`)
+    expect(exported).toMatchObject({ kind: "hook", definition: { schema: "relay.hook.v1", installed: false } })
+    expect(exported.definition.connections).toEqual([
+      { from: "event", port: 0, to: "generated" },
+      { from: "generated", port: 0, to: "block" },
+    ])
+
+    const skilled = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true", "no-such-skill"))
+    expect(skilled.meta.relay.diagnostics).toEqual(["Skill unavailable"])
+    expect(await refused(tmp.path, "GET", `/api/relay/document/${skilled.id}/sprint`)).toMatchObject({
+      status: 404,
+      code: "skill-unavailable",
+    })
+
+    const types = await ok(tmp.path, "GET", "/api/relay/node-types")
+    expect(types.workflow.map((item: Json) => item.type)).toContain("relay.execute")
+    expect(types.hook.map((item: Json) => item.type)).toContain("relay.hookBlock")
+  })
+
+  test("public checks require Maestro without shell, judge, run, ledger or Session effects; authoring remains available", async () => {
+    const requests: string[] = []
+    const judge = createServer((request, response) => {
+      requests.push(request.url ?? "")
+      response.setHeader("content-type", "application/json")
+      response.end(JSON.stringify({ content: [{ type: "text", text: "VERDICT: PASS" }] }))
+    })
+    await new Promise<void>((resolve) => judge.listen(0, "127.0.0.1", resolve))
+    await using judgeScope = {
+      [Symbol.asyncDispose]: () =>
+        new Promise<void>((resolve, reject) => judge.close((error) => (error ? reject(error) : resolve()))),
+    }
+    const address = judge.address()
+    if (!address || typeof address === "string") throw new Error("Judge listener did not bind TCP")
+    const baseURL = `http://127.0.0.1:${address.port}`
+    // Positive control: the request recorder must see real traffic before its unchanged count proves non-execution.
+    expect((await fetch(`${baseURL}/v1/messages`, { method: "POST" })).status).toBe(200)
+    expect(requests).toEqual(["/v1/messages"])
+    await using tmp = await tmpdir({
+      git: true,
+      config: { relay: { judge: { backend: "api", baseURL } } },
+    })
+    const web = HttpRouter.toWebHandler(
+      HttpApiApp.routes.pipe(
+        Layer.provide(
+          ConfigProvider.layer(
+            ConfigProvider.fromUnknown({
+              ORCHESTRA_SERVER_PASSWORD: "secret",
+              ORCHESTRA_SERVER_USERNAME: "alice",
+            }),
+          ),
+        ),
+      ),
+      { disableLogger: true },
+    )
+    await using webScope = { [Symbol.asyncDispose]: web.dispose }
+    const request = (method: string, route: string, body?: unknown, headers = ALICE) =>
+      call(tmp.path, method, route, body, headers, web)
+    const definition = workflowDocument("printf executed > public-check-marker.txt")
+    definition.nodes[1].parameters.checklist = JSON.stringify([
+      { id: "marker", cmd: "printf executed > public-check-marker.txt" },
+      { id: "judge", judge: "Marker is correct", files: ["public-check-marker.txt"] },
+    ])
+    const created = await request("POST", "/api/relay/document", definition)
+    expect(created.status).toBe(200)
+    const route = `/api/relay/document/${created.body.data.id}`
+    const saved = await request("PATCH", route, { name: "Saved", versionId: created.body.data.versionId })
+    expect(saved.status).toBe(200)
+    expect(saved.body.data.meta.relay.diagnostics).toEqual([])
+    const sprint = await request("GET", `${route}/sprint`)
+    expect(sprint.status).toBe(200)
+    expect(sprint.body.data.sprint.work_packages[0].checklist).toHaveLength(2)
+    const exported = await request("GET", `${route}/export`)
+    expect(exported.status).toBe(200)
+    expect(exported.body.data).toMatchObject({ kind: "workflow", definition: sprint.body.data.sprint })
+    const published = await request("POST", `${route}/publish`, { versionId: saved.body.data.versionId })
+    expect(published.status).toBe(200)
+    expect(published.body.data.active).toBe(true)
+    const scopes = await request("GET", "/api/relay/scope")
+    expect(scopes.status).toBe(200)
+    const root = path.join(await fs.realpath(Global.Path.data), "relay", scopes.body.location.project.id)
+    const files = (await fs.readdir(root, { recursive: true })).sort()
+    expect(files).toContain("authoring.sqlite3")
+    const sessions = await request("GET", "/api/session")
+    expect(sessions.status).toBe(200)
+    expect(sessions.body.data).toEqual([])
+    expect((await request("POST", `${route}/check`, {}, { authorization: "" })).status).toBe(401)
+    const results = await Promise.all([
+      request("POST", `${route}/check`, { position: "build", params: { crafted: "yes" } }),
+      request("POST", "/api/relay/document/missing/check", {}),
+    ])
+    // Inspect effects even under the old handler mutation, before the refusal assertion stops the test.
+    expect(await Bun.file(path.join(tmp.path, "public-check-marker.txt")).exists()).toBe(false)
+    expect(requests).toEqual(["/v1/messages"])
+    expect((await fs.readdir(root, { recursive: true })).sort()).toEqual(files)
+    expect((await request("GET", "/api/session")).body).toEqual(sessions.body)
+    results.forEach((result) =>
+      expect(result).toEqual({
+        status: 403,
+        body: {
+          _tag: "RelayForbiddenError",
+          code: "maestro-execution-required",
+          message: "Executable workflow checks are owned by Maestro.",
+        },
+      }),
+    )
+    expect((await request("GET", route)).body.data).toEqual(published.body.data)
+  })
+
+  test("scopes are case-insensitive names, expanded on the documents that carry them", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const scope = await ok(tmp.path, "POST", "/api/relay/scope", { name: " Backend " })
+    expect(scope).toMatchObject({ name: "Backend", description: "" })
+    expect(await refused(tmp.path, "POST", "/api/relay/scope", { name: "backend" })).toMatchObject({
+      status: 409,
+      code: "duplicate-scope",
+    })
+    const document = await ok(tmp.path, "POST", "/api/relay/document", { name: "Scoped", tags: [scope.id] })
+    expect(document.tags).toEqual([scope])
+    expect((await call(tmp.path, "DELETE", `/api/relay/scope/${scope.id}`)).status).toBe(204)
+    expect(await ok(tmp.path, "GET", `/api/relay/document/${document.id}`)).toMatchObject({ tags: [] })
+  })
+})
+
+describe("relay hooks", () => {
+  test("deleting an installed hook retires its authoritative snapshot and retains immutable versions and receipts", async () => {
+    await using tmp = await tmpdir({ git: true })
+    await using other = await tmpdir({ git: true })
+    const { root, data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Stop enforcing after deletion"))
+    await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, { versionId: hook.versionId })
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id })
+    const unrelated = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Keep enforcing"))
+    await ok(tmp.path, "POST", `/api/relay/document/${unrelated.id}/publish`, { versionId: unrelated.versionId })
+    const kept = await ok(tmp.path, "POST", "/api/relay/hook", { document: unrelated.id })
+    const otherHook = await ok(other.path, "POST", "/api/relay/document", hookDocument("Other location"))
+    await ok(other.path, "POST", `/api/relay/document/${otherHook.id}/publish`, { versionId: otherHook.versionId })
+    const otherInstall = await ok(other.path, "POST", "/api/relay/hook", { document: otherHook.id })
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toHaveLength(2)
+    expect((await call(tmp.path, "DELETE", `/api/relay/document/${hook.id}`)).status).toBe(204)
+    expect(JSON.parse(await fs.readFile(RelayHookInstall.file(data, projectID), "utf8")).installs).toEqual([kept])
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([kept])
+    expect((await ok(other.path, "GET", "/api/relay/hook")).installs).toEqual([otherInstall])
+    expect((await call(tmp.path, "GET", `/api/relay/document/${hook.id}`)).status).toBe(404)
+    expect(await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/version/${hook.versionId}`)).toMatchObject({ versionId: hook.versionId })
+    expect((await ledger(root, installed.installID)).map((entry) => entry.event)).toEqual(["hook-installed", "hook-uninstalled"])
+  })
+
+  test("N-14: unpublishing a hook stops its installs firing until it is published again", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { root, data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Stop after unpublish"))
+    const route = `/api/relay/document/${hook.id}`
+    const published = await ok(tmp.path, "POST", `${route}/publish`, { versionId: hook.versionId })
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id })
+    const other = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Keep firing"))
+    await ok(tmp.path, "POST", `/api/relay/document/${other.id}/publish`, { versionId: other.versionId })
+    const kept = await ok(tmp.path, "POST", "/api/relay/hook", { document: other.id })
+    const stored = async () =>
+      JSON.parse(await fs.readFile(RelayHookInstall.file(data, projectID), "utf8")).installs as Json[]
+
+    // A stale unpublish is refused by the store, and the installs are left as they were.
+    expect(
+      await refused(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: "0".repeat(64) }),
+    ).toMatchObject({ status: 409, code: "version-conflict" })
+    expect(await stored()).toEqual([installed, kept])
+
+    const unpublished = await ok(tmp.path, "POST", `${route}/unpublish`, { expectedChecksum: published.checksum })
+    expect(unpublished).toMatchObject({ active: false, activeVersionId: null })
+    // The install keeps its pin, order and enabled state; only the mark stops it firing.
+    expect(await stored()).toEqual([{ ...installed, unpublished: true }, kept])
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([{ ...installed, unpublished: true }, kept])
+    expect(await refused(tmp.path, "POST", `/api/relay/hook/${installed.installID}/update`, {})).toMatchObject({
+      status: 409,
+      code: "not-published",
+    })
+    // It can still be paused, resumed and removed while unpublished; resuming does not make it fire.
+    expect(await ok(tmp.path, "POST", `/api/relay/hook/${installed.installID}/disable`)).toMatchObject({
+      enabled: false,
+      unpublished: true,
+    })
+    expect(await ok(tmp.path, "POST", `/api/relay/hook/${installed.installID}/enable`)).toMatchObject({
+      enabled: true,
+      unpublished: true,
+    })
+
+    // Publishing it again lets the install fire its pinned version.
+    const again = await ok(tmp.path, "GET", route)
+    await ok(tmp.path, "POST", `${route}/publish`, { versionId: again.versionId, expectedChecksum: again.checksum })
+    expect(await stored()).toEqual([installed, kept])
+    expect((await ledger(root, installed.installID)).map((entry) => entry.event)).toEqual([
+      "hook-installed",
+      "hook-unpublished",
+      "hook-disabled",
+      "hook-enabled",
+      "hook-republished",
+    ])
+    expect((await ledger(root, kept.installID)).map((entry) => entry.event)).toEqual(["hook-installed"])
+  })
+
+  test("N-14: publishing and unpublishing a hook nobody installed writes no hooks.json", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { data, projectID } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Never installed"))
+    const published = await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, { versionId: hook.versionId })
+    await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/unpublish`, { expectedChecksum: published.checksum })
+    expect(await fs.stat(RelayHookInstall.file(data, projectID)).then(() => true, () => false)).toBe(false)
+  })
+
+  test("an install pins the published version and every change is receipted with its principal", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { root } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Regenerate the SDK"))
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: hook.id })).toMatchObject({
+      status: 409,
+      code: "not-published",
+    })
+    const published = await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, {
+      versionId: hook.versionId,
+    })
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: hook.id, version: "another" })).toMatchObject(
+      { status: 409, code: "not-published" },
+    )
+
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id }, ALICE)
+    expect(installed).toMatchObject({
+      document: hook.id,
+      version: published.activeVersionId,
+      order: 0,
+      enabled: true,
+      installedBy: os.userInfo().username,
+      snapshot: { schema: "relay.hook.v1", name: "No generated edits" },
+    })
+    const exported = await ok(tmp.path, "GET", `/api/relay/document/${hook.id}/export`)
+    // The pin is sha256(json.compact(export)); for ASCII without DEL that is JSON.stringify's bytes.
+    expect(installed.sha256).toBe(createHash("sha256").update(JSON.stringify(exported.definition)).digest("hex"))
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: hook.id })).toMatchObject({
+      status: 409,
+      code: "document-installed",
+    })
+
+    const workflow = await ok(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))
+    await ok(tmp.path, "POST", `/api/relay/document/${workflow.id}/publish`, { versionId: workflow.versionId })
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: workflow.id })).toMatchObject({
+      status: 400,
+      code: "not-a-hook",
+    })
+
+    const install = `/api/relay/hook/${installed.installID}`
+    expect(await ok(tmp.path, "POST", `${install}/disable`, undefined, ALICE)).toMatchObject({ enabled: false })
+    expect(await ok(tmp.path, "POST", `${install}/enable`, undefined, ALICE)).toMatchObject({ enabled: true })
+
+    // Republishing changes nothing until an explicit update.
+    const edited = await ok(tmp.path, "PATCH", `/api/relay/document/${hook.id}`, {
+      ...hookDocument("Run ./packages/sdk/js/script/build.ts"),
+      versionId: published.versionId,
+    })
+    const republished = await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, {
+      versionId: edited.versionId,
+    })
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs[0].version).toBe(published.activeVersionId)
+    const updated = await ok(tmp.path, "POST", `${install}/update`, {}, ALICE)
+    expect(updated).toMatchObject({ installID: installed.installID, version: republished.activeVersionId, order: 0 })
+    expect(updated.snapshot.nodes[2].parameters.message).toBe("Run ./packages/sdk/js/script/build.ts")
+
+    expect(await ok(tmp.path, "PATCH", "/api/relay/hook/order", { installIDs: [installed.installID] })).toMatchObject({
+      installs: [{ installID: installed.installID, order: 0 }],
+    })
+    expect(await refused(tmp.path, "PATCH", "/api/relay/hook/order", { installIDs: [] })).toMatchObject({
+      status: 409,
+      code: "order-mismatch",
+    })
+
+    expect((await call(tmp.path, "DELETE", install)).status).toBe(204)
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([])
+    expect(await refused(tmp.path, "POST", `${install}/enable`)).toMatchObject({ status: 404, code: "install-missing" })
+
+    const receipts = await ledger(root, installed.installID)
+    expect(receipts.map((line) => [line.event, line.principal, line.seq])).toEqual([
+      ["hook-installed", os.userInfo().username, 0],
+      ["hook-disabled", os.userInfo().username, 1],
+      ["hook-enabled", os.userInfo().username, 2],
+      ["hook-updated", os.userInfo().username, 3],
+      ["hook-uninstalled", os.userInfo().username, 4],
+    ])
+    expect(receipts[0]).toMatchObject({ install: installed.installID, document: hook.id, sha256: installed.sha256 })
+    expect(receipts[3]).toMatchObject({ version: republished.activeVersionId, sha256: updated.sha256 })
+  })
+
+  test("a folder outside git refuses new hooks and workflows, and still lets an earlier install be paused or removed", async () => {
+    await using tmp = await tmpdir()
+    // Every folder outside git resolves to the one global project, so whatever is made there applies to all of them.
+    expect(await call(tmp.path, "GET", "/api/relay/hook")).toMatchObject({
+      status: 200,
+      body: { location: { project: { id: "global" } } },
+    })
+    const refusal = {
+      status: 409,
+      tag: "RelayConflictError",
+      code: "repository-required",
+      message:
+        "Hooks and workflows need a git repository. This folder isn't one, so they would apply to every non-repository folder.",
+    }
+    expect(await refused(tmp.path, "POST", "/api/relay/document", workflowDocument("true"))).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/document", hookDocument("Not here"))).toEqual(refusal)
+    expect(
+      await refused(tmp.path, "POST", "/api/relay/document/relay-wp-execute/publish", { versionId: "v1" }),
+    ).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook", { document: "relay-wp-execute" })).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/update", {})).toEqual(refusal)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/enable")).toEqual(refusal)
+    // Pausing and uninstalling are not gated: they reach the install list and find nothing to change.
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/h-earlier/disable")).toMatchObject({
+      status: 404,
+      code: "install-missing",
+    })
+    expect(await refused(tmp.path, "DELETE", "/api/relay/hook/h-earlier")).toMatchObject({
+      status: 404,
+      code: "install-missing",
+    })
+  })
+
+  test("decisions are the hook-decision lines of the install's ledger", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { root } = await relayRoot(tmp.path)
+    const hook = await ok(tmp.path, "POST", "/api/relay/document", hookDocument("Regenerate the SDK"))
+    await ok(tmp.path, "POST", `/api/relay/document/${hook.id}/publish`, { versionId: hook.versionId })
+    const installed = await ok(tmp.path, "POST", "/api/relay/hook", { document: hook.id })
+    const route = `/api/relay/hook/${installed.installID}/decisions`
+    expect(await ok(tmp.path, "GET", route)).toEqual([])
+
+    // The receipt shipper writes these; the route only reads them back, lifecycle lines left out.
+    const decision = {
+      ts: 1_700_000_000,
+      event: "hook-decision",
+      decision: "dec-1",
+      install: installed.installID,
+      version: installed.version,
+      node: "block",
+      action: "block",
+      trigger: "edit.before",
+      tool: "edit",
+      session: "ses_1",
+      call: "call_1",
+      subject: "src/generated/types.ts",
+      outcome: "blocked",
+    }
+    const file = path.join(root, "hooks", installed.installID, "ledger.jsonl")
+    await fs.appendFile(file, JSON.stringify({ ...decision, gen: 0, prev: "0".repeat(64), seq: 1 }) + "\n")
+    expect(await ok(tmp.path, "GET", route)).toEqual([{ ...decision, seq: 1 }])
+
+    await fs.appendFile(file, JSON.stringify({ event: "hook-decision", seq: 2 }) + "\n")
+    expect(await refused(tmp.path, "GET", route)).toMatchObject({ status: 409, code: "ledger-invalid" })
+    expect(await ok(tmp.path, "GET", "/api/relay/hook/h-never-installed/decisions")).toEqual([])
+    expect(await refused(tmp.path, "GET", "/api/relay/hook/..%2Fescape/decisions")).toMatchObject({ status: 404 })
+  })
+
+  test("repair runs only on request, backs up a corrupt hooks.json and resets it, and leaves anything else alone", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const { data, projectID } = await relayRoot(tmp.path)
+    const file = RelayHookInstall.file(data, projectID)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true })).toMatchObject({
+      status: 409,
+      code: "repair-not-needed",
+    })
+
+    await fs.mkdir(path.dirname(file), { recursive: true })
+    await fs.writeFile(file, "{not json")
+    expect(await refused(tmp.path, "GET", "/api/relay/hook")).toMatchObject({ status: 409, code: "profile-invalid" })
+    // Reading never repairs, and a repair must be asked for in so many words.
+    expect((await call(tmp.path, "POST", "/api/relay/hook/repair", {})).status).toBe(400)
+    expect(await fs.readFile(file, "utf8")).toBe("{not json")
+
+    const repaired = await ok(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true }, ALICE)
+    expect(repaired.installs).toEqual([])
+    // The server reports its own spelling of the data path; Windows may short-name it (RUNNER~1), so both sides are
+    // compared resolved.
+    expect(await fs.realpath(path.dirname(repaired.backup))).toBe(path.dirname(file))
+    expect(path.basename(repaired.backup)).toMatch(/^hooks\.json\.corrupt-\d+-[0-9a-f]{8}$/)
+    expect(await fs.readFile(repaired.backup, "utf8")).toBe("{not json")
+    expect(JSON.parse(await fs.readFile(file, "utf8"))).toEqual({ installs: [] })
+    expect((await ok(tmp.path, "GET", "/api/relay/hook")).installs).toEqual([])
+
+    // A regular file over the loader's cap is corrupt too.
+    await fs.writeFile(file, " ".repeat(RelayHookInstall.MAX_BYTES + 1))
+    const oversized = await ok(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true })
+    expect((await fs.stat(oversized.backup)).size).toBe(RelayHookInstall.MAX_BYTES + 1)
+
+    // A symlink or a directory is not corruption the server can prove: it stays for the owner to inspect.
+    const elsewhere = path.join(tmp.path, "elsewhere.json")
+    await fs.writeFile(elsewhere, "{not json")
+    await fs.rm(file)
+    await fs.symlink(elsewhere, file)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true })).toMatchObject({
+      status: 409,
+      code: "repair-refused",
+    })
+    expect((await fs.lstat(file)).isSymbolicLink()).toBe(true)
+    expect(await fs.readFile(elsewhere, "utf8")).toBe("{not json")
+    await fs.rm(file)
+    await fs.mkdir(file)
+    expect(await refused(tmp.path, "POST", "/api/relay/hook/repair", { confirm: true })).toMatchObject({
+      status: 409,
+      code: "repair-refused",
+    })
+    expect((await fs.stat(file)).isDirectory()).toBe(true)
+  })
+})

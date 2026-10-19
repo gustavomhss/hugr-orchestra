@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { response } from "../location"
-import { CatalogAvailability } from "../catalog-availability"
+import { CatalogAvailability } from "@orchestra/core/host/catalog-availability"
 
 export const ModelHandler = HttpApiBuilder.group(Api, "server.model", (handlers) =>
   Effect.gen(function* () {

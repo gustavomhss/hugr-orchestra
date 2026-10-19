@@ -77,6 +77,13 @@ test("Relay stores canonical project contract, host must bind checks; no Claude 
   // Supplied captures never grade a contract here: completion runs only on the native host's Relay arm.
   expect(validateArgs(governance.inputSchema, { operation: "completion-check", contract, checks: capture(check("suite")), bindings: ["bun-tests"] }).ok).toBe(false)
   expect(await rethrow(relay.handler({ action: "arm", contract: { ...contract, chain: [] } }, f.context))).toThrow("COMPLETION_CHAIN_EMPTY_OR_OVERFLOW")
+  // A workflow Task's arm names no checks: the native host arms the approved plan's own controls under its token.
+  const workflow: CompletionContract = { sessionID: "session", label: "workflow task" }
+  expect(validateArgs(relay.inputSchema, { action: "arm", contract: workflow }).ok).toBe(true)
+  const bare = result<{ token: string; contract: CompletionContract; bindingRequired: string[] }>(await relay.handler({ action: "arm", contract: workflow }, f.context))
+  expect(bare).toMatchObject({ contract: { ...workflow, retryBudget: 3 }, bindingRequired: [] })
+  expect(bare.token).not.toBe(armed.token)
+  expect(result<{ contract: CompletionContract }>(await relay.handler({ action: "read", token: bare.token }, f.context)).contract).toEqual({ ...workflow, retryBudget: 3 })
 })
 test("native acceptance operation executes exact contract", async () => {
   const f = await fixture()

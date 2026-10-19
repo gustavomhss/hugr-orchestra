@@ -331,3 +331,15 @@ test("production DOM-ready rendering: three samples per picker and roster datase
     contentType: "application/json",
   })
 })
+
+// Failure states share one recovery: a Retry that re-runs the failed load.
+test("server-unavailable and actions failure states each offer a working Retry", async ({ page }) => {
+  await page.goto("/e2e/orchestra/agent-picker.fixture.html?failures=1&auto=0")
+  const retries = page.getByTestId("retries")
+  const unavailable = page.locator('[data-slot="server-unavailable"]')
+  await expect(unavailable).toContainText("No server available")
+  await unavailable.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect(retries).toHaveText("1")
+  await page.getByRole("button", { name: "Retry load", exact: true }).click()
+  await expect(retries).toHaveText("2")
+})

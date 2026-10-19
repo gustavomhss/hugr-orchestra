@@ -61,6 +61,7 @@ export const HOME_COPY = {
   "orchestra.home.sessionMessage": "{{count}} message",
   "orchestra.home.sessionMessages": "{{count}} messages",
   "orchestra.home.sessionsEmpty": "No session activity in this period.",
+  "orchestra.home.startSession": "Start a session",
   "orchestra.home.models": "Spend by model",
   "orchestra.home.manage": "Manage",
   "orchestra.home.modelsEmpty": "No model runs in this period.",

@@ -6,7 +6,7 @@ import { useFile, selectionFromLines, type FileSelection, type SelectedLineRange
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { usePermission } from "@/context/permission"
-import { usePrompt } from "@/context/prompt"
+import { isPromptEqual, usePrompt } from "@/context/prompt"
 import { useSDK } from "@/context/sdk"
 import { useSettings } from "@/context/settings"
 import { useSync } from "@/context/sync"
@@ -17,7 +17,7 @@ import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from
 import { findLast } from "@orchestra/core/util/array"
 import { createSidePanelTabs } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
-import { Message, Part, UserMessage } from "@orchestra/sdk/v2"
+import { Message, Part, UserMessage } from "../../compat/sdk-v2"
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
@@ -87,6 +87,19 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     if (!id) return
     return sync().session.get(id)
   }
+  // Text the user typed must survive undo and redo. A prompt still equal to the reverted message
+  // was put there by the last undo and may be replaced.
+  const typedPrompt = (promptSession: ReturnType<typeof prompt.capture>, revertID: string | undefined) => {
+    if (!promptSession.dirty()) return false
+    if (!revertID) return true
+    const reverted = extractPromptFromParts(sync().data.part[revertID] ?? [], { directory: sdk().directory })
+    return !isPromptEqual(promptSession.current(), reverted)
+  }
+  const draftKept = () =>
+    showToast({
+      title: language.t("orchestra.chat.revert.draftKept.title"),
+      description: language.t("orchestra.chat.revert.draftKept.description"),
+    })
   const hasReview = () => !!params.id
   const normalizeTab = (tab: string) => {
     if (!tab.startsWith("file://")) return tab
@@ -100,11 +113,10 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     hasReview,
     fileBrowser: actions.fileBrowser,
     cockpit: () => false,
-    permanent: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
-  const shown = settings.visibility.fileTree
+  const shown = settings.general.showFileTree
 
   const messages = () => {
     const id = params.id
@@ -270,6 +282,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     const message = messages[boundary - 1]
     if (!message) return
     const parts = sync().data.part[message.id]
+    const keep = typedPrompt(promptSession, revert)
 
     if (sync().data.session_working(sessionID)) {
       await session.interrupt({ sessionID })
@@ -280,7 +293,9 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       prompt: promptSession,
       request: () => session.revert.stage({ sessionID, messageID: message.id }),
       updatePrompt: (promptSession) => {
-        if (parts) promptSession.set(extractPromptFromParts(parts, { directory }))
+        if (!parts) return
+        if (keep) return draftKept()
+        promptSession.set(extractPromptFromParts(parts, { directory }))
       },
       updateViewport: () => setActiveMessage(messages[boundary - 2]),
     })
@@ -296,6 +311,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
 
     const revertMessageID = info()?.revert?.messageID
     if (!revertMessageID) return
+    const keep = typedPrompt(promptSession, revertMessageID)
 
     const boundary = messages.findIndex((message) => message.id === revertMessageID)
     if (boundary < 0) return
@@ -305,7 +321,9 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
         owner,
         prompt: promptSession,
         request: () => session.revert.clear({ sessionID }),
-        updatePrompt: (promptSession) => promptSession.reset(),
+        updatePrompt: (promptSession) => {
+          if (!keep) promptSession.reset()
+        },
         updateViewport: () => setActiveMessage(messages.at(-1)),
       })
       return
@@ -375,13 +393,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.session.new"),
       keybind: "mod+shift+s",
       slash: "new",
-      onSelect: (source) => {
-        if (settings.general.newLayoutDesigns()) {
-          command.trigger("tab.new", source)
-          return
-        }
-        navigate(`/${params.dir}/session`)
-      },
+      onSelect: (source) => command.trigger("tab.new", source),
     }),
     sessionCommand({
       id: "session.undo",
@@ -522,21 +534,11 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
         // Orchestra's rail keeps a permanent Tasks tab: reveal it and toggle the Tasks detail.
-        if (settings.general.newLayoutDesigns()) {
-          const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
-          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
-          view().reviewPanel.open()
-          tabs().open("tasks")
-          tabs().setActive("tasks")
-          return
-        }
-        if (tabs().active() === "tasks") {
-          tabs().close("tasks")
-          return
-        }
+        const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
+        updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+        view().reviewPanel.open()
         tabs().open("tasks")
         tabs().setActive("tasks")
-        view().reviewPanel.open()
       },
     }),
     viewCommand({

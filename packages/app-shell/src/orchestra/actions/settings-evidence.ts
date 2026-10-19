@@ -50,7 +50,11 @@ export function settingsConnection(state: State) {
   const auth = [state.commandError, ...errors].find((error) => error?.kind === "not_authenticated" || error?.kind === "server_auth")
   if (auth) return { state: "unavailable" as const, label: auth.message }
   if (state.unsupported) return { state: "unavailable" as const, label: "orchestra.actions.unsupported" as const }
-  if (errors.length) return { state: "unavailable" as const, label: errors[0].message }
+  // A failed resource, workflow or run read (one unreadable schedule source, a
+  // missing artifact) says nothing about the connection; only the binding list
+  // and the capability probe that proves the provider endpoint do.
+  const connection = [state.bindings, state.capabilities].find((data) => data.status === "error" && data.error)?.error
+  if (connection) return { state: "unavailable" as const, label: connection.message }
   if (!state.binding) return { state: "unknown" as const, label: "orchestra.actions.unknown" as const }
   const scopes = [`repository:${state.binding.projectID}`, `project:${state.binding.projectID}`, `projects/${state.binding.projectID}`]
   const observed = state.capabilities.status === "ready" && state.capabilities.value?.some((item) =>

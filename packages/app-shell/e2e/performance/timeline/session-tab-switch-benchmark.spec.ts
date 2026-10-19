@@ -42,7 +42,7 @@ benchmark(
             await withBenchmarkPage(
               browser,
               `session-tab-switch-v2-${reviewPane}-${mode}-${run}`,
-              (page) => trial(page, mode, { newLayoutDesigns: true, reviewPane }),
+              (page) => trial(page, mode, { reviewPane }),
               testInfo,
             ),
           )
@@ -53,14 +53,10 @@ benchmark(
   },
 )
 
-async function trial(
-  page: Page,
-  mode: "cold" | "hot",
-  options?: { newLayoutDesigns?: boolean; reviewPane?: "closed" | "open" },
-) {
-  const reviewDiffs = options?.newLayoutDesigns ? createReviewDiffs() : undefined
+async function trial(page: Page, mode: "cold" | "hot", options?: { reviewPane?: "closed" | "open" }) {
+  const reviewDiffs = createReviewDiffs()
   await mockStressTimeline(page, { vcsDiff: reviewDiffs })
-  if (options?.newLayoutDesigns) await installTimelineSettings(page)
+  await installTimelineSettings(page)
   await installStressSessionTabs(page)
   if (mode === "hot") {
     await page.goto(stressSessionHref(fixture.targetID))

@@ -68,7 +68,7 @@ afterEach(() => vi.restoreAllMocks())
 // ── REQ-CLI-1 — total command surface ─────────────────────────────────────────────────────────────
 
 describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
-  it("is total (32 keys, WP-11.W8 ∪ WP-3-RETR ∪ EPIC-1-b) and mutually-exclusive over the ratified table", () => {
+  it("is total (one leg per key of COMMANDS) and mutually-exclusive over the ratified table", () => {
     // totality: every command in the finite surface has exactly one leg.
     expect(COMMANDS).toEqual([
       "init",

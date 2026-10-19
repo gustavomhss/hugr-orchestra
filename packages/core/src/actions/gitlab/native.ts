@@ -24,7 +24,7 @@ export const Project = Schema.Struct({
   permissions: Schema.optional(Schema.Struct({ project_access: Schema.optional(access), group_access: Schema.optional(access) })),
 })
 export const Pipeline = Schema.Struct({
-  id: ID, project_id: ID, sha: SHA, ref: Schema.NullOr(Schema.String), source: Schema.NonEmptyString, status: Schema.NullOr(Schema.NonEmptyString),
+  id: ID, iid: Schema.optional(ID), project_id: ID, sha: SHA, ref: Schema.NullOr(Schema.String), source: Schema.NonEmptyString, status: Schema.NullOr(Schema.NonEmptyString),
   name: nullableText, web_url: nullableText, created_at: nullableText, updated_at: nullableText,
   started_at: nullableText, finished_at: nullableText,
   duration: Schema.optional(Schema.NullOr(Schema.Number.check(Schema.isGreaterThanOrEqualTo(0)))),

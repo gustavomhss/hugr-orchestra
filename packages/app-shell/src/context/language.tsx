@@ -10,7 +10,6 @@ import { EDIT_REVIEW_COPY } from "@orchestra/ui/i18n/edit-review"
 import { ORCHESTRA_COPY } from "@/i18n/orchestra"
 import {
   createDesktopNativeBundle,
-  detectDesktopNativeLocale,
   DESKTOP_NATIVE_ENGLISH,
   DESKTOP_NATIVE_LABELS,
   DESKTOP_NATIVE_LOCALES,
@@ -133,9 +132,10 @@ export function loadLocaleDict(locale: Locale) {
   return loadDict(locale).then(() => undefined)
 }
 
+// The app ships in English first: other locales are partial, and following the OS locale mixed them with English
+// in one screen. A locale the person picks in Settings still applies.
 function detectLocale(): Locale {
-  if (typeof navigator !== "object") return "en"
-  return detectDesktopNativeLocale(navigator.languages?.length ? navigator.languages : [navigator.language])
+  return "en"
 }
 
 export function normalizeLocale(value: string): Locale {

@@ -241,6 +241,14 @@ html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-
   color: var(--orchestra-sidebar-icon);
   fill: currentColor;
 }
+[data-orchestra-palette="graphite"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+[data-orchestra-palette="graphite"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
 [data-orchestra-palette="graphite"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }
@@ -1151,7 +1159,8 @@ html[data-orchestra-palette="graphite"][data-color-scheme][dir="rtl"] body[data-
   color: var(--orchestra-warm);
 }
 /* orchestra/chapters/kit.css */
-html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout] {
+html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout],
+html[data-orchestra-palette="graphite"][data-color-scheme] body[data-mx-kit] {
   --mx-line: rgba(190, 191, 193, 0.14);
   --mx-soft: rgba(196, 197, 198, 0.055);
   --mx-raised: rgba(31, 32, 34, 0.55);
@@ -1393,7 +1402,7 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
   color: #a0a2a5;
 }
 [data-orchestra-palette="graphite"] .home-kpi-value[data-state="loading"]::before {
-  background: rgba(175, 187, 201, 0.12);
+  background: rgba(175, 187, 201, 0.2);
 }
 [data-orchestra-palette="graphite"] .home-kpi-foot {
   color: var(--mx-dim);
@@ -1600,15 +1609,12 @@ html[data-orchestra-palette="graphite"][data-color-scheme] body[data-new-layout]
 [data-orchestra-palette="graphite"] .providers-route-label {
   color: var(--mx-dim);
 }
-[data-orchestra-palette="graphite"] .mx-page .mx-row > .mx-brand {
+[data-orchestra-palette="graphite"] .mx-row > .mx-brand {
   color: var(--orchestra-text);
 }
 [data-orchestra-palette="graphite"] .providers-close {
   fill: none;
   stroke: currentColor;
-}
-[data-orchestra-palette="graphite"] .providers-dialog .providers-authorize .mx-link {
-  text-decoration: underline;
 }
 [data-orchestra-palette="graphite"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .providers-dialog) {
   background: var(--mx-backdrop);

@@ -1,6 +1,13 @@
 import { describe, expect, test } from "bun:test"
 import { ServerConnection } from "@/context/server"
-import { legacySessionHref, legacySessionServer, requireServerKey, rootSession, sessionHref } from "./session-route"
+import {
+  legacySessionHref,
+  legacySessionServer,
+  parseServerKey,
+  requireServerKey,
+  rootSession,
+  sessionHref,
+} from "./session-route"
 import { rethrow } from "../testing/rejection"
 
 describe("session routes", () => {
@@ -37,6 +44,8 @@ describe("session routes", () => {
 
   test("rejects malformed server keys", () => {
     expect(() => requireServerKey("not-base64")).toThrow("Invalid server route")
+    expect(parseServerKey("not-base64")).toBeUndefined()
+    expect(parseServerKey(undefined)).toBeUndefined()
   })
 
   test("builds the legacy directory-keyed route", () => {

@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "owner": "actions",
+  "disposition": "retain-recovery",
+  "scopes": [
+    "specs/actions/parity"
+  ],
+  "source": {
+    "revision": "0ff924411761fb41419ba95c1f997188bd902a3e",
+    "tree": "e917b9c92e8682ac2800d70575c5f3365393ce59"
+  },
+  "storage": {
+    "root": "owner-approved HuGR/orchestra-recovery",
+    "bundle": "actions-parity-0ff924411761",
+    "retention": "until owner closes the rollback window"
+  },
+  "manifestSha256": "c47d461189582cbcec3265680d17fc5e16d5a9ed168046e7b4e7d060cc293a61",
+  "members": 35,
+  "bytes": 4971377,
+  "verification": {
+    "restoredBytes": "all 35 restored members hash to their source Git blobs (git hash-object)",
+    "restoredMemberList": "35 files restored, equal to the source tree listing",
+    "host": {
+      "platform": "darwin",
+      "arch": "x64",
+      "bun": "1.3.14"
+    }
+  },
+  "readers": [
+    "docs/specs/actions/UI-MOCK-PARITY.md"
+  ],
+  "sourceRemoval": "removed from the tree after the restore check"
+}

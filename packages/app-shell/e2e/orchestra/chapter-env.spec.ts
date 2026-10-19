@@ -73,7 +73,7 @@ async function setup(page: Page, scheme = "dark") {
   })
   await page.addInitScript(
     ({ serverA, serverB, scheme }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {}, notifications: {} }))
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)

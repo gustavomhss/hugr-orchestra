@@ -37,7 +37,7 @@ import { usePromptStash } from "../../prompt/stash"
 import { DialogStash } from "../dialog-stash"
 import { type AutocompleteRef, Autocomplete } from "./autocomplete"
 import { useRenderer, useTerminalDimensions, type JSX } from "@opentui/solid"
-import type { AssistantMessage, FilePart, UserMessage } from "@orchestra/sdk/v2"
+import type { AssistantMessage, FilePart, UserMessage } from "../../compat/sdk-v2"
 import { Locale } from "../../util/locale"
 import { errorMessage } from "../../util/error"
 import { formatDuration } from "../../util/format"
@@ -397,7 +397,8 @@ export function Prompt(props: PromptProps) {
         hidden: true,
         enabled: status().type !== "idle",
         run: () => {
-          if (auto()?.visible) return
+          // Escape precedence: an open dialog consumes it first, then autocomplete, then shell mode, then interrupt.
+          if (dialog.stack.length > 0 || auto()?.visible) return
           if (!input.focused) return
           // TODO: this should be its own command
           if (store.mode === "shell") {
@@ -418,7 +419,6 @@ export function Prompt(props: PromptProps) {
             })
             setStore("interrupt", 0)
           }
-          dialog.clear()
         },
       },
       {

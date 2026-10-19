@@ -4,7 +4,7 @@ import { createRequire } from "node:module"
 import { join } from "node:path"
 import { isDeepStrictEqual } from "node:util"
 import type { UpstreamAttribution } from "../../packages/schema/src/upstream-attribution"
-import type { Denied } from "../../packages/orchestra/src/maestro/upstream-provenance"
+import type { Denied } from "../../apps/orchestra/src/maestro/upstream-provenance"
 import type { Plan } from "./archie-host-plan"
 import { stopOwned, within } from "./archie-host-process"
 
@@ -13,7 +13,7 @@ export async function runS14(plan: Plan, launch: typeof import("./archie-host-ac
   const report = object(await Bun.file(join(plan.out, "report.json")).json())
   const positive = object(object(report.checks).d)
   requireFact(positive.pass === true, "S14_SOURCE_OBSERVER_NOT_ACCEPTED")
-  const { Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
+  const { Schema } = (await import(createRequire(join(plan.repo, "apps/orchestra/package.json")).resolve("effect"))) as typeof import("../../apps/orchestra/script/archie-host-effect")
   const { UpstreamAttribution } = (await import(join(plan.repo, "packages/schema/src/upstream-attribution.ts"))) as typeof import("../../packages/schema/src/upstream-attribution")
   const input = Schema.decodeUnknownSync(UpstreamAttribution.V2)(positive.attribution)
   requireFact(input.dispatch.kind === "claude-code-agent", "S14_SOURCE_DISPATCH_KIND_INVALID")
@@ -112,15 +112,15 @@ export async function runS14(plan: Plan, launch: typeof import("./archie-host-ac
 
 export async function observeS14(plan: Plan) {
   console.error("S14_OBSERVER_START")
-  const { Effect, Schema } = (await import(createRequire(join(plan.repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
+  const { Effect, Schema } = (await import(createRequire(join(plan.repo, "apps/orchestra/package.json")).resolve("effect"))) as typeof import("../../apps/orchestra/script/archie-host-effect")
   console.error("S14_EFFECT_READY")
   const { UpstreamAttribution } = (await import(join(plan.repo, "packages/schema/src/upstream-attribution.ts"))) as typeof import("../../packages/schema/src/upstream-attribution")
   console.error("S14_SCHEMA_READY")
-  const { AppRuntime } = (await import(join(plan.repo, "packages/orchestra/src/effect/app-runtime.ts"))) as typeof import("../../packages/orchestra/src/effect/app-runtime")
+  const { AppRuntime } = (await import(join(plan.repo, "apps/orchestra/src/effect/app-runtime.ts"))) as typeof import("../../apps/orchestra/src/effect/app-runtime")
   console.error("S14_RUNTIME_READY")
-  const { InstanceStore } = (await import(join(plan.repo, "packages/orchestra/src/project/instance-store.ts"))) as typeof import("../../packages/orchestra/src/project/instance-store")
-  const { InstanceRef } = (await import(join(plan.repo, "packages/orchestra/src/effect/instance-ref.ts"))) as typeof import("../../packages/orchestra/src/effect/instance-ref")
-  const { UpstreamProvenance } = (await import(join(plan.repo, "packages/orchestra/src/maestro/upstream-provenance.ts"))) as typeof import("../../packages/orchestra/src/maestro/upstream-provenance")
+  const { InstanceStore } = (await import(join(plan.repo, "apps/orchestra/src/project/instance-store.ts"))) as typeof import("../../apps/orchestra/src/project/instance-store")
+  const { InstanceRef } = (await import(join(plan.repo, "apps/orchestra/src/effect/instance-ref.ts"))) as typeof import("../../apps/orchestra/src/effect/instance-ref")
+  const { UpstreamProvenance } = (await import(join(plan.repo, "apps/orchestra/src/maestro/upstream-provenance.ts"))) as typeof import("../../apps/orchestra/src/maestro/upstream-provenance")
   const input = Schema.decodeUnknownSync(UpstreamAttribution.V2)(await Bun.file(join(plan.out, "s14-input.json")).json())
   console.error("S14_IMPORTS_READY")
   const result = await AppRuntime.runPromise(Effect.gen(function* () {

@@ -13,6 +13,8 @@ await Promise.all(
       ["native-header", "adapter-io/src/native-header.ts"],
       // F3 A1/A3: the bound Memory composition (recall, exact fold, write, reconcile) for the backend seat's tools.
       ["native-memory", "adapter-io/src/native-bound.ts"],
+      // The Atlas screen's read and write API over the composition root (specs/atlas-ui/build D1/D2).
+      ["surface", "adapter-io/src/surface/index.ts"],
     ] as const
   ).map(async ([name, file]) => {
     const entry = path.join(root, "modules/atlas/packages", file)
@@ -23,6 +25,10 @@ await Promise.all(
       // Bun's cross-module identifier minifier is nondeterministic: repeated builds of the same graph
       // occasionally permute short names, so check:generated flakes. Keep whitespace and syntax minification only.
       minify: { whitespace: true, syntax: true, identifiers: false },
+      // The surface's AST module imports the parser at load and only uses it after `initAst()`, which the surface never
+      // calls. Kept external, it resolves at run time to this package's pinned dependency, and the emscripten loader's
+      // own paths never enter the committed bytes.
+      external: ["web-tree-sitter"],
       plugins: [
         {
           name: "canonical-atlas-build-boundary",
@@ -31,6 +37,11 @@ await Promise.all(
               path: path.join(root, "modules/atlas/packages", args.path.slice("@atlas/".length), "src/index.ts"),
             }))
             builder.onResolve({ filter: /^@noble\/hashes\// }, (args) => ({
+              path: Bun.resolveSync(args.path, path.resolve(import.meta.dir, "..")),
+            }))
+            // The SCIP decoder the surface reads `.atlas/index.scip` with: this package's pinned copy, not whichever
+            // copy happens to sit above the Atlas sources.
+            builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({
               path: Bun.resolveSync(args.path, path.resolve(import.meta.dir, "..")),
             }))
           },

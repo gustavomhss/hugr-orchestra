@@ -14,6 +14,8 @@ import {
   filterBehaviors,
   removeBehavior,
   saveBehavior,
+  seedText,
+  sendsInstructions,
   toggleBehavior,
   type BehaviorCardLabels,
   type LlmBehavior,
@@ -50,7 +52,10 @@ export default function PluginsPage(props: ChapterPageProps) {
   // Push the set this page shows when it opens and after every change, one request at a time so the server ends on
   // the latest set. Only the latest request's answer sets the status.
   const push = { latest: 0, queue: Promise.resolve() }
+  // Retry bumps this so the effect pushes the same set again.
+  const [attempt, setAttempt] = createSignal(0)
   createEffect(() => {
+    attempt()
     if (protocol() !== "v2" || store().loading()) return
     const input = {
       location: { directory: directory() },
@@ -77,13 +82,18 @@ export default function PluginsPage(props: ChapterPageProps) {
     get configure() {
       return language.t("orchestra.plugins.configure")
     },
+    name: (behavior) => seedText(behavior, "name", language.t("orchestra.plugins.caveman.name")),
+    description: (behavior) => seedText(behavior, "description", language.t("orchestra.plugins.caveman.description")),
+    intensity: (level) => language.t(`orchestra.plugins.intensity.${level}`),
     status: (behavior) =>
       language.t(
         !behavior.enabled
           ? "orchestra.plugins.disabled"
-          : applied()
-            ? "orchestra.plugins.active"
-            : "orchestra.plugins.enabled",
+          : !sendsInstructions(behavior)
+            ? "orchestra.plugins.noInstructions"
+            : applied()
+              ? "orchestra.plugins.active"
+              : "orchestra.plugins.enabled",
       ),
   }
   const visible = createMemo(() => filterBehaviors(store().behaviors(), state.query, labels))
@@ -175,14 +185,16 @@ export default function PluginsPage(props: ChapterPageProps) {
                       <PluginIcon />
                     </span>
                     <h3>
-                      <bdi>{behavior.name}</bdi>
+                      <bdi>{labels.name(behavior)}</bdi>
                     </h3>
                   </div>
-                  <p>{behavior.description}</p>
+                  <p>{labels.description(behavior)}</p>
                   <div class="mx-meta">
                     <MxBadge>{labels.kind}</MxBadge>
-                    <MxBadge>{behavior.intensity ?? labels.custom}</MxBadge>
-                    <MxBadge tone={behavior.enabled ? "good" : undefined}>{labels.status(behavior)}</MxBadge>
+                    <MxBadge>{behavior.intensity ? labels.intensity(behavior.intensity) : labels.custom}</MxBadge>
+                    <MxBadge tone={behavior.enabled && sendsInstructions(behavior) ? "good" : undefined}>
+                      {labels.status(behavior)}
+                    </MxBadge>
                   </div>
                   <footer class="mx-card-foot">
                     <button type="button" class="mx-btn" onClick={() => edit(behavior)}>
@@ -190,7 +202,7 @@ export default function PluginsPage(props: ChapterPageProps) {
                     </button>
                     <MxToggle
                       checked={behavior.enabled}
-                      label={language.t("orchestra.plugins.enable", { name: behavior.name })}
+                      label={language.t("orchestra.plugins.enable", { name: labels.name(behavior) })}
                       onChange={(enabled) => store().update(toggleBehavior(store().behaviors(), behavior.id, enabled))}
                     />
                   </footer>
@@ -204,6 +216,11 @@ export default function PluginsPage(props: ChapterPageProps) {
         {(key) => (
           <p class="mx-note" data-slot="plugins-application">
             {language.t(key())}
+            <Show when={server() === "failed"}>
+              <button type="button" class="mx-btn" data-slot="plugins-sync-retry" onClick={() => setAttempt((count) => count + 1)}>
+                {language.t("orchestra.plugins.syncRetry")}
+              </button>
+            </Show>
           </p>
         )}
       </Show>

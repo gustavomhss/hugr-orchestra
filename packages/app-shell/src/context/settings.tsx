@@ -1,5 +1,5 @@
 import { createStore, reconcile } from "solid-js/store"
-import { createEffect, createMemo, createSignal, onCleanup } from "solid-js"
+import { createEffect, createMemo } from "solid-js"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
@@ -24,7 +24,6 @@ export interface Settings {
     autoSave: boolean
     followup: "queue" | "steer"
     showFileTree: boolean
-    showNavigation: boolean
     showSearch: boolean
     showStatus: boolean
     showTerminal: boolean
@@ -33,9 +32,7 @@ export interface Settings {
     shellToolPartsExpanded: boolean
     editToolPartsExpanded: boolean
     mobileTitlebarPosition: "top" | "bottom"
-    newLayoutDesigns?: boolean
     layoutTransitionEligible?: boolean
-    newInterfaceNoticeDismissed?: boolean
     shouldDisplayTabsToast?: boolean
   }
   appearance: {
@@ -55,11 +52,6 @@ export interface Settings {
 export const monoDefault = "System Mono"
 export const sansDefault = "System Sans"
 export const terminalDefault = "JetBrainsMono Nerd Font Mono"
-const legacyNewLayoutDesignsDefault = import.meta.env.VITE_ORCHESTRA_CHANNEL !== "prod"
-export const newLayoutDesignsDefault = true
-// Existing users can switch layouts until local midnight on this date. Set new Date(YYYY, M-1, D) to show.
-export const oldInterfaceSunset = new Date(2026, 8, 14)
-const newLayoutDesignsUpgradeCutoff = "1.17.19"
 
 function compareVersions(a: string, b: string) {
   const parse = (version: string) => {
@@ -90,38 +82,6 @@ export function shouldDisplayTabsToast(
 
 export function hasExistingWebState(settings: Promise<string> | string | null, previousVersion: string | undefined) {
   return settings !== null || previousVersion !== undefined
-}
-
-export function shouldEnableNewLayout(previous: string | undefined, current: string | undefined) {
-  if (!current) return false
-  const currentComparison = compareVersions(current, newLayoutDesignsUpgradeCutoff)
-  if (!previous) return currentComparison !== undefined && currentComparison > 0
-  if (!isAppUpgrade(previous, current)) return false
-  const previousComparison = compareVersions(previous, newLayoutDesignsUpgradeCutoff)
-  return (
-    previousComparison !== undefined &&
-    currentComparison !== undefined &&
-    previousComparison <= 0 &&
-    currentComparison > 0
-  )
-}
-
-export function layoutTransitionState(scheduled: boolean, eligible: boolean, retired: boolean, dismissed: boolean) {
-  return {
-    available: scheduled && eligible && !retired,
-    notice: scheduled && eligible && retired && !dismissed,
-  }
-}
-
-export const maximumSunsetTimeout = 2_147_483_647
-
-export function nextSunsetCheckDelay(sunset: number, now: number) {
-  return Math.min(Math.max(0, sunset - now), maximumSunsetTimeout)
-}
-
-export function resolveNewLayoutDesigns(retired: boolean, preference: boolean | undefined, fallback = true) {
-  if (retired) return true
-  return preference ?? fallback
 }
 
 const monoFallback =
@@ -178,7 +138,6 @@ const defaultSettings: Settings = {
     autoSave: true,
     followup: "steer",
     showFileTree: false,
-    showNavigation: false,
     showSearch: false,
     showStatus: false,
     showTerminal: false,
@@ -229,57 +188,11 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     )
     const [launchState, setLaunchState] = createStore({
       classified: false,
-      migrationApplied: false,
       previous: undefined as string | undefined,
     })
-    const showFileTree = withFallback(() => store.general?.showFileTree, defaultSettings.general.showFileTree)
-    const showSearch = withFallback(() => store.general?.showSearch, defaultSettings.general.showSearch)
-    const showStatus = withFallback(() => store.general?.showStatus, defaultSettings.general.showStatus)
-    const sunset = oldInterfaceSunset
-    const [oldInterfaceRetired, setOldInterfaceRetired] = createSignal(sunset ? Date.now() >= sunset.getTime() : false)
+    // `layoutTransitionEligible` is the persisted existing-install classification; the tabs toast reads it.
     const layoutTransitionClassified = createMemo(() => typeof store.general?.layoutTransitionEligible === "boolean")
     const layoutTransitionEligible = withFallback(() => store.general?.layoutTransitionEligible, false)
-    const newInterfaceNoticeDismissed = withFallback(() => store.general?.newInterfaceNoticeDismissed, false)
-    const layoutUpgrade = createMemo(() =>
-      launchState.classified && !launchState.migrationApplied
-        ? shouldEnableNewLayout(launchState.previous, platform.version)
-        : false,
-    )
-    const layoutTransition = createMemo(() =>
-      layoutTransitionState(!!sunset, layoutTransitionEligible(), oldInterfaceRetired(), newInterfaceNoticeDismissed()),
-    )
-    const newLayoutDesigns = createMemo(() => {
-      if (layoutUpgrade()) return true
-      if (!ready() && !oldInterfaceRetired()) return legacyNewLayoutDesignsDefault
-      if (!layoutTransitionClassified()) {
-        return resolveNewLayoutDesigns(
-          oldInterfaceRetired(),
-          store.general?.newLayoutDesigns,
-          legacyNewLayoutDesignsDefault,
-        )
-      }
-      return resolveNewLayoutDesigns(
-        oldInterfaceRetired(),
-        store.general?.newLayoutDesigns,
-        layoutTransitionEligible() ? legacyNewLayoutDesignsDefault : newLayoutDesignsDefault,
-      )
-    })
-    const visible = (preference: () => boolean) => createMemo(() => !newLayoutDesigns() || preference())
-
-    if (sunset && !oldInterfaceRetired()) {
-      const timeout = { current: undefined as ReturnType<typeof setTimeout> | undefined }
-      const checkSunset = () => {
-        if (Date.now() >= sunset.getTime()) {
-          setOldInterfaceRetired(true)
-          return
-        }
-        timeout.current = setTimeout(checkSunset, nextSunsetCheckDelay(sunset.getTime(), Date.now()))
-      }
-      checkSunset()
-      onCleanup(() => {
-        if (timeout.current !== undefined) clearTimeout(timeout.current)
-      })
-    }
 
     createEffect(() => {
       if (!launchReady() || launchState.classified) return
@@ -298,14 +211,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
     })
 
     createEffect(() => {
-      if (!ready() || !launchState.classified || launchState.migrationApplied) return
-      if (layoutUpgrade() && store.general?.newLayoutDesigns !== true) {
-        setStore("general", "newLayoutDesigns", true)
-      }
-      setLaunchState("migrationApplied", true)
-    })
-
-    createEffect(() => {
       if (!ready() || !launchState.classified) return
       if (typeof store.general?.shouldDisplayTabsToast === "boolean") return
       if (!launchState.previous && !layoutTransitionClassified()) return
@@ -314,12 +219,6 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         "shouldDisplayTabsToast",
         shouldDisplayTabsToast(launchState.previous, platform.version, layoutTransitionEligible()),
       )
-    })
-
-    createEffect(() => {
-      if (!ready() || !oldInterfaceRetired()) return
-      if (store.general?.newLayoutDesigns === true) return
-      setStore("general", "newLayoutDesigns", true)
     })
 
     createEffect(() => {
@@ -355,19 +254,15 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setFollowup(value: "queue" | "steer") {
           setStore("general", "followup", value === "queue" ? "steer" : value)
         },
-        showFileTree,
+        showFileTree: withFallback(() => store.general?.showFileTree, defaultSettings.general.showFileTree),
         setShowFileTree(value: boolean) {
           setStore("general", "showFileTree", value)
         },
-        showNavigation: withFallback(() => store.general?.showNavigation, defaultSettings.general.showNavigation),
-        setShowNavigation(value: boolean) {
-          setStore("general", "showNavigation", value)
-        },
-        showSearch,
+        showSearch: withFallback(() => store.general?.showSearch, defaultSettings.general.showSearch),
         setShowSearch(value: boolean) {
           setStore("general", "showSearch", value)
         },
-        showStatus,
+        showStatus: withFallback(() => store.general?.showStatus, defaultSettings.general.showStatus),
         setShowStatus(value: boolean) {
           setStore("general", "showStatus", value)
         },
@@ -403,33 +298,15 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         setMobileTitlebarPosition(value: "top" | "bottom") {
           setStore("general", "mobileTitlebarPosition", value)
         },
-        newLayoutDesigns,
-        setNewLayoutDesigns(value: boolean) {
-          const next = oldInterfaceRetired() ? true : value
-          if (newLayoutDesigns() === next) return
-          setStore("general", "newLayoutDesigns", next)
-          if (typeof window !== "undefined") setTimeout(() => window.location.reload())
-        },
-        layoutTransitionClassified,
         setOldLayoutEligible(eligible: boolean) {
           const current = store.general?.layoutTransitionEligible
           if (typeof current === "boolean") return
           setStore("general", "layoutTransitionEligible", eligible)
         },
-        layoutTransitionAvailable: createMemo(() => ready() && layoutTransition().available),
-        newInterfaceNoticeVisible: createMemo(() => ready() && layoutTransition().notice),
-        dismissNewInterfaceNotice() {
-          setStore("general", "newInterfaceNoticeDismissed", true)
-        },
         shouldDisplayTabsToast: withFallback(() => store.general?.shouldDisplayTabsToast, false),
         dismissTabsToast() {
           setStore("general", "shouldDisplayTabsToast", false)
         },
-      },
-      visibility: {
-        fileTree: visible(showFileTree),
-        search: visible(showSearch),
-        status: visible(showStatus),
       },
       appearance: {
         fontSize: withFallback(() => store.appearance?.fontSize, defaultSettings.appearance.fontSize),

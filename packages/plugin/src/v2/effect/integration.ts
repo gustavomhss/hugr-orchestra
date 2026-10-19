@@ -8,7 +8,7 @@ import type {
   IntegrationMethod,
   IntegrationOAuthMethod,
   IntegrationRef,
-} from "@orchestra/sdk/v2/types"
+} from "../../compat/sdk-v2-types.js"
 import type { Effect, Scope } from "effect"
 import type { Hooks } from "./registration.js"
 

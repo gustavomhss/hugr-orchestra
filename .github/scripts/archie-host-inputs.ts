@@ -7,7 +7,7 @@ import { dirname, isAbsolute, join, relative, resolve } from "node:path"
 export async function copyInputs(packet: string, project: string, repo: string) {
   const root = await realpath(packet)
   await requireComponents(root, "DOMAIN-SOURCE.json")
-  const { Schema } = (await import(createRequire(join(repo, "packages/orchestra/package.json")).resolve("effect"))) as typeof import("../../packages/orchestra/script/archie-host-effect")
+  const { Schema } = (await import(createRequire(join(repo, "apps/orchestra/package.json")).resolve("effect"))) as typeof import("../../apps/orchestra/script/archie-host-effect")
   const manifest = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({
     nativeAssignmentBoundary: Schema.Struct({ projectRoot: Schema.NonEmptyString }),
     modelExposure: Schema.Struct({ operativeIds: Schema.Array(Schema.NonEmptyString), excludedPrivateEvaluationFile: Schema.NonEmptyString }),

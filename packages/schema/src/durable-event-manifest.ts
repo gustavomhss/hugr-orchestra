@@ -16,6 +16,7 @@ export const Durable = Event.durable([
   ...SessionV1.Event.Definitions.filter((definition) => definition.durable !== undefined),
   ...SessionEvent.DurableDefinitions,
   ...MaestroEvent.Definitions,
+  ...MaestroEvent.DurableOnlyDefinitions,
   ...RelayHook.Definitions,
   ...ResearchEvent.Definitions,
 ])

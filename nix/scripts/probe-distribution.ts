@@ -58,7 +58,7 @@ const directory = requireArgument(values.directory)
 const workspaceConfig = requireArgument(values["workspace-config"])
 requireArgument(values.modules)
 const { readCliManifest } = await import(join(await sourceModule(source, "desktop"), "src/main/cli-artifacts.ts")) as
-  Pick<typeof import("../../packages/desktop/src/main/cli-artifacts.ts"), "readCliManifest">
+  Pick<typeof import("../../apps/desktop/src/main/cli-artifacts.ts"), "readCliManifest">
 await mkdir(directory) // no recursive mkdir: reject reuse/missing parent
 const raw = join(directory, "share/orchestra/cli")
 await mkdir(join(directory, "share/orchestra"), { recursive: true })

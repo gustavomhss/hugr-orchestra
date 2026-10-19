@@ -511,3 +511,16 @@ describe("pure current step and guarded transition seam", () => {
       .toBe("WORKFLOW_MATERIALIZATION_DRIFT")
   }))
 })
+
+// Every provider turn of a bound child reads its step first, so this refusal is what stops a child the arm moved away
+// from before it calls the model, in any process and on any later wake.
+describe("workflow current step holder", () => {
+  it.live("a child that is not the arm's holder is refused even when the meta still names it", () => Effect.gen(function* () {
+    const f = yield* currentKnowledgeFixture
+    const read = RelayWorkflowCurrentStep.read("atlas-arm", f.binding).pipe(Effect.provideService(ArmState.Store, f.armStore))
+    expect((yield* read).wp).toBeDefined()
+    // A rebind stopped between its two writes leaves the meta naming the old child and agent_id naming the new one.
+    yield* Effect.sync(() => writeFileSync(path.join(f.arm, RelayArm.Files.agentID), "ses_new_holder"))
+    expect(yield* reason(read)).toBe("WORKFLOW_ARM_BINDING_MISMATCH")
+  }))
+})

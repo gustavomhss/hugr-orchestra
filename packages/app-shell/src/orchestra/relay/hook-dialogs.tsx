@@ -123,8 +123,10 @@ export function OrderDialog(props: { source: RelaySource; name: (document: strin
               <li data-install={item.installID}>
                 <span class="hk-order-n">{index() + 1}</span>
                 <span class="hk-order-name">{name()}</span>
-                <Show when={!item.enabled}>
-                  <span class="mx-badge">{copy.t("orchestra.hooks.row.paused")}</span>
+                <Show when={item.unpublished || !item.enabled}>
+                  <span class="mx-badge">
+                    {copy.t(item.unpublished ? "orchestra.hooks.row.unpublished" : "orchestra.hooks.row.paused")}
+                  </span>
                 </Show>
                 <button
                   type="button"

@@ -49,6 +49,7 @@ test("exposes every standard HTTP API group", () => {
     "actionsResources",
     "actionsSource",
     "actionsTransfers",
+    "relayRuns",
   ]
   expect(Object.keys(client)).toEqual(groups)
   expect(

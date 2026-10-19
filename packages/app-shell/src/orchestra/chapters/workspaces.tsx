@@ -59,6 +59,8 @@ export default function Workspaces(props: ChapterPageProps) {
   const name = (directory: string) => preference.names[pathKey(directory)] ?? fallbackName(directory)
   const branch = (directory: string) => state.branches[pathKey(directory)]
   const home = () => sync().data.path.home
+  // New workspaces are worktrees, so a folder that is not a repository cannot have one.
+  const gitRequired = () => state.status === "ready" && state.project?.vcs !== "git"
 
   // After a write the cards stay on screen while the server's list reloads.
   async function load(quiet = false) {
@@ -279,6 +281,7 @@ export default function Workspaces(props: ChapterPageProps) {
             type="button"
             class="mx-btn primary"
             disabled={state.status !== "ready" || state.project?.vcs !== "git"}
+            aria-describedby={gitRequired() ? "workspaces-git-required" : undefined}
             onClick={() => openDialog({ kind: "new" })}
           >
             {language.t("orchestra.workspaces.new")}
@@ -291,6 +294,11 @@ export default function Workspaces(props: ChapterPageProps) {
             )}
           </Show>
         </div>
+        <Show when={gitRequired()}>
+          <p id="workspaces-git-required" class="mx-note">
+            {language.t("orchestra.workspaces.gitRequired")}
+          </p>
+        </Show>
         <Show
           when={state.status === "ready"}
           fallback={

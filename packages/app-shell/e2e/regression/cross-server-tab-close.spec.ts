@@ -218,7 +218,7 @@ async function mockReviewServers(
 async function installReviewTabs(page: Page, ids = [sessionA.id, sessionB.id]) {
   await page.addInitScript(
     ({ serverA, serverB, sessionA, sessionB }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({
@@ -253,7 +253,7 @@ test.describe("legacy tab strip", () => {
     await mockServers(page, requests)
     await page.addInitScript(
       ({ serverB, sessionA, sessionB }) => {
-        localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+        localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
         localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
         localStorage.setItem(
           "orchestra.window.browser.dat:tabs",
@@ -293,7 +293,7 @@ test("desktop closing the last profile tab goes Home and preserves the other ser
   await mockServers(page, requests)
   await page.addInitScript(
     ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({
@@ -367,7 +367,7 @@ test("legacy session routes preserve an existing tab's server", async ({ page })
   await mockServers(page, [])
   await page.addInitScript(
     ({ serverB, sessionB }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
       localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
       localStorage.setItem(
         "orchestra.window.browser.dat:tabs",

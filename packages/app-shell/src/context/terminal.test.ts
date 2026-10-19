@@ -4,6 +4,7 @@ import { ServerScope } from "@/utils/server-scope"
 let getWorkspaceTerminalCacheKey: typeof import("./terminal").getWorkspaceTerminalCacheKey
 let getLegacyTerminalStorageKeys: (dir: string, legacySessionID?: string) => string[]
 let migrateTerminalState: (value: unknown) => unknown
+let isTerminalGoneError: (error: unknown) => boolean
 
 beforeAll(async () => {
   mock.module("@solidjs/router", () => ({
@@ -22,6 +23,7 @@ beforeAll(async () => {
   getWorkspaceTerminalCacheKey = mod.getWorkspaceTerminalCacheKey
   getLegacyTerminalStorageKeys = mod.getLegacyTerminalStorageKeys
   migrateTerminalState = mod.migrateTerminalState
+  isTerminalGoneError = mod.isTerminalGoneError
 })
 
 describe("getWorkspaceTerminalCacheKey", () => {
@@ -87,5 +89,19 @@ describe("migrateTerminalState", () => {
         { id: "two", title: "shell", titleNumber: 7 },
       ],
     })
+  })
+})
+
+describe("isTerminalGoneError", () => {
+  test("treats a pty the server no longer has as already closed", () => {
+    expect(isTerminalGoneError({ _tag: "PtyNotFoundError", ptyID: "pty_1", message: "gone" })).toBe(true)
+    expect(isTerminalGoneError(Object.assign(new Error("request failed"), { cause: { status: 404 } }))).toBe(true)
+  })
+
+  test("keeps every other close failure visible", () => {
+    expect(isTerminalGoneError(new Error("offline"))).toBe(false)
+    expect(isTerminalGoneError({ _tag: "PtyForbiddenError" })).toBe(false)
+    expect(isTerminalGoneError(Object.assign(new Error("request failed"), { cause: { status: 500 } }))).toBe(false)
+    expect(isTerminalGoneError(undefined)).toBe(false)
   })
 })
