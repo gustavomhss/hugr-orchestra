@@ -194,7 +194,7 @@
         { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
         { "path": "src/actions", "kind": "cohesive", "entries": ["src/actions.ts"] },
         { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
-        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts"] },
+        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts"] },
         { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
         { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts"] },
         { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },

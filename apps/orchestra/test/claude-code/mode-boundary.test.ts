@@ -12,12 +12,15 @@ import { readBoundarySource } from "./mode-boundary-source"
 // Decoded separators and alias wildcard paths are normalized before checking final source-root containment.
 // The engine adapter's moved files live in the package @orchestra/engine-claude-code; its specifiers count as Claude
 // mode (`@orchestra/engine-claude-code/host/join` is `claude-code/host/join`), so moving a file never hides an edge.
+// Likewise the product packages Claude mode reads keep their former module names (`@orchestra/maestro/seats` is
+// `maestro/seats`), so INTERFACE still checks every edge into them.
 
 const ORCHESTRA = path.resolve(import.meta.dir, "../..")
 const SRC = path.join(ORCHESTRA, "src")
 const CLAUDE_MODE = "claude-code"
 const ENTRY = "claude-code/engine"
 const ENGINE_PACKAGE = "@orchestra/engine-claude-code"
+const MOVED_PACKAGES: Record<string, string> = { "@orchestra/maestro": "maestro", "@orchestra/continuity": "continuity" }
 
 /** Reviewed runtime-audit adapters, scoped to the importing file and target module; never a host-directory allowance. */
 const ADAPTER_EDGES = [
@@ -128,6 +131,13 @@ test("the engine package is Claude mode: a normal-mode import of it is flagged, 
   // Claude mode reaches its own package freely.
   expect(violations([{ file: "claude-code/host/x.ts", text: 'import type { Join } from "@orchestra/engine-claude-code/host/join"' }])).toEqual([])
   expect(imports({ file: "claude-code/host/x.ts", text: 'import "@orchestra/engine-claude-code/host/../host/join.ts"' })).toEqual(["claude-code/host/join"])
+  // Moved product packages keep their module names, so INTERFACE still governs Claude mode's edges into them.
+  expect(imports({ file: "claude-code/host/x.ts", text: 'import { Seats } from "@orchestra/maestro/seats"' })).toEqual(["maestro/seats"])
+  expect(violations([{ file: "claude-code/host/x.ts", text: 'import { Seats } from "@orchestra/maestro/seats"' }])).toEqual([])
+  expect(violations([{ file: "claude-code/host/x.ts", text: 'import { GovernedTask } from "@orchestra/maestro/governed-task"' }])).toEqual([
+    "claude-code/host/x.ts imports maestro/governed-task, which is not in Claude mode's INTERFACE",
+  ])
+  expect(imports({ file: "claude-code/host/x.ts", text: 'import "@orchestra/maestro-arsenal/policy"' })).toEqual([])
 })
 
 test("reviewed adapters allow only their exact module edges", () => {
@@ -373,11 +383,13 @@ function imports(item: File) {
     const alias = specifier.startsWith("@/")
     const relative = !alias && specifier.startsWith(".")
     const engine = specifier === ENGINE_PACKAGE || specifier.startsWith(`${ENGINE_PACKAGE}/`)
+    const moved = Object.keys(MOVED_PACKAGES).find((name) => specifier.startsWith(`${name}/`))
     const argument = alias ? specifier.slice(2) : specifier
     const absolute = alias ? path.resolve(path.join(SRC, argument))
       : relative ? path.resolve(SRC, path.dirname(item.file), argument) : undefined
     const resolved = absolute === undefined ? undefined : path.relative(SRC, absolute).split(path.sep).join("/")
     const target = engine ? engineTarget(specifier)
+      : moved ? movedTarget(moved, specifier)
       : resolved === undefined || resolved === ".." || resolved.startsWith("../") || path.isAbsolute(resolved) ? undefined
       : resolved.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")
     if (item.control) rows.push({ literal, normalized: specifier, branch: alias ? "alias" : relative ? "relative" : "package", argument, absolute, resolved, target })
@@ -402,6 +414,11 @@ function imports(item: File) {
 function engineTarget(specifier: string) {
   const module = path.posix.normalize(CLAUDE_MODE + specifier.slice(ENGINE_PACKAGE.length))
   return inClaudeMode(module) ? module.replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "") : undefined
+}
+
+/** `@orchestra/maestro/<subpath>` names the module `maestro/<subpath>`, as it did before the move. */
+function movedTarget(name: string, specifier: string) {
+  return path.posix.normalize(MOVED_PACKAGES[name] + specifier.slice(name.length)).replace(/\.(ts|tsx|js)$/, "").replace(/\/index$/, "")
 }
 
 function inClaudeMode(module: string) {

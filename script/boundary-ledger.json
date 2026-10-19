@@ -1868,12 +1868,6 @@
     },
     {
       "rule": "R7",
-      "file": "apps/orchestra/src/config/markdown.ts",
-      "specifier": "@orchestra/core/config/markdown",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
       "file": "apps/orchestra/src/continuity/service.ts",
       "specifier": "@orchestra/core/project/checkpoint",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
@@ -1990,12 +1984,6 @@
       "rule": "R7",
       "file": "apps/orchestra/src/maestro/atlas-knowledge.ts",
       "specifier": "@orchestra/core/session/sql",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/maestro/atlas-source.ts",
-      "specifier": "@orchestra/core/config/markdown",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
     {
