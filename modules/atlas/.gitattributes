@@ -1,4 +1,4 @@
-# The two append-only Atlas logs merge by UNION (F3 clause 30, owner ruling F3-D5: Memory is versioned in
+# The append-only Atlas logs merge by UNION (F3 clause 30, owner ruling F3-D5: Memory is versioned in
 # Git with the code and a branch's Memory becomes canonical when it merges).
 #
 # Why a driver at all: two branches that each append from a common base both add lines at end-of-file, and
@@ -18,3 +18,4 @@
 # same two lines there: Orchestra's root `.gitattributes` does, for the `.atlas/` the backend specialist's binding writes.
 .atlas/memory.jsonl merge=union
 .atlas/orientation.jsonl merge=union
+.atlas/review.jsonl merge=union

@@ -45,7 +45,6 @@ import { ensureAtlasIgnored } from "./gitignore.js"
 import { renderHelp } from "./help.js"
 import { COMMAND_LEG } from "./map.js"
 import { marshalArgs } from "./marshal.js"
-import { runOwn } from "./own.js"
 import { runTransitionCli } from "./transition.js"
 import { runTestVacuityCli } from "./test-vacuity.js"
 import { parse } from "./parse.js"
@@ -64,8 +63,11 @@ import {
   dispatchExport,
   dispatchImport,
   dispatchPromote,
+  dispatchOwn,
   dispatchDeriveRelations,
 } from "./cli-dispatch.js"
+import { REVIEW_COMMANDS } from "./review-cli.js"
+import { OPS_COMMANDS } from "./ops-cli.js"
 
 /** Optional dependency injection seam (additive): tests inject a FAKE `WiredHandler` + a FAKE read-only
  *  `DoctorSource`; prod assembles both at the composition-root WP. */
@@ -332,11 +334,12 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     return dispatchMine()
   }
 
-  if (command === "promote") {
-    // CLI-7: `atlas promote` drives the composed governed PROMOTION leg ONE pass (ADR-0008 — no new governed
-    // surface; the rendered `CliVerdict` reaches the console over the SAME emit/exit path as every command).
-    return dispatchPromote(deps.promote)
-  }
+  // Lane command tables (B-L-API.md §2): review commands in review-cli.ts, ownership/ops commands in ops-cli.ts.
+  // A command listed there is dispatched by its own runner, so a new command adds no line to this file.
+  const laneRunner = REVIEW_COMMANDS[command] ?? OPS_COMMANDS[command]
+  if (laneRunner !== undefined) return laneRunner({ positionals, flags, deps })
+
+  if (command === "promote") return dispatchPromote(deps.promote) // CLI-7 — body and rationale in cli-dispatch.ts
 
   if (command === "derive-relations") {
     // #99 WP-R7: `atlas derive-relations` drives the SOUND-RELATION projection ONE pass (ADR-0008 — publishes
@@ -344,19 +347,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
     return dispatchDeriveRelations(deps.deriveRelations)
   }
 
-  if (command === "own") {
-    // CLI-8: `atlas own <scope>` composes the RETR-12 curated briefing for one scope-unit through the
-    // composition root's `own` leg — `@atlas/retrieval`'s `createOwn` over the SAME durable store + built
-    // axes the query readback rides. Like `node` it is intercepted before the handler (it is not a `Tool`:
-    // it opens no governed surface, and `GOVERNANCE_SURFACE` stays 5), and like every other command its
-    // rendered `CliVerdict` reaches the console over the SAME emit/exit path (uniform bytes).
-    //
-    // It fails closed on an uncomposed runtime for the same reason the READ commands do: composing a second
-    // runtime here would brief from a store that is not the one `atlas query` reads.
-    if (!deps.own)
-      return emit(errorVerdict("atlas runtime is not composed yet — the WireConfig seams need the composition-root WP"))
-    return emitCli(runOwn(deps.own, positionals[0] ?? ""))
-  }
+  if (command === "own") return dispatchOwn(deps.own, positionals[0] ?? "") // CLI-8 — body and rationale in cli-dispatch.ts
 
   if (command === "doctor") {
     // CLI-1a: `doctor` sub-dispatches to the read/advisory `DoctorApi` legs over the INJECTED read-only
