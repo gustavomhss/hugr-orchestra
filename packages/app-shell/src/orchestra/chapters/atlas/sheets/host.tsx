@@ -1,11 +1,17 @@
 import { type Component, onCleanup, Show } from "solid-js"
 import { Dynamic } from "solid-js/web"
+import { MineSheet, ProducersSheet, PromoteAllSheet, PromoteResultSheet, ReconcileSheet } from "./review-sheets"
 import { AddFactSheet, ClassifySheet, EditSheet, LinkSheet, RatifySheet } from "./fact-sheets"
 import { type AtlasSheet, type AtlasSheetKind, type AtlasSheetProps, atlasSheetState, closeAtlasSheet, resetAtlasSheets } from "./state"
 
 // Each sheet task adds its own line here: `<kind>: <Component>,` with the component imported from its file.
 // A kind without a line opens nothing.
 export const atlasSheets: { [K in AtlasSheetKind]?: Component<AtlasSheetProps<K>> } = {
+  "promote-all": PromoteAllSheet,
+  "promote-result": PromoteResultSheet,
+  reconcile: ReconcileSheet,
+  mine: MineSheet,
+  producers: ProducersSheet,
   ratify: RatifySheet,
   edit: EditSheet,
   classify: ClassifySheet,
