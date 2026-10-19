@@ -10,7 +10,7 @@
    - `bun install`, which adds the dev dependencies listed in A06;
    - `bun run generate` in `modules/atlas/boundary`;
    - commit `src/generated/surface.*`.
-3. A06b, which needs the owner's approval of the spawn allow-list row; see [OPEN.md](OPEN.md).
+3. A06b (its spawn allow-list row is approved; see [OPEN.md](OPEN.md)).
 4. **LEAD:** dispatch the atlas CI job, then merge A-S into `atlas-ui-study`. A03 and A06 change bundle bytes, so A-S lands as one unit.
 
 ## Lane A-H (host)
@@ -52,7 +52,7 @@ Starts after A-S has merged.
 
 ## Lane B-O (ownership and memory Rs)
 1. B-R5-01 → B-R7-01a → B-R9-01a → B-R9-02 → B-R10-01 → B-R4-01a → B-R4-01b → B-R7-01b → B-R9-01b
-   - B-R9-01b needs the owner's approval of the `repair-run.ts` allow-list row; see [OPEN.md](OPEN.md).
+   - B-R9-01b adds the `repair-run.ts` allow-list row (approved; see [OPEN.md](OPEN.md)).
 2. **LEAD:** merge B-L and B-K into this lane. B-R1-01 needs B-K's B-R2-01b; the publish tasks need B-K's README counts.
 3. B-R1-01 → B-R4-01c → B-R7-01c → B-R9-01c
 4. **LEAD:** run the atlas CI job, then merge B-O into `atlas-ui-study`. In the same merge, append to AGENTS.md "CI Cadence" the sentence from `issues/b-o.md` item 10 (approved 2026-10-19).
