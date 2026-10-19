@@ -75,12 +75,12 @@ The installed-companion peer probe independently checks supervisor execution. It
 
 ## Release
 
-`.github/workflows/release-cli.yml` is dispatched by hand from `dev` with a stable `version` (`X.Y.Z`). It builds the six natively qualified targets (`linux-x64-baseline`, `linux-arm64`, `darwin-arm64`, `darwin-x64-baseline`, `windows-x64-baseline`, `windows-arm64`) on their own runners, and `linux-x64-baseline-musl` and `linux-arm64-musl` with `distribution/musl-release.sh` inside the same pinned `rust:1-alpine` guests that the bundle's musl lane qualifies (pinned musl Bun, omni and musl parsers built in the guest). `script/release.ts payload` prepares and archives each build; `script/release.ts assemble` restores executable modes from each descriptor, verifies every payload and writes the npm packages (`@humangr/cli`, `@humangr/cli-<target>`), and `SHA256SUMS`. The npm packages are packed in that same job, because artifact upload drops Unix modes; the job installs the packed wrapper and Linux x64 package and requires `orchestra --version`, and the publish job ships those exact tarballs. The packed musl x64 package also runs `orchestra --version` in `node:22-alpine`.
+`.github/workflows/release-cli.yml` is dispatched by hand from `dev` with a stable `version` (`X.Y.Z`). It builds the six natively qualified targets (`linux-x64-baseline`, `linux-arm64`, `darwin-arm64`, `darwin-x64-baseline`, `windows-x64-baseline`, `windows-arm64`) on their own runners, and `linux-x64-baseline-musl` and `linux-arm64-musl` with `distribution/musl-release.sh` inside the same pinned `rust:1-alpine` guests that the bundle's musl lane qualifies (pinned musl Bun, omni and musl parsers built in the guest). `script/release.ts payload` prepares and archives each build; `script/release.ts assemble` restores executable modes from each descriptor, verifies every payload and writes the npm packages (`@humanguardrail/cli`, `@humanguardrail/cli-<target>`), and `SHA256SUMS`. The npm packages are packed in that same job, because artifact upload drops Unix modes; the job installs the packed wrapper and Linux x64 package and requires `orchestra --version`, and the publish job ships those exact tarballs. The packed musl x64 package also runs `orchestra --version` in `node:22-alpine`.
 
 Without `publish` the run is a dry run: everything is uploaded as the `release-assembled` artifact and nothing is published. With `publish`, the `release` environment job creates the GitHub release `vX.Y.Z` (archives, `SHA256SUMS`, `install.sh`), publishes the platform packages and then the wrapper to npm with provenance. It requires these secrets on the `release` environment:
 
 | Secret | Use |
 | --- | --- |
-| `NPM_TOKEN` | npm automation token with publish rights on the `@humangr` scope |
+| `NPM_TOKEN` | npm automation token with publish rights on the `@humanguardrail` scope |
 
 Binaries are not code-signed or notarized in this release flow.

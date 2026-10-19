@@ -61,7 +61,7 @@ export class UpgradeFailedError extends Schema.TaggedErrorClass<UpgradeFailedErr
 
 const GitHubRelease = Schema.Struct({ tag_name: Schema.String })
 
-export const PACKAGE = "@humangr/cli"
+export const PACKAGE = "@humanguardrail/cli"
 
 // The desktop app ships its own copy of the CLI in Resources/cli; that copy is updated with the app.
 export function isDesktopBundle(execPath: string) {
@@ -184,7 +184,7 @@ export function upgradeCommand(method: Method, target: string): string[] | strin
     return "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
   if (method === "desktop") return "This CLI belongs to the Orchestra desktop app. Update the desktop app instead."
   if (method === "scoop" || method === "choco") return `Orchestra has no ${method} package. Reinstall with npm i -g ${PACKAGE}.`
-  return "Orchestra could not tell how it was installed. Reinstall with npm i -g @humangr/cli."
+  return "Orchestra could not tell how it was installed. Reinstall with npm i -g @humanguardrail/cli."
 }
 
 export const node = LayerNode.make({

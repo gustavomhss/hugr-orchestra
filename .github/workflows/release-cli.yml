@@ -1,7 +1,7 @@
 name: release-cli
 
 # Builds the Orchestra CLI on each native host the distribution bundle qualifies, assembles the public channels and,
-# only with publish=true, publishes the GitHub release and npm (@humangr/cli).
+# only with publish=true, publishes the GitHub release and npm (@humanguardrail/cli).
 # A dry run (the default) uploads every assembled artifact and publishes nothing. With sign=true the native build jobs sign
 # every macOS and Windows executable before the payload is hashed, archived, packed or checksummed, so every channel ships
 # the signed bytes. An unsigned publish is allowed: npm and install.sh download without the browser quarantine
@@ -51,7 +51,7 @@ jobs:
             [ "$SIGN" = true ] || echo "::warning::Publishing unsigned binaries; a binary downloaded from the release page in a browser trips Gatekeeper and SmartScreen"
             [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
             if gh release view "v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: v$VERSION" >&2; exit 1; fi
-            if npm view "@humangr/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
+            if npm view "@humanguardrail/cli@$VERSION" version >/dev/null 2>&1; then echo "RELEASE_NPM_VERSION_EXISTS: $VERSION" >&2; exit 1; fi
           fi
 
   models:
@@ -322,7 +322,7 @@ jobs:
           rm -rf "$RUNNER_TEMP/assembled/npm"
           packs="$RUNNER_TEMP/assembled/npm-packs"
           npm install --prefix "$RUNNER_TEMP/npm-smoke" --no-audit --no-fund --omit=optional \
-            "$packs/humangr-cli-linux-x64-baseline-$VERSION.tgz" "$packs/humangr-cli-$VERSION.tgz"
+            "$packs/humanguardrail-cli-linux-x64-baseline-$VERSION.tgz" "$packs/humanguardrail-cli-$VERSION.tgz"
           reported=$(HOME="$RUNNER_TEMP/npm-smoke-home" "$RUNNER_TEMP/npm-smoke/node_modules/.bin/orchestra" --version)
           [ "$reported" = "$VERSION" ] || { echo "RELEASE_PACKED_VERSION_MISMATCH: $reported" >&2; exit 1; }
       - name: Run the packed musl CLI in Alpine
@@ -330,7 +330,7 @@ jobs:
           set -euo pipefail
           docker run --rm --mount "type=bind,source=$RUNNER_TEMP/assembled/npm-packs,target=/packs,readonly" node:22-alpine sh -euc '
             npm install --prefix /smoke --no-audit --no-fund --omit=optional \
-              "/packs/humangr-cli-linux-x64-baseline-musl-$0.tgz" "/packs/humangr-cli-$0.tgz" >/dev/null
+              "/packs/humanguardrail-cli-linux-x64-baseline-musl-$0.tgz" "/packs/humanguardrail-cli-$0.tgz" >/dev/null
             reported=$(HOME=/tmp/home /smoke/node_modules/.bin/orchestra --version)
             [ "$reported" = "$0" ] || { echo "RELEASE_PACKED_MUSL_VERSION_MISMATCH: $reported" >&2; exit 1; }' "$VERSION"
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -367,7 +367,7 @@ jobs:
           SIGNING_NOTE="macOS binaries are signed and notarized; Windows binaries are signed."
           if [ "$SIGN" != true ]; then SIGNING_NOTE="These binaries are not signed. The installers above never trip Gatekeeper or SmartScreen; a binary downloaded here in a browser can."; fi
           gh release create "v$VERSION" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --title "Orchestra CLI $VERSION" \
-            --notes "Install with \`npm install -g @humangr/cli\` or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. $SIGNING_NOTE" \
+            --notes "Install with \`npm install -g @humanguardrail/cli\` or \`install.sh\` with an archive and its SHA-256 from SHA256SUMS. $SIGNING_NOTE" \
             assembled/*.tar.gz assembled/SHA256SUMS assembled/install.sh
       # Platform packages first: the wrapper pins each one exactly in optionalDependencies.
       - name: Publish npm packages
@@ -376,5 +376,5 @@ jobs:
         run: |
           set -euo pipefail
           [ -n "${NODE_AUTH_TOKEN:-}" ] || { echo "RELEASE_NPM_TOKEN_MISSING" >&2; exit 1; }
-          for package in assembled/npm-packs/humangr-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
-          npm publish "assembled/npm-packs/humangr-cli-$VERSION.tgz" --access public --provenance
+          for package in assembled/npm-packs/humanguardrail-cli-*-"$VERSION".tgz; do npm publish "$package" --access public --provenance; done
+          npm publish "assembled/npm-packs/humanguardrail-cli-$VERSION.tgz" --access public --provenance

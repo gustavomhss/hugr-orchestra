@@ -30,13 +30,13 @@ function launch(input: {
     path: posix,
     os: { platform: () => platform, arch: () => arch },
     fs: {
-      realpathSync: () => "/work/node_modules/@humangr/cli/bin/orchestra.cjs",
+      realpathSync: () => "/work/node_modules/@humanguardrail/cli/bin/orchestra.cjs",
       readFileSync: () => input.avx2 ? "flags: avx avx2 sse" : "flags: avx sse",
       existsSync: (path: string) => {
         if (path === "/etc/alpine-release") return input.alpine ?? false
-        if (path === "/work/node_modules/@humangr/cli/bin/.orchestra") return input.cached ?? false
+        if (path === "/work/node_modules/@humanguardrail/cli/bin/.orchestra") return input.cached ?? false
         if (path === "/work/node_modules") return true
-        const name = /^\/work\/node_modules\/@humangr\/(cli-[^/]+)\/bin\/orchestra(?:\.exe)?$/.exec(path)?.[1]
+        const name = /^\/work\/node_modules\/@humanguardrail\/(cli-[^/]+)\/bin\/orchestra(?:\.exe)?$/.exec(path)?.[1]
         if (!name) return false
         attempted.push(name)
         return input.available?.includes(name) ?? false
@@ -92,7 +92,7 @@ for (const row of [
     if (row.platform === "linux") expect(result.probes.find((probe) => probe.command === "ldd")?.timeout).toBe(1500)
     for (const name of row.names) {
       const selected = launch({ ...row, available: [name] })
-      expect(selected.target).toBe(`/work/node_modules/@humangr/${name}/bin/orchestra${row.platform === "win32" ? ".exe" : ""}`)
+      expect(selected.target).toBe(`/work/node_modules/@humanguardrail/${name}/bin/orchestra${row.platform === "win32" ? ".exe" : ""}`)
       expect(selected.args).toEqual(["--version"])
       expect(selected.code).toBe(23)
     }
@@ -152,7 +152,7 @@ test("Node report positively selects glibc without invoking ldd (VM only)", () =
   for (const avx2 of [false, true]) {
     const name = avx2 ? "cli-linux-x64" : "cli-linux-x64-baseline"
     const result = launch({ glibcVersionRuntime: "2.39", avx2, lddThrows: true, available: [name, "cli-linux-x64-baseline-musl"] })
-    expect(result.target).toBe(`/work/node_modules/@humangr/${name}/bin/orchestra`)
+    expect(result.target).toBe(`/work/node_modules/@humanguardrail/${name}/bin/orchestra`)
     expect(result.code).toBe(23)
     expect(result.attempted).toEqual([name])
     expect(result.probes).toEqual([])
@@ -164,7 +164,7 @@ test("Node report positively selects glibc without invoking ldd (VM only)", () =
 
 test("Alpine marker positively selects musl without invoking ldd (VM only)", () => {
   const result = launch({ alpine: true, lddThrows: true, available: ["cli-linux-x64-baseline-musl", "cli-linux-x64-baseline"] })
-  expect(result.target).toBe("/work/node_modules/@humangr/cli-linux-x64-baseline-musl/bin/orchestra")
+  expect(result.target).toBe("/work/node_modules/@humanguardrail/cli-linux-x64-baseline-musl/bin/orchestra")
   expect(result.code).toBe(23)
   expect(result.probes).toEqual([])
 })
@@ -176,7 +176,7 @@ test("explicit ldd libc evidence works across stdout and stderr (VM only)", () =
     { ldd: { status: 1, stdout: "", stderr: "musl libc (x86_64)\nVersion 1.2.5" }, name: "cli-linux-x64-baseline-musl" },
   ]) {
     const result = launch({ ...row, reportError: true, available: [row.name] })
-    expect(result.target).toBe(`/work/node_modules/@humangr/${row.name}/bin/orchestra`)
+    expect(result.target).toBe(`/work/node_modules/@humanguardrail/${row.name}/bin/orchestra`)
     expect(result.code).toBe(23)
   }
 })

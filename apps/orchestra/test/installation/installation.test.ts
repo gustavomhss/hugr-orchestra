@@ -105,10 +105,10 @@ describe("installation", () => {
       for (const method of ["npm", "pnpm", "bun", "yarn"] as const)
         yield* Installation.use.upgrade(method, "9.9.9")
       expect(commands.spawns).toEqual([
-        "npm install -g @humangr/cli@9.9.9",
-        "pnpm add -g @humangr/cli@9.9.9",
-        "bun add -g @humangr/cli@9.9.9",
-        "yarn global add @humangr/cli@9.9.9",
+        "npm install -g @humanguardrail/cli@9.9.9",
+        "pnpm add -g @humanguardrail/cli@9.9.9",
+        "bun add -g @humanguardrail/cli@9.9.9",
+        "yarn global add @humanguardrail/cli@9.9.9",
       ])
       expect(commands.directories.every((directory) => directory === Global.Path.state)).toBe(true)
     }),
@@ -133,7 +133,7 @@ describe("installation", () => {
       }
       expect((yield* Effect.flip(Installation.use.upgrade("curl", "9.9.9"))).stderr).toContain("install.sh")
       expect((yield* Effect.flip(Installation.use.upgrade("desktop", "9.9.9"))).stderr).toContain("desktop app")
-      expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain("npm i -g @humangr/cli")
+      expect((yield* Effect.flip(Installation.use.upgrade("unknown", "9.9.9"))).stderr).toContain("npm i -g @humanguardrail/cli")
       expect(refused.spawns).toEqual([])
     }),
   )
@@ -145,8 +145,8 @@ describe("installation", () => {
     expect(Installation.isDesktopBundle("/usr/local/bin/orchestra")).toBe(false)
   })
 
-  const detect = recordingLayer({ stdout: (command) => (command === "pnpm list -g --depth=0" ? "@humangr/cli 1.0.0" : "orchestra-ai 1.0.0") })
-  testEffect(detect.layer).effect("method() matches the @humangr/cli package name, not the old one", () =>
+  const detect = recordingLayer({ stdout: (command) => (command === "pnpm list -g --depth=0" ? "@humanguardrail/cli 1.0.0" : "orchestra-ai 1.0.0") })
+  testEffect(detect.layer).effect("method() matches the @humanguardrail/cli package name, not the old one", () =>
     Effect.gen(function* () {
       const detected = yield* Installation.use.method()
       if (detected === "curl" || detected === "desktop") return

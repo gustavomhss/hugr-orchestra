@@ -286,7 +286,7 @@ verify() {
          }
        } else {
          a=field(root,"os"); b=field(root,"cpu")
-         if(!string(field(root,"name"),"@humangr/cli-" target) || kind[a]!="[" || count[a]!=1 || !string(field(a,0),os) || kind[b]!="[" || count[b]!=1 || !string(field(b,0),cpu)) bad()
+         if(!string(field(root,"name"),"@humanguardrail/cli-" target) || kind[a]!="[" || count[a]!=1 || !string(field(a,0),os) || kind[b]!="[" || count[b]!=1 || !string(field(b,0),cpu)) bad()
        }
     }' "$1"; }
   metadata "$tree/distribution.json" > "$stage/descriptor" || fail 'invalid distribution descriptor'
