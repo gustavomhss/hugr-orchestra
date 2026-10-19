@@ -13,6 +13,7 @@ export const atlasViews: Partial<Record<AtlasViewId, Component<AtlasViewProps>>>
   activity: lazy(() => import("./activity")),
   review: lazy(() => import("./review")),
   overview: lazy(() => import("./overview")),
+  architecture: lazy(() => import("./architecture")),
   fact: lazy(() => import("./fact")),
   unit: lazy(() => import("./unit")),
   explore: lazy(() => import("./explore")),
