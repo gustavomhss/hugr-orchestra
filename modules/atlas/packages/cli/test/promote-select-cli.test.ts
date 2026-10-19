@@ -2,7 +2,8 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest"
 import { appendFileSync, mkdirSync, mkdtempSync, rmSync } from "node:fs"
 import { join } from "node:path"
 import { tmpdir } from "node:os"
-import type { Hash, PromoteOut, PromoteSelect } from "@atlas/adapter-io"
+import type { Hash } from "@atlas/contracts"
+import type { PromoteOut, PromoteSelect } from "@atlas/adapter-io"
 import { appendReview, reviewLogPath } from "@atlas/adapter-io"
 import { main } from "../src/cli.js"
 import { promoteVerdict } from "../src/promote.js"
@@ -39,22 +40,22 @@ describe("CLI promote select", () => {
   it("named nodeKeys are passed as only", async () => {
     const code = await main(["promote", "nk-a", "nk-b"], { promote })
     expect(code).toBe(0)
-    expect(calls[0].select?.only).toEqual(["nk-a", "nk-b"])
-    expect([...calls[0].select!.held]).toEqual([])
+    expect(calls[0]!.select?.only).toEqual(["nk-a", "nk-b"])
+    expect([...calls[0]!.select!.held]).toEqual([])
   })
 
   it("a held row folds into held", async () => {
     appendReview(tmp, { kind: "hold", nodeKey: "nk-a", at: "2026-10-18T10:00:00.000Z", by: "alice" })
     await main(["promote"], { promote })
-    expect(calls[0].select?.only).toBeUndefined()
-    expect(calls[0].select?.held.has("nk-a")).toBe(true)
+    expect(calls[0]!.select?.only).toBeUndefined()
+    expect(calls[0]!.select?.held.has("nk-a")).toBe(true)
   })
 
   it("a release removes the hold", async () => {
     appendReview(tmp, { kind: "hold", nodeKey: "nk-a", at: "2026-10-18T10:00:00.000Z", by: "alice" })
     appendReview(tmp, { kind: "release", nodeKey: "nk-a", at: "2026-10-18T11:00:00.000Z", by: "alice" })
     await main(["promote"], { promote })
-    expect(calls[0].select?.held.has("nk-a")).toBe(false)
+    expect(calls[0]!.select?.held.has("nk-a")).toBe(false)
   })
 
   it("a torn review log refuses the pass", async () => {

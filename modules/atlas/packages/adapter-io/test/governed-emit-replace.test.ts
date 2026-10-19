@@ -18,8 +18,8 @@ import {
   POLICY,
   AT,
 } from "./harness/governed-fixtures.js"
-import type { T0Heuristic, TruthGate, ReconcileApi } from "@atlas/tools"
-import type { GroundedFact } from "@atlas/knowledge"
+import type { T0Heuristic, TruthGate } from "@atlas/tools"
+import type { GroundedFact, ReconcileApi } from "@atlas/knowledge"
 
 const seams: WireSeams = {
   heuristic: { isCandidate: () => false } as T0Heuristic,

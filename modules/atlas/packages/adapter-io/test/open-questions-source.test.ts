@@ -3,6 +3,8 @@ import { join } from "node:path"
 import { mkdirSync, writeFileSync } from "node:fs"
 import { makeFixRepo } from "./harness/fix-repo.js"
 import { upsert, emptyStore } from "@atlas/knowledge"
+import type { PredicateSlot } from "@atlas/knowledge"
+import type { Tier } from "@atlas/contracts"
 import { createDiskStore } from "../src/store.js"
 import { openQuestionsOf } from "../src/open-questions-source.js"
 
@@ -18,7 +20,7 @@ describe("open-questions-source", () => {
     writeFileSync(join(repo.repoPath, ".atlas", "policy.json"), '{"t0Heuristic":{"keywords":[]},"authz":{"scopes":{"packages/b":["alice"]}}}')
     const store = createDiskStore(join(repo.repoPath, ".atlas", "cas"))
     let proj = emptyStore()
-    const rows = [
+    const rows: readonly { nodeKey: string; tier: Tier; claimNorm: string; anchor: string; slot: PredicateSlot; authoring: string }[] = [
       { nodeKey: "k1", tier: "T2", claimNorm: "x holds", anchor: "packages/a/src/x.ts::f", slot: "invariant", authoring: "ADVISORY" },
       { nodeKey: "k2", tier: "T2", claimNorm: "y is retired", anchor: "packages/a/src/y.ts::g", slot: "invariant", authoring: "SUPERSEDED" },
       { nodeKey: "k3", tier: "T2", claimNorm: "b is for z", anchor: "packages/b/src/z.ts", slot: "rationale", authoring: "ADVISORY" },
