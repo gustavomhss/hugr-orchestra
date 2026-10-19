@@ -310,3 +310,7 @@ export type { TerritoriesData, TerritoryRow } from "./calibration-verdicts.js"
 // `publishTerritoryCatalog` (lane B-O; specs/atlas-ui/build/issues/b-o.md item 3).
 export { declareTerritory, TERRITORY_CATALOG_FILE } from "./territory-write.js"
 export type { TerritoryDeclaration, TerritoryWrite } from "./territory-write.js"
+
+// R7 (D21) — `atlas own-export`: the reviewed Own snapshot built from the live store (lane B-O).
+export { buildOwnExport } from "./own-export.js"
+export type { OwnExport } from "./own-export.js"

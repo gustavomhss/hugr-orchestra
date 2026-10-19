@@ -6,7 +6,9 @@
 import type { CommandTable } from "./cli-dispatch.js"
 import { emitCli } from "./cli-verdict.js"
 import { runTerritory, territoryPorts } from "./territory-cli.js"
+import { ownExportPorts, runOwnExport } from "./own-export-cli.js"
 
 export const OPS_COMMANDS: CommandTable = {
   territory: (input) => emitCli(runTerritory(territoryPorts(), input.positionals, input.flags)),
+  "own-export": (input) => emitCli(runOwnExport(ownExportPorts(input.deps), input.positionals, input.flags)),
 }
