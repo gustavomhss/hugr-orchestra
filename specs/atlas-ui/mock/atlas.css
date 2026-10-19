@@ -990,9 +990,7 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-explore-graph { position: relative; border: 1px solid var(--mx-line); border-radius: 16px; background: radial-gradient(100% 80% at 60% 30%, rgba(90,140,255,.08), transparent 60%), var(--mx-raised); overflow: hidden; }
 .at-graph-zoom { position: absolute; inset-inline-start: 12px; inset-block-start: 12px; display: flex; flex-direction: column; gap: 4px; }
 .at-graph-side { position: absolute; inset-inline-end: 12px; inset-block-start: 12px; inline-size: min(360px, 42%); padding: 14px; border: 1px solid var(--mx-line); border-radius: 12px; background: var(--mx-raised); box-shadow: var(--mx-pop-shadow, 0 8px 24px rgba(0,0,0,.3)); }
-  background: hsl(var(--hue) 48% 40% / .42); transition: filter .15s; }
 .at-tm-scale { display: flex; align-items: center; gap: 8px; margin-block-start: 10px; font-size: 11px; color: var(--mx-dim); }
-.at-tm-scale i { inline-size: 120px; block-size: 8px; border-radius: 4px; background: linear-gradient(90deg, hsl(32 48% 40% / .7), hsl(90 48% 40% / .7), hsl(142 48% 40% / .7)); }
 .at-hint.center { display: block; text-align: center; margin-block-start: 10px; }
 
 /* Genesis */
@@ -1428,3 +1426,11 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-pack-stats small { font-size: 11px; color: var(--mx-dim); }
 .at-sortbar { display: flex; align-items: center; gap: 10px; margin-block-end: 12px; font-size: 12px; color: var(--mx-dim); }
 @media (max-width: 900px) { .at-pack { grid-template-columns: 1fr; block-size: auto; } .at-pack-svg { aspect-ratio: 1; block-size: auto; } }
+.at-cells-svg { cursor: pointer; }
+.at-cells-svg .cell.leaf { stroke: rgba(10,12,16,.6); stroke-width: 1.5; transition: filter .15s; }
+.at-cells-svg .cell.leaf:hover { filter: brightness(1.25); }
+.at-cells-svg .cell.unit { fill: transparent; stroke: rgba(8,10,14,.95); stroke-width: 6; stroke-linejoin: round; }
+.at-cells-svg .cell.unit:hover { stroke: var(--mx-strong); stroke-width: 4; }
+.at-cells-svg .at-pack-label { stroke-width: 4px; }
+.at-tm-scale .sw { display: inline-block; inline-size: 10px; block-size: 10px; margin-inline-end: 5px; border-radius: 3px; vertical-align: -1px; }
+.at-tm-scale .sw.hold { background: hsl(158 28% 32%); } .at-tm-scale .sw.moved { background: hsl(34 70% 52%); }
