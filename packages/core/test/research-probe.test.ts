@@ -4,6 +4,7 @@ import { createServer } from "node:net"
 import { mkdir, readFile, symlink, writeFile } from "fs/promises"
 import { Effect } from "effect"
 import { LayerNode } from "../src/effect/layer-node"
+import { Flag } from "../src/flag/flag"
 import { AppProcess } from "../src/process"
 import { ProbeRun } from "../src/research-toolkit/probe/run"
 import type { Probe } from "../src/research-toolkit/probe/types"
@@ -142,8 +143,9 @@ live("the timeout stops the probe and names it", () =>
   }), 60_000,
 )
 
-// Only where the result declares an rss cap is it enforced; elsewhere the result says heap-only (JE-AC-P6).
-const capped = jail && ProbeRun.memoryCap() === "rss" ? it.live : it.live.skip
+// Omni enforces the cap in every jail, srt's bubblewrap session on linux included; only the legacy spawner says
+// heap-only (JE-AC-P6). Gated on the spawner, not on memoryCap(), so a jail that loses the cap fails here.
+const capped = jail && Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? it.live : it.live.skip
 capped("a tree over the RSS cap is killed as memory_exceeded (J4.7)", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)

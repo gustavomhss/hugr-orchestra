@@ -22,6 +22,7 @@ describe("research toolkit packs", () => {
     expect(ResearchToolkitManifest.ENGINES.typescript?.fit.role).toBe("oracle")
   })
 
+  // Lock integrity (K2). Mutation control: delete one `"integrity"` line from a pack's `*.package-lock.json`.
   test("every npm pack installs from a lock whose entries all carry a registry URL and sha512 integrity", () => {
     for (const pack of npm) {
       const entries = lockOf(pack.install)

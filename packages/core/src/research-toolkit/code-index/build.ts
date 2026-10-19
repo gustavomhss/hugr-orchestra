@@ -1,7 +1,7 @@
 export * as CodeIndexBuild from "./build"
 
 import { Effect } from "effect"
-import type { Research } from "@orchestra/schema/research"
+import { Research } from "@orchestra/schema/research"
 import { Limits, type Language } from "../index"
 import { CodeIndexShard } from "./shard"
 import { CodeIndexStore } from "./store"
@@ -87,10 +87,15 @@ export const build = Effect.fn("CodeIndexBuild.build")(function* (
   const missing = current.shards.filter((_, index) => !present[index])
   progress.set(current.dir, { commit: current.commit, shardsDone: 0, shardsTotal: missing.length })
   const outcomes = yield* Effect.forEach(missing, (planned, index) =>
-    input.extract({ root: input.root, commit: current.commit, shard: planned.shard, indexer: planned.indexer }).pipe(
-      Effect.flatMap((content) => CodeIndexStore.write(current.dir, {
-        shardKey: planned.key, commit: current.commit, indexer: planned.indexer.id, version: planned.indexer.version,
-      }, content)),
+    // One build per shard in this process: a warm-up or another query already building it is awaited, not repeated.
+    CodeIndexStore.singleFlight(input.storeRoot, planned.key,
+      input.extract({ root: input.root, commit: current.commit, shard: planned.shard, indexer: planned.indexer }).pipe(
+        Effect.flatMap((content) => CodeIndexStore.write(current.dir, {
+          shardKey: planned.key, commit: current.commit, indexer: planned.indexer.id, version: planned.indexer.version,
+        }, content)),
+      ),
+      { describe: (error) => error.message, join: (message) => new Research.Error({ code: "index_unavailable", message }) },
+    ).pipe(
       Effect.as({ id: planned.shard.id, key: planned.key }),
       Effect.result,
       Effect.tap(() => Effect.sync(() =>

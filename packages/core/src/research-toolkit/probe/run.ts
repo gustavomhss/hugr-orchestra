@@ -88,12 +88,12 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
 }, Effect.scoped)
 
 /**
- * Omni enforces the RSS cap over the whole tree; the legacy spawner bounds only the runner's heap (J4.7). Under srt
- * (linux) omni does not see the jailed tree's resident memory, so a 400 MiB child outlives a 150 MiB cap: only the
- * seatbelt jail is declared rss.
+ * Omni enforces the RSS cap over the whole tree, a jail's workload included: under srt (linux) bubblewrap's
+ * `--new-session` takes it out of omni's session, and omni counts it as the jail's descendant. The legacy spawner
+ * bounds only the runner's heap (J4.7).
  */
 export function memoryCap(): Probe.ProbeResult["memoryCap"] {
-  return process.platform === "darwin" && Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? "rss" : "heap-only"
+  return Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? "rss" : "heap-only"
 }
 
 function verdict(expect: Probe.ProbeInput["expect"], outcome: ResearchProcess.Outcome, text: string, diagnostics?: ReadonlyArray<ProbeTypecheck.Diagnostic>): Probe.Verdict {
