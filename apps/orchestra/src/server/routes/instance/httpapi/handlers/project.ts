@@ -85,10 +85,11 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
       next: Project.Info,
     ) {
       const directory = AbsolutePath.make(ctx.directory)
-      if (next.id !== ctx.project.id) {
-        yield* locations.invalidate(Location.Ref.make({ directory }))
-        yield* locations.invalidate(Location.Ref.make({ directory, workspaceID: undefined }))
-      }
+      // Started immediately, invalidate drops the cached entry before this request goes on; closing the old services
+      // waits for work this request still holds, so it finishes in the background instead of inside the request.
+      if (next.id !== ctx.project.id)
+        for (const ref of [Location.Ref.make({ directory }), Location.Ref.make({ directory, workspaceID: undefined })])
+          yield* locations.invalidate(ref).pipe(Effect.forkDetach({ startImmediately: true }))
       yield* markInstanceForReload(ctx, { directory: ctx.directory, worktree, project: next })
     })
 
