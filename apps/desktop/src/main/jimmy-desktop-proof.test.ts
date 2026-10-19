@@ -71,6 +71,8 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     // sidecarLaunchEnv requires the Claude Code executable beside the install. This proof never runs it (the Task uses
     // the fixture provider), so an existence-only placeholder satisfies the access check.
     await Bun.write(path.join(install, "resources/claude-code", process.platform === "win32" ? "claude.exe" : "claude"), "")
+    // The desktop server env reads Maestro's playbooks from ../../orchestra/playbooks beside the install, as in a dev run.
+    await cp(path.join(repo, "apps/orchestra/playbooks"), path.join(root, "install/apps/orchestra/playbooks"), { recursive: true, dereference: true })
     const bare = new Set<string>()
     for (const file of await Array.fromAsync(new Bun.Glob("**/*.js").scan({ cwd: path.join(install, "out/main") }))) {
       const source = ts.createSourceFile(file, await readFile(path.join(install, "out/main", file), "utf8"), ts.ScriptTarget.Latest)
@@ -118,6 +120,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     // Remove the real compiled API route from a separate owned artifact, not a fake service/fetch response.
     const mutant = path.join(root, "mutant/apps/desktop")
     await cp(install, mutant, { recursive: true, dereference: true })
+    await cp(path.join(root, "install/apps/orchestra"), path.join(root, "mutant/apps/orchestra"), { recursive: true, dereference: true })
     const changes: string[] = []
     for (const file of await Array.fromAsync(new Bun.Glob("**/*.js").scan({ cwd: path.join(mutant, "out/main") }))) {
       const filename = path.join(mutant, "out/main", file)
