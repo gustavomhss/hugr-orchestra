@@ -434,6 +434,8 @@ export function assembleHandler(config: WireConfig): WiredHandler {
       governedEmit.emit(
         (args as { node: import("@atlas/knowledge").GroundedFact }).node,
         (args as { at: import("@atlas/contracts").Hash }).at,
+        // R8: the schema declares `replace` as a boolean, so anything but `true` was refused before this line.
+        (args as { replace?: unknown }).replace === true ? { replace: true } : undefined,
       )) satisfies ToolLeg,
     // WP-SAMEAS: the governed sameAs link leg — routes through the ONE handler like every other tool. Reads
     // the two nodeKeys off the marshalled `{a,b}` arg shape (CLI marshal.ts / MCP inputSchema both supply it).
