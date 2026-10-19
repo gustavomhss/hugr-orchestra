@@ -9,6 +9,11 @@ function empty(body: unknown) {
   check(body.state === "empty", "a project without an Atlas store should answer empty")
 }
 
+function installed(body: unknown) {
+  object(body)
+  check(body.state === "ok", "install answers ok, whether it set Atlas up or refused")
+}
+
 export const atlasScenarios: Scenario[] = [
   http.protected.get("/atlas/snapshot", "atlas.snapshot").json(200, empty, "status"),
   http.protected
@@ -112,4 +117,23 @@ export const atlasScenarios: Scenario[] = [
       body: { questionIds: ["q1"], providerID: "openai", modelID: "gpt-5.2" },
     }))
     .json(200, empty, "status"),
+  http.protected
+    .post("/atlas/index", "atlas.index")
+    .mutating()
+    .at((ctx) => ({ path: "/atlas/index", headers: ctx.headers(), body: {} }))
+    .json(200, empty, "status"),
+  http.protected
+    .post("/atlas/mine", "atlas.mine")
+    .mutating()
+    .at((ctx) => ({
+      path: "/atlas/mine",
+      headers: ctx.headers(),
+      body: { providerID: "openai", modelID: "gpt-5.2", ceiling: 5 },
+    }))
+    .json(200, empty, "status"),
+  http.protected
+    .post("/atlas/install", "atlas.install")
+    .mutating()
+    .at((ctx) => ({ path: "/atlas/install", headers: ctx.headers(), body: {} }))
+    .json(200, installed, "status"),
 ]

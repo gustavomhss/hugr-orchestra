@@ -20,6 +20,7 @@ import {
   AtlasReview,
   AtlasTerritoryInput,
 } from "./atlas-review"
+import { AtlasIndexOk, AtlasMineInput, AtlasMineOk } from "./atlas-setup"
 
 // The Atlas screen's routes: reads and writes over the instance's Atlas store through the boundary's `./surface`
 // entry (server/atlas-surface.ts). The schemas transcribe modules/atlas/packages/adapter-io/src/surface/types.ts and
@@ -46,6 +47,9 @@ export const AtlasPaths = {
   memoryDecide: `${root}/memory-decide`,
   territory: `${root}/territory`,
   delegate: `${root}/delegate`,
+  install: `${root}/install`,
+  index: `${root}/index`,
+  mine: `${root}/mine`,
 } as const
 
 export const AtlasEmpty = Schema.Struct({ state: Schema.Literal("empty") }).annotate({ identifier: "AtlasEmpty" })
@@ -200,6 +204,17 @@ const AtlasPlannedLang = Schema.Struct({
   files: Schema.Finite,
 })
 
+const AtlasIndexPlan = Schema.Struct({
+  scipRel: Schema.String,
+  scip: Schema.Union([
+    Schema.Struct({ kind: Schema.Literal("absent") }),
+    Schema.Struct({ kind: Schema.Literal("unreadable"), reason: Schema.String }),
+    Schema.Struct({ kind: Schema.Literal("present"), documents: Schema.Finite }),
+  ]),
+  configured: Schema.Array(AtlasPlannedLang),
+  holes: Schema.Array(AtlasPlannedLang),
+})
+
 export const AtlasHealth = Schema.Struct({
   state: Schema.Literal("ok"),
   actor: Schema.String,
@@ -222,16 +237,7 @@ export const AtlasHealth = Schema.Struct({
     unverifiable: Schema.Finite,
     dangling: Schema.Finite,
   }),
-  index: Schema.Struct({
-    scipRel: Schema.String,
-    scip: Schema.Union([
-      Schema.Struct({ kind: Schema.Literal("absent") }),
-      Schema.Struct({ kind: Schema.Literal("unreadable"), reason: Schema.String }),
-      Schema.Struct({ kind: Schema.Literal("present"), documents: Schema.Finite }),
-    ]),
-    configured: Schema.Array(AtlasPlannedLang),
-    holes: Schema.Array(AtlasPlannedLang),
-  }),
+  index: AtlasIndexPlan,
   hotSet: Schema.Finite,
 }).annotate({ identifier: "AtlasHealth" })
 
@@ -360,6 +366,20 @@ export const AtlasReviewWriteResult = Schema.Union([
 export const AtlasDelegateResult = Schema.Union([AtlasEmpty, AtlasDelegateOk]).annotate({
   identifier: "AtlasDelegateResult",
 })
+
+export const AtlasInstall = Schema.Struct({
+  state: Schema.Literal("ok"),
+  installed: Schema.Boolean,
+  refusal: Schema.NullOr(Schema.Literals(["already-installed", "no-git", "no-actor"])),
+  actor: Schema.String,
+  scopes: Strings,
+  gitignore: Schema.NullOr(Schema.Literals(["installed", "already-present", "partial-repaired", "failed"])),
+  index: Schema.NullOr(AtlasIndexPlan),
+}).annotate({ identifier: "AtlasInstall" })
+
+export const AtlasIndexResult = Schema.Union([AtlasEmpty, AtlasIndexOk]).annotate({ identifier: "AtlasIndexResult" })
+
+export const AtlasMineResult = Schema.Union([AtlasEmpty, AtlasMineOk]).annotate({ identifier: "AtlasMineResult" })
 
 export const AtlasOwnQuery = Schema.Struct({ ...WorkspaceRoutingQueryFields, scope: Schema.String })
 export const AtlasPromoteInput = Schema.Struct({
@@ -598,6 +618,40 @@ export const AtlasApi = HttpApi.make("atlas")
             "atlas.delegate",
             "Delegate Atlas interview questions to a model",
             "A model drafts an answer to each open question; each draft keeps its question open until a person accepts it.",
+          ),
+        ),
+        HttpApiEndpoint.post("install", AtlasPaths.install, {
+          query: WorkspaceRoutingQuery,
+          success: AtlasInstall,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.install",
+            "Set Atlas up in this project",
+            "Create the store, write a policy granting the acting person every scope, and make git ignore the store.",
+          ),
+        ),
+        HttpApiEndpoint.post("index", AtlasPaths.index, {
+          query: WorkspaceRoutingQuery,
+          success: AtlasIndexResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.index",
+            "Index the project's code for Atlas",
+            "Run the SCIP indexer the store's plan names, from the project root, and report the result.",
+          ),
+        ),
+        HttpApiEndpoint.post("mine", AtlasPaths.mine, {
+          query: WorkspaceRoutingQuery,
+          payload: AtlasMineInput,
+          success: AtlasMineResult,
+          error: ServiceUnavailableError,
+        }).annotateMerge(
+          doc(
+            "atlas.mine",
+            "Mine candidate facts with a model",
+            "Ask a model about each site Genesis ranks and stage the facts that pass admission as candidates.",
           ),
         ),
       )

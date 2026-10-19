@@ -3,6 +3,7 @@ import { Effect, Layer } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { AtlasSurface } from "@/server/atlas-surface"
 import { AtlasDelegate } from "@/server/atlas-delegate"
+import { AtlasMine } from "@/server/atlas-mine"
 import { Provider } from "@/provider/provider"
 import { LLM } from "@/session/llm"
 import { InstanceHttpApi } from "../api"
@@ -37,5 +38,8 @@ export const atlasHandlers = HttpApiBuilder.group(InstanceHttpApi, "atlas", (han
         AtlasDelegate.delegate({ atlas, llm, provider }, ctx.payload).pipe(Effect.mapError(unavailable)),
       )
       .handle("territory", (ctx) => atlas.territory(ctx.payload).pipe(Effect.mapError(unavailable)))
+      .handle("install", () => atlas.install().pipe(Effect.mapError(unavailable)))
+      .handle("index", () => atlas.index().pipe(Effect.mapError(unavailable)))
+      .handle("mine", (ctx) => AtlasMine.mine({ atlas, llm, provider }, ctx.payload).pipe(Effect.mapError(unavailable)))
   }),
 ).pipe(Layer.provide(LayerNode.compile(AtlasSurface.node)))

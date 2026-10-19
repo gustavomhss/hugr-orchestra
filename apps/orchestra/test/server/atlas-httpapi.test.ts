@@ -95,11 +95,26 @@ describe("atlas HttpApi", () => {
       call(AtlasPaths.memoryDecide, tmp.path, { body: { proposalId: "p1", verdict: "discarded" } }),
       call(AtlasPaths.territory, tmp.path, { body: { name: "t", owner: "o", tier: "T1", globs: ["src/**"] } }),
       call(AtlasPaths.delegate, tmp.path, { body: { questionIds: ["q1"], providerID: "openai", modelID: "gpt-5.2" } }),
+      call(AtlasPaths.index, tmp.path, { body: {} }),
+      call(AtlasPaths.mine, tmp.path, { body: { providerID: "openai", modelID: "gpt-5.2", ceiling: 5 } }),
     ])
-    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: 18 }, () => 200))
+    expect(responses.map((response) => response.status)).toEqual(Array.from({ length: 20 }, () => 200))
     expect(await Promise.all(responses.map((response) => response.json()))).toEqual(
-      Array.from({ length: 18 }, () => ({ state: "empty" })),
+      Array.from({ length: 20 }, () => ({ state: "empty" })),
     )
+  })
+
+  test("sets Atlas up in a project with no store, then refuses a second install", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const first = await call(AtlasPaths.install, tmp.path, { body: {} })
+    expect(first.status).toBe(200)
+    const body = (await first.json()) as { readonly installed: boolean; readonly scopes: readonly string[] }
+    expect(body).toMatchObject({ state: "ok", installed: true, refusal: null, gitignore: "installed" })
+    expect(body.scopes).toContain("atlas:mined")
+    expect(await Bun.file(path.join(tmp.path, ".atlas/policy.json")).exists()).toBe(true)
+    expect(await (await call(AtlasPaths.snapshot, tmp.path)).json()).toMatchObject({ state: "ok" })
+    const second = await call(AtlasPaths.install, tmp.path, { body: {} })
+    expect(await second.json()).toMatchObject({ state: "ok", installed: false, refusal: "already-installed" })
   })
 
   test("serves the snapshot and the reasoning of a store written to disk", async () => {
