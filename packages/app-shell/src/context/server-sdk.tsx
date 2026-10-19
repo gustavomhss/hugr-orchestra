@@ -5,7 +5,8 @@ import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"
 import { type Accessor, type ParentProps, batch, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
-import { createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
+import { Orchestra } from "@orchestra/client"
+import { authTokenFromCredentials, createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
 import { type Platform, usePlatform } from "./platform"
 import { ServerConnection, useServer } from "./server"
 import { ServerRequired } from "@/components/server-unavailable"
@@ -17,6 +18,7 @@ import { createCompatibleApi, type CompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
 import { createScopedFetch } from "@/utils/scoped-fetch"
 import { SessionEvent } from "@orchestra/schema/session-event"
+import { createNativeEventAdapter } from "./server-event-native"
 import { Schema } from "effect"
 
 const isAbortError = (error: unknown) =>
@@ -226,6 +228,7 @@ type ServerSDKBase = {
   api: CompatibleApi
   currentApi: ServerApi
   sessionManagement: ReturnType<typeof createSessionManagementForServer>
+  orchestra: ReturnType<typeof Orchestra.make>
   event: {
     on: ServerEventEmitter["on"]
     listen: ServerEventEmitter["listen"]
@@ -356,6 +359,7 @@ function createServerSdkContextBase(
   }
 
   let streamErrorLogged = false
+  const native = createNativeEventAdapter()
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
   let attempt: AbortController | undefined
   let run: Promise<void> | undefined
@@ -389,7 +393,7 @@ function createServerSdkContextBase(
             const legacy = "payload" in event
             if (legacy && event.payload.type === "sync") continue
             const directory = legacy ? (event.directory ?? "global") : (event.location?.directory ?? "global")
-            const payload = legacy ? (event.payload as Event) : adaptServerEvent(event)
+            const payload = legacy ? (event.payload as Event) : adaptServerEvent(native(event) ?? event)
             if (enqueueServerEvent(queue, { directory, payload })) schedule()
 
             if (Date.now() - yielded < STREAM_YIELD_MS) continue
@@ -448,6 +452,14 @@ function createServerSdkContextBase(
     throwOnError: true,
   })
   const currentApi: ServerApi = createApiForServer({ server: http, fetch: scopedFetch() })
+  // Routes only the Orchestra V2 server serves (the bundled client predates them).
+  const orchestra = Orchestra.make({
+    baseUrl: http.url,
+    fetch: scopedFetch(),
+    headers: http.password
+      ? { Authorization: `Basic ${authTokenFromCredentials({ username: http.username, password: http.password })}` }
+      : undefined,
+  })
   const sessionManagement = createSessionManagementForServer({
     server: http,
     fetch: scopedFetch(),
@@ -475,6 +487,7 @@ function createServerSdkContextBase(
     api,
     currentApi,
     sessionManagement,
+    orchestra,
     event: {
       on: emitter.on.bind(emitter),
       listen: emitter.listen.bind(emitter),

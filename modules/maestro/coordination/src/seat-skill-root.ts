@@ -11,12 +11,17 @@ import { PlaybookContent } from "./playbook-content"
 import { fileURLToPath } from "node:url"
 
 declare const ORCHESTRA_COMPILED: boolean
+// The standalone CLI embeds the same module but is not an Orchestra build (ORCHESTRA_COMPILED also selects the bundled Claude Code).
+declare const ORCHESTRA_SEAT_SKILLS_EMBEDDED: boolean | undefined
 
 // Compiled builds (Bun binary and desktop Node sidecar) embed every seat's skill tree (F6.1) as one generated module
 // mapping seat id to tree-relative path to text (script/seat-skills.ts). Each tree is copied to a real directory (F6.12)
 // that the read tool and sandboxed shells can reach. That directory is under the cache: ToolSafety's sandbox denies
 // reads under data/state. Running from source reads each tree in place (`Seats.skillSource`).
-const embedded = typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED ? await import(
+const packaged =
+  (typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED) ||
+  (typeof ORCHESTRA_SEAT_SKILLS_EMBEDDED !== "undefined" && ORCHESTRA_SEAT_SKILLS_EMBEDDED === true)
+const embedded = packaged ? await import(
   // @ts-expect-error - generated file at build time
   "orchestra-seat-skills.gen.ts"
 )
@@ -24,7 +29,7 @@ const embedded = typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED
   .catch((cause) => {
     throw new SeatSkillContent.PackagingError("Cannot import compiled seat skill module", { cause })
   }) : undefined
-if (typeof ORCHESTRA_COMPILED !== "undefined" && ORCHESTRA_COMPILED &&
+if (packaged &&
   (!embedded || typeof embedded !== "object" || Array.isArray(embedded)))
   throw new SeatSkillContent.PackagingError("Invalid compiled seat skill module")
 if (embedded && Object.keys(embedded).some((id) => id !== "maestro" && !Seats.find(id)?.skills.length))

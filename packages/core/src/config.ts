@@ -2,7 +2,7 @@ export * as Config from "./config"
 
 import { makeLocationNode } from "./effect/app-node"
 import path from "path"
-import { type ParseError, parse } from "jsonc-parser"
+import { type ParseError, applyEdits, modify, parse } from "jsonc-parser"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { Permission } from "@orchestra/schema/permission"
 import { FSUtil } from "./fs-util"
@@ -213,11 +213,47 @@ const layer = Layer.effect(
     return Service.of({
       packagedSkills: () => Effect.succeed(packagedSkills),
       entries: Effect.fn("Config.entries")(function* () {
-        return configs
+        // Global documents are read again so a settings write (`updateGlobal`) reaches the next agent or catalog
+        // reload without reopening the location; project documents keep the snapshot taken at open.
+        const globals = yield* loadDirectory(globalDirectory).pipe(Effect.orDie)
+        return [...globals, ...direct, ...supplementary.slice(1).flat()]
       }),
     })
   }),
 )
+
+/** The settings the app writes into the user's global config document. */
+export interface GlobalPatch {
+  readonly model?: string
+  readonly agents?: Readonly<Record<string, { readonly engine?: "orchestra" | "claude-code" }>>
+}
+
+/**
+ * Merges settings into the global config document, editing the highest-priority existing file in place so
+ * comments and unrelated keys survive. Readers see the change on their next `entries()` call.
+ */
+export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: GlobalPatch) {
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  // `orchestra.jsonc` loads after `orchestra.json`, so it wins when both exist.
+  const files = yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) => {
+    const file = path.join(global.config, name)
+    return fs.readFileStringSafe(file).pipe(Effect.map((text) => ({ file, text })))
+  }).pipe(Effect.orDie)
+  const target = files.find((item) => item.text !== undefined) ?? { file: path.join(global.config, "orchestra.json"), text: undefined }
+  const leaves = (value: unknown, at: string[]): [string[], unknown][] =>
+    value !== null && typeof value === "object"
+      ? Object.entries(value).flatMap(([key, item]) => leaves(item, [...at, key]))
+      : value === undefined
+        ? []
+        : [[at, value]]
+  const next = leaves(patch, []).reduce(
+    (text, [at, value]) =>
+      applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
+    target.text?.trim() ? target.text : "{}",
+  )
+  yield* fs.writeWithDirs(target.file, next).pipe(Effect.orDie)
+})
 
 export const locationLayer = layer.pipe(Layer.provideMerge(Policy.locationLayer))
 

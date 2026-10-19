@@ -63,6 +63,7 @@ import { ModelsDev } from "@orchestra/core/models-dev"
 import { Npm } from "@orchestra/core/npm"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { ProjectV2 } from "@orchestra/core/project"
+import { Global } from "@orchestra/core/global"
 import { ProjectCopy } from "@orchestra/core/project/copy"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { Ripgrep } from "@orchestra/core/ripgrep"
@@ -275,6 +276,7 @@ const app = LayerNode.group([
   httpClient,
   EventV2.node,
   ProjectV2.node,
+  Global.node,
   ProjectCopy.node,
   PtyTicket.node,
   ArsenalBindings.node,

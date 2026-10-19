@@ -2802,6 +2802,34 @@ export type ProjectCopiesRefreshInput = {
 
 export type ProjectCopiesRefreshOutput = void
 
+export type ProjectsListOutput = ReadonlyArray<{
+  readonly id: string
+  readonly worktree: string
+  readonly vcs?: "git"
+  readonly name?: string
+  readonly icon?: { readonly url?: string; readonly override?: string; readonly color?: string }
+  readonly commands?: { readonly start?: string }
+  readonly time: { readonly created: number; readonly updated: number; readonly initialized?: number }
+  readonly sandboxes: ReadonlyArray<string>
+}>
+
+export type ConfigUpdateInput = {
+  readonly model?: {
+    readonly model?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+  }["model"]
+  readonly agents?: {
+    readonly model?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+  }["agents"]
+}
+
+export type ConfigUpdateOutput = void
+
 export type RelayDocumentsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined

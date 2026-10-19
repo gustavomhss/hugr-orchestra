@@ -137,6 +137,9 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectsListOutput,
+  ConfigUpdateInput,
+  ConfigUpdateOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -1239,6 +1242,27 @@ export function make(options: ClientOptions) {
             query: { location: input["location"] },
             successStatus: 204,
             declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    projects: {
+      list: (requestOptions?: RequestOptions) =>
+        request<ProjectsListOutput>(
+          { method: "GET", path: `/api/project`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+    },
+    config: {
+      update: (input?: ConfigUpdateInput, requestOptions?: RequestOptions) =>
+        request<ConfigUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/config`,
+            body: { model: input?.["model"], agents: input?.["agents"] },
+            successStatus: 204,
+            declaredStatuses: [401, 400],
             empty: true,
           },
           requestOptions,

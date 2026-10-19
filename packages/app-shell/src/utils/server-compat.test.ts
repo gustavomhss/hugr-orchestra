@@ -42,6 +42,9 @@ function setup(
       }
       if (request.method === "GET" && new URL(request.url).pathname === "/vcs")
         return Response.json(responses?.vcs ?? {})
+      if (new URL(request.url).pathname === "/api/project/current") return new Response("not found", { status: 404 })
+      if (new URL(request.url).pathname === "/api/location")
+        return Response.json({ directory: "/repo", project: { id: "prj_1", directory: "/repo" } })
       if (request.method === "GET") return Response.json([])
       return new Response(undefined, { status: 204 })
     },
@@ -58,6 +61,18 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
+  test("resolves the V2 current project from the location route", async () => {
+    const { api, requests } = setup("v2")
+
+    expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
+    expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
+    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
+      "/api/project/current",
+      "/api/location",
+      "/api/location",
+    ])
+  })
+
   test("keeps missing legacy session cost unavailable after normalization", async () => {
     const session = {
       id: "ses_1",

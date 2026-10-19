@@ -32,6 +32,13 @@ export const catalogScenarios: Scenario[] = [
     .probe({ path: "/api/pull-request", body: pullRequest })
     .json(400, noPullRequestRemote, "status"),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
+  http.protected.get("/api/project", "v2.project.list").json(200, array),
+  // Writes the isolated global config document and reloads open locations.
+  http.protected
+    .patch("/api/config", "v2.config.update")
+    .global()
+    .at(() => ({ path: "/api/config", body: { agents: { maestro: { engine: "orchestra" } } } }))
+    .status(204, undefined, "status"),
   http.protected.get("/api/reference", "v2.reference.list").json(200, object),
   http.protected
     .get("/api/model/default", "v2.model.default")
