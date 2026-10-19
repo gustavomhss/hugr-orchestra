@@ -179,8 +179,7 @@ it.instance(
           ...Object.values(Seats.all).flatMap((seat) => seat.skills),
           ...(await fs.readdir(path.resolve(import.meta.dir, "../../../playbooks"))),
         ]
-        expect(skills).toContain("jimmy-research")
-        expect(skills).toContain("jimmy-discovery")
+        expect(skills).toContain("jimmy-reference")
         expect(skills).toContain("backend-implement")
         expect(skills).toContain("maestro-governed")
         for (const skill of skills) expect(written).toContain(`skills/${skill}/SKILL.md`)

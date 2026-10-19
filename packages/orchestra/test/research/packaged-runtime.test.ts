@@ -171,7 +171,7 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
     expect(skill.output).toContain(`<skill_content name="${skill.name}">`)
     expect(skill.output).toContain(skill.content.trim())
   }))
-  expect(evidence.companion).toBe(evidence.skillFiles["jimmy-discovery/methods/understand.md"].replace(/\n$/, ""))
+  expect(evidence.companion).toBe(evidence.skillFiles["jimmy-reference/calibration.md"].replace(/\n$/, ""))
   expect(evidence.source).toMatchObject({ complete: true, ref: { representation: "text" }, transformation: "read-line-projection-v1" })
   expect(evidence.received.text).toBe("Version 1 only.\nDisabled rejects operation.\n")
   expect(evidence.received.receipt).toMatchObject({ ref: evidence.source.derivedFrom, complete: true })
@@ -196,7 +196,7 @@ if (!result.success) throw new Error(result.logs.join("\\n"));`)
   expect(evidence.card.documentRefs).toEqual([evidence.document.ref])
   expect(evidence.report.documents).toEqual([evidence.document])
   expect(evidence.report.corpus.documents).toEqual([evidence.document])
-  expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "skill", "read", "read", "research_view", "research_view", "research_record", "research_view",
+  expect(evidence.calls.map((call) => call.tool)).toEqual(["skill", "read", "read", "research_view", "research_view", "research_record", "research_view",
     "research_record", "research_view", "inquiry", "inquiry", "inquiry", "inquiry"])
   expect(evidence.calls.every((call) => call.status === "completed")).toBe(true)
 

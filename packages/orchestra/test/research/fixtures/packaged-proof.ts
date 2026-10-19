@@ -116,7 +116,7 @@ const proof = Effect.gen(function* () {
         throw new Error(`Native packaged skill load differs: ${name}`)
       return { name, location: info.location, content: info.content, output: result.output }
     }))
-    const companion = yield* invoke("read", { filePath: path.join(skillRoot, "jimmy-discovery/methods/understand.md") })
+    const companion = yield* invoke("read", { filePath: path.join(skillRoot, "jimmy-reference/calibration.md") })
     const companionText = Schema.decodeUnknownSync(Schema.Struct({ display: Schema.Struct({ type: Schema.Literal("file"), text: Schema.String, truncated: Schema.Literal(false) }) }))(companion.metadata).display.text
     yield* fsys.writeFileString(path.join(directory, "evidence.txt"), "Version 1 only.\nDisabled rejects operation.\n")
     const read = yield* invoke("read", { filePath: "evidence.txt" })
