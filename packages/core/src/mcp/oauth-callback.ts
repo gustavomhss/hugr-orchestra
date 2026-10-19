@@ -1,6 +1,6 @@
 import { createConnection } from "net"
 import { createServer } from "http"
-import { OauthCallbackPage } from "@orchestra/core/oauth/page"
+import { OauthCallbackPage } from "../oauth/page"
 import { OAUTH_CALLBACK_PORT, OAUTH_CALLBACK_PATH, parseRedirectUri } from "./oauth-provider"
 
 const OAUTH_CALLBACK_HOST = "127.0.0.1"

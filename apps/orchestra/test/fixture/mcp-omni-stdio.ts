@@ -1,11 +1,16 @@
 import { spawn } from "node:child_process"
 import { Server } from "@modelcontextprotocol/sdk/server/index.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
-import { ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import {
+  ListResourcesRequestSchema,
+  ListResourceTemplatesRequestSchema,
+  ListToolsRequestSchema,
+} from "@modelcontextprotocol/sdk/types.js"
 
 // An MCP stdio server for the omni transport tests (test/mcp/omni-stdio.test.ts). It lists one tool per argument.
 // MCP_OMNI_TREE ({command, args}) starts a nonce tree below it; MCP_OMNI_STDERR writes that many bytes of stderr
 // lines before it serves; MCP_OMNI_FAIL_LINES writes that many numbered stderr lines and exits 1 instead of serving.
+// MCP_OMNI_RESOURCE (a URI) also offers that resource and one template.
 
 // Bun makes fd 2 non-blocking, so a writeSync that finds the pipe momentarily full throws EAGAIN and the fixture dies
 // early. process.stderr.write waits for the pipe instead: the failing fixture exits only once the pipe took every line,
@@ -26,7 +31,19 @@ if (process.env.MCP_OMNI_TREE) {
   spawn(tree.command, tree.args, { stdio: "ignore" })
 }
 
-const server = new Server({ name: "mcp-omni-stdio", version: "1.0.0" }, { capabilities: { tools: {} } })
+const resource = process.env.MCP_OMNI_RESOURCE
+const server = new Server(
+  { name: "mcp-omni-stdio", version: "1.0.0" },
+  { capabilities: resource ? { tools: {}, resources: {} } : { tools: {} } },
+)
+if (resource) {
+  server.setRequestHandler(ListResourcesRequestSchema, () =>
+    Promise.resolve({ resources: [{ name: "fixture note", uri: resource, mimeType: "text/plain" }] }),
+  )
+  server.setRequestHandler(ListResourceTemplatesRequestSchema, () =>
+    Promise.resolve({ resourceTemplates: [{ name: "fixture notes", uriTemplate: `${resource}/{id}` }] }),
+  )
+}
 server.setRequestHandler(ListToolsRequestSchema, () =>
   Promise.resolve({
     tools: process.argv.slice(2).map((name) => ({ name, inputSchema: { type: "object" as const, properties: {} } })),

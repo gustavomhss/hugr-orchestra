@@ -10,13 +10,13 @@ import { EffectFlock } from "../util/effect-flock"
 import { BackendToolkit } from "../backend-toolkit"
 import type { Engine } from "../backend-toolkit/manifest"
 import { ENGINES, IDS } from "./manifest"
+import { CodeIndexStore } from "./code-index/store"
 
 // J6: the discovery seat's pinned engines on the BackendToolkit lifecycle, with research Root and Manifest supplied.
 // Nothing here copies acquisition: `status`, `ensure` and `prefetch` run BackendToolkit's verbs over this toolkit's
 // own root and packs, so installs, launchers, shims, retries and failure causes are the backend's (J6.1).
 
-/** scip-go and rust-analyzer join after the benchmark gate (X6). */
-export type ResearchEngineId = "scip-typescript" | "scip-python" | "typescript"
+export type ResearchEngineId = "scip-typescript" | "scip-python" | "scip-go" | "rust-analyzer" | "typescript"
 
 export type Language = "ts" | "js" | "py" | "go" | "rust"
 
@@ -181,30 +181,36 @@ export const warm = Effect.fn("ResearchToolkit.warm")(function* (worktree: strin
     Effect.fnUntraced(function* (shard: Shard) {
       const ready = engines.get(shard.engine) ?? { reason: `toolkit-not-ready:absent:${shard.engine}` }
       if ("reason" in ready) return yield* record(root, worktree, shard.id, { status: "skipped", reason: ready.reason })
-      const built = yield* flock
-        .withLock(
-          Effect.gen(function* () {
-            yield* record(root, worktree, shard.id, { status: "building" })
-            return yield* index
-              .build(shard, { worktree, executable: ready.executable, memoryBytes: caps.indexerBytes })
-              .pipe(
-                Effect.timeoutOrElse({
-                  duration: caps.shardTimeoutMs,
-                  orElse: () => Effect.fail(new ShardFailed({ reason: `timeout:${caps.shardTimeoutMs}ms` })),
-                }),
-              )
-          }),
-          "research-toolkit:indexer",
-          path.join(root, "locks"),
-        )
-        // The lock waits at most five minutes per try; a shard of another worktree may hold it for fifteen.
-        .pipe(
-          Effect.retry({ while: (error) => error._tag === "LockTimeoutError" }),
-          Effect.match({
-            onSuccess: () => undefined,
-            onFailure: (error) => (error._tag === "ResearchToolkit.ShardFailed" ? error.reason : "indexer-lock-compromised"),
-          }),
-        )
+      // A query that is already building this shard is awaited, not repeated (`shard.id` is the shard key).
+      const built = yield* CodeIndexStore.singleFlight(
+        root,
+        shard.id,
+        flock
+          .withLock(
+            Effect.gen(function* () {
+              yield* record(root, worktree, shard.id, { status: "building" })
+              return yield* index
+                .build(shard, { worktree, executable: ready.executable, memoryBytes: caps.indexerBytes })
+                .pipe(
+                  Effect.timeoutOrElse({
+                    duration: caps.shardTimeoutMs,
+                    orElse: () => Effect.fail(new ShardFailed({ reason: `timeout:${caps.shardTimeoutMs}ms` })),
+                  }),
+                )
+            }),
+            "research-toolkit:indexer",
+            path.join(root, "locks"),
+          )
+          // The lock waits at most five minutes per try; a shard of another worktree may hold it for fifteen.
+          .pipe(
+            Effect.retry({ while: (error) => error._tag === "LockTimeoutError" }),
+            Effect.mapError((error) =>
+              error._tag === "ResearchToolkit.ShardFailed" ? error : new ShardFailed({ reason: "indexer-lock-compromised" })),
+          ),
+        { describe: (error) => error.reason, join: (reason) => new ShardFailed({ reason }) },
+      ).pipe(
+        Effect.match({ onSuccess: () => undefined, onFailure: (error) => error.reason }),
+      )
       yield* record(root, worktree, shard.id, built === undefined ? undefined : { status: "skipped", reason: built })
     }),
     { discard: true },

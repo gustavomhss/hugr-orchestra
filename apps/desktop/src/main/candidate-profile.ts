@@ -138,6 +138,7 @@ export function candidateEnvironment(
     ORCHESTRA_LEAN_CANDIDATE: "1",
     ORCHESTRA_CANDIDATE_PROFILE_ROOT: profile.root,
     ORCHESTRA_INHERIT_CREDENTIALS: "0",
+    // Pinned to the V1 sidecar fallback: the lean-candidate acceptance proofs drive its Node sidecar.
     ORCHESTRA_SIDECAR_V2: "0",
     ORCHESTRA_DISABLE_EMBEDDED_WEB_UI: "true",
     ORCHESTRA_CLIENT: "desktop",

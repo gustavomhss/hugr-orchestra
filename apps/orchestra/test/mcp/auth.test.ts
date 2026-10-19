@@ -3,7 +3,7 @@ import { setTimeout as sleep } from "node:timers/promises"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Effect, Layer } from "effect"
 import { FSUtil } from "@orchestra/core/fs-util"
-import { McpAuth } from "../../src/mcp/auth"
+import { McpAuth } from "@orchestra/core/mcp/auth"
 
 function authFile() {
   let raw = ""

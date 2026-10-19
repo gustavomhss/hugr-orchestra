@@ -8,10 +8,10 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Effect } from "effect"
 import { Config } from "../../src/config/config"
 import { EventV2Bridge } from "../../src/event-v2-bridge"
-import { McpAuth } from "../../src/mcp/auth"
+import { McpAuth } from "@orchestra/core/mcp/auth"
 import { MCP } from "../../src/mcp/index"
-import { McpOAuthCallback } from "../../src/mcp/oauth-callback"
-import { McpOAuthPendingProvider, McpOAuthProvider } from "../../src/mcp/oauth-provider"
+import { McpOAuthCallback } from "@orchestra/core/mcp/oauth-callback"
+import { McpOAuthPendingProvider, McpOAuthProvider } from "@orchestra/core/mcp/oauth-provider"
 import { testEffect } from "../lib/effect"
 
 const mcpTest = testEffect(

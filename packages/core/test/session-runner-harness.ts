@@ -43,19 +43,18 @@ import { PermissionFixture } from "./permission-fixture"
 export const systemContextLayer = AppNodeBuilder.build(SystemContextRegistry.node)
 
 const referenceGuidance = Layer.mock(ReferenceGuidance.Service, { load: () => Effect.succeed(SystemContext.empty) })
-const config = Layer.succeed(
+export const compaction = new ConfigCompaction.Info({
+  buffer: 3_000,
+  keep: new ConfigCompaction.Keep({ tokens: 1_000 }),
+})
+const defaultConfig = Layer.succeed(
   Config.Service,
   Config.Service.of({
     entries: () =>
       Effect.succeed([
         new Config.Document({
           type: "document",
-          info: new Config.Info({
-            compaction: new ConfigCompaction.Info({
-              buffer: 3_000,
-              keep: new ConfigCompaction.Keep({ tokens: 1_000 }),
-            }),
-          }),
+          info: new Config.Info({ compaction }),
         }),
       ]),
   }),
@@ -71,8 +70,11 @@ export function make(input: {
   hosts?: Layer.Layer<ExecutionHost.Service>
   /** Replaces the fail-closed permission fixture. */
   permissions?: Layer.Layer<PermissionV2.Service>
+  /** Replaces the compaction-only config, for example to configure MCP servers. */
+  config?: Layer.Layer<Config.Service>
 }) {
   const permissions = input.permissions ?? PermissionFixture.normalLayer
+  const config = input.config ?? defaultConfig
   const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [

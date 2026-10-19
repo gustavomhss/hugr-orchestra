@@ -90,6 +90,24 @@ export const mcpScenarios: Scenario[] = [
     .json(404, object, "status"),
   // V2 routes: the Location's MCP service.
   http.protected.get("/api/mcp", "v2.mcp.list").json(200, locationData(array)),
+  http.protected.get("/api/mcp/resource", "v2.mcp.resource.catalog").json(200, locationData(object)),
+  http.protected
+    .post("/api/mcp/{server}/auth", "v2.mcp.auth.start")
+    .at((ctx) => ({ path: route("/api/mcp/{server}/auth", { server: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
+  http.protected
+    .post("/api/mcp/{server}/auth/callback", "v2.mcp.auth.callback")
+    .at((ctx) => ({
+      path: route("/api/mcp/{server}/auth/callback", { server: "httpapi-missing" }),
+      headers: ctx.headers(),
+      body: { code: "code" },
+    }))
+    .json(404, object, "status"),
+  http.protected
+    .delete("/api/mcp/{server}/auth", "v2.mcp.auth.remove")
+    .mutating()
+    .at((ctx) => ({ path: route("/api/mcp/{server}/auth", { server: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
   http.protected
     .put("/api/mcp/{server}", "v2.mcp.add")
     .mutating()

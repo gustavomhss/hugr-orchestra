@@ -41,6 +41,11 @@ await Promise.all(
             }))
             // The SCIP decoder the surface reads `.atlas/index.scip` with: this package's pinned copy, not whichever
             // copy happens to sit above the Atlas sources.
+            // The protobuf runtime the decoder and the Atlas sources share: this package's pinned copy too, so a
+            // local `npm ci` under modules/atlas cannot change the committed bytes.
+            builder.onResolve({ filter: /^@bufbuild\/protobuf(\/.*)?$/ }, (args) => ({
+              path: Bun.resolveSync(args.path, path.resolve(import.meta.dir, "..")),
+            }))
             builder.onResolve({ filter: /^@c4312\/scip$/ }, (args) => ({
               path: Bun.resolveSync(args.path, path.resolve(import.meta.dir, "..")),
             }))

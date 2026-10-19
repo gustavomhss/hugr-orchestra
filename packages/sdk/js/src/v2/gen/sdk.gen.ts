@@ -72,7 +72,7 @@ import type {
   AtlasTerritoryResponses,
   AtlasVerifyErrors,
   AtlasVerifyResponses,
-  Auth as Auth3,
+  Auth as Auth4,
   AuthRemoveErrors,
   AuthRemoveResponses,
   AuthSetErrors,
@@ -494,6 +494,12 @@ import type {
   V2LocationGetResponses,
   V2McpAddErrors,
   V2McpAddResponses,
+  V2McpAuthCallbackErrors,
+  V2McpAuthCallbackResponses,
+  V2McpAuthRemoveErrors,
+  V2McpAuthRemoveResponses,
+  V2McpAuthStartErrors,
+  V2McpAuthStartResponses,
   V2McpConnectErrors,
   V2McpConnectResponses,
   V2McpDisconnectErrors,
@@ -502,6 +508,8 @@ import type {
   V2McpListResponses,
   V2McpRemoveErrors,
   V2McpRemoveResponses,
+  V2McpResourceCatalogErrors,
+  V2McpResourceCatalogResponses,
   V2ModelDefaultErrors,
   V2ModelDefaultResponses,
   V2ModelListErrors,
@@ -780,7 +788,7 @@ export class Auth extends HeyApiClient {
   public set<ThrowOnError extends boolean = false>(
     parameters: {
       providerID: string
-      auth?: Auth3
+      auth?: Auth4
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -8366,6 +8374,142 @@ export class Command2 extends HeyApiClient {
   }
 }
 
+export class Resource2 extends HeyApiClient {
+  /**
+   * List MCP resources
+   *
+   * List the resources and resource templates of the Location's connected MCP servers.
+   */
+  public catalog<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      V2McpResourceCatalogResponses,
+      V2McpResourceCatalogErrors,
+      ThrowOnError
+    >({
+      url: "/api/mcp/resource",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Auth3 extends HeyApiClient {
+  /**
+   * Remove MCP OAuth
+   *
+   * Forget an MCP server's stored OAuth credentials and cancel a sign-in in progress.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2McpAuthRemoveResponses, V2McpAuthRemoveErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/auth",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Start MCP OAuth
+   *
+   * Start an OAuth sign-in for a remote MCP server and return the authorization URL to open. The local callback completes the sign-in and reconnects the server; an empty URL means it was already authorized.
+   */
+  public start<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpAuthStartResponses, V2McpAuthStartErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/auth",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Complete MCP OAuth
+   *
+   * Complete a started OAuth sign-in with its authorization code and reconnect the server.
+   */
+  public callback<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      code?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+            { in: "body", key: "code" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpAuthCallbackResponses, V2McpAuthCallbackErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/auth/callback",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Mcp2 extends HeyApiClient {
   /**
    * List MCP servers
@@ -8526,6 +8670,16 @@ export class Mcp2 extends HeyApiClient {
       ...options,
       ...params,
     })
+  }
+
+  private _resource?: Resource2
+  get resource(): Resource2 {
+    return (this._resource ??= new Resource2({ client: this.client }))
+  }
+
+  private _auth?: Auth3
+  get auth(): Auth3 {
+    return (this._auth ??= new Auth3({ client: this.client }))
   }
 }
 
@@ -11990,7 +12144,7 @@ export class ActionsPipeline extends HeyApiClient {
   }
 }
 
-export class Resource2 extends HeyApiClient {
+export class Resource3 extends HeyApiClient {
   public list<ThrowOnError extends boolean = false>(
     parameters: {
       bindingID: ActionsBindingId
@@ -12088,9 +12242,9 @@ export class Resource2 extends HeyApiClient {
 }
 
 export class Actions7 extends HeyApiClient {
-  private _resource?: Resource2
-  get resource(): Resource2 {
-    return (this._resource ??= new Resource2({ client: this.client }))
+  private _resource?: Resource3
+  get resource(): Resource3 {
+    return (this._resource ??= new Resource3({ client: this.client }))
   }
 }
 

@@ -4102,10 +4102,36 @@ export type McpServer = {
   status: McpStatus
 }
 
+export type McpResource1 = {
+  server: string
+  name: string
+  uri: string
+  description?: string
+  mimeType?: string
+}
+
+export type McpResourceTemplate = {
+  server: string
+  name: string
+  uriTemplate: string
+  description?: string
+  mimeType?: string
+}
+
+export type McpResourceCatalog = {
+  resources: Array<McpResource1>
+  templates: Array<McpResourceTemplate>
+}
+
 export type McpServerNotFoundError1 = {
   _tag: "McpServerNotFoundError"
   server: string
   message: string
+}
+
+export type McpAuthStart = {
+  authorizationUrl: string
+  oauthState: string
 }
 
 export type OutputFormat1 =
@@ -18853,6 +18879,43 @@ export type V2McpListResponses = {
 
 export type V2McpListResponse = V2McpListResponses[keyof V2McpListResponses]
 
+export type V2McpResourceCatalogData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/resource"
+}
+
+export type V2McpResourceCatalogErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2McpResourceCatalogError = V2McpResourceCatalogErrors[keyof V2McpResourceCatalogErrors]
+
+export type V2McpResourceCatalogResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: McpResourceCatalog
+  }
+}
+
+export type V2McpResourceCatalogResponse = V2McpResourceCatalogResponses[keyof V2McpResourceCatalogResponses]
+
 export type V2McpRemoveData = {
   body?: never
   path: {
@@ -19010,6 +19073,128 @@ export type V2McpDisconnectResponses = {
 }
 
 export type V2McpDisconnectResponse = V2McpDisconnectResponses[keyof V2McpDisconnectResponses]
+
+export type V2McpAuthRemoveData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth"
+}
+
+export type V2McpAuthRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthRemoveError = V2McpAuthRemoveErrors[keyof V2McpAuthRemoveErrors]
+
+export type V2McpAuthRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpAuthRemoveResponse = V2McpAuthRemoveResponses[keyof V2McpAuthRemoveResponses]
+
+export type V2McpAuthStartData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth"
+}
+
+export type V2McpAuthStartErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthStartError = V2McpAuthStartErrors[keyof V2McpAuthStartErrors]
+
+export type V2McpAuthStartResponses = {
+  /**
+   * McpAuthStart
+   */
+  200: McpAuthStart
+}
+
+export type V2McpAuthStartResponse = V2McpAuthStartResponses[keyof V2McpAuthStartResponses]
+
+export type V2McpAuthCallbackData = {
+  body: {
+    code: string
+  }
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth/callback"
+}
+
+export type V2McpAuthCallbackErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthCallbackError = V2McpAuthCallbackErrors[keyof V2McpAuthCallbackErrors]
+
+export type V2McpAuthCallbackResponses = {
+  /**
+   * MCPStatus
+   */
+  200: McpStatus
+}
+
+export type V2McpAuthCallbackResponse = V2McpAuthCallbackResponses[keyof V2McpAuthCallbackResponses]
 
 export type V2SkillRemoveData = {
   body?: never

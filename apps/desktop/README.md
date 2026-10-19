@@ -38,6 +38,24 @@ builds the main, preload, and renderer outputs in `out/`. `package` runs
 electron-builder and writes distributables under `dist/`. Platform-specific
 scripts are `package:mac`, `package:win`, and `package:linux`.
 
+## Server
+
+Each launch starts one local server for the app. By default it is a desktop-owned V2 `orchestra serve` child: the
+bundled CLI runs as a child of the main process on a loopback port with a per-launch password, restarts with backoff
+when it crashes, and stops with the app (`src/main/owned-serve.ts`). It reaches the main process's App Dock handlers
+through a loopback channel (`src/main/dock-channel.ts`). On its first start it copies V1 transcripts from the shared
+database into V2 once.
+
+`ORCHESTRA_SIDECAR_V2` selects another server for the launch:
+
+| Value | Server |
+| --- | --- |
+| unset or `owned` | the desktop-owned V2 `orchestra serve` child (default) |
+| `legacy` (or `0`) | the V1 Node sidecar, kept for one release as the fallback, then removed |
+| `1` | the shared V2 background daemon managed through the CLI |
+
+The lean candidate profile pins the V1 fallback, since its acceptance proofs drive the Node sidecar.
+
 ## Persistent data
 
 Electron settings and desktop draft data live under Electron's `userData`

@@ -5,6 +5,8 @@ import { Effect } from "effect"
 import type { Language, Node, Parser, Query } from "web-tree-sitter"
 import { lazy } from "../../util/lazy"
 import type { Grammar } from "./filter"
+import { CodeIndexGo } from "./go"
+import { CodeIndexRust } from "./rust"
 
 // The structural layer (J2.5), transplanted from the HuGR techlead onboard/extract.ts (a68e7af, MIT) by way of
 // Arsenal onboard/extract.ts: 1-based lines per symbol and per import, the TS and Python import walks, and the
@@ -67,7 +69,10 @@ export const extract = Effect.fn("CodeIndexTreeSitter.extract")(function* (path:
     path,
     lines,
     definitions: definitions(entry.tags, tree.rootNode, grammar),
-    imports: entry.calls ? scriptImports(entry.calls, tree.rootNode) : pythonImports(tree.rootNode),
+    imports: entry.calls ? scriptImports(entry.calls, tree.rootNode)
+      : grammar === "go" ? CodeIndexGo.imports(tree.rootNode)
+      : grammar === "rust" ? CodeIndexRust.imports(tree.rootNode)
+      : pythonImports(tree.rootNode),
     coverage: tree.rootNode.hasError ? { complete: false, reason: "partial-parse" } : { complete: true },
   } satisfies Extract
   tree.delete()
@@ -88,6 +93,18 @@ const EXTRA = {
   python: `
 (class_definition body: (block (expression_statement (assignment left: (identifier) @name) @definition.property)))
 `,
+  go: `
+(source_file (const_declaration (const_spec name: (identifier) @name) @definition.constant))
+(source_file (var_declaration (var_spec name: (identifier) @name) @definition.variable))
+(field_declaration name: (field_identifier) @name) @definition.property
+(method_elem name: (field_identifier) @name) @definition.method
+`,
+  rust: `
+(field_declaration name: (field_identifier) @name) @definition.property
+(function_signature_item name: (identifier) @name) @definition.method
+(const_item name: (identifier) @name) @definition.constant
+(static_item name: (identifier) @name) @definition.constant
+`,
 }
 
 // Static imports and re-exports are top-level statements (the techlead walk); calls can sit anywhere.
@@ -106,10 +123,11 @@ function definitions(query: Query, root: Node, grammar: Grammar) {
     const definition = match.captures.find((capture) => capture.name.startsWith("definition."))
     const name = match.captures.find((capture) => capture.name === "name")
     if (!definition || !name) return
-    const kind = definition.name.slice("definition.".length)
+    const captured = definition.name.slice("definition.".length)
+    const kind = grammar === "rust" ? CodeIndexRust.kind(definition.node, captured) : captured
     // Upstream and EXTRA can both match one declarator; the upstream kind (function) wins over constant.
     if (found.has(definition.node.id) && kind === "constant") return
-    if (kind === "constant" && grammar !== "python" && !constantInScope(definition.node)) return
+    if (kind === "constant" && (grammar === "typescript" || grammar === "tsx") && !constantInScope(definition.node)) return
     found.set(definition.node.id, { node: definition.node, name: name.node, kind: kind === "constant" ? declarationKind(definition.node) : kind })
   })
   const ordered = [...found.values()].toSorted((a, b) => a.node.startIndex - b.node.startIndex || b.node.endIndex - a.node.endIndex)
@@ -168,6 +186,8 @@ function span(node: Node) {
 
 function exported(node: Node, name: string, parent: Definition | undefined, root: Node, grammar: Grammar) {
   if (grammar === "python") return !name.startsWith("_") && (!parent || (parent.exported && parent.kind === "class"))
+  if (grammar === "go") return CodeIndexGo.exported(name, parent)
+  if (grammar === "rust") return CodeIndexRust.exported(node, parent)
   if (parent) return parent.exported && !name.startsWith("#") && !node.text.startsWith("private ") && ["class", "interface", "namespace", "module"].includes(parent.kind)
   const declaration = node.type === "variable_declarator" ? node.parent : node
   if (declaration?.parent?.type === "export_statement") return true
@@ -257,13 +277,18 @@ const grammars = lazy(async () => {
   const { default: typescriptWasm } = await import("tree-sitter-typescript/tree-sitter-typescript.wasm" as string, { with: { type: "wasm" } })
   const { default: tsxWasm } = await import("tree-sitter-typescript/tree-sitter-tsx.wasm" as string, { with: { type: "wasm" } })
   const { default: pythonWasm } = await import("tree-sitter-python/tree-sitter-python.wasm" as string, { with: { type: "wasm" } })
+  const { default: goWasm } = await import("tree-sitter-go/tree-sitter-go.wasm" as string, { with: { type: "wasm" } })
+  const { default: rustWasm } = await import("tree-sitter-rust/tree-sitter-rust.wasm" as string, { with: { type: "wasm" } })
   // Upstream tree-sitter.json composes the TypeScript tags from its own file plus the JavaScript one.
   const { default: typescriptTags } = await import("tree-sitter-typescript/queries/tags.scm" as string, { with: { type: "text" } })
   const { default: javascriptTags } = await import("tree-sitter-javascript/queries/tags.scm" as string, { with: { type: "text" } })
   const { default: pythonTags } = await import("tree-sitter-python/queries/tags.scm" as string, { with: { type: "text" } })
+  const { default: goTags } = await import("tree-sitter-go/queries/tags.scm" as string, { with: { type: "text" } })
+  const { default: rustTags } = await import("tree-sitter-rust/queries/tags.scm" as string, { with: { type: "text" } })
   const treePath = resolveWasm(treeWasm)
   await Parser.init({ locateFile: () => treePath })
-  const [typescript, tsx, python] = await Promise.all([typescriptWasm, tsxWasm, pythonWasm].map((asset) => Language.load(resolveWasm(asset))))
+  const [typescript, tsx, python, go, rust] = await Promise.all([typescriptWasm, tsxWasm, pythonWasm, goWasm, rustWasm]
+    .map((asset) => Language.load(resolveWasm(asset))))
   const entry = (language: Language, tags: string, calls?: string) => {
     const parser: Parser = new Parser()
     parser.setLanguage(language)
@@ -274,5 +299,7 @@ const grammars = lazy(async () => {
     typescript: entry(typescript, scriptTags, CALL_IMPORTS),
     tsx: entry(tsx, scriptTags, CALL_IMPORTS),
     python: entry(python, `${pythonTags}\n${EXTRA.python}`),
+    go: entry(go, `${goTags}\n${EXTRA.go}`),
+    rust: entry(rust, `${rustTags}\n${EXTRA.rust}`),
   }
 })
