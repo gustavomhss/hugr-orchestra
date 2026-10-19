@@ -23,13 +23,14 @@ import type { ReverifyReport, BudgetReport, TerritoriesLeg, OwnLeg } from "@atla
 import type { Awareness, MemoryRecord, Orientation, TurnHeader } from "@atlas/memory"
 import { runOkfExport, runOkfImport } from "./okf-cli.js"
 import { runPromote } from "./promote.js"
+import { foldOrRefuse } from "./review-common.js"
 import { runOwn } from "./own.js"
 import type { CliDeps } from "./cli.js"
 import { runDeriveRelationsCli } from "./derive-relations.js"
 import { asHash } from "@atlas/kernel"
 import { headSha } from "@atlas/adapter-io"
 import type { Hash } from "@atlas/contracts"
-import type { PromoteOut } from "@atlas/adapter-io"
+import type { PromoteOut, PromoteSelect } from "@atlas/adapter-io"
 import type { DeriveRelationsRun } from "@atlas/adapter-io"
 import { runMine, runMineArms } from "./mine.js"
 import { loadTaskProposer, resolveMineSlot, TASK_PROPOSER_IDENTITY } from "./mine-proposer.js"
@@ -253,10 +254,18 @@ export function dispatchImport(
  *  through the total `headSha` seam (a gate that later reads it gets a fact, never a placeholder). It opens no
  *  new governed surface, and its rendered `CliVerdict` reaches the console over the SAME emit/exit path as every
  *  command. Moved here from cli.ts with its intercept (B-L01) to give cli.ts room under its godfile waiver. */
-export function dispatchPromote(promote: ((at: Hash) => PromoteOut) | undefined): number {
+export function dispatchPromote(
+  promote: ((at: Hash, select?: PromoteSelect) => PromoteOut) | undefined,
+  keys: readonly string[],
+): number {
   if (!promote)
     return emit(errorVerdict("atlas runtime is not composed yet — the WireConfig seams need the composition-root WP"))
-  return emitCli(runPromote(promote, asHash(headSha(process.cwd()) ?? "")))
+  // R2 (D15): the held set is read from the review log BEFORE the pass, and a log that does not fully verify
+  // refuses the pass — promoting a row a curator held would break "keep in staging survives the next promote".
+  const review = foldOrRefuse(process.cwd())
+  if ("refusal" in review) return emitCli(review.refusal)
+  const select = keys.length > 0 ? { only: keys, held: review.fold.held } : { held: review.fold.held }
+  return emitCli(runPromote(promote, asHash(headSha(process.cwd()) ?? ""), select))
 }
 
 /** `atlas derive-relations` — the composed SOUND-RELATION projection ONE pass over the repo (WP-R7 / ADR-0008).
