@@ -392,7 +392,7 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
   await expect(dialog(page).getByRole("heading", { name: "Remove plan?" })).toBeVisible()
   await expect(dialog(page)).toContainText("Existing sessions keep their recorded model and conversation.")
   await expect(dialog(page)).toContainText(
-    "Adds disable: true to .orchestra/agent/plan.md and keeps the rest of the definition. Delete that line to restore plan.",
+    "Adds disable: true to .orchestra/agent/plan.md and keeps the rest of the definition. Restore plan from the notice that follows, or later by creating an agent with the same name.",
   )
   expect(mock.writes).toEqual([])
   await dialog(page).getByRole("button", { name: "Confirm", exact: true }).click()
@@ -411,6 +411,18 @@ test("cancel and Escape discard the draft and return focus; remove keeps the def
   ])
   await expect(page.getByRole("list", { name: "Configured agents" }).getByRole("listitem")).toHaveCount(4)
   await expect(card(page, "plan")).toHaveCount(0)
+
+  // The page offers to take the removal back: the same definition is written again without `disable`.
+  await expect(page.getByRole("status").filter({ hasText: "Removed plan." })).toBeVisible()
+  await page.getByRole("button", { name: "Restore", exact: true }).click()
+  await expect(page.getByRole("status").filter({ hasText: "Removed plan." })).toHaveCount(0)
+  expect(mock.writes.at(-1)?.body).toEqual({
+    description: "Plan file",
+    system: "File prompt",
+    permission: { "*": "ask", edit: "deny" },
+    revision: "plan-1",
+  })
+  await expect(card(page, "plan")).toHaveCount(1)
 })
 
 test("Maestro cannot be removed or taken out of primary mode; its other fields stay editable", async ({ page }) => {

@@ -1,6 +1,7 @@
 import { For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
 import { normalizeServerUrl, ServerConnection, useServer } from "@/context/server"
 import { useCheckServerHealth } from "@/utils/server-health"
 
@@ -8,9 +9,12 @@ import { useCheckServerHealth } from "@/utils/server-health"
 export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConnection.Key) => void }) {
   const server = useServer()
   const language = useLanguage()
+  const platform = usePlatform()
   const check = useCheckServerHealth()
   const [state, setState] = createStore({
     open: false,
+    // The unreachable entry being edited. Saving a different address replaces it instead of adding a second one.
+    replace: undefined as ServerConnection.Key | undefined,
     url: "",
     name: "",
     username: "",
@@ -23,6 +27,7 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
     const conn = server.current
     setState({
       open: true,
+      replace: conn?.type === "http" ? ServerConnection.key(conn) : undefined,
       url: conn?.http.url ?? "",
       name: conn?.displayName ?? "",
       username: conn?.http.username ?? "",
@@ -50,7 +55,16 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
     if (!("health" in result) || !result.health.healthy)
       return setState("error", language.t("orchestra.shell.server.failed"))
     const saved = server.add(conn)
-    if (saved) props.onServerSelected?.(ServerConnection.key(saved))
+    if (!saved) return
+    const key = ServerConnection.key(saved)
+    if (state.replace && state.replace !== key) await replaceEntry(state.replace, key)
+    props.onServerSelected?.(key)
+  }
+  // The default server is what the app opens on launch, so it moves with the entry it pointed at.
+  const replaceEntry = async (previous: ServerConnection.Key, next: ServerConnection.Key) => {
+    server.remove(previous)
+    const isDefault = (await platform.getDefaultServer?.().catch(() => null)) === previous
+    if (isDefault) await Promise.resolve(platform.setDefaultServer?.(next)).catch(() => undefined)
   }
   return (
     <section class="w-full max-w-sm shrink-0 flex flex-col gap-3" aria-label={language.t("status.popover.tab.servers")}>
@@ -67,7 +81,9 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
           type="button"
           class="rounded-md px-3 py-2 bg-surface-base text-text-strong"
           disabled={state.busy}
-          onClick={() => setState({ open: true, url: "", name: "", username: "", password: "", error: "" })}
+          onClick={() =>
+            setState({ open: true, replace: undefined, url: "", name: "", username: "", password: "", error: "" })
+          }
         >
           {language.t("dialog.server.add.title")}
         </button>
@@ -92,9 +108,19 @@ export function ConnectionRecovery(props: { onServerSelected?: (key: ServerConne
           <Show when={state.error}>
             <p role="alert">{state.error}</p>
           </Show>
-          <button type="submit" class="rounded-md px-3 py-2 bg-surface-base text-text-strong" disabled={state.busy}>
-            {language.t(state.busy ? "dialog.server.add.checking" : "common.save")}
-          </button>
+          <div class="flex gap-3 justify-end">
+            <button
+              type="button"
+              class="rounded-md px-3 py-2 bg-surface-base text-text-strong"
+              disabled={state.busy}
+              onClick={() => setState({ open: false, error: "" })}
+            >
+              {language.t("common.cancel")}
+            </button>
+            <button type="submit" class="rounded-md px-3 py-2 bg-surface-base text-text-strong" disabled={state.busy}>
+              {language.t(state.busy ? "dialog.server.add.checking" : "common.save")}
+            </button>
+          </div>
         </form>
       </Show>
     </section>

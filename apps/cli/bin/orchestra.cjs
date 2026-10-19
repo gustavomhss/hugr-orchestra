@@ -1,0 +1,149 @@
+#!/usr/bin/env node
+
+const childProcess = require("child_process")
+const fs = require("fs")
+const path = require("path")
+const os = require("os")
+
+const forwardedSignals = ["SIGINT", "SIGTERM", "SIGHUP"]
+
+function run(target) {
+  const child = childProcess.spawn(target, process.argv.slice(2), { stdio: "inherit" })
+  child.on("error", (error) => {
+    console.error(error.message)
+    process.exit(1)
+  })
+  const forwarders = {}
+  for (const signal of forwardedSignals) {
+    forwarders[signal] = () => {
+      try {
+        child.kill(signal)
+      } catch {}
+    }
+    process.on(signal, forwarders[signal])
+  }
+  child.on("exit", (code, signal) => {
+    for (const forwardedSignal of forwardedSignals) process.removeListener(forwardedSignal, forwarders[forwardedSignal])
+    if (signal) return process.kill(process.pid, signal)
+    process.exit(typeof code === "number" ? code : 0)
+  })
+}
+
+const envPath = process.env.ORCHESTRA_BIN_PATH
+const scriptDir = path.dirname(fs.realpathSync(__filename))
+const cached = path.join(scriptDir, ".orchestra")
+const platform = { darwin: "darwin", linux: "linux", win32: "windows" }[os.platform()] || os.platform()
+const arch = { x64: "x64", arm64: "arm64", arm: "arm" }[os.arch()] || os.arch()
+const base = "@humanguardrail/cli-" + platform + "-" + arch
+const binary = platform === "windows" ? "orchestra.exe" : "orchestra"
+
+function supportsAvx2() {
+  if (arch !== "x64") return false
+  if (platform === "linux") {
+    try {
+      return /(^|\s)avx2(\s|$)/i.test(fs.readFileSync("/proc/cpuinfo", "utf8"))
+    } catch {
+      return false
+    }
+  }
+  if (platform === "darwin") {
+    try {
+      const result = childProcess.spawnSync("sysctl", ["-n", "hw.optional.avx2_0"], { encoding: "utf8", timeout: 1500 })
+      return result.status === 0 && (result.stdout || "").trim() === "1"
+    } catch {
+      return false
+    }
+  }
+  if (platform === "windows") {
+    const command =
+      '(Add-Type -MemberDefinition "[DllImport(""kernel32.dll"")] public static extern bool IsProcessorFeaturePresent(int ProcessorFeature);" -Name Kernel32 -Namespace Win32 -PassThru)::IsProcessorFeaturePresent(40)'
+    for (const executable of ["powershell.exe", "pwsh.exe", "pwsh", "powershell"]) {
+      try {
+        const result = childProcess.spawnSync(executable, ["-NoProfile", "-NonInteractive", "-Command", command], {
+          encoding: "utf8",
+          timeout: 3000,
+          windowsHide: true,
+        })
+        if (result.status !== 0) continue
+        const output = (result.stdout || "").trim().toLowerCase()
+        if (output === "true" || output === "1") return true
+        if (output === "false" || output === "0") return false
+      } catch {
+        continue
+      }
+    }
+  }
+  return false
+}
+
+const names = (() => {
+  if (envPath) return []
+  const baseline = arch === "x64" && !supportsAvx2()
+  if (platform === "linux") {
+    const libc = (() => {
+      try {
+        const version = process.report?.getReport?.().header?.glibcVersionRuntime
+        if (typeof version === "string" && /^\d+\.\d+(?:\.\d+)?$/.test(version)) return "glibc"
+      } catch {}
+      try {
+        if (fs.existsSync("/etc/alpine-release")) return "musl"
+        const result = childProcess.spawnSync("ldd", ["--version"], {
+          encoding: "utf8",
+          timeout: 1500,
+          maxBuffer: 64 * 1024,
+        })
+        if (result.error || result.signal) return "unknown"
+        const output = (result.stdout || "") + "\n" + (result.stderr || "")
+        // musl's ldd --version may exit with status 1 despite identifying itself.
+        if ((result.status === 0 || result.status === 1) && /\bmusl libc\b/i.test(output)) return "musl"
+        if (result.status === 0 && /\b(?:glibc|gnu libc|gnu c library)\b/i.test(output)) return "glibc"
+      } catch {}
+      return "unknown"
+    })()
+    if (libc === "unknown") {
+      console.error(
+        "Cannot determine Linux libc (glibc or musl); refusing automatic orchestra CLI binary selection. " +
+          "Set ORCHESTRA_BIN_PATH to an explicitly selected compatible binary.",
+      )
+      process.exit(1)
+    }
+    if (libc === "musl")
+      return arch === "x64"
+        ? baseline
+          ? [`${base}-baseline-musl`]
+          : [`${base}-musl`, `${base}-baseline-musl`]
+        : [`${base}-musl`]
+    return arch === "x64"
+      ? baseline
+        ? [`${base}-baseline`]
+        : [base, `${base}-baseline`]
+      : [base]
+  }
+  return arch === "x64" ? (baseline ? [`${base}-baseline`] : [base, `${base}-baseline`]) : [base]
+})()
+
+function findBinary(startDir) {
+  let current = startDir
+  for (;;) {
+    const modules = path.join(current, "node_modules")
+    if (fs.existsSync(modules))
+      for (const name of names) {
+        const candidate = path.join(modules, name, "bin", binary)
+        if (fs.existsSync(candidate)) return candidate
+      }
+    const parent = path.dirname(current)
+    if (parent === current) return
+    current = parent
+  }
+}
+
+const resolved = envPath || (fs.existsSync(cached) ? cached : findBinary(scriptDir))
+if (!resolved) {
+  console.error(
+    "It seems that your package manager failed to install the right orchestra CLI package. Try manually installing " +
+      names.map((name) => `"${name}"`).join(" or ") +
+      " package",
+  )
+  process.exit(1)
+}
+run(resolved)

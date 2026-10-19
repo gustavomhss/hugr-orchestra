@@ -9,8 +9,8 @@ import type {
   Session,
   SessionStatus,
   Todo,
-} from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
+} from "../../compat/sdk-v2-client"
+import type { FileDiffInfo } from "../../compat/vendored-client-promise"
 import type { State, VcsCache } from "./types"
 import { trimSessions } from "./session-trim"
 import { dropSessionCaches } from "./session-cache"

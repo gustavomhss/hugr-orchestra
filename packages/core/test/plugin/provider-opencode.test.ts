@@ -75,7 +75,7 @@ const cost = (input: number, output = 0) => [{ input, output, cache: { read: 0, 
 
 describe("OpencodePlugin", () => {
   it.live(
-    "free catalog models authenticate real HTTP requests with the public sentinel and credentials override it",
+    "free catalog models authenticate real HTTP requests with the credential, never a public sentinel",
     () =>
       Effect.gen(function* () {
         const headers: Array<string | null> = []
@@ -105,84 +105,24 @@ describe("OpencodePlugin", () => {
           })
         })
         yield* addPlugin()
-        const free = required((yield* catalog.model.available()).find((model) => model.id === "free"))
-        for (const credential of [undefined, Credential.Key.make({ type: "key", key: "synthetic-request-key" })]) {
-          const model = yield* SessionRunnerModel.fromCatalogModel(free, credential)
-          yield* LLMClient.generate(LLM.request({ model, prompt: "Hello" })).pipe(
-            Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
-          )
-        }
-        expect(headers).toEqual(["Bearer public", "Bearer synthetic-request-key"])
+        const free = required(yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free")))
+        expect(free.request.body.apiKey).toBeUndefined()
+        const model = yield* SessionRunnerModel.fromCatalogModel(
+          free,
+          Credential.Key.make({ type: "key", key: "synthetic-request-key" }),
+        )
+        yield* LLMClient.generate(LLM.request({ model, prompt: "Hello" })).pipe(
+          Effect.provide(LLMClient.layer.pipe(Layer.provide(RequestExecutor.fetchLayer))),
+        )
+        expect(headers).toEqual(["Bearer synthetic-request-key"])
       }),
   )
-  it.effect("registers account and service account methods", () =>
+  it.effect("registers only the service account key method", () =>
     Effect.gen(function* () {
       yield* addPlugin()
       expect((yield* (yield* Integration.Service).get(Integration.ID.make("opencode")))?.methods).toEqual([
-        {
-          id: Integration.MethodID.make("device"),
-          type: "oauth",
-          label: "OpenCode Console account",
-        },
         { type: "key", label: "API key (service account)" },
       ])
-    }),
-  )
-
-  it.effect("resolves origin-rooted device verification URLs", () =>
-    Effect.gen(function* () {
-      const http = HttpClient.make((request) =>
-        Effect.succeed(
-          HttpClientResponse.fromWeb(
-            request,
-            Response.json({
-              device_code: "device",
-              user_code: "user",
-              verification_uri_complete: "/console/device?user_code=user&client_id=opencode-cli",
-              expires_in: 60,
-              interval: 60,
-            }),
-          ),
-        ),
-      )
-      yield* addPlugin(http)
-      const integration = yield* Integration.Service
-      const attempt = yield* integration.connection.oauth({
-        integrationID: Integration.ID.make("opencode"),
-        methodID: Integration.MethodID.make("device"),
-        inputs: {},
-      })
-      expect(attempt.url).toBe("https://opencode.ai/console/device?user_code=user&client_id=opencode-cli")
-    }),
-  )
-
-  it.effect("rejects malformed device verification URLs", () =>
-    Effect.gen(function* () {
-      const http = HttpClient.make((request) =>
-        Effect.succeed(
-          HttpClientResponse.fromWeb(
-            request,
-            Response.json({
-              device_code: "device",
-              user_code: "user",
-              verification_uri_complete: "http://[::1",
-              expires_in: 60,
-              interval: 60,
-            }),
-          ),
-        ),
-      )
-      yield* addPlugin(http)
-      const integration = yield* Integration.Service
-      const error = yield* integration.connection
-        .oauth({
-          integrationID: Integration.ID.make("opencode"),
-          methodID: Integration.MethodID.make("device"),
-          inputs: {},
-        })
-        .pipe(Effect.flip)
-      expect(error).toBeInstanceOf(Integration.AuthorizationError)
-      expect(String(error.cause)).toContain("Invalid device verification URL")
     }),
   )
 
@@ -300,7 +240,7 @@ describe("OpencodePlugin", () => {
     ),
   )
 
-  it.effect("keeps anonymous Zen free access model-scoped without marking the provider authenticated", () =>
+  it.effect("offers no Zen models without a credential, even free ones", () =>
     withEnv({ OPENCODE_API_KEY: undefined }, () =>
       Effect.gen(function* () {
         const catalog = yield* Catalog.Service
@@ -322,15 +262,15 @@ describe("OpencodePlugin", () => {
         })
         yield* addPlugin()
         expect(required(yield* catalog.provider.get(ProviderV2.ID.opencode)).request.body.apiKey).toBeUndefined()
-        expect((yield* catalog.provider.available()).map((provider) => provider.id)).toContain(ProviderV2.ID.opencode)
-        expect(
-          (yield* catalog.model.available())
-            .filter((model) => model.providerID === ProviderV2.ID.opencode)
-            .map((model) => model.id),
-        ).toEqual([ModelV2.ID.make("free")])
-        expect((yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free")))?.request.body.apiKey).toBe(
-          "public",
+        expect((yield* catalog.provider.available()).map((provider) => provider.id)).not.toContain(
+          ProviderV2.ID.opencode,
         )
+        expect(
+          (yield* catalog.model.available()).filter((model) => model.providerID === ProviderV2.ID.opencode),
+        ).toEqual([])
+        expect(
+          (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free")))?.request.body.apiKey,
+        ).toBeUndefined()
       }),
     ),
   )

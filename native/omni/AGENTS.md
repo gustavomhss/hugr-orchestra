@@ -87,7 +87,7 @@ runner fails loudly without them.
 
 ```bash
 docker run --rm -v "$PWD":/w -w /w -v omni-cargo:/usr/local/cargo/registry -v omni-target:/w/target \
-  -v omni-rustup:/usr/local/rustup rust:1.96 cargo test --workspace
+  -v omni-rustup:/usr/local/rustup rust:1.98 cargo test --workspace
 ```
 
 - **Supervisor tests in Docker** need `--privileged`: the Linux PID-reuse test steers `ns_last_pid`, and it fails

@@ -3,7 +3,7 @@ import { createEffect, createMemo, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Todo } from "@orchestra/sdk/v2"
 import { useServerSync } from "@/context/global-sync"
-import { PromptInput } from "@/components/prompt-input"
+import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { usePrompt } from "@/context/prompt"
 import {
   SessionComposerRegion,
@@ -26,7 +26,7 @@ This playground renders the real session composer region from app code.
 
 ### Includes
 - \`SessionTodoDock\` (real)
-- \`PromptInput\` (real)
+- \`PromptInputV2Composer\` (real)
 
 No visual reimplementation layer is used for the dock/input stack.`,
       },
@@ -300,15 +300,7 @@ export const Playground = {
                       setPromptRef: () => {},
                       setDockRef: () => {},
                     })}
-                    promptInput={
-                      <PromptInput
-                        controls={controls}
-                        submission={{ abort: () => {}, handleSubmit: (event) => event.preventDefault() }}
-                        ref={() => {}}
-                        newSessionWorktree=""
-                        onNewSessionWorktreeReset={() => {}}
-                      />
-                    }
+                    promptInput={<StoryPromptComposer controls={controls} />}
                   />
                 </div>
               </div>
@@ -619,4 +611,14 @@ export const Playground = {
       </div>
     )
   },
+}
+
+function StoryPromptComposer(props: { controls: Parameters<typeof usePromptInputV2Controller>[0]["controls"] }) {
+  const controller = usePromptInputV2Controller({
+    controls: props.controls,
+    ref: () => {},
+    newSessionWorktree: "",
+    onNewSessionWorktreeReset: () => {},
+  })
+  return <PromptInputV2Composer controller={controller} />
 }

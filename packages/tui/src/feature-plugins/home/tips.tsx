@@ -1,14 +1,25 @@
 import type { TuiPlugin, TuiPluginApi } from "@orchestra/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
-import { createMemo, Show } from "solid-js"
+import { createMemo, createSignal, Show } from "solid-js"
 import { Tips } from "./tips-view"
 import { useBindings } from "../../keymap"
 
 const id = "internal:home-tips"
 
 function View(props: { api: TuiPluginApi; hidden: boolean; show: boolean; connected: boolean }) {
+  const [step, setStep] = createSignal(0)
   useBindings(() => ({
     commands: [
+      {
+        name: "tips.next",
+        title: "Next tip",
+        category: "System",
+        namespace: "palette",
+        run() {
+          setStep((value) => value + 1)
+          props.api.ui.dialog.clear()
+        },
+      },
       {
         name: "tips.toggle",
         title: props.hidden ? "Show tips" : "Hide tips",
@@ -20,13 +31,13 @@ function View(props: { api: TuiPluginApi; hidden: boolean; show: boolean; connec
         },
       },
     ],
-    bindings: props.api.tuiConfig.keybinds.get("tips.toggle"),
+    bindings: [...props.api.tuiConfig.keybinds.get("tips.toggle"), ...props.api.tuiConfig.keybinds.get("tips.next")],
   }))
 
   return (
     <box width="100%" maxWidth={75} alignItems="center" paddingTop={3} flexShrink={1}>
       <Show when={props.show}>
-        <Tips api={props.api} connected={props.connected} />
+        <Tips api={props.api} connected={props.connected} step={step()} />
       </Show>
     </box>
   )

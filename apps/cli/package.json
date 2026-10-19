@@ -1,0 +1,39 @@
+{
+  "$schema": "https://json.schemastore.org/package.json",
+  "name": "@orchestra/cli",
+  "version": "1.18.27",
+  "type": "module",
+  "license": "MIT",
+  "bin": {
+    "orchestra": "./bin/orchestra.cjs"
+  },
+  "files": [
+    "bin"
+  ],
+  "scripts": {
+    "build": "bun run script/build.ts",
+    "dev": "bun run src/index.ts",
+    "test": "bun run script/test.ts",
+    "typecheck": "tsgo --noEmit"
+  },
+  "dependencies": {
+    "@effect/platform-node": "catalog:",
+    "@orchestra/client": "workspace:*",
+    "@orchestra/core": "workspace:*",
+    "@orchestra/maestro": "workspace:*",
+    "@orchestra/sdk": "workspace:*",
+    "@orchestra/server": "workspace:*",
+    "@orchestra/tui": "workspace:*",
+    "@opentui/core": "catalog:",
+    "@opentui/solid": "catalog:",
+    "@parcel/watcher": "2.5.1",
+    "effect": "catalog:",
+    "solid-js": "catalog:"
+  },
+  "devDependencies": {
+    "@orchestra/script": "workspace:*",
+    "@tsconfig/bun": "catalog:",
+    "@types/bun": "catalog:",
+    "@typescript/native-preview": "catalog:"
+  }
+}

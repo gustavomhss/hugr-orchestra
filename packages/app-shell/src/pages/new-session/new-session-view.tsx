@@ -1,4 +1,4 @@
-import { useDialog } from "@orchestra/ui/context/dialog"
+import { useNavigate } from "@solidjs/router"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
@@ -19,6 +19,7 @@ import { useSDK } from "@/context/sdk"
 import { useServerSync } from "@/context/server-sync"
 import { useProviders } from "@/hooks/use-providers"
 import { HugrMark } from "@/orchestra/brand"
+import { useClaudeMode } from "@/orchestra/use-claude-mode"
 import { NEW_SESSION_CONTENT_WIDTH } from "@/pages/session/new-session-layout"
 import { Persist, persisted } from "@/utils/persist"
 import type { NewSessionDraftController } from "./new-session-draft-controller"
@@ -97,10 +98,11 @@ export function NewSessionStatus(props: { mount: Accessor<HTMLElement | null>; v
 
 function ProviderTip() {
   const language = useLanguage()
-  const dialog = useDialog()
+  const navigate = useNavigate()
   const sdk = useSDK()
   const serverSync = useServerSync()
   const providers = useProviders(() => sdk().directory)
+  const claudeMode = useClaudeMode(() => sdk().directory)
   const [persistedState, setPersistedState, , persistedReady] = persisted(
     Persist.global("new-session.provider-tip"),
     createStore({ dismissedAt: 0 }),
@@ -117,11 +119,7 @@ function ProviderTip() {
     show: visible,
     element: () => ref() ?? null,
   })
-  const openProviders = () => {
-    void import("@/components/dialog-connect-provider").then(({ DialogConnectProvider }) => {
-      void dialog.show(() => <DialogConnectProvider directory={() => sdk().directory} />)
-    })
-  }
+  const openProviders = () => navigate("/orchestra/providers")
 
   return (
     <Show when={presence.present()}>
@@ -138,10 +136,18 @@ function ProviderTip() {
             class="flex h-6 min-w-0 items-center rounded-[4px] pl-1.5 text-[13px] leading-none tracking-[-0.04px] text-v2-text-text-faint transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-muted focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-muted focus-visible:outline-none"
             onClick={openProviders}
           >
-            <span class="truncate">{language.t("home.providerTip")}</span>
+            <span class="truncate">{language.t("orchestra.chat.providerTip")}</span>
             <span class="flex size-6 shrink-0 items-center justify-center" aria-hidden="true">
               <IconV2 name="chevron-down" size="small" class="-rotate-90" />
             </span>
+          </button>
+          <button
+            type="button"
+            data-action="claude-mode"
+            class="flex h-6 min-w-0 items-center rounded-[4px] px-1.5 text-[13px] leading-none tracking-[-0.04px] text-v2-text-text-faint transition-[background-color,color] duration-150 ease-in-out hover:bg-v2-overlay-simple-overlay-hover hover:text-v2-text-text-muted focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:text-v2-text-text-muted focus-visible:outline-none"
+            onClick={() => void claudeMode()}
+          >
+            <span class="truncate">{language.t("orchestra.providers.claudeMode.use")}</span>
           </button>
           <TooltipV2
             class="hover-reveal absolute left-full top-0 flex h-6 w-7 items-center justify-end delay-0 duration-0 group-hover/provider-tip:delay-[250ms] group-hover/provider-tip:duration-150 group-hover/provider-tip:opacity-100 focus-within:delay-0 focus-within:duration-0 focus-within:opacity-100"

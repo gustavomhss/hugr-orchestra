@@ -1,4 +1,4 @@
-import { For, type JSX, Show } from "solid-js"
+import { createSignal, For, type JSX, Show } from "solid-js"
 import { decisionTime, type RelayDecision, type RelayNodeType } from "./client"
 import { Empty, NodeDetails, NodeNameField, Rows, Switchable } from "./details"
 import {
@@ -15,6 +15,7 @@ import {
   RECORDED,
   recordOnly,
   TRIGGER,
+  uniqueName,
   updateNode,
 } from "./graph"
 import { eventSuggestions, hookKey, isFileOperation, operationTimings, toolSuggestions } from "./catalog"
@@ -73,6 +74,7 @@ type Props = {
   testResult?: string
   issues: string[]
   save: JSX.Element
+  readOnly?: boolean
   onChange: (flow: Flow) => void
   onNav: (id: string) => void
   onClose: () => void
@@ -101,6 +103,7 @@ export function HookDetails(props: Props) {
       </>}
       output={<Show when={!props.decisionStatus && props.installed !== false} fallback={<DecisionStatus {...props} />}><Output {...props} /></Show>}
       save={props.save}
+      readOnly={props.readOnly}
       actions={
         <button type="button" class="mx-btn" onClick={props.onTest}>
           <Ic name="test" />
@@ -155,7 +158,7 @@ function Input(props: Props) {
                     ? "orchestra.hooks.details.commandHash"
                     : "orchestra.hooks.details.target",
                 ),
-                decision().subject,
+                decision().subject ? `\u2068${decision().subject}\u2069` : undefined,
               ],
               [copy.t("orchestra.hooks.details.session"), decision().session],
               [
@@ -238,9 +241,19 @@ function Params(props: Props) {
   const copy = useRelayCopy()
   const update = (parameters: Record<string, unknown>) =>
     props.onChange(updateNode(props.flow, props.node.id, { parameters: { ...props.node.parameters, ...parameters } }))
-  // Allow and Record keep their note with the hook; every other action hands its message to the agent.
+  // Allow and Record keep their note with the hook; Ask shows its message on the approval card, and the agent reads it
+  // only after a refusal; every other action hands its message to the agent.
   const note = () => props.node.type === "relay.hookAllow" || props.node.type === "relay.hookRecord"
-  const message = () => copy.t(note() ? "orchestra.hooks.details.note" : "orchestra.hooks.details.message")
+  const approve = () => props.node.type === "relay.hookApprove"
+  const message = () =>
+    copy.t(
+      note()
+        ? "orchestra.hooks.details.note"
+        : approve()
+          ? "orchestra.hooks.details.approverMessage"
+          : "orchestra.hooks.details.message",
+    )
+  const [pasted, setPasted] = createSignal(false)
   const trigger = () => props.flow.nodes.find((node) => node.type === TRIGGER)
   // An empty Record note is saved as RECORDED (the export needs text), which the field shows as empty.
   const noteValue = () => {
@@ -282,9 +295,19 @@ function Params(props: Props) {
             value={`${String(props.node.parameters.operation ?? "edit")}:${String(props.node.parameters.timing ?? "before")}`}
             onChange={(event) => {
               const [operation, timing] = event.currentTarget.value.split(":")
+              // The name follows the event only while it is the event's own label; a name the user gave stays.
+              const named =
+                props.node.name !==
+                triggerName(
+                  copy,
+                  String(props.node.parameters.operation ?? "edit"),
+                  String(props.node.parameters.timing ?? "before"),
+                  props.types,
+                )
+              const others = { ...props.flow, nodes: props.flow.nodes.filter((node) => node.id !== props.node.id) }
               props.onChange(
                 updateNode(props.flow, props.node.id, {
-                  name: triggerName(copy, operation, timing, props.types),
+                  ...(named ? {} : { name: uniqueName(others, triggerName(copy, operation, timing, props.types)) }),
                   parameters: { ...props.node.parameters, operation, timing },
                 }),
               )
@@ -357,14 +380,30 @@ function Params(props: Props) {
       </Show>
       <Show when={props.node.type !== TRIGGER && props.node.type !== CONDITION}>
         <Show when={props.node.type === "relay.hookVerify"}>
-          <label class="mx-field">
+          <label class="mx-field" classList={{ invalid: pasted() }}>
             <span>{copy.t("orchestra.hooks.details.command")}</span>
             <input
               value={String(props.node.parameters.check ?? "")}
               placeholder="bun typecheck"
               style={{ "font-family": "var(--mx-mono)" }}
-              onInput={(event) => update({ check: event.currentTarget.value })}
+              onPaste={(event) => {
+                // A one-line field joins pasted lines into one command that runs something else, so refuse them.
+                const lines = /[\r\n]/.test((event.clipboardData?.getData("text/plain") ?? "").trim())
+                setPasted(lines)
+                if (lines) event.preventDefault()
+              }}
+              onInput={(event) => {
+                setPasted(false)
+                update({ check: event.currentTarget.value })
+              }}
             />
+            <Show when={pasted()}>
+              <span class="mx-hint" role="alert">
+                {copy.t("orchestra.hooks.details.commandOneLine")}
+              </span>
+            </Show>
+            <span class="mx-hint">{copy.t("orchestra.hooks.details.commandHint")}</span>
+            <span class="mx-hint">{copy.t("orchestra.hooks.details.commandEnv")}</span>
           </label>
           <Show when={outputsOf(props.flow, props.node, props.outputs).length === 2}>
             <p class="mx-note" style={{ "margin-top": "-6px" }}>
@@ -382,6 +421,9 @@ function Params(props: Props) {
           />
           <Show when={note()}>
             <span class="mx-hint">{copy.t("orchestra.hooks.details.noteHint")}</span>
+          </Show>
+          <Show when={approve()}>
+            <span class="mx-hint">{copy.t("orchestra.hooks.details.approverHint")}</span>
           </Show>
           <Show when={props.node.type === "relay.hookRemind" && trigger()?.parameters.operation !== "prompt"}>
             <span class="mx-hint">{copy.t("orchestra.hooks.details.remindHint")}</span>

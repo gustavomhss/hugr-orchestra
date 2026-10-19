@@ -5,7 +5,7 @@ import type {
   AgentFileInput,
   AgentFilePermission,
   Provider,
-} from "@orchestra/sdk/v2/client"
+} from "../../compat/sdk-v2-client"
 import { agentKey } from "@/context/agent-identity"
 import { modelUnavailable } from "@/components/subagent-model-rules"
 
@@ -171,6 +171,11 @@ export function removeInput(file: AgentFileInfo | undefined): AgentFileInput {
     disable: true,
     ...(file ? { revision: file.revision } : {}),
   }
+}
+
+/** The write that undoes `removeInput`: the same definition without `disable`, which the server drops from the file. */
+export function restoreInput(file: AgentFileInfo): AgentFileInput {
+  return { ...removeInput(file), disable: undefined }
 }
 
 export function draftError(draft: AgentDraft, names: readonly string[], creating: boolean) {

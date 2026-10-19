@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { listenDeepLinks } from "../src/pages/layout/deep-links"
-import { listenForDeepLinks } from "../../desktop/src/renderer/deep-links"
+import { listenForDeepLinks } from "../../../apps/desktop/src/renderer/deep-links"
 
 test("desktop bridge waits for shell readiness and acknowledges live links without remount replay", async () => {
   const delivered: string[] = []

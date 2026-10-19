@@ -14,7 +14,7 @@ Examples: `session-recovery`, `fix-scroll-state`, `regenerate-sdk`.
 
 - Maestro's name is fixed. The app and other Sessions find and address the conductor by it, so config cannot rename it.
 - Every other native seat is addressed by its stable id (for example `backend`); its display name is a user setting (`agent.<id>.name`). Code, tests, docs, commits and PR text refer to a seat by role or id, never by a default display name.
-- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`packages/orchestra/src/maestro/roster.ts`). `packages/orchestra/test/agent/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
+- The backend specialist's default display name lives only in `BACKEND_DEFAULT_LABEL` (`modules/maestro/coordination/src/roster.ts`). `apps/orchestra/test/agent/specialist-name-guard.test.ts` fails on any other occurrence in the repository.
 
 ## Commits and PR Titles
 
@@ -153,14 +153,14 @@ const table = sqliteTable("session", {
   - It uploads a snapshot of your working tree to a temporary `ci-run-*` branch, waits for the `test-ci` workflow, prints the result and exits non-zero when tests fail. No commit is needed; untracked files that are not gitignored are included, so keep secrets out of the tree.
   - A run takes a few minutes: give the shell call a long timeout or run it in the background.
   - A Python package (a `requirements-dev.txt` and no `package.json`) runs pytest instead. In a package with both, such as `modules/relay`, naming only `.py` files runs pytest, for example `bun run test:ci relay tests/test_authoring.py`, and anything else runs `bun test`; `-t` becomes pytest's `-k`.
-  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run, and `test:ci` fails a job without it. Full lanes and whole-package `test:ci` runs expect every run to spawn through omni; a narrower `test:ci` run (`ORCHESTRA_OMNI_CONTROL=declared`, derived from the request) expects it only from tests that declared it. A test that must spawn through omni calls `expectSpawn(import.meta.path)` from `packages/core/test/fixture/omni-expect.ts` in its body, before it spawns; it then fails unless it made an omni spawn of its own. `packages/core/test/omni-expect-guard.test.ts` requires the call in test files that import omni's spawn surface. Do not pass `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER=0` to quiet the control; that runs the tests on legacy.
+  - The omni positive control (`script/test-omni-control.ts`) prints one `omni positive control:` line per run, and `test:ci` fails a job without it or whose verdict is neither `pass` nor `not applicable`. Full lanes and whole-package `test:ci` runs expect every run to spawn through omni; a narrower `test:ci` run (`ORCHESTRA_OMNI_CONTROL=declared`, derived from the request) expects it only from tests that declared it. A test that must spawn through omni calls `expectSpawn(import.meta.path)` from `packages/core/test/fixture/omni-expect.ts` in its body, before it spawns; it then fails unless it made an omni spawn of its own. `packages/core/test/omni-expect-guard.test.ts` requires the call in test files that import omni's spawn surface. `test:ci` accepts only `1` or `strict` for `--env ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER`: `0` or a typo would run the tests on legacy with the control off. Legacy rollback runs only in test.yml's named lanes.
   - A local `bun test` stops with a pointer to `test:ci` (`script/test-guard.ts`). Only the owner may allow a local run, with `ORCHESTRA_LOCAL_TESTS=1`.
 
 ## Spawning Processes
 
 - Orchestra code starts child processes only through `ChildProcessSpawner`, `Process`, or `Process.interactive`.
 - Only `packages/core/src/omni.ts` imports `hugr-omni` (`native/omni`); everything else goes through it.
-- The sites that stay outside omni, and why, are listed in `native/omni/docs/orchestra-integration.md` §3.
+- The sites that stay outside omni are the entries in `script/spawn-allowlist.json`, which is the source of truth; `native/omni/docs/orchestra-integration.md` §3 explains only the main groups.
 - `bun run check:spawn-imports` fails on any other import of `cross-spawn`, `bun-pty`, `@lydell/node-pty`, `child_process` or `hugr-omni`, or use of `StdioClientTransport`. Today's sites are in `script/spawn-allowlist.json`; entries are only removed, never added without the lead.
 
 ## CI Cadence
@@ -175,7 +175,7 @@ const table = sqliteTable("session", {
 
 ## Type Checking
 
-- Always run `bun typecheck` from package directories (e.g., `packages/orchestra`), never `tsc` directly.
+- Always run `bun typecheck` from package directories (e.g., `apps/orchestra`), never `tsc` directly.
 
 ## V2 Session Core
 
@@ -187,4 +187,4 @@ const table = sqliteTable("session", {
 - Keep local Session drains process-local until clustering is implemented. `SessionRunCoordinator` joins explicit same-Session resumes, coalesces prompt wakeups, and allows different Sessions to run concurrently. Advisory wakes drain eligible durable inbox rows only; post-crash continuation recovery requires a separate explicit design before it may retry provider work. A drain has no durable identity or transcript boundary.
 - Keep delivery vocabulary explicit. Prompts steer by default and promote at the next safe provider-turn boundary while the current drain requires continuation. An explicit `queue` input remains pending until the Session would otherwise become idle; promote one queued input at that boundary, then reevaluate continuation before promoting another. Promoting any new user input resets the selected agent's provider-turn allowance; a batch of steers resets it once.
 - Keep EventV2 replay owner claims separate from clustered Session execution ownership.
-- Keep the System Context algebra, registry, and built-ins in `src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.
+- Keep the System Context algebra, registry, and built-ins in `packages/core/src/system-context`; keep Context Source producers with their observed domains, and keep Session History selection plus Context Epoch persistence Session-owned.

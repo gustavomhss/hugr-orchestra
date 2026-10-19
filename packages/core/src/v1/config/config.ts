@@ -41,7 +41,7 @@ export const Info = Schema.Struct({
     description: "Server configuration for orchestra serve and web commands",
   }),
   command: Schema.optional(Schema.Record(Schema.String, ConfigCommandV1.Info)).annotate({
-    description: "Command configuration, see https://opencode.ai/docs/commands",
+    description: "Command configuration",
   }),
   skills: Schema.optional(ConfigSkillsV1.Info).annotate({ description: "Additional skill folder paths" }),
   maestro: Schema.optional(ConfigMaestro.Info).annotate({
@@ -100,7 +100,7 @@ export const Info = Schema.Struct({
       }),
       [Schema.Record(Schema.String, ConfigAgentV1.Info)],
     ),
-  ).annotate({ description: "Agent configuration, see https://opencode.ai/docs/agents" }),
+  ).annotate({ description: "Agent configuration" }),
   provider: Schema.optional(Schema.Record(Schema.String, ConfigProviderV1.Info)).annotate({
     description: "Custom provider configurations and model overrides",
   }),

@@ -5,11 +5,10 @@ import { layerBase, parseRelayRoute, relayPath } from "./route"
 describe("routes", () => {
   test("library views", () => {
     expect(parseRelayRoute("workflow", "")).toEqual({ page: "library", kind: "workflow", tab: "list", create: false })
-    // Workflow runs are hidden: their executions URL opens the library.
     expect(parseRelayRoute("workflow", "/executions")).toEqual({
       page: "library",
       kind: "workflow",
-      tab: "list",
+      tab: "runs",
       create: false,
     })
     expect(parseRelayRoute("hook", "/activity")).toEqual({ page: "library", kind: "hook", tab: "runs", create: false })

@@ -1,4 +1,4 @@
-import type { SessionMessageInfo, SessionPendingMessage } from "@opencode-ai/client/promise"
+import type { SessionMessageInfo, SessionPendingMessage } from "../compat/vendored-client-promise"
 import type { ServerCurrentEvent } from "./server-sdk"
 
 type Assistant = Extract<SessionMessageInfo, { type: "assistant" }>

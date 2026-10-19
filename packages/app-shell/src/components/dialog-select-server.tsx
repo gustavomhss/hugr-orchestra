@@ -2,23 +2,21 @@ import { Button } from "@orchestra/ui/button"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { Dialog } from "@orchestra/ui/dialog"
 import { DropdownMenu } from "@orchestra/ui/dropdown-menu"
-import { Icon } from "@orchestra/ui/icon"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { List } from "@orchestra/ui/list"
 import { TextField } from "@orchestra/ui/text-field"
 import { useMutation } from "@tanstack/solid-query"
 import { showToast } from "@/utils/toast"
 import { useNavigate } from "@solidjs/router"
-import { createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
+import { batch, createEffect, createMemo, createResource, onCleanup, Show } from "solid-js"
 import { createStore } from "solid-js/store"
+import { DialogRemoveServer } from "@/components/server/dialog-remove-server"
 import { ServerHealthIndicator, ServerRow } from "@/components/server/server-row"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { normalizeServerUrl, ServerConnection, useServer } from "@/context/server"
-import { detectServerProtocol } from "@/utils/server-protocol"
+import { normalizeServerUrl, ServerConnection, serverName, useServer } from "@/context/server"
 import { type ServerHealth, useCheckServerHealth } from "@/utils/server-health"
-import { useSettings } from "@/context/settings"
 import { useTabs } from "@/context/tabs"
 
 const DEFAULT_USERNAME = "orchestra"
@@ -202,7 +200,6 @@ export function useServerManagementController(options: { onSelect?: () => void; 
       global: useGlobal(),
       platform: usePlatform(),
       language: useLanguage(),
-      settings: useSettings(),
       checkServerHealth: useCheckServerHealth(),
     },
     options,
@@ -214,10 +211,9 @@ export function createServerManagementController(
     navigate: ReturnType<typeof useNavigate>
     server: Pick<ReturnType<typeof useServer>, "key" | "current" | "list" | "add" | "remove" | "setActive">
     tabs: Pick<ReturnType<typeof useTabs>, "removeServer">
-    global: Pick<ReturnType<typeof useGlobal>, "servers" | "ensureServerCtx">
+    global: Pick<ReturnType<typeof useGlobal>, "servers">
     platform: ReturnType<typeof usePlatform>
     language: Pick<ReturnType<typeof useLanguage>, "t">
-    settings: { general: Pick<ReturnType<typeof useSettings>["general"], "newLayoutDesigns"> }
     checkServerHealth: ReturnType<typeof useCheckServerHealth>
   },
   options: { onSelect?: () => void; navigateOnAdd?: boolean } = {},
@@ -228,7 +224,6 @@ export function createServerManagementController(
   const global = input.global
   const platform = input.platform
   const language = input.language
-  const settings = input.settings
   const checkServerHealth = input.checkServerHealth
   const { defaultKey, canDefault, setDefault } = useDefaultServer(platform, language)
   const { previewStatus } = useServerPreview(checkServerHealth)
@@ -304,18 +299,17 @@ export function createServerManagementController(
         setStore("addServer", { error: language.t("dialog.server.add.error") })
         return
       }
-      if (
-        !settings.general.newLayoutDesigns() &&
-        (await detectServerProtocol(conn.http, platform.fetch ?? globalThis.fetch)) === "v2"
-      ) {
-        if (current()) setStore("addServer", { error: language.t("dialog.server.add.error") })
-        return
-      }
 
       if (!current()) return
       resetAdd()
       if (options.navigateOnAdd === false) {
-        server.add(conn)
+        // Adding from Settings only saves the entry. add() activates it, which would remount the shell mid-action,
+        // so restore the previous server in the same batch.
+        const active = server.key
+        batch(() => {
+          server.add(conn)
+          server.setActive(active)
+        })
         options.onSelect?.()
         return
       }
@@ -359,13 +353,6 @@ export function createServerManagementController(
         setStore("editServer", { error: language.t("dialog.server.add.error") })
         return
       }
-      if (
-        !settings.general.newLayoutDesigns() &&
-        (await detectServerProtocol(conn.http, platform.fetch ?? globalThis.fetch)) === "v2"
-      ) {
-        if (current()) setStore("editServer", { error: language.t("dialog.server.add.error") })
-        return
-      }
       if (!current()) return
       const previousDefault = await platform.getDefaultServer?.()
       if (!current()) return
@@ -402,19 +389,9 @@ export function createServerManagementController(
     return [current, ...list.filter((x) => x !== current)]
   })
 
-  const current = createMemo<ServerConnection.Any | undefined>(() =>
-    settings.general.newLayoutDesigns()
-      ? undefined
-      : (items().find((x) => ServerConnection.key(x) === server.key) ?? items()[0]),
-  )
-
   const sortedItems = createMemo(() => {
-    const raw = items()
-    const list = settings.general.newLayoutDesigns()
-      ? raw
-      : raw.filter((x) => global.ensureServerCtx(x).sdk.protocolKind() !== "v2")
+    const list = items()
     if (!list.length) return list
-    const active = current()
     const order = new Map(list.map((url, index) => [url, index] as const))
     const rank = (value?: ServerHealth) => {
       if (value?.healthy === true) return 0
@@ -422,8 +399,6 @@ export function createServerManagementController(
       return 1
     }
     return list.slice().sort((a, b) => {
-      if (a === active) return -1
-      if (b === active) return 1
       const diff =
         rank(global.servers.health[ServerConnection.key(a)]) - rank(global.servers.health[ServerConnection.key(b)])
       if (diff !== 0) return diff
@@ -596,7 +571,6 @@ export function createServerManagementController(
   return {
     defaultKey,
     canDefault,
-    current,
     sortedItems,
     status: () => global.servers.health,
     isFormMode,
@@ -625,7 +599,7 @@ export function createServerManagementController(
 
 export function ServerConnectionList(props: { controller: ReturnType<typeof useServerManagementController> }) {
   const language = useLanguage()
-  const settings = useSettings()
+  const dialog = useDialog()
 
   return (
     <div class="flex flex-1 min-h-0 flex-col gap-4">
@@ -639,9 +613,6 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
         emptyMessage={language.t("dialog.server.empty")}
         items={props.controller.sortedItems}
         key={(x) => x.http.url}
-        onSelect={(x) => {
-          if (x && !settings.general.newLayoutDesigns()) void props.controller.select(x)
-        }}
         divider={true}
       >
         {(i) => {
@@ -666,10 +637,6 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
                 showCredentials
               />
               <div class="flex items-center justify-center gap-4 pl-4">
-                <Show when={props.controller.current() && ServerConnection.key(props.controller.current()!) === key}>
-                  <Icon name="check" class="h-6" />
-                </Show>
-
                 <Show when={i.type === "http"}>
                   <DropdownMenu>
                     <DropdownMenu.Trigger
@@ -704,7 +671,11 @@ export function ServerConnectionList(props: { controller: ReturnType<typeof useS
                         </Show>
                         <DropdownMenu.Separator />
                         <DropdownMenu.Item
-                          onSelect={() => props.controller.handleRemove(ServerConnection.key(i))}
+                          onSelect={() =>
+                            dialog.push(() => (
+                              <DialogRemoveServer name={serverName(i)} onConfirm={() => props.controller.handleRemove(key)} />
+                            ))
+                          }
                           class="text-text-on-critical-base hover:bg-surface-critical-weak"
                         >
                           <DropdownMenu.ItemLabel>{language.t("dialog.server.menu.delete")}</DropdownMenu.ItemLabel>

@@ -24,7 +24,7 @@ export type NativeFrameFixture = {
     disconnected: number
     targets: string[]
   }
-  update(value: { zoom?: number; fullscreen?: boolean; newLayout?: boolean; direction?: "ltr" | "rtl" }): void
+  update(value: { zoom?: number; fullscreen?: boolean; direction?: "ltr" | "rtl" }): void
   move(left: number, top: number, height: number): void
   stream(): Promise<void>
   dispose(): void
@@ -45,7 +45,7 @@ const navigationTooltip = normalizePath(
 const shellCSS = normalizePath(fileURLToPath(new URL("../../src/orchestra/shell.css", import.meta.url)))
 const stateModule = `
 import { createStore } from "solid-js/store"
-export const [state, setState] = createStore({ zoom: 1, fullscreen: false, newLayout: true, direction: "ltr", compact: true })
+export const [state, setState] = createStore({ zoom: 1, fullscreen: false, direction: "ltr", compact: true })
 export const records = { frames: [], reads: 0, requests: 0, completed: 0, cancelled: 0, observers: 0, disconnected: 0, targets: [] }
 export const callbacks = { raf: [], observers: [] }
 const params = new URLSearchParams(location.search)
@@ -64,9 +64,7 @@ const providersModule = `
 import { state, platform } from "frame:state"
 export const usePlatform = () => platform
 export const useSettings = () => ({ general: {
-  newLayoutDesigns: () => state.newLayout,
   mobileTitlebarPosition: () => "top",
-  showNavigation: () => true,
 } })
 export const useLayout = () => ({
   route: () => ({ type: "home" }),
@@ -104,6 +102,7 @@ export const KeybindV2 = Icon
 export const TooltipV2 = Tooltip
 export const WindowsAppMenu = () => null
 export const TitlebarTabStrip = () => null
+export const useDraftCloseGuard = () => (_tab, close) => close()
 `
 const entryModule = `
 import { createEffect } from "solid-js"
@@ -250,7 +249,7 @@ window.nativeFrameFixture = {
     callbacks.raf.forEach((callback) => callback(performance.now()))
     callbacks.observers.forEach((callback) => callback())
     window.dispatchEvent(new Event("resize"))
-    setState({ zoom: 1.5, newLayout: false, fullscreen: true })
+    setState({ zoom: 1.5, fullscreen: true })
     await reportsDone()
   },
   settled,
@@ -306,6 +305,7 @@ export function nativeFrameViteConfig(cache: string) {
             source.startsWith("@orchestra/ui/") ||
             source === "@solidjs/router" ||
             source === "@/components/titlebar-tab-strip" ||
+            source === "@/components/titlebar-draft-close" ||
             source === "./windows-app-menu" ||
             source === "./titlebar-tab-order" ||
             source === "./command-tooltip-keybind" ||

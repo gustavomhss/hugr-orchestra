@@ -15,7 +15,7 @@ import {
   PTY_CONNECT_TOKEN_HEADER_VALUE,
 } from "@orchestra/protocol/groups/pty"
 import { response } from "../location"
-import { PtyEnvironment } from "../pty-environment"
+import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 
 const ticketScope = Effect.gen(function* () {
   const location = yield* Location.Service

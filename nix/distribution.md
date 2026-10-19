@@ -22,7 +22,7 @@ original output controls; independent completion retained all 26 original contro
 Full finite archives were recovered, individual record manifests checked, and
 external/native-completion worker record bytes compared against the live API-bound
 receipt. Persistent identity and artifact IDs are in
-[`specs/orchestra-visual/RELAY-ACTIVE.md`](../specs/orchestra-visual/RELAY-ACTIVE.md).
+[`docs/specs/orchestra-visual/RELAY-ACTIVE.md`](../docs/specs/orchestra-visual/RELAY-ACTIVE.md).
 
 This qualifies the named Nix component source. Its package fingerprint remains
 historical qualified `791d7e1846`; changed Archie/Auth/dev package inputs need a

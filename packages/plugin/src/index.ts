@@ -9,8 +9,8 @@ import type {
   Message,
   Part,
   Config as SDKConfig,
-} from "@orchestra/sdk"
-import type { Provider as ProviderV2, Model as ModelV2, Auth } from "@orchestra/sdk/v2"
+} from "./compat/sdk.js"
+import type { Provider as ProviderV2, Model as ModelV2, Auth } from "./compat/sdk-v2.js"
 
 import type { BunShell } from "./shell.js"
 import { type ToolDefinition } from "./tool.js"
@@ -353,7 +353,7 @@ export interface Hooks {
 
   /**
    * Fires once when a session is created, before any tool calls.
-   * Plugin may add to `output.metadata` (reserved keys blocked).
+   * Plugin may add to `output.metadata`; keys the creator already set are kept.
    */
   "session.start"?: (
     input: {

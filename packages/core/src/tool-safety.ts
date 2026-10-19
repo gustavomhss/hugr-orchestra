@@ -516,7 +516,7 @@ export const make = Effect.gen(function* () {
           ? yield* ToolSafetyHooks.before({ installs: loaded.hooks, call: input, profile, resolve: canonical, ambient })
           : undefined
       yield* observe({ ...observation, outcome: "started" })
-      const value = yield* effect.pipe(
+      const ran = effect.pipe(
         Effect.provideService(RuntimeProfile, profile),
         Effect.provideService(
           NativeContext,
@@ -526,7 +526,9 @@ export const make = Effect.gen(function* () {
         Effect.provideService(HookedCall, hooked ? input.callID : outer),
         sanitizeFailure,
       )
-      if (!hooked) return value
+      if (!hooked) return yield* ran
+      // A call that fails instead of returning a result still hands its `before` notes to the model.
+      const value = yield* ToolSafetyHooks.failing(hooked, ran)
       return yield* ToolSafetyHooks.after(hooked, value, (outcome?.(value) ?? "success") === "success")
     }).pipe(
       Effect.onExit((exit) => {

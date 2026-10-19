@@ -12,7 +12,7 @@ import { mkdir, realpath, writeFile } from "node:fs/promises"
 import { createHash } from "node:crypto"
 const job = ${JSON.stringify({ ...job, claude })}
 const model = ${JSON.stringify(model)}
-const requireCandidate = createRequire(job.candidate + "/packages/orchestra/package.json")
+const requireCandidate = createRequire(job.candidate + "/apps/orchestra/package.json")
 const { Cause, Effect, ManagedRuntime } = await import(requireCandidate.resolve("effect"))
 const driverPath = ${JSON.stringify(fileURLToPath(new URL("./archie-authoring-pair.ts", import.meta.url)))}
 const driverSha256 = ${JSON.stringify(job.driverSha256)}
@@ -38,7 +38,7 @@ const originalSpawner = { ...sharedSpawner }
 const groupSpawner = ChildProcessSpawner.make((command) => originalSpawner.spawn(contained(command)))
 Object.assign(sharedSpawner, groupSpawner)
 const { AppProcess } = await import(job.candidate + "/packages/core/src/process.ts")
-const { Git } = await import(job.candidate + "/packages/orchestra/src/git/index.ts")
+const { Git } = await import(job.candidate + "/apps/orchestra/src/git/index.ts")
 const processRuntime = ManagedRuntime.make(LayerNode.compile(LayerNode.group([AppProcess.node, Git.node])), { memoMap })
 function fact(value: unknown, code: string): asserts value { if (!value) throw new Error(code) }
 const emit = (event: object) => console.log(serializedEvidence(event, secrets, decodeJson).text.trimEnd())
@@ -65,25 +65,25 @@ const seeded = await processRuntime.runPromise(Effect.gen(function* () {
   fact(processes.spawn === groupSpawner.spawn, "PAIR_PROCESS_CONTAINMENT_NOT_BOUND")
   return { processes, git }
 }))
-const { AppRuntime } = await import(job.candidate + "/packages/orchestra/src/effect/app-runtime.ts")
+const { AppRuntime } = await import(job.candidate + "/apps/orchestra/src/effect/app-runtime.ts")
 try {
-const { InstanceStore } = await import(job.candidate + "/packages/orchestra/src/project/instance-store.ts")
-const { InstanceRef } = await import(job.candidate + "/packages/orchestra/src/effect/instance-ref.ts")
-const { Agent } = await import(job.candidate + "/packages/orchestra/src/agent/agent.ts")
-const { Session } = await import(job.candidate + "/packages/orchestra/src/session/session.ts")
-const { SessionPrompt } = await import(job.candidate + "/packages/orchestra/src/session/prompt.ts")
-const { PromptGuard } = await import(job.candidate + "/packages/orchestra/src/session/prompt-guard.ts")
-const { MessageID } = await import(job.candidate + "/packages/orchestra/src/session/schema.ts")
-const { ToolRegistry } = await import(job.candidate + "/packages/orchestra/src/tool/registry.ts")
-const { ToolJsonSchema } = await import(job.candidate + "/packages/orchestra/src/tool/json-schema.ts")
-const { WriteRoots } = await import(job.candidate + "/packages/orchestra/src/maestro/write-roots.ts")
-const { BackendResult } = await import(job.candidate + "/packages/orchestra/src/maestro/backend-result.ts")
-const { Permission } = await import(job.candidate + "/packages/orchestra/src/permission/index.ts")
-const { Provider } = await import(job.candidate + "/packages/orchestra/src/provider/provider.ts")
-const { ClaudeCodeTools } = await import(job.candidate + "/packages/orchestra/src/claude-code/tools.ts")
+const { InstanceStore } = await import(job.candidate + "/apps/orchestra/src/project/instance-store.ts")
+const { InstanceRef } = await import(job.candidate + "/apps/orchestra/src/effect/instance-ref.ts")
+const { Agent } = await import(job.candidate + "/apps/orchestra/src/agent/agent.ts")
+const { Session } = await import(job.candidate + "/apps/orchestra/src/session/session.ts")
+const { SessionPrompt } = await import(job.candidate + "/apps/orchestra/src/session/prompt.ts")
+const { PromptGuard } = await import(job.candidate + "/apps/orchestra/src/session/prompt-guard.ts")
+const { MessageID } = await import(job.candidate + "/apps/orchestra/src/session/schema.ts")
+const { ToolRegistry } = await import(job.candidate + "/apps/orchestra/src/tool/registry.ts")
+const { ToolJsonSchema } = await import(job.candidate + "/apps/orchestra/src/tool/json-schema.ts")
+const { WriteRoots } = await import(job.candidate + "/apps/orchestra/src/maestro/write-roots.ts")
+const { BackendResult } = await import(job.candidate + "/apps/orchestra/src/maestro/backend-result.ts")
+const { Permission } = await import(job.candidate + "/apps/orchestra/src/permission/index.ts")
+const { Provider } = await import(job.candidate + "/apps/orchestra/src/provider/provider.ts")
+const { ClaudeCodeTools } = await import(job.candidate + "/apps/orchestra/src/claude-code/tools.ts")
 const { Wildcard } = await import(job.candidate + "/packages/core/src/util/wildcard.ts")
-const { Seats } = await import(job.candidate + "/packages/orchestra/src/maestro/seats/index.ts")
-const { SeatSkillRoot } = await import(job.candidate + "/packages/orchestra/src/maestro/seat-skill-root.ts")
+const { Seats } = await import(job.candidate + "/modules/maestro/coordination/src/seats/index.ts")
+const { SeatSkillRoot } = await import(job.candidate + "/modules/maestro/coordination/src/seat-skill-root.ts")
 const { UpstreamArsenal } = await import(job.candidate + "/packages/core/src/tool/upstream-arsenal.ts")
 const loaded = await AppRuntime.runPromise(Effect.gen(function* () {
   const git = yield* Git.Service
@@ -98,7 +98,7 @@ for (const arm of [job.arm]) {
   const root = join(job.output, arm)
   const project = join(root, "project")
   const placement = await AppRuntime.runPromise(loaded.store.load({ directory: project }))
-  const run = <A, E>(effect: import("effect").Effect.Effect<A, E, import(${JSON.stringify(join(job.candidate, "packages/orchestra/src/effect/app-runtime.ts"))}).AppServices | import(${JSON.stringify(join(job.candidate, "packages/orchestra/src/effect/instance-ref.ts"))}).InstanceRef>) =>
+  const run = <A, E>(effect: import("effect").Effect.Effect<A, E, import(${JSON.stringify(join(job.candidate, "apps/orchestra/src/effect/app-runtime.ts"))}).AppServices | import(${JSON.stringify(join(job.candidate, "apps/orchestra/src/effect/instance-ref.ts"))}).InstanceRef>) =>
     AppRuntime.runPromise(effect.pipe(Effect.provideService(InstanceRef, placement)))
   const services = await run(Effect.gen(function* () {
     const agents = yield* Agent.Service

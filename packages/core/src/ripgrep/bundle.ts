@@ -5,7 +5,7 @@ import { gunzipSync, inflateRawSync } from "zlib"
 import { RipgrepRelease } from "./release"
 
 /**
- * Puts the pinned ripgrep in a packaged build (packages/cli/script/build.ts, packages/desktop/scripts): the archive is
+ * Puts the pinned ripgrep in a packaged build (apps/cli/script/build.ts, apps/desktop/scripts): the archive is
  * read from RIPGREP_ARCHIVES (offline builds) or downloaded, checked against its pin in release.ts before anything is
  * unpacked, and its executable and license texts are written to one directory with a manifest of where they came
  * from. The runtime finds the result through binary.ts; the desktop's main process runs `verify`, so this module

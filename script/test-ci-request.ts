@@ -6,9 +6,12 @@ export const systems = {
   macos: ["macos-14"], "macos-intel": ["macos-15-intel"], all: ["ubuntu-latest", "windows-latest", "macos-14"],
   "linux-arm64": ["ubuntu-24.04-arm"],
 }
-// Variables a run may set (--env), and the only shape their values may take. test-ci.yml checks the same.
+// Variables a run may set (--env), and the only values they may take. test-ci.yml checks the same. The omni flag takes
+// only its two omni states: "0" (legacy rollback) turns the omni positive control off, and any other value is invalid,
+// which core's flag parser also reads as legacy, so either would run a request on legacy with the control silenced.
+// Legacy rollback runs only in test.yml's named lanes.
 const envKeys = ["ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"]
-const envValue = /^[A-Za-z0-9_]+$/
+const envValue = /^(?:1|strict)$/
 const configs = {
   "e2e/playwright.production.config.ts": { prefix: "e2e/", repeat: 1 },
   "e2e/performance/playwright.config.ts": { prefix: "e2e/performance/", repeat: 3 },
@@ -246,7 +249,8 @@ export function preloadsControl(bunfig: { test?: { preload?: unknown } }) {
 // hands the nonce to the run, whose preload removes it from the environment before any test loads and prints exactly
 // one "omni positive control [<nonce>]: ..." line. Only a line carrying this job's nonce counts, wherever it sits in a
 // line, so interleaved output and a test that prints a lookalike line can neither add nor fake a verdict. Throws when
-// the nonce is missing or repeated, or when the run printed no verdict or more than one.
+// the nonce is missing or repeated, when the run printed no verdict or more than one, and when the one verdict is
+// neither "pass" nor "not applicable": "off" means the run checked nothing and "FAIL" means the control failed.
 export function controlVerdict(job: { name: string }, log: string) {
   const rows = log.split(/\r?\n/).map((line) => {
     const fields = line.split("\t")
@@ -265,5 +269,8 @@ export function controlVerdict(job: { name: string }, log: string) {
   })
   if (verdicts.length !== 1)
     throw new Error(`${job.name}: expected one omni positive control verdict for this run's nonce, found ${verdicts.length}`)
-  return verdicts[0]!
+  const verdict = verdicts[0]!
+  if (!/^omni positive control: (?:pass|not applicable) \(/.test(verdict))
+    throw new Error(`${job.name}: the omni positive control did not pass: ${verdict}`)
+  return verdict
 }

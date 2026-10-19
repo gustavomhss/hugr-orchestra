@@ -103,6 +103,7 @@ const publicEventTypes = [
   "tui.toast.show",
   "tui.session.select",
   "mcp.tools.changed",
+  "mcp.status.changed",
   "mcp.browser.open.failed",
   "command.executed",
   "project.updated",
@@ -125,7 +126,7 @@ const publicEventTypes = [
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
     expect(EventManifest.ServerDefinitions.length).toBe(88)
-    expect(EventManifest.Definitions.length).toBe(118)
+    expect(EventManifest.Definitions.length).toBe(119)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,
       SessionV1.Event.Updated,
@@ -142,8 +143,15 @@ describe("public event manifest", () => {
     expectPublicTypes([...EventManifest.Latest.keys()])
     expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
-    // Research's ten durable-only definitions are already canonical; the two Session settings events add two more.
-    expect(EventManifest.Durable.size).toBe(75)
+    // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
+    // and Maestro's durable-only workflow review hold, workflow rebind and review findings three.
+    expect(EventManifest.Durable.size).toBe(78)
+    expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
+    expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
+    expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)
+    expect(EventManifest.Latest.has("maestro.task.workflow_rebound")).toBe(false)
+    expect(EventManifest.Durable.get("maestro.task.workflow_review_findings.1")).toBe(MaestroEvent.Task.WorkflowReviewFindings)
+    expect(EventManifest.Latest.has("maestro.task.workflow_review_findings")).toBe(false)
   })
 
   test("owns canonical research definitions only on the durable surface", () => {

@@ -22,6 +22,11 @@ export const RING_BYTES = 1024 * 1024
 export const TAIL_BYTES = 16 * 1024
 export const STOP_GRACE_MS = 2000
 const POLL_MS = 1000
+// A write that would leave the last chunk at most this size merges into it. A terminal that trickles output (a spinner,
+// a progress bar) writes a few bytes at a time; one array per write would cost ~100 bytes of overhead per byte held.
+// Merging keeps every adjacent pair above 1 KiB, so a full default ring holds at most ~2k arrays, and each merge copies
+// at most 1 KiB.
+const MERGE_BYTES = 1024
 
 export type ProcessInfo = { pid: number; parentPid: number | null; name: string | null }
 
@@ -54,13 +59,28 @@ export class Ring implements Sink {
     return this.size
   }
 
+  /** Arrays the ring holds now: small writes merge, so this stays near `held / MERGE_BYTES`, never one per write. */
+  get pieces() {
+    return this.chunks.length
+  }
+
   write(data: string | Uint8Array) {
     const bytes = typeof data === "string" ? new TextEncoder().encode(data) : data
     if (bytes.byteLength === 0) return
     this.written += bytes.byteLength
     // Copy: the pump may hand over a view of a buffer it reuses.
     const kept = bytes.byteLength > this.limit ? bytes.slice(bytes.byteLength - this.limit) : bytes.slice()
-    this.chunks.push(kept)
+    const last = this.chunks.at(-1)
+    const merged =
+      last && last.byteLength + kept.byteLength <= MERGE_BYTES
+        ? new Uint8Array(last.byteLength + kept.byteLength)
+        : undefined
+    if (last && merged) {
+      merged.set(last)
+      merged.set(kept, last.byteLength)
+      this.chunks[this.chunks.length - 1] = merged
+    }
+    if (!merged) this.chunks.push(kept)
     this.size += kept.byteLength
     while (this.size > this.limit) {
       const first = this.chunks[0]

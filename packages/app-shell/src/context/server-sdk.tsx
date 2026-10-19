@@ -1,14 +1,14 @@
-import type { OpenCodeEvent } from "@opencode-ai/client/promise"
-import type { Event } from "@orchestra/sdk/v2/client"
+import type { OpenCodeEvent } from "../compat/vendored-client-promise"
+import type { Event } from "../compat/sdk-v2-client"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import { type Accessor, batch, createMemo, onCleanup, onMount } from "solid-js"
+import { type Accessor, type ParentProps, batch, createMemo, onCleanup, onMount } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createApiForServer, createSdkForServer, type ServerApi } from "@/utils/server"
-import { useLanguage } from "./language"
 import { type Platform, usePlatform } from "./platform"
 import { ServerConnection, useServer } from "./server"
+import { ServerRequired } from "@/components/server-unavailable"
 import { createRefCountMap } from "@/utils/refcount"
 import { useGlobal } from "./global"
 import { ServerScope } from "@/utils/server-scope"
@@ -506,7 +506,7 @@ export function createServerSdkContext(
   })
 }
 
-export const { use: useServerSDK, provider: ServerSDKProvider } = createSimpleContext({
+const ServerSDKContext = createSimpleContext({
   name: "ServerSDK",
   // Returns an accessor so the resolved server can change reactively (e.g. a
   // /new-session draft retargeting its server) without re-instantiating the subtree.
@@ -514,16 +514,26 @@ export const { use: useServerSDK, provider: ServerSDKProvider } = createSimpleCo
     const captured = props.value
     if (captured) return () => captured
     const global = useGlobal()
-    const language = useLanguage()
     const server = useServer()
 
     return createMemo<ServerSDK>(() => {
       const conn = props.server?.() ?? server.current
-      if (!conn) throw new Error(language.t("error.serverSDK.noServerAvailable"))
+      // ServerRequired renders the unavailable state before this provider mounts without a connection.
+      if (!conn) throw new Error("No server connection resolved")
       return global.ensureServerCtx(conn).sdk
     })
   },
 })
+
+export const useServerSDK = ServerSDKContext.use
+
+export function ServerSDKProvider(props: ParentProps<Parameters<typeof ServerSDKContext.provider>[0]>) {
+  return (
+    <ServerRequired server={props.server} value={props.value}>
+      <ServerSDKContext.provider {...props}>{props.children}</ServerSDKContext.provider>
+    </ServerRequired>
+  )
+}
 
 export function useServerProtocol() {
   const serverSDK = useServerSDK()

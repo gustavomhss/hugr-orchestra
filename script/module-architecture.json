@@ -1,0 +1,641 @@
+{
+  "format": 1,
+  "layers": {
+    "foundation": [],
+    "native": [],
+    "contract": ["foundation"],
+    "client": ["foundation", "contract"],
+    "extension-api": ["foundation", "contract", "client"],
+    "library": ["foundation", "native"],
+    "tooling": ["foundation", "library", "tooling"],
+    "module": ["foundation", "native", "library"],
+    "platform": ["foundation", "native", "library", "contract", "extension-api", "module:platformLibrary"],
+    "product": ["foundation", "native", "library", "contract", "extension-api", "module", "platform", "product"],
+    "composition": ["foundation", "native", "library", "contract", "client", "extension-api", "module", "platform", "product", "composition"],
+    "ui": ["foundation", "contract", "client", "ui", "platform:browserSafe"],
+    "terminal-ui": ["foundation", "contract", "client", "extension-api", "library", "platform", "ui"],
+    "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "product", "composition", "ui", "terminal-ui"]
+  },
+  "packages": {
+    "schema": {
+      "layer": "foundation",
+      "status": "canonical",
+      "owner": "contract maintainer",
+      "summary": "Browser-safe, serializable wire and storage schemas shared across Orchestra.",
+      "exportsPolicy": "full",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "protocol": {
+      "layer": "contract",
+      "status": "canonical",
+      "owner": "contract maintainer",
+      "summary": "The public Effect HttpApi contract for the Orchestra instance routes under /api.",
+      "exportsPolicy": "full",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "client": {
+      "layer": "client",
+      "status": "canonical",
+      "owner": "client SDK maintainer",
+      "summary": "Network client generated from the authoritative Effect HttpApi contracts.",
+      "exportsPolicy": "none"
+    },
+    "sdk/js": {
+      "layer": "client",
+      "status": "legacy",
+      "successor": "packages/client",
+      "owner": "client SDK maintainer",
+      "summary": "Legacy generated JavaScript SDK, frozen behind compat facades until its consumers move to the client package.",
+      "exportsPolicy": "none"
+    },
+    "plugin": {
+      "layer": "extension-api",
+      "status": "canonical",
+      "owner": "plugin API maintainer",
+      "summary": "Public authoring contracts and helpers for server, terminal UI and V2 plugins.",
+      "exportsPolicy": "none"
+    },
+    "omni/bindings/node": {
+      "layer": "native",
+      "status": "canonical",
+      "owner": "Omni maintainer",
+      "summary": "Node bindings that run processes and terminals with the same tested behavior on every platform.",
+      "exportsPolicy": "none"
+    },
+    "llm": {
+      "layer": "library",
+      "status": "canonical",
+      "owner": "provider runtime maintainer",
+      "summary": "Schema-first LLM request, response, event and tool language with provider adapters.",
+      "exportsPolicy": "none"
+    },
+    "codemode": {
+      "layer": "library",
+      "status": "canonical",
+      "owner": "codemode maintainer",
+      "summary": "Effect-native confined code execution over explicit, schema-described tools.",
+      "exportsPolicy": "none"
+    },
+    "effect-drizzle-sqlite": {
+      "layer": "library",
+      "status": "canonical",
+      "owner": "persistence maintainer",
+      "summary": "Effect adapter for the Drizzle SQLite query builders.",
+      "exportsPolicy": "none"
+    },
+    "effect-sqlite-node": {
+      "layer": "library",
+      "status": "unused",
+      "owner": "persistence maintainer",
+      "summary": "Effect SQLite client for Node runtimes that nothing in the repository imports.",
+      "exportsPolicy": "none"
+    },
+    "script": {
+      "layer": "tooling",
+      "status": "canonical",
+      "owner": "build and tooling maintainer",
+      "summary": "Build, CI and repository tooling library.",
+      "exportsPolicy": "none"
+    },
+    "http-recorder": {
+      "layer": "tooling",
+      "status": "canonical",
+      "owner": "build and tooling maintainer",
+      "summary": "Records Effect HTTP and WebSocket traffic once and replays it from deterministic cassettes.",
+      "exportsPolicy": "none"
+    },
+    "httpapi-codegen": {
+      "layer": "tooling",
+      "status": "canonical",
+      "owner": "build and tooling maintainer",
+      "summary": "Build-time generation of Promise and Effect APIs from HttpApi and Effect Schema contracts.",
+      "exportsPolicy": "none"
+    },
+    "relay": {
+      "layer": "module",
+      "status": "canonical",
+      "owner": "Relay maintainer",
+      "summary": "Relay evaluates ordered work-package checklists at agent stop boundaries.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
+      "platformLibrary": true
+    },
+    "maestro-arsenal": {
+      "layer": "module",
+      "status": "canonical",
+      "owner": "Maestro maintainer",
+      "summary": "Maestro's tool catalog and host-authorized operations.",
+      "exportsPolicy": "none",
+      "platformLibrary": true
+    },
+    "capability-assets": {
+      "layer": "module",
+      "status": "canonical",
+      "owner": "capability maintainer",
+      "summary": "Data-only capability source packages and their catalog.",
+      "exportsPolicy": "none"
+    },
+    "atlas-boundary": {
+      "layer": "module",
+      "status": "canonical",
+      "owner": "Atlas maintainer",
+      "summary": "Generated bundles that expose Atlas to Orchestra.",
+      "exportsPolicy": "none"
+    },
+    "app-dock": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "App Dock maintainer",
+      "summary": "App Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "janitor": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Janitor maintainer",
+      "summary": "Janitor scans the data directory for growth and reports through a host-supplied sink.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "continuity": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "continuity maintainer",
+      "summary": "Engine-neutral continuity helpers: transcript aliases, archive search, masking and request sources.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "engine-claude-code": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Claude Code engine maintainer",
+      "summary": "Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "maestro": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Maestro maintainer",
+      "summary": "Maestro coordination: seat roster and seats, governance records and the Arsenal native safety contribution.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "core": {
+      "layer": "platform",
+      "status": "canonical",
+      "owner": "core platform maintainer",
+      "summary": "Reusable platform and domain services for the application and server layers, including the V2 Session core.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
+      "browserSafe": ["src/util/path.ts", "src/util/encode.ts", "src/util/binary.ts", "src/util/retry.ts", "src/util/task-tool.ts", "src/util/array.ts"],
+      "modules": [
+        { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
+        { "path": "src/actions", "kind": "cohesive", "entries": ["src/actions.ts"] },
+        { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
+        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts"] },
+        { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
+        { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts"] },
+        { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },
+        { "path": "src/image", "kind": "cohesive", "entries": ["src/image.ts"] },
+        { "path": "src/integration", "kind": "cohesive", "entries": ["src/integration.ts"] },
+        { "path": "src/observability", "kind": "cohesive", "entries": ["src/observability.ts"] },
+        { "path": "src/permission", "kind": "cohesive", "entries": ["src/permission.ts"] },
+        { "path": "src/plugin", "kind": "cohesive", "entries": ["src/plugin.ts"] },
+        { "path": "src/project", "kind": "cohesive", "entries": ["src/project.ts"] },
+        { "path": "src/pty", "kind": "cohesive", "entries": ["src/pty.ts"] },
+        { "path": "src/reference", "kind": "cohesive", "entries": ["src/reference.ts"] },
+        { "path": "src/ripgrep", "kind": "cohesive", "entries": ["src/ripgrep.ts"] },
+        { "path": "src/scheduled-task", "kind": "cohesive", "entries": ["src/scheduled-task.ts"] },
+        { "path": "src/session", "kind": "cohesive", "entries": ["src/session.ts", "src/session/runner/index.ts"] },
+        { "path": "src/skill", "kind": "cohesive", "entries": ["src/skill.ts"] },
+        { "path": "src/backend-toolkit", "kind": "cohesive", "entries": ["src/backend-toolkit/index.ts"] },
+        { "path": "src/system-context", "kind": "cohesive", "entries": ["src/system-context/index.ts"] },
+        { "path": "src/capability", "kind": "collection" },
+        { "path": "src/control-plane", "kind": "collection" },
+        { "path": "src/database", "kind": "collection" },
+        { "path": "src/effect", "kind": "collection" },
+        { "path": "src/flag", "kind": "collection" },
+        { "path": "src/host", "kind": "collection" },
+        { "path": "src/id", "kind": "collection" },
+        { "path": "src/installation", "kind": "collection" },
+        { "path": "src/oauth", "kind": "collection" },
+        { "path": "src/research", "kind": "collection" },
+        { "path": "src/share", "kind": "collection" },
+        { "path": "src/tool", "kind": "collection" },
+        { "path": "src/util", "kind": "collection" },
+        { "path": "src/v1", "kind": "collection", "status": "legacy" },
+        { "path": "src/github-copilot", "kind": "collection", "status": "vendored" }
+      ],
+      "domains": {
+        "session": { "kind": "platform", "entry": "src/session.ts", "patterns": ["src/session/", "src/session.ts"] },
+        "agent": { "kind": "platform", "entry": "src/agent.ts", "patterns": ["src/agent/", "src/agent.ts"] },
+        "system-context": { "kind": "platform", "entry": "src/system-context/index.ts", "patterns": ["src/system-context/"] },
+        "tool": { "kind": "platform", "patterns": ["src/tool/", "src/tool-output-store.ts"] },
+        "tool-safety": {
+          "kind": "platform",
+          "entry": "src/tool-safety.ts",
+          "patterns": ["src/tool-safety.ts", "src/tool-safety-*", "src/sandbox-parents.ts", "src/sandbox-project-config.ts"]
+        },
+        "relay": { "kind": "platform", "entry": "src/relay.ts", "patterns": ["src/relay.ts", "src/relay-*"] },
+        "config": {
+          "kind": "platform",
+          "entry": "src/config.ts",
+          "patterns": ["src/config/", "src/config.ts", "src/behavior.ts", "src/policy.ts", "src/flag/"]
+        },
+        "permission": {
+          "kind": "platform",
+          "entry": "src/permission.ts",
+          "patterns": ["src/permission/", "src/permission.ts", "src/question.ts"]
+        },
+        "location": {
+          "kind": "platform",
+          "entry": "src/location.ts",
+          "patterns": ["src/location.ts", "src/location-services.ts", "src/location-service-map.ts", "src/location-mutation.ts"]
+        },
+        "project": {
+          "kind": "platform",
+          "entry": "src/project.ts",
+          "patterns": [
+            "src/project/",
+            "src/project.ts",
+            "src/filesystem/",
+            "src/filesystem.ts",
+            "src/fs-util.ts",
+            "src/file.ts",
+            "src/file-mutation.ts",
+            "src/git.ts",
+            "src/repository.ts",
+            "src/repository-cache.ts",
+            "src/snapshot.ts",
+            "src/patch.ts",
+            "src/pull-request.ts",
+            "src/workspace.ts"
+          ]
+        },
+        "database": { "kind": "platform", "entry": "src/database/database.ts", "patterns": ["src/database/", "src/data-migration.sql.ts"] },
+        "event": { "kind": "platform", "entry": "src/event.ts", "patterns": ["src/event/", "src/event.ts", "src/public-event-manifest.ts"] },
+        "runtime": {
+          "kind": "platform",
+          "entry": "src/global.ts",
+          "patterns": [
+            "src/effect/",
+            "src/global.ts",
+            "src/host.ts",
+            "src/host/",
+            "src/id/",
+            "src/installation/",
+            "src/observability/",
+            "src/observability.ts",
+            "src/background-job.ts",
+            "src/state.ts",
+            "src/schema.ts",
+            "src/v2-schema.ts"
+          ]
+        },
+        "process": {
+          "kind": "platform",
+          "entry": "src/process.ts",
+          "patterns": [
+            "src/process.ts",
+            "src/child-process-common.ts",
+            "src/cross-spawn-command.ts",
+            "src/cross-spawn-spawner.ts",
+            "src/shell.ts",
+            "src/pty/",
+            "src/pty.ts",
+            "src/tcp-proxy.ts",
+            "src/omni.ts",
+            "src/omni-*",
+            "src/output-inspector.ts",
+            "src/artifact-native-windows.ts",
+            "src/artifact-native-windows.rs",
+            "src/ripgrep/",
+            "src/ripgrep.ts"
+          ]
+        },
+        "provider": {
+          "kind": "platform",
+          "entry": "src/provider.ts",
+          "patterns": [
+            "src/provider.ts",
+            "src/model.ts",
+            "src/models-dev.ts",
+            "src/aisdk.ts",
+            "src/catalog.ts",
+            "src/github-copilot/",
+            "src/plugin/provider/",
+            "src/plugin/provider.ts",
+            "src/plugin/models-dev.ts",
+            "src/plugin/variant.ts"
+          ]
+        },
+        "plugin-host": { "kind": "platform", "entry": "src/plugin.ts", "patterns": ["src/plugin/", "src/plugin.ts"] },
+        "identity": {
+          "kind": "platform",
+          "entry": "src/account.ts",
+          "patterns": [
+            "src/account/",
+            "src/account.ts",
+            "src/credential/",
+            "src/credential.ts",
+            "src/oauth/",
+            "src/integration/",
+            "src/integration.ts",
+            "src/share/"
+          ]
+        },
+        "instruction": {
+          "kind": "platform",
+          "entry": "src/skill.ts",
+          "patterns": [
+            "src/skill/",
+            "src/skill.ts",
+            "src/packaged-skills.ts",
+            "src/instruction-context.ts",
+            "src/command.ts",
+            "src/reference/",
+            "src/reference.ts"
+          ]
+        },
+        "research": { "kind": "platform", "patterns": ["src/research/", "src/research-toolkit/"] },
+        "backend-toolkit": {
+          "kind": "platform",
+          "entry": "src/backend-toolkit/index.ts",
+          "target": "packs move to modules/backend-toolkit after the 70-C' cut",
+          "patterns": ["src/backend-toolkit/", "src/pinned-artifact.ts"]
+        },
+        "control-plane": { "kind": "platform", "patterns": ["src/control-plane/"] },
+        "capability": { "kind": "platform", "patterns": ["src/capability/"] },
+        "scheduled-task": { "kind": "platform", "entry": "src/scheduled-task.ts", "patterns": ["src/scheduled-task/", "src/scheduled-task.ts"] },
+        "actions": { "kind": "platform", "entry": "src/actions.ts", "patterns": ["src/actions/", "src/actions.ts"] },
+        "util": { "kind": "platform", "patterns": ["src/util/", "src/image/", "src/image.ts", "src/npm.ts", "src/npm-config.ts"] },
+        "v1": { "kind": "compat", "patterns": ["src/v1/"] }
+      }
+    },
+    "server": {
+      "layer": "composition",
+      "status": "canonical",
+      "owner": "server maintainer",
+      "summary": "Adapts the typed Protocol API to Effect HTTP on top of Core services.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "sdk-next": {
+      "layer": "composition",
+      "status": "canonical",
+      "owner": "client SDK maintainer",
+      "summary": "Effect-native in-process Orchestra host for embedded applications.",
+      "exportsPolicy": "none"
+    },
+    "ui": {
+      "layer": "ui",
+      "status": "canonical",
+      "owner": "UI maintainer",
+      "summary": "Solid component library with themes, i18n, fonts, audio and Tailwind styles.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/components/*.tsx", "./i18n/*": "./src/i18n/*.ts", "./context/*": "./src/context/*.tsx", "./theme/*": "./src/theme/*.ts", "./v2/*": "./src/v2/components/*.tsx"},
+      "assetWildcards": ["./fonts/*", "./audio/*", "./v2/*.css", "./v2/styles/*"]
+    },
+    "session-ui": {
+      "layer": "ui",
+      "status": "canonical",
+      "owner": "UI maintainer",
+      "summary": "Solid components that render Sessions: messages, parts, diffs and review.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/components/*.tsx", "./pierre/*": "./src/pierre/*.ts", "./context/*": "./src/context/*.tsx", "./v2/*": "./src/v2/components/*.tsx"},
+      "assetWildcards": ["./v2/*.css"]
+    },
+    "app": {
+      "layer": "ui",
+      "status": "canonical",
+      "owner": "UI maintainer",
+      "summary": "The shared Solid application library that desktop and web load.",
+      "exportsPolicy": "none",
+      "aliases": { "@/": "src/" }
+    },
+    "tui": {
+      "layer": "terminal-ui",
+      "status": "canonical",
+      "owner": "terminal UI maintainer",
+      "summary": "Terminal UI used by the CLI.",
+      "exportsPolicy": "none"
+    },
+    "orchestra": {
+      "layer": "app",
+      "status": "legacy",
+      "successor": "apps/cli and packages/server",
+      "live": "default desktop sidecar (v1)",
+      "owner": "core platform maintainer",
+      "summary": "The legacy-live Orchestra server and CLI that the desktop app starts as its default sidecar.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"},
+      "entries": ["node"],
+      "aliases": { "@/": "src/", "@test/": "test/" },
+      "domains": {
+        "composition": {
+          "kind": "composition",
+          "target": "apps/orchestra",
+          "patterns": ["src/cli/", "src/effect/", "src/index.ts", "src/node.ts", "src/temporary.ts"]
+        },
+        "maestro": { "kind": "product", "target": "modules/maestro", "patterns": ["src/maestro/", "src/tool/maestro-*", "src/tool/atlas-*"] },
+        "continuity": {
+          "kind": "product",
+          "target": "modules/continuity",
+          "patterns": [
+            "src/continuity/",
+            "src/tool/context-compact.ts",
+            "src/tool/context-recall.ts",
+            "src/tool/context-recall-archive.ts",
+            "src/session/prompt-continuity.ts"
+          ]
+        },
+        "claude-code": { "kind": "product", "target": "modules/engine-adapters/claude-code", "patterns": ["src/claude-code/"] },
+        "acp": { "kind": "product", "target": "modules/acp", "patterns": ["src/acp/"] },
+        "session-engine": {
+          "kind": "platform-legacy",
+          "target": "core v1 Session, storage and jobs plus modules/session-engine",
+          "patterns": ["src/session/", "src/storage/", "src/background/"]
+        },
+        "agent": { "kind": "platform-legacy", "target": "core agent plus the product roster (70-C')", "patterns": ["src/agent/"] },
+        "config": {
+          "kind": "platform-legacy",
+          "target": "core config, permission and instruction",
+          "patterns": ["src/config/", "src/permission/", "src/question/", "src/command/", "src/skill/", "src/env/"]
+        },
+        "identity": { "kind": "platform-legacy", "target": "core identity", "patterns": ["src/auth/"] },
+        "project": { "kind": "platform-legacy", "target": "core project", "patterns": ["src/project/", "src/git/", "src/worktree/", "src/snapshot/"] },
+        "provider": { "kind": "platform-legacy", "target": "core provider and plugin-host plus llm", "patterns": ["src/provider/", "src/plugin/"] },
+        "tool": { "kind": "platform-legacy", "target": "core tool", "patterns": ["src/tool/"] },
+        "integration": { "kind": "platform-legacy", "target": "core integration", "patterns": ["src/lsp/", "src/mcp/", "src/ide/", "src/format/"] },
+        "control-plane": { "kind": "platform-legacy", "target": "core control-plane plus server handlers", "patterns": ["src/control-plane/"] },
+        "event": {
+          "kind": "platform-legacy",
+          "target": "core event",
+          "patterns": ["src/bus/", "src/sync/", "src/event-manifest.ts", "src/event-v2-bridge.ts"]
+        },
+        "runtime": {
+          "kind": "platform-legacy",
+          "target": "core runtime and util",
+          "patterns": ["src/installation/", "src/util/", "src/id/", "src/image/", "src/patch/"]
+        },
+        "research": { "kind": "platform-legacy", "target": "core research", "patterns": ["src/research/"] },
+        "server": { "kind": "platform-legacy", "target": "packages/server compat v1", "patterns": ["src/server/"] },
+        "declarations": {
+          "kind": "platform-legacy",
+          "target": "next to their loader",
+          "patterns": ["src/audio.d.ts", "src/markdown.d.ts", "src/sql.d.ts"]
+        }
+      }
+    },
+    "cli": {
+      "layer": "app",
+      "status": "canonical",
+      "owner": "CLI maintainer",
+      "summary": "The executable and composition package for the Orchestra 2.0 CLI.",
+      "exportsPolicy": "none"
+    },
+    "desktop": {
+      "layer": "app",
+      "status": "canonical",
+      "owner": "desktop maintainer",
+      "summary": "The Electron host for the shared Solid application.",
+      "exportsPolicy": "none"
+    },
+    "web": {
+      "layer": "app",
+      "status": "canonical",
+      "owner": "web maintainer",
+      "summary": "Browser bootstrap and Vite distribution for Orchestra.",
+      "exportsPolicy": "none"
+    },
+    "storybook": {
+      "layer": "app",
+      "status": "canonical",
+      "owner": "UI maintainer",
+      "summary": "Storybook workbench for the ui, session-ui and app components.",
+      "exportsPolicy": "none"
+    }
+  },
+  "legacy": [
+    {
+      "path": "packages/sdk/js",
+      "specifier": "@orchestra/sdk",
+      "status": "legacy",
+      "successor": "packages/client",
+      "reason": "generated legacy SDK; consumers migrate to the client package one by one",
+      "decision": "D14",
+      "compat": { ".": "sdk", "./v2": "sdk-v2", "./v2/client": "sdk-v2-client", "./v2/types": "sdk-v2-types" }
+    },
+    {
+      "path": "packages/app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
+      "specifier": "@opencode-ai/client",
+      "label": "the vendored upstream client tarball listed in script/rename-ledger.ts",
+      "status": "legacy",
+      "successor": "packages/client",
+      "reason": "published upstream client that cannot be rebuilt from this tree",
+      "decision": "D14",
+      "compat": { ".": "vendored-client", "./promise": "vendored-client-promise" }
+    },
+    {
+      "path": "apps/orchestra",
+      "status": "legacy",
+      "successor": "apps/cli and packages/server",
+      "reason": "legacy-live: the desktop app starts it as its default sidecar",
+      "decision": "D14"
+    },
+    {
+      "path": "packages/core/src/v1",
+      "status": "legacy",
+      "successor": "the V2 Session core in packages/core",
+      "reason": "v1 compatibility surface kept for the legacy server",
+      "decision": "D14"
+    },
+    {
+      "path": "packages/core/src/github-copilot",
+      "status": "vendored",
+      "reason": "vendored third-party provider code",
+      "decision": "D14"
+    },
+    {
+      "path": "packages/effect-sqlite-node",
+      "status": "unused",
+      "reason": "declared by core but imported by nothing; removal needs a lockfile change",
+      "decision": "D14"
+    },
+    {
+      "path": "apps/orchestra/src/id/id.ts",
+      "status": "duplicate",
+      "successor": "packages/core/src/id/id.ts",
+      "reason": "second monotonic ID counter",
+      "decision": "D14"
+    },
+    {
+      "path": "apps/orchestra/src/util/iife.ts",
+      "status": "duplicate",
+      "successor": "packages/core/src/util/iife.ts",
+      "reason": "copy of the core helper",
+      "decision": "D14"
+    },
+    {
+      "path": "apps/orchestra/src/util/lazy.ts",
+      "status": "duplicate",
+      "successor": "packages/core/src/util/lazy.ts",
+      "reason": "copy of the core helper",
+      "decision": "D14"
+    }
+  ],
+  "productEdges": [
+    ["claude-code", "maestro"],
+    ["claude-code", "continuity"],
+    ["maestro", "continuity"]
+  ],
+  "relayContainment": { "package": "core", "specifier": "@orchestra/relay", "domains": ["relay", "tool-safety"] },
+  "logicalModules": [
+    {
+      "id": "app-dock",
+      "paths": [
+        "apps/desktop/src/main/app-dock*",
+        "apps/desktop/src/main/ipc-app-dock*",
+        "apps/desktop/src/main/linux-workspace*",
+        "modules/app-dock/src/*",
+        "packages/app-shell/src/app-dock-linux.ts"
+      ],
+      "readme": "apps/desktop/src/main/README.md",
+      "target": "modules/app-dock"
+    }
+  ],
+  "assetModules": [
+    { "id": "atlas", "path": "modules/atlas", "target": "modules/atlas" },
+    { "id": "omni", "path": "native/omni", "target": "native/omni" },
+    { "id": "specialist-backend", "path": "modules/specialists/backend", "target": "modules/specialists/backend" },
+    { "id": "specialist-archie", "path": "modules/specialists/archie", "target": "modules/specialists/archie" },
+    { "id": "specialist-jimmy", "path": "packages/jimmy-specialist", "target": "modules/specialists/jimmy" }
+  ],
+  "scaffoldReadmes": [
+    "modules/atlas/boundary/README.md",
+    "packages/effect-sqlite-node/README.md",
+    "packages/sdk/js/README.md",
+    "packages/script/README.md",
+    "packages/session-ui/README.md",
+    "apps/storybook/README.md",
+    "packages/tui/README.md",
+    "packages/ui/README.md",
+    "apps/orchestra/src/maestro/README.md",
+    "apps/orchestra/src/continuity/README.md",
+    "apps/orchestra/src/claude-code/README.md",
+    "apps/orchestra/src/acp/README.md",
+    "modules/janitor/README.md",
+    "apps/orchestra/src/control-plane/README.md",
+    "apps/desktop/src/main/README.md",
+    "packages/core/src/session/README.md",
+    "packages/core/src/backend-toolkit/README.md",
+    "packages/core/src/database/README.md",
+    "packages/core/src/plugin/README.md",
+    "modules/app-dock/README.md",
+    "modules/continuity/README.md",
+    "modules/engine-adapters/claude-code/README.md",
+    "modules/maestro/coordination/README.md"
+  ]
+}

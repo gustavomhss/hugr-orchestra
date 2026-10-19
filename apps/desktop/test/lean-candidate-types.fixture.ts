@@ -1,0 +1,34 @@
+import assert from "node:assert/strict"
+import path from "node:path"
+import { mkdtemp, rm } from "node:fs/promises"
+import { CandidateRecorder } from "./lean-candidate-record.fixture"
+
+export async function typecheckCandidateProof(scratchParent = path.resolve(import.meta.dir, "../node_modules")) {
+  // test-ci.yml deliberately sets GITHUB_ACTIONS=false; the native packaged gate does not.
+  if (process.env.CI !== "true" || !process.env.GITHUB_RUN_ID) throw new Error("LEAN_CANDIDATE_COMPILE_CI_REQUIRED")
+  const desktop = path.resolve(import.meta.dir, "..")
+  const recorder = new CandidateRecorder()
+  recorder.protectPath(path.resolve(desktop, "../.."), "repository")
+  const owned: { scratch?: string } = {}
+  try {
+    const scratch = await mkdtemp(path.join(scratchParent, ".lean-candidate-types-"))
+    owned.scratch = scratch
+    recorder.protectPath(scratch, "typecheck-scratch")
+    const config = path.join(scratch, "tsconfig.json")
+    await Bun.write(config, JSON.stringify({ extends: path.join(desktop, "tsconfig.json"),
+      compilerOptions: { types: ["vite/client", "bun", "node", "electron"], tsBuildInfoFile: path.join(scratch, "proof.tsbuildinfo"),
+        paths: { "@playwright/test": [path.resolve(desktop, "../../packages/app-shell/node_modules/@playwright/test/index.d.ts")] } },
+      references: [{ path: path.resolve(desktop, "../../packages/app-shell") }],
+      // Bun globals belong to proof files. Production renderer uses the unchanged desktop config.
+      include: [path.join(import.meta.dir, "lean-candidate-*.ts")],
+    }))
+    const child = Bun.spawn([process.execPath, "typecheck", config], { cwd: desktop, stdout: "pipe", stderr: "pipe", timeout: 120000, killSignal: "SIGKILL" })
+    const [out, error, code] = await Promise.all([new Response(child.stdout).text(), new Response(child.stderr).text(), child.exited])
+    assert.equal(code, 0, `Candidate proof typecheck: ${code}/${child.signalCode}\n${out}\n${error}`)
+  } catch (error) { recorder.fail("primary", "candidate helper typecheck", error) }
+  // Remove only scratch this call acquired.
+  if (owned.scratch) {
+    try { await rm(owned.scratch, { recursive: true, force: true }) } catch (error) { recorder.fail("cleanup", "typecheck scratch removal", error) }
+  }
+  if (recorder.failures.length) throw recorder.publicError("Candidate typecheck primary and cleanup diagnostics")
+}

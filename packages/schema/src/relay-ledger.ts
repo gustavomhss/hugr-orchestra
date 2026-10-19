@@ -309,6 +309,8 @@ export const HookLifecycleEvent = Schema.Literals([
   "hook-enabled",
   "hook-disabled",
   "hook-uninstalled",
+  "hook-unpublished",
+  "hook-republished",
 ])
 export type HookLifecycleEvent = typeof HookLifecycleEvent.Type
 

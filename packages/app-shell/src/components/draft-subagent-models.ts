@@ -38,6 +38,19 @@ export function clearPending(directory: string, revision?: number) {
   return true
 }
 
+/** Puts back an allowlist saved with the draft after a reload. It counts as a fresh edit, so the first send writes it
+    to the new Session, and a selection made since the composer mounted wins over the saved one. */
+export function restorePending(key: string, saved: SubagentModelPolicy) {
+  if (saved.mode !== "allowlist" || !Array.isArray(saved.models) || pending.has(key)) return false
+  // Saved data is plain JSON from storage: keep only well-formed entries, as fresh objects.
+  const models = saved.models.flatMap((model) =>
+    typeof model?.providerID === "string" && typeof model.id === "string" ? [{ providerID: model.providerID, id: model.id }] : [],
+  )
+  pending.set(key, { revision: state.version + 1, policy: { mode: "allowlist", models } })
+  setState("version", (version) => version + 1)
+  return true
+}
+
 export function pendingPolicy(key: string): SubagentModelPolicy {
   draftVersion()
   return structuredClone(pending.get(key)?.policy ?? { mode: "inherit" })

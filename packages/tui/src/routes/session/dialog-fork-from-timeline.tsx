@@ -1,10 +1,11 @@
 import { createMemo, onMount } from "solid-js"
 import { useSync } from "../../context/sync"
 import { DialogSelect, type DialogSelectOption } from "../../ui/dialog-select"
-import type { TextPart } from "@orchestra/sdk/v2"
+import type { TextPart } from "../../compat/sdk-v2"
 import { Locale } from "../../util/locale"
 import { useSDK } from "../../context/sdk"
 import { useRoute } from "../../context/route"
+import { useToast } from "../../ui/toast"
 import { useDialog, type DialogContext } from "../../ui/dialog"
 import type { PromptInfo } from "../../component/prompt/history"
 import { stripPromptPartIDs as strip } from "../../prompt/part"
@@ -14,6 +15,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
   const dialog = useDialog()
   const sdk = useSDK()
   const route = useRoute()
+  const toast = useToast()
 
   onMount(() => {
     dialog.setSize("large")
@@ -26,8 +28,13 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
       value: undefined,
       onSelect: async (dialog: DialogContext) => {
         const forked = await sdk.client.session.fork({ sessionID: props.sessionID })
+        if (!forked.data) {
+          toast.show({ variant: "error", message: JSON.stringify(forked.error) })
+          dialog.clear()
+          return
+        }
         route.navigate({
-          sessionID: forked.data!.id,
+          sessionID: forked.data.id,
           type: "session",
         })
         dialog.clear()
@@ -49,6 +56,11 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
             sessionID: props.sessionID,
             messageID: message.id,
           })
+          if (!forked.data) {
+            toast.show({ variant: "error", message: JSON.stringify(forked.error) })
+            dialog.clear()
+            return
+          }
           const parts = sync.data.part[message.id] ?? []
           const prompt = parts.reduce(
             (agg, part) => {
@@ -61,7 +73,7 @@ export function DialogForkFromTimeline(props: { sessionID: string; onMove: (mess
             { input: "", parts: [] as PromptInfo["parts"] },
           )
           route.navigate({
-            sessionID: forked.data!.id,
+            sessionID: forked.data.id,
             type: "session",
             prompt,
           })

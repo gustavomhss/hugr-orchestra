@@ -5,6 +5,7 @@ import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useServer } from "@/context/server"
 import { onJanitorReport } from "@/context/server-sync"
+import { showToast } from "@/utils/toast"
 import { parseJanitorReport, usefulJanitorReport, type JanitorReport } from "@/utils/janitor-report"
 
 const SnoozeMinutes = 24 * 60
@@ -84,6 +85,13 @@ function init(props: { initial?: JanitorReport | null; expanded?: boolean; enabl
     onCleanup(api.onReport(apply))
   })
 
+  const failed = (err: unknown) =>
+    showToast({
+      variant: "error",
+      title: language.t("common.requestFailed"),
+      description: err instanceof Error ? err.message : undefined,
+    })
+
   return {
     store,
     expand() {
@@ -96,13 +104,13 @@ function init(props: { initial?: JanitorReport | null; expanded?: boolean; enabl
       const source = store.source
       setStore({ report: null, source: null, expanded: false })
       const api = window.api?.janitor
-      if (api) void api.dismiss(source).catch(() => undefined)
+      if (api) void api.dismiss(source).catch(failed)
     },
     snooze() {
       const source = store.source
       setStore({ report: null, source: null, expanded: false })
       const api = window.api?.janitor
-      if (api) void api.snooze(SnoozeMinutes, source).catch(() => undefined)
+      if (api) void api.snooze(SnoozeMinutes, source).catch(failed)
     },
   }
 }

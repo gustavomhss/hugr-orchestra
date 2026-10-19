@@ -193,6 +193,14 @@ import type {
   PullRequestsListOutput,
   PullRequestsCreateInput,
   PullRequestsCreateOutput,
+  RelayRunsListInput,
+  RelayRunsListOutput,
+  RelayRunsGetInput,
+  RelayRunsGetOutput,
+  RelayRunsAuditInput,
+  RelayRunsAuditOutput,
+  RelayRunsLedgerInput,
+  RelayRunsLedgerOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -1628,6 +1636,56 @@ export function make(options: ClientOptions) {
     actionsResources: makeActionsResources(request, sse),
     actionsSource: makeActionsSource(request, sse),
     actionsTransfers: makeActionsTransfers(request, sse),
+    relayRuns: {
+      list: (input?: RelayRunsListInput, requestOptions?: RequestOptions) =>
+        request<RelayRunsListOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/run`,
+            query: { location: input?.["location"], document: input?.["document"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      get: (input: RelayRunsGetInput, requestOptions?: RequestOptions) =>
+        request<RelayRunsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/run/${encodeURIComponent(input.runID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      audit: (input: RelayRunsAuditInput, requestOptions?: RequestOptions) =>
+        request<RelayRunsAuditOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/run/${encodeURIComponent(input.runID)}/audit`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      ledger: (input: RelayRunsLedgerInput, requestOptions?: RequestOptions) =>
+        request<RelayRunsLedgerOutput>(
+          {
+            method: "GET",
+            path: `/api/relay/run/${encodeURIComponent(input.runID)}/ledger`,
+            query: { location: input["location"], after: input["after"] },
+            successStatus: 200,
+            declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
   }
 }
 

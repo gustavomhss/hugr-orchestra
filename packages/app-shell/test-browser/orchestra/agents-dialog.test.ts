@@ -74,6 +74,8 @@ async function mount(
     agents?: Agent[]
     file?: AgentFileInfo
     fail?: boolean
+    // Holds every write open until it resolves, to look at the dialog while a write is in flight.
+    hold?: Promise<void>
     modelsStatus?: "pending" | "error" | "success"
   } = {},
 ) {
@@ -82,6 +84,7 @@ async function mount(
   const reads: string[] = []
   const writes: { id: string; input: AgentFileInput }[] = []
   const closed: boolean[] = []
+  const removed: string[] = []
   const dispose = render(
     () =>
       createComponent(PlatformProvider, {
@@ -111,8 +114,10 @@ async function mount(
                 },
                 save: async (id, payload) => {
                   writes.push({ id, input: payload })
+                  await input.hold
                   if (input.fail) throw new Error("write failed")
                 },
+                onRemoved: (removedAgent) => removed.push(removedAgent.id ?? removedAgent.name),
                 onClose: () => closed.push(true),
               })
             },
@@ -126,7 +131,7 @@ async function mount(
     root.remove()
   })
   await new Promise((resolve) => setTimeout(resolve, 0))
-  return { root, reads, writes, closed }
+  return { root, reads, writes, closed, removed }
 }
 
 function submit(root: HTMLElement) {
@@ -149,6 +154,22 @@ test("renamed agent is removed by stable id", async () => {
   button.click()
   await submit(removed.root)
   expect(removed.writes[0]).toMatchObject({ id: "backend", input: { disable: true, revision: "r1" } })
+})
+
+test("the dialog cannot be dismissed while a write is in flight, and a finished remove is reported", async () => {
+  const gate = Promise.withResolvers<void>()
+  const form = await mount({ agent, hold: gate.promise })
+  const button = [...form.root.querySelectorAll("button")].find((item) => item.textContent === "Remove agent")!
+  button.click()
+  await submit(form.root)
+  const cancel = [...form.root.querySelectorAll("button")].find((item) => item.textContent === "Cancel")!
+  expect(cancel.disabled).toBe(true)
+  form.root.querySelector("dialog")!.dispatchEvent(new Event("cancel", { cancelable: true }))
+  expect(form.closed).toEqual([])
+  gate.resolve()
+  await new Promise((resolve) => setTimeout(resolve, 0))
+  expect(form.closed).toEqual([true])
+  expect(form.removed).toEqual(["backend"])
 })
 
 test("create rejects an occupied stable id even when its display name differs", async () => {

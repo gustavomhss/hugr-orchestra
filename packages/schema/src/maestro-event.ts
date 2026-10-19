@@ -610,6 +610,56 @@ export namespace Task {
   })
   export type WorkflowBound = typeof WorkflowBound.Type
 
+  // One workflow settlement that held for a code review before the arm graded it, so it spent no ledger entry. The
+  // authorized resume of the Task reads it to continue that step instead of replaying. Durable only, not public.
+  export const WorkflowReviewHeld = Event.define({
+    type: "maestro.task.workflow_review_held",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      assistantMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      expected: RelayArm.WorkflowPosition,
+    },
+  })
+  export type WorkflowReviewHeld = typeof WorkflowReviewHeld.Type
+
+  // A code review that did not approve graded the held reply `assistantMessageID` on the authorized resume, leaving the
+  // step at `expected`. The newest such record of a step names the review whose findings ride every later attempt of it
+  // until a new review decides. Durable only, not public.
+  export const WorkflowReviewFindings = Event.define({
+    type: "maestro.task.workflow_review_findings",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      reviewID: Schema.NonEmptyString,
+      assistantMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+      expected: RelayArm.WorkflowPosition,
+    },
+  })
+  export type WorkflowReviewFindings = typeof WorkflowReviewFindings.Type
+  // A workflow arm moved from an execution Session that never ran a provider turn (`from`, whose own WorkflowBound
+  // record stays and which never takes the arm again) to the child that took it (`executionSessionID`). The authority
+  // fields name the Task call that moved it. A move that stopped before its record (a crash) is recorded later by
+  // another call, named in `recoveredBy` instead, since the moving call is no longer known. Durable only, not public.
+  export const WorkflowRebound = Event.define({
+    type: "maestro.task.workflow_rebound",
+    durable: { version: 1, aggregate: "executionSessionID" },
+    schema: {
+      executionSessionID: RelayArm.WorkflowBinding.fields.executionSessionID,
+      from: RelayArm.WorkflowBinding.fields.executionSessionID,
+      token: RelayArm.Token,
+      authorityMessageID: Schema.optional(RelayArm.WorkflowSettlement.fields.assistantMessageID),
+      authorityCallID: Schema.optional(Schema.NonEmptyString),
+      recoveredBy: Schema.optional(Schema.Struct({
+        authorityMessageID: RelayArm.WorkflowSettlement.fields.assistantMessageID,
+        authorityCallID: Schema.NonEmptyString,
+      })),
+    },
+  })
+  export type WorkflowRebound = typeof WorkflowRebound.Type
+
   // F2.11: the logical work item an execution Session carries. `taskId` is never a Session ID; the event ID is
   // derived from the execution Session, so one Session binds at most one logical task.
   export const Bound = Event.define({
@@ -682,3 +732,7 @@ export const Definitions = Event.inventory(
   Task.WorkflowBound,
   WorkResult.Decided,
 )
+
+/** Maestro events stored and replayed by the host but never part of the public event surface. */
+export const DurableOnlyDefinitions = Event.inventory(Task.WorkflowReviewHeld, Task.WorkflowRebound,
+  Task.WorkflowReviewFindings)

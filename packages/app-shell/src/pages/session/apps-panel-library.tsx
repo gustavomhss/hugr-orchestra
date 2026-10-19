@@ -1,4 +1,5 @@
-import { onCleanup, Show } from "solid-js"
+import { createEffect, on, onCleanup, Show } from "solid-js"
+import { useLanguage } from "@/context/language"
 import type { Bookmark, Download } from "./apps-panel-controller"
 
 // Bookmarks, history and downloads float over the page area, where the native browser paints above HTML,
@@ -12,9 +13,44 @@ export function LibraryPopover(props: {
   onOpenDownload: (id: string) => void
   onCancelDownload: (id: string) => void
 }) {
-  const title = () => ({ bookmarks: "Bookmarks", history: "History", downloads: "Downloads" })[props.kind]
+  const t = useLanguage().t
+  const title = () => t(`appDock.browser.${props.kind}`)
+  // Opened from a toolbar button: focus moves into the dialog, and back to that button when it closes.
+  const invoker = document.activeElement
+  let popover: HTMLDivElement | undefined
+  createEffect(
+    on(
+      () => props.kind,
+      () => requestAnimationFrame(() => (popover?.querySelector("button") ?? popover)?.focus({ preventScroll: true })),
+    ),
+  )
+  onCleanup(() =>
+    requestAnimationFrame(() => {
+      const focused = document.activeElement
+      if (invoker instanceof HTMLElement && (!focused || focused === document.body)) invoker.focus()
+    }),
+  )
   return (
-    <div ref={(element) => onCleanup(props.register(element))} class="zen-library" role="dialog" aria-label={title()}>
+    <div
+      ref={(element) => {
+        popover = element
+        onCleanup(props.register(element))
+      }}
+      class="zen-library"
+      role="dialog"
+      aria-modal="true"
+      aria-label={title()}
+      tabindex="-1"
+      onKeyDown={(event) => {
+        if (event.key !== "Tab") return
+        // Modal: Tab cycles inside the dialog instead of reaching the page behind it.
+        const items = [...event.currentTarget.querySelectorAll("button")]
+        const current = items.findIndex((item) => item === document.activeElement)
+        if (current >= 0 && current !== (event.shiftKey ? 0 : items.length - 1)) return
+        event.preventDefault()
+        items[event.shiftKey ? items.length - 1 : 0]?.focus()
+      }}
+    >
       <div class="zen-library-title">{title()}</div>
       <Show
         when={props.kind === "downloads"}
@@ -26,7 +62,7 @@ export function LibraryPopover(props: {
                 <small>{new URL(entry.url).hostname}</small>
               </button>
             ))}
-            {props.entries.length === 0 && <p>Nothing here yet.</p>}
+            {props.entries.length === 0 && <p>{t("appDock.browser.library.empty")}</p>}
           </>
         }
       >
@@ -36,20 +72,20 @@ export function LibraryPopover(props: {
             <small>
               {download.state === "progressing" && download.totalBytes > 0
                 ? `${Math.round((download.receivedBytes / download.totalBytes) * 100)}%`
-                : download.state}
+                : t(`appDock.browser.download.${download.state}`)}
             </small>
             {download.state === "completed" ? (
               <button class="zen-open-button" type="button" onClick={() => props.onOpenDownload(download.id)}>
-                Open
+                {t("common.open")}
               </button>
             ) : download.state === "progressing" || download.state === "paused" ? (
               <button class="zen-open-button" type="button" onClick={() => props.onCancelDownload(download.id)}>
-                Cancel
+                {t("common.cancel")}
               </button>
             ) : null}
           </div>
         ))}
-        {props.downloads.length === 0 && <p>No downloads yet.</p>}
+        {props.downloads.length === 0 && <p>{t("appDock.browser.library.noDownloads")}</p>}
       </Show>
     </div>
   )
@@ -63,6 +99,7 @@ export function FindBar(props: {
   onFind: (forward: boolean) => void
   onClose: () => void
 }) {
+  const t = useLanguage().t
   return (
     <form
       class="zen-findbar"
@@ -75,17 +112,17 @@ export function FindBar(props: {
         autofocus
         value={props.text}
         onInput={(event) => props.onInput(event.currentTarget.value)}
-        aria-label="Find in page"
-        placeholder="Find in page"
+        aria-label={t("appDock.browser.find.label")}
+        placeholder={t("appDock.browser.find.label")}
       />
       <span>{props.result ? `${props.result.activeMatchOrdinal}/${props.result.matches}` : ""}</span>
-      <button type="button" aria-label="Previous match" onClick={() => props.onFind(false)}>
+      <button type="button" aria-label={t("appDock.browser.find.previous")} onClick={() => props.onFind(false)}>
         &#8593;
       </button>
-      <button type="submit" aria-label="Next match">
+      <button type="submit" aria-label={t("appDock.browser.find.next")}>
         &#8595;
       </button>
-      <button type="button" aria-label="Close find" onClick={props.onClose}>
+      <button type="button" aria-label={t("appDock.browser.find.close")} onClick={props.onClose}>
         x
       </button>
     </form>

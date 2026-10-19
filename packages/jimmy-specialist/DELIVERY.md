@@ -4,12 +4,12 @@
 
 The seat `jimmy` is now defined by the jimmy-engine spec (`specs/jimmy-engine/`, `method.md`). The qualification recorded below is superseded by it and stays as history.
 
-- **Prompt.** `packages/orchestra/src/agent/prompt/jimmy.txt`, under 400 words: open the inquiry, check the premise, locate in batches, commit to the ranges that decide the answer, probe when reading is not enough, claim with an evidence class, check and close.
+- **Prompt.** `modules/maestro/coordination/src/seats/prompt/jimmy.txt`, under 400 words: open the inquiry, check the premise, locate in batches, commit to the ranges that decide the answer, probe when reading is not enough, claim with an evidence class, check and close.
 - **Card.** The host assembles card v2 from `inquiry close`. The seat writes no fenced card.
-- **Tools.** One descriptor, `packages/orchestra/src/research/seat-tools.ts`, on both engines. Each tool's own description carries its contract; the prompt does not repeat it.
+- **Tools.** One descriptor, `packages/core/src/research/seat-tools.ts`, on both engines. Each tool's own description carries its contract; the prompt does not repeat it.
 - **Host-enforced rules.** The check before close, citation rules, repeated-call refusal, allowance and domain pinning live in the host, not in prose.
 - **Skills.** `jimmy-discovery` and `jimmy-research` (33 files, 16,753 words) are deleted. One optional skill, `jimmy-reference`, holds calibration and web-source doctrine (about 900 words) and is never required before the first search.
-- **Guards.** `packages/orchestra/test/research/jimmy-method.test.ts` pins the word cap, the absence of a fenced-card instruction and the single reference skill (JE-AC-M1).
+- **Guards.** `apps/orchestra/test/research/jimmy-method.test.ts` pins the word cap, the absence of a fenced-card instruction and the single reference skill (JE-AC-M1).
 
 ## Superseded — final handoff, 2026-10-10
 
@@ -31,7 +31,7 @@ The existing implementation is the common baseline. Each writer uses an isolated
 
 | Work package | Owned files | Output | Completion check |
 | --- | --- | --- | --- |
-| Packaged runtime | `packages/orchestra/test/research/packaged-runtime.test.ts`, `test/research/fixtures/packaged-proof.ts` | Bun/Node proof aligned with actual production builders and native corpus APIs | Both runtimes execute the capture → finding → document → view → verified card path; unavailable authored source is demonstrated |
+| Packaged runtime | `apps/orchestra/test/research/packaged-runtime.test.ts`, `test/research/fixtures/packaged-proof.ts` | Bun/Node proof aligned with actual production builders and native corpus APIs | Both runtimes execute the capture → finding → document → view → verified card path; unavailable authored source is demonstrated |
 | UI and consumers | Research UI components, app artifact callback, research i18n, generated Client/SDK outputs | Review/corrections for artifact paging, binding, cancellation, RTL and generator freshness | No stale/foreign document displayed; generators own generated output; changed UI uses established direction/i18n patterns |
 | Evaluation preparation | Research pilot/document scripts and evaluation runbook | Final-stage paired-run prerequisites and isolated, honest evaluation telemetry | No private oracle content in source/context; unsupported cases explicitly blocked; no quality/model trial during preparation |
 | Lead integration | Prompt, roster identity, delivery/implementation docs | Final charter after capability review, reviewed commits, consolidated gate plan | No unsupported capability claim, no hidden acceptance gap, one authoritative closure status |

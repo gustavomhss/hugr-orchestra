@@ -1,6 +1,6 @@
 import { For, Show, createEffect, createUniqueId, on, onCleanup, onMount } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
-import type { SessionProcess } from "@orchestra/sdk/v2/client"
+import type { SessionProcess } from "../../compat/sdk-v2-client"
 import { IconButton } from "@orchestra/ui/icon-button"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"

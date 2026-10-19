@@ -24,6 +24,7 @@ import { CredentialGroup } from "./groups/credential"
 import { ProjectCopyGroup } from "./groups/project-copy"
 import { RelayDocumentGroup, RelayPublishGroup } from "./groups/relay-document"
 import { RelayHookGroup } from "./groups/relay-hook"
+import { RelayRunGroup } from "./groups/relay-run"
 import { PullRequestGroup } from "./groups/pull-request"
 import { ScheduleGroup } from "./groups/schedule"
 import { makeResearchArtifactGroup } from "./groups/research-artifact"
@@ -84,6 +85,7 @@ const makeApiFromGroup = <
     .add(ActionsResourceGroup.middleware(locationMiddleware))
     .add(ActionsSourceGroup.middleware(locationMiddleware))
     .add(ActionsTransferGroup.middleware(locationMiddleware))
+    .add(RelayRunGroup.middleware(locationMiddleware))
     .annotateMerge(
       OpenApi.annotations({
         title: "orchestra HttpApi",

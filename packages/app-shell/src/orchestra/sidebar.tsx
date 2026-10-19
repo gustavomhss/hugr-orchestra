@@ -129,6 +129,15 @@ export function OrchestraSidebar(props: {
         (ctx && target.directory ? profileProject(ctx, target.directory) : undefined),
     }
   })
+  // Actions opens the selected directory through its own API and never bootstraps it, so a directory that is not an
+  // opened project is named by its folder rather than asking to choose a project that is already selected.
+  const profileName = () => {
+    const target = profile()
+    const route = layout.route()
+    if (target.project) return displayName(target.project)
+    if (target.directory && route.type === "chapter" && ["actions", "cicd"].includes(route.chapter))
+      return displayName({ worktree: target.directory })
+  }
   const selected = createMemo(() => {
     const target = profile()
     return target.conn && target.project ? { conn: target.conn, project: target.project } : undefined
@@ -293,7 +302,11 @@ export function OrchestraSidebar(props: {
     if (route.type === "session" || route.type === "draft") return
     const conn = profile().conn ?? home.server.focused()
     if (!conn) {
-      command.trigger("settings.open")
+      showToast({
+        title: language.t("orchestra.chat.send.openProviders"),
+        description: language.t("orchestra.chat.noConnection.description"),
+      })
+      navigate("/orchestra/providers")
       return
     }
     const ctx = global.ensureServerCtx(conn)
@@ -475,7 +488,7 @@ export function OrchestraSidebar(props: {
                   data-unset={
                     !getProjectAvatarSource(profile().project?.icon) && !profile().project?.icon?.color ? "" : undefined
                   }
-                  fallback={profile().project ? displayName(profile().project!) : ""}
+                  fallback={profileName() ?? ""}
                   src={getProjectAvatarSource(profile().project?.icon)}
                   variant={getProjectAvatarVariant(profile().project?.icon?.color)}
                   aria-hidden="true"
@@ -483,7 +496,7 @@ export function OrchestraSidebar(props: {
                 <span class="orchestra-profile-text">
                   <strong id="orchestra-profile-name">
                     <bdi>
-                      {profile().project ? displayName(profile().project!) : language.t("orchestra.profile.empty")}
+                      {profileName() ?? language.t("orchestra.profile.empty")}
                     </bdi>
                   </strong>
                   <small dir={profile().project ? "ltr" : "auto"} title={profile().project?.worktree}>
@@ -508,8 +521,11 @@ export function OrchestraSidebar(props: {
               <DropdownMenu.RadioGroup
                 value={profile().project ? `${profile().server}\n${profile().project!.worktree}` : ""}
               >
-                <For each={groups()}>
-                  {(group) => (
+                {/* Server health and list refreshes rebuild the group objects; key by server so an open menu keeps its items. */}
+                <For each={groups().map((group) => group.key)}>
+                  {(key) => {
+                    const group = groups().find((item) => item.key === key)!
+                    return (
                     <DropdownMenu.Group>
                       <DropdownMenu.GroupLabel class="orchestra-profile-group">
                         <bdi>{serverName(group.conn)}</bdi>
@@ -527,7 +543,13 @@ export function OrchestraSidebar(props: {
                               disabled={
                                 !layout.ready() || !tabs.ready() || global.servers.health[group.key]?.healthy === false
                               }
-                              onSelect={() => afterProfileClose(() => selectProject(group.conn, project()))}
+                              onSelect={() => {
+                                // Only what moves focus or opens tabs waits for the menu to unmount. The profile
+                                // applies now: a chapter opened while the menu closes would otherwise mount
+                                // against the previous profile and mount again when the selection lands.
+                                layout.home.setSelection({ server: group.key, directory: worktree })
+                                afterProfileClose(() => selectProject(group.conn, project()))
+                              }}
                             >
                               <DropdownMenu.ItemLabel class="orchestra-profile-item-name">
                                 <bdi>{displayName(project())}</bdi>
@@ -550,7 +572,8 @@ export function OrchestraSidebar(props: {
                         <DropdownMenu.ItemLabel>{language.t("home.project.add")}</DropdownMenu.ItemLabel>
                       </DropdownMenu.Item>
                     </DropdownMenu.Group>
-                  )}
+                    )
+                  }}
                 </For>
               </DropdownMenu.RadioGroup>
               <Show when={selected()}>

@@ -1,6 +1,6 @@
 import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
-import { AssistantMessage, Part, SessionStatus, UserMessage } from "@orchestra/sdk/v2"
+import type { SessionMessageInfo } from "../../../compat/vendored-client-promise"
+import { AssistantMessage, Part, SessionStatus, UserMessage } from "../../../compat/sdk-v2"
 import { groupParts, renderable, type PartGroup } from "@orchestra/session-ui/message-part"
 import { TimelineRow, type SummaryDiff } from "./timeline-row"
 import { uniqueSummaryDiffs } from "./summary-diffs"
@@ -10,13 +10,7 @@ export { TimelineRow, type SummaryDiff } from "./timeline-row"
 
 export type TimelineRowMap = {
   TurnGap: { userMessageID: string }
-  CommentStrip: {
-    userMessageID: string
-  }
-  UserMessage: {
-    userMessageID: string
-    anchor: boolean
-  }
+  UserMessage: { userMessageID: string }
   TurnDivider: {
     userMessageID: string
     label: "compaction" | "interrupted"
@@ -39,7 +33,6 @@ export namespace Timeline {
     getMessageParts: (messageID: string) => Part[],
     showReasoning: boolean,
     status: SessionStatus["type"],
-    inlineComments: boolean,
     projectedUserMessages: UserMessage[],
   ) {
     const turns: { user: UserMessage; assistants: AssistantMessage[] }[] = []
@@ -92,7 +85,6 @@ export namespace Timeline {
           showReasoning,
           status,
           turn.user.id === activeMessageID,
-          inlineComments,
         ),
       ),
     }
@@ -106,14 +98,11 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     isActive: boolean,
-    // v2 renders comments inside the user message attachments row instead of a strip row
-    inlineComments: boolean,
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
     const previousUserMessage = index > 0
     const userParts = getMessageParts(userMessage.id)
-    const comments = userParts.flatMap((p) => MessageComment.fromPart(p) ?? [])
     const compaction = userParts.some((p) => p.type === "compaction")
     const interruptedMessageIndex = assistantMessages.findIndex((m) => m.error?.name === "MessageAbortedError")
     const interrupted = interruptedMessageIndex !== -1
@@ -145,19 +134,7 @@ export namespace Timeline {
         : groupParts(assistantPartRefs).map((group) => ({ type: "part" as const, group }))
     if (previousUserMessage) rows.push(new TimelineRow.TurnGap({ userMessageID: userMessage.id }))
 
-    if (comments.length > 0 && !inlineComments)
-      rows.push(
-        new TimelineRow.CommentStrip({
-          userMessageID: userMessage.id,
-        }),
-      )
-
-    rows.push(
-      new TimelineRow.UserMessage({
-        userMessageID: userMessage.id,
-        anchor: inlineComments || comments.length === 0,
-      }),
-    )
+    rows.push(new TimelineRow.UserMessage({ userMessageID: userMessage.id }))
 
     if (compaction) {
       rows.push(

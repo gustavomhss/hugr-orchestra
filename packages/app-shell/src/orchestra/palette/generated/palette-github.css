@@ -247,6 +247,14 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   color: var(--orchestra-sidebar-icon);
   fill: currentColor;
 }
+[data-orchestra-palette="github"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"] {
+  border: 0;
+  background: none;
+  color: inherit;
+}
+[data-orchestra-palette="github"] .orchestra-shell > [data-slot="titlebar-v2"] [data-slot="orchestra-crumb-link"]:hover {
+  text-decoration: underline;
+}
 [data-orchestra-palette="github"] [data-navigation="compact"] .orchestra-nav-button[aria-current="page"]::before {
   background: var(--orchestra-sidebar-active-icon);
 }
@@ -1204,11 +1212,13 @@ html[data-orchestra-palette="github"][data-color-scheme="light"][dir="rtl"] body
   color: var(--orchestra-warm);
 }
 /* orchestra/chapters/kit.css */
-html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout] {
+html[data-orchestra-palette="github"][data-color-scheme] body[data-new-layout],
+html[data-orchestra-palette="github"][data-color-scheme] body[data-mx-kit] {
   --mx-primary: linear-gradient(180deg, #73adff, #4d95ff);
   --mx-primary-text: #ffffff;
 }
-html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout] {
+html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-new-layout],
+html[data-orchestra-palette="github"][data-color-scheme="light"] body[data-mx-kit] {
   --mx-line: rgba(103, 111, 120, 0.14);
   --mx-soft: rgba(83, 128, 202, 0.045);
   --mx-raised: rgba(255, 255, 255, 0.63);
@@ -1492,7 +1502,7 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] .home-kpi-value
   color: var(--mx-dim);
 }
 html[data-orchestra-palette="github"][data-color-scheme="light"] .home-kpi-value[data-state="loading"]::before {
-  background: rgba(81, 154, 255, 0.12);
+  background: rgba(81, 154, 255, 0.2);
 }
 html[data-orchestra-palette="github"][data-color-scheme="light"] .home-kpi-foot {
   color: var(--mx-dim);
@@ -1681,15 +1691,12 @@ html[data-orchestra-palette="github"][data-color-scheme="light"] .mx-page[data-m
 [data-orchestra-palette="github"] .providers-route-label {
   color: var(--mx-dim);
 }
-[data-orchestra-palette="github"] .mx-page .mx-row > .mx-brand {
+[data-orchestra-palette="github"] .mx-row > .mx-brand {
   color: var(--orchestra-text);
 }
 [data-orchestra-palette="github"] .providers-close {
   fill: none;
   stroke: currentColor;
-}
-[data-orchestra-palette="github"] .providers-dialog .providers-authorize .mx-link {
-  text-decoration: underline;
 }
 [data-orchestra-palette="github"] [data-component="dialog-overlay"]:has(+ [data-dialog-layer] .providers-dialog) {
   background: var(--mx-backdrop);

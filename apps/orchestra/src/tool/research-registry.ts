@@ -1,0 +1,124 @@
+export * as ResearchRegistry from "./research-registry"
+
+// The native discovery seat's part of the tool registry: its own tools, which tools it sees, and the wrapper that
+// charges every builtin call to the research dispatch it runs in, with its sources captured and retained.
+import { Effect, Schema } from "effect"
+import { Research } from "@orchestra/schema/research"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
+import { ResearchRecords } from "@orchestra/core/research/records"
+import { Ripgrep } from "@orchestra/core/ripgrep"
+import type { Agent } from "@/agent/agent"
+import { AtlasMemory } from "@/maestro/atlas-memory"
+import { nativeProfiles } from "@orchestra/maestro/roster"
+import { Permission } from "@/permission"
+import { ResearchExecution } from "@/research/allowance"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
+import { ResearchSourceCapture } from "@/research/source-capture"
+import { AtlasContextTool } from "./atlas-context"
+import { CodeIndexTools } from "./code-index"
+import { CodeLocateTool } from "./code-locate"
+import { CodeQueryTool } from "./code-query"
+import { CodeSearchTool } from "./code-search"
+import { InquiryTool } from "./inquiry"
+import { ProbeRunTool } from "./probe-run"
+import { ResearchCaptureTool } from "./research-capture"
+import { ResearchRecordTool } from "./research-record"
+import { ResearchViewTool } from "./research-view"
+import { Tool } from "./tool"
+
+// Every tool this registry initializes. A tool reaches the seat only once its id is in ResearchSeatTools.OWN (JD-2): the
+// seat's permission profile derives from OWN, and no other agent ever sees any of them.
+export const IDS: readonly string[] = [AtlasContextTool, ResearchRecordTool, ResearchViewTool, ResearchCaptureTool,
+  CodeQueryTool, CodeLocateTool, CodeSearchTool, ProbeRunTool, InquiryTool].map((tool) => tool.id)
+
+// What the seat may see on the loop: its descriptor, never a tool its permissions merely reach through another tool.
+const SEEN: readonly string[] = [...ResearchSeatTools.OWN, ...ResearchSeatTools.LOOP]
+
+// RipgrepBinary: code_search runs the bundled ripgrep with its own argv. CodeIndexTools: the code index behind
+// code_query, code_locate and code_search's enclosing symbols.
+export const nodes = [ResearchRecords.node, ResearchExecution.node, Ripgrep.RipgrepBinary.node, CodeIndexTools.node] as const
+
+// The output digest of each tool and argument set a dispatch already ran, with the call that ran it. An identical call
+// whose output digest is unchanged is refused (efficiency.md): the model already holds that result.
+const seen = new Map<string, { readonly digest: string; readonly call: string }>()
+const SEEN_LIMIT = 4096
+
+export const make = Effect.gen(function* () {
+  const atlas = yield* AtlasContextTool
+  const record = yield* ResearchRecordTool
+  const view = yield* ResearchViewTool
+  const acquire = yield* ResearchCaptureTool
+  const query = yield* CodeQueryTool
+  const locate = yield* CodeLocateTool
+  const search = yield* CodeSearchTool
+  const probe = yield* ProbeRunTool
+  const inquiry = yield* InquiryTool
+  const execution = yield* ResearchExecution.Service
+  const capture = yield* ResearchSourceCapture.make
+  const records = yield* ResearchRecords.Service
+  const warm = yield* CodeIndexTools.Warm
+  // The dispatch's inquiry closed when its ledger holds the closed event (J5.5), re-entries and restarts included. A
+  // resumed Task binds a new dispatch, whose ledger stream starts after its own allowance, so it starts open.
+  const closed = (allowance: Research.Allowance) => records.dispatch(allowance).pipe(
+    Effect.map((steps) => steps.some((step) => step.type === "research.inquiry.closed")))
+  const repeated = (frame: ResearchExecution.Frame | undefined, id: string, args: unknown, context: Tool.Context, result: Tool.ExecuteResult) => {
+    if (!frame || id === InquiryTool.id) return false
+    const key = `${dispatch(frame.allowance)}\0${id}\0${ResearchLedger.digest(ResearchLedger.canonical(args))}`
+    const digest = ResearchLedger.digest(result.output)
+    const prior = seen.get(key)
+    if (prior && prior.digest === digest && prior.call !== callKey(context)) return true
+    if (seen.size >= SEEN_LIMIT) seen.clear()
+    seen.set(key, { digest, call: callKey(context) })
+    return false
+  }
+  return {
+    /** Starts the code index warm-up of a git worktree in the background, once the discovery seat is active (J6.7). */
+    prewarm: (agent: Agent.Info | undefined, worktree: string) =>
+      agent && discovery(agent) && worktree !== "/" ? warm(worktree) : Effect.void,
+    /** The discovery tools, initialized as builtins. */
+    init: Effect.all([Tool.init(atlas), Tool.init(record), Tool.init(view), Tool.init(acquire), Tool.init(query),
+      Tool.init(locate), Tool.init(search), Tool.init(probe), Tool.init(inquiry)]),
+    /** One builtin call, charged to its dispatch under the call key its context carries. */
+    charge: <P extends Schema.Decoder<unknown>, E, R>(definition: Tool.Def<P>, args: Schema.Schema.Type<P>, context: Tool.Context,
+      run: (effect: Effect.Effect<Tool.ExecuteResult>) => Effect.Effect<Tool.ExecuteResult, E, R>) =>
+      Effect.gen(function* () {
+        const frame = yield* ResearchExecution.Current
+        if (frame && (yield* closed(frame.allowance)))
+          return yield* new Research.Error({ code: "inquiry_state", message: "inquiry closed: this dispatch admits no further tool calls" })
+        return yield* execution.tool(context.sessionID, callKey(context), definition.id,
+          capture.withCapture(context, definition.id, run(definition.execute(args, context).pipe(
+            Effect.flatMap((result) => repeated(frame, definition.id, args, context, result)
+              ? Effect.die(new Research.Error({ code: "conflict", message: `repeated_call: ${definition.id} already returned this exact output for these arguments in this dispatch; reuse that result, or change the arguments` }))
+              : capture.retain(context, definition.id, result, args)))), args))
+      }),
+  }
+})
+
+// A host that charges a call before it runs (Claude Code PreToolUse, keyed by its tool-use id) puts that key in the
+// context, so execution reconciles the same charge. Otherwise the call id is unique only within its message.
+function callKey(context: Tool.Context) {
+  if (!context.callID) return ""
+  return typeof context.extra?.callKey === "string" ? context.extra.callKey : `${context.messageID}:${context.callID}`
+}
+
+function dispatch(allowance: Research.Allowance) {
+  return `${allowance.binding.executionSessionID}\0${allowance.dispatchCallID}`
+}
+
+export function discovery(agent: Agent.Info) {
+  return agent.native === true && agent.id === ResearchSeatTools.SEAT
+}
+
+/**
+ * Research tools belong to native discovery; every native Atlas owner also holds the builtin Atlas context door.
+ * Discovery never sees a configured plugin tool, nor a
+ * tool its immutable native floor denies: a path-scoped skill-root edit deny can mask the wildcard discovery deny in its
+ * ordinary permissions.
+ */
+export function hidden(agent: Agent.Info, id: string, plugin: boolean) {
+  if (!plugin && id === AtlasContextTool.id) return !AtlasMemory.supports(agent)
+  if (plugin && agent.id === ResearchSeatTools.SEAT) return true
+  if (!discovery(agent)) return IDS.includes(id)
+  if (!SEEN.includes(id)) return true
+  return Permission.disabled([id], Permission.fromConfig(nativeProfiles[ResearchSeatTools.SEAT])).has(id)
+}

@@ -1,7 +1,6 @@
 import { type Accessor, createMemo, For, type JSX, onCleanup, Show, splitProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useNavigate } from "@solidjs/router"
-import { useSettings } from "@/context/settings"
 import { DragDropProvider, PointerSensor } from "@dnd-kit/solid"
 import { isSortable, useSortable } from "@dnd-kit/solid/sortable"
 import { AutoScroller, Feedback, PointerActivationConstraints } from "@dnd-kit/dom"
@@ -58,7 +57,6 @@ export type HomeProjectsViewProps = {
   onRevealProject: (server: ServerConnection.Any, project: LocalProject) => void
   onClearNotifications: (server: ServerConnection.Any, project: LocalProject) => void
   onCloseProject: (server: ServerConnection.Any, directory: string) => void
-  onOpenSettings: () => void
 }
 
 export function HomeProjectsView(props: HomeProjectsViewProps) {
@@ -145,30 +143,19 @@ export function HomeProjectsView(props: HomeProjectsViewProps) {
           </div>
         </Show>
       </ScrollView>
-      <HomeUtilityNav
-        class="mb-8 mt-4 hidden shrink-0 lg:flex"
-        onOpenSettings={props.onOpenSettings}
-        language={props.language}
-      />
+      <HomeUtilityNav class="mb-8 mt-4 hidden shrink-0 lg:flex" language={props.language} />
     </aside>
   )
 }
 
-export function HomeUtilityNav(props: {
-  class?: string
-  onOpenSettings: () => void
-  language: ReturnType<typeof useLanguage>
-}) {
+export function HomeUtilityNav(props: { class?: string; language: ReturnType<typeof useLanguage> }) {
   const navigate = useNavigate()
-  const settings = useSettings()
   return (
     <div class={`${props.class ?? ""} min-w-0 flex-col gap-1 pr-3`}>
       <HomeProjectNavButton
         type="button"
         class="text-v2-text-text-faint [&>[data-slot=icon-svg]]:text-v2-icon-icon-muted"
-        onClick={() =>
-          settings.general.newLayoutDesigns() ? navigate("/orchestra/settings?section=general") : props.onOpenSettings()
-        }
+        onClick={() => navigate("/orchestra/settings?section=general")}
       >
         <IconV2 name="settings-gear" size="small" />
         <span class={HOME_PROJECT_NAV_LABEL}>{props.language.t("sidebar.settings")}</span>

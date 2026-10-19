@@ -54,7 +54,7 @@ jobs:
       - name: Install dependencies once without lifecycle scripts
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
       - name: Require native Linux producer and exact Bun
-        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+        run: bun apps/cli/script/runtime-proof.ts --target linux-x64-baseline --host
       # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as build.ts reads them.
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
@@ -74,16 +74,16 @@ jobs:
           TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
         run: |
           set -euo pipefail
-          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          ORCHESTRA_VERSION="$(bun -p 'require("./apps/cli/package.json").version')"
           export ORCHESTRA_VERSION
           for target in linux-x64-baseline linux-arm64; do
-            bun packages/cli/script/build.ts --skip-install --target "$target"
+            bun apps/cli/script/build.ts --skip-install --target "$target"
           done
-          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out wsl-resources --version "$ORCHESTRA_VERSION" --target linux-x64-baseline --target linux-arm64
+          bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out wsl-resources --version "$ORCHESTRA_VERSION" --target linux-x64-baseline --target linux-arm64
           # The guest install takes each CLI's omni pair from omni-<target>/, its tree-sitter from tree-sitter-<target>/
           # and its rg from ripgrep-<target>/.
           for target in linux-x64-baseline linux-arm64; do
-            bin="packages/cli/dist/cli-$target/bin"
+            bin="apps/cli/dist/cli-$target/bin"
             mkdir -p "wsl-resources/omni-$target"
             cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "wsl-resources/omni-$target/"
             cp -R "$bin/tree-sitter" "wsl-resources/tree-sitter-$target"
@@ -121,7 +121,7 @@ jobs:
       - name: Install dependencies once for actual Desktop helpers
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
       - name: Require matching native Windows process and kernel CPU
-        run: bun packages/cli/script/runtime-proof.ts --target "${{ matrix.cpu == 'x64' && 'windows-x64-baseline' || 'windows-arm64' }}" --host
+        run: bun apps/cli/script/runtime-proof.ts --target "${{ matrix.cpu == 'x64' && 'windows-x64-baseline' || 'windows-arm64' }}" --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: wsl-resources
@@ -129,13 +129,13 @@ jobs:
       - name: Require both real producer resources and source version
         run: |
           bun -e '
-          const { readCliManifest, verifyCliArtifact } = await import("./packages/desktop/src/main/cli-artifacts.ts");
+          const { readCliManifest, verifyCliArtifact } = await import("./apps/desktop/src/main/cli-artifacts.ts");
           const manifest = await readCliManifest("wsl-resources").catch(() => { throw Error("PRODUCER_MANIFEST_MISSING_OR_INVALID"); });
           const targets = ["linux-x64-baseline", "linux-arm64"];
-          if (manifest.version !== (await Bun.file("packages/cli/package.json").json()).version || manifest.artifacts.length !== 2 || !targets.every(target => manifest.artifacts.some(x => x.target === target))) throw Error("PRODUCER_TARGETS_OR_VERSION_MISMATCH");
+          if (manifest.version !== (await Bun.file("apps/cli/package.json").json()).version || manifest.artifacts.length !== 2 || !targets.every(target => manifest.artifacts.some(x => x.target === target))) throw Error("PRODUCER_TARGETS_OR_VERSION_MISMATCH");
           await Promise.all(targets.map(target => verifyCliArtifact("wsl-resources", target)));'
       - name: Execute actual installer retry corruption auth and owned-HOME proof
-        run: bun packages/desktop/scripts/wsl-product-proof.ts --resources wsl-resources --distro "$env:DISTRO" --report wsl-proof.json
+        run: bun apps/desktop/scripts/wsl-product-proof.ts --resources wsl-resources --distro "$env:DISTRO" --report wsl-proof.json
       - name: Require matching passed report and redact artifact fields
         run: |
           bun -e '

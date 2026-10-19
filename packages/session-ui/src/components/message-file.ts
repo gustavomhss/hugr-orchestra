@@ -1,6 +1,6 @@
 import { bundledLanguagesInfo } from "shiki"
 import { getFilename } from "@orchestra/core/util/path"
-import type { FilePart } from "@orchestra/sdk/v2"
+import type { FilePart } from "../compat/sdk-v2"
 
 export function attached(part: FilePart) {
   return part.url.startsWith("data:") && !inline(part)

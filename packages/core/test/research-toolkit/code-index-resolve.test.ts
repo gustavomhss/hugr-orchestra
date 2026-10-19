@@ -81,8 +81,8 @@ describe("code-index resolve", () => {
   test("this repository's own aliases and workspace exports resolve", async () => {
     const root = path.resolve(import.meta.dirname, "../../../..")
     const resolver = await Effect.runPromise(CodeIndexResolve.make(root))
-    const from = "packages/orchestra/src/tool/shell/scan.ts"
-    expect(resolver.resolve(from, "@/util/lazy")).toEqual({ kind: "alias", to: "packages/orchestra/src/util/lazy.ts" })
+    const from = "apps/orchestra/src/tool/shell/scan.ts"
+    expect(resolver.resolve(from, "@/util/lazy")).toEqual({ kind: "alias", to: "apps/orchestra/src/util/lazy.ts" })
     expect(resolver.resolve(from, "@orchestra/core/research-toolkit/code-index/types")).toEqual({
       kind: "workspace",
       to: "packages/core/src/research-toolkit/code-index/types.ts",
