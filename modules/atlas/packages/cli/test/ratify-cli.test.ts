@@ -2,11 +2,10 @@ import { describe, it, expect, beforeEach, afterEach } from "vitest"
 import { mkdtempSync, rmSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { readReview, foldReview } from "@atlas/adapter-io"
+import { foldReview, readReview, resolveReviewId } from "@atlas/adapter-io"
 import type { RatifyPorts } from "../src/ratify-cli.js"
 import type { CurrentFact } from "@atlas/adapter-io"
 import type { GroundedFact } from "@atlas/knowledge"
-import { resolveId } from "../src/review-common.js"
 import { REVIEW_COMMANDS } from "../src/review-cli.js"
 import { runDecide, runProposals, runPropose } from "../src/ratify-cli.js"
 
@@ -165,9 +164,9 @@ describe("ratify-cli", () => {
     expect(bad.stdout).toContain("no open proposal matches")
   })
 
-  it("case 14: resolveId", () => {
-    expect(resolveId(["abcdefgh1", "abcdefgh2"], "abcdefgh")).toBeUndefined()
-    expect(resolveId(["abcdefgh1"], "abcdefgh")).toBe("abcdefgh1")
+  it("case 14: resolveReviewId", () => {
+    expect(resolveReviewId(["abcdefgh1", "abcdefgh2"], "abcdefgh")).toBeUndefined()
+    expect(resolveReviewId(["abcdefgh1"], "abcdefgh")).toBe("abcdefgh1")
   })
 
   it("case 15: REVIEW_COMMANDS entries", () => {

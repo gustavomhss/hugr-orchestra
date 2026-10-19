@@ -6,11 +6,11 @@
 // batch. A `tier` question answered `T1` or `T0` ALSO appends a `proposal`, so a rule still needs `atlas decide` by a
 // person — the interview itself never ratifies anything.
 
-import { appendReview, openQuestionsOf } from "@atlas/adapter-io"
+import { appendReview, openQuestionsOf, resolveReviewId } from "@atlas/adapter-io"
 import { assembleInterview } from "@atlas/genesis"
 import type { RankedQuestion } from "@atlas/genesis"
 import type { CliVerdict } from "./render.js"
-import { foldOrRefuse, requireBy, resolveId, reviewOutcome, usageError } from "./review-common.js"
+import { foldOrRefuse, requireBy, reviewOutcome, usageError } from "./review-common.js"
 
 /** What interview/answer read and write through — injected so a test needs no store or index. */
 export interface InterviewPorts {
@@ -56,7 +56,7 @@ export function runAnswer(ports: InterviewPorts, positionals: readonly string[],
   const read = foldOrRefuse(ports.repoPath)
   if ("refusal" in read) return read.refusal
   const open = ports.questions(new Set(read.fold.answers.keys()))
-  const qid = resolveId(open.map((q) => q.id), wanted)
+  const qid = resolveReviewId(open.map((q) => q.id), wanted)
   const question = open.find((q) => q.id === qid)
   if (question === undefined) {
     return usageError(`answer: no open question matches '${wanted}' — \`atlas interview\` lists the open batch (an answered question drops out)`)
