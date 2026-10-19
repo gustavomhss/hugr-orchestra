@@ -9,6 +9,7 @@ import { num } from "../kit/format"
 import { AtlasLink, Rich } from "../kit/text"
 import { openAtlasSheet } from "../sheets/state"
 import { BriefingBuild } from "./briefing-build"
+import { UnitMap } from "./unit-map"
 import type { AtlasViewProps } from "./index"
 
 // A unit: what an agent learns here, and whether it still holds (specs/atlas-ui/mock/views.js:31-159). The same
@@ -307,7 +308,17 @@ function UnitPage(props: AtlasViewProps & { path: string }) {
           <BriefingBuild path={path} />
         </Acc>
       </Show>
-      {/* A23C: the map section goes here. */}
+      <Show when={!isRoot && !node()?.file}>
+        <Acc
+          id="unit-map"
+          icon="graph"
+          title={language.t("orchestra.atlas.unit.map")}
+          purpose={language.t("orchestra.atlas.unit.map.purpose")}
+          summary={language.t("orchestra.atlas.unit.map.files", { count: props.model.fileGraph(path).files.length })}
+        >
+          <UnitMap model={props.model} path={path} />
+        </Acc>
+      </Show>
       <Acc
         id="unit-kinds"
         icon="fact"
