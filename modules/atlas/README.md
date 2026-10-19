@@ -140,6 +140,8 @@ below, so the drift that produced this correction cannot recur silently.
 | `atlas propose <nodeKey> <T1\|T0> <reason...> --by <actor>`            | review    | proposes a fact for T1 or T0 with a reason; a person decides it                                            | [reference](./docs/reference/commands/propose.md)            |
 | `atlas proposals`                                                      | review    | lists the open ratification proposals                                                                      | [reference](./docs/reference/commands/proposals.md)          |
 | `atlas decide <id> <ratify\|reject> <reason...> --by <actor>`          | write     | ratify re-emits the fact at the proposed tier THROUGH the emit door; reject records why                    | [reference](./docs/reference/commands/decide.md)             |
+| `atlas interview [--json]`                                             | review    | the ranked ratification interview: at most 20 open questions per session, the rest deferred                | [reference](./docs/reference/commands/interview.md)          |
+| `atlas answer <questionId> <answer...> --by <actor>`                   | review    | records an interview answer; a T1/T0 tier answer also opens a proposal                                     | [reference](./docs/reference/commands/answer.md)             |
 | `atlas derive-relations`                                               | write     | projects proven `depends-on` from the index into governed knowledge                                        | [reference](./docs/reference/commands/derive-relations.md)   |
 | `atlas transition <unit>`                                              | write     | produce a grounded transition for a unit across two revs                                                   | [reference](./docs/reference/commands/transition.md)         |
 | `atlas test-vacuity`                                                   | write     | produce grounded test-vacuity facts over a repository's HEAD test files                                    | [reference](./docs/reference/commands/test-vacuity.md)       |
@@ -179,7 +181,7 @@ packages/
   genesis         the one-time $0-LLM seeder · budgeted LLM proposal · mechanical admission
   ── RING (campaign 9 — the productization surface; the core stays pure and does no I/O itself)
   adapter-io      the composition root: filesystem · SCIP · git · LLM · durable store, wired into ONE handler
-  cli             the `atlas` CLI — 37 commands through a total argv parser (never throws); see the table above
+  cli             the `atlas` CLI — 39 commands through a total argv parser (never throws); see the table above
   mcp-server      a stdio MCP server over that same handler, mapping every Verdict (incl. refusals) to MCP
   ── SUITES
   e2e             story-driven in-process suite over the wired runtime
@@ -209,14 +211,14 @@ the numbers on this page most likely to rot.
   so an identical input yields a byte-identical `Verdict` on the CLI and over MCP (TOOLS-3).
 - **Does NOT hold: surface parity.**
   <!-- transport-parity:begin -->
-  The CLI exposes **37** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
+  The CLI exposes **39** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
   The first two groups are `GOVERNANCE_SURFACE ∪ READ_SURFACE` (ADR-0006), both arrays in
   `packages/tools/src/handler.ts`. The third is `atlas-relations` (#99a) and `atlas-negations` (#99b),
   advertised through a documented path that deliberately leaves both surface constants untouched — so
   "MCP advertises the union" was never the whole truth, and this bullet asserted it for two campaigns.
-  **The remaining 19 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
+  **The remaining 21 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
   `transitions`, `transition`, `test-vacuities`, `test-vacuity`, `verify-fact`,
-  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`.
+  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`.
   <!-- transport-parity:end -->
   The writers among them publish through `atlas-emit` (ADR-0008 — an ordinary use of the existing door, not
   new surface), so no tool token exists for them.

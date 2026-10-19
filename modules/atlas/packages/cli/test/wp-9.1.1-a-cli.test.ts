@@ -85,6 +85,8 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "propose",
       "proposals",
       "decide",
+      "interview",
+      "answer",
       "own",
       "relations",
       "negations",
@@ -125,6 +127,8 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       propose: "atlas-query", // REVIEW (R3) — appends to the review log only; no knowledge write
       proposals: "atlas-query", // REVIEW (R3) — reads the review log
       decide: "atlas-emit", // WRITE (R3) — ratify publishes THROUGH the existing atlas-emit door
+      interview: "atlas-query", // REVIEW (R11) — reads; serves the ranked batch
+      answer: "atlas-query", // REVIEW (R11) — appends to the review log only; no knowledge write
       own: "atlas-query", // READ authority oracle (RETR-12 `own_<scope>` briefing) — a second projection of the
       //                     query readback over the SAME durable store; carries no write authority
       relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold) — intercepted before the

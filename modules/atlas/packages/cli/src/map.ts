@@ -81,6 +81,8 @@ export const COMMANDS = [
   "propose",
   "proposals",
   "decide",
+  "interview",
+  "answer",
   "own",
   "relations",
   "negations",
@@ -149,6 +151,9 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   proposals: "atlas-query", // REVIEW (R3): reads the open proposals off the review log; writes nothing.
   decide: "atlas-emit", // WRITE (R3): `ratify` re-emits the fact at the proposed tier THROUGH the governed emit door (the
   //                       composed handler's `atlas-emit`, every gate applies); `reject` only appends a decision record.
+  interview: "atlas-query", // REVIEW (R11): reads the store, the policy and the code index, and serves the ranked batch.
+  answer: "atlas-query", // REVIEW (R11): appends an `answer` record (and, for a T1/T0 tier answer, a `proposal`) to the
+  //                       review log; writes no knowledge — ratification stays with `decide`.
   relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold); intercepted before the handler
   //                           (cli.ts) and driven over the composition root's `relations` leg, which reads the
   //                           SAME durable projection this leg's query readback rides. Carries NO write authority.
