@@ -24,7 +24,7 @@ export function applicationTools(port: Transport, resolve: Resolve): Record<stri
   return Object.fromEntries(
     Object.entries(hooks ?? {}).map(([name, definition]) => {
       const args = tool.schema.object(definition.args)
-      const input = SchemaRepresentation.toSchema(
+      const input = SchemaRepresentation.toSchema<Schema.Codec<unknown, unknown, never, never>>(
         SchemaRepresentation.fromJsonSchemaDocument(
           JsonSchema.fromSchemaDraft2020_12(tool.schema.toJSONSchema(args, { target: "draft-2020-12", io: "input" }) as JsonSchema.JsonSchema),
         ),

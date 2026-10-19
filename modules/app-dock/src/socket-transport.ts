@@ -20,7 +20,8 @@ export function connect(url: string, token: string): Transport {
   const listeners: Array<(event: { data: unknown }) => void> = []
   // Requests made before the socket opens are sent once it does.
   const queue: string[] = []
-  const socket = new WebSocket(url, { headers: { authorization: `Bearer ${token}` } })
+  // Bun's WebSocket takes request headers; the DOM constructor type in scope only knows subprotocols.
+  const socket = new WebSocket(url, { headers: { authorization: `Bearer ${token}` } } as unknown as string[])
   socket.addEventListener("open", () => queue.splice(0).forEach((text) => socket.send(text)))
   socket.addEventListener("message", (event) => {
     const data: unknown = JSON.parse(String(event.data))
