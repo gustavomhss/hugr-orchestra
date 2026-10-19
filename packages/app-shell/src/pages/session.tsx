@@ -176,12 +176,7 @@ export function SessionRouteErrorBoundary(
       fallback={(error, reset) => (
         <SessionRouteFrame padded={props.padded}>
           <SessionPanelFrame raised={!!props.sessionID}>
-            <SessionErrorFallback
-              error={error}
-              sessionID={props.sessionID}
-              serverKey={props.serverKey}
-              onRetry={reset}
-            />
+            <SessionErrorFallback error={error} sessionID={props.sessionID} serverKey={props.serverKey} onRetry={reset} />
           </SessionPanelFrame>
         </SessionRouteFrame>
       )}
@@ -558,13 +553,14 @@ export default function Page() {
   const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().protocolKind())
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
-    const project = sync().project
     const vcs = sync().data.vcs
-    if (project?.vcs === "git") list.push("git")
-    if (project?.vcs === "git" && vcs?.branch && vcs?.default_branch && vcs.branch !== vcs.default_branch) {
-      list.push("branch")
-    }
-    list.push("turn")
+    // A branch read only answers inside a repository, so it counts while the project record catches up.
+    const git = sync().project?.vcs === "git" || !!vcs?.branch
+    if (git) list.push("git")
+    if (git && vcs?.branch && vcs?.default_branch && vcs.branch !== vcs.default_branch) list.push("branch")
+    // The V2 server records no per-turn diffs: in a repository its last-turn view would always read empty, and a
+    // mode that fell back to it would survive a reload as zero changes.
+    if (!git || serverSDK().protocolKind() !== "v2") list.push("turn")
     return list
   })
   const mobileChanges = createMemo(() => !isDesktop() && store.mobileTab === "changes")
