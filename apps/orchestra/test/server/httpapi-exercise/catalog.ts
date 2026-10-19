@@ -40,6 +40,7 @@ export const catalogScenarios: Scenario[] = [
     .at(() => ({ path: "/api/config", body: { agents: { maestro: { engine: "orchestra" } } } }))
     .status(204, undefined, "status"),
   http.protected.get("/api/config", "v2.config.get").global().json(200, object),
+  http.protected.get("/api/config/shells", "v2.config.shells").global().json(200, array),
   http.protected
     .get("/api/project/{projectID}/directories", "v2.project.directories")
     .at((ctx) => ({ path: route("/api/project/{projectID}/directories", { projectID: "global" }), headers: ctx.headers() }))

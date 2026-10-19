@@ -3485,11 +3485,16 @@ export type ProjectsInitGitOutput = {
   } | null
 }
 
-export type ConfigGetOutput = { readonly model?: string | undefined; readonly disabledProviders: ReadonlyArray<string> }
+export type ConfigGetOutput = {
+  readonly model?: string | undefined
+  readonly shell?: string | undefined
+  readonly disabledProviders: ReadonlyArray<string>
+}
 
 export type ConfigUpdateInput = {
   readonly model?: {
     readonly model?: string | undefined
+    readonly shell?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
@@ -3506,8 +3511,28 @@ export type ConfigUpdateInput = {
         }
       | undefined
   }["model"]
+  readonly shell?: {
+    readonly model?: string | undefined
+    readonly shell?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
+  }["shell"]
   readonly agents?: {
     readonly model?: string | undefined
+    readonly shell?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
@@ -3526,6 +3551,7 @@ export type ConfigUpdateInput = {
   }["agents"]
   readonly disabledProviders?: {
     readonly model?: string | undefined
+    readonly shell?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
@@ -3544,6 +3570,7 @@ export type ConfigUpdateInput = {
   }["disabledProviders"]
   readonly providers?: {
     readonly model?: string | undefined
+    readonly shell?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
@@ -3563,6 +3590,12 @@ export type ConfigUpdateInput = {
 }
 
 export type ConfigUpdateOutput = void
+
+export type ConfigShellsOutput = ReadonlyArray<{
+  readonly path: string
+  readonly name: string
+  readonly acceptable: boolean
+}>
 
 export type RelayDocumentsListInput = {
   readonly location?: {

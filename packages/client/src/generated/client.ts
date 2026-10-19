@@ -195,6 +195,7 @@ import type {
   ConfigGetOutput,
   ConfigUpdateInput,
   ConfigUpdateOutput,
+  ConfigShellsOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -1657,6 +1658,7 @@ export function make(options: ClientOptions) {
             path: `/api/config`,
             body: {
               model: input?.["model"],
+              shell: input?.["shell"],
               agents: input?.["agents"],
               disabledProviders: input?.["disabledProviders"],
               providers: input?.["providers"],
@@ -1665,6 +1667,11 @@ export function make(options: ClientOptions) {
             declaredStatuses: [401, 400],
             empty: true,
           },
+          requestOptions,
+        ),
+      shells: (requestOptions?: RequestOptions) =>
+        request<ConfigShellsOutput>(
+          { method: "GET", path: `/api/config/shells`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
           requestOptions,
         ),
     },

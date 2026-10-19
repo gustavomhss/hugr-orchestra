@@ -1185,6 +1185,7 @@ const Endpoint23_0 = (raw: RawClient["server.config"]) => () =>
 type Endpoint23_1Request = Parameters<RawClient["server.config"]["config.update"]>[0]
 type Endpoint23_1Input = {
   readonly model?: Endpoint23_1Request["payload"]["model"]
+  readonly shell?: Endpoint23_1Request["payload"]["shell"]
   readonly agents?: Endpoint23_1Request["payload"]["agents"]
   readonly disabledProviders?: Endpoint23_1Request["payload"]["disabledProviders"]
   readonly providers?: Endpoint23_1Request["payload"]["providers"]
@@ -1193,13 +1194,21 @@ const Endpoint23_1 = (raw: RawClient["server.config"]) => (input?: Endpoint23_1I
   raw["config.update"]({
     payload: {
       model: input?.["model"],
+      shell: input?.["shell"],
       agents: input?.["agents"],
       disabledProviders: input?.["disabledProviders"],
       providers: input?.["providers"],
     },
   }).pipe(Effect.mapError(mapClientError))
 
-const adaptGroup23 = (raw: RawClient["server.config"]) => ({ get: Endpoint23_0(raw), update: Endpoint23_1(raw) })
+const Endpoint23_2 = (raw: RawClient["server.config"]) => () =>
+  raw["config.shells"]({}).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup23 = (raw: RawClient["server.config"]) => ({
+  get: Endpoint23_0(raw),
+  update: Endpoint23_1(raw),
+  shells: Endpoint23_2(raw),
+})
 
 type Endpoint24_0Request = Parameters<RawClient["server.relay.document"]["relay.document.list"]>[0]
 type Endpoint24_0Input = { readonly location?: Endpoint24_0Request["query"]["location"] }

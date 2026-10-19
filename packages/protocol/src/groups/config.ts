@@ -13,6 +13,7 @@ const CustomProvider = Schema.Struct({
 
 export const ConfigPatch = Schema.Struct({
   model: Schema.optional(Schema.String),
+  shell: Schema.optional(Schema.String),
   agents: Schema.optional(
     Schema.Record(Schema.String, Schema.Struct({ engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])) })),
   ),
@@ -26,6 +27,7 @@ export const ConfigPatch = Schema.Struct({
 
 export const ConfigSettings = Schema.Struct({
   model: Schema.optional(Schema.String),
+  shell: Schema.optional(Schema.String),
   disabledProviders: Schema.Array(Schema.String),
 }).annotate({ identifier: "ConfigSettings" })
 
@@ -51,6 +53,18 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         summary: "Update global settings",
         description:
           "Merge the default model, agent engines and disabled providers into the global config document, then reload the agents and catalog of every open location.",
+      }),
+    ),
+  )
+  .add(
+    HttpApiEndpoint.get("config.shells", "/api/config/shells", {
+      success: Schema.Array(Schema.Struct({ path: Schema.String, name: Schema.String, acceptable: Schema.Boolean })),
+    }).annotateMerge(
+      OpenApi.annotations({
+        identifier: "v2.config.shells",
+        summary: "List shells",
+        description:
+          "The shells installed on the server host; `acceptable` ones can run commands, the rest only terminals.",
       }),
     ),
   )

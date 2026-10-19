@@ -230,6 +230,8 @@ const layer = Layer.effect(
 /** The settings the app writes into the user's global config document. */
 export interface GlobalPatch {
   readonly model?: string
+  /** The shell `!` commands, the bash tool and terminals use. */
+  readonly shell?: string
   readonly agents?: Readonly<Record<string, { readonly engine?: "orchestra" | "claude-code" }>>
   /** The whole list of disabled providers, kept as exact `provider.use` deny policies. Replaces the previous list. */
   readonly disabledProviders?: ReadonlyArray<string>
@@ -252,7 +254,7 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
         : [[at, value]]
   const text = target.text?.trim() ? target.text : "{}"
   const next = [
-    ...leaves({ model: patch.model, agents: patch.agents }, []),
+    ...leaves({ model: patch.model, shell: patch.shell, agents: patch.agents }, []),
     ...(patch.disabledProviders === undefined ? [] : providerEdits(text, patch.disabledProviders)),
     ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
   ].reduce(
@@ -268,6 +270,7 @@ export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
   const document = settings((yield* globalDocument()).text ?? "{}")
   return {
     ...(typeof document.model === "string" ? { model: document.model } : {}),
+    ...(typeof document.shell === "string" ? { shell: document.shell } : {}),
     disabledProviders: [
       ...new Set([
         ...document.policies.filter(providerDenial).map((item) => item.resource),
@@ -312,6 +315,7 @@ function settings(text: string) {
   const policies = record(root.experimental).policies
   return {
     model: root.model,
+    shell: root.shell,
     policies: Array.isArray(policies) ? policies.map(record) : [],
     disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
     hasDisabled: "disabled_providers" in root,
