@@ -23,7 +23,8 @@
     "./session-authority": "./src/session-authority.ts",
     "./task-hash": "./src/task-hash.ts",
     "./upstream-result": "./src/upstream-result.ts",
-    "./work-contract": "./src/work-contract.ts"
+    "./work-contract": "./src/work-contract.ts",
+    "./v2/seats": "./src/v2/seats.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000",
