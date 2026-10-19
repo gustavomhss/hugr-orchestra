@@ -168,6 +168,7 @@ const table = sqliteTable("session", {
 - The full suite runs once per epic, not per unit of work. Gate each unit with change-scoped tests through `bun run test:ci` and a local package typecheck.
 - To run CI, add the `epic` label to the epic PR (remove and re-add it to rerun) or dispatch the workflow manually. Pushes and unlabeled PRs run nothing.
 - A local green is not a CI green; say which gate ran.
+- Two Atlas workflows are the exceptions: `atlas-guard.yml` runs the Own snapshot guard on PRs that touch Own-anchored files, and `atlas-worklist.yml` writes the stale-Own worklist on pushes to dev.
 
 ## Local Runtime
 
