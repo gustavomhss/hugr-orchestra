@@ -20,6 +20,8 @@ export type {
   ProjectRuleProposal,
   ReconcileVerdict,
   RecordRef,
+  ResumableList,
+  ResumableRecord,
   StoreState,
   WriteVerdict,
 } from "./native-memory.js"

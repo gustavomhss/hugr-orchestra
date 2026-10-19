@@ -157,6 +157,19 @@ export type ReconcileVerdict =
   | { readonly present: true; readonly ref: RecordRef }
   | { readonly present: false; readonly store: StoreState }
 
+/** R5 (D23): one of the binding owner's own `task` checkpoints, as a resume picker lists it. It carries no time: a
+ *  record has none, and log order is never \"latest\" (F3-D3), so the list claims nothing about recency. */
+export interface ResumableRecord {
+  readonly ref: RecordRef
+  readonly taskId: string
+  readonly stoppedAt: string
+  readonly lesson: string
+}
+/** R5 (D23). File order. An `unavailable` store lists nothing and says so; it is never an empty `complete` list. */
+export interface ResumableList {
+  readonly records: readonly ResumableRecord[]
+  readonly store: StoreState
+}
 /** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
  *  bound write takes no caller-supplied score. */
 export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">
@@ -171,6 +184,9 @@ export interface NativeMemory {
   resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict
   write(entry: BoundEntry): WriteVerdict
   reconcile(entry: BoundEntry): ReconcileVerdict
+  /** R5: the binding owner's own task checkpoints (its `legacyOwners` included). Takes no owner: the binding is the
+   *  only owner this surface reads as (clauses 2-4). */
+  listResumable(): ResumableList
 }
 
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
@@ -286,6 +302,27 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       const ref = complete === undefined ? undefined : admissibleRef(complete, owner)
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
+    },
+
+    listResumable(): ResumableList {
+      const read = store.read()
+      const state = storeStateOf(read)
+      if (state === "unavailable") return { records: [], store: state }
+      // A partial store still lists what verified (each line carries its own content hash) and says it is partial.
+      const records = [...read.log.entries()].flatMap(([eventId, ev]): ResumableRecord[] => {
+        const record = ev.payload as MemoryRecord
+        if (!owners.has(record.owner) || record.kind !== "task") return []
+        const entry = record.entry as TaskMemoryEntry
+        return [
+          {
+            ref: { contentHash: ev.contentHash, eventId },
+            taskId: entry.taskId,
+            stoppedAt: entry.stoppedAt,
+            lesson: entry.lesson,
+          },
+        ]
+      })
+      return { records, store: state }
     },
   }
 }
