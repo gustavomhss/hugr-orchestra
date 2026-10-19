@@ -21,6 +21,7 @@ import {
   stages,
   storeCounts,
 } from "./genesis-data"
+import { GenesisInterview } from "./genesis-interview"
 import type { AtlasViewProps } from "./index"
 
 // Genesis: how Atlas learns a repository (specs/atlas-ui/mock/views-explore.js:374-443).
@@ -273,7 +274,7 @@ export default function AtlasGenesisView(props: AtlasViewProps) {
         </p>
       </section>
 
-      {/* A27C: the ratification interview goes here. */}
+      <GenesisInterview model={props.model} />
 
       <section class="at-panel at-gen-config">
         <header class="at-panel-head">
