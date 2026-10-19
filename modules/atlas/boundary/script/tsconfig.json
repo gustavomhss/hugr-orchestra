@@ -8,7 +8,9 @@
     "baseUrl": "../../../..",
     "paths": {
       "@atlas/*": ["modules/atlas/packages/*/src/index.ts"],
-      "@noble/hashes/*": ["modules/atlas/boundary/node_modules/@noble/hashes/*"]
+      "@noble/hashes/*": ["modules/atlas/boundary/node_modules/@noble/hashes/*"],
+      "@c4312/scip": ["modules/atlas/boundary/node_modules/@c4312/scip/index.d.ts"],
+      "web-tree-sitter": ["modules/atlas/boundary/node_modules/web-tree-sitter"]
     },
     "types": ["node"],
     "typeRoots": ["../node_modules/@types"]

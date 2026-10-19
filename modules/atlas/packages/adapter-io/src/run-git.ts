@@ -22,6 +22,12 @@ export interface RunGitOptions {
   readonly input?: string
 }
 
+/** The largest stdout one git call may return. Node's default `maxBuffer` (1 MiB) is smaller than `git ls-files -s -z`
+ *  on a repository of ~14k files (1.4 MB on the Orchestra repository, measured 2026-10-18), and past it
+ *  `execFileSync` throws, which `fs.ts` reads as an EMPTY tree. 256 MiB bounds a runaway output without
+ *  truncating a real one. */
+const GIT_MAX_BUFFER = 256 * 1024 * 1024
+
 /** The one git seam — `execFileSync`, NO shell (args are never shell-interpolated). stdin is closed (or
  *  `input`-piped); stdout+stderr are CAPTURED. On a non-zero exit `execFileSync` THROWS, the thrown error
  *  carrying the captured `.stderr` — a real failure is classifiable + diagnosable, never silently swallowed. */
@@ -30,6 +36,7 @@ export function runGit(repo: string, args: readonly string[], opts: RunGitOption
   return execFileSync("git", args as string[], {
     cwd: repo,
     encoding: "utf8",
+    maxBuffer: GIT_MAX_BUFFER,
     stdio: [hasInput ? "pipe" : "ignore", "pipe", "pipe"],
     ...(hasInput ? { input: opts.input } : {}),
   })
