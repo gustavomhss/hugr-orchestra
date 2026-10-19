@@ -18,6 +18,7 @@ import {
   taskLog,
   taskStatus,
 } from "./memory-data"
+import { ProjectMemory } from "./memory-project"
 import { MemoryTask } from "./memory-task"
 
 // Memory, per member (specs/atlas-ui/mock/views-memory.js): project memory (scoped rules carried into every turn,
@@ -200,8 +201,7 @@ function BoundMember(props: MemoryMemberProps) {
         summary={language.plural("orchestra.atlas.memory.tokens", pm().used, { n: num(pm().used) })}
         open
       >
-        {/* A31C: the project memory section goes here. */}
-        <div class="at-band-empty" />
+        <ProjectMemory {...props} />
       </Acc>
       <Acc
         id={`${props.member}-log`}
