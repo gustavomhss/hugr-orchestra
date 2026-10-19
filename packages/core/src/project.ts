@@ -7,6 +7,7 @@ import path from "path"
 import { Project as ProjectInfo } from "@orchestra/schema/project"
 import { Database } from "./database/database"
 import type { EventV2 } from "./event"
+import type { GitCli } from "./git-cli"
 import { AbsolutePath } from "./schema"
 import { FSUtil } from "./fs-util"
 import { Git } from "./git"
@@ -182,6 +183,63 @@ export const record = Effect.fn("Project.record")(function* (
       .pipe(Effect.orDie)
   const row = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
   if (row) yield* events.publish(ProjectInfo.Event.Updated, toInfo(row))
+})
+
+/** Renames a project or changes its icon or start command, as the app's project editor does; undefined when unknown. */
+export const update = Effect.fn("Project.update")(function* (
+  db: Database.Interface["db"],
+  events: EventV2.Interface,
+  input: {
+    readonly projectID: ID
+    readonly name?: string
+    readonly icon?: { readonly color?: string; readonly override?: string }
+    readonly commands?: { readonly start?: string }
+  },
+) {
+  const row = yield* db
+    .update(ProjectTable)
+    .set({
+      name: input.name,
+      icon_url_override: input.icon?.override,
+      icon_color: input.icon?.color,
+      commands: input.commands,
+      time_updated: Date.now(),
+    })
+    .where(eq(ProjectTable.id, input.projectID))
+    .returning()
+    .get()
+    .pipe(Effect.orDie)
+  if (!row) return
+  const info = toInfo(row)
+  yield* events.publish(ProjectInfo.Event.Updated, info)
+  return info
+})
+
+/**
+ * Makes a folder a git repository with an empty first commit, as V1 did, so it has a project identity at once; without
+ * a configured git identity the commit is authored as Orchestra. Returns the recorded project.
+ */
+export const initGit = Effect.fn("Project.initGit")(function* (
+  services: {
+    readonly db: Database.Interface["db"]
+    readonly events: EventV2.Interface
+    readonly git: GitCli.Interface
+    readonly projects: Interface
+  },
+  directory: AbsolutePath,
+) {
+  const init = yield* services.git.run(["init", "--quiet"], { cwd: directory })
+  if (init.exitCode !== 0) return yield* Effect.die(new Error(init.stderr.toString().trim() || "git init failed"))
+  const first = ["commit", "--allow-empty", "--no-verify", "--quiet", "-m", "Initial commit"]
+  const committed = yield* services.git.run(first, { cwd: directory })
+  if (committed.exitCode !== 0)
+    yield* services.git.run(["-c", "user.name=Orchestra", "-c", "user.email=orchestra@localhost", ...first], {
+      cwd: directory,
+    })
+  const project = yield* services.projects.resolve(directory)
+  yield* record(services.db, services.events, project)
+  const row = yield* services.db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
+  return row ? toInfo(row) : undefined
 })
 
 export const node = makeGlobalNode({

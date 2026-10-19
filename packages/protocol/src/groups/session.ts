@@ -22,6 +22,7 @@ import { Model } from "@orchestra/schema/model"
 import { Location } from "@orchestra/schema/location"
 import { Revert } from "@orchestra/schema/revert"
 import { SessionEvent } from "@orchestra/schema/session-event"
+import { SessionTodo } from "@orchestra/schema/session-todo"
 
 const SessionsQueryFields = {
   workspace: Workspace.ID.pipe(Schema.optional),
@@ -450,6 +451,21 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             summary: "Generate text",
             description:
               "Run one tool-less completion of the prompt after the Session's history with its model. Nothing is recorded.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.todo", "/api/session/:sessionID/todo", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: Schema.Array(SessionTodo.Info) }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.todo",
+            summary: "Get session todos",
+            description: "The Session's current todo list, as its agent last wrote it.",
           }),
         ),
     )

@@ -48,6 +48,8 @@ import type {
   SessionsSyntheticOutput,
   SessionsGenerateInput,
   SessionsGenerateOutput,
+  SessionsTodoInput,
+  SessionsTodoOutput,
   SessionsWaitInput,
   SessionsWaitOutput,
   SessionsStageInput,
@@ -186,6 +188,10 @@ import type {
   ProjectsListOutput,
   ProjectsDirectoriesInput,
   ProjectsDirectoriesOutput,
+  ProjectsUpdateInput,
+  ProjectsUpdateOutput,
+  ProjectsInitGitInput,
+  ProjectsInitGitOutput,
   ConfigGetOutput,
   ConfigUpdateInput,
   ConfigUpdateOutput,
@@ -712,6 +718,17 @@ export function make(options: ClientOptions) {
             body: { prompt: input["prompt"] },
             successStatus: 200,
             declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      todo: (input: SessionsTodoInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsTodoOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/todo`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,
@@ -1602,6 +1619,30 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      update: (input: ProjectsUpdateInput, requestOptions?: RequestOptions) =>
+        request<ProjectsUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/project/${encodeURIComponent(input.projectID)}`,
+            body: { name: input["name"], icon: input["icon"], commands: input["commands"] },
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      initGit: (input?: ProjectsInitGitInput, requestOptions?: RequestOptions) =>
+        request<ProjectsInitGitOutput>(
+          {
+            method: "POST",
+            path: `/api/project/git`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     config: {
       get: (requestOptions?: RequestOptions) =>
@@ -1618,6 +1659,7 @@ export function make(options: ClientOptions) {
               model: input?.["model"],
               agents: input?.["agents"],
               disabledProviders: input?.["disabledProviders"],
+              providers: input?.["providers"],
             },
             successStatus: 204,
             declaredStatuses: [401, 400],

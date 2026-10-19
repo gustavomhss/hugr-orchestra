@@ -1,6 +1,16 @@
 import { Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
 
+// A custom provider as the app defines one: an AI SDK package at an endpoint with its models. A subset of the config
+// document's provider entry.
+const CustomProvider = Schema.Struct({
+  name: Schema.optional(Schema.String),
+  env: Schema.optional(Schema.Array(Schema.String)),
+  api: Schema.Struct({ type: Schema.Literal("aisdk"), package: Schema.String, url: Schema.optional(Schema.String) }),
+  request: Schema.optional(Schema.Struct({ headers: Schema.optional(Schema.Record(Schema.String, Schema.String)) })),
+  models: Schema.optional(Schema.Record(Schema.String, Schema.Struct({ name: Schema.optional(Schema.String) }))),
+}).annotate({ identifier: "ConfigCustomProvider" })
+
 export const ConfigPatch = Schema.Struct({
   model: Schema.optional(Schema.String),
   agents: Schema.optional(
@@ -8,6 +18,9 @@ export const ConfigPatch = Schema.Struct({
   ),
   disabledProviders: Schema.optional(Schema.Array(Schema.String)).annotate({
     description: "The whole list of disabled providers, stored as `provider.use` deny policies. Replaces the previous list.",
+  }),
+  providers: Schema.optional(Schema.Record(Schema.String, CustomProvider)).annotate({
+    description: "Custom providers by ID, each replacing any previous definition of that ID.",
   }),
 }).annotate({ identifier: "ConfigPatch" })
 

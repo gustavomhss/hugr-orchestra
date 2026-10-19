@@ -901,6 +901,12 @@ export type SessionsGenerateInput = {
 
 export type SessionsGenerateOutput = { readonly data: { readonly text: string } }["data"]
 
+export type SessionsTodoInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsTodoOutput = {
+  readonly data: ReadonlyArray<{ readonly content: string; readonly status: string; readonly priority: string }>
+}["data"]
+
 export type SessionsWaitInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
 export type SessionsWaitOutput = void
@@ -3425,6 +3431,60 @@ export type ProjectsDirectoriesOutput = ReadonlyArray<{
   readonly strategy?: string | undefined
 }>
 
+export type ProjectsUpdateInput = {
+  readonly projectID: { readonly projectID: string }["projectID"]
+  readonly name?: {
+    readonly name?: string | null
+    readonly icon?: { readonly color?: string | null; readonly override?: string | null } | null
+    readonly commands?: { readonly start?: string } | null
+  }["name"]
+  readonly icon?: {
+    readonly name?: string | null
+    readonly icon?: { readonly color?: string | null; readonly override?: string | null } | null
+    readonly commands?: { readonly start?: string } | null
+  }["icon"]
+  readonly commands?: {
+    readonly name?: string | null
+    readonly icon?: { readonly color?: string | null; readonly override?: string | null } | null
+    readonly commands?: { readonly start?: string } | null
+  }["commands"]
+}
+
+export type ProjectsUpdateOutput = {
+  readonly id: string
+  readonly worktree: string
+  readonly vcs?: "git"
+  readonly name?: string
+  readonly icon?: { readonly url?: string; readonly override?: string; readonly color?: string }
+  readonly commands?: { readonly start?: string }
+  readonly time: { readonly created: number; readonly updated: number; readonly initialized?: number }
+  readonly sandboxes: ReadonlyArray<string>
+}
+
+export type ProjectsInitGitInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ProjectsInitGitOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly id: string
+    readonly worktree: string
+    readonly vcs?: "git"
+    readonly name?: string
+    readonly icon?: { readonly url?: string; readonly override?: string; readonly color?: string }
+    readonly commands?: { readonly start?: string }
+    readonly time: { readonly created: number; readonly updated: number; readonly initialized?: number }
+    readonly sandboxes: ReadonlyArray<string>
+  } | null
+}
+
 export type ConfigGetOutput = { readonly model?: string | undefined; readonly disabledProviders: ReadonlyArray<string> }
 
 export type ConfigUpdateInput = {
@@ -3434,6 +3494,17 @@ export type ConfigUpdateInput = {
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
     readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
   }["model"]
   readonly agents?: {
     readonly model?: string | undefined
@@ -3441,6 +3512,17 @@ export type ConfigUpdateInput = {
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
     readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
   }["agents"]
   readonly disabledProviders?: {
     readonly model?: string | undefined
@@ -3448,7 +3530,36 @@ export type ConfigUpdateInput = {
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
     readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
   }["disabledProviders"]
+  readonly providers?: {
+    readonly model?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
+  }["providers"]
 }
 
 export type ConfigUpdateOutput = void

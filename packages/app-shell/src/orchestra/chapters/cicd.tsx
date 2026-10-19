@@ -36,12 +36,13 @@ type Dialog =
 
 export default function Cicd(props: ChapterPageProps) {
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
   const language = useLanguage()
   const tabs = useTabs()
   const global = useGlobal()
   const sync = useServerSync()
   const pipelines = profilePipelines(`${ServerConnection.key(props.server)}\0${pathKey(props.directory)}`, {
-    sdk: useServerSDK()(),
+    sdk: serverSDK(),
     platform: usePlatform(),
     directory: props.directory,
     t: language.t,
@@ -69,11 +70,18 @@ export default function Cicd(props: ChapterPageProps) {
       )
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
-  // V2 has no VCS route yet; the legacy route still answers on current servers and is only a form default.
+  // Only a form default, so a failed read leaves it to the synced branch.
   const [vcs] = createResource(() =>
     sdk()
-      .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
-      .then((result) => result.data?.branch)
+      .protocol.then((protocol) =>
+        protocol === "v1"
+          ? sdk()
+              .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
+              .then((result) => result.data?.branch)
+          : serverSDK()
+              .orchestra.vcs.get({ location: { directory: props.directory } }, { signal: abort.signal })
+              .then((result) => result.data.branch),
+      )
       .catch(() => undefined),
   )
   const branch = () => vcs() ?? sync().child(props.directory, { bootstrap: false })[0].vcs?.branch ?? ""

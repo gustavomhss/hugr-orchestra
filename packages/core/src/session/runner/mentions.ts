@@ -48,7 +48,7 @@ const local = Effect.fnUntraced(function* (
   url: URL,
 ) {
   const filepath = AbsolutePath.make(fileURLToPath(url))
-  const exit = yield* Effect.gen(function* (): Effect.fn.Return<Mention, ReadToolFileSystem.ReadError | FSUtil.Error> {
+  const exit = yield* Effect.gen(function* () {
     if ((yield* services.reader.inspect(filepath)) === "directory") {
       const listing = yield* services.reader.list(filepath)
       return {
@@ -59,7 +59,10 @@ const local = Effect.fnUntraced(function* (
     }
     const read = yield* services.reader.read(filepath, filepath, page(url)).pipe(
       Effect.catchTag("ReadTool.BinaryFileError", (error) =>
-        path.extname(filepath).toLowerCase() === ".pdf" ? pdf(services.fs, filepath) : Effect.fail(error),
+        Effect.gen(function* () {
+          if (path.extname(filepath).toLowerCase() !== ".pdf") return yield* error
+          return yield* pdf(services.fs, filepath)
+        }),
       ),
     )
     if (read instanceof ReadToolFileSystem.TextPage)

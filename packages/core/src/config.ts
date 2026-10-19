@@ -233,6 +233,8 @@ export interface GlobalPatch {
   readonly agents?: Readonly<Record<string, { readonly engine?: "orchestra" | "claude-code" }>>
   /** The whole list of disabled providers, kept as exact `provider.use` deny policies. Replaces the previous list. */
   readonly disabledProviders?: ReadonlyArray<string>
+  /** Custom providers by ID, each replacing any previous definition of that ID. */
+  readonly providers?: Readonly<Record<string, unknown>>
 }
 
 /**
@@ -252,6 +254,7 @@ export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: G
   const next = [
     ...leaves({ model: patch.model, agents: patch.agents }, []),
     ...(patch.disabledProviders === undefined ? [] : providerEdits(text, patch.disabledProviders)),
+    ...Object.entries(patch.providers ?? {}).map(([id, value]): [string[], unknown] => [["providers", id], value]),
   ].reduce(
     (text, [at, value]) =>
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),

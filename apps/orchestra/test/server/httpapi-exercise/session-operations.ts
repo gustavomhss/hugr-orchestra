@@ -46,4 +46,9 @@ export const sessionOperationScenarios: Scenario[] = [
       headers: ctx.headers(),
     }))
     .status(404, undefined, "status"),
+  http.protected
+    .get("/api/session/{sessionID}/todo", "v2.session.todo")
+    .seeded((ctx) => ctx.session({ title: "Todo owner" }))
+    .at((ctx) => ({ path: route("/api/session/{sessionID}/todo", { sessionID: ctx.state.id }), headers: ctx.headers() }))
+    .json(200, object, "status"),
 ]

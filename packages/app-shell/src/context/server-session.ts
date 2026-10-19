@@ -191,7 +191,8 @@ function reconcileFetched<T extends { id: string }>(
   return options.compare ? items.sort(options.compare) : items
 }
 
-type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2"> }
+type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
+type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2">; todo?: TodoRead }
 
 export function createServerSession(
   client: OrchestraClient,
@@ -1345,13 +1346,11 @@ export function createServerSession(
     async todo(sessionID: string, request?: { force?: boolean }) {
       touch(sessionID)
       if (data.todo[sessionID] !== undefined && !request?.force) return
-      if ((await options?.protocol) === "v2") {
-        setData("todo", sessionID, [])
-        return
-      }
+      const v2 = (await options?.protocol) === "v2" ? options?.todo : undefined
       return runInflight(inflightTodo, sessionID, () => {
         const active = recovery.generation(sessionID)
-        return (options?.retry ?? retry)(() => client.session.todo({ sessionID })).then((result) => {
+        const read = () => (v2 ? v2(sessionID).then((data) => ({ data: [...data] })) : client.session.todo({ sessionID }))
+        return (options?.retry ?? retry)(read).then((result) => {
           if (generations.get(sessionID) !== active) return
           setData("todo", sessionID, reconcile(result.data ?? [], { key: "id" }))
         })

@@ -75,25 +75,21 @@ export function createEditProjectModel(props: { project: LocalProject; server: S
       const start = store.startup.trim()
 
       if (props.project.id && props.project.id !== "global") {
-        // Fail visibly: a silent return leaves the dialog open with nothing saved.
-        if ((await serverCtx().sdk.protocol) !== "v1")
-          throw new Error(language.t("orchestra.shell.project.editUnsupported"))
-        const project = await serverCtx()
-          .sdk.client.project.update({
-            projectID: props.project.id,
-            directory: props.project.worktree,
-            name,
-            icon: { color: store.color || "", override: store.iconOverride || "" },
-            commands: { start },
-          })
-          .then((result) => result.data)
+        const edit = {
+          projectID: props.project.id,
+          name,
+          icon: { color: store.color || "", override: store.iconOverride || "" },
+          commands: { start },
+        }
+        const project =
+          (await serverCtx().sdk.protocol) === "v1"
+            ? await serverCtx()
+                .sdk.client.project.update({ ...edit, directory: props.project.worktree })
+                .then((result) => result.data)
+            : await serverCtx()
+                .sdk.orchestra.projects.update(edit)
+                .then((result) => ({ ...result, sandboxes: [...result.sandboxes] }))
         if (!project) return
-        // const project = await serverCtx().sdk.api.project.update({
-        //   projectID: props.project.id,
-        //   name,
-        //   icon: { color: store.color || "", override: store.iconOverride || "" },
-        //   commands: { start },
-        // })
         serverCtx().sync.set("project", (items) =>
           items.map((item) => (item.id === project.id ? normalizeProjectInfo(project) : item)),
         )

@@ -1,4 +1,4 @@
-import { SessionV2 } from "@orchestra/core/session"
+import { SessionTodo, SessionV2 } from "@orchestra/core/session"
 import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
@@ -20,7 +20,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 
 const DefaultSessionsLimit = 50
 const DefaultSessionHistoryLimit = 50
-const typedNotFound = <A, E, R>(effect: Effect.Effect<A, E | SessionV2.NotFoundError, R>) =>
+const typedNotFound = <A, R>(effect: Effect.Effect<A, SessionV2.NotFoundError, R>) =>
   Effect.catchTag(
     effect,
     "Session.NotFoundError",
@@ -28,22 +28,19 @@ const typedNotFound = <A, E, R>(effect: Effect.Effect<A, E | SessionV2.NotFoundE
       new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
   )
 
-const busy = <A, E, R>(effect: Effect.Effect<A, E | SessionV2.BusyError, R>) =>
-  Effect.catchTag(
-    effect,
-    "Session.BusyError",
-    (error) =>
-      new ConflictError({ message: `Session is busy: ${error.sessionID}`, resource: error.sessionID }),
-  )
-
-// A model or history failure while compacting or generating reaches the caller with its own words; a missing or busy
-// Session keeps its own error.
-const runFailure = <A, E, R>(effect: Effect.Effect<A, E, R>) =>
-  Effect.catch(effect, (error) =>
-    error instanceof SessionV2.NotFoundError || error instanceof SessionV2.BusyError
-      ? Effect.fail(error)
-      : Effect.fail(new UnknownError({ message: error instanceof Error ? error.message : String(error) })),
-  )
+// The errors the V2 Session operations share, mapped onto the public ones.
+const operationErrors = {
+  "Session.NotFoundError": (error: SessionV2.NotFoundError) =>
+    Effect.fail(new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` })),
+  "Session.BusyError": (error: SessionV2.BusyError) =>
+    Effect.fail(new ConflictError({ message: `Session is busy: ${error.sessionID}`, resource: error.sessionID })),
+  // A model or history failure while compacting or generating reaches the caller in its own words.
+  "Session.RunFailedError": (error: SessionV2.RunFailedError) => Effect.fail(new UnknownError({ message: error.message })),
+}
+const missingOrBusy = {
+  "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+  "Session.BusyError": operationErrors["Session.BusyError"],
+}
 
 export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handlers) =>
   Effect.gen(function* () {
@@ -288,7 +285,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           const compacted = yield* session
             .compact({ sessionID: ctx.params.sessionID })
-            .pipe(runFailure, typedNotFound, busy)
+            .pipe(Effect.catchTags(operationErrors))
           return { data: { compacted } }
         }),
       )
@@ -297,16 +294,17 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           return {
             data: yield* session.fork({ sessionID: ctx.params.sessionID, messageID: ctx.payload.messageID }).pipe(
-              typedNotFound,
-              Effect.catchTag(
-                "Session.MessageNotFoundError",
-                (error) =>
-                  new MessageNotFoundError({
-                    sessionID: error.sessionID,
-                    messageID: error.messageID,
-                    message: `Message not found: ${error.messageID}`,
-                  }),
-              ),
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.MessageNotFoundError": (error) =>
+                  Effect.fail(
+                    new MessageNotFoundError({
+                      sessionID: error.sessionID,
+                      messageID: error.messageID,
+                      message: `Message not found: ${error.messageID}`,
+                    }),
+                  ),
+              }),
             ),
           }
         }),
@@ -315,16 +313,17 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.move",
         Effect.fn(function* (ctx) {
           yield* session.move({ sessionID: ctx.params.sessionID, location: ctx.payload.location }).pipe(
-            typedNotFound,
-            busy,
-            Effect.catchTag(
-              "Session.MoveError",
-              (error) =>
-                new InvalidRequestError({
-                  message: `${error.directory} is not in the Session's project`,
-                  field: "location",
-                }),
-            ),
+            Effect.catchTags({
+              "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+              "Session.BusyError": operationErrors["Session.BusyError"],
+              "Session.MoveError": (error) =>
+                Effect.fail(
+                  new InvalidRequestError({
+                    message: `${error.directory} is not in the Session's project`,
+                    field: "location",
+                  }),
+                ),
+            }),
           )
           return HttpApiSchema.NoContent.make()
         }),
@@ -334,7 +333,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           yield* session
             .shell({ sessionID: ctx.params.sessionID, id: ctx.payload.id, command: ctx.payload.command })
-            .pipe(typedNotFound, busy)
+            .pipe(Effect.catchTags(missingOrBusy))
           return HttpApiSchema.NoContent.make()
         }),
       )
@@ -344,12 +343,12 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
           yield* session
             .skill({ sessionID: ctx.params.sessionID, skill: ctx.payload.skill, resume: ctx.payload.resume })
             .pipe(
-              typedNotFound,
-              busy,
-              Effect.catchTag(
-                "Session.SkillNotFoundError",
-                (error) => new InvalidRequestError({ message: `Skill not found: ${error.skill}`, field: "skill" }),
-              ),
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.BusyError": operationErrors["Session.BusyError"],
+                "Session.SkillNotFoundError": (error) =>
+                  Effect.fail(new InvalidRequestError({ message: `Skill not found: ${error.skill}`, field: "skill" })),
+              }),
             )
           return HttpApiSchema.NoContent.make()
         }),
@@ -364,7 +363,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
               text: ctx.payload.text,
               resume: ctx.payload.resume,
             })
-            .pipe(typedNotFound, busy)
+            .pipe(Effect.catchTags(missingOrBusy))
           return { data: { id } }
         }),
       )
@@ -373,8 +372,21 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           const text = yield* session
             .generate({ sessionID: ctx.params.sessionID, prompt: ctx.payload.prompt })
-            .pipe(runFailure, typedNotFound)
+            .pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.RunFailedError": operationErrors["Session.RunFailedError"],
+              }),
+            )
           return { data: { text } }
+        }),
+      )
+      .handle(
+        "session.todo",
+        Effect.fn(function* (ctx) {
+          yield* session.get(ctx.params.sessionID).pipe(typedNotFound)
+          const todos = yield* SessionTodo.Service
+          return { data: yield* todos.get(ctx.params.sessionID) }
         }),
       )
       .handle(

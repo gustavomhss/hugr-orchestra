@@ -133,6 +133,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
   const session = createServerSession(serverSDK.client, serverSDK.api.session, serverSDK.api.message, {
     protocol: serverSDK.protocol,
+    todo: (sessionID) => serverSDK.orchestra.sessions.todo({ sessionID }),
   })
   // V2 keeps only the settings the app writes (default model, disabled providers) in its global config document.
   const readV2Config = () =>
