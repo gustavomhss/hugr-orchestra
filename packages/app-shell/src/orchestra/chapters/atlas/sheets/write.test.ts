@@ -29,6 +29,15 @@ function fake(draft: AtlasOutput<"draft">, emit: AtlasOutput<"emit">) {
     promote: () => unused(),
     link: () => unused(),
     verify: () => unused(),
+    review: () => Promise.resolve({ state: "empty" } as unknown as AtlasOutput<"review">),
+    hold: () => unused(),
+    release: () => unused(),
+    propose: () => unused(),
+    decide: () => unused(),
+    answer: () => unused(),
+    memoryDecide: () => unused(),
+    territory: () => unused(),
+    delegate: () => unused(),
     draft: (input) => {
       sent.push({ name: "draft", input })
       return Promise.resolve(draft)

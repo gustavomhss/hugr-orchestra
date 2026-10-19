@@ -182,14 +182,17 @@ describe("openSurface — the review writes", () => {
     process.env.ATLAS_ACTOR = "alice"
     delete process.env.ATLAS_RATIFY_TOKEN
     const surface = openSurface(repoPath)
-    expect(ok(surface.emit({ fact: groundedFact(repoPath, "core"), at: "cafe" })).data?.emitted).toBe(true)
+    const emitted = ok(surface.emit({ fact: groundedFact(repoPath, "core"), at: "cafe" })).data
+    expect(emitted?.emitted).toBe(true)
+    // The governed door keys the node by its anchor and slot, not by the fact's own id.
+    const key = emitted?.nodeKey ?? ""
     expect(ok(surface.propose({ nodeKey: "nk-none", toTier: "T1", reason: "r" })).rejected).toBe(
       "propose: no current fact has nodeKey 'nk-none'",
     )
-    const proposed = ok(surface.propose({ nodeKey: "nk-core", toTier: "T1", reason: "reviewed" }))
+    const proposed = ok(surface.propose({ nodeKey: key, toTier: "T1", reason: "reviewed" }))
     const proposalId = proposed.data?.id ?? ""
-    expect(ok(surface.propose({ nodeKey: "nk-core", toTier: "T1", reason: "again" })).rejected).toBe(
-      `propose: 'nk-core' already has an open T1 proposal ${proposalId}`,
+    expect(ok(surface.propose({ nodeKey: key, toTier: "T1", reason: "again" })).rejected).toBe(
+      `propose: '${key}' already has an open T1 proposal ${proposalId}`,
     )
     const unratified = ok(surface.decide({ proposalId, verdict: "ratified", reason: "looks right" }))
     expect(unratified.ok).toBe(false)
@@ -199,10 +202,10 @@ describe("openSurface — the review writes", () => {
     expect(ratified.ok).toBe(true)
     expect(process.env.ATLAS_RATIFY_TOKEN).toBeUndefined()
     expect(ok(surface.review()).proposals).toEqual([])
-    expect(ok(surface.propose({ nodeKey: "nk-core", toTier: "T1", reason: "r" })).rejected).toBe(
-      "propose: 'nk-core' is already T1; a proposal must raise the tier",
+    expect(ok(surface.propose({ nodeKey: key, toTier: "T1", reason: "r" })).rejected).toBe(
+      `propose: '${key}' is already T1; a proposal must raise the tier`,
     )
-    const core = ok(surface.propose({ nodeKey: "nk-core", toTier: "T0", reason: "core rule" }))
+    const core = ok(surface.propose({ nodeKey: key, toTier: "T0", reason: "core rule" }))
     const rejected = ok(surface.decide({ proposalId: core.data?.id ?? "", verdict: "rejected", reason: "not core" }))
     expect([rejected.ok, rejected.guidance.next]).toEqual([
       true,
