@@ -23,6 +23,7 @@ import type {
   NegationLeg,
   OwnLeg,
   PromoteOut,
+  PromoteSelect,
   RelationLeg,
   ReverifyReport,
   TestVacuityLeg,
@@ -114,7 +115,7 @@ export interface CliDeps {
    * ABSENT ⇒ `atlas promote` fails closed with the same "runtime is not composed yet" guidance every other
    * routed command gives, never a silent success over nothing.
    */
-  readonly promote?: (at: Hash) => PromoteOut
+  readonly promote?: (at: Hash, select?: PromoteSelect) => PromoteOut
   /**
    * The `atlas doctor index` provider. DEFAULTED (not deferred): production reads `process.cwd()` through
    * the real `reportIndexPlan`, so the leg is REACHABLE from the shipped bin the day it lands — the seam
@@ -339,7 +340,7 @@ export async function main(argv: string[], deps: CliDeps = {}): Promise<number> 
   const laneRunner = REVIEW_COMMANDS[command] ?? OPS_COMMANDS[command]
   if (laneRunner !== undefined) return laneRunner({ positionals, flags, deps })
 
-  if (command === "promote") return dispatchPromote(deps.promote) // CLI-7 — body and rationale in cli-dispatch.ts
+  if (command === "promote") return dispatchPromote(deps.promote, positionals) // CLI-7 + R2 — body in cli-dispatch.ts
 
   if (command === "derive-relations") {
     // #99 WP-R7: `atlas derive-relations` drives the SOUND-RELATION projection ONE pass (ADR-0008 — publishes

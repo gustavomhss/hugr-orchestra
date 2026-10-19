@@ -44,3 +44,4 @@ export * from "./ratify/ratify.js" // KNOW-8  — T0 → human+billy (never auto
 export * from "./ratify/fastpath.js" // KNOW-18 — auto-accept ONLY grounded∧lowRisk∧T2∧advisory∧¬contested (route(candidate, ctx))
 // Campaign-6:
 export * from "./lifecycle/hits.js" // WP-6.18.KNOW — served-fact hits ledger + door-2 threshold calibration + decay/re-entry
+export * from "./retired.js" // R6 — `isRetired`: a fact whose CAS bytes say `authoring: SUPERSEDED` leaves every read
