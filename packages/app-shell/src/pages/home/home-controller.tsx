@@ -88,10 +88,12 @@ export function createHomeController() {
     const directory = directories[0]
     if (!directory) return
     const ctx = global.ensureServerCtx(conn)
-    directories.forEach((item) => {
-      if (ctx.projects.list().some((project) => project.worktree === item)) return
+    // Settles once every new folder is added, its git question included, so a caller can navigate afterwards: moving
+    // away while the question is open would close it as a silent skip.
+    const added = directories.map((item) => {
+      if (ctx.projects.list().some((project) => project.worktree === item)) return Promise.resolve()
       const location = { directory: item }
-      void ctx.sdk.api.file
+      const settled = ctx.sdk.api.file
         .list({ path: ".", location })
         .then(async (files) => {
           // An empty folder only becomes a repository when the person agrees.
@@ -108,9 +110,11 @@ export function createHomeController() {
           }),
         )
       ctx.projects.open(item)
+      return settled
     })
     ctx.projects.touch(directory)
     setSelection({ server: ServerConnection.key(conn), directory })
+    return Promise.all(added).then(() => undefined)
   }
 
   function canRevealProject(conn: ServerConnection.Any) {

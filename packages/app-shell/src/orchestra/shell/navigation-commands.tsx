@@ -87,8 +87,7 @@ export function ShellNavigationCommands() {
       onSelect: (result) => {
         const directories = homeProjectDirectories(result)
         if (!directories[0]) return
-        home.project.add(conn, directories)
-        showProject(conn, directories[0])
+        void home.project.add(conn, directories)?.then(() => showProject(conn, directories[0]))
       },
     })
   }

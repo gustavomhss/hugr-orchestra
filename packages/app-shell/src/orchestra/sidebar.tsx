@@ -270,13 +270,15 @@ export function OrchestraSidebar(props: {
         if (profile().server !== target.server || profile().directory !== target.directory) return
         const directories = homeProjectDirectories(result)
         if (!directories[0]) return
-        home.project.add(conn, directories)
-        const project = global
-          .ensureServerCtx(conn)
-          .projects.list()
-          .find((item) => item.worktree === directories[0])
-        if (requests.disposed || requests.profile !== current || layout.route() !== route) return
-        if (project) selectProject(conn, project, draft)
+        // Select after the add settles: navigating while its git question is open would close it as a silent skip.
+        void home.project.add(conn, directories)?.then(() => {
+          const project = global
+            .ensureServerCtx(conn)
+            .projects.list()
+            .find((item) => item.worktree === directories[0])
+          if (requests.disposed || requests.profile !== current || layout.route() !== route) return
+          if (project) selectProject(conn, project, draft)
+        })
       },
     })
   }
