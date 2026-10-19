@@ -1349,10 +1349,11 @@ export function createServerSession(
       const v2 = (await options?.protocol) === "v2" ? options?.todo : undefined
       return runInflight(inflightTodo, sessionID, () => {
         const active = recovery.generation(sessionID)
-        const read = () => (v2 ? v2(sessionID).then((data) => ({ data: [...data] })) : client.session.todo({ sessionID }))
-        return (options?.retry ?? retry)(read).then((result) => {
+        const read = (): Promise<Todo[]> =>
+          v2 ? v2(sessionID).then((todos) => [...todos]) : client.session.todo({ sessionID }).then((result) => result.data ?? [])
+        return (options?.retry ?? retry)(read).then((todos) => {
           if (generations.get(sessionID) !== active) return
-          setData("todo", sessionID, reconcile(result.data ?? [], { key: "id" }))
+          setData("todo", sessionID, reconcile(todos, { key: "id" }))
         })
       })
     },

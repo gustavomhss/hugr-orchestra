@@ -418,7 +418,7 @@ export async function bootstrapDirectory(input: {
   /** The V2 server's branch read (`GET /api/vcs`); V1 answers through the legacy SDK. */
   branches?: (input: {
     location: { directory: string }
-  }) => Promise<{ data: { branch?: string; default_branch?: string } }>
+  }) => Promise<{ data: { branch?: string | null; default_branch?: string | null } }>
 }) {
   const loading = input.store.status !== "complete"
   const seededProject = projectID(input.directory, input.global.project)
@@ -509,7 +509,7 @@ export async function bootstrapDirectory(input: {
               ? (await input.sdk.vcs.get()).data
               : await input.branches?.({ location: { directory: input.directory } }).then((value) => value.data)
           if (!result) return
-          const next = { branch: result.branch, default_branch: result.default_branch }
+          const next = { branch: result.branch ?? undefined, default_branch: result.default_branch ?? undefined }
           input.setStore("vcs", next)
           input.vcsCache.setStore("value", next)
         }),

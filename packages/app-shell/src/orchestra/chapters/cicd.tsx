@@ -80,7 +80,7 @@ export default function Cicd(props: ChapterPageProps) {
               .then((result) => result.data?.branch)
           : serverSDK()
               .orchestra.vcs.get({ location: { directory: props.directory } }, { signal: abort.signal })
-              .then((result) => result.data.branch),
+              .then((result) => result.data.branch ?? undefined),
       )
       .catch(() => undefined),
   )
