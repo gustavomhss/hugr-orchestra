@@ -13,6 +13,7 @@ import type { Tool } from "../tool/tool"
 import { ResearchArtifacts } from "./artifacts"
 import { ResearchBinding } from "./binding"
 import { ResearchLedger } from "./ledger"
+import { Locate } from "../research-toolkit/locate"
 
 export type CaptureInput = {
   readonly origin: Research.SourceReceipt["origin"]
@@ -101,6 +102,14 @@ export const layer = Layer.effect(Service, Effect.gen(function* () {
 
   const evidence = Effect.fn("ResearchRecords.evidence")(function* (binding: Research.Binding, ref: Research.EvidenceRef) {
     const content = yield* source(binding, ref.source)
+    // A code_locate snapshot holds ranges of many worktree files: original lines resolve inside one of its ranges.
+    const snapshot = ref.locator.kind === "lines" && ref.locator.basis === "original" && "origin" in content.receipt &&
+      content.receipt.origin.kind === "file" && content.receipt.origin.uri === binding.worktree ? Locate.blocks(content.text) : undefined
+    if (snapshot && ref.locator.kind === "lines") {
+      const lines = ref.locator
+      if (snapshot.some((block) => block.start <= lines.start && lines.end <= block.end && lines.start <= lines.end)) return
+      return yield* new Research.Error({ code: "reference_invalid", message: `Lines ${lines.start}-${lines.end} are not inside one range of this code_locate snapshot` })
+    }
     return yield* Effect.try({ try: () => checkLocator(content.text, ref.source.representation, retainedLocator(ref.locator, content.receipt)),
       catch: (error) => error instanceof Research.Error ? error : new Research.Error({ code: "reference_invalid", message: "Source locator does not match" }) })
   })

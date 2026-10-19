@@ -28,6 +28,7 @@ import { DiscoveryResult } from "@/maestro/discovery-result"
 import { Database } from "@orchestra/core/database/database"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { EventV2 } from "@orchestra/core/event"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import { memoMap } from "@orchestra/core/effect/memo-map"
@@ -123,8 +124,8 @@ const proof = Effect.gen(function* () {
     if (!source.derivedFrom) throw new Error("Packaged native read omitted received-byte provenance")
     // Reopening after deletion proves retained bytes, rather than a second filesystem read.
     yield* fsys.remove(path.join(directory, "evidence.txt"))
-    const received = Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))((yield* invoke("research_view", { action: "source", ref: source.derivedFrom })).output)
-    const retained = Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))((yield* invoke("research_view", { action: "source", ref: source.ref })).output)
+    const received = Schema.decodeUnknownSync(Schema.fromJsonString(SourcePage))((yield* invoke("research_view", { action: "source", ref: source.derivedFrom })).output)
+    const retained = Schema.decodeUnknownSync(Schema.fromJsonString(SourcePage))((yield* invoke("research_view", { action: "source", ref: source.ref })).output)
     const supported: Research.EvidenceRef = { source: source.ref, locator: { kind: "quote", exact: "Version 1 only." } }
     const disabled: Research.EvidenceRef = { source: source.ref, locator: { kind: "quote", exact: "Disabled rejects operation." } }
     const finding = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ receipt: Research.MutationReceipt, record: Research.FindingRecord })))(
@@ -140,12 +141,18 @@ const proof = Effect.gen(function* () {
       } })).output)
     const page = Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))(
       (yield* invoke("research_view", { action: "document", ref: publication.document.ref })).output)
-    const card: Research.Card = { answer: "Version 1 only; disabled rejects operation.", profile: "understand", depth: "quick", sufficiency: "answered",
-      findingRefs: [{ id: reopenedFinding.id, revision: reopenedFinding.revision }], evidenceRefs: [supported, disabled],
-      documentRefs: [publication.document.ref], coverage: { examined: ["evidence.txt"], excluded: ["runtime"], failures: [] },
-      limitations: ["Supplied static source"], nextActions: [] }
-    yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: child.id, type: "text",
-      text: `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060` })
+    // The card is the host's: the seat opens, claims, checks and closes its inquiry, and the ledger holds what close assembled.
+    const opened = Schema.decodeUnknownSync(Opened)((yield* invoke("inquiry", { action: "open", question: "When is version 1 supported?",
+      subquestions: ["Which condition enables version 1"], profile: "understand" })).metadata.inquiry)
+    yield* invoke("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "Version 1 is supported when enabled",
+      nature: "extraction", conditions: ["version 1", "enabled"], evidence: [{ source: source.ref, quote: "Version 1 only." }],
+      contrary: [{ source: source.ref, quote: "Disabled rejects operation." }] })
+    yield* invoke("inquiry", { action: "check" })
+    yield* invoke("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.",
+      limitations: ["Supplied static source"] })
+    const card = yield* ResearchLedger.closed(source.binding)
+    if (!card) throw new Error("Packaged native inquiry close stored no card")
+    yield* sessions.updatePart({ id: PartID.ascending(), messageID: assistant.id, sessionID: child.id, type: "text", text: "Inquiry closed." })
     yield* sessions.updateMessage({ ...assistant, finish: "stop", time: { ...assistant.time, completed: Date.now() } })
     const history = yield* sessions.messages({ sessionID: child.id })
     const message = history.find((entry) => entry.info.id === assistant.id)
@@ -158,14 +165,19 @@ const proof = Effect.gen(function* () {
   }))
 })
 
+const Opened = Schema.Struct({ question: Research.RecordRef, subquestions: Schema.NonEmptyArray(Research.RecordRef) })
+
+// research_view source pages also say where their line 1 sits in the original file (J5.3).
+const SourcePage = Schema.Struct({ ...Research.ArtifactPage.fields, lines: Schema.Struct({ basis: Schema.Literals(["original", "retained"]), start: Schema.Int }) })
+
 // Scripted localhost responses prove native mechanics, not real-model research quality.
 const TaskMetadata = Schema.Struct({
   parentSessionId: Schema.String, sessionId: Schema.String,
   workResult: Schema.Struct({
     schema: Schema.Literal("discovery-work-result-v1"), taskId: Schema.String,
-    card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.String }),
+    card: Schema.Struct({ parsed: Schema.Literal(true), messageID: Schema.String }), outcome: Schema.Literal("done"),
     referencesChecked: Schema.Literal(true), terminal: Schema.Struct({ reason: Schema.Literal("ended") }),
-    discovery: Research.Card, documents: Schema.Array(Research.DocumentReceipt), corpus: Research.Corpus,
+    discovery: Research.CardV2, documents: Schema.Array(Research.DocumentReceipt), corpus: Research.Corpus,
   }),
 })
 
@@ -181,7 +193,7 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
   yield* fsys.writeFileString(path.join(directory, "task-evidence.txt"), "Version 1 only.\nDisabled rejects operation.\n")
   const body = "Résumé: Version 1 is supported [source](research:supported); disabled rejects operation [exception](research:disabled).\n"
   const state: { source?: Research.SourceReceipt; finding?: typeof Research.FindingRecord.Type; document?: Research.DocumentReceipt;
-    page?: Research.ArtifactPage; card?: Research.Card; returned?: boolean } = {}
+    page?: Research.ArtifactPage; opened?: boolean; returned?: boolean } = {}
   const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
     if (event.type === ResearchEvent.SourceAdmitted.type) {
       const admitted = Schema.decodeUnknownSync(ResearchEvent.SourceAdmitted.data)(event.data)
@@ -215,17 +227,27 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
     if (event.type !== SessionV1.Event.PartUpdated.type) return
     const part = Schema.decodeUnknownSync(SessionV1.Event.PartUpdated.data)(event.data).part
     if (part.type !== "tool" || part.state.status !== "completed") return
-    if (part.tool === "research_view" && part.sessionID === state.source?.binding.executionSessionID && !state.card) {
+    if (part.tool === "research_view" && part.sessionID === state.source?.binding.executionSessionID && !state.page) {
       const page = Schema.decodeUnknownSync(Schema.fromJsonString(Research.ArtifactPage))(part.state.output)
       const document = Schema.decodeUnknownSync(Research.DocumentReceipt)(page.receipt)
       if (!state.finding || !state.source || !state.document || !isDeepStrictEqual(document, state.document) || page.text !== body)
         throw new Error("Native Task reopened document differs from admitted publication")
       state.page = page
-      state.card = { answer: "Version 1 only; disabled rejects operation.", profile: "understand", depth: "quick", sufficiency: "answered",
-        findingRefs: document.findingRefs, evidenceRefs: [document.citations.supported, document.citations.disabled], documentRefs: [document.ref],
-        coverage: { examined: ["task-evidence.txt"], excluded: ["runtime behavior"], failures: [] },
-        limitations: ["Scripted static-source mechanics only"], nextActions: [] }
-      yield* remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(state.card)}\n\u0060\u0060\u0060`)
+      yield* remote.tool("inquiry", { action: "open", question: "When is version 1 supported?",
+        subquestions: ["Which condition enables version 1"], profile: "understand" })
+      return
+    }
+    // The open reply names the subquestion; claim, check and close follow, then the seat's last text.
+    if (part.tool === "inquiry" && state.source && part.sessionID === state.source.binding.executionSessionID && !state.opened) {
+      const opened = Schema.decodeUnknownSync(Schema.Struct({ inquiry: Opened }))(part.state.metadata).inquiry
+      state.opened = true
+      yield* remote.tool("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "Version 1 is supported when enabled",
+        nature: "extraction", conditions: ["version 1", "enabled"], evidence: [{ source: state.source.ref, quote: "Version 1 only." }],
+        contrary: [{ source: state.source.ref, quote: "Disabled rejects operation." }] })
+      yield* remote.tool("inquiry", { action: "check" })
+      yield* remote.tool("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 is supported when enabled; disabled rejects operation.",
+        limitations: ["Scripted static-source mechanics only"] })
+      yield* remote.text("Inquiry closed.")
       return
     }
     if (part.tool !== "task" || part.sessionID !== parent.id || state.returned) return
@@ -234,7 +256,7 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
     yield* remote.text("Native discovery returned with verified admitted references.")
   }))
   yield* Effect.addFinalizer(() => unsubscribe)
-  yield* remote.tool("task", { description: "Inspect conditional behavior", prompt: "Read task-evidence.txt; retain both branches, publish qualified answer, return jimmy-result.", subagent_type: "jimmy" })
+  yield* remote.tool("task", { description: "Inspect conditional behavior", prompt: "Read task-evidence.txt; retain both branches, publish qualified answer, close the inquiry.", subagent_type: "jimmy" })
   yield* remote.tool("read", { filePath: "task-evidence.txt" })
   const final = yield* prompt.prompt({ sessionID: parent.id, agent: "maestro", model: { providerID: model.providerID, modelID: model.id },
     parts: [{ type: "text", text: "Delegate conditional source research to jimmy and receive verified document references." }] }).pipe(
@@ -246,7 +268,8 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
   )
   const parentHistory = yield* sessions.messages({ sessionID: parent.id })
   const task = parentHistory.flatMap((message) => message.parts).find((part) => part.type === "tool" && part.tool === "task")
-  if (!task || task.type !== "tool" || task.state.status !== "completed" || !state.returned || !state.source || !state.finding || !state.document || !state.page || !state.card)
+  const card = state.source ? yield* ResearchLedger.closed(state.source.binding) : undefined
+  if (!task || task.type !== "tool" || task.state.status !== "completed" || !state.returned || !state.source || !state.finding || !state.document || !state.page || !card)
     throw new Error(`Packaged native Task omitted completed corpus/result: ${JSON.stringify({ state, parentHistory })}`)
   const metadata = Schema.decodeUnknownSync(TaskMetadata)(task.state.metadata)
   const child = yield* sessions.get(state.source.binding.executionSessionID)
@@ -284,7 +307,7 @@ const taskProof = Effect.fn("PackagedProof.task")(function* (directory: string) 
   const childFinal = childHistory.find((message) => message.info.id === metadata.workResult.card.messageID)
   if (!childFinal) throw new Error("Parent Task result does not identify a persisted child final message")
   return { parentID: parent.id, childID: child.id, siblingID: sibling.id, childParentID: child.parentID, siblingTaskID: siblingTask.taskId, metadata,
-    source: state.source, finding: state.finding, document: state.document, page: state.page, card: state.card,
+    source: state.source, finding: state.finding, document: state.document, page: state.page, card,
     generated, generatedDigest: createHash("sha256").update(generated.text, "utf8").digest("hex"), siblingError, requests, providerURL: remote.url, providerRequests,
     pending: yield* remote.pending,
     childFinal: childFinal.parts.flatMap((part) => part.type === "text" ? [part.text] : []).join(""),
@@ -299,4 +322,6 @@ const result = await Effect.runPromise(Effect.scoped(Effect.gen(function* () {
   const services = yield* Layer.buildWithMemoMap(layer, memoMap, scope)
   return yield* proof.pipe(Effect.provide(services))
 })))
-console.log(`PACKAGED_RESEARCH=${JSON.stringify(result)}`)
+// The marker line now carries several inquiry turns; wait for the pipe to take all of it before the runtime may exit.
+await new Promise<void>((resolve, reject) =>
+  process.stdout.write(`PACKAGED_RESEARCH=${JSON.stringify(result)}\n`, (error) => error ? reject(error) : resolve()))

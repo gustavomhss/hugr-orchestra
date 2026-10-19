@@ -1,9 +1,13 @@
-import { Effect } from "effect"
+import { Context, Effect, Option } from "effect"
 import { isDeepStrictEqual } from "node:util"
 import { Research } from "@orchestra/schema/research"
+import { Database } from "@orchestra/core/database/database"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { ResearchRecords } from "@orchestra/core/research/records"
+import { Liveness } from "@orchestra/core/research-toolkit/liveness"
 import { AllowedDomains } from "@orchestra/core/tool/websearch"
+import { MessageV2 } from "@/session/message-v2"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchTools } from "@/research/binding"
 import { ResearchInquiry } from "@/research/inquiry"
@@ -13,10 +17,15 @@ import DESCRIPTION from "./inquiry.txt"
 
 type Input = Research.InquiryInput
 
+/** URL liveness for R10 (J5.9): a plain HEAD/GET from the host. Read per call, so a test can bind a fake network policy. */
+export const Links = Context.Reference<typeof Liveness.check>("@orchestra/Inquiry/Links", { defaultValue: () => Liveness.check })
+
 // The seat's investigation (J5.4): every action writes the existing records or an inquiry event, then answers with the
 // compact state, so the model keeps ids instead of rereading.
 export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
   const records = yield* ResearchRecords.Service
+  const database = yield* Database.Service
+  const fs = yield* Effect.serviceOption(FSUtil.Service)
   const run = yield* ResearchTools.make
   return {
     description: DESCRIPTION,
@@ -39,6 +48,13 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           : Effect.fail(new Research.Error({ code: "publication_uncertain", message: "Inquiry record was not retained" }))))
       const relate = (from: Research.RecordRef, to: Research.RecordRef, relation: "depends-on" | "related" | "answers" | "supports" | "refutes",
         reason: string, slot: string) => write({ action: "relation", from, to, relation, reason }, slot)
+      // The check's dependencies beyond the ledger: the record verifier and retained bytes (records), the domain list,
+      // the Session's code searches for R5/R6, URL liveness, and real paths so a symlinked citation resolves like read.
+      const deps = Effect.gen(function* () {
+        const messages = yield* MessageV2.stream(ctx.sessionID).pipe(Effect.provideService(Database.Service, database), Effect.orElseSucceed(() => []))
+        return { records, binding, domains: yield* AllowedDomains, searches: ResearchInquiry.searches(messages), links: yield* Links,
+          ...(Option.isSome(fs) ? { real: (target: string) => fs.value.resolve(target).pipe(Effect.catchDefect(() => Effect.succeed(target))) } : {}) }
+      })
       const subquestion = (ref: Research.RecordRef) => {
         const found = state.subquestions.find((sub) => sub.ref.id === ref.id)
         return found ? Effect.succeed(found) : Effect.fail(refuse(`${ref.id} is not a subquestion of this inquiry`))
@@ -88,7 +104,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           return { dropped: known.ref }
         }
         if (input.action === "check") {
-          const check = yield* ResearchInquiry.check(state, "answered", (ref) => records.verifyEvidence(binding, ref))
+          const check = (yield* ResearchInquiry.check(state, undefined, yield* deps)).result
           yield* records.inquire(allowance, context, { type: "research.inquiry.checked", check })
           return { check }
         }
@@ -96,12 +112,15 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           const refusal = ResearchInquiry.refusal(state, input.sufficiency)
           if (refusal) return yield* refuse(refusal)
           // The close re-runs the check on the final state; its failures become the card's limitations short of answered.
-          const check = yield* ResearchInquiry.check(state, input.sufficiency, (ref) => records.verifyEvidence(binding, ref))
-          if (input.sufficiency === "answered" && check.verdict !== "pass")
-            return yield* refuse(`the closing check failed: ${check.issues.map((issue) => `${issue.rule} ${issue.reason}`).join("; ")}`)
-          const card = ResearchInquiry.card(state, { allowance, close: input, check, domains: yield* AllowedDomains })
+          const outcome = yield* ResearchInquiry.check(state, input, yield* deps)
+          if (input.sufficiency === "answered" && outcome.result.verdict !== "pass")
+            return yield* refuse(`the closing check failed: ${outcome.result.issues.slice(0, 16).map((issue) =>
+              `${issue.rule}${issue.citation ? ` ${issue.citation}` : ""} ${issue.reason}`).join("; ")}`)
+          const corpus = yield* records.view(binding, { action: "corpus" })
+          const documents = "documents" in corpus ? corpus.documents.map((document) => document.ref) : []
+          const card = ResearchInquiry.card(state, { allowance, close: input, outcome, domains: yield* AllowedDomains, documents })
           yield* records.inquire(allowance, context, { type: "research.inquiry.closed", card })
-          return { closed: input.sufficiency, check: check.verdict }
+          return { closed: input.sufficiency, check: outcome.result.verdict }
         }
         return { phase: state.phase, check: state.check ?? null }
       })

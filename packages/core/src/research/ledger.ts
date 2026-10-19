@@ -111,6 +111,30 @@ export const dispatch = Effect.fn("ResearchLedger.dispatch")(function* (allowanc
   )).pipe(Effect.map((list) => list.flat()))
 })
 
+/**
+ * The card of the binding's latest dispatch, when that dispatch closed its inquiry (J5.13); undefined otherwise. An
+ * earlier dispatch's card never answers for a resumed one.
+ */
+export const closed = Effect.fn("ResearchLedger.closed")(function* (binding: Research.Binding) {
+  const database = yield* Database.Service
+  const close = EventV2.versionedType(ResearchEvent.InquiryClosed.type, 1)
+  const rows = yield* database.db.select().from(EventTable).where(and(
+    eq(EventTable.aggregate_id, binding.executionSessionID), inArray(EventTable.type, [bound, close]),
+  )).orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
+  const start = rows.findLastIndex((row) => {
+    if (row.type !== bound) return false
+    const data = Schema.decodeUnknownOption(ResearchEvent.AllowanceBound.data)(row.data)
+    return data._tag === "Some" && isDeepStrictEqual(data.value.allowance.binding, binding)
+  })
+  const row = start < 0 ? undefined : rows.slice(start + 1).findLast((item) => item.type === close)
+  if (!row) return undefined
+  const data = yield* Schema.decodeUnknownEffect(ResearchEvent.InquiryClosed.data)(row.data).pipe(
+    Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: "Invalid retained inquiry card" })))
+  if (!isDeepStrictEqual(data.binding, binding))
+    return yield* new Research.Error({ code: "source_unavailable", message: "Inquiry card scope does not match its dispatch" })
+  return data.card
+})
+
 function owned(step: Step, allowance: Research.Allowance) {
   if (step.data.sessionID !== allowance.binding.executionSessionID) return false
   if (step.type === "research.allowance.charged") return step.data.dispatchCallID === allowance.dispatchCallID

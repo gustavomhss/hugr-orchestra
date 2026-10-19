@@ -5,6 +5,7 @@ import { Effect } from "effect"
 import { Research } from "@orchestra/schema/research"
 import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { Liveness } from "@orchestra/core/research-toolkit/liveness"
+import { Locate } from "@orchestra/core/research-toolkit/locate"
 
 // J5.6-J5.8: the mechanical check before the card. It proves a citation exists and covers what it says it covers; it
 // never judges whether the sentence follows from it. Every rule reports `checked`, so an empty pass cannot happen.
@@ -115,8 +116,17 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     return value
   })
 
-  // One piece of evidence: ownership (R1), attempt (R4), locator (R3). Returns the original lines it covers, if known.
-  const spans: Array<{ receipt: Research.SourceReceipt; start: number; end: number }> = []
+  // A code_locate snapshot: one retained source whose origin is the worktree, holding ranges of many files.
+  const snapshot = Effect.fn("InquiryCheck.snapshot")(function* (receipt: Research.SourceReceipt) {
+    if (receipt.origin.kind !== "file" || receipt.origin.uri !== input.binding.worktree) return undefined
+    const body = yield* text(receipt.ref)
+    return body.ok ? Locate.blocks(body.text) : undefined
+  })
+
+  // One piece of evidence: ownership (R1), attempt (R4), locator (R3). Records the original lines it covers, and of
+  // which file, so R9 matches a citation to the file the lines came from.
+  const spans: Array<{ receipt: Research.SourceReceipt; file?: string; start: number; end: number }> = []
+  const own = (receipt: Research.SourceReceipt) => receipt.origin.kind === "file" ? path.resolve(receipt.origin.uri) : undefined
   const evidence = Effect.fn("InquiryCheck.evidence")(function* (item: Research.Evidence, owner: Research.RecordRef, resolves: boolean) {
     const at = { ref: owner }
     const receipt = receipts.get(ResearchLedger.canonical(item.source))
@@ -128,12 +138,19 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
       return fail("R4", `source attempt was ${attempts[0].outcome} (${attempts[0].reason})`, { ...at, citation: receipt.origin.uri }), false
     count("R3")
     const where = { ...at, citation: receipt.origin.uri }
+    const ranges = yield* snapshot(receipt)
+    if ("lines" in item && ranges) {
+      const held = ranges.filter((range) => range.start <= item.lines.start && item.lines.end <= range.end && item.lines.start <= item.lines.end)
+      if (!held.length) return fail("R3", `lines ${item.lines.start}-${item.lines.end} are not inside one range of this code_locate snapshot`, where), false
+      held.forEach((range) => spans.push({ receipt, file: path.resolve(input.binding.worktree, range.path), ...item.lines }))
+      return true
+    }
     if ("lines" in item) {
       const have = yield* extent(receipt)
       if (typeof have === "string") return fail("R3", have, where), false
       if (item.lines.start > item.lines.end || item.lines.start < have.start || item.lines.end > have.end)
         return fail("R3", `lines ${item.lines.start}-${item.lines.end} outside the captured range ${have.start}-${have.end}`, where), false
-      spans.push({ receipt, ...item.lines })
+      spans.push({ receipt, file: own(receipt), ...item.lines })
       return true
     }
     const locator = "quote" in item ? { kind: "quote" as const, exact: item.quote } : { kind: "json" as const, pointer: item.pointer }
@@ -142,17 +159,29 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     if (verdict && verdict.code !== "locator_ambiguous")
       return fail("R3", verdict.code === "reference_invalid" ? ("quote" in item ? "quote not present in the retained bytes" : "JSON pointer does not resolve")
         : `source unreadable (${verdict.code})`, where), false
-    if ("quote" in item) yield* quoteSpan(receipt, item.quote)
+    if ("quote" in item) yield* quoteSpan(receipt, item.quote, ranges)
     return resolves
   })
-  const quoteSpan = Effect.fn("InquiryCheck.quoteSpan")(function* (receipt: Research.SourceReceipt, quote: string) {
-    const have = yield* extent(receipt)
+  const quoteSpan = Effect.fn("InquiryCheck.quoteSpan")(function* (receipt: Research.SourceReceipt, quote: string,
+    ranges: ReturnType<typeof Locate.blocks>) {
     const body = yield* text(receipt.ref)
-    if (typeof have === "string" || !body.ok) return
+    if (!body.ok) return
     const at = body.text.indexOf(quote)
     if (at < 0) return
-    const before = body.text.slice(0, at).split(/\r\n|\n|\r/).length
-    spans.push({ receipt, start: have.start + before - 1, end: have.start + before - 1 + quote.split(/\r\n|\n|\r/).length - 1 })
+    const first = body.text.slice(0, at).split(/\r\n|\n|\r/).length
+    const last = first + quote.split(/\r\n|\n|\r/).length - 1
+    if (ranges) {
+      // Snapshot rows follow their range header in order; a quote maps to the original lines of the range it sits in.
+      const range = ranges.findLast((item) => item.row < first)
+      if (!range) return
+      const start = range.start + first - range.row - 1
+      if (start > range.end) return
+      spans.push({ receipt, file: path.resolve(input.binding.worktree, range.path), start, end: Math.min(range.end, range.start + last - range.row - 1) })
+      return
+    }
+    const have = yield* extent(receipt)
+    if (typeof have === "string") return
+    spans.push({ receipt, file: own(receipt), start: have.start + first - 1, end: have.start + last - 1 })
   })
 
   // R1, R2, R3, R4, R5, R6 per claim.
@@ -217,10 +246,10 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     if (lined && citation.start! > citation.end!) return fail("R9", "inverted line range", at)
     if (citation.kind === "url" && !lined)
       return known.has(Liveness.normal(citation.target)) ? undefined : fail("R9", "URL not captured or seen in this dispatch", at)
-    const own = citation.kind === "url" ? undefined : yield* targets(citation.target)
+    const exact = citation.kind === "url" ? undefined : yield* targets(citation.target)
     const rematched = spans.filter((span) => citation.kind === "url"
       ? span.receipt.origin.kind === "url" && Liveness.normal(span.receipt.origin.uri) === Liveness.normal(citation.target)
-      : span.receipt.origin.kind === "file" && own!.has(normal(path.resolve(span.receipt.origin.uri))))
+      : span.file !== undefined && exact!.has(normal(span.file)))
     if (!lined) return rematched.length ? undefined : fail("R9", "no evidence for this path", at)
     if (!rematched.length) return fail("R9", "no evidence for this path or URL", at)
     if (!rematched.some((span) => span.start <= citation.start! && citation.end! <= span.end))

@@ -64,12 +64,12 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
   const task = (yield* registry.tools({ agent: maestro, providerID: model.providerID, modelID: model.id })).find((tool) => tool.id === "task")
   if (!task) throw new Error("Expected native Task definition")
   const state: { source?: Research.SourceReceipt; finding?: Research.RecordRef; taskId?: string; metadata: Record<string, unknown>;
-    recalled?: { source: Research.SourceRef; finding: Research.RecordRef }; halted?: boolean; finalQueued?: boolean } = { metadata: {} }
+    recalled?: { source: Research.SourceRef; finding: Research.RecordRef }; halted?: boolean; finalQueued?: boolean; reread?: Research.SourceRef } = { metadata: {} }
   const checkpoint = yield* Deferred.make<void>()
   const unsubscribe = yield* events.listen((event) => Effect.gen(function* () {
     if (event.type === ResearchEvent.SourceAdmitted.type) {
       const decoded = Schema.decodeUnknownOption(ResearchEvent.SourceAdmitted.data)(event.data)
-      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || decoded.value.receipt.ref.representation !== "text") return
+      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || decoded.value.receipt.ref.representation !== "text" || state.source) return
       state.source = decoded.value.receipt
       state.taskId = decoded.value.binding.taskId
       yield* remote.tool("research_record", { action: "finding", proposition: "Version 1 requires enabled operation", nature: "extraction",
@@ -80,7 +80,7 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
     }
     if (event.type === ResearchEvent.RecordCommitted.type) {
       const decoded = Schema.decodeUnknownOption(ResearchEvent.RecordCommitted.data)(event.data)
-      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || decoded.value.record.kind !== "finding" || !state.source) return
+      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || decoded.value.record.kind !== "finding" || !state.source || state.finding) return
       state.finding = { id: decoded.value.record.id, revision: decoded.value.record.revision }
       yield* remote.tool("atlas_memory_emit", { entry: { taskId: decoded.value.binding.taskId,
         attempted: ["Read conditions.txt and retain both applicable branches"], failedWith: [], stoppedAt: "Condition-sensitive finding retained",
@@ -172,18 +172,35 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
   expect((yield* LogicalTask.read(childID))?.taskId).toBe(state.taskId)
   const children = yield* sessions.children(parent.id)
   yield* remote.tool("atlas_memory_recall", { kind: "task", taskId: state.taskId })
-  const card: Research.Card = { answer: "Only version 1 with enabled operation; disabled operation rejects requests.", profile: "investigate", depth: "focused",
-    sufficiency: "answered", findingRefs: [state.finding], evidenceRefs: [{ source: state.source.ref, locator: { kind: "quote", exact: "Disabled operation rejects the request." } }],
-    documentRefs: [], coverage: { examined: ["conditions.txt"], excluded: ["runtime execution"], failures: [] }, limitations: ["Static supplied conditions only"], nextActions: [] }
-  // Full recall, rather than the canonical reduced closing fold, carries the authored corpus pointer.
+  const answer = "Version 1 with enabled operation; disabled operation rejects requests."
+  // Full recall, rather than the canonical reduced closing fold, carries the authored corpus pointer. The resumed
+  // dispatch's inquiry cites only its own retained sources, so it rereads the file before it claims and closes.
   const recovered = yield* events.listen((event) => Effect.gen(function* () {
+    if (event.type === ResearchEvent.SourceAdmitted.type) {
+      const decoded = Schema.decodeUnknownOption(ResearchEvent.SourceAdmitted.data)(event.data)
+      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || decoded.value.receipt.ref.representation !== "text" ||
+        !state.finalQueued || state.reread) return
+      state.reread = decoded.value.receipt.ref
+      yield* remote.tool("inquiry", { action: "open", question: "Which conditions apply?", subquestions: ["What does disabled operation do"], profile: "investigate" })
+      return
+    }
+    if (event.type === ResearchEvent.InquiryOpened.type) {
+      const decoded = Schema.decodeUnknownOption(ResearchEvent.InquiryOpened.data)(event.data)
+      if (Option.isNone(decoded) || decoded.value.binding.authoritySessionID !== parent.id || !state.reread) return
+      yield* remote.tool("inquiry", { action: "claim", subquestion: decoded.value.subquestions[0], proposition: "Disabled operation rejects the request",
+        nature: "extraction", evidence: [{ source: state.reread, quote: "Disabled operation rejects the request." }] })
+      yield* remote.tool("inquiry", { action: "check" })
+      yield* remote.tool("inquiry", { action: "close", sufficiency: "answered", answer, limitations: ["Static supplied conditions only"] })
+      yield* remote.text("Resumed research closed.")
+      return
+    }
     if (event.type !== SessionV1.Event.PartUpdated.type) return
     const decoded = Schema.decodeUnknownOption(SessionV1.Event.PartUpdated.data)(event.data)
     if (Option.isNone(decoded)) return
     const part = decoded.value.part
     if (part.type === "tool" && part.tool === "research_view" && part.state.status === "completed" && state.recalled && !state.finalQueued) {
       state.finalQueued = true
-      yield* remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`)
+      yield* remote.tool("read", { filePath: "conditions.txt" })
     }
   }))
   yield* Effect.addFinalizer(() => recovered)
@@ -192,7 +209,8 @@ it.instance("native Task interruption resumes exact corpus through own admitted 
   expect(resumed.metadata.sessionId).toBe(childID)
   expect(yield* sessions.children(parent.id)).toHaveLength(children.length)
   expect(resumed.metadata.workResult).toMatchObject({ schema: "discovery-work-result-v1", taskId: state.taskId,
-    card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, discovery: { answer: card.answer },
+    card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, outcome: "done",
+    discovery: { schema: "jimmy-card-v2", answer, sufficiency: "answered", check: { verdict: "pass" } },
     memory: { writes: [{ outcome: "admitted" }] } })
   const history = yield* sessions.messages({ sessionID: childID })
   const admissions = history.flatMap((message) => message.parts).flatMap((part) => "metadata" in part && part.metadata?.[AtlasMemory.ADMISSION_KEY] ? [part.metadata[AtlasMemory.ADMISSION_KEY]] : [])

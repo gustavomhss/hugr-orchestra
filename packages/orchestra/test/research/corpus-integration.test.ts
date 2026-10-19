@@ -63,7 +63,7 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
     ask: (request) => permission.ask({ ...request, sessionID: child.id, tool: { messageID: assistant.id, callID }, ruleset: agent.permission }).pipe(Effect.orDie),
   })
   const parts = new Map<string, PartID>()
-  const run = (name: string, args: unknown, callID: string = PartID.ascending()) => Effect.gen(function* () {
+  const run = (name: string, args: unknown, callID: string = PartID.ascending(), dispatch = "integration-dispatch") => Effect.gen(function* () {
     const tool = tools.find((candidate) => candidate.id === name)
     if (!tool) throw new Error(`Missing native research tool: ${name}`)
     const id = parts.get(callID) ?? PartID.ascending()
@@ -71,7 +71,7 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
     const part = { type: "tool" as const, id, sessionID: child.id, messageID: assistant.id, callID, tool: name,
       state: { status: "running" as const, input: {}, time: { start: Date.now() } } }
     yield* sessions.updatePart(part)
-    const result = yield* execution.enter(child.id, "integration-dispatch", tool.execute(args, context(callID)))
+    const result = yield* execution.enter(child.id, dispatch, tool.execute(args, context(callID)))
     yield* sessions.updatePart({ ...part, state: { status: "completed", input: {}, title: result.title, output: result.output,
       metadata: result.metadata, time: { start: part.state.time.start, end: Date.now() } } })
     return result
@@ -82,6 +82,8 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
 function source(result: Tool.ExecuteResult) {
   return Schema.decodeUnknownSync(Research.SourceReceipt)(result.metadata.researchSource)
 }
+
+const Opened = Schema.Struct({ question: Research.RecordRef, subquestions: Schema.Array(Research.RecordRef) })
 
 describe("native research vertical slice", () => {
   http.instance("ordinary read retains actual bytes and original range; publication, decoder and HTTP reopen same document", () => Effect.gen(function* () {
@@ -106,16 +108,42 @@ describe("native research vertical slice", () => {
       findingRefs: [], citations: { observed: evidence },
     } })
     const mutation = Schema.decodeUnknownSync(Schema.Struct({ document: Research.DocumentReceipt }))(document.metadata.research)
-    const card: Research.Card = { answer: "Only version 1.", profile: "understand", depth: "quick", sufficiency: "answered",
-      findingRefs: [], evidenceRefs: [evidence], documentRefs: [mutation.document.ref],
-      coverage: { examined: ["observed.txt:2"], excluded: ["runtime"], failures: [] }, limitations: ["No runtime observation"], nextActions: [] }
     const message = { info: { ...fixture.assistant, finish: "stop", time: { ...fixture.assistant.time, completed: Date.now() } },
-      parts: [{ id: PartID.ascending(), sessionID: fixture.child.id, messageID: fixture.assistant.id, type: "text" as const, text: `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060` }] }
+      parts: [{ id: PartID.ascending(), sessionID: fixture.child.id, messageID: fixture.assistant.id, type: "text" as const, text: "Inquiry closed." }] }
+    // Before inquiry close no card exists, whatever the worker writes: a fenced v1 card in its text is never parsed.
+    const fenced = `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ answer: "Version 1.", profile: "understand", depth: "quick", sufficiency: "answered",
+      findingRefs: [], evidenceRefs: [evidence], documentRefs: [mutation.document.ref], coverage: { examined: [], excluded: [], failures: [] },
+      limitations: [], nextActions: [] })}\n\u0060\u0060\u0060`
+    yield* Effect.forEach(["Missing final card", fenced, `${fenced}\n${fenced}`, fenced.replace("jimmy-result", "backend-result")], (text) => Effect.gen(function* () {
+      const rejected = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text }] }, [])
+      expect(rejected.card.parsed).toBe(false)
+      expect(rejected.referencesChecked).toBe(false)
+      expect(rejected.discovery).toBeUndefined()
+      expect(rejected.outcome).toBeUndefined()
+      expect(rejected.risks[0]).toStartWith("Inquiry not closed")
+      expect(rejected.corpus?.documents).toEqual([mutation.document])
+      expect(rejected.terminal.reason).toBe("ended")
+    }), { discard: true })
+    const opened = Schema.decodeUnknownSync(Opened)((yield* fixture.run("inquiry", { action: "open", question: "Which version applies?",
+      subquestions: ["Which version does observed.txt name"], profile: "understand" })).metadata.inquiry)
+    // The retained range holds original line 2 only.
+    yield* fixture.run("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "observed.txt names version 1",
+      nature: "extraction", evidence: [{ source: retained.ref, lines: { start: 2, end: 2 } }] })
+    expect((yield* fixture.run("inquiry", { action: "check" })).output).toContain("\"verdict\":\"pass\"")
+    yield* fixture.run("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 applies.", limitations: ["No runtime observation"] })
     const envelope = yield* DiscoveryResult.assemble(message, [])
-    expect(envelope).toMatchObject({ card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, discovery: card })
+    expect(envelope).toMatchObject({ outcome: "done", card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" },
+      discovery: { schema: "jimmy-card-v2", sufficiency: "answered", answer: "Version 1 applies.", limitations: ["No runtime observation"],
+        check: { verdict: "pass" }, documentRefs: [mutation.document.ref],
+        claims: [{ evidence: [{ source: retained.ref, locator: { kind: "lines", start: 2, end: 2 } }] }] } })
     expect(envelope.documents).toEqual([mutation.document])
-    const blocked = { ...message, parts: [{ ...message.parts[0], text: `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ ...card, sufficiency: "blocked" })}\n\u0060\u0060\u0060` }] }
-    expect(yield* DiscoveryResult.assemble(blocked, [])).toMatchObject({ discovery: { sufficiency: "blocked" }, terminal: { reason: "ended" } })
+    expect(envelope.corpus?.documents).toEqual([mutation.document])
+    // A later dispatch of the same Task closes its own inquiry; its blocked card is the one the parent reads.
+    yield* fixture.run("inquiry", { action: "open", question: "Does it run?", subquestions: ["Does observed.txt run"], profile: "understand" }, undefined, "integration-blocked")
+    yield* fixture.run("inquiry", { action: "check" }, undefined, "integration-blocked")
+    yield* fixture.run("inquiry", { action: "close", sufficiency: "blocked", answer: "No runtime is available." }, undefined, "integration-blocked")
+    expect(yield* DiscoveryResult.assemble(message, [])).toMatchObject({ outcome: "blocked", card: { parsed: true },
+      discovery: { sufficiency: "blocked" }, terminal: { reason: "ended" } })
     const foreign = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.authority.id })
     yield* LogicalTask.ensure({ executionSessionID: foreign.id, authoritySessionID: fixture.authority.id,
       projectID: foreign.projectID, memberID: "jimmy", source: "host" })
@@ -131,21 +159,6 @@ describe("native research vertical slice", () => {
     expect(fetched.receipt).toEqual(mutation.document)
     expect((yield* Effect.promise(() => request(fixture.authority.id))).status).toBe(404)
     expect((yield* Effect.promise(() => request(foreign.id))).status).toBe(404)
-    const invalid = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text: "Missing final card" }] }, [])
-    expect(invalid.card.parsed).toBe(false)
-    expect(invalid.corpus?.documents).toEqual([mutation.document])
-    yield* Effect.forEach([
-      `${message.parts[0].text}\n${message.parts[0].text}`,
-      message.parts[0].text.replace("jimmy-result", "backend-result"),
-      `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ ...card, accepted: true, authoritySessionID: fixture.authority.id })}\n\u0060\u0060\u0060`,
-    ], (text) => Effect.gen(function* () {
-      const rejected = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text }] }, [])
-      expect(rejected.card.parsed).toBe(false)
-      expect(rejected.referencesChecked).toBe(false)
-      expect(rejected.discovery).toBeUndefined()
-      expect(rejected.corpus?.documents).toEqual([mutation.document])
-      expect(rejected.terminal.reason).toBe("ended")
-    }), { discard: true })
     const artifacts = yield* ResearchArtifacts.Service
     yield* artifacts.remove(binding)
     expect((yield* Effect.promise(() => request(fixture.child.id))).status).toBe(503)

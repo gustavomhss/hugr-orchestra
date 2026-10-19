@@ -145,7 +145,7 @@ describe("the inquiry state machine", () => {
       const hypothesis = hypothesized(yield* fixture.inquiry({ action: "hypothesize", subquestion: open.subquestions[0],
         proposition: "b.ts exports only constants" }))
       const pending = yield* fixture.inquiry({ action: "check" })
-      expect(pending.output).toContain("hypothesis is still open")
+      expect(pending.output).toContain("open hypothesis in an answered inquiry")
       yield* fixture.inquiry({ action: "resolve", hypothesis, status: "confirmed", evidence: [{ source, lines: { start: 1, end: 20 } }] })
       expect((yield* fixture.inquiry({ action: "check" })).output).toContain("\"verdict\":\"pass\"")
       // Rebuilt from the ledger alone, as after a compaction: twenty claims and their evidence fit well under 1.5k tokens.
