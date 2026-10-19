@@ -228,6 +228,7 @@ type ServerSDKBase = {
   api: CompatibleApi
   currentApi: ServerApi
   sessionManagement: ReturnType<typeof createSessionManagementForServer>
+  orchestra: ReturnType<typeof Orchestra.make>
   event: {
     on: ServerEventEmitter["on"]
     listen: ServerEventEmitter["listen"]
