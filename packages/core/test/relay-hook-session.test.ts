@@ -201,6 +201,7 @@ function sessions<A, E>(
     SessionExecution.Service.of({
       active: Effect.succeed(new Set()),
       exclusive: (_, effect) => Effect.asSome(effect),
+      withRunner: () => Effect.die("unused"),
       resume: () => Effect.void,
       interrupt: () => Effect.void,
       wake: (sessionID) => Effect.sync(() => wakes.push(sessionID)),

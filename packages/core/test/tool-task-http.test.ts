@@ -6,6 +6,7 @@ import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { AppProcess } from "@orchestra/core/process"
+import { FSUtil } from "@orchestra/core/fs-util"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
@@ -32,6 +33,7 @@ const services = AppNodeBuilder.build(
     Database.node,
     LocationServiceMap.node,
     AppProcess.node,
+    FSUtil.node,
     SessionExecution.node,
     SessionV2.node,
     SessionSubagentModels.node,

@@ -110,6 +110,7 @@ it.live("binds real Core roots to issuing placement and pre-provider permission 
       return SessionExecution.Service.of({
         active: coordinator.active, resume: coordinator.run, wake: coordinator.wake, interrupt: coordinator.interrupt,
         exclusive: coordinator.exclusive,
+        withRunner: (_, use) => use(runner),
       })
     })).pipe(Layer.provide(runnerLayer))
     const layer = AppNodeBuilder.build(LayerNode.group([

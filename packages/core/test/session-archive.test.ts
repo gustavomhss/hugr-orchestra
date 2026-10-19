@@ -289,6 +289,7 @@ describe("SessionV2 archive", () => {
             wake: coordinator.wake,
             interrupt: coordinator.interrupt,
             exclusive: coordinator.exclusive,
+            withRunner: () => Effect.die("unused"),
           })
         }),
       )

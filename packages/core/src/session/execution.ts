@@ -27,6 +27,11 @@ export interface Interface {
     effect: Effect.Effect<A, E>,
     options?: { readonly wait?: boolean },
   ) => Effect.Effect<Option.Option<A>, E>
+  /** Runs `use` with the runner of the Location the Session is placed in. */
+  readonly withRunner: <A, E>(
+    sessionID: SessionSchema.ID,
+    use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>,
+  ) => Effect.Effect<A, E>
 }
 
 /** Routes execution from a Session ID to the runner owned by that Session's Location. */
@@ -43,5 +48,6 @@ export const noopLayer = Layer.succeed(
     wake: () => Effect.void,
     interrupt: () => Effect.void,
     exclusive: (_, effect) => Effect.asSome(effect),
+    withRunner: () => Effect.die("No Session runner is placed by the recording-only execution layer"),
   }),
 )

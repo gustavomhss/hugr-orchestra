@@ -27,7 +27,7 @@ export const read = Effect.fn("SessionMentions.read")(function* (
   },
   prompt: Prompt,
 ) {
-  const mentions = yield* Effect.forEach(prompt.files ?? [], (file) =>
+  const mentions = yield* Effect.forEach(prompt.files ?? [], (file): Effect.Effect<Mention | undefined> =>
     Effect.gen(function* () {
       if (!URL.canParse(file.uri)) return undefined
       const url = new URL(file.uri)
@@ -36,7 +36,7 @@ export const read = Effect.fn("SessionMentions.read")(function* (
       return yield* resource(services.mcp, file)
     }),
   )
-  const read = mentions.filter((mention): mention is Mention => mention !== undefined)
+  const read = mentions.filter((mention) => mention !== undefined)
   return {
     text: read.map((mention) => mention.text).join("\n\n"),
     files: read.flatMap((mention) => mention.files ?? []),

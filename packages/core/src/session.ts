@@ -308,9 +308,9 @@ const layer = Layer.effect(
       )
     })
 
-    // The Session's Location runner, acquired as revert and hooks acquire it.
+    // Session execution places the Session and hands over its Location's runner.
     const runner = <A, E>(session: SessionSchema.Info, use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>) =>
-      SessionRunner.Service.use(use).pipe(Effect.provide(locations.get(session.location)))
+      execution.withRunner(session.id, use)
 
     // Session operations hold the Session as a drain would, so none interleaves with a running turn.
     const exclusive = <A, E>(session: SessionSchema.Info, effect: Effect.Effect<A, E>) =>
