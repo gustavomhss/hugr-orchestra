@@ -435,6 +435,12 @@ export function createCommandClient(command: ModelCommand, format: AnswerFormat 
   }
 }
 
+/** [D39] The same gate over a reply the caller already holds as text: the Orchestra host asks the model itself and
+ *  hands each reply in. Block format, the advisory arm's `atlas-fact` contract (prompts/propose.md). */
+export function admitAnswerText(text: string): CompletionResult {
+  return admitModelAnswer(Buffer.from(text, "utf8"), "block")
+}
+
 /**
  * [#195 leg (c)] The admission SANITY GATE on the model's raw stdout bytes, BEFORE they can become a claim.
  * Three fail-closed checks; any failure returns a grounded ABSTENTION, never a fabricated claim:

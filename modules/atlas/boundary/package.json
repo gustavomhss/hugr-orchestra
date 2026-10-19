@@ -23,6 +23,10 @@
     "./surface": {
       "types": "./src/generated/surface.d.ts",
       "default": "./src/generated/surface.js"
+    },
+    "./mine": {
+      "types": "./src/generated/mine.d.ts",
+      "default": "./src/generated/mine.js"
     }
   },
   "scripts": {

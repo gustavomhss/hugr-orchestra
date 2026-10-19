@@ -15,6 +15,8 @@ await Promise.all(
       ["native-memory", "adapter-io/src/native-bound.ts"],
       // The Atlas screen's read and write API over the composition root (specs/atlas-ui/build D1/D2).
       ["surface", "adapter-io/src/surface/index.ts"],
+      // The screen's Genesis mining (specs/atlas-ui/build D39): the CLI's governed pass, driven by the host's models.
+      ["mine", "cli/src/surface-mine.ts"],
     ] as const
   ).map(async ([name, file]) => {
     const entry = path.join(root, "modules/atlas/packages", file)

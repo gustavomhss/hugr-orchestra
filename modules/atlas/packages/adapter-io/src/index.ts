@@ -35,6 +35,7 @@ export { headSha } from "./run-git.js"
 export {
   createSiteProposer,
   advisoryClaimParser,
+  admitAnswerText, // D39 — the answer gate over a reply the host already holds
   makeDependencyClaimParser,
   DEP_UNPARSEABLE_REASON,
   makeCountClaimParser,
