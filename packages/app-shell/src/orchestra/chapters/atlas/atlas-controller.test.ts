@@ -4,6 +4,15 @@ import { createAtlasController } from "./atlas-controller"
 import { atlasFixture } from "./atlas-model.fixture"
 import type { AtlasInput, AtlasOutput } from "./atlas-types"
 
+const review = {
+  state: "ok",
+  unreadable: false,
+  held: ["k5"],
+  proposals: [],
+  memoryProposals: [],
+  interview: { batch: [], deferred: 0 },
+} as unknown as AtlasOutput<"review">
+
 // A plain transport object that records each call; tests replace single methods.
 function fake(overrides: Partial<AtlasTransport> = {}) {
   const calls: string[] = []
@@ -21,6 +30,15 @@ function fake(overrides: Partial<AtlasTransport> = {}) {
     emit: () => answer("emit", {} as unknown as AtlasOutput<"emit">),
     link: () => answer("link", {} as unknown as AtlasOutput<"link">),
     verify: () => answer("verify", {} as unknown as AtlasOutput<"verify">),
+    review: () => answer("review", review),
+    hold: () => answer("hold", {} as unknown as AtlasOutput<"hold">),
+    release: () => answer("release", {} as unknown as AtlasOutput<"release">),
+    propose: () => answer("propose", {} as unknown as AtlasOutput<"propose">),
+    decide: () => answer("decide", {} as unknown as AtlasOutput<"decide">),
+    answer: () => answer("answer", {} as unknown as AtlasOutput<"answer">),
+    memoryDecide: () => answer("memoryDecide", {} as unknown as AtlasOutput<"memoryDecide">),
+    territory: () => answer("territory", {} as unknown as AtlasOutput<"territory">),
+    delegate: () => answer("delegate", {} as unknown as AtlasOutput<"delegate">),
     ...overrides,
   }
   return { calls, transport }
@@ -38,7 +56,7 @@ describe("atlas controller", () => {
     await controller.select(owner(source.transport))
     expect(controller.state.snapshot?.project).toBe("demo")
     expect([controller.state.empty, controller.state.unavailable, controller.state.loading]).toEqual([false, false, false])
-    expect(source.calls).toEqual(["snapshot"])
+    expect(source.calls).toEqual(["snapshot", "review"])
   })
 
   test("an absent store reads as empty (D5)", async () => {
@@ -50,7 +68,10 @@ describe("atlas controller", () => {
   })
 
   test("a server without the atlas routes is unavailable and is not asked again", async () => {
-    const source = fake({ snapshot: () => Promise.reject(new AtlasAPIError("unsupported")) })
+    const source = fake({
+      snapshot: () => Promise.reject(new AtlasAPIError("unsupported")),
+      review: () => Promise.reject(new AtlasAPIError("unsupported")),
+    })
     const controller = createAtlasController(describeError)
     await controller.select(owner(source.transport))
     expect(controller.state.unavailable).toBe(true)
@@ -71,10 +92,29 @@ describe("atlas controller", () => {
     const controller = createAtlasController(describeError)
     await controller.select(owner(source.transport))
     await controller.promote({} as AtlasInput<"promote">)
-    expect(source.calls).toEqual(["snapshot", "promote", "snapshot"])
+          expect(source.calls).toEqual(["snapshot", "review", "promote", "snapshot", "review"])
+          expect(controller.state.pending).toEqual([])
+          await controller.verify({} as AtlasInput<"verify">)
+          expect(source.calls).toEqual(["snapshot", "review", "promote", "snapshot", "review", "verify"])
+  })
+
+  test("a write rereads the review too (D34)", async () => {
+    const source = fake()
+    const controller = createAtlasController(describeError)
+    await controller.select(owner(source.transport))
+    expect(controller.state.review?.held).toEqual(["k5"])
+    await controller.hold({ nodeKey: "k5" })
+    await controller.delegate({ questionIds: ["q1"], providerID: "p", modelID: "m" })
+    expect(source.calls).toEqual(["snapshot", "review", "hold", "snapshot", "review", "delegate", "snapshot", "review"])
     expect(controller.state.pending).toEqual([])
-    await controller.verify({} as AtlasInput<"verify">)
-    expect(source.calls).toEqual(["snapshot", "promote", "snapshot", "verify"])
+  })
+
+  test("an empty review log reads as no review", async () => {
+    const source = fake({ review: () => Promise.resolve({ state: "empty" } as unknown as AtlasOutput<"review">) })
+    const controller = createAtlasController(describeError)
+    await controller.select(owner(source.transport))
+    expect(controller.state.snapshot?.project).toBe("demo")
+    expect(controller.state.review).toBeUndefined()
   })
 
   test("reasoning and own briefings are read once and cached", async () => {
@@ -85,7 +125,7 @@ describe("atlas controller", () => {
     await controller.reasoning("r1")
     await controller.own("packages/a")
     await controller.own("packages/a")
-    expect(source.calls).toEqual(["snapshot", "reasoning:r1", "own:packages/a"])
+    expect(source.calls).toEqual(["snapshot", "review", "reasoning:r1", "own:packages/a"])
     expect(Object.keys(controller.state.reasoning)).toEqual(["r1"])
   })
 
@@ -95,7 +135,7 @@ describe("atlas controller", () => {
     await controller.select(owner(source.transport))
     controller.dispose()
     await controller.refresh()
-    expect(source.calls).toEqual(["snapshot"])
+    expect(source.calls).toEqual(["snapshot", "review"])
   })
 
   test("isAtlasEmpty only matches the empty answer", () => {

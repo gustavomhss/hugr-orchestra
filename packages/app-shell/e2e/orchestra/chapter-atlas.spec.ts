@@ -90,6 +90,40 @@ const health = {
   hotSet: 4,
 }
 
+// D34: the review log's read. One open interview question and one proposed Backend rule.
+const review = {
+  state: "ok",
+  unreadable: false,
+  held: [],
+  proposals: [],
+  memoryProposals: [
+    {
+      id: "mp1",
+      member: "backend",
+      rule: "Always run the guard before a merge.",
+      scope: "*",
+      by: "backend",
+      at: "2026-10-19T00:00:00Z",
+    },
+  ],
+  interview: {
+    batch: [
+      {
+        id: "q1",
+        kind: "owner",
+        subject: "packages/a",
+        ask: "Who owns packages/a?",
+        rank: 1,
+        site: "packages/a",
+        options: ["seat:orchestrator", "a person on the team", "nobody yet"],
+        nodeKey: null,
+        draft: null,
+      },
+    ],
+    deferred: 0,
+  },
+}
+
 test("v1: every Atlas view renders the store", async ({ page }) => {
   const requests: string[] = []
   await setup(page, { protocol: "v1", requests })
@@ -103,6 +137,7 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   const first = new URL(requests[0])
   expect(first.pathname).toBe("/atlas/snapshot")
   expect(first.searchParams.get("directory")).toBe(directory)
+  expect(requests.some((url) => new URL(url).pathname === "/atlas/review")).toBe(true)
 
   await rail.getByRole("link", { name: "Explore" }).click()
   await expect(page).toHaveURL(/\/orchestra\/atlas\/explore$/)
@@ -247,11 +282,12 @@ async function setup(page: Page, input: { protocol: "v1" | "v2"; requests: strin
   })
 }
 
-// The legacy `atlas` group: the snapshot, a missing reasoning entry, health; every other call answers empty.
+// The legacy `atlas` group: the snapshot, the review, a missing reasoning entry, health; every other call answers empty.
 function atlas(route: Route, call: string, id: string) {
   if (call === "snapshot") return json(route, snapshot)
   if (call === "reasoning") return json(route, { state: "missing", id })
   if (call === "health") return json(route, health)
+  if (call === "review") return json(route, review)
   return json(route, { state: "empty" })
 }
 

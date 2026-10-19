@@ -50,5 +50,23 @@ export function createAtlasAPI(sdk: Pick<DirectorySDK, "client" | "directory" | 
       response(() => sdk.client.atlas.link({ ...input, directory: sdk.directory }, options(signal)), signal),
     verify: (input: AtlasInput<"verify">, signal?: AbortSignal): Promise<AtlasOutput<"verify">> =>
       response(() => sdk.client.atlas.verify({ ...input, directory: sdk.directory }, options(signal)), signal),
+    review: (signal?: AbortSignal): Promise<AtlasOutput<"review">> =>
+      response(() => sdk.client.atlas.review({ directory: sdk.directory }, options(signal)), signal),
+    hold: (input: AtlasInput<"hold">, signal?: AbortSignal): Promise<AtlasOutput<"hold">> =>
+      response(() => sdk.client.atlas.hold({ ...input, directory: sdk.directory }, options(signal)), signal),
+    release: (input: AtlasInput<"release">, signal?: AbortSignal): Promise<AtlasOutput<"release">> =>
+      response(() => sdk.client.atlas.release({ ...input, directory: sdk.directory }, options(signal)), signal),
+    propose: (input: AtlasInput<"propose">, signal?: AbortSignal): Promise<AtlasOutput<"propose">> =>
+      response(() => sdk.client.atlas.propose({ ...input, directory: sdk.directory }, options(signal)), signal),
+    decide: (input: AtlasInput<"decide">, signal?: AbortSignal): Promise<AtlasOutput<"decide">> =>
+      response(() => sdk.client.atlas.decide({ ...input, directory: sdk.directory }, options(signal)), signal),
+    answer: (input: AtlasInput<"answer">, signal?: AbortSignal): Promise<AtlasOutput<"answer">> =>
+      response(() => sdk.client.atlas.answer({ ...input, directory: sdk.directory }, options(signal)), signal),
+    memoryDecide: (input: AtlasInput<"memoryDecide">, signal?: AbortSignal): Promise<AtlasOutput<"memoryDecide">> =>
+      response(() => sdk.client.atlas.memoryDecide({ ...input, directory: sdk.directory }, options(signal)), signal),
+    territory: (input: AtlasInput<"territory">, signal?: AbortSignal): Promise<AtlasOutput<"territory">> =>
+      response(() => sdk.client.atlas.territory({ ...input, directory: sdk.directory }, options(signal)), signal),
+    delegate: (input: AtlasInput<"delegate">, signal?: AbortSignal): Promise<AtlasOutput<"delegate">> =>
+      response(() => sdk.client.atlas.delegate({ ...input, directory: sdk.directory }, options(signal)), signal),
   }
 }

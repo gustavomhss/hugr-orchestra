@@ -1,14 +1,29 @@
 import { createStore } from "solid-js/store"
 import { pathKey } from "@/utils/path-key"
 import { isAtlasEmpty, type AtlasTransport } from "./atlas-api"
-import type { AtlasInput, AtlasOutput, AtlasSnapshot } from "./atlas-types"
+import type { AtlasInput, AtlasOutput, AtlasReview, AtlasSnapshot } from "./atlas-types"
 
 export type AtlasOwner = { server: string; directory: string; transport: AtlasTransport }
-export type AtlasWrite = "promote" | "draft" | "emit" | "link" | "verify"
+export type AtlasWrite =
+  | "promote"
+  | "draft"
+  | "emit"
+  | "link"
+  | "verify"
+  | "hold"
+  | "release"
+  | "propose"
+  | "decide"
+  | "answer"
+  | "memoryDecide"
+  | "territory"
+  | "delegate"
 export type AtlasController = ReturnType<typeof createAtlasController>
 type State = {
   key?: string
   snapshot?: AtlasSnapshot
+  // D34: the review log, read with the snapshot; undefined while the store is empty.
+  review?: AtlasReview
   // D5: the instance worktree has no .atlas/.
   empty: boolean
   // The server has no `atlas` routes.
@@ -52,7 +67,15 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     const result = describe(error)
     if (result.unavailable) {
       cancel()
-      setState({ snapshot: undefined, empty: false, unavailable: true, loading: false, pending: [], error: undefined })
+      setState({
+        snapshot: undefined,
+        review: undefined,
+        empty: false,
+        unavailable: true,
+        loading: false,
+        pending: [],
+        error: undefined,
+      })
       return
     }
     setState("error", result.message)
@@ -77,14 +100,18 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     const order = ++life.sequence
     setState({ loading: true, error: undefined })
     read = request()
-    const data = await run((transport, signal) => transport.snapshot(signal), read)
+    // D34: the review log is read beside the snapshot, under the same abort, so the two always match.
+    const [data, review] = await Promise.all([
+      run((transport, signal) => transport.snapshot(signal), read),
+      run((transport, signal) => transport.review(signal), read),
+    ])
     if (life.disposed) return
     // A newer refresh owns the loading flag until it finishes.
     if (order === life.sequence) setState("loading", false)
     if (data === undefined || order < life.accepted) return
     life.accepted = order
-    if (isAtlasEmpty(data)) return setState({ snapshot: undefined, empty: true })
-    setState({ snapshot: data, empty: false })
+    if (isAtlasEmpty(data)) return setState({ snapshot: undefined, review: undefined, empty: true })
+    setState({ snapshot: data, review: review === undefined || isAtlasEmpty(review) ? undefined : review, empty: false })
   }
 
   const reasoning = async (id: string) => {
@@ -105,7 +132,7 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     return data
   }
 
-  // A write marks its kind pending, then rereads the snapshot (D6). `verify` saves nothing, so it does not reread.
+  // A write marks its kind pending, then rereads the snapshot and the review (D6, D34). `verify` saves nothing.
   const write = async <T>(kind: AtlasWrite, call: (transport: AtlasTransport, signal: AbortSignal) => Promise<T>) => {
     setState({ pending: [...state.pending, kind], error: undefined })
     const data = await run(call)
@@ -126,6 +153,17 @@ export function createAtlasController(describe: (error: unknown) => { message: s
     emit: (input: AtlasInput<"emit">) => write("emit", (transport, signal) => transport.emit(input, signal)),
     link: (input: AtlasInput<"link">) => write("link", (transport, signal) => transport.link(input, signal)),
     verify: (input: AtlasInput<"verify">) => write("verify", (transport, signal) => transport.verify(input, signal)),
+    hold: (input: AtlasInput<"hold">) => write("hold", (transport, signal) => transport.hold(input, signal)),
+    release: (input: AtlasInput<"release">) => write("release", (transport, signal) => transport.release(input, signal)),
+    propose: (input: AtlasInput<"propose">) => write("propose", (transport, signal) => transport.propose(input, signal)),
+    decide: (input: AtlasInput<"decide">) => write("decide", (transport, signal) => transport.decide(input, signal)),
+    answer: (input: AtlasInput<"answer">) => write("answer", (transport, signal) => transport.answer(input, signal)),
+    memoryDecide: (input: AtlasInput<"memoryDecide">) =>
+      write("memoryDecide", (transport, signal) => transport.memoryDecide(input, signal)),
+    territory: (input: AtlasInput<"territory">) =>
+      write("territory", (transport, signal) => transport.territory(input, signal)),
+    delegate: (input: AtlasInput<"delegate">) =>
+      write("delegate", (transport, signal) => transport.delegate(input, signal)),
     async select(next: AtlasOwner) {
       if (life.disposed) return
       cancel()
@@ -133,6 +171,7 @@ export function createAtlasController(describe: (error: unknown) => { message: s
       life.accepted = 0
       setState({
         key: `${next.server}\0${pathKey(next.directory)}`,
+        review: undefined,
         snapshot: undefined,
         empty: false,
         unavailable: false,
