@@ -121,6 +121,7 @@ The lead then reviews the diff, runs the acceptance step, and commits.
 
 - Read the brief and only the files it lists. Change only the files in "Touch only".
 - Never run tests, typecheck, builds or installs. Never commit, push or switch branches.
+- Write files with your file-writing tool, directly at their path inside the worktree. Never use `/tmp` or any path outside the worktree, not even as a scratch copy: those calls are refused and end the session.
 - When anything does not match the brief, stop and report the mismatch, word for word. Do not improvise.
 - End with a short report: the files changed, plus anything that differed from the brief.
 - The very last line of the answer is exactly `RESULT: DONE` when every step was applied, or `RESULT: STOPPED <one-line reason>` otherwise.
