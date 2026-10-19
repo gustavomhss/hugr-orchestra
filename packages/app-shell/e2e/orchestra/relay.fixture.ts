@@ -7,7 +7,7 @@ import { mockOrchestraServer } from "../utils/mock-server"
 // Hooks specs. Workflow documents are the shipped profiles seeded the way AuthoringStore.seedProfiles projects them;
 // hooks, installs and ledger decisions come from relay.data.json (times in minutes ago). Requests are checked like the
 // server checks them: unknown save fields, stale versions, fractional positions and an install `version` are refused.
-// The run routes (WP17) do not exist yet, so they answer a plain 404.
+// The run routes list external runs; the fixture has none, so the list is empty and a single run is a 404.
 
 export const server = "http://127.0.0.1:4096"
 export const directory = "/repo/orchestra-canonical"
@@ -330,12 +330,13 @@ export async function mockRelay(page: Page, state: RelayState) {
             body: JSON.stringify(status < 300 ? { location: { directory }, data: body } : body),
           })
     const missing = () => route.fulfill({ status: 404, contentType: "text/plain", headers, body: "Not Found" })
-    if (!state.supported || group === "run") return missing()
+    if (!state.supported) return missing()
     if (url.searchParams.get("location[directory]") !== directory)
       return refuse(json, 400, "RelayInvalidError", "invalid-request", "Unknown location")
     const body = method === "GET" || method === "DELETE" ? undefined : (request.postDataJSON() as Json)
     if (method !== "GET") state.writes.push({ method, path: url.pathname, body })
     const call = { method, id, action, extra, body }
+    if (group === "run") return id ? missing() : json([])
     if (group === "node-types") return json(nodeTypes)
     if (group === "document") return answerDocument(state, json, call)
     if (group === "hook") return answerHook(state, json, call)
