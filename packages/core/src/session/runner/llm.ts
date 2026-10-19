@@ -10,6 +10,7 @@ import {
   type ToolCall,
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
@@ -35,6 +36,7 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
@@ -42,6 +44,7 @@ import { createLLMEventPublisher } from "./publish-llm-event"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { SessionMentions } from "./mentions"
+import { SessionTitle } from "./title"
 import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
@@ -139,6 +142,7 @@ const layer = Layer.effect(
     )
     const db = database.db
     const compaction = SessionCompaction.make({ events, llm, subagentModels, config: yield* config.entries() })
+    const nameSession = SessionTitle.make({ db, events, store, agents, models, subagentModels, llm })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID).pipe(
         Effect.catchDefect((cause) =>
@@ -147,6 +151,21 @@ const layer = Layer.effect(
       )
       if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
       return session
+    })
+
+    // A Session's own permission rules, after its agent's as V1 merged them, so a Session rule wins over the agent's.
+    const sessionRules = Effect.fn("SessionRunner.sessionRules")(function* (sessionID: SessionSchema.ID) {
+      const row = yield* db
+        .select({ permission: SessionTable.permission })
+        .from(SessionTable)
+        .where(eq(SessionTable.id, sessionID))
+        .get()
+        .pipe(Effect.orDie)
+      return (row?.permission ?? []).map((rule) => ({
+        action: rule.permission,
+        resource: rule.pattern,
+        effect: rule.action,
+      }))
     })
 
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
@@ -216,7 +235,10 @@ const layer = Layer.effect(
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
       const agent = yield* agents.select(session.agent)
-      const effectiveRules = agent.info?.permissions.map((rule) => ({ ...rule })) ?? []
+      const effectiveRules = [
+        ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
+        ...(yield* sessionRules(session.id)),
+      ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
@@ -231,6 +253,15 @@ const layer = Layer.effect(
         }
         if (promoted > 0) {
           currentStep = 1
+          // Beside the turn, as V1 named a Session after its first prompt; a failed title leaves the default one.
+          yield* nameSession(session.id).pipe(
+            Effect.catchCause((cause) =>
+              Effect.logWarning("Session title generation failed", cause).pipe(
+                Effect.annotateLogs({ sessionID: session.id }),
+              ),
+            ),
+            Effect.forkDetach,
+          )
           // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
           for (const input of yield* SessionInput.promotedAfter(db, session.id, cutoff)) {
             const mentions = yield* SessionMentions.read({ reader, mcp, fs }, input.prompt)

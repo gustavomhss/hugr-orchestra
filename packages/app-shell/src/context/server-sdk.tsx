@@ -245,13 +245,30 @@ export function createServerProtocolPromise(
   options: ServerProtocolOptions = {},
   onDetected?: (kind: ServerProtocol) => void,
 ) {
-  return connectionPromise(() =>
-    detectServerProtocol(server, fetcher, options).then((kind) => {
-      onDetected?.(kind)
-      return kind
-    }),
-  )
+  // Every consumer retries a failed detection; consecutive failures back off so an unreachable server is not probed in
+  // a loop. The first retry is immediate.
+  const failed = { count: 0, at: 0 }
+  return connectionPromise(async () => {
+    const delay =
+      failed.count < 2 ? 0 : Math.min(PROTOCOL_RETRY_MS * 2 ** (failed.count - 2), PROTOCOL_RETRY_MAX_MS) - (Date.now() - failed.at)
+    if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay))
+    return detectServerProtocol(server, fetcher, options).then(
+      (kind) => {
+        failed.count = 0
+        onDetected?.(kind)
+        return kind
+      },
+      (error: unknown) => {
+        failed.count++
+        failed.at = Date.now()
+        throw error
+      },
+    )
+  })
 }
+
+const PROTOCOL_RETRY_MS = 1_000
+const PROTOCOL_RETRY_MAX_MS = 30_000
 
 // Consumers retain both this promise and derived .then chains (including the compatibility API).
 // Cache pending/successful results at each link, but let the next consumer retry a rejected link.
@@ -326,6 +343,7 @@ function createServerSdkContextBase(
   const FLUSH_FRAME_MS = 16
   const STREAM_YIELD_MS = 8
   const RECONNECT_DELAY_MS = 250
+  const RECONNECT_MAX_DELAY_MS = 30_000
 
   let queue: Queued[] = []
   let buffer: Queued[] = []
@@ -362,6 +380,7 @@ function createServerSdkContextBase(
   const native = createNativeEventAdapter()
   const wait = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
   let attempt: AbortController | undefined
+  let backoff: (() => void) | undefined
   let run: Promise<void> | undefined
   let started = false
   let generation = 0
@@ -373,6 +392,8 @@ function createServerSdkContextBase(
     const previous = run
     const current = (async () => {
       if (previous) await previous
+      // Consecutive attempts that deliver no event back off, so an unreachable server is not asked in a loop.
+      let failures = 0
       // oxlint-disable-next-line no-unmodified-loop-condition -- `started` is set to false by stop() which also aborts; both flags are checked to allow graceful exit
       while (!abort.signal.aborted && started && generation === active) {
         attempt = new AbortController()
@@ -390,6 +411,7 @@ function createServerSdkContextBase(
           for await (const event of events) {
             if (abort.signal.aborted || !started || generation !== active) return
             streamErrorLogged = false
+            failures = 0
             const legacy = "payload" in event
             if (legacy && event.payload.type === "sync") continue
             const directory = legacy ? (event.directory ?? "global") : (event.location?.directory ?? "global")
@@ -415,7 +437,12 @@ function createServerSdkContextBase(
         }
 
         if (abort.signal.aborted || !started || generation !== active) return
-        await wait(RECONNECT_DELAY_MS)
+        // stop() cuts the pause short, so a restarted stream does not wait out the backoff of the one it replaces.
+        await new Promise<void>((resolve) => {
+          backoff = resolve
+          setTimeout(resolve, Math.min(RECONNECT_DELAY_MS * 2 ** failures++, RECONNECT_MAX_DELAY_MS))
+        })
+        backoff = undefined
       }
     })().finally(() => {
       if (run !== current) return
@@ -430,6 +457,7 @@ function createServerSdkContextBase(
     started = false
     generation++
     attempt?.abort()
+    backoff?.()
   }
 
   onMount(() => {

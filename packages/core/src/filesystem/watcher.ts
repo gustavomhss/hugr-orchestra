@@ -6,6 +6,7 @@ import type ParcelWatcher from "@parcel/watcher"
 import { makeLocationNode } from "../effect/app-node"
 import { Cause, Context, Effect, Layer } from "effect"
 import { FileSystemWatcher } from "@orchestra/schema/filesystem-watcher"
+import { VcsEvent } from "@orchestra/schema/vcs-event"
 import path from "path"
 import { Config } from "../config"
 import { EventV2 } from "../event"
@@ -113,11 +114,14 @@ const layer = Layer.effect(
     const pendingSubscriptions = new Set<Promise<ParcelWatcher.AsyncSubscription>>()
     yield* Effect.addFinalizer(() => Effect.promise(() => closeSubscriptions(pendingSubscriptions)))
 
+    // A branch switch rewrites HEAD; `vcs.branch.updated` tells the app, as V1's HEAD watcher did.
+    const head = { file: undefined as string | undefined, check: Effect.void as Effect.Effect<void> }
     const callback: ParcelWatcher.SubscribeCallback = (_error, updates) => {
       for (const update of updates) {
         if (update.type === "create") runFork(events.publish(Event.Updated, { file: update.path, event: "add" }))
         if (update.type === "update") runFork(events.publish(Event.Updated, { file: update.path, event: "change" }))
         if (update.type === "delete") runFork(events.publish(Event.Updated, { file: update.path, event: "unlink" }))
+        if (update.path === head.file) runFork(head.check)
       }
     }
 
@@ -142,9 +146,20 @@ const layer = Layer.effect(
     }
 
     if (location.vcs?.type === "git") {
-      const resolved = (yield* git.repo.discover(location.directory))?.gitDirectory
+      const repository = yield* git.repo.discover(location.directory)
+      const resolved = repository?.gitDirectory
       const vcs = resolved ? yield* fs.realPath(resolved).pipe(Effect.catch(() => Effect.succeed(resolved))) : undefined
       if (vcs && !config.includes(".git") && !config.includes(vcs) && (!resolved || !config.includes(resolved))) {
+        if (repository) {
+          const branch = { current: yield* git.history.branch(repository) }
+          head.file = path.join(vcs, "HEAD")
+          head.check = Effect.gen(function* () {
+            const next = yield* git.history.branch(repository)
+            if (next === branch.current) return
+            branch.current = next
+            yield* events.publish(VcsEvent.BranchUpdated, { branch: next })
+          })
+        }
         const ignore = (yield* fs.readDirectoryEntries(vcs).pipe(Effect.catch(() => Effect.succeed([])))).flatMap(
           (entry) => (entry.name === "HEAD" ? [] : [entry.name]),
         )

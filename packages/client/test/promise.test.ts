@@ -38,6 +38,7 @@ test("exposes every standard HTTP API group", () => {
     "references",
     "projectCopies",
     "projects",
+    "lean",
     "config",
     "relayDocuments",
     "relayPublish",

@@ -6,21 +6,21 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint35_0Request = Parameters<RawClient["server.actionsResource"]["actions.resource.list"]>[0]
-type Endpoint35_0Input = {
-  readonly bindingID: Endpoint35_0Request["params"]["bindingID"]
-  readonly location?: Endpoint35_0Request["query"]["location"]
-  readonly revision: Endpoint35_0Request["query"]["revision"]
-  readonly kind: Endpoint35_0Request["query"]["kind"]
-  readonly runID?: Endpoint35_0Request["query"]["runID"]
-  readonly resourceID?: Endpoint35_0Request["query"]["resourceID"]
-  readonly scope?: Endpoint35_0Request["query"]["scope"]
-  readonly ref?: Endpoint35_0Request["query"]["ref"]
-  readonly query?: Endpoint35_0Request["query"]["query"]
-  readonly cursor?: Endpoint35_0Request["query"]["cursor"]
-  readonly limit?: Endpoint35_0Request["query"]["limit"]
+type Endpoint36_0Request = Parameters<RawClient["server.actionsResource"]["actions.resource.list"]>[0]
+type Endpoint36_0Input = {
+  readonly bindingID: Endpoint36_0Request["params"]["bindingID"]
+  readonly location?: Endpoint36_0Request["query"]["location"]
+  readonly revision: Endpoint36_0Request["query"]["revision"]
+  readonly kind: Endpoint36_0Request["query"]["kind"]
+  readonly runID?: Endpoint36_0Request["query"]["runID"]
+  readonly resourceID?: Endpoint36_0Request["query"]["resourceID"]
+  readonly scope?: Endpoint36_0Request["query"]["scope"]
+  readonly ref?: Endpoint36_0Request["query"]["ref"]
+  readonly query?: Endpoint36_0Request["query"]["query"]
+  readonly cursor?: Endpoint36_0Request["query"]["cursor"]
+  readonly limit?: Endpoint36_0Request["query"]["limit"]
 }
-const Endpoint35_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint35_0Input) =>
+const Endpoint36_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint36_0Input) =>
   raw["actions.resource.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -37,24 +37,24 @@ const Endpoint35_0 = (raw: RawClient["server.actionsResource"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_1Request = Parameters<RawClient["server.actionsResource"]["actions.resource.command"]>[0]
-type Endpoint35_1Input = {
-  readonly bindingID: Endpoint35_1Request["params"]["bindingID"]
-  readonly resourceKind: Endpoint35_1Request["params"]["resourceKind"]
-  readonly action: Endpoint35_1Request["params"]["action"]
-  readonly location?: Endpoint35_1Request["query"]["location"]
-  readonly revision: Endpoint35_1Request["query"]["revision"]
-  readonly id: Endpoint35_1Request["payload"]["id"]
-  readonly input: Endpoint35_1Request["payload"]["input"]
+type Endpoint36_1Request = Parameters<RawClient["server.actionsResource"]["actions.resource.command"]>[0]
+type Endpoint36_1Input = {
+  readonly bindingID: Endpoint36_1Request["params"]["bindingID"]
+  readonly resourceKind: Endpoint36_1Request["params"]["resourceKind"]
+  readonly action: Endpoint36_1Request["params"]["action"]
+  readonly location?: Endpoint36_1Request["query"]["location"]
+  readonly revision: Endpoint36_1Request["query"]["revision"]
+  readonly id: Endpoint36_1Request["payload"]["id"]
+  readonly input: Endpoint36_1Request["payload"]["input"]
 }
-const Endpoint35_1 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint35_1Input) =>
+const Endpoint36_1 = (raw: RawClient["server.actionsResource"]) => (input: Endpoint36_1Input) =>
   raw["actions.resource.command"]({
     params: { bindingID: input["bindingID"], resourceKind: input["resourceKind"], action: input["action"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup35 = (raw: RawClient["server.actionsResource"]) => ({
-  list: Endpoint35_0(raw),
-  command: Endpoint35_1(raw),
+export const adaptGroup36 = (raw: RawClient["server.actionsResource"]) => ({
+  list: Endpoint36_0(raw),
+  command: Endpoint36_1(raw),
 })

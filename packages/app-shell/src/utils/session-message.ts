@@ -107,17 +107,16 @@ export function normalizeSessionMessages(sessionID: string, source: readonly Ses
       parts.set(message.id, assistantParts(sessionID, message))
       return
     }
-    if (message.type !== "compaction" || !parentID) return
-    parts.set(parentID, [
-      ...(parts.get(parentID) ?? []),
-      {
-        id: `${message.id}:compaction`,
-        sessionID,
-        messageID: parentID,
-        type: "compaction",
-        auto: message.reason === "auto",
-      },
+    // A compaction is its own turn, as V1 recorded it: a divider in place of the user prompt and the summary as the
+    // reply. The runner's work after an automatic compaction continues that turn.
+    if (message.type !== "compaction" || message.status === "failed") return
+    parentID = message.id
+    const [user, assistant] = compactionMessages(sessionID, message, agent, model)
+    messages.push(user, assistant)
+    parts.set(user.id, [
+      { id: `${message.id}:compaction`, sessionID, messageID: user.id, type: "compaction", auto: message.reason === "auto" },
     ])
+    parts.set(assistant.id, message.summary.trim() ? [textPart(sessionID, assistant.id, 0, message.summary)] : [])
   })
 
   return { messages, parts }
@@ -153,6 +152,40 @@ function shellMessages(
       cost: 0,
       tokens: emptyTokens,
       synthetic: true,
+    },
+  ]
+}
+
+function compactionMessages(
+  sessionID: string,
+  message: Exclude<Extract<SessionMessageInfo, { type: "compaction" }>, { status: "failed" }>,
+  agent: string,
+  model: { id: string; providerID: string; variant?: string },
+): [UserMessage, AssistantMessage] {
+  return [
+    {
+      id: message.id,
+      sessionID,
+      role: "user",
+      time: { created: message.time.created },
+      agent,
+      model: { providerID: model.providerID, modelID: model.id, variant: model.variant },
+    },
+    {
+      id: `${message.id}:assistant`,
+      sessionID,
+      role: "assistant",
+      time: message.status === "running" ? { created: message.time.created } : { created: message.time.created, completed: message.time.created },
+      parentID: message.id,
+      modelID: model.id,
+      providerID: model.providerID,
+      variant: model.variant,
+      mode: agent,
+      agent,
+      path: { cwd: "", root: "" },
+      cost: 0,
+      tokens: emptyTokens,
+      summary: true,
     },
   ]
 }

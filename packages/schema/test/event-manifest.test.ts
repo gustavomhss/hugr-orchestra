@@ -7,6 +7,7 @@ import { ResearchEvent } from "../src/research-event"
 import { SessionEvent } from "../src/session-event"
 import { SessionTodo } from "../src/session-todo"
 import { SessionV1 } from "../src/session-v1"
+import { VcsEvent } from "../src/vcs-event"
 import { WorkspaceEvent } from "../src/workspace-event"
 
 // Deliberate public-name oracle for the joined contract, independent of the implementation's inventory assembly.
@@ -125,7 +126,9 @@ const publicEventTypes = [
 
 describe("public event manifest", () => {
   test("owns the complete public event surface", () => {
-    expect(EventManifest.ServerDefinitions.length).toBe(88)
+    expect(EventManifest.ServerDefinitions.length).toBe(89)
+    // The V2 server's HEAD watcher announces branch switches.
+    expect(EventManifest.ServerDefinitions).toContain(VcsEvent.BranchUpdated)
     expect(EventManifest.Definitions.length).toBe(119)
     expect(SessionV1.Event.Definitions).toEqual([
       SessionV1.Event.Created,

@@ -45,7 +45,7 @@ function needsOlderTurnRoot(source: readonly SessionMessageInfo[]) {
     (message) =>
       message.type === "user" ||
       message.type === "shell" ||
-      message.type === "assistant" ||
+      message.type === "assistant" || message.type === "compaction" ||
       (message.type === "synthetic" && message.description?.trim()),
   )
   return boundary?.type === "assistant"
@@ -839,14 +839,14 @@ export function createServerSession(
     const touched = new Set(reduction.touched)
     let parentID: string | undefined
     for (const message of reduction.messages) {
-      if (message.type === "user" || (message.type === "synthetic" && message.description?.trim()))
+      if (message.type === "user" || message.type === "compaction" || (message.type === "synthetic" && message.description?.trim()))
         parentID = message.id
       if (message.type === "shell") {
         if (touched.has(message.id)) touched.add(`${message.id}:assistant`)
         parentID = undefined
       }
       if (message.type === "assistant" && touched.has(message.id) && parentID) touched.add(parentID)
-      if (message.type === "compaction" && touched.has(message.id) && parentID) touched.add(parentID)
+      if (message.type === "compaction" && touched.has(message.id)) touched.add(`${message.id}:assistant`)
     }
 
     const normalized = normalizeSessionMessages(reduction.sessionID, reduction.messages)

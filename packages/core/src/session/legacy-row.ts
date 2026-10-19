@@ -13,6 +13,11 @@ import { SessionTable } from "./sql"
 // Rename and delete reuse the shared `session.updated` / `session.deleted` events and their projector, so V1 and V2
 // read one Session row. Both events carry the whole V1 Session, rebuilt here from the stored row.
 
+const defaultTitle = /^(New session - |Child session - )\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/
+
+/** A title a Session got at creation, before anyone or the `title` agent named it. */
+export const isDefaultTitle = (title: string) => defaultTitle.test(title)
+
 /** Returns false only when the Session is missing. */
 export const rename = Effect.fn("SessionLegacyRow.rename")(function* (
   db: Database.Interface["db"],

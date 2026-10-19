@@ -192,6 +192,12 @@ import type {
   ProjectsUpdateOutput,
   ProjectsInitGitInput,
   ProjectsInitGitOutput,
+  LeanGetInput,
+  LeanGetOutput,
+  LeanUpdateInput,
+  LeanUpdateOutput,
+  LeanHistoryInput,
+  LeanHistoryOutput,
   ConfigGetOutput,
   ConfigUpdateInput,
   ConfigUpdateOutput,
@@ -1640,6 +1646,45 @@ export function make(options: ClientOptions) {
             query: { location: input?.["location"] },
             successStatus: 200,
             declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    lean: {
+      get: (input?: LeanGetInput, requestOptions?: RequestOptions) =>
+        request<LeanGetOutput>(
+          {
+            method: "GET",
+            path: `/api/lean`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      update: (input: LeanUpdateInput, requestOptions?: RequestOptions) =>
+        request<LeanUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/lean`,
+            query: { location: input["location"] },
+            body: { itemID: input["itemID"], enabled: input["enabled"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      history: (input: LeanHistoryInput, requestOptions?: RequestOptions) =>
+        request<LeanHistoryOutput>(
+          {
+            method: "GET",
+            path: `/api/lean/history/${encodeURIComponent(input.itemID)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
             empty: false,
           },
           requestOptions,

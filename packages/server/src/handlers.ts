@@ -21,6 +21,7 @@ import { IntegrationHandler } from "./handlers/integration"
 import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
 import { ProjectHandler } from "./handlers/project"
+import { LeanHandler } from "./handlers/lean"
 import { ConfigHandler } from "./handlers/config"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
@@ -61,6 +62,7 @@ export const handlers = Layer.mergeAll(
   ReferenceHandler,
   ProjectCopyHandler,
   ProjectHandler,
+  LeanHandler,
   ConfigHandler,
   RelayDocumentHandler,
   RelayPublishHandler,

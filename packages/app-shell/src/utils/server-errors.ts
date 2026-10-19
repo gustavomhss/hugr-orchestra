@@ -36,9 +36,11 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
 }
 
 function unwrapNamedError(error: unknown): unknown {
-  if (error instanceof Error && error.cause && typeof error.cause === "object" && "body" in error.cause) {
-    return (error.cause as Record<string, unknown>).body
-  }
+  if (!(error instanceof Error) || !error.cause || typeof error.cause !== "object") return error
+  if ("body" in error.cause) return (error.cause as Record<string, unknown>).body
+  // A boundary wraps a thrown non-Error value as `new Error("Unknown error", { cause })`, as Solid does with the server's
+  // typed error bodies the clients throw; the body is the cause.
+  if (!(error.cause instanceof Error)) return error.cause
   return error
 }
 

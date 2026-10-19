@@ -3,12 +3,12 @@ import { createComponent, createEffect, ErrorBoundary, on, type JSX, type Parent
 // Only an errored route watches identity for reset. Healthy session switches keep
 // their directory providers, terminals and timeline subtree mounted.
 export function SessionLineageBoundary(
-  props: ParentProps<{ identity: () => string; fallback: (error: unknown) => JSX.Element }>,
+  props: ParentProps<{ identity: () => string; fallback: (error: unknown, reset: () => void) => JSX.Element }>,
 ) {
   return createComponent(ErrorBoundary, {
     fallback: (error, reset) => {
       createEffect(on(props.identity, () => reset(), { defer: true }))
-      return props.fallback(error)
+      return props.fallback(error, reset)
     },
     get children() {
       return props.children

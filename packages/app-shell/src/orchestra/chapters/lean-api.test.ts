@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { createServer, type IncomingMessage } from "node:http"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
+import { Orchestra } from "@orchestra/client"
 import { createSdkForServer } from "@/utils/server"
 import { createLeanAPI, LeanAPIError } from "./lean-api"
 
@@ -102,5 +103,31 @@ test("v2 and missing endpoints are unavailable; protocol wait honors disposal; o
     for (status of [404, 405, 501]) await expect(api.read()).rejects.toMatchObject({ reason: "unsupported" })
     status = 500
     await expect(api.read()).rejects.toMatchObject({ message: "denied" })
+  } finally { await server.stop() }
+})
+
+test("v2 reads the dashboard from the Location-scoped Orchestra route and unwraps its data", async () => {
+  const location = { directory: "/repo one", project: { id: "shared-git-id", directory: "/repo one" } }
+  const requests: { method: string; path: string; directory: string | null; body: unknown }[] = []
+  const server = await endpoint(async (request) => {
+    const url = new URL(request.url!, "http://fixture")
+    const chunks: Buffer[] = []
+    for await (const chunk of request) chunks.push(Buffer.from(chunk))
+    requests.push({ method: request.method!, path: url.pathname, directory: url.searchParams.get("location[directory]"),
+      body: request.method === "PATCH" ? JSON.parse(Buffer.concat(chunks).toString()) : undefined })
+    return { body: { location, data: url.pathname.includes("history") ? history : info } }
+  })
+  const api = createLeanAPI(
+    { client: createSdkForServer({ server: { url: server.url } }), directory: "/repo one", protocol: Promise.resolve("v2") },
+    Orchestra.make({ baseUrl: server.url }),
+  )
+  try {
+    expect(await api.read()).toEqual(info)
+    expect(await api.update({ itemID: "cargo", enabled: false })).toEqual(info)
+    expect(await api.history("cargo")).toEqual(history)
+    expect(requests.map((request) => [request.method, request.path, request.directory])).toEqual([
+      ["GET", "/api/lean", "/repo one"], ["PATCH", "/api/lean", "/repo one"], ["GET", "/api/lean/history/cargo", "/repo one"],
+    ])
+    expect(requests[1]?.body).toEqual({ itemID: "cargo", enabled: false })
   } finally { await server.stop() }
 })

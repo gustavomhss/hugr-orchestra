@@ -65,6 +65,8 @@ export const ServerDefinitions = Event.inventory(
   ...foundationDefinitions,
   ...featureDefinitions,
   ...SessionTodo.Event.Definitions,
+  // The V2 server's HEAD watcher announces a branch switch, as V1's did.
+  ...VcsEvent.Definitions,
 )
 
 export const Definitions = Event.inventory(

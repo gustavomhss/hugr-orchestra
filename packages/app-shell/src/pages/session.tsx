@@ -173,10 +173,15 @@ export function SessionRouteErrorBoundary(
   return (
     <SessionLineageBoundary
       identity={() => JSON.stringify([props.serverKey, props.sessionID])}
-      fallback={(error) => (
+      fallback={(error, reset) => (
         <SessionRouteFrame padded={props.padded}>
           <SessionPanelFrame raised={!!props.sessionID}>
-            <SessionErrorFallback error={error} sessionID={props.sessionID} serverKey={props.serverKey} />
+            <SessionErrorFallback
+              error={error}
+              sessionID={props.sessionID}
+              serverKey={props.serverKey}
+              onRetry={reset}
+            />
           </SessionPanelFrame>
         </SessionRouteFrame>
       )}
