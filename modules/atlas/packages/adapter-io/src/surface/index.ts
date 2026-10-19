@@ -21,7 +21,8 @@
 // composes (compose.ts:175), and closes over it. A write that carries `token` sets the variable for exactly that one
 // synchronous `composeRuntime` call and restores the previous value before anything else can run.
 //
-// A repository with no `.atlas/` directory answers `{ state: "empty" }` from every method, checked on each call.
+// A repository with no `.atlas/` directory answers `{ state: "empty" }` from every method but `install` (D37), which
+// creates it; the check runs on each call.
 import { existsSync } from "node:fs"
 import { basename, join } from "node:path"
 import { asHash } from "@atlas/kernel"
@@ -41,6 +42,7 @@ import { readDependents } from "./read-index.js"
 import { readMemory, readOrientation, readOwn, readTerritories } from "./read-own-memory.js"
 import { pendingFacts, readReasoning, readStoreFiles, storeSummary } from "./read-store.js"
 import { answer, decide, hold, memoryDecide, propose, release, review, territory } from "./review.js"
+import { install } from "./install.js"
 import type {
   AtlasDraftInput,  AtlasDraftResult,
   AtlasEmitInput,
@@ -77,6 +79,7 @@ export type {
   AtlasGuidance,
   AtlasHealth,
   AtlasHealthResult,
+  AtlasInstallResult,
   AtlasIndexerPlan,
   AtlasIndexPlan,
   AtlasLinkInput,
@@ -136,6 +139,7 @@ export function openSurface(repoPath: string): AtlasSurface {
   const absent = () => !existsSync(join(repoPath, ".atlas"))
   return {
     snapshot: () => (absent() ? EMPTY : snapshot(repoPath)),
+    install: () => install(repoPath),
     reasoning: (id) => (absent() ? EMPTY : readReasoning(readStoreFiles(repoPath), id)),
     own: (scope) => (absent() ? EMPTY : own(repoPath, scope)),
     health: () => (absent() ? EMPTY : health(repoPath)),
