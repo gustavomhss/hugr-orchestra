@@ -204,9 +204,10 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     const absence = ABSENCE.test(claim.proposition)
     if (universal) count("R5")
     if (absence) count("R6")
-    // The claim must name the scope of a complete search; "complete" without a scope would prove nothing.
-    const searched = input.searches.some((search) => search.complete &&
-      search.scope.some((entry) => entry.trim() !== "" && claim.conditions.some((condition) => condition.includes(entry))))
+    // The claim must name the scope of a complete search; "complete" without a scope would prove nothing. The host finds
+    // it in the claim's conditions, or as a whole term of its proposition, so the seat never restates a search it ran.
+    const searched = input.searches.some((search) => search.complete && search.scope.some((entry) => entry.trim() !== "" &&
+      (claim.conditions.some((condition) => condition.includes(entry)) || terms(entry).some((term) => names(claim.proposition, term)))))
     if (universal && !searched) fail("R5", "universal claim without a complete code_search or code_query whose scope is in its conditions", at)
     if (absence && !searched) fail("R6", "absence claim without a complete code_search or code_query whose scope is in its conditions", at)
     return primary && good.length > 0
@@ -360,4 +361,21 @@ function normal(value: string) {
 
 function clip(value: string, limit: number) {
   return value.length <= limit ? value : `${value.slice(0, limit - 3)}...`
+}
+
+/** A search scope's terms: the scope itself, or each top-level alternative of a regex such as `Foo|def bar`. */
+function terms(scope: string) {
+  const parts = scope.split("").reduce((acc, char, index) => {
+    if (char === "(" && scope[index - 1] !== "\\") acc.depth++
+    if (char === ")" && scope[index - 1] !== "\\") acc.depth--
+    if (char === "|" && acc.depth === 0 && scope[index - 1] !== "\\") acc.parts.push("")
+    else acc.parts[acc.parts.length - 1] += char
+    return acc
+  }, { depth: 0, parts: [""] }).parts
+  return parts.map((part) => part.trim()).filter((part) => part.length >= 3 && !/[\\[\]()*+?{}^$]/.test(part))
+}
+
+/** The proposition names the term as a whole token, not inside a longer identifier. */
+function names(proposition: string, term: string) {
+  return new RegExp(`(?<![\\p{L}\\p{N}_])${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}_])`, "u").test(proposition)
 }

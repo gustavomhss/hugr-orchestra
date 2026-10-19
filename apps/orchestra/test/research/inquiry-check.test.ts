@@ -140,6 +140,18 @@ describe("InquiryCheck.run", () => {
     expect(rule(incomplete, "R5").failed).toBe(1)
   })
 
+  // Mutation control: drop the `|| terms(entry).some(...)` branch of `searched` in src/research/inquiry-check.ts; the claim
+  // that names a searched alternative without restating it in conditions then fails R5.
+  test("R5 finds a complete search whose term the proposition names, without restated conditions", async () => {
+    const only = claim([lines(file.ref, 1, 2)], { proposition: "Only Sanic imports StaticHandleMixin" })
+    const search = { tool: "code_search" as const, complete: true, scope: ["StaticHandleMixin|def _apply_static", "sanic/**/*.py"] }
+    expect((await run(base({ claims: [only], searches: [search] }))).result.verdict).toBe("pass")
+    // A term inside a longer identifier, or an incomplete search, still proves nothing.
+    const longer = claim([lines(file.ref, 1, 2)], { proposition: "Only Sanic imports XStaticHandleMixinY" })
+    expect(rule(await run(base({ claims: [longer], searches: [search] })), "R5").failed).toBe(1)
+    expect(rule(await run(base({ claims: [only], searches: [{ ...search, complete: false }] })), "R5").failed).toBe(1)
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))
