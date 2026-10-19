@@ -271,3 +271,40 @@ dispatch, R7 republish, R8 replace and R9 repair stay as `New capability` marker
   - R3 on the Review page is not wired in Track C (no marker there).
   - The host's c-host.md items 1–4 are accepted as written. Item 2 (structured output) gets a live `/atlas/delegate` call
     in the dev app before R11 is reported done.
+
+## Track D (decided 2026-10-19): set Atlas up from the app, then mine with a connected model
+
+A new project showed "Atlas has no store in this project" and nothing else: the app could not create a store, index the
+code or run Genesis. Only the CLI could (`atlas init`, a hand-written `policy.json`, an indexer the operator runs,
+`atlas mine` with `~/.config/atlas/model.json`). The owner decided that Orchestra runs the indexer during setup.
+
+- **D37 Install (engine).** The surface gains `install()`, the one method that runs when `.atlas/` is absent. It refuses
+  with `already-installed` when `.atlas/` exists, `no-git` when the repository has no `.git`, and `no-actor` when the
+  actor (`ATLAS_ACTOR`, else the repository's git e-mail, the rule `health` reports) is empty. Otherwise it creates
+  `.atlas/`, writes `.atlas/policy.json` as `{ t0Heuristic: { keywords: [] }, authz: { scopes } }`, and makes git ignore
+  the store the way `atlas init` does. `scopes` grants the actor every scope a drafted fact can carry: the first path
+  segment of each tracked file (the default `atlas draft` gives, `tools/src/draft.ts` `scopeOf`) plus `atlas:mined`
+  (the scope mined candidates carry). It returns the indexer plan (`reportIndexPlan`) so the screen can index next.
+  `ensureAtlasIgnored` moves from `cli/src/gitignore.ts` to `adapter-io/src/gitignore.ts`; the CLI file re-exports it.
+- **D38 Index (host).** `POST /atlas/index` runs the plan's indexer from the repository root. It runs `scip-typescript`
+  when the plan configures it, else `scip-python`, else nothing (both write the one `.atlas/index.scip`). The package
+  (`@sourcegraph/scip-typescript@0.4.0`, `@sourcegraph/scip-python@0.6.6`, the versions `scip.ts` pins) comes from
+  Orchestra's package cache (`Npm.which`) and runs with Orchestra's own Bun (`BUN_BE_BUN=1`) through `AppProcess`, with a
+  ten-minute limit. TypeScript without a root `tsconfig.json` adds `--infer-tsconfig`. The result is
+  `{ state: "ok", ran, tool, exitCode, documents, message }`; a failed run carries the last 300 characters of stderr.
+- **D39 Mine (engine).** Mining stays the CLI's governed pass (`driveMinePass`), advisory arm only. The surface cannot
+  import `@atlas/cli` (the layer ring), so a new boundary entry `./mine` is built from `cli/src/surface-mine.ts` with
+  two calls: `mineSites(repoPath, ceiling)` runs the pass with a recording proposer that abstains everywhere and
+  returns each visited site's key and the exact advisory prompt; `mineWith(repoPath, ceiling, answers, model)` runs
+  the pass again with a proposer that answers each site from `answers` (raw model text keyed by site), sent through
+  the same answer gate the command client uses (`admitAnswerText`, a thin export over `llm.ts` `admitModelAnswer`
+  in block format). Candidates are staged, never promoted. The generated `mine.js` joins the spawn allowlist next to
+  `surface.js` (lead decision: same reason, the bundled git and history readers).
+- **D40 Mine (host).** `POST /atlas/mine` with `{ providerID, modelID, ceiling }` (ceiling 1–200, default 20 on the
+  screen) calls `mineSites`, asks the model once per site (plain text, no response schema, four at a time), then calls
+  `mineWith` with every reply. Result `{ state: "ok", sites, facts, complete, why, refusal }`. A site whose call fails is
+  left out of `answers` and abstains.
+- **D41 Screen.** The empty state gains "Set up Atlas": a sheet lists what will be written (the store, policy scopes,
+  `.gitignore`), then runs install and index in sequence and reloads. The Genesis "Run atlas mine" sheet stops copying a
+  command: it picks a connected model (the delegate sheet's picker) and a ceiling, runs `/atlas/mine`, and toasts the
+  staged count, or the why line when none.

@@ -343,3 +343,7 @@ export type { TerritoryDeclaration, TerritoryWrite } from "./territory-write.js"
 // R7 (D21) — `atlas own-export`: the reviewed Own snapshot built from the live store (lane B-O).
 export { buildOwnExport } from "./own-export.js"
 export type { OwnExport } from "./own-export.js"
+
+// D37 — the durable-store ignore rule `atlas init` and the surface's `install` both write (moved from @atlas/cli).
+export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ensureAtlasIgnored } from "./gitignore.js"
+export type { IgnoreOutcome, IgnoreResult } from "./gitignore.js"

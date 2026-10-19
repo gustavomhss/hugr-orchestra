@@ -67,3 +67,10 @@ One lane `c`, in this order. `*-GEN` steps are the lead's.
 6. C02-GEN / C04-GEN: `./packages/sdk/js/script/build.ts`; raise the SDK godfile waivers if needed.
 7. C03a → C03b → C03c → C03d → C03e → C03f → C04c (screen).
 8. Lead: test:ci app + orchestra targets, typecheck workflow, full test.yml, one live `/atlas/delegate` call in the dev app.
+
+## Track D (set up and mine from the app, D37–D41)
+
+Lane D, one worktree, in order: D01 → D02 → D-GEN (lead: `bun run generate` in `modules/atlas/boundary`) → D03 →
+D03-GEN (lead: `./packages/sdk/js/script/build.ts`) → D04 → D05 → lead gates (typecheck workflow, `test.yml` atlas job,
+targeted `test:ci`) and a dev-app smoke on a fresh repository: set up, index, mine with a connected model, accept in
+Review.
