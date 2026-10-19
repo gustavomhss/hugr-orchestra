@@ -238,25 +238,28 @@ type Close = Extract<Research.InquiryInput, { action: "close" }>
  * the reason a claim cannot be placed. At tier quick a claim without subquestion takes the first one still uncovered.
  */
 export function draft(state: State, close: Close, tier?: Research.Depth): State | string {
-  const subquestions = state.phase === "none"
-    ? [{ ref: { id: "subquestion-1", revision: 0 }, question: close.question ?? "", claims: [] as Research.RecordRef[] }]
+  const subquestions: Subquestion[] = state.phase === "none"
+    ? [{ ref: provisional("subquestion-1"), question: close.question ?? "", claims: [] }]
     : state.subquestions.map((sub) => ({ ...sub, claims: [...sub.claims] }))
   const placed = (close.claims ?? []).map((claim, index) => {
     const sub = claim.subquestion ? subquestions.find((item) => item.ref.id === claim.subquestion!.id)
       : subquestions.length === 1 ? subquestions[0]
       : tier === "quick" ? subquestions.find((item) => !item.claims.length && !item.gap) ?? subquestions.at(-1) : undefined
-    sub?.claims.push({ id: `claim-${index + 1}`, revision: 0 })
+    sub?.claims.push(provisional(`claim-${index + 1}`))
     return { claim, index, sub }
   })
   const lost = placed.find((item) => !item.sub)
   if (lost) return `claim-${lost.index + 1} needs subquestion, one of ${subquestions.map((sub) => sub.ref.id).join(", ")}`
   const claims = placed.map((item): Claim => {
-    const ref = { id: `claim-${item.index + 1}`, revision: 0 }
+    const ref = provisional(`claim-${item.index + 1}`)
     return { ref, proposition: item.claim.proposition, nature: item.claim.nature, subquestion: item.sub!.ref.id,
       evidence: item.claim.evidence.map(evidence), contrary: (item.claim.contrary ?? []).map(evidence), conditions: conditions(item.claim) }
   })
   return { ...state, phase: state.phase === "none" ? "investigating" : state.phase, subquestions, claims: [...state.claims, ...claims] }
 }
+
+// A draft ref names what the close has not written yet; it never reaches the ledger.
+const provisional = (id: string) => ({ id, revision: 0 }) as Research.RecordRef
 
 /** A claim's conditions as recorded: its own, then its declared scope. */
 export function conditions(claim: Research.InlineClaim) {

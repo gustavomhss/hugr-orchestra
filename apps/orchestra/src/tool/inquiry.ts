@@ -132,7 +132,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           const opened = state.phase === "none"
             ? yield* open({ question: input.question!, subquestions: [input.question!], profile: "understand" }) : undefined
           // Each inline claim is written under the subquestion the draft placed it in.
-          const placement = new Map(draft.subquestions.flatMap((sub, position) => sub.claims.map((ref) => [ref.id, position] as const)))
+          const placement = new Map<string, number>(draft.subquestions.flatMap((sub, position) => sub.claims.map((ref) => [ref.id, position] as const)))
           const subquestions = opened ? opened.subquestions : state.subquestions.map((sub) => sub.ref)
           yield* Effect.forEach(input.claims ?? [], (item, index) => claim(item, subquestions[placement.get(`claim-${index + 1}`) ?? 0], `claim:${index}`),
             { discard: true })
