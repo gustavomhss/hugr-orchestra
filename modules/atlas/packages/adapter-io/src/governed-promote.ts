@@ -45,6 +45,10 @@
 // silent in report: the second run reports what it settled, which is the honest answer to "what did this
 // invocation do", and the operator sees the same count twice rather than a fabricated 0.
 //
+// R2 (D15) narrows that limitation without touching staging: `promote(at, select)` presents only the rows `select.only`
+// names, and never a row `select.held` holds. Both sets come from the shared review log (`review-log.ts`), read by the
+// CLI before the pass, so the staging sidecar, `StoreProjection` and the wire format stay exactly as they were.
+//
 // ── THE COUNT IS SETTLED, NEVER ATTEMPTED ────────────────────────────────────────────────────────────
 // `promoted` counts `EmitOut.emitted === true` and nothing else. The measured failure this exists to
 // prevent: 8 mine processes × 5 sites reported 40 candidates committed with 5 durable, every process
@@ -88,13 +92,21 @@ export interface PromotedRow {
   readonly rejected?: string
 }
 
+/** R2 (D15): which staged rows one pass presents. Passing no selection is the pass before R2: every staged row. */
+export interface PromoteSelect {
+  /** Present only these staged nodeKeys (`atlas promote <nodeKey...>`). Absent ⇒ every staged row. */
+  readonly only?: readonly string[]
+  /** Staged nodeKeys a curator holds (`atlas hold`, the review log). ALWAYS skipped, even when named in `only`. */
+  readonly held: ReadonlySet<string>
+}
+
 /** The fold of one promotion pass. */
 export interface PromoteOut {
   /** Did the STAGING READ settle? `false` ⇒ nothing was read and nothing was attempted — see `refusal`. */
   readonly read: boolean
   /** Why the staging read refused (`unreadable` / `untrusted` / `contended`). Present iff `read` is false. */
   readonly refusal?: CommitRefusal
-  /** Rows FOUND in staging. `0` with `read:true` is an honest empty staging; `read:false` is NOT that. */
+  /** Rows PRESENTED to the door: found in staging, selected, not held. `0` with `read:true` and no `held`/`unknown` is an honest empty staging; `read:false` is NOT that. */
   readonly candidates: number
   /** Rows the door made DURABLE. Settled, never attempted. */
   readonly promoted: number
@@ -102,6 +114,10 @@ export interface PromoteOut {
   readonly refused: number
   /** Per-row outcomes, in the staging projection's own iteration order. */
   readonly rows: readonly PromotedRow[]
+  /** R2: staged rows this pass skipped because a curator holds them, in staging order. Absent when none. */
+  readonly held?: readonly string[]
+  /** R2: nodeKeys named in `only` that no staged row carries. Absent when every named key was staged. */
+  readonly unknown?: readonly string[]
 }
 
 /** Is this the identity refusal `governed-emit.ts` throws by design at gate 2.1? Matched on the NAMED class
@@ -120,8 +136,10 @@ function isDegenerateAnchor(e: unknown): boolean {
  * identity-schema throw, a defect in Atlas: those propagate, because laundering one into a per-row
  * "refusal" would report a broken disk as a governance decision about a candidate.
  */
-export function createGovernedPromote(deps: GovernedPromoteDeps): { readonly promote: (at: Hash) => PromoteOut } {
-  const promote = (at: Hash): PromoteOut => {
+export function createGovernedPromote(deps: GovernedPromoteDeps): {
+  readonly promote: (at: Hash, select?: PromoteSelect) => PromoteOut
+} {
+  const promote = (at: Hash, select?: PromoteSelect): PromoteOut => {
     // 1. READ STAGING — the store's own documented read-only decision. A decision with no `next` publishes
     //    nothing (`sidecar-commit.ts` returns before the CAS put), so this is a read that cannot write.
     const staged = deps.store.commitStaging<StoreProjection>((p) => ({ out: p }))
@@ -134,8 +152,18 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): { readonly pro
       return { read: false, refusal: staged.refusal, candidates: 0, promoted: 0, refused: 0, rows: [] }
     }
 
+    // R2 — THE SELECTION, decided before any row reaches the door. A held row is never presented, even when named:
+    // \"keep in staging\" must survive every pass. A named key no staged row carries is reported, not ignored.
+    const all = [...staged.out.current.values()]
+    const only = select?.only === undefined ? undefined : new Set(select.only)
+    const held = select?.held ?? new Set<string>()
+    const selected = all.filter((row) => only === undefined || only.has(row.nodeKey))
+    const heldKeys = selected.filter((row) => held.has(row.nodeKey)).map((row) => row.nodeKey)
+    const stagedKeys = new Set(all.map((row) => row.nodeKey))
+    const unknown = only === undefined ? [] : [...only].filter((key) => !stagedKeys.has(key))
+
     const rows: PromotedRow[] = []
-    for (const row of staged.out.current.values()) {
+    for (const row of selected.filter((r) => !held.has(r.nodeKey))) {
       // 3. REHYDRATE — `store.get(contentHash)` returns the WHOLE fact `mine` put before it published the
       //    row (the CAS bytes ARE the fact), which is structurally the `GroundedFact` `emit(node, at)` takes.
       //    `get` is total: a miss / tampered / oversized / traversal read all answer `undefined`.
@@ -167,7 +195,15 @@ export function createGovernedPromote(deps: GovernedPromoteDeps): { readonly pro
 
     // 5. THE FOLD — `promoted` is the count of rows the store actually holds because of this call.
     const promoted = rows.filter((r) => r.settled).length
-    return { read: true, candidates: rows.length, promoted, refused: rows.length - promoted, rows }
+    return {
+      read: true,
+      candidates: rows.length,
+      promoted,
+      refused: rows.length - promoted,
+      rows,
+      ...(heldKeys.length > 0 ? { held: heldKeys } : {}),
+      ...(unknown.length > 0 ? { unknown } : {}),
+    }
   }
   return { promote }
 }

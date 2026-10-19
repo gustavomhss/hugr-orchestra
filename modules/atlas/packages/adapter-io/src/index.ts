@@ -105,7 +105,7 @@ export {
   REJECTED_CANDIDATE_UNREADABLE,
   REJECTED_DEGENERATE_CANDIDATE,
 } from "./governed-promote.js"
-export type { GovernedPromoteDeps, PromoteOut, PromotedRow } from "./governed-promote.js"
+export type { GovernedPromoteDeps, PromoteOut, PromoteSelect, PromotedRow } from "./governed-promote.js"
 export { createGovernedLink } from "./governed-link.js"
 export type { GovernedLinkDeps } from "./governed-link.js"
 export type { LinkOut } from "@atlas/tools"
