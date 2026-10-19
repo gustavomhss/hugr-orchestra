@@ -43,7 +43,7 @@
 import type { Hash, PackInvariant } from "@atlas/contracts"
 import type { QueryIndex } from "@atlas/tools"
 import { isAdvisory } from "@atlas/tools"
-import { currentNodes } from "@atlas/knowledge"
+import { currentNodes, isRetired } from "@atlas/knowledge"
 import type { BoundHits, GroundedFact } from "@atlas/knowledge"
 import { asNodeKey } from "@atlas/kernel"
 import { underScope } from "./anchor-scope.js"
@@ -112,6 +112,7 @@ export function createProjectionQueryIndex(
         if (!underScope(node.primaryAnchor, scope)) continue // out-of-scope facts never leak into the pack
         const fact = store.get(node.contentHash as Hash) as GroundedFact | undefined
         if (fact === undefined) continue // the CAS bytes ARE the fact; a miss ⇒ skip (never a throw)
+        if (isRetired(fact)) continue // R6: a retired fact (authoring SUPERSEDED) leaves the pack; its bytes stay in CAS
         // The ONE shared shaping (shared with retrieval-model.ts), now carrying this row's OWN verdict.
         let inv = factToInvariant(node, fact, resolveFreshness(freshness, fact))
         // USE-OR-SEAL (INV-AUTH-16): this is the serve path that WRITES the USE ledger. An ADVISORY node
