@@ -52,7 +52,8 @@ export const setup = Effect.fn("DelegationTerminalFixture.setup")(function* (
   })
   const fire = (hook: HookInput) => Effect.promise(() => hooks[hook.hook_event_name]![0].hooks[0](hook, undefined, { signal: abort.signal }))
   const admit = Effect.fn("DelegationTerminalFixture.admit")(function* (callID = "service-agent", seat = "jimmy", background = false) {
-    const args = { subagent_type: `orchestra:${seat}`, description: "Unit delegated research", prompt: "Keep applicability conditions.",
+    // jimmy is dispatched by tier (J1.4); the focused tier is the plain research dispatch.
+    const args = { subagent_type: seat === "jimmy" ? "orchestra:jimmy-focused" : `orchestra:${seat}`, description: "Unit delegated research", prompt: "Keep applicability conditions.",
       run_in_background: background }
     const part = yield* sessions.updatePart({ id: PartID.ascending(), sessionID: fixture.parent.id, messageID: assistant.id, type: "tool",
       tool: "Agent", callID, state: { status: "running", input: args, time: { start: Date.now() } } })
