@@ -194,15 +194,17 @@ export function exportOwnSnapshot(input: OwnSnapshotExport): OwnSnapshot {
   if (parseOwnSnapshot(JSON.stringify(snapshot)) === undefined) {
     throw new Error("Own snapshot export requires non-empty, unique units with fresh packs and source blobs")
   }
-  if (
-    snapshot.units.some(
-      (entry) =>
-        entry.pack.invariants.some((fact) => fact.freshness !== "FRESH") ||
-        entry.pack.advisory.some((fact) => fact.freshness !== "FRESH") ||
-        entry.pack.gotchas.some((fact) => fact.freshness !== "FRESH"),
-    )
-  ) {
-    throw new Error("Own snapshot export requires fresh reviewed packs")
+  // D21 (R7): name every unit and fact that blocks the export, so the refusal says what to re-review.
+  const notFresh = snapshot.units.flatMap((entry) => [
+    ...[...entry.pack.invariants, ...entry.pack.advisory]
+      .filter((row) => row.freshness !== "FRESH")
+      .map((row) => `${entry.unit.id} ${String(row.nodeId)} (${row.freshness})`),
+    ...entry.pack.gotchas
+      .filter((fact) => fact.freshness !== "FRESH")
+      .map((fact) => `${entry.unit.id} ${String(fact.id)} (${fact.freshness})`),
+  ])
+  if (notFresh.length > 0) {
+    throw new Error(`Own snapshot export requires fresh reviewed packs; not FRESH: ${notFresh.join("; ")}`)
   }
   return snapshot
 }

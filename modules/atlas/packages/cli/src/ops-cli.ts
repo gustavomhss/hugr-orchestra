@@ -4,5 +4,13 @@
 // commands add no line to cli.ts. A name that is not yet in `COMMANDS` (map.ts) is unreachable — `parse` refuses it.
 
 import type { CommandTable } from "./cli-dispatch.js"
+import { emitCli } from "./cli-verdict.js"
+import { runTerritory, territoryPorts } from "./territory-cli.js"
+import { ownExportPorts, runOwnExport } from "./own-export-cli.js"
+import { repairPorts, runRepair } from "./repair-cli.js"
 
-export const OPS_COMMANDS: CommandTable = {}
+export const OPS_COMMANDS: CommandTable = {
+  territory: (input) => emitCli(runTerritory(territoryPorts(), input.positionals, input.flags)),
+  "own-export": (input) => emitCli(runOwnExport(ownExportPorts(input.deps), input.positionals, input.flags)),
+  repair: (input) => emitCli(runRepair(repairPorts(input.deps), input.flags)),
+}

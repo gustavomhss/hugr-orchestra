@@ -105,7 +105,7 @@ export {
   REJECTED_CANDIDATE_UNREADABLE,
   REJECTED_DEGENERATE_CANDIDATE,
 } from "./governed-promote.js"
-export type { GovernedPromoteDeps, PromoteOut, PromotedRow } from "./governed-promote.js"
+export type { GovernedPromoteDeps, PromoteOut, PromoteSelect, PromotedRow } from "./governed-promote.js"
 export { createGovernedLink } from "./governed-link.js"
 export type { GovernedLinkDeps } from "./governed-link.js"
 export type { LinkOut } from "@atlas/tools"
@@ -143,6 +143,11 @@ export type { DurableMemory, MemoryRead } from "./memory-store.js"
 // and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
 export { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
 export type { ReviewBody, ReviewFold, ReviewInput, ReviewOf, ReviewRead, ReviewRecord, ReviewTier } from "./review-log.js"
+// R2/R3 — the store reads the review commands check against (staged keys; B-R3-01 adds the current fact by nodeKey).
+export { currentFactOf, stagedNodeKeys } from "./review-store.js"
+export type { CurrentFact } from "./review-store.js"
+// R11 — the store feed for the ratification interview (`atlas interview` / `atlas answer`).
+export { openQuestionsOf } from "./open-questions-source.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,
@@ -305,3 +310,12 @@ export { budgetLeg, territoriesLeg, OFF_ATLAS_THRESHOLD } from "./calibration-le
 export type { BudgetLeg, BudgetReport, TerritoriesLeg } from "./calibration-ledger.js"
 export { budgetVerdict, territoriesVerdict } from "./calibration-verdicts.js"
 export type { TerritoriesData, TerritoryRow } from "./calibration-verdicts.js"
+
+// R4 (D22) — `atlas territory`: add or replace one territory in TERRITORY-CATALOG.json through
+// `publishTerritoryCatalog` (lane B-O; specs/atlas-ui/build/issues/b-o.md item 3).
+export { declareTerritory, TERRITORY_CATALOG_FILE } from "./territory-write.js"
+export type { TerritoryDeclaration, TerritoryWrite } from "./territory-write.js"
+
+// R7 (D21) — `atlas own-export`: the reviewed Own snapshot built from the live store (lane B-O).
+export { buildOwnExport } from "./own-export.js"
+export type { OwnExport } from "./own-export.js"

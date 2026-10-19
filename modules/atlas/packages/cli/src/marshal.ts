@@ -129,7 +129,7 @@ function marshalLink(positionals: readonly string[], flags: Readonly<Record<stri
 }
 
 /**
- * `atlas emit <factJsonPath> --at <sha>` — the write door via CLI: a templated `GroundedFact` (OR an `atlas
+ * `atlas emit <factJsonPath> --at <sha> [--replace]` — the write door via CLI: a templated `GroundedFact` (OR an `atlas
  * draft` envelope — see below) lives in a JSON file (positionals[0]); `at` is the anchor rev the fact must
  * re-derive at (`--at`). Reads + parses the file to the `node`. TOTAL: a missing `--at`, an unreadable file,
  * or malformed JSON fails CLOSED to a structured error — never a throw.
@@ -138,6 +138,14 @@ function marshalEmit(positionals: readonly string[], flags: Readonly<Record<stri
   const at = flags["at"]
   if (at === undefined || at === "true" || at.length === 0) {
     return { ok: false, error: `emit requires --at <sha>: the anchor rev the fact must re-derive at` }
+  }
+  // R8 — `--replace` is a bare flag on a WRITE door, so an odd value is refused, never read as "add" (see marshalLink).
+  const replace = flags["replace"]
+  if (replace !== undefined && replace !== "true") {
+    return {
+      ok: false,
+      error: `emit: '--replace' is a bare flag — write '--replace' or '--replace=true'; got '--replace=${replace}'. To add the claim instead of replacing the claim set, omit the flag`,
+    }
   }
   const factPath = positionals[0]
   if (factPath === undefined) {
@@ -155,7 +163,7 @@ function marshalEmit(positionals: readonly string[], flags: Readonly<Record<stri
   } catch {
     return { ok: false, error: `emit: fact file '${factPath}' is not valid JSON` }
   }
-  return marshalEmitNode(node, at)
+  return marshalEmitNode(node, at, replace === "true")
 }
 
 /**
@@ -173,7 +181,8 @@ function marshalEmit(positionals: readonly string[], flags: Readonly<Record<stri
  * When the revs MATCH, the envelope is unwrapped to its `.fact` — the round trip AUTHOR-8 describes (draft
  * at R, emit `--at R`) reaches the SAME door a bare fact always did, with no new argument shape for it.
  */
-function marshalEmitNode(node: unknown, at: string): MarshalResult {
+function marshalEmitNode(node: unknown, at: string, replace: boolean): MarshalResult {
+  const extra = replace ? { replace: true } : {}
   if (typeof node === "object" && node !== null && "fact" in node && "rev" in node) {
     const env = node as { readonly fact: unknown; readonly rev: unknown }
     if (typeof env.rev === "string" && env.rev !== at) {
@@ -185,9 +194,9 @@ function marshalEmitNode(node: unknown, at: string): MarshalResult {
         refusal: true,
       }
     }
-    return { ok: true, args: { node: env.fact, at } }
+    return { ok: true, args: { node: env.fact, at, ...extra } }
   }
-  return { ok: true, args: { node, at } }
+  return { ok: true, args: { node, at, ...extra } }
 }
 
 /**

@@ -246,6 +246,15 @@ describe("static Own snapshot", () => {
     )
   })
 
+  it("names every unit and fact that is not FRESH (D21)", () => {
+    const { snapshot, sourceRevision, units } = JSON.parse(snapshotText)
+    units[0].pack.invariants[0].freshness = "STALE"
+    units[0].pack.gotchas[0].freshness = "DRIFTED"
+    expect(() => exportOwnSnapshot({ snapshot, sourceRevision, units })).toThrow(
+      "Own snapshot export requires fresh reviewed packs; not FRESH: packages/genesis genesis:bootstrap (STALE); packages/genesis genesis:gotcha (DRIFTED)",
+    )
+  })
+
   it("refuses malformed packs", () => {
     const { snapshot, sourceRevision, units } = JSON.parse(snapshotText)
     delete units[0].pack.shape

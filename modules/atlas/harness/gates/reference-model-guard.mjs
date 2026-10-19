@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 42 · dead-value-exports: 150 · type-reachable: 4
+//   declared-modules: 38 · dead-value-exports: 133 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,9 +137,6 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
-  // D14 (B-L02): the review log lands one task before its first reader. B-R2-01b (the promote dispatch reads the held
-  // set) gives it a production caller and DELETES this row (declared-modules −1, dead-value-exports −4).
-  "packages/adapter-io/src/review-log.ts": { values: 4, shipped: null, banner: false },
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
   // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
@@ -148,12 +145,9 @@ const BUILTIN_LEDGER = {
   // 2 → 3: `readBoundHeader` joined it (F3 A3/A4). JUSTIFIED: it is the header read the host reaches through the
   // installed `./native-header` boundary subpath; `native-header.ts` only re-exports it, which this analyser does not
   // count as a caller, so the row grows here and no new row appears. dead-value-exports 144 → 145.
-  "packages/adapter-io/src/native-memory.ts": { values: 3, shipped: null, banner: true },
-  // The Atlas UI surface — `openSurface`, the read and write API of the Orchestra Atlas screen. Its consumer is the
-  // host, through the installed `./surface` boundary subpath (boundary/script/build.ts); nothing in this tree imports
-  // it, so it is declared exactly as `native-memory.ts` above. One value export: 40 → 41 entries, dead-value-exports
-  // 145 → 146. Every other surface module is value-imported by it, so none of them is a reference model.
-  "packages/adapter-io/src/surface/index.ts": { values: 1, shipped: null, banner: true },
+  // 3 → 4: `proposeProjectRule` joined it (R1, specs/atlas-ui/build DECISIONS.md D18). Its consumer is the same
+  // host, through the `./native-memory` boundary subpath (`native-bound.ts` re-exports it). dead-value-exports +1.
+  "packages/adapter-io/src/native-memory.ts": { values: 4, shipped: null, banner: true },
   // #95 WP-TV-2 landed: `test-vacuity-source.ts` (the PRODUCER + READ leg + units feed) and `read/test-vacuity.ts`
   // (`testVacuitiesOf`) BOTH moved dead → live and were REMOVED here — exactly the own.ts / relation-derive.ts
   // dead→live transitions documented below. The composition root (`compose.ts` → `ComposedRuntime.
@@ -206,7 +200,6 @@ const BUILTIN_LEDGER = {
   },
   "packages/retrieval/src/poke.ts": { values: 5, shipped: null, banner: false },
   "packages/retrieval/src/relate.ts": { values: 6, shipped: null, banner: false },
-  "packages/retrieval/src/host-context.ts": { values: 6, shipped: null, banner: true }, // external installed host entry; no Atlas-local consumer
 
   // ── @atlas/persist — one value edge crosses into this package in the whole tree (`NOTES_REF`, read by ─
   //    adapter-io/src/git-forge.ts). Everything below states a persistence invariant nothing executes.
@@ -234,7 +227,7 @@ const BUILTIN_LEDGER = {
   //    values entry deleted) — the mine driver now invokes `makeSeed(...).seed(...)` as the worked Awareness
   //    assembly at the end of every pass (WP-8.29.GEN / GEN-9), so the module is SHIPPED, not a reference model.
   //    The un-wired remainder below is the genuine residue.
-  "packages/genesis/src/align.ts": { values: 7, shipped: null, banner: false },
+  //   align.ts is GONE from this ledger (R11, B-R11-02a): `cli/src/interview-cli.ts` value-imports `assembleInterview` for `atlas interview`.
   "packages/genesis/src/cost-policy.ts": { values: 13, shipped: null, banner: false },
   "packages/genesis/src/loops.ts": { values: 8, shipped: null, banner: false },
   "packages/genesis/src/usefulness.ts": { values: 2, shipped: null, banner: false },

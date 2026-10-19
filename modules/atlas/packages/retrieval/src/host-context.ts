@@ -1,7 +1,7 @@
-// ── REFERENCE MODEL — EXTERNAL STATIC HOST BOUNDARY
-// Declared in harness/gates/reference-model-guard.mjs.
-// Installed consumers are outside Atlas's packages/*/src scan. The host builds this exact entry into
-// @orchestra/atlas-boundary; no Atlas-local runtime composes it. Ledger classification states scan reach.
+// @atlas/retrieval — src/host-context.ts  (the external static host boundary)
+// The host builds this exact entry into @orchestra/atlas-boundary. Inside Atlas, `atlas territory` (R4,
+// adapter-io/src/territory-write.ts) publishes the catalog through `publishTerritoryCatalog` and re-reads it through
+// `territoryCatalog`, both re-exported by the retrieval barrel, so this module is live code, not a ledgered reference model.
 import type { Territory } from "@atlas/contracts"
 import { createTerritoryCatalog, parseTerritoryCatalog } from "@atlas/index"
 import type { TerritoryCatalog } from "@atlas/index"

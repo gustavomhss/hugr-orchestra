@@ -12,15 +12,20 @@ five tools. Promotion is an _ordinary use_ of `atlas-emit` (ADR-0008), so an MCP
 ## Invocation
 
 ```
-atlas promote
+atlas promote [nodeKey...]
 ```
 
-- **No arguments.** Arity is `0` and there is no flag. The repository is `process.cwd()`, because the
-  staging sidecar it reads and the projection it writes are both under the one composed store — a path
-  argument would let those two disagree (read one repo's candidates, publish into another's knowledge).
-- An extra positional or an unknown flag is **silently ignored**, inheriting the parser's general behaviour:
-  `atlas promote some/path` and `atlas promote --force` both ran the ordinary pass and exited `0`. (`link`
-  is the one command that refuses unknown flags; this one does not.)
+- **`[nodeKey...]` — optional.** With no positional the pass presents every staged row, as before. With one or more
+  nodeKeys (the keys the per-row lines print) it presents only those rows, so promoting one row does not present the
+  others. A named key that no staged row carries is printed as `not staged <nodeKey>` and makes the exit code `2`.
+  The repository is always `process.cwd()`: the staging sidecar it reads and the projection it writes are both under
+  the one composed store, so no positional is a path.
+- **Held rows are always skipped.** A row held with [`atlas hold`](./hold.md) is never presented, even when named, and
+  is printed as `held <nodeKey>`; [`atlas release`](./release.md) lets the next pass present it. The held set is the
+  review log `.atlas/review.jsonl`; if that log has a line that does not verify, the pass refuses (exit `2`) instead
+  of risking a held row.
+- An unknown flag is still **silently ignored**, inheriting the parser's general behaviour (`atlas promote --force` runs
+  the ordinary pass). (`link` is the one command that refuses unknown flags; this one does not.)
 - `ATLAS_ACTOR` decides authorization. `ATLAS_RATIFY_TOKEN` is **required** — see below; it is not optional
   here the way it is for an ordinary `T2` advisory `emit`.
 

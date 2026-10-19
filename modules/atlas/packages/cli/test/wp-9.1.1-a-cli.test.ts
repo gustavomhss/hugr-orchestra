@@ -80,6 +80,13 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "node",
       "link",
       "promote",
+      "hold",
+      "release",
+      "propose",
+      "proposals",
+      "decide",
+      "interview",
+      "answer",
       "own",
       "relations",
       "negations",
@@ -103,6 +110,9 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "territories",
       "export",
       "import",
+      "territory",
+      "own-export",
+      "repair",
     ])
     expect(Object.keys(COMMAND_LEG).sort()).toEqual([...COMMANDS].sort())
     expect(COMMAND_LEG).toEqual({
@@ -115,6 +125,13 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       node: "atlas-query", // READ authority oracle (like doctor) — intercepted before the handler, no write authority
       link: "atlas-link", // WRITE authority oracle (WP-SAMEAS governed sameAs door)
       promote: "atlas-emit", // WRITE authority oracle (KNOW-8 governed promotion) — publishes THROUGH atlas-emit
+      hold: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
+      release: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
+      propose: "atlas-query", // REVIEW (R3) — appends to the review log only; no knowledge write
+      proposals: "atlas-query", // REVIEW (R3) — reads the review log
+      decide: "atlas-emit", // WRITE (R3) — ratify publishes THROUGH the existing atlas-emit door
+      interview: "atlas-query", // REVIEW (R11) — reads; serves the ranked batch
+      answer: "atlas-query", // REVIEW (R11) — appends to the review log only; no knowledge write
       own: "atlas-query", // READ authority oracle (RETR-12 `own_<scope>` briefing) — a second projection of the
       //                     query readback over the SAME durable store; carries no write authority
       relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold) — intercepted before the
@@ -164,6 +181,9 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       import: "atlas-query", // READ authority oracle (EPIC-1-b PERSIST-9 store-instance replay) — intercepted
       //                       before the handler, replays CAS bytes into a FRESH EMPTY target ONLY (the
       //                       guarded projection is NEVER written); no governed fact-write token
+      territory: "atlas-query", // OPS (R4) — writes the territory catalog file only; no knowledge write
+      "own-export": "atlas-query", // OPS (R7) — writes a reviewed-snapshot file only; no knowledge write
+      repair: "atlas-query", // OPS (R9) — writes the Own files and a git branch/PR; no knowledge write
     })
     // teeth: a command bound to zero legs (totality) or two legs (uniqueness) — each key resolves to one string.
     for (const c of COMMANDS) {
@@ -236,6 +256,7 @@ describe("SCN-CLI-2a/2b/2c — command × authority partition", () => {
     expect([...WRITE_PATHS].sort()).toEqual(["atlas-emit", "atlas-link", "atlas-memory-emit"])
     const writers = COMMANDS.filter((c) => authorityOf(c) === "write")
     expect([...writers].sort()).toEqual([
+      "decide",
       "derive-relations",
       "emit",
       "link",
