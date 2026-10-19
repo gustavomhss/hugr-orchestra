@@ -90,9 +90,17 @@ function sessionInfo(session: Session): SessionInfo & Pick<Session, "metadata"> 
 
 export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   const v1 = createV1Api(input)
+  // The V2 server has no project lookup route; its location answer already carries the resolved project.
+  const current: ServerApi = {
+    ...input.current,
+    project: {
+      ...input.current.project,
+      current: (value, options) => input.current.location.get(value, options).then((info) => info.project),
+    },
+  }
   return lazyApi(
-    input.protocol.then((protocol) => (protocol === "v1" ? v1 : input.current)),
-    input.current,
+    input.protocol.then((protocol) => (protocol === "v1" ? v1 : current)),
+    current,
   )
 }
 

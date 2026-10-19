@@ -21,6 +21,7 @@ import type {
 import FileTreeV2 from "@/components/file-tree-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { readFileContent } from "@/context/file/read"
 import {
   filterRenderableDiff,
   filterReviewFiles,
@@ -136,9 +137,7 @@ export function ReviewPanelV2(props: ReviewPanelV2Props) {
   })
 
   const readFile = async (path: string) =>
-    sdk()
-      .client.file.read({ path })
-      .then((x) => x.data)
+    readFileContent(sdk(), path)
       .catch((error) => {
         console.debug("[session-review-v2] failed to read file", { path, error })
         return undefined
