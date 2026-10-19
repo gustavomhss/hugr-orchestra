@@ -77,7 +77,7 @@ it.live("an unshipped pack is unsupported in status and ensure fails named, neve
     const root = yield* temporary("research-toolkit-")
     const scoped = <A, E, R>(self: Effect.Effect<A, E, R>) => self.pipe(Effect.provideService(ResearchToolkit.Root, root), Effect.provideService(ResearchToolkit.Manifest, {}))
     expect(yield* ResearchToolkit.status().pipe(scoped)).toEqual(
-      (["scip-typescript", "scip-python", "typescript"] as const).map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
+      (["scip-typescript", "scip-python", "scip-go", "rust-analyzer", "typescript"] as const).map((engine) => ({ engine, version: "none", status: "unsupported", reason: "pack-not-shipped" })),
     )
     const reason = yield* ResearchToolkit.ensure("typescript").pipe(scoped, Effect.flip, Effect.map((error) => error.reason))
     expect(reason).toBe("toolkit-not-ready:unsupported:typescript:pack-not-shipped")

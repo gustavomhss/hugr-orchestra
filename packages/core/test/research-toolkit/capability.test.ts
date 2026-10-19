@@ -13,7 +13,7 @@ const temporary = (prefix: string) =>
     (directory) => Effect.promise(() => rm(directory, { recursive: true, force: true })),
   )
 
-const ids = ["scip-typescript", "scip-python", "typescript"] as const
+const ids = ["scip-typescript", "scip-python", "scip-go", "rust-analyzer", "typescript"] as const
 
 // JE-AC-X5 and JE-AC-L5 precondition (J6.10): an engine the manifest does not ship is reported unsupported and its
 // `ensure` fails with the named blocker `code_query` quotes. No verb answers with an empty or ready-looking success.
@@ -64,12 +64,14 @@ it.live("a shard whose engine is missing is reported skipped with the toolkit bl
 // Mutation control: change a pack's license to a copyleft one.
 test("every shipped research pack is pinned to an exact version with an allowed license and a scriptless lock", () => {
   const packs = Object.values(ResearchToolkitManifest.ENGINES)
-  expect(packs.map((pack) => pack.id).toSorted()).toEqual(["scip-python", "scip-typescript", "typescript"])
+  expect(packs.map((pack) => pack.id).toSorted()).toEqual(["rust-analyzer", "scip-go", "scip-python", "scip-typescript", "typescript"])
   for (const pack of packs) {
     expect([pack.id, pack.version]).toEqual([pack.id, expect.stringMatching(/^\d+\.\d+\.\d+$/)])
-    expect([pack.id, /^(MIT|Apache-2\.0|BSD-[23]-Clause)$/.test(pack.license)]).toEqual([pack.id, true])
+    // An `OR` expression is permissive when every alternative is.
+    expect([pack.id, pack.license.split(" OR ").every((license) => /^(MIT|Apache-2\.0|BSD-[23]-Clause)$/.test(license))]).toEqual([pack.id, true])
     expect([pack.id, pack.upstream.length > 0]).toEqual([pack.id, true])
-    if (!("install" in pack) || pack.install.kind !== "npm") throw new Error(`${pack.id} is not an npm pack`)
+    // Native and source packs are pinned per artifact (research-toolkit-packs.test.ts); only an npm lock can run scripts.
+    if (!("install" in pack) || pack.install.kind !== "npm") continue
     const lock = JSON.parse(pack.install.lock) as { packages: Record<string, { hasInstallScript?: boolean }> }
     expect([pack.id, Object.values(lock.packages).filter((entry) => entry.hasInstallScript)]).toEqual([pack.id, []])
   }
