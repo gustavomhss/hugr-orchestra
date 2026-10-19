@@ -1,6 +1,5 @@
 import { skipToken, useQuery } from "@tanstack/solid-query"
 import { createSignal, For, Show } from "solid-js"
-import type { RelayDocument } from "./client"
 import type { RelayRun, RelayRunStep } from "./runs"
 import { createAction } from "./dialogs"
 import { badgeTone, runHandle, span, STEP_TONE, type Tone } from "./format"
@@ -13,7 +12,6 @@ import { Ic, Menu, useRelayCopy } from "./ui"
 // and the recorded audit. Execution and release stay with Maestro.
 export function Receipt(props: {
   run: RelayRun
-  document: RelayDocument
   flow: Flow
   source: RelaySource
   onOpenStep: (wp: string) => void
@@ -81,7 +79,9 @@ export function Receipt(props: {
       <div class="wf-rhead">
         <div>
           <h2>
-            {copy.t("orchestra.workflows.receipt.title", { id: runHandle(props.run.runID) })}
+            {copy.t("orchestra.workflows.receipt.title", {
+              id: external() ? props.run.runID : runHandle(props.run.runID),
+            })}
             <RunBadge run={props.run} />
             <Show when={external()}>
               <span class="mx-badge">{copy.t("orchestra.workflows.receipt.external")}</span>
@@ -107,7 +107,7 @@ export function Receipt(props: {
         </div>
         <div class="wf-rhead-actions">
           <Show
-            when={props.run.position && props.run.status !== "completed" ? props.run.position : undefined}
+            when={!external() && props.run.position && props.run.status !== "completed" ? props.run.position : undefined}
             fallback={
               <Show when={!external()}>
                 <button type="button" class="mx-btn" onClick={props.onCanvas}>
@@ -146,6 +146,7 @@ export function Receipt(props: {
             {copy.t("orchestra.workflows.receipt.waiting", { step: at()?.name ?? props.run.position ?? "" })}
           </div>
           <div class="wf-wait-body">
+            <Show when={!external()} fallback={copy.t("orchestra.workflows.runs.externalWaiting")}>
             {copy.t("orchestra.workflows.receipt.spent", {
               attempt: step(props.run.position ?? "")?.attempts ?? "",
               budget: budget(),
@@ -164,6 +165,7 @@ export function Receipt(props: {
             </Show>
             <br />
             {copy.t("orchestra.workflows.maestroOnly")}
+            </Show>
           </div>
           <div class="wf-wait-foot">
             <Show when={sessionOf(props.run.position)}>
@@ -173,7 +175,7 @@ export function Receipt(props: {
                 </button>
               )}
             </Show>
-            <Show when={props.run.position}>
+            <Show when={external() ? undefined : props.run.position}>
               {(position) => (
                 <button type="button" class="mx-btn" onClick={() => props.onOpenStep(position())}>
                   {copy.t("orchestra.workflows.receipt.openStep")}
@@ -214,8 +216,8 @@ export function Receipt(props: {
           {copy.t("orchestra.workflows.receipt.steps")}
         </h3>
         <span class="mx-meta">
-          {copy.count(order().length, "orchestra.workflows.count.step.one", "orchestra.workflows.count.step.other")} ·{" "}
-          {copy.t("orchestra.workflows.receipt.budgetMeta", { count: budget() })}
+          {copy.count(order().length, "orchestra.workflows.count.step.one", "orchestra.workflows.count.step.other")}
+          <Show when={!external()}> · {copy.t("orchestra.workflows.receipt.budgetMeta", { count: budget() })}</Show>
         </span>
       </div>
       <div class="mx-table wf-steps">
@@ -231,26 +233,32 @@ export function Receipt(props: {
         <For each={order()}>
           {(node, index) => {
             const result = (): RelayRunStep | undefined => step(node.id)
-            const status = () => result()?.status ?? "pending"
+            // Nobody can release an external run from here, so its escalated step reads as failed, not awaiting.
+            const status = () =>
+              external() && result()?.status === "escalated" ? "failed" : (result()?.status ?? "pending")
             const highlight = () => status() === "escalated" || status() === "failed"
             const phase = () => phaseOf(props.flow, node.id)
             const total = () => result()?.checks.length || readChecklist(node).controls.length
             return (
               <>
-                <Show when={index() === 0 || phaseOf(props.flow, order()[index() - 1].id) !== phase()}>
+                <Show when={!external() && (index() === 0 || phaseOf(props.flow, order()[index() - 1].id) !== phase())}>
                   <div class="mx-row phase">{phase()?.name ?? copy.t("orchestra.workflows.receipt.noPhase")}</div>
                 </Show>
                 <div class="mx-row" classList={{ hl: highlight() }} data-step={node.id}>
                   <span class={`wf-dot ${STEP_TONE[status()]}`} />
                   <div class="mx-grow">
                     <strong>{node.name}</strong>
-                    <small>{[node.id, result()?.note].filter(Boolean).join(" · ")}</small>
+                    <small>{[external() ? undefined : node.id, result()?.note].filter(Boolean).join(" · ")}</small>
                   </div>
                   <span class={`mx-badge ${badgeTone(STEP_TONE[status()])}`}>
                     {copy.t(`orchestra.workflows.verdict.${status()}`)}
                   </span>
                   <span class="num" classList={{ warm: (result()?.attempts ?? 0) > budget() }}>
-                    {status() === "pending" ? "—" : `${Math.max(1, result()?.attempts ?? 1)} / ${budget() + 1}`}
+                    {status() === "pending"
+                      ? "—"
+                      : external()
+                        ? `${result()?.attempts ?? 1}`
+                        : `${Math.max(1, result()?.attempts ?? 1)} / ${budget() + 1}`}
                   </span>
                   <span class="num" classList={{ bad: highlight() }}>
                     {status() === "pending" || !result()?.checks.length
@@ -258,15 +266,17 @@ export function Receipt(props: {
                       : `${result()!.checks.filter((check) => check.verdict === "pass").length}/${total()}`}
                   </span>
                   <span class="num">{span(result()?.startedAt, result()?.endedAt, Date.now()) ?? "—"}</span>
-                  <button
-                    type="button"
-                    class="mx-btn icon"
-                    aria-label={copy.t("orchestra.workflows.receipt.openInEditor", { name: node.name })}
-                    title={copy.t("orchestra.workflows.receipt.openInEditor", { name: node.name })}
-                    onClick={() => props.onOpenStep(node.id)}
-                  >
-                    <Ic name="open" />
-                  </button>
+                  <Show when={!external()} fallback={<span />}>
+                    <button
+                      type="button"
+                      class="mx-btn icon"
+                      aria-label={copy.t("orchestra.workflows.receipt.openInEditor", { name: node.name })}
+                      title={copy.t("orchestra.workflows.receipt.openInEditor", { name: node.name })}
+                      onClick={() => props.onOpenStep(node.id)}
+                    >
+                      <Ic name="open" />
+                    </button>
+                  </Show>
                 </div>
                 <Show when={highlight() && result()?.checks.length}>
                   <div class="mx-row wf-step-detail">
@@ -351,7 +361,9 @@ export function Receipt(props: {
           </span>
         </Show>
       </div>
-      <p class="mx-note">{copy.t("orchestra.workflows.receipt.note")}</p>
+      <p class="mx-note">
+        {copy.t(external() ? "orchestra.workflows.receipt.externalNote" : "orchestra.workflows.receipt.note")}
+      </p>
       <Show when={menu()}>
         {(anchor) => (
           <Menu

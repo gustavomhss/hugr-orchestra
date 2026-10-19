@@ -3,6 +3,7 @@ import type { RelayKind } from "./client"
 // Every view and layer has its own URL under its chapter, so back, forward and reload keep the place.
 //   /orchestra/workflows                        library        /orchestra/hooks
 //   /orchestra/workflows/executions             all runs       /orchestra/hooks/activity
+//   /orchestra/workflows/executions/<run>       an external run's receipt (it has no document)
 //   /orchestra/workflows/new                    new dialog     /orchestra/hooks/new
 //   /orchestra/workflows/<id>                   canvas         /orchestra/hooks/<id>
 //   …/<id>/add                                  add panel
@@ -14,7 +15,7 @@ import type { RelayKind } from "./client"
 // on a missing page; the library's executions list is shown.
 
 export type RelayRoute =
-  | { page: "library"; kind: RelayKind; tab: "list" | "runs"; create: boolean }
+  | { page: "library"; kind: RelayKind; tab: "list" | "runs"; create: boolean; run?: string }
   | {
       page: "editor"
       kind: RelayKind
@@ -51,6 +52,7 @@ export function parseRelayRoute(kind: RelayKind, rest: string): RelayRoute {
       kind,
       tab: first === runsWord(kind) ? "runs" : "list",
       create: first === "new",
+      ...(first === runsWord(kind) && parts[1] !== undefined ? { run: parts[1] } : {}),
     }
   const route: Extract<RelayRoute, { page: "editor" }> = { page: "editor", kind, id: first, tab: "editor", add: false }
   const read = (index: number): Extract<RelayRoute, { page: "editor" }> => {
@@ -77,7 +79,7 @@ const segment = (value: string) => encodeURIComponent(value)
 
 export const relayPath = {
   library: (kind: RelayKind) => `/orchestra/${chapterOf(kind)}`,
-  runs: (kind: RelayKind) => `/orchestra/${chapterOf(kind)}/${runsWord(kind)}`,
+  runs: (kind: RelayKind, run?: string) => `/orchestra/${chapterOf(kind)}/${runsWord(kind)}${run ? `/${segment(run)}` : ""}`,
   create: (kind: RelayKind) => `/orchestra/${chapterOf(kind)}/new`,
   editor: (kind: RelayKind, id: string) => `/orchestra/${chapterOf(kind)}/${segment(id)}`,
   add: (kind: RelayKind, id: string) => `${relayPath.editor(kind, id)}/add`,

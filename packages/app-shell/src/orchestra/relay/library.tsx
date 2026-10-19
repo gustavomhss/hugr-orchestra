@@ -22,6 +22,7 @@ import {
 import { copyDocument, freeName } from "./presets"
 import { type RelayRoute, relayPath } from "./route"
 import type { RelayRun, RelayRunStatus } from "./runs"
+import { Receipt } from "./receipt"
 import type { RelaySource } from "./source"
 import { Ic, Menu, type MenuItem, RelayDialog, useRelayCopy } from "./ui"
 
@@ -195,6 +196,15 @@ export function WorkflowLibrary(props: Props) {
         </Match>
         <Match when={props.route.tab === "runs" && props.source.runsState() !== "ready"}>
           <RunsUnavailable source={props.source} />
+        </Match>
+        <Match when={props.route.tab === "runs" && props.route.run}>
+          {(runID) => (
+            <ExternalReceipt
+              run={(props.source.runs.data ?? []).find((run) => run.runID === runID())}
+              source={props.source}
+              go={props.go}
+            />
+          )}
         </Match>
         <Match when={props.route.tab === "runs"}>
           <AllRuns
@@ -583,13 +593,14 @@ export function AllRuns(props: {
         <div class="mx-table" role="list" aria-label={copy.t("orchestra.workflows.tab.runs")}>
           <For each={shown()}>
             {(run) => {
-              // An external run (Relay for LangGraph) has no document to open: it reads inline, failing checks included.
+              // An external run (Relay for LangGraph) has no document: its receipt opens from the executions list.
               const external = run.documentID.startsWith("external:")
               const name = () =>
                 external ? run.label : props.source.list().find((item) => item.id === run.documentID)?.name ?? ""
-              const open = () => {
-                if (!external) props.go(relayPath.history("workflow", run.documentID, run.runID))
-              }
+              const open = () =>
+                props.go(
+                  external ? relayPath.runs("workflow", run.runID) : relayPath.history("workflow", run.documentID, run.runID),
+                )
               return (
                 <div
                   class="mx-row wf-lrow"
@@ -632,16 +643,14 @@ export function AllRuns(props: {
                     </span>
                   </div>
                   <div class="wf-actions">
-                    <Show when={!external}>
-                      <button
-                        type="button"
-                        class="mx-btn icon"
-                        aria-label={copy.t("orchestra.workflows.runs.open", { id: runHandle(run.runID) })}
-                        onClick={(event) => (event.stopPropagation(), open())}
-                      >
-                        <Ic name="next" />
-                      </button>
-                    </Show>
+                    <button
+                      type="button"
+                      class="mx-btn icon"
+                      aria-label={copy.t("orchestra.workflows.runs.open", { id: runHandle(run.runID) })}
+                      onClick={(event) => (event.stopPropagation(), open())}
+                    >
+                      <Ic name="next" />
+                    </button>
                   </div>
                 </div>
               )
@@ -650,6 +659,44 @@ export function AllRuns(props: {
         </div>
       </Show>
     </Show>
+  )
+}
+
+// An external run's receipt. Its steps, in ledger order, stand in for the canvas it does not have.
+function ExternalReceipt(props: { run: RelayRun | undefined; source: RelaySource; go: (path: string) => void }) {
+  const copy = useRelayCopy()
+  const flow = (run: RelayRun): Flow => ({
+    kind: "workflow",
+    nodes: run.steps.map((step) => ({ id: step.wp, name: step.wp, type: "relay.external", x: 0, y: 0, parameters: {} })),
+    edges: run.steps.slice(1).map((step, index) => ({ from: run.steps[index].wp, to: step.wp, port: 0 })),
+    phases: [],
+  })
+  return (
+    <div class="wf-receipt">
+      <button type="button" class="mx-btn" onClick={() => props.go(relayPath.runs("workflow"))}>
+        <Ic name="back" />
+        {copy.t("orchestra.palette.executions")}
+      </button>
+      <Show
+        when={props.run}
+        fallback={
+          <Show when={!props.source.runs.isPending}>
+            <p class="mx-empty">{copy.t("orchestra.workflows.receipt.missing")}</p>
+          </Show>
+        }
+      >
+        {(run) => (
+          <Receipt
+            run={run()}
+            flow={flow(run())}
+            source={props.source}
+            onOpenStep={() => {}}
+            onCanvas={() => {}}
+            onSession={() => {}}
+          />
+        )}
+      </Show>
+    </div>
   )
 }
 

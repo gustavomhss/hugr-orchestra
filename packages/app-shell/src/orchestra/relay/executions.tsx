@@ -105,7 +105,6 @@ export function Executions(props: {
           {(run) => (
             <Receipt
               run={run()}
-              document={props.document}
               flow={props.flow}
               source={props.source}
               onOpenStep={(wp) => props.onOpenStep(run(), wp)}

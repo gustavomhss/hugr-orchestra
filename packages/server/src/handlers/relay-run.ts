@@ -52,19 +52,44 @@ const load = Effect.fnUntraced(function* (runID: string) {
     })
   // A broken chain makes its self-reported steps untrustworthy, so the run shows only that it is broken.
   const verified = yield* LedgerVerify.verify(ledger)
-  if (verified.exit === 0) return { entries, run }
+  if (verified.exit !== 0)
+    return {
+      entries,
+      run: {
+        ...run,
+        status: "failed" as const,
+        failing: [],
+        reason: `Ledger broken: ${`${verified.stdout}${verified.stderr}`.split("\n")[0]}`,
+        endedAt: run.endedAt ?? run.startedAt,
+        steps: [],
+      },
+    }
+  if (run.status !== "parked" || (yield* Effect.promise(() => waiting(path.dirname(ledger))))) return { entries, run }
   return {
     entries,
     run: {
       ...run,
       status: "failed" as const,
-      failing: [],
-      reason: `Ledger broken: ${`${verified.stdout}${verified.stderr}`.split("\n")[0]}`,
-      endedAt: run.endedAt ?? run.startedAt,
-      steps: [],
+      reason:
+        "The process that asked for this approval has exited, so nobody can answer it. Start a new run with a new thread_id, or resume this one from a checkpointer that kept it.",
+      endedAt: bodies.pipe(Option.map((value) => value.at(-1)!.at), Option.getOrUndefined),
+      steps: run.steps.map((step) => (step.status === "running" ? { ...step, status: "failed" as const } : step)),
     },
   }
 })
+
+// The library writes `waiting.pid` before it asks for an approval. A parked run whose process is gone has no one left
+// to answer it; EPERM means the process exists under another user.
+async function waiting(folder: string) {
+  const pid = Number((await Bun.file(path.join(folder, "waiting.pid")).text().catch(() => "")).trim())
+  if (!Number.isInteger(pid) || pid <= 0) return false
+  try {
+    process.kill(pid, 0)
+    return true
+  } catch (error) {
+    return (error as NodeJS.ErrnoException).code === "EPERM"
+  }
+}
 
 // The external process records its own checks, so an intact chain proves only that nothing changed afterwards.
 const audit = Effect.fnUntraced(function* (runID: string) {
