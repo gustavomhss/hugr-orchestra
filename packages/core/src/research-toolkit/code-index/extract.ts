@@ -9,15 +9,17 @@ import { ChildProcess } from "effect/unstable/process"
 import { Research } from "@orchestra/schema/research"
 import { AppProcess } from "../../process"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
-import { ResearchToolkit } from "../index"
+import { ResearchToolkit, type Language } from "../index"
 import { IDS } from "../manifest"
 import { CodeIndexBuild } from "./build"
 import { Callers } from "./callers"
 import { Enclosing } from "./enclosing"
 import { CodeIndexFilter } from "./filter"
+import { CodeIndexGo } from "./go"
 import { CodeIndexPython } from "./python"
 import type { CodeIndexQuery } from "./query"
 import { CodeIndexResolve } from "./resolve"
+import { CodeIndexRust } from "./rust"
 import { Scip } from "./scip"
 import { CodeIndexShard } from "./shard"
 import { CodeIndexStore } from "./store"
@@ -35,6 +37,13 @@ import { Role } from "./types"
 // Not stored: document-scoped `local N` symbols (their ids repeat across documents, and `symbol.scip` is unique),
 // parameters, type parameters and file-module symbols. None of them is a definition a caller or an outline names.
 // The indexer reads the worktree as it is on disk; files that differ from the commit are what the overlay re-reads.
+//
+// Go and Rust indexers drive the host toolchain. A Go or Rust shard whose toolchain or indexer is missing is built by
+// the STRUCTURAL indexer instead: no SCIP run, every document layer 2, and the reason in the shard's skipped list, so
+// its basis names `tree-sitter` and its coverage is incomplete, as for TypeScript files outside every tsconfig.
+
+/** The indexer id of a tree-sitter-only shard; its version names why the precise layer is absent. */
+export const STRUCTURAL = "tree-sitter"
 
 /** The extraction X3's build runs per shard, and the overlay its queries run on dirty files, with services bound. */
 export const make = Effect.gen(function* () {
@@ -63,9 +72,32 @@ export const indexers = Effect.fn("CodeIndexExtract.indexers")(function* () {
     return yield* new Research.Error({ code: "index_unavailable", message: blocked
       ? `toolkit-not-ready:${blocked.status}:${blocked.engine}${"reason" in blocked ? `:${blocked.reason}` : "cause" in blocked ? `:${blocked.cause}` : ""}`
       : "toolkit-not-ready:unsupported:index:no-indexer-pack" })
-  return Object.fromEntries(usable.flatMap((state) => (manifest[state.engine]?.fit.languages ?? [])
+  const ready = Object.fromEntries(usable.flatMap((state) => (manifest[state.engine]?.fit.languages ?? [])
     .map((language) => [language, { id: state.engine, version: state.version } satisfies CodeIndexShard.Indexer] as const)))
+  return structural(ready, Bun.which, (language) => {
+    const state = states.find((entry) => manifest[entry.engine]?.fit.languages.includes(language))
+    return state ? `toolkit-not-ready:${state.status}:${state.engine}` : "toolkit-not-ready:unsupported:pack-not-shipped"
+  })
 })
+
+/**
+ * Go and Rust languages without a precise indexer, or whose host toolchain `which` cannot find, map to the STRUCTURAL
+ * indexer; every other language keeps its own. `blocked` names why a language has no indexer.
+ */
+export function structural(
+  indexers: Partial<Record<Language, CodeIndexShard.Indexer>>,
+  which: (command: string) => string | null,
+  blocked: (language: Language) => string,
+): Partial<Record<Language, CodeIndexShard.Indexer>> {
+  const toolchains = { go: CodeIndexGo.TOOLCHAIN, rust: CodeIndexRust.TOOLCHAIN }
+  return {
+    ...indexers,
+    ...Object.fromEntries((["go", "rust"] as const).flatMap((language) => {
+      const missing = !indexers[language] ? blocked(language) : which(toolchains[language]) ? undefined : `toolchain-missing:${toolchains[language]}`
+      return missing ? [[language, { id: STRUCTURAL, version: missing }] as const] : []
+    })),
+  }
+}
 
 /**
  * `ResearchToolkit.Index` over X3's planner and store, which `warm` and `prewarm` drive (J6.7): each shard of the
@@ -80,8 +112,11 @@ export const toolkit = Effect.gen(function* () {
     const manifest = yield* ResearchToolkit.Manifest
     const plan = yield* CodeIndexBuild.plan({
       root, git: yield* CodeIndexShard.live(root), storeRoot: yield* ResearchToolkit.Root,
-      indexers: Object.fromEntries(Object.values(manifest).flatMap((pack) => pack?.fit.role === "indexer"
+      // The warm-up acquires absent packs, so only a missing toolchain falls back here; the fallback is no engine, so
+      // the warm-up leaves its shard to the first query.
+      indexers: structural(Object.fromEntries(Object.values(manifest).flatMap((pack) => pack?.fit.role === "indexer"
         ? pack.fit.languages.map((language) => [language, { id: pack.id, version: pack.version }] as const) : [])),
+      Bun.which, () => "toolkit-not-ready:unsupported:pack-not-shipped"),
     }).pipe(Effect.mapError(failed))
     return { root, plan }
   }).pipe(Effect.provideService(AppProcess.Service, proc))
@@ -122,7 +157,7 @@ const extract = Effect.fn("CodeIndexExtract.extract")(function* (
     text(input.root, file.path).pipe(Effect.map((content) => ({ ...file, text: content }))), { concurrency: 16 })
   const sources = read.flatMap((file) => file.text === undefined ? [] : [{ path: file.path, grammar: file.grammar, text: file.text }])
   const outlines = yield* Effect.forEach(sources, (file) => CodeIndexTreeSitter.extract(file.path, file.text, file.grammar), { concurrency: 8 })
-  const dump = yield* scip(input, launch)
+  const dump: Scip.Index = input.indexer.id === STRUCTURAL ? { indexer: undefined, documents: [], malformed: 0 } : yield* scip(input, launch, new Map(sources.map((file) => [file.path, file.text])))
   const resolver = yield* CodeIndexResolve.make(input.root)
   return assemble({
     sources, outlines, dump,
@@ -132,6 +167,7 @@ const extract = Effect.fn("CodeIndexExtract.extract")(function* (
       ...read.filter((file) => file.text === undefined).map((file) => ({ path: file.path, reason: "missing-in-worktree" })),
       ...outlines.flatMap((entry) => entry.coverage.complete ? [] : [{ path: entry.path, reason: entry.coverage.reason ?? "partial-parse" }]),
       ...(dump.malformed ? [{ path: input.shard.project, reason: `scip-malformed-occurrences:${dump.malformed}` }] : []),
+      ...(input.indexer.id === STRUCTURAL ? [{ path: input.shard.project, reason: `structural-only:${input.indexer.version}` }] : []),
     ],
     language: input.shard.language,
   })
@@ -144,7 +180,9 @@ const extract = Effect.fn("CodeIndexExtract.extract")(function* (
  */
 const scip = Effect.fn("CodeIndexExtract.scip")(function* (
   input: Parameters<CodeIndexBuild.Extract>[0],
-  launch?: { readonly executable: string; readonly memoryBytes: number },
+  launch: { readonly executable: string; readonly memoryBytes: number } | undefined,
+  // The shard's source text by repository-relative path, for dumps whose columns are not UTF-16.
+  texts: ReadonlyMap<string, string>,
 ) {
   const proc = yield* AppProcess.Service
   const caps = yield* ResearchToolkit.Caps
@@ -164,8 +202,12 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (
     const output = path.join(directory, "index.scip")
     yield* Effect.promise(() => writeFile(output, ""))
     const launch = yield* ToolSafetySandbox.confine({
-      command: ready.executable, cwd: directory,
-      args: input.shard.language === "py" ? CodeIndexPython.args({ project: input.shard.project, output }) : ["index", "--output", output], write: [output], env: process.env,
+      command: ready.executable, cwd: directory, write: [output],
+      args: input.shard.language === "py" ? CodeIndexPython.args({ project: input.shard.project, output })
+        : input.shard.language === "go" ? CodeIndexGo.args(output)
+        : input.shard.language === "rust" ? CodeIndexRust.args(output)
+        : ["index", "--output", output],
+      env: { ...process.env, ...(input.shard.language === "go" ? CodeIndexGo.ENV : input.shard.language === "rust" ? CodeIndexRust.ENV : {}) },
     }).pipe(Effect.mapError((denied) => failed(`sandbox ${denied.reason}`)))
     const result = yield* proc.run(
       ChildProcess.make(launch.command, launch.args, {
@@ -176,7 +218,7 @@ const scip = Effect.fn("CodeIndexExtract.scip")(function* (
     if (result.exitCode !== 0)
       return yield* failed(`exit ${result.exitCode}: ${(result.stderr.toString("utf8") || result.stdout.toString("utf8")).trim().slice(0, 500)}`)
     return yield* Effect.try({
-      try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project }),
+      try: () => Scip.readScip(output, { prefix: input.shard.project === "." ? "" : input.shard.project, source: (file) => texts.get(file) }),
       catch: (cause) => failed(`dump unreadable: ${String(cause)}`),
     })
   }).pipe(Effect.scoped)

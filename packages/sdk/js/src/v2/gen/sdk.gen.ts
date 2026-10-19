@@ -4,6 +4,26 @@ import { client } from "./client.gen.js"
 import { buildClientParams, type Client, type Options as Options2, type TDataShape } from "./client/index.js"
 import type { V2ResearchArtifactErrors, V2ResearchArtifactResponses } from "./research.gen.js"
 import type {
+  ActionsBindingId,
+  ActionsBindingInput,
+  ActionsDispatchCommand,
+  ActionsDraftValidation,
+  ActionsGitHubCommand,
+  ActionsGitLabCommand,
+  ActionsJobPlayCommand,
+  ActionsJobRetryCommand,
+  ActionsMergeRequestCommand,
+  ActionsOperationId,
+  ActionsOperationIntent,
+  ActionsPolicy,
+  ActionsProviderCommand,
+  ActionsRenameCommand,
+  ActionsResourceCommand,
+  ActionsResourceKind,
+  ActionsRetryCommand,
+  ActionsSourceValidation,
+  ActionsTriggerPipelineCommand,
+  ActionsWorkflowStateCommand,
   AgentFileInput,
   AgentPartInput,
   AppAgentsErrors,
@@ -25,13 +45,16 @@ import type {
   CapabilityArtifactId,
   CommandListErrors,
   CommandListResponses,
-  Config as Config4,
+  Config as Config5,
   ConfigGetErrors,
   ConfigGetResponses,
+  ConfigPatch,
   ConfigProvidersErrors,
   ConfigProvidersResponses,
   ConfigUpdateErrors,
   ConfigUpdateResponses,
+  ConfigV2McpLocal,
+  ConfigV2McpRemote,
   EventSubscribeResponses,
   EventTuiCommandExecute,
   EventTuiPromptAppend,
@@ -212,6 +235,84 @@ import type {
   RelayUnpublishInput,
   ScheduledTaskCreateInput,
   ScheduledTaskUpdateInput,
+  ServerActionsBindingActionsBindingCapabilitiesErrors,
+  ServerActionsBindingActionsBindingCapabilitiesResponses,
+  ServerActionsBindingActionsBindingCreateErrors,
+  ServerActionsBindingActionsBindingCreateResponses,
+  ServerActionsBindingActionsBindingGetErrors,
+  ServerActionsBindingActionsBindingGetResponses,
+  ServerActionsBindingActionsBindingListErrors,
+  ServerActionsBindingActionsBindingListResponses,
+  ServerActionsBindingActionsBindingPolicyErrors,
+  ServerActionsBindingActionsBindingPolicyResponses,
+  ServerActionsBindingActionsBindingRemoveErrors,
+  ServerActionsBindingActionsBindingRemoveResponses,
+  ServerActionsBindingActionsBindingUpdateErrors,
+  ServerActionsBindingActionsBindingUpdatePolicyErrors,
+  ServerActionsBindingActionsBindingUpdatePolicyResponses,
+  ServerActionsBindingActionsBindingUpdateResponses,
+  ServerActionsJobActionsJobCancelErrors,
+  ServerActionsJobActionsJobCancelResponses,
+  ServerActionsJobActionsJobEraseErrors,
+  ServerActionsJobActionsJobEraseResponses,
+  ServerActionsJobActionsJobPlayErrors,
+  ServerActionsJobActionsJobPlayResponses,
+  ServerActionsJobActionsJobRetryErrors,
+  ServerActionsJobActionsJobRetryResponses,
+  ServerActionsOperationActionsOperationGetErrors,
+  ServerActionsOperationActionsOperationGetResponses,
+  ServerActionsOperationActionsOperationPrepareErrors,
+  ServerActionsOperationActionsOperationPrepareResponses,
+  ServerActionsOperationActionsOperationReconcileErrors,
+  ServerActionsOperationActionsOperationReconcileResponses,
+  ServerActionsPipelineActionsPipelineMergeRequestErrors,
+  ServerActionsPipelineActionsPipelineMergeRequestResponses,
+  ServerActionsPipelineActionsPipelineTriggerErrors,
+  ServerActionsPipelineActionsPipelineTriggerResponses,
+  ServerActionsResourceActionsResourceCommandErrors,
+  ServerActionsResourceActionsResourceCommandResponses,
+  ServerActionsResourceActionsResourceListErrors,
+  ServerActionsResourceActionsResourceListResponses,
+  ServerActionsRunActionsRunApproveForkErrors,
+  ServerActionsRunActionsRunApproveForkResponses,
+  ServerActionsRunActionsRunCancelErrors,
+  ServerActionsRunActionsRunCancelResponses,
+  ServerActionsRunActionsRunForceCancelErrors,
+  ServerActionsRunActionsRunForceCancelResponses,
+  ServerActionsRunActionsRunGetErrors,
+  ServerActionsRunActionsRunGetResponses,
+  ServerActionsRunActionsRunJobsErrors,
+  ServerActionsRunActionsRunJobsResponses,
+  ServerActionsRunActionsRunListErrors,
+  ServerActionsRunActionsRunListResponses,
+  ServerActionsRunActionsRunRemoveErrors,
+  ServerActionsRunActionsRunRemoveResponses,
+  ServerActionsRunActionsRunRenameErrors,
+  ServerActionsRunActionsRunRenameResponses,
+  ServerActionsRunActionsRunRetryErrors,
+  ServerActionsRunActionsRunRetryResponses,
+  ServerActionsSourceActionsSourceBaseErrors,
+  ServerActionsSourceActionsSourceBaseResponses,
+  ServerActionsSourceActionsSourceCommandErrors,
+  ServerActionsSourceActionsSourceCommandResponses,
+  ServerActionsSourceActionsSourceValidateDraftErrors,
+  ServerActionsSourceActionsSourceValidateDraftResponses,
+  ServerActionsSourceActionsSourceValidateErrors,
+  ServerActionsSourceActionsSourceValidateResponses,
+  ServerActionsTransferActionsTransferInfoErrors,
+  ServerActionsTransferActionsTransferInfoResponses,
+  ServerActionsTransferActionsTransferReadErrors,
+  ServerActionsTransferActionsTransferReadResponses,
+  ServerActionsWorkflowActionsWorkflowDispatchErrors,
+  ServerActionsWorkflowActionsWorkflowDispatchResponses,
+  ServerActionsWorkflowActionsWorkflowGraphErrors,
+  ServerActionsWorkflowActionsWorkflowGraphResponses,
+  ServerActionsWorkflowActionsWorkflowListErrors,
+  ServerActionsWorkflowActionsWorkflowListResponses,
+  ServerActionsWorkflowActionsWorkflowSourceErrors,
+  ServerActionsWorkflowActionsWorkflowSourceResponses,
+  ServerActionsWorkflowActionsWorkflowStateErrors,
+  ServerActionsWorkflowActionsWorkflowStateResponses,
   SessionAbortErrors,
   SessionAbortResponses,
   SessionActivityErrors,
@@ -315,6 +416,10 @@ import type {
   V2BehaviorSetResponses,
   V2CommandListErrors,
   V2CommandListResponses,
+  V2ConfigGetErrors,
+  V2ConfigGetResponses,
+  V2ConfigUpdateErrors,
+  V2ConfigUpdateResponses,
   V2CredentialRemoveErrors,
   V2CredentialRemoveResponses,
   V2CredentialUpdateErrors,
@@ -351,6 +456,16 @@ import type {
   V2IntegrationOauthStatusResponses,
   V2LocationGetErrors,
   V2LocationGetResponses,
+  V2McpAddErrors,
+  V2McpAddResponses,
+  V2McpConnectErrors,
+  V2McpConnectResponses,
+  V2McpDisconnectErrors,
+  V2McpDisconnectResponses,
+  V2McpListErrors,
+  V2McpListResponses,
+  V2McpRemoveErrors,
+  V2McpRemoveResponses,
   V2ModelDefaultErrors,
   V2ModelDefaultResponses,
   V2ModelListErrors,
@@ -367,6 +482,10 @@ import type {
   V2ProjectCopyRefreshResponses,
   V2ProjectCopyRemoveErrors,
   V2ProjectCopyRemoveResponses,
+  V2ProjectDirectoriesErrors,
+  V2ProjectDirectoriesResponses,
+  V2ProjectListErrors,
+  V2ProjectListResponses,
   V2ProviderGetErrors,
   V2ProviderGetResponses,
   V2ProviderListErrors,
@@ -437,6 +556,14 @@ import type {
   V2RelayPublishPublishResponses,
   V2RelayPublishUnpublishErrors,
   V2RelayPublishUnpublishResponses,
+  V2RelayRunAuditErrors,
+  V2RelayRunAuditResponses,
+  V2RelayRunGetErrors,
+  V2RelayRunGetResponses,
+  V2RelayRunLedgerErrors,
+  V2RelayRunLedgerResponses,
+  V2RelayRunListErrors,
+  V2RelayRunListResponses,
   V2RelayScopeCreateErrors,
   V2RelayScopeCreateResponses,
   V2RelayScopeListErrors,
@@ -497,6 +624,10 @@ import type {
   V2SessionQuestionRejectResponses,
   V2SessionQuestionReplyErrors,
   V2SessionQuestionReplyResponses,
+  V2SessionRemoveErrors,
+  V2SessionRemoveResponses,
+  V2SessionRenameErrors,
+  V2SessionRenameResponses,
   V2SessionRevertClearErrors,
   V2SessionRevertClearResponses,
   V2SessionRevertCommitErrors,
@@ -1386,7 +1517,7 @@ export class Config extends HeyApiClient {
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
-      config?: Config4
+      config?: Config5
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1543,7 +1674,7 @@ export class Config2 extends HeyApiClient {
     parameters?: {
       directory?: string
       workspace?: string
-      config?: Config4
+      config?: Config5
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -6153,6 +6284,25 @@ export class Session3 extends HeyApiClient {
   }
 
   /**
+   * Delete session
+   *
+   * Interrupt the session, then permanently delete it with its child sessions and history.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).delete<V2SessionRemoveResponses, V2SessionRemoveErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Get session
    *
    * Retrieve a session by ID.
@@ -6196,6 +6346,41 @@ export class Session3 extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<V2SessionArchiveResponses, V2SessionArchiveErrors, ThrowOnError>({
       url: "/api/session/{sessionID}/archive",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Rename session
+   *
+   * Replace the session title.
+   */
+  public rename<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      title?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "title" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionRenameResponses, V2SessionRenameErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/rename",
       ...options,
       ...params,
       headers: {
@@ -7443,6 +7628,169 @@ export class Command2 extends HeyApiClient {
   }
 }
 
+export class Mcp2 extends HeyApiClient {
+  /**
+   * List MCP servers
+   *
+   * List the Location's configured MCP servers and their connection state.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2McpListResponses, V2McpListErrors, ThrowOnError>({
+      url: "/api/mcp",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Remove MCP server
+   *
+   * Remove an MCP server from the Location's own config files and disconnect it.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2McpRemoveResponses, V2McpRemoveErrors, ThrowOnError>({
+      url: "/api/mcp/{server}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Add MCP server
+   *
+   * Write an MCP server into the Location's own config file and connect it.
+   */
+  public add<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      config?: ConfigV2McpLocal | ConfigV2McpRemote
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+            { in: "body", key: "config" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2McpAddResponses, V2McpAddErrors, ThrowOnError>({
+      url: "/api/mcp/{server}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Connect MCP server
+   *
+   * Connect, or reconnect, one configured MCP server.
+   */
+  public connect<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpConnectResponses, V2McpConnectErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/connect",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Disconnect MCP server
+   *
+   * Disconnect one configured MCP server and remove its tools.
+   */
+  public disconnect<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpDisconnectResponses, V2McpDisconnectErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/disconnect",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Skill extends HeyApiClient {
   /**
    * Remove skill
@@ -8023,6 +8371,81 @@ export class ProjectCopy2 extends HeyApiClient {
   }
 }
 
+export class Project2 extends HeyApiClient {
+  /**
+   * List projects
+   *
+   * Retrieve every project this server has opened, oldest first.
+   */
+  public list<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<V2ProjectListResponses, V2ProjectListErrors, ThrowOnError>({
+      url: "/api/project",
+      ...options,
+    })
+  }
+
+  /**
+   * List project directories
+   *
+   * Retrieve the extra directories (worktrees and copies) recorded for a project.
+   */
+  public directories<ThrowOnError extends boolean = false>(
+    parameters: {
+      projectID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "projectID" }] }])
+    return (options?.client ?? this.client).get<
+      V2ProjectDirectoriesResponses,
+      V2ProjectDirectoriesErrors,
+      ThrowOnError
+    >({
+      url: "/api/project/{projectID}/directories",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Config4 extends HeyApiClient {
+  /**
+   * Read global settings
+   *
+   * Read the default model and disabled providers from the global config document.
+   */
+  public get<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<V2ConfigGetResponses, V2ConfigGetErrors, ThrowOnError>({
+      url: "/api/config",
+      ...options,
+    })
+  }
+
+  /**
+   * Update global settings
+   *
+   * Merge the default model, agent engines and disabled providers into the global config document, then reload the agents and catalog of every open location.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      configPatch: ConfigPatch
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ key: "configPatch", map: "body" }] }])
+    return (options?.client ?? this.client).patch<V2ConfigUpdateResponses, V2ConfigUpdateErrors, ThrowOnError>({
+      url: "/api/config",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
 export class Document extends HeyApiClient {
   /**
    * List Relay documents
@@ -8161,7 +8584,7 @@ export class Document extends HeyApiClient {
   /**
    * Save Relay document
    *
-   * Save a new version of the loaded one. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.
+   * Save the working draft over the loaded one; only publish makes a version. A stale versionId or expectedChecksum is a 409 version-conflict unless force is set.
    */
   public update<ThrowOnError extends boolean = false>(
     parameters: {
@@ -8205,7 +8628,7 @@ export class Document extends HeyApiClient {
   /**
    * List document versions
    *
-   * A document's saved versions, newest first.
+   * A document's published versions, newest first.
    */
   public versions<ThrowOnError extends boolean = false>(
     parameters: {
@@ -8242,7 +8665,7 @@ export class Document extends HeyApiClient {
   /**
    * Get document version
    *
-   * One saved version of a document.
+   * One published version of a document.
    */
   public version<ThrowOnError extends boolean = false>(
     parameters: {
@@ -8968,6 +9391,142 @@ export class Hook extends HeyApiClient {
   }
 }
 
+export class Run extends HeyApiClient {
+  /**
+   * List external runs
+   *
+   * The location's external runs, newest first, optionally only those of one document. A run whose ledger does not decode is left out.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      document?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "document" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayRunListResponses, V2RelayRunListErrors, ThrowOnError>({
+      url: "/api/relay/run",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get external run
+   *
+   * One external run rebuilt from its ledger.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayRunGetResponses, V2RelayRunGetErrors, ThrowOnError>({
+      url: "/api/relay/run/{runID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Audit external run
+   *
+   * Verify the run's ledger chain. An intact chain is pending external-self-reported, never pass; a broken one fails at its first bad line.
+   */
+  public audit<ThrowOnError extends boolean = false>(
+    parameters: {
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayRunAuditResponses, V2RelayRunAuditErrors, ThrowOnError>({
+      url: "/api/relay/run/{runID}/audit",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Read external run ledger
+   *
+   * The run's ledger entries from seq `after` on (all of them when it is 0 or absent).
+   */
+  public ledger<ThrowOnError extends boolean = false>(
+    parameters: {
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      after?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "after" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2RelayRunLedgerResponses, V2RelayRunLedgerErrors, ThrowOnError>({
+      url: "/api/relay/run/{runID}/ledger",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Relay extends HeyApiClient {
   private _document?: Document
   get document(): Document {
@@ -8987,6 +9546,11 @@ export class Relay extends HeyApiClient {
   private _hook?: Hook
   get hook(): Hook {
     return (this._hook ??= new Hook({ client: this.client }))
+  }
+
+  private _run?: Run
+  get run(): Run {
+    return (this._run ??= new Run({ client: this.client }))
   }
 }
 
@@ -9283,6 +9847,11 @@ export class V2 extends HeyApiClient {
     return (this._command ??= new Command2({ client: this.client }))
   }
 
+  private _mcp?: Mcp2
+  get mcp(): Mcp2 {
+    return (this._mcp ??= new Mcp2({ client: this.client }))
+  }
+
   private _skill?: Skill
   get skill(): Skill {
     return (this._skill ??= new Skill({ client: this.client }))
@@ -9318,6 +9887,16 @@ export class V2 extends HeyApiClient {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
   }
 
+  private _project?: Project2
+  get project(): Project2 {
+    return (this._project ??= new Project2({ client: this.client }))
+  }
+
+  private _config?: Config4
+  get config(): Config4 {
+    return (this._config ??= new Config4({ client: this.client }))
+  }
+
   private _relay?: Relay
   get relay(): Relay {
     return (this._relay ??= new Relay({ client: this.client }))
@@ -9331,6 +9910,1784 @@ export class V2 extends HeyApiClient {
   private _schedule?: Schedule
   get schedule(): Schedule {
     return (this._schedule ??= new Schedule({ client: this.client }))
+  }
+}
+
+export class Binding extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<
+      ServerActionsBindingActionsBindingListResponses,
+      ServerActionsBindingActionsBindingListErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding",
+      ...options,
+      ...params,
+    })
+  }
+
+  public create<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      actionsBindingInput: ActionsBindingInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "actionsBindingInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsBindingActionsBindingCreateResponses,
+      ServerActionsBindingActionsBindingCreateErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerActionsBindingActionsBindingRemoveResponses,
+      ServerActionsBindingActionsBindingRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsBindingActionsBindingGetResponses,
+      ServerActionsBindingActionsBindingGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsBindingInput: ActionsBindingInput
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsBindingInput", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<
+      ServerActionsBindingActionsBindingUpdateResponses,
+      ServerActionsBindingActionsBindingUpdateErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public capabilities<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsBindingActionsBindingCapabilitiesResponses,
+      ServerActionsBindingActionsBindingCapabilitiesErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}/capabilities",
+      ...options,
+      ...params,
+    })
+  }
+
+  public policy<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsBindingActionsBindingPolicyResponses,
+      ServerActionsBindingActionsBindingPolicyErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}/policy",
+      ...options,
+      ...params,
+    })
+  }
+
+  public updatePolicy<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsPolicy: ActionsPolicy
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsPolicy", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerActionsBindingActionsBindingUpdatePolicyResponses,
+      ServerActionsBindingActionsBindingUpdatePolicyErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/binding/{bindingID}/policy",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions extends HeyApiClient {
+  private _binding?: Binding
+  get binding(): Binding {
+    return (this._binding ??= new Binding({ client: this.client }))
+  }
+}
+
+export class ActionsBinding extends HeyApiClient {
+  private _actions?: Actions
+  get actions(): Actions {
+    return (this._actions ??= new Actions({ client: this.client }))
+  }
+}
+
+export class Operation extends HeyApiClient {
+  public prepare<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsOperationIntent: ActionsOperationIntent
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsOperationIntent", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsOperationActionsOperationPrepareResponses,
+      ServerActionsOperationActionsOperationPrepareErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/operation/{bindingID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      operationID: ActionsOperationId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "operationID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsOperationActionsOperationGetResponses,
+      ServerActionsOperationActionsOperationGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/operation/{bindingID}/{operationID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public reconcile<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      operationID: ActionsOperationId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "operationID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsOperationActionsOperationReconcileResponses,
+      ServerActionsOperationActionsOperationReconcileErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/operation/{bindingID}/{operationID}/reconcile",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Actions2 extends HeyApiClient {
+  private _operation?: Operation
+  get operation(): Operation {
+    return (this._operation ??= new Operation({ client: this.client }))
+  }
+}
+
+export class ActionsOperation extends HeyApiClient {
+  private _actions?: Actions2
+  get actions(): Actions2 {
+    return (this._actions ??= new Actions2({ client: this.client }))
+  }
+}
+
+export class Workflow extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      cursor?: string
+      limit?: string
+      query?: string
+      state?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "cursor" },
+            { in: "query", key: "limit" },
+            { in: "query", key: "query" },
+            { in: "query", key: "state" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsWorkflowActionsWorkflowListResponses,
+      ServerActionsWorkflowActionsWorkflowListErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/workflow/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public source<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      path: string
+      ref: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "path" },
+            { in: "query", key: "ref" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsWorkflowActionsWorkflowSourceResponses,
+      ServerActionsWorkflowActionsWorkflowSourceErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/workflow/{bindingID}/source",
+      ...options,
+      ...params,
+    })
+  }
+
+  public graph<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      path: string
+      ref: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "path" },
+            { in: "query", key: "ref" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsWorkflowActionsWorkflowGraphResponses,
+      ServerActionsWorkflowActionsWorkflowGraphErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/workflow/{bindingID}/graph",
+      ...options,
+      ...params,
+    })
+  }
+
+  public dispatch<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      workflowID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsDispatchCommand: ActionsDispatchCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "workflowID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsDispatchCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsWorkflowActionsWorkflowDispatchResponses,
+      ServerActionsWorkflowActionsWorkflowDispatchErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/workflow/{bindingID}/{workflowID}/dispatch",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public state<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      workflowID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsWorkflowStateCommand: ActionsWorkflowStateCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "workflowID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsWorkflowStateCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerActionsWorkflowActionsWorkflowStateResponses,
+      ServerActionsWorkflowActionsWorkflowStateErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/workflow/{bindingID}/{workflowID}/state",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions3 extends HeyApiClient {
+  private _workflow?: Workflow
+  get workflow(): Workflow {
+    return (this._workflow ??= new Workflow({ client: this.client }))
+  }
+}
+
+export class ActionsWorkflow extends HeyApiClient {
+  private _actions?: Actions3
+  get actions(): Actions3 {
+    return (this._actions ??= new Actions3({ client: this.client }))
+  }
+}
+
+export class Run2 extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      workflowID?: string
+      cursor?: string
+      limit?: string
+      ref?: string
+      event?: string
+      status?: string
+      commit?: string
+      actor?: string
+      created?: string
+      createdAfter?: string
+      createdBefore?: string
+      updatedAfter?: string
+      updatedBefore?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "workflowID" },
+            { in: "query", key: "cursor" },
+            { in: "query", key: "limit" },
+            { in: "query", key: "ref" },
+            { in: "query", key: "event" },
+            { in: "query", key: "status" },
+            { in: "query", key: "commit" },
+            { in: "query", key: "actor" },
+            { in: "query", key: "created" },
+            { in: "query", key: "createdAfter" },
+            { in: "query", key: "createdBefore" },
+            { in: "query", key: "updatedAfter" },
+            { in: "query", key: "updatedBefore" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsRunActionsRunListResponses,
+      ServerActionsRunActionsRunListErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsProviderCommand: ActionsProviderCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsProviderCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<
+      ServerActionsRunActionsRunRemoveResponses,
+      ServerActionsRunActionsRunRemoveErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public get<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsRunActionsRunGetResponses,
+      ServerActionsRunActionsRunGetErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public jobs<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      attempt?: string
+      cursor?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "attempt" },
+            { in: "query", key: "cursor" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsRunActionsRunJobsResponses,
+      ServerActionsRunActionsRunJobsErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/jobs",
+      ...options,
+      ...params,
+    })
+  }
+
+  public retry<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsRetryCommand: ActionsRetryCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsRetryCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsRunActionsRunRetryResponses,
+      ServerActionsRunActionsRunRetryErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/retry",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public cancel<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsProviderCommand: ActionsProviderCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsProviderCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsRunActionsRunCancelResponses,
+      ServerActionsRunActionsRunCancelErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/cancel",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public forceCancel<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsGitHubCommand: ActionsGitHubCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsGitHubCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsRunActionsRunForceCancelResponses,
+      ServerActionsRunActionsRunForceCancelErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/force-cancel",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public approveFork<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsGitHubCommand: ActionsGitHubCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsGitHubCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsRunActionsRunApproveForkResponses,
+      ServerActionsRunActionsRunApproveForkErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/approve-fork",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public rename<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      runID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsRenameCommand: ActionsRenameCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "runID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsRenameCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<
+      ServerActionsRunActionsRunRenameResponses,
+      ServerActionsRunActionsRunRenameErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/run/{bindingID}/{runID}/name",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions4 extends HeyApiClient {
+  private _run?: Run2
+  get run(): Run2 {
+    return (this._run ??= new Run2({ client: this.client }))
+  }
+}
+
+export class ActionsRun extends HeyApiClient {
+  private _actions?: Actions4
+  get actions(): Actions4 {
+    return (this._actions ??= new Actions4({ client: this.client }))
+  }
+}
+
+export class Job extends HeyApiClient {
+  public retry<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      jobID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsJobRetryCommand: ActionsJobRetryCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "jobID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsJobRetryCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsJobActionsJobRetryResponses,
+      ServerActionsJobActionsJobRetryErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/job/{bindingID}/{jobID}/retry",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public play<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      jobID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsJobPlayCommand: ActionsJobPlayCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "jobID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsJobPlayCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsJobActionsJobPlayResponses,
+      ServerActionsJobActionsJobPlayErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/job/{bindingID}/{jobID}/play",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public cancel<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      jobID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsGitLabCommand: ActionsGitLabCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "jobID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsGitLabCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsJobActionsJobCancelResponses,
+      ServerActionsJobActionsJobCancelErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/job/{bindingID}/{jobID}/cancel",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public erase<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      jobID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsGitLabCommand: ActionsGitLabCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "jobID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsGitLabCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsJobActionsJobEraseResponses,
+      ServerActionsJobActionsJobEraseErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/job/{bindingID}/{jobID}/erase",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions5 extends HeyApiClient {
+  private _job?: Job
+  get job(): Job {
+    return (this._job ??= new Job({ client: this.client }))
+  }
+}
+
+export class ActionsJob extends HeyApiClient {
+  private _actions?: Actions5
+  get actions(): Actions5 {
+    return (this._actions ??= new Actions5({ client: this.client }))
+  }
+}
+
+export class Pipeline extends HeyApiClient {
+  public mergeRequest<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      mergeRequestID: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsMergeRequestCommand: ActionsMergeRequestCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "mergeRequestID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsMergeRequestCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsPipelineActionsPipelineMergeRequestResponses,
+      ServerActionsPipelineActionsPipelineMergeRequestErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/pipeline/{bindingID}/merge-request/{mergeRequestID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public trigger<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsTriggerPipelineCommand: ActionsTriggerPipelineCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsTriggerPipelineCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsPipelineActionsPipelineTriggerResponses,
+      ServerActionsPipelineActionsPipelineTriggerErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/pipeline/{bindingID}/trigger",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions6 extends HeyApiClient {
+  private _pipeline?: Pipeline
+  get pipeline(): Pipeline {
+    return (this._pipeline ??= new Pipeline({ client: this.client }))
+  }
+}
+
+export class ActionsPipeline extends HeyApiClient {
+  private _actions?: Actions6
+  get actions(): Actions6 {
+    return (this._actions ??= new Actions6({ client: this.client }))
+  }
+}
+
+export class Resource2 extends HeyApiClient {
+  public list<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      kind: ActionsResourceKind
+      runID?: string
+      resourceID?: string
+      scope?: string
+      ref?: string
+      query?: string
+      cursor?: string
+      limit?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "kind" },
+            { in: "query", key: "runID" },
+            { in: "query", key: "resourceID" },
+            { in: "query", key: "scope" },
+            { in: "query", key: "ref" },
+            { in: "query", key: "query" },
+            { in: "query", key: "cursor" },
+            { in: "query", key: "limit" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsResourceActionsResourceListResponses,
+      ServerActionsResourceActionsResourceListErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/resource/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  public command<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      resourceKind: ActionsResourceKind
+      action: "create" | "update" | "delete" | "play" | "pause" | "keep" | "clear"
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsResourceCommand: ActionsResourceCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "resourceKind" },
+            { in: "path", key: "action" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsResourceCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsResourceActionsResourceCommandResponses,
+      ServerActionsResourceActionsResourceCommandErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/resource/{bindingID}/{resourceKind}/{action}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions7 extends HeyApiClient {
+  private _resource?: Resource2
+  get resource(): Resource2 {
+    return (this._resource ??= new Resource2({ client: this.client }))
+  }
+}
+
+export class ActionsResource extends HeyApiClient {
+  private _actions?: Actions7
+  get actions(): Actions7 {
+    return (this._actions ??= new Actions7({ client: this.client }))
+  }
+}
+
+export class Source extends HeyApiClient {
+  public base<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      ref?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "ref" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsSourceActionsSourceBaseResponses,
+      ServerActionsSourceActionsSourceBaseErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/source/{bindingID}/base",
+      ...options,
+      ...params,
+    })
+  }
+
+  public validateDraft<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsDraftValidation: ActionsDraftValidation
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsDraftValidation", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsSourceActionsSourceValidateDraftResponses,
+      ServerActionsSourceActionsSourceValidateDraftErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/source/{bindingID}/validate-draft",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public validate<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsSourceValidation: ActionsSourceValidation
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsSourceValidation", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsSourceActionsSourceValidateResponses,
+      ServerActionsSourceActionsSourceValidateErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/source/{bindingID}/validate",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  public command<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      action: "branch" | "write" | "review"
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      actionsResourceCommand: ActionsResourceCommand
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "path", key: "action" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { key: "actionsResourceCommand", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<
+      ServerActionsSourceActionsSourceCommandResponses,
+      ServerActionsSourceActionsSourceCommandErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/source/{bindingID}/{action}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+}
+
+export class Actions8 extends HeyApiClient {
+  private _source?: Source
+  get source(): Source {
+    return (this._source ??= new Source({ client: this.client }))
+  }
+}
+
+export class ActionsSource extends HeyApiClient {
+  private _actions?: Actions8
+  get actions(): Actions8 {
+    return (this._actions ??= new Actions8({ client: this.client }))
+  }
+}
+
+export class Transfer extends HeyApiClient {
+  public info<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+      id: string
+      runID?: string
+      attempt?: string
+      path?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "kind" },
+            { in: "query", key: "id" },
+            { in: "query", key: "runID" },
+            { in: "query", key: "attempt" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsTransferActionsTransferInfoResponses,
+      ServerActionsTransferActionsTransferInfoErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/transfer/{bindingID}/info",
+      ...options,
+      ...params,
+    })
+  }
+
+  public read<ThrowOnError extends boolean = false>(
+    parameters: {
+      bindingID: ActionsBindingId
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      revision: string
+      kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+      id: string
+      runID?: string
+      attempt?: string
+      path?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "bindingID" },
+            { in: "query", key: "location" },
+            { in: "query", key: "revision" },
+            { in: "query", key: "kind" },
+            { in: "query", key: "id" },
+            { in: "query", key: "runID" },
+            { in: "query", key: "attempt" },
+            { in: "query", key: "path" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<
+      ServerActionsTransferActionsTransferReadResponses,
+      ServerActionsTransferActionsTransferReadErrors,
+      ThrowOnError
+    >({
+      url: "/api/actions/transfer/{bindingID}",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Actions9 extends HeyApiClient {
+  private _transfer?: Transfer
+  get transfer(): Transfer {
+    return (this._transfer ??= new Transfer({ client: this.client }))
+  }
+}
+
+export class ActionsTransfer extends HeyApiClient {
+  private _actions?: Actions9
+  get actions(): Actions9 {
+    return (this._actions ??= new Actions9({ client: this.client }))
+  }
+}
+
+export class Server extends HeyApiClient {
+  private _actionsBinding?: ActionsBinding
+  get actionsBinding(): ActionsBinding {
+    return (this._actionsBinding ??= new ActionsBinding({ client: this.client }))
+  }
+
+  private _actionsOperation?: ActionsOperation
+  get actionsOperation(): ActionsOperation {
+    return (this._actionsOperation ??= new ActionsOperation({ client: this.client }))
+  }
+
+  private _actionsWorkflow?: ActionsWorkflow
+  get actionsWorkflow(): ActionsWorkflow {
+    return (this._actionsWorkflow ??= new ActionsWorkflow({ client: this.client }))
+  }
+
+  private _actionsRun?: ActionsRun
+  get actionsRun(): ActionsRun {
+    return (this._actionsRun ??= new ActionsRun({ client: this.client }))
+  }
+
+  private _actionsJob?: ActionsJob
+  get actionsJob(): ActionsJob {
+    return (this._actionsJob ??= new ActionsJob({ client: this.client }))
+  }
+
+  private _actionsPipeline?: ActionsPipeline
+  get actionsPipeline(): ActionsPipeline {
+    return (this._actionsPipeline ??= new ActionsPipeline({ client: this.client }))
+  }
+
+  private _actionsResource?: ActionsResource
+  get actionsResource(): ActionsResource {
+    return (this._actionsResource ??= new ActionsResource({ client: this.client }))
+  }
+
+  private _actionsSource?: ActionsSource
+  get actionsSource(): ActionsSource {
+    return (this._actionsSource ??= new ActionsSource({ client: this.client }))
+  }
+
+  private _actionsTransfer?: ActionsTransfer
+  get actionsTransfer(): ActionsTransfer {
+    return (this._actionsTransfer ??= new ActionsTransfer({ client: this.client }))
   }
 }
 
@@ -9475,5 +11832,10 @@ export class OrchestraClient extends HeyApiClient {
   private _v2?: V2
   get v2(): V2 {
     return (this._v2 ??= new V2({ client: this.client }))
+  }
+
+  private _server?: Server
+  get server(): Server {
+    return (this._server ??= new Server({ client: this.client }))
   }
 }

@@ -5,7 +5,7 @@ export * as CodeIndexFilter from "./filter"
 // cannot parse never takes a slot (P0-3); a skipped source file keeps its reason; there is no file cap.
 
 /** The tree-sitter grammar a path parses with. `.js` and `.jsx` use the TSX grammar, which accepts plain JS and JSX. */
-export type Grammar = "typescript" | "tsx" | "python"
+export type Grammar = "typescript" | "tsx" | "python" | "go" | "rust"
 
 const GRAMMARS: Record<string, Grammar> = {
   ".ts": "typescript",
@@ -18,6 +18,8 @@ const GRAMMARS: Record<string, Grammar> = {
   ".cjs": "tsx",
   ".py": "python",
   ".pyi": "python",
+  ".go": "go",
+  ".rs": "rust",
 }
 
 export const SKIP_SEGMENTS = new Set([

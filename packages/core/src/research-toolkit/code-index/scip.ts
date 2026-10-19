@@ -6,13 +6,24 @@ import { fromBinary } from "@bufbuild/protobuf"
 // The package root resolves to its `index.ts` source, which does not compile under this repo's
 // `verbatimModuleSyntax`; `scip_pb` ships as JS with declarations. `fromBinary(IndexSchema, …)` is the body of the
 // package's own `deserializeSCIP`.
-import { IndexSchema, SymbolRole } from "@c4312/scip/scip_pb"
+import { IndexSchema, PositionEncoding, SymbolRole } from "@c4312/scip/scip_pb"
 import { Role } from "./types"
 
 // T-X1: the SCIP reader, transplanted from Atlas `adapter-io/src/scip.ts:95-160`. Atlas projects a dump down to
 // (symbol, definition|reference); the index needs ranges, roles, enclosing ranges and relationships, so this
 // projection keeps them. Every range is converted once, here, from SCIP's 0-based half-open form to the index's
 // 1-based closed lines and columns (UTF-16 units, the encoding scip-typescript declares).
+//
+// A document's `position_encoding` says how its columns count: UTF-8 bytes, UTF-16 or UTF-32 units. When it is unset
+// the indexer's own convention applies (DEFAULT_ENCODING). Columns in another encoding are converted to UTF-16 against
+// the line's text: the dump's own `text`, else the source the caller passes. Without either they stay as emitted.
+
+/** Per indexer, the column encoding it uses without declaring one; any other indexer counts UTF-16 units. */
+const DEFAULT_ENCODING: Readonly<Record<string, PositionEncoding>> = {
+  // go/token columns are byte offsets.
+  "scip-go": PositionEncoding.UTF8CodeUnitOffsetFromLineStart,
+  "rust-analyzer": PositionEncoding.UTF8CodeUnitOffsetFromLineStart,
+}
 
 /** 1-based, closed. A zero-width SCIP range (a file module definition) has `endCol = startCol - 1`. */
 export type Span = { readonly startLine: number; readonly startCol: number; readonly endLine: number; readonly endCol: number }
@@ -79,19 +90,30 @@ export function decodeScipCached(file: string) {
   return raw
 }
 
-/** Read one dump. `prefix` is the project directory relative to the repository root (the indexer's cwd). */
-export function readScip(file: string, options?: { readonly prefix?: string }): Index {
+/**
+ * Read one dump. `prefix` is the project directory relative to the repository root (the indexer's cwd); `source`
+ * gives a document's text by that repository-relative path, for converting columns the dump counts in UTF-8 or UTF-32.
+ */
+export function readScip(
+  file: string,
+  options?: { readonly prefix?: string; readonly source?: (path: string) => string | undefined },
+): Index {
   const raw = decodeScipCached(file)
   const prefix = options?.prefix ?? ""
+  const tool = raw.metadata?.toolInfo
   const documents = raw.documents.map((doc) => {
+    const relative = path.posix.join(prefix, doc.relativePath.replaceAll("\\", "/"))
+    const encoding = doc.positionEncoding || DEFAULT_ENCODING[tool?.name ?? ""] || PositionEncoding.UTF16CodeUnitOffsetFromLineStart
+    const text = encoding === PositionEncoding.UTF16CodeUnitOffsetFromLineStart ? undefined : doc.text || options?.source?.(relative)
+    const convert = text === undefined ? (range: ReadonlyArray<number>) => range : utf16(text.split("\n"), encoding)
     const occurrences = doc.occurrences.flatMap((occ) => {
-      const range = span(occ.range)
+      const range = span(convert(occ.range))
       if (!range) return []
-      const enclosingRange = span(occ.enclosingRange)
+      const enclosingRange = span(convert(occ.enclosingRange))
       return [{ ...range, symbol: occ.symbol, role: role(occ.symbolRoles), ...(enclosingRange ? { enclosingRange } : {}) }]
     })
     return {
-      path: path.posix.join(prefix, doc.relativePath.replaceAll("\\", "/")),
+      path: relative,
       language: doc.language,
       occurrences,
       symbols: doc.symbols.map((info) => ({
@@ -108,7 +130,6 @@ export function readScip(file: string, options?: { readonly prefix?: string }): 
       })),
     }
   })
-  const tool = raw.metadata?.toolInfo
   return {
     indexer: tool ? { name: tool.name, version: tool.version } : undefined,
     documents,
@@ -153,6 +174,22 @@ export function descriptorName(symbol: string) {
 
 function decode(bytes: Uint8Array) {
   return fromBinary(IndexSchema, bytes)
+}
+
+// A range's columns re-counted in UTF-16 units of their line. An ASCII line, or a line the text does not have, keeps
+// its columns: they are the same in every encoding there, or cannot be checked.
+function utf16(lines: ReadonlyArray<string>, encoding: PositionEncoding) {
+  const column = (line: number, offset: number) => {
+    const text = lines[line]
+    if (text === undefined || !/[^\x00-\x7f]/.test(text)) return offset
+    if (encoding === PositionEncoding.UTF32CodeUnitOffsetFromLineStart) return [...text].slice(0, offset).join("").length
+    return Buffer.from(text, "utf8").subarray(0, offset).toString("utf8").length
+  }
+  return (range: ReadonlyArray<number>) => {
+    if (range.length === 3) return [range[0], column(range[0], range[1]), column(range[0], range[2])]
+    if (range.length === 4) return [range[0], column(range[0], range[1]), range[2], column(range[2], range[3])]
+    return range
+  }
 }
 
 function span(range: ReadonlyArray<number>): Span | undefined {

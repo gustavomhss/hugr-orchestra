@@ -138,7 +138,7 @@ describe("the wired code index", () => {
       expect(output).toContain("src/y.ts:3-5 call in relayed lines 4")
       // The import of viaExports on y.ts:1 names it without calling it.
       expect(output).not.toContain("src/y.ts:1 ")
-      expect(output).toContain("shards ts:.")
+      expect(output).toContain("shards ts:.@scip-typescript")
 
       const answer = yield* fixture.call("code_locate", { question: "which function doubles the relayed value?" })
       if (Exit.isFailure(answer)) throw new Error(Cause.pretty(answer.cause))
