@@ -246,7 +246,7 @@ export function Receipt(props: {
                   <span class={`wf-dot ${STEP_TONE[status()]}`} />
                   <div class="mx-grow">
                     <strong>{node.name}</strong>
-                    <small>{[node.id, result()?.note].filter(Boolean).join(" · ")}</small>
+                    <small>{[external() ? undefined : node.id, result()?.note].filter(Boolean).join(" · ")}</small>
                   </div>
                   <span class={`mx-badge ${badgeTone(STEP_TONE[status()])}`}>
                     {copy.t(`orchestra.workflows.verdict.${status()}`)}

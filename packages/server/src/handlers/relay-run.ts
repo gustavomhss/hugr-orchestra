@@ -52,27 +52,28 @@ const load = Effect.fnUntraced(function* (runID: string) {
     })
   // A broken chain makes its self-reported steps untrustworthy, so the run shows only that it is broken.
   const verified = yield* LedgerVerify.verify(ledger)
-  if (verified.exit === 0 && run.status === "parked" && !(yield* Effect.promise(() => waiting(path.dirname(ledger)))))
+  if (verified.exit !== 0)
     return {
       entries,
       run: {
         ...run,
         status: "failed" as const,
-        reason:
-          "The process that asked for this approval has exited. Run the graph again with the same thread_id to answer it.",
+        failing: [],
+        reason: `Ledger broken: ${`${verified.stdout}${verified.stderr}`.split("\n")[0]}`,
         endedAt: run.endedAt ?? run.startedAt,
+        steps: [],
       },
     }
-  if (verified.exit === 0) return { entries, run }
+  if (run.status !== "parked" || (yield* Effect.promise(() => waiting(path.dirname(ledger))))) return { entries, run }
   return {
     entries,
     run: {
       ...run,
       status: "failed" as const,
-      failing: [],
-      reason: `Ledger broken: ${`${verified.stdout}${verified.stderr}`.split("\n")[0]}`,
-      endedAt: run.endedAt ?? run.startedAt,
-      steps: [],
+      reason:
+        "The process that asked for this approval has exited. Run the graph again with the same thread_id to answer it.",
+      endedAt: bodies.pipe(Option.map((value) => value.at(-1)!.at), Option.getOrUndefined),
+      steps: run.steps.map((step) => (step.status === "running" ? { ...step, status: "failed" as const } : step)),
     },
   }
 })

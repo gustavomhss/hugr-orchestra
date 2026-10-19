@@ -120,6 +120,7 @@ describe("external relay runs", () => {
     const gone = (await get(tmp.path, "/api/relay/run/gone")).body.data
     expect(gone.status).toBe("failed")
     expect(gone.reason).toMatch(/^The process that asked for this approval has exited/)
+    expect(gone.steps.map((step: Json) => step.status)).not.toContain("running")
   })
 
   test("an ID that does not match RUN_ID is refused", async () => {
