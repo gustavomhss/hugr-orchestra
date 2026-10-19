@@ -152,6 +152,15 @@ describe("InquiryCheck.run", () => {
     expect(rule(await run(base({ claims: [only], searches: [{ ...search, complete: false }] })), "R5").failed).toBe(1)
   })
 
+  // Mutation control: make `word` in src/research/inquiry-check.ts ignore claim.scope; the existential claim then fails R5.
+  test("R5 lets a declared scope decide, and names the wording that flagged an undeclared claim", async () => {
+    const proposition = "snapshot lists only the last 12 sources"
+    const flagged = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition })] }))
+    expect(reasons(flagged, "R5")[0]).toContain('universal wording "only"')
+    const declared = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition, scope: "existential" })] }))
+    expect(rule(declared, "R5")).toMatchObject({ checked: 0, failed: 0 })
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))

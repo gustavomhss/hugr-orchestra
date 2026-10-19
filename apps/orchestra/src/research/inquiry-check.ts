@@ -200,7 +200,9 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
       return origin.kind === "file" || origin.kind === "url" || (origin.kind === "tool-output" && origin.uri.startsWith("probe:"))
     })
     if (good.length && !primary) fail("R1", "no primary source: tool output and atlas-own memory cannot be a claim's only evidence", at)
-    const universal = claim.scope === "universal" || UNIVERSAL.test(claim.proposition)
+    // A declared scope decides; the wording only flags a claim that declared none.
+    const word = claim.scope ? undefined : UNIVERSAL.exec(claim.proposition)?.[0]
+    const universal = claim.scope === "universal" || word !== undefined
     const absence = ABSENCE.test(claim.proposition)
     if (universal) count("R5")
     if (absence) count("R6")
@@ -208,7 +210,8 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     // it in the claim's conditions, or as a whole term of its proposition, so the seat never restates a search it ran.
     const searched = input.searches.some((search) => search.complete && search.scope.some((entry) => entry.trim() !== "" &&
       (claim.conditions.some((condition) => condition.includes(entry)) || terms(entry).some((term) => names(claim.proposition, term)))))
-    if (universal && !searched) fail("R5", "universal claim without a complete code_search or code_query whose scope is in its conditions", at)
+    // The reason names the trigger and every way out, so the seat fixes the claim in one try.
+    if (universal && !searched) fail("R5", `${word ? `universal wording "${word}"` : "universal scope"} without a complete code_search or code_query whose pattern or path the claim names; name one, declare scope existential, or reword`, at)
     if (absence && !searched) fail("R6", "absence claim without a complete code_search or code_query whose scope is in its conditions", at)
     return primary && good.length > 0
   }))

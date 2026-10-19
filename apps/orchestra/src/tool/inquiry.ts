@@ -116,7 +116,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           const outcome = yield* ResearchInquiry.check(state, input, yield* deps)
           if (input.sufficiency === "answered" && outcome.result.verdict !== "pass")
             return yield* refuse(`the closing check failed: ${outcome.result.issues.slice(0, 16).map((issue) =>
-              `${issue.rule}${issue.citation ? ` ${issue.citation}` : ""} ${issue.reason}`).join("; ")}`)
+              `${issue.rule}${issue.ref ? ` ${issue.ref.id}` : ""}${issue.citation ? ` ${issue.citation}` : ""} ${issue.reason}`).join("; ")}`)
           const corpus = yield* records.view(binding, { action: "corpus" })
           const documents = "documents" in corpus ? corpus.documents.map((document) => document.ref) : []
           const card = ResearchInquiry.card(state, { allowance, close: input, outcome, domains: yield* AllowedDomains, documents })
