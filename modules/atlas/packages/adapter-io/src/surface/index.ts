@@ -12,18 +12,17 @@
 // is `ComposedRuntime.promote`, `draft` is `draftVerdict` + `checkVerdict` over `ComposedRuntime.draft`/`check`, `emit`
 // and `link` are `handler.handle` on `atlas-emit` and `atlas-link`. `verify` is `verifyFactVerdict` over the verify-fact
 // leg built exactly as compose.ts builds it; it reads the code index and nothing else, so it composes nothing more.
+// REVIEW (D31): `review` and the review writes live in ./review.ts and act through the same adapter-io helpers the
+// CLI's review commands call (D29), so the screen and the CLI cannot diverge.
 //
 // COST, STATED: `own`, `health` and every write call `composeRuntime`, which walks the tracked tree and decodes the
 // SCIP index, once per call. `snapshot`, `reasoning` and `verify` do not compose. Every method is synchronous.
-//
 // THE RATIFY TOKEN. `composeRuntime` reads `ATLAS_RATIFY_TOKEN` from the environment once, synchronously, while it
 // composes (compose.ts:175), and closes over it. A write that carries `token` sets the variable for exactly that one
 // synchronous `composeRuntime` call and restores the previous value before anything else can run.
 //
 // A repository with no `.atlas/` directory answers `{ state: "empty" }` from every method, checked on each call.
-
-import { existsSync } from "node:fs"
-import { basename, join } from "node:path"
+import { existsSync } from "node:fs"import { basename, join } from "node:path"
 import { asHash } from "@atlas/kernel"
 import type { EmitOut, LinkOut, Verdict } from "@atlas/tools"
 import { checkVerdict, draftVerdict } from "../author-verdicts.js"
@@ -38,9 +37,9 @@ import { childrenOf, headShort, langCounts, trackedFiles, trackedStore, withDrif
 import { readDependents } from "./read-index.js"
 import { readMemory, readOrientation, readOwn, readTerritories } from "./read-own-memory.js"
 import { pendingFacts, readReasoning, readStoreFiles, storeSummary } from "./read-store.js"
+import { review } from "./review.js"
 import type {
-  AtlasDraftInput,
-  AtlasDraftResult,
+  AtlasDraftInput,  AtlasDraftResult,
   AtlasEmitInput,
   AtlasEmitResult,
   AtlasEmpty,
@@ -60,9 +59,9 @@ export type {
   AtlasCasIntegrity,
   AtlasCheckOut,
   AtlasClaimProvenance,
+  AtlasDelegateResult,
   AtlasDraftData,
-  AtlasDraftInput,
-  AtlasDraftOut,
+  AtlasDraftInput,  AtlasDraftOut,
   AtlasDraftResult,
   AtlasDrift,
   AtlasDriftHunk,
@@ -91,9 +90,10 @@ export type {
   AtlasReasoning,
   AtlasReasoningMissing,
   AtlasReasoningResult,
+  AtlasReviewResult,
+  AtlasReviewWriteResult,
   AtlasScipState,
-  AtlasSnapshot,
-  AtlasSnapshotResult,
+  AtlasSnapshot,  AtlasSnapshotResult,
   AtlasSurface,
   AtlasTracked,
   AtlasVerdict,
@@ -109,9 +109,25 @@ export type {
   AtlasOwnSnapshot,
   AtlasTerritory,
 } from "./types-memory.js"
+export type {
+  AtlasAnswerInput,
+  AtlasDecideInput,
+  AtlasDelegateInput,
+  AtlasDelegateOut,
+  AtlasHoldInput,
+  AtlasInterviewDraft,
+  AtlasInterviewQuestion,
+  AtlasMemoryDecideInput,
+  AtlasMemoryProposal,
+  AtlasProposeInput,
+  AtlasReleaseInput,
+  AtlasReview,
+  AtlasReviewProposal,
+  AtlasReviewWriteOut,
+  AtlasTerritoryInput,
+} from "./types-review.js"
 
 const EMPTY: AtlasEmpty = { state: "empty" }
-
 /** The Atlas screen's API over the store at `<repoPath>/.atlas`. Opening it reads nothing. */
 export function openSurface(repoPath: string): AtlasSurface {
   const absent = () => !existsSync(join(repoPath, ".atlas"))
@@ -128,6 +144,7 @@ export function openSurface(repoPath: string): AtlasSurface {
     emit: (input) => (absent() ? EMPTY : emit(repoPath, input)),
     link: (input) => (absent() ? EMPTY : link(repoPath, input)),
     verify: (input) => (absent() ? EMPTY : verify(repoPath, input)),
+    review: () => (absent() ? EMPTY : review(repoPath)),
   }
 }
 
