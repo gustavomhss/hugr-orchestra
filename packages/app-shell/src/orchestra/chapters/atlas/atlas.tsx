@@ -22,6 +22,7 @@ import { Btn } from "./kit/controls"
 import { Icon } from "./kit/chips"
 import { num } from "./kit/format"
 import { createToaster, Toast } from "./kit/toast"
+import { AtlasSheetHost } from "./sheets/host"
 import { atlasInspector, atlasViews } from "./views"
 
 // The Atlas chapter (D7): the sub-navigation rail, the main view chosen by the URL, the fact inspector, the toast.
@@ -187,6 +188,7 @@ export default function AtlasPage(props: ChapterPageProps) {
           )}
         </Show>
         <Toast toaster={toaster} />
+        <AtlasSheetHost />
         <AtlasKeys
           main={() => elements.main}
           blocked={() =>
