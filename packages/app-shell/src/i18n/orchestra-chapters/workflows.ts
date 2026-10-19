@@ -609,6 +609,7 @@ export const WORKFLOWS_COPY = {
   "orchestra.workflows.receipt.base": "base {{ref}}",
   "orchestra.workflows.receipt.canvas": "View on canvas",
   "orchestra.workflows.receipt.external": "external",
+  "orchestra.workflows.runs.externalWaiting": "Waiting for approval in the terminal running this graph",
   "orchestra.workflows.receipt.openFailed": "Open failed step",
   "orchestra.workflows.receipt.openCurrent": "Open current step",
   "orchestra.workflows.receipt.more": "More actions for run {{id}}",

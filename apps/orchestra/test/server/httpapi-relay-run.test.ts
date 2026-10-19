@@ -94,6 +94,10 @@ describe("external relay runs", () => {
     const broken = (await get(tmp.path, "/api/relay/run/byte-flip/audit")).body.data
     expect(broken).toMatchObject({ status: "fail", code: "ledger-broken" })
     expect(broken.rows[0].value).toMatch(/^TAMPERED line 3:/)
+    // The list never shows a tampered run as it reported itself.
+    const flipped = list.find((run) => run.runID === "byte-flip")!
+    expect({ status: flipped.status, steps: flipped.steps }).toEqual({ status: "failed", steps: [] })
+    expect(flipped.reason).toMatch(/^Ledger broken: TAMPERED line 3:/)
 
     const seqs = async (query: string) =>
       ((await get(tmp.path, `/api/relay/run/thread-pass/ledger${query}`)).body.data as Json[]).map((entry) => entry.seq)

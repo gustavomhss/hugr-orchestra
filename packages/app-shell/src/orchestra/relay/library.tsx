@@ -173,7 +173,7 @@ export function WorkflowLibrary(props: Props) {
           {copy.t("orchestra.palette.executions")}
         </a>
       </p>
-      <Show when={props.shared}>
+      <Show when={props.shared && props.route.tab !== "runs"}>
         <p class="wf-retained" role="status" data-slot="relay-repository-required">
           <span>{copy.t("orchestra.workflows.scope.repositoryRequired")}</span>
         </p>
@@ -604,21 +604,19 @@ export function AllRuns(props: {
                   </span>
                   <div class="mx-grow">
                     <strong>
-                      #{runHandle(run.runID)} · {name()}
+                      {/* An external run ID is the thread the user chose, so it shows whole. */}
+                      #{external ? run.runID : runHandle(run.runID)} · {name()}
                       <Show when={external}>
                         {" "}
                         <span class="mx-badge">{copy.t("orchestra.workflows.receipt.external")}</span>
                       </Show>
                     </strong>
                     <small>
-                      {[
-                        run.label,
-                        run.version !== undefined ? `v${run.version}` : undefined,
-                        run.agent,
-                        external ? run.failing.join(" ") : undefined,
-                      ]
-                        .filter(Boolean)
-                        .join(" · ")}
+                      {external
+                        ? externalNote(copy, run)
+                        : [run.label, run.version !== undefined ? `v${run.version}` : undefined, run.agent]
+                            .filter(Boolean)
+                            .join(" · ")}
                     </small>
                   </div>
                   <div>
@@ -653,4 +651,13 @@ export function AllRuns(props: {
       </Show>
     </Show>
   )
+}
+
+// What an external run's row says under its name: where it waits, or the failing check and its last output line.
+function externalNote(copy: ReturnType<typeof useRelayCopy>, run: RelayRun) {
+  if (run.status === "parked") return copy.t("orchestra.workflows.runs.externalWaiting")
+  const check = run.steps.flatMap((step) => step.checks).find((item) => item.verdict === "fail")
+  if (!check) return run.reason ?? ""
+  const last = (check.output ?? "").trim().split("\n").at(-1) ?? ""
+  return last ? `${check.id} — ${last}` : check.id
 }
