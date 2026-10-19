@@ -2802,7 +2802,7 @@ export type ProjectCopiesRefreshInput = {
 
 export type ProjectCopiesRefreshOutput = void
 
-export type ServerProjectListOutput = ReadonlyArray<{
+export type ProjectsListOutput = ReadonlyArray<{
   readonly id: string
   readonly worktree: string
   readonly vcs?: "git"
@@ -2813,7 +2813,7 @@ export type ServerProjectListOutput = ReadonlyArray<{
   readonly sandboxes: ReadonlyArray<string>
 }>
 
-export type ServerConfigUpdateInput = {
+export type ConfigUpdateInput = {
   readonly model?: {
     readonly model?: string | undefined
     readonly agents?:
@@ -2828,7 +2828,7 @@ export type ServerConfigUpdateInput = {
   }["agents"]
 }
 
-export type ServerConfigUpdateOutput = void
+export type ConfigUpdateOutput = void
 
 export type RelayDocumentsListInput = {
   readonly location?: {

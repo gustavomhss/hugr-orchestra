@@ -65,11 +65,6 @@ export function KpiDashboard(props: {
   const navigate = useNavigate()
   const openModels = () => navigate("/orchestra/settings?section=models")
   const client = props.sdk.createClient({ directory: props.directory })
-  // Session and repository activity have no V2 route; those cards show as unavailable there.
-  const v1Only = <T,>(read: () => Promise<Outcome<T>>) =>
-    props.sdk.protocol.then((protocol): Promise<Outcome<T>> =>
-      protocol === "v1" ? read() : Promise.resolve({ status: "unavailable" }),
-    )
   const [prefs, setPrefs, , ready] = persisted(
     Persist.serverWorkspace(props.sdk.scope, props.directory, "orchestra-home"),
     createStore({ period: "30d" as Period }),
@@ -124,9 +119,7 @@ export function KpiDashboard(props: {
     setPulls({ status: "loading" })
     setState("expanded", false)
     void cached("activity", period, (abort) =>
-      v1Only(() =>
-        outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
-      ),
+      outcome(client.session.activity({ directory: props.directory, period }, { signal: abort }), parseActivity),
     ).then((result) => {
       if (!signal.aborted) setActivity(result)
     })
@@ -134,14 +127,12 @@ export function KpiDashboard(props: {
     const now = Date.now()
     const days = { "7d": 7, "30d": 30, "90d": 90, all: undefined }[period]
     void cached("vcs", period, (abort) =>
-      v1Only(() =>
-        outcome(
-          client.vcs.activity(
-            { directory: props.directory, since: days === undefined ? 0 : now - (2 * days + 2) * 86_400_000, until: now },
-            { signal: abort },
-          ),
-          parseGit,
+      outcome(
+        client.vcs.activity(
+          { directory: props.directory, since: days === undefined ? 0 : now - (2 * days + 2) * 86_400_000, until: now },
+          { signal: abort },
         ),
+        parseGit,
       ),
     ).then((result) => {
       if (!signal.aborted) setRepository(result)

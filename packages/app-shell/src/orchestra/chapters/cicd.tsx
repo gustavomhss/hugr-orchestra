@@ -69,14 +69,13 @@ export default function Cicd(props: ChapterPageProps) {
       )
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
-  // V2 has no VCS route yet; the V1 route is only a form default, so V2 falls back to the synced branch.
-  const [vcs] = createResource(async () => {
-    if ((await sdk().protocol) !== "v1") return undefined
-    return sdk()
+  // V2 has no VCS route yet; the legacy route still answers on current servers and is only a form default.
+  const [vcs] = createResource(() =>
+    sdk()
       .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
       .then((result) => result.data?.branch)
-      .catch(() => undefined)
-  })
+      .catch(() => undefined),
+  )
   const branch = () => vcs() ?? sync().child(props.directory, { bootstrap: false })[0].vcs?.branch ?? ""
   const matches = (text: string) => text.toLowerCase().includes(query().trim().toLowerCase())
   const trigger = (value: "manual" | "push" | "pullRequest") => language.t(`orchestra.cicd.trigger.${value}`)
