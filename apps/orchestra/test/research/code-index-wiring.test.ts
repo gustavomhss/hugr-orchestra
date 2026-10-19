@@ -31,7 +31,6 @@ import { Skill } from "@/skill"
 import { ToolRegistry } from "@/tool/registry"
 import type { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -114,7 +113,6 @@ const located = (output: string) => JSON.parse(output.split("\n\nRetained source
 describe("the wired code index", () => {
   it.instance("code_query answers real callers and code_locate a ranked range from the real build", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       expect(fixture.ids).toEqual(expect.arrayContaining(["code_query", "code_search", "code_locate"]))
       const callers = { op: "callers", name: "viaExports" } satisfies CodeIndex.CodeQuery

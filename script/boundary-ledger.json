@@ -1124,26 +1124,8 @@
     },
     {
       "rule": "R5",
-      "file": "apps/orchestra/test/research/code-index-python.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/orchestra/test/research/code-index-wiring.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/orchestra/test/research/fixtures/packaged-proof.ts",
       "specifier": "../../../../../packages/client/src/index",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/orchestra/test/research/probe-run.test.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },
     {

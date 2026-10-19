@@ -30,7 +30,6 @@ import { Skill } from "@/skill"
 import { ToolRegistry } from "@/tool/registry"
 import type { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
@@ -103,7 +102,6 @@ const failure = (exit: Exit.Exit<unknown, unknown>) => Exit.isFailure(exit) ? Ca
 describe("the wired Python code index", () => {
   it.instance("code_query finds a function's definition and its references across modules from the real build", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       const definition = { op: "definition", name: "double_it" } satisfies CodeIndex.CodeQuery
 

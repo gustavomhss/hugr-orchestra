@@ -33,7 +33,6 @@ import { Skill } from "@/skill"
 import { ToolRegistry } from "@/tool/registry"
 import { Tool } from "@/tool/tool"
 import { Truncate } from "@/tool/truncate"
-import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 import { TestAppNodeBuilder } from "../fixture/app-node-builder"
 import { TestInstance } from "../fixture/fixture"
 import { jail } from "../fixture/sandbox-host"
@@ -123,7 +122,6 @@ console.log(got === 10 ? "OK" : \`DEFECT clamp(10, 0, 10) = \${got}\`)
 describe("probe_run", () => {
   live("a typecheck probe reports the planted TS2322 in original coordinates, retained as a probe source", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       const { result, receipt } = yield* fixture.probe({ snapshot: { kind: "worktree" }, runner: { kind: "typecheck", project: "tsconfig.json" } })
       const line = (yield* Effect.promise(() => Bun.file(path.join(FIXTURE, "src", "typed.ts")).text())).split("\n")
@@ -138,7 +136,6 @@ describe("probe_run", () => {
 
   live("a test probe shows the planted clamp defect", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       const { result } = yield* fixture.probe({ snapshot: { kind: "worktree" }, runner: { kind: "test", file: "test/clamp.fixture.ts" } })
       expect(result.verdict, result.stderr.tail).toBe("failed")
@@ -149,7 +146,6 @@ describe("probe_run", () => {
 
   live("with a hypothesis the probe resolves it, and its receipt is citable by inquiry claim and passes inquiry check", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       const inquiry = (input: Research.InquiryInput) => fixture.call("inquiry", input)
       const open = Schema.decodeUnknownSync(Schema.Struct({ subquestions: Schema.Array(Research.RecordRef) }))(
@@ -173,7 +169,6 @@ describe("probe_run", () => {
 
   live("probe seconds are charged per probe: once they run out, the next probe is refused with the named error", () =>
     Effect.gen(function* () {
-      expectSpawn(import.meta.path)
       const fixture = yield* setup()
       yield* fixture.spend(Research.ProbeSeconds.quick - 1)
       expect((yield* fixture.probe(script("console.log('first')"))).result.verdict).toBe("passed")
