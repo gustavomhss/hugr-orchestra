@@ -77,7 +77,8 @@ describe("proposeProjectRule", () => {
     if (!v.ok) throw new Error(v.reason)
     expect(v.reconciled).toBeUndefined()
     const records = readReview(root).records
-    expect(records[1]?.member).toBe("jimmy")
+    const proposal = records[1]
+    expect(proposal?.kind === "memory-proposal" ? proposal.member : undefined).toBe("jimmy")
   })
 
   it("rejects an extra field", () => {
