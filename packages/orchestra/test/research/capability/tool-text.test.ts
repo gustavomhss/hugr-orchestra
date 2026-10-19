@@ -4,8 +4,7 @@ import { CapabilitySupport } from "./support"
 
 // JE-AC-M2: every research tool the seat holds declares, in at most 120 words, its line unit, what an empty result means,
 // what it retains and its named failure. The descriptions are read from the registry, as the model receives them.
-// probe_run is pending: P3 owns its text (it has no .txt yet), so it joins this list when P3 lands.
-const TOOLS = ["code_query", "code_search", "code_locate", "inquiry"]
+const TOOLS = ["code_query", "code_search", "code_locate", "inquiry", "probe_run"]
 const DECLARED = [["line unit", /^Lines: \S/m], ["empty result", /^Empty: \S/m], ["retained", /^Retains: \S/m], ["named failure", /^Fails: [a-z_]+/m]] as const
 const words = (text: string) => text.trim().split(/\s+/).length
 
