@@ -71,7 +71,7 @@ const load = Effect.fnUntraced(function* (runID: string) {
       ...run,
       status: "failed" as const,
       reason:
-        "The process that asked for this approval has exited. Run the graph again with the same thread_id to answer it.",
+        "The process that asked for this approval has exited, so nobody can answer it. Start a new run with a new thread_id, or resume this one from a checkpointer that kept it.",
       endedAt: bodies.pipe(Option.map((value) => value.at(-1)!.at), Option.getOrUndefined),
       steps: run.steps.map((step) => (step.status === "running" ? { ...step, status: "failed" as const } : step)),
     },

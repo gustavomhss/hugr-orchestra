@@ -233,7 +233,9 @@ export function Receipt(props: {
         <For each={order()}>
           {(node, index) => {
             const result = (): RelayRunStep | undefined => step(node.id)
-            const status = () => result()?.status ?? "pending"
+            // Nobody can release an external run from here, so its escalated step reads as failed, not awaiting.
+            const status = () =>
+              external() && result()?.status === "escalated" ? "failed" : (result()?.status ?? "pending")
             const highlight = () => status() === "escalated" || status() === "failed"
             const phase = () => phaseOf(props.flow, node.id)
             const total = () => result()?.checks.length || readChecklist(node).controls.length
