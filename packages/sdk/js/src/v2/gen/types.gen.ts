@@ -2539,6 +2539,14 @@ export type Config = {
       enabled?: boolean
     }
   }
+  research?: {
+    limits?: {
+      indexer_bytes?: number
+      probe_bytes?: number
+      scratch_bytes?: number
+      index_bytes?: number
+    }
+  }
   compaction?: {
     auto?: boolean
     prune?: boolean
@@ -4009,6 +4017,17 @@ export type ProviderNotFoundError = {
   message: string
 }
 
+export type McpServer = {
+  name: string
+  status: McpStatus
+}
+
+export type McpServerNotFoundError1 = {
+  _tag: "McpServerNotFoundError"
+  server: string
+  message: string
+}
+
 export type OutputFormat1 =
   | {
       type: "text"
@@ -4199,6 +4218,21 @@ export type ProjectCopyError = {
     message: string
     forceRequired?: boolean
   }
+}
+
+export type ConfigSettings = {
+  model?: string
+  disabledProviders: Array<string>
+}
+
+export type ConfigPatch = {
+  model?: string
+  agents?: {
+    [key: string]: {
+      engine?: "orchestra" | "claude-code"
+    }
+  }
+  disabledProviders?: Array<string>
 }
 
 export type RelayDocumentView = {
@@ -7326,6 +7360,41 @@ export type CommandV2Info = {
   agent?: string
   model?: ModelRef
   subtask?: boolean
+}
+
+export type ConfigV2McpTimeout = {
+  startup?: number
+  request?: number
+}
+
+export type ConfigV2McpLocal = {
+  type: "local"
+  command: Array<string>
+  cwd?: string
+  environment?: {
+    [key: string]: string
+  }
+  disabled?: boolean
+  timeout?: ConfigV2McpTimeout
+}
+
+export type ConfigV2McpoAuth = {
+  client_id?: string
+  client_secret?: string
+  scope?: string
+  callback_port?: number
+  redirect_uri?: string
+}
+
+export type ConfigV2McpRemote = {
+  type: "remote"
+  url: string
+  headers?: {
+    [key: string]: string
+  }
+  oauth?: ConfigV2McpoAuth | false
+  disabled?: boolean
+  timeout?: ConfigV2McpTimeout
 }
 
 export type SkillV2Info = {
@@ -16491,6 +16560,41 @@ export type V2SessionActiveResponses = {
 
 export type V2SessionActiveResponse = V2SessionActiveResponses[keyof V2SessionActiveResponses]
 
+export type V2SessionRemoveData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}"
+}
+
+export type V2SessionRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionRemoveError = V2SessionRemoveErrors[keyof V2SessionRemoveErrors]
+
+export type V2SessionRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionRemoveResponse = V2SessionRemoveResponses[keyof V2SessionRemoveResponses]
+
 export type V2SessionGetData = {
   body?: never
   path: {
@@ -16564,6 +16668,43 @@ export type V2SessionArchiveResponses = {
 }
 
 export type V2SessionArchiveResponse = V2SessionArchiveResponses[keyof V2SessionArchiveResponses]
+
+export type V2SessionRenameData = {
+  body: {
+    title: string
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/rename"
+}
+
+export type V2SessionRenameErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionRenameError = V2SessionRenameErrors[keyof V2SessionRenameErrors]
+
+export type V2SessionRenameResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionRenameResponse = V2SessionRenameResponses[keyof V2SessionRenameResponses]
 
 export type V2SessionGetSubagentModelsData = {
   body?: never
@@ -18271,6 +18412,201 @@ export type V2CommandListResponses = {
 
 export type V2CommandListResponse = V2CommandListResponses[keyof V2CommandListResponses]
 
+export type V2McpListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp"
+}
+
+export type V2McpListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2McpListError = V2McpListErrors[keyof V2McpListErrors]
+
+export type V2McpListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<McpServer>
+  }
+}
+
+export type V2McpListResponse = V2McpListResponses[keyof V2McpListResponses]
+
+export type V2McpRemoveData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}"
+}
+
+export type V2McpRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpRemoveError = V2McpRemoveErrors[keyof V2McpRemoveErrors]
+
+export type V2McpRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpRemoveResponse = V2McpRemoveResponses[keyof V2McpRemoveResponses]
+
+export type V2McpAddData = {
+  body: {
+    config: ConfigV2McpLocal | ConfigV2McpRemote
+  }
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}"
+}
+
+export type V2McpAddErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2McpAddError = V2McpAddErrors[keyof V2McpAddErrors]
+
+export type V2McpAddResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpAddResponse = V2McpAddResponses[keyof V2McpAddResponses]
+
+export type V2McpConnectData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/connect"
+}
+
+export type V2McpConnectErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpConnectError = V2McpConnectErrors[keyof V2McpConnectErrors]
+
+export type V2McpConnectResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpConnectResponse = V2McpConnectResponses[keyof V2McpConnectResponses]
+
+export type V2McpDisconnectData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/disconnect"
+}
+
+export type V2McpDisconnectErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpDisconnectError = V2McpDisconnectErrors[keyof V2McpDisconnectErrors]
+
+export type V2McpDisconnectResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpDisconnectResponse = V2McpDisconnectResponses[keyof V2McpDisconnectResponses]
+
 export type V2SkillRemoveData = {
   body?: never
   path?: never
@@ -19045,6 +19381,127 @@ export type V2ProjectCopyRefreshResponses = {
 }
 
 export type V2ProjectCopyRefreshResponse = V2ProjectCopyRefreshResponses[keyof V2ProjectCopyRefreshResponses]
+
+export type V2ProjectListData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/project"
+}
+
+export type V2ProjectListErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ProjectListError = V2ProjectListErrors[keyof V2ProjectListErrors]
+
+export type V2ProjectListResponses = {
+  /**
+   * Success
+   */
+  200: Array<Project>
+}
+
+export type V2ProjectListResponse = V2ProjectListResponses[keyof V2ProjectListResponses]
+
+export type V2ProjectDirectoriesData = {
+  body?: never
+  path: {
+    projectID: string
+  }
+  query?: never
+  url: "/api/project/{projectID}/directories"
+}
+
+export type V2ProjectDirectoriesErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ProjectDirectoriesError = V2ProjectDirectoriesErrors[keyof V2ProjectDirectoriesErrors]
+
+export type V2ProjectDirectoriesResponses = {
+  /**
+   * Success
+   */
+  200: Array<{
+    directory: string
+    strategy?: string
+  }>
+}
+
+export type V2ProjectDirectoriesResponse = V2ProjectDirectoriesResponses[keyof V2ProjectDirectoriesResponses]
+
+export type V2ConfigGetData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/config"
+}
+
+export type V2ConfigGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ConfigGetError = V2ConfigGetErrors[keyof V2ConfigGetErrors]
+
+export type V2ConfigGetResponses = {
+  /**
+   * ConfigSettings
+   */
+  200: ConfigSettings
+}
+
+export type V2ConfigGetResponse = V2ConfigGetResponses[keyof V2ConfigGetResponses]
+
+export type V2ConfigUpdateData = {
+  body: ConfigPatch
+  path?: never
+  query?: never
+  url: "/api/config"
+}
+
+export type V2ConfigUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ConfigUpdateError = V2ConfigUpdateErrors[keyof V2ConfigUpdateErrors]
+
+export type V2ConfigUpdateResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2ConfigUpdateResponse = V2ConfigUpdateResponses[keyof V2ConfigUpdateResponses]
 
 export type V2RelayDocumentListData = {
   body?: never

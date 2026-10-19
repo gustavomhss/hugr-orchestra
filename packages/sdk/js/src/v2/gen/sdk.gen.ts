@@ -63,13 +63,16 @@ import type {
   CapabilityArtifactId,
   CommandListErrors,
   CommandListResponses,
-  Config as Config4,
+  Config as Config5,
   ConfigGetErrors,
   ConfigGetResponses,
+  ConfigPatch,
   ConfigProvidersErrors,
   ConfigProvidersResponses,
   ConfigUpdateErrors,
   ConfigUpdateResponses,
+  ConfigV2McpLocal,
+  ConfigV2McpRemote,
   EventSubscribeResponses,
   EventTuiCommandExecute,
   EventTuiPromptAppend,
@@ -431,6 +434,10 @@ import type {
   V2BehaviorSetResponses,
   V2CommandListErrors,
   V2CommandListResponses,
+  V2ConfigGetErrors,
+  V2ConfigGetResponses,
+  V2ConfigUpdateErrors,
+  V2ConfigUpdateResponses,
   V2CredentialRemoveErrors,
   V2CredentialRemoveResponses,
   V2CredentialUpdateErrors,
@@ -467,6 +474,16 @@ import type {
   V2IntegrationOauthStatusResponses,
   V2LocationGetErrors,
   V2LocationGetResponses,
+  V2McpAddErrors,
+  V2McpAddResponses,
+  V2McpConnectErrors,
+  V2McpConnectResponses,
+  V2McpDisconnectErrors,
+  V2McpDisconnectResponses,
+  V2McpListErrors,
+  V2McpListResponses,
+  V2McpRemoveErrors,
+  V2McpRemoveResponses,
   V2ModelDefaultErrors,
   V2ModelDefaultResponses,
   V2ModelListErrors,
@@ -483,6 +500,10 @@ import type {
   V2ProjectCopyRefreshResponses,
   V2ProjectCopyRemoveErrors,
   V2ProjectCopyRemoveResponses,
+  V2ProjectDirectoriesErrors,
+  V2ProjectDirectoriesResponses,
+  V2ProjectListErrors,
+  V2ProjectListResponses,
   V2ProviderGetErrors,
   V2ProviderGetResponses,
   V2ProviderListErrors,
@@ -621,6 +642,10 @@ import type {
   V2SessionQuestionRejectResponses,
   V2SessionQuestionReplyErrors,
   V2SessionQuestionReplyResponses,
+  V2SessionRemoveErrors,
+  V2SessionRemoveResponses,
+  V2SessionRenameErrors,
+  V2SessionRenameResponses,
   V2SessionRevertClearErrors,
   V2SessionRevertClearResponses,
   V2SessionRevertCommitErrors,
@@ -1510,7 +1535,7 @@ export class Config extends HeyApiClient {
    */
   public update<ThrowOnError extends boolean = false>(
     parameters?: {
-      config?: Config4
+      config?: Config5
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -2006,7 +2031,7 @@ export class Config2 extends HeyApiClient {
     parameters?: {
       directory?: string
       workspace?: string
-      config?: Config4
+      config?: Config5
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -6616,6 +6641,25 @@ export class Session3 extends HeyApiClient {
   }
 
   /**
+   * Delete session
+   *
+   * Interrupt the session, then permanently delete it with its child sessions and history.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).delete<V2SessionRemoveResponses, V2SessionRemoveErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
    * Get session
    *
    * Retrieve a session by ID.
@@ -6659,6 +6703,41 @@ export class Session3 extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<V2SessionArchiveResponses, V2SessionArchiveErrors, ThrowOnError>({
       url: "/api/session/{sessionID}/archive",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Rename session
+   *
+   * Replace the session title.
+   */
+  public rename<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      title?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "title" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionRenameResponses, V2SessionRenameErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/rename",
       ...options,
       ...params,
       headers: {
@@ -7906,6 +7985,169 @@ export class Command2 extends HeyApiClient {
   }
 }
 
+export class Mcp2 extends HeyApiClient {
+  /**
+   * List MCP servers
+   *
+   * List the Location's configured MCP servers and their connection state.
+   */
+  public list<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2McpListResponses, V2McpListErrors, ThrowOnError>({
+      url: "/api/mcp",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Remove MCP server
+   *
+   * Remove an MCP server from the Location's own config files and disconnect it.
+   */
+  public remove<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).delete<V2McpRemoveResponses, V2McpRemoveErrors, ThrowOnError>({
+      url: "/api/mcp/{server}",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Add MCP server
+   *
+   * Write an MCP server into the Location's own config file and connect it.
+   */
+  public add<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      config?: ConfigV2McpLocal | ConfigV2McpRemote
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+            { in: "body", key: "config" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).put<V2McpAddResponses, V2McpAddErrors, ThrowOnError>({
+      url: "/api/mcp/{server}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Connect MCP server
+   *
+   * Connect, or reconnect, one configured MCP server.
+   */
+  public connect<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpConnectResponses, V2McpConnectErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/connect",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Disconnect MCP server
+   *
+   * Disconnect one configured MCP server and remove its tools.
+   */
+  public disconnect<ThrowOnError extends boolean = false>(
+    parameters: {
+      server: string
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "server" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2McpDisconnectResponses, V2McpDisconnectErrors, ThrowOnError>({
+      url: "/api/mcp/{server}/disconnect",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Skill extends HeyApiClient {
   /**
    * Remove skill
@@ -8482,6 +8724,81 @@ export class ProjectCopy2 extends HeyApiClient {
       url: "/experimental/project/{projectID}/copy/refresh",
       ...options,
       ...params,
+    })
+  }
+}
+
+export class Project2 extends HeyApiClient {
+  /**
+   * List projects
+   *
+   * Retrieve every project this server has opened, oldest first.
+   */
+  public list<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<V2ProjectListResponses, V2ProjectListErrors, ThrowOnError>({
+      url: "/api/project",
+      ...options,
+    })
+  }
+
+  /**
+   * List project directories
+   *
+   * Retrieve the extra directories (worktrees and copies) recorded for a project.
+   */
+  public directories<ThrowOnError extends boolean = false>(
+    parameters: {
+      projectID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "projectID" }] }])
+    return (options?.client ?? this.client).get<
+      V2ProjectDirectoriesResponses,
+      V2ProjectDirectoriesErrors,
+      ThrowOnError
+    >({
+      url: "/api/project/{projectID}/directories",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Config4 extends HeyApiClient {
+  /**
+   * Read global settings
+   *
+   * Read the default model and disabled providers from the global config document.
+   */
+  public get<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<V2ConfigGetResponses, V2ConfigGetErrors, ThrowOnError>({
+      url: "/api/config",
+      ...options,
+    })
+  }
+
+  /**
+   * Update global settings
+   *
+   * Merge the default model, agent engines and disabled providers into the global config document, then reload the agents and catalog of every open location.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      configPatch: ConfigPatch
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ key: "configPatch", map: "body" }] }])
+    return (options?.client ?? this.client).patch<V2ConfigUpdateResponses, V2ConfigUpdateErrors, ThrowOnError>({
+      url: "/api/config",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
     })
   }
 }
@@ -9887,6 +10204,11 @@ export class V2 extends HeyApiClient {
     return (this._command ??= new Command2({ client: this.client }))
   }
 
+  private _mcp?: Mcp2
+  get mcp(): Mcp2 {
+    return (this._mcp ??= new Mcp2({ client: this.client }))
+  }
+
   private _skill?: Skill
   get skill(): Skill {
     return (this._skill ??= new Skill({ client: this.client }))
@@ -9920,6 +10242,16 @@ export class V2 extends HeyApiClient {
   private _projectCopy?: ProjectCopy2
   get projectCopy(): ProjectCopy2 {
     return (this._projectCopy ??= new ProjectCopy2({ client: this.client }))
+  }
+
+  private _project?: Project2
+  get project(): Project2 {
+    return (this._project ??= new Project2({ client: this.client }))
+  }
+
+  private _config?: Config4
+  get config(): Config4 {
+    return (this._config ??= new Config4({ client: this.client }))
   }
 
   private _relay?: Relay
