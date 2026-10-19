@@ -60,6 +60,15 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
+  test("answers MCP reads on V2 without a request and refuses writes", async () => {
+    const { api, requests } = setup("v2")
+
+    expect((await api.mcp.list({ location: { directory: "/repo" } })).data).toEqual([])
+    expect((await api.mcp.resource.catalog({ location: { directory: "/repo" } })).data.resources).toEqual([])
+    await expect(api.mcp.connect({ server: "x", location: { directory: "/repo" } })).rejects.toThrow("MCP")
+    expect(requests.filter((request) => new URL(request.url).pathname.includes("mcp"))).toEqual([])
+  })
+
   test("resolves the V2 current project from the location route", async () => {
     const { api, requests } = setup("v2")
 

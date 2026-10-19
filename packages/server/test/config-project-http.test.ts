@@ -147,4 +147,53 @@ describe("project and config routes", () => {
         }),
       ),
     ))
+
+  test("stores disabled providers as provider.use denials and reads them back", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const directory = yield* scratch()
+          const locations = yield* closed([])
+          const server = yield* serve({
+            config: directory,
+            locations: locations as unknown as Locations,
+          })
+
+          const response = yield* server.request("/api/config", {
+            method: "PATCH",
+            body: JSON.stringify({ disabledProviders: ["openai"] }),
+          })
+          expect(response.status).toBe(204)
+          expect(JSON.parse(yield* Effect.promise(() => fs.readFile(path.join(directory, "orchestra.json"), "utf8")))).toEqual({
+            experimental: { policies: [{ action: "provider.use", effect: "deny", resource: "openai" }] },
+          })
+          const read = yield* server.request("/api/config")
+          expect(yield* Effect.promise(() => read.json())).toEqual({ disabledProviders: ["openai"] })
+        }),
+      ),
+    ))
+
+  test("lists a project's directories", () =>
+    Effect.runPromise(
+      Effect.scoped(
+        Effect.gen(function* () {
+          const directory = yield* scratch()
+          const locations = yield* closed([])
+          const server = yield* serve({
+            config: directory,
+            locations: locations as unknown as Locations,
+          })
+          yield* server.database
+            .insert(ProjectTable)
+            .values({ id: ProjectV2.ID.make("prj_one"), worktree: AbsolutePath.make("/repo"), vcs: "git", sandboxes: [] })
+            .run()
+            .pipe(Effect.orDie)
+
+          const response = yield* server.request("/api/project/prj_one/directories?location[directory]=/repo")
+          expect(response.status).toBe(200)
+          expect(yield* Effect.promise(() => response.json())).toEqual([])
+        }),
+      ),
+    ))
 })
+
