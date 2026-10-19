@@ -147,6 +147,7 @@ below, so the drift that produced this correction cannot recur silently.
 | `atlas test-vacuity`                                                   | write     | produce grounded test-vacuity facts over a repository's HEAD test files                                    | [reference](./docs/reference/commands/test-vacuity.md)       |
 | `atlas mine <repo>`                                                    | bootstrap | the genesis bootstrap; writes candidates only, and abstains loudly with no model                           | [reference](./docs/reference/commands/mine.md)               |
 | `atlas reconcile <mergeBase> [--accept-reground]`                      | gate      | the merge gate: classifies drift, exits `2` on any semantic flip                                           | [reference](./docs/reference/commands/reconcile.md)          |
+| `atlas territory <name> <glob...> --owner <seat> --tier <tier>`        | ops       | declares or replaces one territory in TERRITORY-CATALOG.json; needs ATLAS_RATIFY_TOKEN (billy for T0)      | [reference](./docs/reference/commands/territory.md)          |
 
 <!-- command-table:end -->
 
@@ -181,7 +182,7 @@ packages/
   genesis         the one-time $0-LLM seeder · budgeted LLM proposal · mechanical admission
   ── RING (campaign 9 — the productization surface; the core stays pure and does no I/O itself)
   adapter-io      the composition root: filesystem · SCIP · git · LLM · durable store, wired into ONE handler
-  cli             the `atlas` CLI — 39 commands through a total argv parser (never throws); see the table above
+  cli             the `atlas` CLI — 40 commands through a total argv parser (never throws); see the table above
   mcp-server      a stdio MCP server over that same handler, mapping every Verdict (incl. refusals) to MCP
   ── SUITES
   e2e             story-driven in-process suite over the wired runtime
@@ -211,14 +212,14 @@ the numbers on this page most likely to rot.
   so an identical input yields a byte-identical `Verdict` on the CLI and over MCP (TOOLS-3).
 - **Does NOT hold: surface parity.**
   <!-- transport-parity:begin -->
-  The CLI exposes **39** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
+  The CLI exposes **40** commands; MCP advertises **18** tools (6 governance + 10 read + 2 parallel-path).
   The first two groups are `GOVERNANCE_SURFACE ∪ READ_SURFACE` (ADR-0006), both arrays in
   `packages/tools/src/handler.ts`. The third is `atlas-relations` (#99a) and `atlas-negations` (#99b),
   advertised through a documented path that deliberately leaves both surface constants untouched — so
   "MCP advertises the union" was never the whole truth, and this bullet asserted it for two campaigns.
-  **The remaining 21 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
+  **The remaining 22 commands are CLI-only and unreachable over MCP**: `mine`, `promote`, `own`,
   `transitions`, `transition`, `test-vacuities`, `test-vacuity`, `verify-fact`,
-  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`.
+  `verify-store`, `derive-relations`, `budget`, `territories`, `export`, `import`, `hold`, `release`, `propose`, `proposals`, `decide`, `interview`, `answer`, `territory`.
   <!-- transport-parity:end -->
   The writers among them publish through `atlas-emit` (ADR-0008 — an ordinary use of the existing door, not
   new surface), so no tool token exists for them.

@@ -110,6 +110,7 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "territories",
       "export",
       "import",
+      "territory",
     ])
     expect(Object.keys(COMMAND_LEG).sort()).toEqual([...COMMANDS].sort())
     expect(COMMAND_LEG).toEqual({
@@ -178,6 +179,7 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       import: "atlas-query", // READ authority oracle (EPIC-1-b PERSIST-9 store-instance replay) — intercepted
       //                       before the handler, replays CAS bytes into a FRESH EMPTY target ONLY (the
       //                       guarded projection is NEVER written); no governed fact-write token
+      territory: "atlas-query", // OPS (R4) — writes the territory catalog file only; no knowledge write
     })
     // teeth: a command bound to zero legs (totality) or two legs (uniqueness) — each key resolves to one string.
     for (const c of COMMANDS) {

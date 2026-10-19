@@ -106,6 +106,7 @@ export const COMMANDS = [
   "territories",
   "export",
   "import",
+  "territory",
 ] as const
 export type Command = (typeof COMMANDS)[number]
 
@@ -248,6 +249,8 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   //                       a FRESH EMPTY target ONLY and NEVER writes the guarded projection, so it carries NO
   //                       governed fact-write token and cannot be a back-channel write path (ADR-0003). Classified
   //                       read by `authorityOf` (WRITE_PATHS), with the page stating the honest write it does.
+  territory: "atlas-query", // OPS (R4): writes TERRITORY-CATALOG.json through publishTerritoryCatalog and no
+  //                           knowledge, so it binds a READ leg — the `export` precedent (a file, never the store).
 }
 
 export type Authority = "read" | "write"
