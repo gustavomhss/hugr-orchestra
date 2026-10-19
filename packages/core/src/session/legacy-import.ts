@@ -1,16 +1,26 @@
 export * as SessionLegacyImport from "./legacy-import"
 
+import path from "node:path"
 import { asc, eq, sql } from "drizzle-orm"
 import { Effect, Option, Schema } from "effect"
-import type { Info, Part, ToolPart } from "@orchestra/schema/session-v1"
+import type {
+  CompactionPart,
+  FilePart,
+  Info,
+  Part,
+  PatchPart,
+  SubtaskPart,
+  ToolPart,
+} from "@orchestra/schema/session-v1"
 import { Database } from "../database/database"
 import { SessionMessage } from "./message"
-import { MessageTable, PartTable, SessionMessageTable } from "./sql"
+import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "./sql"
 
 // V1 and V2 share the `session` table, but V1 keeps transcripts in `message`/`part` and V2 reads `session_message`.
 // This copies each V1 transcript into V2 once: only Sessions with V1 messages and no V2 message are touched, V1 rows
 // are never changed, and a rerun is a no-op. Imported rows take negative sequences, below every durable event
-// sequence a later V2 turn on the same Session will project.
+// sequence a later V2 turn on the same Session will project. Subtask, compaction and patch parts and tool-result
+// attachments map onto their V2 shapes (user text and mentions, compaction messages, the assistant's snapshot).
 
 const decode = Schema.decodeUnknownOption(SessionMessage.Message)
 const encode = Schema.encodeSync(SessionMessage.Message)
@@ -34,6 +44,12 @@ const importSession = Effect.fnUntraced(function* (
   db: Database.Interface["db"],
   sessionID: (typeof MessageTable.$inferSelect)["session_id"],
 ) {
+  const session = yield* db
+    .select({ directory: SessionTable.directory })
+    .from(SessionTable)
+    .where(eq(SessionTable.id, sessionID))
+    .get()
+    .pipe(Effect.orDie)
   const messages = yield* db
     .select()
     .from(MessageTable)
@@ -48,13 +64,17 @@ const importSession = Effect.fnUntraced(function* (
     .orderBy(asc(PartTable.id))
     .all()
     .pipe(Effect.orDie)
-  const converted = messages.flatMap((row) => {
-    const info = { ...row.data, id: row.id, sessionID } as Info
-    const own = parts
+  const rows: Row[] = messages.map((row) => ({
+    info: { ...row.data, id: row.id, sessionID } as Info,
+    parts: parts
       .filter((part) => part.message_id === row.id)
-      .map((part) => ({ ...part.data, id: part.id, messageID: part.message_id, sessionID }) as Part)
-    return Option.toArray(decode(info.role === "user" ? user(info, own) : assistant(info, own)))
-  })
+      .map((part) => ({ ...part.data, id: part.id, messageID: part.message_id, sessionID }) as Part),
+  }))
+  const converted = rows.flatMap((row) =>
+    Option.toArray(
+      decode(row.info.role === "user" ? user(row.info, row.parts, rows) : assistant(row.info, row.parts, rows, session?.directory)),
+    ),
+  )
   if (converted.length === 0) return
   yield* db
     .transaction(
@@ -83,11 +103,26 @@ const importSession = Effect.fnUntraced(function* (
     .pipe(Effect.orDie)
 })
 
-function user(info: Extract<Info, { role: "user" }>, parts: ReadonlyArray<Part>) {
-  const text = parts.flatMap((part) => (part.type === "text" && !part.ignored ? [part.text] : [])).join("\n\n")
-  const files = parts.flatMap((part) =>
-    part.type === "file" ? [{ uri: part.url, mime: part.mime, ...(part.filename ? { name: part.filename } : {}) }] : [],
-  )
+type Row = { readonly info: Info; readonly parts: ReadonlyArray<Part> }
+
+function user(info: Extract<Info, { role: "user" }>, parts: ReadonlyArray<Part>, rows: ReadonlyArray<Row>) {
+  const compaction = parts.find((part): part is CompactionPart => part.type === "compaction")
+  if (compaction) return checkpoint(info, compaction, rows)
+  // A subtask is the owner's request for a subagent: its prompt joins the text and its agent the mentions.
+  const subtasks = parts.filter((part): part is SubtaskPart => part.type === "subtask")
+  const text = [
+    ...parts.flatMap((part) => (part.type === "text" && !part.ignored ? [part.text] : [])),
+    ...subtasks.map((part) => part.prompt),
+  ].join("\n\n")
+  const files = parts.flatMap((part) => (part.type === "file" ? [attachment(part)] : []))
+  const agents = [
+    ...parts.flatMap((part) =>
+      part.type === "agent"
+        ? [{ name: part.name, ...(part.source ? { source: { start: part.source.start, end: part.source.end, text: part.source.value } } : {}) }]
+        : [],
+    ),
+    ...subtasks.map((part) => ({ name: part.agent })),
+  ]
   if (!text && files.length === 0) return undefined
   return {
     type: "user",
@@ -95,10 +130,45 @@ function user(info: Extract<Info, { role: "user" }>, parts: ReadonlyArray<Part>)
     time: { created: info.time.created },
     text,
     ...(files.length ? { files } : {}),
+    ...(agents.length ? { agents } : {}),
   }
 }
 
-function assistant(info: Extract<Info, { role: "assistant" }>, parts: ReadonlyArray<Part>) {
+/**
+ * A V1 compaction is a user message with a compaction part answered by a summary assistant message. On V2 it is one
+ * compaction message whose summary is that answer and whose recent context is the tail V1 kept verbatim; the summary
+ * assistant is folded into it. A compaction that never produced a summary restores nothing.
+ */
+function checkpoint(info: Extract<Info, { role: "user" }>, part: CompactionPart, rows: ReadonlyArray<Row>) {
+  const answer = rows.find((row) => row.info.role === "assistant" && row.info.summary && row.info.parentID === info.id)
+  const summary = answer ? textOf(answer.parts) : ""
+  if (!summary) return undefined
+  const self = rows.findIndex((row) => row.info.id === info.id)
+  const tail = part.tail_start_id ? rows.findIndex((row) => row.info.id === part.tail_start_id) : -1
+  const recent = (tail === -1 ? [] : rows.slice(tail, self))
+    .flatMap((row) => {
+      const text = textOf(row.parts)
+      return text ? [`${row.info.role === "user" ? "User" : "Assistant"}: ${text}`] : []
+    })
+    .join("\n\n")
+  return {
+    type: "compaction",
+    id: info.id,
+    reason: part.auto ? "auto" : "manual",
+    summary,
+    recent,
+    time: { created: info.time.created },
+  }
+}
+
+function assistant(
+  info: Extract<Info, { role: "assistant" }>,
+  parts: ReadonlyArray<Part>,
+  rows: ReadonlyArray<Row>,
+  directory: string | undefined,
+) {
+  if (info.summary && rows.some((row) => row.info.id === info.parentID && row.parts.some((part) => part.type === "compaction")))
+    return undefined
   return {
     type: "assistant",
     id: info.id,
@@ -118,6 +188,7 @@ function assistant(info: Extract<Info, { role: "assistant" }>, parts: ReadonlyAr
       if (part.type === "tool") return [tool(part, info.time.created)]
       return []
     }),
+    ...snapshot(parts, directory),
     ...(info.finish ? { finish: info.finish } : {}),
     cost: info.cost,
     tokens: {
@@ -129,6 +200,44 @@ function assistant(info: Extract<Info, { role: "assistant" }>, parts: ReadonlyAr
     ...(info.error ? { error: { type: "unknown", message: errorMessage(info.error) } } : {}),
     time: { created: info.time.created, ...(info.time.completed ? { completed: info.time.completed } : {}) },
   }
+}
+
+/**
+ * V1 records a turn's changes as patch parts (the step's start snapshot and the files it changed) between step parts
+ * that carry the snapshots; V2 keeps the same facts on the assistant's `snapshot`, with Location-relative files.
+ */
+function snapshot(parts: ReadonlyArray<Part>, directory: string | undefined) {
+  const patches = parts.filter((part): part is PatchPart => part.type === "patch")
+  const start =
+    parts.flatMap((part) => (part.type === "step-start" && part.snapshot ? [part.snapshot] : []))[0] ?? patches[0]?.hash
+  const end = parts.flatMap((part) => (part.type === "step-finish" && part.snapshot ? [part.snapshot] : [])).at(-1)
+  const files = Array.from(
+    new Set(
+      patches.flatMap((part) =>
+        part.files.map((file) => (directory && path.isAbsolute(file) ? path.relative(directory, file) : file)),
+      ),
+    ),
+  )
+  if (!start && !end && files.length === 0) return {}
+  return {
+    snapshot: { ...(start ? { start } : {}), ...(end ? { end } : {}), ...(files.length ? { files } : {}) },
+  }
+}
+
+function attachment(part: FilePart) {
+  return {
+    uri: part.url,
+    mime: part.mime,
+    ...(part.filename ? { name: part.filename } : {}),
+    ...(part.source ? { source: { start: part.source.text.start, end: part.source.text.end, text: part.source.text.value } } : {}),
+  }
+}
+
+function textOf(parts: ReadonlyArray<Part>) {
+  return parts
+    .flatMap((part) => (part.type === "text" && !part.synthetic && !part.ignored ? [part.text] : []))
+    .join("\n\n")
+    .trim()
 }
 
 function tool(part: ToolPart, created: number) {
@@ -147,6 +256,7 @@ function tool(part: ToolPart, created: number) {
       state: {
         status: "completed",
         input: state.input,
+        ...(state.attachments?.length ? { attachments: state.attachments.map(attachment) } : {}),
         content: [{ type: "text", text: state.output }],
         structured: state.metadata,
       },
