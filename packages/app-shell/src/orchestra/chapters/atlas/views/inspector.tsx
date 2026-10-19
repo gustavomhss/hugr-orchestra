@@ -1,12 +1,13 @@
 import { createEffect, Match, on, Show, Switch } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { isAtlasEmpty } from "../atlas-api"
 import { useAtlas } from "../atlas-context"
 import type { AtlasFact } from "../atlas-model"
 import { atlasHref } from "../atlas-route"
-import { type AtlasReq, Icon, useAtlasWords } from "../kit/chips"
+import { Icon } from "../kit/chips"
 import { Btn } from "../kit/controls"
-import { openAtlasSheet } from "../sheets/state"
+import { keepPromoteRun, openAtlasSheet } from "../sheets/state"
 import { FactBody, useCopyLink } from "./fact-detail"
 import { InspectorRetire } from "./inspector-retire"
 import type { AtlasInspectorProps } from "./index"
@@ -24,7 +25,6 @@ export default function AtlasInspector(props: AtlasInspectorProps) {
 function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const words = useAtlasWords()
   const copyLink = useCopyLink()
   const [state, setState] = createStore({ order: [] as string[], retiring: false })
   createEffect(on(() => props.factKey, () => requestAnimationFrame(() => setState("order", readOrder()))))
@@ -37,9 +37,29 @@ function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
   }
   const staged = () => props.fact.kind === "candidate" && !props.fact.promotedNow
   const factState = () => props.model.state(props.fact)
-  // D13: a control that needs a new capability toasts what it needs instead of acting.
-  const needs = (id: AtlasReq) =>
-    atlas.toast(language.t("orchestra.atlas.kit.newcap.tip", { id, text: words.requirement(id) }), "sparkle")
+  // R2 (D15, D34): a held candidate stays staged and every promote skips it until it is put back.
+  const held = () => atlas.controller.state.review?.held.includes(props.fact.key) ?? false
+  const busy = () =>
+    atlas.controller.state.pending.some((kind) => kind === "hold" || kind === "release" || kind === "promote")
+  const review = async (kind: "hold" | "release") => {
+    const input = { nodeKey: props.fact.key }
+    const result = await (kind === "hold" ? atlas.controller.hold(input) : atlas.controller.release(input))
+    if (!result || isAtlasEmpty(result)) return
+    if (!result.ok)
+      return atlas.toast(language.t("orchestra.atlas.fact.refused", { reason: result.rejected ?? "unknown" }), "xc")
+    atlas.toast(
+      language.t(kind === "hold" ? "orchestra.atlas.fact.kept" : "orchestra.atlas.fact.putBack"),
+      kind === "hold" ? "clock" : "refresh",
+    )
+  }
+  // Accept promotes this one row (`atlas promote <nodeKey>`); the result sheet shows its outcome.
+  const accept = async () => {
+    const staged = props.model.candidates.map((x) => x.key)
+    const result = await atlas.controller.promote({ nodeKeys: [props.fact.key] })
+    if (!result || isAtlasEmpty(result)) return
+    keepPromoteRun({ run: result, staged })
+    openAtlasSheet({ kind: "promote-result" })
+  }
   const retire = () => {
     if (props.model.governing(props.fact))
       return atlas.toast(
@@ -97,8 +117,37 @@ function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
         <span class="grow" />
         <Switch>
           <Match when={staged()}>
-            <Btn label={language.t("orchestra.atlas.fact.keep")} write cap="R2" onClick={() => needs("R2")} />
-            <Btn label={language.t("orchestra.atlas.fact.accept")} write primary cap="R2" onClick={() => needs("R2")} />
+            <Show
+              when={held()}
+              fallback={
+                <>
+                  <Btn
+                    label={language.t("orchestra.atlas.fact.keep")}
+                    write
+                    disabled={busy()}
+                    onClick={() => void review("hold")}
+                  />
+                  <Btn
+                    label={language.t("orchestra.atlas.fact.accept")}
+                    write
+                    primary
+                    disabled={busy()}
+                    onClick={() => void accept()}
+                  />
+                </>
+              }
+            >
+              <span class="at-hint">
+                <Icon name="clock" />
+                {language.t("orchestra.atlas.fact.held")}
+              </span>
+              <Btn
+                label={language.t("orchestra.atlas.fact.release")}
+                write
+                disabled={busy()}
+                onClick={() => void review("release")}
+              />
+            </Show>
           </Match>
           <Match when={factState() === "drifted"}>
             <Btn
