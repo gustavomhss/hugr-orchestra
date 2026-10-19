@@ -1,4 +1,4 @@
-import { createSignal, type JSX, Show } from "solid-js"
+import { createSignal, type JSX, onCleanup, onMount, Show } from "solid-js"
 import { showToast } from "@/utils/toast"
 import { type RelayDocument, type RelayKind, writeFailure } from "./client"
 import { useDraftScope } from "./drafts"
@@ -70,6 +70,16 @@ export function EditorHead(props: {
     props.onRename(value)
     props.onPublish()
   }
+  // The name commits on blur, which a closing window never sends. Commit a typed name as the page goes, before the
+  // drafts are written down on pagehide, so it is kept with them.
+  onMount(() => {
+    const commitTypedName = () => {
+      const value = nameInput.value.trim()
+      if (!props.readOnly && value && value !== props.name) props.onRename(value)
+    }
+    window.addEventListener("beforeunload", commitTypedName)
+    onCleanup(() => window.removeEventListener("beforeunload", commitTypedName))
+  })
   return (
     <>
     <header class="wf-head">

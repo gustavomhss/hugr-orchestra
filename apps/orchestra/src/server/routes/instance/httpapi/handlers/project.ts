@@ -1,4 +1,5 @@
 import { InstanceState } from "@/effect/instance-state"
+import type { InstanceContext } from "@/project/instance-context"
 import { Project } from "@/project/project"
 import { ProjectV2 } from "@orchestra/core/project"
 import { Database } from "@orchestra/core/database/database"
@@ -10,6 +11,9 @@ import { LeanProject } from "@/session/lean-project"
 import { LeanProfilePreferences } from "@/session/lean-profile-preferences"
 import { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import { LeanDashboard } from "@orchestra/schema/lean-dashboard"
+import { LocationServiceMap } from "@orchestra/core/location-services"
+import { Location } from "@orchestra/core/location"
+import { AbsolutePath } from "@orchestra/core/schema"
 import { Effect, Layer } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { InstanceHttpApi } from "../api"
@@ -24,6 +28,7 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
     const database = yield* Database.Service
+    const locations = yield* LocationServiceMap.Service
     const preferences = LeanProfilePreferences.make(fs, global)
     const collector = LeanProject.make(database)
 
@@ -53,7 +58,14 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
     })
 
     const current = Effect.fn("ProjectHttpApi.current")(function* () {
-      return (yield* InstanceState.context).project
+      const ctx = yield* InstanceState.context
+      if (ctx.project.id !== ProjectV2.ID.global) return ctx.project
+      // A folder that had no git commit when its instance started shares the "global" project. Once a first commit
+      // exists (made outside the app too) it has its own identity: resolve again and move the instance onto it.
+      const { project: next } = yield* svc.fromDirectory(ctx.directory)
+      if (next.id === ProjectV2.ID.global) return ctx.project
+      yield* moveProject(ctx, next.worktree, next)
+      return next
     })
 
     const initGit = Effect.fn("ProjectHttpApi.initGit")(function* () {
@@ -61,12 +73,23 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
       const next = yield* svc.initGit({ directory: ctx.directory, project: ctx.project })
       if (next.id === ctx.project.id && next.vcs === ctx.project.vcs && next.worktree === ctx.project.worktree)
         return next
-      yield* markInstanceForReload(ctx, {
-        directory: ctx.directory,
-        worktree: ctx.directory,
-        project: next,
-      })
+      yield* moveProject(ctx, ctx.directory, next)
       return next
+    })
+
+    // A Location is cached per directory with the project it was opened under. When the directory's project changes,
+    // drop it first (both Ref shapes hash apart), or the reloaded instance and its Location disagree on the project.
+    const moveProject = Effect.fnUntraced(function* (
+      ctx: InstanceContext,
+      worktree: string,
+      next: Project.Info,
+    ) {
+      const directory = AbsolutePath.make(ctx.directory)
+      if (next.id !== ctx.project.id) {
+        yield* locations.invalidate(Location.Ref.make({ directory }))
+        yield* locations.invalidate(Location.Ref.make({ directory, workspaceID: undefined }))
+      }
+      yield* markInstanceForReload(ctx, { directory: ctx.directory, worktree, project: next })
     })
 
     const update = Effect.fn("ProjectHttpApi.update")(function* (ctx: {

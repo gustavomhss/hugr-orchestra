@@ -49,6 +49,7 @@ test("every seat keeps Claude Code's preset prompt; only an appended text is add
 test("Maestro's append delegates through Agent with plugin seats and names Orchestra's tools, without precedence or env", async () => {
   const append = (await setup("maestro").build()).systemPrompt.append ?? ""
   expect(append).toContain("Maestro on Claude Code")
+  expect(append).toContain("when the owner asks who you are, you are Maestro")
   expect(append).toContain('subagent_type: "orchestra:<seat>"')
   expect(append).toContain("`orchestra:archie`, `orchestra:backend`, `orchestra:jimmy`")
   expect(append).toContain("Run `orchestra:archie` and `orchestra:backend` in the foreground")

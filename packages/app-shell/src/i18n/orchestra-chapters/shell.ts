@@ -39,7 +39,7 @@ export const SHELL_COPY = {
   "orchestra.shell.project.addFailed": "Could not add the project",
   "orchestra.shell.project.initGit.title": "Set up git for this folder?",
   "orchestra.shell.project.initGit.description":
-    "{{directory}} is empty. Initialize a git repository so Orchestra can track changes in it.",
+    "{{directory}} is empty. Initialize a git repository with an empty first commit so Orchestra can track changes in it.",
   "orchestra.shell.project.initGit.confirm": "Initialize git",
   "orchestra.shell.project.initGit.skip": "Add without git",
 }

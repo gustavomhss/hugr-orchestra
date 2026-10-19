@@ -77,7 +77,8 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
     return navigate(path, { replace })
   }
   const close = (path: string) => {
-    if (history.previous === path) return window.history.back()
+    // The router's own back: the desktop app runs on a memory history, where window.history.back() does nothing.
+    if (history.previous === path) return navigate(-1)
     go(path, true)
   }
   // Search and filter of the Workflows library outlive its view, so coming back from an editor finds them as left.

@@ -7,6 +7,7 @@ import { usePlatform } from "@/context/platform"
 import { ServerConnection, useServer } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
+import { relayKey } from "@/orchestra/relay/source"
 import {
   closeHomeProject,
   errorMessage,
@@ -88,15 +89,19 @@ export function createHomeController() {
     const directory = directories[0]
     if (!directory) return
     const ctx = global.ensureServerCtx(conn)
-    directories.forEach((item) => {
-      if (ctx.projects.list().some((project) => project.worktree === item)) return
+    // Settles once every new folder is added, its git question included, so a caller can navigate afterwards: moving
+    // away while the question is open would close it as a silent skip.
+    const added = directories.map((item) => {
+      if (ctx.projects.list().some((project) => project.worktree === item)) return Promise.resolve()
       const location = { directory: item }
-      void ctx.sdk.api.file
+      const settled = ctx.sdk.api.file
         .list({ path: ".", location })
         .then(async (files) => {
           // An empty folder only becomes a repository when the person agrees.
           if (files.data.length > 0 || !(await confirmInitGit(item))) return ctx.sdk.api.project.current({ location })
           const result = await ctx.sdk.client.project.initGit({ directory: item })
+          // The chapters asked while the question was open and cached the shared "global" project; the folder has its own now.
+          void ctx.queryClient.invalidateQueries({ queryKey: relayKey(ctx.sdk.scope, item) })
           return result.data ?? ctx.sdk.api.project.current({ location })
         })
         .then((project) => ctx.sync.child(item, { bootstrap: false })[1]("project", project.id))
@@ -108,9 +113,11 @@ export function createHomeController() {
           }),
         )
       ctx.projects.open(item)
+      return settled
     })
     ctx.projects.touch(directory)
     setSelection({ server: ServerConnection.key(conn), directory })
+    return Promise.all(added).then(() => undefined)
   }
 
   function canRevealProject(conn: ServerConnection.Any) {

@@ -15,6 +15,7 @@ import { usePermission } from "@/context/permission"
 import { type ImageAttachmentPart, type Prompt, type usePrompt } from "@/context/prompt"
 import { useSDK, type DirectorySDK } from "@/context/sdk"
 import { useServerSDK, type ServerSDK } from "@/context/server-sdk"
+import { ServerConnection } from "@/context/server"
 import { usePlatform, type Platform } from "@/context/platform"
 import { resolveBehaviorSystem } from "@/utils/llm-behaviors-store"
 import { clearPending, pendingSnapshot } from "@/components/draft-subagent-models"
@@ -268,7 +269,16 @@ export function createPromptSubmit(input: PromptSubmitInput) {
       showToast({
         title: language.t("prompt.toast.modelRequired.title"),
         description: language.t("prompt.toast.modelRequired.description"),
-        actions: [{ label: language.t("orchestra.chat.send.openProviders"), onClick: () => navigate("/orchestra/providers") }],
+        actions: [
+          {
+            label: language.t("orchestra.chat.send.openProviders"),
+            onClick: () => {
+              // Chapters read the Home selection; keep this draft's project selected on the way to Providers.
+              layout.home.setSelection({ server: ServerConnection.key(serverSDK().server), directory: sdk().directory })
+              navigate("/orchestra/providers")
+            },
+          },
+        ],
       })
       return
     }
