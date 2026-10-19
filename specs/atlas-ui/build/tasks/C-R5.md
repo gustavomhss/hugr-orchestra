@@ -12,15 +12,15 @@ with several checkpoints and no receipt is admitted rather than refused `ambiguo
 
 ## Read first
 - `specs/atlas-ui/build/DECISIONS.md` D23; `specs/atlas-ui/build/issues/b-o.md` item 6.
-- `packages/orchestra/src/maestro/atlas-resume.ts` (113 lines): `admit` at 21-71, `selectedRef` at 76-98.
+- `apps/orchestra/src/maestro/atlas-resume.ts` (113 lines): `admit` at 21-71, `selectedRef` at 76-98.
 - `modules/atlas/packages/adapter-io/src/native-memory.ts:182-198` (`resolveFold(unit, ref?)`: an explicit ref is looked up
   by `eventId`, then owner and unit are checked — a foreign or mismatched ref is refused, never admitted).
-- `packages/orchestra/src/tool/task.ts:537` (the existing caller; it passes no ref and stays unchanged).
-- `packages/orchestra/test/tool/task-atlas-resume.test.ts:1-100` (fixtures `remember`, `seed`, `offline`, `UNIT`, `OLDER`,
+- `apps/orchestra/src/tool/task.ts:537` (the existing caller; it passes no ref and stays unchanged).
+- `apps/orchestra/test/tool/task-atlas-resume.test.ts:1-100` (fixtures `remember`, `seed`, `offline`, `UNIT`, `OLDER`,
   `NEWER`), `:272-297` (`admissionsOf`, `key`) and the `ambiguous` case at `:379-400`.
 
 ## Change
-1. `packages/orchestra/src/maestro/atlas-resume.ts`:
+1. `apps/orchestra/src/maestro/atlas-resume.ts`:
    a. Replace `import type { FoldVerdict, ResumeUnit } from "@orchestra/atlas-boundary/native-memory"` with
       `import type { FoldVerdict, RecordRef, ResumeUnit } from "@orchestra/atlas-boundary/native-memory"`.
    b. In the `admit` input type, after the line `  ctx: Tool.Context` add:
@@ -34,7 +34,7 @@ with several checkpoints and no receipt is admitted rather than refused `ambiguo
       `// unit's latest admitted checkpoint into the child Session once per logical resume. Every verdict, a fold or a refusal,`
       with
       `// unit's latest admitted checkpoint (or the one an explicit ref names) into the child Session once per logical resume. Every verdict, a fold or a refusal,`.
-2. `packages/orchestra/test/tool/task-atlas-resume.test.ts`:
+2. `apps/orchestra/test/tool/task-atlas-resume.test.ts`:
    a. Add the imports `import { AtlasResume } from "@/maestro/atlas-resume"` (after the `AtlasMemory` import) and
       `import type { Tool } from "@/tool/tool"` (after the `Truncate` import).
    b. Inside `describe("tool.task Atlas resume admission", () => {`, after the `"two own records without a receipt yield one
@@ -79,13 +79,13 @@ with several checkpoints and no receipt is admitted rather than refused `ambiguo
       ```
 
 ## Touch only
-- `packages/orchestra/src/maestro/atlas-resume.ts`
-- `packages/orchestra/test/tool/task-atlas-resume.test.ts`
+- `apps/orchestra/src/maestro/atlas-resume.ts`
+- `apps/orchestra/test/tool/task-atlas-resume.test.ts`
 
 ## Done when
-- `grep -n "input.ref ?? selectedRef(history, key)" packages/orchestra/src/maestro/atlas-resume.ts` prints 1 line.
-- `grep -n "ref?: RecordRef" packages/orchestra/src/maestro/atlas-resume.ts` prints 1 line.
-- `grep -n "AtlasResume.admit" packages/orchestra/src/tool/task.ts` still prints exactly the one unchanged line.
+- `grep -n "input.ref ?? selectedRef(history, key)" apps/orchestra/src/maestro/atlas-resume.ts` prints 1 line.
+- `grep -n "ref?: RecordRef" apps/orchestra/src/maestro/atlas-resume.ts` prints 1 line.
+- `grep -n "AtlasResume.admit" apps/orchestra/src/tool/task.ts` still prints exactly the one unchanged line.
 - Lead acceptance: `bun run test:ci orchestra test/tool/task-atlas-resume.test.ts test/research/atlas-owners.test.ts
   test/session/atlas-resume-compaction.test.ts` is green, and `gh workflow run typecheck.yml --ref <branch>` is green.
 
