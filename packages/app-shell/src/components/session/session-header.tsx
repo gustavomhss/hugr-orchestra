@@ -38,7 +38,15 @@ export function SessionHeader() {
   const navigate = useNavigate()
   const { params, view } = useSessionLayout()
 
-  const projectDirectory = createMemo(() => decode64(params.dir) || sync().project?.worktree || "")
+  // Desktop session routes carry no directory, and a folder without git syncs as the "/" global project, so the
+  // session's own directory names its project first.
+  const projectDirectory = createMemo(
+    () =>
+      decode64(params.dir) ||
+      (params.id ? sync().session.get(params.id)?.directory : undefined) ||
+      sync().project?.worktree ||
+      "",
+  )
   const project = createMemo(() => {
     const directory = projectDirectory()
     if (!directory) return

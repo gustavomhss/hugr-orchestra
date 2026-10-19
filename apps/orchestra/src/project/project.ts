@@ -373,6 +373,14 @@ const layer = Layer.effect(
       if (result.code !== 0) {
         throw new Error(result.stderr.trim() || result.text.trim() || "Failed to initialize git repository")
       }
+      // A repository without a commit has no project identity, so hooks and workflows would refuse the folder until
+      // its first commit. Without a configured git identity the empty first commit is authored as Orchestra.
+      const first = ["commit", "--allow-empty", "--no-verify", "--quiet", "-m", "Initial commit"]
+      const committed = yield* git(first, { cwd: input.directory })
+      if (committed.code !== 0)
+        yield* git(["-c", "user.name=Orchestra", "-c", "user.email=orchestra@localhost", ...first], {
+          cwd: input.directory,
+        })
       const { project } = yield* fromDirectory(input.directory)
       return project
     })

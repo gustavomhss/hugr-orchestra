@@ -109,7 +109,7 @@ test("an empty folder is initialized as a git repository when the person agrees"
   const dialog = gitDialog(page)
   await expectAppVisible(dialog)
   await expect(dialog.locator('[data-slot="dialog-description"]')).toHaveText(
-    `${directory} is empty. Initialize a git repository so Orchestra can track changes in it.`,
+    `${directory} is empty. Initialize a git repository with an empty first commit so Orchestra can track changes in it.`,
   )
   // Nothing is initialized until the person chooses.
   expect(app.initialized()).toEqual([])
