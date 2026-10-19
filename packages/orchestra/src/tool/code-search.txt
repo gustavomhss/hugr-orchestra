@@ -1,7 +1,8 @@
-Lexical search over the working tree with ripgrep. Use it to find where a string, identifier or pattern appears; use `code_query` for what a symbol means (definitions, references, callers).
+Lexical ripgrep search of the working tree for where a string, identifier or pattern appears. Use code_query for what a symbol means.
 
-- `pattern` is at most 512 characters and is never read as an option. `mode` is `literal` (default, exact text), `identifier` (exact text bounded by identifier characters, so `parse` does not match `parseJson`) or `regex` (ripgrep syntax).
-- Matching is case-sensitive; pass `caseSensitive: false` to ignore case. `paths` is up to 16 globs relative to the working directory, for example `src/**/*.ts` or `!**/test/**`. `context` adds 0 to 5 lines around each hit.
-- Hidden files are searched. `.gitignore` is respected, so generated or ignored files are not in scope.
-- Results are `path:line text` rows sorted by path, at most `limit` (default 50, maximum 200). When `next` is returned, call again with `offset: next` for more.
-- `coverage` states what was examined: files searched, whether ignore rules applied, binaries skipped, and `complete`. A zero-hit result with `coverage.complete: true` is the only way to say a text is absent from this scope; an incomplete or truncated result proves nothing about absence.
+pattern: at most 512 characters. mode: literal (default), identifier (bounded by identifier characters) or regex. caseSensitive: false ignores case. paths: up to 16 globs, e.g. src/**/*.ts or !**/test/**. context: 0 to 5 lines. limit: default 50, max 200; next gives the offset. Hidden files are searched, .gitignore respected.
+
+Lines: rows are path:line text, 1-based, sorted by path.
+Empty: absent from this scope only when coverage.complete is true; otherwise it proves nothing.
+Retains: nothing; read the file to cite it.
+Fails: index_unavailable (no ripgrep), unsupported (invalid pattern), source_unavailable.
