@@ -1,17 +1,26 @@
 import { openSurface } from "@orchestra/atlas-boundary/surface"
 import type {
+  AtlasAnswerInput,
+  AtlasDecideInput,
   AtlasDraftInput,
   AtlasDraftResult,
   AtlasEmitInput,
   AtlasEmitResult,
   AtlasHealthResult,
+  AtlasHoldInput,
   AtlasLinkInput,
   AtlasLinkResult,
+  AtlasMemoryDecideInput,
   AtlasOwnResult,
   AtlasPromoteInput,
   AtlasPromoteResult,
+  AtlasProposeInput,
   AtlasReasoningResult,
+  AtlasReleaseInput,
+  AtlasReviewResult,
+  AtlasReviewWriteResult,
   AtlasSnapshotResult,
+  AtlasTerritoryInput,
   AtlasVerifyInput,
   AtlasVerifyResult,
 } from "@orchestra/atlas-boundary/surface"
@@ -38,6 +47,14 @@ export interface Interface {
   readonly emit: (input: AtlasEmitInput) => Effect.Effect<AtlasEmitResult, Unavailable>
   readonly link: (input: AtlasLinkInput) => Effect.Effect<AtlasLinkResult, Unavailable>
   readonly verify: (input: AtlasVerifyInput) => Effect.Effect<AtlasVerifyResult, Unavailable>
+  readonly review: () => Effect.Effect<AtlasReviewResult, Unavailable>
+  readonly hold: (input: AtlasHoldInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly release: (input: AtlasReleaseInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly propose: (input: AtlasProposeInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly decide: (input: AtlasDecideInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly answer: (input: AtlasAnswerInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly memoryDecide: (input: AtlasMemoryDecideInput) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
+  readonly territory: (input: Omit<AtlasTerritoryInput, "projectId">) => Effect.Effect<AtlasReviewWriteResult, Unavailable>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/AtlasSurface") {}
@@ -69,6 +86,20 @@ const layer = Layer.succeed(
     emit: (input) => run("emit", (surface) => surface.emit(input)),
     link: (input) => run("link", (surface) => surface.link(input)),
     verify: (input) => run("verify", (surface) => surface.verify(input)),
+    review: () => run("review", (surface) => surface.review()),
+    hold: (input) => run("hold", (surface) => surface.hold(input)),
+    release: (input) => run("release", (surface) => surface.release(input)),
+    propose: (input) => run("propose", (surface) => surface.propose(input)),
+    decide: (input) => run("decide", (surface) => surface.decide(input)),
+    answer: (input) => run("answer", (surface) => surface.answer(input)),
+    memoryDecide: (input) => run("memoryDecide", (surface) => surface.memoryDecide(input)),
+    // The first territory catalog needs the Orchestra project id (issues/c-engine.md item 2). The client never sends
+    // it: the host fills it from the instance, and an existing catalog of another project refuses the write.
+    territory: (input) =>
+      Effect.gen(function* () {
+        const ctx = yield* InstanceState.context
+        return yield* run("territory", (surface) => surface.territory({ ...input, projectId: ctx.project.id }))
+      }),
   }),
 )
 
