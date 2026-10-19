@@ -6,6 +6,8 @@ import { Api } from "../api"
 export const ProjectHandler = HttpApiBuilder.group(Api, "server.project", (handlers) =>
   Effect.gen(function* () {
     const projects = yield* ProjectV2.Service
-    return handlers.handle("project.list", () => projects.list())
+    return handlers
+      .handle("project.list", () => projects.list())
+      .handle("project.directories", (ctx) => projects.directories({ projectID: ctx.params.projectID }))
   }),
 )

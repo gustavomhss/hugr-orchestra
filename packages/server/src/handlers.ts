@@ -6,6 +6,7 @@ import { SessionHandler } from "./handlers/session"
 import { PermissionHandler } from "./handlers/permission"
 import { FileSystemHandler } from "./handlers/fs"
 import { CommandHandler } from "./handlers/command"
+import { McpHandler } from "./handlers/mcp"
 import { SkillHandler } from "./handlers/skill"
 import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
@@ -49,6 +50,7 @@ export const handlers = Layer.mergeAll(
   PermissionHandler,
   FileSystemHandler,
   CommandHandler,
+  McpHandler,
   SkillHandler,
   BehaviorHandler,
   EventHandler,

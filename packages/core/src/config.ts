@@ -19,7 +19,7 @@ import { ConfigCommand } from "./config/command"
 import { ConfigExperimental } from "./config/experimental"
 import { ConfigFormatter } from "./config/formatter"
 import { ConfigLSP } from "./config/lsp"
-import { ConfigMCP } from "./config/mcp"
+import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { ConfigPlugin } from "./config/plugin"
 import { ConfigProvider } from "./config/provider"
 import { ConfigReference } from "./config/reference"
@@ -203,20 +203,25 @@ const layer = Layer.effect(
     const configs = [...(supplementary[0] ?? []), ...direct, ...supplementary.slice(1).flat()]
     // Rules use the opposite order so a user-global rule can override a
     // repository rule. Statement order inside each file stays unchanged.
-    yield* policy.load(
-      configs
-        .filter((config): config is Document => config.type === "document")
-        .toReversed()
-        .flatMap((config) => config.info.experimental?.policies ?? []),
-    )
+    const loadPolicies = (configs: ReadonlyArray<Document | Directory>) =>
+      policy.load(
+        configs
+          .filter((config): config is Document => config.type === "document")
+          .toReversed()
+          .flatMap((config) => config.info.experimental?.policies ?? []),
+      )
+    yield* loadPolicies(configs)
 
     return Service.of({
       packagedSkills: () => Effect.succeed(packagedSkills),
       entries: Effect.fn("Config.entries")(function* () {
         // Global documents are read again so a settings write (`updateGlobal`) reaches the next agent or catalog
         // reload without reopening the location; project documents keep the snapshot taken at open.
+        // Policies reload with them, so a disabled provider leaves the catalog on its next reload.
         const globals = yield* loadDirectory(globalDirectory).pipe(Effect.orDie)
-        return [...globals, ...direct, ...supplementary.slice(1).flat()]
+        const configs = [...globals, ...direct, ...supplementary.slice(1).flat()]
+        yield* loadPolicies(configs)
+        return configs
       }),
     })
   }),
@@ -226,6 +231,8 @@ const layer = Layer.effect(
 export interface GlobalPatch {
   readonly model?: string
   readonly agents?: Readonly<Record<string, { readonly engine?: "orchestra" | "claude-code" }>>
+  /** The whole list of disabled providers, kept as exact `provider.use` deny policies. Replaces the previous list. */
+  readonly disabledProviders?: ReadonlyArray<string>
 }
 
 /**
@@ -234,26 +241,83 @@ export interface GlobalPatch {
  */
 export const updateGlobal = Effect.fn("Config.updateGlobal")(function* (patch: GlobalPatch) {
   const fs = yield* FSUtil.Service
-  const global = yield* Global.Service
-  // `orchestra.jsonc` loads after `orchestra.json`, so it wins when both exist.
-  const files = yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) => {
-    const file = path.join(global.config, name)
-    return fs.readFileStringSafe(file).pipe(Effect.map((text) => ({ file, text })))
-  }).pipe(Effect.orDie)
-  const target = files.find((item) => item.text !== undefined) ?? { file: path.join(global.config, "orchestra.json"), text: undefined }
+  const target = yield* globalDocument()
   const leaves = (value: unknown, at: string[]): [string[], unknown][] =>
     value !== null && typeof value === "object"
       ? Object.entries(value).flatMap(([key, item]) => leaves(item, [...at, key]))
       : value === undefined
         ? []
         : [[at, value]]
-  const next = leaves(patch, []).reduce(
+  const text = target.text?.trim() ? target.text : "{}"
+  const next = [
+    ...leaves({ model: patch.model, agents: patch.agents }, []),
+    ...(patch.disabledProviders === undefined ? [] : providerEdits(text, patch.disabledProviders)),
+  ].reduce(
     (text, [at, value]) =>
       applyEdits(text, modify(text, at, value, { formattingOptions: { insertSpaces: true, tabSize: 2 } })),
-    target.text?.trim() ? target.text : "{}",
+    text,
   )
   yield* fs.writeWithDirs(target.file, next).pipe(Effect.orDie)
 })
+
+/** The settings `updateGlobal` writes, read back from the global config document. */
+export const readGlobal = Effect.fn("Config.readGlobal")(function* () {
+  const document = settings((yield* globalDocument()).text ?? "{}")
+  return {
+    ...(typeof document.model === "string" ? { model: document.model } : {}),
+    disabledProviders: [
+      ...new Set([
+        ...document.policies.filter(providerDenial).map((item) => item.resource),
+        ...document.disabled.filter((item): item is string => typeof item === "string"),
+      ]),
+    ],
+  }
+})
+
+const globalDocument = Effect.fnUntraced(function* () {
+  const fs = yield* FSUtil.Service
+  const global = yield* Global.Service
+  // `orchestra.jsonc` loads after `orchestra.json`, so it wins when both exist.
+  const files = yield* Effect.forEach(["orchestra.jsonc", "orchestra.json"], (name) => {
+    const file = path.join(global.config, name)
+    return fs.readFileStringSafe(file).pipe(Effect.map((text) => ({ file, text })))
+  }).pipe(Effect.orDie)
+  return files.find((item) => item.text !== undefined) ?? { file: path.join(global.config, "orchestra.json"), text: undefined }
+})
+
+// Disabled providers own the exact `provider.use` denials; other statements, such as an allowlist's `*` denial, stay.
+// A legacy `disabled_providers` list is rewritten too, since the V1 migration appends it after every policy.
+function providerEdits(text: string, disabled: ReadonlyArray<string>): [string[], unknown][] {
+  const document = settings(text)
+  return [
+    [
+      ["experimental", "policies"],
+      [
+        ...document.policies.filter((item) => !providerDenial(item)),
+        ...disabled.map((id) => ({ action: "provider.use", effect: "deny", resource: id })),
+      ],
+    ],
+    ...(document.hasDisabled ? [[["disabled_providers"], [...disabled]] as [string[], unknown]] : []),
+  ]
+}
+
+function settings(text: string) {
+  const document: unknown = parse(text)
+  const record = (value: unknown): Record<string, unknown> =>
+    value !== null && typeof value === "object" && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+  const root = record(document)
+  const policies = record(root.experimental).policies
+  return {
+    model: root.model,
+    policies: Array.isArray(policies) ? policies.map(record) : [],
+    disabled: Array.isArray(root.disabled_providers) ? root.disabled_providers : [],
+    hasDisabled: "disabled_providers" in root,
+  }
+}
+
+function providerDenial(item: Record<string, unknown>): item is { action: "provider.use"; effect: "deny"; resource: string } {
+  return item.action === "provider.use" && item.effect === "deny" && typeof item.resource === "string" && item.resource !== "*"
+}
 
 export const locationLayer = layer.pipe(Layer.provideMerge(Policy.locationLayer))
 

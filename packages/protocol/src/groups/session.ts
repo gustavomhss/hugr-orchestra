@@ -197,6 +197,37 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
       ),
     )
     .add(
+      HttpApiEndpoint.post("session.rename", "/api/session/:sessionID/rename", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ title: Schema.NonEmptyString }),
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.rename",
+            summary: "Rename session",
+            description: "Replace the session title.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.delete("session.remove", "/api/session/:sessionID", {
+        params: { sessionID: Session.ID },
+        success: HttpApiSchema.NoContent,
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.remove",
+            summary: "Delete session",
+            description: "Interrupt the session, then permanently delete it with its child sessions and history.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.get("session.getSubagentModels", "/api/session/:sessionID/subagent-models", {
         params: { sessionID: Session.ID },
         success: Schema.Struct({ data: SessionSubagentModels.Policy }),

@@ -14,29 +14,33 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
     const fs = yield* FSUtil.Service
     const global = yield* Global.Service
     const locations = yield* LocationServiceMap.Service
-    return handlers.handle(
-      "config.update",
-      Effect.fn(function* (ctx) {
-        yield* Config.updateGlobal(ctx.payload).pipe(
-          Effect.provideService(FSUtil.Service, fs),
-          Effect.provideService(Global.Service, global),
-        )
-        // Agents carry the Maestro engine; the catalog carries the default model.
-        const refs = yield* RcMap.keys(locations.rcMap)
-        yield* Effect.forEach(
-          refs,
-          (ref) =>
-            Effect.scoped(
-              Effect.gen(function* () {
-                const context = yield* locations.contextEffect(ref)
-                yield* Context.get(context, AgentV2.Service).reload()
-                yield* Context.get(context, Catalog.Service).reload()
-              }),
-            ).pipe(Effect.ignore),
-          { discard: true },
-        )
-        return HttpApiSchema.NoContent.make()
-      }),
-    )
+    return handlers
+      .handle("config.get", () =>
+        Config.readGlobal().pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(Global.Service, global)),
+      )
+      .handle(
+        "config.update",
+        Effect.fn(function* (ctx) {
+          yield* Config.updateGlobal(ctx.payload).pipe(
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.provideService(Global.Service, global),
+          )
+          // Agents carry the Maestro engine; the catalog carries the default model and the provider policies.
+          const refs = yield* RcMap.keys(locations.rcMap)
+          yield* Effect.forEach(
+            refs,
+            (ref) =>
+              Effect.scoped(
+                Effect.gen(function* () {
+                  const context = yield* locations.contextEffect(ref)
+                  yield* Context.get(context, AgentV2.Service).reload()
+                  yield* Context.get(context, Catalog.Service).reload()
+                }),
+              ).pipe(Effect.ignore),
+            { discard: true },
+          )
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
   }),
 )

@@ -30,6 +30,7 @@ export const groupNames = {
   "server.permission": "permissions",
   "server.fs": "files",
   "server.command": "commands",
+  "server.mcp": "mcp",
   "server.skill": "skills",
   "server.behavior": "behaviors",
   "server.event": "events",

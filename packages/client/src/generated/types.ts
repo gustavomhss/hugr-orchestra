@@ -487,6 +487,17 @@ export type SessionsArchiveInput = {
 
 export type SessionsArchiveOutput = void
 
+export type SessionsRenameInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly title: { readonly title: string }["title"]
+}
+
+export type SessionsRenameOutput = void
+
+export type SessionsRemoveInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsRemoveOutput = void
+
 export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
 export type SessionsGetSubagentModelsOutput = {
@@ -2389,6 +2400,97 @@ export type CommandsListOutput = {
   }>
 }
 
+export type McpListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly status:
+      | { readonly status: "connected" }
+      | { readonly status: "disabled" }
+      | { readonly status: "failed"; readonly error: string }
+      | { readonly status: "needs_auth" }
+      | { readonly status: "needs_client_registration"; readonly error: string }
+  }>
+}
+
+export type McpAddInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly config: {
+    readonly config:
+      | {
+          readonly type: "local"
+          readonly command: ReadonlyArray<string>
+          readonly cwd?: string | undefined
+          readonly environment?: { readonly [x: string]: string } | undefined
+          readonly disabled?: boolean | undefined
+          readonly timeout?:
+            | { readonly startup?: number | undefined; readonly request?: number | undefined }
+            | undefined
+        }
+      | {
+          readonly type: "remote"
+          readonly url: string
+          readonly headers?: { readonly [x: string]: string } | undefined
+          readonly oauth?:
+            | {
+                readonly client_id?: string | undefined
+                readonly client_secret?: string | undefined
+                readonly scope?: string | undefined
+                readonly callback_port?: number | undefined
+                readonly redirect_uri?: string | undefined
+              }
+            | false
+            | undefined
+          readonly disabled?: boolean | undefined
+          readonly timeout?:
+            | { readonly startup?: number | undefined; readonly request?: number | undefined }
+            | undefined
+        }
+  }["config"]
+}
+
+export type McpAddOutput = void
+
+export type McpRemoveInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpRemoveOutput = void
+
+export type McpConnectInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpConnectOutput = void
+
+export type McpDisconnectInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpDisconnectOutput = void
+
 export type SkillsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -2813,19 +2915,37 @@ export type ProjectsListOutput = ReadonlyArray<{
   readonly sandboxes: ReadonlyArray<string>
 }>
 
+export type ProjectsDirectoriesInput = { readonly projectID: { readonly projectID: string }["projectID"] }
+
+export type ProjectsDirectoriesOutput = ReadonlyArray<{
+  readonly directory: string
+  readonly strategy?: string | undefined
+}>
+
+export type ConfigGetOutput = { readonly model?: string | undefined; readonly disabledProviders: ReadonlyArray<string> }
+
 export type ConfigUpdateInput = {
   readonly model?: {
     readonly model?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
   }["model"]
   readonly agents?: {
     readonly model?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
   }["agents"]
+  readonly disabledProviders?: {
+    readonly model?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
+  }["disabledProviders"]
 }
 
 export type ConfigUpdateOutput = void
@@ -6937,6 +7057,8 @@ export {
   isProviderNotFoundError,
   type PermissionNotFoundError,
   isPermissionNotFoundError,
+  type McpServerNotFoundError,
+  isMcpServerNotFoundError,
   type PtyNotFoundError,
   isPtyNotFoundError,
   type QuestionNotFoundError,

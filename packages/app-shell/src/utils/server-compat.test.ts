@@ -61,6 +61,16 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
+  test("sends MCP server calls to the V2 server and answers the resource catalog locally", async () => {
+    const { api, requests } = setup("v2")
+
+    await api.mcp.connect({ server: "x", location: { directory: "/repo" } })
+    expect((await api.mcp.resource.catalog({ location: { directory: "/repo" } })).data.resources).toEqual([])
+    expect(requests.map((request) => new URL(request.url).pathname).filter((path) => path.includes("mcp"))).toEqual([
+      "/api/mcp/x/connect",
+    ])
+  })
+
   test("resolves the V2 current project from the location route", async () => {
     const { api, requests } = setup("v2")
 

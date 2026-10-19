@@ -151,6 +151,30 @@ export function make<
   return tool
 }
 
+/**
+ * A tool whose input contract is a JSON Schema owned by another system, such as an MCP server. The input reaches
+ * `execute` undecoded: the owner validates it.
+ */
+export function dynamic(config: {
+  readonly description: string
+  readonly inputSchema: JsonSchema.JsonSchema
+  readonly execute: (input: unknown, context: Context) => Effect.Effect<ToolOutput, ToolFailure>
+}): AnyTool {
+  const tool = Object.freeze({}) as AnyTool
+  const definitions = new Map<string, ToolDefinition>()
+  runtimes.set(tool, {
+    definition: (name) => {
+      const cached = definitions.get(name)
+      if (cached) return cached
+      const definition = new ToolDefinition({ name, description: config.description, inputSchema: config.inputSchema })
+      definitions.set(name, definition)
+      return definition
+    },
+    settle: (call, context) => config.execute(call.input, context),
+  })
+  return tool
+}
+
 export const validateName = (name: string) =>
   /^[A-Za-z][A-Za-z0-9_-]{0,63}$/.test(name)
     ? Effect.void

@@ -30,10 +30,10 @@ import { CrossSpawnSpawner } from "@orchestra/core/cross-spawn-spawner"
 import { McpCatalog } from "./catalog"
 import { McpEvent } from "@orchestra/schema/mcp-event"
 import { McpBrowser } from "./browser"
-import { createClient } from "./client"
+import { createClient } from "@orchestra/core/mcp/client"
 import { serverLog } from "./server-log"
 import { McpStdio, OmniStdioTransport } from "./stdio"
-import { Status } from "./status"
+import { Status } from "@orchestra/schema/mcp"
 
 const DEFAULT_TIMEOUT = 30_000
 export const Resource = Schema.Struct({

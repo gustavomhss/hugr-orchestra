@@ -1,7 +1,7 @@
 import { Model } from "@orchestra/schema/model"
 import { Schema } from "effect"
 import { array, check, locationData, object } from "./assertions"
-import { http } from "./dsl"
+import { http, route } from "./dsl"
 import { type Scenario } from "./types"
 
 // V2 location catalog routes: commands, references and the project behaviors every Session receives as system
@@ -39,6 +39,25 @@ export const catalogScenarios: Scenario[] = [
     .global()
     .at(() => ({ path: "/api/config", body: { agents: { maestro: { engine: "orchestra" } } } }))
     .status(204, undefined, "status"),
+  http.protected.get("/api/config", "v2.config.get").global().json(200, object),
+  http.protected
+    .get("/api/project/{projectID}/directories", "v2.project.directories")
+    .at((ctx) => ({ path: route("/api/project/{projectID}/directories", { projectID: "global" }), headers: ctx.headers() }))
+    .json(200, array),
+  http.protected
+    .post("/api/session/{sessionID}/rename", "v2.session.rename")
+    .seeded((ctx) => ctx.session({ title: "Rename" }))
+    .at((ctx) => ({
+      path: route("/api/session/{sessionID}/rename", { sessionID: ctx.state.id }),
+      headers: { ...ctx.headers(), "content-type": "application/json" },
+      body: { title: "Renamed" },
+    }))
+    .status(204, undefined, "none"),
+  http.protected
+    .delete("/api/session/{sessionID}", "v2.session.remove")
+    .seeded((ctx) => ctx.session({ title: "Delete" }))
+    .at((ctx) => ({ path: route("/api/session/{sessionID}", { sessionID: ctx.state.id }), headers: ctx.headers() }))
+    .status(204, undefined, "none"),
   http.protected.get("/api/reference", "v2.reference.list").json(200, object),
   http.protected
     .get("/api/model/default", "v2.model.default")

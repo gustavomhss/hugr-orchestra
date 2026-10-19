@@ -105,11 +105,16 @@ function showErrors(input: {
   })
 }
 
-export const loadGlobalConfigQuery = (scope: ServerScope, sdk: OrchestraClient, protocol?: Promise<ServerProtocol>) =>
+export const loadGlobalConfigQuery = (
+  scope: ServerScope,
+  sdk: OrchestraClient,
+  protocol?: Promise<ServerProtocol>,
+  readV2?: () => Promise<Config>,
+) =>
   queryOptions({
     queryKey: [scope, "config"],
     queryFn: async () => {
-      if ((await protocol) !== "v1") return {}
+      if ((await protocol) !== "v1") return readV2 ? retry(readV2) : {}
       return retry(() => sdk.global.config.get().then((x) => x.data!))
     },
   })
@@ -142,6 +147,7 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
 
 export async function bootstrapGlobal(input: {
   serverSDK: OrchestraClient
+  readV2Config?: () => Promise<Config>
   serverAPI: CatalogApi & { readonly project: ProjectApi }
   protocol?: Promise<ServerProtocol>
   scope: ServerScope
@@ -152,7 +158,10 @@ export async function bootstrapGlobal(input: {
   queryClient: QueryClient
 }) {
   const slow = [
-    () => input.queryClient.fetchQuery(loadGlobalConfigQuery(input.scope, input.serverSDK, input.protocol)),
+    () =>
+      input.queryClient.fetchQuery(
+        loadGlobalConfigQuery(input.scope, input.serverSDK, input.protocol, input.readV2Config),
+      ),
     () =>
       input.queryClient.fetchQuery(
         loadProvidersQuery(input.scope, null, input.serverAPI, input.serverSDK, input.protocol),

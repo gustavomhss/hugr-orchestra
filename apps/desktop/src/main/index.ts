@@ -53,6 +53,7 @@ import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
 import { startOwnedServe } from "./owned-serve"
+import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
 import { initializeCandidateProfile } from "./candidate-profile"
@@ -424,19 +425,29 @@ const main = Effect.gen(function* () {
 
     // Exclusive with the V1 sidecar below: one server per launch on one database.
     if (SIDECAR_VERSION === "v2-owned") {
+      // The child reaches main's Dock handlers through this channel, as the V1 sidecar does through its utility port.
+      const dock = yield* Effect.promise(() =>
+        startDockChannel({
+          onMessage: (message, reply) => {
+            if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
+          },
+          onClose: () =>
+            void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
+        }),
+      )
       const owned = yield* Effect.promise(() =>
         Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"), candidateProfile)]).then(
           ([binary, env]) =>
             startOwnedServe({
               logger,
               command: [binary],
-              env,
+              env: { ...env, ...dock.env },
               write: (stream, message) =>
                 writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
             }),
         ),
       )
-      server = owned.listener
+      server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
 
       if (process.platform === "win32") {
         void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))

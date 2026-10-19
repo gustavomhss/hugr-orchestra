@@ -97,8 +97,9 @@ export function createHomeController() {
       const settled = ctx.sdk.api.file
         .list({ path: ".", location })
         .then(async (files) => {
-          // An empty folder only becomes a repository when the person agrees.
-          if (files.data.length > 0 || !(await confirmInitGit(item))) return ctx.sdk.api.project.current({ location })
+          // An empty folder only becomes a repository when the person agrees; V2 has no `initGit` route, so it never asks.
+          if (files.data.length > 0 || (await ctx.sdk.protocol) !== "v1" || !(await confirmInitGit(item)))
+            return ctx.sdk.api.project.current({ location })
           const result = await ctx.sdk.client.project.initGit({ directory: item })
           // The chapters asked while the question was open and cached the shared "global" project; the folder has its own now.
           void ctx.queryClient.invalidateQueries({ queryKey: relayKey(ctx.sdk.scope, item) })

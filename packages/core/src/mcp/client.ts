@@ -1,7 +1,9 @@
+export * as McpClient from "./client"
+
 import { pathToFileURL } from "node:url"
 import { Client, type ClientOptions } from "@modelcontextprotocol/sdk/client/index.js"
 import { ListRootsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
-import { InstallationVersion } from "@orchestra/core/installation/version"
+import { InstallationVersion } from "../installation/version"
 
 const CLIENT_OPTIONS = {
   capabilities: {
