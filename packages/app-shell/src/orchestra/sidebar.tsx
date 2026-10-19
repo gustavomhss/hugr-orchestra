@@ -233,8 +233,8 @@ export function OrchestraSidebar(props: {
     const ctx = global.ensureServerCtx(conn)
     layout.home.setSelection({ server: ServerConnection.key(conn), directory: project.worktree })
     ctx.projects.open(project.worktree)
+    // The menu is already closed by whoever called this; closing it here would shut one reopened in the meantime.
     ctx.projects.touch(project.worktree)
-    setState("profileOpen", false)
     const result = await projectTab(conn, project).then(
       (tab) => ({ tab }),
       (cause: unknown) => ({ cause }),
