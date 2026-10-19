@@ -10,6 +10,7 @@ import type {
 } from "@orchestra/session-ui/session-review"
 import type { SelectedLineRange } from "@/context/file"
 import { useSDK } from "@/context/sdk"
+import { readFileContent } from "@/context/file/read"
 import { useLayout } from "@/context/layout"
 import type { LineComment } from "@/context/comments"
 
@@ -54,9 +55,7 @@ export function SessionReviewTab(props: SessionReviewTabProps) {
   const layout = useLayout()
 
   const readFile = async (path: string) => {
-    return sdk()
-      .client.file.read({ path })
-      .then((x) => x.data)
+    return readFileContent(sdk(), path)
       .catch((error) => {
         console.debug("[session-review] failed to read file", { path, error })
         return undefined

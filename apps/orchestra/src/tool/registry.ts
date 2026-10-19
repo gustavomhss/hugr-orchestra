@@ -21,6 +21,7 @@ import { AtlasMemoryEmitTool, AtlasMemoryRecallTool } from "./atlas-memory"
 import { AtlasContextTool, boundRetained } from "./atlas-context"
 import { AtlasKnowledge } from "@/maestro/atlas-knowledge"
 import { ResearchRegistry } from "./research-registry"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Archive } from "@/continuity/archive"
 import { TaskTool } from "@/tool/task"
 import { MaestroPresentApprovalTool, MaestroRecordApprovalTool } from "./maestro-approval"
@@ -355,7 +356,7 @@ const layer = Layer.effect(
           }
         }
 
-        yield* config.get()
+        yield* config.get().pipe(Effect.andThen(agent.get(ResearchSeatTools.SEAT)), Effect.flatMap((seat) => research.prewarm(seat, ctx.worktree)))
         const questionEnabled = ["app", "cli", "desktop"].includes(flags.client) || flags.enableQuestionTool
         yield* MaestroArsenalTools.prepare.pipe(Effect.provideService(FSUtil.Service, fs), Effect.orDie)
 
@@ -480,8 +481,7 @@ const layer = Layer.effect(
           execute: (args: unknown, context: Tool.Context) =>
             nativeAtlasTools.has(definition.id)
               ? Effect.die(new Error(`Configured tools cannot replace native Atlas tool ${definition.id}`))
-              : context.agentID === "jimmy"
-              ? Effect.die(new Error("Discovery cannot execute configured plugin tools"))
+              : context.agentID === ResearchSeatTools.SEAT ? Effect.die(new Error("Discovery cannot execute configured plugin tools"))
               : definition.executeWithSafety(args, context, durableSafety, requiredBinding),
         })),
       ]
@@ -577,8 +577,8 @@ const layer = Layer.effect(
         ) {
           return false
         }
-        if (tool.id === WebSearchTool.id) return webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel })
-        if (tool.id === LspTool.id) return flags.experimentalLspTool || ResearchRegistry.discovery(input.agent)
+        if (tool.id === WebSearchTool.id) return ResearchRegistry.discovery(input.agent) || webSearchEnabled({ exa: flags.enableExa, parallel: flags.enableParallel }) // D1: discovery's keyless endpoints need no account
+        if (tool.id === LspTool.id) return flags.experimentalLspTool
 
         const usePatch =
           input.modelID.includes("gpt-") && !input.modelID.includes("oss") && !input.modelID.includes("gpt-4")

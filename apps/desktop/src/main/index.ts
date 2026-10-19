@@ -30,6 +30,7 @@ import {
   getDefaultServerUrl,
   preferAppEnv,
   setDefaultServerUrl,
+  sidecarLaunchEnv,
   spawnLocalServer,
   type SidecarListener,
 } from "./server"
@@ -50,7 +51,9 @@ import { registerWslIpcHandlers } from "./wsl/ipc"
 import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
-import { startBackgroundCli } from "./background-cli"
+import { resolveCliBinary, startBackgroundCli } from "./background-cli"
+import { startOwnedServe } from "./owned-serve"
+import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
 import { initializeCandidateProfile } from "./candidate-profile"
@@ -83,7 +86,10 @@ const APP_IDS: Record<string, string> = {
   prod: "ai.hugr.orchestra",
 }
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
-const SIDECAR_VERSION = process.env.ORCHESTRA_SIDECAR_V2 === "1" ? "v2" : "v1"
+// "1": the shared background daemon. "owned": a desktop-owned `orchestra serve` child in place of the V1 sidecar.
+// Unset (default) keeps the V1 sidecar until the app's V2 route parity lands.
+const SIDECAR_VERSION =
+  process.env.ORCHESTRA_SIDECAR_V2 === "owned" ? "v2-owned" : process.env.ORCHESTRA_SIDECAR_V2 === "1" ? "v2" : "v1"
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>
@@ -413,6 +419,46 @@ const main = Effect.gen(function* () {
         void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
       }
 
+      logger.log("loading task finished")
+      return
+    }
+
+    // Exclusive with the V1 sidecar below: one server per launch on one database.
+    if (SIDECAR_VERSION === "v2-owned") {
+      // The child reaches main's Dock handlers through this channel, as the V1 sidecar does through its utility port.
+      const dock = yield* Effect.promise(() =>
+        startDockChannel({
+          onMessage: (message, reply) => {
+            if (!LinuxWorkspaceRPC.handle(message, reply)) handleDockRPC(message, reply)
+          },
+          onClose: () =>
+            void LinuxWorkspaceRPC.close().catch(() => writeLog("utility", "linux access cleanup failed", {}, "warn")),
+        }),
+      )
+      const owned = yield* Effect.promise(() =>
+        Promise.all([resolveCliBinary(logger), sidecarLaunchEnv(app.getPath("userData"), candidateProfile)]).then(
+          ([binary, env]) =>
+            startOwnedServe({
+              logger,
+              command: [binary],
+              env: { ...env, ...dock.env },
+              write: (stream, message) =>
+                writeLog("server", stream, { message }, stream === "stderr" ? "warn" : "info"),
+            }),
+        ),
+      )
+      server = { stop: () => owned.listener.stop().finally(() => dock.close()) }
+
+      if (process.platform === "win32") {
+        void wslServers.initialize().catch((error) => logger.error("wsl server initialization failed", error))
+      }
+
+      yield* Effect.tryPromise(() => owned.health.wait).pipe(
+        Effect.catch((e) => Effect.sync(() => logger.error("owned serve health check failed", String(e)))),
+        Effect.ensuring(
+          Deferred.succeed(serverReady, { url: owned.url, username: owned.username, password: owned.password }),
+        ),
+      )
       logger.log("loading task finished")
       return
     }

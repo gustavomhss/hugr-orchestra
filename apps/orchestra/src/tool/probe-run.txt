@@ -1,0 +1,6 @@
+Run one probe in a fresh read-only snapshot of the worktree or a commit: `typecheck` (a tsconfig), `test` (one test file, optional name) or `script` (ts, js or py, up to 16 KiB). No network, no writes outside its scratch. `expect` makes the verdict reproduced or not_reproduced; `hypothesis` lets the host record and resolve it. Charged in probe seconds.
+
+Lines: diagnostics carry the original file path with 1-based line and column.
+Empty: an empty stdout or stderr means the runner printed nothing; it proves nothing beyond this run.
+Retains: every result, failed or not, as structured JSON; cite its source with a JSON pointer such as /verdict.
+Fails: probe_timeout, probe_memory, probe_denied, budget_exhausted.

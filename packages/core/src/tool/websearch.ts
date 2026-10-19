@@ -51,6 +51,67 @@ export const Input = Schema.Struct({
   ),
 })
 
+/** A lower-case host name; a result passes when its host is the name or a subdomain of it. */
+export const Domain = Schema.String.check(
+  Schema.isPattern(/^(?=.{1,253}(?![\s\S]))(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z][a-z0-9-]{0,62}(?![\s\S])/),
+)
+export const Domains = Schema.Array(Domain).check(Schema.isMinLength(1), Schema.isMaxLength(32))
+
+/**
+ * The dispatch's web domain list (J1.9). The host provides it around one research dispatch; no model input sets it.
+ * Absent means unrestricted.
+ */
+export const AllowedDomains = Context.Reference<ReadonlyArray<string> | undefined>("@orchestra/WebSearch/AllowedDomains", {
+  defaultValue: () => undefined,
+})
+
+export function allows(domains: ReadonlyArray<string>, url: string) {
+  const parsed = URL.parse(url)
+  if (!parsed || !["http:", "https:"].includes(parsed.protocol)) return false
+  const host = parsed.hostname.toLowerCase().replace(/\.$/, "")
+  return domains.some((domain) => host === domain || host.endsWith(`.${domain}`))
+}
+
+/** Parallel honours `site:` operators: one query per allowed domain (at most four) steers it before the host filter. */
+export function parallelQueries(query: string, domains: ReadonlyArray<string> | undefined) {
+  return domains?.length ? domains.slice(0, 4).map((domain) => `${query} site:${domain}`) : [query]
+}
+
+/**
+ * Keeps only results whose URL the domain list admits. Neither backend filters by domain itself, so this is the
+ * enforcement. Parallel answers JSON with `results[].url`; Exa answers text blocks that open with `Title:` and carry one
+ * `URL:` line. A response that cannot be attributed to URLs returns nothing rather than an unchecked result.
+ */
+export function restrict(provider: Provider, text: string, domains: ReadonlyArray<string>) {
+  const scope = `Results restricted to ${domains.join(", ")}`
+  if (!text.trim() || text === NO_RESULTS) return { text: `${scope}. ${NO_RESULTS}`, withheld: 0 }
+  const kept = provider === "parallel" ? parallelResults(text, domains) : exaResults(text, domains)
+  if (!kept) return { text: `${scope}. The search response could not be matched to URLs, so no result is returned.`, withheld: undefined }
+  if (kept.count === 0) return { text: `${scope}. No result within those domains (${kept.withheld} withheld).`, withheld: kept.withheld }
+  return { text: `${scope}; ${kept.withheld} result(s) outside them withheld.\n\n${kept.text}`, withheld: kept.withheld }
+}
+
+function parallelResults(text: string, domains: ReadonlyArray<string>) {
+  const decoded = Schema.decodeUnknownOption(Schema.UnknownFromJsonString)(text)
+  if (decoded._tag === "None" || !record(decoded.value) || !Array.isArray(decoded.value.results)) return
+  const results: unknown[] = decoded.value.results
+  if (!results.every((item) => record(item) && typeof item.url === "string")) return
+  const kept = results.filter((item) => record(item) && typeof item.url === "string" && allows(domains, item.url))
+  return { text: JSON.stringify({ ...decoded.value, results: kept }, null, 2), count: kept.length, withheld: results.length - kept.length }
+}
+
+function exaResults(text: string, domains: ReadonlyArray<string>) {
+  const blocks = text.split(/(?=^Title: )/m)
+  const urls = blocks.map((block) => /^URL: (\S+)$/m.exec(block)?.[1])
+  if (urls.some((url) => url === undefined)) return
+  const kept = blocks.filter((_, index) => allows(domains, urls[index] ?? ""))
+  return { text: kept.join(""), count: kept.length, withheld: blocks.length - kept.length }
+}
+
+function record(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+}
+
 export const Provider = Schema.Literals(["exa", "parallel"])
 export type Provider = typeof Provider.Type
 
@@ -201,11 +262,12 @@ const layer = Layer.effectDiscard(
           execute: (input, context) => {
             const provider = selectProvider(context.sessionID, config, config.provider)
             return Effect.gen(function* () {
+              const domains = yield* AllowedDomains
               yield* permission.assert({
                 action: name,
                 resources: [input.query],
                 save: ["*"],
-                metadata: { ...input, provider },
+                metadata: { ...input, provider, ...(domains ? { allowedDomains: domains } : {}) },
                 sessionID: context.sessionID,
                 agent: context.agent,
                 source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
@@ -227,7 +289,7 @@ const layer = Layer.effectDiscard(
                       ParallelArgs,
                       {
                         objective: input.query,
-                        search_queries: [input.query],
+                        search_queries: parallelQueries(input.query, domains),
                         session_id: context.sessionID,
                         // V2 invocation context does not safely expose the model yet.
                       },
@@ -238,7 +300,7 @@ const layer = Layer.effectDiscard(
                     )
               return {
                 provider,
-                text: text ?? NO_RESULTS,
+                text: domains ? restrict(provider, text ?? NO_RESULTS, domains).text : (text ?? NO_RESULTS),
               }
             }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to search the web for ${input.query}` })))
           },

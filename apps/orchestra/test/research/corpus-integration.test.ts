@@ -1,6 +1,5 @@
 import { describe, expect } from "bun:test"
 import path from "node:path"
-import { pathToFileURL } from "node:url"
 import { Cause, Effect, Exit, Schema } from "effect"
 import { Database } from "@orchestra/core/database/database"
 import { SessionProjector } from "@orchestra/core/session/projector"
@@ -64,7 +63,7 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
     ask: (request) => permission.ask({ ...request, sessionID: child.id, tool: { messageID: assistant.id, callID }, ruleset: agent.permission }).pipe(Effect.orDie),
   })
   const parts = new Map<string, PartID>()
-  const run = (name: string, args: unknown, callID: string = PartID.ascending()) => Effect.gen(function* () {
+  const run = (name: string, args: unknown, callID: string = PartID.ascending(), dispatch = "integration-dispatch") => Effect.gen(function* () {
     const tool = tools.find((candidate) => candidate.id === name)
     if (!tool) throw new Error(`Missing native research tool: ${name}`)
     const id = parts.get(callID) ?? PartID.ascending()
@@ -72,7 +71,7 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
     const part = { type: "tool" as const, id, sessionID: child.id, messageID: assistant.id, callID, tool: name,
       state: { status: "running" as const, input: {}, time: { start: Date.now() } } }
     yield* sessions.updatePart(part)
-    const result = yield* execution.enter(child.id, "integration-dispatch", tool.execute(args, context(callID)))
+    const result = yield* execution.enter(child.id, dispatch, tool.execute(args, context(callID)))
     yield* sessions.updatePart({ ...part, state: { status: "completed", input: {}, title: result.title, output: result.output,
       metadata: result.metadata, time: { start: part.state.time.start, end: Date.now() } } })
     return result
@@ -83,6 +82,8 @@ const setup = Effect.fn("ResearchIntegration.setup")(function* () {
 function source(result: Tool.ExecuteResult) {
   return Schema.decodeUnknownSync(Research.SourceReceipt)(result.metadata.researchSource)
 }
+
+const Opened = Schema.Struct({ question: Research.RecordRef, subquestions: Schema.Array(Research.RecordRef) })
 
 describe("native research vertical slice", () => {
   http.instance("ordinary read retains actual bytes and original range; publication, decoder and HTTP reopen same document", () => Effect.gen(function* () {
@@ -107,16 +108,42 @@ describe("native research vertical slice", () => {
       findingRefs: [], citations: { observed: evidence },
     } })
     const mutation = Schema.decodeUnknownSync(Schema.Struct({ document: Research.DocumentReceipt }))(document.metadata.research)
-    const card: Research.Card = { answer: "Only version 1.", profile: "understand", depth: "quick", sufficiency: "answered",
-      findingRefs: [], evidenceRefs: [evidence], documentRefs: [mutation.document.ref],
-      coverage: { examined: ["observed.txt:2"], excluded: ["runtime"], failures: [] }, limitations: ["No runtime observation"], nextActions: [] }
     const message = { info: { ...fixture.assistant, finish: "stop", time: { ...fixture.assistant.time, completed: Date.now() } },
-      parts: [{ id: PartID.ascending(), sessionID: fixture.child.id, messageID: fixture.assistant.id, type: "text" as const, text: `\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060` }] }
+      parts: [{ id: PartID.ascending(), sessionID: fixture.child.id, messageID: fixture.assistant.id, type: "text" as const, text: "Inquiry closed." }] }
+    // Before inquiry close no card exists, whatever the worker writes: a fenced v1 card in its text is never parsed.
+    const fenced = `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ answer: "Version 1.", profile: "understand", depth: "quick", sufficiency: "answered",
+      findingRefs: [], evidenceRefs: [evidence], documentRefs: [mutation.document.ref], coverage: { examined: [], excluded: [], failures: [] },
+      limitations: [], nextActions: [] })}\n\u0060\u0060\u0060`
+    yield* Effect.forEach(["Missing final card", fenced, `${fenced}\n${fenced}`, fenced.replace("jimmy-result", "backend-result")], (text) => Effect.gen(function* () {
+      const rejected = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text }] }, [])
+      expect(rejected.card.parsed).toBe(false)
+      expect(rejected.referencesChecked).toBe(false)
+      expect(rejected.discovery).toBeUndefined()
+      expect(rejected.outcome).toBeUndefined()
+      expect(rejected.risks[0]).toStartWith("Inquiry not closed")
+      expect(rejected.corpus?.documents).toEqual([mutation.document])
+      expect(rejected.terminal.reason).toBe("ended")
+    }), { discard: true })
+    const opened = Schema.decodeUnknownSync(Opened)((yield* fixture.run("inquiry", { action: "open", question: "Which version applies?",
+      subquestions: ["Which version does observed.txt name"], profile: "understand" })).metadata.inquiry)
+    // The retained range holds original line 2 only.
+    yield* fixture.run("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "observed.txt names version 1",
+      nature: "extraction", evidence: [{ source: retained.ref, lines: { start: 2, end: 2 } }] })
+    expect((yield* fixture.run("inquiry", { action: "check" })).output).toContain("\"verdict\":\"pass\"")
+    yield* fixture.run("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 applies.", limitations: ["No runtime observation"] })
     const envelope = yield* DiscoveryResult.assemble(message, [])
-    expect(envelope).toMatchObject({ card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" }, discovery: card })
+    expect(envelope).toMatchObject({ outcome: "done", card: { parsed: true }, referencesChecked: true, terminal: { reason: "ended" },
+      discovery: { schema: "jimmy-card-v2", sufficiency: "answered", answer: "Version 1 applies.", limitations: ["No runtime observation"],
+        check: { verdict: "pass" }, documentRefs: [mutation.document.ref],
+        claims: [{ evidence: [{ source: retained.ref, locator: { kind: "lines", start: 2, end: 2 } }] }] } })
     expect(envelope.documents).toEqual([mutation.document])
-    const blocked = { ...message, parts: [{ ...message.parts[0], text: `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ ...card, sufficiency: "blocked" })}\n\u0060\u0060\u0060` }] }
-    expect(yield* DiscoveryResult.assemble(blocked, [])).toMatchObject({ discovery: { sufficiency: "blocked" }, terminal: { reason: "ended" } })
+    expect(envelope.corpus?.documents).toEqual([mutation.document])
+    // A later dispatch of the same Task closes its own inquiry; its blocked card is the one the parent reads.
+    yield* fixture.run("inquiry", { action: "open", question: "Does it run?", subquestions: ["Does observed.txt run"], profile: "understand" }, undefined, "integration-blocked")
+    yield* fixture.run("inquiry", { action: "check" }, undefined, "integration-blocked")
+    yield* fixture.run("inquiry", { action: "close", sufficiency: "blocked", answer: "No runtime is available." }, undefined, "integration-blocked")
+    expect(yield* DiscoveryResult.assemble(message, [])).toMatchObject({ outcome: "blocked", card: { parsed: true },
+      discovery: { sufficiency: "blocked" }, terminal: { reason: "ended" } })
     const foreign = yield* fixture.sessions.create({ agent: "jimmy", parentID: fixture.authority.id })
     yield* LogicalTask.ensure({ executionSessionID: foreign.id, authoritySessionID: fixture.authority.id,
       projectID: foreign.projectID, memberID: "jimmy", source: "host" })
@@ -132,21 +159,6 @@ describe("native research vertical slice", () => {
     expect(fetched.receipt).toEqual(mutation.document)
     expect((yield* Effect.promise(() => request(fixture.authority.id))).status).toBe(404)
     expect((yield* Effect.promise(() => request(foreign.id))).status).toBe(404)
-    const invalid = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text: "Missing final card" }] }, [])
-    expect(invalid.card.parsed).toBe(false)
-    expect(invalid.corpus?.documents).toEqual([mutation.document])
-    yield* Effect.forEach([
-      `${message.parts[0].text}\n${message.parts[0].text}`,
-      message.parts[0].text.replace("jimmy-result", "backend-result"),
-      `\u0060\u0060\u0060jimmy-result\n${JSON.stringify({ ...card, accepted: true, authoritySessionID: fixture.authority.id })}\n\u0060\u0060\u0060`,
-    ], (text) => Effect.gen(function* () {
-      const rejected = yield* DiscoveryResult.assemble({ ...message, parts: [{ ...message.parts[0], text }] }, [])
-      expect(rejected.card.parsed).toBe(false)
-      expect(rejected.referencesChecked).toBe(false)
-      expect(rejected.discovery).toBeUndefined()
-      expect(rejected.corpus?.documents).toEqual([mutation.document])
-      expect(rejected.terminal.reason).toBe("ended")
-    }), { discard: true })
     const artifacts = yield* ResearchArtifacts.Service
     yield* artifacts.remove(binding)
     expect((yield* Effect.promise(() => request(fixture.child.id))).status).toBe(503)
@@ -171,29 +183,24 @@ describe("native research vertical slice", () => {
     yield* fs.writeFileString(path.join(fixture.directory, ".env"), "UNRECOGNIZED_SECRET=private")
     yield* fs.symlink(path.join(fixture.directory, ".env"), path.join(fixture.directory, "alias.txt"))
     expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "file", path: "alias.txt" }).pipe(Effect.exit))).toBe(true)
-    expect(Exit.isFailure(yield* fixture.run("lsp", { operation: "documentSymbol", filePath: "alias.txt", line: 1, character: 1 }).pipe(Effect.exit))).toBe(true)
     const attempts = yield* fixture.run("research_view", { action: "attempts" })
     const decoded = Schema.decodeUnknownSync(Schema.fromJsonString(Schema.Struct({ attempts: Schema.Array(Research.AttemptReceipt) })))(attempts.output)
     expect(decoded.attempts.some((attempt) => attempt.outcome === "captured")).toBe(true)
-    expect(decoded.attempts.filter((attempt) => attempt.outcome === "unavailable")).toHaveLength(4)
+    expect(decoded.attempts.filter((attempt) => attempt.outcome === "unavailable")).toHaveLength(3)
     expect(fixture.tools.some((tool) => ["bash", "edit", "task", "arsenal_execute"].includes(tool.id))).toBe(false)
     yield* fixture.sessions.remove(fixture.authority.id)
   }))
 
-  it.instance("webfetch retains received HTML before conversion; dedicated capture shares acquisition and failure ledger", () => Effect.gen(function* () {
+  it.instance("URL capture retains received HTML before conversion and records failed acquisition", () => Effect.gen(function* () {
     const fixture = yield* setup()
     const server = yield* Effect.acquireRelease(Effect.sync(() => Bun.serve({ port: 0, fetch: (request) =>
       new URL(request.url).pathname === "/missing" ? new Response("Missing", { status: 404 })
         : new Response("<h1>Only version 1</h1><script>untrusted()</script>", { headers: { "content-type": "text/html" } }),
     })), (server) => Effect.sync(() => server.stop(true)))
-    const result = yield* fixture.run("webfetch", { url: server.url.href, format: "markdown" })
-    expect(result.output).toContain("# Only version 1")
-    const converted = source(result)
-    expect(converted.transformation).toBe("webfetch-markdown-v1")
-    expect(converted.derivedFrom).toBeDefined()
     const dedicated = source(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }))
     expect(dedicated.transformation).toBe("webfetch-text-v1")
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: new URL("/missing", server.url).href, format: "text" }).pipe(Effect.exit))).toBe(true)
+    expect(dedicated.derivedFrom).toBeDefined()
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: new URL("/missing", server.url).href, format: "text" }).pipe(Effect.exit))).toBe(true)
     const attempts = yield* fixture.run("research_view", { action: "attempts" })
     expect(attempts.output).toContain('"outcome":"unavailable"')
     yield* fixture.sessions.remove(fixture.authority.id)
@@ -217,12 +224,12 @@ describe("native research vertical slice", () => {
       state.calls++
       return state.calls === 1 ? new Response("historical response", { headers: { "content-type": "text/plain" } }) : new Response("Missing", { status: 404 })
     } })), (server) => Effect.sync(() => server.stop(true)))
-    const fetched = source(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "exact-fetch"))
-    const cached = yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "exact-fetch")
+    const fetched = source(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "exact-fetch"))
+    const cached = yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "exact-fetch")
     expect(source(cached)).toEqual(fetched)
     expect(state.calls).toBe(1)
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
-    expect(Exit.isFailure(yield* fixture.run("webfetch", { url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
+    expect(Exit.isFailure(yield* fixture.run("research_capture", { kind: "url", url: server.url.href, format: "text" }, "failed-fetch").pipe(Effect.exit))).toBe(true)
     expect(state.calls).toBe(2)
     const binding = yield* ResearchBinding.resolve(fixture.child.id, fixture.child.projectID)
     const corpus = yield* records.view(binding, { action: "corpus" })
@@ -375,36 +382,4 @@ describe("native research vertical slice", () => {
     expect(corpus.sources.filter((value) => value.ref.representation === "text")).toHaveLength(1)
     yield* fixture.sessions.remove(fixture.authority.id)
   }))
-
-  for (const fails of [false, true]) it.instance(`native TypeScript alias resolution and semantic failure coverage; RPC failure=${fails}`, () => Effect.gen(function* () {
-    const fixture = yield* setup()
-    const fs = yield* FSUtil.Service
-    const records = yield* ResearchRecords.Service
-    yield* fs.makeDirectory(path.join(fixture.directory, "src"))
-    yield* fs.writeFileString(path.join(fixture.directory, "tsconfig.json"), JSON.stringify({ compilerOptions: {
-      target: "ES2022", module: "ESNext", moduleResolution: "Bundler", baseUrl: ".", paths: { "@runtime/current": ["src/barrel.ts"] },
-    }, include: ["src/*.ts"] }))
-    yield* fs.writeFileString(path.join(fixture.directory, "src/base.ts"), "export function active() { return 'selected' }\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/unused.ts"), "export function active() { return 'unused' }\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/barrel.ts"), "export { active } from './base'\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/consumer.ts"), "import { active } from '@runtime/current'\nexport const selected = active()\n")
-    yield* fs.writeFileString(path.join(fixture.directory, "src/symbols.ts"), Array.from({ length: 120 }, (_, index) => `export const sym${index} = ${index}`).join("\n"))
-    const result = yield* fixture.run("lsp", { operation: "goToDefinition", filePath: "src/consumer.ts", line: 2, character: 25 }).pipe(Effect.exit)
-    if (fails) {
-      expect(Exit.isFailure(result) && Cause.pretty(result.cause)).toContain("failed acquisition is not an empty semantic result")
-      const binding = yield* ResearchBinding.resolve(fixture.child.id, fixture.child.projectID)
-      const attempts = yield* records.view(binding, { action: "attempts" })
-      expect("attempts" in attempts && attempts.attempts).toMatchObject([{ outcome: "unavailable", returned: false }])
-      yield* fixture.sessions.remove(fixture.authority.id)
-      return
-    }
-    if (Exit.isFailure(result)) return yield* Effect.failCause(result.cause)
-    const locations = Schema.decodeUnknownSync(Schema.Array(Schema.Struct({ uri: Schema.String })))(result.value.metadata.result)
-    expect(locations.map((value) => value.uri)).toEqual([pathToFileURL(path.join(fixture.directory, "src/base.ts")).href])
-    expect(source(result.value).complete).toBe(true)
-    const symbols = yield* fixture.run("lsp", { operation: "workspaceSymbol", filePath: "src/consumer.ts", line: 1, character: 1, query: "sym" })
-    expect(source(symbols).complete).toBe(false)
-    expect(symbols.metadata.semanticCoverage).toMatchObject({ state: "partial", omitted: 20 })
-    yield* fixture.sessions.remove(fixture.authority.id)
-  }), { config: { lsp: { semantic: { command: [process.execPath, path.join(import.meta.dir, "fixtures/semantic-server.ts"), ...(fails ? ["--fail-queries"] : [])], extensions: [".ts"] } } } })
 })

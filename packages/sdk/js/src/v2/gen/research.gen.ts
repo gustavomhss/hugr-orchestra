@@ -78,6 +78,7 @@ export type ResearchLineLocator = {
   kind: "lines"
   start: number
   end: number
+  basis?: "original" | "retained"
 }
 
 export type ResearchQuoteLocator = {

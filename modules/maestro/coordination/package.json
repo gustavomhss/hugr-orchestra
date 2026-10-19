@@ -18,6 +18,7 @@
     "./route-grant": "./src/route-grant.ts",
     "./seat-skill-content": "./src/seat-skill-content.ts",
     "./seat-skill-root": "./src/seat-skill-root.ts",
+    "./seat-skills-module": "./src/seat-skills-module.ts",
     "./seats": "./src/seats/index.ts",
     "./seats/seat": "./src/seats/seat.ts",
     "./session-authority": "./src/session-authority.ts",

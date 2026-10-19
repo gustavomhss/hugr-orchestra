@@ -98,6 +98,7 @@ function fixture<A, E>(
               Project.Service,
               Project.Service.of({
                 resolve: (directory) => Effect.succeed({ id: location.project.id, directory }),
+                list: () => Effect.succeed([]),
                 directories: () => Effect.succeed([]),
                 commit: () => Effect.void,
               }),

@@ -26,14 +26,22 @@ class RelayError(Exception):
 
 
 def gated(builder, gates, dev=False):
-    """Insert a check node (and an approval node when asked) after each gated node and route its edges through them."""
+    """Insert an approval node before each gated node that asks for one, and a check node after it."""
     root = project_root()
     ignore = root / ".gitignore"
     if ".relay/" not in (ignore.read_text(encoding="utf-8").splitlines() if ignore.exists() else []):
         with ignore.open("a", encoding="utf-8") as f:
             f.write(".relay/\n")
         print(f"relay: added .relay/ to {ignore}", file=sys.stderr)
-    graph = {"name": "LangGraph"}
+    graph = {"name": root.name}
+    # Approvals go first, before any check node adds conditional edges of its own.
+    for node in [node for node, gate in gates.items() if isinstance(gate, dict) and gate.get("approve")]:
+        if any(node in (b.ends or {}).values() for branches in builder.branches.values() for b in branches.values()):
+            raise RelayError(
+                f'relay: node "{node}" is reached through a conditional edge, so relay cannot put its approval first.\n'
+                f'       Fix: route to a separate node that has one static edge to "{node}".'
+            )
+        builder.edges = {(start, f"{node}__relay_approve" if end == node else end) for start, end in builder.edges}
     for node, gate in gates.items():
         _gate(builder, root, graph, node, {"check": gate} if isinstance(gate, str) else gate)
     builder.edges = {(start, "relay__end" if end == END else end) for start, end in builder.edges}
@@ -47,7 +55,7 @@ class _Gated:
         self.builder, self.graph, self.dev, self.approve = builder, graph, dev, approve
 
     def compile(self, checkpointer=None, **kwargs):
-        self.graph["name"] = kwargs.get("name") or "LangGraph"
+        self.graph["name"] = kwargs.get("name") or self.graph["name"]
         if checkpointer is None and self.dev:
             print("relay: dev mode, compiling with an in-memory checkpointer (InMemorySaver)", file=sys.stderr)
             checkpointer = InMemorySaver()
@@ -68,7 +76,10 @@ def project_root():
 
 def _gate(builder, root, graph, node, gate):
     if node not in builder.nodes:
-        raise RelayError(f'relay: no node "{node}" in this graph. Gated nodes: add_node("{node}", ...) first.')
+        raise RelayError(
+            f'relay: no node "{node}" in this graph.\n'
+            f'       Nodes in this graph: {", ".join(n for n in builder.nodes if "__relay_" not in n)}'
+        )
     if builder.branches.get(node) or builder.nodes[node].ends or any(node in s for s, _ in builder.waiting_edges):
         raise RelayError(
             f'relay: node "{node}" has conditional edges, Command destinations or a join edge.\n'
@@ -80,6 +91,36 @@ def _gate(builder, root, graph, node, gate):
     targets = [("relay__end" if end == END else end) for end in targets] or ["relay__end"]
     retries = gate.get("retries", 3)
     check, approve = f"{node}__relay_check", f"{node}__relay_approve"
+
+    def run_approve(state, config):
+        thread, ledger = _ledger(root, config)
+        _append(ledger, {"event": "run.start", "key": f"{thread}/__start__/0/run.start", "thread_id": thread,
+                         "graph": graph["name"], "library_version": __version__})
+        attempt = sum(e["event"] == "step.end" and e.get("node") == node for e in _read(ledger)) + 1
+        key = f"{thread}/{node}/{attempt}"
+        asked = any(e.get("key") == f"{key}/approval.request" for e in _read(ledger))
+        _append(ledger, {"event": "approval.request", "key": f"{key}/approval.request", "node": node,
+                         "attempt": attempt})
+        # A decision already on the ledger is replayed, so a re-run of this node never asks twice.
+        entries = _read(ledger)
+        recorded = next((e for e in entries if e.get("key") == f"{key}/approval.decision"), None)
+        if recorded is None:
+            if not asked:
+                _say(node, "approval", f"WAITING  (before {node} runs)")
+            answer = interrupt({"node": node, "attempt": attempt, "ledger": str(ledger)})
+            decision = answer.get("decision") if isinstance(answer, dict) else answer
+            recorded = {"event": "approval.decision", "key": f"{key}/approval.decision", "node": node,
+                        "attempt": attempt,
+                        "request_seq": next(e["seq"] for e in entries if e["key"] == f"{key}/approval.request"),
+                        "decision": "approve" if decision == "approve" else "reject",
+                        "note": str(answer.get("note", "")) if isinstance(answer, dict) else "", "source": "terminal"}
+            _append(ledger, recorded)
+        _say(node, "approval", "APPROVED" if recorded["decision"] == "approve" else "REJECTED")
+        if recorded["decision"] == "reject":
+            _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
+                             "outcome": "fail"})
+            _escalate(ledger, thread, node, f'approval rejected on node "{node}"')
+        return None
 
     def run_check(state, config):
         thread, ledger = _ledger(root, config)
@@ -103,61 +144,30 @@ def _gate(builder, root, graph, node, gate):
             label = f"check {spec}" if kind == "cmd" else f'judge "{spec}"'
             note = "  → retrying" if verdict == "fail" and attempt < retries else ""
             _say(node, label, f"{verdict.upper()}  (attempt {attempt}/{retries}){note}")
-        if failed:
-            _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "outcome": "fail"})
-            if attempt >= retries:
-                _escalate(ledger, thread, node, f'check failed {attempt} of {retries} times on node "{node}"')
-            return None
-        if not gate.get("approve"):
-            _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "outcome": "pass"})
-        return None
-
-    def run_approve(state, config):
-        thread, ledger = _ledger(root, config)
-        attempt = sum(e["event"] == "step.start" and e.get("node") == node for e in _read(ledger))
-        key = f"{thread}/{node}/{attempt}"
-        _append(ledger, {"event": "approval.request", "key": f"{key}/approval.request", "node": node,
-                         "attempt": attempt})
-        # A decision already on the ledger is replayed, so a re-run of this node never asks twice.
-        entries = _read(ledger)
-        recorded = next((e for e in entries if e.get("key") == f"{key}/approval.decision"), None)
-        if recorded is None:
-            _say(node, "approval", "WAITING")
-            answer = interrupt({"node": node, "attempt": attempt, "ledger": str(ledger)})
-            decision = answer.get("decision") if isinstance(answer, dict) else answer
-            recorded = {"event": "approval.decision", "key": f"{key}/approval.decision", "node": node,
-                        "attempt": attempt,
-                        "request_seq": next(e["seq"] for e in entries if e["key"] == f"{key}/approval.request"),
-                        "decision": "approve" if decision == "approve" else "reject",
-                        "note": str(answer.get("note", "")) if isinstance(answer, dict) else "", "source": "terminal"}
-            _append(ledger, recorded)
-        _say(node, "approval", "APPROVED" if recorded["decision"] == "approve" else "REJECTED")
-        if recorded["decision"] == "approve":
-            _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                             "outcome": "pass"})
-            return None
+            if verdict == "fail":
+                for line in output.strip().splitlines()[-3:]:
+                    print(f"relay  {'':<12} │ {line}", file=sys.stderr)
         _append(ledger, {"event": "step.end", "key": f"{key}/step.end", "node": node, "attempt": attempt,
-                         "outcome": "fail"})
-        _escalate(ledger, thread, node, f'approval rejected on node "{node}"')
+                         "outcome": "fail" if failed else "pass"})
+        if failed and attempt >= retries:
+            _escalate(ledger, thread, node, f'check failed {attempt} of {retries} times on node "{node}"')
         return None
 
-    # The route is read back from the ledger: the node's last entry says passed, retry, escalated or awaiting approval.
+    # The route is read back from the ledger: the node's last entry says passed, retry, escalated or approved.
     def route(state, config):
         last = [e for e in _read(_ledger(root, config)[1]) if e.get("node") == node][-1]
         if last["event"] == "escalate":
             return END
-        if last["event"] == "step.end":
-            return targets if last["outcome"] == "pass" else node
-        return approve
+        if last["event"] == "approval.decision":
+            return node
+        return targets if last["outcome"] == "pass" else node
 
-    builder.add_node(check, run_check)
-    builder.add_edge(node, check)
-    builder.add_conditional_edges(check, route, [*targets, node, END, *([approve] if gate.get("approve") else [])])
     if gate.get("approve"):
         builder.add_node(approve, run_approve)
-        builder.add_conditional_edges(approve, route, [*targets, END])
+        builder.add_conditional_edges(approve, route, [node, END])
+    builder.add_node(check, run_check)
+    builder.add_edge(node, check)
+    builder.add_conditional_edges(check, route, [*targets, node, END])
 
 
 def _evaluate(kind, spec, root):
@@ -183,6 +193,7 @@ def _finish(root, graph, config):
 
 def _escalate(ledger, thread, node, reason):
     _append(ledger, {"event": "escalate", "key": f"{thread}/__end__/0/escalate", "reason": reason, "node": node})
+    _say(node, "run", f"STOPPED  ({reason}; nothing after it ran)")
     _summary(ledger)
 
 
@@ -192,7 +203,7 @@ def _summary(ledger):
     intact = subprocess.run([sys.executable, str(VERIFY), str(ledger)], capture_output=True).returncode == 0
     state = "chain intact" if intact else "CHAIN BROKEN"
     print(f"relay  ledger       {len(lines)} entries · {state} · {h[:4]}…{h[-4:]}", file=sys.stderr)
-    print(f"relay  verify  →    python -m orchestra_relay verify {ledger.parent}", file=sys.stderr)
+    print(f"relay  verify  →    relay verify {ledger.parent}", file=sys.stderr)
 
 
 def _say(node, label, status):

@@ -238,7 +238,7 @@ it.instance("Archie receives an explicit hold instead of incomplete context unde
     if (mode === "registry") {
       expect(result.output).toStartWith(content)
       expect(result.output).toContain(`Retained source evidence: ${JSON.stringify(source.ref)}`)
-      expect(result.output).toContain("Locators address retained representation from line 1; original coordinates are recorded separately.")
+      expect(result.output).not.toContain("Locators address retained representation")
       expect(result.metadata.atlasContext.coverage.state).toBe("complete")
     }
     if (mode === "footer-bytes" || mode === "footer-lines" || mode === "tiny") {

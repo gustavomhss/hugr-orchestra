@@ -17,6 +17,18 @@ export type Entry = typeof Entry.Type
 const types = [ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.DocumentPublished]
   .map((definition) => EventV2.versionedType(definition.type, 1))
 
+/** The inquiry's own events (J5.1). They sit beside Entry: corpus readers and artifact staging never see them. */
+export const Inquiry = Schema.Union([ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed])
+export type Inquiry = typeof Inquiry.Type
+/** Everything one dispatch's inquiry folds over, in ledger order. */
+export const Step = Schema.Union([ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.AllowanceCharged,
+  ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed])
+export type Step = typeof Step.Type
+const bound = EventV2.versionedType(ResearchEvent.AllowanceBound.type, 1)
+const steps = [ResearchEvent.SourceAdmitted, ResearchEvent.RecordCommitted, ResearchEvent.AllowanceCharged,
+  ResearchEvent.InquiryOpened, ResearchEvent.InquiryChecked, ResearchEvent.InquiryClosed]
+  .map((definition) => EventV2.versionedType(definition.type, 1))
+
 /** Canonical JSON ignores object insertion order and absent optional fields, preserving array order. */
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(canonical).join(",")}]`
@@ -70,6 +82,65 @@ export const entries = Effect.fn("ResearchLedger.entries")(function* (binding: R
       : Effect.succeed(entry)),
   ))
 })
+
+/**
+ * One dispatch's ledger after its allowance was bound: sources, records, its own charges and inquiry events. A resumed
+ * Task binds a new dispatch, so its inquiry starts open; re-entering the same dispatch reads the same stream.
+ */
+export const dispatch = Effect.fn("ResearchLedger.dispatch")(function* (allowance: Research.Allowance) {
+  const database = yield* Database.Service
+  const binding = allowance.binding
+  const rows = yield* database.db.select().from(EventTable).where(and(
+    eq(EventTable.aggregate_id, binding.executionSessionID), inArray(EventTable.type, [bound, ...steps]),
+  )).orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
+  const start = rows.findIndex((row) => {
+    if (row.type !== bound) return false
+    const data = Schema.decodeUnknownOption(ResearchEvent.AllowanceBound.data)(row.data)
+    return data._tag === "Some" && isDeepStrictEqual(data.value.allowance, allowance)
+  })
+  if (start < 0) return yield* new Research.Error({ code: "binding_missing", message: "Dispatch allowance is not admitted" })
+  return yield* Effect.forEach(rows.slice(start + 1).filter((row) => row.type !== bound), (row) => Schema.decodeUnknownEffect(Step)({
+    id: row.id, type: row.type.slice(0, -2), data: row.data,
+    durable: { aggregateID: row.aggregate_id, seq: row.seq, version: 1 },
+  }).pipe(
+    Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: "Invalid retained research event" })),
+    Effect.flatMap((step) => owned(step, allowance) ? Effect.succeed([step])
+      // Another dispatch's charges share the Session aggregate; anything else out of scope is a corrupt ledger.
+      : step.type === "research.allowance.charged" && step.data.sessionID === row.aggregate_id ? Effect.succeed([])
+      : Effect.fail(new Research.Error({ code: "source_unavailable", message: "Research event scope does not match admission" }))),
+  )).pipe(Effect.map((list) => list.flat()))
+})
+
+/**
+ * The card of the binding's latest dispatch, when that dispatch closed its inquiry (J5.13); undefined otherwise. An
+ * earlier dispatch's card never answers for a resumed one.
+ */
+export const closed = Effect.fn("ResearchLedger.closed")(function* (binding: Research.Binding) {
+  const database = yield* Database.Service
+  const close = EventV2.versionedType(ResearchEvent.InquiryClosed.type, 1)
+  const rows = yield* database.db.select().from(EventTable).where(and(
+    eq(EventTable.aggregate_id, binding.executionSessionID), inArray(EventTable.type, [bound, close]),
+  )).orderBy(asc(EventTable.seq)).all().pipe(Effect.orDie)
+  const start = rows.findLastIndex((row) => {
+    if (row.type !== bound) return false
+    const data = Schema.decodeUnknownOption(ResearchEvent.AllowanceBound.data)(row.data)
+    return data._tag === "Some" && isDeepStrictEqual(data.value.allowance.binding, binding)
+  })
+  const row = start < 0 ? undefined : rows.slice(start + 1).findLast((item) => item.type === close)
+  if (!row) return undefined
+  const data = yield* Schema.decodeUnknownEffect(ResearchEvent.InquiryClosed.data)(row.data).pipe(
+    Effect.mapError(() => new Research.Error({ code: "source_unavailable", message: "Invalid retained inquiry card" })))
+  if (!isDeepStrictEqual(data.binding, binding))
+    return yield* new Research.Error({ code: "source_unavailable", message: "Inquiry card scope does not match its dispatch" })
+  return data.card
+})
+
+function owned(step: Step, allowance: Research.Allowance) {
+  if (step.data.sessionID !== allowance.binding.executionSessionID) return false
+  if (step.type === "research.allowance.charged") return step.data.dispatchCallID === allowance.dispatchCallID
+  if (step.type === "research.source.admitted" && !isDeepStrictEqual(step.data.receipt.binding, allowance.binding)) return false
+  return isDeepStrictEqual(step.data.binding, allowance.binding)
+}
 
 export const retained = Effect.fn("ResearchLedger.retained")(function* (binding: Research.Binding) {
   const actual = yield* ResearchBinding.resolve(binding.executionSessionID, binding.projectID)

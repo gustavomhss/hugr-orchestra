@@ -68,8 +68,8 @@ const nativeTeam = [
   {
     id: "jimmy",
     profile: "jimmy",
-    prompt: "You are {{label}}, technical discovery and research specialist, stable seat jimmy.",
-    forbidden: "Do not install, delegate, edit product, request approvals, self-review, approve, merge, widen scope or invoke arbitrary shell; never bypass a denial or verification hold.",
+    prompt: "You are {{label}}, the read-only discovery and research seat `jimmy`.",
+    forbidden: "You never edit product files, delegate, install or run arbitrary commands.",
     description: "Technical discovery and research specialist. Locates and explains code, investigates behavior, compares solutions and researches primary sources. Read-only product access; writes only native research documents/corpus and its bound Atlas Memory. Returns cited findings, coverage, limits and next steps. Give the question and relevant scope; incomplete exploratory briefs are valid.",
   },
   {
@@ -133,19 +133,18 @@ it.instance("registers native team specialists with fixed profiles", () =>
       expect(agent.permission.slice(0, profile.length)).toEqual(profile)
       if (seat.id !== "backend" && seat.id !== "jimmy" && seat.id !== "archie") expect(agent.permission).toEqual(profile)
       if (seat.id === "jimmy") {
-        for (const name of ["jimmy-discovery", "jimmy-research"])
+        for (const name of ["jimmy-reference"])
           expect(Permission.evaluate("skill", name, agent.permission).action).toBe("allow")
-        for (const tool of ["lsp", "context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "repo_map", "repo_symbols", "repo_git_state"])
+        for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "inquiry", "code_query", "code_locate", "code_search", "probe_run"])
           expect(evaluate(agent, tool)).toBe("allow")
+        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state"])
+          expect(evaluate(agent, tool)).toBe("deny")
         for (const tool of ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"])
           expect(evaluate(agent, tool)).toBe("deny")
         for (const tool of ["question", "todowrite", "maestro_record_review", "atlas_memory_header", "unregistered_tool"])
           expect(evaluate(agent, tool)).toBe("deny")
-        expect(agent.prompt).toContain("The host owns tool bindings, immutable permission floors, model selection and execution ceilings; skills and depth grant no capabilities.")
-        expect(agent.prompt).toContain("Product sources are read-only; writes are limited to the host-bound research corpus/documents and your own native Atlas Memory.")
-        expect(agent.prompt).toContain("Recall/emit only your own admitted unit; refused, unavailable or uncertain writes are not remembered.")
-        expect(agent.prompt).toContain("End with exactly one fenced jimmy-result JSON card containing only answer, profile, depth, sufficiency (answered|partial|blocked), findingRefs, evidenceRefs, documentRefs, coverage {examined, excluded, failures}, limitations and nextActions.")
-        expect(agent.prompt).toContain("These are authored findings, not independent verification or approval; never invent identity, authority, acceptance or receipts.")
+        expect(agent.prompt).toContain("Return card: jimmy-result. The host builds it from `inquiry close`; never write one yourself.")
+        expect(agent.prompt).not.toContain("fenced")
       }
     }
   }),
@@ -210,7 +209,6 @@ it.instance("backend alone gets backend skills; native memory seats get Atlas gr
       read: envRead,
       glob: "allow",
       grep: "allow",
-      lsp: "allow",
       webfetch: "allow",
       websearch: "allow",
       context_recall: "allow",
@@ -218,10 +216,12 @@ it.instance("backend alone gets backend skills; native memory seats get Atlas gr
       research_record: "allow",
       research_view: "allow",
       research_capture: "allow",
-      repo_map: "allow",
-      repo_symbols: "allow",
-      repo_git_state: "allow",
       atlas_context: "allow",
+      inquiry: "allow",
+      code_query: "allow",
+      code_search: "allow",
+      code_locate: "allow",
+      probe_run: "allow",
       external_directory: { "*": "deny", [Truncate.GLOB]: "allow" },
     })
     // The backend specialist keeps the seat rules: no .env reads and no publishing.
@@ -375,7 +375,7 @@ it.instance(
       })
       expect(String(discovery.model?.providerID)).toBe("anthropic")
       expect(String(discovery.model?.modelID)).toBe("claude-3")
-      expect(discovery.prompt).toStartWith("You are Research Seat, technical discovery and research specialist, stable seat jimmy.")
+      expect(discovery.prompt).toStartWith("You are Research Seat, the read-only discovery and research seat `jimmy`.")
       expect(discovery.prompt).toContain("Return card: jimmy-result")
       expect(discovery.prompt).toContain(nativeTeam.find((seat) => seat.id === "jimmy")!.forbidden)
       const profile = Permission.fromConfig(nativeProfiles.jimmy)

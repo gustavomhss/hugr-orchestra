@@ -8,14 +8,18 @@
   "exports": {
     "./app-dock": "./src/app-dock.ts",
     "./app-dock-linux": "./src/app-dock-linux.ts",
-    "./linux-workspace": "./src/linux-workspace.ts"
+    "./application-tools": "./src/application-tools.ts",
+    "./linux-workspace": "./src/linux-workspace.ts",
+    "./socket-transport": "./src/socket-transport.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000",
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
-    "@orchestra/plugin": "workspace:*"
+    "@orchestra/core": "workspace:*",
+    "@orchestra/plugin": "workspace:*",
+    "effect": "catalog:"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",

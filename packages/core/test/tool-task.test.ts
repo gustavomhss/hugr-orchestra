@@ -114,6 +114,7 @@ const it = testEffect(AppNodeBuilder.build(LayerNode.group([
   })],
   [ProjectV2.node, Layer.succeed(ProjectV2.Service, ProjectV2.Service.of({
     resolve: (directory) => Effect.succeed({ id: ProjectV2.ID.global, directory }),
+    list: () => Effect.succeed([]),
     directories: () => Effect.die("Unexpected directories"),
     commit: () => Effect.die("Unexpected project commit"),
   }))],

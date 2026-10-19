@@ -1,8 +1,11 @@
 export * as ProjectV2 from "./project"
 export * as Project from "./project"
 
+import { asc } from "drizzle-orm"
 import { Context, Effect, Layer, Schema } from "effect"
 import path from "path"
+import { Project as ProjectInfo } from "@orchestra/schema/project"
+import { Database } from "./database/database"
 import { AbsolutePath } from "./schema"
 import { FSUtil } from "./fs-util"
 import { Git } from "./git"
@@ -10,6 +13,7 @@ import { makeGlobalNode } from "./effect/app-node"
 import { Hash } from "./util/hash"
 import { ProjectDirectories } from "./project/directories"
 import { ProjectSchema } from "./project/schema"
+import { ProjectTable } from "./project/sql"
 
 export const ID = ProjectSchema.ID
 export type ID = ProjectSchema.ID
@@ -35,6 +39,8 @@ export interface Resolved {
 }
 
 export interface Interface {
+  /** Every project this database knows, oldest first. */
+  readonly list: () => Effect.Effect<ProjectInfo.Info[]>
   readonly directories: (input: DirectoriesInput) => Effect.Effect<Directories>
   readonly resolve: (input: AbsolutePath) => Effect.Effect<Resolved>
   /**
@@ -57,6 +63,30 @@ const layer = Layer.effect(
     const fs = yield* FSUtil.Service
     const git = yield* Git.Service
     const projectDirectories = yield* ProjectDirectories.Service
+    const db = (yield* Database.Service).db
+
+    const list = Effect.fn("Project.list")(function* () {
+      const rows = yield* db.select().from(ProjectTable).orderBy(asc(ProjectTable.time_created)).all().pipe(Effect.orDie)
+      return rows.map(
+        (row): ProjectInfo.Info => ({
+          id: row.id,
+          worktree: row.worktree,
+          vcs: row.vcs === "git" ? "git" : undefined,
+          name: row.name ?? undefined,
+          icon:
+            row.icon_url || row.icon_url_override || row.icon_color
+              ? {
+                  url: row.icon_url ?? undefined,
+                  override: row.icon_url_override ?? undefined,
+                  color: row.icon_color ?? undefined,
+                }
+              : undefined,
+          commands: row.commands ?? undefined,
+          time: { created: row.time_created, updated: row.time_updated, initialized: row.time_initialized ?? undefined },
+          sandboxes: row.sandboxes,
+        }),
+      )
+    })
 
     const directories = Effect.fn("Project.directories")(function* (input: DirectoriesInput) {
       return yield* projectDirectories.list(input.projectID)
@@ -125,12 +155,12 @@ const layer = Layer.effect(
       yield* fs.writeFileString(path.join(input.store, "orchestra"), input.id).pipe(Effect.ignore)
     })
 
-    return Service.of({ directories, resolve, commit })
+    return Service.of({ list, directories, resolve, commit })
   }),
 )
 
 export const node = makeGlobalNode({
   service: Service,
   layer: layer,
-  deps: [FSUtil.node, Git.node, ProjectDirectories.node],
+  deps: [FSUtil.node, Git.node, ProjectDirectories.node, Database.node],
 })

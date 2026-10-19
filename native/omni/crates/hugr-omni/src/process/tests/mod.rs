@@ -9,6 +9,7 @@ mod big;
 mod deadline;
 mod exit;
 mod host;
+mod memory;
 mod scope;
 mod tree;
 

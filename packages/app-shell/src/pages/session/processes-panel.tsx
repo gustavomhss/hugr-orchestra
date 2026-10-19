@@ -144,10 +144,12 @@ export function BackgroundProcessesPanel() {
     foreground: !document.hidden,
   })
 
+  // Session processes are a V1 route; on V2 the panel stays empty.
   const refresh = (sessionID: string) =>
     sdk()
-      .client.session.processes({ sessionID })
+      .protocol.then((protocol) => (protocol === "v1" ? sdk().client.session.processes({ sessionID }) : undefined))
       .then((result) => {
+        if (!result) return
         if (params.id !== sessionID) return
         setState("items", reconcile(sortProcesses(result.data ?? []), { key: "id" }))
       })

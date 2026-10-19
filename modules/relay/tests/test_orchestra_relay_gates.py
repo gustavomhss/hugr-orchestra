@@ -79,34 +79,48 @@ def test_failing_check_retries_then_passes(project, capsys):
     assert main(["verify", str(ledger(project, "retry").parent)]) == 0
 
 
-def test_static_out_edge_never_runs_on_unchecked_output(project):
+def test_static_out_edge_never_runs_on_unchecked_output(project, capsys):
     calls = []
-    graph = gated(build(calls), {"write": {"check": "exit 1", "retries": 2}}).compile()
+    graph = gated(build(calls), {"write": {"check": "echo no labeler module; exit 1", "retries": 2}}).compile()
     graph.invoke({"n": 0}, config("blocked"))
     assert calls == ["write", "write"]
     assert events(project, "blocked")[-1] == "escalate"
+    # A failing check shows why in the terminal, and the run is named after the project folder.
+    err = capsys.readouterr().err
+    assert "│ no labeler module" in err and "STOPPED  (check failed 2 of 2 times" in err
+    assert json.loads(ledger(project, "blocked").read_text().splitlines()[0])["graph"] == project.name
     assert main(["verify", str(ledger(project, "blocked").parent)]) == 0
 
 
-def test_approval_resume_reruns_nothing(project):
+def test_approval_comes_before_the_node_and_resume_reruns_nothing(project, capsys):
     calls = []
     graph = gated(build(calls), {"write": {"check": PASS, "approve": True}}).compile(checkpointer=InMemorySaver())
     assert "__interrupt__" in graph.invoke({"n": 0}, config("approve"))
     before = ledger(project, "approve").read_text()
-    assert calls == ["write"] and checks(project) == 1
+    assert calls == [] and checks(project) == 0
     graph.invoke(Command(resume="approve"), config("approve"))
     assert calls == ["write", "ship"] and checks(project) == 1
     after = ledger(project, "approve").read_text()
     assert after.startswith(before)
     assert [json.loads(line)["event"] for line in after[len(before):].splitlines()] == [
-        "approval.decision", "step.end", "sprint-complete"]
+        "approval.decision", "step.start", "check.result", "step.end", "sprint-complete"]
+    assert capsys.readouterr().err.count("WAITING") == 1
+
+
+def test_rejected_approval_never_runs_the_node(project):
+    calls = []
+    graph = gated(build(calls), {"write": {"check": PASS, "approve": True}}).compile(checkpointer=InMemorySaver())
+    graph.invoke({"n": 0}, config("reject"))
+    graph.invoke(Command(resume="reject"), config("reject"))
+    assert calls == [] and checks(project) == 0
+    assert events(project, "reject")[-1] == "escalate"
 
 
 def test_recorded_decision_is_replayed_without_asking_again(project):
     calls = []
     graph = gated(build(calls), {"write": {"check": PASS, "approve": True}}).compile(checkpointer=InMemorySaver())
     graph.invoke({"n": 0}, config("replay"))
-    # The process recorded the decision and died before LangGraph saved the node's result.
+    # The process recorded the decision and died before LangGraph saved the approval node's result.
     request = next(json.loads(line) for line in ledger(project, "replay").read_text().splitlines()
                    if '"approval.request"' in line)
     orchestra_relay._append(ledger(project, "replay"), {
@@ -147,3 +161,8 @@ def test_conditional_out_edges_are_refused():
     builder.add_conditional_edges("ship", lambda state: END, [END])
     with pytest.raises(orchestra_relay.RelayError, match='node "ship" has conditional edges'):
         gated(builder, {"ship": PASS})
+
+
+def test_a_gate_on_a_missing_node_names_the_graph_nodes():
+    with pytest.raises(orchestra_relay.RelayError, match='no node "shipp" in this graph.\\n.*Nodes in this graph: write, ship'):
+        gated(build([]), {"write": PASS, "shipp": PASS})

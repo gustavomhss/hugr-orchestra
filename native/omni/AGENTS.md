@@ -66,7 +66,7 @@ by a lead decision. Their bodies and every private item belong to the module's o
 
 **Dependency allowlist (INV-12).**
 - **Allowed:** `libc`, `windows-sys`, `tokio` (no `process` feature), `tokio-util`, `serde` + `serde_json` + `regex` (tests
-  and runners only), and `napi`/`napi-derive`/`napi-build` (W13).
+  and runners only), `napi`/`napi-derive`/`napi-build` (W13), and `sysinfo` with only the `system` feature (tree RSS for `maxRssBytes`).
 - **Anything else** — and any new `windows-sys` feature — means stop and ask the lead.
 
 ## Gates (run all before you push)

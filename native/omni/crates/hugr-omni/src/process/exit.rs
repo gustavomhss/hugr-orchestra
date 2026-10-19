@@ -9,7 +9,7 @@ use crate::types::{Exit, Reason};
 /// Precedence of `reason` (contract §7, "the cause is committed when the library acts"):
 /// 1. if the root's exit was observed before the library sent any termination, the root's own status decides:
 ///    `Exit` for an exit code, `Signal` for a Unix signal;
-/// 2. otherwise the first of `Killed` (stop or drop), `Timeout` or `Aborted` that the library acted on, which the
+/// 2. otherwise the first of `Killed` (stop or drop), `Timeout`, `Aborted` or `MemoryExceeded` that the library acted on, which the
 ///    caller commits once and passes here as `cause`.
 ///
 /// `code` and `signal` always carry the root's native status, whatever the reason: a child that handles SIGTERM and
@@ -21,7 +21,7 @@ pub(super) fn of(root: RootExit, cause: Option<Reason>) -> Exit {
         RootExit::Signal(num) => (None, Some(signal_name(num, std::env::consts::OS)), Reason::Signal),
     };
     let reason = match cause {
-        Some(acted @ (Reason::Killed | Reason::Timeout | Reason::Aborted)) => acted,
+        Some(acted @ (Reason::Killed | Reason::Timeout | Reason::Aborted | Reason::MemoryExceeded)) => acted,
         Some(Reason::Exit | Reason::Signal) | None => own,
     };
     Exit { code, signal, reason }

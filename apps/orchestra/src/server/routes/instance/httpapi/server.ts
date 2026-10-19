@@ -63,6 +63,7 @@ import { ModelsDev } from "@orchestra/core/models-dev"
 import { Npm } from "@orchestra/core/npm"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { ProjectV2 } from "@orchestra/core/project"
+import { Global } from "@orchestra/core/global"
 import { ProjectCopy } from "@orchestra/core/project/copy"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { Ripgrep } from "@orchestra/core/ripgrep"
@@ -73,7 +74,7 @@ import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
 import { lazy } from "@/util/lazy"
-import { CorsConfig, isAllowedCorsOrigin, type CorsOptions } from "@orchestra/server/cors"
+import { CorsConfig, corsVaryFix, isAllowedCorsOrigin, type CorsOptions } from "@orchestra/server/cors"
 import { serveUIEffect } from "@/server/shared/ui"
 import { ServerAuth } from "@/server/auth"
 import { InstanceHttpApi, RootHttpApi } from "./api"
@@ -121,7 +122,6 @@ import { workspaceRoutingLayer } from "./middleware/workspace-routing"
 import { disposeMiddleware } from "./lifecycle"
 import { memoMap } from "@orchestra/core/effect/memo-map"
 import { compressionLayer } from "./middleware/compression"
-import { corsVaryFix } from "./middleware/cors-vary"
 import { errorLayer } from "./middleware/error"
 import { fenceLayer } from "./middleware/fence"
 import { schemaErrorLayer } from "./middleware/schema-error"
@@ -278,6 +278,7 @@ const app = LayerNode.group([
   httpClient,
   EventV2.node,
   ProjectV2.node,
+  Global.node,
   ProjectCopy.node,
   PtyTicket.node,
   ArsenalBindings.node,

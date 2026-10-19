@@ -34,9 +34,10 @@ it.instance("unit parent retains deadline/control acknowledgement, exact author/
     expect(part.state.output).toBe(report)
     expect(report).toContain("Orchestra research interrupted: budget_exhausted:")
     expect(report).toContain("SDK stop control does not establish physical completion")
+    expect(report).toContain("Inquiry check: pass")
     expect(report).toContain("Retained finding qualifications")
     expect(report).toContain(JSON.stringify(retained.finding))
-    expect(report).toContain(retained.text)
+    expect(report).toContain(JSON.stringify(retained.text))
     expect(part.state.metadata.researchControl).toMatchObject({ version: 1, source: "claude-code-host-research",
       dispatchCallID: dispatch.callID, executionSessionID: dispatch.child, seat: "jimmy", admission: "closed", deadlineActive: false,
       exhaustionReason: expect.stringContaining("deadline exhausted"), nativeJoin: { status: "joined", taskID: dispatch.taskID },
@@ -50,13 +51,16 @@ it.instance("unit parent retains deadline/control acknowledgement, exact author/
         bound: "native-agentic-api-round-trips", physicalPreProviderAdmission: "unavailable", hiddenWork: "unmeasured" },
     })
     expect(part.state.metadata.workResult).toMatchObject({ terminal: { reason: "interrupted", hostDetail: expect.stringContaining("deadline") },
-      referencesChecked: true, discovery: retained.card, documents: [retained.document], qualifications: { records: [retained.finding], complete: true } })
+      referencesChecked: true, outcome: "done", card: { parsed: true },
+      discovery: { schema: "jimmy-card-v2", sufficiency: "answered", claims: [{ ref: retained.claim }], documentRefs: [retained.document.ref],
+        check: { verdict: "pass" } },
+      documents: [retained.document], qualifications: { records: [retained.finding], complete: true } })
     expect(part.state.metadata.delivery).toBeUndefined()
     expect(yield* fixture.sessions.messages({ sessionID: dispatch.child })).toEqual(original)
     expect(original.find((message) => message.info.id === author.id)?.parts.flatMap((part) => part.type === "text" ? [part.text] : []))
       .toEqual([retained.text])
     expect(yield* LogicalTask.read(dispatch.child)).toEqual(logical)
-    expect(yield* retained.records.view(retained.binding, { action: "record", ref: retained.card.findingRefs[0] })).toEqual(retained.finding)
+    expect(yield* retained.records.view(retained.binding, { action: "record", ref: retained.claim })).toEqual(retained.finding)
     expect(yield* retained.records.view(retained.binding, { action: "source", ref: retained.source.ref })).toMatchObject({
       text: "Declared: release 1 enabled mode works.\nContrary: disabled mode rejects requests." })
     if (!retained.source.derivedFrom) throw new Error("Expected original received-byte provenance")

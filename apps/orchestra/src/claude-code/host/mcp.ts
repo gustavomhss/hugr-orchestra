@@ -21,6 +21,7 @@ import type { ModelV2 } from "@orchestra/core/model"
 import type { ProviderV2 } from "@orchestra/core/provider"
 import { Agent } from "@/agent/agent"
 import { Seats } from "@orchestra/maestro/seats"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { WriteRoots } from "@/maestro/write-roots"
 import { PartID, type SessionID } from "@/session/schema"
 import { ToolRegistry } from "@/tool/registry"
@@ -209,6 +210,9 @@ export const GrantParameters = Schema.Struct({
     description: "Worktree-relative files or directories the seat may write in this dispatch. Empty: read-only.",
   }),
   purpose: Schema.String.annotate({ description: "One line: what the dispatch writes and why." }),
+  allowedDomains: Schema.optional(Schema.Array(Schema.String).check(Schema.isMinLength(1))).annotate({
+    description: "jimmy only: the web domains its WebSearch may return in this dispatch. Pass writePaths: [] with it.",
+  }),
 })
 
 export type Grant = {
@@ -219,6 +223,8 @@ export type Grant = {
   /** Canonical absolute roots, validated as Task validates `writePaths`. */
   readonly writeRoots: readonly string[]
   readonly purpose: string
+  /** The research seat's WebSearch domains for the dispatch (J1.9). */
+  readonly allowedDomains?: readonly string[]
   readonly time: number
 }
 
@@ -252,6 +258,7 @@ function grant(sessionID: SessionID): Tool.Def {
       "Grant a write-roots seat (such as archie or backend) the paths it may write in one dispatch. Call it before the",
       "Agent call that dispatches the seat, then put the returned id on its own line in that Agent prompt as",
       "`grantID: <id>`. The host binds the grant to that dispatch and enforces it; without a grant the seat is read-only.",
+      "For jimmy, pass allowedDomains and writePaths: [] to limit its web search to those domains in that dispatch.",
       "Returns { grantID }.",
     ].join(" "),
     parameters: GrantParameters,
@@ -259,13 +266,19 @@ function grant(sessionID: SessionID): Tool.Def {
       const input = yield* decodeGrant(args).pipe(Effect.orDie)
       const seat = Seats.find(input.seat)
       if (!seat) return yield* Effect.die(new Error(`task_grant denied: unknown seat ${JSON.stringify(input.seat)}`))
-      if (!seat.writeRoots) return yield* Effect.die(new Error(`task_grant denied: seat ${seat.id} takes no write-root grant`))
+      // The research seat's grant carries web domains only, never write roots.
+      const research = seat.id === ResearchSeatTools.SEAT
+      if (research && (input.writePaths.length || !input.allowedDomains))
+        return yield* Effect.die(new Error(`task_grant denied: ${seat.id} takes allowedDomains and no writePaths`))
+      if (!research && input.allowedDomains) return yield* Effect.die(new Error(`task_grant denied: only ${ResearchSeatTools.SEAT} takes allowedDomains`))
+      if (!research && !seat.writeRoots) return yield* Effect.die(new Error(`task_grant denied: seat ${seat.id} takes no write-root grant`))
       // Task's own validation: worktree-relative, no escape, symlinks resolved, canonical absolute roots.
       const rules = yield* WriteRoots.bind(seat.id, input.writePaths, []).pipe(
         Effect.provide(LayerNode.compile(filesystem)), Effect.orDie)
       const entry = {
         grantID: Identifier.create("grt", "ascending"), sessionID, seat: seat.id, writePaths: [...input.writePaths],
-        writeRoots: WriteRoots.read(rules) ?? [], purpose: input.purpose, time: Date.now(),
+        writeRoots: WriteRoots.read(rules) ?? [], purpose: input.purpose,
+        ...(input.allowedDomains ? { allowedDomains: [...input.allowedDomains] } : {}), time: Date.now(),
       } satisfies Grant
       grants(sessionID).set(entry.grantID, entry)
       return { title: `Write grant for ${seat.id}`, output: JSON.stringify({ grantID: entry.grantID }),

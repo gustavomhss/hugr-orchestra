@@ -1,5 +1,5 @@
 import path from "node:path"
-import { Effect, Layer, Scope } from "effect"
+import { Context, Effect, Exit, Layer, Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Location } from "@orchestra/core/location"
 import { LocationServiceMap } from "@orchestra/core/location-services"
@@ -24,16 +24,21 @@ export const make = Effect.gen(function* () {
       requireNative(native)
       // Native Agent state may itself open the Location for references. Finish that state before replay can reenter it.
       const scope = yield* Scope.Scope
-      const context = yield* Layer.buildWithScope(
-        locations.get(
-          Location.Ref.make({
-            directory: AbsolutePath.make(instance.directory),
-            // Match the SessionStore's implicit-local Ref shape; omitted and explicit undefined hash differently.
-            workspaceID: undefined,
-          }),
-        ),
-        scope,
-      )
+      const ref = Location.Ref.make({
+        directory: AbsolutePath.make(instance.directory),
+        // Match the SessionStore's implicit-local Ref shape; omitted and explicit undefined hash differently.
+        workspaceID: undefined,
+      })
+      // A folder's first commit gives it its own project while a Location opened under the shared "global" one may
+      // still be cached. Release that one and open the folder again instead of refusing the placement.
+      const probe = yield* Scope.fork(scope)
+      const cached = yield* Layer.buildWithScope(locations.get(ref), probe)
+      const stale = Context.get(cached, Location.Service).project.id !== instance.project.id
+      if (stale) {
+        yield* Scope.close(probe, Exit.void)
+        yield* locations.invalidate(ref)
+      }
+      const context = stale ? yield* Layer.buildWithScope(locations.get(ref), scope) : cached
       yield* Effect.gen(function* () {
         const location = yield* Location.Service
         if (

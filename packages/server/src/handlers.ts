@@ -6,6 +6,7 @@ import { SessionHandler } from "./handlers/session"
 import { PermissionHandler } from "./handlers/permission"
 import { FileSystemHandler } from "./handlers/fs"
 import { CommandHandler } from "./handlers/command"
+import { McpHandler } from "./handlers/mcp"
 import { SkillHandler } from "./handlers/skill"
 import { BehaviorHandler } from "./handlers/behavior"
 import { EventHandler } from "./handlers/event"
@@ -18,6 +19,8 @@ import { LocationHandler } from "./handlers/location"
 import { IntegrationHandler } from "./handlers/integration"
 import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
+import { ProjectHandler } from "./handlers/project"
+import { ConfigHandler } from "./handlers/config"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
 import { RelayRunHandler } from "./handlers/relay-run"
@@ -47,6 +50,7 @@ export const handlers = Layer.mergeAll(
   PermissionHandler,
   FileSystemHandler,
   CommandHandler,
+  McpHandler,
   SkillHandler,
   BehaviorHandler,
   EventHandler,
@@ -54,6 +58,8 @@ export const handlers = Layer.mergeAll(
   QuestionHandler,
   ReferenceHandler,
   ProjectCopyHandler,
+  ProjectHandler,
+  ConfigHandler,
   RelayDocumentHandler,
   RelayPublishHandler,
   RelayHookHandler,

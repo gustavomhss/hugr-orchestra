@@ -15,7 +15,7 @@ const it = testEffect(NativeResearchTask.layer)
 const result = Schema.Struct({ schema: Schema.Literal("discovery-work-result-v1"),
   referencesChecked: Schema.Boolean, card: Schema.Struct({ parsed: Schema.Boolean }),
   terminal: Schema.Struct({ reason: Schema.String }), outcome: Schema.optional(Schema.String), documents: Schema.optional(Schema.Array(Research.DocumentReceipt)),
-  corpus: Schema.optional(Research.Corpus), discovery: Schema.optional(Research.Card) })
+  corpus: Schema.optional(Research.Corpus), discovery: Schema.optional(Research.CardV2) })
 
 // Actual native dispatch/provider/store behavior; scripted responses earn no research-quality credit.
 it.instance("background native Task is running before worker facts and delivers admitted documents to parent after completion", () => Effect.gen(function* () {
@@ -49,10 +49,19 @@ it.instance("background native Task is running before worker facts and delivers 
       const admitted = Schema.decodeUnknownSync(ResearchEvent.DocumentPublished.data)(event.data)
       if (admitted.binding.authoritySessionID !== fixture.parent.id || !state.source || state.document) return
       state.document = admitted.receipt
-      const card: Research.Card = { answer: "Only version 1; disabled operation rejects requests.", profile: "understand", depth: "quick", sufficiency: "answered",
-        findingRefs: [], evidenceRefs: [admitted.receipt.citations.condition], documentRefs: [admitted.receipt.ref],
-        coverage: { examined: ["conditions.txt"], excluded: ["runtime"], failures: [] }, limitations: ["Static source only"], nextActions: [] }
-      yield* fixture.remote.text(`\u0060\u0060\u0060jimmy-result\n${JSON.stringify(card)}\n\u0060\u0060\u0060`)
+      yield* fixture.remote.tool("inquiry", { action: "open", question: "Which conditions apply?",
+        subquestions: ["What does disabled operation do"], profile: "understand" })
+      return
+    }
+    if (event.type === ResearchEvent.InquiryOpened.type) {
+      const opened = Schema.decodeUnknownSync(ResearchEvent.InquiryOpened.data)(event.data)
+      if (opened.binding.authoritySessionID !== fixture.parent.id || !state.source) return
+      yield* fixture.remote.tool("inquiry", { action: "claim", subquestion: opened.subquestions[0], proposition: "Disabled operation rejects the request",
+        nature: "extraction", evidence: [{ source: state.source.ref, quote: "Disabled operation rejects the request." }] })
+      yield* fixture.remote.tool("inquiry", { action: "check" })
+      yield* fixture.remote.tool("inquiry", { action: "close", sufficiency: "answered", answer: "Version 1 applies; disabled operation rejects requests.",
+        limitations: ["Static source only"] })
+      yield* fixture.remote.text("Background research closed.")
       yield* fixture.remote.text("Parent received completed background research.")
     }
   }))
@@ -78,8 +87,10 @@ it.instance("background native Task is running before worker facts and delivers 
   ), "Background Task did not deliver its work result", "30 seconds")
   const completed = Schema.decodeUnknownSync(result)(delivered.type === "text" ? delivered.metadata?.workResult : undefined)
   if (!state.document || !state.source) throw new Error("Native background worker omitted admitted source/document")
-  expect(completed).toMatchObject({ terminal: { reason: "ended" }, card: { parsed: true }, referencesChecked: true })
-  expect(completed.discovery).toMatchObject({ sufficiency: "answered", documentRefs: [state.document.ref], evidenceRefs: [state.document.citations.condition] })
+  expect(completed).toMatchObject({ terminal: { reason: "ended" }, card: { parsed: true }, referencesChecked: true, outcome: "done" })
+  expect(completed.discovery).toMatchObject({ schema: "jimmy-card-v2", sufficiency: "answered", limitations: ["Static source only"], check: { verdict: "pass" },
+    documentRefs: [state.document.ref],
+    claims: [{ evidence: [{ source: state.source.ref, locator: { kind: "quote", exact: "Disabled operation rejects the request." } }] }] })
   expect(completed.documents).toEqual([state.document])
   expect(completed.corpus?.sources).toContainEqual(state.source)
   expect(completed.corpus?.documents).toEqual([state.document])
@@ -106,9 +117,9 @@ it.instance("background native Task is running before worker facts and delivers 
   expect(published[0]?.type === "text" && Schema.decodeUnknownSync(result)(published[0].metadata?.workResult)).toEqual(completed)
   expect(history.flatMap((message) => message.parts).find((part) => part.id === called.partID))
     .toMatchObject({ state: { status: "completed", metadata: { workResult: running } } })
-  // Three child requests (read, document, card), then one native parent-notice request.
-  expect(yield* fixture.remote.calls).toBe(4)
-  expect(JSON.stringify((yield* fixture.remote.inputs)[3])).toContain("Background task completed: Background conditional discovery")
+  // Seven child requests (read, document, inquiry open, claim, check, close, final text), then one native parent-notice request.
+  expect(yield* fixture.remote.calls).toBe(8)
+  expect(JSON.stringify((yield* fixture.remote.inputs)[7])).toContain("Background task completed: Background conditional discovery")
   expect(yield* fixture.remote.pending).toBe(0)
 }), { git: true }, 120_000)
 

@@ -1,6 +1,6 @@
 # orchestra-relay
 
-Verifiable gates for LangGraph graphs, in one line. A gated node gets a check after it, an optional human approval, a bounded retry, and a hash-chained ledger that `relay verify` checks.
+Verifiable gates for LangGraph graphs, in one line. A gated node gets an optional human approval before it runs, a check after it, a bounded retry, and a hash-chained ledger that `relay verify` checks.
 
 ## Install
 
@@ -23,7 +23,7 @@ graph.invoke(state, {"configurable": {"thread_id": "my-run"}})
 relay  write_code   check pytest -q ............ FAIL  (attempt 1/3)  → retrying
 relay  write_code   check pytest -q ............ PASS  (attempt 2/3)
 relay  ledger       8 entries · chain intact · 9f2c…e41a
-relay  verify  →    python -m orchestra_relay verify .relay/runs/my-run
+relay  verify  →    relay verify .relay/runs/my-run
 ```
 
 A runnable version is in [examples/quickstart.py](examples/quickstart.py).
@@ -36,11 +36,11 @@ gated(builder, {"deploy": {"check": "make smoke", "judge": "the change is safe",
 
 - `check`: a shell command run from the project root; exit code 0 passes. A failure retries the node until `retries` (default 3) attempts are used, then the run escalates and ends.
 - `judge`: recorded as advisory. Real model judging comes in a later version.
-- `approve`: pauses with LangGraph's `interrupt()`. Resume with `graph.invoke(Command(resume="approve"), config)` or `Command(resume={"decision": "reject", "note": "..."})`. A decision already on the ledger is replayed, never asked again.
+- `approve`: pauses with LangGraph's `interrupt()` before the node runs, so a rejected step never happens; retries after a failed check do not ask again. Resume with `graph.invoke(Command(resume="approve"), config)` or `Command(resume={"decision": "reject", "note": "..."})`. A decision already on the ledger is replayed, never asked again.
 
-Your node functions are never wrapped. Their static out-edges are moved behind the inserted nodes. A gated node with conditional edges, `Command` destinations or a join edge is refused with an error.
+Your node functions are never wrapped. Their static out-edges are moved behind the check node, and with `approve` their static in-edges go through the approval node first. A gated node with conditional out-edges, `Command` destinations or a join edge is refused with an error, and so is an approval-gated node reached through a conditional edge.
 
-Runs are written to `<project>/.relay/runs/<thread_id>/ledger.jsonl`, where the project is the nearest folder with `.git`. `.relay/` is added to `.gitignore` once.
+Runs are written to `<project>/.relay/runs/<thread_id>/ledger.jsonl`, where the project is the nearest folder with `.git`; a run is named after that folder unless you pass `compile(name=...)`. A failing check prints its last output lines. `.relay/` is added to `.gitignore` once.
 
 ```bash
 relay verify [run_dir]        # or: python -m orchestra_relay verify

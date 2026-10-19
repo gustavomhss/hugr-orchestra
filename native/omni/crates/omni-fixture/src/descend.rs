@@ -41,6 +41,15 @@ pub fn hold(ms: u64, log: Option<&Path>) -> Result<(), String> {
     start(me(log)?.arg(format!("sleep={ms}")).stdin(Stdio::null()), "hold").map(drop)
 }
 
+/// Starts a descendant that holds `mib` resident mebibytes (`alloc`) and hangs.
+pub fn alloc(mib: u64, log: Option<&Path>) -> Result<(), String> {
+    start(
+        me(log)?.arg(format!("alloc={mib}")).arg("hang").stdin(Stdio::null()),
+        "alloc-child",
+    )
+    .map(drop)
+}
+
 /// Unix: the descendant calls `setsid` and prints `ESCAPED <pid>` itself. Windows: it is started with
 /// `CREATE_BREAKAWAY_FROM_JOB`; this process prints `ESCAPED <pid>`, or `ESCAPE-REFUSED` if the OS refused.
 pub fn escape(out: &mut Out, log: Option<&Path>) -> Result<(), String> {

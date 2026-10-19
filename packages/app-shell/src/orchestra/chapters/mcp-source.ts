@@ -19,7 +19,7 @@ export function createMcpSource(input: {
 }) {
   const v1 = () => input.serverSDK.protocol.then((protocol) => protocol === "v1")
   const location = { directory: input.directory }
-  const api = () => input.serverSDK.currentApi.mcp
+  const api = () => input.serverSDK.api.mcp
 
   return {
     v1,

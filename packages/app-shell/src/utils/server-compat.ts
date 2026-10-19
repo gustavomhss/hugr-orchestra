@@ -90,9 +90,39 @@ function sessionInfo(session: Session): SessionInfo & Pick<Session, "metadata"> 
 
 export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   const v1 = createV1Api(input)
+  // The Orchestra V2 server has no project lookup route; its location answer carries the resolved project. A
+  // server that answers the lookup keeps it; the first failure switches this API to the location route.
+  const fromLocation: ServerApi["project"]["current"] = (value, options) =>
+    input.current.location.get(value, options).then((info) => info.project)
+  const lookup = { served: true }
+  // The V2 MCP service has no resource routes yet: the catalog answers empty instead of a 404 per poll.
+  const located = (value?: { location?: { directory?: string } }) => ({
+    directory: value?.location?.directory ?? "",
+    project: { id: "", directory: value?.location?.directory ?? "" },
+  })
+  const current: ServerApi = {
+    ...input.current,
+    project: {
+      ...input.current.project,
+      current: (value, options) => {
+        if (!lookup.served) return fromLocation(value, options)
+        return input.current.project.current(value, options).catch(() => {
+          lookup.served = false
+          return fromLocation(value, options)
+        })
+      },
+    },
+    mcp: {
+      ...input.current.mcp,
+      resource: {
+        ...input.current.mcp.resource,
+        catalog: async (value) => ({ location: located(value), data: { resources: [], templates: [] } }),
+      },
+    },
+  }
   return lazyApi(
-    input.protocol.then((protocol) => (protocol === "v1" ? v1 : input.current)),
-    input.current,
+    input.protocol.then((protocol) => (protocol === "v1" ? v1 : current)),
+    current,
   )
 }
 

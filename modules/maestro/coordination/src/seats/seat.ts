@@ -36,6 +36,8 @@ export type Seat = {
   readonly atlasMemory: boolean
   /** The shell fetches the backend toolkit's pinned engines for this seat's commands. */
   readonly toolkit: boolean
+  /** The research engine's seat: its tools come from @orchestra/core/research/seat-tools, and Claude mode dispatches it per tier. */
+  readonly research?: boolean
 }
 
 export function define<const T extends Seat>(seat: T) {
@@ -49,6 +51,8 @@ export function define<const T extends Seat>(seat: T) {
     throw new Error(`Atlas Memory supports only backend, jimmy and archie owners: ${seat.id}`)
   if (seat.toolkit && seat.id !== "backend")
     throw new Error(`The backend toolkit supports only the backend seat: ${seat.id}`)
+  if (seat.research && seat.id !== "jimmy")
+    throw new Error(`The research engine supports only the jimmy seat: ${seat.id}`)
   if (seat.writeRoots && seat.profile !== "execution")
     throw new Error(`Write roots require an execution profile: ${seat.id}`)
   if (seat.profile === "execution" && seat.skills.length > 0 && !seat.writeRoots)

@@ -88,6 +88,7 @@ export default function Agents(props: ChapterPageProps) {
     Object.values((await legacy(directory).session.status()).data ?? {}).some((status) => status.type !== "idle")
   // V1 keeps config per instance, and disposing it cancels that directory's running sessions.
   const reloadLegacy = async (directory: string) => {
+    if ((await sdk().protocol) !== "v1") return true
     if (await working(directory)) return false
     await legacy(directory).instance.dispose()
     return true

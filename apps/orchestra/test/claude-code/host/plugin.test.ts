@@ -20,6 +20,7 @@ import { Agent } from "@/agent/agent"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
 import { ClaudeHostProcess } from "@/claude-code/host/process-tool"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { Seats } from "@orchestra/maestro/seats"
 import { TestInstance, tmpdirScoped } from "../../fixture/fixture"
 import { expectSpawn } from "../../../../../packages/core/test/fixture/omni-expect"
@@ -52,7 +53,7 @@ const tools = Object.fromEntries(
       "grep",
       ...(seat.profile === "execution" ? ["bash", "edit", "write", "apply_patch", ClaudeHostProcess.ID] : []),
       ...(seat.skills.length ? ["skill"] : []),
-      ...(seat.workResult === "discovery-work-result-v1" ? ["research_capture", "research_view", "research_record", "atlas_context", "repo_map", "repo_symbols", "repo_git_state"] : []),
+      ...(seat.workResult === "discovery-work-result-v1" ? ["research_capture", "research_view", "research_record", "atlas_context"] : []),
       ...(seat.atlasMemory ? ["atlas_memory_recall", "atlas_memory_emit"] : []),
       ...(seat.id === "lucy" ? ["maestro_record_review"] : []),
       ...(seat.id === "archie"
@@ -164,10 +165,12 @@ it.instance(
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
         const ids = Object.keys(Seats.all).toSorted()
         expect(ids.length).toBeGreaterThanOrEqual(8)
-        expect(built.seats).toEqual(Object.fromEntries(ids.map((id) => [`orchestra:${id}`, id])))
+        // The research seat has one agent per tier (J1.4); every other seat has one agent named by its id.
+        const agents = ids.flatMap((id) => ClaudeHostPlugin.agents(id).map((agent) => ({ id, name: agent.name })))
+        expect(built.seats).toEqual(Object.fromEntries(agents.map((agent) => [`orchestra:${agent.name}`, agent.id])))
         expect(built.sdkAgents).toEqual({})
         const written = await files(built.path)
-        expect(written.filter((file) => file.startsWith("agents/"))).toEqual(ids.map((id) => `agents/${id}.md`))
+        expect(written.filter((file) => file.startsWith("agents/"))).toEqual(agents.map((agent) => `agents/${agent.name}.md`).toSorted())
         expect(JSON.parse(await Bun.file(path.join(built.path, ".claude-plugin/plugin.json")).text()).name).toBe(
           "orchestra",
         )
@@ -177,20 +180,19 @@ it.instance(
           ...Object.values(Seats.all).flatMap((seat) => seat.skills),
           ...(await fs.readdir(path.resolve(import.meta.dir, "../../../playbooks"))),
         ]
-        expect(skills).toContain("jimmy-research")
-        expect(skills).toContain("jimmy-discovery")
+        expect(skills).toContain("jimmy-reference")
         expect(skills).toContain("backend-implement")
         expect(skills).toContain("maestro-governed")
         for (const skill of skills) expect(written).toContain(`skills/${skill}/SKILL.md`)
         // Skill reference files travel with their SKILL.md.
         expect(written.filter((file) => file.startsWith("skills/backend-implement/")).length).toBeGreaterThan(1)
 
-        for (const seat of seats) {
-          const text = await Bun.file(path.join(built.path, `agents/${seat.id}.md`)).text()
+        for (const [seat, agent] of seats.flatMap((seat) => ClaudeHostPlugin.agents(seat.id!).map((agent) => [seat, agent] as const))) {
+          const text = await Bun.file(path.join(built.path, `agents/${agent.name}.md`)).text()
           const head = frontmatter(text)
-          expect(head.name).toBe(seat.id!)
+          expect(head.name).toBe(agent.name)
           expect(JSON.parse(head.skills)).toEqual(Seats.find(seat.id)?.skills)
-          expect(JSON.parse(head.description)).toBe(seat.description!)
+          expect(JSON.parse(head.description)).toStartWith(seat.description!.trim())
           expect(JSON.parse(head.model)).toBe("inherit")
           expect(head.disallowedTools).toBeUndefined()
           expect(text).toContain(seat.prompt!.split("\n")[0])
@@ -500,7 +502,7 @@ it.instance(
       yield* Effect.promise(async () => {
         const built = await ClaudeHostPlugin.build({ seats, tools, root: f.root })
         for (const seat of seats) {
-          const listed = frontmatter(await Bun.file(path.join(built.path, `agents/${seat.id}.md`)).text()).tools.split(
+          const listed = frontmatter(await Bun.file(path.join(built.path, `agents/${ClaudeHostPlugin.agents(seat.id!)[0].name}.md`)).text()).tools.split(
             ", ",
           )
           expect(listed).toEqual(ClaudeHostPlugin.tools(seat.id!, tools[seat.id!]))
@@ -538,8 +540,9 @@ it.instance(
   60_000,
 )
 
-test("jimmy reads sources only through the research capture tools", () => {
+test("jimmy gets its descriptor's tools and native search, never WebFetch, LSP or repository intelligence", () => {
   const listed = ClaudeHostPlugin.tools("jimmy", [
+    "repo_map",
     "read",
     "grep",
     "glob",
@@ -550,12 +553,21 @@ test("jimmy reads sources only through the research capture tools", () => {
     "research_capture", "research_record", "research_view", "skill",
   ])
   expect(listed).toEqual([
+    "Glob",
+    "Grep",
+    "Read",
     "Skill",
+    "WebSearch",
+    "mcp__orchestra__context_recall",
     "mcp__orchestra__research_capture",
     "mcp__orchestra__research_record",
     "mcp__orchestra__research_view",
   ])
-  expect(ClaudeHostPlugin.CAPTURE.jimmy).toContain("research_capture")
+})
+
+test("jimmy's probe_run is served as an Orchestra MCP tool from its descriptor", () => {
+  expect(ResearchSeatTools.OWN).toContain("probe_run")
+  expect(ClaudeHostPlugin.tools("jimmy", [...ResearchSeatTools.OWN])).toContain("mcp__orchestra__probe_run")
 })
 
 it.instance(

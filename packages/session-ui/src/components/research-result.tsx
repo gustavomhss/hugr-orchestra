@@ -12,7 +12,8 @@ const Envelope = Schema.Struct({
   schema: Schema.Literal("discovery-work-result-v1"),
   referencesChecked: Schema.optional(Schema.Boolean),
   card: Schema.Struct({ parsed: Schema.Boolean }),
-  discovery: Schema.optional(Research.Card),
+  // Card v2 is assembled by the host on inquiry close (J5.12); stored version 1 results still render.
+  discovery: Schema.optional(Schema.Union([Research.CardV2, Research.Card])),
   documents: Schema.optional(Schema.Array(Research.DocumentReceipt)),
   corpus: Schema.optional(Research.Corpus),
   terminal: Schema.Struct({

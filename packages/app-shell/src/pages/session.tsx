@@ -559,10 +559,8 @@ export default function Page() {
   }, desktopReviewOpen())
 
   const turnDiffs = createMemo(() => list(lastUserMessage()?.summary?.diffs))
-  const nogit = createMemo(() => {
-    const project = sync().project
-    return !!project && project.vcs !== "git"
-  })
+  // `initGit` is a V1-only route; on V2 the empty review state just says there are no changes.
+  const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && serverSDK().protocolKind() === "v1")
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
     const project = sync().project

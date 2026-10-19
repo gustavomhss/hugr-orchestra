@@ -138,6 +138,18 @@ export const Info = Schema.Struct({
     description:
       "Thresholds for truncating tool output. When output exceeds either limit, the full text is written to the truncation directory and a preview is returned.",
   }),
+  research: Schema.optional(
+    Schema.Struct({
+      limits: Schema.optional(Schema.Struct({
+        indexer_bytes: Schema.optional(PositiveInt).annotate({ description: "Memory cap of one code indexer run in bytes (default and maximum: 2 GiB)" }),
+        probe_bytes: Schema.optional(PositiveInt).annotate({ description: "Memory cap of one research probe in bytes (default and maximum: 1 GiB)" }),
+        scratch_bytes: Schema.optional(PositiveInt).annotate({ description: "Scratch disk of one research probe in bytes (default and maximum: 2 GiB)" }),
+        index_bytes: Schema.optional(PositiveInt).annotate({ description: "Disk budget of the code index cache in bytes (default and maximum: 4 GiB)" }),
+      })),
+    }),
+  ).annotate({
+    description: "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap.",
+  }),
   compaction: Schema.optional(
     Schema.Struct({
       auto: Schema.optional(Schema.Boolean).annotate({

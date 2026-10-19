@@ -5,7 +5,7 @@ import { usePlatform } from "@/context/platform"
 import type { ServerConnection } from "@/context/server"
 import { pathKey } from "@/utils/path-key"
 import { createRelayClient, documentKind, relayUnsupported, type RelayKind } from "./client"
-import { createRunClient, type RelayRun } from "./runs"
+import { createRunClient } from "./runs"
 
 // One profile's Relay data, shared by the chapter pages and the sidebar through the server's query client.
 // Queries never retry: a server without a Relay route answers 404 and the screens say so.
@@ -72,8 +72,8 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
       queryKey: key("runs"),
       queryFn: runsEnabled && input.kind === "workflow" && documents.isSuccess ? () => runner.runs() : skipToken,
       retry: false,
-      refetchInterval: (query: { state: { data?: RelayRun[] } }) =>
-        query.state.data?.some((run) => run.status === "running") ? 10_000 : false,
+      // External runs start outside the app, so the list keeps polling instead of waiting for one already running.
+      refetchInterval: 10_000,
     }),
     queryClient,
   )

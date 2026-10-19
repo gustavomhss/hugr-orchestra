@@ -70,6 +70,8 @@ const INTERFACE = [
   "session/lifecycle", "session/summary",
   // Native issued research frames and the qualification packet at Claude Agent settlement.
   "research/allowance", "maestro/discovery-result",
+  // The research tool binding the host uses to record and retain the research seat's built-in reads.
+  "research/binding",
   // Reviewed runtime-audit additions: shared continuity/memory, provider configuration, location lifecycle,
   // event projection, Git operations and shell execution; none owns the normal provider loop.
   "tool/shell/execution", "continuity/model", "maestro/atlas-memory", "maestro/atlas-knowledge", "provider/provider", "event-v2-bridge", "git",

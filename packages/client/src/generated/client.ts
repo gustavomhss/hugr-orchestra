@@ -18,6 +18,10 @@ import type {
   SessionsGetOutput,
   SessionsArchiveInput,
   SessionsArchiveOutput,
+  SessionsRenameInput,
+  SessionsRenameOutput,
+  SessionsRemoveInput,
+  SessionsRemoveOutput,
   SessionsGetSubagentModelsInput,
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
@@ -102,6 +106,16 @@ import type {
   FilesFindOutput,
   CommandsListInput,
   CommandsListOutput,
+  McpListInput,
+  McpListOutput,
+  McpAddInput,
+  McpAddOutput,
+  McpRemoveInput,
+  McpRemoveOutput,
+  McpConnectInput,
+  McpConnectOutput,
+  McpDisconnectInput,
+  McpDisconnectOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -137,6 +151,12 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectsListOutput,
+  ProjectsDirectoriesInput,
+  ProjectsDirectoriesOutput,
+  ConfigGetOutput,
+  ConfigUpdateInput,
+  ConfigUpdateOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -473,6 +493,29 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/archive`,
             body: { archived: input["archived"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      rename: (input: SessionsRenameInput, requestOptions?: RequestOptions) =>
+        request<SessionsRenameOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/rename`,
+            body: { title: input["title"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      remove: (input: SessionsRemoveInput, requestOptions?: RequestOptions) =>
+        request<SessionsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}`,
             successStatus: 204,
             declaredStatuses: [404, 400, 401],
             empty: true,
@@ -1003,6 +1046,69 @@ export function make(options: ClientOptions) {
           requestOptions,
         ),
     },
+    mcp: {
+      list: (input?: McpListInput, requestOptions?: RequestOptions) =>
+        request<McpListOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      add: (input: McpAddInput, requestOptions?: RequestOptions) =>
+        request<McpAddOutput>(
+          {
+            method: "PUT",
+            path: `/api/mcp/${encodeURIComponent(input.server)}`,
+            query: { location: input["location"] },
+            body: { config: input["config"] },
+            successStatus: 204,
+            declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      remove: (input: McpRemoveInput, requestOptions?: RequestOptions) =>
+        request<McpRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/mcp/${encodeURIComponent(input.server)}`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      connect: (input: McpConnectInput, requestOptions?: RequestOptions) =>
+        request<McpConnectOutput>(
+          {
+            method: "POST",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/connect`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 401, 400],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      disconnect: (input: McpDisconnectInput, requestOptions?: RequestOptions) =>
+        request<McpDisconnectOutput>(
+          {
+            method: "POST",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/disconnect`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 401, 400],
+            empty: true,
+          },
+          requestOptions,
+        ),
+    },
     skills: {
       list: (input?: SkillsListInput, requestOptions?: RequestOptions) =>
         request<SkillsListOutput>(
@@ -1239,6 +1345,47 @@ export function make(options: ClientOptions) {
             query: { location: input["location"] },
             successStatus: 204,
             declaredStatuses: [400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    projects: {
+      list: (requestOptions?: RequestOptions) =>
+        request<ProjectsListOutput>(
+          { method: "GET", path: `/api/project`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      directories: (input: ProjectsDirectoriesInput, requestOptions?: RequestOptions) =>
+        request<ProjectsDirectoriesOutput>(
+          {
+            method: "GET",
+            path: `/api/project/${encodeURIComponent(input.projectID)}/directories`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    config: {
+      get: (requestOptions?: RequestOptions) =>
+        request<ConfigGetOutput>(
+          { method: "GET", path: `/api/config`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+      update: (input?: ConfigUpdateInput, requestOptions?: RequestOptions) =>
+        request<ConfigUpdateOutput>(
+          {
+            method: "PATCH",
+            path: `/api/config`,
+            body: {
+              model: input?.["model"],
+              agents: input?.["agents"],
+              disabledProviders: input?.["disabledProviders"],
+            },
+            successStatus: 204,
+            declaredStatuses: [401, 400],
             empty: true,
           },
           requestOptions,

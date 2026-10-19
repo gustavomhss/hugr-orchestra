@@ -5,6 +5,8 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Global } from "@orchestra/core/global"
+import { ProjectV2 } from "@orchestra/core/project"
 import { Host } from "@orchestra/core/host"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
@@ -21,6 +23,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Layer, Option } from "effect"
 import { Api } from "./api"
 import { ServerAuth } from "./auth"
+import { corsLayer } from "./cors"
 import { handlers } from "./handlers"
 import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
@@ -45,6 +48,8 @@ const applicationServices = LayerNode.group([
   PtyEnvironment.node,
   LocationServiceMap.node,
   FSUtil.node,
+  Global.node,
+  ProjectV2.node,
 ])
 
 export interface Options {
@@ -88,6 +93,8 @@ function makeRoutes<AuthError, AuthServices>(
     Layer.provide(schemaErrorLayer),
     Layer.provide(auth),
     Layer.provide(serviceLayer),
+    // The desktop renderer (`oc://renderer`) calls a desktop-owned server cross-origin, as it does V1.
+    Layer.provide(corsLayer()),
   )
 }
 

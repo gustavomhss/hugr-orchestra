@@ -29,7 +29,14 @@ const keys = new Set([
 
 export function isV1(input: unknown) {
   if (typeof input !== "object" || input === null || Array.isArray(input)) return false
-  return Object.keys(input).some((key) => keys.has(key))
+  return Object.keys(input).some((key) => keys.has(key)) || ("mcp" in input && v1Mcp(input.mcp))
+}
+
+// A V1 `mcp` maps server names to entries; V2 nests them under `servers`. A file whose only V1 key is `mcp`, such as
+// one `orchestra mcp add` created, is still V1.
+function v1Mcp(mcp: unknown) {
+  if (typeof mcp !== "object" || mcp === null) return false
+  return Object.values(mcp).some((entry) => typeof entry === "object" && entry !== null && "type" in entry)
 }
 
 export function migrate(info: typeof ConfigV1.Info.Type) {

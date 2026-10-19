@@ -32,7 +32,7 @@ describe("native seat framework", () => {
       profile: "discovery",
       returnCard: "jimmy-result",
       workResult: "discovery-work-result-v1",
-      skills: ["jimmy-discovery", "jimmy-research"],
+      skills: ["jimmy-reference"],
       writeRoots: false,
       strictResume: true,
       atlasMemory: true,

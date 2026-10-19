@@ -1,0 +1,9 @@
+Answer structural questions about the linked worktree's code from its prebuilt index. Prefer it to reading files when you know a name or location.
+
+op: definition (also first callers and file imports), references, callers, callees, implementations, imports and importers (need path), symbols (outline of path, or by name, kind, exported), map (files ranked by importance).
+Target: name ("DiscoveryResult.assemble") narrowed by path, or symbol id, or at {path, line, column}. An ambiguous name returns candidates only: repeat with symbol. limit max 200; next pages.
+
+Lines: 1-based, inclusive, as on disk.
+Empty: no match in the index; absence is claimed only when basis.coverage.complete and freshness allow.
+Retains: nothing; read the file to cite it.
+Fails: index_unavailable, index_building, reference_invalid.

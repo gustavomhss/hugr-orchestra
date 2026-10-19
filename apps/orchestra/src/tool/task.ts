@@ -33,6 +33,8 @@ import { SessionAuthority } from "@orchestra/maestro/session-authority"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
 import { Research } from "@orchestra/schema/research"
+import { AllowedDomains, Domains } from "@orchestra/core/tool/websearch"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { WriteRoots } from "@/maestro/write-roots"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
@@ -103,6 +105,10 @@ const BaseParameterFields = {
   effort: Schema.optional(Research.Depth).annotate({
     description:
       "jimmy only: the research effort tier, fixed for this dispatch. quick (default), focused or deep; each step doubles its provider-call, tool, byte and time allowance. Ignored for other teammates.",
+  }),
+  allowedDomains: Schema.optional(Domains).annotate({
+    description:
+      "jimmy only: lower-case host names its web search may return for this dispatch, e.g. [\"docs.python.org\"]; subdomains included, 1-32 names. Absent leaves web search unrestricted. Ignored for other teammates.",
   }),
 }
 
@@ -618,15 +624,18 @@ export const TaskTool = Tool.define(
             Effect.provideService(FileSystem.FileSystem, fs),
           ) },
         )
+        // The dispatch's web domain list reaches the child's websearch through the fiber context, never through its prompt (J1.9).
+        const scoped = nextID === ResearchSeatTools.SEAT && params.allowedDomains
+          ? prompted.pipe(Effect.provideService(AllowedDomains, params.allowedDomains)) : prompted
         // A native research dispatch runs under its allowance; the discovery seat never runs without one.
         const result = yield* completion.withWorkflow(completionReceipt, Option.isSome(research)
-          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", prompted,
+          ? research.value.enter(nextSession.id, governedCallID ?? ctx.callID ?? "", scoped,
             { tier: params.effort, onDeadline: (error) => Effect.gen(function* () {
               researchDeadline.reason = `budget_exhausted: ${error.message}`
               yield* work.hostEnded("interrupted", researchDeadline.reason).pipe(Effect.provideService(Database.Service, database))
               yield* ops.cancel(nextSession.id)
             }) })
-          : nextID === "jimmy"
+          : nextID === ResearchSeatTools.SEAT
             ? Effect.die(new Error("Native discovery dispatch allowance service is unavailable"))
             : prompted)
         const returned = result.info.role === "assistant" ? {

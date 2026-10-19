@@ -10,6 +10,7 @@ import { useSync } from "./sync"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
 import { createPathHelpers } from "./file/path"
+import { listFileNodes, readFileContent } from "./file/read"
 import {
   approxBytes,
   evictContentLru,
@@ -79,10 +80,7 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
     const tree = createFileTreeStore({
       scope,
       normalizeDir: path.normalizeDir,
-      list: (dir) =>
-        sdk()
-          .client.file.list({ path: dir })
-          .then((x) => x.data ?? []),
+      list: (dir) => listFileNodes(sdk(), dir),
       onError: (message) => {
         showToast({
           variant: "error",
@@ -180,11 +178,9 @@ export const { use: useFile, provider: FileProvider } = createSimpleContext({
 
       setLoading(file)
 
-      const promise = sdk()
-        .client.file.read({ path: file })
-        .then((x) => {
+      const promise = readFileContent(sdk(), file)
+        .then((content) => {
           if (scope() !== directory) return
-          const content = x.data
           setLoaded(file, content)
 
           if (!content) return

@@ -76,6 +76,7 @@ import { SessionTable } from "@orchestra/core/session/sql"
 import { LocationServiceMap } from "@orchestra/core/location-services"
 import { SessionNativeTools } from "./native-tools"
 import { ResearchExecution } from "@/research/allowance"
+import { ResearchInquiry } from "@/research/inquiry"
 import { LLMEvent } from "@orchestra/llm"
 import { RelayWorkflowSession } from "@orchestra/core/relay-workflow-session"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
@@ -1238,7 +1239,7 @@ const layer = Layer.effect(
               sessionID,
               parentSessionID: session.parentID,
               system: [...system, ...prepared.system, ...workflowPrompt, ...structuredPrompt],
-              messages: [...modelMsgs, ...reminders],
+              messages: [...modelMsgs, ...(yield* ResearchInquiry.turn().pipe(Effect.provideService(Database.Service, database), Effect.map((text) => (text ? [{ role: "user" as const, content: text }] : [])), Effect.catch(() => Effect.succeed([])))), ...reminders],
               tools,
               model,
               toolChoice: format.type === "json_schema" ? ("required" as const) : undefined,

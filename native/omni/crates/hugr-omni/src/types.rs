@@ -106,6 +106,8 @@ pub enum Reason {
     Timeout,
     /// Cancellation ended it.
     Aborted,
+    /// The resident memory of the whole tree went over `max_rss_bytes`, and the tree was killed.
+    MemoryExceeded,
 }
 
 /// How the root process ended.

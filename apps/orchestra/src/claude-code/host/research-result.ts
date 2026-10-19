@@ -1,6 +1,7 @@
 export * as ClaudeHostResearchResult from "./research-result"
 
 import { Effect } from "effect"
+import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { Research } from "@orchestra/schema/research"
 import type { SessionID } from "@/session/schema"
@@ -38,13 +39,13 @@ export const close = Effect.fn("ClaudeHostResearchResult.close")(function* (
     message: yield* diagnostic(state.nativeStop.error.message),
   } : undefined
   const joined = join.get(callID)
-  const agrees = joined?.child === child && joined.seat === "jimmy" && !joined.hold
+  const agrees = joined?.child === child && joined.seat === ResearchSeatTools.SEAT && !joined.hold
   return {
     version: 1 as const,
     source: "claude-code-host-research" as const,
     dispatchCallID: callID,
     executionSessionID: child,
-    seat: "jimmy" as const,
+    seat: ResearchSeatTools.SEAT,
     admission: state ? state.closed ? "closed" as const : "open" as const : "unobserved" as const,
     ...(state ? { deadlineActive: state.deadlineActive } : {}),
     ...(reason ? { exhaustionCode: "budget_exhausted" as const, exhaustionReason: reason } : {}),

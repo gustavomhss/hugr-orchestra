@@ -1,5 +1,5 @@
 import { MCP } from "@/mcp"
-import { McpProjectConfig } from "@/mcp/project-config"
+import { McpProjectConfig } from "@orchestra/core/mcp/project-config"
 import { ConfigMCPV1 } from "@orchestra/core/v1/config/mcp"
 import { Schema } from "effect"
 import { HttpApi, HttpApiEndpoint, HttpApiError, HttpApiGroup, OpenApi } from "effect/unstable/httpapi"

@@ -55,6 +55,8 @@ pub(crate) struct Request {
     pub grace: Duration,
     /// Validated here, enforced by `process`.
     pub timeout: Option<Duration>,
+    /// Enforced by `process::memory`: the tree's total resident bytes above which it is killed.
+    pub max_rss_bytes: Option<u64>,
     /// Windows only (amendment WP8b): the command-line tail written after the quoted `argv[0]`, unchanged.
     pub verbatim: Option<OsString>,
 }
@@ -72,6 +74,7 @@ impl Request {
             merge_stderr: false,
             grace: DEFAULT_GRACE,
             timeout: None,
+            max_rss_bytes: None,
             verbatim: None,
         }
     }

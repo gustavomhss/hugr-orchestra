@@ -143,9 +143,9 @@ describe("public event manifest", () => {
     expectPublicTypes([...EventManifest.Latest.keys()])
     expectPublicTypes([...new Set(EventManifest.Definitions.map((event) => event.type))])
     expect(EventManifest.Latest.size).toBe(publicEventTypes.length)
-    // Research's seven durable-only definitions are already canonical; the two Session settings events add two more,
+    // Research's ten durable-only definitions are already canonical; the two Session settings events add two more,
     // and Maestro's durable-only workflow review hold, workflow rebind and review findings three.
-    expect(EventManifest.Durable.size).toBe(75)
+    expect(EventManifest.Durable.size).toBe(78)
     expect(EventManifest.Durable.get("maestro.task.workflow_review_held.1")).toBe(MaestroEvent.Task.WorkflowReviewHeld)
     expect(EventManifest.Latest.has("maestro.task.workflow_review_held")).toBe(false)
     expect(EventManifest.Durable.get("maestro.task.workflow_rebound.1")).toBe(MaestroEvent.Task.WorkflowRebound)
@@ -163,6 +163,9 @@ describe("public event manifest", () => {
       ["research.document.published", ResearchEvent.DocumentPublished],
       ["research.allowance.bound", ResearchEvent.AllowanceBound],
       ["research.allowance.charged", ResearchEvent.AllowanceCharged],
+      ["research.inquiry.opened", ResearchEvent.InquiryOpened],
+      ["research.inquiry.checked", ResearchEvent.InquiryChecked],
+      ["research.inquiry.closed", ResearchEvent.InquiryClosed],
     ] as const
     expect([...ResearchEvent.Definitions]).toEqual(research.map((event) => event[1]))
     expect([...EventManifest.Durable.keys()].filter((key) => key.startsWith("research.")).sort()).toEqual(
