@@ -58,6 +58,12 @@ Starts after A-S has merged.
 4. **LEAD:** run the atlas CI job, then merge B-O into `atlas-ui-study`. In the same merge, append to AGENTS.md "CI Cadence" the sentence from `issues/b-o.md` item 10 (approved 2026-10-19).
 
 ## Track C (after A and B have merged)
-- C-R1 and C-R5 are written.
-- C01–C04 (surface, host and UI wiring for R1–R11, plus interview delegation) are briefed by the lead once A and B have landed. They build on code that does not exist yet, and every decision must be made against the real APIs.
-- C-R5 does not depend on the boundary and can run at any time after A-H.
+One lane `c`, in this order. `*-GEN` steps are the lead's.
+1. C-R5 (done).
+2. C01a → C01b → C01c → C01d → C01e → C01f (engine and surface).
+3. C01-GEN: `bun run generate` in `modules/atlas/boundary`; atlas CI job.
+4. C-R1 (members propose project rules; needs C01-GEN).
+5. C02a → C02b → C02c (host endpoints); C04a → C04b (delegation host).
+6. C02-GEN / C04-GEN: `./packages/sdk/js/script/build.ts`; raise the SDK godfile waivers if needed.
+7. C03a → C03b → C03c → C03d → C03e → C03f → C04c (screen).
+8. Lead: test:ci app + orchestra targets, typecheck workflow, full test.yml, one live `/atlas/delegate` call in the dev app.

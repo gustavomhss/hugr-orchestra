@@ -260,3 +260,14 @@ dispatch, R7 republish, R8 replace and R9 repair stay as `New capability` marker
     modelID: string }`.
   - Results: `AtlasReviewWriteResult = AtlasEmpty | AtlasVerdict<{ id: string }>`; `AtlasDelegateResult = AtlasEmpty |
     { state: "ok"; drafted: { questionId: string; ok: boolean; rejected: string | null }[] }`.
+- **D36 Track C amendments** (from `issues/c-ui.md` and `issues/c-host.md`):
+  - `promote` takes `nodeKeys?: string[]` (surface `AtlasPromoteInput` and the host schema). With keys it settles only
+    those rows; held rows (`foldReview(...).held`) are always skipped, with or without keys. Accept on one row promotes
+    that row.
+  - A person's own project rule (Add rule, a lesson's Index) stays disabled with its R1 marker. No `memoryPropose` write in
+    Track C; listed in OPEN.md.
+  - Delegation asks the model for an answer that is exactly one of the question's `options` when it has options, so a
+    drafted tier answer reads `T1` or `T0` and accepting it opens the R3 proposal.
+  - R3 on the Review page is not wired in Track C (no marker there).
+  - The host's c-host.md items 1–4 are accepted as written. Item 2 (structured output) gets a live `/atlas/delegate` call
+    in the dev app before R11 is reported done.
