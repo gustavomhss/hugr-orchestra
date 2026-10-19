@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 38 · dead-value-exports: 134 · type-reachable: 4
+//   declared-modules: 38 · dead-value-exports: 133 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -147,9 +147,9 @@ const BUILTIN_LEDGER = {
   // count as a caller, so the row grows here and no new row appears. dead-value-exports 144 → 145.
   // 3 → 4: `proposeProjectRule` joined it (R1, specs/atlas-ui/build DECISIONS.md D18). Its consumer is the same
   // host, through the `./native-memory` boundary subpath (`native-bound.ts` re-exports it). dead-value-exports +1.
-  // 4 → 5: `decideProjectRule` joined it (R1, specs/atlas-ui/build DECISIONS.md D30), re-exported by `native-bound.ts`.
-  // dead-value-exports +1. Task C01e's `surface/review.ts` calls it and moves both back.
-  "packages/adapter-io/src/native-memory.ts": { values: 5, shipped: null, banner: true },
+  // `decideProjectRule` (R1, D30) is NOT counted: `surface/review.ts` calls it — a person's decision writes as the
+  // PROPOSAL's member, never as a resolved actor, so clause 4 still holds. The four values above remain dead.
+  "packages/adapter-io/src/native-memory.ts": { values: 4, shipped: null, banner: true },
   // #95 WP-TV-2 landed: `test-vacuity-source.ts` (the PRODUCER + READ leg + units feed) and `read/test-vacuity.ts`
   // (`testVacuitiesOf`) BOTH moved dead → live and were REMOVED here — exactly the own.ts / relation-derive.ts
   // dead→live transitions documented below. The composition root (`compose.ts` → `ComposedRuntime.

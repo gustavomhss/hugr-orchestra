@@ -6,6 +6,8 @@
 // module under `packages/*/src` calls it and none should: the CLI/MCP doors compose Memory through
 // `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3 clause 4 forbids
 // exactly that route here. The entry goes stale when an in-tree caller appears, and the gate says so.
+// One in-tree caller exists by design: the Atlas screen's surface (`surface/review.ts`) calls `decideProjectRule`,
+// which writes as the PROPOSAL's member and never as the surface's resolved actor, so clause 4 still holds.
 //
 // ── WHAT THIS FILE IS ────────────────────────────────────────────────────────────────────────────────────
 // The four Memory doors (`createDurableMemory`, `createMemoryRead`, `createMemoryEmit`, the scanner) composed

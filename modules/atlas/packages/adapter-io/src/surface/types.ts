@@ -17,7 +17,18 @@
 // Lead decision D3b adds four keys to the snapshot — `own`, `memory`, `orientation`, `territories` — whose shapes
 // live in ./types-memory.ts, the one file this one imports from.
 import type { AtlasMemoryRecord, AtlasOrientationEvent, AtlasOwnSnapshot, AtlasTerritory } from "./types-memory.js"
-import type { AtlasDelegateOut, AtlasReview, AtlasReviewWriteOut } from "./types-review.js"
+import type {
+  AtlasAnswerInput,
+  AtlasDecideInput,
+  AtlasDelegateOut,
+  AtlasHoldInput,
+  AtlasMemoryDecideInput,
+  AtlasProposeInput,
+  AtlasReleaseInput,
+  AtlasReview,
+  AtlasReviewWriteOut,
+  AtlasTerritoryInput,
+} from "./types-review.js"
 
 /** A repository with no `.atlas/` directory. Every read and every write answers this. */
 export interface AtlasEmpty {  readonly state: "empty"
@@ -396,4 +407,11 @@ export interface AtlasSurface {
   readonly link: (input: AtlasLinkInput) => AtlasLinkResult
   readonly verify: (input: AtlasVerifyInput) => AtlasVerifyResult
   readonly review: () => AtlasReviewResult
+    readonly hold: (input: AtlasHoldInput) => AtlasReviewWriteResult
+    readonly release: (input: AtlasReleaseInput) => AtlasReviewWriteResult
+    readonly propose: (input: AtlasProposeInput) => AtlasReviewWriteResult
+    readonly decide: (input: AtlasDecideInput) => AtlasReviewWriteResult
+    readonly answer: (input: AtlasAnswerInput) => AtlasReviewWriteResult
+    readonly memoryDecide: (input: AtlasMemoryDecideInput) => AtlasReviewWriteResult
+    readonly territory: (input: AtlasTerritoryInput) => AtlasReviewWriteResult
 }

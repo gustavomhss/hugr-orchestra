@@ -27,7 +27,7 @@ import { asHash } from "@atlas/kernel"
 import type { EmitOut, LinkOut, Verdict } from "@atlas/tools"
 import { checkVerdict, draftVerdict } from "../author-verdicts.js"
 import { composeRuntime, gitUserEmail } from "../compose.js"
-import type { ComposedRuntime } from "../compose.js"
+import { composeWith } from "./compose-with.js"
 import { reportIndexPlan } from "../indexer-report.js"
 import { headSha } from "../run-git.js"
 import { readScipIndexerName, readScipOrEmpty, SCIP_INDEX_REL } from "../scip.js"
@@ -37,7 +37,7 @@ import { childrenOf, headShort, langCounts, trackedFiles, trackedStore, withDrif
 import { readDependents } from "./read-index.js"
 import { readMemory, readOrientation, readOwn, readTerritories } from "./read-own-memory.js"
 import { pendingFacts, readReasoning, readStoreFiles, storeSummary } from "./read-store.js"
-import { review } from "./review.js"
+import { answer, decide, hold, memoryDecide, propose, release, review, territory } from "./review.js"
 import type {
   AtlasDraftInput,  AtlasDraftResult,
   AtlasEmitInput,
@@ -145,6 +145,13 @@ export function openSurface(repoPath: string): AtlasSurface {
     link: (input) => (absent() ? EMPTY : link(repoPath, input)),
     verify: (input) => (absent() ? EMPTY : verify(repoPath, input)),
     review: () => (absent() ? EMPTY : review(repoPath)),
+      hold: (input) => (absent() ? EMPTY : hold(repoPath, input)),
+      release: (input) => (absent() ? EMPTY : release(repoPath, input)),
+      propose: (input) => (absent() ? EMPTY : propose(repoPath, input)),
+      decide: (input) => (absent() ? EMPTY : decide(repoPath, input)),
+      answer: (input) => (absent() ? EMPTY : answer(repoPath, input)),
+      memoryDecide: (input) => (absent() ? EMPTY : memoryDecide(repoPath, input)),
+      territory: (input) => (absent() ? EMPTY : territory(repoPath, input)),
   }
 }
 
@@ -250,24 +257,4 @@ function verify(repoPath: string, input: AtlasVerifyInput): AtlasVerifyResult {
     exact: input.exact === true,
   })
   return { state: "ok", ...verdict }
-}
-
-/** `composeRuntime`, with `ATLAS_RATIFY_TOKEN` set to `token` for that one synchronous call when a token is given. */
-function composeWith(repoPath: string, token: string | undefined): ComposedRuntime {
-  if (token === undefined) return composeRuntime(repoPath)
-  const prior = process.env.ATLAS_RATIFY_TOKEN
-  process.env.ATLAS_RATIFY_TOKEN = token
-  try {
-    return composeRuntime(repoPath)
-  } finally {
-    restoreToken(prior)
-  }
-}
-
-function restoreToken(prior: string | undefined): void {
-  if (prior === undefined) {
-    delete process.env.ATLAS_RATIFY_TOKEN
-    return
-  }
-  process.env.ATLAS_RATIFY_TOKEN = prior
 }
