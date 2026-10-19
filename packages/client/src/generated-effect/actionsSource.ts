@@ -6,69 +6,69 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint35_0Request = Parameters<RawClient["server.actionsSource"]["actions.source.base"]>[0]
-type Endpoint35_0Input = {
-  readonly bindingID: Endpoint35_0Request["params"]["bindingID"]
-  readonly location?: Endpoint35_0Request["query"]["location"]
-  readonly revision: Endpoint35_0Request["query"]["revision"]
-  readonly ref?: Endpoint35_0Request["query"]["ref"]
+type Endpoint36_0Request = Parameters<RawClient["server.actionsSource"]["actions.source.base"]>[0]
+type Endpoint36_0Input = {
+  readonly bindingID: Endpoint36_0Request["params"]["bindingID"]
+  readonly location?: Endpoint36_0Request["query"]["location"]
+  readonly revision: Endpoint36_0Request["query"]["revision"]
+  readonly ref?: Endpoint36_0Request["query"]["ref"]
 }
-const Endpoint35_0 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint35_0Input) =>
+const Endpoint36_0 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint36_0Input) =>
   raw["actions.source.base"]({
     params: { bindingID: input["bindingID"] },
     query: { location: input["location"], revision: input["revision"], ref: input["ref"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_1Request = Parameters<RawClient["server.actionsSource"]["actions.source.validateDraft"]>[0]
-type Endpoint35_1Input = {
-  readonly bindingID: Endpoint35_1Request["params"]["bindingID"]
-  readonly location?: Endpoint35_1Request["query"]["location"]
-  readonly revision: Endpoint35_1Request["query"]["revision"]
-  readonly base: Endpoint35_1Request["payload"]["base"]
-  readonly path: Endpoint35_1Request["payload"]["path"]
-  readonly draft: Endpoint35_1Request["payload"]["draft"]
+type Endpoint36_1Request = Parameters<RawClient["server.actionsSource"]["actions.source.validateDraft"]>[0]
+type Endpoint36_1Input = {
+  readonly bindingID: Endpoint36_1Request["params"]["bindingID"]
+  readonly location?: Endpoint36_1Request["query"]["location"]
+  readonly revision: Endpoint36_1Request["query"]["revision"]
+  readonly base: Endpoint36_1Request["payload"]["base"]
+  readonly path: Endpoint36_1Request["payload"]["path"]
+  readonly draft: Endpoint36_1Request["payload"]["draft"]
 }
-const Endpoint35_1 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint35_1Input) =>
+const Endpoint36_1 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint36_1Input) =>
   raw["actions.source.validateDraft"]({
     params: { bindingID: input["bindingID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { base: input["base"], path: input["path"], draft: input["draft"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_2Request = Parameters<RawClient["server.actionsSource"]["actions.source.validate"]>[0]
-type Endpoint35_2Input = {
-  readonly bindingID: Endpoint35_2Request["params"]["bindingID"]
-  readonly location?: Endpoint35_2Request["query"]["location"]
-  readonly revision: Endpoint35_2Request["query"]["revision"]
-  readonly source: Endpoint35_2Request["payload"]["source"]
-  readonly draft: Endpoint35_2Request["payload"]["draft"]
+type Endpoint36_2Request = Parameters<RawClient["server.actionsSource"]["actions.source.validate"]>[0]
+type Endpoint36_2Input = {
+  readonly bindingID: Endpoint36_2Request["params"]["bindingID"]
+  readonly location?: Endpoint36_2Request["query"]["location"]
+  readonly revision: Endpoint36_2Request["query"]["revision"]
+  readonly source: Endpoint36_2Request["payload"]["source"]
+  readonly draft: Endpoint36_2Request["payload"]["draft"]
 }
-const Endpoint35_2 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint35_2Input) =>
+const Endpoint36_2 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint36_2Input) =>
   raw["actions.source.validate"]({
     params: { bindingID: input["bindingID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { source: input["source"], draft: input["draft"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_3Request = Parameters<RawClient["server.actionsSource"]["actions.source.command"]>[0]
-type Endpoint35_3Input = {
-  readonly bindingID: Endpoint35_3Request["params"]["bindingID"]
-  readonly action: Endpoint35_3Request["params"]["action"]
-  readonly location?: Endpoint35_3Request["query"]["location"]
-  readonly revision: Endpoint35_3Request["query"]["revision"]
-  readonly id: Endpoint35_3Request["payload"]["id"]
-  readonly input: Endpoint35_3Request["payload"]["input"]
+type Endpoint36_3Request = Parameters<RawClient["server.actionsSource"]["actions.source.command"]>[0]
+type Endpoint36_3Input = {
+  readonly bindingID: Endpoint36_3Request["params"]["bindingID"]
+  readonly action: Endpoint36_3Request["params"]["action"]
+  readonly location?: Endpoint36_3Request["query"]["location"]
+  readonly revision: Endpoint36_3Request["query"]["revision"]
+  readonly id: Endpoint36_3Request["payload"]["id"]
+  readonly input: Endpoint36_3Request["payload"]["input"]
 }
-const Endpoint35_3 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint35_3Input) =>
+const Endpoint36_3 = (raw: RawClient["server.actionsSource"]) => (input: Endpoint36_3Input) =>
   raw["actions.source.command"]({
     params: { bindingID: input["bindingID"], action: input["action"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup35 = (raw: RawClient["server.actionsSource"]) => ({
-  base: Endpoint35_0(raw),
-  validateDraft: Endpoint35_1(raw),
-  validate: Endpoint35_2(raw),
-  command: Endpoint35_3(raw),
+export const adaptGroup36 = (raw: RawClient["server.actionsSource"]) => ({
+  base: Endpoint36_0(raw),
+  validateDraft: Endpoint36_1(raw),
+  validate: Endpoint36_2(raw),
+  command: Endpoint36_3(raw),
 })

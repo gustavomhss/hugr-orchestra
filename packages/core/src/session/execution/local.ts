@@ -33,6 +33,7 @@ const layer = Layer.effect(
       interrupt: coordinator.interrupt,
       resume: (sessionID, options) => coordinator.run(sessionID, options),
       wake: coordinator.wake,
+      exclusive: coordinator.exclusive,
     })
   }),
 )

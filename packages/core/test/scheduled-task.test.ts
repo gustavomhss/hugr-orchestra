@@ -26,6 +26,7 @@ const execution = Layer.succeed(
   SessionExecution.Service,
   SessionExecution.Service.of({
     active: Effect.succeed(new Set()),
+    exclusive: (_, effect) => Effect.asSome(effect),
     resume: () => Effect.void,
     interrupt: () => Effect.void,
     wake: (sessionID) =>

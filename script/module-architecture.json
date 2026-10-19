@@ -266,6 +266,8 @@
             "src/file.ts",
             "src/file-mutation.ts",
             "src/git.ts",
+            "src/git-cli.ts",
+            "src/vcs.ts",
             "src/repository.ts",
             "src/repository-cache.ts",
             "src/snapshot.ts",

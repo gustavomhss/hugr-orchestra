@@ -46,6 +46,7 @@ import { runtime } from "./runtime"
 import { type Scenario } from "./types"
 import { vcsScenarios } from "./vcs"
 import { sessionActivityScenarios } from "./session-activity"
+import { sessionOperationScenarios } from "./session-operations"
 import { sessionInitScenarios } from "./session-init"
 import { researchArtifactScenarios } from "./research-artifact"
 import { actionsBindingScenarios } from "./actions-binding"
@@ -892,20 +893,6 @@ const scenarios: Scenario[] = [
     }))
     .status(400, undefined, "none"),
   http.protected
-    .post("/api/session/{sessionID}/compact", "v2.session.compact")
-    .at((ctx) => ({
-      path: route("/api/session/{sessionID}/compact", { sessionID: "ses_httpapi_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(404, undefined, "status"),
-  http.protected
-    .post("/api/session/{sessionID}/wait", "v2.session.wait")
-    .at((ctx) => ({
-      path: route("/api/session/{sessionID}/wait", { sessionID: "ses_httpapi_missing" }),
-      headers: ctx.headers(),
-    }))
-    .status(404, undefined, "status"),
-  http.protected
     .get("/session", "session.list")
     .seeded((ctx) => ctx.session({ title: "List me" }))
     .at((ctx) => ({ path: "/session?roots=true", headers: ctx.headers() }))
@@ -921,6 +908,7 @@ const scenarios: Scenario[] = [
     .seeded((ctx) => ctx.session({ title: "Status session" }))
     .json(200, object),
   ...sessionActivityScenarios,
+  ...sessionOperationScenarios,
   http.protected
     .post("/session", "session.create")
     .mutating()

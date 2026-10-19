@@ -101,6 +101,7 @@ const execution = Layer.effect(SessionExecution.Service, Effect.gen(function* ()
     ),
     wake: coordinator.wake,
     interrupt: coordinator.interrupt,
+    exclusive: coordinator.exclusive,
   })
 })).pipe(Layer.provide(harnessLayer))
 

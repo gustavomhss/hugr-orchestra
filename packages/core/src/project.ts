@@ -1,11 +1,12 @@
 export * as ProjectV2 from "./project"
 export * as Project from "./project"
 
-import { asc } from "drizzle-orm"
+import { asc, eq } from "drizzle-orm"
 import { Context, Effect, Layer, Schema } from "effect"
 import path from "path"
 import { Project as ProjectInfo } from "@orchestra/schema/project"
 import { Database } from "./database/database"
+import type { EventV2 } from "./event"
 import { AbsolutePath } from "./schema"
 import { FSUtil } from "./fs-util"
 import { Git } from "./git"
@@ -67,25 +68,7 @@ const layer = Layer.effect(
 
     const list = Effect.fn("Project.list")(function* () {
       const rows = yield* db.select().from(ProjectTable).orderBy(asc(ProjectTable.time_created)).all().pipe(Effect.orDie)
-      return rows.map(
-        (row): ProjectInfo.Info => ({
-          id: row.id,
-          worktree: row.worktree,
-          vcs: row.vcs === "git" ? "git" : undefined,
-          name: row.name ?? undefined,
-          icon:
-            row.icon_url || row.icon_url_override || row.icon_color
-              ? {
-                  url: row.icon_url ?? undefined,
-                  override: row.icon_url_override ?? undefined,
-                  color: row.icon_color ?? undefined,
-                }
-              : undefined,
-          commands: row.commands ?? undefined,
-          time: { created: row.time_created, updated: row.time_updated, initialized: row.time_initialized ?? undefined },
-          sandboxes: row.sandboxes,
-        }),
-      )
+      return rows.map(toInfo)
     })
 
     const directories = Effect.fn("Project.directories")(function* (input: DirectoriesInput) {
@@ -158,6 +141,48 @@ const layer = Layer.effect(
     return Service.of({ list, directories, resolve, commit })
   }),
 )
+
+const toInfo = (row: typeof ProjectTable.$inferSelect): ProjectInfo.Info => ({
+  id: row.id,
+  worktree: row.worktree,
+  vcs: row.vcs === "git" ? "git" : undefined,
+  name: row.name ?? undefined,
+  icon:
+    row.icon_url || row.icon_url_override || row.icon_color
+      ? {
+          url: row.icon_url ?? undefined,
+          override: row.icon_url_override ?? undefined,
+          color: row.icon_color ?? undefined,
+        }
+      : undefined,
+  commands: row.commands ?? undefined,
+  time: { created: row.time_created, updated: row.time_updated, initialized: row.time_initialized ?? undefined },
+  sandboxes: row.sandboxes,
+})
+
+/**
+ * Records a resolved project for the project list with its version control, as opening a directory did on V1, and
+ * announces a new project or a newly found repository with `project.updated`.
+ */
+export const record = Effect.fn("Project.record")(function* (
+  db: Database.Interface["db"],
+  events: EventV2.Interface,
+  project: Resolved,
+) {
+  const existing = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
+  const vcs = project.vcs?.type
+  if (existing && (!vcs || existing.vcs === vcs)) return
+  if (existing) yield* db.update(ProjectTable).set({ vcs }).where(eq(ProjectTable.id, project.id)).run().pipe(Effect.orDie)
+  if (!existing)
+    yield* db
+      .insert(ProjectTable)
+      .values({ id: project.id, worktree: project.directory, vcs, sandboxes: [] })
+      .onConflictDoNothing()
+      .run()
+      .pipe(Effect.orDie)
+  const row = yield* db.select().from(ProjectTable).where(eq(ProjectTable.id, project.id)).get().pipe(Effect.orDie)
+  if (row) yield* events.publish(ProjectInfo.Event.Updated, toInfo(row))
+})
 
 export const node = makeGlobalNode({
   service: Service,

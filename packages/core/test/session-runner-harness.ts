@@ -101,6 +101,7 @@ export function make(input: {
         resume: coordinator.run,
         wake: coordinator.wake,
         interrupt: coordinator.interrupt,
+        exclusive: coordinator.exclusive,
       })
     }),
   ).pipe(Layer.provide(runnerLayer))

@@ -75,7 +75,7 @@ import { createExecutionEvidenceRenderer } from "@/pages/session/orchestra-evide
 import { createTimelineModel } from "@/pages/session/timeline/model"
 import { type DiffStyle, SessionReviewTab, type SessionReviewTabProps } from "@/pages/session/review-tab"
 import { useSessionLayout } from "@/pages/session/session-layout"
-import { restorePromptModel, syncPromptModel, syncSessionModel } from "@/pages/session/session-model-helpers"
+import { followSessionModel, restorePromptModel, syncPromptModel } from "@/pages/session/session-model-helpers"
 import { SESSION_PANEL_WIDTH_MIN } from "@/pages/session/session-panel-width"
 import { SessionSidePanel } from "@/pages/session/session-side-panel"
 import { sessionPanelLayout } from "@/pages/session/session-panel-layout"
@@ -484,16 +484,7 @@ export default function Page() {
     if (path) void file.load(path)
   })
 
-  createEffect(
-    on(
-      () => lastUserMessage()?.id,
-      () => {
-        const msg = lastUserMessage()
-        if (!msg) return
-        syncSessionModel(local, msg)
-      },
-    ),
-  )
+  followSessionModel(local, { lastUserMessage, model: () => info()?.model, sessionID: () => params.id })
 
   let restoredModelSession: string | undefined
   createEffect(() => {

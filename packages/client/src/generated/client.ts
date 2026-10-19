@@ -36,6 +36,18 @@ import type {
   SessionsCommandOutput,
   SessionsCompactInput,
   SessionsCompactOutput,
+  SessionsForkInput,
+  SessionsForkOutput,
+  SessionsMoveInput,
+  SessionsMoveOutput,
+  SessionsShellInput,
+  SessionsShellOutput,
+  SessionsSkillInput,
+  SessionsSkillOutput,
+  SessionsSyntheticInput,
+  SessionsSyntheticOutput,
+  SessionsGenerateInput,
+  SessionsGenerateOutput,
   SessionsWaitInput,
   SessionsWaitOutput,
   SessionsStageInput,
@@ -106,6 +118,16 @@ import type {
   FilesListOutput,
   FilesFindInput,
   FilesFindOutput,
+  VcsGetInput,
+  VcsGetOutput,
+  VcsStatusInput,
+  VcsStatusOutput,
+  VcsDiffInput,
+  VcsDiffOutput,
+  VcsActivityInput,
+  VcsActivityOutput,
+  VcsSessionActivityInput,
+  VcsSessionActivityOutput,
   CommandsListInput,
   CommandsListOutput,
   McpListInput,
@@ -612,23 +634,95 @@ export function make(options: ClientOptions) {
           requestOptions,
         ).then((value) => value.data),
       compact: (input: SessionsCompactInput, requestOptions?: RequestOptions) =>
-        request<SessionsCompactOutput>(
+        request<{ readonly data: SessionsCompactOutput }>(
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/compact`,
+            successStatus: 200,
+            declaredStatuses: [404, 409, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      fork: (input: SessionsForkInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsForkOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/fork`,
+            body: { messageID: input["messageID"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      move: (input: SessionsMoveInput, requestOptions?: RequestOptions) =>
+        request<SessionsMoveOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/move`,
+            body: { location: input["location"] },
             successStatus: 204,
-            declaredStatuses: [404, 503, 400, 401],
+            declaredStatuses: [404, 409, 400, 401],
             empty: true,
           },
           requestOptions,
         ),
+      shell: (input: SessionsShellInput, requestOptions?: RequestOptions) =>
+        request<SessionsShellOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/shell`,
+            body: { id: input["id"], command: input["command"] },
+            successStatus: 204,
+            declaredStatuses: [404, 409, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      skill: (input: SessionsSkillInput, requestOptions?: RequestOptions) =>
+        request<SessionsSkillOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/skill`,
+            body: { skill: input["skill"], resume: input["resume"] },
+            successStatus: 204,
+            declaredStatuses: [404, 409, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      synthetic: (input: SessionsSyntheticInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsSyntheticOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/synthetic`,
+            body: { id: input["id"], text: input["text"], resume: input["resume"] },
+            successStatus: 200,
+            declaredStatuses: [404, 409, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      generate: (input: SessionsGenerateInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsGenerateOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/generate`,
+            body: { prompt: input["prompt"] },
+            successStatus: 200,
+            declaredStatuses: [404, 500, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       wait: (input: SessionsWaitInput, requestOptions?: RequestOptions) =>
         request<SessionsWaitOutput>(
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/wait`,
             successStatus: 204,
-            declaredStatuses: [404, 503, 400, 401],
+            declaredStatuses: [404, 400, 401],
             empty: true,
           },
           requestOptions,
@@ -1055,6 +1149,68 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/fs/find`,
             query: { location: input["location"], query: input["query"], type: input["type"], limit: input["limit"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    vcs: {
+      get: (input?: VcsGetInput, requestOptions?: RequestOptions) =>
+        request<VcsGetOutput>(
+          {
+            method: "GET",
+            path: `/api/vcs`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      status: (input?: VcsStatusInput, requestOptions?: RequestOptions) =>
+        request<VcsStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/vcs/status`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      diff: (input: VcsDiffInput, requestOptions?: RequestOptions) =>
+        request<VcsDiffOutput>(
+          {
+            method: "GET",
+            path: `/api/vcs/diff`,
+            query: { location: input["location"], mode: input["mode"], context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      activity: (input: VcsActivityInput, requestOptions?: RequestOptions) =>
+        request<VcsActivityOutput>(
+          {
+            method: "GET",
+            path: `/api/vcs/activity`,
+            query: { location: input["location"], since: input["since"], until: input["until"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      sessionActivity: (input: VcsSessionActivityInput, requestOptions?: RequestOptions) =>
+        request<VcsSessionActivityOutput>(
+          {
+            method: "GET",
+            path: `/api/activity/session`,
+            query: { location: input["location"], period: input["period"] },
             successStatus: 200,
             declaredStatuses: [401, 400],
             empty: false,

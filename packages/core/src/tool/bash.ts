@@ -51,7 +51,10 @@ const Output = Schema.Struct({
 
 type Output = typeof Output.Type
 
-const defaultShell = () => (process.platform === "win32" ? (process.env.COMSPEC ?? "cmd.exe") : "/bin/sh")
+/** The configured shell, else `/bin/sh` (`cmd.exe` on Windows); `!` commands and templates run in it too. */
+export const configuredShell = (entries: ReadonlyArray<Config.Entry>): string =>
+  Object.assign({}, ...entries.flatMap((entry) => (entry.type === "document" ? [entry.info] : []))).shell ??
+  (process.platform === "win32" ? (process.env.COMSPEC ?? "cmd.exe") : "/bin/sh")
 // cmd.exe, the default shell on Windows, does not treat single quotes as quoting.
 const commitExample =
   process.platform === "win32" ? `git commit -m "subject" -m "body"` : "git commit -m 'subject' -m 'body'"
@@ -187,10 +190,7 @@ const layer = Layer.effectDiscard(
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
 
-              const entries = yield* config.entries()
-              const shell =
-                Object.assign({}, ...entries.flatMap((entry) => (entry.type === "document" ? [entry.info] : [])))
-                  .shell ?? defaultShell()
+              const shell = configuredShell(yield* config.entries())
               const command = ChildProcess.make(input.command, [], {
                 cwd: target.canonical,
                 shell,

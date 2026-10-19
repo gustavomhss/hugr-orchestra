@@ -288,6 +288,7 @@ describe("SessionV2 archive", () => {
             resume: coordinator.run,
             wake: coordinator.wake,
             interrupt: coordinator.interrupt,
+            exclusive: coordinator.exclusive,
           })
         }),
       )

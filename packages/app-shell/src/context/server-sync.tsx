@@ -409,6 +409,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         queryClient,
         session,
         protocol: serverSDK.protocol,
+        branches: (value) => serverSDK.orchestra.vcs.get(value),
       })
     })
 

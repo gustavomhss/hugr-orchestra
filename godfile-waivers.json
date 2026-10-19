@@ -379,20 +379,20 @@
       "authorizedAt": "2026-10-05"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 1355,
-      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project directories and config read contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route.",
+      "maximumLines": 1475,
+      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project directories and config read contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route, then for the V1 parity routes (session fork, move, shell, skill, synthetic, generate, compaction and the vcs and activity group).",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-19"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1942,
-      "reason": "Generated Promise V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project list/directories and global config read/write contracts. Exact generated-output ceiling. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route.",
+      "maximumLines": 2098,
+      "reason": "Generated Promise V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project list/directories and global config read/write contracts. Exact generated-output ceiling. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route, then for the V1 parity routes (session fork, move, shell, skill, synthetic, generate, compaction and the vcs and activity group).",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-19"
     },
     "packages/client/src/generated/types.ts": {
-      "maximumLines": 7169,
-      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Union of the frontend stack's model-default, owned OAuth, agent engine, session model-policy and archive contracts (6822) with dev's Atlas knowledge Relay schemas (6799); official generator output after merging both is 6892 LOC. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route.",
+      "maximumLines": 7438,
+      "reason": "Generated V2 HttpApi client types (packages/client bun run generate); splitting requires generator redesign. Union of the frontend stack's model-default, owned OAuth, agent engine, session model-policy and archive contracts (6822) with dev's Atlas knowledge Relay schemas (6799); official generator output after merging both is 6892 LOC. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route, then for the V1 parity routes (session fork, move, shell, skill, synthetic, generate, compaction and the vcs and activity group).",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-19"
     },
