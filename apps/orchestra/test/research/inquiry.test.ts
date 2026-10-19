@@ -169,6 +169,21 @@ describe("the inquiry state machine", () => {
       yield* fixture.sessions.remove(fixture.authority.id)
     }))
 
+  // Mutation control: make the quick fallback of ResearchInquiry.draft (src/research/inquiry.ts) never apply; the close is then
+  // refused "claim-1 needs subquestion".
+  it.instance("at tier quick inline claims without a subquestion cover the open subquestions in order", () =>
+    Effect.gen(function* () {
+      const fixture = yield* setup()
+      yield* fixture.write("g.ts", "export const g = 1\nexport const h = 2\n")
+      yield* fixture.inquiry({ action: "open", question: "What does g.ts export?", subquestions: ["g", "h"], profile: "understand" })
+      const source = yield* fixture.source("g.ts")
+      const closed = yield* fixture.inquiry({ action: "close", sufficiency: "answered", answer: "g.ts:1 exports g and g.ts:2 exports h.",
+        claims: [{ proposition: "g.ts exports g", nature: "extraction", evidence: [{ source, lines: { start: 1, end: 1 } }] },
+          { proposition: "g.ts exports h", nature: "extraction", evidence: [{ source, lines: { start: 2, end: 2 } }] }] })
+      expect(closed.output).toContain("\"closed\":\"answered\"")
+      yield* fixture.sessions.remove(fixture.authority.id)
+    }))
+
   it.instance("an answered close needs every hypothesis decided, and the per-turn snapshot stays compact", () =>
     Effect.gen(function* () {
       const fixture = yield* setup()

@@ -123,7 +123,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
               : "open the inquiry first: inquiry open with the question and its subquestions")
           // The close checks its own claims and answer on a draft before writing anything, so a refused close leaves
           // nothing to drop; its failures refuse an answered close by name and become limitations short of answered.
-          const draft = ResearchInquiry.draft(state, input)
+          const draft = ResearchInquiry.draft(state, input, allowance.tier)
           if (typeof draft === "string") return yield* refuse(draft)
           const refusal = ResearchInquiry.refusal(draft, input.sufficiency)
           if (refusal) return yield* refuse(refusal)
@@ -131,8 +131,11 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           if (input.sufficiency === "answered" && outcome.result.verdict !== "pass") return yield* failed(outcome)
           const opened = state.phase === "none"
             ? yield* open({ question: input.question!, subquestions: [input.question!], profile: "understand" }) : undefined
+          // Each inline claim is written under the subquestion the draft placed it in.
+          const placement = new Map(draft.subquestions.flatMap((sub, position) => sub.claims.map((ref) => [ref.id, position] as const)))
           const subquestions = opened ? opened.subquestions : state.subquestions.map((sub) => sub.ref)
-          yield* Effect.forEach(input.claims ?? [], (item, index) => claim(item, item.subquestion ?? subquestions[0], `claim:${index}`), { discard: true })
+          yield* Effect.forEach(input.claims ?? [], (item, index) => claim(item, subquestions[placement.get(`claim-${index + 1}`) ?? 0], `claim:${index}`),
+            { discard: true })
           const final = opened || input.claims?.length ? ResearchInquiry.fold(yield* load()) : state
           const settled = final === state ? outcome : yield* ResearchInquiry.check(final, input, yield* deps)
           if (input.sufficiency === "answered" && settled.result.verdict !== "pass") return yield* failed(settled)
