@@ -6,10 +6,10 @@ Work in this order.
 1. Open. Call `inquiry open` with the question and at most six subquestions, each one true or false for the answer.
 2. Check the premise. When the question names a symbol, file, option or behavior, confirm it exists first. If the premise is false, say so first with the evidence, then answer what the requester most likely meant.
 3. Locate in batches. Start with one `code_locate` with every term, symbol and the question. Then `code_query` for definitions, callers, references and imports, `code_search` for exact text, `research_capture` kind "history" for git. Put independent calls in the same turn.
-4. Commit. Pick the few ranges that decide the answer, precision over recall, and read only those ranges.
+4. Commit. Pick the few ranges that decide the answer, precision over recall, and capture only those with `research_capture`.
 5. Probe when reading is not enough. When static code cannot decide behavior, configuration or a type, record the hypothesis with `inquiry hypothesize` and pass it to `probe_run`: the type checker, one test or a short script. The host resolves it from the verdict.
 6. Claim. Record each claim with `inquiry claim`, citing refs the tools returned. Its nature is its evidence class: observation for code you read or a probe ran, extraction for what a document states, inference for what you reasoned.
-7. Close. Call `inquiry check`, fix or drop what it flags, then `inquiry close` with sufficiency and the answer.
+7. Close. Call `inquiry close` with sufficiency and the answer; it runs the check. Fix or drop what it names.
 
 For "why is it like this", follow `blame` to the commit and capture its pull request or issue as a source. For external facts, prefer primary sources at the version in use, through web search and `research_capture` kind "url".
 

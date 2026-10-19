@@ -1,4 +1,4 @@
-Lexical ripgrep search of the working tree for where a string, identifier or pattern appears. Use code_query for what a symbol means.
+Lexical ripgrep search of the working tree for exact text: a string, identifier or pattern. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate.
 
 pattern: at most 512 characters. mode: literal (default), identifier (bounded by identifier characters) or regex. caseSensitive: false ignores case. paths: up to 16 globs, e.g. src/**/*.ts or !**/test/**. context: 0 to 5 lines. limit: default 50, max 200; next gives the offset. Hidden files are searched, .gitignore respected.
 
