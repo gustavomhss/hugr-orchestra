@@ -134,12 +134,18 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const session = createServerSession(serverSDK.client, serverSDK.api.session, serverSDK.api.message, {
     protocol: serverSDK.protocol,
   })
+  // V2 keeps only the settings the app writes (default model, disabled providers) in its global config document.
+  const readV2Config = () =>
+    serverSDK.orchestra["server.config"]
+      .get()
+      .then((settings): Config => ({ model: settings.model, disabled_providers: [...settings.disabledProviders] }))
   const queryOptionsApi = makeQueryOptionsApi(
     serverSDK.scope,
     () => serverSDK.client,
     serverSDK.api,
     sdkFor,
     serverSDK.protocol,
+    readV2Config,
   )
 
   const [configQuery, providerQuery, pathQuery] = useQueries(() => ({
@@ -226,6 +232,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     queryFn: async () => {
       await bootstrapGlobal({
         serverSDK: serverSDK.client,
+        readV2Config,
         serverAPI: serverSDK.api,
         protocol: serverSDK.protocol,
         scope: serverSDK.scope,
@@ -597,9 +604,10 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const updateConfigMutation = useMutation(() => ({
     mutationFn: async (config: Config) => {
       if ((await serverSDK.protocol) === "v1") return serverSDK.client.global.config.update({ config })
-      // V2 keeps the default model and per-agent engines in its global config document; it has no provider switch.
+      // V2 keeps the default model, per-agent engines and disabled providers in its global config document.
       return serverSDK.orchestra["server.config"].update({
         model: config.model,
+        disabledProviders: config.disabled_providers,
         agents:
           config.agent &&
           Object.fromEntries(

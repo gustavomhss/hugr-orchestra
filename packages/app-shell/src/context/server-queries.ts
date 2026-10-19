@@ -1,4 +1,4 @@
-import type { OrchestraClient } from "../compat/sdk-v2-client"
+import type { Config, OrchestraClient } from "../compat/sdk-v2-client"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
 import type {
@@ -103,9 +103,10 @@ export function makeQueryOptionsApi(
   serverAPI: ServerApi,
   sdkFor: (dir: PathKey) => OrchestraClient,
   protocol: Promise<"v1" | "v2">,
+  readV2Config?: () => Promise<Config>,
 ) {
   return {
-    globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol),
+    globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol, readV2Config),
     projects: () => loadProjectsQuery(scope, serverAPI.project),
     providers: (directory: PathKey | null) =>
       loadProvidersQuery(scope, directory, serverAPI, directory ? sdkFor(directory) : serverSDK(), protocol),

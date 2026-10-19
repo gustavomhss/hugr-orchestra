@@ -60,4 +60,56 @@ describe("Config.updateGlobal", () => {
       }),
     ),
   )
+
+  it.live("keeps disabled providers as exact provider.use denials that the next entries read enforces", () =>
+    Effect.acquireRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ).pipe(
+      Effect.flatMap((tmp) => {
+        const globalDirectory = path.join(tmp.path, "global")
+        const file = path.join(globalDirectory, "orchestra.json")
+        return Effect.gen(function* () {
+          yield* Effect.promise(async () => {
+            await fs.mkdir(globalDirectory, { recursive: true })
+            await fs.writeFile(
+              file,
+              JSON.stringify({
+                experimental: {
+                  policies: [
+                    { action: "tool.custom", effect: "deny", resource: "*" },
+                    { action: "provider.use", effect: "deny", resource: "mistral" },
+                  ],
+                },
+              }),
+            )
+          })
+          const config = yield* Config.Service
+          const policy = yield* Policy.Service
+          expect((yield* Config.readGlobal()).disabledProviders).toEqual(["mistral"])
+
+          yield* Config.updateGlobal({ disabledProviders: ["openai"] })
+          yield* config.entries()
+
+          expect((yield* Config.readGlobal()).disabledProviders).toEqual(["openai"])
+          expect(yield* policy.evaluate("provider.use", "openai", "allow")).toBe("deny")
+          expect(yield* policy.evaluate("provider.use", "mistral", "allow")).toBe("allow")
+          expect(yield* policy.evaluate("tool.custom", "x", "allow")).toBe("deny")
+        }).pipe(
+          Effect.provide(
+            AppNodeBuilder.build(LayerNode.group([Config.node, Policy.node, FSUtil.node, Global.node]), [
+              [
+                Location.node,
+                Layer.succeed(
+                  Location.Service,
+                  Location.Service.of(location({ directory: AbsolutePath.make(tmp.path) })),
+                ),
+              ],
+              [Global.node, Global.layerWith({ config: globalDirectory })],
+            ]),
+          ),
+        )
+      }),
+    ),
+  )
 })
