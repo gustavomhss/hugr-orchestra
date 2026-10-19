@@ -385,7 +385,7 @@
       "authorizedAt": "2026-10-12"
     },
     "packages/client/src/generated/client.ts": {
-      "maximumLines": 1740,
+      "maximumLines": 1752,
       "reason": "Generated Promise V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, project list and global config contracts. Exact generated-output ceiling. Handwritten source limits unchanged.",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-19"

@@ -21,7 +21,7 @@ export const ConfigHandler = HttpApiBuilder.group(Api, "server.config", (handler
           Effect.provideService(FSUtil.Service, fs),
           Effect.provideService(Global.Service, global),
         )
-        // Agents carry the Maestro engine; the catalog carries the default model and provider switches.
+        // Agents carry the Maestro engine; the catalog carries the default model.
         const refs = yield* RcMap.keys(locations.rcMap)
         yield* Effect.forEach(
           refs,

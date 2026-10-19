@@ -135,7 +135,6 @@ describe("project and config routes", () => {
             body: JSON.stringify({
               model: "anthropic/claude-opus",
               agents: { maestro: { engine: "claude-code" } },
-              providers: { openai: { disabled: true } },
             }),
           })
 
@@ -143,7 +142,6 @@ describe("project and config routes", () => {
           expect(JSON.parse(yield* Effect.promise(() => fs.readFile(path.join(directory, "orchestra.json"), "utf8")))).toEqual({
             model: "anthropic/claude-opus",
             agents: { maestro: { engine: "claude-code" } },
-            providers: { openai: { disabled: true } },
           })
           expect(reloads).toEqual(["agent:/repo", "catalog:/repo"])
         }),

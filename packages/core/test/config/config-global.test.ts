@@ -36,14 +36,12 @@ describe("Config.updateGlobal", () => {
           yield* Config.updateGlobal({
             model: "anthropic/claude-opus",
             agents: { maestro: { engine: "claude-code" } },
-            providers: { openai: { disabled: true } },
           })
 
           const entries = yield* config.entries()
           expect(Config.latest(entries, "model")).toBe("anthropic/claude-opus")
           expect(Config.latest(entries, "shell")).toBe("/bin/zsh")
           expect(Config.latest(entries, "agents")?.maestro?.engine).toBe("claude-code")
-          expect(Config.latest(entries, "providers")?.openai?.disabled).toBe(true)
           expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toContain("// kept")
         }).pipe(
           Effect.provide(

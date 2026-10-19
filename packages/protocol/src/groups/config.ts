@@ -6,9 +6,6 @@ export const ConfigPatch = Schema.Struct({
   agents: Schema.optional(
     Schema.Record(Schema.String, Schema.Struct({ engine: Schema.optional(Schema.Literals(["orchestra", "claude-code"])) })),
   ),
-  providers: Schema.optional(
-    Schema.Record(Schema.String, Schema.Struct({ disabled: Schema.optional(Schema.Boolean) })),
-  ),
 }).annotate({ identifier: "ConfigPatch" })
 
 export const ConfigGroup = HttpApiGroup.make("server.config")
@@ -21,7 +18,7 @@ export const ConfigGroup = HttpApiGroup.make("server.config")
         identifier: "v2.config.update",
         summary: "Update global settings",
         description:
-          "Merge the default model, agent engines and provider switches into the global config document, then reload the agents and catalog of every open location.",
+          "Merge the default model and agent engines into the global config document, then reload the agents and catalog of every open location.",
       }),
     ),
   )

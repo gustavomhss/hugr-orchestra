@@ -226,7 +226,6 @@ const layer = Layer.effect(
 export interface GlobalPatch {
   readonly model?: string
   readonly agents?: Readonly<Record<string, { readonly engine?: "orchestra" | "claude-code" }>>
-  readonly providers?: Readonly<Record<string, { readonly disabled?: boolean }>>
 }
 
 /**

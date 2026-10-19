@@ -1260,7 +1260,7 @@ export function make(options: ClientOptions) {
           {
             method: "PATCH",
             path: `/api/config`,
-            body: { model: input?.["model"], agents: input?.["agents"], providers: input?.["providers"] },
+            body: { model: input?.["model"], agents: input?.["agents"] },
             successStatus: 204,
             declaredStatuses: [401, 400],
             empty: true,

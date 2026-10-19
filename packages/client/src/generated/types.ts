@@ -2819,22 +2819,13 @@ export type ServerConfigUpdateInput = {
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
-    readonly providers?: { readonly [x: string]: { readonly disabled?: boolean | undefined } } | undefined
   }["model"]
   readonly agents?: {
     readonly model?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
-    readonly providers?: { readonly [x: string]: { readonly disabled?: boolean | undefined } } | undefined
   }["agents"]
-  readonly providers?: {
-    readonly model?: string | undefined
-    readonly agents?:
-      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
-      | undefined
-    readonly providers?: { readonly [x: string]: { readonly disabled?: boolean | undefined } } | undefined
-  }["providers"]
 }
 
 export type ServerConfigUpdateOutput = void

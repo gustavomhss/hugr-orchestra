@@ -871,12 +871,11 @@ type Endpoint21_0Request = Parameters<RawClient["server.config"]["config.update"
 type Endpoint21_0Input = {
   readonly model?: Endpoint21_0Request["payload"]["model"]
   readonly agents?: Endpoint21_0Request["payload"]["agents"]
-  readonly providers?: Endpoint21_0Request["payload"]["providers"]
 }
 const Endpoint21_0 = (raw: RawClient["server.config"]) => (input?: Endpoint21_0Input) =>
-  raw["config.update"]({
-    payload: { model: input?.["model"], agents: input?.["agents"], providers: input?.["providers"] },
-  }).pipe(Effect.mapError(mapClientError))
+  raw["config.update"]({ payload: { model: input?.["model"], agents: input?.["agents"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
 
 const adaptGroup21 = (raw: RawClient["server.config"]) => ({ update: Endpoint21_0(raw) })
 
