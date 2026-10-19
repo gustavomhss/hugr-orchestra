@@ -9,6 +9,7 @@ export type AtlasInspectorProps = AtlasViewProps & { factKey: string }
 // Each view task adds its own line here: `<view>: lazy(() => import("./<view>")),` (views/<view>.tsx default-exports
 // a Component<AtlasViewProps>). A view without a line shows the frame's "not built yet" note.
 export const atlasViews: Partial<Record<AtlasViewId, Component<AtlasViewProps>>> = {
+  memory: lazy(() => import("./memory")),
   how: lazy(() => import("./how")),
   ownership: lazy(() => import("./ownership")),  genesis: lazy(() => import("./genesis")),
   activity: lazy(() => import("./activity")),
