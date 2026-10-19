@@ -1,0 +1,108 @@
+{
+  "moves": [
+    {
+      "from": "apps/orchestra/src/maestro/ability-descriptors.ts",
+      "to": "modules/maestro/coordination/src/ability-descriptors.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/ability-registry.ts",
+      "to": "modules/maestro/coordination/src/ability-registry.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/admit-request.ts",
+      "to": "modules/maestro/coordination/src/admit-request.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/approval.ts",
+      "to": "modules/maestro/coordination/src/approval.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/arsenal-observations.ts",
+      "to": "modules/maestro/coordination/src/arsenal-observations.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/arsenal-outcome.ts",
+      "to": "modules/maestro/coordination/src/arsenal-outcome.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/governed-task.ts",
+      "to": "modules/maestro/coordination/src/governed-task.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/lifecycle-fold.ts",
+      "to": "modules/maestro/coordination/src/lifecycle-fold.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/project-config.ts",
+      "to": "modules/maestro/coordination/src/project-config.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/session-authority.ts",
+      "to": "modules/maestro/coordination/src/session-authority.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/task-hash.ts",
+      "to": "modules/maestro/coordination/src/task-hash.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/upstream-proposal.ts",
+      "to": "modules/maestro/coordination/src/upstream-proposal.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/upstream-result.ts",
+      "to": "modules/maestro/coordination/src/upstream-result.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/verification-plan.ts",
+      "to": "modules/maestro/coordination/src/verification-plan.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/work-contract.ts",
+      "to": "modules/maestro/coordination/src/work-contract.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/lifecycle-fold.test.ts",
+      "to": "modules/maestro/coordination/test/lifecycle-fold.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/governed-task.test.ts",
+      "to": "modules/maestro/coordination/test/governed-task.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/project-config.test.ts",
+      "to": "modules/maestro/coordination/test/project-config.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/upstream-proposal.test.ts",
+      "to": "modules/maestro/coordination/test/upstream-proposal.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/work-contract.test.ts",
+      "to": "modules/maestro/coordination/test/work-contract.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/ability-registry.test.ts",
+      "to": "modules/maestro/coordination/test/ability-registry.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/task-hash.test.ts",
+      "to": "modules/maestro/coordination/test/task-hash.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/admit-request.test.ts",
+      "to": "modules/maestro/coordination/test/admit-request.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/approval.test.ts",
+      "to": "modules/maestro/coordination/test/approval.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/ability-descriptors.test.ts",
+      "to": "modules/maestro/coordination/test/ability-descriptors.test.ts"
+    },
+    {
+      "from": "apps/orchestra/test/maestro/verification-plan.test.ts",
+      "to": "modules/maestro/coordination/test/verification-plan.test.ts"
+    }
+  ]
+}

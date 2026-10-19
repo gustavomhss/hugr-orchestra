@@ -48,7 +48,7 @@ run all-consumers nix eval --impure --no-write-lock-file --no-update-lock-file -
   in assert builtins.attrNames flake.packages == builtins.attrNames manifest.bun.sources;
   lib.mapAttrs (system: packages:
     assert builtins.all (path: builtins.pathExists (packages.node_modules.src + "/${path}/package.json")) packages.node_modules.workspacePaths;
-    assert builtins.pathExists (packages.node_modules.src + "/packages/cli/script/artifact-darwin.c");
+    assert builtins.pathExists (packages.node_modules.src + "/apps/cli/script/artifact-darwin.c");
     {
     cli = { inherit (packages.orchestra) drvPath version cliTarget cliArtifacts nativeBuildInputs; };
     desktop = { inherit (packages.orchestra-desktop) drvPath version; electron = packages.orchestra-desktop.electron.version; };

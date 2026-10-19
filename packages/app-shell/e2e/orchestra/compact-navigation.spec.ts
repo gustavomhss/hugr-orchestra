@@ -111,7 +111,12 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Choose repository profile" })).toBeFocused()
   await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
-  await expect(crumb.last()).toHaveText("session")
+  // Session and draft pages carry the chapter breadcrumb too: home / project / session title.
+  await expect(crumb.nth(2)).toHaveText("home")
+  await expect(crumb.nth(2).getByRole("button", { name: "home", exact: true })).toBeVisible()
+  await expect(crumb.nth(4).getByRole("button", { name: "Compact project", exact: true })).toBeVisible()
+  await expect(crumb.last()).toHaveText("New session")
+  expect((await header.boundingBox())!.height).toBe(frame!.height)
   const editor = page.locator('[data-component="prompt-input-v2"] [contenteditable="true"]')
   await editor.fill("Keep this draft while changing navigation")
   const route = page.url()
@@ -161,17 +166,19 @@ test("WIP chapters mark their page above its content; other pages do not", async
   await sidebar.getByRole("button", { name: "Choose repository profile" }).click()
   await page.getByRole("menuitemradio", { name: "Compact project", exact: true }).click()
   const mark = page.locator('[data-slot="orchestra-wip"]')
-  for (const [name, wip] of [
-    ["Agents", true],
-    ["MCP", true],
-    ["Actions", true],
-    ["Workspaces", true],
-    ["Skills", false],
-    [".env", false],
-    ["Dock", false],
+  for (const [name, chapter, wip] of [
+    ["Agents", "agents", true],
+    ["MCP", "mcp", true],
+    ["Actions", "cicd", true],
+    ["Workspaces", "workspaces", true],
+    ["Skills", "skills", false],
+    [".env", "env", true],
+    ["Dock", "dock", false],
   ] as const) {
     await sidebar.getByRole("button", { name, exact: true }).click()
     const panel = page.locator('[data-component="orchestra-chapter"]')
+    // Judge the page that was opened, not the previous one still on screen.
+    await expect(panel).toHaveAttribute("data-chapter", chapter)
     await expect(panel.locator("h1").first()).toBeVisible()
     if (!wip) {
       await expect(mark).toHaveCount(0)

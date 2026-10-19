@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { Actions } from "@orchestra/schema/actions"
 import { initial, type State } from "./contract"
-import { libraryPresentation, workflowState } from "./library-presentation"
+import { libraryPresentation, runFilters, runIdentity, selectedFilter, workflowFilters, workflowState } from "./library-presentation"
 
 const binding: Actions.Binding = {
   id: Actions.BindingID.make("ab_library"), revision: 1, remote: "origin", projectID: "21", projectPath: "gustavomhss/hugr-orchestra", directory: "/repo/native",
@@ -27,23 +27,39 @@ test("GitLab configured participates in active filter without inventing dispatch
   const configured = { ...workflow, id: "gitlab:project:21:pipeline", path: ".ci/project.yml", state: "configured" }
   state.binding = { ...binding, provider: { kind: "gitlab", hostname: "gitlab.com", apiOrigin: "https://gitlab.com" } }
   state.workflows = { status: "ready", value: { capturedAt: 1, items: [configured] } }
-  expect(workflowState(configured.state).label).toBe("orchestra.actions.enabled")
+  expect(workflowState(configured.state).label).toBe("orchestra.actions.active")
   expect(libraryPresentation(state, { ...filters, status: "active" }).workflows).toEqual([configured])
-  expect(libraryPresentation(state, filters).statuses).toEqual(["active"])
   expect(configured.dispatchState).toBe("unknown")
   expect(configured.dispatchable).toBe(false)
 })
 
-test("filters expose observed states only, group known disabled states and retain unknown native states", () => {
+test("workflow filters are fixed, group known disabled states and keep unknown native states under All only", () => {
   const state = fixture()
   const disabled = { ...workflow, id: "42", state: "disabled_manually", name: "Release", path: ".github/workflows/release.yml" }
   const unknown = { ...workflow, id: "43", state: "disabled_future" }
   const inactive = { ...disabled, id: "44", state: "disabled_inactivity" }
   state.workflows = { status: "ready", value: { capturedAt: 1, items: [workflow, disabled, inactive, unknown] } }
   expect(libraryPresentation(state, { query: " RELEASE.YML ", status: "disabled" }).workflows).toEqual([disabled, inactive])
-  expect(libraryPresentation(state, { query: "no matches", status: "" }).statuses).toEqual(["active", "disabled", "disabled_future"])
+  expect(workflowFilters.map((item) => item.value)).toEqual(["", "active", "disabled"])
+  expect(libraryPresentation(state, filters).workflows).toContain(unknown)
+  expect(libraryPresentation(state, { ...filters, status: "disabled" }).workflows).not.toContain(unknown)
   expect(workflowState(unknown.state).label).toBeUndefined()
-  expect(libraryPresentation(fixture(), filters).statuses).toEqual(["active"])
+})
+
+test("run filters are a fixed list of distinct native status values per provider", () => {
+  const labels = (waiting: string) => ["orchestra.actions.all", "orchestra.actions.failed", "orchestra.actions.running", waiting,
+    "orchestra.actions.queued", "orchestra.actions.passed"]
+  expect(runFilters("github").map((item): string => item.label)).toEqual(labels("orchestra.actions.needsApproval"))
+  expect(runFilters("gitlab").map((item): string => item.label)).toEqual(labels("orchestra.actions.manual"))
+  expect(runFilters("github").map((item) => item.value)).toEqual(["", "failure", "in_progress", "waiting", "queued", "success"])
+  expect(runFilters("gitlab").map((item) => item.value)).toEqual(["", "failed", "running", "manual", "pending", "success"])
+})
+
+test("a stored status from another provider or an old raw value counts as All", () => {
+  expect(selectedFilter(runFilters("github"), "failure")).toBe("failure")
+  expect(selectedFilter(runFilters("gitlab"), "failure")).toBe("")
+  expect(selectedFilter(runFilters("github"), "completed")).toBe("")
+  expect(selectedFilter(workflowFilters, "disabled")).toBe("disabled")
 })
 
 test("recent and latest runs join by binding and workflow, use creation time and preserve native execution status", () => {
@@ -99,4 +115,10 @@ test("collection does not inspect source or graph and rejects stale loading/erro
   state.binding = undefined
   expect(libraryPresentation(state, filters).actualOrchestraCI).toBeUndefined()
   expect(libraryPresentation(state, filters).recent).toEqual([])
+})
+
+test("run identity prefers the native title and number, falling back to name and bare native id", () => {
+  expect(runIdentity(run)).toEqual({ title: "Native run", number: "101" })
+  expect(runIdentity({ ...run, name: null })).toEqual({ title: "101", number: "101" })
+  expect(runIdentity({ ...run, title: "fix: keep identity", number: 248 })).toEqual({ title: "fix: keep identity", number: "#248" })
 })

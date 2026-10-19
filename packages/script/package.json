@@ -8,7 +8,8 @@
   },
   "dependencies": {
     "@orchestra/schema": "workspace:*",
-    "semver": "^7.6.3"
+    "semver": "^7.6.3",
+    "typescript": "catalog:"
   },
   "devDependencies": {
     "@tsconfig/bun": "catalog:",
@@ -21,6 +22,7 @@
     "./module-resolver": "./src/module-resolver.ts",
     "./module-catalog": "./src/module-catalog.ts",
     "./workspace-paths": "./src/workspace-paths.ts",
+    "./spawn-imports": "./src/spawn-imports.ts",
     "./omni": "./src/omni.ts",
     "./tree-sitter-prebuilds": "./src/tree-sitter-prebuilds.ts"
   }

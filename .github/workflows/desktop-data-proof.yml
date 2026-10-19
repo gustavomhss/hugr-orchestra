@@ -4,7 +4,7 @@ name: desktop-data-proof
 on:
   push:
     branches: [desktop-data-proof]
-    paths: ["packages/desktop/test/desktop-persistence/**", ".github/workflows/desktop-data-proof.yml"]
+    paths: ["apps/desktop/test/desktop-persistence/**", ".github/workflows/desktop-data-proof.yml"]
   workflow_dispatch:
     inputs:
       scope:
@@ -61,12 +61,12 @@ jobs:
           bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
           target=$([ "${{ matrix.target }}" = linux-arm64-gnu ] && echo linux-arm64 || echo linux-x64-baseline)
           export OMNI_ARTIFACTS="$PWD/native/omni/dist/omni" ORCHESTRA_VERSION=1.18.27 ORCHESTRA_CHANNEL=beta
-          bun packages/cli/script/build.ts --target "$target" --skip-install
-          TARGET="$target" bun -e 'import{stageCliArtifacts}from"./packages/desktop/scripts/cli-staging";await stageCliArtifacts({dist:"packages/cli/dist",directory:`packages/desktop/.guest-cli-${process.env.TARGET}`,version:"1.18.27",targets:[process.env.TARGET]})'
+          bun apps/cli/script/build.ts --target "$target" --skip-install
+          TARGET="$target" bun -e 'import{stageCliArtifacts}from"./apps/desktop/scripts/cli-staging";await stageCliArtifacts({dist:"apps/cli/dist",directory:`apps/desktop/.guest-cli-${process.env.TARGET}`,version:"1.18.27",targets:[process.env.TARGET]})'
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: desktop-data-cli-${{ matrix.target }}
-          path: packages/desktop/${{ matrix.target == 'linux-arm64-gnu' && '.guest-cli-linux-arm64' || '.guest-cli-linux-x64-baseline' }}/
+          path: apps/desktop/${{ matrix.target == 'linux-arm64-gnu' && '.guest-cli-linux-arm64' || '.guest-cli-linux-x64-baseline' }}/
           include-hidden-files: true
           if-no-files-found: error
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
@@ -92,7 +92,7 @@ jobs:
           fetch-depth: 0
           persist-credentials: false
       - name: Initialize source evidence
-        run: mkdir -p packages/desktop/.omni-desktop-evidence && git rev-parse HEAD > packages/desktop/.omni-desktop-evidence/source-sha.txt
+        run: mkdir -p apps/desktop/.omni-desktop-evidence && git rev-parse HEAD > apps/desktop/.omni-desktop-evidence/source-sha.txt
       - uses: ./.github/actions/setup-bun
         with:
           install-flags: --frozen-lockfile --os='*' --cpu='*'
@@ -105,48 +105,48 @@ jobs:
         if: runner.os == 'Windows'
         with:
           pattern: desktop-data-omni-*
-          path: packages/desktop/.desktop-guest-inputs/omni
+          path: apps/desktop/.desktop-guest-inputs/omni
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         if: runner.os == 'Windows'
         with:
           pattern: tree-sitter-linux-*
-          path: packages/desktop/.desktop-guest-inputs/tree-sitter
+          path: apps/desktop/.desktop-guest-inputs/tree-sitter
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         if: runner.os == 'Windows'
         with:
           pattern: desktop-data-cli-*
-          path: packages/desktop/.desktop-guest-inputs/cli
+          path: apps/desktop/.desktop-guest-inputs/cli
       - name: Supply exact-source CLI input layout without modifying producer
         run: |
           bun -e 'import { cp, mkdir } from "node:fs/promises"; import path from "node:path";
           const id = process.platform === "win32" ? "win32-x64-msvc" : "linux-x64-gnu";
-          const root = path.resolve("packages/desktop/.omni-desktop-evidence/native", id);
+          const root = path.resolve("apps/desktop/.omni-desktop-evidence/native", id);
           await mkdir(path.join(root, id), {recursive:true});
           await cp(process.env.HUGR_OMNI_ADDON, path.join(root,id,"hugr_omni.node"));
           await cp(process.env.HUGR_OMNI_SUPERVISOR, path.join(root,id,path.basename(process.env.HUGR_OMNI_SUPERVISOR)));
-          if (process.platform === "win32") await Promise.all(["linux-x64-gnu","linux-arm64-gnu"].map((target) => cp(path.resolve("packages/desktop/.desktop-guest-inputs/omni",`desktop-data-omni-${target}`),path.join(root,target),{recursive:true})));
+          if (process.platform === "win32") await Promise.all(["linux-x64-gnu","linux-arm64-gnu"].map((target) => cp(path.resolve("apps/desktop/.desktop-guest-inputs/omni",`desktop-data-omni-${target}`),path.join(root,target),{recursive:true})));
           '
       - name: Typecheck scoped qualification
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: bun typecheck test/desktop-persistence/tsconfig.json
       - name: Assemble verified native and guest CLI resources
         if: runner.os == 'Windows'
         env:
-          OMNI_ARTIFACTS: ${{ github.workspace }}/packages/desktop/.omni-desktop-evidence/native/win32-x64-msvc
+          OMNI_ARTIFACTS: ${{ github.workspace }}/apps/desktop/.omni-desktop-evidence/native/win32-x64-msvc
           ORCHESTRA_VERSION: "1.18.27"
           ORCHESTRA_CHANNEL: beta
         run: |
-          bun packages/cli/script/build.ts --target windows-x64-baseline --skip-install
-          bun -e 'import{stageCliArtifacts}from"./packages/desktop/scripts/cli-staging";import{copyCliRipgrep,readCliManifest,verifyCliArtifact}from"./packages/desktop/src/main/cli-artifacts";import{cp}from"node:fs/promises";import path from"node:path";
-          const out=path.resolve("packages/desktop/.desktop-guest-inputs/combined");await stageCliArtifacts({dist:"packages/cli/dist",directory:out,version:"1.18.27",targets:["windows-x64-baseline"]});const native=await readCliManifest(out);const entries=[...native.artifacts];
-          for(const id of["linux-x64-gnu","linux-arm64-gnu"]){const from=path.resolve("packages/desktop/.desktop-guest-inputs/cli",`desktop-data-cli-${id}`);const m=await readCliManifest(from);if(m.version!=="1.18.27"||m.artifacts.length!==1)throw Error("GUEST_CLI_MANIFEST_INVALID");for(const a of m.artifacts){await verifyCliArtifact(from,a.target);await copyCliRipgrep(path.join(from,`ripgrep-${a.target}`),path.join(out,`ripgrep-${a.target}`),a.target);await cp(path.join(from,a.file),path.join(out,a.file));await cp(path.join(from,`tree-sitter-${a.target}`),path.join(out,`tree-sitter-${a.target}`),{recursive:true});await cp(path.join("packages/desktop/.desktop-guest-inputs/omni",`desktop-data-omni-${id}`),path.join(out,`omni-${a.target}`),{recursive:true});entries.push(a)}}await Bun.write(path.join(out,"manifest.json"),JSON.stringify({schema:1,version:"1.18.27",artifacts:entries}))'
-          value=$(bun -p 'require("node:path").resolve("packages/desktop/.desktop-guest-inputs/combined")')
+          bun apps/cli/script/build.ts --target windows-x64-baseline --skip-install
+          bun -e 'import{stageCliArtifacts}from"./apps/desktop/scripts/cli-staging";import{copyCliRipgrep,readCliManifest,verifyCliArtifact}from"./apps/desktop/src/main/cli-artifacts";import{cp}from"node:fs/promises";import path from"node:path";
+          const out=path.resolve("apps/desktop/.desktop-guest-inputs/combined");await stageCliArtifacts({dist:"apps/cli/dist",directory:out,version:"1.18.27",targets:["windows-x64-baseline"]});const native=await readCliManifest(out);const entries=[...native.artifacts];
+          for(const id of["linux-x64-gnu","linux-arm64-gnu"]){const from=path.resolve("apps/desktop/.desktop-guest-inputs/cli",`desktop-data-cli-${id}`);const m=await readCliManifest(from);if(m.version!=="1.18.27"||m.artifacts.length!==1)throw Error("GUEST_CLI_MANIFEST_INVALID");for(const a of m.artifacts){await verifyCliArtifact(from,a.target);await copyCliRipgrep(path.join(from,`ripgrep-${a.target}`),path.join(out,`ripgrep-${a.target}`),a.target);await cp(path.join(from,a.file),path.join(out,a.file));await cp(path.join(from,`tree-sitter-${a.target}`),path.join(out,`tree-sitter-${a.target}`),{recursive:true});await cp(path.join("apps/desktop/.desktop-guest-inputs/omni",`desktop-data-omni-${id}`),path.join(out,`omni-${a.target}`),{recursive:true});entries.push(a)}}await Bun.write(path.join(out,"manifest.json"),JSON.stringify({schema:1,version:"1.18.27",artifacts:entries}))'
+          value=$(bun -p 'require("node:path").resolve("apps/desktop/.desktop-guest-inputs/combined")')
           echo "ORCHESTRA_CLI_PREBUILT_DIR=$value" >> "$GITHUB_ENV"
       - name: Build actual unsigned app
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         env:
           ORCHESTRA_VERSION: "1.18.27"
-          TREE_SITTER_ARTIFACTS: ${{ github.workspace }}/packages/desktop/.desktop-guest-inputs/tree-sitter-layout
+          TREE_SITTER_ARTIFACTS: ${{ github.workspace }}/apps/desktop/.desktop-guest-inputs/tree-sitter-layout
         run: |
           if [ "$RUNNER_OS" = Windows ]; then
             bun -e 'import {cp,mkdir} from "node:fs/promises"; await mkdir(".desktop-guest-inputs/tree-sitter-layout",{recursive:true}); await Promise.all(["linux-x64","linux-arm64"].map((target)=>cp(`.desktop-guest-inputs/tree-sitter/tree-sitter-${target}`,`.desktop-guest-inputs/tree-sitter-layout/${target}`,{recursive:true})))'
@@ -155,7 +155,7 @@ jobs:
           fi
           bun test/omni-smoke/build.ts
       - name: Detect actual missing referenced blob before any replacement write
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: |
           unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR
           mkdir -p .desktop-persistence-evidence
@@ -167,10 +167,10 @@ jobs:
           [ -s .desktop-persistence-evidence/control.json ] || { cat .desktop-persistence-evidence/control-error.txt; echo 'CONTROL_EVIDENCE_EMPTY_BEFORE_MUTATION'; exit 1; }
           bun -e 'const r=await Bun.file(".desktop-persistence-evidence/control.json").json(); const error=await Bun.file(".desktop-persistence-evidence/control-error.txt").text(); if(r.control!=="delete-blob"||r.seeded!==true||r.deleted!==true||r.detected!==true||r.cleanup!==true||r.reason!=="DRAFT_BLOB_LOST"||r.phases?.map(p=>p.phase).join(",")!=="seed,reopen-mutant"||error.trim()!=="DRAFT_BLOB_LOST") throw Error("CORRUPT_BLOB_CONTROL_INVALID"); if(await Bun.file(".desktop-persistence-evidence/result.json").exists()) throw Error("CONTROL_PUBLISHED_SUCCESS")'
       - name: Real renderer positive reopenings
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: unset HUGR_OMNI_ADDON HUGR_OMNI_SUPERVISOR && bun test/desktop-persistence/packaged.ts
       - name: Require complete source-pinned result
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: |
           bun -e 'const f=Bun.file(".desktop-persistence-evidence/result.json"); if(!await f.exists()) throw Error("RESULT_REPORT_MISSING"); const r=await f.json(); if(r.sourceSHA!==process.env.GITHUB_SHA||r.platform!==process.platform||r.arch!==process.arch||r.cleanup!==true) throw Error("REPORT_SOURCE_OR_HOST_MISMATCH"); if(!Array.isArray(r.phases)||r.phases.map(p=>p.phase).join(",")!=="seed,reopen-add,third-reopen"||r.phases.some(p=>p.quit?.code!==0||p.preservation!=="exact")) throw Error("REPORT_PHASES_INCOMPLETE")'
       - name: Preserve sanitized receipts
@@ -179,18 +179,18 @@ jobs:
         with:
           name: desktop-data-evidence-${{ matrix.os }}-${{ github.sha }}
           path: |
-            packages/desktop/.omni-desktop-evidence/source-sha.txt
-            packages/desktop/.omni-desktop-evidence/inputs.json
-            packages/desktop/.omni-desktop-evidence/build.json
-            packages/desktop/.desktop-persistence-evidence/result.json
-            packages/desktop/.desktop-persistence-evidence/control.json
-            packages/desktop/.desktop-persistence-evidence/control-error.txt
-            packages/desktop/.desktop-persistence-evidence/startup-failure.json
+            apps/desktop/.omni-desktop-evidence/source-sha.txt
+            apps/desktop/.omni-desktop-evidence/inputs.json
+            apps/desktop/.omni-desktop-evidence/build.json
+            apps/desktop/.desktop-persistence-evidence/result.json
+            apps/desktop/.desktop-persistence-evidence/control.json
+            apps/desktop/.desktop-persistence-evidence/control-error.txt
+            apps/desktop/.desktop-persistence-evidence/startup-failure.json
           include-hidden-files: true
           if-no-files-found: error
           retention-days: 14
       - name: Archive complete app with executable permissions
-        working-directory: packages/desktop
+        working-directory: apps/desktop
         run: |
           folder=$([ "$RUNNER_OS" = Windows ] && echo win-unpacked || echo linux-unpacked)
           tar -czf ".desktop-persistence-evidence/app-$RUNNER_OS.tar.gz" "dist/$folder" .omni-desktop-evidence/build.json
@@ -201,8 +201,8 @@ jobs:
         with:
           name: desktop-data-app-${{ matrix.os }}-${{ github.sha }}
           path: |
-            packages/desktop/.desktop-persistence-evidence/app-${{ runner.os }}.tar.gz
-            packages/desktop/.desktop-persistence-evidence/app-${{ runner.os }}.tar.gz.sha256
-            packages/desktop/.omni-desktop-evidence/build.json
+            apps/desktop/.desktop-persistence-evidence/app-${{ runner.os }}.tar.gz
+            apps/desktop/.desktop-persistence-evidence/app-${{ runner.os }}.tar.gz.sha256
+            apps/desktop/.omni-desktop-evidence/build.json
           if-no-files-found: error
           retention-days: 14

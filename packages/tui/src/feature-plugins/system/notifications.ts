@@ -1,4 +1,4 @@
-import type { Event } from "@orchestra/sdk/v2"
+import type { Event } from "../../compat/sdk-v2"
 import type { TuiAttentionSoundName, TuiPlugin, TuiPluginApi } from "@orchestra/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 

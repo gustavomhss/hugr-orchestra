@@ -56,7 +56,7 @@ export async function setupIdentity(
   const timeline = await setupTimeline(page, {
     messages,
     locale: input.locale ?? "en",
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
+    settings: { shouldDisplayTabsToast: false },
     viewport: input.viewport,
   })
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", input.scheme)

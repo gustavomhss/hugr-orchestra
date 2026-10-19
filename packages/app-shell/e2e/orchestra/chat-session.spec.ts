@@ -263,7 +263,7 @@ test("V2: Steer is the default delivery and the Queue choice is sent with the ne
   await setupTimeline(page, {
     protocol: "v2",
     locale: "en",
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
+    settings: { shouldDisplayTabsToast: false },
     onPrompt: (input) => prompts.push(input.body),
   })
   // The shared mock answers V2 catalog reads with `{}`, so a V2 composer has no model and never sends.

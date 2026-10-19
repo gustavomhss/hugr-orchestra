@@ -10,7 +10,7 @@ import path from "path"
 import { createClient } from "@hey-api/openapi-ts"
 import { splitTypes } from "./split-types"
 
-const orchestra = path.resolve(dir, "../../orchestra")
+const orchestra = path.resolve(dir, "../../../apps/orchestra")
 
 await $`bun dev generate > ${dir}/openapi.json`.cwd(orchestra)
 

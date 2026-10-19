@@ -1239,6 +1239,55 @@ const Endpoint23_1 = (raw: RawClient["server.pullRequest"]) => (input: Endpoint2
 
 const adaptGroup23 = (raw: RawClient["server.pullRequest"]) => ({ list: Endpoint23_0(raw), create: Endpoint23_1(raw) })
 
+type Endpoint34_0Request = Parameters<RawClient["server.relay.run"]["relay.run.list"]>[0]
+type Endpoint34_0Input = {
+  readonly location?: Endpoint34_0Request["query"]["location"]
+  readonly document?: Endpoint34_0Request["query"]["document"]
+}
+const Endpoint34_0 = (raw: RawClient["server.relay.run"]) => (input?: Endpoint34_0Input) =>
+  raw["relay.run.list"]({ query: { location: input?.["location"], document: input?.["document"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint34_1Request = Parameters<RawClient["server.relay.run"]["relay.run.get"]>[0]
+type Endpoint34_1Input = {
+  readonly runID: Endpoint34_1Request["params"]["runID"]
+  readonly location?: Endpoint34_1Request["query"]["location"]
+}
+const Endpoint34_1 = (raw: RawClient["server.relay.run"]) => (input: Endpoint34_1Input) =>
+  raw["relay.run.get"]({ params: { runID: input["runID"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint34_2Request = Parameters<RawClient["server.relay.run"]["relay.run.audit"]>[0]
+type Endpoint34_2Input = {
+  readonly runID: Endpoint34_2Request["params"]["runID"]
+  readonly location?: Endpoint34_2Request["query"]["location"]
+}
+const Endpoint34_2 = (raw: RawClient["server.relay.run"]) => (input: Endpoint34_2Input) =>
+  raw["relay.run.audit"]({ params: { runID: input["runID"] }, query: { location: input["location"] } }).pipe(
+    Effect.mapError(mapClientError),
+  )
+
+type Endpoint34_3Request = Parameters<RawClient["server.relay.run"]["relay.run.ledger"]>[0]
+type Endpoint34_3Input = {
+  readonly runID: Endpoint34_3Request["params"]["runID"]
+  readonly location?: Endpoint34_3Request["query"]["location"]
+  readonly after?: Endpoint34_3Request["query"]["after"]
+}
+const Endpoint34_3 = (raw: RawClient["server.relay.run"]) => (input: Endpoint34_3Input) =>
+  raw["relay.run.ledger"]({
+    params: { runID: input["runID"] },
+    query: { location: input["location"], after: input["after"] },
+  }).pipe(Effect.mapError(mapClientError))
+
+const adaptGroup34 = (raw: RawClient["server.relay.run"]) => ({
+  list: Endpoint34_0(raw),
+  get: Endpoint34_1(raw),
+  audit: Endpoint34_2(raw),
+  ledger: Endpoint34_3(raw),
+})
+
 const adaptClient = (raw: RawClient) => ({
   health: adaptGroup0(raw["server.health"]),
   location: adaptGroup1(raw["server.location"]),
@@ -1274,6 +1323,7 @@ const adaptClient = (raw: RawClient) => ({
   actionsResources: adaptGroup31(raw["server.actionsResource"]),
   actionsSource: adaptGroup32(raw["server.actionsSource"]),
   actionsTransfers: adaptGroup33(raw["server.actionsTransfer"]),
+  relayRuns: adaptGroup34(raw["server.relay.run"]),
 })
 
 export const make = (options?: { readonly baseUrl?: URL | string }) =>

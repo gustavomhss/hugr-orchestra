@@ -6,8 +6,12 @@ import { useCommand } from "@/context/command"
 import { useGlobal } from "@/context/global"
 import { useLayout } from "@/context/layout"
 import { useLanguage } from "@/context/language"
+import { SDKProvider } from "@/context/sdk"
 import { ServerConnection, useServer } from "@/context/server"
+import { ServerSDKProvider } from "@/context/server-sdk"
+import { ServerSyncProvider } from "@/context/server-sync"
 import { tabKey, useTabs } from "@/context/tabs"
+import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { createHomeController } from "@/pages/home/home-controller"
 import { homeProjectDirectories, profileProject, projectForSession } from "@/pages/layout/helpers"
 
@@ -83,8 +87,7 @@ export function ShellNavigationCommands() {
       onSelect: (result) => {
         const directories = homeProjectDirectories(result)
         if (!directories[0]) return
-        home.project.add(conn, directories)
-        showProject(conn, directories[0])
+        void home.project.add(conn, directories)?.then(() => showProject(conn, directories[0]))
       },
     })
   }
@@ -133,6 +136,27 @@ export function ShellNavigationCommands() {
       keybind: "mod+alt+arrowdown",
       onSelect: () => cycleProject(1),
     },
+    {
+      id: "home.go",
+      title: language.t("orchestra.shell.goHome"),
+      category: language.t("command.category.view"),
+      keybind: "mod+shift+h",
+      onSelect: () => {
+        if (layout.route().type !== "home") tabs.toggleHome({ home: false })
+      },
+    },
+    {
+      id: "session.new",
+      title: language.t("command.session.new"),
+      category: language.t("command.category.session"),
+      keybind: "mod+shift+s",
+      onSelect: () => {
+        const conn = connection()
+        const directory = target().directory
+        if (!conn || !directory) return
+        home.project.openProjectNewSession(conn, directory)
+      },
+    },
     // The titlebar tab strip owns the tab order and registers the cyclers.
     {
       id: "session.previous",
@@ -149,6 +173,36 @@ export function ShellNavigationCommands() {
       onSelect: () => command.trigger("tab.next"),
     },
   ])
+  // The session page registers its own copy for the open session; the shell offers it on every other page.
+  command.register("orchestra.archived", () => {
+    if (layout.route().type === "session") return []
+    const conn = connection()
+    const directory = target().directory
+    const sdk = conn && global.ensureServerCtx(conn).sdk
+    // Same condition as the session page: only servers that can restore can list archived sessions.
+    const routed = !!sdk && (sdk.protocolKind() === "v2" || sdk.sessionManagement.hasArchiveRoutes())
+    return [
+      {
+        id: "session.archived",
+        title: sessionRecoveryLanguage(language).t("session.archived.title"),
+        category: language.t("command.category.session"),
+        disabled: !conn || !directory || !routed,
+        onSelect: async () => {
+          if (!conn || !directory) return
+          const { DialogArchivedSessions } = await import("@/components/dialog-archived-sessions")
+          void dialog.show(() => (
+            <ServerSDKProvider server={() => conn}>
+              <ServerSyncProvider server={() => conn}>
+                <SDKProvider directory={directory}>
+                  <DialogArchivedSessions directory={directory} />
+                </SDKProvider>
+              </ServerSyncProvider>
+            </ServerSDKProvider>
+          ))
+        },
+      },
+    ]
+  })
   command.register("orchestra.relay", () =>
     [
       {

@@ -4,7 +4,13 @@ import { Switch } from "@orchestra/ui/switch"
 import { Tooltip } from "@orchestra/ui/tooltip"
 import { Button } from "@orchestra/ui/button"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
-import { Dialog as DialogV2, DialogBody, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
+import {
+  Dialog as DialogV2,
+  DialogBody,
+  DialogFooter,
+  DialogHeader,
+  DialogTitleGroup,
+} from "@orchestra/ui/v2/dialog-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
@@ -260,6 +266,11 @@ export const DialogManageModelsV2: Component = () => {
           </div>
         </div>
       </DialogBody>
+      <DialogFooter>
+        <ButtonV2 variant="contrast" onClick={() => dialog.close()}>
+          {language.t("orchestra.settings.models.done")}
+        </ButtonV2>
+      </DialogFooter>
     </DialogV2>
   )
 }

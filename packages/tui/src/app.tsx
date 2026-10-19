@@ -49,7 +49,6 @@ import { DialogHelp } from "./ui/dialog-help"
 import { DialogAgent } from "./component/dialog-agent"
 import { DialogSessionList } from "./component/dialog-session-list"
 import { DialogWorkspaceList } from "./component/dialog-workspace-list"
-import { DialogConsoleOrg } from "./component/dialog-console-org"
 import { ThemeProvider, useTheme } from "./context/theme"
 import { Home } from "./routes/home"
 import { Session } from "./routes/session"
@@ -116,7 +115,6 @@ const appBindingCommands = [
   "variant.cycle",
   "variant.list",
   "provider.connect",
-  "console.org.switch",
   "orchestra.status",
   "orchestra.debug",
   "theme.switch",
@@ -443,9 +441,9 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     renderer.clearSelection()
   }
   const [terminalTitleEnabled, setTerminalTitleEnabled] = createSignal(kv.get("terminal_title_enabled", true))
-  const [pasteSummaryEnabled, setPasteSummaryEnabled] = createSignal(
-    kv.get("paste_summary_enabled", !sync.data.config.experimental?.disable_paste_summary),
-  )
+  // Read through kv on every call, like the prompt does, so the palette title never drifts from the paste behavior.
+  const pasteSummaryEnabled = () =>
+    kv.get("paste_summary_enabled", !sync.data.config.experimental?.disable_paste_summary)
 
   // Update terminal window title based on current route and session
   createEffect(() => {
@@ -496,6 +494,13 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     })
   })
 
+  async function forkSession(sessionID: string): Promise<void> {
+    const result = await sdk.client.session.fork({ sessionID }).catch((error: unknown) => ({ data: undefined, error }))
+    if (result.data?.id) return route.navigate({ type: "session", sessionID: result.data.id })
+    const message = `${result.error ? errorMessage(result.error) : "no response"}. Confirm to retry, or run: orchestra --session ${sessionID} --fork`
+    if (await DialogConfirm.show(dialog, "Failed to fork session", message, "dismiss")) return forkSession(sessionID)
+  }
+
   let continued = false
   createEffect(() => {
     // When using -c, session list is loaded in blocking phase, so we can navigate at "partial"
@@ -506,13 +511,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
     if (match) {
       continued = true
       if (args.fork) {
-        void sdk.client.session.fork({ sessionID: match }).then((result) => {
-          if (result.data?.id) {
-            route.navigate({ type: "session", sessionID: result.data.id })
-          } else {
-            toast.show({ message: "Failed to fork session", variant: "error" })
-          }
-        })
+        void forkSession(match)
       } else {
         route.navigate({ type: "session", sessionID: match })
       }
@@ -526,13 +525,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   createEffect(() => {
     if (forked || sync.status !== "complete" || !args.sessionID || !args.fork) return
     forked = true
-    void sdk.client.session.fork({ sessionID: args.sessionID }).then((result) => {
-      if (result.data?.id) {
-        route.navigate({ type: "session", sessionID: result.data.id })
-      } else {
-        toast.show({ message: "Failed to fork session", variant: "error" })
-      }
-    })
+    void forkSession(args.sessionID)
   })
 
   createEffect(
@@ -743,21 +736,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         },
         category: "Provider",
       },
-      ...(sync.data.console_state.switchableOrgCount > 1
-        ? [
-            {
-              name: "console.org.switch",
-              title: "Switch org",
-              suggested: Boolean(sync.data.console_state.activeOrgName),
-              slashName: "org",
-              slashAliases: ["orgs", "switch-org"],
-              run: () => {
-                dialog.replace(() => <DialogConsoleOrg />)
-              },
-              category: "Provider",
-            },
-          ]
-        : []),
       {
         name: "orchestra.status",
         title: "View status",
@@ -774,6 +752,12 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         run: () => {
           dialog.replace(() => <DialogDebug />)
         },
+        category: "System",
+      },
+      {
+        name: "orchestra.getting_started",
+        title: "Show getting started",
+        run: () => kv.set("dismissed_getting_started", false),
         category: "System",
       },
       {
@@ -912,11 +896,7 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
         title: pasteSummaryEnabled() ? "Disable paste summary" : "Enable paste summary",
         category: "System",
         run: () => {
-          setPasteSummaryEnabled((prev) => {
-            const next = !prev
-            kv.set("paste_summary_enabled", next)
-            return next
-          })
+          kv.set("paste_summary_enabled", !pasteSummaryEnabled())
           dialog.clear()
         },
       },

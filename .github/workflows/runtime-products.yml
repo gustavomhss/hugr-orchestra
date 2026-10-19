@@ -90,7 +90,7 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
       # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
       - name: Require matching native host and exact Bun
-        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --host
+        run: bun apps/cli/script/runtime-proof.ts --target "$TARGET" --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: models-dev-snapshot
@@ -106,9 +106,9 @@ jobs:
           OMNI_ARTIFACTS: ${{ runner.temp }}/omni-artifacts
         run: |
           set -euo pipefail
-          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          ORCHESTRA_VERSION="$(bun -p 'require("./apps/cli/package.json").version')"
           export ORCHESTRA_VERSION
-          bun packages/cli/script/build.ts --skip-install --target "$TARGET"
+          bun apps/cli/script/build.ts --skip-install --target "$TARGET"
       - name: Execute isolated native product proof
         run: |
           set -euo pipefail
@@ -116,18 +116,18 @@ jobs:
             ORCHESTRA_ARTIFACT_DARWIN_SDK="$(xcrun --sdk macosx --show-sdk-path)"
             export ORCHESTRA_ARTIFACT_DARWIN_SDK
           fi
-          bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json
+          bun apps/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json
       - name: Require the actual proof report
-        run: bun packages/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json --check-report
+        run: bun apps/cli/script/runtime-proof.ts --target "$TARGET" --report runtime-proof.json --check-report
       # bin/ripgrep holds the pinned rg; the CLI searches with it, with no rg on PATH, and never downloads one, also
       # once bin/ripgrep is moved away (mutant), after which it is restored and the search passes again.
       - name: Bundled ripgrep is pinned and used, and the packaged CLI never downloads one
         run: |
           set -euo pipefail
-          bin="packages/cli/dist/cli-$TARGET/bin"
+          bin="apps/cli/dist/cli-$TARGET/bin"
           exe=orchestra
           [[ "$TARGET" != windows-* ]] || exe=orchestra.exe
-          bun packages/cli/script/ripgrep-proof.ts --target "$TARGET" --binary "$bin/$exe" --ripgrep "$bin/ripgrep" --mutate
+          bun apps/cli/script/ripgrep-proof.ts --target "$TARGET" --binary "$bin/$exe" --ripgrep "$bin/ripgrep" --mutate
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: runtime-proof-${{ matrix.target }}
@@ -152,7 +152,7 @@ jobs:
       - name: Install once without lifecycle scripts
         run: bun install --frozen-lockfile --ignore-scripts --os='*' --cpu='*'
       - name: Require native Linux producer
-        run: bun packages/cli/script/runtime-proof.ts --target linux-x64-baseline --host
+        run: bun apps/cli/script/runtime-proof.ts --target linux-x64-baseline --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: models-dev-snapshot
@@ -168,10 +168,10 @@ jobs:
           TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
         run: |
           set -euo pipefail
-          ORCHESTRA_VERSION="$(bun -p 'require("./packages/cli/package.json").version')"
+          ORCHESTRA_VERSION="$(bun -p 'require("./apps/cli/package.json").version')"
           export ORCHESTRA_VERSION
-          bun packages/cli/script/build.ts --skip-install --target windows-arm64
-          bun packages/cli/script/export-artifacts.ts --dist packages/cli/dist --out windows-arm64-resources --version "$ORCHESTRA_VERSION" --target windows-arm64
+          bun apps/cli/script/build.ts --skip-install --target windows-arm64
+          bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-arm64-resources --version "$ORCHESTRA_VERSION" --target windows-arm64
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-arm64-resources
@@ -180,7 +180,7 @@ jobs:
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: windows-arm64-ripgrep
-          path: packages/cli/dist/cli-windows-arm64/bin/ripgrep/
+          path: apps/cli/dist/cli-windows-arm64/bin/ripgrep/
           if-no-files-found: error
 
   windows-arm64:
@@ -202,15 +202,15 @@ jobs:
         run: bun install --frozen-lockfile --ignore-scripts
       # runtime-proof.ts loads Desktop code that imports workspace packages, so it runs after the install.
       - name: Require native Windows ARM64 Bun
-        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --host
+        run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --host
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: windows-arm64-resources
           path: windows-arm64-resources
       - name: Execute isolated handed-off native product proof
-        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json
+        run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json
       - name: Require the actual proof report and producer digest
-        run: bun packages/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json --check-report
+        run: bun apps/cli/script/runtime-proof.ts --target windows-arm64 --resources windows-arm64-resources --report runtime-proof.json --check-report
       - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
         with:
           name: windows-arm64-ripgrep
@@ -219,7 +219,7 @@ jobs:
       - name: Bundled ripgrep is pinned and used, and the packaged CLI never downloads one
         run: |
           Copy-Item windows-arm64-resources/orchestra-windows-arm64.exe windows-arm64-cli/orchestra.exe
-          bun packages/cli/script/ripgrep-proof.ts --target windows-arm64 --binary windows-arm64-cli/orchestra.exe --ripgrep windows-arm64-cli/ripgrep --mutate
+          bun apps/cli/script/ripgrep-proof.ts --target windows-arm64 --binary windows-arm64-cli/orchestra.exe --ripgrep windows-arm64-cli/ripgrep --mutate
           if ($LASTEXITCODE -ne 0) { throw "ripgrep proof failed" }
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:

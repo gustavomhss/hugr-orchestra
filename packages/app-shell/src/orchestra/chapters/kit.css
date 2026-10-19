@@ -1,8 +1,10 @@
 /* Shared page kit ported 1:1 from the approved mock (mock-features.js `.mx-*`).
    Capability screens compose these classes so every page shares one geometry and palette.
-   Tokens live on body so portaled dialogs and menus resolve them too. */
+   Tokens live on body so portaled dialogs and menus resolve them too. The legacy Settings dialog sets
+   data-mx-kit while open, because its Providers and Shortcuts tabs render the chapter list and editor. */
 
-html[data-color-scheme] body[data-new-layout] {
+html[data-color-scheme] body[data-new-layout],
+html[data-color-scheme] body[data-mx-kit] {
   --mx-line: rgba(166, 189, 211, 0.14);
   --mx-soft: rgba(170, 196, 220, 0.055);
   --mx-raised: rgba(19, 28, 38, 0.55);
@@ -24,7 +26,8 @@ html[data-color-scheme] body[data-new-layout] {
   --mx-emphasis: "Mx Inter Medium", var(--orchestra-font-family-sans);
 }
 
-html[data-color-scheme="light"] body[data-new-layout] {
+html[data-color-scheme="light"] body[data-new-layout],
+html[data-color-scheme="light"] body[data-mx-kit] {
   --mx-line: rgba(65, 86, 107, 0.14);
   --mx-soft: rgba(60, 87, 118, 0.045);
   --mx-raised: rgba(255, 255, 255, 0.63);

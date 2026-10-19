@@ -19,6 +19,6 @@ bun run test:ci orchestra test/skill/backend-skills.test.ts test/skill/backend-f
 bun run test:ci core test/backend-toolkit-packs.test.ts
 ```
 
-The source contract lives in [specs/backend-specialist](../../../specs/backend-specialist).
+The source contract lives in [docs/specs/backend-specialist](../../../docs/specs/backend-specialist).
 Orchestra and Core own package typechecks; compiled payload tests and delivery lanes qualify their
 respective runtimes.

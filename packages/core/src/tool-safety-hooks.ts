@@ -21,6 +21,8 @@ import { ToolSafety } from "./tool-safety"
 // Hooks only restrict: a Block, a Repair, a rejected Approve and a failed Verify deny; Remind, Record and Allow grant
 // nothing. Every matched action is first a durable `relay.hook.decided` event, then a receipt in the install's ledger,
 // but no outcome waits on either. Session events (`session-start`, `prompt`, `session-idle`) take the same path.
+// A tool call's notes reach the model whatever happens to it: with its result, or in the failure it reads instead (a
+// later hook's refusal, or an error the tool threw), so a decision recorded as `reminded` was handed over.
 
 export interface Scope {
   readonly installs: ReadonlyMap<string, RelayHook.Install>
@@ -61,9 +63,11 @@ export const before = Effect.fn("ToolSafetyHooks.before")(function* (input: {
   // ToolSafety's construction context: a call's own context may lack the event or Relay service.
   readonly ambient: Context.Context<never>
 }) {
-  if (!input.installs.some((install) => install.enabled)) return undefined
+  if (!input.installs.some((install) => install.enabled && !install.unpublished)) return undefined
   const scope = yield* scoped(input, input.call, yield* invocation(input.call, input.resolve))
-  return { scope, notes: yield* enforce(scope, "before") } satisfies Hooked
+  const notes: Array<string> = []
+  yield* enforce(scope, "before", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
+  return { scope, notes } satisfies Hooked
 })
 
 /**
@@ -76,7 +80,7 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
   readonly profile: ToolSafety.Profile | undefined
   readonly ambient: Context.Context<never>
 }): Effect.fn.Return<ReadonlyArray<string>, ToolSafety.Denied> {
-  if (!input.installs.some((install) => install.enabled)) return []
+  if (!input.installs.some((install) => install.enabled && !install.unpublished)) return []
   const event = input.event
   // There is no tool call: decisions leave out the empty tool and call ID, and hosts bind the Session instead.
   const call = {
@@ -91,21 +95,58 @@ export const session = Effect.fn("ToolSafetyHooks.session")(function* (input: {
   } satisfies ToolSafety.Invocation
   const subject = event.text === undefined ? undefined : createHash("sha256").update(event.text).digest("hex")
   const scope = yield* scoped(input, call, { operation: event.operation, paths: [] }, subject)
-  return yield* enforce(
+  const notes: Array<string> = []
+  // A refused prompt reaches no agent, and its refusal's words are for the sender, so they carry no notes.
+  yield* enforce(
     { ...scope, ...(event.operation === "prompt" ? { messageID: event.messageID } : {}) },
     event.operation === "prompt" ? "before" : "after",
+    notes,
   )
+  return notes
 })
 
 /**
  * The `after` hooks of a call whose effect settled, then every note of the call in order, for a host that hands them to
- * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial; the effect itself is not undone.
+ * the model itself (Claude Code's PostToolUse). A failed check or a Repair is a denial, which carries the notes; the
+ * effect itself is not undone.
  */
 export const settle = (hooked: Hooked, succeeded: boolean) =>
   Effect.gen(function* () {
-    const notes = succeeded ? yield* enforce(hooked.scope, "after") : []
-    return [...hooked.notes, ...notes]
+    if (!succeeded) return hooked.notes
+    const notes = [...hooked.notes]
+    yield* enforce(hooked.scope, "after", notes).pipe(Effect.mapError((denied) => noted(denied, notes)))
+    return notes
   })
+
+/**
+ * `effect` failing with the `before` notes in the failure the model reads instead of a result: a refusal's detail, or
+ * the message of an error the tool threw as it is (V1 tools die with their errors). An error of a subclass, such as a
+ * rejected permission, keeps its type, which hosts act on; it and other typed failures keep their own words.
+ */
+export const failing = <A, E, R>(
+  hooked: Hooked,
+  effect: Effect.Effect<A, E, R>,
+): Effect.Effect<A, E | ToolSafety.Denied, R> => {
+  if (hooked.notes.length === 0) return effect
+  return effect.pipe(
+    Effect.catchCause((cause) =>
+      Effect.failCause(
+        Cause.fromReasons(
+          cause.reasons.flatMap<Cause.Reason<E | ToolSafety.Denied>>((reason) => {
+            if (Cause.isFailReason(reason) && reason.error instanceof ToolSafety.Denied)
+              return Cause.fail(noted(reason.error, hooked.notes)).reasons
+            if (!Cause.isDieReason(reason)) return [reason]
+            if (reason.defect instanceof ToolSafety.Denied) return Cause.die(noted(reason.defect, hooked.notes)).reasons
+            if (!(reason.defect instanceof Error) || Object.getPrototypeOf(reason.defect) !== Error.prototype)
+              return [reason]
+            const text = `${reason.defect.message}\n\n${hooked.notes.join("\n")}`
+            return Cause.die(new Error(text, { cause: reason.defect })).reasons
+          }),
+        ),
+      ),
+    ),
+  )
+}
 
 /** `settle`, with every note appended to the call's result. */
 export const after = <A>(hooked: Hooked, value: A, succeeded: boolean) =>
@@ -214,56 +255,64 @@ const invocation = Effect.fnUntraced(function* (
 })
 
 // Enabled installs in install order. Within an install, a failed Verify with a connected Fail port runs that branch in
-// place of the rest of its install, which is the Verify's Pass continuation. The first denial ends the call.
-const enforce = Effect.fnUntraced(function* (scope: Scope, timing: RelayHook.Timing) {
+// place of the rest of its install, which is the Verify's Pass continuation. The first denial ends the call. `notes`
+// gathers the notes as they are given, so a caller can still hand over the ones given before a denial.
+const enforce = Effect.fnUntraced(function* (scope: Scope, timing: RelayHook.Timing, notes: Array<string>) {
   const steps = yield* Effect.try({
     try: () => HookEvaluate.plan([...scope.installs.values()], { ...scope.invocation, timing }),
     // A hook that cannot be evaluated holds the call instead of letting it through.
     catch: () => new ToolSafety.Denied({ reason: "relay-hook-evaluation-acquisition" }),
   })
-  const notes = yield* Effect.forEach(Map.groupBy(steps, (step) => step.installID).values(), (group) =>
-    walk(scope, timing, group),
+  yield* Effect.forEach(
+    Map.groupBy(steps, (step) => step.installID).values(),
+    (group) => walk(scope, timing, group, notes),
+    { discard: true },
   )
-  return notes.flat()
 })
 
 function walk(
   scope: Scope,
   timing: RelayHook.Timing,
   steps: ReadonlyArray<HookEvaluate.Step>,
-): Effect.Effect<ReadonlyArray<string>, ToolSafety.Denied> {
+  notes: Array<string>,
+): Effect.Effect<void, ToolSafety.Denied> {
   const step = steps[0]
-  if (!step) return Effect.succeed([])
-  return act(scope, timing, step).pipe(
-    Effect.flatMap((acted) =>
-      walk(scope, timing, acted.branch ?? steps.slice(1)).pipe(Effect.map((notes) => [...acted.notes, ...notes])),
-    ),
+  if (!step) return Effect.void
+  return act(scope, timing, step, notes).pipe(
+    Effect.flatMap((branch) => walk(scope, timing, branch ?? steps.slice(1), notes)),
   )
 }
 
 const AFTER = " The tool already ran; its effect was not undone."
 
+// One step: its decision, its note if it gives one, and the Fail branch of a failed Verify that has one.
 const act = Effect.fnUntraced(function* (
   scope: Scope,
   timing: RelayHook.Timing,
   step: HookEvaluate.Step,
-): Effect.fn.Return<
-  { readonly notes: ReadonlyArray<string>; readonly branch?: ReadonlyArray<HookEvaluate.Step> },
-  ToolSafety.Denied
-> {
+  notes: Array<string>,
+): Effect.fn.Return<ReadonlyArray<HookEvaluate.Step> | undefined, ToolSafety.Denied> {
   const started = yield* Clock.currentTimeMillis
   const hook = scope.installs.get(step.installID)!.snapshot
   const node = hook.nodes.find((item) => item.id === step.nodeID)?.name ?? step.nodeID
   const tail = timing === "after" ? AFTER : ""
   const origin = { name: hook.name, message: step.message }
   const decide = (outcome: RelayLedger.HookOutcome) => decided(scope, timing, step, outcome, started)
+  // What the agent reads once a person said no: a refusal, never the card's request. A refused prompt reaches no agent;
+  // its sender keeps the card's words.
+  const declined = (card: string, why: string) => {
+    if (scope.invocation.tool === undefined) return card
+    const ran = timing === "after" ? "" : ", so it did not run"
+    return `A person declined this call${ran}. Do not retry it another way. ${why}${tail}`
+  }
   if (step.action === "remind") {
     yield* decide("reminded")
-    return { notes: [`Hook '${hook.name}': ${step.message}`] }
+    notes.push(`Hook '${hook.name}': ${step.message}`)
+    return
   }
   if (step.action === "record" || step.action === "allow") {
     yield* decide(step.action === "record" ? "recorded" : "allowed")
-    return { notes: [] }
+    return
   }
   if (step.action === "block") {
     yield* decide("blocked")
@@ -274,17 +323,18 @@ const act = Effect.fnUntraced(function* (
     return yield* deny("relay-hook-repair", `Hook '${hook.name}' requires a repair: ${step.message}${tail}`, origin)
   }
   if (step.action === "approve") {
-    yield* ask(scope, timing, step, `Hook '${hook.name}' asks for approval: ${step.message}`)
-    return { notes: [] }
+    const card = `Hook '${hook.name}' asks for approval: ${step.message}`
+    yield* ask(scope, timing, step, card, declined(card, `Hook '${hook.name}': ${step.message}`))
+    return
   }
   const verified = yield* check(scope, step)
   if (verified.verdict === "pass") {
     yield* decide("passed")
-    return { notes: [] }
+    return
   }
   if (verified.verdict === "fail") {
     yield* decide("failed")
-    if (step.onFail) return { notes: [], branch: step.onFail }
+    if (step.onFail) return step.onFail
     return yield* deny(
       "relay-hook-verify-failed",
       `Hook '${hook.name}' check '${node}' failed: ${step.message}${tail}`,
@@ -295,13 +345,17 @@ const act = Effect.fnUntraced(function* (
   const unavailable = `Hook '${hook.name}' check '${node}' could not run (${verified.reason ?? "unavailable"})`
   // A check that cannot run never blocks and never allows: before the effect, the user decides; after it, the result
   // stands with a warning.
-  if (timing === "after") return { notes: [`${unavailable}; the result was kept: ${step.message}`] }
-  yield* ask(scope, timing, step, `${unavailable}: ${step.message}`)
-  return { notes: [] }
+  if (timing === "after") {
+    notes.push(`${unavailable}; the result was kept: ${step.message}`)
+    return
+  }
+  const card = `${unavailable}: ${step.message}`
+  yield* ask(scope, timing, step, card, declined(card, card))
 })
 
-// One native approval, recorded with how it ended: approved, rejected, or cancelled when the call was interrupted.
-function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, message: string) {
+// One native approval, recorded with how it ended: approved, rejected, or cancelled when the call was interrupted. A
+// person's no is refused with `declined`; any other refusal keeps the card's `message`.
+function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, message: string, declined: string) {
   return Effect.uninterruptibleMask((restore) =>
     Effect.gen(function* () {
       const started = yield* Clock.currentTimeMillis
@@ -327,7 +381,7 @@ function ask(scope: Scope, timing: RelayHook.Timing, step: HookEvaluate.Step, me
       yield* decide(interrupted ? "cancelled" : "rejected")
       const error = Option.getOrUndefined(Cause.findErrorOption(exit.cause))
       if (interrupted || !error) return yield* Effect.failCause(exit.cause)
-      return yield* deny(error.reason, message, origin)
+      return yield* deny(error.reason, error.reason === "approval-native-rejected" ? declined : message, origin)
     }),
   )
 }
@@ -374,6 +428,17 @@ function resources(scope: Scope) {
 
 function deny(reason: string, detail: string, hook: { readonly name: string; readonly message: string }) {
   return Effect.fail(new ToolSafety.Denied({ reason, detail, hook }))
+}
+
+// A refusal that also hands over the notes the call's hooks gave before it.
+function noted(denied: ToolSafety.Denied, notes: ReadonlyArray<string>) {
+  if (notes.length === 0) return denied
+  const text = notes.join("\n")
+  return new ToolSafety.Denied({
+    reason: denied.reason,
+    detail: denied.detail === undefined ? text : `${denied.detail}\n\n${text}`,
+    ...(denied.hook ? { hook: denied.hook } : {}),
+  })
 }
 
 /**

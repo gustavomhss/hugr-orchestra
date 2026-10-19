@@ -12,18 +12,25 @@ export const matchesModelSearch = (query: string, values: string[]) => {
   if (!search) return true
 
   const compactSearch = compactModelSearch(query)
-  return values.some(
-    (value) => normalizeModelSearch(value).includes(search) || compactModelSearch(value).includes(compactSearch),
+  if (
+    values.some(
+      (value) => normalizeModelSearch(value).includes(search) || compactModelSearch(value).includes(compactSearch),
+    )
   )
+    return true
+
+  // The words may come from different fields, like a provider name and a model name.
+  const haystack = normalizeModelSearch(values.join(" "))
+  return search.split(" ").every((word) => haystack.includes(word))
 }
 
 export function createModelSelectorNavigation<T>(
   groups: () => ReadonlyArray<{ items: readonly T[] }>,
   key: (item: T) => string,
-  manage: string,
+  ...actions: string[]
 ) {
   const items = () => groups().flatMap((group) => group.items)
-  const keys = () => [...items().map(key), manage]
+  const keys = () => [...items().map(key), ...actions]
   return {
     keys,
     find: (active: string) => items().find((item) => key(item) === active),

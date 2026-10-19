@@ -7,7 +7,7 @@ import { useServerSync } from "./server-sync"
 import { useServerSDK } from "./server-sdk"
 import { RECENTLY_CLOSED_DISPLAY_LIMIT, ServerConnection, useServer } from "./server"
 import { usePlatform } from "./platform"
-import { Project } from "@orchestra/sdk/v2"
+import { Project } from "../compat/sdk-v2"
 import { normalizeProjectInfo } from "./global-sync/utils"
 import { Persist, persisted, removePersisted } from "@/utils/persist"
 import { pathKey } from "@/utils/path-key"
@@ -33,19 +33,6 @@ const DEFAULT_SESSION_WIDTH = 600
 const DEFAULT_TERMINAL_HEIGHT = 280
 const DEFAULT_REVIEW_PANEL_OPENED = false
 export type AvatarColorKey = (typeof AVATAR_COLOR_KEYS)[number]
-
-export function getAvatarColors(key?: string) {
-  if (key && AVATAR_COLOR_KEYS.includes(key as AvatarColorKey)) {
-    return {
-      background: `var(--avatar-background-${key})`,
-      foreground: `var(--avatar-text-${key})`,
-    }
-  }
-  return {
-    background: "var(--surface-info-base)",
-    foreground: "var(--text-base)",
-  }
-}
 
 export function getProjectAvatarVariant(key?: string): ProjectAvatarVariant {
   if (key === "mint") return "cyan"

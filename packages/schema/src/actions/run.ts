@@ -7,6 +7,8 @@ export const Run = Schema.Struct({
   bindingID: BindingID,
   workflowID: Schema.NonEmptyString,
   name: Schema.NullOr(Schema.String),
+  title: optional(Schema.String),
+  number: optional(PositiveInt),
   ref: Schema.NullOr(Schema.String),
   commit: Schema.String,
   event: Schema.String,

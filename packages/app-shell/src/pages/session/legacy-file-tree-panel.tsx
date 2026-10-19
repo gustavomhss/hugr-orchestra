@@ -5,7 +5,6 @@ import FileTree, { type Kind } from "@/components/file-tree"
 import { useFile } from "@/context/file"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
-import { useSettings } from "@/context/settings"
 import type { Sizing } from "@/pages/session/helpers"
 
 export const FILE_TREE_WIDTH_MIN = 240
@@ -26,7 +25,6 @@ export function LegacyFileTreePanel(props: {
   openTab: (tab: string) => void
 }) {
   const layout = useLayout()
-  const settings = useSettings()
   const file = useFile()
   const language = useLanguage()
 
@@ -73,19 +71,7 @@ export function LegacyFileTreePanel(props: {
         >
           <Tabs.List>
             <Tabs.Trigger value="changes" class="flex-1" classes={{ button: "w-full" }}>
-              <Show
-                when={settings.general.newLayoutDesigns()}
-                fallback={
-                  <>
-                    {props.reviewCount()}{" "}
-                    {language.t(
-                      props.reviewCount() === 1 ? "session.review.change.one" : "session.review.change.other",
-                    )}
-                  </>
-                }
-              >
-                {language.t("session.review.filesChanged", { count: props.reviewCount() })}
-              </Show>
+              {language.t("session.review.filesChanged", { count: props.reviewCount() })}
             </Tabs.Trigger>
             <Tabs.Trigger value="all" class="flex-1" classes={{ button: "w-full" }}>
               {language.t("session.files.all")}

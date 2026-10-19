@@ -1,8 +1,0 @@
-{"label": "01-dispatch", "session": "ses_ed7a20d47ffeuDOkH6UTQGo008", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T00:30:15Z"}
-{"label": "01-dispatch", "end": "2026-10-11T00:32:11Z"}
-{"label": "02-resume", "session": "ses_ed7a20d47ffeuDOkH6UTQGo008", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T00:32:47Z"}
-{"label": "02-resume", "end": "2026-10-11T00:33:17Z"}
-{"label": "03-interim", "session": "ses_ed7a20d47ffeuDOkH6UTQGo008", "model": "opencode/longcat-2.5-preview-free", "agent": "default", "start": "2026-10-11T00:33:33Z"}
-{"label": "03-interim", "end": "2026-10-11T00:34:33Z"}
-{"label": "04-compact", "session": "ses_ed7a1b007ffeZFcmNx1VflEKqy", "call": "POST /session/ses_ed7a1b007ffeZFcmNx1VflEKqy/summarize", "start": "2026-10-11T00:34:41Z"}
-{"label": "04-compact", "end": "2026-10-11T00:37:15Z"}

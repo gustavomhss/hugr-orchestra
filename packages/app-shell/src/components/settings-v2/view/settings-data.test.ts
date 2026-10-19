@@ -5,16 +5,20 @@ import {
   permissionLock,
   permissionMap,
   permissionWrite,
-  routeModel,
+  SETTINGS_SECTIONS,
   settingsSection,
 } from "./settings-data"
 
 describe("settings sections", () => {
-  test("accepts known sections and falls back to permissions", () => {
+  test("accepts known sections and falls back to general", () => {
     expect(settingsSection("models")).toBe("models")
     expect(settingsSection("servers")).toBe("servers")
-    expect(settingsSection("nope")).toBe("permissions")
-    expect(settingsSection(undefined)).toBe("permissions")
+    expect(settingsSection("nope")).toBe("general")
+    expect(settingsSection(undefined)).toBe("general")
+  })
+
+  test("lists the dialog's tabs first, in the dialog's order", () => {
+    expect(SETTINGS_SECTIONS.slice(0, 5)).toEqual(["general", "shortcuts", "servers", "providers", "models"])
   })
 })
 
@@ -108,25 +112,5 @@ describe("context labels", () => {
     expect(contextLabel(128_500)).toBe("129K")
     expect(contextLabel(0)).toBeUndefined()
     expect(contextLabel(undefined)).toBeUndefined()
-  })
-})
-
-describe("route for new turns", () => {
-  const provider = { id: "openrouter", models: { "gpt-5": {}, "claude-sonnet-4": {} } }
-
-  test("keeps the current model when the provider serves it", () => {
-    expect(
-      routeModel({
-        provider,
-        defaults: { openrouter: "gpt-5" },
-        current: { providerID: "opencode", modelID: "claude-sonnet-4" },
-      }),
-    ).toBe("openrouter/claude-sonnet-4")
-  })
-
-  test("otherwise uses the provider default, then its first model", () => {
-    expect(routeModel({ provider, defaults: { openrouter: "gpt-5" } })).toBe("openrouter/gpt-5")
-    expect(routeModel({ provider, defaults: { openrouter: "missing" } })).toBe("openrouter/gpt-5")
-    expect(routeModel({ provider: { id: "empty", models: {} }, defaults: {} })).toBeUndefined()
   })
 })

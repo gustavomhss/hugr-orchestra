@@ -34,6 +34,14 @@ export function dispatchDefaultRef(state: SelectionState, dialog: DispatchDialog
   return workflow.defaultRef ?? ""
 }
 
+/** Refs this binding already reported for the workflow: its default ref and refs of loaded runs. */
+export function dispatchRefs(state: Pick<State, "binding" | "workflows" | "runs">, workflowID: string) {
+  const workflow = state.workflows.value?.items.find((item) => item.bindingID === state.binding?.id && item.id === workflowID)
+  const runs = (state.runs.value?.items ?? []).filter((run) => run.bindingID === state.binding?.id && run.workflowID === workflowID)
+  return [...new Set([workflow?.defaultRef, ...runs.map((run) => run.ref)])]
+    .filter((ref): ref is string => typeof ref === "string" && ref.trim() !== "")
+}
+
 export function dispatchSelection(state: SelectionState, ref: string): Selection | undefined {
   const dialog = state.dialog
   if (dialog?.kind !== "dispatch" || !state.binding) return

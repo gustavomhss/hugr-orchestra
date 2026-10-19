@@ -20,6 +20,7 @@ import { CredentialHandler } from "./handlers/credential"
 import { ProjectCopyHandler } from "./handlers/project-copy"
 import { RelayDocumentHandler, RelayPublishHandler } from "./handlers/relay-document"
 import { RelayHookHandler } from "./handlers/relay-hook"
+import { RelayRunHandler } from "./handlers/relay-run"
 import { PullRequestHandler } from "./handlers/pull-request"
 import { ScheduleHandler } from "./handlers/schedule"
 import { ResearchArtifactHandler } from "./handlers/research-artifact"
@@ -56,6 +57,7 @@ export const handlers = Layer.mergeAll(
   RelayDocumentHandler,
   RelayPublishHandler,
   RelayHookHandler,
+  RelayRunHandler,
   PullRequestHandler,
   ScheduleHandler,
   ResearchArtifactHandler,

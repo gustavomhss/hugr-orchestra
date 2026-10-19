@@ -51,6 +51,8 @@ export type ScheduleSource = {
   remove: (id: string) => Promise<string | undefined>
   // Resolves with the run's Session, or nothing when it did not start (`error` says why).
   run: (id: string) => Promise<string | undefined>
+  // Reads the list from the server now, for a Retry; a source that keeps its list on this device has no such read.
+  refresh?: () => Promise<void>
 }
 export type DeviceStore = {
   saved: { tasks: ScheduleTask[] }

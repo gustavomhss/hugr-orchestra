@@ -1,5 +1,6 @@
 import { getFilename } from "@orchestra/core/util/path"
 import { useLocation, useNavigate } from "@solidjs/router"
+import { useQuery } from "@tanstack/solid-query"
 import { createEffect, createMemo, Match, on, onCleanup, Switch } from "solid-js"
 import { useGlobal } from "@/context/global"
 import { ServerConnection } from "@/context/server"
@@ -15,7 +16,7 @@ import { Editor } from "./editor"
 import { HookLibrary } from "./hook-library"
 import { createLibraryView, WorkflowLibrary } from "./library"
 import { chapterOf, parseRelayRoute, type RelayRoute } from "./route"
-import { createRelaySource } from "./source"
+import { createRelaySource, relayKey } from "./source"
 import { useRelayCopy } from "./ui"
 import "./relay.css"
 
@@ -41,6 +42,20 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
       )
     return project ? displayName(project) : getFilename(props.directory) || props.directory
   })
+  // A folder outside git resolves to the one "global" project every such folder shares, so a hook or workflow made
+  // there would apply to all of them. The server refuses new ones there; the pages say so before anyone tries.
+  const ctx = global.ensureServerCtx(props.server)
+  const owner = useQuery(
+    () => ({
+      queryKey: relayKey(ctx.sdk.scope, props.directory, "project"),
+      queryFn: () => ctx.sdk.api.project.current({ location: { directory: props.directory } }),
+      retry: false,
+      // A folder gets its own project once it is a repository with a commit, so each visit asks again.
+      refetchOnMount: "always" as const,
+    }),
+    () => ctx.queryClient,
+  )
+  const shared = () => owner.data?.id === "global"
   // Closing a layer goes back when the layer was opened from that view, and replaces the entry otherwise, so
   // Escape never leaves the page and back never reopens a closed layer. `previous` is the entry below the current
   // one: a replace swaps the current entry and leaves the one below alone, so add, pick, then Done still finds the
@@ -62,7 +77,8 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
     return navigate(path, { replace })
   }
   const close = (path: string) => {
-    if (history.previous === path) return window.history.back()
+    // The router's own back: the desktop app runs on a memory history, where window.history.back() does nothing.
+    if (history.previous === path) return navigate(-1)
     go(path, true)
   }
   // Search and filter of the Workflows library outlive its view, so coming back from an editor finds them as left.
@@ -108,6 +124,15 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
             <p class="mx-empty" role="status" data-slot="relay-unsupported">
               {copy.t(props.kind === "workflow" ? "orchestra.workflows.unsupported" : "orchestra.hooks.unsupported")}
             </p>
+            {/* A proxy or a restarting server can answer like a server without Relay; asking again needs no remount. */}
+            <button
+              type="button"
+              class="mx-btn"
+              disabled={source.documents.isFetching}
+              onClick={() => void source.documents.refetch()}
+            >
+              {copy.t("orchestra.workflows.checkAgain")}
+            </button>
           </MxPage>
         </Match>
         <Match when={route().page === "library"}>
@@ -116,12 +141,20 @@ export function RelayChapter(props: ChapterPageProps & { kind: RelayKind }) {
                 source={source}
                 route={library()!}
                 profile={profile()}
+                shared={shared()}
                 view={libraryView}
                 go={go}
                 close={close}
               />
             ) : (
-              <HookLibrary source={source} route={library()!} profile={profile()} go={go} close={close} />
+              <HookLibrary
+                source={source}
+                route={library()!}
+                profile={profile()}
+                shared={shared()}
+                go={go}
+                close={close}
+              />
             )
           }
         </Match>

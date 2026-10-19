@@ -103,6 +103,36 @@ describe("prompt input v2 interaction machine", () => {
     expect(result.handled).toBeTrue()
   })
 
+  test("closes an inline popover with no match on enter and leaves the key to the editor", () => {
+    const state = {
+      ...createPromptInputV2InteractionState(),
+      popover: { type: "command-inline" as const, query: "tmp" },
+    }
+    const result = transitionPromptInputV2(
+      state,
+      { type: "key.down", key: "Enter", ctrl: false, composing: false, ids: [] },
+      persisted("/tmp"),
+    )
+
+    expect(result.state.popover).toEqual({ type: "closed" })
+    expect(result.handled).toBeFalse()
+  })
+
+  test("keeps enter inside the searchable command menu when nothing matches", () => {
+    const state = {
+      ...createPromptInputV2InteractionState(),
+      popover: { type: "command-menu" as const, query: "zzz" },
+    }
+    const result = transitionPromptInputV2(
+      state,
+      { type: "key.down", key: "Enter", ctrl: false, composing: false, ids: [] },
+      persisted("existing text"),
+    )
+
+    expect(result.state.popover.type).toBe("command-menu")
+    expect(result.handled).toBeTrue()
+  })
+
   test("opens the searchable command menu for a populated draft", () => {
     const result = transitionPromptInputV2(
       createPromptInputV2InteractionState(),

@@ -1,4 +1,4 @@
-import type { Session } from "@orchestra/sdk/v2/client"
+import type { Session } from "../compat/sdk-v2-client"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createStore, produce } from "solid-js/store"
 import { Persist, persisted, removePersisted, draftPersistedKeys } from "@/utils/persist"
@@ -245,6 +245,13 @@ export const { use: useTabs, provider: TabsProvider } = createSimpleContext({
         })
         memory.remove(`draft:${draftID}`)
         removeDraftPersisted(draftID)
+      },
+      // Closing a draft deletes its saved prompt, so callers ask first when this is true. A draft that was never
+      // opened in this window has its prompt read from storage first.
+      async draftHasContent(tab: DraftTab) {
+        const prompt = memory.ensure(tabKey(tab), "prompt", () => createDraftPromptSession(tab.draftID))
+        await prompt.ready.promise
+        return prompt.dirty() || prompt.context.items().length > 0
       },
       removeTab,
       // User-initiated close: records the tab so it can be reopened.

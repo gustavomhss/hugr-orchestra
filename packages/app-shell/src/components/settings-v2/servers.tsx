@@ -6,6 +6,7 @@ import { useDialog } from "@orchestra/ui/context/dialog"
 import fuzzysort from "fuzzysort"
 import { type Component, For, Show, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
+import { DialogRemoveServer } from "@/components/server/dialog-remove-server"
 import { ServerRowMenu } from "@/components/server/server-row-menu"
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { useLanguage } from "@/context/language"
@@ -46,6 +47,15 @@ export const SettingsServersV2: Component = () => {
     dialog.push(() => <DialogServerV2 mode="edit" server={server} />)
   }
 
+  // Deleting also drops the saved password and every tab open on the server, so ask first.
+  const confirming = {
+    ...controller,
+    handleRemove: async (key: ServerConnection.Key) => {
+      const name = serverName(controller.sortedItems().find((item) => ServerConnection.key(item) === key)) || key
+      dialog.push(() => <DialogRemoveServer name={name} onConfirm={() => controller.handleRemove(key)} />)
+    },
+  }
+
   return (
     <>
       <div
@@ -77,6 +87,7 @@ export const SettingsServersV2: Component = () => {
                 size="small"
                 class="settings-v2-tab-search-clear"
                 icon={<IconV2 name="close" size="large" class="text-v2-icon-icon-muted" />}
+                aria-label={language.t("common.clear")}
                 onClick={() => setStore("filter", "")}
               />
             </Show>
@@ -97,7 +108,7 @@ export const SettingsServersV2: Component = () => {
           }
         >
           <SettingsListV2>
-            <WslServerSettings controller={controller} servers={wslServers} />
+            <WslServerSettings controller={confirming} servers={wslServers} />
             <For each={filtered()}>
               {(item) => {
                 const key = ServerConnection.key(item)
@@ -125,7 +136,7 @@ export const SettingsServersV2: Component = () => {
                       <Show when={controller.canDefault() && isDefault()}>
                         <Tag>{language.t("dialog.server.status.default")}</Tag>
                       </Show>
-                      <ServerRowMenu server={item} controller={controller} onEdit={openEdit} />
+                      <ServerRowMenu server={item} controller={confirming} onEdit={openEdit} />
                     </div>
                   </div>
                 )

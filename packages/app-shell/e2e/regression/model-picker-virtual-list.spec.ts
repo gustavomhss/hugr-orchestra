@@ -76,10 +76,7 @@ async function openSession(page: Page) {
     eventRetry: 600_000,
   })
   await page.addInitScript(() => {
-    localStorage.setItem(
-      "settings.v3",
-      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-    )
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   const control = page.locator('[data-action="prompt-model"]')
@@ -101,7 +98,9 @@ test("composer model popover renders a bounded window and keeps keyboard selecti
   await expect.poll(() => options.count()).toBeLessThan(60)
   await expectContiguous(options)
 
-  // Up from the selected free model wraps to "Manage models", then to the last model, far outside the window.
+  // Up from the selected free model wraps to "Manage models" and "Connect provider", then to the last model,
+  // far outside the window.
+  await search.press("ArrowUp")
   await search.press("ArrowUp")
   await search.press("ArrowUp")
   await expect(page.locator(`[data-option-key="router:model-${label(total - 1)}"]`)).toBeInViewport()

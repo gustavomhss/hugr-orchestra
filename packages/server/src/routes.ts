@@ -5,6 +5,7 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { Host } from "@orchestra/core/host"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
@@ -23,7 +24,7 @@ import { ServerAuth } from "./auth"
 import { handlers } from "./handlers"
 import { authorizationLayer } from "./middleware/authorization"
 import { schemaErrorLayer } from "./middleware/schema-error"
-import { PtyEnvironment } from "./pty-environment"
+import { PtyEnvironment } from "@orchestra/core/host/pty-environment"
 import { layer as locationLayer } from "./location"
 import { sessionLocationLayer } from "./middleware/session-location"
 
@@ -46,23 +47,41 @@ const applicationServices = LayerNode.group([
   FSUtil.node,
 ])
 
-export function createRoutes(password?: string) {
+export interface Options {
+  readonly password?: string
+  /** Product contributions the application composes (apps/cli `CliHost.contributions`); sdk-next passes none. */
+  readonly host?: ReadonlyArray<Host.Contribution>
+}
+
+export function createRoutes(options: Options = {}) {
   return makeRoutes(
-    password
-      ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(password) })
+    options.password
+      ? ServerAuth.Config.configLayer({ username: "orchestra", password: Option.some(options.password) })
       : ServerAuth.Config.layer,
+    options.host ?? [],
   )
 }
 
-export function createEmbeddedRoutes() {
-  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }))
+export function createEmbeddedRoutes(options: Pick<Options, "host"> = {}) {
+  return makeRoutes(ServerAuth.Config.configLayer({ username: "orchestra", password: Option.none() }), options.host ?? [])
 }
 
-function makeRoutes<AuthError, AuthServices>(auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>) {
-  const serviceLayer = AppNodeBuilder.build(applicationServices, [[SessionExecution.node, SessionExecutionLocal.node]])
+function makeRoutes<AuthError, AuthServices>(
+  auth: Layer.Layer<ServerAuth.Config, AuthError, AuthServices>,
+  host: ReadonlyArray<Host.Contribution>,
+) {
+  const merged = Host.merge(host)
+  // Contributed global nodes add services and may not fail, so the root keeps the application services' types.
+  const serviceLayer: Layer.Layer<LayerNode.Output<typeof applicationServices>, LayerNode.Error<typeof applicationServices>> =
+    AppNodeBuilder.build(
+      LayerNode.group([applicationServices, ...merged.nodes]),
+      [[SessionExecution.node, SessionExecutionLocal.node], ...merged.replacements],
+      merged.locationNodes,
+    )
 
   return HttpApiBuilder.layer(Api, { openapiPath: "/openapi.json" }).pipe(
     Layer.provide(handlers),
+    Layer.provide(merged.references),
     Layer.provide(sessionLocationLayer),
     Layer.provide(locationLayer),
     Layer.provide(authorizationLayer),

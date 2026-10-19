@@ -57,14 +57,15 @@ describe("CatalogV2", () => {
       expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("paid"))
       configured.body = "public"
       yield* catalog.reload()
-      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      expect(yield* catalog.model.available()).toEqual([])
       configured.body = undefined
       configured.settings = "public"
       yield* catalog.reload()
-      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
+      expect(yield* catalog.model.available()).toEqual([])
     }),
   )
-  it.effect("anonymous Zen exposes only explicitly free models and cannot select a paid configured default", () =>
+  // Zen's free tier rejects every client but its own, so a zero-cost model is no reason to offer Zen without a key.
+  it.effect("Zen without a credential exposes no models, not even free ones", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       const integrations = yield* Integration.Service
@@ -94,13 +95,11 @@ describe("CatalogV2", () => {
         })
         draft.model.default.set(ProviderV2.ID.opencode, ModelV2.ID.make("paid"))
       })
-      expect((yield* catalog.provider.available()).map((provider) => provider.id)).toEqual([ProviderV2.ID.opencode])
-      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
-      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("free"))
-      expect((yield* catalog.model.default())?.request.body.apiKey).toBe("public")
-      expect((yield* catalog.provider.get(ProviderV2.ID.opencode))?.request.body.apiKey).toBeUndefined()
+      expect(yield* catalog.provider.available()).toEqual([])
+      expect(yield* catalog.model.available()).toEqual([])
+      expect(yield* catalog.model.default()).toBeUndefined()
       expect(
-        (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("paid")))?.request.body.apiKey,
+        (yield* catalog.model.get(ProviderV2.ID.opencode, ModelV2.ID.make("free")))?.request.body.apiKey,
       ).toBeUndefined()
 
       const credential = yield* credentials.create({
@@ -110,12 +109,12 @@ describe("CatalogV2", () => {
       expect((yield* catalog.model.available()).map((model) => model.id)).toContain(ModelV2.ID.make("paid"))
       expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("paid"))
       yield* credentials.remove(credential.id)
-      expect((yield* catalog.model.available()).map((model) => model.id)).toEqual([ModelV2.ID.make("free")])
-      expect((yield* catalog.model.default())?.id).toBe(ModelV2.ID.make("free"))
+      expect(yield* catalog.model.available()).toEqual([])
+      expect(yield* catalog.model.default()).toBeUndefined()
     }),
   )
 
-  it.effect("anonymous Zen preserves configured request auth, disabled providers and policy", () =>
+  it.effect("configured Zen request auth respects disabled providers and policy", () =>
     Effect.gen(function* () {
       const catalog = yield* Catalog.Service
       const policy = yield* Policy.Service
