@@ -1931,7 +1931,7 @@ export class Atlas extends HeyApiClient {
       target?: string
       scope?: string
       world?: string
-      min?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      min?: number
       exact?: boolean
     },
     options?: Options<never, ThrowOnError>,

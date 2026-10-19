@@ -91,7 +91,7 @@ function EventRow(props: { event: AtlasEvent }) {
       <span class="at-avatar sm">{seatName(props.event.who)[0]}</span>
       <div class="at-event-main">
         <span>
-          {language.t(text().key, text().params)}
+          {language.t(text().key, text().params as Record<string, string | number>)}
           <Show when={props.event.unit && props.event.kind !== "read"}>
             {" "}
             <small>· {props.event.unit}</small>

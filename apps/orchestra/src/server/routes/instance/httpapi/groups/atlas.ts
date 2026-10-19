@@ -78,12 +78,12 @@ export const AtlasOwnSnapshot = Schema.Struct({
   coverage: Schema.NullOr(
     Schema.Struct({ snapshot: Schema.String, sourceRevision: Schema.String, units: Strings }),
   ),
-  skills: Schema.Array(Schema.Struct({ path: Schema.String, size: Schema.Number, head: Schema.String })),
+  skills: Schema.Array(Schema.Struct({ path: Schema.String, size: Schema.Finite, head: Schema.String })),
 }).annotate({ identifier: "AtlasOwnSnapshot" })
 
 export const AtlasMemoryRecord = Schema.Struct({
   eventId: Schema.String,
-  seq: Schema.Number,
+  seq: Schema.Finite,
   member: Schema.String,
   kind: Schema.String,
   text: Schema.String,
@@ -95,7 +95,7 @@ export const AtlasMemoryRecord = Schema.Struct({
 
 export const AtlasOrientationEvent = Schema.Struct({
   eventId: Schema.String,
-  seq: Schema.Number,
+  seq: Schema.Finite,
   channel: Schema.String,
   label: Schema.String,
   supersedes: Strings,
@@ -113,34 +113,34 @@ export const AtlasSnapshot = Schema.Struct({
   project: Schema.String,
   head: Schema.String,
   builtAt: Schema.String,
-  gen: Schema.Number,
-  stagingGen: Schema.Number,
+  gen: Schema.Finite,
+  stagingGen: Schema.Finite,
   identity: Schema.NullOr(Schema.String),
-  casObjects: Schema.Number,
+  casObjects: Schema.Finite,
   policy: Schema.Record(Schema.String, Strings),
   t0Keywords: Strings,
   scip: Schema.Boolean,
   tracked: Schema.Struct({
     projection: Schema.Boolean,
-    cas: Schema.Number,
+    cas: Schema.Finite,
     staging: Schema.Boolean,
     policy: Schema.Boolean,
     memory: Schema.Boolean,
   }),
-  sealed: Schema.Number,
+  sealed: Schema.Finite,
   casAudit: Schema.Struct({
-    objects: Schema.Number,
-    referenced: Schema.Number,
-    missing: Schema.Number,
-    orphan: Schema.Number,
+    objects: Schema.Finite,
+    referenced: Schema.Finite,
+    missing: Schema.Finite,
+    orphan: Schema.Finite,
   }),
   generations: Strings,
-  abstained: Schema.Number,
-  langs: Schema.Record(Schema.String, Schema.Number),
+  abstained: Schema.Finite,
+  langs: Schema.Record(Schema.String, Schema.Finite),
   facts: Schema.Array(AtlasFact),
   candidates: Schema.Array(AtlasFact),
   dependents: Schema.Record(Schema.String, Strings),
-  dependentCount: Schema.Record(Schema.String, Schema.Number),
+  dependentCount: Schema.Record(Schema.String, Schema.Finite),
   children: Schema.Record(Schema.String, Strings),
   own: Schema.NullOr(AtlasOwnSnapshot),
   memory: Schema.Record(Schema.String, Schema.Array(AtlasMemoryRecord)),
@@ -176,7 +176,7 @@ const AtlasPlannedLang = Schema.Struct({
     args: Strings,
     version: Schema.optional(Schema.String),
   }),
-  files: Schema.Number,
+  files: Schema.Finite,
 })
 
 export const AtlasHealth = Schema.Struct({
@@ -186,32 +186,32 @@ export const AtlasHealth = Schema.Struct({
   readRefusal: Schema.NullOr(Schema.String),
   readAdvisory: Schema.NullOr(Schema.String),
   cas: Schema.Struct({
-    objects: Schema.Number,
+    objects: Schema.Finite,
     corrupt: Strings,
     unreadable: Strings,
     missing: Strings,
-    orphan: Schema.Number,
-    referenced: Schema.Number,
+    orphan: Schema.Finite,
+    referenced: Schema.Finite,
     sound: Schema.Boolean,
   }),
   proofs: Schema.Struct({
-    sealedProven: Schema.Number,
-    reProven: Schema.Number,
-    broken: Schema.Number,
-    unverifiable: Schema.Number,
-    dangling: Schema.Number,
+    sealedProven: Schema.Finite,
+    reProven: Schema.Finite,
+    broken: Schema.Finite,
+    unverifiable: Schema.Finite,
+    dangling: Schema.Finite,
   }),
   index: Schema.Struct({
     scipRel: Schema.String,
     scip: Schema.Union([
       Schema.Struct({ kind: Schema.Literal("absent") }),
       Schema.Struct({ kind: Schema.Literal("unreadable"), reason: Schema.String }),
-      Schema.Struct({ kind: Schema.Literal("present"), documents: Schema.Number }),
+      Schema.Struct({ kind: Schema.Literal("present"), documents: Schema.Finite }),
     ]),
     configured: Schema.Array(AtlasPlannedLang),
     holes: Schema.Array(AtlasPlannedLang),
   }),
-  hotSet: Schema.Number,
+  hotSet: Schema.Finite,
 }).annotate({ identifier: "AtlasHealth" })
 
 export const AtlasHealthResult = Schema.Union([AtlasEmpty, AtlasHealth]).annotate({ identifier: "AtlasHealthResult" })
@@ -222,9 +222,9 @@ export const AtlasPromoteResult = Schema.Union([
     state: Schema.Literal("ok"),
     read: Schema.Boolean,
     refusal: Schema.optional(Schema.Literals(["contended", "unreadable", "untrusted"])),
-    candidates: Schema.Number,
-    promoted: Schema.Number,
-    refused: Schema.Number,
+    candidates: Schema.Finite,
+    promoted: Schema.Finite,
+    refused: Schema.Finite,
     rows: Schema.Array(
       Schema.Struct({
         nodeKey: Schema.String,
@@ -348,7 +348,7 @@ export const AtlasVerifyInput = Schema.Struct({
   target: Schema.String,
   scope: Schema.String,
   world: Schema.optional(Schema.String),
-  min: Schema.optional(Schema.Number),
+  min: Schema.optional(Schema.Finite),
   exact: Schema.optional(Schema.Boolean),
 })
 

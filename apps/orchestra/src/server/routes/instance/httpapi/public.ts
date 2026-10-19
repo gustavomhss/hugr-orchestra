@@ -100,7 +100,8 @@ function matchLegacyOpenApi(input: Record<string, unknown>) {
   // legacy shapes while preserving genuine nullable CAS expectations below.
   // Native Lean measurement contracts explicitly retain required null values.
   for (const [name, schema] of Object.entries(spec.components?.schemas ?? {})) {
-    if (RequiredNullableComponents.has(name)) {
+    // The Atlas wire shapes (groups/atlas.ts) are new, not legacy: their Schema.NullOr fields are real nulls.
+    if (RequiredNullableComponents.has(name) || name.startsWith("Atlas")) {
       spec.components!.schemas![name] = structuredClone(schema)
       continue
     }

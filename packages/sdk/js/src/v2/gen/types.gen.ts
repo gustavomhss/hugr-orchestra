@@ -2585,65 +2585,65 @@ export type AtlasFact = {
   scope: string
   derivedAt: string
   subtree: string
-  obvious: string
+  obvious: string | null
   promoted: boolean
-  why: string
-  kind: string
-  authoring: string
-  storedFreshness: string
-  obviousBy: string
+  why: string | null
+  kind: string | null
+  authoring: string | null
+  storedFreshness: string | null
+  obviousBy: string | null
   anchor: {
     kind: string
     qualifiedPath: string
-  }
-  slot: string
-  seal: string
-  supersededBy: string
-  sameAs: Array<string>
+  } | null
+  slot: string | null
+  seal: string | null
+  supersededBy: string | null
+  sameAs: Array<string> | null
   provenance: {
     [key: string]: {
       source: string
       trusted: boolean
-      sha?: string
+      sha?: string | null
     }
-  }
-  drift?: AtlasDrift
+  } | null
+  drift?: AtlasDrift | null
 }
 
 export type AtlasOwnSnapshot = {
   status: "READY" | "HOLD"
-  reason: string
-  snapshot: string
-  sourceRevision: string
+  reason: string | null
+  snapshot: string | null
+  sourceRevision: string | null
   sourcePaths: Array<string>
   units: Array<unknown>
   coverage: {
     snapshot: string
     sourceRevision: string
     units: Array<string>
-  }
+  } | null
   skills: Array<{
     path: string
-    size: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    size: number
     head: string
   }>
 }
 
 export type AtlasMemoryRecord = {
   eventId: string
-  seq: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  seq: number
   member: string
   kind: string
   text: string
-  scope: string
-  at: string
+  scope: string | null
+  at: string | null
   refs: Array<string>
   entry: unknown
 }
 
 export type AtlasOrientationEvent = {
   eventId: string
-  seq: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  seq: number
   channel: string
   label: string
   supersedes: Array<string>
@@ -2661,10 +2661,10 @@ export type AtlasSnapshot = {
   project: string
   head: string
   builtAt: string
-  gen: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-  stagingGen: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-  identity: string
-  casObjects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  gen: number
+  stagingGen: number
+  identity: string | null
+  casObjects: number
   policy: {
     [key: string]: Array<string>
   }
@@ -2672,22 +2672,22 @@ export type AtlasSnapshot = {
   scip: boolean
   tracked: {
     projection: boolean
-    cas: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    cas: number
     staging: boolean
     policy: boolean
     memory: boolean
   }
-  sealed: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  sealed: number
   casAudit: {
-    objects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    referenced: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    missing: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    orphan: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    objects: number
+    referenced: number
+    missing: number
+    orphan: number
   }
   generations: Array<string>
-  abstained: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  abstained: number
   langs: {
-    [key: string]: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    [key: string]: number
   }
   facts: Array<AtlasFact>
   candidates: Array<AtlasFact>
@@ -2695,12 +2695,12 @@ export type AtlasSnapshot = {
     [key: string]: Array<string>
   }
   dependentCount: {
-    [key: string]: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    [key: string]: number
   }
   children: {
     [key: string]: Array<string>
   }
-  own: AtlasOwnSnapshot
+  own: AtlasOwnSnapshot | null
   memory: {
     [key: string]: Array<AtlasMemoryRecord>
   }
@@ -2733,7 +2733,7 @@ export type AtlasOwn = {
   scope: string
   tool: string
   pack: unknown
-  readRefusal: string
+  readRefusal: string | null
 }
 
 export type AtlasOwnResult = AtlasEmpty | AtlasOwn
@@ -2742,23 +2742,23 @@ export type AtlasHealth = {
   state: "ok"
   actor: string
   provenance: "trusted" | "tracked-staging" | "tracked-provable"
-  readRefusal: string
-  readAdvisory: string
+  readRefusal: string | null
+  readAdvisory: string | null
   cas: {
-    objects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    objects: number
     corrupt: Array<string>
     unreadable: Array<string>
     missing: Array<string>
-    orphan: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    referenced: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    orphan: number
+    referenced: number
     sound: boolean
   }
   proofs: {
-    sealedProven: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    reProven: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    broken: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    unverifiable: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-    dangling: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    sealedProven: number
+    reProven: number
+    broken: number
+    unverifiable: number
+    dangling: number
   }
   index: {
     scipRel: string
@@ -2772,28 +2772,28 @@ export type AtlasHealth = {
         }
       | {
           kind: "present"
-          documents: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+          documents: number
         }
     configured: Array<{
       plan: {
         lang: string
         tool: string
         args: Array<string>
-        version?: string
+        version?: string | null
       }
-      files: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      files: number
     }>
     holes: Array<{
       plan: {
         lang: string
         tool: string
         args: Array<string>
-        version?: string
+        version?: string | null
       }
-      files: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+      files: number
     }>
   }
-  hotSet: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  hotSet: number
 }
 
 export type AtlasHealthResult = AtlasEmpty | AtlasHealth
@@ -2801,15 +2801,15 @@ export type AtlasHealthResult = AtlasEmpty | AtlasHealth
 export type AtlasPromote = {
   state: "ok"
   read: boolean
-  refusal?: "contended" | "unreadable" | "untrusted"
-  candidates: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-  promoted: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
-  refused: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  refusal?: "contended" | "unreadable" | "untrusted" | null
+  candidates: number
+  promoted: number
+  refused: number
   rows: Array<{
     nodeKey: string
     settled: boolean
-    id?: string
-    rejected?: string
+    id?: string | null
+    rejected?: string | null
   }>
 }
 
@@ -2818,7 +2818,7 @@ export type AtlasPromoteResult = AtlasEmpty | AtlasPromote
 export type AtlasDraft = {
   state: "ok"
   ok: boolean
-  rejected?: string
+  rejected?: string | null
   guidance: {
     next: string
     invariant: string
@@ -2829,18 +2829,18 @@ export type AtlasDraft = {
       rev: string
       operation: "CREATE" | "UPDATE"
       route: "auto-accept" | "full-ratify"
-      requires?: string
+      requires?: string | null
     }
     check: {
       wouldEmit: boolean
       gates: Array<{
         gate: "shape" | "truth" | "authz" | "ratify"
         pass: boolean
-        reason?: string
-        remedy?: string
+        reason?: string | null
+        remedy?: string | null
       }>
-    }
-  }
+    } | null
+  } | null
 }
 
 export type AtlasDraftResult = AtlasEmpty | AtlasDraft
@@ -2848,17 +2848,17 @@ export type AtlasDraftResult = AtlasEmpty | AtlasDraft
 export type AtlasEmit = {
   state: "ok"
   ok: boolean
-  rejected?: string
+  rejected?: string | null
   guidance: {
     next: string
     invariant: string
   }
   data?: {
     emitted: boolean
-    id?: string
-    nodeKey?: string
-    rejected?: string
-  }
+    id?: string | null
+    nodeKey?: string | null
+    rejected?: string | null
+  } | null
 }
 
 export type AtlasEmitResult = AtlasEmpty | AtlasEmit
@@ -2866,18 +2866,18 @@ export type AtlasEmitResult = AtlasEmpty | AtlasEmit
 export type AtlasLink = {
   state: "ok"
   ok: boolean
-  rejected?: string
+  rejected?: string | null
   guidance: {
     next: string
     invariant: string
   }
   data?: {
     linked: boolean
-    rejected?: string
-    a?: string
-    b?: string
-    retracted?: boolean
-  }
+    rejected?: string | null
+    a?: string | null
+    b?: string | null
+    retracted?: boolean | null
+  } | null
 }
 
 export type AtlasLinkResult = AtlasEmpty | AtlasLink
@@ -2885,7 +2885,7 @@ export type AtlasLinkResult = AtlasEmpty | AtlasLink
 export type AtlasVerify = {
   state: "ok"
   ok: boolean
-  rejected?: string
+  rejected?: string | null
   guidance: {
     next: string
     invariant: string
@@ -2893,11 +2893,11 @@ export type AtlasVerify = {
   data?: {
     kind: "dependency" | "count" | "definition" | "negation"
     verdict: "proven" | "refuted" | "abstain"
-    reason?: string
+    reason?: string | null
     oracle: string
     target: string
     scope: string
-  }
+  } | null
 }
 
 export type AtlasVerifyResult = AtlasEmpty | AtlasVerify
@@ -4658,9 +4658,9 @@ export type RelayAuthoringSkillBinding = {
   content: string
 }
 
-export type AtlasKnowledgeReference = string
+export type AtlasKnowledgeReference = unknown & unknown & unknown
 
-export type AtlasKnowledgeUnitId = string
+export type AtlasKnowledgeUnitId = unknown & unknown & unknown
 
 export type AtlasKnowledgeTarget = {
   kind: "assignment" | "work-package"
@@ -4669,9 +4669,9 @@ export type AtlasKnowledgeTarget = {
 
 export type AtlasKnowledgeUnit = {
   unit: AtlasKnowledgeUnitId
-  name: string
+  name: unknown
   sourceIdentity: AtlasKnowledgeReference
-  sourceRevision: string
+  sourceRevision: unknown
   contentHash: AtlasKnowledgeReference
   receiptHash: AtlasKnowledgeReference
   bodyHash: AtlasKnowledgeReference
@@ -4681,12 +4681,12 @@ export type AtlasKnowledgeUnit = {
 export type AtlasKnowledgeAnchor = {
   reference: AtlasKnowledgeReference
   projectID: string
-  authorSessionID: string
-  assistantMessageID: string
-  callID: string
+  authorSessionID: unknown
+  assistantMessageID: unknown
+  callID: unknown
   memberID: "archie"
   target: AtlasKnowledgeTarget
-  units: Array<AtlasKnowledgeUnit>
+  units: unknown & unknown
 }
 
 export type RelayArmWorkflowDefinition = {
@@ -11949,7 +11949,7 @@ export type AtlasVerifyData = {
     target: string
     scope: string
     world?: string
-    min?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    min?: number
     exact?: boolean
   }
   path?: never
