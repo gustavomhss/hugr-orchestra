@@ -1,5 +1,6 @@
 import { For, Show } from "solid-js"
 import { useLanguage } from "@/context/language"
+import { isAtlasEmpty } from "../atlas-api"
 import { useAtlas } from "../atlas-context"
 import type { AtlasMemoryRule, AtlasModel } from "../atlas-model"
 import { atlasHref } from "../atlas-route"
@@ -27,6 +28,17 @@ export function ProjectMemory(props: MemoryMemberProps) {
   const pm = () => projectMemory(props.model, props.member, props.dismissed)
   const tab = () => props.route.query.pm ?? (pm().indexed.length ? "indexed" : "proposals")
   const tokens = (n: number) => language.plural("orchestra.atlas.memory.tokens", n, { n: num(n) })
+  // R1 (D18, D30): the rules this member proposed wait in the review log until a person indexes or discards them.
+  const proposed = () =>
+    (atlas.controller.state.review?.memoryProposals ?? []).filter((proposal) => proposal.member === props.member)
+  const busy = () => atlas.controller.state.pending.includes("memoryDecide")
+  const discard = async (proposalId: string) => {
+    const result = await atlas.controller.memoryDecide({ proposalId, verdict: "discarded" })
+    if (!result || isAtlasEmpty(result)) return
+    if (!result.ok)
+      return atlas.toast(language.t("orchestra.atlas.memory.refused", { reason: result.rejected ?? "unknown" }), "xc")
+    atlas.toast(language.t("orchestra.atlas.memory.discarded"), "minusc")
+  }
   return (
     <>
       <div class="at-acc-tools">
@@ -38,7 +50,7 @@ export function ProjectMemory(props: MemoryMemberProps) {
             onClick={() => atlas.setQuery({ pm: "proposals" })}
           >
             {language.t("orchestra.atlas.memory.tab.proposals")}
-            <span class="wf-count">{num(pm().proposals.length)}</span>
+            <span class="wf-count">{num(pm().proposals.length + proposed().length)}</span>
           </button>
           <button type="button" role="tab" aria-selected={tab() === "indexed"} onClick={() => atlas.setQuery({ pm: "indexed" })}>
             {language.t("orchestra.atlas.memory.tab.indexed")}
@@ -52,7 +64,8 @@ export function ProjectMemory(props: MemoryMemberProps) {
             label={language.t("orchestra.atlas.memory.addRule")}
             icon="plus"
             cap="R1"
-            onClick={() => openAtlasSheet({ kind: "rule", member: props.member, lesson: "", unit: "" })}
+            disabled
+            tip={language.t("orchestra.atlas.memory.addRule.later")}
           />
         </Show>
       </div>
@@ -60,12 +73,48 @@ export function ProjectMemory(props: MemoryMemberProps) {
         when={tab() === "indexed"}
         fallback={
           <Show
-            when={pm().proposals.length}
+            when={pm().proposals.length + proposed().length}
             fallback={
               <div class="at-band-empty">{language.t("orchestra.atlas.memory.proposals.empty", { name: name() })}</div>
             }
           >
             <p class="at-stew-intro">{language.t("orchestra.atlas.memory.proposals.intro", { name: name() })}</p>
+            <For each={proposed()}>
+              {(proposal) => (
+                <div class="at-rule-row">
+                  <span class="rank">
+                    <Icon name="sparkle" />
+                  </span>
+                  <div class="grow">
+                    <div>{proposal.rule}</div>
+                    <small>
+                      <code data-tip={language.t("orchestra.atlas.memory.scope.tip")}>[{proposal.scope}]</code>
+                      {" · "}
+                      {language.t("orchestra.atlas.memory.proposal.by", { by: proposal.by })}
+                    </small>
+                  </div>
+                  <Btn
+                    label={language.t("orchestra.atlas.memory.discard")}
+                    disabled={busy()}
+                    onClick={() => void discard(proposal.id)}
+                  />
+                  <Btn
+                    label={language.t("orchestra.atlas.memory.index")}
+                    primary
+                    disabled={busy()}
+                    onClick={() =>
+                      openAtlasSheet({
+                        kind: "rule",
+                        member: props.member,
+                        proposalId: proposal.id,
+                        rule: proposal.rule,
+                        scope: proposal.scope,
+                      })
+                    }
+                  />
+                </div>
+              )}
+            </For>
             <For each={pm().proposals}>
               {(proposal) => (
                 <div class="at-rule-row">
@@ -92,9 +141,8 @@ export function ProjectMemory(props: MemoryMemberProps) {
                     label={language.t("orchestra.atlas.memory.index")}
                     primary
                     cap="R1"
-                    onClick={() =>
-                      openAtlasSheet({ kind: "rule", member: props.member, lesson: proposal.lesson, unit: proposal.unit })
-                    }
+                    disabled
+                    tip={language.t("orchestra.atlas.memory.lesson.later", { name: name() })}
                   />
                 </div>
               )}

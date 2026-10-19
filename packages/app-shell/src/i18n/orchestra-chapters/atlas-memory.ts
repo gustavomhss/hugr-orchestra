@@ -92,7 +92,7 @@ export const ATLAS_MEMORY_COPY = {
   "orchestra.atlas.memory.tab.proposals": "Proposals",
   "orchestra.atlas.memory.tab.indexed": "Indexed",
   "orchestra.atlas.memory.project.r1":
-    "Today {{name}} writes its own rules while working and Atlas admits them at once. Proposals and indexing by a person are new (R1).",
+    "{{name}} proposes rules while working; a person indexes or discards each one here. Only indexed rules reach its header.",
   "orchestra.atlas.memory.addRule": "Add rule",
   "orchestra.atlas.memory.shared": "{{n}} more in the shared header lines",
   "orchestra.atlas.memory.shared.help": "Atlas counts a token as one whitespace-separated word.",
@@ -127,10 +127,18 @@ export const ATLAS_MEMORY_COPY = {
   "orchestra.atlas.memory.tech.unavailable.text":
     '<atlas-header member="{{member}}" degraded="unavailable">Degraded: Atlas memory is unavailable (…); no project rules are loaded.</atlas-header>',
   "orchestra.atlas.memory.tech.blocker": "{{name}} is told to return an atlas blocker if the packet alone isn't enough.",
-  "orchestra.atlas.memory.proposals.intro": "Lessons from {{name}}'s checkpoints. Index one to carry it into every request.",
+  "orchestra.atlas.memory.proposals.intro": "Rules {{name}} proposed, then lessons from its checkpoints. Index one to carry it into every request.",
   "orchestra.atlas.memory.proposal.from": "{{tokens}} · from",
   "orchestra.atlas.memory.dismiss": "Dismiss",
   "orchestra.atlas.memory.dismissed": "Dismissed.",
   "orchestra.atlas.memory.index": "Index…",
-  "orchestra.atlas.memory.proposals.empty": "No proposals. New lessons from {{name}}'s tasks will show up here.",
+  "orchestra.atlas.memory.proposals.empty": "No proposals. Rules {{name}} proposes and lessons from its tasks show up here.",
+  "orchestra.atlas.memory.proposal.by": "proposed by {{by}}",
+  "orchestra.atlas.memory.discard": "Discard",
+  "orchestra.atlas.memory.discarded": "Discarded. The rule was not indexed.",
+  "orchestra.atlas.memory.refused": "Refused: {{reason}}",
+  "orchestra.atlas.memory.addRule.later":
+    "A rule of your own needs a propose step the screen does not have yet (R1). Ask the member to propose it.",
+  "orchestra.atlas.memory.lesson.later":
+    "Indexing a lesson needs a propose step the screen does not have yet (R1). Ask {{name}} to propose it as a rule, or dismiss it.",
 }

@@ -194,6 +194,8 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   await expect(page).toHaveURL(/\/orchestra\/atlas\/memory\/backend$/)
   await expect(main.locator("h1")).toHaveText("Backend")
   await expect(main).toContainText("Memory on")
+  await expect(main).toContainText("Always run the guard before a merge.")
+  await expect(main).toContainText("proposed by backend")
   await rail.getByRole("link", { name: /Maestro/ }).click()
   await expect(main).toContainText("Not bound yet")
 

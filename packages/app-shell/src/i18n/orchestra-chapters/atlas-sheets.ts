@@ -215,11 +215,12 @@ export const ATLAS_SHEETS_COPY = {
   "orchestra.atlas.sheets.rule.rule": "Rule",
   "orchestra.atlas.sheets.rule.scope": "Applies to",
   "orchestra.atlas.sheets.rule.scope.placeholder": "a path, a tool or a phase · * for everywhere",
-  "orchestra.atlas.sheets.rule.scope.default": "tasks with phased packets",
+
   "orchestra.atlas.sheets.rule.note":
     "Scanned for secrets, then saved for good: memory is append-only, so a rule can't be removed later. Where it applies is shown to {{name}}; it doesn't filter.",
   "orchestra.atlas.sheets.rule.confirm": "Index",
-  "orchestra.atlas.sheets.rule.newcap": "Indexing is a new capability (R1).",
+  "orchestra.atlas.sheets.rule.done": "Indexed. {{name}} gets it with every request.",
+  "orchestra.atlas.sheets.rule.refused": "Refused: {{reason}}",
   "orchestra.atlas.sheets.territory.title": "Declare territory",
   "orchestra.atlas.sheets.territory.text": "Gives a group of units an owner and a tier.",
   "orchestra.atlas.sheets.territory.name": "Name",

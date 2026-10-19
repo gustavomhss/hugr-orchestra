@@ -19,7 +19,7 @@ export type AtlasSheet =
   | { kind: "hotset" }
   | { kind: "republish" }
   | { kind: "respawn"; member: AtlasMemberId; unit: string }
-  | { kind: "rule"; member: AtlasMemberId; lesson: string; unit: string }
+  | { kind: "rule"; member: AtlasMemberId; proposalId: string; rule: string; scope: string }
   | { kind: "territory"; unit: string }
 export type AtlasSheetKind = AtlasSheet["kind"]
 export type AtlasSheetProps<K extends AtlasSheetKind> = { sheet: Extract<AtlasSheet, { kind: K }>; onClose: () => void }

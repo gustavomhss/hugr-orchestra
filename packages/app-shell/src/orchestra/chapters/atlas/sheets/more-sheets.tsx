@@ -12,8 +12,8 @@ import { Rich } from "../kit/text"
 import { WritingAs } from "./parts"
 import type { AtlasSheetProps } from "./state"
 
-// Check a claim, the hot set budget, Declare territory (R4) and the three sheets whose action is a new capability
-// (R7, R5, R1) (specs/atlas-ui/mock/app.js:249-263, :279-293, :310-313, :429-447, :491-519).
+// Check a claim, the hot set budget, Declare territory (R4), Index a proposed rule (R1) and the two sheets whose
+// action is a new capability (R7, R5) (specs/atlas-ui/mock/app.js:249-263, :279-293, :310-313, :429-447, :491-519).
 
 type ResultRow = { tone: string; icon: AtlasIconName; text: string }
 
@@ -417,13 +417,26 @@ export function TerritorySheet(props: AtlasSheetProps<"territory">) {
   )
 }
 
+// Index a member's proposed rule (D30): the person may edit the text first; an unchanged field is not sent, so the
+// proposal's own text is indexed.
 export function RuleSheet(props: AtlasSheetProps<"rule">) {
   const atlas = useAtlas()
   const language = useLanguage()
-  const [form, setForm] = createStore({
-    rule: props.sheet.lesson,
-    scope: props.sheet.lesson ? language.t("orchestra.atlas.sheets.rule.scope.default") : "",
-  })
+  const [form, setForm] = createStore({ rule: props.sheet.rule, scope: props.sheet.scope, refused: "" })
+  const index = async () => {
+    const rule = form.rule.trim()
+    const scope = form.scope.trim()
+    const result = await atlas.controller.memoryDecide({
+      proposalId: props.sheet.proposalId,
+      verdict: "indexed",
+      rule: rule === props.sheet.rule ? undefined : rule,
+      scope: scope === props.sheet.scope ? undefined : scope,
+    })
+    if (!result || isAtlasEmpty(result)) return
+    if (!result.ok) return setForm("refused", result.rejected ?? "unknown")
+    props.onClose()
+    atlas.toast(language.t("orchestra.atlas.sheets.rule.done", { name: seatName(props.sheet.member) }), "checkc")
+  }
   return (
     <AtDialog
       title={language.t("orchestra.atlas.sheets.rule.title")}
@@ -431,13 +444,10 @@ export function RuleSheet(props: AtlasSheetProps<"rule">) {
       onClose={props.onClose}
       footer={
         <AtDialogFoot
-          note={<NewCap id="R1" />}
           label={language.t("orchestra.atlas.sheets.rule.confirm")}
+          disabled={!form.rule.trim() || atlas.controller.state.pending.includes("memoryDecide")}
           onCancel={props.onClose}
-          onConfirm={() => {
-            props.onClose()
-            atlas.toast(language.t("orchestra.atlas.sheets.rule.newcap"), "info")
-          }}
+          onConfirm={() => void index()}
         />
       }
     >
@@ -454,6 +464,12 @@ export function RuleSheet(props: AtlasSheetProps<"rule">) {
         />
       </label>
       <p class="mx-note">{language.t("orchestra.atlas.sheets.rule.note", { name: seatName(props.sheet.member) })}</p>
+      <Show when={form.refused}>
+        <div class="ins-note">
+          <Icon name="xc" />
+          <span>{language.t("orchestra.atlas.sheets.rule.refused", { reason: form.refused })}</span>
+        </div>
+      </Show>
     </AtDialog>
   )
 }
