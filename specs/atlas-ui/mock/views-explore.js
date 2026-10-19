@@ -48,14 +48,8 @@
     const staged = R().candidates.length + M().facts.length
     return {
       crumbs: [["Atlas"]],
-      after: () => {
-        const host = document.querySelector("#home-graph")
-        if (!host) return
-        const panel = document.querySelector("#home-pick")
-        mountUnitGraph(host, { id: "home", onSelect: (id) => (panel.innerHTML = id ? pick(id) : pickEmpty) })
-      },
       html: `<div class="at-page wide at-home">
-      <section class="at-hero">
+      <section class="at-hero solo">
         <div class="at-hero-text">
           <div class="mx-eyebrow">Atlas · project atlas ${need ? `<a class="at-needs" href="#/review">${A.num(need)} need you</a>` : ""}</div>
           <h1>Atlas knows <em>${A.num(s.facts)} things</em> about this code.</h1>
@@ -63,11 +57,6 @@
           <p class="at-hero-git">${A.icon("branch")} Versioned in git with the code: it changes in pull requests and comes back on any clone. <a class="mx-link" href="#/overview" onclick="event.preventDefault();document.getElementById('travel').scrollIntoView({behavior:'smooth'})">How</a></p>
           ${trusted ? "" : `<p class="at-hero-warn">${A.icon("lock")} This store is in git, so agents get none of it yet. <a class="mx-link" href="#/overview?show=health">Why</a></p>`}
           <div class="at-hero-actions">${A.btn("Explore the map", "go", { value: "#/explore", primary: true, icon: "graph" })}${A.btn("How Atlas learns", "go", { value: "#/genesis", icon: "sparkle" })}${A.btn("Follow one fact", "go", { value: "#/how", icon: "fact" })}</div>
-        </div>
-        <div class="at-hero-graph">
-          <div class="at-graph-host" id="home-graph"></div>
-          <div class="at-graph-legend"><span><i class="lg good"></i>holds</span><span><i class="lg warm"></i>code moved</span><span><i class="lg edge"></i>depends on</span><span class="grow"></span><span class="at-hint">Click a unit to see what depends on it</span></div>
-          <div class="at-graph-pick" id="home-pick">${pickEmpty}</div>
         </div>
       </section>
       <section class="at-stories">

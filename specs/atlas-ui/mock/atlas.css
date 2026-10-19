@@ -1369,3 +1369,5 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-travel .mx-note { padding: 0 16px 14px; }
 @media (max-width: 760px) { .at-travel-flow, .at-travel-steps { grid-template-columns: 1fr; } }
 .at-hero-git { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mx-dim); }
+.at-hero.solo { grid-template-columns: 1fr; }
+.at-hero.solo .at-hero-text p { max-inline-size: 72ch; }
