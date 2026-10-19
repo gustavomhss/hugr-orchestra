@@ -26,7 +26,7 @@ import {
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
-import { executionStatus } from "./server-event-native"
+import { executionStatus, sessionUsage } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
 import type { ServerApi } from "@/utils/server"
@@ -906,8 +906,8 @@ export function createServerSession(
         path: event.data.subpath,
         time: { ...info.time, updated: event.created },
       })
-    if (event.type === "session.usage.updated" && info)
-      remember({ ...info, cost: event.data.cost, tokens: event.data.tokens })
+    const usage = info && sessionUsage(info, event)
+    if (usage) remember(usage)
     // if (event.type === "session.archived") {
     //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
     //   evict([sessionID])

@@ -43,6 +43,11 @@ function setup(
       if (request.method === "GET" && new URL(request.url).pathname === "/vcs")
         return Response.json(responses?.vcs ?? {})
       if (new URL(request.url).pathname === "/api/project/current") return new Response("not found", { status: 404 })
+      if (new URL(request.url).pathname === "/api/mcp/resource")
+        return Response.json({
+          location: { directory: "/repo", project: { id: "prj_1", directory: "/repo" } },
+          data: { resources: [{ server: "x", name: "notes", uri: "notes://today" }], templates: [] },
+        })
       if (new URL(request.url).pathname === "/api/location")
         return Response.json({ directory: "/repo", project: { id: "prj_1", directory: "/repo" } })
       if (request.method === "GET") return Response.json([])
@@ -61,13 +66,16 @@ function setup(
 }
 
 describe("createCompatibleApi", () => {
-  test("sends MCP server calls to the V2 server and answers the resource catalog locally", async () => {
+  test("sends MCP server and resource catalog calls to the V2 server", async () => {
     const { api, requests } = setup("v2")
 
     await api.mcp.connect({ server: "x", location: { directory: "/repo" } })
-    expect((await api.mcp.resource.catalog({ location: { directory: "/repo" } })).data.resources).toEqual([])
+    expect((await api.mcp.resource.catalog({ location: { directory: "/repo" } })).data.resources).toEqual([
+      { server: "x", name: "notes", uri: "notes://today" },
+    ])
     expect(requests.map((request) => new URL(request.url).pathname).filter((path) => path.includes("mcp"))).toEqual([
       "/api/mcp/x/connect",
+      "/api/mcp/resource",
     ])
   })
 

@@ -125,6 +125,7 @@ export function createNativeEventAdapter() {
         return translated("session.reasoning.started", {
           ...step,
           ordinal: ordinal(data, "reasoning", data.reasoningID),
+          state: data.providerMetadata,
         })
       case "session.next.reasoning.delta":
         return translated("session.reasoning.delta", {
@@ -137,6 +138,7 @@ export function createNativeEventAdapter() {
           ...step,
           ordinal: ordinal(data, "reasoning", data.reasoningID),
           text: data.text,
+          state: data.providerMetadata,
         })
       case "session.next.tool.input.started":
         return translated("session.tool.input.started", { ...tool, name: data.name })
@@ -216,4 +218,30 @@ export function executionStatus(event: ServerCurrentEvent) {
     (event.type === "session.step.ended" && event.data.finish !== "tool-calls")
   )
     return "idle" as const
+}
+
+type Usage = {
+  cost?: number
+  tokens?: { input: number; output: number; reasoning: number; cache: { read: number; write: number } }
+}
+
+/**
+ * A session's usage totals after an event: `session.usage.updated` carries them; the V2 server sends none, so each
+ * settled step adds its own, as the server's projection does. Undefined for any other event.
+ */
+export function sessionUsage<Info extends Usage>(info: Info, event: ServerCurrentEvent): Info | undefined {
+  if (event.type === "session.usage.updated") return { ...info, cost: event.data.cost, tokens: event.data.tokens }
+  if (event.type !== "session.step.ended") return
+  const step = event.data.tokens
+  const tokens = info.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }
+  return {
+    ...info,
+    cost: (info.cost ?? 0) + event.data.cost,
+    tokens: {
+      input: tokens.input + step.input,
+      output: tokens.output + step.output,
+      reasoning: tokens.reasoning + step.reasoning,
+      cache: { read: tokens.cache.read + step.cache.read, write: tokens.cache.write + step.cache.write },
+    },
+  }
 }
