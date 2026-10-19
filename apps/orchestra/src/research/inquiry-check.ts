@@ -53,6 +53,8 @@ export type Input = {
   readonly liveness: (urls: readonly string[]) => Effect.Effect<readonly Research.CheckResult["urls"][number][]>
   /** Real path of a citation target, so symlinks resolve like the read tool records them. */
   readonly real?: (target: string) => Effect.Effect<string>
+  /** The dispatch's tier. At quick, universal wording alone is a limitation on the card, not a failure. */
+  readonly tier?: Research.Depth
 }
 export type Outcome = {
   readonly result: Research.CheckResult
@@ -78,6 +80,7 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
   const count = (rule: Rule, by = 1) => checked.set(rule, checked.get(rule)! + by)
   const fail = (rule: Rule, reason: string, extra?: Partial<Issue>) => { issues.push({ rule, reason, ...extra }) }
   const strict = (input.sufficiency ?? "answered") === "answered"
+  const limitations: string[] = []
 
   const receipts = new Map(input.sources.map((receipt) => [ResearchLedger.canonical(receipt.ref), receipt]))
   const texts = new Map<string, { ok: true; text: string } | { ok: false; code: string }>()
@@ -211,7 +214,9 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     const searched = input.searches.some((search) => search.complete && search.scope.some((entry) => entry.trim() !== "" &&
       (claim.conditions.some((condition) => condition.includes(entry)) || terms(entry).some((term) => names(claim.proposition, term)))))
     // The reason names the trigger and every way out, so the seat fixes the claim in one try.
-    if (universal && !searched) fail("R5", `${word ? `universal wording "${word}"` : "universal scope"} without a complete code_search or code_query whose pattern or path the claim names; name one, declare scope existential, or reword`, at)
+    if (universal && !searched && word && input.tier === "quick")
+      limitations.push(`R5 ${claim.ref.id}: universal wording "${word}" not backed by a complete search`)
+    else if (universal && !searched) fail("R5", `${word ? `universal wording "${word}"` : "universal scope"} without a complete code_search or code_query whose pattern or path the claim names; name one, declare scope existential, or reword`, at)
     if (absence && !searched) fail("R6", "absence claim without a complete code_search or code_query whose scope is in its conditions", at)
     return primary && good.length > 0
   }))
@@ -267,7 +272,6 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
   // R10, R11: every cited URL and every captured URL source is alive and allowed.
   const urls = [...new Set([...citations.filter((citation) => citation.kind === "url").map((citation) => citation.target), ...urlSources.map((receipt) => receipt.origin.uri)])]
   const statuses = yield* input.liveness(urls)
-  const limitations: string[] = []
   statuses.forEach((status) => {
     count("R10")
     count("R11")

@@ -52,7 +52,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
       // the Session's code searches for R5/R6, URL liveness, and real paths so a symlinked citation resolves like read.
       const deps = Effect.gen(function* () {
         const messages = yield* MessageV2.stream(ctx.sessionID).pipe(Effect.provideService(Database.Service, database), Effect.orElseSucceed(() => []))
-        return { records, binding, domains: yield* AllowedDomains, searches: ResearchInquiry.searches(messages), links: yield* Links,
+        return { records, binding, domains: yield* AllowedDomains, searches: ResearchInquiry.searches(messages), links: yield* Links, tier: allowance.tier,
           ...(Option.isSome(fs) ? { real: (target: string) => fs.value.resolve(target).pipe(Effect.catchDefect(() => Effect.succeed(target))) } : {}) }
       })
       const subquestion = (ref: Research.RecordRef) => {

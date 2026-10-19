@@ -126,6 +126,7 @@ export type Deps = {
   readonly searches: readonly InquiryCheck.Search[]
   readonly links: (urls: readonly string[], options: Liveness.Options) => Effect.Effect<readonly Liveness.Result[]>
   readonly real?: (target: string) => Effect.Effect<string>
+  readonly tier?: Research.Depth
 }
 
 /**
@@ -174,6 +175,7 @@ export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
     liveness: (urls) => urls.length ? deps.links(urls.slice(0, 256), { seen, captured }).pipe(Effect.map((list) => list.map((item) =>
       ({ url: item.url, status: item.status, ...(item.httpStatus !== undefined ? { httpStatus: item.httpStatus } : {}) })))) : Effect.succeed([]),
     ...(deps.real ? { real: deps.real } : {}),
+    ...(deps.tier ? { tier: deps.tier } : {}),
   })
 })
 

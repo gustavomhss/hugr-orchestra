@@ -161,6 +161,16 @@ describe("InquiryCheck.run", () => {
     expect(rule(declared, "R5")).toMatchObject({ checked: 0, failed: 0 })
   })
 
+  // Mutation control: drop the `input.tier === "quick"` branch of R5 in src/research/inquiry-check.ts; the quick claim fails.
+  test("R5 at tier quick turns undeclared universal wording into a card limitation; a declared universal still fails", async () => {
+    const worded = claim([lines(file.ref, 1, 2)], { proposition: "snapshot lists only the last 12 sources" })
+    const quick = await run(base({ tier: "quick", claims: [worded] }))
+    expect(quick.result.verdict).toBe("pass")
+    expect(quick.limitations).toEqual(['R5 c1: universal wording "only" not backed by a complete search'])
+    expect(rule(await run(base({ tier: "focused", claims: [worded] })), "R5").failed).toBe(1)
+    expect(rule(await run(base({ tier: "quick", claims: [{ ...worded, scope: "universal" }] })), "R5").failed).toBe(1)
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))
