@@ -248,11 +248,12 @@ test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop
   await until(() => fetch(`${owned.url}/api/health`, { headers: auth }).then((r) => r.ok, () => false))
 
   await owned.listener.stop()
+  const exits = events.filter((event) => event.message === "owned serve exited").map((event) => event.meta)
+  expect(exits[0]).toEqual({ code: 3, signal: null, stopping: false })
+  // Windows has no SIGTERM handler to run: the stop terminates the process, so only the stopping exit is observable.
+  if (process.platform === "win32") return expect(exits[1]?.stopping).toBe(true)
   await until(() => lines.includes("sigterm"))
-  expect(events.filter((event) => event.message === "owned serve exited").map((event) => event.meta)).toEqual([
-    { code: 3, signal: null, stopping: false },
-    { code: 0, signal: null, stopping: true },
-  ])
+  expect(exits[1]).toEqual({ code: 0, signal: null, stopping: true })
 }, 30_000)
 
 async function until(check: () => boolean | Promise<boolean>) {
