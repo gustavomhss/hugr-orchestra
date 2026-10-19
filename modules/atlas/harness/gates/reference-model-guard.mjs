@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 42 · dead-value-exports: 146 · type-reachable: 4
+//   declared-modules: 41 · dead-value-exports: 144 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,10 +137,6 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
-  // R4 (B-R4-01a): `territory-write.ts` lands one task before its runner. B-R4-01b (the `atlas territory` runner in
-  // cli/src/territory-cli.ts) gives it a production caller and DELETES this row (declared-modules −1,
-  // dead-value-exports −2). The same task moved `retrieval/src/host-context.ts` dead → live (its row is gone).
-  "packages/adapter-io/src/territory-write.ts": { values: 2, shipped: null, banner: false },
   // D14 (B-L02): the review log lands one task before its first reader. B-R2-01b (the promote dispatch reads the held
   // set) gives it a production caller and DELETES this row (declared-modules −1, dead-value-exports −4).
   "packages/adapter-io/src/review-log.ts": { values: 4, shipped: null, banner: false },
