@@ -133,10 +133,7 @@ export function ProviderList(props: {
   // directory config, which also reveals a project-level `model` that shadows the server-wide write.
   const route = createMemo(() => {
     if (state.route !== undefined) return state.route
-    const preferred =
-      protocol() === "v2"
-        ? v2Data()?.preferred
-        : resolveDefaultModel(providers.defaultModel(), (child?.config ?? sync().data.config).model)
+    const preferred = resolveDefaultModel(providers.defaultModel(), (child?.config ?? sync().data.config).model)
     return routes().find((card) => card.id === preferred?.providerID)?.id ?? ""
   })
   const serverRoute = createMemo(() => {
@@ -221,7 +218,6 @@ export function ProviderList(props: {
     setState("route", card.id)
     await sync()
       .updateConfig({ model: `${card.id}/${model}` })
-      .then(() => (protocol() === "v2" ? refresh() : undefined))
       .catch(requestFailed)
       .finally(() => setState("route", undefined))
   }
@@ -262,7 +258,7 @@ export function ProviderList(props: {
         </Show>
         <Show when={data()}>
           <Show
-            when={protocol() !== undefined}
+            when={protocol() === "v1"}
             fallback={
               <div class="providers-route">
                 <span class="providers-route-label">{language.t("orchestra.providers.route")}</span>

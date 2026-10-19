@@ -9,11 +9,10 @@ import { SessionRunner } from "./runner/index"
 import { MessageTable, SessionMessageTable, SessionTable } from "./sql"
 import { and, eq, gte, inArray, lt, sql } from "drizzle-orm"
 import { Effect } from "effect"
-import { SessionActivity } from "@orchestra/schema/session-activity"
+import { Activity, ActivitySession, Fact, Period } from "@orchestra/schema/session-activity"
 import type { SessionSchema } from "./schema"
 
-export const Period = SessionActivity.Period
-export type Period = SessionActivity.Period
+export { Period }
 
 // At most this many messages are read for one request; beyond it the result is marked truncated.
 export const MAX_MESSAGES = 200_000
@@ -22,11 +21,7 @@ const CHUNK = 500
 const MAX_BARS = 8
 const PERIOD_DAYS = { "7d": 7, "30d": 30, "90d": 90 } as const
 
-export const Fact = SessionActivity.Fact
-export type Fact = SessionActivity.Fact
-export const ActivitySession = SessionActivity.ActivitySession
-export const Activity = SessionActivity.Activity
-export type Activity = SessionActivity.Activity
+export { Activity, ActivitySession, Fact }
 
 // Sessions of one profile: the whole project, or one directory for the shared non-git project.
 export type Scope = { readonly projectID: ProjectV2.ID } | { readonly directory: string }

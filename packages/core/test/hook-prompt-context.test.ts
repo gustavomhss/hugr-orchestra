@@ -261,6 +261,10 @@ it.live(
               // Inline text attachments reach the provider as text, not as media it would refuse.
               { type: "text", text: "input.txt:\nHi" },
               ...content(...notes("First.", "Second.").reminders),
+              {
+                type: "text",
+                text: "Use the above message and context to generate a prompt and call the task tool with subagent: backend",
+              },
             ],
           })
           expect((yield* store.message(admitted.id))?.message).toMatchObject({

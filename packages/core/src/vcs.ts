@@ -7,7 +7,20 @@ import { Duration, Effect } from "effect"
 import { formatPatch, structuredPatch } from "diff"
 import { GitCli } from "./git-cli"
 import { VcsEvent } from "@orchestra/schema/vcs-event"
-import { Vcs } from "@orchestra/schema/vcs"
+import {
+  Activity,
+  ActivityCommit,
+  ActivityDay,
+  ActivityPath,
+  ActivityTotals,
+  ApplyInput,
+  ApplyResult,
+  FileDiff,
+  FileStatus,
+  Info,
+  Mode,
+  type ActivityInput,
+} from "@orchestra/schema/vcs"
 
 const PATCH_CONTEXT_LINES = 2_147_483_647
 const MAX_PATCH_BYTES = 10_000_000
@@ -240,26 +253,21 @@ const track = Effect.fnUntraced(function* (
   return yield* diffAgainstRef(git, cwd, ref, options)
 })
 
-export const Mode = Vcs.Mode
-export type Mode = Vcs.Mode
+export {
+  Activity,
+  ActivityCommit,
+  ActivityDay,
+  ActivityPath,
+  ActivityTotals,
+  ApplyInput,
+  ApplyResult,
+  FileDiff,
+  FileStatus,
+  Info,
+  Mode,
+  type ActivityInput,
+}
 export const Event = VcsEvent
-export const Info = Vcs.Info
-export type Info = Vcs.Info
-export const FileDiff = Vcs.FileDiff
-export type FileDiff = Vcs.FileDiff
-export const FileStatus = Vcs.FileStatus
-export type FileStatus = Vcs.FileStatus
-export const ApplyInput = Vcs.ApplyInput
-export type ApplyInput = Vcs.ApplyInput
-export const ApplyResult = Vcs.ApplyResult
-export type ApplyResult = Vcs.ApplyResult
-export type ActivityInput = Vcs.ActivityInput
-export const ActivityTotals = Vcs.ActivityTotals
-export const ActivityDay = Vcs.ActivityDay
-export const ActivityPath = Vcs.ActivityPath
-export const ActivityCommit = Vcs.ActivityCommit
-export const Activity = Vcs.Activity
-export type Activity = Vcs.Activity
 
 /** Changed files against HEAD with their line counts; empty outside a git repository. */
 export const status = Effect.fn("Vcs.status")(function* (git: GitCli.Interface, directory: string, worktree: string) {

@@ -5,32 +5,31 @@ import { Watcher } from "@orchestra/core/filesystem/watcher"
 import { Git } from "@/git"
 import { EventV2Bridge } from "@/event-v2-bridge"
 import { EventV2 } from "@orchestra/core/event"
-import { Vcs } from "@orchestra/core/vcs"
+import {
+  activity,
+  ActivityCommit,
+  ActivityDay,
+  ActivityPath,
+  ActivityTotals,
+  Activity,
+  ApplyInput,
+  ApplyResult,
+  diff,
+  Event,
+  FileDiff,
+  FileStatus,
+  Info,
+  Mode,
+  status,
+  type ActivityInput,
+  type DiffOptions,
+} from "@orchestra/core/vcs"
 
 // The status, diff and activity logic lives in core (`@orchestra/core/vcs`), shared with the V2 server; this service
 // keeps V1's per-instance branch state and its HEAD watcher.
 
-export const Mode = Vcs.Mode
-export type Mode = Vcs.Mode
-export const Event = Vcs.Event
-export const Info = Vcs.Info
-export type Info = Vcs.Info
-export const FileDiff = Vcs.FileDiff
-export type FileDiff = Vcs.FileDiff
-export const FileStatus = Vcs.FileStatus
-export type FileStatus = Vcs.FileStatus
-export const ApplyInput = Vcs.ApplyInput
-export type ApplyInput = Vcs.ApplyInput
-export const ApplyResult = Vcs.ApplyResult
-export type ApplyResult = Vcs.ApplyResult
-export type ActivityInput = Vcs.ActivityInput
-export const ActivityTotals = Vcs.ActivityTotals
-export const ActivityDay = Vcs.ActivityDay
-export const ActivityPath = Vcs.ActivityPath
-export const ActivityCommit = Vcs.ActivityCommit
-export const Activity = Vcs.Activity
-export type Activity = Vcs.Activity
-type DiffOptions = Vcs.DiffOptions
+export { Activity, ActivityCommit, ActivityDay, ActivityPath, ActivityTotals, ApplyInput, ApplyResult, Event, FileDiff, FileStatus, Info, Mode }
+export type { ActivityInput }
 
 export class PatchApplyError extends Schema.TaggedErrorClass<PatchApplyError>()("VcsPatchApplyError", {
   message: Schema.String,
@@ -108,13 +107,13 @@ const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Service> = 
       status: Effect.fn("Vcs.status")(function* () {
         const ctx = yield* InstanceState.context
         if (ctx.project.vcs !== "git") return []
-        return yield* Vcs.status(git, ctx.directory, ctx.worktree)
+        return yield* status(git, ctx.directory, ctx.worktree)
       }),
       diff: Effect.fn("Vcs.diff")(function* (mode: Mode, options?: DiffOptions) {
         const value = yield* InstanceState.get(state)
         const ctx = yield* InstanceState.context
         if (ctx.project.vcs !== "git") return []
-        return yield* Vcs.diff(git, ctx.directory, mode, value, options)
+        return yield* diff(git, ctx.directory, mode, value, options)
       }),
       diffRaw: Effect.fn("Vcs.diffRaw")(function* () {
         const ctx = yield* InstanceState.context
@@ -149,7 +148,7 @@ const layer: Layer.Layer<Service, never, Git.Service | EventV2Bridge.Service> = 
       activity: Effect.fn("Vcs.activity")(function* (input: ActivityInput) {
         const value = yield* InstanceState.get(state)
         const ctx = yield* InstanceState.context
-        return yield* Vcs.activity(git, ctx.directory, input, ctx.project.vcs === "git", value.root)
+        return yield* activity(git, ctx.directory, input, ctx.project.vcs === "git", value.root)
       }),
     })
   }),

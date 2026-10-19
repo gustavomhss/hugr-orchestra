@@ -588,8 +588,9 @@ const layer = Layer.effect(
 
     const compact = Effect.fn("SessionRunner.compact")(function* (sessionID: SessionSchema.ID) {
       const session = yield* getSession(sessionID)
-      const model = yield* models.resolve(session)
       const history = yield* SessionHistory.load(db, session.id)
+      if (history.length === 0) return false
+      const model = yield* models.resolve(session)
       return yield* compaction.compact({
         sessionID: session.id,
         entries: history.map((message, seq) => ({ seq, message })),

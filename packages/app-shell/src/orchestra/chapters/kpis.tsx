@@ -651,11 +651,20 @@ export function KpiDashboard(props: {
   )
 }
 
-// Maps a V2 read to complete data or an error. Malformed data is an error.
+// Maps a V2 read to complete data, a missing route, or an error. Malformed data is an error.
 async function current<T>(call: Promise<{ data: unknown }>, parse: (value: unknown) => T | undefined): Promise<Outcome<T>> {
-  const data = await call.then((result) => parse(result.data)).catch(() => undefined)
-  if (!data) return { status: "error" }
-  return { status: "complete", data }
+  const result = await call.then(
+    (value) => ({ data: parse(value.data) }),
+    (error: unknown) => ({ status: error instanceof Error && isRecord(error.cause) ? error.cause.status : undefined }),
+  )
+  if ("status" in result && typeof result.status === "number" && [404, 405, 501].includes(result.status))
+    return { status: "unavailable" }
+  if (!("data" in result) || !result.data) return { status: "error" }
+  return { status: "complete", data: result.data }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null
 }
 
 // Maps a legacy SDK call to complete data, a missing endpoint, or an error. Malformed data is an error.

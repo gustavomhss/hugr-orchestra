@@ -283,17 +283,18 @@ describe("PublicApi OpenAPI v2 errors", () => {
     }
   })
 
-  test("documents v2 unfinished session mutation errors", () => {
+  test("documents v2 session operation errors", () => {
     const spec = OpenApi.fromApi(PublicApi) as OpenApiSpec
 
+    // A running Session refuses an operation that would interleave with its drain.
     for (const route of [
       ["post", "/api/session/{sessionID}/compact"],
-      ["post", "/api/session/{sessionID}/wait"],
+      ["post", "/api/session/{sessionID}/shell"],
+      ["post", "/api/session/{sessionID}/move"],
     ] as const) {
-      expect(componentName(responseRef(spec.paths[route[1]]?.[route[0]]?.responses?.["503"]) ?? "")).toBe(
-        "ServiceUnavailableError",
-      )
+      expect(componentNames(spec.paths[route[1]]?.[route[0]]?.responses?.["409"])).toContain("ConflictError")
     }
+    expect(spec.paths["/api/session/{sessionID}/wait"]?.post?.responses?.["503"]).toBeUndefined()
   })
 
   test("documents v2 session read data errors", () => {
