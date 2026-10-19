@@ -68,6 +68,9 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     await mkdir(install, { recursive: true })
     await cp(path.join(desktop, "out/main"), path.join(install, "out/main"), { recursive: true, dereference: true })
     await Bun.write(path.join(install, "package.json"), '{"type":"module"}')
+    // sidecarLaunchEnv requires the Claude Code executable beside the install. This proof never runs it (the Task uses
+    // the fixture provider), so an existence-only placeholder satisfies the access check.
+    await Bun.write(path.join(install, "resources/claude-code", process.platform === "win32" ? "claude.exe" : "claude"), "")
     const bare = new Set<string>()
     for (const file of await Array.fromAsync(new Bun.Glob("**/*.js").scan({ cwd: path.join(install, "out/main") }))) {
       const source = ts.createSourceFile(file, await readFile(path.join(install, "out/main", file), "utf8"), ts.ScriptTarget.Latest)
