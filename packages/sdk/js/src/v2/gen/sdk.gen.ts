@@ -50,10 +50,16 @@ import type {
   AtlasHealthResponses,
   AtlasHoldErrors,
   AtlasHoldResponses,
+  AtlasIndexErrors,
+  AtlasIndexResponses,
+  AtlasInstallErrors,
+  AtlasInstallResponses,
   AtlasLinkErrors,
   AtlasLinkResponses,
   AtlasMemoryDecideErrors,
   AtlasMemoryDecideResponses,
+  AtlasMineErrors,
+  AtlasMineResponses,
   AtlasOwnErrors,
   AtlasOwnResponses,
   AtlasPromoteErrors,
@@ -2369,6 +2375,107 @@ export class Atlas extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<AtlasDelegateResponses, AtlasDelegateErrors, ThrowOnError>({
       url: "/atlas/delegate",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Set Atlas up in this project
+   *
+   * Create the store, write a policy granting the acting person every scope, and make git ignore the store.
+   */
+  public install<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasInstallResponses, AtlasInstallErrors, ThrowOnError>({
+      url: "/atlas/install",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Index the project's code for Atlas
+   *
+   * Run the SCIP indexer the store's plan names, from the project root, and report the result.
+   */
+  public index<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasIndexResponses, AtlasIndexErrors, ThrowOnError>({
+      url: "/atlas/index",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Mine candidate facts with a model
+   *
+   * Ask a model about each site Genesis ranks and stage the facts that pass admission as candidates.
+   */
+  public mine<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      providerID?: string
+      modelID?: string
+      ceiling?: number
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "providerID" },
+            { in: "body", key: "modelID" },
+            { in: "body", key: "ceiling" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasMineResponses, AtlasMineErrors, ThrowOnError>({
+      url: "/atlas/mine",
       ...options,
       ...params,
       headers: {

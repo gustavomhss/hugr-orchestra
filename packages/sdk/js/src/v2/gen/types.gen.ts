@@ -2990,6 +2990,70 @@ export type AtlasDelegate = {
 
 export type AtlasDelegateResult = AtlasEmpty | AtlasDelegate
 
+export type AtlasInstall = {
+  state: "ok"
+  installed: boolean
+  refusal: "already-installed" | "no-git" | "no-actor" | null
+  actor: string
+  scopes: Array<string>
+  gitignore: "installed" | "already-present" | "partial-repaired" | "failed" | null
+  index: {
+    scipRel: string
+    scip:
+      | {
+          kind: "absent"
+        }
+      | {
+          kind: "unreadable"
+          reason: string
+        }
+      | {
+          kind: "present"
+          documents: number
+        }
+    configured: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+    holes: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+  } | null
+}
+
+export type AtlasIndex = {
+  state: "ok"
+  ran: boolean
+  tool: string | null
+  exitCode: number | null
+  documents: number | null
+  message: string | null
+}
+
+export type AtlasIndexResult = AtlasEmpty | AtlasIndex
+
+export type AtlasMine = {
+  state: "ok"
+  sites: number
+  facts: number
+  complete: boolean
+  why: string | null
+  refusal: "contended" | "unreadable" | "untrusted" | null
+}
+
+export type AtlasMineResult = AtlasEmpty | AtlasMine
+
 export type Model = {
   id: string
   providerID: string
@@ -12480,6 +12544,106 @@ export type AtlasDelegateResponses = {
 }
 
 export type AtlasDelegateResponse = AtlasDelegateResponses[keyof AtlasDelegateResponses]
+
+export type AtlasInstallData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/install"
+}
+
+export type AtlasInstallErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasInstallError = AtlasInstallErrors[keyof AtlasInstallErrors]
+
+export type AtlasInstallResponses = {
+  /**
+   * AtlasInstall
+   */
+  200: AtlasInstall
+}
+
+export type AtlasInstallResponse = AtlasInstallResponses[keyof AtlasInstallResponses]
+
+export type AtlasIndexData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/index"
+}
+
+export type AtlasIndexErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasIndexError = AtlasIndexErrors[keyof AtlasIndexErrors]
+
+export type AtlasIndexResponses = {
+  /**
+   * AtlasIndexResult
+   */
+  200: AtlasIndexResult
+}
+
+export type AtlasIndexResponse = AtlasIndexResponses[keyof AtlasIndexResponses]
+
+export type AtlasMineData = {
+  body?: {
+    providerID: string
+    modelID: string
+    ceiling: number
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/mine"
+}
+
+export type AtlasMineErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasMineError = AtlasMineErrors[keyof AtlasMineErrors]
+
+export type AtlasMineResponses = {
+  /**
+   * AtlasMineResult
+   */
+  200: AtlasMineResult
+}
+
+export type AtlasMineResponse = AtlasMineResponses[keyof AtlasMineResponses]
 
 export type ConfigGetData = {
   body?: never
