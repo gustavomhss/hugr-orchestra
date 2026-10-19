@@ -197,3 +197,66 @@ Every decision is made here, before any task runs. A worker never chooses: if a 
 **D10b.** Every non-`.at-*` selector ported from the mock is scoped under `.atlas-scope`, the page root.
 
 **D7b.** Atlas search opens with `/` and the rail's Search button. The app keeps ⌘K.
+
+## Track C (decided 2026-10-19, against the code merged from tracks A and B)
+
+The Track C plan is cut to what the merged engine can carry end to end: R1, R2, R3, R4 and R11 with delegation. R5
+dispatch, R7 republish, R8 replace and R9 repair stay as `New capability` markers; see [OPEN.md](OPEN.md).
+
+- **D29 Engine helpers move out of the CLI.** The CLI holds logic the screen also needs. Each moves into adapter-io, and
+  the CLI runner calls it, so the CLI and the surface cannot diverge.
+  - `adapter-io/src/review-decide.ts`: `decideProposal(repoPath, input: { proposalId; verdict: "ratified" | "rejected";
+    reason; by; at }, emit: (fact: GroundedFact) => EmitOutcome): DecideResult`, ported from the private `ratify` in
+    `cli/src/ratify-cli.ts`. The caller supplies the governed emit, so the ratify token stays with the composition root.
+  - `adapter-io/src/review-answer.ts`: `answerQuestion(repoPath, input: { questionId; answer; by; at; drafted?: { model;
+    why } }): AnswerResult`, ported from `runAnswer` in `cli/src/interview-cli.ts`. A tier answer of T1 or T0 appends its
+    `proposal` only when the answer is not drafted.
+  - `adapter-io/src/open-questions-source.ts`: `interviewOf(repoPath): { batch: InterviewQuestion[]; deferred: number }`,
+    where `InterviewQuestion = RankedQuestion & { draft?: { answer; model; why; by; at } }`. A question counts as
+    answered only when its latest `answer` record has no `drafted`. A drafted answer keeps the question open and rides
+    along as `draft`. `runInterview` calls it.
+- **D30 R1 decision.** `native-memory.ts` gains `decideProjectRule(input: AtlasBinding, decision: { proposalId; verdict:
+  "indexed" | "discarded"; rule?; scope?; by }, at: string): DecisionVerdict`. `indexed` writes the project rule to
+  `memory.jsonl` as the proposal's member through the existing write path, then appends `memory-decision`; `discarded`
+  only appends. `rule` and `scope` replace the proposal's text when the person edited it. Exported through
+  `native-bound.ts`, so the boundary's `./native-memory` and `./surface` both carry it.
+- **D31 Surface.** `openSurface` gains one read and seven writes, in `adapter-io/src/surface/review.ts`, with mirror types
+  in `surface/types-review.ts` (same mirroring rule as `types.ts`):
+  - `review(): AtlasReviewResult`: `AtlasEmpty | { state: "ok"; unreadable: boolean; held: string[]; proposals:
+    AtlasReviewProposal[]; memoryProposals: AtlasMemoryProposal[]; interview: { batch: AtlasInterviewQuestion[]; deferred:
+    number } }`.
+  - `hold({ nodeKey })`, `release({ nodeKey })`, `propose({ nodeKey, toTier, reason })`, `decide({ proposalId, verdict,
+    reason, token? })`, `answer({ questionId, answer, drafted? })`, `memoryDecide({ proposalId, verdict, rule?, scope? })`,
+    `territory({ name, owner, tier, globs, token? })`. Each returns `AtlasEmpty | AtlasVerdict<{ id: string }>` (the
+    territory write returns the catalog path as `id`).
+  - `by` is the composed actor (`ATLAS_ACTOR`), as for `emit`; `at` is the wall clock. A missing actor is a refusal.
+  - The CLI refusals (already held, not staged, tier must go up, one open proposal per node and tier) are the surface's
+    refusals, word for word, through the D29 helpers or the same checks.
+- **D32 Host.** Eight legacy httpapi endpoints mirror D31: `GET /atlas/review` and `POST /atlas/{hold, release, propose,
+  decide, answer, memory-decide, territory}`, plus `POST /atlas/delegate` (D33). Same middleware, handler and
+  `AtlasSurface` pattern as `promote`. The SDK is regenerated (lead step).
+- **D33 Delegation (R11).** `POST /atlas/delegate { questionIds: string[]; providerID; modelID }` lives in the host only
+  (`apps/orchestra/src/maestro/atlas-delegate.ts`). For each id in the current `review().interview.batch` it makes one
+  `LLM.stream` call (the `project-copy.ts` one-shot pattern) with a `responseSchema` of `{ answer: string; why: string }`,
+  then writes `surface.answer({ questionId, answer, drafted: { model: "<providerID>/<modelID>", why } })`. It answers
+  `{ state: "ok"; drafted: { questionId; ok: boolean; rejected?: string }[] }`. A draft never ratifies: a person accepts it
+  with a plain `answer` of the same text (R11 acceptance). The mock's "writes nothing" note is superseded by D14.
+- **D34 Screen.** The controller loads `review` with the snapshot and rereads both after every write (D6 still exempts
+  `verify`). The interview renders the engine batch (`questionId`), not the client-side `openQuestions`; drafts show
+  "Drafted by {model}: {why}" with Accept. Markers replaced: R2 Keep/Accept on a staged candidate (hold/release), R4
+  Declare territory (new sheet), R1 Index/Discard on a memory proposal and Add rule (the person's rule is proposed then
+  indexed in one action), R11 Ratify/Delegate in the interview. Each replaced control drops its `cap`/`NewCap` marker.
+- **D35 Wire shapes for D31** (absent values are `null` on the wire, never omitted):
+  - `AtlasReviewProposal = { id: string; nodeKey: string; toTier: "T1" | "T0"; reason: string; by: string; at: string }`
+  - `AtlasMemoryProposal = { id: string; member: string; rule: string; scope: string; by: string; at: string }`
+  - `AtlasInterviewQuestion = { id: string; kind: "owner" | "tier" | "contested" | "intent"; subject: string; ask: string;
+    rank: number; site: string; options: string[] | null; nodeKey: string | null; draft: AtlasInterviewDraft | null }`
+  - `AtlasInterviewDraft = { answer: string; model: string; why: string; by: string; at: string }`
+  - Inputs: `AtlasHoldInput = { nodeKey }`, `AtlasReleaseInput = { nodeKey }`, `AtlasProposeInput = { nodeKey; toTier:
+    "T1" | "T0"; reason }`, `AtlasDecideInput = { proposalId; verdict: "ratified" | "rejected"; reason; token?: string }`,
+    `AtlasAnswerInput = { questionId; answer; drafted?: { model; why } }`, `AtlasMemoryDecideInput = { proposalId;
+    verdict: "indexed" | "discarded"; rule?: string; scope?: string }`, `AtlasTerritoryInput = { name; owner; tier: "T0" |
+    "T1" | "T2"; globs: string[]; token?: string }`, `AtlasDelegateInput = { questionIds: string[]; providerID: string;
+    modelID: string }`.
+  - Results: `AtlasReviewWriteResult = AtlasEmpty | AtlasVerdict<{ id: string }>`; `AtlasDelegateResult = AtlasEmpty |
+    { state: "ok"; drafted: { questionId: string; ok: boolean; rejected: string | null }[] }`.
