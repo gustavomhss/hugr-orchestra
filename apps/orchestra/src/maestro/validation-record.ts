@@ -184,10 +184,8 @@ const HISTORICAL_ROSTER_HASHES: ReadonlyMap<string, string> = new Map([
   ["21de782c4f626aa289a129f2147ace8bb82ef786fc02d6c7b629169a6f95cb05", ROSTER_V2],
   // Before jimmy took the jimmy-engine method: a short prompt, the card from inquiry close and one reference skill.
   ["06cd43178bba652b3c5ee3676472b8f4acee93b391b02512b1e4b54184354a10", ROSTER_V2],
-  // Before jimmy gained probe_run and accepted a probe receipt as primary evidence.
-  ["2e940ff3b3b693177f372b9e9a144267102988ad0f777f9c5f408ae6c1a64a9f", ROSTER_V2],
-  // Before the jimmy prompt rewrite that folds claims into `inquiry close`.
-  ["8d3204388b964a4236bdd7fe78fc7039eabc16642683dc017b91fde3cb67754b", ROSTER_V2],
+  // Before jimmy gained probe_run and a probe receipt as primary evidence; then before claims folded into `inquiry close`.
+  ["2e940ff3b3b693177f372b9e9a144267102988ad0f777f9c5f408ae6c1a64a9f", ROSTER_V2], ["8d3204388b964a4236bdd7fe78fc7039eabc16642683dc017b91fde3cb67754b", ROSTER_V2],
 ])
 const HISTORICAL_REVIEW_POLICY_HASHES: ReadonlyMap<string, string> = new Map([
   ["05807085f9d9cf64a9cad4766f7eacde2ff1898435252d177d2725434d646c59", "maestro-review-policy-v1"],
