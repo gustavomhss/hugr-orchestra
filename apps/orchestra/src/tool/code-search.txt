@@ -1,8 +1,8 @@
-Lexical ripgrep search of the working tree for exact text: a string, identifier or pattern. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate.
+Ripgrep search of the working tree for exact text. For a symbol's definition or callers use code_query; to find where a behavior lives, code_locate. Batch several patterns in one regex or parallel calls.
 
 pattern: at most 512 characters. mode: literal (default), identifier (bounded by identifier characters) or regex. caseSensitive: false ignores case. paths: up to 16 globs, e.g. src/**/*.ts or !**/test/**. context: 0 to 5 lines. limit: default 50, max 200; next gives the offset. Hidden files are searched, .gitignore respected.
 
 Lines: rows are path:line text, 1-based, sorted by path.
 Empty: absent from this scope only when coverage.complete is true; otherwise it proves nothing.
-Retains: nothing; read the file to cite it.
+Retains: nothing; capture the range to cite it.
 Fails: index_unavailable (no ripgrep), unsupported (invalid pattern), source_unavailable.

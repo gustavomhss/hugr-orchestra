@@ -148,6 +148,27 @@ describe("the inquiry state machine", () => {
       yield* fixture.sessions.remove(fixture.authority.id)
     }))
 
+  // Mutation controls (src/tool/inquiry.ts): drop `&& input.action !== "close"` from the early refusal, and the close is refused
+  // "open the inquiry first"; check `state` instead of `draft` before writing, and the correct close fails R2.
+  it.instance("at tier quick one close opens the inquiry, writes its claims once and a refused close writes nothing", () =>
+    Effect.gen(function* () {
+      const fixture = yield* setup()
+      yield* fixture.write("e.ts", "export const e = 1\n")
+      expect(yield* fixture.turn()).toContain("inquiry close with question, claims and answer")
+      const source = yield* fixture.source("e.ts")
+      const claims = [{ proposition: "e.ts exports e", nature: "extraction" as const, evidence: [{ source, lines: { start: 1, end: 1 } }] }]
+      // The answer cites a file no claim holds: refused, with nothing opened or claimed.
+      expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "answered", question: "What does e.ts export?",
+        claims, answer: "e.ts:1 and f.ts:2 export e." }))).toContain("the closing check failed: R9")
+      expect(yield* fixture.turn()).toContain("<inquiry state=\"none\">")
+      const closed = yield* fixture.inquiry({ action: "close", sufficiency: "answered", question: "What does e.ts export?",
+        claims, answer: "e.ts:1 exports e." })
+      expect(closed.output).toContain("\"closed\":\"answered\"")
+      expect(closed.output).toContain("\"check\":\"pass\"")
+      expect(closed.output).toContain("<inquiry state=\"closed\">")
+      yield* fixture.sessions.remove(fixture.authority.id)
+    }))
+
   it.instance("an answered close needs every hypothesis decided, and the per-turn snapshot stays compact", () =>
     Effect.gen(function* () {
       const fixture = yield* setup()

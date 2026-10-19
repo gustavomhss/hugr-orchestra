@@ -1,13 +1,11 @@
 This dispatch's investigation; the host keeps its state and shows it each turn.
 
 Actions:
-- open: question, 1-6 subquestions, profile; once, first.
-- hypothesize: a proposition to test under a subquestion.
-- claim: a proposition answering one subquestion; nature extraction, observation or inference; evidence {source, lines:{start,end}}, {source, quote} or {source, pointer}.
-- resolve: confirm or refute a hypothesis with evidence.
-- drop: abandon a hypothesis or claim, or declare a subquestion gap, with reason.
-- close: sufficiency (answered, partial, blocked) and answer; runs the check, naming what to fix.
-- check: that check alone. status.
+- close: sufficiency (answered, partial, blocked), answer, and claims [{proposition, nature, evidence, subquestion?, scope?}], numbered claim-1 on. It checks them with the answer before writing anything and names what to fix. At tier quick, pass question instead of opening first.
+- open: question, 1-6 subquestions, profile.
+- claim: one claim before close, same fields plus subquestion.
+- hypothesize, resolve (with evidence), drop (with reason), check, status.
+nature: extraction, observation or inference. evidence: {source, lines:{start,end}} or {source, quote}.
 
 Lines: original-file, 1-based, inclusive.
 Empty: zero claims or no resolved evidence is never answered.
