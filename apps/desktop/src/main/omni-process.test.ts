@@ -1,10 +1,14 @@
 import { afterEach, expect, test } from "bun:test"
 import { execFile } from "node:child_process"
 import { randomUUID } from "node:crypto"
+import { mkdtemp, writeFile } from "node:fs/promises"
+import { tmpdir } from "node:os"
+import { join } from "node:path"
 import { promisify } from "node:util"
 import { expectSpawn } from "../../../../packages/core/test/fixture/omni-expect"
 import { gone, reap, sweep, tree } from "../../../../packages/core/test/fixture/process-tree"
 import { DesktopOmni } from "./omni-process"
+import { startOwnedServe } from "./owned-serve"
 
 // The desktop's omni adapters against real processes. They need the omni addon and supervisor, so they run with
 // ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER on (test:ci --env); the preload's positive control then also requires them to
@@ -194,3 +198,67 @@ test.skipIf(!on)(
   },
   30_000,
 )
+
+// The desktop-owned `orchestra serve` supervisor (owned-serve.ts) over a real omni spawn.
+// A stand-in for `orchestra serve`: Basic auth on /api/health, prints its password, /crash exits, SIGTERM is logged.
+const fakeServe = `
+const port = Number(process.argv[process.argv.indexOf("--port") + 1])
+const password = process.env.ORCHESTRA_SERVER_PASSWORD
+const expected = "Basic " + Buffer.from("orchestra:" + password).toString("base64")
+console.log("listening with password " + password)
+process.on("SIGTERM", () => {
+  console.log("sigterm")
+  process.exit(0)
+})
+Bun.serve({
+  hostname: "127.0.0.1",
+  port,
+  fetch(request) {
+    if (new URL(request.url).pathname === "/crash") setTimeout(() => process.exit(3), 10)
+    if (request.headers.get("authorization") !== expected) return new Response("no", { status: 401 })
+    return new Response("ok")
+  },
+})
+`
+
+test.skipIf(!on)("owned serve: readiness, redaction, crash restart, SIGTERM stop", async () => {
+  expectSpawn(import.meta.path)
+  const dir = await mkdtemp(join(tmpdir(), "owned-serve-"))
+  await writeFile(join(dir, "serve.ts"), fakeServe)
+  const lines: string[] = []
+  const events: { message: string; meta?: Record<string, unknown> }[] = []
+  const record = (message: string, meta?: Record<string, unknown>) => void events.push({ message, meta })
+  const owned = await startOwnedServe({
+    logger: { log: record, error: record },
+    command: [process.execPath, join(dir, "serve.ts")],
+    env: { PATH: process.env.PATH ?? "" },
+    write: (_stream, message) => void lines.push(message),
+  })
+  const auth = { authorization: `Basic ${Buffer.from(`orchestra:${owned.password}`).toString("base64")}` }
+
+  await owned.health.wait
+  expect((await fetch(`${owned.url}/api/health`, { headers: auth })).status).toBe(200)
+  expect((await fetch(`${owned.url}/api/health`)).status).toBe(401)
+  await until(() => lines.some((line) => line.includes("listening with password")))
+  expect(lines.join("\n")).not.toContain(owned.password)
+  expect(lines).toContain("listening with password [redacted]")
+
+  await fetch(`${owned.url}/crash`).catch(() => undefined)
+  await until(() => events.some((event) => event.message === "owned serve restarting"))
+  await until(() => fetch(`${owned.url}/api/health`, { headers: auth }).then((r) => r.ok, () => false))
+
+  await owned.listener.stop()
+  await until(() => lines.includes("sigterm"))
+  expect(events.filter((event) => event.message === "owned serve exited").map((event) => event.meta)).toEqual([
+    { code: 3, signal: null, stopping: false },
+    { code: 0, signal: null, stopping: true },
+  ])
+}, 30_000)
+
+async function until(check: () => boolean | Promise<boolean>) {
+  const deadline = Date.now() + 15_000
+  while (!(await check())) {
+    if (Date.now() > deadline) throw new Error("condition not met in 15s")
+    await new Promise((resolve) => setTimeout(resolve, 50))
+  }
+}

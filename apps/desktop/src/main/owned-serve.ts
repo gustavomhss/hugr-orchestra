@@ -1,13 +1,11 @@
 import { randomUUID } from "node:crypto"
 import { createServer } from "node:net"
 import type { Readable } from "node:stream"
-import { resolveCliBinary } from "./background-cli"
-import type { CandidateProfile } from "./candidate-profile"
 import { DesktopOmni } from "./omni-process"
-import { checkHealth, sidecarLaunchEnv } from "./server"
 
 // The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app (B6 precondition 2). It
 // replaces the V1 sidecar for the launch, never runs beside it, and is not the shared background daemon.
+// No electron import: index.ts resolves the CLI and the launch env, so this module runs under bun test.
 
 type Logger = {
   log(message: string, meta?: Record<string, unknown>): void
@@ -23,16 +21,16 @@ const STABLE_AFTER = 60_000
 
 export async function startOwnedServe(options: {
   logger: Logger
-  userDataPath: string
-  candidateProfile?: CandidateProfile
+  /** The CLI executable, then any arguments before `serve`. */
+  command: [string, ...string[]]
+  env: Record<string, string>
   write: (stream: "stdout" | "stderr", message: string) => void
 }) {
-  const binary = await resolveCliBinary(options.logger)
   const port = await freePort()
   const password = randomUUID()
   const url = `http://${HOSTNAME}:${port}`
   const env = {
-    ...(await sidecarLaunchEnv(options.userDataPath, options.candidateProfile)),
+    ...options.env,
     ORCHESTRA_CLIENT: "desktop",
     ORCHESTRA_SERVER_USERNAME: "orchestra",
     ORCHESTRA_SERVER_PASSWORD: password,
@@ -41,10 +39,8 @@ export async function startOwnedServe(options: {
 
   const launch = () => {
     const startedAt = Date.now()
-    const child = DesktopOmni.spawn(binary, ["serve", "--hostname", HOSTNAME, "--port", String(port)], {
-      env,
-      stdin: "closed",
-    })
+    const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
+    const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed" })
     state.child = child
     forward(child.stdout, (line) => options.write("stdout", line.replaceAll(password, "[redacted]")))
     forward(child.stderr, (line) => options.write("stderr", line.replaceAll(password, "[redacted]")))
@@ -67,10 +63,10 @@ export async function startOwnedServe(options: {
     return { child, exited }
   }
 
-  options.logger.log("owned serve starting", { binary, url })
+  options.logger.log("owned serve starting", { command: options.command, url })
   const first = launch()
   const health = Promise.race([
-    poll(() => checkHealth(url, password)),
+    poll(() => healthy(url, password)),
     first.exited.then(() => Promise.reject(new Error("Owned serve exited before its health check passed"))),
     delay(READY_TIMEOUT).then(() => Promise.reject(new Error(`Owned serve not healthy within ${READY_TIMEOUT}ms`))),
   ])
@@ -85,6 +81,16 @@ export async function startOwnedServe(options: {
   }
 
   return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
+}
+
+async function healthy(url: string, password: string) {
+  return fetch(new URL("/api/health", url), {
+    headers: { authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}` },
+    signal: AbortSignal.timeout(3000),
+  }).then(
+    (response) => response.ok,
+    () => false,
+  )
 }
 
 async function poll(check: () => Promise<boolean>) {
