@@ -11,6 +11,7 @@ import {
   createHistorySource,
   createPromptFactory,
   createUnitSourceReader,
+  PROPOSE_TEMPLATE,
 } from "@atlas/adapter-io"
 import { cappedBudget } from "@atlas/genesis"
 import { driveMinePass } from "./mine.js"
@@ -40,7 +41,7 @@ export interface MineResult {
 }
 
 export function mineSites(repoPath: string, ceiling: number): MineSites {
-  const prompts = createPromptFactory({ source: createUnitSourceReader(repoPath) })
+  const prompts = createPromptFactory({ source: createUnitSourceReader(repoPath), templateText: PROPOSE_TEMPLATE })
   const sites: MineSite[] = []
   driveMinePass(repoPath, {
     history: createHistorySource(repoPath, "HEAD"),

@@ -517,8 +517,23 @@ export interface AtlasVerifyInput {
 	readonly min?: number;
 	readonly exact?: boolean;
 }
+/** `install()`: Atlas set up in a repository with no `.atlas/` yet, or why not. Never `AtlasEmpty`. */
+export interface AtlasInstallResult {
+	readonly state: "ok";
+	readonly installed: boolean;
+	readonly refusal: "already-installed" | "no-git" | "no-actor" | null;
+	/** Who the policy grants: `ATLAS_ACTOR`, else the repository's git e-mail, else "". */
+	readonly actor: string;
+	/** The scopes `policy.json` grants the actor, sorted; empty when refused. */
+	readonly scopes: readonly string[];
+	readonly gitignore: "installed" | "already-present" | "partial-repaired" | "failed" | null;
+	/** The indexer plan for the repository's languages; null when refused. */
+	readonly index: AtlasIndexPlan | null;
+}
 export interface AtlasSurface {
 	readonly snapshot: () => AtlasSnapshotResult;
+	/** D37: the one method that runs when `.atlas/` is absent. */
+	readonly install: () => AtlasInstallResult;
 	readonly reasoning: (id: string) => AtlasReasoningResult;
 	readonly own: (scope: string) => AtlasOwnResult;
 	readonly health: () => AtlasHealthResult;
