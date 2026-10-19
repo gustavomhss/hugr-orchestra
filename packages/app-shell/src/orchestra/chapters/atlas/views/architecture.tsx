@@ -5,7 +5,9 @@ import { atlasHref } from "../atlas-route"
 import { Icon } from "../kit/chips"
 import { AtlasLink } from "../kit/text"
 import { ARCH_CHAPTERS } from "./architecture-data"
-import { ArchSteps, ArchStore } from "./architecture-steps"import { ArchOverview } from "./architecture-overview"
+import { ArchIdentity, ArchPackages, ArchPortable } from "./architecture-identity"
+import { ArchSteps, ArchStore } from "./architecture-steps"
+import { ArchOverview } from "./architecture-overview"
 import type { AtlasViewProps } from "./index"
 
 // Architecture: how Atlas keeps knowledge, one chapter at a time (specs/atlas-ui/mock/views-arch.js:165-183).
@@ -51,13 +53,13 @@ export default function AtlasArchitectureView(props: AtlasViewProps) {
           <Match when={chapter() === "store"}>
             <ArchStore model={props.model} file={props.route.query.file} />          </Match>
           <Match when={chapter() === "identity"}>
-            {null /* A28D: identity chapter */}
+            <ArchIdentity model={props.model} />
           </Match>
           <Match when={chapter() === "packages"}>
-            {null /* A28D: packages chapter */}
+            <ArchPackages pkg={props.route.query.pkg} />
           </Match>
           <Match when={chapter() === "portable"}>
-            {null /* A28D: portable chapter */}
+            <ArchPortable model={props.model} />
           </Match>
         </Switch>
       </section>
