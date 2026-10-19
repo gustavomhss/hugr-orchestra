@@ -1300,6 +1300,43 @@
           "additionalProperties": false,
           "description": "Thresholds for truncating tool output. When output exceeds either limit, the full text is written to the truncation directory and a preview is returned."
         },
+        "research": {
+          "type": "object",
+          "properties": {
+            "limits": {
+              "type": "object",
+              "properties": {
+                "indexer_bytes": {
+                  "exclusiveMinimum": 0,
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "description": "Memory cap of one code indexer run in bytes (default and maximum: 2 GiB)"
+                },
+                "probe_bytes": {
+                  "exclusiveMinimum": 0,
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "description": "Memory cap of one research probe in bytes (default and maximum: 1 GiB)"
+                },
+                "scratch_bytes": {
+                  "exclusiveMinimum": 0,
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "description": "Scratch disk of one research probe in bytes (default and maximum: 2 GiB)"
+                },
+                "index_bytes": {
+                  "exclusiveMinimum": 0,
+                  "type": "integer",
+                  "maximum": 9007199254740991,
+                  "description": "Disk budget of the code index cache in bytes (default and maximum: 4 GiB)"
+                }
+              },
+              "additionalProperties": false
+            }
+          },
+          "additionalProperties": false,
+          "description": "Resource caps of the discovery seat's research toolkit. A configured value can only lower its built-in cap."
+        },
         "compaction": {
           "type": "object",
           "properties": {
