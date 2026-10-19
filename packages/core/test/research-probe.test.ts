@@ -56,7 +56,7 @@ live("typecheck on a commit snapshot reproduces the planted error in original co
     expect(planted.verdict, planted.stderr.tail).toBe("reproduced")
     expect(planted.snapshot.revision).toMatch(/^[0-9a-f]{40}$/)
     expect(planted.diagnostics?.[0]).toMatchObject({ path: "src/a.ts", line: 1, column: 14, code: "TS2322" })
-    expect(planted.memoryCap).toBe("rss")
+    expect(planted.memoryCap).toBe(ProbeRun.memoryCap())
     expect(planted.runner.argv).toContain("--max-old-space-size=1024")
     // Diagnostic lines are structured: the condensed tail names each distinct error once, by its original site.
     expect(planted.stdout.tail).toContain("error TS2322: Type 'string' is not assignable to type 'number'. (first at src/a.ts:1:14)")
@@ -142,7 +142,9 @@ live("the timeout stops the probe and names it", () =>
   }), 60_000,
 )
 
-live("a tree over the RSS cap is killed as memory_exceeded (J4.7)", () =>
+// Only where the result declares an rss cap is it enforced; elsewhere the result says heap-only (JE-AC-P6).
+const capped = jail && ProbeRun.memoryCap() === "rss" ? it.live : it.live.skip
+capped("a tree over the RSS cap is killed as memory_exceeded (J4.7)", () =>
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const dir = yield* repo

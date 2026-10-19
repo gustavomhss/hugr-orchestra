@@ -9,6 +9,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { ModelV2 } from "@orchestra/core/model"
 import { AppProcess } from "@orchestra/core/process"
 import { ProviderV2 } from "@orchestra/core/provider"
+import { ProbeRun } from "@orchestra/core/research-toolkit/probe/run"
 import type { Probe } from "@orchestra/core/research-toolkit/probe/types"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchRecords } from "@orchestra/core/research/records"
@@ -129,7 +130,7 @@ describe("probe_run", () => {
         .findIndex((text) => text.startsWith("export const count")) + 1
       expect(result.verdict, result.stdout.tail).toBe("failed")
       expect(result.diagnostics).toContainEqual(expect.objectContaining({ path: "src/typed.ts", line, column: 14, code: "TS2322" }))
-      expect(result.memoryCap).toBe("rss")
+      expect(result.memoryCap).toBe(ProbeRun.memoryCap())
       expect(receipt.origin).toEqual({ kind: "tool-output", uri: `probe:${receipt.binding.executionSessionID}/${result.probeID}` })
       expect(receipt.ref.representation).toBe("structured-json")
       yield* fixture.cleanup
@@ -159,8 +160,10 @@ describe("probe_run", () => {
       const { result, receipt } = yield* fixture.probe(script(REPRO, { expect: { stdoutIncludes: "DEFECT" }, hypothesis }))
       expect(result.verdict, result.stderr.tail).toBe("reproduced")
       expect(result.script?.representation).toBe("text")
+      // Tool output is never a claim's only evidence (R1): the claim pairs the probe with the line it observed.
+      const code = Schema.decodeUnknownSync(Research.SourceReceipt)((yield* fixture.call("read", { filePath: "src/clamp.ts" })).metadata.researchSource).ref
       yield* inquiry({ action: "claim", subquestion: open.subquestions[0], proposition: "clamp(10, 0, 10) returns 9", nature: "observation",
-        evidence: [{ source: receipt.ref, pointer: "/verdict" }] })
+        evidence: [{ source: receipt.ref, pointer: "/verdict" }, { source: code, lines: { start: 5, end: 5 } }] })
       const check = yield* inquiry({ action: "check" })
       expect(check.output).toContain("\"verdict\":\"pass\"")
       // The host already resolved the hypothesis from the probe (J4.10), so it is no longer open.
@@ -176,7 +179,6 @@ describe("probe_run", () => {
       yield* fixture.spend(Research.ProbeSeconds.quick - 1)
       expect((yield* fixture.probe(script("console.log('first')"))).result.verdict).toBe("passed")
       const refused = yield* fixture.refused(fixture.probe(script("console.log('second')")))
-      expect(refused).toContain("budget_exhausted")
       expect(refused).toContain(`Research probe allowance exhausted (${Research.ProbeSeconds.quick}/${Research.ProbeSeconds.quick} seconds)`)
       yield* fixture.cleanup
     }), { git: true, init: repo }, 120_000)

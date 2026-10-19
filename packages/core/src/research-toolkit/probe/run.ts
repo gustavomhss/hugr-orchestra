@@ -74,8 +74,7 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
     verdict: verdict(input.expect, outcome, `${stdout}\n${stderr}`, diagnostics),
     exitCode: outcome.exitCode,
     durationMs: outcome.durationMs,
-    // Omni enforces the RSS cap over the whole tree; the legacy spawner bounds only the runner's heap (J4.7).
-    memoryCap: Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "heap-only" : "rss",
+    memoryCap: memoryCap(),
     // A typecheck's diagnostic lines are already structured: its tail leads with their causes and keeps only the rest.
     stdout: stream(outcome.stdout, diagnostics ? (line) => !ProbeTypecheck.structured(line) : undefined, [
       ...(diagnostics ? ProbeTypecheck.causes(diagnostics) : []),
@@ -87,6 +86,15 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
     expect: input.expect,
   } satisfies Probe.ProbeResult
 }, Effect.scoped)
+
+/**
+ * Omni enforces the RSS cap over the whole tree; the legacy spawner bounds only the runner's heap (J4.7). Under srt
+ * (linux) omni does not see the jailed tree's resident memory, so a 400 MiB child outlives a 150 MiB cap: only the
+ * seatbelt jail is declared rss.
+ */
+export function memoryCap(): Probe.ProbeResult["memoryCap"] {
+  return process.platform === "darwin" && Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER !== "off" ? "rss" : "heap-only"
+}
 
 function verdict(expect: Probe.ProbeInput["expect"], outcome: ResearchProcess.Outcome, text: string, diagnostics?: ReadonlyArray<ProbeTypecheck.Diagnostic>): Probe.Verdict {
   if (outcome.timedOut) return "timeout"
