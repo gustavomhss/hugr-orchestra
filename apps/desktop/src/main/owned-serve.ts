@@ -23,7 +23,7 @@ export async function startOwnedServe(options: {
   logger: Logger
   /** The CLI executable, then any arguments before `serve`. */
   command: [string, ...string[]]
-  env: Record<string, string>
+  env: Record<string, string | undefined>
   write: (stream: "stdout" | "stderr", message: string) => void
 }) {
   const port = await freePort()
