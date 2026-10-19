@@ -2,6 +2,7 @@ import { afterEach, describe, expect } from "bun:test"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
+import { $ } from "bun"
 import { Effect, Layer } from "effect"
 import { HttpClientResponse } from "effect/unstable/http"
 import { InstanceRef } from "../../src/effect/instance-ref"
@@ -10,7 +11,7 @@ import { InstanceStore } from "../../src/project/instance-store"
 import { GlobalBus, type GlobalEvent } from "../../src/bus/global"
 import { Snapshot } from "../../src/snapshot"
 import { resetDatabase } from "../fixture/db"
-import { disposeAllInstances, TestInstance } from "../fixture/fixture"
+import { disposeAllInstances, gitInit, TestInstance } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 import { httpApiLayer, requestInDirectory } from "./httpapi-layer"
 
@@ -77,6 +78,23 @@ describe("project.initGit endpoint", () => {
         Effect.provideService(InstanceRef, ctx),
       )
       expect(tracked).toBeTruthy()
+    }),
+  )
+
+  it.instance("a first commit made outside the app gives the folder its own project", () =>
+    Effect.gen(function* () {
+      const tmp = yield* TestInstance
+      const before = yield* request(tmp.directory, "/project/current")
+      expect(yield* json(before)).toMatchObject({ id: "global" })
+
+      // The person initializes and commits in a terminal while the instance still holds the "global" project.
+      yield* Effect.promise(async () => {
+        await gitInit(tmp.directory)
+        await $`git -c user.name=t -c user.email=t@t commit --allow-empty -m first`.cwd(tmp.directory).quiet()
+      })
+      const after = yield* request(tmp.directory, "/project/current")
+      expect(after.status).toBe(200)
+      expect((yield* json<{ id: string }>(after)).id).toMatch(/^[0-9a-f]{40}$/)
     }),
   )
 

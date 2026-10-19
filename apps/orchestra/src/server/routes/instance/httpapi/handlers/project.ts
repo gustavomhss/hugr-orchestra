@@ -53,7 +53,14 @@ export const projectHandlers = HttpApiBuilder.group(InstanceHttpApi, "project", 
     })
 
     const current = Effect.fn("ProjectHttpApi.current")(function* () {
-      return (yield* InstanceState.context).project
+      const ctx = yield* InstanceState.context
+      if (ctx.project.id !== ProjectV2.ID.global) return ctx.project
+      // A folder that had no git commit when its instance started shares the "global" project. Once a first commit
+      // exists (made outside the app too) it has its own identity: resolve again and move the instance onto it.
+      const { project: next } = yield* svc.fromDirectory(ctx.directory)
+      if (next.id === ProjectV2.ID.global) return ctx.project
+      yield* markInstanceForReload(ctx, { directory: ctx.directory, worktree: next.worktree, project: next })
+      return next
     })
 
     const initGit = Effect.fn("ProjectHttpApi.initGit")(function* () {
