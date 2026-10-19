@@ -474,12 +474,14 @@ export function CanvasTab(props: Props) {
           <span class={`wf-dot ${current ? "good" : "warm"}`} />
           <span>
             {[
-              current
-                ? copy.t("orchestra.hooks.canvas.installed", {
-                    profile: props.profile,
-                    version: props.document.publishedCounter ?? "",
-                  })
-                : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
+              installed.unpublished
+                ? copy.t("orchestra.hooks.canvas.installedUnpublished", { profile: props.profile })
+                : current
+                  ? copy.t("orchestra.hooks.canvas.installed", {
+                      profile: props.profile,
+                      version: props.document.publishedCounter ?? "",
+                    })
+                  : copy.t("orchestra.hooks.canvas.installedEarlier", { profile: props.profile }),
               props.decision
                 ? `${copy.t(`orchestra.hooks.outcome.${props.decision.outcome}`)} ${copy.when(decisionTime(props.decision))}`
                 : props.decisionKnown !== false ? copy.t("orchestra.hooks.canvas.notFired") : undefined,
@@ -649,6 +651,8 @@ export function CanvasTab(props: Props) {
                   .filter((issue) => issueNode(issue) === node().id)
                   .map((issue) => issueText(copy, props.flow, issue))}
                 save={save()}
+                // A conflicting save is settled in the footer first; edits made meanwhile would be lost or overwrite.
+                readOnly={props.readOnly || props.save.state === "conflict"}
                 onChange={props.edit}
                 onNav={(id) => props.go(relayPath.node("hook", props.document.id, id), true)}
                 onClose={() => props.close(base())}

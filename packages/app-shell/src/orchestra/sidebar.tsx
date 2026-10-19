@@ -302,7 +302,11 @@ export function OrchestraSidebar(props: {
     if (route.type === "session" || route.type === "draft") return
     const conn = profile().conn ?? home.server.focused()
     if (!conn) {
-      command.trigger("settings.open")
+      showToast({
+        title: language.t("orchestra.chat.send.openProviders"),
+        description: language.t("orchestra.chat.noConnection.description"),
+      })
+      navigate("/orchestra/providers")
       return
     }
     const ctx = global.ensureServerCtx(conn)
@@ -517,8 +521,11 @@ export function OrchestraSidebar(props: {
               <DropdownMenu.RadioGroup
                 value={profile().project ? `${profile().server}\n${profile().project!.worktree}` : ""}
               >
-                <For each={groups()}>
-                  {(group) => (
+                {/* Server health and list refreshes rebuild the group objects; key by server so an open menu keeps its items. */}
+                <For each={groups().map((group) => group.key)}>
+                  {(key) => {
+                    const group = groups().find((item) => item.key === key)!
+                    return (
                     <DropdownMenu.Group>
                       <DropdownMenu.GroupLabel class="orchestra-profile-group">
                         <bdi>{serverName(group.conn)}</bdi>
@@ -565,7 +572,8 @@ export function OrchestraSidebar(props: {
                         <DropdownMenu.ItemLabel>{language.t("home.project.add")}</DropdownMenu.ItemLabel>
                       </DropdownMenu.Item>
                     </DropdownMenu.Group>
-                  )}
+                    )
+                  }}
                 </For>
               </DropdownMenu.RadioGroup>
               <Show when={selected()}>

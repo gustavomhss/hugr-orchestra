@@ -18,7 +18,7 @@ export async function exportArtifacts(input: { dist: string; out: string; versio
           throw new Error(`Artifact version mismatch: ${source.target}`)
         if (
           !("name" in metadata) ||
-          metadata.name !== `@hugr/cli-${source.target}` ||
+          metadata.name !== `@humanguardrail/cli-${source.target}` ||
           !("os" in metadata) ||
           !Array.isArray(metadata.os) ||
           metadata.os.length !== 1 ||

@@ -101,6 +101,16 @@ test("resolves a session move keybind", () => {
   expect(config.keybinds.get("session.move")).toMatchObject([{ key: "ctrl+o" }])
 })
 
+test("keeps ctrl+d off the session delete default and binds the common actions", () => {
+  const config = resolve({}, { terminalSuspend: true })
+
+  expect(config.keybinds.get("session.delete")).not.toMatchObject([{ key: "ctrl+d" }])
+  expect(config.keybinds.get("session.delete")).toHaveLength(1)
+  for (const command of ["diff.open", "mcp.list", "provider.connect", "variant.list", "tips.next"]) {
+    expect(config.keybinds.get(command)).toHaveLength(1)
+  }
+})
+
 test("disables suspend and assigns ctrl+z to undo when unsupported", () => {
   const config = resolve({}, { terminalSuspend: false })
 

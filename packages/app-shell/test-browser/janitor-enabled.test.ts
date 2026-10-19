@@ -33,7 +33,8 @@ plugin({
   setup(build) {
     build.module("janitor-test:boundary", () => ({
       exports: {
-        useLanguage: () => ({ plural: (key: string, count: number) => `${key}:${count}` }),
+        useLanguage: () => ({ plural: (key: string, count: number) => `${key}:${count}`, t: (key: string) => key }),
+        showToast: () => undefined,
         usePlatform: () => useBoundary().platform,
         useServer: () => useBoundary().server,
         onJanitorReport: (listener: (event: Event) => void) => useBoundary().subscribe(listener),
@@ -47,7 +48,7 @@ plugin({
       return { contents: babel.transformSync((await Bun.file(file).text())
         .replaceAll("import.meta.env.VITE_ORCHESTRA_CHANNEL", '"test"')
         .replace(/from "([^"]+)"/g, (_match, specifier: string) => {
-          if (["@/context/language", "@/context/platform", "@/context/server", "@/context/server-sync", "@/utils/persist"].includes(specifier))
+          if (["@/context/language", "@/context/platform", "@/context/server", "@/context/server-sync", "@/utils/persist", "@/utils/toast"].includes(specifier))
             return 'from "janitor-test:boundary"'
           if (specifier === "@orchestra/ui/context") return `from ${JSON.stringify(files[2] + suffix)}`
           if (specifier.startsWith("@/")) return `from ${JSON.stringify(resolve(app, "src", specifier.slice(2) + ".ts"))}`

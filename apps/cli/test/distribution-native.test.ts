@@ -12,7 +12,7 @@ import { expectSpawn } from "../../../packages/core/test/fixture/omni-expect"
 
 // Native qualification only. Hosted test-ci supplies installed build dependencies
 // and real native/omni/target/release companions through omni-binaries action.
-// No synthetic native headers, spawner-off bypass, provider, brew or makepkg proof.
+// No synthetic native headers, spawner-off bypass, or provider proof.
 // Reach: compiled skill bundle vs captured source bytes, isolated HOME/cwd/cache.
 // Checkout remains readable: this does not qualify a source-inaccessible OS sandbox.
 const state: { directory?: string; built?: Built } = {}

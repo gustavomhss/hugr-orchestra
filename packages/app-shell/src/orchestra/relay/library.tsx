@@ -7,6 +7,7 @@ import { documentProfile, type RelayDocument } from "./client"
 import { rememberDocument } from "./cache"
 import { CreateWorkflowDialog, templates } from "./create"
 import { createAction, DeleteDialog, failure } from "./dialogs"
+import { ImportWorkflowDialog } from "./import-dialog"
 import { badgeTone, newestFirst, RUN_TONE, runHandle, span } from "./format"
 import { type Flow, flowFromDocument, nodeOf, steps } from "./graph"
 import {
@@ -51,6 +52,7 @@ export function WorkflowLibrary(props: Props) {
   const duplication = createAction(useLocation())
   const [view, setView] = props.view ?? createLibraryView()
   const [template, setTemplate] = createSignal<string>()
+  const [importing, setImporting] = createSignal(false)
   const [menu, setMenu] = createSignal<{ anchor: HTMLElement; document: RelayDocument }>()
   const [dialog, setDialog] = createSignal<{ type: "delete" | "rename"; document: RelayDocument }>()
   const flows = createMemo(
@@ -133,15 +135,21 @@ export function WorkflowLibrary(props: Props) {
       title={copy.t("orchestra.workflows.title")}
       description={copy.t("orchestra.workflows.description")}
       action={
-        <button
-          type="button"
-          class="mx-btn primary"
-          disabled={!loaded() || props.shared}
-          onClick={() => openTemplate("blank")}
-        >
-          <Ic name="plus" />
-          {copy.t("orchestra.workflows.new")}
-        </button>
+        <div style={{ display: "flex", gap: "8px" }}>
+          <button type="button" class="mx-btn" disabled={!loaded() || props.shared} onClick={() => setImporting(true)}>
+            <Ic name="download" />
+            {copy.t("orchestra.workflows.import")}
+          </button>
+          <button
+            type="button"
+            class="mx-btn primary"
+            disabled={!loaded() || props.shared}
+            onClick={() => openTemplate("blank")}
+          >
+            <Ic name="plus" />
+            {copy.t("orchestra.workflows.new")}
+          </button>
+        </div>
       }
     >
       <p class="wf-xlink">
@@ -357,6 +365,13 @@ export function WorkflowLibrary(props: Props) {
           initial={template() ?? "blank"}
           onClose={() => props.close(relayPath.library("workflow"))}
           onCreated={(id) => props.go(relayPath.editor("workflow", id), true)}
+        />
+      </Show>
+      <Show when={importing() && loaded() && !props.shared}>
+        <ImportWorkflowDialog
+          source={props.source}
+          onClose={() => setImporting(false)}
+          onCreated={(id) => (setImporting(false), props.go(relayPath.editor("workflow", id), true))}
         />
       </Show>
       <Show when={menu()}>

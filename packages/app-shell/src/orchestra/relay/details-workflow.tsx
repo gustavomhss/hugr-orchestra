@@ -467,6 +467,11 @@ function Params(props: Props) {
               value={String(props.node.parameters.instructions ?? "")}
               onInput={(event) => update({ instructions: event.currentTarget.value })}
             />
+            <Show when={props.node.type === "relay.execute" && !String(props.node.parameters.instructions ?? "").trim()}>
+              <span class="mx-hint" role="status">
+                {copy.t("orchestra.workflows.details.instructionsEmpty")}
+              </span>
+            </Show>
           </label>
           <div class="mx-fields">
             <label class="mx-field">

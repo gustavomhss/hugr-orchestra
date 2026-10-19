@@ -1,6 +1,4 @@
 import { Tag } from "@orchestra/ui/v2/badge-v2"
-import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
-import { Dialog, DialogFooter, DialogHeader, DialogTitleGroup } from "@orchestra/ui/v2/dialog-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
@@ -8,6 +6,7 @@ import { useDialog } from "@orchestra/ui/context/dialog"
 import fuzzysort from "fuzzysort"
 import { type Component, For, Show, createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
+import { DialogRemoveServer } from "@/components/server/dialog-remove-server"
 import { ServerRowMenu } from "@/components/server/server-row-menu"
 import { ServerHealthIndicator } from "@/components/server/server-row"
 import { useLanguage } from "@/context/language"
@@ -147,34 +146,5 @@ export const SettingsServersV2: Component = () => {
         </Show>
       </div>
     </>
-  )
-}
-
-function DialogRemoveServer(props: { name: string; onConfirm: () => void }) {
-  const dialog = useDialog()
-  const language = useLanguage()
-  return (
-    <Dialog>
-      <DialogHeader closeLabel={language.t("common.close")}>
-        <DialogTitleGroup
-          title={language.t("orchestra.settings.servers.remove.title", { server: props.name })}
-          description={language.t("orchestra.settings.servers.remove.description")}
-        />
-      </DialogHeader>
-      <DialogFooter>
-        <ButtonV2 variant="neutral" onClick={() => dialog.close()}>
-          {language.t("common.cancel")}
-        </ButtonV2>
-        <ButtonV2
-          variant="danger"
-          onClick={() => {
-            dialog.close()
-            props.onConfirm()
-          }}
-        >
-          {language.t("dialog.server.menu.delete")}
-        </ButtonV2>
-      </DialogFooter>
-    </Dialog>
   )
 }

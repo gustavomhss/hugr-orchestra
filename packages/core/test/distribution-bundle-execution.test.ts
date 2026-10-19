@@ -37,7 +37,7 @@ for (const pkg of ["core", "cli"] as const) {
 
 // Core Linux qualification observes dedicated native-host rows' emitted shell without running native builds/models.
 if (process.platform === "linux") {
-  for (const lane of ["aur", "musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
+  for (const lane of ["musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const box = yield* fixture("cli", undefined, lane)
     expect(box.row.files).toEqual([`./test/distribution-${lane}.test.ts`])

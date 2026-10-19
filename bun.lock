@@ -660,6 +660,7 @@
       "dependencies": {
         "@orchestra/schema": "workspace:*",
         "semver": "^7.6.3",
+        "typescript": "catalog:",
       },
       "devDependencies": {
         "@tsconfig/bun": "catalog:",

@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import { expect, test, type Page } from "@playwright/test"
 import { adopt, setupRelay } from "./relay.fixture"
 
@@ -88,7 +89,7 @@ test("final fixes: hook creation retains failed inputs and locks pending form", 
   await expect(name).toBeEnabled()
 })
 
-test("final fixes: export joins pending save and refuses failed save or failed compiled export", async ({ page }) => {
+test("final fixes: workflow download joins a pending save, is refused after a failed save, then writes the authoring document", async ({ page }) => {
   await setupRelay(page)
   const pending = Promise.withResolvers<void>()
   const arrived = Promise.withResolvers<void>()
@@ -117,12 +118,16 @@ test("final fixes: export joins pending save and refuses failed save or failed c
   expect(downloads).toEqual([])
   expect(paths.some((path) => path.endsWith("/export"))).toBe(false)
   await page.unroute("**/api/relay/document/relay-wp-execute*")
-  await page.route("**/api/relay/document/relay-wp-execute/export*", (route) => route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "Export offline" }) }))
   await page.getByRole("button", { name: "Try again", exact: true }).click()
   await expect(page.locator('[data-save="saved"]')).toBeVisible()
   await page.getByRole("button", { name: "More actions", exact: true }).click()
-  await page.getByRole("menuitem", { name: "Download definition", exact: true }).click()
-  await expect(page.getByText("Export offline", { exact: true })).toBeVisible()
-  expect(downloads).toEqual([])
+  const [download] = await Promise.all([
+    page.waitForEvent("download"),
+    page.getByRole("menuitem", { name: "Download definition", exact: true }).click(),
+  ])
+  const file = JSON.parse(await readFile((await download.path())!, "utf8"))
+  expect(file.format).toBe("orchestra-relay-workflow")
+  expect(JSON.stringify(file.nodes)).toContain("Unsaved export input")
+  expect(paths.some((path) => path.endsWith("/export"))).toBe(false)
   await expect(canvas(page)).toBeVisible()
 })

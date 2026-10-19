@@ -189,15 +189,16 @@ async function body<T>(call: Promise<Answer>, empty = false): Promise<T> {
     const message = record(result.error) && typeof result.error.message === "string" ? result.error.message : ""
     throw new RelayError(-1, message || String(result.error), "transport")
   }
-  if (!result.response.ok || result.error !== undefined) throw refusal(result.response.status, result.error)
+  if (!result.response.ok || result.error !== undefined) throw refusal(result.response.status, result.error, result.response.statusText)
   if (empty) return contract<T>(undefined)
   if (!record(result.data) || !("data" in result.data)) throw new RelayError(0, "The server did not answer as Relay")
   return contract<T>(result.data.data)
 }
 
-function refusal(status: number, value: unknown) {
-  if (!record(value)) return new RelayError(status, `${status}`)
-  const message = typeof value.message === "string" && value.message ? value.message : `${status}`
+function refusal(status: number, value: unknown, statusText = "") {
+  const fallback = `Request failed (HTTP ${status}${statusText ? ` ${statusText}` : ""})`
+  if (!record(value)) return new RelayError(status, fallback)
+  const message = typeof value.message === "string" && value.message ? value.message : fallback
   const code = typeof value.code === "string" ? value.code : undefined
   const tag = typeof value._tag === "string" ? value._tag : undefined
   return new RelayError(status, message, code, tag)

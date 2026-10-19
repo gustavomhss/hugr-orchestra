@@ -167,7 +167,7 @@ test("wrong version, package tuple and closed target refuse preparation", async 
   await expect(prepareDistribution({ ...value.input, target: "linux-riscv64" })).rejects.toThrow("target/version")
   await writeFile(join(value.source, "package.json"), JSON.stringify({ name: "wrong", version: "1.2.3", os: [tuple.os], cpu: [tuple.arch] }))
   await expect(prepareDistribution(value.input)).rejects.toThrow("tuple/version")
-  await writeFile(join(value.source, "package.json"), JSON.stringify({ name: `@hugr/cli-${tuple.target}`, os: [tuple.os], cpu: [tuple.arch] }))
+  await writeFile(join(value.source, "package.json"), JSON.stringify({ name: `@humanguardrail/cli-${tuple.target}`, os: [tuple.os], cpu: [tuple.arch] }))
   await expect(prepareDistribution(value.input)).rejects.toThrow("tuple/version")
 })
 
