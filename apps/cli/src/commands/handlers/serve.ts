@@ -20,7 +20,9 @@ export default Runtime.handler(
     return yield* Effect.scoped(
       Effect.gen(function* () {
         const daemon = yield* Daemon.Service
-        const address = yield* listen(input.hostname, input.port, yield* daemon.password())
+        // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
+        const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
+        const address = yield* listen(input.hostname, input.port, password)
         if (input.register) yield* daemon.register(address)
         console.log(`server listening on ${HttpServer.formatAddress(address)}`)
         return yield* Effect.never
