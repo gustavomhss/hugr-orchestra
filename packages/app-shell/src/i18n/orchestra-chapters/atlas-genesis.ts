@@ -216,22 +216,31 @@ export const ATLAS_GENESIS_COPY = {
   "orchestra.atlas.genesis.iv.delegateN.one": "Delegate {{n}}…",
   "orchestra.atlas.genesis.iv.delegateN.other": "Delegate {{n}}…",
   "orchestra.atlas.genesis.iv.select": "Select question {{n}}",
-  "orchestra.atlas.genesis.iv.ranked": "Ranked: {{why}}",
+  "orchestra.atlas.genesis.iv.rank": "Rank {{rank}}: the files that depend on it, times its tier weight",
   "orchestra.atlas.genesis.iv.placeholder": "One sentence, in your words",
   "orchestra.atlas.genesis.iv.note":
     "Answer by hand, or select questions and delegate them: a model drafts the answers and you confirm each one. A draft is never ratified on its own. Unanswered questions defer to the next session; an uncovered path stays T0-strict deny.",
   "orchestra.atlas.genesis.iv.ratify": "Ratify the batch",
-  "orchestra.atlas.genesis.iv.newcap": "Serving the interview is a new capability (R11).",
+  "orchestra.atlas.genesis.iv.newcap": "Delegating to a model is a new capability (R11).",
   "orchestra.atlas.genesis.iv.selectFirst": "Select one or more questions first.",
+  "orchestra.atlas.genesis.iv.empty": "No open questions. Answered ones drop out; new ones appear as the store changes.",
+  "orchestra.atlas.genesis.iv.nothing": "Answer one or more questions first.",
+  "orchestra.atlas.genesis.iv.recorded.one": "{{n}} answer recorded.",
+  "orchestra.atlas.genesis.iv.recorded.other": "{{n}} answers recorded.",
+  "orchestra.atlas.genesis.iv.refusedSome": "{{n}} recorded · {{refused}} refused. The refused ones keep your pick.",
+  "orchestra.atlas.genesis.iv.drafted": "Drafted by {{model}}: {{why}}",
+  "orchestra.atlas.genesis.iv.accept": "Accept",
+  "orchestra.atlas.genesis.iv.accepted": "Answer recorded.",
+  "orchestra.atlas.genesis.iv.refused": "Refused: {{reason}}",
   "orchestra.atlas.genesis.iv.tech.code":
-    "<code>genesis/src/align.ts</code> · assembleInterview · INTERVIEW_CAP = 20 · ROUTER_EDGES",
+    "<code>genesis/src/open-questions.ts</code> · deriveOpenQuestions · assembleInterview · INTERVIEW_CAP = 20",
   "orchestra.atlas.genesis.iv.tech.kinds": "Question kinds",
   "orchestra.atlas.genesis.iv.tech.kinds.text": "owner · tier · contested · intent (genesis/src/types.ts OpenQ)",
   "orchestra.atlas.genesis.iv.tech.today": "Today",
   "orchestra.atlas.genesis.iv.tech.today.text":
-    "the library assembles the batch and feeds a Ratifier; no command, tool or flag reaches it",
+    "atlas interview serves the batch; atlas answer records each answer in .atlas/review.jsonl",
   "orchestra.atlas.genesis.iv.tech.here": "Here",
   "orchestra.atlas.genesis.iv.tech.here.text":
-    "questions drafted from this store: units with no owner, invariants and contracts still hints, two claims in one slot, units with no rationale",
+    "the engine's batch, read with the snapshot; a tier answer of T1 or T0 also opens a proposal that a person ratifies",
 }
 

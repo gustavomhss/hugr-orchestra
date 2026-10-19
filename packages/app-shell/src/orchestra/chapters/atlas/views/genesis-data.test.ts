@@ -6,6 +6,7 @@ import {
   genesisConf,
   genesisQuery,
   INTERVIEW_CAP,
+  interviewAnswer,
   KINDS,
   KNOBS,
   markRefutation,
@@ -110,6 +111,14 @@ describe("atlas genesis data", () => {
     const long = markRefutation(`${"a".repeat(950)} refuted`)
     expect([long.before.length, long.mark, long.after, long.more]).toEqual([900, "", "", true])
   })
+
+    test("sends a tier pick as the tier itself and every other pick as its text", () => {
+      const tier = { kind: "tier" as const, options: ["Rule · T1", "Core · T0", "Keep as a hint"] }
+      expect([0, 1, 2].map((index) => interviewAnswer(tier, index))).toEqual(["T1", "T0", "Keep as a hint"])
+      const owner = { kind: "owner" as const, options: ["seat:orchestrator", "a person on the team", "nobody yet"] }
+      expect(interviewAnswer(owner, 1)).toBe("a person on the team")
+      expect(interviewAnswer({ kind: "intent", options: null }, 0)).toBe("")
+    })
 
   test("asks owner and intent questions for every unit outside the root", () => {
     const result = openQuestions(createAtlasModel(atlasFixture()))

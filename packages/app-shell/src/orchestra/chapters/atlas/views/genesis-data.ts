@@ -1,5 +1,6 @@
 import type { useLanguage } from "@/context/language"
 import type { AtlasFact, AtlasModel } from "../atlas-model"
+import type { AtlasInterviewQuestion } from "../atlas-types"
 import { num } from "../kit/format"
 
 // Genesis is the `atlas mine` command (cli/src/map.ts:133): it proposes claims into staging and never writes
@@ -22,6 +23,14 @@ export type GenesisQuestion = {
 
 // genesis/src/align.ts: at most 20 questions are served per session; the tail waits for the next one.
 export const INTERVIEW_CAP = 20
+// `atlas answer` opens a ratification proposal only for the exact answers T1 and T0 (cli/src/interview-cli.ts:64).
+// The engine's tier options read "Rule · T1", "Core · T0" and "Keep as a hint", so the first two are sent as the
+// tier itself; every other pick is sent as its own text.
+const TIER_ANSWERS = ["T1", "T0"]
+export function interviewAnswer(question: Pick<AtlasInterviewQuestion, "kind" | "options">, index: number) {
+  if (question.kind === "tier" && index < TIER_ANSWERS.length) return TIER_ANSWERS[index]
+  return question.options?.[index] ?? ""
+}
 export const PROMOTE_COMMAND = "ATLAS_RATIFY_TOKEN=… atlas promote"
 
 // Who does a stage's work: code, the model, or you. [copy key, tone].

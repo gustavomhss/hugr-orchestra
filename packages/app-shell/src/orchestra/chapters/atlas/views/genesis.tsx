@@ -274,7 +274,7 @@ export default function AtlasGenesisView(props: AtlasViewProps) {
         </p>
       </section>
 
-      <GenesisInterview model={props.model} />
+      <GenesisInterview />
 
       <section class="at-panel at-gen-config">
         <header class="at-panel-head">

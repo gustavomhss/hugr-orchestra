@@ -170,7 +170,8 @@ test("v1: every Atlas view renders the store", async ({ page }) => {
   await rail.getByRole("link", { name: "Genesis" }).click()
   await expect(main.locator("h1")).toHaveText("Genesis")
   await expect(main).toContainText("The ratification interview")
-  await expect(main).toContainText("New capability · R11")
+  await expect(main).toContainText("Who owns packages/a?")
+  await expect(main).not.toContainText("New capability · R11")
   await main.getByRole("button", { name: "Delegate…" }).click()
   await expect(page.locator(".at-toast")).toHaveText("Select one or more questions first.")
 
