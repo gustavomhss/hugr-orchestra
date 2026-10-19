@@ -214,7 +214,9 @@ function snapshot(parts: ReadonlyArray<Part>, directory: string | undefined) {
   const files = Array.from(
     new Set(
       patches.flatMap((part) =>
-        part.files.map((file) => (directory && path.isAbsolute(file) ? path.relative(directory, file) : file)),
+        part.files.map((file) =>
+          directory && path.isAbsolute(file) ? path.relative(directory, file).split(path.sep).join("/") : file,
+        ),
       ),
     ),
   )
