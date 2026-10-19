@@ -139,7 +139,8 @@ describe("createNativeEventAdapter", () => {
 
     expect(total?.cost).toBeCloseTo(1.01)
     expect(total?.tokens).toEqual({ input: 13, output: 7, reasoning: 1, cache: { read: 2, write: 0 } })
-    expect(sessionUsage({ id: "ses_1" }, step)).toMatchObject({ cost: 0.01, tokens: { input: 3, output: 2 } })
+    const fresh: { id: string; cost?: number } = { id: "ses_1" }
+    expect(sessionUsage(fresh, step)).toMatchObject({ cost: 0.01, tokens: { input: 3, output: 2 } })
     expect(sessionUsage(info, createNativeEventAdapter()(stream[2]!) as unknown as typeof step)).toBeUndefined()
   })
 

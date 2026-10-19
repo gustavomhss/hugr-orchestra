@@ -2,6 +2,7 @@ import { useNavigate } from "@solidjs/router"
 import { createMemo, createSignal, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
@@ -130,6 +131,7 @@ const mcpStatus = {
 export function McpSection(props: { directory: string }) {
   const language = useLanguage()
   const serverSync = useServerSync()
+  const platform = usePlatform()
   const navigate = useNavigate()
   const [pending, setPending] = createStore<Record<string, boolean>>({})
   const store = () => serverSync().child(props.directory, { mcp: true })[0]
@@ -143,7 +145,7 @@ export function McpSection(props: { directory: string }) {
   const toggle = (name: string) => {
     setPending(name, true)
     void serverSync()
-      .mcp.toggle(props.directory, name)
+      .mcp.toggle(props.directory, name, (url) => platform.openExternal(url))
       .catch((err: unknown) =>
         showToast({
           title: language.t("common.requestFailed"),
