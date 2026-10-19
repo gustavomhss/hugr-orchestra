@@ -95,12 +95,11 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   const fromLocation: ServerApi["project"]["current"] = (value, options) =>
     input.current.location.get(value, options).then((info) => info.project)
   const lookup = { served: true }
-  // The V2 server has no MCP service yet: it lists no servers and refuses writes, instead of a 404 per poll.
+  // The V2 MCP service has no resource routes yet: the catalog answers empty instead of a 404 per poll.
   const located = (value?: { location?: { directory?: string } }) => ({
     directory: value?.location?.directory ?? "",
     project: { id: "", directory: value?.location?.directory ?? "" },
   })
-  const unavailable = () => Promise.reject(new Error("MCP servers are not available on this server yet"))
   const current: ServerApi = {
     ...input.current,
     project: {
@@ -115,11 +114,6 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
     },
     mcp: {
       ...input.current.mcp,
-      list: async (value) => ({ location: located(value), data: [] }),
-      connect: unavailable,
-      disconnect: unavailable,
-      add: unavailable,
-      remove: unavailable,
       resource: {
         ...input.current.mcp.resource,
         catalog: async (value) => ({ location: located(value), data: { resources: [], templates: [] } }),
