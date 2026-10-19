@@ -1371,3 +1371,19 @@ a.at-wow-card:hover { transform: translateY(-2px); border-color: var(--mx-blue);
 .at-hero-git { display: flex; align-items: center; gap: 6px; font-size: 13px; color: var(--mx-dim); }
 .at-hero.solo { grid-template-columns: 1fr; }
 .at-hero.solo .at-hero-text p { max-inline-size: 72ch; }
+.at-keep-k { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 11px; text-transform: uppercase; letter-spacing: .04em; color: var(--mx-dim); }
+.at-keep-pin { display: flex; gap: 10px; align-items: flex-start; margin: 14px 16px 4px; padding: 10px 12px; border-radius: 10px; background: var(--mx-soft); font-size: 12.5px; line-height: 1.5; }
+.at-keep-track { padding: 10px 16px 4px; }
+.at-keep-label { display: flex; align-items: center; gap: 6px; margin-block-end: 8px; font-size: 11.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--mx-dim); }
+.at-keep-label.good { color: var(--mx-good); } .at-keep-label.warm { color: var(--mx-warm); }
+.at-keep-row { display: grid; grid-template-columns: 1fr auto 1fr auto 1fr auto 1fr; gap: 6px; align-items: stretch; }
+.at-keep-step { padding: 10px 12px; border: 1px solid var(--mx-line); border-radius: 10px; background: var(--mx-raised); }
+.at-keep-step.good { border-color: var(--mx-good); } .at-keep-step.warm { border-color: var(--mx-warm); }
+.at-keep-step .at-keep-k b { text-transform: none; letter-spacing: 0; font-size: 13px; color: var(--mx-strong); }
+.at-keep-step p { margin: 6px 0 0; font-size: 12px; line-height: 1.45; color: var(--mx-dim); }
+.at-keep-arrow { display: grid; place-items: center; color: var(--mx-dim); }
+.at-keep-foot { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 16px 4px; }
+.at-keep-foot > div { padding: 10px 12px; border: 1px solid var(--mx-line); border-radius: 10px; }
+.at-keep-foot b { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.at-keep-foot p { margin: 4px 0 0; font-size: 12px; line-height: 1.45; color: var(--mx-dim); }
+@media (max-width: 1000px) { .at-keep-row { grid-template-columns: 1fr; } .at-keep-arrow { transform: rotate(90deg); } .at-keep-foot { grid-template-columns: 1fr; } }

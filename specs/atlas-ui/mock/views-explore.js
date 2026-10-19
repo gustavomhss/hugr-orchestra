@@ -54,7 +54,7 @@
           <div class="mx-eyebrow">Atlas · project atlas ${need ? `<a class="at-needs" href="#/review">${A.num(need)} need you</a>` : ""}</div>
           <h1>Atlas knows <em>${A.num(s.facts)} things</em> about this code.</h1>
           <p>Each one is pinned to the exact code it describes and re-checked whenever that code moves. <b>${A.num(s.fresh)}</b> still hold. <b class="warm">${A.num(s.drifted)}</b> stopped matching their code, and Atlas noticed.</p>
-          <p class="at-hero-git">${A.icon("branch")} Versioned in git with the code: it changes in pull requests and comes back on any clone. <a class="mx-link" href="#/overview" onclick="event.preventDefault();document.getElementById('travel').scrollIntoView({behavior:'smooth'})">How</a></p>
+          <p class="at-hero-git">${A.icon("shield")} Versioned with the code and guarded by CI: a stale Atlas does not merge. <a class="mx-link" href="#/overview" onclick="event.preventDefault();document.getElementById('travel').scrollIntoView({behavior:'smooth'})">How it travels</a> · <a class="mx-link" href="#/overview" onclick="event.preventDefault();document.getElementById('keep').scrollIntoView({behavior:'smooth'})">How it stays in sync</a></p>
           ${trusted ? "" : `<p class="at-hero-warn">${A.icon("lock")} This store is in git, so agents get none of it yet. <a class="mx-link" href="#/overview?show=health">Why</a></p>`}
           <div class="at-hero-actions">${A.btn("Explore the map", "go", { value: "#/explore", primary: true, icon: "graph" })}${A.btn("How Atlas learns", "go", { value: "#/genesis", icon: "sparkle" })}${A.btn("Follow one fact", "go", { value: "#/how", icon: "fact" })}</div>
         </div>
@@ -80,6 +80,7 @@
         </a>
       </section>
       ${A.travelSection()}
+      ${A.keepSection()}
       ${health.html}
       </div>`,
     }
@@ -96,6 +97,26 @@
     </div>
     <div class="at-travel-steps">${[["Open a PR", "Memories, policy and owners change in the same diff as the code they describe."], ["Merge", "Logs union line by line; owners whose code changed hold until refreshed."], ["Clone anywhere", "Run Genesis: the index and store come back from the code; memory and owners are already there."]].map(([t, d], i) => `<div><span>${i + 1}</span><b>${t}</b><p>${d}</p></div>`).join("")}</div>
     <p class="mx-note">To move a whole store in one piece, <code>atlas export</code> writes an <code>atlas-okf.json</code> bundle that imports into an empty store, all or nothing. ${A.help("modules/atlas/.gitignore: .atlas/* is ignored except memory.jsonl, orientation.jsonl and policy.json; staging is denied at any depth.")}</p></section>`
+
+  // How Atlas stays free of drift across pull requests. Every fact and every owner is bound to the exact bytes of its
+  // code, so a change either refreshes them in the same PR (and CI proves it), or lands and is held until rebuilt.
+  A.keepSection = () => {
+    const st = { R: ["Runs", "good"], B: ["Built", "blue"], D: ["Designed", ""] }
+    const pill = (k) => `<span class="at-own-badge ${st[k][1]}">${st[k][0]}</span>`
+    const step = (icon, t, d, k, tone = "") => `<div class="at-keep-step ${tone}"><div class="at-keep-k">${A.icon(icon)}<b>${t}</b>${pill(k)}</div><p>${d}</p></div>`
+    const arrow = `<span class="at-keep-arrow">${A.icon("arrow")}</span>`
+    return `<section class="at-panel at-arch-block at-travel" id="keep"><header class="at-panel-head"><div><h3>${A.icon("shield")}How Atlas stays free of drift</h3><small>Every fact and every owner is bound to the exact bytes of the code it describes. When that code changes, Atlas is either refreshed in the same pull request, or it stops being served until it is.</small></div></header>
+    <div class="at-keep-pin">${A.icon("hash")}<span><b>The anchor.</b> A fact carries the hash of the code under it (<code>path@subtreeHash</code>); an owner carries the git blob of every file it covers. Change one byte and the hash no longer matches. That mismatch is what every step below looks for.</span></div>
+    <div class="at-keep-track"><div class="at-keep-label good">${A.icon("checkc")}Refreshed in the pull request</div>
+      <div class="at-keep-row">${step("code", "Code changes", "A pull request edits <code>packages/billing</code>.", "R")}${arrow}${step("drift", "Atlas sees it", "Facts on the changed files show as changed in Review › Changed, with the commit that moved them.", "R")}${arrow}${step("fact", "Refresh", "Rewrite or confirm those facts and re-materialize the owner, in the same PR as the code.", "R")}${arrow}${step("shield", "CI proves it", "<code>own-snapshot-guard</code> re-renders every owner and re-hashes its files. Equal bytes: green.", "R", "good")}</div></div>
+    <div class="at-keep-track"><div class="at-keep-label warm">${A.icon("drift")}Merged without refreshing</div>
+      <div class="at-keep-row">${step("code", "Code merges", "Atlas was not touched, or CI did not run on that PR.", "R")}${arrow}${step("lock", "Held, not served", "Stale facts travel marked stale. The owner no longer matches its files, so Maestro holds instead of handing it to an agent.", "R", "warm")}${arrow}${step("list", "Worklist", "A deterministic list of the owners whose files changed, computed from hashes, no model.", "B")}${arrow}${step("agents", "Rebuild", "A repair pull request refreshes exactly those owners, then the same CI check must pass.", "D")}</div></div>
+    <div class="at-keep-foot">
+      <div><b>${A.icon("shield")}CI</b><p>The atlas job in <code>test.yml</code> runs 13 Atlas guards, <code>own-snapshot-guard</code> among them, on epic pull requests and on demand. A failing guard blocks the merge.</p></div>
+      <div><b>${A.icon("agents")}Rosie, the maintainer</b>${pill("B")}<p>The team's maintenance seat: documentation freshness, stale claims, orphaned files. Built today for documentation changes; curating Atlas and repo hygiene is her designed scope.</p></div>
+    </div>
+    <p class="mx-note">Sources: harness/gates/own-snapshot-guard.mjs, .github/workflows/test.yml (Run Atlas guards), specs/hugr-maestro/own-protocol.md (CI freshness path), docs/CONVENTIONS.md, maestro/seats/rosie.ts.</p></section>`
+  }
 
   const pickEmpty = `<div class="at-pick-empty">${A.icon("graph")}<span>Each circle is a unit Atlas serves knowledge for. Arrows point to what it depends on.</span></div>`
   const pick = (id) => {
