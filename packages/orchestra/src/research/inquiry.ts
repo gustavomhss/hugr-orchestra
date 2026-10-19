@@ -33,7 +33,7 @@ export type State = {
   stale: boolean
   card?: Research.CardV2
   sources: Research.SourceReceipt[]
-  used: { provider: number; tool: number; bytes: number }
+  used: { provider: number; tool: number; bytes: number; probe: number }
   searches: number
 }
 
@@ -43,7 +43,7 @@ const SEARCHES = new Set(["grep", "glob", "Grep", "Glob", "code_search", "code_l
 export function fold(steps: readonly ResearchLedger.Step[]): State {
   const records = new Map<string, Research.Record>()
   const state: State = { phase: "none", subquestions: [], hypotheses: [], claims: [], stale: false, sources: [],
-    used: { provider: 0, tool: 0, bytes: 0 }, searches: 0 }
+    used: { provider: 0, tool: 0, bytes: 0, probe: 0 }, searches: 0 }
   steps.forEach((step) => {
     if (step.type === "research.source.admitted") state.sources.push(step.data.receipt)
     if (step.type === "research.allowance.charged") {
@@ -292,7 +292,7 @@ const SNAPSHOT_CHARS = 4500
  * from the ledger every turn, so it survives compaction. Kept under about 1.1k tokens at four characters per token.
  */
 export function snapshot(state: State, allowance: Research.Allowance) {
-  const budget = `tier ${allowance.tier}; used tools ${state.used.tool}/${allowance.toolLimit}, provider ${state.used.provider}/${allowance.providerLimit}, bytes ${state.used.bytes}/${allowance.byteLimit}, deadline ${allowance.deadlineSeconds}s, probe ${allowance.probeSecondsLimit}s`
+  const budget = `tier ${allowance.tier}; used tools ${state.used.tool}/${allowance.toolLimit}, provider ${state.used.provider}/${allowance.providerLimit}, bytes ${state.used.bytes}/${allowance.byteLimit}, deadline ${allowance.deadlineSeconds}s, probe ${state.used.probe}/${allowance.probeSecondsLimit}s`
   if (state.phase === "none") return [`<inquiry state="none">`, budget, "Open it with inquiry open before investigating.", "</inquiry>"].join("\n")
   const ref = (item: Research.RecordRef) => `${item.id}@${item.revision}`
   const label = (text: string) => JSON.stringify(text.length > 80 ? `${text.slice(0, 77)}...` : text)

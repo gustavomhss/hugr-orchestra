@@ -135,9 +135,9 @@ it.instance("registers native team specialists with fixed profiles", () =>
       if (seat.id === "jimmy") {
         for (const name of ["jimmy-reference"])
           expect(Permission.evaluate("skill", name, agent.permission).action).toBe("allow")
-        for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "inquiry", "code_query", "code_locate", "code_search"])
+        for (const tool of ["context_recall", "context_compact", "research_capture", "research_record", "research_view", "atlas_context", "atlas_memory_recall", "atlas_memory_emit", "inquiry", "code_query", "code_locate", "code_search", "probe_run"])
           expect(evaluate(agent, tool)).toBe("allow")
-        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state", "probe_run"])
+        for (const tool of ["lsp", "repo_map", "repo_symbols", "repo_git_state"])
           expect(evaluate(agent, tool)).toBe("deny")
         for (const tool of ["maestro_arsenal_catalog", "maestro_arsenal_describe", "maestro_arsenal_execute"])
           expect(evaluate(agent, tool)).toBe("deny")
@@ -221,6 +221,7 @@ it.instance("backend alone gets backend skills; native memory seats get Atlas gr
       code_query: "allow",
       code_search: "allow",
       code_locate: "allow",
+      probe_run: "allow",
       external_directory: { "*": "deny", [Truncate.GLOB]: "allow" },
     })
     // The backend specialist keeps the seat rules: no .env reads and no publishing.

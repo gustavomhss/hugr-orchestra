@@ -9,6 +9,8 @@ import { PositiveInt, optional } from "@orchestra/schema/schema"
 /** Owner caps (D2, 2026-10-18); config `research.limits.*` may lower them. */
 export const Limits = Object.freeze({
   heapMiB: 1024,
+  /** Resident memory of the whole probe tree, enforced by omni (J4.7, D2). */
+  rssBytes: 1024 * 1024 * 1024,
   scratchBytes: 2 * 1024 * 1024 * 1024,
   outputBytes: 1024 * 1024,
   tailBytes: 64 * 1024,

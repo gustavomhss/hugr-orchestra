@@ -48,7 +48,8 @@ export const AllowanceCharged = Event.define({
   durable: { version: 1, aggregate: "sessionID" },
   schema: {
     sessionID: SessionID, dispatchCallID: Schema.NonEmptyString, operation: Schema.NonEmptyString,
-    kind: Schema.Literals(["provider", "tool", "bytes"]), amount: NonNegativeInt,
+    // probe: wall-clock seconds a probe ran (J1.10).
+    kind: Schema.Literals(["provider", "tool", "bytes", "probe"]), amount: NonNegativeInt,
   },
 })
 // One dispatch's inquiry (J5.1): opened over its question records, each check, and the close that carries the card.

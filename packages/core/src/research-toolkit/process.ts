@@ -3,6 +3,7 @@ export * as ResearchProcess from "./process"
 import { Duration, Effect, Option, Schema, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { AppProcess } from "../process"
+import { OmniSpawner } from "../omni-spawner"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
 
 // T-P1, from A/engine/process.ts:13-14: the research seat's fixed processes (history, indexer, probe) run with a
@@ -27,6 +28,8 @@ export type Outcome = {
   readonly timedOut: boolean
   /** A stream passed maxBytes; the process was stopped there. */
   readonly overflow: boolean
+  /** The tree went over maxRssBytes and omni killed it. */
+  readonly memoryExceeded: boolean
   /** The process could not be started or supervised. */
   readonly failure?: string
   readonly stdout: Captured
@@ -49,6 +52,8 @@ export const run = Effect.fn("ResearchProcess.run")(function* (input: {
   readonly timeoutMs: number
   readonly maxBytes: number
   readonly tailBytes?: number
+  /** Resident bytes of the whole tree; omni kills it above (J4.7). */
+  readonly maxRssBytes?: number
 }) {
   const processes = yield* AppProcess.Service
   const started = Date.now()
@@ -57,17 +62,19 @@ export const run = Effect.fn("ResearchProcess.run")(function* (input: {
   const settled = yield* Effect.scoped(Effect.gen(function* () {
     const handle = yield* processes.spawn(ChildProcess.make(input.command, [...input.args], {
       cwd: input.cwd, env: input.env, extendEnv: false, stdin: "ignore",
-    }))
+    })).pipe(Effect.provideService(OmniSpawner.MemoryCap, input.maxRssBytes))
     const all = yield* Effect.all([drain(handle.stdout, stdout, input.maxBytes), drain(handle.stderr, stderr, input.maxBytes), handle.exitCode],
       { concurrency: "unbounded" })
-    return { exitCode: Number(all[2]) as number | null, timedOut: false, overflow: false, failure: undefined as string | undefined }
+    return { exitCode: Number(all[2]) as number | null, timedOut: false, overflow: false, memoryExceeded: false, failure: undefined as string | undefined }
   })).pipe(
     // Closing the scope stops the child; omni stops its whole tree.
     Effect.timeoutOption(Duration.millis(input.timeoutMs)),
-    Effect.map(Option.getOrElse(() => ({ exitCode: null, timedOut: true, overflow: false, failure: undefined }))),
+    Effect.map(Option.getOrElse(() => ({ exitCode: null, timedOut: true, overflow: false, memoryExceeded: false, failure: undefined }))),
     Effect.catch((error) => Effect.succeed(error instanceof Overflow
-      ? { exitCode: null, timedOut: false, overflow: true, failure: undefined }
-      : { exitCode: null, timedOut: false, overflow: false, failure: error.message })),
+      ? { exitCode: null, timedOut: false, overflow: true, memoryExceeded: false, failure: undefined }
+      : memory(error)
+        ? { exitCode: null, timedOut: false, overflow: false, memoryExceeded: true, failure: undefined }
+        : { exitCode: null, timedOut: false, overflow: false, memoryExceeded: false, failure: error.message })),
   )
   return { ...settled, durationMs: Date.now() - started, stdout: stdout.captured(), stderr: stderr.captured() } satisfies Outcome
 })
@@ -81,6 +88,12 @@ export const git = Effect.fn("ResearchProcess.git")(function* (cwd: string, args
     detail: outcome.failure ?? (outcome.timedOut ? "timed out" : outcome.overflow ? "output cap" : outcome.stderr.data.toString("utf8").trim()),
   })
 })
+
+// Omni fails the exit code with a PlatformError whose cause chain holds MemoryExceeded.
+function memory(error: unknown): boolean {
+  if (error instanceof OmniSpawner.MemoryExceeded) return true
+  return error instanceof Error && error.cause !== undefined && memory(error.cause)
+}
 
 function sink(keep: number) {
   const state = { chunks: [] as Uint8Array[], kept: 0, bytes: 0 }

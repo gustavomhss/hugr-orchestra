@@ -4,6 +4,7 @@ import os from "os"
 import path from "path"
 import { mkdtemp, realpath, rm } from "fs/promises"
 import { Duration, Effect, Option, Semaphore } from "effect"
+import { Flag } from "../../flag/flag"
 import { ToolSafetySandbox } from "../../tool-safety-sandbox"
 import { ResearchProcess } from "../process"
 import { Probe } from "./types"
@@ -26,6 +27,7 @@ export type Context = {
   /** Adds --noUnusedLocals --noUnusedParameters to a typecheck (T-P3). */
   readonly unused?: boolean
   readonly heapMiB?: number
+  readonly rssBytes?: number
   readonly queueSeconds?: number
 }
 
@@ -58,7 +60,7 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
   const outcome = yield* ResearchProcess.run({
     command: launch.command, args: launch.args, cwd: plan.cwd,
     env: Object.fromEntries(Object.entries(launch.env).filter((entry): entry is [string, string] => entry[1] !== undefined)),
-    timeoutMs: seconds * 1000, maxBytes: Probe.Limits.outputBytes,
+    timeoutMs: seconds * 1000, maxBytes: Probe.Limits.outputBytes, maxRssBytes: context.rssBytes ?? Probe.Limits.rssBytes,
   })
   const stdout = outcome.stdout.data.toString("utf8")
   const stderr = outcome.stderr.data.toString("utf8")
@@ -72,8 +74,8 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
     verdict: verdict(input.expect, outcome, `${stdout}\n${stderr}`, diagnostics),
     exitCode: outcome.exitCode,
     durationMs: outcome.durationMs,
-    // P2 adds the omni RSS cap; until then only the runner's heap is bounded (J4.7 phase 1).
-    memoryCap: "heap-only",
+    // Omni enforces the RSS cap over the whole tree; the legacy spawner bounds only the runner's heap (J4.7).
+    memoryCap: Flag.ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER === "off" ? "heap-only" : "rss",
     // A typecheck's diagnostic lines are already structured: its tail leads with their causes and keeps only the rest.
     stdout: stream(outcome.stdout, diagnostics ? (line) => !ProbeTypecheck.structured(line) : undefined, [
       ...(diagnostics ? ProbeTypecheck.causes(diagnostics) : []),
@@ -88,6 +90,7 @@ export const run = Effect.fn("Probe.run")(function* (input: Probe.ProbeInput, co
 
 function verdict(expect: Probe.ProbeInput["expect"], outcome: ResearchProcess.Outcome, text: string, diagnostics?: ReadonlyArray<ProbeTypecheck.Diagnostic>): Probe.Verdict {
   if (outcome.timedOut) return "timeout"
+  if (outcome.memoryExceeded) return "memory_exceeded"
   if (outcome.failure !== undefined || outcome.overflow) return "error"
   if (text.includes(GUARD)) return "blocked_by_repo_guard"
   if (!expect) return outcome.exitCode === 0 ? "passed" : "failed"

@@ -16,7 +16,7 @@ export interface Interface {
   readonly bind: (binding: Research.Binding, dispatchCallID: string, tier?: Research.Depth) => Effect.Effect<Research.Allowance, Research.Error>
   readonly charge: (
     allowance: Research.Allowance,
-    kind: "provider" | "tool" | "bytes",
+    kind: "provider" | "tool" | "bytes" | "probe",
     operation: string,
     amount?: number,
   ) => Effect.Effect<void, Research.Error>
@@ -57,11 +57,17 @@ export const layer = Layer.effect(
           toolLimit: limits.toolCalls,
           byteLimit: limits.capturedBytes,
           deadlineSeconds: limits.deadlineSeconds,
+          probeSecondsLimit: Research.ProbeSeconds[tier],
         })
         const id = eventID("bound", binding.executionSessionID, dispatchCallID)
-        if (yield* read(id)) {
-          yield* bound(allowance)
-          return allowance
+        const row = yield* read(id)
+        if (row) {
+          // A dispatch admitted before probe seconds existed keeps the limit its stored row decodes to.
+          const stored = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceBound.data)(row.data)
+          const admitted = typeof row.data.allowance === "object" && row.data.allowance !== null &&
+            !("probeSecondsLimit" in row.data.allowance) ? { ...allowance, probeSecondsLimit: stored.allowance.probeSecondsLimit } : allowance
+          yield* bound(admitted)
+          return admitted
         }
         yield* events.publish(ResearchEvent.AllowanceBound, { sessionID: binding.executionSessionID, allowance }, {
           id, persist: true,
@@ -93,7 +99,7 @@ export const layer = Layer.effect(
     const charge: Interface["charge"] = Effect.fn("ResearchAllowance.charge")((allowance, kind, operation, amount = 1) =>
       Effect.gen(function* () {
         if (!operation.trim() || operation.length > 256 || !Number.isSafeInteger(amount) || amount < 0 ||
-          (kind !== "bytes" && amount !== 1))
+          (kind !== "bytes" && kind !== "probe" && amount !== 1))
           return yield* new Research.Error({ code: "over_cap", message: "Invalid allowance charge operation or amount" })
         const data = yield* Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)({
           sessionID: allowance.binding.executionSessionID, dispatchCallID: allowance.dispatchCallID, operation, kind, amount,
@@ -117,11 +123,12 @@ export const layer = Layer.effect(
             )).all()
             const ledger = yield* Effect.forEach(rows, (row) => Schema.decodeUnknownEffect(ResearchEvent.AllowanceCharged.data)(row.data))
             if (ledger.some((entry) => entry.sessionID !== data.sessionID || !Number.isSafeInteger(entry.amount) ||
-              (entry.kind !== "bytes" && entry.amount !== 1)))
+              (entry.kind !== "bytes" && entry.kind !== "probe" && entry.amount !== 1)))
               return yield* Effect.die(new Research.Error({ code: "publication_uncertain", message: "Invalid allowance ledger" }))
             const used = ledger.filter((entry) => entry.dispatchCallID === data.dispatchCallID && entry.kind === kind)
               .reduce((total, entry) => total + entry.amount, 0)
-            const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit : allowance.byteLimit
+            const limit = kind === "provider" ? allowance.providerLimit : kind === "tool" ? allowance.toolLimit
+              : kind === "probe" ? allowance.probeSecondsLimit : allowance.byteLimit
             if (!Number.isSafeInteger(used) || amount > limit - used)
               return yield* Effect.die(new Research.Error({ code: "budget_exhausted", message: `Research ${kind} allowance exhausted (${used}/${limit}); retained work remains available` }))
           }).pipe(Effect.orDie),

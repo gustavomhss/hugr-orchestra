@@ -6,6 +6,7 @@ import { Research } from "@orchestra/schema/research"
 import { Project } from "@orchestra/schema/project"
 import { AbsolutePath } from "@orchestra/schema/schema"
 import { ResearchAllowance } from "@orchestra/core/research/allowance"
+import { ResearchLedger } from "@orchestra/core/research/ledger"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -39,6 +40,12 @@ export interface Interface {
   readonly provider: <A, E, R>(input: LLM.StreamInput, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly tool: <A, E, R>(sessionID: string, callID: string, toolID: string, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
   readonly captureBytes: <A, E, R>(sessionID: string, callID: string, bytes: number, effect: Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
+  /**
+   * One probe inside its dispatch (J1.10): `use` gets what remains of the probe seconds as its timeout, and the seconds
+   * it ran are charged after it. A dispatch runs one probe at a time (J4.12), so another probe cannot spend them meanwhile.
+   */
+  readonly probe: <A extends { readonly durationMs: number }, E, R>(sessionID: string, callID: string,
+    use: (remainingSeconds: number) => Effect.Effect<A, E, R>) => Effect.Effect<A, E | Research.Error, R>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/ResearchExecution") {}
@@ -152,7 +159,23 @@ const layer = Layer.effect(
       return yield* effect
     })
 
-    return Service.of({ enter, withAttribution, provider, tool, captureBytes })
+    const probe: Interface["probe"] = (sessionID, callID, use) => Effect.gen(function* () {
+      const current = yield* frame(sessionID)
+      if (!current) return yield* new Research.Error({ code: "binding_missing", message: "A probe runs only inside a research dispatch" })
+      if (!callID.trim()) return yield* new Research.Error({ code: "binding_missing", message: "Native probe call identity is missing" })
+      const limit = current.allowance.probeSecondsLimit
+      const used = (yield* ResearchLedger.dispatch(current.allowance).pipe(Effect.provideService(Database.Service, database)))
+        .reduce((total, step) => step.type === "research.allowance.charged" && step.data.kind === "probe" ? total + step.data.amount : total, 0)
+      if (used >= limit) return yield* new Research.Error({ code: "budget_exhausted",
+        message: `Research probe allowance exhausted (${used}/${limit} seconds); retained work remains available` })
+      const result = yield* use(limit - used)
+      // Whole seconds, at least one per probe that ran; the timeout already bounds it by what remained.
+      yield* allowances.charge(current.allowance, "probe", `probe:${callID}`,
+        Math.min(limit - used, Math.max(1, Math.ceil(result.durationMs / 1000))))
+      return result
+    })
+
+    return Service.of({ enter, withAttribution, provider, tool, captureBytes, probe })
   }),
 )
 

@@ -63,7 +63,8 @@ const test = Effect.fnUntraced(function* (
   const filter = (flag: string) => (target.name === undefined ? [] : [flag, target.name])
   if (runner === "bun")
     return { kind: "test", binary: process.execPath, version: Bun.version, cwd: target.cwd, env: BUN,
-      argv: [process.execPath, "--no-env-file", "test", target.file, ...filter("-t")] } satisfies Plan
+      // A bare name is a filter over discovered *.test files; a ./ path runs exactly that file, whatever its name.
+      argv: [process.execPath, "--no-env-file", "test", `./${target.file.split(path.sep).join("/")}`, ...filter("-t")] } satisfies Plan
   if (runner === "vitest" || runner === "jest") {
     const asset = yield* ProbeAssets.project(runner, target.cwd, target.root)
     if (!asset) return yield* denied(`test-runner-missing: ${runner} is configured but not installed`)

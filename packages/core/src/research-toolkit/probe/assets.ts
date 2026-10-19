@@ -35,7 +35,7 @@ export const project = Effect.fn("ProbeAssets.project")(function* (kind: Kind, f
 export const typescript = Effect.fn("ProbeAssets.typescript")(function* (from: string, top: string) {
   const own = yield* project("typescript", from, top)
   if (own) return own
-  // The pack lifecycle may not be ready (or not implemented yet); either way the probe names the gap.
+  // The pack may not be installed or ready yet; the probe then names the gap.
   const pack = yield* ResearchToolkit.ensure("typescript").pipe(Effect.catchCause(() => Effect.succeed(undefined)))
   if (!pack) return yield* denied("typescript-unavailable: the project has no node_modules/typescript and the research pack is not ready")
   return { kind: "typescript" as const, root: path.dirname(pack.executable), entry: pack.executable, version: "pack" }

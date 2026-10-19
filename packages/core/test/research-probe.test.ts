@@ -56,7 +56,7 @@ live("typecheck on a commit snapshot reproduces the planted error in original co
     expect(planted.verdict, planted.stderr.tail).toBe("reproduced")
     expect(planted.snapshot.revision).toMatch(/^[0-9a-f]{40}$/)
     expect(planted.diagnostics?.[0]).toMatchObject({ path: "src/a.ts", line: 1, column: 14, code: "TS2322" })
-    expect(planted.memoryCap).toBe("heap-only")
+    expect(planted.memoryCap).toBe("rss")
     expect(planted.runner.argv).toContain("--max-old-space-size=1024")
     // Diagnostic lines are structured: the condensed tail names each distinct error once, by its original site.
     expect(planted.stdout.tail).toContain("error TS2322: Type 'string' is not assignable to type 'number'. (first at src/a.ts:1:14)")
@@ -138,6 +138,19 @@ live("the timeout stops the probe and names it", () =>
     const result = yield* ProbeRun.run(script("setInterval(() => {}, 1000)", { timeoutSeconds: 30 }), context(dir.path, { remainingSeconds: 2 }))
     expect(result.verdict).toBe("timeout")
     expect(result.exitCode).toBeNull()
+    expect(result.durationMs).toBeLessThan(20_000)
+  }), 60_000,
+)
+
+live("a tree over the RSS cap is killed as memory_exceeded (J4.7)", () =>
+  Effect.gen(function* () {
+    expectSpawn(import.meta.path)
+    const dir = yield* repo
+    // A non-zero fill touches every page, so the bytes are resident.
+    const result = yield* ProbeRun.run(script("const held = Buffer.alloc(400 * 1024 * 1024, 1); setTimeout(() => console.log(held.length), 30000)"),
+      context(dir.path, { rssBytes: 150 * 1024 * 1024 }))
+    expect(result.verdict, result.stderr.tail).toBe("memory_exceeded")
+    expect(result.memoryCap).toBe("rss")
     expect(result.durationMs).toBeLessThan(20_000)
   }), 60_000,
 )

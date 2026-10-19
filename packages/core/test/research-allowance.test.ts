@@ -191,6 +191,33 @@ describe("native ResearchAllowance", () => {
     expect(error(yield* Effect.exit(service.reserveBytes(allowance, "bytes:over", 1)))?.code).toBe("budget_exhausted")
   }))
 
+  it.live("each tier binds its probe seconds, and probe charges exhaust there with the named error (J1.10)", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    for (const tier of ["quick", "focused", "deep"] as const) {
+      const allowance = yield* service.bind(binding(), "dispatch", tier)
+      expect(allowance.probeSecondsLimit).toBe(Research.ProbeSeconds[tier])
+      yield* service.charge(allowance, "probe", "probe:1", Research.ProbeSeconds[tier] - 1)
+      yield* service.charge(allowance, "probe", "probe:2", 1)
+      const over = error(yield* Effect.exit(service.charge(allowance, "probe", "probe:3", 1)))
+      expect(over?.code).toBe("budget_exhausted")
+      expect(over?.message).toContain("probe allowance exhausted")
+    }
+  }))
+
+  it.live("a focused dispatch admitted before probe seconds keeps its stored limit on re-bind", () => Effect.gen(function* () {
+    const service = yield* ResearchAllowance.Service
+    const database = yield* Database.Service
+    const native = binding()
+    yield* service.bind(native, "dispatch", "focused")
+    const row = (yield* ledger(native.executionSessionID))[0]
+    const legacy = structuredClone(row.data) as { allowance: Record<string, unknown> }
+    delete legacy.allowance.probeSecondsLimit
+    yield* database.db.update(EventTable).set({ data: legacy }).where(eq(EventTable.id, row.id)).run().pipe(Effect.orDie)
+    const rebound = yield* service.bind(native, "dispatch", "focused")
+    expect(rebound.probeSecondsLimit).toBe(Research.ProbeSeconds.quick)
+    yield* service.charge(rebound, "probe", "probe:legacy", 1)
+  }))
+
   it.live("a version 1 binding admitted before tiers decodes as quick and re-binds unchanged", () => Effect.gen(function* () {
     const service = yield* ResearchAllowance.Service
     const database = yield* Database.Service

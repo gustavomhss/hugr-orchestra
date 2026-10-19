@@ -20,6 +20,7 @@ import { Agent } from "@/agent/agent"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostPlugin } from "@/claude-code/host/plugin"
 import { ClaudeHostProcess } from "@/claude-code/host/process-tool"
+import { ResearchSeatTools } from "@/research/seat-tools"
 import { Seats } from "@/maestro/seats"
 import { TestInstance, tmpdirScoped } from "../../fixture/fixture"
 import { expectSpawn } from "../../../../core/test/fixture/omni-expect"
@@ -562,6 +563,11 @@ test("jimmy gets its descriptor's tools and native search, never WebFetch, LSP o
     "mcp__orchestra__research_record",
     "mcp__orchestra__research_view",
   ])
+})
+
+test("jimmy's probe_run is served as an Orchestra MCP tool from its descriptor", () => {
+  expect(ResearchSeatTools.OWN).toContain("probe_run")
+  expect(ClaudeHostPlugin.tools("jimmy", [...ResearchSeatTools.OWN])).toContain("mcp__orchestra__probe_run")
 })
 
 it.instance(
