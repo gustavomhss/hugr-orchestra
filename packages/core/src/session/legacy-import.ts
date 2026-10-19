@@ -102,7 +102,7 @@ function assistant(info: Extract<Info, { role: "assistant" }>, parts: ReadonlyAr
     id: info.id,
     agent: info.agent,
     model: { id: info.modelID, providerID: info.providerID, ...(info.variant ? { variant: info.variant } : {}) },
-    content: parts.flatMap((part) => {
+    content: parts.flatMap((part): unknown[] => {
       if (part.type === "text") return [{ type: "text", id: part.id, text: part.text }]
       if (part.type === "reasoning")
         return [
