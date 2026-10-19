@@ -171,6 +171,8 @@ export async function mountGraph(host: HTMLElement, opts: AtlasGraphOptions): Pr
     .nodeId("id")
     .nodeVal((n) => ((n as DrawNode).r * (n as DrawNode).r) / 6)
     .nodeRelSize(1)
+    // A graph of one or two units would otherwise zoom to fit until a single circle fills the canvas.
+    .maxZoom(3)
     .nodeLabel((n) => `<div class="at-fg-tip">${(n as DrawNode).tip ?? esc((n as DrawNode).label)}</div>`)
     .linkColor((l) =>
       state.blast && !state.hover && linkLit(l)

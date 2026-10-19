@@ -320,9 +320,10 @@ export function TerritorySheet(props: AtlasSheetProps<"territory">) {
   const atlas = useAtlas()
   const language = useLanguage()
   const [form, setForm] = createStore({
-    name: props.sheet.unit.split("/").at(-1) ?? "",
+    // The root unit is the top-level files: no folder name, and a glob that matches only them.
+    name: props.sheet.unit === "(root)" ? "" : (props.sheet.unit.split("/").at(-1) ?? ""),
     owner: "",
-    globs: `${props.sheet.unit}/**`,
+    globs: props.sheet.unit === "(root)" ? "*" : `${props.sheet.unit}/**`,
     tier: "T2" as (typeof TERRITORY_TIERS)[number][0],
     token: "",
     refused: "",
