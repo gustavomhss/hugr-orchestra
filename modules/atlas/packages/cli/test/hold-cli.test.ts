@@ -60,7 +60,7 @@ describe("hold-cli", () => {
 
   it("5. unreadable staging is a governed refusal", () => {
     tmp = mkdtempSync(join(tmpdir(), "atlas-hold-"))
-    const r = runHold(ports(undefined), ["nk-a"], { by: "alice" })
+    const r = runHold({ ...ports(), staged: () => undefined }, ["nk-a"], { by: "alice" })
     expect(r.exitCode).toBe(2)
     expect(r.stdout).toContain("status: rejected")
   })

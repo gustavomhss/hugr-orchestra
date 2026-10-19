@@ -21,6 +21,10 @@ export const keptPaths: Kept[] = [
   },
   { path: /^docs\/specs\/hugr-maestro\/BASELINE-EVIDENCE\.md$/, reason: "baseline evidence record" },
   {
+    path: /^specs\/atlas-ui\/build\/|^specs\/atlas-ui\/mock\/data-spawns\.js$/,
+    reason: "the Atlas UI build runner drives external executor CLIs, and the mock replays recorded spawn logs verbatim",
+  },
+  {
     path: /^nix\/W5-readiness\.md$/,
     reason: "Nix readiness record naming the upstream npm packages it pins and replaces",
   },
