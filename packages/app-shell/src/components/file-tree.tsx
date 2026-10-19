@@ -17,7 +17,7 @@ import {
   type ParentProps,
 } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import type { FileNode } from "@orchestra/sdk/v2"
+import type { FileNode } from "../compat/sdk-v2"
 
 const MAX_DEPTH = 128
 

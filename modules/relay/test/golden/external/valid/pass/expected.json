@@ -1,0 +1,33 @@
+{
+  "verify": {
+    "exit": 0,
+    "line": null
+  },
+  "run": {
+    "runID": "thread-pass",
+    "documentID": "external:coder",
+    "status": "completed",
+    "position": "write_code",
+    "failing": [],
+    "label": "coder",
+    "agent": "langgraph",
+    "startedAt": 1700000000000,
+    "endedAt": 1700000007000,
+    "steps": [
+      {
+        "wp": "write_code",
+        "status": "passed",
+        "attempts": 2,
+        "startedAt": 1700000001000,
+        "endedAt": 1700000006000,
+        "checks": [
+          {
+            "id": "tests",
+            "verdict": "pass",
+            "output": "2 passed"
+          }
+        ]
+      }
+    ]
+  }
+}

@@ -22,6 +22,10 @@ dist/
 # clones, so a log that stayed local would fold to a different Orientation per machine and the invariant
 # would be false by construction. Same append-only content-keyed form, same safe line merge.
 !.atlas/orientation.jsonl
+# `review.jsonl` — the shared review log (holds, ratification proposals and decisions, interview answers, memory
+# proposals; specs/atlas-ui/build/DECISIONS.md D14). Same append-only, content-keyed one-record-per-line form as the
+# two logs above, so a union merge can only add whole lines; a hold or a decision must survive a merge.
+!.atlas/review.jsonl
 # …and the admin-owned policy, as before: the ratified config the doors READ, reviewable in the same place
 # as the code.
 !.atlas/policy.json

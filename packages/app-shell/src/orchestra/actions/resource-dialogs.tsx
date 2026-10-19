@@ -361,7 +361,7 @@ function nodeGlyph(kind: ResourceKind): NodeGlyph { return kind.endsWith("variab
 function headerLabel(providerKind: string | undefined, t: Translate): string { return t("orchestra.actions.projectScope", { provider: t(providerKind === "github" ? "orchestra.actions.github" : "orchestra.actions.gitlab") }) }
 function title(dialog: ResourceDialog, resource: Actions.Resource | undefined, t: Translate): string {
    if (dialog.kind === "clear-caches") return t("orchestra.actions.clearProjectRunnerCachesTitle")
-  if (dialog.kind === "project-settings") return t(dialog.target === "native" ? "orchestra.actions.nativePolicy" : "orchestra.actions.localPolicy")
+  if (dialog.kind === "project-settings") return t(dialog.target === "native" ? "orchestra.actions.nativePolicy" : "orchestra.actions.settings.policy")
   if (dialog.kind.startsWith("delete")) return t("orchestra.actions.deleteResourceTitle", {
     name: resource?.name ?? ("id" in dialog ? dialog.id ?? "" : ""),
   })

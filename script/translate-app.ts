@@ -118,7 +118,7 @@ export function targetFiles(locale: Locale) {
   return [
     `packages/app-shell/src/i18n/${locale}.ts`,
     `packages/ui/src/i18n/${locale}.ts`,
-    ...(desktopLocales.has(locale) ? [`packages/desktop/src/renderer/i18n/${locale}.ts`] : []),
+    ...(desktopLocales.has(locale) ? [`apps/desktop/src/renderer/i18n/${locale}.ts`] : []),
   ]
 }
 
@@ -196,7 +196,7 @@ export function modelVariants(output: string, model: string) {
 
 export function translationConfig(agent: string, model: string, targets: string[]) {
   return {
-    $schema: "https://opencode.ai/config.json",
+    $schema: "https://raw.githubusercontent.com/gustavomhss/hugr-orchestra/dev/schema/config.json",
     model,
     default_agent: agent,
     share: "disabled" as const,

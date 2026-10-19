@@ -55,6 +55,8 @@ export type RevertState = Revert.State
 // - by workspace (home is special)
 
 export { ListAnchor }
+// Public through the session entry so product modules need no deep import (R7).
+export { SessionStore }
 
 const ListInputBase = {
   workspaceID: WorkspaceV2.ID.pipe(Schema.optional),

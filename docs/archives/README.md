@@ -23,4 +23,18 @@ Before restoration, compare `manifest.json` SHA-256 with the index. The retained
 
 The restored original `restore-evidence.ts` reconstructed the historical tarball from its ordered parts. Its complete 207,658,700-byte output matched SHA-256 `27921a7b12d047070c8c4672f110a56c5edef9a97dcb608f6b8826d1b4e16d48`.
 
-This checkpoint restores source files, including opaque archives, and verifies historical archive reconstruction. Extraction and per-tar-member restoration, reader migration, and any source removal belong to a subsequent cleanup slice. Original files remain in their current paths.
+This checkpoint restores source files, including opaque archives, and verifies historical archive reconstruction. The handoff directory has since been removed from the tree. Restore it from this bundle when it is needed.
+
+## Visual evidence and screenshots
+
+[`visual-evidence.json`](visual-evidence.json) identifies `specs/orchestra-visual/evidence` and `specs/orchestra-visual/screenshots` at `ca6d9b5625bca4ca0bd7c42b09f50105ad4c1ad3`: 100 files, 12,994,044 bytes. The bundle is `visual-evidence-ca6d9b5625bc` in the same retention directory, and it restores the same way as the handoff bundle.
+
+All 100 restored files hashed to their source Git blobs before the directories were removed from the tree. The design documents that cite this evidence (`VERIFICATION.md`, `COVERAGE.md`, `DELIVERY.md`) stay in `docs/specs/orchestra-visual`.
+
+## Backend specialist evidence
+
+[`backend-evidence.json`](backend-evidence.json) identifies `specs/backend-specialist/evidence` at `0ff924411761fb41419ba95c1f997188bd902a3e`: 95 files, 694,502 bytes, in bundle `backend-evidence-0ff924411761`. All 95 restored files hashed to their source Git blobs before the directory was removed. `docs/specs/backend-specialist/acceptance.md` still cites these receipts by their original paths.
+
+## Actions parity screenshots
+
+[`actions-parity.json`](actions-parity.json) identifies `specs/actions/parity` at `0ff924411761fb41419ba95c1f997188bd902a3e`: 35 images, 4,971,377 bytes, in bundle `actions-parity-0ff924411761`. All 35 restored files hashed to their source Git blobs before the directory was removed. `docs/specs/actions/UI-MOCK-PARITY.md` still cites them by their original paths.

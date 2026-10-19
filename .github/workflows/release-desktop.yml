@@ -1,0 +1,468 @@
+name: release-desktop
+
+# Builds the prod-channel Orchestra desktop installers (macOS dmg+zip on arm64 and x64, Windows NSIS x64, Linux
+# AppImage+deb+rpm x64) and their electron-updater feed. With publish=true it creates desktop-v<version> with the
+# installers and SHA256SUMS, then replaces the assets of desktop-latest, the fixed release prod builds read their update
+# feed from (electron-builder.config.ts). The desktop releases stay apart from the CLI's v<version> releases and are
+# never marked Latest. sign=true reads the `release` environment's secrets, signs and notarizes macOS, signs Windows
+# with Azure Artifact Signing and verifies both. sign=false builds the same installers with no identity: macOS warns on
+# first open and unsigned macOS builds only announce updates (Squirrel.Mac cannot install into an unsigned app), and
+# Windows shows SmartScreen. Linux installers are unsigned either way.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: Stable X.Y.Z
+        required: true
+        type: string
+      sign:
+        description: Sign and notarize with the release environment's secrets
+        type: boolean
+        default: false
+      publish:
+        description: Create desktop-v<version> and replace the desktop-latest update feed
+        type: boolean
+        default: false
+
+concurrency:
+  group: release-desktop
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  VERSION: ${{ inputs.version }}
+
+jobs:
+  plan:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Require a stable, unreleased version to publish
+        env:
+          PUBLISH: ${{ inputs.publish == true }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "RELEASE_VERSION_INVALID: $VERSION" >&2; exit 1; }
+          if [ "$PUBLISH" = true ]; then
+            [ "$GITHUB_REF" = refs/heads/dev ] || { echo "RELEASE_PUBLISH_REQUIRES_DEV: $GITHUB_REF" >&2; exit 1; }
+            if gh release view "desktop-v$VERSION" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
+            if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/desktop-v$VERSION" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: desktop-v$VERSION" >&2; exit 1; fi
+          fi
+
+  # A Windows desktop bundles its own CLI and the Linux CLIs its WSL guests run (scripts/cli-staging.ts). Bun on
+  # Windows cannot cross-compile the Linux CLIs, so a Linux producer builds all three, as omni-desktop-smoke.yml does,
+  # with the omni pairs and tree-sitter bundles built on their own hosts, and hands them to the Windows build as
+  # ORCHESTRA_CLI_PREBUILT_DIR.
+  guest-omni:
+    needs: [plan]
+    uses: ./.github/workflows/omni-artifacts.yml
+
+  guest-tree-sitter:
+    needs: [plan]
+    uses: ./.github/workflows/tree-sitter-artifacts.yml
+    with:
+      targets: '["linux-arm64","win32-x64"]'
+
+  windows-cli:
+    needs: [guest-omni, guest-tree-sitter]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile --os="*" --cpu="*"
+      # OMNI_ARTIFACTS=<dir>/<omni id>/ and TREE_SITTER_ARTIFACTS=<dir>/<os>-<arch>/, as the CLI build reads them.
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-win32-x64-msvc
+          path: ${{ runner.temp }}/omni-artifacts/win32-x64-msvc
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-x64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-x64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: omni-linux-arm64-gnu
+          path: ${{ runner.temp }}/omni-artifacts/linux-arm64-gnu
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-linux-arm64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/linux-arm64
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: tree-sitter-win32-x64
+          path: ${{ runner.temp }}/tree-sitter-artifacts/win32-x64
+      # The desktop packages the prod channel at the release version; its CLIs must match.
+      - name: Build and export the Windows bundle's three CLIs
+        env:
+          OMNI_ARTIFACTS: ${{ runner.temp }}/omni-artifacts
+          TREE_SITTER_ARTIFACTS: ${{ runner.temp }}/tree-sitter-artifacts
+          ORCHESTRA_CHANNEL: prod
+          ORCHESTRA_VERSION: ${{ env.VERSION }}
+        run: |
+          set -euo pipefail
+          # download-artifact transfers file bytes, not Unix execute bits; the CLI build refuses a non-executable supervisor.
+          chmod +x "$OMNI_ARTIFACTS"/linux-*/hugr-omni-supervisor
+          targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
+          for target in $targets; do
+            bun apps/cli/script/build.ts --skip-install --target "$target"
+          done
+          bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
+            --target windows-x64-baseline --target linux-arm64 --target linux-x64-baseline
+          # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each WSL guest's
+          # omni pair in omni-<target>/ (scripts/cli-staging.ts reads them there).
+          for target in $targets; do
+            bin="apps/cli/dist/cli-$target/bin"
+            cp -R "$bin/tree-sitter" "windows-cli/tree-sitter-$target"
+            cp -R "$bin/ripgrep" "windows-cli/ripgrep-$target"
+            if [[ "$target" == linux-* ]]; then
+              mkdir -p "windows-cli/omni-$target"
+              cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "windows-cli/omni-$target/"
+            fi
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: windows-cli
+          path: windows-cli/
+          if-no-files-found: error
+
+  build:
+    name: build (${{ matrix.os }}-${{ matrix.arch }})
+    needs: [plan, windows-cli]
+    runs-on: ${{ matrix.host }}
+    # Only a signed build reads the release environment's secrets.
+    environment: ${{ inputs.sign == true && 'release' || '' }}
+    timeout-minutes: 120
+    permissions:
+      contents: read
+      id-token: write # azure/login OIDC, Windows signed builds only
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { host: macos-15, os: mac, arch: arm64, omni: darwin-arm64, target: aarch64-apple-darwin, builder: --mac }
+          - { host: macos-15-intel, os: mac, arch: x64, omni: darwin-x64, target: x86_64-apple-darwin, builder: --mac }
+          - { host: windows-2022, os: win, arch: x64, omni: win32-x64-msvc, target: x86_64-pc-windows-msvc, builder: --win }
+          - { host: ubuntu-24.04, os: linux, arch: x64, omni: linux-x64-gnu, target: x86_64-unknown-linux-gnu, builder: --linux }
+    env:
+      SIGN: ${{ inputs.sign == true }}
+      ORCHESTRA_CHANNEL: prod
+      ORCHESTRA_VERSION: ${{ inputs.version }}
+      # Read by electron.vite.config.ts into the app: only a signed macOS build installs updates in place.
+      ORCHESTRA_MAC_SIGNED: ${{ inputs.sign == true && matrix.os == 'mac' && 'true' || 'false' }}
+      # sign=false: electron-builder.config.ts drops identity, notarization and Windows signing.
+      ORCHESTRA_DESKTOP_UNSIGNED: ${{ inputs.sign != true && '1' || '' }}
+      CSC_IDENTITY_AUTO_DISCOVERY: ${{ inputs.sign != true && 'false' || 'true' }}
+      # sign=true: scripts/sign-windows.ps1 fails instead of skipping when signing is not configured.
+      ORCHESTRA_REQUIRE_SIGNING: ${{ inputs.sign == true && '1' || '' }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+
+      - name: Require the signing secrets
+        if: env.SIGN == 'true' && runner.os != 'Linux'
+        env:
+          APPLE_CERTIFICATE_P12_BASE64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          APPLE_CERTIFICATE_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          AZURE_CLIENT_ID: ${{ secrets.AZURE_CLIENT_ID }}
+          AZURE_TENANT_ID: ${{ secrets.AZURE_TENANT_ID }}
+          AZURE_SUBSCRIPTION_ID: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ secrets.AZURE_TRUSTED_SIGNING_ENDPOINT }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE }}
+        run: |
+          set -euo pipefail
+          case "$RUNNER_OS" in
+            macOS) required="APPLE_CERTIFICATE_P12_BASE64 APPLE_CERTIFICATE_PASSWORD APPLE_ID APPLE_APP_SPECIFIC_PASSWORD APPLE_TEAM_ID"; error=APPLE_SIGNING_SECRET_MISSING ;;
+            Windows) required="AZURE_CLIENT_ID AZURE_TENANT_ID AZURE_SUBSCRIPTION_ID AZURE_TRUSTED_SIGNING_ENDPOINT AZURE_TRUSTED_SIGNING_ACCOUNT_NAME AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE"; error=WINDOWS_SIGNING_SECRET_MISSING ;;
+          esac
+          missing=""
+          for name in $required; do [ -n "${!name}" ] || missing="$missing $name"; done
+          [ -z "$missing" ] || { echo "::error::$error:$missing (add them to the release environment)"; exit 1; }
+
+      - name: Setup Bun
+        uses: ./.github/actions/setup-bun
+        with:
+          install-flags: --frozen-lockfile
+
+      - name: Exact-source release omni binaries
+        uses: ./.github/actions/omni-binaries
+
+      # stage-omni reads the pair under <dir>/<platform>-<arch>/ or directly under <dir>; the CLI build under
+      # <dir>/<omni id>/ (as test/omni-smoke/build.ts lays it out).
+      - name: Lay out OMNI_ARTIFACTS
+        env:
+          OMNI_ID: ${{ matrix.omni }}
+        run: |
+          set -euo pipefail
+          dir="$RUNNER_TEMP/omni-artifacts"
+          mkdir -p "$dir/$OMNI_ID"
+          for target in "$dir/$OMNI_ID" "$dir"; do
+            cp "$HUGR_OMNI_ADDON" "$target/hugr_omni.node"
+            cp "$HUGR_OMNI_SUPERVISOR" "$target/$(basename "$HUGR_OMNI_SUPERVISOR")"
+          done
+          echo "OMNI_ARTIFACTS=$dir" >> "$GITHUB_ENV"
+
+      - name: The Windows bundle's CLIs from the Linux producer
+        if: runner.os == 'Windows'
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: windows-cli
+          path: ${{ runner.temp }}/windows-cli
+      - name: Point the build at the produced CLIs
+        if: runner.os == 'Windows'
+        run: echo "ORCHESTRA_CLI_PREBUILT_DIR=$RUNNER_TEMP/windows-cli" >> "$GITHUB_ENV"
+
+      - name: rpmbuild for the rpm target
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends rpm
+
+      - name: Developer ID keychain
+        if: env.SIGN == 'true' && runner.os == 'macOS'
+        uses: ./.github/actions/apple-signing
+        with:
+          certificate-p12-base64: ${{ secrets.APPLE_CERTIFICATE_P12_BASE64 }}
+          certificate-password: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+
+      - name: Azure login for Artifact Signing
+        if: env.SIGN == 'true' && runner.os == 'Windows'
+        uses: azure/login@a641126d1b8aa4d1fa005f4f92df94a3a4c4c906 # v3.1.0
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Build the installers
+        working-directory: apps/desktop
+        env:
+          # The electron-vite build exceeds Node's default old space on hosted runners (scripts/lean-candidate.ts).
+          # Builder only: it never reaches the packaged app.
+          NODE_OPTIONS: --max-old-space-size=8192
+          BUILDER_PLATFORM: ${{ matrix.builder }}
+          # electron-builder notarizes with these; identity comes from CSC_NAME + CSC_KEYCHAIN (apple-signing), never
+          # CSC_LINK, because prebuild signs the bundled CLI with codesign before electron-builder runs.
+          APPLE_ID: ${{ env.SIGN == 'true' && runner.os == 'macOS' && secrets.APPLE_ID || '' }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ env.SIGN == 'true' && runner.os == 'macOS' && secrets.APPLE_APP_SPECIFIC_PASSWORD || '' }}
+          APPLE_TEAM_ID: ${{ env.SIGN == 'true' && runner.os == 'macOS' && secrets.APPLE_TEAM_ID || '' }}
+          AZURE_TRUSTED_SIGNING_ENDPOINT: ${{ env.SIGN == 'true' && runner.os == 'Windows' && secrets.AZURE_TRUSTED_SIGNING_ENDPOINT || '' }}
+          AZURE_TRUSTED_SIGNING_ACCOUNT_NAME: ${{ env.SIGN == 'true' && runner.os == 'Windows' && secrets.AZURE_TRUSTED_SIGNING_ACCOUNT_NAME || '' }}
+          AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE: ${{ env.SIGN == 'true' && runner.os == 'Windows' && secrets.AZURE_TRUSTED_SIGNING_CERTIFICATE_PROFILE || '' }}
+        run: |
+          set -euo pipefail
+          # prepare stages the CLI, Claude Code, omni and icons, and stamps the version the update feed records.
+          bun scripts/prepare.ts
+          # No Sentry upload is configured, so the renderer ships without source maps.
+          ORCHESTRA_FAST_BUILD=1 bun x electron-vite build
+          # codesign takes the full "Developer ID Application: ..." name; electron-builder refuses that prefix in CSC_NAME.
+          if [ -n "${CSC_NAME:-}" ]; then export CSC_NAME="${CSC_NAME#Developer ID Application: }"; fi
+          bun x electron-builder "$BUILDER_PLATFORM" --publish never --config electron-builder.config.ts
+
+      - name: Collect the installers
+        env:
+          OS: ${{ matrix.os }}
+          ARCH: ${{ matrix.arch }}
+        run: |
+          set -euo pipefail
+          case "$OS" in
+            mac) extensions="dmg zip" ;;
+            win) extensions="exe" ;;
+            linux) extensions="AppImage deb rpm" ;;
+          esac
+          mkdir -p installers
+          for ext in $extensions; do
+            found=(apps/desktop/dist/orchestra-desktop-*."$ext")
+            [ "${#found[@]}" -eq 1 ] && [ -f "${found[0]}" ] || { echo "::error::DESKTOP_INSTALLER_MISSING: expected one .$ext, got: ${found[*]}"; exit 1; }
+            cp "${found[0]}" installers/
+          done
+          # The update payloads' blockmaps and this build's feed, which the feed job merges.
+          cp apps/desktop/dist/*.blockmap installers/ 2>/dev/null || true
+          mkdir -p feed
+          cp apps/desktop/dist/latest*.yml feed/
+          ls -l installers feed
+
+      - name: Require the packaged app to read the desktop-latest feed
+        working-directory: apps/desktop/dist
+        run: |
+          set -euo pipefail
+          feed=$(find . -path '*esources/app-update.yml' -print -quit)
+          [ -n "$feed" ] || { echo "RELEASE_APP_FEED_MISSING" >&2; exit 1; }
+          cat "$feed"
+          grep -qF "gustavomhss/hugr-orchestra/releases/download/desktop-latest" "$feed" || { echo "RELEASE_APP_FEED_WRONG: $feed" >&2; exit 1; }
+
+      - name: Verify the macOS signature, Gatekeeper assessment and notarization
+        if: env.SIGN == 'true' && runner.os == 'macOS'
+        env:
+          APPLE_ID: ${{ secrets.APPLE_ID }}
+          APPLE_APP_SPECIFIC_PASSWORD: ${{ secrets.APPLE_APP_SPECIFIC_PASSWORD }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: |
+          set -euo pipefail
+          app="$(find apps/desktop/dist -maxdepth 2 -name '*.app' -type d | head -n 1)"
+          [ -n "$app" ] || { echo "::error::DESKTOP_APP_MISSING"; exit 1; }
+          codesign --verify --deep --strict --verbose=2 "$app"
+          spctl -a -t exec -vv "$app"
+          dmg="$(ls installers/*.dmg)"
+          # electron-builder notarizes and staples the .app; the dmg around it is notarized here when it is not yet.
+          if ! xcrun stapler validate "$dmg"; then
+            xcrun notarytool submit "$dmg" --apple-id "$APPLE_ID" --password "$APPLE_APP_SPECIFIC_PASSWORD" --team-id "$APPLE_TEAM_ID" --wait
+            xcrun stapler staple "$dmg"
+          fi
+          xcrun stapler validate "$dmg"
+
+      - name: Verify the Windows signatures
+        if: env.SIGN == 'true' && runner.os == 'Windows'
+        shell: pwsh
+        run: |
+          $files = @(Get-ChildItem installers/*.exe) + @(Get-ChildItem "apps/desktop/dist/win-unpacked/*.exe")
+          foreach ($file in $files) {
+            $status = (Get-AuthenticodeSignature -LiteralPath $file.FullName).Status
+            Write-Host "$($file.Name): $status"
+            if ($status -ne "Valid") { throw "WINDOWS_SIGNATURE_INVALID: $($file.Name) is $status" }
+          }
+
+      - name: Delete the signing keychain
+        if: always() && env.SIGN == 'true' && runner.os == 'macOS'
+        run: security delete-keychain "$RUNNER_TEMP/orchestra-signing.keychain-db" || true
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: desktop-${{ matrix.os }}-${{ matrix.arch }}
+          path: installers/
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 14
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          # finalize-latest-yml.ts reads latest-yml-<rust target>/.
+          name: latest-yml-${{ matrix.target }}
+          path: feed/latest*.yml
+          if-no-files-found: error
+          retention-days: 14
+
+  # Merges the per-build feeds (the two macOS builds share latest-mac.yml) and checks that every payload a feed names
+  # exists with the size and sha512 it records. Runs on dry runs too: its artifact is what a real run publishes.
+  feed:
+    needs: [build]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+        with:
+          bun-version-file: package.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: ${{ runner.temp }}/dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: latest-yml-*
+          path: ${{ runner.temp }}/latest-yml
+      - name: Assemble and verify the update feed and checksums
+        env:
+          LATEST_YML_DIR: ${{ runner.temp }}/latest-yml
+          LATEST_YML_OUT: ${{ runner.temp }}/feed
+          LATEST_PAYLOAD_DIR: ${{ runner.temp }}/dist
+          ORCHESTRA_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          mkdir -p "$LATEST_YML_OUT"
+          bun apps/desktop/scripts/finalize-latest-yml.ts
+          for feed in latest.yml latest-mac.yml latest-linux.yml; do
+            test -s "$LATEST_YML_OUT/$feed" || { echo "RELEASE_FEED_MISSING: $feed" >&2; exit 1; }
+            cat "$LATEST_YML_OUT/$feed"
+          done
+          (cd "$LATEST_PAYLOAD_DIR" && sha256sum -- *.dmg *.zip *.exe *.AppImage *.deb *.rpm) > "$LATEST_YML_OUT/SHA256SUMS"
+          cat "$LATEST_YML_OUT/SHA256SUMS"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: release-desktop-feed
+          path: ${{ runner.temp }}/feed/
+          if-no-files-found: error
+          retention-days: 14
+
+  publish:
+    if: inputs.publish == true
+    needs: [feed]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    environment: release
+    permissions:
+      contents: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      SIGNED: ${{ inputs.sign == true }}
+    steps:
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          pattern: desktop-*
+          merge-multiple: true
+          path: dist
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+        with:
+          name: release-desktop-feed
+          path: feed
+
+      - name: Create desktop-v<version> with the installers and SHA256SUMS
+        run: |
+          set -euo pipefail
+          tag="desktop-v$VERSION"
+          # Checked again: gh release create attaches to an existing tag instead of failing.
+          if gh release view "$tag" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then echo "RELEASE_EXISTS: $tag" >&2; exit 1; fi
+          if gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$tag" >/dev/null 2>&1; then echo "RELEASE_TAG_EXISTS: $tag" >&2; exit 1; fi
+          {
+            echo "Download the installer for your system and check it against SHA256SUMS."
+            echo
+            echo "Windows and AppImage installs update themselves. deb and rpm installs tell you when a new version is out and link to its release page."
+            if [ "$SIGNED" != true ]; then
+              echo
+              echo "This release is not signed. On macOS, open it from System Settings > Privacy & Security > Open Anyway, or run \`xattr -dr com.apple.quarantine \"/Applications/HuGR Orchestra.app\"\`; the macOS builds tell you when a new version is out but do not install it themselves. On Windows, choose More info > Run anyway on the SmartScreen prompt."
+            fi
+          } > notes.md
+          shopt -s nullglob
+          installers=(dist/*.dmg dist/*.zip dist/*.exe dist/*.AppImage dist/*.deb dist/*.rpm)
+          gh release create "$tag" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+            --title "HuGR Orchestra $VERSION" --notes-file notes.md "${installers[@]}" feed/SHA256SUMS
+
+      - name: Replace the desktop-latest feed
+        run: |
+          set -euo pipefail
+          release=desktop-latest
+          if ! gh release view "$release" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release create "$release" --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --latest=false \
+              --title "HuGR Orchestra desktop update feed" \
+              --notes "The update feed installed desktop apps read. Its files are replaced on every desktop release; installers are in the desktop-v<version> releases."
+          fi
+          # Payloads first, then the feeds that name them, so a feed never names a file that is not there yet.
+          payloads=()
+          while read -r name; do
+            payloads+=("dist/$name")
+            if [ -f "dist/$name.blockmap" ]; then payloads+=("dist/$name.blockmap"); fi
+          done < <(sed -n 's/^  - url: //p' feed/latest*.yml | sort -u)
+          [ "${#payloads[@]}" -gt 0 ] || { echo "RELEASE_FEED_EMPTY" >&2; exit 1; }
+          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber "${payloads[@]}"
+          gh release upload "$release" --repo "$GITHUB_REPOSITORY" --clobber feed/latest*.yml
+          # Drop what an earlier release left that this feed no longer names.
+          keep=$(printf '%s\n' "${payloads[@]##*/}"; cd feed && printf '%s\n' latest*.yml)
+          gh release view "$release" --repo "$GITHUB_REPOSITORY" --json assets --jq '.assets[].name' | while read -r asset; do
+            grep -qxF -- "$asset" <<<"$keep" || gh release delete-asset "$release" "$asset" --repo "$GITHUB_REPOSITORY" --yes
+          done

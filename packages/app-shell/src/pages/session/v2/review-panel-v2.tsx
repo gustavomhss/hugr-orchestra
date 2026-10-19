@@ -1,6 +1,6 @@
 import { createEffect, createMemo, createSignal, on, onCleanup, Show, type JSX } from "solid-js"
-import type { SnapshotFileDiff, VcsFileDiff } from "@orchestra/sdk/v2"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
+import type { SnapshotFileDiff, VcsFileDiff } from "../../../compat/sdk-v2"
+import type { FileDiffInfo } from "../../../compat/vendored-client-promise"
 import {
   SESSION_REVIEW_V2_SIDEBAR_WIDTH_MAX,
   SESSION_REVIEW_V2_SIDEBAR_WIDTH_MIN,

@@ -39,7 +39,7 @@ benchmark("performance: common streaming then retained research result", async (
   const visualProfile = benchmarkFlag("TIMELINE_VISUAL_PROFILE", "1")
   const profileVisual = !minimal && profileCPU && visualProfile
   benchmark.setTimeout(completionTimeoutMs + 60_000)
-  const fixture = await setupTimelineBenchmark(page, { historyTurns, eventBatch, newLayoutDesigns: true })
+  const fixture = await setupTimelineBenchmark(page, { historyTurns, eventBatch })
   fixture.transport.enqueue(buildInitialStreamEvent(deltaCount))
   await expect(fixture.text).toContainText("Implementation plan")
   await fixture.scrollToBottom()

@@ -36,6 +36,7 @@ export type Event =
   | EventSessionNextAgentSwitched
   | EventSessionNextModelSwitched
   | EventSessionNextSubagentModelsChanged
+  | EventSessionNextArchiveChanged
   | EventSessionNextMoved
   | EventSessionNextPrompted
   | EventSessionNextPromptAdmitted
@@ -112,6 +113,7 @@ export type Event =
   | EventTuiToastShow2
   | EventTuiSessionSelect2
   | EventMcpToolsChanged
+  | EventMcpStatusChanged
   | EventMcpBrowserOpenFailed
   | EventCommandExecuted
   | EventProjectUpdated
@@ -922,6 +924,15 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "session.next.archive.changed"
+        properties: {
+          timestamp: number
+          sessionID: string
+          archived: number
+        }
+      }
+    | {
+        id: string
         type: "session.next.moved"
         properties: {
           timestamp: number
@@ -1556,6 +1567,7 @@ export type GlobalEvent = {
             line: number
             message: string
           }>
+          stage?: "plan" | "code"
         }
       }
     | {
@@ -1946,6 +1958,13 @@ export type GlobalEvent = {
       }
     | {
         id: string
+        type: "mcp.status.changed"
+        properties: {
+          server: string
+        }
+      }
+    | {
+        id: string
         type: "mcp.browser.open.failed"
         properties: {
           mcpName: string
@@ -2098,6 +2117,7 @@ export type GlobalEvent = {
     | SyncEventSessionNextAgentSwitched
     | SyncEventSessionNextModelSwitched
     | SyncEventSessionNextSubagentModelsChanged
+    | SyncEventSessionNextArchiveChanged
     | SyncEventSessionNextMoved
     | SyncEventSessionNextPrompted
     | SyncEventSessionNextPromptAdmitted
@@ -2542,6 +2562,346 @@ export type Config = {
   }
 }
 
+export type AtlasEmpty = {
+  state: "empty"
+}
+
+export type AtlasDrift = {
+  hunks: Array<{
+    at: string
+    lines: Array<string>
+  }>
+  stat: string
+  commits: Array<[string, string]>
+}
+
+export type AtlasFact = {
+  key: string
+  hash: string
+  claim: string
+  file: string
+  family: string
+  tier: string
+  scope: string
+  derivedAt: string
+  subtree: string
+  obvious: string
+  promoted: boolean
+  why: string
+  kind: string
+  authoring: string
+  storedFreshness: string
+  obviousBy: string
+  anchor: {
+    kind: string
+    qualifiedPath: string
+  }
+  slot: string
+  seal: string
+  supersededBy: string
+  sameAs: Array<string>
+  provenance: {
+    [key: string]: {
+      source: string
+      trusted: boolean
+      sha?: string
+    }
+  }
+  drift?: AtlasDrift
+}
+
+export type AtlasOwnSnapshot = {
+  status: "READY" | "HOLD"
+  reason: string
+  snapshot: string
+  sourceRevision: string
+  sourcePaths: Array<string>
+  units: Array<unknown>
+  coverage: {
+    snapshot: string
+    sourceRevision: string
+    units: Array<string>
+  }
+  skills: Array<{
+    path: string
+    size: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    head: string
+  }>
+}
+
+export type AtlasMemoryRecord = {
+  eventId: string
+  seq: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  member: string
+  kind: string
+  text: string
+  scope: string
+  at: string
+  refs: Array<string>
+  entry: unknown
+}
+
+export type AtlasOrientationEvent = {
+  eventId: string
+  seq: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  channel: string
+  label: string
+  supersedes: Array<string>
+}
+
+export type AtlasTerritory = {
+  name: string
+  owner: string
+  tier: string
+  globs: Array<string>
+}
+
+export type AtlasSnapshot = {
+  state: "ok"
+  project: string
+  head: string
+  builtAt: string
+  gen: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  stagingGen: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  identity: string
+  casObjects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  policy: {
+    [key: string]: Array<string>
+  }
+  t0Keywords: Array<string>
+  scip: boolean
+  tracked: {
+    projection: boolean
+    cas: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    staging: boolean
+    policy: boolean
+    memory: boolean
+  }
+  sealed: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  casAudit: {
+    objects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    referenced: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    missing: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    orphan: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  }
+  generations: Array<string>
+  abstained: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  langs: {
+    [key: string]: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  }
+  facts: Array<AtlasFact>
+  candidates: Array<AtlasFact>
+  dependents: {
+    [key: string]: Array<string>
+  }
+  dependentCount: {
+    [key: string]: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  }
+  children: {
+    [key: string]: Array<string>
+  }
+  own: AtlasOwnSnapshot
+  memory: {
+    [key: string]: Array<AtlasMemoryRecord>
+  }
+  orientation: Array<AtlasOrientationEvent>
+  territories: Array<AtlasTerritory>
+}
+
+export type AtlasSnapshotResult = AtlasEmpty | AtlasSnapshot
+
+export type ServiceUnavailableError = {
+  _tag: "ServiceUnavailableError"
+  message: string
+  service?: string
+}
+
+export type AtlasReasoningResult =
+  | AtlasEmpty
+  | {
+      state: "ok"
+      id: string
+      text: string
+    }
+  | {
+      state: "missing"
+      id: string
+    }
+
+export type AtlasOwn = {
+  state: "ok"
+  scope: string
+  tool: string
+  pack: unknown
+  readRefusal: string
+}
+
+export type AtlasOwnResult = AtlasEmpty | AtlasOwn
+
+export type AtlasHealth = {
+  state: "ok"
+  actor: string
+  provenance: "trusted" | "tracked-staging" | "tracked-provable"
+  readRefusal: string
+  readAdvisory: string
+  cas: {
+    objects: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    corrupt: Array<string>
+    unreadable: Array<string>
+    missing: Array<string>
+    orphan: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    referenced: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    sound: boolean
+  }
+  proofs: {
+    sealedProven: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    reProven: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    broken: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    unverifiable: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    dangling: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  }
+  index: {
+    scipRel: string
+    scip:
+      | {
+          kind: "absent"
+        }
+      | {
+          kind: "unreadable"
+          reason: string
+        }
+      | {
+          kind: "present"
+          documents: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+        }
+    configured: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string
+      }
+      files: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }>
+    holes: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string
+      }
+      files: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    }>
+  }
+  hotSet: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type AtlasHealthResult = AtlasEmpty | AtlasHealth
+
+export type AtlasPromote = {
+  state: "ok"
+  read: boolean
+  refusal?: "contended" | "unreadable" | "untrusted"
+  candidates: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  promoted: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  refused: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  rows: Array<{
+    nodeKey: string
+    settled: boolean
+    id?: string
+    rejected?: string
+  }>
+}
+
+export type AtlasPromoteResult = AtlasEmpty | AtlasPromote
+
+export type AtlasDraft = {
+  state: "ok"
+  ok: boolean
+  rejected?: string
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    draft: {
+      fact: unknown
+      rev: string
+      operation: "CREATE" | "UPDATE"
+      route: "auto-accept" | "full-ratify"
+      requires?: string
+    }
+    check: {
+      wouldEmit: boolean
+      gates: Array<{
+        gate: "shape" | "truth" | "authz" | "ratify"
+        pass: boolean
+        reason?: string
+        remedy?: string
+      }>
+    }
+  }
+}
+
+export type AtlasDraftResult = AtlasEmpty | AtlasDraft
+
+export type AtlasEmit = {
+  state: "ok"
+  ok: boolean
+  rejected?: string
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    emitted: boolean
+    id?: string
+    nodeKey?: string
+    rejected?: string
+  }
+}
+
+export type AtlasEmitResult = AtlasEmpty | AtlasEmit
+
+export type AtlasLink = {
+  state: "ok"
+  ok: boolean
+  rejected?: string
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    linked: boolean
+    rejected?: string
+    a?: string
+    b?: string
+    retracted?: boolean
+  }
+}
+
+export type AtlasLinkResult = AtlasEmpty | AtlasLink
+
+export type AtlasVerify = {
+  state: "ok"
+  ok: boolean
+  rejected?: string
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    kind: "dependency" | "count" | "definition" | "negation"
+    verdict: "proven" | "refuted" | "abstain"
+    reason?: string
+    oracle: string
+    target: string
+    scope: string
+  }
+}
+
+export type AtlasVerifyResult = AtlasEmpty | AtlasVerify
+
 export type Model = {
   id: string
   providerID: string
@@ -2641,16 +3001,6 @@ export type Provider = {
 
 export type ExperimentalCapabilities = {
   backgroundSubagents: boolean
-}
-
-export type ConsoleState = {
-  consoleManagedProviders: Array<string>
-  activeOrgName?: string
-  switchableOrgCount: number
-}
-
-export type EffectHttpApiErrorInternalServerError = {
-  _tag: "InternalServerError"
 }
 
 export type ToolListItem = {
@@ -3079,12 +3429,6 @@ export type LeanProfileDashboard = {
   items: Array<LeanProfileItem>
 }
 
-export type ServiceUnavailableError = {
-  _tag: "ServiceUnavailableError"
-  message: string
-  service?: string
-}
-
 export type LeanProfileUpdate = {
   itemID?:
     | "cargo"
@@ -3342,6 +3686,23 @@ export type ProviderAuthError1 = {
   }
 }
 
+export type ClaudeCodeAccount = {
+  signedIn: boolean
+  email?: string
+  subscription?: string
+}
+
+export type ClaudeCodeLogin = {
+  url: string
+}
+
+export type ClaudeCodeLoginError = {
+  name: "ClaudeCodeLoginFailed"
+  data: {
+    message: string
+  }
+}
+
 export type SessionActivitySession = {
   id: string
   title: string
@@ -3572,14 +3933,14 @@ export type InvalidCursorError = {
   message: string
 }
 
-export type SessionActive = {
-  type: "running"
-}
-
 export type SessionNotFoundError = {
   _tag: "SessionNotFoundError"
   sessionID: string
   message: string
+}
+
+export type SessionActive = {
+  type: "running"
 }
 
 export type PromptInput = {
@@ -3599,6 +3960,7 @@ export type SessionDurableEvent =
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
   | SessionNextSubagentModelsChanged
+  | SessionNextArchiveChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -3728,6 +4090,7 @@ export type V2Event =
   | SessionNextAgentSwitched
   | SessionNextModelSwitched
   | SessionNextSubagentModelsChanged
+  | SessionNextArchiveChanged
   | SessionNextMoved
   | SessionNextPrompted
   | SessionNextPromptAdmitted
@@ -3804,6 +4167,7 @@ export type V2Event =
   | TuiToastShow
   | TuiSessionSelect
   | McpToolsChanged
+  | McpStatusChanged
   | McpBrowserOpenFailed
   | CommandExecuted
   | ProjectUpdated
@@ -4048,6 +4412,54 @@ export type ScheduleNotFoundError = {
 export type ScheduleRunError = {
   _tag: "ScheduleRunError"
   message: string
+}
+
+export type ActionsError = {
+  _tag: "ActionsError"
+  kind: ActionsErrorKind
+  message: string
+  bindingID?: ActionsBindingId
+  provider?: ActionsProviderKind
+  resourceID?: string
+  retryAfter?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  operationID?: ActionsOperationId
+  disposition?: ActionsSendDisposition
+}
+
+export type RelayExternalRun = {
+  runID: string
+  documentID: string
+  version?: string
+  status: "running" | "parked" | "completed" | "failed"
+  position?: string
+  failing: Array<string>
+  reason?: string
+  label: string
+  agent: "langgraph"
+  startedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  endedAt?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  steps: Array<{
+    wp: string
+    status: "running" | "passed" | "failed" | "escalated"
+    attempts: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    startedAt?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    endedAt?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    checks: Array<{
+      id: string
+      verdict: "pass" | "fail" | "advisory"
+      output: string
+    }>
+    note?: string
+  }>
+}
+
+export type RelayExternalAudit = {
+  status: "pass" | "fail" | "pending"
+  code: string
+  rows: Array<{
+    label: string
+    value: string
+  }>
 }
 
 export type EffectHttpApiErrorForbidden = {
@@ -4628,6 +5040,22 @@ export type SyncEventSessionNextSubagentModelsChanged = {
       timestamp: number
       sessionID: string
       policy: SessionSubagentModelsPolicy
+    }
+  }
+}
+
+export type SyncEventSessionNextArchiveChanged = {
+  type: "sync"
+  id: string
+  syncEvent: {
+    type: "session.next.archive.changed.1"
+    id: string
+    seq: number
+    aggregateID: string
+    data: {
+      timestamp: number
+      sessionID: string
+      archived: number
     }
   }
 }
@@ -5489,6 +5917,7 @@ export type SyncEventMaestroReviewReceived = {
         line: number
         message: string
       }>
+      stage?: "plan" | "code"
     }
   }
 }
@@ -6064,6 +6493,25 @@ export type SessionNextSubagentModelsChanged = {
     timestamp: number
     sessionID: string
     policy: SessionSubagentModelsPolicy
+  }
+}
+
+export type SessionNextArchiveChanged = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "session.next.archive.changed"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    timestamp: number
+    sessionID: string
+    archived: number
   }
 }
 
@@ -7612,6 +8060,7 @@ export type MaestroReviewReceived = {
       line: number
       message: string
     }>
+    stage?: "plan" | "code"
   }
 }
 
@@ -8287,6 +8736,23 @@ export type McpToolsChanged = {
   }
 }
 
+export type McpStatusChanged = {
+  id: string
+  metadata?: {
+    [key: string]: unknown
+  }
+  type: "mcp.status.changed"
+  durable?: {
+    aggregateID: string
+    seq: number
+    version: number
+  }
+  location?: LocationRef
+  data: {
+    server: string
+  }
+}
+
 export type McpBrowserOpenFailed = {
   id: string
   metadata?: {
@@ -8888,6 +9354,7 @@ export type RelayHookInstall = {
   sha256: string
   order: number
   enabled: boolean
+  unpublished?: true
   installedBy: string
   installedAt: number
   snapshot: RelayHookV1
@@ -8996,6 +9463,532 @@ export type ScheduledTaskUpdateInput = {
 
 export type ScheduledTaskRunResult = {
   sessionID: string
+}
+
+export type ActionsBindingId = string
+
+export type ActionsProviderKind = "github" | "gitlab"
+
+export type ActionsProvider = {
+  kind: ActionsProviderKind
+  hostname: string
+  apiOrigin: string
+  version?: string
+}
+
+export type ActionsBinding = {
+  id: ActionsBindingId
+  revision: number
+  remote: string
+  provider: ActionsProvider
+  projectID: string
+  projectPath: string
+  account?: string
+  directory: string
+  workspaceID?: string
+}
+
+export type ActionsErrorKind =
+  | "binding_missing"
+  | "binding_stale"
+  | "host_mismatch"
+  | "cli_missing"
+  | "not_authenticated"
+  | "permission_denied"
+  | "capability_unavailable"
+  | "not_found"
+  | "invalid_input"
+  | "source_conflict"
+  | "source_unresolved"
+  | "rate_limited"
+  | "metadata_truncated"
+  | "transport_failed"
+  | "transfer_failed"
+  | "outcome_unknown"
+  | "operation_missing"
+  | "operation_expired"
+  | "operation_reused"
+  | "intent_conflict"
+  | "maintenance_required"
+
+export type ActionsOperationId = string
+
+export type ActionsSendDisposition = "definitely_unsent" | "definitely_rejected" | "unknown"
+
+export type ActionsBindingInput = {
+  remote: string
+  provider: ActionsProvider
+  projectPath: string
+  expectedRevision?: number
+}
+
+export type ActionsCapability = {
+  operation: string
+  state: "available" | "unavailable" | "unknown"
+  reason?: string
+  scope?: string
+  observedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type ActionsBindingRef = {
+  id: ActionsBindingId
+  revision: number
+}
+
+export type ActionsPolicy = {
+  retentionDays?: number
+  execution?: string
+}
+
+export type ActionsPolicyState = {
+  binding: ActionsBindingRef
+  policy: ActionsPolicy
+}
+
+export type ActionsOperationKind =
+  | "workflow.dispatch"
+  | "workflow.enable"
+  | "workflow.disable"
+  | "run.retry"
+  | "run.retryFailed"
+  | "run.cancel"
+  | "run.forceCancel"
+  | "run.delete"
+  | "run.approveFork"
+  | "run.rename"
+  | "job.retry"
+  | "job.play"
+  | "job.cancel"
+  | "job.erase"
+  | "logs.delete"
+  | "source.branch"
+  | "source.write"
+  | "source.delete"
+  | "source.review"
+  | "resource.create"
+  | "resource.update"
+  | "resource.delete"
+  | "artifact.keep"
+  | "deployment.review"
+  | "environment.stop"
+  | "runner.register"
+  | "runner.assign"
+  | "runner.remove"
+  | "cache.clear"
+  | "schedule.play"
+  | "schedule.takeOwnership"
+  | "pipeline.mergeRequest"
+  | "pipeline.trigger"
+  | "secureFile.upload"
+  | "resourceGroup.processMode"
+
+export type ActionsResourceKind =
+  | "artifacts"
+  | "environments"
+  | "deployments"
+  | "variables"
+  | "runners"
+  | "caches"
+  | "schedules"
+  | "triggers"
+  | "secureFiles"
+  | "resourceGroups"
+  | "pipelineVariables"
+  | "testReports"
+  | "policy"
+
+export type ActionsOperationTarget = {
+  workflowID?: string
+  runID?: string
+  jobID?: string
+  resourceID?: string
+  resourceKind?: ActionsResourceKind
+  scope?: string
+  path?: string
+  ref?: string
+}
+
+export type ActionsOperationExpected = {
+  sourceVersion?: string
+  commit?: string
+  attempt?: number
+  resourceVersion?: string
+}
+
+export type ActionsOperationIntent = {
+  clientID: string
+  binding: ActionsBindingRef
+  kind: ActionsOperationKind
+  target: ActionsOperationTarget
+  expected?: ActionsOperationExpected
+}
+
+export type ActionsOperationAcknowledgement = {
+  runID?: string
+  jobID?: string
+  resourceID?: string
+  attempt?: number
+  unattributed?: boolean
+}
+
+export type ActionsOperation = {
+  id: ActionsOperationId
+  bindingID: ActionsBindingId
+  clientID: string
+  kind: ActionsOperationKind
+  state: "prepared" | "sending" | "accepted" | "confirmed" | "rejected" | "outcome_unknown" | "expired"
+  target: ActionsOperationTarget
+  createdAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  expiresAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  updatedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  result?: ActionsOperationAcknowledgement
+  reason?: string
+}
+
+export type ActionsInputDefinition = {
+  name: string
+  description?: string
+  type: "string" | "boolean" | "number" | "choice" | "environment" | "file" | "array"
+  required: boolean
+  default?: unknown
+  options?: Array<string | boolean | number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN">
+}
+
+export type ActionsWorkflow = {
+  id: string
+  bindingID: ActionsBindingId
+  name: string
+  path: string
+  defaultRef?: string
+  state: string
+  dispatchable: boolean
+  dispatchState?: "available" | "unavailable" | "unknown"
+  inputs?: Array<ActionsInputDefinition>
+  triggers?: Array<string>
+  updatedAt?: string
+}
+
+export type ActionsWorkflowPage = {
+  items: Array<ActionsWorkflow>
+  next?: string
+  total?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  capturedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type ActionsSource = {
+  bindingID: ActionsBindingId
+  path: string
+  ref: string
+  commit?: string
+  version: string
+  text: string
+  editable: boolean
+  includes?: Array<string>
+  diagnostics?: Array<string>
+}
+
+export type ActionsGraphStep = {
+  name: string
+  uses?: string
+  run?: string
+  condition?: string
+}
+
+export type ActionsGraphJob = {
+  id: string
+  name: string
+  needs: Array<string>
+  stage?: string
+  condition?: string
+  runner?: unknown
+  matrix?: unknown
+  reusable?: string
+  configuration?: unknown
+  steps: Array<ActionsGraphStep>
+}
+
+export type ActionsGraph = {
+  source: ActionsSource
+  state: "complete" | "partial" | "unresolved"
+  jobs: Array<ActionsGraphJob>
+  diagnostics: Array<string>
+  triggers?: unknown
+  stages?: Array<string>
+  includes?: unknown
+  inputs?: Array<ActionsInputDefinition>
+  header?: unknown
+}
+
+export type ActionsGitHubDispatch = {
+  provider: "github"
+  ref: string
+  inputs?: {
+    [key: string]: string | number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN" | boolean
+  }
+}
+
+export type ActionsGitLabDispatch = {
+  provider: "gitlab"
+  ref: string
+  variables?: Array<{
+    key: string
+    value: string
+    variable_type?: "env_var" | "file"
+  }>
+  inputs?: {
+    [key: string]: unknown
+  }
+}
+
+export type ActionsDispatchCommand = {
+  id: ActionsOperationId
+  input: ActionsGitHubDispatch | ActionsGitLabDispatch
+}
+
+export type ActionsCommandOutput =
+  | {
+      kind: "runnerToken"
+      token: string
+      expiresAt?: string
+      runnerID?: string
+    }
+  | {
+      kind: "runnerJit"
+      encodedConfiguration: string
+      runnerID: string
+    }
+  | {
+      kind: "triggerToken"
+      token: string
+      triggerID: string
+    }
+  | {
+      kind: "sourceReview"
+      id: string
+      url: string
+    }
+
+export type ActionsCommandExecution = {
+  operation: ActionsOperation
+  output?: ActionsCommandOutput
+}
+
+export type ActionsWorkflowStateCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "github"
+    enabled: boolean
+  }
+}
+
+export type ActionsRun = {
+  id: string
+  bindingID: ActionsBindingId
+  workflowID: string
+  name: string
+  title?: string
+  number?: number
+  ref: string
+  commit: string
+  event: string
+  actor?: string
+  status: string
+  conclusion?: string
+  attempt?: number
+  createdAt?: string
+  startedAt?: string
+  finishedAt?: string
+  updatedAt?: string
+  triggeringActor?: string
+  repositoryID?: string
+  duration?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  parentID?: string
+  url?: string
+}
+
+export type ActionsRunPage = {
+  items: Array<ActionsRun>
+  next?: string
+  total?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  capturedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type ActionsStep = {
+  number: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  name: string
+  status: string
+  conclusion?: string
+  startedAt?: string
+  finishedAt?: string
+}
+
+export type ActionsJob = {
+  id: string
+  bindingID: ActionsBindingId
+  runID: string
+  name: string
+  status: string
+  conclusion?: string
+  definitionID?: string
+  runner?: string
+  runnerID?: string
+  runnerLabels?: Array<string>
+  runnerGroupID?: string
+  attempt?: number
+  startedAt?: string
+  finishedAt?: string
+  downstreamID?: string
+  downstreamProjectID?: string
+  kind?: "job" | "bridge"
+  stage?: string
+  retried?: boolean
+  retryOf?: string
+  allowFailure?: boolean
+  steps: Array<ActionsStep>
+}
+
+export type ActionsJobPage = {
+  items: Array<ActionsJob>
+  next?: string
+  total?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  capturedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type ActionsRetryCommand = {
+  id: ActionsOperationId
+  input:
+    | {
+        provider: "github"
+        mode: "all" | "failed"
+        enableDebugLogging?: boolean
+      }
+    | {
+        provider: "gitlab"
+        mode: "failed"
+      }
+}
+
+export type ActionsProviderCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "github" | "gitlab"
+  }
+}
+
+export type ActionsGitHubCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "github"
+  }
+}
+
+export type ActionsRenameCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "gitlab"
+    name: string
+  }
+}
+
+export type ActionsJobRetryCommand = {
+  id: ActionsOperationId
+  input:
+    | {
+        provider: "github"
+        enableDebugLogging?: boolean
+      }
+    | {
+        provider: "gitlab"
+      }
+}
+
+export type ActionsJobPlayCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "gitlab"
+    variables?: Array<{
+      key: string
+      value: string
+      variable_type?: "env_var" | "file"
+    }>
+  }
+}
+
+export type ActionsGitLabCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "gitlab"
+  }
+}
+
+export type ActionsMergeRequestCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "gitlab"
+  }
+}
+
+export type ActionsTriggerPipelineCommand = {
+  id: ActionsOperationId
+  input: {
+    provider: "gitlab"
+    ref: string
+    token: string
+    variables?: {
+      [key: string]: string
+    }
+    inputs?: {
+      [key: string]: unknown
+    }
+  }
+}
+
+export type ActionsResource = {
+  id: string
+  bindingID: ActionsBindingId
+  kind: ActionsResourceKind
+  name: string
+  scope?: string
+  owner?: string
+  status?: string
+  sensitive?: boolean
+  data: unknown
+}
+
+export type ActionsResourcePage = {
+  items: Array<ActionsResource>
+  next?: string
+  total?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  capturedAt: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+}
+
+export type ActionsResourceCommand = {
+  id: ActionsOperationId
+  input: unknown
+}
+
+export type ActionsSourceBase = {
+  bindingID: ActionsBindingId
+  ref: string
+  commit: string
+}
+
+export type ActionsDraftValidation = {
+  base: ActionsSourceBase
+  path: string
+  draft: string
+}
+
+export type ActionsSourceValidation = {
+  source: ActionsSource
+  draft: string
+}
+
+export type ActionsTransferInfo = {
+  filename: string
+  contentType: string
+  size?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+  digest?: string
 }
 
 export type EventModelsDevRefreshed = {
@@ -9130,6 +10123,16 @@ export type EventSessionNextSubagentModelsChanged = {
     timestamp: number
     sessionID: string
     policy: SessionSubagentModelsPolicy
+  }
+}
+
+export type EventSessionNextArchiveChanged = {
+  id: string
+  type: "session.next.archive.changed"
+  properties: {
+    timestamp: number
+    sessionID: string
+    archived: number
   }
 }
 
@@ -9810,6 +10813,7 @@ export type EventMaestroReviewReceived = {
       line: number
       message: string
     }>
+    stage?: "plan" | "code"
   }
 }
 
@@ -10138,6 +11142,14 @@ export type EventPermissionReplied = {
 export type EventMcpToolsChanged = {
   id: string
   type: "mcp.tools.changed"
+  properties: {
+    server: string
+  }
+}
+
+export type EventMcpStatusChanged = {
+  id: string
+  type: "mcp.status.changed"
   properties: {
     server: string
   }
@@ -10655,6 +11667,321 @@ export type EventSubscribeResponses = {
 
 export type EventSubscribeResponse = EventSubscribeResponses[keyof EventSubscribeResponses]
 
+export type AtlasSnapshotData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/snapshot"
+}
+
+export type AtlasSnapshotErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasSnapshotError = AtlasSnapshotErrors[keyof AtlasSnapshotErrors]
+
+export type AtlasSnapshotResponses = {
+  /**
+   * AtlasSnapshotResult
+   */
+  200: AtlasSnapshotResult
+}
+
+export type AtlasSnapshotResponse = AtlasSnapshotResponses[keyof AtlasSnapshotResponses]
+
+export type AtlasReasoningData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/reasoning/{id}"
+}
+
+export type AtlasReasoningErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasReasoningError = AtlasReasoningErrors[keyof AtlasReasoningErrors]
+
+export type AtlasReasoningResponses = {
+  /**
+   * AtlasReasoningResult
+   */
+  200: AtlasReasoningResult
+}
+
+export type AtlasReasoningResponse = AtlasReasoningResponses[keyof AtlasReasoningResponses]
+
+export type AtlasOwnData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    scope: string
+  }
+  url: "/atlas/own"
+}
+
+export type AtlasOwnErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasOwnError = AtlasOwnErrors[keyof AtlasOwnErrors]
+
+export type AtlasOwnResponses = {
+  /**
+   * AtlasOwnResult
+   */
+  200: AtlasOwnResult
+}
+
+export type AtlasOwnResponse = AtlasOwnResponses[keyof AtlasOwnResponses]
+
+export type AtlasHealthData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/health"
+}
+
+export type AtlasHealthErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasHealthError = AtlasHealthErrors[keyof AtlasHealthErrors]
+
+export type AtlasHealthResponses = {
+  /**
+   * AtlasHealthResult
+   */
+  200: AtlasHealthResult
+}
+
+export type AtlasHealthResponse = AtlasHealthResponses[keyof AtlasHealthResponses]
+
+export type AtlasPromoteData = {
+  body?: {
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/promote"
+}
+
+export type AtlasPromoteErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasPromoteError = AtlasPromoteErrors[keyof AtlasPromoteErrors]
+
+export type AtlasPromoteResponses = {
+  /**
+   * AtlasPromoteResult
+   */
+  200: AtlasPromoteResult
+}
+
+export type AtlasPromoteResponse = AtlasPromoteResponses[keyof AtlasPromoteResponses]
+
+export type AtlasDraftData = {
+  body?: {
+    anchor: string
+    slot: string
+    claim: string
+    supersede?: boolean
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/draft"
+}
+
+export type AtlasDraftErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasDraftError = AtlasDraftErrors[keyof AtlasDraftErrors]
+
+export type AtlasDraftResponses = {
+  /**
+   * AtlasDraftResult
+   */
+  200: AtlasDraftResult
+}
+
+export type AtlasDraftResponse = AtlasDraftResponses[keyof AtlasDraftResponses]
+
+export type AtlasEmitData = {
+  body?: {
+    fact: unknown
+    at: string
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/emit"
+}
+
+export type AtlasEmitErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasEmitError = AtlasEmitErrors[keyof AtlasEmitErrors]
+
+export type AtlasEmitResponses = {
+  /**
+   * AtlasEmitResult
+   */
+  200: AtlasEmitResult
+}
+
+export type AtlasEmitResponse = AtlasEmitResponses[keyof AtlasEmitResponses]
+
+export type AtlasLinkData = {
+  body?: {
+    a: string
+    b: string
+    retract?: boolean
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/link"
+}
+
+export type AtlasLinkErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasLinkError = AtlasLinkErrors[keyof AtlasLinkErrors]
+
+export type AtlasLinkResponses = {
+  /**
+   * AtlasLinkResult
+   */
+  200: AtlasLinkResult
+}
+
+export type AtlasLinkResponse = AtlasLinkResponses[keyof AtlasLinkResponses]
+
+export type AtlasVerifyData = {
+  body?: {
+    kind: string
+    target: string
+    scope: string
+    world?: string
+    min?: number | "NaN" | "Infinity" | "-Infinity" | "Infinity" | "-Infinity" | "NaN"
+    exact?: boolean
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/verify"
+}
+
+export type AtlasVerifyErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasVerifyError = AtlasVerifyErrors[keyof AtlasVerifyErrors]
+
+export type AtlasVerifyResponses = {
+  /**
+   * AtlasVerifyResult
+   */
+  200: AtlasVerifyResult
+}
+
+export type AtlasVerifyResponse = AtlasVerifyResponses[keyof AtlasVerifyResponses]
+
 export type ConfigGetData = {
   body?: never
   path?: never
@@ -10773,104 +12100,6 @@ export type ExperimentalCapabilitiesGetResponses = {
 
 export type ExperimentalCapabilitiesGetResponse =
   ExperimentalCapabilitiesGetResponses[keyof ExperimentalCapabilitiesGetResponses]
-
-export type ExperimentalConsoleGetData = {
-  body?: never
-  path?: never
-  query?: {
-    directory?: string
-    workspace?: string
-  }
-  url: "/experimental/console"
-}
-
-export type ExperimentalConsoleGetErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-  /**
-   * InternalServerError
-   */
-  500: EffectHttpApiErrorInternalServerError
-}
-
-export type ExperimentalConsoleGetError = ExperimentalConsoleGetErrors[keyof ExperimentalConsoleGetErrors]
-
-export type ExperimentalConsoleGetResponses = {
-  /**
-   * Active Console provider metadata
-   */
-  200: ConsoleState
-}
-
-export type ExperimentalConsoleGetResponse = ExperimentalConsoleGetResponses[keyof ExperimentalConsoleGetResponses]
-
-export type ExperimentalConsoleListOrgsData = {
-  body?: never
-  path?: never
-  query?: {
-    directory?: string
-    workspace?: string
-  }
-  url: "/experimental/console/orgs"
-}
-
-export type ExperimentalConsoleListOrgsErrors = {
-  /**
-   * Bad request
-   */
-  400: BadRequestError
-  /**
-   * InternalServerError
-   */
-  500: EffectHttpApiErrorInternalServerError
-}
-
-export type ExperimentalConsoleListOrgsError =
-  ExperimentalConsoleListOrgsErrors[keyof ExperimentalConsoleListOrgsErrors]
-
-export type ExperimentalConsoleListOrgsResponses = {
-  /**
-   * Switchable Console orgs
-   */
-  200: {
-    orgs: Array<{
-      accountID: string
-      accountEmail: string
-      accountUrl: string
-      orgID: string
-      orgName: string
-      active: boolean
-    }>
-  }
-}
-
-export type ExperimentalConsoleListOrgsResponse =
-  ExperimentalConsoleListOrgsResponses[keyof ExperimentalConsoleListOrgsResponses]
-
-export type ExperimentalConsoleSwitchOrgData = {
-  body?: {
-    accountID: string
-    orgID: string
-  }
-  path?: never
-  query?: {
-    directory?: string
-    workspace?: string
-  }
-  url: "/experimental/console/switch"
-}
-
-export type ExperimentalConsoleSwitchOrgResponses = {
-  /**
-   * Switch success
-   */
-  200: boolean
-}
-
-export type ExperimentalConsoleSwitchOrgResponse =
-  ExperimentalConsoleSwitchOrgResponses[keyof ExperimentalConsoleSwitchOrgResponses]
 
 export type ToolListData = {
   body?: never
@@ -13055,6 +14284,95 @@ export type ProviderOauthCallbackResponses = {
 
 export type ProviderOauthCallbackResponse = ProviderOauthCallbackResponses[keyof ProviderOauthCallbackResponses]
 
+export type ProviderClaudeCodeAccountData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/account"
+}
+
+export type ProviderClaudeCodeAccountErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeAccountError = ProviderClaudeCodeAccountErrors[keyof ProviderClaudeCodeAccountErrors]
+
+export type ProviderClaudeCodeAccountResponses = {
+  /**
+   * Claude Code sign-in status
+   */
+  200: ClaudeCodeAccount
+}
+
+export type ProviderClaudeCodeAccountResponse =
+  ProviderClaudeCodeAccountResponses[keyof ProviderClaudeCodeAccountResponses]
+
+export type ProviderClaudeCodeLoginData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login"
+}
+
+export type ProviderClaudeCodeLoginErrors = {
+  /**
+   * ClaudeCodeLoginError | InvalidRequestError
+   */
+  400: ClaudeCodeLoginError | InvalidRequestError
+}
+
+export type ProviderClaudeCodeLoginError = ProviderClaudeCodeLoginErrors[keyof ProviderClaudeCodeLoginErrors]
+
+export type ProviderClaudeCodeLoginResponses = {
+  /**
+   * Fallback sign-in URL
+   */
+  200: ClaudeCodeLogin
+}
+
+export type ProviderClaudeCodeLoginResponse = ProviderClaudeCodeLoginResponses[keyof ProviderClaudeCodeLoginResponses]
+
+export type ProviderClaudeCodeLoginCodeData = {
+  body?: {
+    code: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/provider/claude-code/login/code"
+}
+
+export type ProviderClaudeCodeLoginCodeErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+}
+
+export type ProviderClaudeCodeLoginCodeError =
+  ProviderClaudeCodeLoginCodeErrors[keyof ProviderClaudeCodeLoginCodeErrors]
+
+export type ProviderClaudeCodeLoginCodeResponses = {
+  /**
+   * Whether a running sign-in received the code
+   */
+  200: boolean
+}
+
+export type ProviderClaudeCodeLoginCodeResponse =
+  ProviderClaudeCodeLoginCodeResponses[keyof ProviderClaudeCodeLoginCodeResponses]
+
 export type SessionListData = {
   body?: never
   path?: never
@@ -15066,6 +16384,7 @@ export type V2SessionListData = {
     limit?: number
     order?: "asc" | "desc"
     search?: string
+    includeArchived?: "true" | "false"
     directory?: string
     project?: string
     subpath?: string
@@ -15120,6 +16439,10 @@ export type V2SessionCreateErrors = {
    * UnauthorizedError
    */
   401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
 }
 
 export type V2SessionCreateError = V2SessionCreateErrors[keyof V2SessionCreateErrors]
@@ -15204,6 +16527,43 @@ export type V2SessionGetResponses = {
 }
 
 export type V2SessionGetResponse = V2SessionGetResponses[keyof V2SessionGetResponses]
+
+export type V2SessionArchiveData = {
+  body: {
+    archived: boolean
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/archive"
+}
+
+export type V2SessionArchiveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionArchiveError = V2SessionArchiveErrors[keyof V2SessionArchiveErrors]
+
+export type V2SessionArchiveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionArchiveResponse = V2SessionArchiveResponses[keyof V2SessionArchiveResponses]
 
 export type V2SessionGetSubagentModelsData = {
   body?: never
@@ -16176,6 +17536,125 @@ export type V2IntegrationConnectOauthResponses = {
 
 export type V2IntegrationConnectOauthResponse =
   V2IntegrationConnectOauthResponses[keyof V2IntegrationConnectOauthResponses]
+
+export type V2IntegrationOauthCancelData = {
+  body?: never
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}"
+}
+
+export type V2IntegrationOauthCancelErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthCancelError = V2IntegrationOauthCancelErrors[keyof V2IntegrationOauthCancelErrors]
+
+export type V2IntegrationOauthCancelResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2IntegrationOauthCancelResponse =
+  V2IntegrationOauthCancelResponses[keyof V2IntegrationOauthCancelResponses]
+
+export type V2IntegrationOauthStatusData = {
+  body?: never
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}"
+}
+
+export type V2IntegrationOauthStatusErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthStatusError = V2IntegrationOauthStatusErrors[keyof V2IntegrationOauthStatusErrors]
+
+export type V2IntegrationOauthStatusResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: IntegrationAttemptStatus
+  }
+}
+
+export type V2IntegrationOauthStatusResponse =
+  V2IntegrationOauthStatusResponses[keyof V2IntegrationOauthStatusResponses]
+
+export type V2IntegrationOauthCompleteData = {
+  body: {
+    code?: string
+  }
+  path: {
+    integrationID: string
+    attemptID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/integration/{integrationID}/connect/oauth/{attemptID}/complete"
+}
+
+export type V2IntegrationOauthCompleteErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2IntegrationOauthCompleteError = V2IntegrationOauthCompleteErrors[keyof V2IntegrationOauthCompleteErrors]
+
+export type V2IntegrationOauthCompleteResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2IntegrationOauthCompleteResponse =
+  V2IntegrationOauthCompleteResponses[keyof V2IntegrationOauthCompleteResponses]
 
 export type V2IntegrationAttemptCancelData = {
   body?: never
@@ -19141,6 +20620,1903 @@ export type V2ScheduleRunResponses = {
 }
 
 export type V2ScheduleRunResponse = V2ScheduleRunResponses[keyof V2ScheduleRunResponses]
+
+export type ServerActionsBindingActionsBindingListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/actions/binding"
+}
+
+export type ServerActionsBindingActionsBindingListErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingListError =
+  ServerActionsBindingActionsBindingListErrors[keyof ServerActionsBindingActionsBindingListErrors]
+
+export type ServerActionsBindingActionsBindingListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<ActionsBinding>
+  }
+}
+
+export type ServerActionsBindingActionsBindingListResponse =
+  ServerActionsBindingActionsBindingListResponses[keyof ServerActionsBindingActionsBindingListResponses]
+
+export type ServerActionsBindingActionsBindingCreateData = {
+  body: ActionsBindingInput
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/actions/binding"
+}
+
+export type ServerActionsBindingActionsBindingCreateErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingCreateError =
+  ServerActionsBindingActionsBindingCreateErrors[keyof ServerActionsBindingActionsBindingCreateErrors]
+
+export type ServerActionsBindingActionsBindingCreateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsBinding
+  }
+}
+
+export type ServerActionsBindingActionsBindingCreateResponse =
+  ServerActionsBindingActionsBindingCreateResponses[keyof ServerActionsBindingActionsBindingCreateResponses]
+
+export type ServerActionsBindingActionsBindingRemoveData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}"
+}
+
+export type ServerActionsBindingActionsBindingRemoveErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingRemoveError =
+  ServerActionsBindingActionsBindingRemoveErrors[keyof ServerActionsBindingActionsBindingRemoveErrors]
+
+export type ServerActionsBindingActionsBindingRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: null
+  }
+}
+
+export type ServerActionsBindingActionsBindingRemoveResponse =
+  ServerActionsBindingActionsBindingRemoveResponses[keyof ServerActionsBindingActionsBindingRemoveResponses]
+
+export type ServerActionsBindingActionsBindingGetData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}"
+}
+
+export type ServerActionsBindingActionsBindingGetErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingGetError =
+  ServerActionsBindingActionsBindingGetErrors[keyof ServerActionsBindingActionsBindingGetErrors]
+
+export type ServerActionsBindingActionsBindingGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsBinding
+  }
+}
+
+export type ServerActionsBindingActionsBindingGetResponse =
+  ServerActionsBindingActionsBindingGetResponses[keyof ServerActionsBindingActionsBindingGetResponses]
+
+export type ServerActionsBindingActionsBindingUpdateData = {
+  body: ActionsBindingInput
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}"
+}
+
+export type ServerActionsBindingActionsBindingUpdateErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingUpdateError =
+  ServerActionsBindingActionsBindingUpdateErrors[keyof ServerActionsBindingActionsBindingUpdateErrors]
+
+export type ServerActionsBindingActionsBindingUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsBinding
+  }
+}
+
+export type ServerActionsBindingActionsBindingUpdateResponse =
+  ServerActionsBindingActionsBindingUpdateResponses[keyof ServerActionsBindingActionsBindingUpdateResponses]
+
+export type ServerActionsBindingActionsBindingCapabilitiesData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}/capabilities"
+}
+
+export type ServerActionsBindingActionsBindingCapabilitiesErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingCapabilitiesError =
+  ServerActionsBindingActionsBindingCapabilitiesErrors[keyof ServerActionsBindingActionsBindingCapabilitiesErrors]
+
+export type ServerActionsBindingActionsBindingCapabilitiesResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<ActionsCapability>
+  }
+}
+
+export type ServerActionsBindingActionsBindingCapabilitiesResponse =
+  ServerActionsBindingActionsBindingCapabilitiesResponses[keyof ServerActionsBindingActionsBindingCapabilitiesResponses]
+
+export type ServerActionsBindingActionsBindingPolicyData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}/policy"
+}
+
+export type ServerActionsBindingActionsBindingPolicyErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingPolicyError =
+  ServerActionsBindingActionsBindingPolicyErrors[keyof ServerActionsBindingActionsBindingPolicyErrors]
+
+export type ServerActionsBindingActionsBindingPolicyResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsPolicyState
+  }
+}
+
+export type ServerActionsBindingActionsBindingPolicyResponse =
+  ServerActionsBindingActionsBindingPolicyResponses[keyof ServerActionsBindingActionsBindingPolicyResponses]
+
+export type ServerActionsBindingActionsBindingUpdatePolicyData = {
+  body: ActionsPolicy
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/binding/{bindingID}/policy"
+}
+
+export type ServerActionsBindingActionsBindingUpdatePolicyErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsBindingActionsBindingUpdatePolicyError =
+  ServerActionsBindingActionsBindingUpdatePolicyErrors[keyof ServerActionsBindingActionsBindingUpdatePolicyErrors]
+
+export type ServerActionsBindingActionsBindingUpdatePolicyResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsPolicyState
+  }
+}
+
+export type ServerActionsBindingActionsBindingUpdatePolicyResponse =
+  ServerActionsBindingActionsBindingUpdatePolicyResponses[keyof ServerActionsBindingActionsBindingUpdatePolicyResponses]
+
+export type ServerActionsOperationActionsOperationPrepareData = {
+  body: ActionsOperationIntent
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/operation/{bindingID}"
+}
+
+export type ServerActionsOperationActionsOperationPrepareErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsOperationActionsOperationPrepareError =
+  ServerActionsOperationActionsOperationPrepareErrors[keyof ServerActionsOperationActionsOperationPrepareErrors]
+
+export type ServerActionsOperationActionsOperationPrepareResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsOperation
+  }
+}
+
+export type ServerActionsOperationActionsOperationPrepareResponse =
+  ServerActionsOperationActionsOperationPrepareResponses[keyof ServerActionsOperationActionsOperationPrepareResponses]
+
+export type ServerActionsOperationActionsOperationGetData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+    operationID: ActionsOperationId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/operation/{bindingID}/{operationID}"
+}
+
+export type ServerActionsOperationActionsOperationGetErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsOperationActionsOperationGetError =
+  ServerActionsOperationActionsOperationGetErrors[keyof ServerActionsOperationActionsOperationGetErrors]
+
+export type ServerActionsOperationActionsOperationGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsOperation
+  }
+}
+
+export type ServerActionsOperationActionsOperationGetResponse =
+  ServerActionsOperationActionsOperationGetResponses[keyof ServerActionsOperationActionsOperationGetResponses]
+
+export type ServerActionsOperationActionsOperationReconcileData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+    operationID: ActionsOperationId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/operation/{bindingID}/{operationID}/reconcile"
+}
+
+export type ServerActionsOperationActionsOperationReconcileErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsOperationActionsOperationReconcileError =
+  ServerActionsOperationActionsOperationReconcileErrors[keyof ServerActionsOperationActionsOperationReconcileErrors]
+
+export type ServerActionsOperationActionsOperationReconcileResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsOperation
+  }
+}
+
+export type ServerActionsOperationActionsOperationReconcileResponse =
+  ServerActionsOperationActionsOperationReconcileResponses[keyof ServerActionsOperationActionsOperationReconcileResponses]
+
+export type ServerActionsWorkflowActionsWorkflowListData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    cursor?: string
+    limit?: string
+    query?: string
+    state?: string
+  }
+  url: "/api/actions/workflow/{bindingID}"
+}
+
+export type ServerActionsWorkflowActionsWorkflowListErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsWorkflowActionsWorkflowListError =
+  ServerActionsWorkflowActionsWorkflowListErrors[keyof ServerActionsWorkflowActionsWorkflowListErrors]
+
+export type ServerActionsWorkflowActionsWorkflowListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsWorkflowPage
+  }
+}
+
+export type ServerActionsWorkflowActionsWorkflowListResponse =
+  ServerActionsWorkflowActionsWorkflowListResponses[keyof ServerActionsWorkflowActionsWorkflowListResponses]
+
+export type ServerActionsWorkflowActionsWorkflowSourceData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    path: string
+    ref: string
+  }
+  url: "/api/actions/workflow/{bindingID}/source"
+}
+
+export type ServerActionsWorkflowActionsWorkflowSourceErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsWorkflowActionsWorkflowSourceError =
+  ServerActionsWorkflowActionsWorkflowSourceErrors[keyof ServerActionsWorkflowActionsWorkflowSourceErrors]
+
+export type ServerActionsWorkflowActionsWorkflowSourceResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsSource
+  }
+}
+
+export type ServerActionsWorkflowActionsWorkflowSourceResponse =
+  ServerActionsWorkflowActionsWorkflowSourceResponses[keyof ServerActionsWorkflowActionsWorkflowSourceResponses]
+
+export type ServerActionsWorkflowActionsWorkflowGraphData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    path: string
+    ref: string
+  }
+  url: "/api/actions/workflow/{bindingID}/graph"
+}
+
+export type ServerActionsWorkflowActionsWorkflowGraphErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsWorkflowActionsWorkflowGraphError =
+  ServerActionsWorkflowActionsWorkflowGraphErrors[keyof ServerActionsWorkflowActionsWorkflowGraphErrors]
+
+export type ServerActionsWorkflowActionsWorkflowGraphResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsGraph
+  }
+}
+
+export type ServerActionsWorkflowActionsWorkflowGraphResponse =
+  ServerActionsWorkflowActionsWorkflowGraphResponses[keyof ServerActionsWorkflowActionsWorkflowGraphResponses]
+
+export type ServerActionsWorkflowActionsWorkflowDispatchData = {
+  body: ActionsDispatchCommand
+  path: {
+    bindingID: ActionsBindingId
+    workflowID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/workflow/{bindingID}/{workflowID}/dispatch"
+}
+
+export type ServerActionsWorkflowActionsWorkflowDispatchErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsWorkflowActionsWorkflowDispatchError =
+  ServerActionsWorkflowActionsWorkflowDispatchErrors[keyof ServerActionsWorkflowActionsWorkflowDispatchErrors]
+
+export type ServerActionsWorkflowActionsWorkflowDispatchResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsWorkflowActionsWorkflowDispatchResponse =
+  ServerActionsWorkflowActionsWorkflowDispatchResponses[keyof ServerActionsWorkflowActionsWorkflowDispatchResponses]
+
+export type ServerActionsWorkflowActionsWorkflowStateData = {
+  body: ActionsWorkflowStateCommand
+  path: {
+    bindingID: ActionsBindingId
+    workflowID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/workflow/{bindingID}/{workflowID}/state"
+}
+
+export type ServerActionsWorkflowActionsWorkflowStateErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsWorkflowActionsWorkflowStateError =
+  ServerActionsWorkflowActionsWorkflowStateErrors[keyof ServerActionsWorkflowActionsWorkflowStateErrors]
+
+export type ServerActionsWorkflowActionsWorkflowStateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsWorkflowActionsWorkflowStateResponse =
+  ServerActionsWorkflowActionsWorkflowStateResponses[keyof ServerActionsWorkflowActionsWorkflowStateResponses]
+
+export type ServerActionsRunActionsRunListData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    workflowID?: string
+    cursor?: string
+    limit?: string
+    ref?: string
+    event?: string
+    status?: string
+    commit?: string
+    actor?: string
+    created?: string
+    createdAfter?: string
+    createdBefore?: string
+    updatedAfter?: string
+    updatedBefore?: string
+  }
+  url: "/api/actions/run/{bindingID}"
+}
+
+export type ServerActionsRunActionsRunListErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunListError =
+  ServerActionsRunActionsRunListErrors[keyof ServerActionsRunActionsRunListErrors]
+
+export type ServerActionsRunActionsRunListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsRunPage
+  }
+}
+
+export type ServerActionsRunActionsRunListResponse =
+  ServerActionsRunActionsRunListResponses[keyof ServerActionsRunActionsRunListResponses]
+
+export type ServerActionsRunActionsRunRemoveData = {
+  body: ActionsProviderCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}"
+}
+
+export type ServerActionsRunActionsRunRemoveErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunRemoveError =
+  ServerActionsRunActionsRunRemoveErrors[keyof ServerActionsRunActionsRunRemoveErrors]
+
+export type ServerActionsRunActionsRunRemoveResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunRemoveResponse =
+  ServerActionsRunActionsRunRemoveResponses[keyof ServerActionsRunActionsRunRemoveResponses]
+
+export type ServerActionsRunActionsRunGetData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}"
+}
+
+export type ServerActionsRunActionsRunGetErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunGetError =
+  ServerActionsRunActionsRunGetErrors[keyof ServerActionsRunActionsRunGetErrors]
+
+export type ServerActionsRunActionsRunGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsRun
+  }
+}
+
+export type ServerActionsRunActionsRunGetResponse =
+  ServerActionsRunActionsRunGetResponses[keyof ServerActionsRunActionsRunGetResponses]
+
+export type ServerActionsRunActionsRunJobsData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    attempt?: string
+    cursor?: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/jobs"
+}
+
+export type ServerActionsRunActionsRunJobsErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunJobsError =
+  ServerActionsRunActionsRunJobsErrors[keyof ServerActionsRunActionsRunJobsErrors]
+
+export type ServerActionsRunActionsRunJobsResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsJobPage
+  }
+}
+
+export type ServerActionsRunActionsRunJobsResponse =
+  ServerActionsRunActionsRunJobsResponses[keyof ServerActionsRunActionsRunJobsResponses]
+
+export type ServerActionsRunActionsRunRetryData = {
+  body: ActionsRetryCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/retry"
+}
+
+export type ServerActionsRunActionsRunRetryErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunRetryError =
+  ServerActionsRunActionsRunRetryErrors[keyof ServerActionsRunActionsRunRetryErrors]
+
+export type ServerActionsRunActionsRunRetryResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunRetryResponse =
+  ServerActionsRunActionsRunRetryResponses[keyof ServerActionsRunActionsRunRetryResponses]
+
+export type ServerActionsRunActionsRunCancelData = {
+  body: ActionsProviderCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/cancel"
+}
+
+export type ServerActionsRunActionsRunCancelErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunCancelError =
+  ServerActionsRunActionsRunCancelErrors[keyof ServerActionsRunActionsRunCancelErrors]
+
+export type ServerActionsRunActionsRunCancelResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunCancelResponse =
+  ServerActionsRunActionsRunCancelResponses[keyof ServerActionsRunActionsRunCancelResponses]
+
+export type ServerActionsRunActionsRunForceCancelData = {
+  body: ActionsGitHubCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/force-cancel"
+}
+
+export type ServerActionsRunActionsRunForceCancelErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunForceCancelError =
+  ServerActionsRunActionsRunForceCancelErrors[keyof ServerActionsRunActionsRunForceCancelErrors]
+
+export type ServerActionsRunActionsRunForceCancelResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunForceCancelResponse =
+  ServerActionsRunActionsRunForceCancelResponses[keyof ServerActionsRunActionsRunForceCancelResponses]
+
+export type ServerActionsRunActionsRunApproveForkData = {
+  body: ActionsGitHubCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/approve-fork"
+}
+
+export type ServerActionsRunActionsRunApproveForkErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunApproveForkError =
+  ServerActionsRunActionsRunApproveForkErrors[keyof ServerActionsRunActionsRunApproveForkErrors]
+
+export type ServerActionsRunActionsRunApproveForkResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunApproveForkResponse =
+  ServerActionsRunActionsRunApproveForkResponses[keyof ServerActionsRunActionsRunApproveForkResponses]
+
+export type ServerActionsRunActionsRunRenameData = {
+  body: ActionsRenameCommand
+  path: {
+    bindingID: ActionsBindingId
+    runID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/run/{bindingID}/{runID}/name"
+}
+
+export type ServerActionsRunActionsRunRenameErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsRunActionsRunRenameError =
+  ServerActionsRunActionsRunRenameErrors[keyof ServerActionsRunActionsRunRenameErrors]
+
+export type ServerActionsRunActionsRunRenameResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsRunActionsRunRenameResponse =
+  ServerActionsRunActionsRunRenameResponses[keyof ServerActionsRunActionsRunRenameResponses]
+
+export type ServerActionsJobActionsJobRetryData = {
+  body: ActionsJobRetryCommand
+  path: {
+    bindingID: ActionsBindingId
+    jobID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/job/{bindingID}/{jobID}/retry"
+}
+
+export type ServerActionsJobActionsJobRetryErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsJobActionsJobRetryError =
+  ServerActionsJobActionsJobRetryErrors[keyof ServerActionsJobActionsJobRetryErrors]
+
+export type ServerActionsJobActionsJobRetryResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsJobActionsJobRetryResponse =
+  ServerActionsJobActionsJobRetryResponses[keyof ServerActionsJobActionsJobRetryResponses]
+
+export type ServerActionsJobActionsJobPlayData = {
+  body: ActionsJobPlayCommand
+  path: {
+    bindingID: ActionsBindingId
+    jobID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/job/{bindingID}/{jobID}/play"
+}
+
+export type ServerActionsJobActionsJobPlayErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsJobActionsJobPlayError =
+  ServerActionsJobActionsJobPlayErrors[keyof ServerActionsJobActionsJobPlayErrors]
+
+export type ServerActionsJobActionsJobPlayResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsJobActionsJobPlayResponse =
+  ServerActionsJobActionsJobPlayResponses[keyof ServerActionsJobActionsJobPlayResponses]
+
+export type ServerActionsJobActionsJobCancelData = {
+  body: ActionsGitLabCommand
+  path: {
+    bindingID: ActionsBindingId
+    jobID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/job/{bindingID}/{jobID}/cancel"
+}
+
+export type ServerActionsJobActionsJobCancelErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsJobActionsJobCancelError =
+  ServerActionsJobActionsJobCancelErrors[keyof ServerActionsJobActionsJobCancelErrors]
+
+export type ServerActionsJobActionsJobCancelResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsJobActionsJobCancelResponse =
+  ServerActionsJobActionsJobCancelResponses[keyof ServerActionsJobActionsJobCancelResponses]
+
+export type ServerActionsJobActionsJobEraseData = {
+  body: ActionsGitLabCommand
+  path: {
+    bindingID: ActionsBindingId
+    jobID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/job/{bindingID}/{jobID}/erase"
+}
+
+export type ServerActionsJobActionsJobEraseErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsJobActionsJobEraseError =
+  ServerActionsJobActionsJobEraseErrors[keyof ServerActionsJobActionsJobEraseErrors]
+
+export type ServerActionsJobActionsJobEraseResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsJobActionsJobEraseResponse =
+  ServerActionsJobActionsJobEraseResponses[keyof ServerActionsJobActionsJobEraseResponses]
+
+export type ServerActionsPipelineActionsPipelineMergeRequestData = {
+  body: ActionsMergeRequestCommand
+  path: {
+    bindingID: ActionsBindingId
+    mergeRequestID: string
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/pipeline/{bindingID}/merge-request/{mergeRequestID}"
+}
+
+export type ServerActionsPipelineActionsPipelineMergeRequestErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsPipelineActionsPipelineMergeRequestError =
+  ServerActionsPipelineActionsPipelineMergeRequestErrors[keyof ServerActionsPipelineActionsPipelineMergeRequestErrors]
+
+export type ServerActionsPipelineActionsPipelineMergeRequestResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsPipelineActionsPipelineMergeRequestResponse =
+  ServerActionsPipelineActionsPipelineMergeRequestResponses[keyof ServerActionsPipelineActionsPipelineMergeRequestResponses]
+
+export type ServerActionsPipelineActionsPipelineTriggerData = {
+  body: ActionsTriggerPipelineCommand
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/pipeline/{bindingID}/trigger"
+}
+
+export type ServerActionsPipelineActionsPipelineTriggerErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsPipelineActionsPipelineTriggerError =
+  ServerActionsPipelineActionsPipelineTriggerErrors[keyof ServerActionsPipelineActionsPipelineTriggerErrors]
+
+export type ServerActionsPipelineActionsPipelineTriggerResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsPipelineActionsPipelineTriggerResponse =
+  ServerActionsPipelineActionsPipelineTriggerResponses[keyof ServerActionsPipelineActionsPipelineTriggerResponses]
+
+export type ServerActionsResourceActionsResourceListData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    kind: ActionsResourceKind
+    runID?: string
+    resourceID?: string
+    scope?: string
+    ref?: string
+    query?: string
+    cursor?: string
+    limit?: string
+  }
+  url: "/api/actions/resource/{bindingID}"
+}
+
+export type ServerActionsResourceActionsResourceListErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsResourceActionsResourceListError =
+  ServerActionsResourceActionsResourceListErrors[keyof ServerActionsResourceActionsResourceListErrors]
+
+export type ServerActionsResourceActionsResourceListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsResourcePage
+  }
+}
+
+export type ServerActionsResourceActionsResourceListResponse =
+  ServerActionsResourceActionsResourceListResponses[keyof ServerActionsResourceActionsResourceListResponses]
+
+export type ServerActionsResourceActionsResourceCommandData = {
+  body: ActionsResourceCommand
+  path: {
+    bindingID: ActionsBindingId
+    resourceKind: ActionsResourceKind
+    action: "create" | "update" | "delete" | "play" | "pause" | "keep" | "clear"
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/resource/{bindingID}/{resourceKind}/{action}"
+}
+
+export type ServerActionsResourceActionsResourceCommandErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsResourceActionsResourceCommandError =
+  ServerActionsResourceActionsResourceCommandErrors[keyof ServerActionsResourceActionsResourceCommandErrors]
+
+export type ServerActionsResourceActionsResourceCommandResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsResourceActionsResourceCommandResponse =
+  ServerActionsResourceActionsResourceCommandResponses[keyof ServerActionsResourceActionsResourceCommandResponses]
+
+export type ServerActionsSourceActionsSourceBaseData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    ref?: string
+  }
+  url: "/api/actions/source/{bindingID}/base"
+}
+
+export type ServerActionsSourceActionsSourceBaseErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsSourceActionsSourceBaseError =
+  ServerActionsSourceActionsSourceBaseErrors[keyof ServerActionsSourceActionsSourceBaseErrors]
+
+export type ServerActionsSourceActionsSourceBaseResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsSourceBase
+  }
+}
+
+export type ServerActionsSourceActionsSourceBaseResponse =
+  ServerActionsSourceActionsSourceBaseResponses[keyof ServerActionsSourceActionsSourceBaseResponses]
+
+export type ServerActionsSourceActionsSourceValidateDraftData = {
+  body: ActionsDraftValidation
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/source/{bindingID}/validate-draft"
+}
+
+export type ServerActionsSourceActionsSourceValidateDraftErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsSourceActionsSourceValidateDraftError =
+  ServerActionsSourceActionsSourceValidateDraftErrors[keyof ServerActionsSourceActionsSourceValidateDraftErrors]
+
+export type ServerActionsSourceActionsSourceValidateDraftResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsGraph
+  }
+}
+
+export type ServerActionsSourceActionsSourceValidateDraftResponse =
+  ServerActionsSourceActionsSourceValidateDraftResponses[keyof ServerActionsSourceActionsSourceValidateDraftResponses]
+
+export type ServerActionsSourceActionsSourceValidateData = {
+  body: ActionsSourceValidation
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/source/{bindingID}/validate"
+}
+
+export type ServerActionsSourceActionsSourceValidateErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsSourceActionsSourceValidateError =
+  ServerActionsSourceActionsSourceValidateErrors[keyof ServerActionsSourceActionsSourceValidateErrors]
+
+export type ServerActionsSourceActionsSourceValidateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsGraph
+  }
+}
+
+export type ServerActionsSourceActionsSourceValidateResponse =
+  ServerActionsSourceActionsSourceValidateResponses[keyof ServerActionsSourceActionsSourceValidateResponses]
+
+export type ServerActionsSourceActionsSourceCommandData = {
+  body: ActionsResourceCommand
+  path: {
+    bindingID: ActionsBindingId
+    action: "branch" | "write" | "review"
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+  }
+  url: "/api/actions/source/{bindingID}/{action}"
+}
+
+export type ServerActionsSourceActionsSourceCommandErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsSourceActionsSourceCommandError =
+  ServerActionsSourceActionsSourceCommandErrors[keyof ServerActionsSourceActionsSourceCommandErrors]
+
+export type ServerActionsSourceActionsSourceCommandResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsCommandExecution
+  }
+}
+
+export type ServerActionsSourceActionsSourceCommandResponse =
+  ServerActionsSourceActionsSourceCommandResponses[keyof ServerActionsSourceActionsSourceCommandResponses]
+
+export type ServerActionsTransferActionsTransferInfoData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    id: string
+    runID?: string
+    attempt?: string
+    path?: string
+  }
+  url: "/api/actions/transfer/{bindingID}/info"
+}
+
+export type ServerActionsTransferActionsTransferInfoErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsTransferActionsTransferInfoError =
+  ServerActionsTransferActionsTransferInfoErrors[keyof ServerActionsTransferActionsTransferInfoErrors]
+
+export type ServerActionsTransferActionsTransferInfoResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: ActionsTransferInfo
+  }
+}
+
+export type ServerActionsTransferActionsTransferInfoResponse =
+  ServerActionsTransferActionsTransferInfoResponses[keyof ServerActionsTransferActionsTransferInfoResponses]
+
+export type ServerActionsTransferActionsTransferReadData = {
+  body?: never
+  path: {
+    bindingID: ActionsBindingId
+  }
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    revision: string
+    kind: "jobLog" | "runLog" | "artifact" | "secureFile"
+    id: string
+    runID?: string
+    attempt?: string
+    path?: string
+  }
+  url: "/api/actions/transfer/{bindingID}"
+}
+
+export type ServerActionsTransferActionsTransferReadErrors = {
+  /**
+   * ActionsError | InvalidRequestError
+   */
+  400: ActionsError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type ServerActionsTransferActionsTransferReadError =
+  ServerActionsTransferActionsTransferReadErrors[keyof ServerActionsTransferActionsTransferReadErrors]
+
+export type ServerActionsTransferActionsTransferReadResponses = {
+  /**
+   * Success
+   */
+  200: Blob | File
+}
+
+export type ServerActionsTransferActionsTransferReadResponse =
+  ServerActionsTransferActionsTransferReadResponses[keyof ServerActionsTransferActionsTransferReadResponses]
+
+export type V2RelayRunListData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    document?: string
+  }
+  url: "/api/relay/run"
+}
+
+export type V2RelayRunListErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayRunListError = V2RelayRunListErrors[keyof V2RelayRunListErrors]
+
+export type V2RelayRunListResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<RelayExternalRun>
+  }
+}
+
+export type V2RelayRunListResponse = V2RelayRunListResponses[keyof V2RelayRunListResponses]
+
+export type V2RelayRunGetData = {
+  body?: never
+  path: {
+    runID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/run/{runID}"
+}
+
+export type V2RelayRunGetErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayRunGetError = V2RelayRunGetErrors[keyof V2RelayRunGetErrors]
+
+export type V2RelayRunGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayExternalRun
+  }
+}
+
+export type V2RelayRunGetResponse = V2RelayRunGetResponses[keyof V2RelayRunGetResponses]
+
+export type V2RelayRunAuditData = {
+  body?: never
+  path: {
+    runID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/relay/run/{runID}/audit"
+}
+
+export type V2RelayRunAuditErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayRunAuditError = V2RelayRunAuditErrors[keyof V2RelayRunAuditErrors]
+
+export type V2RelayRunAuditResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: RelayExternalAudit
+  }
+}
+
+export type V2RelayRunAuditResponse = V2RelayRunAuditResponses[keyof V2RelayRunAuditResponses]
+
+export type V2RelayRunLedgerData = {
+  body?: never
+  path: {
+    runID: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    after?: string
+  }
+  url: "/api/relay/run/{runID}/ledger"
+}
+
+export type V2RelayRunLedgerErrors = {
+  /**
+   * RelayInvalidError | InvalidRequestError
+   */
+  400: RelayInvalidError | InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * RelayNotFoundError
+   */
+  404: RelayNotFoundError
+  /**
+   * RelayConflictError
+   */
+  409: RelayConflictError
+  /**
+   * RelayUnavailableError
+   */
+  503: RelayUnavailableError
+}
+
+export type V2RelayRunLedgerError = V2RelayRunLedgerErrors[keyof V2RelayRunLedgerErrors]
+
+export type V2RelayRunLedgerResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<{
+      [key: string]: unknown
+    }>
+  }
+}
+
+export type V2RelayRunLedgerResponse = V2RelayRunLedgerResponses[keyof V2RelayRunLedgerResponses]
 
 export type PtyConnectData = {
   body?: never

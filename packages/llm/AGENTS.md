@@ -23,12 +23,12 @@ This package is an Effect Schema-first LLM core. The Schema classes in `src/sche
 
 Primary in-repo integration point:
 
-- `packages/orchestra/src/session/llm.ts` is the session-owned orchestration layer that decides whether a request uses AI SDK or this package's native route runtime.
-- `packages/orchestra/src/session/llm/native-request.ts` is the lowering adapter from orchestra's session/AI SDK-shaped data into this package's `LLMRequest` model.
-- `packages/orchestra/src/session/llm/native-runtime.ts` is the execution adapter that calls raw `LLMClient.stream(request)` and bridges one provider turn of orchestra tool calls through this package's typed dispatcher.
-- `packages/orchestra/src/session/llm/ai-sdk.ts` keeps the default AI SDK path compatible by converting AI SDK stream parts into this package's shared `LLMEvent`s.
+- `apps/orchestra/src/session/llm.ts` is the session-owned orchestration layer that decides whether a request uses AI SDK or this package's native route runtime.
+- `apps/orchestra/src/session/llm/native-request.ts` is the lowering adapter from orchestra's session/AI SDK-shaped data into this package's `LLMRequest` model.
+- `apps/orchestra/src/session/llm/native-runtime.ts` is the execution adapter that calls raw `LLMClient.stream(request)` and bridges one provider turn of orchestra tool calls through this package's typed dispatcher.
+- `apps/orchestra/src/session/llm/ai-sdk.ts` keeps the default AI SDK path compatible by converting AI SDK stream parts into this package's shared `LLMEvent`s.
 
-Keep this package independent of session concerns. Session auth, permissions, plugins, telemetry headers, and runtime selection belong in `packages/orchestra/src/session/llm.ts` and its local adapters.
+Keep this package independent of session concerns. Session auth, permissions, plugins, telemetry headers, and runtime selection belong in `apps/orchestra/src/session/llm.ts` and its local adapters.
 
 ### Request Flow
 

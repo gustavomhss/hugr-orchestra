@@ -5,6 +5,10 @@ export interface TodoItemProps {
   content: string
 }
 
+export function todoProgress(todos: ReadonlyArray<{ status: string }>) {
+  return `${todos.filter((todo) => todo.status === "completed").length}/${todos.length} done`
+}
+
 export function TodoItem(props: TodoItemProps) {
   const { theme } = useTheme()
 

@@ -19,10 +19,12 @@ import {
   budgetVerdict,
   territoriesVerdict,
 } from "@atlas/adapter-io"
-import type { ReverifyReport, BudgetReport, TerritoriesLeg } from "@atlas/adapter-io"
+import type { ReverifyReport, BudgetReport, TerritoriesLeg, OwnLeg } from "@atlas/adapter-io"
 import type { Awareness, MemoryRecord, Orientation, TurnHeader } from "@atlas/memory"
 import { runOkfExport, runOkfImport } from "./okf-cli.js"
 import { runPromote } from "./promote.js"
+import { runOwn } from "./own.js"
+import type { CliDeps } from "./cli.js"
 import { runDeriveRelationsCli } from "./derive-relations.js"
 import { asHash } from "@atlas/kernel"
 import { headSha } from "@atlas/adapter-io"
@@ -35,6 +37,20 @@ import { runReverify } from "./reverify.js"
 import { renderRefusal } from "./render.js"
 import { emit, emitCli, errorVerdict, refusalVerdict } from "./cli-verdict.js"
 import type { CliVerdict } from "./render.js"
+
+/** What a lane command runner receives: the parsed invocation plus the composed runtime's legs (B-L-API.md §2). */
+export interface CommandInput {
+  readonly positionals: readonly string[]
+  readonly flags: Readonly<Record<string, string>>
+  readonly deps: CliDeps
+}
+
+/** One lane command: returns the process exit code, through the same `emit`/`emitCli` path as every command. */
+export type CommandRunner = (input: CommandInput) => number | Promise<number>
+
+/** A lane's command table (`review-cli.ts`, `ops-cli.ts`), keyed by command name. String keys on purpose: a key
+ *  not yet in `COMMANDS` is unreachable because `parse` refuses it, so a runner can land before its command. */
+export type CommandTable = Readonly<Partial<Record<string, CommandRunner>>>
 
 /**
  * CLI-4 / SOUND-DEFAULT-MINE: `mine` drives the FROZEN genesis run-controller (`runMineArms`) over the repo
@@ -234,7 +250,9 @@ export function dispatchImport(
 
 /** `atlas promote` — the composed governed PROMOTION leg, ONE pass over the repo at cwd (CLI-7 / ADR-0008).
  *  A WRITE command: fails closed on an uncomposed runtime like the routed ones; the anchor rev is LIVE HEAD
- *  through the total `headSha` seam (a gate that later reads it gets a fact, never a placeholder). */
+ *  through the total `headSha` seam (a gate that later reads it gets a fact, never a placeholder). It opens no
+ *  new governed surface, and its rendered `CliVerdict` reaches the console over the SAME emit/exit path as every
+ *  command. Moved here from cli.ts with its intercept (B-L01) to give cli.ts room under its godfile waiver. */
 export function dispatchPromote(promote: ((at: Hash) => PromoteOut) | undefined): number {
   if (!promote)
     return emit(errorVerdict("atlas runtime is not composed yet — the WireConfig seams need the composition-root WP"))
@@ -248,4 +266,20 @@ export function dispatchDeriveRelations(deriveRelations: (() => DeriveRelationsR
   if (!deriveRelations)
     return emit(errorVerdict("atlas runtime is not composed yet — the WireConfig seams need the composition-root WP"))
   return emitCli(runDeriveRelationsCli(deriveRelations))
+}
+
+/**
+ * CLI-8: `atlas own <scope>` composes the RETR-12 curated briefing for one scope-unit through the composition
+ * root's `own` leg — `@atlas/retrieval`'s `createOwn` over the SAME durable store + built axes the query readback
+ * rides. Like `node` it is intercepted before the handler (it is not a `Tool`: it opens no governed surface, and
+ * `GOVERNANCE_SURFACE` stays 5), and like every other command its rendered `CliVerdict` reaches the console over
+ * the SAME emit/exit path (uniform bytes).
+ *
+ * It fails closed on an uncomposed runtime for the same reason the READ commands do: composing a second runtime
+ * here would brief from a store that is not the one `atlas query` reads. Moved here from cli.ts (B-L01).
+ */
+export function dispatchOwn(own: OwnLeg | undefined, scope: string): number {
+  if (!own)
+    return emit(errorVerdict("atlas runtime is not composed yet — the WireConfig seams need the composition-root WP"))
+  return emitCli(runOwn(own, scope))
 }

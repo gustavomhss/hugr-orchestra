@@ -28,11 +28,7 @@ const DEFAULT_TERMINAL_COLORS: Record<"light" | "dark", TerminalColors & { foreg
 }
 
 // Read the applied skin, including preview/system-mode changes, after its DOM attributes change.
-export function createTerminalTheme(input: {
-  theme: () => DesktopTheme | undefined
-  mode: () => "light" | "dark"
-  newLayout: () => boolean
-}) {
+export function createTerminalTheme(input: { theme: () => DesktopTheme | undefined; mode: () => "light" | "dark" }) {
   const [store, setStore] = createStore({ revision: 0 })
   onMount(() => {
     const observer = new MutationObserver(() => setStore("revision", (value) => value + 1))
@@ -46,9 +42,9 @@ export function createTerminalTheme(input: {
 
   return createMemo(() => {
     store.revision
-    const fallback = legacyTerminalColors({ theme: input.theme(), mode: input.mode(), newLayout: input.newLayout() })
+    const fallback = legacyTerminalColors({ theme: input.theme(), mode: input.mode() })
     const scheme = document.documentElement.dataset.colorScheme
-    if (!input.newLayout() || !document.body.hasAttribute("data-new-layout") || !scheme) {
+    if (!document.body.hasAttribute("data-new-layout") || !scheme) {
       return { colors: fallback, mode: input.mode() }
     }
     const mode = scheme === "dark" ? "dark" : "light"
@@ -69,11 +65,7 @@ export function createTerminalTheme(input: {
   })
 }
 
-function legacyTerminalColors(input: {
-  theme?: DesktopTheme
-  mode: "light" | "dark"
-  newLayout: boolean
-}): TerminalColors {
+function legacyTerminalColors(input: { theme?: DesktopTheme; mode: "light" | "dark" }): TerminalColors {
   const mode = input.mode
   const fallback = DEFAULT_TERMINAL_COLORS[mode]
   const currentTheme = input.theme
@@ -82,9 +74,8 @@ function legacyTerminalColors(input: {
   if (!variant?.seeds && !variant?.palette) return fallback
   const resolved = resolveThemeVariant(variant, mode === "dark")
   const text = resolved["text-stronger"] ?? fallback.foreground
-  const background = input.newLayout
-    ? (resolveV2Token(resolveThemeVariantV2(variant, mode === "dark"), "v2-background-bg-base") ?? fallback.background)
-    : (resolved["background-stronger"] ?? fallback.background)
+  const background =
+    resolveV2Token(resolveThemeVariantV2(variant, mode === "dark"), "v2-background-bg-base") ?? fallback.background
   const alpha = mode === "dark" ? 0.25 : 0.2
   const base = isHexColor(text) ? text : fallback.foreground
   const selectionBackground = withAlpha(base, alpha)

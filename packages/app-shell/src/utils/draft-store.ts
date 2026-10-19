@@ -28,11 +28,6 @@ async function blobID(blob: Blob) {
   return id
 }
 
-export async function createBlobReference(blob: Blob): Promise<BlobReference> {
-  const id = await blobID(blob)
-  return { id, url: blobUrl(id, blob) }
-}
-
 export function createDraftStore(driver: Driver): DraftStore {
   const versions = new Map<string, number>()
   const putBlob = async (blob: Blob) => {

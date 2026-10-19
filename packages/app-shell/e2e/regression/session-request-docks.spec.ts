@@ -271,9 +271,6 @@ async function mockServer(
     questions: requests.questions,
   })
   await page.addInitScript(() => {
-    localStorage.setItem(
-      "settings.v3",
-      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-    )
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })
 }

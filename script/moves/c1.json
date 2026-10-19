@@ -1,0 +1,5 @@
+{
+  "moves": [
+    { "from": "apps/orchestra/src/tool/truncation-dir.ts", "to": "packages/core/src/tool/truncation-dir.ts" }
+  ]
+}

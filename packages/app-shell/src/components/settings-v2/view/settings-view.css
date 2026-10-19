@@ -156,6 +156,12 @@
   color: var(--mx-dim);
   font-size: 11px;
 }
+.orchestra-settings .settings-scope {
+  margin: 0 0 14px;
+}
+.orchestra-settings .mx-empty .mx-btn {
+  margin-block-start: 12px;
+}
 .orchestra-settings .agent-desc {
   display: -webkit-box;
   overflow: hidden;

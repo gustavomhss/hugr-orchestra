@@ -1,27 +1,21 @@
 [
   {
-    "path": "specs/orchestra-visual/handoff/archives",
-    "disposition": "retain-recovery",
-    "owner": "visual-handoff",
-    "readers": ["specs/orchestra-visual/handoff/restore-evidence.ts", "specs/orchestra-visual/handoff/evidence-snapshot.json"]
-  },
-  {
-    "path": "packages/orchestra/specs/benchmark-evidence",
+    "path": "apps/orchestra/specs/benchmark-evidence",
     "disposition": "review-history",
     "owner": "continuity",
-    "readers": ["packages/orchestra/specs/context-continuity-benchmark-v3-v4.md", "packages/orchestra/script/continuity-bench/v4.ts"],
+    "readers": ["apps/orchestra/specs/context-continuity-benchmark-v3-v4.md", "apps/orchestra/script/continuity-bench/v4.ts"],
     "uncertainty": "The spec associates retained benchmark evidence with the harness; v4.ts reads BENCH_DIR scratch evidence. Direct readership of each retained evidence file remains unverified."
   },
   {
-    "path": "specs/backend-specialist/research",
+    "path": "docs/specs/backend-specialist/research",
     "disposition": "review-history",
     "owner": "backend",
-    "readers": ["specs/backend-specialist/session-handoff.md", "specs/backend-specialist/contracts/f4-work-result.md"]
+    "readers": ["docs/specs/backend-specialist/session-handoff.md", "docs/specs/backend-specialist/contracts/f4-work-result.md"]
   },
   {
     "path": "packages/jimmy-specialist",
     "disposition": "retain-runtime",
     "owner": "backend",
-    "readers": ["packages/desktop/src/main/jimmy-desktop-proof.test.ts", "packages/orchestra/script/research-pilot.ts"]
+    "readers": ["apps/desktop/src/main/jimmy-desktop-proof.test.ts", "apps/orchestra/script/research-pilot.ts"]
   }
 ]

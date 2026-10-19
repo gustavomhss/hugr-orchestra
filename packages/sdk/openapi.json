@@ -865,231 +865,6 @@
         ]
       }
     },
-    "/experimental/console": {
-      "get": {
-        "tags": ["experimental"],
-        "operationId": "experimental.console.get",
-        "parameters": [
-          {
-            "name": "directory",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "workspace",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Active Console provider metadata",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ConsoleState"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/effect_HttpApiError_InternalServerError"
-                }
-              }
-            }
-          }
-        },
-        "description": "Get the active Console org name and the set of provider IDs managed by that Console org.",
-        "summary": "Get active Console provider metadata",
-        "x-codeSamples": [
-          {
-            "lang": "js",
-            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.experimental.console.get({\n  ...\n})"
-          }
-        ]
-      }
-    },
-    "/experimental/console/orgs": {
-      "get": {
-        "tags": ["experimental"],
-        "operationId": "experimental.console.listOrgs",
-        "parameters": [
-          {
-            "name": "directory",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "workspace",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Switchable Console orgs",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "orgs": {
-                      "type": "array",
-                      "items": {
-                        "type": "object",
-                        "properties": {
-                          "accountID": {
-                            "type": "string"
-                          },
-                          "accountEmail": {
-                            "type": "string"
-                          },
-                          "accountUrl": {
-                            "type": "string"
-                          },
-                          "orgID": {
-                            "type": "string"
-                          },
-                          "orgName": {
-                            "type": "string"
-                          },
-                          "active": {
-                            "type": "boolean"
-                          }
-                        },
-                        "required": ["accountID", "accountEmail", "accountUrl", "orgID", "orgName", "active"],
-                        "additionalProperties": false
-                      }
-                    }
-                  },
-                  "required": ["orgs"],
-                  "additionalProperties": false,
-                  "description": "Switchable Console orgs"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Bad request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/BadRequestError"
-                }
-              }
-            }
-          },
-          "500": {
-            "description": "InternalServerError",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/effect_HttpApiError_InternalServerError"
-                }
-              }
-            }
-          }
-        },
-        "description": "Get the available Console orgs across logged-in accounts, including the current active org.",
-        "summary": "List switchable Console orgs",
-        "x-codeSamples": [
-          {
-            "lang": "js",
-            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.experimental.console.listOrgs({\n  ...\n})"
-          }
-        ]
-      }
-    },
-    "/experimental/console/switch": {
-      "post": {
-        "tags": ["experimental"],
-        "operationId": "experimental.console.switchOrg",
-        "parameters": [
-          {
-            "name": "directory",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          },
-          {
-            "name": "workspace",
-            "in": "query",
-            "schema": {
-              "type": "string"
-            },
-            "required": false
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Switch success",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "boolean",
-                  "description": "Switch success"
-                }
-              }
-            }
-          }
-        },
-        "description": "Persist a new active Console account/org selection for the current local Orchestra state.",
-        "summary": "Switch active Console org",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "type": "object",
-                "properties": {
-                  "accountID": {
-                    "type": "string"
-                  },
-                  "orgID": {
-                    "type": "string"
-                  }
-                },
-                "required": ["accountID", "orgID"],
-                "additionalProperties": false
-              }
-            }
-          }
-        },
-        "x-codeSamples": [
-          {
-            "lang": "js",
-            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.experimental.console.switchOrg({\n  ...\n})"
-          }
-        ]
-      }
-    },
     "/experimental/tool": {
       "get": {
         "tags": ["experimental"],
@@ -4348,7 +4123,12 @@
                 "uv",
                 "vite",
                 "webpack",
-                "yarn"
+                "yarn",
+                "shell",
+                "read",
+                "webfetch",
+                "glob",
+                "grep"
               ]
             },
             "required": true
@@ -11133,6 +10913,15 @@
             "required": false
           },
           {
+            "name": "includeArchived",
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": ["true", "false"]
+            },
+            "required": false
+          },
+          {
             "name": "directory",
             "in": "query",
             "schema": {
@@ -11257,6 +11046,16 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionNotFoundError"
                 }
               }
             }
@@ -11436,6 +11235,290 @@
           {
             "lang": "js",
             "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.session.get({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/session/{sessionID}/archive": {
+      "post": {
+        "tags": ["sessions"],
+        "operationId": "v2.session.archive",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "description": "Change session visibility without stopping execution or removing session history.",
+        "summary": "Archive or restore session",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "archived": {
+                    "type": "boolean"
+                  }
+                },
+                "required": ["archived"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.session.archive({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/session/{sessionID}/subagent-models": {
+      "get": {
+        "tags": ["sessions"],
+        "operationId": "v2.session.getSubagentModels",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+                    }
+                  },
+                  "required": ["data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Read the stored outgoing subagent model policy. Corrupt stored policy is refused.",
+        "summary": "Get session subagent model policy",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.session.getSubagentModels({\n  ...\n})"
+          }
+        ]
+      },
+      "post": {
+        "tags": ["sessions"],
+        "operationId": "v2.session.setSubagentModels",
+        "parameters": [
+          {
+            "name": "sessionID",
+            "in": "path",
+            "schema": {
+              "type": "string",
+              "pattern": "^ses"
+            },
+            "required": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "data": {
+                      "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+                    }
+                  },
+                  "required": ["data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvalidRequestError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "SessionNotFoundError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/SessionNotFoundError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "ServiceUnavailableError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ServiceUnavailableError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Durably replace the outgoing subagent model policy; inheritance and an empty allowlist are distinct.",
+        "summary": "Set session subagent model policy",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "policy": {
+                    "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+                  }
+                },
+                "required": ["policy"],
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.session.setSubagentModels({\n  ...\n})"
           }
         ]
       }
@@ -13660,6 +13743,289 @@
         ]
       }
     },
+    "/api/integration/{integrationID}/connect/oauth/{attemptID}": {
+      "get": {
+        "tags": ["integrations"],
+        "operationId": "v2.integration.oauth.status",
+        "parameters": [
+          {
+            "name": "integrationID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "attemptID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "location": {
+                      "$ref": "#/components/schemas/LocationInfo"
+                    },
+                    "data": {
+                      "$ref": "#/components/schemas/IntegrationAttemptStatus"
+                    }
+                  },
+                  "required": ["location", "data"],
+                  "additionalProperties": false
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Compatibility route for polling an OAuth attempt owned by this integration.",
+        "summary": "Get integration OAuth status",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.integration.oauth.status({\n  ...\n})"
+          }
+        ]
+      },
+      "delete": {
+        "tags": ["integrations"],
+        "operationId": "v2.integration.oauth.cancel",
+        "parameters": [
+          {
+            "name": "integrationID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "attemptID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Compatibility route for cancelling an OAuth attempt owned by this integration.",
+        "summary": "Cancel integration OAuth connection",
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.integration.oauth.cancel({\n  ...\n})"
+          }
+        ]
+      }
+    },
+    "/api/integration/{integrationID}/connect/oauth/{attemptID}/complete": {
+      "post": {
+        "tags": ["integrations"],
+        "operationId": "v2.integration.oauth.complete",
+        "parameters": [
+          {
+            "name": "integrationID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "attemptID",
+            "in": "path",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "schema": {
+              "type": "object",
+              "properties": {
+                "directory": {
+                  "type": "string"
+                },
+                "workspace": {
+                  "type": "string"
+                }
+              },
+              "additionalProperties": false
+            },
+            "required": false,
+            "style": "deepObject",
+            "explode": true
+          }
+        ],
+        "security": [],
+        "responses": {
+          "204": {
+            "description": "<No Content>"
+          },
+          "400": {
+            "description": "InvalidRequestError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "UnauthorizedError",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnauthorizedError"
+                }
+              }
+            }
+          }
+        },
+        "description": "Compatibility route for completing an OAuth attempt owned by this integration.",
+        "summary": "Complete integration OAuth connection",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "code": {
+                    "type": "string"
+                  }
+                },
+                "additionalProperties": false
+              }
+            }
+          },
+          "required": true
+        },
+        "x-codeSamples": [
+          {
+            "lang": "js",
+            "source": "import { createOrchestraClient } from \"@orchestra/sdk\n\nconst client = createOrchestraClient()\nawait client.v2.integration.oauth.complete({\n  ...\n})"
+          }
+        ]
+      }
+    },
     "/api/integration/attempt/{attemptID}": {
       "get": {
         "tags": ["integrations"],
@@ -13720,7 +14086,14 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/InvalidRequestError"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    },
+                    {
+                      "$ref": "#/components/schemas/InvalidRequestError"
+                    }
+                  ]
                 }
               }
             }
@@ -17409,7 +17782,7 @@
             }
           }
         },
-        "description": "Delete a document. Its versions stay, and an installed hook keeps enforcing its pinned snapshot.",
+        "description": "Remove a document from the authoring library. Installed hooks for this document in the current profile are retired before deletion; immutable versions and recorded results are retained.",
         "summary": "Delete Relay document",
         "x-codeSamples": [
           {
@@ -20784,6 +21157,12 @@
             "$ref": "#/components/schemas/EventSessionNextModelSwitched"
           },
           {
+            "$ref": "#/components/schemas/EventSessionNextSubagentModelsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/EventSessionNextArchiveChanged"
+          },
+          {
             "$ref": "#/components/schemas/EventSessionNextMoved"
           },
           {
@@ -21010,6 +21389,9 @@
           },
           {
             "$ref": "#/components/schemas/EventMcpToolsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/EventMcpStatusChanged"
           },
           {
             "$ref": "#/components/schemas/EventMcpBrowserOpenFailed"
@@ -23452,6 +23834,70 @@
                       }
                     },
                     "required": ["timestamp", "sessionID", "messageID", "model"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["session.next.subagent.models.changed"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "timestamp": {
+                        "type": "number"
+                      },
+                      "sessionID": {
+                        "type": "string",
+                        "pattern": "^ses"
+                      },
+                      "policy": {
+                        "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+                      }
+                    },
+                    "required": ["timestamp", "sessionID", "policy"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
+                    "enum": ["session.next.archive.changed"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "timestamp": {
+                        "type": "number"
+                      },
+                      "sessionID": {
+                        "type": "string",
+                        "pattern": "^ses"
+                      },
+                      "archived": {
+                        "type": "number"
+                      }
+                    },
+                    "required": ["timestamp", "sessionID", "archived"],
                     "additionalProperties": false
                   }
                 },
@@ -27279,6 +27725,31 @@
                   },
                   "type": {
                     "type": "string",
+                    "enum": ["mcp.status.changed"]
+                  },
+                  "properties": {
+                    "type": "object",
+                    "properties": {
+                      "server": {
+                        "type": "string"
+                      }
+                    },
+                    "required": ["server"],
+                    "additionalProperties": false
+                  }
+                },
+                "required": ["id", "type", "properties"],
+                "additionalProperties": false
+              },
+              {
+                "type": "object",
+                "properties": {
+                  "id": {
+                    "type": "string",
+                    "pattern": "^evt_"
+                  },
+                  "type": {
+                    "type": "string",
                     "enum": ["mcp.browser.open.failed"]
                   },
                   "properties": {
@@ -27797,6 +28268,12 @@
               },
               {
                 "$ref": "#/components/schemas/SyncEventSessionNextModelSwitched"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventSessionNextSubagentModelsChanged"
+              },
+              {
+                "$ref": "#/components/schemas/SyncEventSessionNextArchiveChanged"
               },
               {
                 "$ref": "#/components/schemas/SyncEventSessionNextMoved"
@@ -29288,37 +29765,6 @@
         "required": ["backgroundSubagents"],
         "additionalProperties": false
       },
-      "ConsoleState": {
-        "type": "object",
-        "properties": {
-          "consoleManagedProviders": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "activeOrgName": {
-            "type": "string"
-          },
-          "switchableOrgCount": {
-            "type": "integer",
-            "minimum": 0
-          }
-        },
-        "required": ["consoleManagedProviders", "switchableOrgCount"],
-        "additionalProperties": false
-      },
-      "effect_HttpApiError_InternalServerError": {
-        "type": "object",
-        "properties": {
-          "_tag": {
-            "type": "string",
-            "enum": ["InternalServerError"]
-          }
-        },
-        "required": ["_tag"],
-        "additionalProperties": false
-      },
       "ToolListItem": {
         "type": "object",
         "properties": {
@@ -30462,7 +30908,12 @@
               "uv",
               "vite",
               "webpack",
-              "yarn"
+              "yarn",
+              "shell",
+              "read",
+              "webfetch",
+              "glob",
+              "grep"
             ]
           },
           "enabled": {
@@ -30561,7 +31012,12 @@
               "uv",
               "vite",
               "webpack",
-              "yarn"
+              "yarn",
+              "shell",
+              "read",
+              "webfetch",
+              "glob",
+              "grep"
             ]
           },
           "enabled": {
@@ -30620,7 +31076,12 @@
               "uv",
               "vite",
               "webpack",
-              "yarn"
+              "yarn",
+              "shell",
+              "read",
+              "webfetch",
+              "glob",
+              "grep"
             ]
           },
           "command": {
@@ -30724,7 +31185,12 @@
               "uv",
               "vite",
               "webpack",
-              "yarn"
+              "yarn",
+              "shell",
+              "read",
+              "webfetch",
+              "glob",
+              "grep"
             ]
           },
           "complete": {
@@ -31753,17 +32219,6 @@
         "required": ["_tag", "message"],
         "additionalProperties": false
       },
-      "SessionActive": {
-        "type": "object",
-        "properties": {
-          "type": {
-            "type": "string",
-            "enum": ["running"]
-          }
-        },
-        "required": ["type"],
-        "additionalProperties": false
-      },
       "SessionNotFoundError": {
         "type": "object",
         "properties": {
@@ -31779,6 +32234,17 @@
           }
         },
         "required": ["_tag", "sessionID", "message"],
+        "additionalProperties": false
+      },
+      "SessionActive": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["running"]
+          }
+        },
+        "required": ["type"],
         "additionalProperties": false
       },
       "PromptInput": {
@@ -31830,6 +32296,12 @@
           },
           {
             "$ref": "#/components/schemas/SessionNextModelSwitched"
+          },
+          {
+            "$ref": "#/components/schemas/SessionNextSubagentModelsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/SessionNextArchiveChanged"
           },
           {
             "$ref": "#/components/schemas/SessionNextMoved"
@@ -32229,6 +32701,12 @@
             "$ref": "#/components/schemas/SessionNextModelSwitched"
           },
           {
+            "$ref": "#/components/schemas/SessionNextSubagentModelsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/SessionNextArchiveChanged"
+          },
+          {
             "$ref": "#/components/schemas/SessionNextMoved"
           },
           {
@@ -32455,6 +32933,9 @@
           },
           {
             "$ref": "#/components/schemas/McpToolsChanged"
+          },
+          {
+            "$ref": "#/components/schemas/McpStatusChanged"
           },
           {
             "$ref": "#/components/schemas/McpBrowserOpenFailed"
@@ -33457,6 +33938,38 @@
         "required": ["id", "providerID"],
         "additionalProperties": false
       },
+      "SessionSubagentModelsPolicy": {
+        "anyOf": [
+          {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": ["inherit"]
+              }
+            },
+            "required": ["mode"],
+            "additionalProperties": false
+          },
+          {
+            "type": "object",
+            "properties": {
+              "mode": {
+                "type": "string",
+                "enum": ["allowlist"]
+              },
+              "models": {
+                "type": "array",
+                "items": {
+                  "$ref": "#/components/schemas/ModelRef"
+                }
+              }
+            },
+            "required": ["mode", "models"],
+            "additionalProperties": false
+          }
+        ]
+      },
       "LocationRef": {
         "type": "object",
         "properties": {
@@ -33741,6 +34254,123 @@
         "required": ["wp", "skill", "sha256", "mode", "content"],
         "additionalProperties": false
       },
+      "AtlasKnowledgeReference": {
+        "type": "string",
+        "minLength": 64,
+        "maxLength": 64,
+        "pattern": "^[0-9a-f]{64}$"
+      },
+      "AtlasKnowledgeUnitID": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 256,
+        "pattern": "^[^\\u0000]+$"
+      },
+      "AtlasKnowledgeTarget": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": ["assignment", "work-package"]
+          },
+          "id": {
+            "$ref": "#/components/schemas/AtlasKnowledgeUnitID"
+          }
+        },
+        "required": ["kind", "id"],
+        "additionalProperties": false
+      },
+      "AtlasKnowledgeUnit": {
+        "type": "object",
+        "properties": {
+          "unit": {
+            "$ref": "#/components/schemas/AtlasKnowledgeUnitID"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "sourceIdentity": {
+            "$ref": "#/components/schemas/AtlasKnowledgeReference"
+          },
+          "sourceRevision": {
+            "type": "string",
+            "minLength": 1
+          },
+          "contentHash": {
+            "$ref": "#/components/schemas/AtlasKnowledgeReference"
+          },
+          "receiptHash": {
+            "$ref": "#/components/schemas/AtlasKnowledgeReference"
+          },
+          "bodyHash": {
+            "$ref": "#/components/schemas/AtlasKnowledgeReference"
+          },
+          "content": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "unit",
+          "name",
+          "sourceIdentity",
+          "sourceRevision",
+          "contentHash",
+          "receiptHash",
+          "bodyHash",
+          "content"
+        ],
+        "additionalProperties": false
+      },
+      "AtlasKnowledgeAnchor": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "$ref": "#/components/schemas/AtlasKnowledgeReference"
+          },
+          "projectID": {
+            "type": "string"
+          },
+          "authorSessionID": {
+            "type": "string",
+            "pattern": "^ses"
+          },
+          "assistantMessageID": {
+            "type": "string",
+            "pattern": "^msg_"
+          },
+          "callID": {
+            "type": "string",
+            "minLength": 1
+          },
+          "memberID": {
+            "type": "string",
+            "enum": ["archie"]
+          },
+          "target": {
+            "$ref": "#/components/schemas/AtlasKnowledgeTarget"
+          },
+          "units": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasKnowledgeUnit"
+            },
+            "minItems": 1,
+            "maxItems": 8
+          }
+        },
+        "required": [
+          "reference",
+          "projectID",
+          "authorSessionID",
+          "assistantMessageID",
+          "callID",
+          "memberID",
+          "target",
+          "units"
+        ],
+        "additionalProperties": false
+      },
       "RelayArmWorkflowDefinition": {
         "type": "object",
         "properties": {
@@ -33767,6 +34397,12 @@
             "items": {
               "type": "string",
               "minLength": 1
+            }
+          },
+          "knowledge": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasKnowledgeAnchor"
             }
           }
         },
@@ -34857,6 +35493,112 @@
                   }
                 },
                 "required": ["timestamp", "sessionID", "messageID", "model"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventSessionNextSubagentModelsChanged": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["session.next.subagent.models.changed.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "timestamp": {
+                    "type": "number"
+                  },
+                  "sessionID": {
+                    "type": "string",
+                    "pattern": "^ses"
+                  },
+                  "policy": {
+                    "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+                  }
+                },
+                "required": ["timestamp", "sessionID", "policy"],
+                "additionalProperties": false
+              }
+            },
+            "required": ["type", "id", "seq", "aggregateID", "data"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["type", "id", "syncEvent"],
+        "additionalProperties": false
+      },
+      "SyncEventSessionNextArchiveChanged": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": ["sync"]
+          },
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "syncEvent": {
+            "type": "object",
+            "properties": {
+              "type": {
+                "type": "string",
+                "enum": ["session.next.archive.changed.1"]
+              },
+              "id": {
+                "type": "string",
+                "pattern": "^evt_"
+              },
+              "seq": {
+                "type": "number"
+              },
+              "aggregateID": {
+                "type": "string"
+              },
+              "data": {
+                "type": "object",
+                "properties": {
+                  "timestamp": {
+                    "type": "number"
+                  },
+                  "sessionID": {
+                    "type": "string",
+                    "pattern": "^ses"
+                  },
+                  "archived": {
+                    "type": "number"
+                  }
+                },
+                "required": ["timestamp", "sessionID", "archived"],
                 "additionalProperties": false
               }
             },
@@ -38935,6 +39677,9 @@
           "model": {
             "$ref": "#/components/schemas/ModelRef"
           },
+          "subagentModels": {
+            "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+          },
           "cost": {
             "type": "number"
           },
@@ -39771,6 +40516,114 @@
               }
             },
             "required": ["timestamp", "sessionID", "messageID", "model"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "SessionNextSubagentModelsChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.next.subagent.models.changed"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "policy": {
+                "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+              }
+            },
+            "required": ["timestamp", "sessionID", "policy"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
+      "SessionNextArchiveChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.next.archive.changed"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "archived": {
+                "type": "number"
+              }
+            },
+            "required": ["timestamp", "sessionID", "archived"],
             "additionalProperties": false
           }
         },
@@ -47218,6 +48071,53 @@
         "required": ["id", "type", "data"],
         "additionalProperties": false
       },
+      "McpStatusChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "metadata": {
+            "type": "object"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["mcp.status.changed"]
+          },
+          "durable": {
+            "type": "object",
+            "properties": {
+              "aggregateID": {
+                "type": "string"
+              },
+              "seq": {
+                "type": "integer"
+              },
+              "version": {
+                "type": "integer"
+              }
+            },
+            "required": ["aggregateID", "seq", "version"],
+            "additionalProperties": false
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationRef"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "type": "string"
+              }
+            },
+            "required": ["server"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "data"],
+        "additionalProperties": false
+      },
       "McpBrowserOpenFailed": {
         "type": "object",
         "properties": {
@@ -48296,6 +49196,14 @@
               "type": "string"
             }
           },
+          "knowledge": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasKnowledgeReference"
+            },
+            "maxItems": 8,
+            "uniqueItems": true
+          },
           "checklist": {
             "type": "array",
             "items": {
@@ -48355,6 +49263,14 @@
             "items": {
               "$ref": "#/components/schemas/RelaySprintMacro"
             }
+          },
+          "knowledge": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AtlasKnowledgeReference"
+            },
+            "maxItems": 8,
+            "uniqueItems": true
           },
           "work_packages": {
             "type": "array",
@@ -50096,6 +51012,70 @@
               }
             },
             "required": ["timestamp", "sessionID", "messageID", "model"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventSessionNextSubagentModelsChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.next.subagent.models.changed"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "policy": {
+                "$ref": "#/components/schemas/SessionSubagentModelsPolicy"
+              }
+            },
+            "required": ["timestamp", "sessionID", "policy"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventSessionNextArchiveChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["session.next.archive.changed"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "timestamp": {
+                "type": "number"
+              },
+              "sessionID": {
+                "type": "string",
+                "pattern": "^ses"
+              },
+              "archived": {
+                "type": "number"
+              }
+            },
+            "required": ["timestamp", "sessionID", "archived"],
             "additionalProperties": false
           }
         },
@@ -53719,6 +54699,31 @@
           "type": {
             "type": "string",
             "enum": ["mcp.tools.changed"]
+          },
+          "properties": {
+            "type": "object",
+            "properties": {
+              "server": {
+                "type": "string"
+              }
+            },
+            "required": ["server"],
+            "additionalProperties": false
+          }
+        },
+        "required": ["id", "type", "properties"],
+        "additionalProperties": false
+      },
+      "EventMcpStatusChanged": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^evt_"
+          },
+          "type": {
+            "type": "string",
+            "enum": ["mcp.status.changed"]
           },
           "properties": {
             "type": "object",

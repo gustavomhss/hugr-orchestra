@@ -24,6 +24,9 @@ import {
 } from "./command-palette"
 import "./dialog-command-palette-v2.css"
 
+const resultsID = "command-palette-v2-results"
+const optionID = (index: number) => `command-palette-v2-option-${index}`
+
 function groups(entries: CommandPaletteEntry[]) {
   const map = new Map<string, CommandPaletteEntry[]>()
   for (const entry of entries) map.set(entry.category, [...(map.get(entry.category) ?? []), entry])
@@ -195,6 +198,9 @@ function CommandPaletteView(props: {
             value={query()}
             autofocus
             autocomplete="off"
+            aria-autocomplete="list"
+            aria-controls={resultsID}
+            aria-activedescendant={activeEntry() ? optionID(active()) : undefined}
             spellcheck={false}
             appearance="large"
             placeholder={props.placeholder}
@@ -204,7 +210,7 @@ function CommandPaletteView(props: {
           />
         </div>
         <ScrollView class="command-palette-v2-scroll" viewportRef={(el) => (resultsRef = el)}>
-          <div class="command-palette-v2-results" role="listbox">
+          <div id={resultsID} class="command-palette-v2-results" role="listbox">
             <Show
               when={visibleEntries().length > 0}
               fallback={
@@ -223,6 +229,7 @@ function CommandPaletteView(props: {
                       {(item) => (
                         <PaletteRow
                           item={item}
+                          id={optionID(visibleEntries().findIndex((entry) => entry.id === item.id))}
                           active={activeEntry()?.id === item.id}
                           language={language}
                           sessionOpen={
@@ -248,6 +255,7 @@ function CommandPaletteView(props: {
 
 function PaletteRow(props: {
   item: CommandPaletteEntry
+  id: string
   active: boolean
   language: ReturnType<typeof useLanguage>
   sessionOpen: boolean
@@ -262,6 +270,7 @@ function PaletteRow(props: {
   return (
     <button
       type="button"
+      id={props.id}
       class="command-palette-v2-row group"
       role="option"
       aria-selected={props.active}

@@ -1,9 +1,25 @@
 export * as ActionsCopy from "./actions"
 
 import { ActionsResourceCopy } from "./resources-copy"
+import { ActionsLibraryCopy } from "./actions-library-copy"
+import { ActionsGraphCopy } from "./actions-graph-copy"
+import { ActionsRunCopy } from "./actions-run-copy"
+import { ActionsResourcesCopy } from "./actions-resources-copy"
+import { ActionsSourceCopy } from "./actions-source-copy"
+import { ActionsDialogsCopy } from "./actions-dialogs-copy"
+import { ActionsSettingsCopy } from "./actions-settings-copy"
+import { ActionsShellCopy } from "./actions-shell-copy"
 
 export const dict = {
   ...ActionsResourceCopy.dict,
+  ...ActionsLibraryCopy.dict,
+  ...ActionsGraphCopy.dict,
+  ...ActionsRunCopy.dict,
+  ...ActionsResourcesCopy.dict,
+  ...ActionsSourceCopy.dict,
+  ...ActionsDialogsCopy.dict,
+  ...ActionsSettingsCopy.dict,
+  ...ActionsShellCopy.dict,
   "orchestra.actions.title": "Actions",
   "orchestra.actions.description": "Repository automation, from source configuration to execution.",
   "orchestra.actions.library": "Workflow library",
@@ -88,6 +104,7 @@ export const dict = {
   "orchestra.actions.artifacts": "Artifacts",
   "orchestra.actions.source": "Source",
   "orchestra.actions.refresh": "Refresh",
+  "orchestra.actions.loadRetry": "Retry",
   "orchestra.actions.connect": "Connect repository",
   "orchestra.actions.disconnect": "Remove connection",
   "orchestra.actions.close": "Close",
@@ -184,13 +201,11 @@ export const dict = {
   "orchestra.actions.pipelineConfigurations": "Pipeline configurations",
   "orchestra.actions.libraryCount": "{{shown}} of {{loaded}} loaded configurations",
   "orchestra.actions.gitlabLibraryNote": "GitLab has one project CI configuration. Local included files remain source proposals, not independent workflows.",
-  "orchestra.actions.nativeMetadata": "Native configuration metadata",
   "orchestra.actions.metadataOnly": "Open source or job graph to inspect native job definitions and dependencies.",
   "orchestra.actions.recentRuns": "Recent runs",
   "orchestra.actions.allRuns": "All runs",
   "orchestra.actions.latestRun": "Latest run",
   "orchestra.actions.actualOrchestraCI": "Actual Orchestra CI",
-  "orchestra.actions.yamlSource": "YAML source",
   "orchestra.actions.operationRejected": "Provider rejected this command. No automatic retry was sent.",
   "orchestra.actions.signIn": "Sign-in",
   "orchestra.actions.access": "Access",
@@ -202,7 +217,6 @@ export const dict = {
   "orchestra.actions.capabilityManageResources": "Manage project resources",
   "orchestra.actions.capabilityReviewDeployments": "Review deployments",
   "orchestra.actions.capabilityEditSource": "Edit source",
-  "orchestra.actions.capabilityLiveLogs": "Live job logs",
   "orchestra.actions.serverManagedAuth": "Server-managed authentication",
   "orchestra.actions.providerSignInRequired": "Sign in to the provider CLI on this server, then try again.",
   "orchestra.actions.serverAuthFailed": "Server authentication failed.",
@@ -225,7 +239,6 @@ export const dict = {
   "orchestra.actions.waiting": "Waiting",
   "orchestra.actions.canceled": "Canceled",
   "orchestra.actions.skipped": "Skipped",
-  "orchestra.actions.idle": "Idle",
   "orchestra.actions.default": "Default",
   "orchestra.actions.zoomIn": "Zoom in",
   "orchestra.actions.zoomOut": "Zoom out",

@@ -25,4 +25,4 @@ jobs:
         uses: ./.github/actions/setup-bun
 
       - name: Build Storybook
-        run: bun --cwd packages/storybook build
+        run: bun --cwd apps/storybook build

@@ -1,4 +1,4 @@
-import type { IntegrationMethod, IntegrationOauthConnectOutput } from "@opencode-ai/client/promise"
+import type { IntegrationMethod, IntegrationOauthConnectOutput } from "../compat/vendored-client-promise"
 import { createMemo, type Accessor } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import type { useLanguage } from "@/context/language"

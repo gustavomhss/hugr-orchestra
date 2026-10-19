@@ -1,0 +1,16 @@
+/* Actions workflow source, matched to the approved Actions mock. */
+.actions-page .detail-source > .source-identity { border: 1px solid var(--actions-line); border-radius: 8px; }
+.actions-page .detail-source .source-identity bdi { overflow-wrap: anywhere; }
+.actions-page .detail-source .source-identity code { margin-inline-start: 4px; font-size: 10.5px; }
+.actions-page .detail-source .source-identity .source-access { margin-inline-start: auto; }
+.actions-page .detail-source .source-toolbar { background: var(--actions-raised); font-size: 12px; }
+.actions-page .detail-source .source-toolbar > span { overflow-wrap: anywhere; }
+.actions-page .detail-source .source-toolbar form { display: inline-flex; align-items: center; gap: 8px; }
+.actions-page .detail-source .source-toolbar label { display: inline-flex; align-items: center; gap: 8px; color: var(--actions-dim); }
+.actions-page .detail-source .source-toolbar label > span { flex: none; }
+.actions-page .detail-source .source-toolbar input { inline-size: 160px; min-inline-size: 0; max-inline-size: 100%; block-size: 30px; color: var(--actions-strong); }
+.actions-page .detail-source .source-footer { background: var(--actions-raised); }
+@media (max-width: 850px) {
+  .actions-page .detail-source > .source-identity { padding-inline: 16px; }
+  .actions-page .detail-source .source-identity .source-access { margin-inline-start: 0; }
+}

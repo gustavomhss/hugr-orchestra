@@ -420,6 +420,22 @@ test("same paths on a second server remain isolated while a first-server respons
   expect(writes(mock.requests)).toEqual([])
 })
 
+test("a project that is not a repository says why New workspace is unavailable", async ({ page }) => {
+  const mock = await setup(page)
+  mock.state.vcs = undefined
+  await openChapter(page)
+  const chapter = page.locator(".orchestra-workspaces")
+  const create = chapter.getByRole("button", { name: "New workspace", exact: true })
+  await expect(create).toBeDisabled()
+  await expect(create).toHaveAccessibleDescription(
+    "New workspaces are git worktrees, so this project needs a git repository.",
+  )
+  mock.state.vcs = "git"
+  await page.reload()
+  await expect(create).toBeEnabled()
+  await expect(chapter).not.toContainText("needs a git repository")
+})
+
 for (const protocol of ["v1", "v2"] as const) {
   test(`${protocol}: reports error, unavailable and empty states and recovers`, async ({ page }) => {
     const mock = await setup(page, { protocol })
@@ -506,6 +522,8 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     status: 200,
     empty: false,
     delay: false,
+    // `undefined` stands for a folder that is not a repository.
+    vcs: "git" as "git" | undefined,
     failCreate: undefined as string | undefined,
     failRemove: undefined as string | undefined,
     // V2 refuses to remove a copy with uncommitted changes unless the request is forced.
@@ -521,10 +539,7 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
   const pending: (() => Promise<void>)[] = []
   await page.addInitScript(
     ({ serverA, serverB, root, scheme }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
@@ -560,10 +575,10 @@ async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?
     })
     const list = state.sandboxes[url.origin]
     // V2 core keeps `sandboxes` empty; its workspaces come from the directory table below.
-    const current = project(
-      url.origin === serverA ? "Server A repository" : "Server B repository",
-      protocol === "v1" ? list : [],
-    )
+    const current = {
+      ...project(url.origin === serverA ? "Server A repository" : "Server B repository", protocol === "v1" ? list : []),
+      vcs: state.vcs,
+    }
     if (["/global/event", "/event", "/api/event"].includes(url.pathname))
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (url.pathname === "/global/health")

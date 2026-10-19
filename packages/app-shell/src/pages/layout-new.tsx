@@ -4,8 +4,8 @@ import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { createEffect, ErrorBoundary, on, onCleanup, Show, Suspense, type ParentProps } from "solid-js"
 import { createStore } from "solid-js/store"
 import { DebugBar } from "@/components/debug-bar"
-import { TabsInfoPopup } from "@/components/help-button"
-import { Titlebar, type TitlebarUpdate } from "@/components/titlebar"
+import { Titlebar } from "@/components/titlebar"
+import { useTitlebarUpdate } from "@/components/updater-action"
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { useLayout } from "@/context/layout"
@@ -40,15 +40,7 @@ export default function NewLayout(props: ParentProps) {
 
   createEffect(() => setV2Toast(true))
 
-  const update: TitlebarUpdate = {
-    version: () => {
-      const state = platform.updater?.state()
-      if (state?.status !== "ready") return
-      return state.version
-    },
-    installing: () => platform.updater?.state().status === "installing",
-    install: () => void platform.updater?.install(),
-  }
+  const update = useTitlebarUpdate()
 
   return (
     <>
@@ -188,7 +180,6 @@ export default function NewLayout(props: ParentProps) {
             </div>
           </div>
           {import.meta.env.DEV && state.debugTools && <DebugBar inline />}
-          <TabsInfoPopup />
           <ToastRegion v2 />
         </div>
       </Show>

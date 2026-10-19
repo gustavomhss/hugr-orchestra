@@ -1,4 +1,4 @@
-import type { AssistantMessage, Part, Provider, UserMessage } from "@orchestra/sdk/v2"
+import type { AssistantMessage, Part, Provider, UserMessage } from "../compat/sdk-v2"
 import { Locale } from "./locale"
 import * as Model from "./model"
 

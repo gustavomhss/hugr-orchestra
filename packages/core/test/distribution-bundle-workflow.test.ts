@@ -25,32 +25,32 @@ const Workflow = Schema.Struct({ name: Schema.String, on: Schema.Record(Schema.S
   permissions: Schema.Record(Schema.String, Schema.String), defaults: Schema.Struct({ run: Schema.Struct({ shell: Schema.String }) }),
   env: Schema.Record(Schema.String, Schema.String), jobs: Schema.Record(Schema.String, Job) })
 const source = YAML.parse(await Bun.file(path.join(root, ".github/workflows/distribution-bundle.yml")).text())
-const selector = await Bun.file(path.join(root, "packages/cli/script/test.ts")).text()
-const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "packages/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
+const selector = await Bun.file(path.join(root, "apps/cli/script/test.ts")).text()
+const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "apps/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
 const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
 const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
-const localized = ["./test/fixture/distribution-aur/sandbox-evidence.test.ts", "./test/fixture/distribution-aur/bootstrap-config.test.ts",
+const localized = [
   ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]
 
 test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
   inspect(source)
   check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/core/bunfig.toml")).text()))), "BUNDLE_CORE_PRELOAD")
-  check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "packages/desktop/bunfig.toml")).text()))), "BUNDLE_DESKTOP_PRELOAD")
+  check(preloadsControl(Schema.decodeUnknownSync(Schema.Struct({ test: Schema.Struct({ preload: Schema.Array(Schema.String) }) }))(Bun.TOML.parse(await Bun.file(path.join(root, "apps/desktop/bunfig.toml")).text()))), "BUNDLE_DESKTOP_PRELOAD")
   for (const platform of ["linux", "win32", "darwin"]) {
     for (const exitCode of [0, 17]) {
       const calls: string[][] = []
       const exits: number[] = []
       await new Function("Bun", "process", `return (async () => {${new Bun.Transpiler({ loader: "ts" }).transformSync(selector.startsWith("#!") ? selector.slice(selector.indexOf("\n") + 1) : selector)}})()`)(
-        { file: (file: string) => Bun.file(path.join(root, "packages/cli", file)), spawn: (args: string[]) => { calls.push(args); return { exited: Promise.resolve(exitCode) } } },
+        { file: (file: string) => Bun.file(path.join(root, "apps/cli", file)), spawn: (args: string[]) => { calls.push(args); return { exited: Promise.resolve(exitCode) } } },
         { platform, execPath: "bun", argv: ["bun", "script/test.ts", "sentinel"], exit: (code: number) => exits.push(code) },
       )
       check(calls.length === 1, "CLI_SELECTOR_SPAWN")
       expect(exits, "CLI_SELECTOR_EXIT").toEqual([exitCode])
       const args = calls[0] ?? []
       const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
-      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-aur.test.ts", "./test/fixture/distribution-aur-guest.test.ts", "./test/distribution-musl.test.ts", "./test/fixture/distribution-musl-guest.test.ts", "./test/distribution-provider.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
+      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-musl.test.ts", "./test/fixture/distribution-musl-guest.test.ts", "./test/distribution-provider.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts"] : [])])
       expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
-      exclusions.forEach((file) => check(statSync(path.join(root, "packages/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
+      exclusions.forEach((file) => check(statSync(path.join(root, "apps/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
     }
   }
 })
@@ -75,7 +75,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_LANE", (value) => patchRows(value, (row) => ({ ...row, lane: "heavy" }))],
     ["BUNDLE_ROWS_REPEATED", (value) => patchMatrix(value, (rows) => [...rows.slice(0, -1), rows[0]])],
     ["BUNDLE_ROWS_REPEATED", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, lane: "regression" } : row)],
-    ["BUNDLE_ROWS", (value) => patchMatrix(value, (rows) => rows.filter((row) => row.lane !== "aur"))],
+    ["BUNDLE_ROWS", (value) => patchMatrix(value, (rows) => rows.filter((row) => row.lane !== "musl"))],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, cpu: "X86" } : row)],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, platform: "darwin" } : row)],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.host === "windows-11-arm" ? { ...row, host: "windows-latest" } : row)],
@@ -84,15 +84,13 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: undefined }))],
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: [] }))],
     ["BUNDLE_FILES_REPEATED", (value) => patchRows(value, (row) => ({ ...row, files: [...(row.files ?? []), ...(row.files?.slice(0, 1) ?? [])] }))],
-    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "regression" && row.package === "cli" && row.platform === "linux" ? { ...row, files: [...(row.files ?? []), "./test/distribution-aur.test.ts"] } : row)],
+    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "regression" && row.package === "cli" && row.platform === "linux" ? { ...row, files: [...(row.files ?? []), "./test/distribution-musl.test.ts"] } : row)],
     ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: [...(row.files ?? []), "./test/packaged-skills-build.test.ts"] } : row)],
     ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: [...(row.files ?? []), "./test/build-runtime.test.ts"] } : row)],
     ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: [...(row.files ?? []), "./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.package === "core" ? { ...row, files: row.files?.filter((file) => !file.endsWith("ripgrep-binary.test.ts")) } : row)],
     ["BUNDLE_NATIVE_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-native.test.ts")) }))],
-    ["BUNDLE_HOMEBREW_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-homebrew.test.ts")) }))],
     ["BUNDLE_WINDOWS_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-windows.test.ts")) }))],
-    ["BUNDLE_AUR_PROOF", (value) => patchRows(value, (row) => row.lane === "aur" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_MUSL_PROOF", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_PROVIDER_PROOF", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
@@ -123,7 +121,7 @@ test("mutations of parsed real source fail by defect name", () => {
 test("root discovery coverage rejects omissions in both directions and accepts row/file reordering", () => {
   expect(() => inspect(source, [])).toThrow("BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
   expect(() => inspect(source, [...distribution, "./test/distribution-new.test.ts"])).toThrow("BUNDLE_UNREACHED: ./test/distribution-new.test.ts")
-  expect(() => inspect(source, distribution.filter((file) => file !== "./test/distribution-aur.test.ts"))).toThrow("BUNDLE_UNDISCOVERED: ./test/distribution-aur.test.ts")
+  expect(() => inspect(source, distribution.filter((file) => file !== "./test/distribution-musl.test.ts"))).toThrow("BUNDLE_UNDISCOVERED: ./test/distribution-musl.test.ts")
   inspect(patchMatrix(Schema.decodeUnknownSync(Workflow)(source), (rows) => rows.toReversed().map((row) => ({ ...row, files: row.files?.toReversed() }))))
 })
 
@@ -141,21 +139,20 @@ function inspect(input: unknown, discovered = distribution) {
   check(Object.keys(job.strategy.matrix).join() === "include", "BUNDLE_MATRIX")
   const provider = value.jobs.provider
   const rows = [...job.strategy.matrix.include, ...(provider?.strategy?.matrix.include ?? [])]
-  rows.forEach((row) => check(row.lane && ["regression", "aur", "musl", "provider"].includes(row.lane), `BUNDLE_LANE: ${row.package}/${row.host}`))
+  rows.forEach((row) => check(row.lane && ["regression", "musl", "provider"].includes(row.lane), `BUNDLE_LANE: ${row.package}/${row.host}`))
   check(new Set(rows.map((row) => `${row.lane}/${row.package}/${row.host}`)).size === rows.length, "BUNDLE_ROWS_REPEATED")
   check(JSON.stringify(rows.map((row) => [row.lane, row.package, row.host, row.cpu, row.platform]).toSorted()) === JSON.stringify([
     ["regression", "core", "ubuntu-latest", "X64", "linux"], ["regression", "core", "windows-latest", "X64", "win32"],
     ["regression", "cli", "ubuntu-latest", "X64", "linux"], ["regression", "cli", "windows-latest", "X64", "win32"],
     ["regression", "cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["regression", "cli", "macos-14", "ARM64", "darwin"], ["regression", "cli", "macos-15-intel", "X64", "darwin"],
     ["regression", "cli", "windows-11-arm", "ARM64", "win32"],
-    ["aur", "cli", "ubuntu-latest", "X64", "linux"], ["aur", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
     ["musl", "cli", "ubuntu-latest", "X64", "linux"], ["musl", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
     ["provider", "cli", "ubuntu-latest", "X64", "linux"],
   ].toSorted()), "BUNDLE_ROWS")
   check(provider && provider.if === "${{ inputs.provider }}" && job.strategy.matrix.include.every((row) => row.lane !== "provider") &&
     provider.strategy?.matrix.include?.every((row) => row.lane === "provider"), "BUNDLE_PROVIDER_OPT_IN")
   check(job.name === "qualification (${{ matrix.lane }}, ${{ matrix.package }}, ${{ matrix.host }})", "BUNDLE_JOB_NAME")
-  check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
+  check(job["runs-on"] === "${{ matrix.host }}" && job.env?.ROW === "${{ toJSON(matrix) }}" && job.env.PACKAGE === "${{ matrix.package }}" && job.env.PACKAGE_DIR === "${{ matrix.package == 'cli' && 'apps/cli' || format('packages/{0}', matrix.package) }}" && job.env.ORCHESTRA_OMNI_CONTROL === "suite", "BUNDLE_MATRIX_WIRING")
   check(job.env.ORCHESTRA_EXPERIMENTAL_DISABLE_FILEWATCHER === "${{ matrix.platform == 'win32' && 'true' || 'false' }}", "BUNDLE_JOB_ENV_CONTEXT")
   check(!JSON.stringify(value).includes("ORCHESTRA_EXPERIMENTAL_OMNI_SPAWNER"), "BUNDLE_SPAWNER_OVERRIDE")
   Object.values(value.jobs).forEach((lane) => { check((lane === provider || !lane.if) && !lane["continue-on-error"] && lane["timeout-minutes"] > 0 && (!lane.defaults || lane.defaults.run.shell === "bash"), "BUNDLE_JOB_BYPASS"); lane.steps.forEach((step) => check(!step["continue-on-error"] && (!step.shell || step.shell === "bash"), "BUNDLE_STEP_BYPASS")) })
@@ -171,18 +168,18 @@ function inspect(input: unknown, discovered = distribution) {
   const elf = requireStep(job.steps, "Prove Schema ELF ABI", "BUNDLE_SCHEMA_ELF")
   const parser = requireStep(job.steps, "Prove packaged parser ABI", "BUNDLE_PARSER_ABI")
   const oracles = requireStep(job.steps, "Prove localized proof oracles", "BUNDLE_LOCALIZED_ORACLES")
-  check(abi.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && desktop.if === abi.if && desktop["working-directory"] === "packages/desktop" && job.steps.indexOf(abi) < job.steps.indexOf(desktop) && job.steps.indexOf(desktop) < job.steps.indexOf(run), "BUNDLE_SOURCE_ABI")
+  check(abi.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.host == 'ubuntu-latest'" && abi["working-directory"] === "packages/script" && desktop.if === abi.if && desktop["working-directory"] === "apps/desktop" && job.steps.indexOf(abi) < job.steps.indexOf(desktop) && job.steps.indexOf(desktop) < job.steps.indexOf(run), "BUNDLE_SOURCE_ABI")
   check(elf.if === abi.if && elf["working-directory"] === "packages/schema" && job.steps.indexOf(elf) < job.steps.indexOf(run), "BUNDLE_SCHEMA_ELF")
   check(parser.if === abi.if && parser["working-directory"] === "modules/maestro/arsenal" && job.steps.indexOf(parser) < job.steps.indexOf(run), "BUNDLE_PARSER_ABI")
-  check(oracles.if === `${abi.if} && matrix.cpu == 'X64'` && oracles["working-directory"] === "packages/cli" && job.steps.indexOf(parser) < job.steps.indexOf(oracles) && job.steps.indexOf(oracles) < job.steps.indexOf(run), "BUNDLE_LOCALIZED_ORACLES")
+  check(oracles.if === `${abi.if} && matrix.cpu == 'X64'` && oracles["working-directory"] === "apps/cli" && job.steps.indexOf(parser) < job.steps.indexOf(oracles) && job.steps.indexOf(oracles) < job.steps.indexOf(run), "BUNDLE_LOCALIZED_ORACLES")
   check(oracles.run === `set -euo pipefail\nmkdir -p ../../distribution-logs\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 30000 ${localized.join(" ")} 2>&1 | tee ../../distribution-logs/localized-oracles.log\n`, "BUNDLE_LOCALIZED_ORACLES")
-  localized.forEach((file) => check(statSync(path.join(root, "packages/cli", file), { throwIfNoEntry: false })?.isFile() && !rows.some((row) => row.files?.includes(file)), `BUNDLE_LOCALIZED_ORACLE_MISSING_OR_REPEATED: ${file}`))
+  localized.forEach((file) => check(statSync(path.join(root, "apps/cli", file), { throwIfNoEntry: false })?.isFile() && !rows.some((row) => row.files?.includes(file)), `BUNDLE_LOCALIZED_ORACLE_MISSING_OR_REPEATED: ${file}`))
   check(job["timeout-minutes"] === 90, "BUNDLE_NATIVE_TIMEOUT")
   check(deno.if === "matrix.package == 'cli'" && denoExtract.if === deno.if && !deno["working-directory"] && !denoExtract["working-directory"] && job.steps.indexOf(admission) < job.steps.indexOf(deno) && job.steps.indexOf(deno) < job.steps.indexOf(denoExtract) && job.steps.indexOf(denoExtract) < job.steps.indexOf(run), "BUNDLE_DENO")
   check(nativeJob.if === "matrix.platform == 'win32'" && nativeJob["working-directory"] === "native/omni" && job.steps.indexOf(nativeJob) < job.steps.indexOf(run), "BUNDLE_NATIVE_JOB")
-  check(posix.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.platform != 'win32'" && posix["working-directory"] === "packages/cli" && job.steps.indexOf(posix) < job.steps.indexOf(run), "BUNDLE_NATIVE_POSIX")
+  check(posix.if === "matrix.lane == 'regression' && matrix.package == 'cli' && matrix.platform != 'win32'" && posix["working-directory"] === "apps/cli" && job.steps.indexOf(posix) < job.steps.indexOf(run), "BUNDLE_NATIVE_POSIX")
   check(posix.run === 'set -euo pipefail\nmkdir -p ../../distribution-logs\nif [ "$RUNNER_OS" = macOS ]; then\n  sdk=$(xcrun --sdk macosx --show-sdk-path)\n  export ORCHESTRA_ARTIFACT_DARWIN_SDK="$sdk"\nfi\nGITHUB_ACTIONS=false ORCHESTRA_OMNI_CONTROL=declared bun test --timeout 120000 ./test/artifact-abi.test.ts -t POSIX 2>&1 | tee ../../distribution-logs/native-posix-abi.log\n', "BUNDLE_NATIVE_POSIX")
-  check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "packages/${{ matrix.package }}", "BUNDLE_EXECUTION")
+  check(!admission.if && !run.if && control.if === "always()" && run["working-directory"] === "${{ env.PACKAGE_DIR }}", "BUNDLE_EXECUTION")
   check(job.steps.indexOf(admission) < job.steps.indexOf(run) && job.steps.indexOf(run) < job.steps.indexOf(control), "BUNDLE_ORDER")
   check(discovered.length > 0, "BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
   rows.forEach((row) => {
@@ -191,13 +188,11 @@ function inspect(input: unknown, discovered = distribution) {
     check(new Set(files).size === files.length, `BUNDLE_FILES_REPEATED: ${row.lane}/${row.package}/${row.host}`)
     files.forEach((file) => {
       check(!rows.some((other) => other !== row && other.package === row.package && other.host === row.host && other.files?.includes(file)), `BUNDLE_FILES_OVERLAP: ${row.lane}/${row.package}/${row.host}/${file}`)
-      check(file.startsWith("./test/") && file.endsWith(".test.ts") && !file.slice(2).split("/").some((part) => !part || part === "." || part === "..") && statSync(path.join(root, "packages", row.package, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
+      check(file.startsWith("./test/") && file.endsWith(".test.ts") && !file.slice(2).split("/").some((part) => !part || part === "." || part === "..") && statSync(path.join(root, row.package === "cli" ? "apps/cli" : `packages/${row.package}`, file), { throwIfNoEntry: false })?.isFile(), `BUNDLE_FILE_INVALID_OR_MISSING: ${file}`)
     })
     if (row.package === "cli") {
       check(files.includes("./test/distribution-native.test.ts") === (row.lane === "regression" && row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.lane}/${row.host}`)
-      check(files.includes("./test/distribution-homebrew.test.ts") === (row.lane === "regression" && row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-windows.test.ts") === (row.lane === "regression" && row.platform === "win32"), `BUNDLE_WINDOWS_PROOF: ${row.lane}/${row.host}`)
-      check(files.includes("./test/distribution-aur.test.ts") === (row.lane === "aur"), `BUNDLE_AUR_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-musl.test.ts") === (row.lane === "musl"), `BUNDLE_MUSL_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-provider.test.ts") === (row.lane === "provider"), `BUNDLE_PROVIDER_PROOF: ${row.lane}/${row.host}`)
     }
@@ -208,8 +203,8 @@ function inspect(input: unknown, discovered = distribution) {
   rows.forEach((row) => {
     const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "distribution-bundle-boundaries", "distribution-bundle-deno", "effect/cross-spawn-spawner", "session-runner-model", "ripgrep-binary", "ripgrep-bundle"].map((name) => `./test/${name}.test.ts`)
       : row.lane !== "regression" ? [`./test/distribution-${row.lane}.test.ts`]
-      : [...(row.host === "ubuntu-latest" ? discovered.filter((file) => !["homebrew", "windows", "aur", "musl", "provider"].some((name) => file === `./test/distribution-${name}.test.ts`))
-        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
+      : [...(row.host === "ubuntu-latest" ? discovered.filter((file) => !["windows", "musl", "provider"].some((name) => file === `./test/distribution-${name}.test.ts`))
+        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     check(JSON.stringify(row.files?.toSorted()) === JSON.stringify([...new Set(expected)].toSorted()), `BUNDLE_EXACT_FILES: ${row.lane}/${row.package}/${row.host}`)
   })
   // Runtime conformance lives in distribution-bundle-execution.test.ts; unordered source lines cannot prove exit or IO behavior.
@@ -220,7 +215,7 @@ function inspect(input: unknown, discovered = distribution) {
   check(staticJob?.["timeout-minutes"] === 20, "BUNDLE_STATIC_TIMEOUT")
   check(staticJob?.steps[0]?.uses === checkout && staticJob.steps[1]?.uses === "./.github/actions/setup-bun", "BUNDLE_STATIC_SETUP")
   expect(staticJob.steps.filter((step) => step.run).map((step) => [step.run, step["working-directory"], step.env])).toEqual([
-    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "packages/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "modules/maestro/arsenal", undefined],
+    ["git fetch --depth=1 origin dev:refs/remotes/origin/dev", undefined, undefined], ["bun typecheck", "apps/cli", undefined], ["bun typecheck", "packages/core", undefined], ["bun typecheck", "packages/script", undefined], ["bun typecheck", "packages/schema", undefined], ["bun typecheck", "modules/maestro/arsenal", undefined],
     ["bun run check:spawn-imports", undefined, undefined], ["bun run check:godfile", undefined, { GODFILE_BASE_REF: "origin/dev" }], ["git diff --check origin/dev HEAD", undefined, undefined],
   ])
   // Opting in runs the same qualification job; only its single row and parallelism differ.

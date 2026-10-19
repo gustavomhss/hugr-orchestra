@@ -65,6 +65,17 @@ export const SessionTable = sqliteTable(
     index("session_project_idx").on(table.project_id),
     index("session_workspace_idx").on(table.workspace_id),
     index("session_parent_idx").on(table.parent_id),
+    // V1 Session.list: project_id = ? ORDER BY time_updated DESC LIMIT n.
+    index("session_project_time_updated_idx").on(table.project_id, table.time_updated),
+    // V1 Session.listGlobal: time_archived IS NULL ORDER BY time_updated DESC, id DESC LIMIT n.
+    index("session_time_archived_time_updated_id_idx").on(table.time_archived, table.time_updated, table.id),
+    // V2 SessionArchive.list by project: project_id = ? AND time_archived IS NULL ORDER BY time_created, id.
+    index("session_project_time_archived_time_created_id_idx").on(
+      table.project_id,
+      table.time_archived,
+      table.time_created,
+      table.id,
+    ),
   ],
 )
 

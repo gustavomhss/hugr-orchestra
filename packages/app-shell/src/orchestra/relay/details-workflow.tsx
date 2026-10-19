@@ -29,7 +29,6 @@ import {
   writeChecklist,
 } from "./graph"
 import { issueText, phaseNames } from "./parts"
-import { runsEnabled } from "./source"
 import { Ic, useRelayCopy } from "./ui"
 
 // The skill catalog as the editor has it: `names` is undefined until it has loaded, and `error` says it could not.
@@ -43,9 +42,12 @@ type Props = {
   issues: string[]
   skills: Skills
   focusPhase?: string
+  // The workflow's own description, edited on its Start step.
+  description: string
   save: JSX.Element
   readOnly?: boolean
   onChange: (flow: Flow) => void
+  onDescribe: (description: string) => void
   onNav: (id: string) => void
   onClose: () => void
   onReview: (run: RelayRun) => void
@@ -58,9 +60,10 @@ export function WorkflowDetails(props: Props) {
   // Kept out of the JSX: a condition inside a prop compiles to a memo, and NodeDetails reads `next` in its click
   // handler, where that memo has no owner, outlives the layer and throws a stale read when the layer closes.
   const next = () => (index() >= 0 ? order()[index() + 1] : undefined)
-  // The compile summary of Start sits under its parameters while the run columns are hidden.
+  // Per-node run columns stay hidden: the run routes serve only external runs, which have no document to open.
+  // The compile summary of Start sits under its parameters instead.
   const summary = () =>
-    !runsEnabled && props.node.type === START ? (
+    props.node.type === START ? (
       <StartOutput {...props} title={copy.t("orchestra.workflows.details.summary")} />
     ) : undefined
   const kindLabel = () => {
@@ -79,7 +82,7 @@ export function WorkflowDetails(props: Props) {
       kind={kindLabel()}
       previous={order()[index() - 1]}
       next={next()}
-      runs={runsEnabled}
+      runs={false}
       input={<Input {...props} />}
       params={<Params {...props} />}
       output={<Output {...props} />}
@@ -464,6 +467,11 @@ function Params(props: Props) {
               value={String(props.node.parameters.instructions ?? "")}
               onInput={(event) => update({ instructions: event.currentTarget.value })}
             />
+            <Show when={props.node.type === "relay.execute" && !String(props.node.parameters.instructions ?? "").trim()}>
+              <span class="mx-hint" role="status">
+                {copy.t("orchestra.workflows.details.instructionsEmpty")}
+              </span>
+            </Show>
           </label>
           <div class="mx-fields">
             <label class="mx-field">
@@ -587,6 +595,15 @@ function StartParams(props: Props) {
           onInput={(event) => update({ relayBrief: event.currentTarget.value })}
         />
         <span class="mx-hint">{copy.t("orchestra.workflows.details.objectiveHint")}</span>
+      </label>
+      <label class="mx-field">
+        <span>{copy.t("orchestra.workflows.details.purpose")}</span>
+        <input
+          name="description"
+          value={props.description}
+          onInput={(event) => props.onDescribe(event.currentTarget.value)}
+        />
+        <span class="mx-hint">{copy.t("orchestra.workflows.details.purposeHint")}</span>
       </label>
       <label class="mx-field" style={{ "max-width": "260px" }}>
         <span>{copy.t("orchestra.workflows.details.budgetField")}</span>

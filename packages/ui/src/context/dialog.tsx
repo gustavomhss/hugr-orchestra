@@ -97,6 +97,8 @@ function init() {
 
     const onKeyDown = (event: KeyboardEvent) => {
       if (event.key !== "Escape") return
+      // An element inside the dialog can claim Escape for itself, for example while capturing a shortcut.
+      if (document.querySelector("[data-dialog-escape-claim]")) return
       close()
       event.preventDefault()
       event.stopPropagation()

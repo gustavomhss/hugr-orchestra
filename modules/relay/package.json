@@ -7,7 +7,23 @@
   "license": "MIT",
   "exports": {
     ".": "./src/index.ts",
-    "./*": "./src/*.ts"
+    "./arm/create": "./src/arm/create.ts",
+    "./arm/evaluate": "./src/arm/evaluate.ts",
+    "./arm/load": "./src/arm/load.ts",
+    "./arm/state": "./src/arm/state.ts",
+    "./audit": "./src/audit.ts",
+    "./authoring/graph": "./src/authoring/graph.ts",
+    "./authoring/hook": "./src/authoring/hook.ts",
+    "./authoring/store": "./src/authoring/store.ts",
+    "./gate/check": "./src/gate/check.ts",
+    "./gate/control": "./src/gate/control.ts",
+    "./gate/shell": "./src/gate/shell.ts",
+    "./hook/evaluate": "./src/hook/evaluate.ts",
+    "./json": "./src/json.ts",
+    "./judge/config": "./src/judge/config.ts",
+    "./ledger/chain": "./src/ledger/chain.ts",
+    "./ledger/read": "./src/ledger/read.ts",
+    "./ledger/verify": "./src/ledger/verify.ts"
   },
   "imports": {
     "#sqlite": {

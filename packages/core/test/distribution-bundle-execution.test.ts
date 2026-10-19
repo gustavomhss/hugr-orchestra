@@ -37,7 +37,7 @@ for (const pkg of ["core", "cli"] as const) {
 
 // Core Linux qualification observes dedicated native-host rows' emitted shell without running native builds/models.
 if (process.platform === "linux") {
-  for (const lane of ["aur", "musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
+  for (const lane of ["musl", "provider"] as const) it.live(`ORCHESTRATION-ONLY ${lane}: dedicated row argv, timeout, log and control`, () => Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const box = yield* fixture("cli", undefined, lane)
     expect(box.row.files).toEqual([`./test/distribution-${lane}.test.ts`])
@@ -96,9 +96,9 @@ const controls = [
   { name: "empty log", text: "", diagnostic: "expected one omni control nonce" },
   { name: "no control", text: `omni control nonce: ${nonce}\n`, diagnostic: "expected one omni positive control verdict" },
   { name: "no nonce", text: `omni positive control [${nonce}]: pass (suite)\n`, diagnostic: "expected one omni control nonce" },
-  { name: "off", text: log("off (legacy rollback)"), diagnostic: "BUNDLE_CONTROL_FAILED" },
+  { name: "off", text: log("off (legacy rollback)"), diagnostic: "the omni positive control did not pass" },
   { name: "not applicable", text: log("not applicable (focused)"), diagnostic: "BUNDLE_CONTROL_FAILED" },
-  { name: "FAIL", text: log("FAIL (suite)"), diagnostic: "BUNDLE_CONTROL_FAILED" },
+  { name: "FAIL", text: log("FAIL (suite)"), diagnostic: "the omni positive control did not pass" },
   { name: "repeated nonce", text: log("pass (suite)") + `omni control nonce: ${nonce}\n`, diagnostic: "expected one omni control nonce" },
   { name: "repeated verdict", text: log("pass (suite)") + `omni positive control [${nonce}]: pass (suite)\n`, diagnostic: "expected one omni positive control verdict" },
   { name: "wrong nonce", text: log("pass (suite)").replace(`[${nonce}]`, "[wrong]"), diagnostic: "expected one omni positive control verdict" },
@@ -160,7 +160,7 @@ it.live("mutation: control reading wrong log is observed despite valid actual ru
   yield* Effect.promise(() => Bun.write(path.join(box.dir, "distribution-logs/wrong.log"), log("off (legacy rollback)")))
   const result = yield* command(box, control.replace("readFileSync('distribution-logs/run.log'", "readFileSync('distribution-logs/wrong.log'"))
   expect(() => requireExit(result, 0, "BUNDLE_CONTROL_LOG_DESTINATION_BLIND")).toThrow("BUNDLE_CONTROL_LOG_DESTINATION_BLIND")
-  check(result.stderr.toString().includes("BUNDLE_CONTROL_FAILED"), "BUNDLE_CONTROL_LOG_FAILURE_UNOBSERVED")
+  check(result.stderr.toString().includes("the omni positive control did not pass"), "BUNDLE_CONTROL_LOG_FAILURE_UNOBSERVED")
 }))
 
 it.live("mutation: early nonce with append-mode tee is visible to actual child", () => Effect.gen(function* () {

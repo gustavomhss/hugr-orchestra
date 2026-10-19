@@ -1,3 +1,4 @@
+import { DialogConfirmChoice } from "@/components/dialog-confirm-choice"
 import { useDirectoryPicker } from "@/components/directory-picker"
 import { useGlobal } from "@/context/global"
 import { type HomeProjectSelection, type LocalProject, useLayout } from "@/context/layout"
@@ -6,6 +7,7 @@ import { usePlatform } from "@/context/platform"
 import { ServerConnection, useServer } from "@/context/server"
 import { useServerSync } from "@/context/server-sync"
 import { useTabs } from "@/context/tabs"
+import { relayKey } from "@/orchestra/relay/source"
 import {
   closeHomeProject,
   errorMessage,
@@ -60,26 +62,62 @@ export function createHomeController() {
     layout.home.setSelection(next)
   }
 
+  // Several empty folders added together ask one at a time: showing a dialog replaces the one on screen.
+  let initGitQueue = Promise.resolve(false)
+  function confirmInitGit(directory: string) {
+    initGitQueue = initGitQueue.then(
+      () =>
+        new Promise<boolean>((resolve) => {
+          void dialog.show(
+            () => (
+              <DialogConfirmChoice
+                title={language.t("orchestra.shell.project.initGit.title")}
+                description={language.t("orchestra.shell.project.initGit.description", { directory })}
+                confirm={language.t("orchestra.shell.project.initGit.confirm")}
+                cancel={language.t("orchestra.shell.project.initGit.skip")}
+                onConfirm={() => resolve(true)}
+              />
+            ),
+            () => resolve(false),
+          )
+        }),
+    )
+    return initGitQueue
+  }
+
   function addProjects(conn: ServerConnection.Any, directories: string[]) {
     const directory = directories[0]
     if (!directory) return
     const ctx = global.ensureServerCtx(conn)
-    directories.forEach((item) => {
-      if (ctx.projects.list().some((project) => project.worktree === item)) return
+    // Settles once every new folder is added, its git question included, so a caller can navigate afterwards: moving
+    // away while the question is open would close it as a silent skip.
+    const added = directories.map((item) => {
+      if (ctx.projects.list().some((project) => project.worktree === item)) return Promise.resolve()
       const location = { directory: item }
-      void ctx.sdk.api.file
+      const settled = ctx.sdk.api.file
         .list({ path: ".", location })
         .then(async (files) => {
-          if (files.data.length > 0) return ctx.sdk.api.project.current({ location })
+          // An empty folder only becomes a repository when the person agrees.
+          if (files.data.length > 0 || !(await confirmInitGit(item))) return ctx.sdk.api.project.current({ location })
           const result = await ctx.sdk.client.project.initGit({ directory: item })
+          // The chapters asked while the question was open and cached the shared "global" project; the folder has its own now.
+          void ctx.queryClient.invalidateQueries({ queryKey: relayKey(ctx.sdk.scope, item) })
           return result.data ?? ctx.sdk.api.project.current({ location })
         })
         .then((project) => ctx.sync.child(item, { bootstrap: false })[1]("project", project.id))
-        .catch(() => undefined)
+        .catch((cause: unknown) =>
+          showToast({
+            variant: "error",
+            title: language.t("orchestra.shell.project.addFailed"),
+            description: errorMessage(cause, language.t("common.requestFailed")),
+          }),
+        )
       ctx.projects.open(item)
+      return settled
     })
     ctx.projects.touch(directory)
     setSelection({ server: ServerConnection.key(conn), directory })
+    return Promise.all(added).then(() => undefined)
   }
 
   function canRevealProject(conn: ServerConnection.Any) {

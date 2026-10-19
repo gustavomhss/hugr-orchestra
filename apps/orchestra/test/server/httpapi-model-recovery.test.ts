@@ -1,0 +1,137 @@
+import { afterAll, expect, test } from "bun:test"
+import { Context, Effect, ManagedRuntime } from "effect"
+import { Credential } from "@orchestra/core/credential"
+import { Integration } from "@orchestra/core/integration"
+import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { tmpdir } from "../fixture/fixture"
+import { httpApiFixture } from "./httpapi-fixture"
+
+const context = Context.empty() as Context.Context<unknown>
+const fixture = httpApiFixture()
+const config = {
+  formatter: false as const,
+  lsp: false as const,
+  model: "opencode/ux-paid",
+  enabled_providers: ["opencode"],
+  provider: {
+    opencode: {
+      env: [],
+      npm: "@ai-sdk/openai-compatible",
+      api: "http://127.0.0.1:1/v1",
+      models: {
+        "ux-free": { name: "UX Free", cost: { input: 0, output: 0 }, limit: { context: 1000, output: 100 } },
+        "ux-paid": { name: "UX Paid", cost: { input: 1, output: 1 }, limit: { context: 1000, output: 100 } },
+      },
+    },
+  },
+}
+
+afterAll(() => fixture.dispose())
+
+// Zen's free tier rejects every client but its own, so without a key Zen offers nothing, not even free models.
+test("fresh Location HTTP catalog exposes no Zen without a key; key exposes paid; HTTP removal exposes none again", async () => {
+  await using tmp = await tmpdir({ git: true, config })
+  const consoleServer = Bun.serve({ hostname: "127.0.0.1", port: 0, fetch: () => Response.json({ config: {} }) })
+  const credentials = ManagedRuntime.make(LayerNode.compile(Credential.node), { memoMap: fixture.memoMap })
+  const request = (route: string, init?: RequestInit) => {
+    const url = new URL(route, "http://localhost")
+    url.searchParams.set("location[directory]", tmp.path)
+    return fixture.handler(new Request(url, init), context)
+  }
+  const models = async () => {
+    const response = await request("/api/model")
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    return (
+      (await response.json()) as {
+        data: Array<{ id: string; providerID: string; request: { body: { apiKey?: string } } }>
+      }
+    ).data
+  }
+  const preferred = async () => {
+    const response = await request("/api/model/default")
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    return ((await response.json()) as { data: { id: string } | null }).data
+  }
+  try {
+    const initial = await models()
+    const initialDefault = await preferred()
+    const providers = await request("/api/provider")
+    expect(initial.some((model) => model.providerID === "opencode")).toBe(false)
+    expect(initialDefault).toBeNull()
+    expect(providers.status).toBe(200)
+    expect(
+      ((await providers.json()) as { data: Array<{ id: string }> }).data.map((provider) => provider.id),
+    ).not.toContain("opencode")
+
+    // Seed a synthetic credential through the real Core service, without initiating Console network I/O.
+    const credential = await credentials.runPromise(
+      Effect.gen(function* () {
+        const credentials = yield* Credential.Service
+        return yield* credentials.create({
+          integrationID: Integration.ID.make("opencode"),
+          value: Credential.Key.make({
+            type: "key",
+            key: "synthetic-model-recovery-key",
+            metadata: { server: consoleServer.url.origin },
+          }),
+        })
+      }),
+    )
+    const paid = await models()
+    const paidDefault = await preferred()
+    expect(paid.some((model) => model.id === "ux-paid")).toBe(true)
+    expect(paidDefault?.id).toBe("ux-paid")
+    expect((await request(`/api/credential/${credential.id}`, { method: "DELETE" })).status).toBe(204)
+    expect((await models()).some((model) => model.providerID === "opencode")).toBe(false)
+    expect(await preferred()).toBeNull()
+  } finally {
+    await consoleServer.stop(true)
+    await credentials.dispose()
+  }
+}, 60_000)
+
+test("HTTP default is null when provider is explicitly disabled", async () => {
+  await using tmp = await tmpdir({ git: true, config: { ...config, disabled_providers: ["opencode"] } })
+  for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
+    const response = await fixture.handler(
+      new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
+      context,
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    expect(((await response.json()) as { data: unknown }).data).toEqual(route.endsWith("default") ? null : [])
+  }
+}, 30_000)
+
+test("HTTP provider policy keeps anonymous Zen out and returns a null default", async () => {
+  await using tmp = await tmpdir({
+    git: true,
+    config: {
+      ...config,
+      experimental: { policies: [{ action: "provider.use", effect: "deny", resource: "opencode" }] },
+    },
+  })
+  for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
+    const response = await fixture.handler(
+      new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
+      context,
+    )
+    expect(response.status).toBe(200)
+    expect(response.headers.get("content-type")).toContain("application/json")
+    expect(((await response.json()) as { data: unknown }).data).toEqual(route.endsWith("default") ? null : [])
+  }
+}, 30_000)
+
+test("an empty legacy provider allowlist suppresses anonymous models on HTTP", async () => {
+  await using tmp = await tmpdir({ git: true, config: { ...config, enabled_providers: [] } })
+  for (const route of ["/api/provider", "/api/model", "/api/model/default"]) {
+    const response = await fixture.handler(
+      new Request(`http://localhost${route}?location[directory]=${encodeURIComponent(tmp.path)}`),
+      context,
+    )
+    expect(response.status).toBe(200)
+    expect(((await response.json()) as { data: unknown }).data).toEqual(route.endsWith("default") ? null : [])
+  }
+}, 30_000)

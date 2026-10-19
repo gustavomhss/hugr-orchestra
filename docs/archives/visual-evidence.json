@@ -1,0 +1,33 @@
+{
+  "format": 1,
+  "owner": "visual-handoff",
+  "disposition": "retain-recovery",
+  "scopes": ["specs/orchestra-visual/evidence", "specs/orchestra-visual/screenshots"],
+  "source": {
+    "revision": "ca6d9b5625bca4ca0bd7c42b09f50105ad4c1ad3",
+    "tree": "183886134ab817f472407fba3609572c375f13ff"
+  },
+  "storage": {
+    "root": "owner-approved HuGR/orchestra-recovery",
+    "bundle": "visual-evidence-ca6d9b5625bc",
+    "retention": "until owner closes the rollback window"
+  },
+  "manifestSha256": "fbfee48927e986603e9c76e9bb0195d94b9a87e7ab0c66a0252602ec7eebb586",
+  "members": 100,
+  "bytes": 12994044,
+  "verification": {
+    "restoredBytes": "all 100 restored members hash to their source Git blobs (git hash-object)",
+    "restoredMemberList": "100 files restored, equal to the source tree listing",
+    "host": {
+      "platform": "darwin",
+      "arch": "x64",
+      "bun": "1.3.14"
+    }
+  },
+  "readers": [
+    "docs/specs/orchestra-visual/VERIFICATION.md",
+    "docs/specs/orchestra-visual/COVERAGE.md",
+    "docs/specs/orchestra-visual/DELIVERY.md"
+  ],
+  "sourceRemoval": "removed from the tree after the restore check"
+}

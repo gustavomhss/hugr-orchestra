@@ -14,7 +14,6 @@
   },
   "dependencies": {
     "@orchestra/schema": "workspace:*",
-    "hugr-omni": "workspace:*",
     "@modelcontextprotocol/sdk": "1.29.0",
     "typescript": "catalog:",
     "tree-sitter": "0.25.0",

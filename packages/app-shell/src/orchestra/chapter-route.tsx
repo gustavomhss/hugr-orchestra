@@ -75,36 +75,39 @@ export function OrchestraChapterRoute() {
               {language.t("orchestra.shell.wip.page")}
             </p>
           </Show>
-          <Show
-            when={owner()}
-            keyed
-            fallback={
-              <Show
-                when={serverWideChapters.includes(params.chapter) && selectedServer()}
-                keyed
-                fallback={<ChapterEmpty server={selectedServer()} />}
-              >
-                {(conn) => (
-                  <ServerSDKProvider server={() => conn}>
-                    <ServerSyncProvider server={() => conn}>
-                      <Dynamic component={page()} server={conn} directory="" />
-                    </ServerSyncProvider>
-                  </ServerSDKProvider>
-                )}
-              </Show>
-            }
-          >
-            {(owner) => (
-              <ServerSDKProvider server={() => owner.server}>
-                <ServerSyncProvider server={() => owner.server}>
-                  <SDKProvider directory={owner.directory}>
-                    <ModelsProvider directory={() => owner.directory}>
-                      <Dynamic component={page()} server={owner.server} directory={owner.directory} />
-                    </ModelsProvider>
-                  </SDKProvider>
-                </ServerSyncProvider>
-              </ServerSDKProvider>
-            )}
+          {/* The selected profile comes from async storage. Until it has loaded, "no profile" is not yet true. */}
+          <Show when={layout.ready()}>
+            <Show
+              when={owner()}
+              keyed
+              fallback={
+                <Show
+                  when={serverWideChapters.includes(params.chapter) && selectedServer()}
+                  keyed
+                  fallback={<ChapterEmpty server={selectedServer()} />}
+                >
+                  {(conn) => (
+                    <ServerSDKProvider server={() => conn}>
+                      <ServerSyncProvider server={() => conn}>
+                        <Dynamic component={page()} server={conn} directory="" />
+                      </ServerSyncProvider>
+                    </ServerSDKProvider>
+                  )}
+                </Show>
+              }
+            >
+              {(owner) => (
+                <ServerSDKProvider server={() => owner.server}>
+                  <ServerSyncProvider server={() => owner.server}>
+                    <SDKProvider directory={owner.directory}>
+                      <ModelsProvider directory={() => owner.directory}>
+                        <Dynamic component={page()} server={owner.server} directory={owner.directory} />
+                      </ModelsProvider>
+                    </SDKProvider>
+                  </ServerSyncProvider>
+                </ServerSDKProvider>
+              )}
+            </Show>
           </Show>
         </div>
       )}

@@ -73,7 +73,6 @@ beforeAll(async () => {
       promoteRoute(servers[route.server], id)
     },
   }))
-  mock.module("@/context/settings", () => ({ useSettings: () => ({ general: { newLayoutDesigns: () => true } }) }))
   mock.module("@/context/platform", () => ({
     usePlatform: () => ({ platform: "web", fetch, openExternal: () => undefined }),
   }))

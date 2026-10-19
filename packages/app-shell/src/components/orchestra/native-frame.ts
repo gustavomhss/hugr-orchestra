@@ -10,7 +10,6 @@ export function createNativeTitlebarFrame(input: {
     setTitlebarFrame?: (frame?: NativeTitlebarFrame) => Promise<void>
   }
   isDesktop: () => boolean
-  useV2Titlebar: () => boolean
   header: () => HTMLElement | undefined
 }) {
   const platform = input.platform
@@ -41,7 +40,7 @@ export function createNativeTitlebarFrame(input: {
         state.raf = undefined
         if (state.disposed) return
         const header = input.header()
-        if (!input.isDesktop() || !input.useV2Titlebar() || platform.windowFullscreen?.() || !header?.isConnected) {
+        if (!input.isDesktop() || platform.windowFullscreen?.() || !header?.isConnected) {
           send()
           return
         }
@@ -64,7 +63,6 @@ export function createNativeTitlebarFrame(input: {
     createEffect(() => {
       platform.webviewZoom?.()
       platform.windowFullscreen?.()
-      input.useV2Titlebar()
       input.isDesktop()
       request()
     })

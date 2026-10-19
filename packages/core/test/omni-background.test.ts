@@ -72,6 +72,21 @@ describe("OmniBackground.Ring", () => {
     expect(copy.text()).toBe("ok")
   })
 
+  test("a trickle of tiny writes merges into few arrays and keeps every byte in order", () => {
+    const ring = new OmniBackground.Ring()
+    const text = Array.from({ length: 100_000 }, (_, i) => String.fromCharCode(97 + (i % 26))).join("")
+    for (const char of text) ring.write(char)
+    expect(ring.text()).toBe(text)
+    // Adjacent arrays always sum above 1 KiB: one array per write would be 100k.
+    expect(ring.pieces).toBeLessThanOrEqual(Math.ceil((2 * ring.held) / 1024) + 1)
+
+    const full = new OmniBackground.Ring(4096)
+    for (const char of text) full.write(char)
+    expect(full.text()).toBe(text.slice(-4096))
+    expect(full.held).toBe(4096)
+    expect(full.pieces).toBeLessThanOrEqual(9)
+  })
+
   test("sink() is one ring per child", () => {
     const { child } = fake()
     expect(OmniBackground.sink(child)).toBe(OmniBackground.sink(child))

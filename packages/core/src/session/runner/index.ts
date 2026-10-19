@@ -31,3 +31,5 @@ export interface Interface {
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionRunner") {}
+
+export { ExecutionHost } from "./execution-host"

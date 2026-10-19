@@ -1,0 +1,23 @@
+/* Actions connection settings and schedules, matched to the approved Actions mock. */
+.actions-page .ar-settings .ar-head h1 { margin: 0; font: 600 16px/1.35 var(--mx-emphasis, sans-serif); }
+.actions-page .ar-settings .settings-grid { align-items: stretch; }
+.actions-page .ar-settings .ar-setting-card { display: flex; flex-direction: column; }
+.actions-page .ar-settings .ar-setting-card .mx-card-top { flex-wrap: wrap; gap: 10px; }
+.actions-page .ar-settings .ar-setting-card h3 { flex: 1; min-inline-size: 0; margin: 0; font-size: 14px; line-height: 1.45; }
+.actions-page .ar-settings .ar-setting-card .mx-card-top > .mx-badge { flex: none; }
+.actions-page .ar-settings .ar-setting-card .mx-field { display: grid; gap: 7px; margin-block: 16px 0; }
+.actions-page .ar-settings .ar-setting-card .mx-field > span { font-size: 11px; }
+.actions-page .ar-settings .ar-setting-card .mx-field select { inline-size: 100%; min-inline-size: 0; padding-inline: 10px; }
+.actions-page .ar-settings .capability { align-items: center; }
+.actions-page .ar-settings .mx-badge.warm { color: var(--actions-warm); }
+.actions-page .ar-settings .mx-card-foot > small { color: var(--actions-dim); font-size: 11px; line-height: 1.6; }
+.actions-page .ar-settings .settings-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-inline-start: auto; }
+.actions-page .ar-settings .settings-details { font-size: 11px; }
+.actions-page .ar-settings .settings-details > summary { color: var(--actions-dim); cursor: pointer; }
+.actions-page .ar-settings .settings-details .ar-facts { margin-block: 12px 0; }
+.actions-page .ar-settings .settings-details ul { display: grid; gap: 6px; margin: 10px 0 0; padding-inline-start: 16px; color: var(--actions-dim); overflow-wrap: anywhere; line-height: 1.55; }
+.actions-page .ar-settings .settings-details pre { max-block-size: 240px; overflow: auto; margin-block-start: 10px; font: 11px/1.5 var(--mx-mono, monospace); }
+@media (max-width: 720px) {
+  .actions-page .ar-settings .settings-actions { margin-inline-start: 0; }
+  .actions-page .ar-settings .settings-actions > .mx-btn { max-inline-size: 100%; white-space: normal; }
+}

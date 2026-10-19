@@ -4,6 +4,7 @@ import os from "node:os"
 import path from "node:path"
 import { Effect, Redacted, Result } from "effect"
 import { RelayAudit } from "../src/audit"
+import { LedgerChain } from "../src/ledger/chain"
 import { LedgerRead } from "../src/ledger/read"
 
 // WP2 parity. The G1 goldens (test/golden/{audit,ledger}) hold `bin/relay verify|problems|cost --json` for every
@@ -439,5 +440,43 @@ describe("RelayAudit verify", () => {
     expect({ result: without.result, exit: without.exit }).toEqual({ result: "TAMPERED", exit: 1 })
     const keyedReport = await run(RelayAudit.verify(keyed, { key: Redacted.make("relay-golden-ledger-key") }))
     expect({ result: keyedReport.result, exit: keyedReport.exit }).toEqual({ result: "PASS", exit: 0 })
+  })
+})
+
+// A chained plain-mode ledger of these bodies, appended as the arm and the native workflow host append them.
+async function chained(bodies: ReadonlyArray<object>) {
+  const ledger = path.join(await directory(), "ledger.jsonl")
+  for (const body of bodies) await run(LedgerChain.append({ ledger, body: JSON.stringify(body), gen: 0 }))
+  return ledger
+}
+
+describe("W7-6: a trailing workflow disposition (PARITY-EXCEPTIONS)", () => {
+  const control = { wp: "wp1", i: 0, event: "checklist-item", item: "C1", assert: "real control", verdict: "pass",
+    graded_by: "deterministic", oracle: "b".repeat(64), origin: "sprint" }
+  const settled = (event: string) => ({ wp: "wp1", i: 0, event, retry: 0, fails: "", reg: "" })
+  const disposition = (sourceSeq: number) => ({ event: "workflow-disposition", arm: "arm-token", sourceSeq })
+  const audited = async (bodies: ReadonlyArray<object>) => {
+    const report = await run(RelayAudit.verify(await chained(bodies)))
+    return { intact: report.chain_intact, last: report.last_event, truncated: report.truncated, result: report.result }
+  }
+
+  test("a disposition of the sprint-complete right before it reads as that completion", async () => {
+    expect(await audited([control, settled("sprint-complete"), disposition(1)])).toEqual({
+      intact: true, last: "sprint-complete", truncated: false, result: "PASS" })
+  })
+
+  test("a disposition of the escalate right before it reads as that escalation", async () => {
+    expect(await audited([control, settled("escalate"), disposition(1)])).toEqual({
+      intact: true, last: "escalate", truncated: false, result: "ESCALATED" })
+  })
+
+  test("a disposition whose sourceSeq is not the entry right before it is a truncated trace", async () => {
+    expect(await audited([control, settled("sprint-complete"), disposition(0)])).toEqual({
+      intact: true, last: "workflow-disposition", truncated: true, result: "TRUNCATED" })
+  })
+
+  test("a disposition of a nonterminal event is a truncated trace that names that event", async () => {
+    expect(await audited([control, { wp: "wp1", i: 0, event: "advance-reveal" }, disposition(1)])).toEqual({
+      intact: true, last: "advance-reveal", truncated: true, result: "TRUNCATED" })
   })
 })

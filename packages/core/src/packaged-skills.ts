@@ -159,6 +159,8 @@ async function acquire(lock: string, timeout: number) {
   for (;;) {
     const acquired = await fs.mkdir(lock).then(() => true, (cause: unknown) => {
       if (hasCode(cause, "EEXIST")) return false
+      // Windows fails mkdir with EPERM while another starter's lock is pending delete.
+      if (process.platform === "win32" && hasCode(cause, "EPERM")) return false
       throw cause
     })
     if (acquired) return

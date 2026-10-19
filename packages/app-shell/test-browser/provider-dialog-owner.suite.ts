@@ -50,6 +50,18 @@ const transport = Object.assign(
           connections: [],
         },
       })
+    if (url.pathname === "/api/provider")
+      return Response.json({
+        data: [
+          {
+            id: "openrouter",
+            name: `${url.hostname} catalog`,
+            api: { type: "aisdk", package: "x" },
+            request: { headers: {}, body: {} },
+          },
+        ],
+      })
+    if (url.pathname === "/api/model") return Response.json({ data: [] })
     if (url.pathname.endsWith("/connect/key")) return new Response(null, { status: 204 })
     if (request.method === "PUT" || request.method === "PATCH") return Response.json(true)
     throw new Error(`Unexpected fixture request: ${request.method} ${request.url}`)
@@ -119,6 +131,7 @@ const tabs = Object.assign(container, {
 })
 // View atoms and shell selection are fixtures. DialogProvider.show, runtime providers, model
 // preferences, SDK requests and transport revocation are real; sync supplies distinct A/B catalogs.
+// Settings › Providers renders the Providers chapter's list, so its connect actions are the ones driven.
 const fixtures = {
   forms: { FormData: DOMFormData },
   ui: {
@@ -147,11 +160,13 @@ const fixtures = {
     Spinner: () => undefined,
     List: container,
     TabsV2: tabs,
+    iconNames: [] as string[],
   },
   language: { useLanguage: () => ({ t: (key: string) => key, locale: () => "en" }) },
   platform: { usePlatform: () => ({ platform: "web", fetch: transport }) },
-  settings: { useSettings: () => ({ general: { newLayoutDesigns: () => true } }) },
-  server: { ServerConnection, useServer: () => ({ current: a }) },
+  server: { ServerConnection, serverName: () => "server", useServer: () => ({ current: a }) },
+  bootstrap: { loadDefaultModel: async () => undefined },
+  helpers: { displayName: (project: { worktree: string }) => project.worktree },
   global: {
     useGlobal: () => ({
       servers: { list: () => state.servers },
@@ -165,13 +180,14 @@ const fixtures = {
     }),
   },
   tabs: { useTabs: () => ({ store: [] }) },
-  router: { useParams: () => ({}) },
+  router: { useParams: () => ({}), useNavigate: () => () => undefined },
   toast: { showToast: () => undefined },
   unused: {
     SettingsGeneralV2: () => undefined,
-    SettingsKeybinds: () => undefined,
     SettingsModelsV2: () => undefined,
     SettingsServersV2: () => undefined,
+    ShortcutsEditor: () => undefined,
+    ShortcutsReset: () => undefined,
   },
 }
 const imports: Record<string, string> = {
@@ -179,21 +195,25 @@ const imports: Record<string, string> = {
   "@orchestra/ui/context/dialog": subject("../../ui/src/context/dialog.tsx"),
   "@/context/server-sdk": subject("../src/context/server-sdk.tsx"),
   "@/context/server-sync": subject("../src/context/server-sync.tsx"),
+  "@/components/server-unavailable": subject("../src/components/server-unavailable.tsx"),
   "@/context/models": subject("../src/context/models.tsx"),
   "@/utils/persist": subject("../src/utils/persist.ts"),
   "@/hooks/use-providers": subject("../src/hooks/use-providers.ts"),
-  "../dialog-connect-provider": subject("../src/components/dialog-connect-provider.tsx"),
-  "../dialog-custom-provider": subject("../src/components/dialog-custom-provider.tsx"),
+  "@/components/dialog-connect-provider": subject("../src/components/dialog-connect-provider.tsx"),
+  "@/orchestra/use-claude-mode": subject("../src/orchestra/use-claude-mode.ts"),
+  "./claude-mode": subject("../src/orchestra/chapters/claude-mode.tsx"),
   "./dialog-custom-provider": subject("../src/components/dialog-custom-provider.tsx"),
-  "./provider-controller": subject("../src/components/settings-v2/provider-controller.tsx"),
-  "./provider-dialog-scope": `${import.meta.dir}/../src/components/settings-v2/provider-dialog-scope.tsx?provider-owner`,
-  "./providers": subject("../src/components/settings-v2/providers.tsx"),
-  "./parts/list": subject("../src/components/settings-v2/parts/list.tsx"),
+  "@/components/settings-v2/provider-dialog-scope": subject("../src/components/settings-v2/provider-dialog-scope.tsx"),
+  "@/orchestra/chapters/providers-list": subject("../src/orchestra/chapters/providers-list.tsx"),
+  "./kit": subject("../src/orchestra/chapters/kit.tsx"),
+  "./providers-dialogs": subject("../src/orchestra/chapters/providers-dialogs.tsx"),
+  "@/context/global-sync/bootstrap": "owner-fixture:bootstrap",
+  "@/pages/layout/helpers": "owner-fixture:helpers",
+  "@/orchestra/chapters/shortcuts-editor": "owner-fixture:unused",
   "@/context/language": "owner-fixture:language",
   "./language": "owner-fixture:language",
   "@/context/platform": "owner-fixture:platform",
   "./platform": "owner-fixture:platform",
-  "@/context/settings": "owner-fixture:settings",
   "@/context/server": "owner-fixture:server",
   "./server": "owner-fixture:server",
   "@/context/global": "owner-fixture:global",
@@ -203,7 +223,6 @@ const imports: Record<string, string> = {
   "@solidjs/router": "owner-fixture:router",
   "@/utils/toast": "owner-fixture:toast",
   "./general": "owner-fixture:unused",
-  "../settings-keybinds": "owner-fixture:unused",
   "./models": "owner-fixture:unused",
   "./servers": "owner-fixture:unused",
   "@/components/secret-input-v2": "owner-fixture:ui",
@@ -227,7 +246,9 @@ Bun.plugin({
       })
       if (!file.endsWith(".tsx")) return { contents: source, loader: "ts" }
       const result = await compiler("@babel/core").transformAsync(
-        file.endsWith("dialog-connect-provider.tsx") ? `import { FormData } from "owner-fixture:forms"\n${source}` : source,
+        file.endsWith("dialog-connect-provider.tsx")
+          ? `import { FormData } from "owner-fixture:forms"\n${source}`
+          : source,
         {
           filename: file,
           presets: [[compiler("babel-preset-solid"), { generate: "dom" }]],
@@ -266,6 +287,9 @@ async function until(predicate: () => boolean) {
       body: document.body.textContent,
     }),
   ).toBe(true)
+}
+function labelled(host: HTMLElement, text: string) {
+  return [...host.querySelectorAll("button")].find((node) => node.textContent === text)!
 }
 function fill(input: HTMLInputElement, value: string) {
   input.value = value
@@ -309,7 +333,8 @@ function mount() {
         return {
           sdk,
           sync: {
-            data: { provider, config: {} },
+            ready: true,
+            data: { provider, config: {}, project: [] },
             child: () => [{ provider_ready: true, provider }],
             refreshProviders: async () => {
               await sdk.api.integration.list({ location: { directory: "/b" } })
@@ -389,11 +414,7 @@ test("A-opened Settings replaces with B picker, catalog and key request; revoked
   try {
     await until(() => screen.host.textContent?.includes("owner-b.test catalog") === true)
     expect(screen.dialog?.active?.owner).toBeDefined()
-    const all = [...screen.host.querySelectorAll("button")].find(
-      (node) => node.textContent === "dialog.provider.viewAll",
-    )!
-    expect(all).toBeDefined()
-    all.click()
+    labelled(screen.host, "orchestra.providers.connect").click()
     await until(() => screen.host.textContent?.includes("owner-b.test discovery") === true)
     screen.host.querySelector<HTMLButtonElement>('[data-provider-id="openrouter"]')!.click()
     await until(() => !!screen.host.querySelector('input[name="apiKey"]'))
@@ -421,10 +442,8 @@ test("A-opened Settings replaces with B picker, catalog and key request; revoked
     setState("directory", "/b")
     await screen.dialog!.show(() => createComponent(DialogSettings, { defaultValue: "providers" }))
     await until(() => screen.host.textContent?.includes("owner-b.test catalog") === true)
-    const add = [...screen.host.querySelectorAll("button")].find(
-      (node) => node.textContent === "settings.providers.addKey",
-    )!
-    add.click()
+    // Configure on the provider's card opens the connect dialog straight on that provider.
+    labelled(screen.host, "orchestra.providers.configure").click()
     await until(() => !!screen.host.querySelector('input[name="apiKey"]'))
     filledKey(screen.host.querySelector<HTMLInputElement>('input[name="apiKey"]')!, "synthetic-revoked-key")
     setState("servers", [a, { ...b, http: { ...b.http, password: "synthetic-edited" } }])
@@ -445,8 +464,11 @@ test("direct custom-provider replacement writes B auth and config under A dialog
   setState({ servers: [a, b], directory: "/b" })
   const screen = mount()
   try {
-    await until(() => !!screen.host.querySelector('[data-component="custom-provider-section"] button'))
-    screen.host.querySelector<HTMLButtonElement>('[data-component="custom-provider-section"] button')!.click()
+    await until(() => !!labelled(screen.host, "orchestra.providers.connect"))
+    labelled(screen.host, "orchestra.providers.connect").click()
+    // The connect dialog's picker offers the custom provider form on a v1 server.
+    await until(() => !!screen.host.querySelector('[data-provider-id="_custom"]'))
+    screen.host.querySelector<HTMLButtonElement>('[data-provider-id="_custom"]')!.click()
     await until(() => !!screen.host.querySelector('input[placeholder="provider.custom.field.providerID.placeholder"]'))
     for (const [key, value] of [
       ["provider.custom.field.providerID.placeholder", "synthetic-custom"],

@@ -138,8 +138,7 @@ export const verify = (
         : yield* oracleRecheck(usable, options?.sprint ?? (yield* findSprint(target)))
     const deterministic = controls.filter((control) => control.graded_by === "deterministic")
     const failing = deterministic.filter((control) => control.verdict !== "pass")
-    const last = loaded.entries.length > 0 ? get(loaded.entries[loaded.entries.length - 1], "event") : undefined
-    const lastEvent = typeof last === "string" ? last : null
+    const lastEvent = finalEvent(loaded.entries)
     const verdict = {
       intact,
       errors: loaded.errors.length > 0,
@@ -772,4 +771,17 @@ function continues(lead: number, offset: number, byte: number) {
   if (lead === 0xf0) return byte >= 0x90 && byte <= 0xbf
   if (lead === 0xf4) return byte >= 0x80 && byte <= 0x8f
   return byte >= 0x80 && byte <= 0xbf
+}
+
+// TS-only (PARITY-EXCEPTIONS W7-6): the native workflow host signs one `workflow-disposition` record after the Relay
+// event it settled. A trailing disposition whose `sourceSeq` names the entry right before it reports that entry's
+// event, so a workflow that completed reads as complete; any other trailing record still reads as truncated.
+function finalEvent(entries: ReadonlyArray<Entry>) {
+  const last = entries.at(-1)
+  if (!last) return null
+  const before = entries.at(-2)
+  const settled = before !== undefined && get(last, "event") === "workflow-disposition" &&
+    get(last, "sourceSeq") === get(before, "seq") && typeof get(before, "seq") === "number"
+  const event = get(settled ? before : last, "event")
+  return typeof event === "string" ? event : null
 }

@@ -8,10 +8,9 @@ import { DialogPrompt } from "../ui/dialog-prompt"
 import { Link } from "../ui/link"
 import { useTheme } from "../context/theme"
 import { TextAttributes } from "@opentui/core"
-import type { ProviderAuthAuthorization, ProviderAuthMethod } from "@orchestra/sdk/v2"
+import type { ProviderAuthAuthorization, ProviderAuthMethod } from "../compat/sdk-v2"
 import { DialogModel } from "./dialog-model"
 import { useToast } from "../ui/toast"
-import { isConsoleManagedProvider } from "../util/provider-origin"
 import { useConnected } from "./use-connected"
 import { useBindings } from "../keymap"
 import { useClipboard } from "../context/clipboard"
@@ -128,19 +127,15 @@ export function createDialogProviderOptions() {
         }
 
         const providerID = provider.providerID
-        const consoleManaged = isConsoleManagedProvider(sync.data.console_state.consoleManagedProviders, providerID)
         const connected = sync.data.provider_next.connected.includes(providerID)
 
         return {
           title: provider.title,
           value: provider.value,
           description: provider.description,
-          footer: consoleManaged ? sync.data.console_state.activeOrgName : undefined,
           category: provider.category,
           gutter: connected && onboarded() ? () => <text fg={theme.success}>✓</text> : undefined,
           async onSelect() {
-            if (consoleManaged) return
-
             const methods = sync.data.provider_auth[providerID] ?? [
               {
                 type: "api",
@@ -363,7 +358,7 @@ function ApiMethod(props: ApiMethodProps) {
       placeholder="API key"
       onConfirm={async (value) => {
         if (!value) return
-        await sdk.client.auth.set({
+        const saved = await sdk.client.auth.set({
           providerID: props.providerID,
           auth: {
             type: "api",
@@ -371,6 +366,10 @@ function ApiMethod(props: ApiMethodProps) {
             ...(props.metadata ? { metadata: props.metadata } : {}),
           },
         })
+        if (saved.error) {
+          toast.show({ variant: "error", message: JSON.stringify(saved.error) })
+          return
+        }
         await sdk.client.instance.dispose()
         await sync.bootstrap()
         if (props.custom && !sync.data.provider_next.all.some((provider) => provider.id === props.providerID)) {

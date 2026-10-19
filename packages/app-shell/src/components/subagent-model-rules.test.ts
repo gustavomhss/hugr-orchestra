@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import type { Provider } from "@orchestra/sdk/v2/client"
 import {
+  allowsEveryModel,
   connectedSubagentModels,
   createModelRuleEditor,
   effectiveModelState,
@@ -97,6 +98,38 @@ describe("subagent model rules", () => {
         "team/model",
       ),
     ).toBe("ask")
+  })
+
+  test("allowsEveryModel holds only while the last model-scoped task rule allows every model", () => {
+    const deny: ModelRule = { permission: "task", pattern: "*/*", action: "deny" }
+    const all: ModelRule = { permission: "task", pattern: "*/*", action: "allow" }
+    const one: ModelRule = { permission: "task", pattern: "router/x", action: "allow" }
+    expect(allowsEveryModel([])).toBe(false)
+    expect(allowsEveryModel([deny, one])).toBe(false)
+    expect(allowsEveryModel([deny, one, all])).toBe(true)
+    expect(allowsEveryModel([all, { ...one, action: "deny" }])).toBe(false)
+    expect(allowsEveryModel([all, { permission: "task", pattern: "general", action: "deny" }])).toBe(true)
+  })
+
+  test("a scoped v1 session returns to inherit by appending an allow-all rule", async () => {
+    const stored: ModelRule[] = [
+      { permission: "task", pattern: "*/*", action: "deny" },
+      { permission: "task", pattern: "router/x", action: "allow" },
+    ]
+    const writes: ModelRule[][] = []
+    const editor = createModelRuleEditor({
+      read: () => stored,
+      write: async (rules) => {
+        writes.push(rules)
+        stored.push(...rules)
+        return [...stored]
+      },
+    })
+    expect(allowsEveryModel(editor.rules())).toBe(false)
+    await editor.inherit()
+    expect(writes).toEqual([[{ permission: "task", pattern: "*/*", action: "allow" }]])
+    expect(allowsEveryModel(editor.rules())).toBe(true)
+    expect(effectiveModelState(editor.rules(), "groq", "y")).toBe("allow")
   })
 
   test("model identities keep every slash after the provider separator", () => {

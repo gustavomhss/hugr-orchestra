@@ -93,6 +93,7 @@ export type LocationError = LayerNode.Error<typeof locationServices>
 
 export function buildLocationServiceMap(
   replacements: LayerNode.Replacements = [],
+  extra: ReadonlyArray<Node.LocationNode<unknown, LocationError>> = [],
 ): Layer.Layer<LocationServiceMap.Service> {
   return Layer.effect(
     LocationServiceMap.Service,
@@ -108,9 +109,11 @@ export function buildLocationServiceMap(
         // introduce new tagged dependencies (Location.boundNode depends on
         // Project), and the hoist walk is the only pass that can still slice
         // those back out.
-        const location = LayerNode.hoist(locationServices, Node.tags.values.global, allReplacements)
+        const location = LayerNode.hoist(LayerNode.group([locationServices, ...extra]), Node.tags.values.global, allReplacements)
+        // Contributed nodes (Host.Contribution.locationNodes) add services; the map still exposes LocationServices.
+        const services: Layer.Layer<LocationServices, LocationError> = LayerNode.compile(location.node)
 
-        return LayerNode.compile(location.node).pipe(
+        return services.pipe(
           Layer.fresh,
           Layer.tap((context) =>
             Effect.gen(function* () {

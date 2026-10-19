@@ -12,6 +12,8 @@ type Mock = {
   failModelWrite?: boolean
   auto?: "pending" | "failed" | "complete"
   fillers?: number
+  engine?: string
+  claude?: { signedIn: boolean; loginError?: string }
 }
 
 const v1Model = (providerID: string, id: string) => ({
@@ -151,22 +153,25 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await search.fill("")
   await expect(cards).toHaveCount(5)
 
+  // Connect opens the app's one connect dialog, straight on the provider.
   await popular.filter({ hasText: "OpenRouter" }).getByRole("button", { name: "Connect" }).click()
-  const dialog = page.locator(".providers-dialog")
-  await expect(dialog.getByRole("heading", { name: "Connect OpenRouter" })).toBeVisible()
-  await expect(dialog.getByRole("combobox", { name: "Connection method" }).locator("option")).toHaveText(["API key"])
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Enter an API key to continue.")
+  const connect = page.locator('[data-component="dialog-v2"]')
+  await expect(connect.getByText("Connect OpenRouter", { exact: true })).toBeVisible()
+  const submit = connect.locator('[data-action="provider-connect-submit"]')
+  await submit.click()
+  await expect(connect.getByRole("alert")).toHaveText("API key is required")
   expect(mock.calls.filter((call) => call.path.startsWith("/auth/"))).toHaveLength(0)
-  await dialog.getByLabel("API key", { exact: true }).fill(`  ${secret}  `)
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog).toHaveCount(0)
+  await connect.getByLabel("OpenRouter API key", { exact: true }).fill(secret)
+  await submit.click()
+  await expect(connect).toHaveCount(0)
   expect(mock.calls.find((call) => call.method === "PUT" && call.path === "/auth/openrouter")?.body).toEqual({
     type: "api",
     key: secret,
   })
+  await expect(page.getByText("API key saved for OpenRouter", { exact: true })).toBeVisible()
   await expectSecretGone(page)
 
+  const dialog = page.locator(".providers-dialog")
   await anthropic.getByRole("button", { name: "Disconnect" }).click()
   await expect(dialog.getByRole("heading", { name: "Disconnect Anthropic?" })).toBeVisible()
   await expect(dialog.getByText("This removes the stored key or sign-in for Anthropic.")).toBeVisible()
@@ -194,31 +199,26 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await chapter.locator('.mx-card[data-provider-id="opencode"]').getByRole("button", { name: "Models" }).click()
   await expect(page.getByRole("tab", { name: "Models" })).toHaveAttribute("aria-selected", "true")
   await page.keyboard.press("Escape")
+  await expect(page.getByRole("tab", { name: "Models" })).toHaveCount(0)
 
+  // Connect provider opens the same dialog on its picker: Claude mode leads, then the custom form and popular providers.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
-  await expect(dialog.getByRole("heading", { name: "Connect provider" })).toBeVisible()
-  // Popular providers lead; OpenCode Zen is an ordinary provider and sorts with the rest by name.
-  await expect(dialog.locator(".mx-row strong").first()).toHaveText("Anthropic")
-  await dialog.getByRole("button", { name: "Custom OpenAI-compatible provider" }).click()
-  await expect(dialog.getByRole("heading", { name: "Custom provider" })).toBeVisible()
-  await expect(
-    dialog.getByText("It is saved in this server's config, for every profile.", { exact: false }),
-  ).toBeVisible()
-  await expect(dialog.getByLabel("Base URL", { exact: true })).toHaveValue("http://localhost:8080/v1")
-  await dialog.getByLabel("Model ID", { exact: true }).fill("qwen")
-  // Catalog, disabled card and config keys all count: "LMStudio" derives the configured `lmstudio` id.
-  for (const name of ["Anthropic", "Local", "LMStudio"]) {
-    await dialog.getByLabel("Name", { exact: true }).fill(name)
-    await dialog.getByRole("button", { name: "Connect" }).click()
-    await expect(dialog.getByRole("alert")).toHaveText("Choose a unique provider name.")
-  }
-  await dialog.getByLabel("Name", { exact: true }).fill("My LLM")
-  await dialog.getByLabel("Base URL", { exact: true }).fill("ftp://nope")
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Enter a valid endpoint URL.")
-  await dialog.getByLabel("Base URL", { exact: true }).fill("http://localhost:8080/v1")
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog).toHaveCount(0)
+  await expect(connect.getByText("Connect provider", { exact: true })).toBeVisible()
+  await expect(connect.locator("[data-provider-id]").first()).toHaveAttribute("data-provider-id", "_claude-mode")
+  await connect.locator('[data-provider-id="_custom"]').click()
+  await expect(connect.getByText("Custom provider", { exact: true })).toBeVisible()
+  await connect.getByLabel("Provider ID", { exact: true }).fill("anthropic")
+  await connect.getByLabel("Display name", { exact: true }).fill("My LLM")
+  await connect.getByLabel("Base URL", { exact: true }).fill("ftp://nope")
+  await connect.getByPlaceholder("model-id", { exact: true }).fill("qwen")
+  await connect.getByPlaceholder("Display Name", { exact: true }).fill("qwen")
+  await connect.getByRole("button", { name: "Submit" }).click()
+  await expect(connect.getByText("That provider ID already exists", { exact: true })).toBeVisible()
+  await expect(connect.getByText("Must start with http:// or https://", { exact: true })).toBeVisible()
+  await connect.getByLabel("Provider ID", { exact: true }).fill("my-llm")
+  await connect.getByLabel("Base URL", { exact: true }).fill("http://localhost:8080/v1")
+  await connect.getByRole("button", { name: "Submit" }).click()
+  await expect(connect).toHaveCount(0)
   expect(patches(mock).at(-1)).toEqual({
     provider: {
       "my-llm": {
@@ -233,7 +233,7 @@ test("v1: cards, route scope and revert, confirmed disconnects, enable and custo
   await page.screenshot({ path: test.info().outputPath("v1-dark.png") })
 })
 
-test("v2: error and retry, server route, confirmed credential removal, key and pinned picker", async ({ page }) => {
+test("v2: error and retry, server route, confirmed credential removal, key and picker", async ({ page }) => {
   const mock: Mock = { calls: [], failProviders: true, fillers: 40 }
   await setup(page, "v2", mock, "light")
   await openProviders(page)
@@ -259,11 +259,13 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
   await expect(keyed.locator(".mx-badge")).toHaveText(["Connected", "API key"])
   await expect(keyed.locator("h3")).toHaveText("OpenAI (work)")
 
-  const dialog = page.locator(".providers-dialog")
+  const connect = page.locator('[data-component="dialog-v2"]')
   await keyed.getByRole("button", { name: "Configure" }).click()
-  await expect(dialog.getByRole("heading", { name: "Connect OpenAI" })).toBeVisible()
-  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await expect(connect.getByText("Connect OpenAI", { exact: true })).toBeVisible()
+  await page.keyboard.press("Escape")
+  await expect(connect).toHaveCount(0)
 
+  const dialog = page.locator(".providers-dialog")
   await signedIn.getByRole("button", { name: "Disconnect" }).click()
   await expect(dialog.getByRole("heading", { name: "Disconnect OpenAI?" })).toBeVisible()
   await dialog.getByRole("button", { name: "Disconnect" }).click()
@@ -275,20 +277,18 @@ test("v2: error and retry, server route, confirmed credential removal, key and p
 
   const popular = chapter.locator("[data-providers-popular] .mx-row")
   await popular.filter({ hasText: "OpenRouter" }).getByRole("button", { name: "Connect" }).click()
-  await dialog.getByLabel("API key", { exact: true }).fill(secret)
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog).toHaveCount(0)
+  await connect.getByLabel("OpenRouter API key", { exact: true }).fill(secret)
+  await connect.locator('[data-action="provider-connect-submit"]').click()
+  await expect(connect).toHaveCount(0)
   expect(
     mock.calls.find((call) => call.method === "POST" && call.path === "/api/integration/openrouter/connect/key")?.body,
   ).toMatchObject({ key: secret })
   await expectSecretGone(page)
 
+  // The picker lists Claude mode and every integration; a server that cannot save a custom provider is not offered one.
   await chapter.getByRole("button", { name: "Connect provider" }).click()
-  await expect(dialog.locator(".mx-row")).toHaveCount(42)
-  await expect(dialog.getByRole("button", { name: "Custom OpenAI-compatible provider" })).toBeInViewport()
-  await dialog.getByRole("button", { name: "Custom OpenAI-compatible provider" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Custom providers are unavailable on this server")
-  await expect(dialog.getByRole("button", { name: "Connect" })).toBeDisabled()
+  await expect(connect.locator("[data-provider-id]")).toHaveCount(43)
+  await expect(connect.locator('[data-provider-id="_custom"]')).toHaveCount(0)
   await page.screenshot({ path: test.info().outputPath("v2-light.png") })
 })
 
@@ -298,73 +298,115 @@ test("v2: OAuth code, automatic, prompted and unsafe-link flows", async ({ page 
   await openProviders(page)
   const chapter = page.locator('[data-chapter="providers"]')
   const card = chapter.locator('.mx-card[data-provider-id="openai"]')
-  const dialog = page.locator(".providers-dialog")
-  const method = dialog.getByRole("combobox", { name: "Connection method" })
+  const dialog = page.locator('[data-component="dialog-v2"]')
+  const method = (name: string) => dialog.getByRole("button", { name, exact: true })
   const oauth = (id: string) =>
     mock.calls.filter((call) => call.path === `/api/integration/openai/connect/oauth` && body(call).methodID === id)
 
   await card.getByRole("button", { name: "Configure" }).click()
-  await expect(method.locator("option")).toHaveText([
-    "API key",
-    "Sign in with a code",
-    "Sign in on this device",
-    "Enterprise sign-in",
-    "Broken link",
-  ])
-  await method.selectOption({ label: "Sign in with a code" })
-  await expect(dialog.getByLabel("API key", { exact: true })).toHaveCount(0)
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByRole("link", { name: "Open the authorization page" })).toHaveAttribute(
+  await expect(dialog.getByText("Select login method for OpenAI.", { exact: true })).toBeVisible()
+  await method("Sign in with a code").click()
+  await expect(dialog.getByRole("link", { name: "this link" })).toHaveAttribute(
     "href",
     "https://auth.example.test/code",
   )
-  await expect(method).toBeDisabled()
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText("Enter the authorization code to continue.")
-  await dialog.getByLabel("Authorization code", { exact: true }).fill("code-123")
-  await dialog.getByRole("button", { name: "Connect" }).click()
+  await dialog.getByRole("button", { name: "Continue" }).click()
+  await expect(dialog.getByRole("alert")).toHaveText("Authorization code is required")
+  await dialog.getByLabel("Sign in with a code authorization code", { exact: true }).fill("code-123")
+  await dialog.getByRole("button", { name: "Continue" }).click()
   await expect(dialog).toHaveCount(0)
   expect(
     mock.calls.find((call) => call.path === "/api/integration/openai/connect/oauth/att-code/complete")?.body,
   ).toEqual({ code: "code-123" })
 
+  // Automatic sign-in polls while it waits, can be cancelled, and starts over after a refusal.
   await card.getByRole("button", { name: "Configure" }).click()
-  await method.selectOption({ label: "Sign in on this device" })
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  const confirmation = dialog.getByLabel("Confirmation code", { exact: true })
-  await expect(confirmation).toHaveValue("ABCD-1234")
-  await expect(dialog.getByRole("status")).toHaveText("Waiting for authorization…")
-  await expect(dialog.getByRole("button", { name: "Connect" })).toHaveCount(0)
-  await confirmation.press("Enter")
+  await method("Sign in on this device").click()
+  await expect(dialog.getByLabel("Confirmation code", { exact: true })).toHaveValue("ABCD-1234")
+  await expect(dialog.getByText("Waiting for authorization...", { exact: true })).toBeVisible()
   await expect.poll(() => statusPolls(mock)).toBeGreaterThan(1)
   expect(mock.calls.some((call) => call.path.endsWith("/att-auto/complete"))).toBe(false)
   mock.auto = "failed"
-  await expect(dialog.getByRole("alert")).toHaveText("Denied by user")
-  await expect(method).toBeEnabled()
-  await expect(confirmation).toHaveCount(0)
+  await expect(dialog.getByText("Authorization failed: Denied by user", { exact: true })).toBeVisible()
   mock.auto = "complete"
-  await dialog.getByRole("button", { name: "Connect" }).click()
+  await dialog.getByRole("button", { name: "Try again" }).click()
   await expect(dialog).toHaveCount(0)
   expect(oauth("auto")).toHaveLength(2)
 
   await card.getByRole("button", { name: "Configure" }).click()
-  await method.selectOption({ label: "Enterprise sign-in" })
-  await expect(dialog.getByRole("combobox", { name: "Deployment", exact: true })).toHaveValue("cloud")
-  await expect(dialog.getByRole("textbox", { name: "Host", exact: true })).toHaveCount(0)
-  await dialog.getByRole("combobox", { name: "Deployment", exact: true }).selectOption("self")
-  await dialog.getByRole("textbox", { name: "Host", exact: true }).fill("https://sso.example.test")
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByLabel("Authorization code", { exact: true })).toBeVisible()
+  await method("Enterprise sign-in").click()
+  await dialog.locator('[data-slot="list-item"]', { hasText: "Self-hosted" }).click()
+  await dialog.getByLabel("Host", { exact: true }).fill("https://sso.example.test")
+  await dialog.getByRole("button", { name: "Continue" }).click()
+  await expect(dialog.getByLabel("Enterprise sign-in authorization code", { exact: true })).toBeVisible()
   expect(body(oauth("prompted")[0]).inputs).toEqual({ deployment: "self", host: "https://sso.example.test" })
-  await dialog.getByRole("button", { name: "Cancel" }).click()
+  await page.keyboard.press("Escape")
+  await expect(dialog).toHaveCount(0)
 
+  // A link that is not a web address is refused, never rendered.
   await card.getByRole("button", { name: "Configure" }).click()
-  await method.selectOption({ label: "Broken link" })
-  await dialog.getByRole("button", { name: "Connect" }).click()
-  await expect(dialog.getByRole("alert")).toHaveText(
-    "The server returned an authorization link that is not a web address.",
-  )
+  await method("Broken link").click()
+  await expect(
+    dialog.getByText("Authorization failed: The server returned an authorization link that is not a web address.", {
+      exact: true,
+    }),
+  ).toBeVisible()
   await expect(dialog.locator("a")).toHaveCount(0)
+})
+
+test("v1: Claude mode engine write and sign-in states", async ({ page }) => {
+  const mock: Mock = { calls: [], claude: { signedIn: false } }
+  await setup(page, "v1", mock)
+  await openProviders(page)
+  const section = page.locator("[data-providers-claude-mode]")
+  await expect(section.getByRole("heading", { name: "Claude mode" })).toBeVisible()
+  const engine = section.getByRole("combobox", { name: "Maestro engine" })
+  await expect(engine).toHaveValue("orchestra")
+  await engine.selectOption("claude-code")
+  await expect.poll(() => patches(mock).at(-1)).toEqual({ agent: { maestro: { engine: "claude-code" } } })
+  await expect(engine).toHaveValue("claude-code")
+  await expect(engine).toBeEnabled()
+
+  // Claude Code opens the browser itself, so the app must not open the fallback URL on its own.
+  await page.evaluate(() => {
+    const opened: string[] = []
+    Object.assign(window, { opened })
+    window.open = (url) => {
+      opened.push(String(url))
+      return null
+    }
+  })
+  const opened = () => page.evaluate(() => (window as unknown as { opened: string[] }).opened)
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  await expect(section.getByRole("status")).toHaveText("Waiting for your browser…")
+  expect(mock.calls.filter((call) => call.path === "/provider/claude-code/login")).toHaveLength(1)
+  expect(await opened()).toEqual([])
+  await section.getByRole("button", { name: "Browser didn't open? Open the sign-in page" }).click()
+  await expect.poll(opened).toEqual(["https://claude.example.test/login"])
+
+  await section.getByRole("button", { name: "Cancel" }).click()
+  await expect(section.getByRole("status")).toHaveCount(0)
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  const submit = section.getByRole("button", { name: "Submit code" })
+  await expect(submit).toBeDisabled()
+  await section.getByLabel("Paste the code from the sign-in page").fill(" abc#state ")
+  await submit.click()
+  await expect(section.getByText("Signed in as me@example.com · Max")).toBeVisible()
+  expect(mock.calls.find((call) => call.path === "/provider/claude-code/login/code")?.body).toEqual({
+    code: "abc#state",
+  })
+  await expect(section.getByRole("button", { name: "Sign in to Claude" })).toHaveCount(0)
+  await expect(section.getByRole("status")).toHaveCount(0)
+})
+
+test("v1: Claude mode shows the sign-in failure message", async ({ page }) => {
+  const mock: Mock = { calls: [], claude: { signedIn: false, loginError: "Managed settings block sign-in." } }
+  await setup(page, "v1", mock)
+  await openProviders(page)
+  const section = page.locator("[data-providers-claude-mode]")
+  await section.getByRole("button", { name: "Sign in to Claude" }).click()
+  await expect(section.getByRole("alert")).toHaveText("Sign-in failed: Managed settings block sign-in.")
+  await expect(section.getByRole("button", { name: "Sign in to Claude" })).toBeVisible()
 })
 
 function body(call: Call) {
@@ -395,10 +437,7 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory, scheme }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
@@ -407,7 +446,10 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
         "orchestra.global.dat:server",
         JSON.stringify({ list: [], projects: { local: [{ worktree: directory }] } }),
       )
-      localStorage.setItem("orchestra.global.dat:layout", JSON.stringify({ home: { selection: { server, directory } } }))
+      localStorage.setItem(
+        "orchestra.global.dat:layout",
+        JSON.stringify({ home: { selection: { server, directory } } }),
+      )
     },
     { server, directory, scheme },
   )
@@ -444,13 +486,28 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (path === "/global/health") return json(route, { healthy: true }, protocol === "v1" ? 200 : 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2", pid: 1 })
+    const stored = { ...config, ...(mock.engine ? { agent: { maestro: { engine: mock.engine } } } : {}) }
     if (path === "/global/config" && method === "PATCH") {
       const patch = JSON.parse(raw ?? "{}")
       if (mock.failModelWrite && "model" in patch) return json(route, { message: "write refused" }, 500)
-      return json(route, { ...config, ...patch })
+      if (patch.agent) mock.engine = patch.agent.maestro.engine
+      return json(route, { ...stored, ...patch })
     }
-    if (path === "/global/config") return json(route, config)
-    if (path === "/config") return json(route, { ...config, model: "anthropic/claude" })
+    if (path === "/global/config") return json(route, stored)
+    if (path === "/config") return json(route, { ...stored, model: "anthropic/claude" })
+    if (path === "/provider/claude-code/account" && mock.claude)
+      return json(
+        route,
+        mock.claude.signedIn ? { signedIn: true, email: "me@example.com", subscription: "Max" } : { signedIn: false },
+      )
+    if (path === "/provider/claude-code/login" && mock.claude)
+      return mock.claude.loginError
+        ? json(route, { name: "ClaudeCodeLoginFailed", data: { message: mock.claude.loginError } }, 400)
+        : json(route, { url: "https://claude.example.test/login" })
+    if (path === "/provider/claude-code/login/code" && mock.claude) {
+      mock.claude.signedIn = true
+      return json(route, true)
+    }
     if (path === "/provider")
       return json(route, {
         all: [

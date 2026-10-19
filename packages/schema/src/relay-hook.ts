@@ -148,6 +148,8 @@ export const Install = Schema.Struct({
   sha256: Hex64,
   order: NonNegativeInt,
   enabled: Schema.Boolean,
+  // Present while the hook document is unpublished: the install stays, but it does not fire until a publish.
+  unpublished: Schema.optionalKey(Schema.Literal(true)),
   installedBy: Schema.String,
   installedAt: NonNegativeInt,
   snapshot: V1,
