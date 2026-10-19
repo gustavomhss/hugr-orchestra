@@ -1,4 +1,5 @@
 import { SessionV2 } from "@orchestra/core/session"
+import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
@@ -7,6 +8,7 @@ import { SessionsCursor } from "@orchestra/protocol/groups/session"
 import {
   ConflictError,
   InvalidCursorError,
+  InvalidRequestError,
   MessageNotFoundError,
   ServiceUnavailableError,
   SessionNotFoundError,
@@ -28,6 +30,30 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
   Effect.gen(function* () {
     const session = yield* SessionV2.Service
     const subagentModels = yield* SessionSubagentModels.Service
+
+    const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
+      session.prompt(input).pipe(
+        Effect.catchTag("Session.NotFoundError", (error) =>
+          Effect.fail(
+            new SessionNotFoundError({
+              sessionID: error.sessionID,
+              message: `Session not found: ${error.sessionID}`,
+            }),
+          ),
+        ),
+        Effect.catchTag("Session.PromptConflictError", (error) =>
+          Effect.fail(
+            new ConflictError({
+              message: `Prompt message ID conflicts with an existing durable record: ${error.messageID}`,
+              resource: error.messageID,
+            }),
+          ),
+        ),
+        // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
+        Effect.catchTag("Session.PromptBlockedError", (error) =>
+          Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
+        ),
+      )
 
     const policyResult = <A>(effect: Effect.Effect<A, SessionSubagentModels.Error>) => effect.pipe(
       Effect.catchTag("SessionSubagentModels.NotFoundError", (error) =>
@@ -191,36 +217,36 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.prompt",
         Effect.fn(function* (ctx) {
           return {
-            data: yield* session
-              .prompt({
-                sessionID: ctx.params.sessionID,
-                id: ctx.payload.id,
-                prompt: ctx.payload.prompt,
-                delivery: ctx.payload.delivery,
-                resume: ctx.payload.resume,
-              })
-              .pipe(
-                Effect.catchTag("Session.NotFoundError", (error) =>
-                  Effect.fail(
-                    new SessionNotFoundError({
-                      sessionID: error.sessionID,
-                      message: `Session not found: ${error.sessionID}`,
-                    }),
-                  ),
-                ),
-                Effect.catchTag("Session.PromptConflictError", (error) =>
-                  Effect.fail(
-                    new ConflictError({
-                      message: `Prompt message ID conflicts with an existing durable record: ${error.messageID}`,
-                      resource: error.messageID,
-                    }),
-                  ),
-                ),
-                // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
-                Effect.catchTag("Session.PromptBlockedError", (error) =>
-                  Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
-                ),
-              ),
+            data: yield* admit({
+              sessionID: ctx.params.sessionID,
+              id: ctx.payload.id,
+              prompt: ctx.payload.prompt,
+              delivery: ctx.payload.delivery,
+              resume: ctx.payload.resume,
+            }),
+          }
+        }),
+      )
+      .handle(
+        "session.command",
+        Effect.fn(function* (ctx) {
+          const text = yield* SlashCommand.render(ctx.payload.command, ctx.payload.arguments ?? "").pipe(
+            Effect.catchTags({
+              "SlashCommand.NotFoundError": (error) =>
+                Effect.fail(new InvalidRequestError({ message: `Command not found: ${error.name}`, field: "command" })),
+              "Mcp.NotFoundError": (error) =>
+                Effect.fail(new UnknownError({ message: `MCP server is not connected: ${error.name}` })),
+              "Mcp.RequestError": (error) => Effect.fail(new UnknownError({ message: error.message })),
+            }),
+          )
+          return {
+            data: yield* admit({
+              sessionID: ctx.params.sessionID,
+              id: ctx.payload.id,
+              prompt: { text, files: ctx.payload.files, agents: ctx.payload.agents },
+              delivery: ctx.payload.delivery,
+              resume: ctx.payload.resume,
+            }),
           }
         }),
       )
