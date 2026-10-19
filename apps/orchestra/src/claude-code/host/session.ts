@@ -332,10 +332,8 @@ const layer = Layer.effect(
         live.join.taskStarted({ toolUseID: message.tool_use_id, taskID: message.task_id })
       if (message.type === "system" && message.subtype === "task_notification") live.join.taskNotification(message)
       if (live.research) yield* live.research.observe(live.join, message)
-      if (live.discard) {
-        // Stop closes the query; discarded frames never relinquish its ownership.
-        return
-      }
+      // Stop closes the query; discarded frames never relinquish its ownership.
+      if (live.discard) return
       if (message.type === "system" && message.subtype === "init") yield* write(live.sessionID, { sessionId: message.session_id })
       // Claude Code may start a turn on its own, for a background subagent's completion: it answers the latest message.
       if (!live.turn && (message.type === "assistant" || message.type === "stream_event")) {
@@ -665,6 +663,7 @@ const layer = Layer.effect(
       }
       const host = started.value
       clearTimeout(host.idle)
+      if (host.research) yield* host.research.adopt(sessionID)
       if (input.promptOps) host.promptOps = input.promptOps
       if (model && model !== host.model) yield* setModel({ sessionID, model })
       const running = host.turn
