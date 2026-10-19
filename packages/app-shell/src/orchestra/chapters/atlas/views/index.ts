@@ -10,6 +10,7 @@ export type AtlasInspectorProps = AtlasViewProps & { factKey: string }
 // a Component<AtlasViewProps>). A view without a line shows the frame's "not built yet" note.
 export const atlasViews: Partial<Record<AtlasViewId, Component<AtlasViewProps>>> = {
   overview: lazy(() => import("./overview")),
+  explore: lazy(() => import("./explore")),
 }
 
 // The fact inspector beside the list views (task A24 replaces `undefined` with lazy(() => import("./inspector"))).
