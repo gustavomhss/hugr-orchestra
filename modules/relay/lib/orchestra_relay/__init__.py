@@ -99,6 +99,8 @@ def _gate(builder, root, graph, node, gate):
         attempt = sum(e["event"] == "step.end" and e.get("node") == node for e in _read(ledger)) + 1
         key = f"{thread}/{node}/{attempt}"
         asked = any(e.get("key") == f"{key}/approval.request" for e in _read(ledger))
+        # Orchestra reads this to tell a run still waiting in a terminal from one whose process has exited.
+        (ledger.parent / "waiting.pid").write_text(str(os.getpid()), encoding="utf-8")
         _append(ledger, {"event": "approval.request", "key": f"{key}/approval.request", "node": node,
                          "attempt": attempt})
         # A decision already on the ledger is replayed, so a re-run of this node never asks twice.

@@ -11,6 +11,13 @@ describe("routes", () => {
       tab: "runs",
       create: false,
     })
+    expect(parseRelayRoute("workflow", relayPath.runs("workflow", "triage 8").slice("/orchestra/workflows".length))).toEqual({
+      page: "library",
+      kind: "workflow",
+      tab: "runs",
+      create: false,
+      run: "triage 8",
+    })
     expect(parseRelayRoute("hook", "/activity")).toEqual({ page: "library", kind: "hook", tab: "runs", create: false })
     expect(parseRelayRoute("hook", "/new")).toEqual({ page: "library", kind: "hook", tab: "list", create: true })
   })

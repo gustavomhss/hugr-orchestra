@@ -1,6 +1,7 @@
 """orchestra_relay gates on real LangGraph graphs: retry, edge rewiring, approval resume, sync/async/config nodes."""
 import asyncio
 import json
+import os
 from pathlib import Path
 import sys
 from typing import TypedDict
@@ -105,6 +106,7 @@ def test_approval_comes_before_the_node_and_resume_reruns_nothing(project, capsy
     assert [json.loads(line)["event"] for line in after[len(before):].splitlines()] == [
         "approval.decision", "step.start", "check.result", "step.end", "sprint-complete"]
     assert capsys.readouterr().err.count("WAITING") == 1
+    assert (ledger(project, "approve").parent / "waiting.pid").read_text() == str(os.getpid())
 
 
 def test_rejected_approval_never_runs_the_node(project):

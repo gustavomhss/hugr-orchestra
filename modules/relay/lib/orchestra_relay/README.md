@@ -36,7 +36,7 @@ gated(builder, {"deploy": {"check": "make smoke", "judge": "the change is safe",
 
 - `check`: a shell command run from the project root; exit code 0 passes. A failure retries the node until `retries` (default 3) attempts are used, then the run escalates and ends.
 - `judge`: recorded as advisory. Real model judging comes in a later version.
-- `approve`: pauses with LangGraph's `interrupt()` before the node runs, so a rejected step never happens; retries after a failed check do not ask again. Resume with `graph.invoke(Command(resume="approve"), config)` or `Command(resume={"decision": "reject", "note": "..."})`. A decision already on the ledger is replayed, never asked again.
+- `approve`: pauses with LangGraph's `interrupt()` before the node runs, so a rejected step never happens; retries after a failed check do not ask again. Resume with `graph.invoke(Command(resume="approve"), config)` or `Command(resume={"decision": "reject", "note": "..."})`. A decision already on the ledger is replayed, never asked again. While it waits, the run folder holds `waiting.pid`; Orchestra shows a waiting run whose process has exited as failed, and running the graph again with the same `thread_id` asks again.
 
 Your node functions are never wrapped. Their static out-edges are moved behind the check node, and with `approve` their static in-edges go through the approval node first. A gated node with conditional out-edges, `Command` destinations or a join edge is refused with an error, and so is an approval-gated node reached through a conditional edge.
 

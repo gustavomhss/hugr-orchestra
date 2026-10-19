@@ -106,6 +106,22 @@ describe("external relay runs", () => {
     expect(await seqs("?after=5")).toEqual([5, 6, 7])
   })
 
+  test("a run parked for approval stays waiting only while the process that asked is alive", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const lines = (await Bun.file(path.join(golden, "valid/approval/ledger.jsonl")).text()).split("\n").slice(0, 5)
+    await Promise.all(
+      ["alive", "gone"].map(async (name) => {
+        await fs.mkdir(path.join(runs(tmp.path), name), { recursive: true })
+        await Bun.write(path.join(runs(tmp.path), name, "ledger.jsonl"), lines.join("\n") + "\n")
+      }),
+    )
+    await Bun.write(path.join(runs(tmp.path), "alive", "waiting.pid"), String(process.pid))
+    expect((await get(tmp.path, "/api/relay/run/alive")).body.data.status).toBe("parked")
+    const gone = (await get(tmp.path, "/api/relay/run/gone")).body.data
+    expect(gone.status).toBe("failed")
+    expect(gone.reason).toMatch(/^The process that asked for this approval has exited/)
+  })
+
   test("an ID that does not match RUN_ID is refused", async () => {
     await using tmp = await tmpdir({ git: true })
     await place(path.join(runs(tmp.path), "bad.id"), "valid/pass")
