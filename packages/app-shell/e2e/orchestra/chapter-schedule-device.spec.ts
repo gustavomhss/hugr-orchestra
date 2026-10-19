@@ -76,7 +76,7 @@ test("due tasks dispatch while the page is open, recurring dates roll forward an
   await expect(once.locator("p").nth(1)).toContainText("1 run")
   // Paused tasks were skipped and the hourly task is not due again until 10:30.
   expect(api.created).toHaveLength(2)
-  expect(api.prompts.map((prompt) => prompt.body.text)).toEqual(["Check the build.", "Tag the release."])
+  expect(api.prompts.map((prompt) => (prompt.body.prompt as { text?: string } | undefined)?.text)).toEqual(["Check the build.", "Tag the release."])
 })
 
 test("a task overdue when the page opens runs at once; a one-off more than a day late is marked Missed", async ({
