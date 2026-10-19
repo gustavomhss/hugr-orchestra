@@ -1,3 +1,4 @@
+import { readFile } from "node:fs/promises"
 import { expect, test, type Page } from "@playwright/test"
 import { adopt, setupRelay } from "./relay.fixture"
 
@@ -124,7 +125,7 @@ test("final fixes: workflow download joins a pending save, is refused after a fa
     page.waitForEvent("download"),
     page.getByRole("menuitem", { name: "Download definition", exact: true }).click(),
   ])
-  const file = JSON.parse(await Bun.file((await download.path())!).text())
+  const file = JSON.parse(await readFile((await download.path())!, "utf8"))
   expect(file.format).toBe("orchestra-relay-workflow")
   expect(JSON.stringify(file.nodes)).toContain("Unsaved export input")
   expect(paths.some((path) => path.endsWith("/export"))).toBe(false)
