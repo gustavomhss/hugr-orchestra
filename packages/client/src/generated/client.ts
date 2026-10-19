@@ -18,6 +18,10 @@ import type {
   SessionsGetOutput,
   SessionsArchiveInput,
   SessionsArchiveOutput,
+  SessionsRenameInput,
+  SessionsRenameOutput,
+  SessionsRemoveInput,
+  SessionsRemoveOutput,
   SessionsGetSubagentModelsInput,
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
@@ -138,6 +142,9 @@ import type {
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
   ServerProjectListOutput,
+  ServerProjectDirectoriesInput,
+  ServerProjectDirectoriesOutput,
+  ServerConfigGetOutput,
   ServerConfigUpdateInput,
   ServerConfigUpdateOutput,
   RelayDocumentsListInput,
@@ -476,6 +483,29 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/archive`,
             body: { archived: input["archived"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      rename: (input: SessionsRenameInput, requestOptions?: RequestOptions) =>
+        request<SessionsRenameOutput>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/rename`,
+            body: { title: input["title"] },
+            successStatus: 204,
+            declaredStatuses: [404, 400, 401],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      remove: (input: SessionsRemoveInput, requestOptions?: RequestOptions) =>
+        request<SessionsRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}`,
             successStatus: 204,
             declaredStatuses: [404, 400, 401],
             empty: true,
@@ -1253,14 +1283,34 @@ export function make(options: ClientOptions) {
           { method: "GET", path: `/api/project`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
           requestOptions,
         ),
+      directories: (input: ServerProjectDirectoriesInput, requestOptions?: RequestOptions) =>
+        request<ServerProjectDirectoriesOutput>(
+          {
+            method: "GET",
+            path: `/api/project/${encodeURIComponent(input.projectID)}/directories`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
     },
     "server.config": {
+      get: (requestOptions?: RequestOptions) =>
+        request<ServerConfigGetOutput>(
+          { method: "GET", path: `/api/config`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
       update: (input?: ServerConfigUpdateInput, requestOptions?: RequestOptions) =>
         request<ServerConfigUpdateOutput>(
           {
             method: "PATCH",
             path: `/api/config`,
-            body: { model: input?.["model"], agents: input?.["agents"] },
+            body: {
+              model: input?.["model"],
+              agents: input?.["agents"],
+              disabledProviders: input?.["disabledProviders"],
+            },
             successStatus: 204,
             declaredStatuses: [401, 400],
             empty: true,

@@ -487,6 +487,17 @@ export type SessionsArchiveInput = {
 
 export type SessionsArchiveOutput = void
 
+export type SessionsRenameInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly title: { readonly title: string }["title"]
+}
+
+export type SessionsRenameOutput = void
+
+export type SessionsRemoveInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsRemoveOutput = void
+
 export type SessionsGetSubagentModelsInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
 export type SessionsGetSubagentModelsOutput = {
@@ -2813,19 +2824,40 @@ export type ServerProjectListOutput = ReadonlyArray<{
   readonly sandboxes: ReadonlyArray<string>
 }>
 
+export type ServerProjectDirectoriesInput = { readonly projectID: { readonly projectID: string }["projectID"] }
+
+export type ServerProjectDirectoriesOutput = ReadonlyArray<{
+  readonly directory: string
+  readonly strategy?: string | undefined
+}>
+
+export type ServerConfigGetOutput = {
+  readonly model?: string | undefined
+  readonly disabledProviders: ReadonlyArray<string>
+}
+
 export type ServerConfigUpdateInput = {
   readonly model?: {
     readonly model?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
   }["model"]
   readonly agents?: {
     readonly model?: string | undefined
     readonly agents?:
       | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
       | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
   }["agents"]
+  readonly disabledProviders?: {
+    readonly model?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
+  }["disabledProviders"]
 }
 
 export type ServerConfigUpdateOutput = void
