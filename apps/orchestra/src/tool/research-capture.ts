@@ -27,7 +27,7 @@ export const ResearchCaptureTool = Tool.define("research_capture", Effect.gen(fu
     return capture.withCapture(ctx, "research_capture", acquired.pipe(Effect.flatMap((result) => {
         if (!result.metadata.researchSource)
           return Effect.fail(new Research.Error({ code: "unsupported", message: "Acquisition returned no supported retained source" }))
-        return Effect.succeed({ title: "Research source captured", output: JSON.stringify(result.metadata.researchSource),
+        return Effect.succeed({ title: "Research source captured", output: result.output,
           metadata: { researchSource: result.metadata.researchSource,
             ...("researchReceived" in result.metadata ? { researchReceived: result.metadata.researchReceived } : {}) } })
       })), input)
@@ -44,7 +44,7 @@ export const ResearchCaptureTool = Tool.define("research_capture", Effect.gen(fu
       "resolve (one ref such as HEAD~1, a branch or a tag to its full commit hash); status (HEAD hash, current branch and dirty paths of the working tree).",
       "Other history operations take full commit hashes only (use resolve first), default revision to native HEAD, and report shallow/limited coverage and byte-bounded partial captures; no commands or process roots are accepted.",
       "Line numbers are always original-file lines, 1-based and inclusive: start/end select them, and a file capture returns lines {basis:\"original\", start, end}.",
-      "A capture whose bytes are already retained in this dispatch returns {ref, unchanged:true} and nothing else; a changed span returns the new capture with changed:true and the previous ref.",
+      "A new capture returns its receipt (cite its ref) on the first line, then the captured text, so do not read the same span again. A capture whose bytes are already retained in this dispatch returns {ref, unchanged:true} and nothing else; a changed span returns the new capture with changed:true and the previous ref.",
       "Receipts mark partial captures. Use research_view for retained bytes; no owner, digest, body or storage path accepted as authority.",
     ].join(" "),
     execute: (input: Research.CaptureInput, ctx: Tool.Context) => run(ctx, "research_capture", (binding) => Effect.gen(function* () {
@@ -57,7 +57,8 @@ export const ResearchCaptureTool = Tool.define("research_capture", Effect.gen(fu
 
 /**
  * Read dedup: bytes already retained in this dispatch come back as their ref alone, and a recaptured span whose bytes
- * changed says so. Retention itself is unchanged; only what the model reads shrinks.
+ * changed says so. Retention itself is unchanged; only what the model reads shrinks. A new capture returns its receipt
+ * on the first line and the captured text below it, so the seat never rereads a span to see what it just retained.
  */
 function compact(result: Tool.ExecuteResult, before: ReadonlyArray<Research.SourceReceipt>) {
   const decoded = Schema.decodeUnknownOption(Research.SourceReceipt)(result.metadata.researchSource)
@@ -73,5 +74,5 @@ function compact(result: Tool.ExecuteResult, before: ReadonlyArray<Research.Sour
     summary: `${receipt.origin.kind === "tool-output" ? "output" : receipt.origin.uri}${lines ? ` lines ${lines.start}-${lines.end}` : ""} is already retained in this dispatch with the same digest; reopen it with research_view only if it left your context` }) }
   const previous = receipt.origin.kind === "tool-output" ? undefined : before.find((source) => same(source) &&
     source.observed?.lineStart === receipt.observed?.lineStart && source.observed?.lineEnd === receipt.observed?.lineEnd)
-  return { ...result, output: JSON.stringify({ ...receipt, ...(lines ? { lines } : {}), ...(previous ? { changed: true, previous: previous.ref } : {}) }) }
+  return { ...result, output: `${JSON.stringify({ ...receipt, ...(lines ? { lines } : {}), ...(previous ? { changed: true, previous: previous.ref } : {}) })}\n\n${result.output}` }
 }

@@ -21,8 +21,12 @@ describe("JE-AC-EFF1: rereading an unchanged span costs under 200 tokens", () =>
       Array.from({ length: 40 }, (_, index) => index === 11 ? `const needle = ${value}` : `line ${index + 1}`).join("\n"))
     yield* write(1)
     const span = { kind: "file", path: "span.ts", start: 10, end: 14 }
-    const first = JSON.parse((yield* fixture.run("research_capture", span)).output)
+    const captured = (yield* fixture.run("research_capture", span)).output
+    const first = JSON.parse(captured.split("\n")[0])
     expect(first.lines).toEqual({ basis: "original", start: 10, end: 14 })
+    // A new capture shows what it retained below its receipt, so the seat never rereads the span to see it.
+    // Mutation control: return only the receipt line from `compact` in src/tool/research-capture.ts.
+    expect(captured).toContain("12: const needle = 1")
 
     const again = yield* fixture.run("research_capture", span)
     expect(JSON.parse(again.output)).toMatchObject({ unchanged: true, ref: first.ref })
@@ -32,7 +36,7 @@ describe("JE-AC-EFF1: rereading an unchanged span costs under 200 tokens", () =>
     expect(again.output.length / 4).toBeLessThan(200)
 
     yield* write(2)
-    expect(JSON.parse((yield* fixture.run("research_capture", span)).output)).toMatchObject({ changed: true, previous: first.ref })
+    expect(JSON.parse((yield* fixture.run("research_capture", span)).output.split("\n")[0])).toMatchObject({ changed: true, previous: first.ref })
 
     yield* fixture.run("research_view", { action: "source", ref: first.ref })
     const reopened = yield* fixture.run("research_view", { action: "source", ref: first.ref })
@@ -68,8 +72,11 @@ describe("JE-AC-H1, H2: git history in the linked repository", () => {
     yield* Effect.acquireRelease(Effect.sync(() => Object.assign(process.env, redirected)), () => Effect.sync(() =>
       Object.entries(saved).forEach(([key, value]) => value === undefined ? delete process.env[key] : process.env[key] = value)))
 
-    const log = yield* structured(yield* fixture.run("research_capture", { kind: "history", operation: "log", path: "tracked.txt" }))
+    const logged = yield* fixture.run("research_capture", { kind: "history", operation: "log", path: "tracked.txt" })
+    const log = yield* structured(logged)
     expect(log.commits).toEqual([second, first])
+    // The history projection is in the output itself, not only behind a research_view.
+    expect(logged.output).toContain(second)
     // H2: a relative ref resolves to the full hash.
     const resolved = yield* structured(yield* fixture.run("research_capture", { kind: "history", operation: "resolve", ref: "HEAD~1" }))
     expect(resolved).toMatchObject({ operation: "resolve", ref: "HEAD~1", commit: first })

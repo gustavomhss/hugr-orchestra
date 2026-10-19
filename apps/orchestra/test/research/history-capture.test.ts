@@ -130,7 +130,7 @@ describe("research read dedup and original coordinates", () => {
     yield* fs.writeFileString(file, Array.from({ length: 40 }, (_, index) => index === 11 ? "const needle = 1" : `line ${index + 1}`).join("\n"))
     const span = { kind: "file", path: "span.ts", start: 10, end: 14 }
     const first = yield* fixture.run("research_capture", span)
-    const captured = JSON.parse(first.output)
+    const captured = JSON.parse(first.output.split("\n")[0])
     expect(captured.lines).toEqual({ basis: "original", start: 10, end: 14 })
 
     const again = yield* fixture.run("research_capture", span)
@@ -141,7 +141,7 @@ describe("research read dedup and original coordinates", () => {
     expect(again.output.length / 4).toBeLessThan(200)
 
     yield* fs.writeFileString(file, Array.from({ length: 40 }, (_, index) => index === 11 ? "const needle = 2" : `line ${index + 1}`).join("\n"))
-    const changed = JSON.parse((yield* fixture.run("research_capture", span)).output)
+    const changed = JSON.parse((yield* fixture.run("research_capture", span)).output.split("\n")[0])
     expect(changed).toMatchObject({ changed: true, previous: captured.ref, lines: { basis: "original", start: 10, end: 14 } })
     expect(changed.ref.digest).not.toBe(captured.ref.digest)
 

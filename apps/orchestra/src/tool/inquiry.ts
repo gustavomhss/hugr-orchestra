@@ -11,6 +11,7 @@ import { MessageV2 } from "@/session/message-v2"
 import { ResearchExecution } from "@/research/allowance"
 import { ResearchTools } from "@/research/binding"
 import { ResearchInquiry } from "@/research/inquiry"
+import type { InquiryCheck } from "@/research/inquiry-check"
 import { Tool } from "./tool"
 import { ToolJsonSchema } from "./json-schema"
 import DESCRIPTION from "./inquiry.txt"
@@ -41,7 +42,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
       const state = ResearchInquiry.fold(steps)
       const refuse = (message: string) => new Research.Error({ code: "inquiry_state", message })
       if (state.phase === "closed") return yield* refuse("inquiry closed")
-      if (state.phase === "none" && input.action !== "open" && input.action !== "status")
+      if (state.phase === "none" && input.action !== "open" && input.action !== "status" && input.action !== "close")
         return yield* refuse("open the inquiry first: inquiry open with the question and its subquestions")
       const write = (record: Research.RecordInput, slot: string) => records.record(binding, context, record, slot).pipe(
         Effect.flatMap((mutation) => mutation.record ? Effect.succeed({ id: mutation.record.id, revision: mutation.record.revision })
@@ -59,18 +60,29 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
         const found = state.subquestions.find((sub) => sub.ref.id === ref.id)
         return found ? Effect.succeed(found) : Effect.fail(refuse(`${ref.id} is not a subquestion of this inquiry`))
       }
+      const open = (input: Pick<Extract<Input, { action: "open" }>, "question" | "subquestions" | "profile" | "genre">) => Effect.gen(function* () {
+        const selection = { profile: input.profile, depth: allowance.tier, genre: input.genre ?? "answer" } as const
+        const question = yield* write({ action: "question", question: input.question, selection }, "open:question")
+        const subquestions = yield* Effect.forEach(input.subquestions, (text, index) => write({ action: "question", question: text, selection },
+          `open:subquestion:${index}`).pipe(Effect.tap((ref) => relate(ref, question, "depends-on", "subquestion", `open:depends:${index}`))))
+        yield* records.inquire(allowance, context, { type: "research.inquiry.opened", question, subquestions })
+        return { question, subquestions }
+      })
+      const claim = (input: Research.InlineClaim, sub: Research.RecordRef, slot: string) => Effect.gen(function* () {
+        const ref = yield* write({ action: "finding", proposition: input.proposition, nature: input.nature, conditions: ResearchInquiry.conditions(input),
+          evidence: input.evidence.map(ResearchInquiry.evidence), contrary: (input.contrary ?? []).map(ResearchInquiry.evidence) }, slot)
+        yield* relate(ref, sub, "answers", "claim", `${slot}:link`)
+        return ref
+      })
+      const failed = (outcome: InquiryCheck.Outcome) => refuse(`the closing check failed: ${outcome.result.issues.slice(0, 16).map((issue) =>
+        `${issue.rule}${issue.ref ? ` ${issue.ref.id}` : ""}${issue.citation ? ` ${issue.citation}` : ""} ${issue.reason}`).join("; ")}`)
       const reply: unknown = yield* Effect.gen(function* () {
         if (input.action === "open") {
           // An exact retry replays its writes; a second open of the same dispatch is refused before any write.
           const retry = steps.some((step) => step.type === "research.inquiry.opened" &&
             step.data.operation === ResearchLedger.operation(context, "research.inquiry.opened"))
           if (state.phase !== "none" && !retry) return yield* refuse("the inquiry is already open in this dispatch")
-          const selection = { profile: input.profile, depth: allowance.tier, genre: input.genre ?? "answer" } as const
-          const question = yield* write({ action: "question", question: input.question, selection }, "open:question")
-          const subquestions = yield* Effect.forEach(input.subquestions, (text, index) => write({ action: "question", question: text, selection },
-            `open:subquestion:${index}`).pipe(Effect.tap((ref) => relate(ref, question, "depends-on", "subquestion", `open:depends:${index}`))))
-          yield* records.inquire(allowance, context, { type: "research.inquiry.opened", question, subquestions })
-          return { question, subquestions }
+          return yield* open(input)
         }
         if (input.action === "hypothesize") {
           const sub = yield* subquestion(input.subquestion)
@@ -81,11 +93,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
         }
         if (input.action === "claim") {
           const sub = yield* subquestion(input.subquestion)
-          const claim = yield* write({ action: "finding", proposition: input.proposition, nature: input.nature,
-            conditions: [...(input.conditions ?? []), ...(input.scope ? [`scope:${input.scope}`] : [])],
-            evidence: input.evidence.map(ResearchInquiry.evidence), contrary: (input.contrary ?? []).map(ResearchInquiry.evidence) }, "claim")
-          yield* relate(claim, sub.ref, "answers", "claim", "claim:link")
-          return { claim }
+          return { claim: yield* claim(input, sub.ref, "claim") }
         }
         if (input.action === "resolve") {
           const hypothesis = state.hypotheses.find((item) => item.ref.id === input.hypothesis.id)
@@ -109,18 +117,33 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
           return { check }
         }
         if (input.action === "close") {
-          const refusal = ResearchInquiry.refusal(state, input.sufficiency)
+          // At tier quick a close may open the inquiry itself, with its question as the one subquestion.
+          if (state.phase === "none" && (allowance.tier !== "quick" || !input.question))
+            return yield* refuse(allowance.tier === "quick" ? "with no open inquiry, close needs question: the question it answers"
+              : "open the inquiry first: inquiry open with the question and its subquestions")
+          // The close checks its own claims and answer on a draft before writing anything, so a refused close leaves
+          // nothing to drop; its failures refuse an answered close by name and become limitations short of answered.
+          const draft = ResearchInquiry.draft(state, input)
+          if (typeof draft === "string") return yield* refuse(draft)
+          const refusal = ResearchInquiry.refusal(draft, input.sufficiency)
           if (refusal) return yield* refuse(refusal)
-          // The close re-runs the check on the final state; its failures become the card's limitations short of answered.
-          const outcome = yield* ResearchInquiry.check(state, input, yield* deps)
-          if (input.sufficiency === "answered" && outcome.result.verdict !== "pass")
-            return yield* refuse(`the closing check failed: ${outcome.result.issues.slice(0, 16).map((issue) =>
-              `${issue.rule}${issue.citation ? ` ${issue.citation}` : ""} ${issue.reason}`).join("; ")}`)
+          const outcome = yield* ResearchInquiry.check(draft, input, yield* deps)
+          if (input.sufficiency === "answered" && outcome.result.verdict !== "pass") return yield* failed(outcome)
+          const opened = state.phase === "none"
+            ? yield* open({ question: input.question!, subquestions: [input.question!], profile: "understand" }) : undefined
+          // Each inline claim is written under the subquestion the draft placed it in.
+          const placement = new Map<string, number>(draft.subquestions.flatMap((sub, position) => sub.claims.map((ref) => [ref.id, position] as const)))
+          const subquestions = opened ? opened.subquestions : state.subquestions.map((sub) => sub.ref)
+          yield* Effect.forEach(input.claims ?? [], (item, index) => claim(item, subquestions[placement.get(`claim-${index + 1}`) ?? 0], `claim:${index}`),
+            { discard: true })
+          const final = opened || input.claims?.length ? ResearchInquiry.fold(yield* load()) : state
+          const settled = final === state ? outcome : yield* ResearchInquiry.check(final, input, yield* deps)
+          if (input.sufficiency === "answered" && settled.result.verdict !== "pass") return yield* failed(settled)
           const corpus = yield* records.view(binding, { action: "corpus" })
           const documents = "documents" in corpus ? corpus.documents.map((document) => document.ref) : []
-          const card = ResearchInquiry.card(state, { allowance, close: input, outcome, domains: yield* AllowedDomains, documents })
+          const card = ResearchInquiry.card(final, { allowance, close: input, outcome: settled, domains: yield* AllowedDomains, documents })
           yield* records.inquire(allowance, context, { type: "research.inquiry.closed", card })
-          return { closed: input.sufficiency, check: outcome.result.verdict }
+          return { closed: input.sufficiency, check: settled.result.verdict }
         }
         return { phase: state.phase, check: state.check ?? null }
       })

@@ -327,17 +327,21 @@ export type Evidence = typeof Evidence.Type
 export const Sufficiency = Schema.Literals(["answered", "partial", "blocked"])
 export type Sufficiency = typeof Sufficiency.Type
 
+const ClaimFields = {
+  proposition: text(8192), nature: Schema.Literals(["extraction", "observation", "inference"]), evidence: list(Evidence),
+  contrary: optional(list(Evidence)), conditions: optional(list(text(4096))), scope: optional(Schema.Literals(["universal", "existential"])),
+}
+/** A claim written by `close` itself; `subquestion` may be omitted when the inquiry has exactly one (J5.4). */
+export const InlineClaim = struct("Research.InquiryInlineClaim", { subquestion: optional(RecordRef), ...ClaimFields })
+export type InlineClaim = typeof InlineClaim.Type
+
 export const InquiryInput = Schema.Union([
   struct("Research.InquiryOpen", {
     action: Schema.Literal("open"), question: text(8192), subquestions: list(text(4096), 6).check(Schema.isMinLength(1)),
     profile: Profile, genre: optional(Genre),
   }),
   struct("Research.InquiryHypothesize", { action: Schema.Literal("hypothesize"), subquestion: RecordRef, proposition: text(8192) }),
-  struct("Research.InquiryClaim", {
-    action: Schema.Literal("claim"), subquestion: RecordRef, proposition: text(8192),
-    nature: Schema.Literals(["extraction", "observation", "inference"]), evidence: list(Evidence), contrary: optional(list(Evidence)),
-    conditions: optional(list(text(4096))), scope: optional(Schema.Literals(["universal", "existential"])),
-  }),
+  struct("Research.InquiryClaim", { action: Schema.Literal("claim"), subquestion: RecordRef, ...ClaimFields }),
   struct("Research.InquiryResolve", {
     action: Schema.Literal("resolve"), hypothesis: RecordRef, status: Schema.Literals(["confirmed", "refuted"]), evidence: list(Evidence),
   }),
@@ -346,6 +350,9 @@ export const InquiryInput = Schema.Union([
   struct("Research.InquiryClose", {
     action: Schema.Literal("close"), sufficiency: Sufficiency, answer: text(32768),
     limitations: optional(list(text(4096))), nextActions: optional(list(text(4096))),
+    // The claims this close writes, checked before any is written; and, at tier quick with no open inquiry, the question
+    // it answers, which opens the inquiry with that one subquestion (J5.4).
+    claims: optional(list(InlineClaim, 32)), question: optional(text(8192)),
   }),
   struct("Research.InquiryStatus", { action: Schema.Literal("status") }),
 ])

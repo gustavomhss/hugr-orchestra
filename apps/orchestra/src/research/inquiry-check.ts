@@ -78,6 +78,7 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
   const count = (rule: Rule, by = 1) => checked.set(rule, checked.get(rule)! + by)
   const fail = (rule: Rule, reason: string, extra?: Partial<Issue>) => { issues.push({ rule, reason, ...extra }) }
   const strict = (input.sufficiency ?? "answered") === "answered"
+  const limitations: string[] = []
 
   const receipts = new Map(input.sources.map((receipt) => [ResearchLedger.canonical(receipt.ref), receipt]))
   const texts = new Map<string, { ok: true; text: string } | { ok: false; code: string }>()
@@ -197,17 +198,23 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
     count("R1")
     const primary = good.some((item) => {
       const origin = receipts.get(ResearchLedger.canonical(item.source))!.origin
+      // Git history the host queried itself (research_capture kind "history") is primary for what the history says.
       return origin.kind === "file" || origin.kind === "url" || (origin.kind === "tool-output" && origin.uri.startsWith("probe:"))
+        || (origin.kind === "tool-output" && /^native:[^/]+\/[^/]+\/[^/]+\/git-[a-z]+$/.test(origin.uri))
     })
     if (good.length && !primary) fail("R1", "no primary source: tool output and atlas-own memory cannot be a claim's only evidence", at)
-    const universal = claim.scope === "universal" || UNIVERSAL.test(claim.proposition)
+    const word = UNIVERSAL.exec(claim.proposition)?.[0]
+    const universal = claim.scope === "universal" || word !== undefined
     const absence = ABSENCE.test(claim.proposition)
     if (universal) count("R5")
     if (absence) count("R6")
-    // The claim must name the scope of a complete search; "complete" without a scope would prove nothing.
-    const searched = input.searches.some((search) => search.complete &&
-      search.scope.some((entry) => entry.trim() !== "" && claim.conditions.some((condition) => condition.includes(entry))))
-    if (universal && !searched) fail("R5", "universal claim without a complete code_search or code_query whose scope is in its conditions", at)
+    // The claim must name the scope of a complete search; "complete" without a scope would prove nothing. The host finds
+    // it in the claim's conditions, or as a whole term of its proposition, so the seat never restates a search it ran.
+    const searched = input.searches.some((search) => search.complete && search.scope.some((entry) => entry.trim() !== "" &&
+      (claim.conditions.some((condition) => condition.includes(entry)) || terms(entry).some((term) => names(claim.proposition, term)))))
+    // The reason names the trigger and every way out, so the seat fixes the claim in one try.
+    // The reason names the trigger and the ways out, so the seat fixes the claim in one try.
+    if (universal && !searched) fail("R5", `${word ? `universal wording "${word}"` : "universal scope"} without a complete code_search or code_query whose pattern or path the claim names; name one in its conditions or proposition, or reword`, at)
     if (absence && !searched) fail("R6", "absence claim without a complete code_search or code_query whose scope is in its conditions", at)
     return primary && good.length > 0
   }))
@@ -256,14 +263,16 @@ export const run = Effect.fn("InquiryCheck.run")(function* (input: Input) {
       : span.file !== undefined && exact!.has(normal(span.file)))
     if (!lined) return rematched.length ? undefined : fail("R9", "no evidence for this path", at)
     if (!rematched.length) return fail("R9", "no evidence for this path or URL", at)
-    if (!rematched.some((span) => span.start <= citation.start! && citation.end! <= span.end))
+    // Adjacent or overlapping evidence of the same file covers a range together; the first line no span covers decides.
+    const uncovered = rematched.toSorted((a, b) => a.start - b.start)
+      .reduce((next, span) => span.start <= next && next <= span.end ? span.end + 1 : next, citation.start!)
+    if (uncovered <= citation.end!)
       fail("R9", `lines ${citation.start}-${citation.end} are outside the evidence held (${rematched.map((span) => `${span.start}-${span.end}`).join(", ")})`, at)
   }))
 
   // R10, R11: every cited URL and every captured URL source is alive and allowed.
   const urls = [...new Set([...citations.filter((citation) => citation.kind === "url").map((citation) => citation.target), ...urlSources.map((receipt) => receipt.origin.uri)])]
   const statuses = yield* input.liveness(urls)
-  const limitations: string[] = []
   statuses.forEach((status) => {
     count("R10")
     count("R11")
@@ -360,4 +369,21 @@ function normal(value: string) {
 
 function clip(value: string, limit: number) {
   return value.length <= limit ? value : `${value.slice(0, limit - 3)}...`
+}
+
+/** A search scope's terms: the scope itself, or each top-level alternative of a regex such as `Foo|def bar`. */
+function terms(scope: string) {
+  const parts = scope.split("").reduce((acc, char, index) => {
+    if (char === "(" && scope[index - 1] !== "\\") acc.depth++
+    if (char === ")" && scope[index - 1] !== "\\") acc.depth--
+    if (char === "|" && acc.depth === 0 && scope[index - 1] !== "\\") acc.parts.push("")
+    else acc.parts[acc.parts.length - 1] += char
+    return acc
+  }, { depth: 0, parts: [""] }).parts
+  return parts.map((part) => part.trim()).filter((part) => part.length >= 3 && !/[\\[\]()*+?{}^$]/.test(part))
+}
+
+/** The proposition names the term as a whole token, not inside a longer identifier. */
+function names(proposition: string, term: string) {
+  return new RegExp(`(?<![\\p{L}\\p{N}_])${term.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}(?![\\p{L}\\p{N}_])`, "u").test(proposition)
 }

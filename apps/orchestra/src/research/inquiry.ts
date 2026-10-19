@@ -228,13 +228,48 @@ export function drain(
   }))
 }
 
-/** Why the inquiry cannot close now, or undefined. The host refuses to close over an uncovered subquestion (efficiency.md). */
+type Close = Extract<Research.InquiryInput, { action: "close" }>
+
+/**
+ * The state a close is checked on before it writes anything: its implicit quick open (one subquestion, the question) and
+ * its inline claims under provisional refs claim-1, claim-2..., so a failing close leaves no claim behind. A string is
+ * the reason a claim cannot be placed.
+ */
+export function draft(state: State, close: Close): State | string {
+  const subquestions: Subquestion[] = state.phase === "none"
+    ? [{ ref: provisional("subquestion-1"), question: close.question ?? "", claims: [] }]
+    : state.subquestions.map((sub) => ({ ...sub, claims: [...sub.claims] }))
+  const placed = (close.claims ?? []).map((claim, index) => {
+    const sub = claim.subquestion ? subquestions.find((item) => item.ref.id === claim.subquestion!.id)
+      : subquestions.length === 1 ? subquestions[0] : undefined
+    sub?.claims.push(provisional(`claim-${index + 1}`))
+    return { claim, index, sub }
+  })
+  const lost = placed.find((item) => !item.sub)
+  if (lost) return `claim-${lost.index + 1} needs subquestion, one of ${subquestions.map((sub) => sub.ref.id).join(", ")}`
+  const claims = placed.map((item): Claim => {
+    const ref = provisional(`claim-${item.index + 1}`)
+    return { ref, proposition: item.claim.proposition, nature: item.claim.nature, subquestion: item.sub!.ref.id,
+      evidence: item.claim.evidence.map(evidence), contrary: (item.claim.contrary ?? []).map(evidence), conditions: conditions(item.claim) }
+  })
+  return { ...state, phase: state.phase === "none" ? "investigating" : state.phase, subquestions, claims: [...state.claims, ...claims] }
+}
+
+// A draft ref names what the close has not written yet; it never reaches the ledger.
+const provisional = (id: string) => ({ id, revision: 0 }) as Research.RecordRef
+
+/** A claim's conditions as recorded: its own, then its declared scope. */
+export function conditions(claim: Research.InlineClaim) {
+  return [...(claim.conditions ?? []), ...(claim.scope ? [`scope:${claim.scope}`] : [])]
+}
+
+/**
+ * Why the inquiry cannot close now, or undefined. The host refuses to close over an uncovered subquestion (efficiency.md).
+ * No earlier check is required: close runs the check itself on the final state and answer.
+ */
 export function refusal(state: State, sufficiency: Research.Sufficiency) {
   if (state.phase === "none") return "open the inquiry first"
   if (state.phase === "closed") return "inquiry closed"
-  if (!state.check) return "no check is registered: run inquiry check before close"
-  if (state.stale) return "a write after the last check invalidated it: run inquiry check again"
-  if (sufficiency === "answered" && state.check.verdict !== "pass") return "the last check failed: answered needs a passing check; close partial or blocked, or fix the issues"
   if (sufficiency === "blocked") return undefined
   const open = state.subquestions.filter((sub) => !sub.gap && !state.claims.some((claim) => !claim.dropped && claim.subquestion === sub.ref.id))
   if (open.length) return `subquestion ${open.map((sub) => sub.ref.id).join(", ")} has neither an answering claim nor a declared gap: claim it, or drop it with the reason`
@@ -293,7 +328,8 @@ const SNAPSHOT_CHARS = 4500
  */
 export function snapshot(state: State, allowance: Research.Allowance) {
   const budget = `tier ${allowance.tier}; used tools ${state.used.tool}/${allowance.toolLimit}, provider ${state.used.provider}/${allowance.providerLimit}, bytes ${state.used.bytes}/${allowance.byteLimit}, deadline ${allowance.deadlineSeconds}s, probe ${state.used.probe}/${allowance.probeSecondsLimit}s`
-  if (state.phase === "none") return [`<inquiry state="none">`, budget, "Open it with inquiry open before investigating.", "</inquiry>"].join("\n")
+  if (state.phase === "none") return [`<inquiry state="none">`, budget, allowance.tier === "quick"
+    ? "Investigate, then inquiry close with question, claims and answer." : "Open it with inquiry open before investigating.", "</inquiry>"].join("\n")
   const ref = (item: Research.RecordRef) => `${item.id}@${item.revision}`
   const label = (text: string) => JSON.stringify(text.length > 80 ? `${text.slice(0, 77)}...` : text)
   const check = state.check
@@ -326,6 +362,6 @@ function next(state: State) {
   const open = state.subquestions.filter((sub) => !sub.gap && !state.claims.some((claim) => !claim.dropped && claim.subquestion === sub.ref.id))
   if (open.length) return `cover ${open.map((sub) => sub.ref.id).join(", ")} with a claim, or drop it with the gap`
   if (state.hypotheses.some((item) => item.status === "open")) return "resolve or drop the open hypotheses"
-  if (!state.check || state.stale) return "inquiry check"
-  return state.check.verdict === "pass" ? "inquiry close" : "fix the check issues, or close partial or blocked"
+  if (state.check && !state.stale && state.check.verdict !== "pass") return "fix the check issues, or close partial or blocked"
+  return "inquiry close; it runs the check and names what to fix"
 }
