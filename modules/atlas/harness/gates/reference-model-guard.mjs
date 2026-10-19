@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 40 · dead-value-exports: 145 · type-reachable: 4
+//   declared-modules: 41 · dead-value-exports: 147 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run//   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
 //
@@ -226,6 +226,9 @@ const BUILTIN_LEDGER = {
   //    assembly at the end of every pass (WP-8.29.GEN / GEN-9), so the module is SHIPPED, not a reference model.
   //    The un-wired remainder below is the genuine residue.
   "packages/genesis/src/align.ts": { values: 7, shipped: null, banner: false },
+  // R11 (B-R11-01): the question rules land one task before their reader. B-R11-02a wires them (and align.ts's
+  // `assembleInterview`) to `atlas interview` and DELETES this row and the align.ts row above.
+  "packages/genesis/src/open-questions.ts": { values: 2, shipped: null, banner: false },
   "packages/genesis/src/cost-policy.ts": { values: 13, shipped: null, banner: false },
   "packages/genesis/src/loops.ts": { values: 8, shipped: null, banner: false },
   "packages/genesis/src/usefulness.ts": { values: 2, shipped: null, banner: false },
