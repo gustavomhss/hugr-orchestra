@@ -1,3 +1,4 @@
+import { Orchestra } from "@orchestra/client"
 import { createOrchestraClient } from "../compat/sdk-v2-client"
 import { OpenCode, type OpenCodeClient } from "../compat/vendored-client-promise"
 import type { ServerConnection } from "@/context/server"
@@ -45,7 +46,7 @@ export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
 }): OpenCodeClient {
-  return OpenCode.make({
+  const options = {
     baseUrl: input.server.url,
     fetch: input.fetch,
     headers: input.server.password
@@ -56,7 +57,47 @@ export function createApiForServer(input: {
           })}`,
         }
       : undefined,
-  })
+  }
+  const api = OpenCode.make(options)
+  // The bundled client sends the prompt flat (`text`, `files`, `agents`); the Orchestra V2 server takes it nested under
+  // `prompt` with `source` for mentions, so prompts go through the repo's own client.
+  const orchestra = Orchestra.make(options)
+  return {
+    ...api,
+    session: {
+      ...api.session,
+      prompt: (value, requestOptions) =>
+        orchestra.sessions
+          .prompt(
+            {
+              sessionID: value.sessionID,
+              id: value.id,
+              prompt: {
+                text: value.text,
+                files: value.files?.map((file) => ({
+                  uri: file.uri,
+                  name: file.name,
+                  description: file.description,
+                  source: file.mention,
+                })),
+                agents: value.agents?.map((agent) => ({ name: agent.name, source: agent.mention })),
+              },
+              delivery: value.delivery,
+              resume: value.resume,
+            },
+            requestOptions,
+          )
+          .then((admitted) => ({
+            admittedSeq: admitted.admittedSeq,
+            id: admitted.id,
+            sessionID: admitted.sessionID,
+            timeCreated: admitted.timeCreated,
+            type: "user" as const,
+            data: { text: value.text },
+            delivery: admitted.delivery,
+          })),
+    },
+  }
 }
 
 export type ServerApi = OpenCodeClient
