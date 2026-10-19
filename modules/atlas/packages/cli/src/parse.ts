@@ -119,6 +119,8 @@ export const ARITY: Record<Command, number> = {
   territory: 1,
   // `own-export <unit...> --out <file>` — at least one unit path (R7); `--out` is a valued flag.
   "own-export": 1,
+  // `repair --worklist <file>` takes NO positional; the worklist file rides the valued flag (R9).
+  repair: 0,
 }
 
 // [ENTRY-CLI-5 clean-up] this used to be a HAND-TRANSCRIBED string literal — a second copy of `COMMANDS`
@@ -139,7 +141,7 @@ function isCommand(s: string): s is Command {
  * flag simply folds into the bag (a bare `--x` becomes `'true'`) — never a parse error, preserving totality.
  *  EXPORTED — `help.ts` (ENTRY-CLI-5) lists these as the flags help names, rather than a second hand-
  *  transcribed set. */
-export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id", "tier", "project", "out"])
+export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id", "tier", "project", "out", "worklist"])
 
 /**
  * Fold one `-x`/`--x`/`--x=y`/`--x y` token into the flag bag — a bare flag is `'true'`. For a VALUED flag in

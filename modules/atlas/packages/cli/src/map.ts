@@ -108,6 +108,7 @@ export const COMMANDS = [
   "import",
   "territory",
   "own-export",
+  "repair",
 ] as const
 export type Command = (typeof COMMANDS)[number]
 
@@ -254,6 +255,8 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   //                           knowledge, so it binds a READ leg — the `export` precedent (a file, never the store).
   "own-export": "atlas-query", // OPS (R7): reads the live store's `own` briefings and writes a reviewed-snapshot FILE;
   //                              it never writes the store or OWN-SNAPSHOT.json (the materializer does).
+  repair: "atlas-query", // OPS (R9): own-export + the materializer + a git branch and a PR; it writes files and git
+  //                       history, never the store, so it binds a READ leg (the `export` precedent).
 }
 
 export type Authority = "read" | "write"
