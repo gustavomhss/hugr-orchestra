@@ -3,7 +3,7 @@ import type { BoundHeader } from "@orchestra/atlas-boundary/native-header"
 import { Effect } from "effect"
 import type { Agent } from "@/agent/agent"
 import { InstanceRef } from "@/effect/instance-ref"
-import { LEGACY_BACKEND_ID } from "./roster"
+import { LEGACY_BACKEND_ID } from "@orchestra/maestro/roster"
 import { AtlasMemory } from "./atlas-memory"
 
 // Native Atlas seats' running header (Awareness, Orientation and their own top-12 project rules) as one

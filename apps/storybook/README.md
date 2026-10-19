@@ -39,7 +39,7 @@ Storybook workbench for the ui, session-ui and app components.
 ## Module contract
 - Package: `@orchestra/storybook` at `apps/storybook` (alias `storybook`)
 - Summary: Storybook workbench for the ui, session-ui and app components.
-- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `composition`, `ui`, `terminal-ui`
+- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `product`, `composition`, `ui`, `terminal-ui`
 - Status: `canonical`
 - Owner: UI maintainer
 - Public entry: application entrypoint, no library exports

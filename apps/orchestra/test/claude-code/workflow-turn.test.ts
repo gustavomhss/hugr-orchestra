@@ -6,7 +6,7 @@ import { ProviderV2 } from "@orchestra/core/provider"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { ClaudeCode } from "@/claude-code/engine"
 import { ClaudeCodeTools } from "@/claude-code/tools"
-import { ClaudeHostAdmission } from "@/claude-code/host/admission"
+import { ClaudeHostAdmission } from "@orchestra/engine-claude-code/host/admission"
 import { MessageID, PartID } from "@/session/schema"
 import { ClaudeEngineFixture } from "./engine-fixture"
 

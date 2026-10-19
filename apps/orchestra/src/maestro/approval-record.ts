@@ -18,7 +18,7 @@ import {
   type ApprovalMessage,
   type ApprovalPresentation,
   type ApprovalResult,
-} from "./approval"
+} from "@orchestra/maestro/approval"
 
 type PresentApprovalInput = Omit<ApprovalPresentation, "id" | "assistantMessageID" | "actor"> & {
   sessionID: string

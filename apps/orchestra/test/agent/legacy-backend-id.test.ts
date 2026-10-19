@@ -11,7 +11,7 @@ import { Plugin } from "../../src/plugin"
 import { Provider } from "../../src/provider/provider"
 import { Session } from "../../src/session/session"
 import { Skill } from "../../src/skill"
-import { BACKEND_DEFAULT_LABEL, LEGACY_BACKEND_ID } from "../../src/maestro/roster"
+import { BACKEND_DEFAULT_LABEL, LEGACY_BACKEND_ID } from "@orchestra/maestro/roster"
 import { disposeAllInstances } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

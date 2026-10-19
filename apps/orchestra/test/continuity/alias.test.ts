@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { SessionV1 } from "@orchestra/core/v1/session"
-import { aliases, child, userText } from "@/continuity/alias"
+import { aliases, child, userText } from "@orchestra/continuity/alias"
 import { MessageID, PartID } from "@/session/schema"
 import { messages, sessionID } from "./memory-fixture"
 

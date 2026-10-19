@@ -1,7 +1,7 @@
 import { expect } from "bun:test"
 import path from "node:path"
 import { Effect } from "effect"
-import { userText } from "@/continuity/alias"
+import { userText } from "@orchestra/continuity/alias"
 import { Session } from "../../src/session/session"
 import { SessionPrompt } from "../../src/session/prompt"
 import { TestInstance } from "../fixture/fixture"

@@ -6,11 +6,11 @@ import type { ToolSafety } from "@orchestra/core/tool-safety"
 import type { RecordRef } from "@orchestra/atlas-boundary/native-memory"
 import { AtlasMemory } from "./atlas-memory"
 import type { ArsenalCompletion } from "./arsenal-completion"
-import { Seats, type Seat } from "./seats"
+import { Seats, type Seat } from "@orchestra/maestro/seats"
 import type { Research } from "@orchestra/schema/research"
 import type { ResearchQualifications } from "@/research/qualifications"
 import type { ResearchCitationCheck } from "@/research/citation-check"
-import { UpstreamResult } from "./upstream-result"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
 import { OUTCOME_KEY, readOutcome, type Outcome } from "../plugin/hugr-composer/outcome"
 
 // The worker-claim card the backend specialist ends its final message with (charter draft v2, F4 cl.5 as amended by F4-CH).

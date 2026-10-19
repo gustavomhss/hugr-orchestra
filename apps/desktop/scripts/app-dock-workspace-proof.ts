@@ -11,7 +11,7 @@ import { AppDockNativeWorkspace } from "../src/main/app-dock-native-workspace"
 import { NativeDockProtocol } from "../src/main/app-dock-native-protocol"
 import { AppDockRPC } from "../src/main/app-dock-rpc"
 import { DockerEngine } from "../src/main/docker-engine"
-import { createAppDockHooks } from "../../orchestra/src/plugin/app-dock"
+import { createAppDockHooks } from "@orchestra/app-dock/app-dock"
 
 type Options = { output: string; root?: string; image?: string; context?: string; nativePayload?: string; suppressAction?: boolean; diagnosticCase?: string }
 type Item = { ref: NativeDockProtocol.NativeRef; role: number; name: string; depth: number; states: number[]; interfaces: string[];
@@ -193,7 +193,7 @@ export async function run(options: Options) {
     "app-dock-native-protocol", "app-dock-native", "app-dock-rpc", "app-dock-api", "docker-engine"].map((name) => join(import.meta.dir, `../src/main/${name}.ts`))
   const context = resolve(options.context ?? join(import.meta.dir, "../resources/linux-runtime"))
   const payload = resolve(options.nativePayload ?? join(import.meta.dir, "../resources/linux/app-dock-accessibility"))
-  sources.push(import.meta.path, manifest, join(import.meta.dir, "../../orchestra/src/plugin/app-dock.ts"), ...["index", "tool"].map((name) => join(checkout, `packages/plugin/src/${name}.ts`)),
+  sources.push(import.meta.path, manifest, join(import.meta.dir, "../../../modules/app-dock/src/app-dock.ts"), ...["index", "tool"].map((name) => join(checkout, `packages/plugin/src/${name}.ts`)),
     ...["workspace.py", "Dockerfile", "seccomp.json"].map((name) => join(context, name)),
     ...["actions", "bindings", "bus", "context", "keyboard", "main", "refs", "snapshot"].map((name) => join(payload, `${name}.py`)))
   const hashes = () => Promise.all(sources.map(async (path) => { const bytes = await Bun.file(path).bytes(); check(bytes.length > 0, `source-empty:${path}`); return { path, bytes: bytes.length, sha256: hash(bytes) } }))

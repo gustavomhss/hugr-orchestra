@@ -1,6 +1,6 @@
 import { Config, ConfigProvider, Context, Effect, Layer, Option } from "effect"
 import { ConfigService } from "@/effect/config-service"
-import { Seats } from "@/maestro/seats"
+import { Seats } from "@orchestra/maestro/seats"
 
 const seatLabels = Config.all(Object.fromEntries(Object.values(Seats.all).flatMap((seat) =>
   seat.labelEnv ? [[seat.id, Config.string(seat.labelEnv).pipe(Config.option, Config.map(Option.getOrUndefined))]] : [],

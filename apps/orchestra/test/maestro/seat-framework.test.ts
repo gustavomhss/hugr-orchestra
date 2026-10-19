@@ -3,22 +3,22 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import matter from "gray-matter"
 import { BackendToolkitManifest } from "@orchestra/core/backend-toolkit/manifest"
-import { Seats } from "@/maestro/seats"
-import { define } from "@/maestro/seats/seat"
+import { Seats } from "@orchestra/maestro/seats"
+import { define } from "@orchestra/maestro/seats/seat"
 import { add } from "../../script/seat"
 import { seatSkillsModule } from "../../script/seat-skills"
 import { tmpdir } from "../fixture/fixture"
 
 describe("native seat framework", () => {
   test("definitions correspond to registered files, charters and skill artifacts", async () => {
-    const dir = path.resolve(import.meta.dirname, "../../src/maestro/seats")
+    const dir = path.resolve(import.meta.dirname, "../../../../modules/maestro/coordination/src/seats")
     const definitions = (await fs.readdir(dir)).filter((file) => file.endsWith(".ts") && !["index.ts", "seat.ts"].includes(file))
     expect(definitions.length).toBeGreaterThan(0)
     expect(definitions.toSorted()).toEqual(Object.values(Seats.all).map((seat) => `${seat.id}.ts`).toSorted())
     for (const seat of Object.values(Seats.all)) {
       expect(seat.prompt).toContain(`Return card: ${seat.returnCard}`)
       expect(seat.prompt.replaceAll("\r\n", "\n")).toBe(
-        (await Bun.file(path.join(dir, "../../agent/prompt", `${seat.id}.txt`)).text()).replaceAll("\r\n", "\n"),
+        (await Bun.file(path.join(dir, "prompt", `${seat.id}.txt`)).text()).replaceAll("\r\n", "\n"),
       )
       if (seat.skills.length === 0) continue
       const root = Seats.skillSource(seat.id)
@@ -86,13 +86,13 @@ describe("native seat framework", () => {
 
   test("scaffold refuses collisions and invalid ids without overwriting artifacts", async () => {
     await using tmp = await tmpdir()
-    const packageRoot = path.join(tmp.path, "apps/orchestra")
-    await fs.mkdir(path.join(packageRoot, "src/agent/prompt"), { recursive: true })
-    await fs.mkdir(path.join(packageRoot, "src/maestro/seats"), { recursive: true })
-    // Seat skill trees live in packages/, beside apps/ in the real layout.
+    const packageRoot = path.join(tmp.path, "modules/maestro/coordination")
+    await fs.mkdir(path.join(packageRoot, "src/seats/prompt"), { recursive: true })
+    await fs.mkdir(path.join(packageRoot, "src/seats"), { recursive: true })
+    // Seat skill trees live in packages/, beside modules/ in the real layout.
     await fs.mkdir(path.join(tmp.path, "packages"), { recursive: true })
-    const index = path.join(packageRoot, "src/maestro/seats/index.ts")
-    const before = await Bun.file(path.resolve(import.meta.dirname, "../../src/maestro/seats/index.ts")).text()
+    const index = path.join(packageRoot, "src/seats/index.ts")
+    const before = await Bun.file(path.resolve(import.meta.dirname, "../../../../modules/maestro/coordination/src/seats/index.ts")).text()
     await Bun.write(index, before)
     for (const id of ["../escape", "Backend", "maestro", "execution", "constructor", "bad_underscore", "foo.ts", ""]) {
       await expect(add(id, "role", packageRoot)).rejects.toThrow("Invalid native seat id")
@@ -113,7 +113,7 @@ describe("native seat framework", () => {
   test("second seat runs from source and a genuine Bun bundle; both isolated mutations fail", async () => {
     await using tmp = await tmpdir()
     const packageRoot = path.resolve(import.meta.dirname, "../..")
-    const originals = await Promise.all(["src/tool/task.ts", "src/maestro/seats/index.ts", "src/maestro/seat-skill-root.ts"].map(async (file) => ({ file, bytes: await Bun.file(path.join(packageRoot, file)).text() })))
+    const originals = await Promise.all(["src/tool/task.ts", "../../modules/maestro/coordination/src/seats/index.ts", "../../modules/maestro/coordination/src/seat-skill-root.ts"].map(async (file) => ({ file, bytes: await Bun.file(path.join(packageRoot, file)).text() })))
     // Keep artifacts under the package so Bun resolves both isolated (Linux) and hoisted (Windows) dependencies.
     // Source snapshots remain separate and parent-owned; no authored source or installed module is overwritten.
     await using artifacts = {

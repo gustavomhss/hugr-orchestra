@@ -1,7 +1,7 @@
 import { afterEach, expect } from "bun:test"
 import { Effect, Exit, Schema } from "effect"
 import { ClaudeHostDelegation } from "@/claude-code/host/delegation"
-import { ClaudeHostJoin } from "@/claude-code/host/join"
+import { ClaudeHostJoin } from "@orchestra/engine-claude-code/host/join"
 import { ClaudeHostMcp } from "@/claude-code/host/mcp"
 import { ClaudeHostMemory } from "@/claude-code/host/memory"
 import { ClaudeHost } from "@/claude-code/host/session"

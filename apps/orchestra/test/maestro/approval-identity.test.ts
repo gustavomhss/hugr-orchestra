@@ -13,7 +13,7 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionStore } from "@orchestra/core/session/store"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolSafety } from "@orchestra/core/tool-safety"
-import { ArsenalApproval } from "@/maestro/arsenal-approval"
+import { ArsenalNative } from "@orchestra/maestro/arsenal-native"
 import { AppRuntime } from "@/effect/app-runtime"
 import { InstanceStore } from "@/project/instance-store"
 import { InstanceRef } from "@/effect/instance-ref"
@@ -50,7 +50,7 @@ it.live("default V2 approval binds exact assistant and agent; repeated call IDs 
     yield* Effect.gen(function* () {
       const registry = yield* ToolRegistry.Service
       const permissions = yield* PermissionV2.Service
-      const host = yield* ArsenalApproval.makeV2ApprovalHost
+      const host = yield* ArsenalNative.makeV2ApprovalHost
       const materialized = yield* registry.materialize()
       const invoke = (messageID: string, agent: string, callID: string) => materialized.settle({ sessionID: session.id, assistantMessageID: SessionMessage.ID.make(messageID), agent: AgentV2.ID.make(agent), call: { type: "tool-call", id: callID, name: "read", input: { path: "secret.txt" } } }).pipe(Effect.provideService(ToolSafety.RuntimeProfile, { askBefore: ["read"] }))
       const held = (messageID: string, agent: string, callID: string) => Effect.raceFirst(invoke(messageID, agent, callID), pollWithTimeout(permissions.list().pipe(Effect.map((items) => items.find((item) => item.source?.callID === callID))), "No incorrect-source prompt expected").pipe(Effect.flatMap((request) => Effect.fail(new Error(`ASSISTANT_IDENTITY_BORROWED: ${JSON.stringify(request.source)}`)))))

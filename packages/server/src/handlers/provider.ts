@@ -4,7 +4,7 @@ import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 import { ProviderNotFoundError } from "@orchestra/protocol/errors"
 import { response } from "../location"
-import { CatalogAvailability } from "../catalog-availability"
+import { CatalogAvailability } from "@orchestra/core/host/catalog-availability"
 
 export const ProviderHandler = HttpApiBuilder.group(Api, "server.provider", (handlers) =>
   Effect.gen(function* () {

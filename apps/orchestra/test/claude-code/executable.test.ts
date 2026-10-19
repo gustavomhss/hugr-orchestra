@@ -3,8 +3,8 @@ import fs from "node:fs/promises"
 import path from "node:path"
 import { pathToFileURL } from "node:url"
 import { createHash } from "node:crypto"
-import { ClaudeCodeExecutable } from "@/claude-code/executable"
-import { ClaudeCodeSDK } from "@/claude-code/sdk"
+import { ClaudeCodeExecutable } from "@orchestra/engine-claude-code/executable"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import {
   resolveClaudeCodeResource,
   stageClaudeCodeResource,

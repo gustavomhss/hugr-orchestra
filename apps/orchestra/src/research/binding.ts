@@ -12,7 +12,7 @@ import { ResearchBinding } from "@orchestra/core/research/binding"
 import { Agent } from "@/agent/agent"
 import { Tool } from "@/tool/tool"
 import { InstanceState } from "@/effect/instance-state"
-import { nativeProfiles } from "@/maestro/roster"
+import { nativeProfiles } from "@orchestra/maestro/roster"
 import { Permission } from "@/permission"
 import { Database } from "@orchestra/core/database/database"
 

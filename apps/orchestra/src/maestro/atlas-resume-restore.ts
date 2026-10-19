@@ -7,7 +7,7 @@ import { MessageV2 } from "@/session/message-v2"
 import { PartID, type MessageID, type SessionID } from "@/session/schema"
 import type { Session } from "@/session/session"
 import { AtlasMemory } from "./atlas-memory"
-import { canonicalMemberId } from "./roster"
+import { canonicalMemberId } from "@orchestra/maestro/roster"
 
 // Ruling M3-1 (F3-D4 over F2.8): when a compaction leaves a native Atlas Session's admitted resume fold outside the kept
 // context, the host re-pushes the same Admission once, as residency "restored", with identical text and ref. This is

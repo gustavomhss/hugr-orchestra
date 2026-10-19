@@ -7,7 +7,7 @@ import { MessageChannel } from "node:worker_threads"
 import { AppDockRuntime } from "../src/main/app-dock-runtime"
 import { LinuxWorkspaceFiles } from "../src/main/linux-workspace-files"
 import { LinuxWorkspaceRPC } from "../src/main/linux-workspace-rpc"
-import { createLinuxWorkspaceHooks } from "../../orchestra/src/plugin/linux-workspace"
+import { createLinuxWorkspaceHooks } from "@orchestra/app-dock/linux-workspace"
 import type { ToolContext } from "@orchestra/plugin"
 
 const root = process.env.APP_DOCK_ACCESS_ROOT

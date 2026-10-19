@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import type { HookCallbackMatcher, McpSdkServerConfigWithInstance } from "@anthropic-ai/claude-agent-sdk"
-import { ClaudeHostOptions } from "@/claude-code/host/options"
+import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
 import { SessionID } from "@/session/schema"
 
 // The Claude host's SDK options (meta-harness PLAN.md §4.3, §4.4; build brief hard rules): Claude Code's preset prompt

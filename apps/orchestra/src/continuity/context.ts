@@ -2,7 +2,7 @@ import type { SessionID } from "@/session/schema"
 import { completeIndex, hasArtifact, tailIndex, type ContinuityContext } from "./model"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Prepared } from "./memory-types"
-import { RequestSource } from "./request-source"
+import { RequestSource } from "@orchestra/continuity/request-source"
 
 export function create() {
   const entries = new Map<SessionID, ContinuityContext>()

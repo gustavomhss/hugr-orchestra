@@ -3,8 +3,8 @@ export * as ClaudeHostBoundary from "./boundary"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import { Schema } from "effect"
 import type { Session } from "@/session/session"
-import { ClaudeHostAdmission } from "./admission"
-import { ClaudeCodeTranscript } from "../transcript"
+import { ClaudeHostAdmission } from "@orchestra/engine-claude-code/host/admission"
+import { ClaudeCodeTranscript } from "@orchestra/engine-claude-code/transcript"
 
 export class UnresolvedNativeBoundary extends Error {
   override readonly name = "UnresolvedNativeBoundary"

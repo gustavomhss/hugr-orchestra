@@ -14,6 +14,7 @@
     "../../script/explicit-exports.ts",
     "../../script/compat-facade.ts",
     "../../script/module-readme.ts",
+    "../../script/move-relink.ts",
     "../../nix/scripts/workspace-config.ts",
     "../../nix/scripts/verify-distribution.ts",
     "../../nix/scripts/probe-distribution.ts"

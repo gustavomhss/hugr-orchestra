@@ -1,10 +1,10 @@
 // CI-only narrow bundle entry. No owner app, query, login or account probe is invoked.
 import fs from "node:fs/promises"
 import path from "node:path"
-import { ClaudeCodeSDK } from "../../../src/claude-code/sdk"
+import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import { ClaudeHostPlugin } from "../../../src/claude-code/host/plugin"
-import { PlaybookContent } from "../../../src/maestro/playbook-content"
-import { SeatSkillRoot } from "../../../src/maestro/seat-skill-root"
+import { PlaybookContent } from "@orchestra/maestro/playbook-content"
+import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
 import { Skill } from "../../../src/skill"
 
 const executable = ClaudeCodeSDK.processLifetime({

@@ -2,7 +2,7 @@ import fs from "node:fs"
 import path from "node:path"
 import { createRequire } from "node:module"
 import { createHash } from "node:crypto"
-import { ClaudeCodeExecutable } from "../src/claude-code/executable"
+import { ClaudeCodeExecutable } from "@orchestra/engine-claude-code/executable"
 
 /** Read only official package metadata and the documented native file; never inspect executable internals. */
 export function resolveClaudeCodeResource(input: { root: string; os: string; arch: string; abi?: string }) {

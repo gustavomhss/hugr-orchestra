@@ -1,5 +1,5 @@
-import { Seats } from "../../orchestra/src/maestro/seats"
-import { SeatSkillContent } from "../../orchestra/src/maestro/seat-skill-content"
+import { Seats } from "@orchestra/maestro/seats"
+import { SeatSkillContent } from "@orchestra/maestro/seat-skill-content"
 import { PackagedSkills } from "@orchestra/core/packaged-skills"
 
 /** Build-time only: the canonical roster and reader own every entry and reference byte. */

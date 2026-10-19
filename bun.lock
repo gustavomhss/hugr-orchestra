@@ -39,6 +39,7 @@
         "@opentui/solid": "catalog:",
         "@orchestra/client": "workspace:*",
         "@orchestra/core": "workspace:*",
+        "@orchestra/maestro": "workspace:*",
         "@orchestra/sdk": "workspace:*",
         "@orchestra/server": "workspace:*",
         "@orchestra/tui": "workspace:*",
@@ -72,6 +73,7 @@
         "@actions/artifact": "4.0.0",
         "@lydell/node-pty": "catalog:",
         "@orchestra/app": "workspace:*",
+        "@orchestra/app-dock": "workspace:*",
         "@orchestra/script": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "@sentry/solid": "catalog:",
@@ -159,9 +161,14 @@
         "@opentui/core": "catalog:",
         "@opentui/keymap": "catalog:",
         "@opentui/solid": "catalog:",
+        "@orchestra/app-dock": "workspace:*",
         "@orchestra/atlas-boundary": "workspace:*",
         "@orchestra/codemode": "workspace:*",
+        "@orchestra/continuity": "workspace:*",
+        "@orchestra/engine-claude-code": "workspace:*",
+        "@orchestra/janitor": "workspace:*",
         "@orchestra/llm": "workspace:*",
+        "@orchestra/maestro": "workspace:*",
         "@orchestra/maestro-arsenal": "workspace:*",
         "@orchestra/plugin": "workspace:*",
         "@orchestra/protocol": "workspace:*",
@@ -287,6 +294,18 @@
         "vite": "catalog:",
       },
     },
+    "modules/app-dock": {
+      "name": "@orchestra/app-dock",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/plugin": "workspace:*",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "modules/atlas/boundary": {
       "name": "@orchestra/atlas-boundary",
       "version": "0.0.0",
@@ -306,6 +325,48 @@
         "@typescript/native-preview": "catalog:",
       },
     },
+    "modules/continuity": {
+      "name": "@orchestra/continuity",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/core": "workspace:*",
+        "effect": "catalog:",
+        "jsonc-parser": "3.3.1",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "modules/engine-adapters/claude-code": {
+      "name": "@orchestra/engine-claude-code",
+      "version": "0.0.0",
+      "dependencies": {
+        "@anthropic-ai/claude-agent-sdk": "0.3.289",
+        "@orchestra/continuity": "workspace:*",
+        "@orchestra/core": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "modules/janitor": {
+      "name": "@orchestra/janitor",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/core": "workspace:*",
+        "effect": "catalog:",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
     "modules/maestro/arsenal": {
       "name": "@orchestra/maestro-arsenal",
       "version": "0.0.0",
@@ -320,6 +381,25 @@
       "devDependencies": {
         "@types/bun": "catalog:",
         "@types/node": "catalog:",
+        "@typescript/native-preview": "catalog:",
+      },
+    },
+    "modules/maestro/coordination": {
+      "name": "@orchestra/maestro",
+      "version": "0.0.0",
+      "dependencies": {
+        "@orchestra/atlas-boundary": "workspace:*",
+        "@orchestra/core": "workspace:*",
+        "@orchestra/llm": "workspace:*",
+        "@orchestra/maestro-arsenal": "workspace:*",
+        "@orchestra/schema": "workspace:*",
+        "drizzle-orm": "catalog:",
+        "effect": "catalog:",
+        "gray-matter": "4.0.3",
+      },
+      "devDependencies": {
+        "@tsconfig/bun": "catalog:",
+        "@types/bun": "catalog:",
         "@typescript/native-preview": "catalog:",
       },
     },
@@ -1571,6 +1651,8 @@
 
     "@orchestra/app": ["@orchestra/app@workspace:packages/app-shell"],
 
+    "@orchestra/app-dock": ["@orchestra/app-dock@workspace:modules/app-dock"],
+
     "@orchestra/atlas-boundary": ["@orchestra/atlas-boundary@workspace:modules/atlas/boundary"],
 
     "@orchestra/capability-assets": ["@orchestra/capability-assets@workspace:modules/capability-assets"],
@@ -1581,6 +1663,8 @@
 
     "@orchestra/codemode": ["@orchestra/codemode@workspace:packages/codemode"],
 
+    "@orchestra/continuity": ["@orchestra/continuity@workspace:modules/continuity"],
+
     "@orchestra/core": ["@orchestra/core@workspace:packages/core"],
 
     "@orchestra/desktop": ["@orchestra/desktop@workspace:apps/desktop"],
@@ -1589,11 +1673,17 @@
 
     "@orchestra/effect-sqlite-node": ["@orchestra/effect-sqlite-node@workspace:packages/effect-sqlite-node"],
 
+    "@orchestra/engine-claude-code": ["@orchestra/engine-claude-code@workspace:modules/engine-adapters/claude-code"],
+
     "@orchestra/http-recorder": ["@orchestra/http-recorder@workspace:tooling/http-recorder"],
 
     "@orchestra/httpapi-codegen": ["@orchestra/httpapi-codegen@workspace:tooling/httpapi-codegen"],
 
+    "@orchestra/janitor": ["@orchestra/janitor@workspace:modules/janitor"],
+
     "@orchestra/llm": ["@orchestra/llm@workspace:packages/llm"],
+
+    "@orchestra/maestro": ["@orchestra/maestro@workspace:modules/maestro/coordination"],
 
     "@orchestra/maestro-arsenal": ["@orchestra/maestro-arsenal@workspace:modules/maestro/arsenal"],
 

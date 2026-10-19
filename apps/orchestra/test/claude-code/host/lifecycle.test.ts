@@ -369,7 +369,7 @@ ClaudeEngineFixture.it.instance("a replacement query waits for the real process 
     expect(previous.exitCode !== null || previous.signalCode != null).toBe(true)
     yield* ClaudeEngineFixture.replies("replacement answer")(input, params)
   })
-  const { ClaudeCodeSDK } = yield* Effect.promise(() => import("@/claude-code/sdk"))
+  const { ClaudeCodeSDK } = yield* Effect.promise(() => import("@orchestra/engine-claude-code/sdk"))
   yield* setup.prompt.prompt({ sessionID: setup.chat.id, ...ClaudeEngineFixture.say("start process") }).pipe(
     Effect.provideService(ClaudeCodeSDK.Environment, { ORCHESTRA_CLAUDE_CODE_PLAN_APPROVED: "1" }))
   const host = yield* ClaudeHost.Service

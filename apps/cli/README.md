@@ -88,7 +88,7 @@ copy, or the pinned download path provided by Core.
 ## Module contract
 - Package: `@orchestra/cli` at `apps/cli` (alias `cli`)
 - Summary: The executable and composition package for the Orchestra 2.0 CLI.
-- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `composition`, `ui`, `terminal-ui`
+- Layer: `app`; may depend on: `foundation`, `native`, `contract`, `client`, `extension-api`, `library`, `tooling`, `module`, `platform`, `product`, `composition`, `ui`, `terminal-ui`
 - Status: `canonical`
 - Owner: CLI maintainer
 - Public entry: application entrypoint, no library exports

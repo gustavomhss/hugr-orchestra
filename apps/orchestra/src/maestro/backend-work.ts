@@ -15,9 +15,9 @@ import { BackendResult } from "./backend-result"
 import { BackendEvidence } from "./backend-evidence"
 import { DiscoveryResult } from "./discovery-result"
 import { ResearchRecords } from "@orchestra/core/research/records"
-import { UpstreamResult } from "./upstream-result"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
 import type { ArsenalCompletion } from "./arsenal-completion"
-import type { Seat } from "./seats"
+import type { Seat } from "@orchestra/maestro/seats"
 
 // F4 cl.6: stream the shared work-result contract onto the Task part as `metadata.workResult`.
 // Definition supplies the fenced tag, schema id and memory capability; seats without workResult opt out.

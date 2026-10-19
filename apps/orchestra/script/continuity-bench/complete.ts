@@ -11,9 +11,9 @@ import { HARD_LIMIT } from "@/continuity/trigger"
 import { decode } from "@/continuity/memory"
 import { create } from "@/continuity/context"
 import type { MemoryArtifact } from "@/continuity/memory-types"
-import { DryRequestCaptured } from "@/continuity/dry-transport"
+import { DryRequestCaptured } from "@orchestra/continuity/dry-transport"
 import { LLMEvent } from "@orchestra/llm"
-import { RequestSource } from "@/continuity/request-source"
+import { RequestSource } from "@orchestra/continuity/request-source"
 import { CaseCapabilities } from "./case-capabilities"
 
 export function replay(input: { messages: SessionV1.WithParts[]; boundary?: MessageID; model: Provider.Model; previous?: MemoryArtifact;

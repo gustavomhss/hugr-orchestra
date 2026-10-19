@@ -9,8 +9,9 @@ const snapshot = process.env.ORCHESTRA_SEAT_SNAPSHOT
 if (!snapshot) throw new Error("Second-seat parent-owned snapshot missing")
 const source = path.resolve(import.meta.dirname, "../../..")
 const packageRoot = path.join(snapshot, "apps/orchestra")
-await fs.cp(path.join(source, "src/maestro/seats"), path.join(packageRoot, "src/maestro/seats"), { recursive: true })
-await fs.cp(path.join(source, "src/agent/prompt"), path.join(packageRoot, "src/agent/prompt"), { recursive: true })
+// Seats and their prompts live in the maestro coordination module; Task stays in apps/orchestra.
+const seatRoot = path.join(snapshot, "modules/maestro/coordination")
+await fs.cp(path.resolve(source, "../../modules/maestro/coordination/src/seats"), path.join(seatRoot, "src/seats"), { recursive: true })
 // Preserve every installed skill tree without importing/caching the live registry before the loader is registered.
 // Otherwise adding a real specialist makes this isolated registry fail before its runtime or bundle proof can run.
 const trees = (await fs.readdir(path.resolve(source, "../../packages"), { withFileTypes: true }))
@@ -22,7 +23,7 @@ await Promise.all(["modules/specialists/backend", "modules/specialists/archie"].
 ))
 // The scaffold validates canonical identity through the live roster. Run it in a separate process so that
 // validation cannot cache this process's registry before the synthetic registry loader is registered.
-const scaffold = Bun.spawn([process.execPath, "-e", `const { add } = await import(${JSON.stringify(path.join(source, "script/seat.ts"))}); await add("sample-seat", "synthetic packet execution", process.argv[1])`, packageRoot], {
+const scaffold = Bun.spawn([process.execPath, "-e", `const { add } = await import(${JSON.stringify(path.join(source, "script/seat.ts"))}); await add("sample-seat", "synthetic packet execution", process.argv[1])`, seatRoot], {
   cwd: source, stdout: "pipe", stderr: "pipe", env: process.env,
 })
 const [scaffoldOut, scaffoldErr, scaffoldExit] = await Promise.all([
@@ -30,8 +31,8 @@ const [scaffoldOut, scaffoldErr, scaffoldExit] = await Promise.all([
 ])
 if (scaffoldExit !== 0) throw new Error(`Second-seat scaffold failed (${scaffoldExit}):\n${scaffoldOut}\n${scaffoldErr}`)
 process.env.ORCHESTRA_SEAT_SKILL_BYTES = await Bun.file(path.join(snapshot, "packages/sample-seat-specialist/skills/sample-seat-work/SKILL.md")).text()
-const registrySource = (await Bun.file(path.join(packageRoot, "src/maestro/seats/index.ts")).text())
-  .replaceAll('from "./', `from "${path.join(packageRoot, "src/maestro/seats").replaceAll("\\", "/")}/`)
+const registrySource = (await Bun.file(path.join(seatRoot, "src/seats/index.ts")).text())
+  .replaceAll('from "./', `from "${path.join(seatRoot, "src/seats").replaceAll("\\", "/")}/`)
 
 const taskPath = await fs.realpath(path.join(source, "src/tool/task.ts"))
 const taskSource = await Bun.file(taskPath).text()
@@ -45,7 +46,7 @@ if (process.env.ORCHESTRA_SEAT_MUTATION === "backend-only-task") {
 export const snapshotPlugin: BunPlugin = {
   name: "second-seat-source-snapshot",
   setup(build) {
-    build.onLoad({ filter: /[\\/]maestro[\\/]seats[\\/]index\.ts$/ }, () => ({ loader: "ts", contents: registrySource }))
+    build.onLoad({ filter: /[\\/]maestro[\\/]coordination[\\/]src[\\/]seats[\\/]index\.ts$/ }, () => ({ loader: "ts", contents: registrySource }))
     if (process.env.ORCHESTRA_SEAT_MUTATION === "backend-only-task") {
       // Runtime loaders cannot decline asynchronously; exclude Core Task before entering this callback.
       build.onLoad(

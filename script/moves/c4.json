@@ -1,0 +1,100 @@
+{
+  "moves": [
+    {
+      "from": "apps/orchestra/src/maestro/context-tool-plan.ts",
+      "to": "modules/maestro/coordination/src/context-tool-plan.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/playbook-content.ts",
+      "to": "modules/maestro/coordination/src/playbook-content.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/roster.ts",
+      "to": "modules/maestro/coordination/src/roster.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/route-grant.ts",
+      "to": "modules/maestro/coordination/src/route-grant.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seat-skill-content.ts",
+      "to": "modules/maestro/coordination/src/seat-skill-content.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seat-skill-root.ts",
+      "to": "modules/maestro/coordination/src/seat-skill-root.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/archie.ts",
+      "to": "modules/maestro/coordination/src/seats/archie.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/backend.ts",
+      "to": "modules/maestro/coordination/src/seats/backend.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/billy.ts",
+      "to": "modules/maestro/coordination/src/seats/billy.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/frankie.ts",
+      "to": "modules/maestro/coordination/src/seats/frankie.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/index.ts",
+      "to": "modules/maestro/coordination/src/seats/index.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/jimmy.ts",
+      "to": "modules/maestro/coordination/src/seats/jimmy.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/lucy.ts",
+      "to": "modules/maestro/coordination/src/seats/lucy.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/patty.ts",
+      "to": "modules/maestro/coordination/src/seats/patty.ts"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/archie.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/archie.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/backend.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/backend.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/billy.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/billy.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/frankie.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/frankie.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/jimmy.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/jimmy.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/lucy.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/lucy.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/patty.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/patty.txt"
+    },
+    {
+      "from": "apps/orchestra/src/agent/prompt/rosie.txt",
+      "to": "modules/maestro/coordination/src/seats/prompt/rosie.txt"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/rosie.ts",
+      "to": "modules/maestro/coordination/src/seats/rosie.ts"
+    },
+    {
+      "from": "apps/orchestra/src/maestro/seats/seat.ts",
+      "to": "modules/maestro/coordination/src/seats/seat.ts"
+    }
+  ]
+}

@@ -47,7 +47,7 @@ Import from `@orchestra/sdk-next` only. Its public entry point intentionally bun
 ## Module contract
 - Package: `@orchestra/sdk-next` at `packages/sdk-next` (alias `sdk-next`)
 - Summary: Effect-native in-process Orchestra host for embedded applications.
-- Layer: `composition`; may depend on: `foundation`, `native`, `library`, `contract`, `client`, `extension-api`, `module`, `platform`, `composition`
+- Layer: `composition`; may depend on: `foundation`, `native`, `library`, `contract`, `client`, `extension-api`, `module`, `platform`, `product`, `composition`
 - Status: `canonical`
 - Owner: client SDK maintainer
 - Public entry: explicit `exports` in package.json

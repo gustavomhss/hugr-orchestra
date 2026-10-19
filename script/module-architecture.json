@@ -10,10 +10,11 @@
     "tooling": ["foundation", "library", "tooling"],
     "module": ["foundation", "native", "library"],
     "platform": ["foundation", "native", "library", "contract", "extension-api", "module:platformLibrary"],
-    "composition": ["foundation", "native", "library", "contract", "client", "extension-api", "module", "platform", "composition"],
+    "product": ["foundation", "native", "library", "contract", "extension-api", "module", "platform", "product"],
+    "composition": ["foundation", "native", "library", "contract", "client", "extension-api", "module", "platform", "product", "composition"],
     "ui": ["foundation", "contract", "client", "ui", "platform:browserSafe"],
     "terminal-ui": ["foundation", "contract", "client", "extension-api", "library", "platform", "ui"],
-    "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "composition", "ui", "terminal-ui"]
+    "app": ["foundation", "native", "contract", "client", "extension-api", "library", "tooling", "module", "platform", "product", "composition", "ui", "terminal-ui"]
   },
   "packages": {
     "schema": {
@@ -141,6 +142,46 @@
       "summary": "Generated bundles that expose Atlas to Orchestra.",
       "exportsPolicy": "none"
     },
+    "app-dock": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "App Dock maintainer",
+      "summary": "App Dock and Linux workspace tools that operate desktop apps over the Electron main channel.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "janitor": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Janitor maintainer",
+      "summary": "Janitor scans the data directory for growth and reports through a host-supplied sink.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "continuity": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "continuity maintainer",
+      "summary": "Engine-neutral continuity helpers: transcript aliases, archive search, masking and request sources.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "engine-claude-code": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Claude Code engine maintainer",
+      "summary": "Claude Code engine adapter: SDK process lifetime, executable lookup, transcripts and host options.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
+    "maestro": {
+      "layer": "product",
+      "status": "canonical",
+      "owner": "Maestro maintainer",
+      "summary": "Maestro coordination: seat roster and seats, governance records and the Arsenal native safety contribution.",
+      "exportsPolicy": "demanded",
+      "sourceWildcards": {"./*": "./src/*.ts"}
+    },
     "core": {
       "layer": "platform",
       "status": "canonical",
@@ -153,7 +194,7 @@
         { "path": "src/account", "kind": "cohesive", "entries": ["src/account.ts"] },
         { "path": "src/actions", "kind": "cohesive", "entries": ["src/actions.ts"] },
         { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
-        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts"] },
+        { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts"] },
         { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
         { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts"] },
         { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },
@@ -176,6 +217,7 @@
         { "path": "src/database", "kind": "collection" },
         { "path": "src/effect", "kind": "collection" },
         { "path": "src/flag", "kind": "collection" },
+        { "path": "src/host", "kind": "collection" },
         { "path": "src/id", "kind": "collection" },
         { "path": "src/installation", "kind": "collection" },
         { "path": "src/oauth", "kind": "collection" },
@@ -240,6 +282,8 @@
           "patterns": [
             "src/effect/",
             "src/global.ts",
+            "src/host.ts",
+            "src/host/",
             "src/id/",
             "src/installation/",
             "src/observability/",
@@ -409,8 +453,6 @@
         },
         "claude-code": { "kind": "product", "target": "modules/engine-adapters/claude-code", "patterns": ["src/claude-code/"] },
         "acp": { "kind": "product", "target": "modules/acp", "patterns": ["src/acp/"] },
-        "janitor": { "kind": "product", "target": "modules/janitor", "patterns": ["src/janitor/"] },
-        "app-dock": { "kind": "product", "target": "modules/app-dock", "patterns": ["src/plugin/app-dock*", "src/plugin/linux-workspace*"] },
         "session-engine": {
           "kind": "platform-legacy",
           "target": "core v1 Session, storage and jobs plus modules/session-engine",
@@ -557,8 +599,7 @@
         "apps/desktop/src/main/app-dock*",
         "apps/desktop/src/main/ipc-app-dock*",
         "apps/desktop/src/main/linux-workspace*",
-        "apps/orchestra/src/plugin/app-dock*",
-        "apps/orchestra/src/plugin/linux-workspace*",
+        "modules/app-dock/src/*",
         "packages/app-shell/src/app-dock-linux.ts"
       ],
       "readme": "apps/desktop/src/main/README.md",
@@ -585,12 +626,16 @@
     "apps/orchestra/src/continuity/README.md",
     "apps/orchestra/src/claude-code/README.md",
     "apps/orchestra/src/acp/README.md",
-    "apps/orchestra/src/janitor/README.md",
+    "modules/janitor/README.md",
     "apps/orchestra/src/control-plane/README.md",
     "apps/desktop/src/main/README.md",
     "packages/core/src/session/README.md",
     "packages/core/src/backend-toolkit/README.md",
     "packages/core/src/database/README.md",
-    "packages/core/src/plugin/README.md"
+    "packages/core/src/plugin/README.md",
+    "modules/app-dock/README.md",
+    "modules/continuity/README.md",
+    "modules/engine-adapters/claude-code/README.md",
+    "modules/maestro/coordination/README.md"
   ]
 }

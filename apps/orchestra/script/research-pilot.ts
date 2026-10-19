@@ -206,7 +206,7 @@ const identity = {
   executableSha256: createHash("sha256").update(new Uint8Array(await Bun.file(process.execPath).arrayBuffer())).digest("hex"),
   runnerSha256: createHash("sha256").update(new Uint8Array(await Bun.file(import.meta.path).arrayBuffer())).digest("hex"),
   lockSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(repository, "bun.lock")).arrayBuffer())).digest("hex"),
-  promptSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(repository, "apps/orchestra/src/agent/prompt/jimmy.txt")).arrayBuffer())).digest("hex"),
+  promptSha256: createHash("sha256").update(new Uint8Array(await Bun.file(path.join(repository, "modules/maestro/coordination/src/seats/prompt/jimmy.txt")).arrayBuffer())).digest("hex"),
   publicManifestSha256: createHash("sha256").update(manifestBytes).digest("hex"),
   questionSha256: createHash("sha256").update(question.prompt).digest("hex"), sources,
   skillFiles: await Promise.all(skillFiles.map(async (file) => ({

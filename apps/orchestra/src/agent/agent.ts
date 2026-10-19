@@ -38,9 +38,9 @@ import {
   LEGACY_BACKEND_ID,
   renderPrompt,
   type RosterMember,
-} from "@/maestro/roster"
-import { Seats } from "@/maestro/seats"
-import { SeatSkillRoot } from "@/maestro/seat-skill-root"
+} from "@orchestra/maestro/roster"
+import { Seats } from "@orchestra/maestro/seats"
+import { SeatSkillRoot } from "@orchestra/maestro/seat-skill-root"
 import { containsPath } from "@/project/instance-context"
 import { RuntimeFlags } from "@/effect/runtime-flags"
 import { EventV2Bridge } from "@/event-v2-bridge"

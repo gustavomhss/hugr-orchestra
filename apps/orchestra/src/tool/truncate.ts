@@ -7,7 +7,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { disabled, evaluate } from "@/permission/evaluate"
 import { Config } from "@/config/config"
 import { ToolID } from "./schema"
-import { TRUNCATION_DIR } from "./truncation-dir"
+import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 
 const RETENTION = Duration.days(7)

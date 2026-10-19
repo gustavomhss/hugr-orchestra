@@ -3,9 +3,9 @@ import { SessionV1 } from "@orchestra/core/v1/session"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
 import { BackendResult } from "@/maestro/backend-result"
-import { Seats } from "@/maestro/seats"
-import { roster } from "@/maestro/roster"
-import { UpstreamResult } from "@/maestro/upstream-result"
+import { Seats } from "@orchestra/maestro/seats"
+import { roster } from "@orchestra/maestro/roster"
+import { UpstreamResult } from "@orchestra/maestro/upstream-result"
 import { MessageID, PartID, SessionID } from "@/session/schema"
 
 const proposal = {

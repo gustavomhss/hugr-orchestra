@@ -5,7 +5,7 @@ import type { MessageID, SessionID } from "@/session/schema"
 import type { SessionV1 } from "@orchestra/core/v1/session"
 import type { Prepared } from "./memory-types"
 import type { Provider } from "@/provider/provider"
-import { RequestSource } from "./request-source"
+import { RequestSource } from "@orchestra/continuity/request-source"
 
 export class AdmissionError extends Schema.TaggedErrorClass<AdmissionError>()("ContinuityAdmissionError", { reason: Schema.String }) {}
 export type Input = { sessionID: SessionID; messages: SessionV1.WithParts[]; canRecall?: boolean;

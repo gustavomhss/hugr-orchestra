@@ -7,7 +7,7 @@ import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { ResearchExecution } from "@/research/allowance"
 import type { SessionID } from "@/session/schema"
 import { ClaudeCodeTools } from "../tools"
-import type { ClaudeHostJoin } from "./join"
+import type { ClaudeHostJoin } from "@orchestra/engine-claude-code/host/join"
 
 export const NativeStop = Context.Reference<
   ((sessionID: SessionID, dispatchCallID: string) => Effect.Effect<void, unknown>) | undefined

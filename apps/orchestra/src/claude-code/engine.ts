@@ -14,7 +14,7 @@ import { Session } from "@/session/session"
 import { MessageID, PartID, type SessionID } from "@/session/schema"
 import type { TaskPromptOps } from "@/tool/task"
 import { ClaudeHost } from "./host/session"
-import { ClaudeHostAdmission } from "./host/admission"
+import { ClaudeHostAdmission } from "@orchestra/engine-claude-code/host/admission"
 import { ClaudeCodeTools } from "./tools"
 
 export interface Interface extends Pick<ClaudeHost.Interface, "steer" | "interrupt" | "setModel" | "fork" | "release" | "reconcileRevert"> {

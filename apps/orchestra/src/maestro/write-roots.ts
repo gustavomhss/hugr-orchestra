@@ -6,7 +6,7 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { InstanceState } from "@/effect/instance-state"
 import type { Session } from "@/session/session"
-import { Seats } from "./seats"
+import { Seats } from "@orchestra/maestro/seats"
 
 // A write-roots seat's scope is bound by the host at Task dispatch (F2.14) and enforced by ToolSafety, never by the
 // charter. It is stored as reserved rules in the child Session's permission ruleset, so it is durable, travels through

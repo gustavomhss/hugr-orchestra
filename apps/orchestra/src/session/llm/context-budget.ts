@@ -3,7 +3,7 @@ import { Effect } from "effect"
 import { SessionV1 } from "@orchestra/core/v1/session"
 import type { Provider } from "@/provider/provider"
 import { ProviderTransform } from "@/provider/transform"
-import { estimate } from "@/continuity/masking"
+import { estimate } from "@orchestra/continuity/masking"
 import { HARD_LIMIT } from "@/continuity/trigger"
 
 const overflow = () => new SessionV1.ContextOverflowError({ message: "Working-memory request exceeds model input capacity" })

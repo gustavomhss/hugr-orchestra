@@ -2,7 +2,7 @@
 
 ## Purpose and ownership
 
-- **App Dock** (logical module, target modules/app-dock (a future path)): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `apps/orchestra/src/plugin/app-dock*.ts`, `apps/orchestra/src/plugin/linux-workspace*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
+- **App Dock** (logical module, target modules/app-dock): `app-dock*`, `ipc-app-dock*` and `linux-workspace*` here, plus `modules/app-dock/src/*.ts` and `packages/app-shell/src/app-dock-linux.ts`.
 - WSL (`wsl/`), Omni (`omni-*`), windows and menu, updater, stores and the draft store, the background CLI, and the janitor binding.
 
 ## Public entry points and consumers

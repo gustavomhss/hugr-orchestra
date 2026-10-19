@@ -97,8 +97,8 @@ export async function snapshot(directory: string) {
 }
 
 export async function captureOracle() {
-  const { Seats } = await import("../../../orchestra/src/maestro/seats")
-  const { SeatSkillContent } = await import("../../../orchestra/src/maestro/seat-skill-content")
+  const { Seats } = await import("@orchestra/maestro/seats")
+  const { SeatSkillContent } = await import("@orchestra/maestro/seat-skill-content")
   const { packagedSkills } = await import("../../script/packaged-skills")
   const trees = Object.fromEntries(await Promise.all(Object.values(Seats.all)
     .filter((seat) => seat.skills.length > 0)
