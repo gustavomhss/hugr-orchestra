@@ -24,6 +24,7 @@ export * from "./admit-transition.js" // #234 — the transition family's PURE a
 export * from "./admit-test-vacuity.js" // #95 D5 — the test-vacuity family's PURE seal legs (trySoundTestVacuity/buildSoundTestVacuity; proven via injected scanTestVacuity oracle), consumed by admit-harness AND the shipped producer
 export * from "./cost-policy.js" // WP-8.28-c.GEN — tiered escalation defaults (1 sample/advisory/CEGIS≤1; refuter T0-only)
 export * from "./align.js" // WP-8.29.GEN   — candidate-only writes + one batched ratification pass
+export * from "./open-questions.js" // R11 — derive + rank the open ratification questions from store facts (the batch align.ts serves)
 export * from "./seed.js" // WP-8.29.GEN   — seed from ratified manifest; Awareness sources never fabricated
 export * from "./coverage.js" // WP-8.30.GEN   — the per-site RUN LEDGER (GEN-8/12g) + its reconciliation
 export * from "./run-controller.js" // WP-8.30.GEN   — resume/checkpoint + malformed-degrade + born-from-work hand-off

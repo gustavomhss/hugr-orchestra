@@ -18,7 +18,7 @@
 // There is no exit-1 leg here: reaching this function means the invocation parsed and the runtime composed.
 
 import type { Hash } from "@atlas/contracts"
-import type { PromoteOut } from "@atlas/adapter-io"
+import type { PromoteOut, PromoteSelect } from "@atlas/adapter-io"
 import type { CliVerdict } from "./render.js"
 
 /** The invariant line every promote outcome carries — the one property a reader should check the bytes against. */
@@ -51,7 +51,8 @@ export function promoteVerdict(out: PromoteOut): CliVerdict {
   }
 
   const settled = out.promoted
-  const rejected = out.refused > 0
+  const unknown = out.unknown ?? []
+  const rejected = out.refused > 0 || unknown.length > 0
   const lines = [
     `status: ${rejected ? "rejected" : "ok"}`,
     `next: ${nextLine(out)}`,
@@ -63,12 +64,18 @@ export function promoteVerdict(out: PromoteOut): CliVerdict {
     ...out.rows.map((r) =>
       r.settled ? `  promoted ${r.nodeKey} -> ${r.id ?? ""}` : `  refused ${r.nodeKey}: ${r.rejected ?? "unknown"}`,
     ),
+    // R2 — the rows this pass deliberately did not present, each with the way to change that.
+    ...(out.held ?? []).map((k) => `  held ${k} — skipped; \`atlas release ${k} --by <you>\` lets the next promote present it`),
+    ...unknown.map((k) => `  not staged ${k} — no staged candidate has this nodeKey`),
   ]
   return { exitCode: rejected ? 2 : 0, stdout: `${lines.join("\n")}\n` }
 }
 
 /** The one actionable sentence, derived from the pass's own numbers — never a guess about the wiring. */
 function nextLine(out: PromoteOut): string {
+  if (out.candidates === 0 && ((out.held?.length ?? 0) > 0 || (out.unknown?.length ?? 0) > 0)) {
+    return "nothing was presented to the door — every selected row is held or not staged; read the lines below"
+  }
   if (out.candidates === 0) {
     // HONESTLY EMPTY, and it says which emptiness it is. Staging read fine and holds nothing, which after a
     // default `atlas mine` is the expected state — that pass wires no admission machinery, so it abstains at
@@ -98,7 +105,12 @@ function nextLine(out: PromoteOut): string {
  * `Axes` built at the repo root, not against a passed sha — the parameter is vestigial on that path). The
  * caller supplies the repo's live HEAD, so a gate that later starts reading it gets the truth rather than a
  * constant somebody has to go back and fix.
+ * `select` (R2) carries the nodeKeys named on the command line and the held set the review log folds to.
  */
-export function runPromote(promote: (at: Hash) => PromoteOut, at: Hash): CliVerdict {
-  return promoteVerdict(promote(at))
+export function runPromote(
+  promote: (at: Hash, select?: PromoteSelect) => PromoteOut,
+  at: Hash,
+  select: PromoteSelect,
+): CliVerdict {
+  return promoteVerdict(promote(at, select))
 }

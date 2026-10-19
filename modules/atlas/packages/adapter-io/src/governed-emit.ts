@@ -164,9 +164,9 @@ export interface GovernedEmitDeps extends NegationEmitDeps {
  * back invariant). Pure of clock/random given a pure store/gate/policy.
  */
 export function createGovernedEmit(deps: GovernedEmitDeps): {
-  readonly emit: (node: GroundedFact, at: Hash) => EmitOut
+  readonly emit: (node: GroundedFact, at: Hash, opts?: { readonly replace?: true }) => EmitOut
 } {
-  const emit = (raw: GroundedFact, at: Hash): EmitOut => {
+  const emit = (raw: GroundedFact, at: Hash, opts?: { readonly replace?: true }): EmitOut => {
     // #99b N2 — a negation re-routes to `emitNegation` (its own gate ladder, §4), branched before gate 0; `at` unused.
     if (raw.kind === "negation") return emitNegation(deps, raw as NegationNode)
     // #234 D4 — a transition re-routes to `emitTransition` (its own gate ladder), branched before gate 0. It
@@ -346,6 +346,7 @@ export function createGovernedEmit(deps: GovernedEmitDeps): {
           //    construction, which is exactly what the corroboration check above requires.
           scope, // the gate-0 narrowed const (`isScope` proved it a non-empty string), never the raw field
           tier,
+          ...(opts?.replace === true ? { replace: true as const } : {}), // R8 — the operator's `--replace`, never the payload
         }
         const next = upsert(projection, req).store
 

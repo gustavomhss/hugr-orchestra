@@ -44,8 +44,9 @@ import { existsSync, readFileSync } from "node:fs"
 import { join } from "node:path"
 import { asSubtreeHash, id } from "@atlas/kernel"
 import type { Node } from "@atlas/kernel"
-import type { StructRef } from "@atlas/contracts"
+import type { Hash, StructRef } from "@atlas/contracts"
 import type { CurrentNode } from "@atlas/knowledge"
+import { isRetired } from "@atlas/knowledge"
 import { atlasRoot, rollup, awarenessBytes, makeAwarenessMemo } from "@atlas/memory"
 import type { Awareness, AwarenessMemo, FacetInput, FacetName, MemberId, RootFacets, WaveAssembly } from "@atlas/memory"
 import { createDiskStore } from "./store.js"
@@ -90,7 +91,10 @@ function constitutionInput(repoPath: string): FacetInput | undefined {
   const store = createDiskStore(join(repoPath, CAS_REL), () => headSha(repoPath), gitSidecarTrust(repoPath))
   const projection = store.loadProjection()
   if (projection === undefined) return undefined
-  const t0 = [...projection.current.values()].filter((n) => n.tier === "T0").sort(byNodeKey)
+  // R6: a T0 row whose CAS bytes are retired (authoring SUPERSEDED) is not part of the constitution any more.
+  const t0 = [...projection.current.values()]
+    .filter((n) => n.tier === "T0" && !isRetired(store.get(n.contentHash as Hash)))
+    .sort(byNodeKey)
   if (t0.length === 0) return undefined
   const grounding = t0.map(structRefOf)
   const tiers = [`constitution: ${t0.length} ratified T0 invariant(s)`, ...t0.flatMap((n) => n.claims)]

@@ -264,6 +264,11 @@ const SCHEMAS: Record<Tool, ToolSchema> = {
       properties: {
         node: { type: "object", description: "the templated grounded candidate fact to admit" },
         at: { type: "string", description: "the source@sha anchor the citation must re-derive at" },
+        replace: {
+          type: "boolean",
+          description:
+            "R8 — replace the node's claim set with this fact's claim on a same-tier update instead of adding to it; every gate still applies",
+        },
       },
       required: ["node", "at"],
       additionalProperties: false,

@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 41 · dead-value-exports: 144 · type-reachable: 4
+//   declared-modules: 39 · dead-value-exports: 133 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,9 +137,6 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
-  // D14 (B-L02): the review log lands one task before its first reader. B-R2-01b (the promote dispatch reads the held
-  // set) gives it a production caller and DELETES this row (declared-modules −1, dead-value-exports −4).
-  "packages/adapter-io/src/review-log.ts": { values: 4, shipped: null, banner: false },
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
   // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
@@ -233,7 +230,7 @@ const BUILTIN_LEDGER = {
   //    values entry deleted) — the mine driver now invokes `makeSeed(...).seed(...)` as the worked Awareness
   //    assembly at the end of every pass (WP-8.29.GEN / GEN-9), so the module is SHIPPED, not a reference model.
   //    The un-wired remainder below is the genuine residue.
-  "packages/genesis/src/align.ts": { values: 7, shipped: null, banner: false },
+  //   align.ts is GONE from this ledger (R11, B-R11-02a): `cli/src/interview-cli.ts` value-imports `assembleInterview` for `atlas interview`.
   "packages/genesis/src/cost-policy.ts": { values: 13, shipped: null, banner: false },
   "packages/genesis/src/loops.ts": { values: 8, shipped: null, banner: false },
   "packages/genesis/src/usefulness.ts": { values: 2, shipped: null, banner: false },

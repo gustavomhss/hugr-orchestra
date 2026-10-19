@@ -329,11 +329,13 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
         isTier(req.tier) &&
         req.tier !== "T2" &&
         (prior.tier === undefined || isWeakerTier(prior.tier, req.tier))
-      const claims = raises
-        ? [req.claimNorm] // the raiser's own assertion only — prior weaker claims do not inherit the new tier
-        : prior.claims.includes(req.claimNorm)
-          ? prior.claims // set-union: dedup by claimNorm (idempotent)
-          : [...prior.claims, req.claimNorm]
+            // R8: an explicit `replace` drops the prior claims on a same-tier update exactly as a raise does.
+            const replaces = raises || req.replace === true
+            const claims = replaces
+              ? [req.claimNorm] // the writer's own assertion only — a raise, or an explicit replace (R8)
+              : prior.claims.includes(req.claimNorm)
+                ? prior.claims // set-union: dedup by claimNorm (idempotent)
+                : [...prior.claims, req.claimNorm]
       cas.add(req.contentHash)
       // SEAL IS NEVER CARRIED FORWARD (SEAL-PROMOTE-CARRY, billy T0). `seal` (`proven`) is a TRUST SIGNAL, and
       // trust attaches to the WRITE that carried it (proven only iff the governed door derived `origin:'promoted'`
@@ -343,7 +345,7 @@ export function upsert(store: StoreProjection, req: WriteRequest): UpsertResult 
       // INHERIT the proven seal through `...prior` — a forgery by omission. `priorNoSeal` is `prior` with `seal`
       // removed; every other field still carries forward (ADR-0009). A promote UPDATE re-stamps its own trusted seal.
       const { seal: _priorSeal, provenanceByClaim: _priorProvenance, ...priorNoSeal } = prior
-      const claimProvenance = raises
+      const claimProvenance = replaces
         ? claimProvenanceOf(claims, req.provenanceByClaim)
         : claimProvenanceOf(claims, req.provenanceByClaim, prior.provenanceByClaim)
       current.set(req.nodeKey, {

@@ -76,6 +76,13 @@ export const COMMANDS = [
   "node",
   "link",
   "promote",
+  "hold",
+  "release",
+  "propose",
+  "proposals",
+  "decide",
+  "interview",
+  "answer",
   "own",
   "relations",
   "negations",
@@ -137,6 +144,16 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   promote: "atlas-emit", // WRITE authority oracle (KNOW-8 governed promotion); intercepted before the handler
   //                        (cli.ts) and driven over the composition root's promotion leg, which publishes
   //                        through THIS leg's own door — the same `createGovernedEmit` `wire.ts` binds
+  hold: "atlas-query", // REVIEW (R2): appends a `hold` record to .atlas/review.jsonl and writes no knowledge, so it binds
+  //                     a READ leg — the `export` precedent (it writes a file, never the store). Runner: hold-cli.ts.
+  release: "atlas-query", // REVIEW (R2): appends a `release` record to .atlas/review.jsonl; writes no knowledge.
+  propose: "atlas-query", // REVIEW (R3): appends a `proposal` record to .atlas/review.jsonl; writes no knowledge.
+  proposals: "atlas-query", // REVIEW (R3): reads the open proposals off the review log; writes nothing.
+  decide: "atlas-emit", // WRITE (R3): `ratify` re-emits the fact at the proposed tier THROUGH the governed emit door (the
+  //                       composed handler's `atlas-emit`, every gate applies); `reject` only appends a decision record.
+  interview: "atlas-query", // REVIEW (R11): reads the store, the policy and the code index, and serves the ranked batch.
+  answer: "atlas-query", // REVIEW (R11): appends an `answer` record (and, for a T1/T0 tier answer, a `proposal`) to the
+  //                       review log; writes no knowledge — ratification stays with `decide`.
   relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold); intercepted before the handler
   //                           (cli.ts) and driven over the composition root's `relations` leg, which reads the
   //                           SAME durable projection this leg's query readback rides. Carries NO write authority.
