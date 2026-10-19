@@ -28,6 +28,8 @@ import type { EmitOut, LinkOut, Verdict } from "@atlas/tools"
 import { checkVerdict, draftVerdict } from "../author-verdicts.js"
 import { composeRuntime, gitUserEmail } from "../compose.js"
 import { composeWith } from "./compose-with.js"
+import { foldReviewLog } from "../review-log.js"
+import type { AtlasPromoteInput, AtlasPromoteResult } from "./types.js"
 import { reportIndexPlan } from "../indexer-report.js"
 import { headSha } from "../run-git.js"
 import { readScipIndexerName, readScipOrEmpty, SCIP_INDEX_REL } from "../scip.js"
@@ -136,10 +138,7 @@ export function openSurface(repoPath: string): AtlasSurface {
     reasoning: (id) => (absent() ? EMPTY : readReasoning(readStoreFiles(repoPath), id)),
     own: (scope) => (absent() ? EMPTY : own(repoPath, scope)),
     health: () => (absent() ? EMPTY : health(repoPath)),
-    promote: (input) =>
-      absent()
-        ? EMPTY
-        : { state: "ok", ...composeWith(repoPath, input.token).promote(asHash(headSha(repoPath) ?? "")) },
+    promote: (input) => (absent() ? EMPTY : promote(repoPath, input)),
     draft: (input) => (absent() ? EMPTY : draft(repoPath, input)),
     emit: (input) => (absent() ? EMPTY : emit(repoPath, input)),
     link: (input) => (absent() ? EMPTY : link(repoPath, input)),
@@ -206,8 +205,20 @@ function health(repoPath: string): AtlasHealthResult {
   }
 }
 
-/** `atlas draft`, then `atlas check` of the drafted fact at the draft's own rev, over ONE composed runtime. */
-function draft(repoPath: string, input: AtlasDraftInput): AtlasDraftResult {
+/** `atlas promote [nodeKey...]` (D15, D36): with keys only those staged rows, and a row the review log holds is ALWAYS
+ *  skipped. A log that does not verify could hide a hold, so the pass is refused before staging is read, as
+ *  `atlas promote` refuses it; nothing is presented. */
+function promote(repoPath: string, input: AtlasPromoteInput): AtlasPromoteResult {
+  const review = foldReviewLog(repoPath)
+  if ("refusal" in review) {
+    return { state: "ok", read: false, refusal: "unreadable", candidates: 0, promoted: 0, refused: 0, rows: [] }
+  }
+  const held = review.fold.held
+  const select = input.nodeKeys === undefined || input.nodeKeys.length === 0 ? { held } : { only: input.nodeKeys, held }
+  return { state: "ok", ...composeWith(repoPath, input.token).promote(asHash(headSha(repoPath) ?? ""), select) }
+}
+
+/** `atlas draft`, then `atlas check` of the drafted fact at the draft's own rev, over ONE composed runtime. */function draft(repoPath: string, input: AtlasDraftInput): AtlasDraftResult {
   const runtime = composeWith(repoPath, input.token)
   const drafted = draftVerdict(
     input.supersede === true ? runtime.draftSupersede : runtime.draft,

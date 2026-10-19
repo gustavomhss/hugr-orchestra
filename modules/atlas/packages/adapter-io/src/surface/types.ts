@@ -289,6 +289,10 @@ export interface AtlasPromote {
   readonly promoted: number
   readonly refused: number
   readonly rows: readonly AtlasPromoteRow[]
+        /** R2: staged rows this pass skipped because a curator holds them (`PromoteOut.held`). Absent when none. */
+        readonly held?: readonly string[]
+        /** R2: named nodeKeys no staged row carries (`PromoteOut.unknown`). Absent when every named key was staged. */
+        readonly unknown?: readonly string[]
 }
 
 export type AtlasPromoteResult = AtlasEmpty | AtlasPromote
@@ -357,6 +361,8 @@ export type AtlasReviewWriteResult = AtlasEmpty | AtlasVerdict<AtlasReviewWriteO
 export type AtlasDelegateResult = AtlasEmpty | AtlasDelegateOut
 /** `token` is the ratify token (`ATLAS_RATIFY_TOKEN`) for this one write; absent ⇒ the process's own. */
 export interface AtlasPromoteInput {
+  /** D36: settle only these staged rows; absent or empty ⇒ every staged row. A held row is always skipped. */
+  readonly nodeKeys?: readonly string[]
   readonly token?: string
 }
 
