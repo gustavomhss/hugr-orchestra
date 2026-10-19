@@ -89,9 +89,8 @@ describe("JE-AC-I2, I3: an answer needs verified evidence before it is done", ()
 
 describe("JE-AC-I5: cited paths match the retained file exactly", () => {
   // Mutation control: match a cited path by suffix in src/research/inquiry-check.ts (R9), replacing
-  // `exact!.has(normal(span.file))` with `[...exact!].some((file) => normal(span.file).endsWith(file) || file.endsWith(normal(span.file)))`
-  // and the bare-basename citation then borrows nested/index.ts.
-  CapabilitySupport.it.instance("p:10, p:10-20, p#L10-L20 and [x](p#L10) all resolve; a bare index.ts never borrows nested/index.ts", () => Effect.gen(function* () {
+  // `exact!.has(normal(span.file))` with `normal(span.file).endsWith(citation.target)`; the bare-basename citation then
+  // borrows nested/index.ts and the close is accepted. Run red on that mutation.
     const test = yield* session()
     const subquestion = yield* test.open()
     const source = yield* test.retain(path.join("nested", "index.ts"), "export const a = 1\nexport const b = 2\n")
