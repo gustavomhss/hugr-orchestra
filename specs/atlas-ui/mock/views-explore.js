@@ -197,7 +197,6 @@
   // The map: three linked views of one scope. Rings (a d3 sunburst) pick the scope, bars rank what is inside it, dots
   // show its facts one by one. Green holds, amber is where the code moved. Click a ring or a bar to go in, the centre to
   // step back out, a dot to read the fact.
-  const HOLD = "hsl(158 34% 38%)", MOVED = "hsl(34 78% 54%)"
   const mountMap = (host, units) => {
     const d3 = window.d3
     if (!d3?.partition) { host.innerHTML = '<div class="at-band-empty">The map library did not load (offline?).</div>'; return }
@@ -205,13 +204,13 @@
     root.each((d) => { d.drifted = d.data.leaf ? d.data.drifted : d.leaves().reduce((n, l) => n + (l.data.drifted ?? 0), 0) })
     const live = M().live()
     const size = 600, R = size / 2, ring = R / 3.15
-    host.innerHTML = `<div class="at-map-rings"><svg viewBox="${-R} ${-R} ${size} ${size}" role="img" aria-label="Rings: units, folders, files"></svg></div>
+    host.innerHTML = `<div class="at-map-rings"><svg viewBox="${-R} ${-R} ${size} ${size}" role="img" aria-label="Rings: units, folders, files"></svg><div class="at-map-hint">Click a ring to go in · the centre steps back</div></div>
       <div class="at-map-side"><div class="at-pack-crumbs" id="map-crumbs"></div><div class="at-map-title" id="map-title"></div><div class="at-map-bars" id="map-bars"></div></div>
       <div class="at-map-dots"><div class="at-map-dots-head" id="map-dots-head"></div><div class="at-map-dotgrid" id="map-dots"></div></div>`
     const svg = host.querySelector("svg")
     const tip = (d) => `${d.data.path || "Everything"} · ${A.num(d.value)} ${d.value === 1 ? "fact" : "facts"}${d.drifted ? ` · ${A.num(d.drifted)} changed` : ""}`
-    // Three steps, not a blend: blends of green and amber read as mud.
-    const color = (d) => (d.drifted / d.value >= 0.25 ? MOVED : d.drifted / d.value >= 0.08 ? "hsl(34 42% 40%)" : HOLD)
+    // Three steps in the HuGR palette (--mx-good, --mx-warm), never a blend: blends of the two read as mud.
+    const tone = (d) => (d.drifted / d.value >= 0.25 ? "much" : d.drifted / d.value >= 0.08 ? "some" : "hold")
     const go = (d) => (d.data.leaf ? A.go(unitHref(d.data.path)) : show(d))
     const show = (focus) => {
       // Rings: the focus in the middle, then two levels below it.
@@ -221,11 +220,13 @@
       const shown = focus.descendants().filter((d) => d !== focus && d.depth - focus.depth <= 2).map((d) => {
         const a0 = ((d.x0 - focus.x0) / span) * 2 * Math.PI, a1 = ((d.x1 - focus.x0) / span) * 2 * Math.PI
         return Object.assign(d, { a0, a1, r0: d.depth - focus.depth, r1: d.depth - focus.depth + 1 })
-      }).filter((d) => d.a1 - d.a0 > 0.002)
-      svg.innerHTML = `${shown.map((d, i) => `<path class="at-map-arc d${d.r0}" d="${arc(d)}" fill="${color(d)}" data-i="${i}"><title>${A.esc(tip(d))}</title></path>`).join("")}
+      }).filter((d) => d.a1 - d.a0 > (d.r0 === 1 ? 0.004 : 0.012))
+      svg.innerHTML = `${shown.map((d, i) => `<path class="at-map-arc d${d.r0} ${tone(d)}" d="${arc(d)}" data-i="${i}" style="animation-delay:${Math.round((d.a0 / (2 * Math.PI)) * 220)}ms"><title>${A.esc(tip(d))}</title></path>`).join("")}
         ${shown.filter((d) => d.r0 === 1 && d.a1 - d.a0 > 0.22).map((d) => { const a = (d.a0 + d.a1) / 2, r = ring * 1.5; const deg = (a * 180) / Math.PI - 90; return `<text class="at-map-label" transform="rotate(${deg}) translate(${r},0) rotate(${deg > 90 ? 180 : 0})">${A.esc(d.data.name.length > 14 ? `${d.data.name.slice(0, 13)}…` : d.data.name)}</text>` }).join("")}
-        <circle class="at-map-centre" r="${ring - 4}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
-        <text class="at-map-centre-n" y="6">${A.num(focus.value)}</text><text class="at-map-centre-u" y="40">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>`
+        <circle class="at-map-centre ${focus === root ? "" : "up"}" r="${ring - 6}"><title>${focus === root ? "Everything Atlas knows" : "Step back out"}</title></circle>
+        <text class="at-map-centre-k" y="-34">${A.esc(focus === root ? "all facts" : focus.data.name.length > 16 ? `${focus.data.name.slice(0, 15)}…` : focus.data.name)}</text>
+        <text class="at-map-centre-n" y="12">${A.num(focus.value)}</text><text class="at-map-centre-u ${focus.drifted ? "warm" : ""}" y="44">${focus.drifted ? `${A.num(focus.drifted)} changed` : "all hold"}</text>
+        ${focus === root ? "" : `<text class="at-map-centre-back" y="76">↑ back</text>`}`
       svg.querySelectorAll(".at-map-arc").forEach((el) => {
         const d = shown[+el.dataset.i]
         el.addEventListener("click", () => go(d))
@@ -243,7 +244,7 @@
       // Bars: what is inside, ranked by facts; the amber end is the share that changed.
       const kids = [...(focus.children ?? [])].sort((a, b) => b.value - a.value)
       const max = kids[0]?.value ?? 1
-      host.querySelector("#map-bars").innerHTML = `<div class="at-map-bars-k">Inside, by facts</div>${kids.slice(0, 14).map((d, i) => `<button class="at-map-bar" data-k="${i}"><span class="n">${A.esc(d.data.name)}</span><span class="track"><i style="width:${((d.value - d.drifted) / max) * 100}%;background:${HOLD}"></i><i style="width:${(d.drifted / max) * 100}%;background:${MOVED}"></i></span><span class="v">${A.num(d.value)}</span></button>`).join("")}${kids.length > 14 ? `<p class="muted">and ${kids.length - 14} more</p>` : ""}`
+      host.querySelector("#map-bars").innerHTML = `<div class="at-map-bars-k"><span>Inside, by facts</span><span>facts · changed</span></div>${kids.slice(0, 14).map((d, i) => `<button class="at-map-bar" data-k="${i}"><span class="n">${A.esc(d.data.name)}</span><span class="track"><i class="hold" style="width:${((d.value - d.drifted) / max) * 100}%"></i><i class="much" style="width:${(d.drifted / max) * 100}%"></i></span><span class="v">${A.num(d.value)}${d.drifted ? `<small>${Math.round((d.drifted / d.value) * 100)}%</small>` : ""}</span></button>`).join("")}${kids.length > 14 ? `<p class="muted">and ${kids.length - 14} more</p>` : ""}`
       host.querySelectorAll(".at-map-bar").forEach((b) => {
         const d = kids[+b.dataset.k]
         b.addEventListener("click", () => go(d))
@@ -253,8 +254,8 @@
       // Dots: every fact in scope, grouped by what is inside, in the same order as the bars.
       const scoped = (d) => live.filter((x) => x.file === d.data.path || x.file.startsWith(`${d.data.path}/`) || (d.data.unit === "(root)" && M().unitOf(x.file) === "(root)"))
       const groups = focus === root ? kids.map((d) => [d, live.filter((x) => M().unitOf(x.file) === d.data.unit)]) : kids.length ? kids.map((d) => [d, scoped(d)]) : [[focus, scoped(focus)]]
-      host.querySelector("#map-dots-head").innerHTML = `<b>${A.num(focus.value)} facts, one dot each</b><span class="grow"></span><span><b class="sw hold"></b>still holds</span><span><b class="sw moved"></b>code moved</span>`
-      host.querySelector("#map-dots").innerHTML = groups.map(([d, xs]) => `<div class="at-map-dotgroup" data-p="${A.esc(d.data.path)}"><small>${A.esc(d.data.name)}</small><div>${xs.map((x) => `<a class="at-dot ${M().state(x) === "drifted" ? "moved" : ""}" href="#/fact/${x.key}" title="${A.esc(x.claim.slice(0, 160))}"></a>`).join("")}</div></div>`).join("")
+      host.querySelector("#map-dots-head").innerHTML = `<b>${A.num(focus.value)} facts, one dot each</b><span class="grow"></span><span class="at-map-key"><i class="hold"></i>still holds</span><span class="at-map-key"><i class="some"></i>some changed</span><span class="at-map-key"><i class="much"></i>a quarter or more changed</span>`
+      host.querySelector("#map-dots").innerHTML = groups.map(([d, xs]) => `<div class="at-map-dotgroup" data-p="${A.esc(d.data.path)}"><small>${A.esc(d.data.name)}<span>${xs.length}</span></small><div>${xs.map((x) => `<a class="at-dot ${M().state(x) === "drifted" ? "moved" : ""}" href="#/fact/${x.key}" title="${A.esc(x.claim.slice(0, 160))}"></a>`).join("")}</div></div>`).join("")
     }
     const mark = (d) => {
       host.classList.toggle("marking", !!d)
