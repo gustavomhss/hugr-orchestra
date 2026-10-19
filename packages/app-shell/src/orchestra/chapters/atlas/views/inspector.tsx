@@ -8,6 +8,7 @@ import { type AtlasReq, Icon, useAtlasWords } from "../kit/chips"
 import { Btn } from "../kit/controls"
 import { openAtlasSheet } from "../sheets/state"
 import { FactBody, useCopyLink } from "./fact-detail"
+import { InspectorRetire } from "./inspector-retire"
 import type { AtlasInspectorProps } from "./index"
 
 // The fact inspector beside a list (specs/atlas-ui/mock/views.js:210-219): step through the list, open the fact as a
@@ -25,7 +26,7 @@ function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
   const language = useLanguage()
   const words = useAtlasWords()
   const copyLink = useCopyLink()
-  const [state, setState] = createStore({ order: [] as string[] })
+  const [state, setState] = createStore({ order: [] as string[], retiring: false })
   createEffect(on(() => props.factKey, () => requestAnimationFrame(() => setState("order", readOrder()))))
   const index = () => state.order.indexOf(props.factKey)
   const step = (delta: number) => {
@@ -47,8 +48,7 @@ function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
         ),
         "xc",
       )
-    // A24C: the retire write goes here.
-    atlas.toast(language.t("orchestra.atlas.frame.pending"), "info")
+    setState("retiring", true)
   }
   return (
     <>
@@ -129,6 +129,9 @@ function Inspector(props: AtlasInspectorProps & { fact: AtlasFact }) {
           </Match>
         </Switch>
       </footer>
+      <Show when={state.retiring}>
+        <InspectorRetire fact={props.fact} onClose={() => setState("retiring", false)} />
+      </Show>
     </>
   )
 }

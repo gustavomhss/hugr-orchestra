@@ -89,4 +89,5 @@ export const ATLAS_FACT_COPY = {
   "orchestra.atlas.fact.missing.text": "It may never have been accepted.",
   "orchestra.atlas.fact.missing.back": "Back to knowledge",
   "orchestra.atlas.fact.back": "Back",
+  "orchestra.atlas.fact.retired": "Retired. Still sent to agents (R6).",
 }
