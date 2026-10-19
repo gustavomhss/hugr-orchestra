@@ -175,7 +175,7 @@ describe("atlas model: write path, health, memory and graphs", () => {
 })
 
 describe("atlas model: committed Own snapshot, memory and territories (D3b)", () => {
-  const territory = { name: "billing", owner: "backend", tier: "T1", globs: ["packages/a/**"] }
+  const territory = { name: "billing", owner: "backend", tier: "T1" as const, globs: ["packages/a/**"] }
 
   test("reads the committed Own snapshot's packs, and none from a snapshot on HOLD", () => {
     const own = {
