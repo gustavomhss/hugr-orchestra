@@ -23,7 +23,7 @@ import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { SessionRunCoordinator } from "@orchestra/core/session/run-coordinator"
-import { SessionRunner } from "@orchestra/core/session/runner"
+import { ExecutionHost, SessionRunner } from "@orchestra/core/session/runner"
 import { node } from "@orchestra/core/session/runner/llm"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { SessionTable } from "@orchestra/core/session/sql"
@@ -67,7 +67,10 @@ export function make(input: {
   echo: Layer.Layer<never, Tool.RegistrationError, ToolRegistry.Service>
   systemContext: Layer.Layer<SystemContextRegistry.Service>
   skillGuidance: Layer.Layer<SkillGuidance.Service>
+  /** Execution hosts the runner may select by agent engine; default none. */
+  hosts?: Layer.Layer<ExecutionHost.Service>
 }) {
+  const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [
     [Snapshot.node, Snapshot.noopLayer],
@@ -79,6 +82,7 @@ export function make(input: {
     [ReferenceGuidance.node, referenceGuidance],
     [PermissionV2.node, PermissionFixture.normalLayer],
     [Config.node, config],
+    ...hosts,
   ])
   const execution = Layer.effect(
     SessionExecution.Service,
@@ -130,6 +134,7 @@ export function make(input: {
         [Snapshot.node, Snapshot.noopLayer],
         [SessionExecution.node, execution],
         [Config.node, config],
+        ...hosts,
       ],
     ),
   )

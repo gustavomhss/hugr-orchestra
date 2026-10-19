@@ -36,6 +36,7 @@ import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
+import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
@@ -110,6 +111,7 @@ const layer = Layer.effect(
     const config = yield* Config.Service
     const snapshots = yield* Snapshot.Service
     const database = yield* Database.Service
+    const hosts = yield* ExecutionHost.Service
     const workflowHosts = yield* RelayWorkflowSession.Service
     const nativeHost = yield* RelayWorkflowSession.NativeHost
     const workflowContext = Context.make(Database.Service, database).pipe(
@@ -212,8 +214,13 @@ const layer = Layer.effect(
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(agent), session.id))
-      const model = yield* models.resolve(session)
-      const modelRef = SessionRunnerModel.reference(model)
+      // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
+      const engine = agent.info?.engine === "orchestra" ? undefined : agent.info?.engine
+      const host = engine ? hosts.get(engine) : undefined
+      if (engine && !host)
+        return yield* Effect.die(new Error(`No execution host is registered for engine ${engine} (agent ${agent.id})`))
+      const model = host ? undefined : yield* models.resolve(session)
+      const modelRef = model ? SessionRunnerModel.reference(model) : (session.model ?? agent.info?.model)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
       const context = entries.map((entry) => entry.message)
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
@@ -221,9 +228,12 @@ const layer = Layer.effect(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
       if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
-      const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
+      const toolMaterialization = isLastStep || host ? undefined : yield* tools.materialize(effectiveRules)
       const promptCacheKey = /^ses_[0-9a-f]{64}$/.test(session.id) ? session.id.slice(4) : session.id
-      const request = LLM.request({
+      const systemText = [agent.info?.system, system.baseline, workflow?.view.instructions].filter(
+        (part): part is string => part !== undefined && part.length > 0,
+      )
+      const request = model && LLM.request({
         model,
         http: {
           headers: {
@@ -233,22 +243,20 @@ const layer = Layer.effect(
           },
         },
         providerOptions: { openai: { promptCacheKey } },
-        system: [agent.info?.system, system.baseline, workflow?.view.instructions]
-          .filter((part): part is string => part !== undefined && part.length > 0)
-          .map(SystemPart.make),
+        system: systemText.map(SystemPart.make),
         messages: [...toLLMMessages(context, model), ...(isLastStep ? [Message.assistant(MAX_STEPS_PROMPT)] : [])],
         tools: toolMaterialization?.definitions ?? [],
         toolChoice: isLastStep ? "none" : undefined,
       })
-      if (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request }))
+      if (model && request && (yield* compaction.compactIfNeeded({ sessionID: session.id, entries, model, request })))
         return yield* Effect.die(continueAfterCompaction(currentStep))
       const startSnapshot = yield* snapshots.capture()
       const publisher = createLLMEventPublisher(events, {
         sessionID: session.id,
         agent: agent.id,
         model: {
-          id: ModelV2.ID.make(model.id),
-          providerID: ProviderV2.ID.make(model.provider),
+          id: model ? ModelV2.ID.make(model.id) : (modelRef?.id ?? ModelV2.ID.make("default")),
+          providerID: model ? ProviderV2.ID.make(model.provider) : (modelRef?.providerID ?? ProviderV2.ID.make("anthropic")),
           ...(session.model?.variant === undefined ? {} : { variant: session.model.variant }),
         },
         snapshot: startSnapshot,
@@ -258,7 +266,19 @@ const layer = Layer.effect(
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
       yield* subagentModels.assert(session.id, modelRef)
-      const providerStream = llm.stream(request).pipe(
+      const source = request
+        ? llm.stream(request)
+        : host && agent.info
+          ? host.stream({
+              session,
+              agent: agent.info,
+              model: modelRef,
+              system: systemText,
+              history: context,
+              state: ExecutionHost.state(db, session.id, host.stateKey),
+            })
+          : Stream.die("SessionRunner: no provider for this turn")
+      const providerStream = source.pipe(
         Stream.runForEach((event) =>
           Effect.gen(function* () {
             if (overflowFailure || publisher.hasProviderError()) return
@@ -271,7 +291,11 @@ const layer = Layer.effect(
             yield* publish(event)
             if (event.type !== "tool-call" || event.providerExecuted) return
             if (!toolMaterialization) {
-              yield* withPublication(publisher.failUnsettledTools("Tools are disabled after the maximum agent steps"))
+              yield* withPublication(
+                publisher.failUnsettledTools(
+                  host ? "Execution host emitted an unsettled call" : "Tools are disabled after the maximum agent steps",
+                ),
+              )
               return
             }
             needsContinuation = true
@@ -327,6 +351,8 @@ const layer = Layer.effect(
             stream._tag === "Failure" ? Option.getOrUndefined(Cause.findErrorOption(stream.cause)) : undefined
           if (
             recoverOverflow &&
+            model &&
+            request &&
             !publisher.hasAssistantStarted() &&
             isContextOverflowFailure(overflowFailure ?? failure) &&
             (yield* restore(recoverOverflow({ sessionID: session.id, entries, model, request })))
@@ -483,5 +509,6 @@ export const node = makeLocationNode({
     Snapshot.node,
     Database.node,
     RelayWorkflowSession.node,
+    ExecutionHost.node,
   ],
 })
