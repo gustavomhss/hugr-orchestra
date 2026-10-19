@@ -224,6 +224,16 @@
       <label class="mx-field"><span>Sites per kind</span><input type="number" value="200" min="1"></label></div>
       ${M().writable() ? "" : `<div class="ins-note">${A.icon("lock")}<span>${A.refusal("untrusted-store")}: suggestions could not be saved.</span></div>`}
       ${A.tech([["Command", "<code>atlas mine .</code> · always the current directory at HEAD"], ["Knobs", "<code>ATLAS_MINE_SLOT</code> (one kind) · <code>ATLAS_MINE_BUDGET</code> · <code>ATLAS_ENRICH</code> (hints only) · <code>ATLAS_FRONTIER=symbol</code> (thin history only)"], ["Model", "<code>$ATLAS_MODEL_CONFIG</code>, outside the repository"]])}</div>${foot("", "mine-run", "Start", "", !M().writable())}</form>`,
+    ivDelegate: () => {
+      const picked = [...document.querySelectorAll("[data-iv-sel]:checked")].map((c) => A.ivBatch[+c.dataset.ivSel])
+      const kinds = Object.entries(picked.reduce((m, q) => ((m[q.kind] = (m[q.kind] ?? 0) + 1), m), {})).map(([k, n]) => `${n} ${k}`).join(" · ")
+      return `<form method="dialog">${head(`Delegate ${plural(picked.length, "question")}`, "A model drafts an answer for each one from what Atlas knows about the site. The drafts come back to you: nothing is ratified until you confirm it.")}<div class="mx-dialog-body">
+      <div class="mx-field"><span>Model</span><div class="wf-range" id="iv-model">${["Atlas model · roles.propose", "Claude Opus 5.5", "Claude Sonnet 5.5", "Claude Haiku 5.5"].map((m, i) => `<button type="button" aria-pressed="${i === 0}" onclick="this.parentNode.querySelectorAll('button').forEach((b) => b.setAttribute('aria-pressed', String(b === this)))">${m}</button>`).join("")}</div></div>
+      <div class="mx-field"><span>It reads</span><div class="at-gen-iv-reads">${["The ownership doc of the site", "Its facts and the files that depend on it", "Git history: who changed it, how often"].map((t) => `<label><input type="checkbox" checked>${t}</label>`).join("")}</div></div>
+      <div class="at-gen-iv-picked"><b>${A.esc(kinds)}</b>${picked.slice(0, 6).map((q) => `<span><code>${A.esc(q.site)}</code>${A.esc(q.ask.slice(0, 80))}</span>`).join("")}${picked.length > 6 ? `<span class="muted">and ${picked.length - 6} more</span>` : ""}</div>
+      <p class="mx-note">Each draft carries the model's reasoning. Tier answers stay drafts until a person ratifies them: the only path to T1 or T0 is through you.</p>
+      ${A.tech([["Runs", "one model call per question, the same way mining calls the model"], ["Writes", "nothing: drafts live in this screen until you ratify the batch"]])}</div>${foot(A.newcap("R11"), "iv-draft", "Draft answers")}</form>`
+    },
     mineResult: () => `<form method="dialog">${head("Genesis finished", "A sample result: this preview does not run a model.")}<div class="mx-dialog-body">
       <div class="at-result-row">${A.icon("sparkle")}<span>Suggested</span><span class="grow"></span><b>41</b></div>
       <div class="at-coverage">${[["good", 41, "Suggested"], ["", 12, "Declined"], ["warm", 3, "No record"], ["", 0, "Stopped"], ["muted", 144, "Not reached"]].map(([t, n, l]) => `<span class="${t}" style="flex:${Math.max(n, 1)}" data-tip="${l}: ${n}"></span>`).join("")}</div>
@@ -328,12 +338,48 @@
     "toggle-why": () => A.go(withQuery({ why: A.state.query.why === "all" ? null : "all" })),
     "copy-link": (v) => copy(`${location.href.split("#")[0]}#/fact/${v}`, "Link copied"),
     copy: (v) => copy(v, "Copied"),
+    "iv-delegate": () => (document.querySelector("[data-iv-sel]:checked") ? dialog(sheet.ivDelegate()) : A.toast("Select one or more questions first.", "info")),
+    "iv-draft": () => {
+      const model = $("#iv-model [aria-pressed=true]")?.textContent.split(" · ")[0] ?? "Atlas model"
+      $("#dialog").close()
+      document.querySelectorAll("[data-iv-sel]:checked").forEach((c) => {
+        const i = c.dataset.ivSel, q = A.ivBatch[+i], li = c.closest(".at-gen-iv-q")
+        c.checked = false
+        if (li.classList.contains("done")) return
+        li.classList.add("drafted")
+        li.querySelector(".at-gen-iv-draft")?.remove()
+        const pick = { owner: 0, tier: 0, contested: 2 }[q.kind]
+        const why = { owner: "Most commits under it come from the orchestrator seat.", tier: "Several files depend on this and nothing contradicts it.", contested: "Both claims re-derive against today's code.", intent: "Taken from its facts; rewrite it in your words if it misses the point." }[q.kind]
+        const lead = M().live().find((x) => M().unitOf(x.file) === q.site)?.claim.split(/(?<=\.)\s/)[0] ?? ""
+        const text = q.kind === "intent" ? (lead.length > 160 ? `${lead.slice(0, 159)}…` : lead) : ""
+        li.querySelectorAll('[data-action="iv-pick"]').forEach((b) => b.classList.toggle("draft", b.dataset.value === `${i}|${pick}`))
+        const input = li.querySelector(".at-gen-iv-text")
+        if (input) input.value = text
+        li.querySelector(".wf-range, .at-gen-iv-text").insertAdjacentHTML("beforebegin", `<div class="at-gen-iv-draft">${A.icon("sparkle")}<span>Drafted by ${A.esc(model)}${why ? `: ${A.esc(why)}` : ""}</span><button class="mx-btn" type="button" data-action="iv-accept" data-value="${i}">Accept</button></div>`)
+      })
+      A.ivSel()
+      const all = $("#iv-all")
+      if (all) all.checked = false
+      const n = document.querySelectorAll(".at-gen-iv-q.drafted:not(.done)").length
+      $("#iv-drafted").textContent = n ? `${n} drafted, waiting for you` : ""
+      A.toast("Drafts are in. Confirm each one before you ratify.", "sparkle")
+    },
+    "iv-accept": (v) => {
+      const li = document.querySelector(`[data-iv="${v}"]`)
+      const draft = li.querySelector(".wf-range .draft")
+      if (draft) return actions["iv-pick"](draft.dataset.value)
+      li.classList.add("done")
+      actions["iv-pick"](`${v}|-1`)
+    },
     "iv-pick": (v) => {
       const [i, j] = v.split("|")
       document.querySelectorAll(`[data-action="iv-pick"][data-value^="${i}|"]`).forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.value === `${i}|${j}`)))
       document.querySelector(`[data-iv="${i}"]`)?.classList.add("done")
       const n = document.querySelector("#iv-done")
       if (n) n.textContent = document.querySelectorAll(".at-gen-iv-q.done").length
+      document.querySelector(`[data-iv="${i}"] .at-gen-iv-draft`)?.remove()
+      const d = document.querySelector("#iv-drafted"), left = document.querySelectorAll(".at-gen-iv-q.drafted:not(.done)").length
+      if (d) d.textContent = left ? `${left} drafted, waiting for you` : ""
     },
     toast: (v) => A.toast(A.esc(v), "info"),
     undo: () => { undo?.(); undo = null; A.toast("Undone", "back"); render(true) },

@@ -358,7 +358,16 @@
       return { kind: "intent", site: u.id, ask: `What is ${u.id} for?`, options: null, rank: b, why: `no rationale among its ${A.num(u.facts)} facts` }
     })
     const open = [...owner, ...tier, ...contested, ...intent].sort((a, b) => b.rank - a.rank)
+    A.ivBatch = open.slice(0, INTERVIEW_CAP)
     return { batch: open.slice(0, INTERVIEW_CAP), deferred: open.slice(INTERVIEW_CAP), counts: { owner: owner.length, tier: tier.length, contested: contested.length, intent: intent.length } }
+  }
+  // Selection drives the Delegate button; the batch is kept so the delegate sheet can name what it hands over.
+  A.ivSel = () => {
+    const n = document.querySelectorAll("[data-iv-sel]:checked").length
+    const label = document.querySelector("#iv-selcount")
+    if (label) label.textContent = n ? `${n} selected` : "Pick questions to hand to a model"
+    const btn = document.querySelector('[data-action="iv-delegate"]')
+    if (btn) btn.lastChild.textContent = n ? `Delegate ${n}…` : "Delegate…"
   }
   const IV_KIND = { owner: ["Owner", "blue"], tier: ["Tier", "good"], contested: ["Contested", "warm"], intent: ["Intent", ""] }
 
@@ -410,12 +419,13 @@
         <p class="mx-note">In this store: ${A.num(all.length)} claims staged, ${A.num(proven)} proven by an oracle, ${A.num(justified)} from the semantic pass, the rest hints. Claims about relations, negations and transitions exist in the write door, but mining can't produce them yet.</p></section>
 
       ${(() => { const iv = interview(); return `<section class="at-panel at-gen-iv" id="interview"><header class="at-panel-head"><div><h3>${A.icon("check")}The ratification interview</h3><small>Genesis only writes suggestions. A rule (T1) or a core fact (T0) needs a person, and Atlas asks once: one batch of the questions that matter most, ranked by how much code depends on the answer. ${A.newcap("R11")}</small></div>
-          <div class="at-gen-iv-count"><b id="iv-done">0</b><span>of ${iv.batch.length} answered</span></div></header>
+          <div class="at-gen-iv-count"><b id="iv-done">0</b><span>of ${iv.batch.length} answered</span><span id="iv-drafted"></span></div></header>
         <div class="at-gen-iv-kinds">${Object.entries(IV_KIND).map(([k, [l, tone]]) => `<span class="at-own-badge ${tone}">${l} · ${A.num(iv.counts[k])}</span>`).join("")}<span class="grow"></span><span class="muted">${A.num(iv.batch.length + iv.deferred.length)} open · top ${INTERVIEW_CAP} this session · ${A.num(iv.deferred.length)} wait for the next</span></div>
-        <ol class="at-gen-iv-list">${iv.batch.map((q, i) => `<li class="at-gen-iv-q" data-iv="${i}"><span class="at-gen-iv-n">${i + 1}</span><div><div class="at-gen-iv-head"><span class="at-own-badge ${IV_KIND[q.kind][1]}">${IV_KIND[q.kind][0]}</span><code>${A.esc(q.site)}</code></div>
+        <div class="at-gen-iv-bar"><label><input type="checkbox" id="iv-all" onchange="document.querySelectorAll('[data-iv-sel]').forEach((c) => (c.checked = this.checked)); Atlas.ivSel()">Select all</label><span id="iv-selcount" class="muted">Pick questions to hand to a model</span><span class="grow"></span>${A.btn("Delegate…", "iv-delegate", { icon: "sparkle", id: "iv-delegate" })}</div>
+        <ol class="at-gen-iv-list">${iv.batch.map((q, i) => `<li class="at-gen-iv-q" data-iv="${i}"><span class="at-gen-iv-n">${i + 1}</span><div><div class="at-gen-iv-head"><input type="checkbox" class="at-gen-iv-sel" data-iv-sel="${i}" aria-label="Select question ${i + 1}" onchange="Atlas.ivSel()"><span class="at-own-badge ${IV_KIND[q.kind][1]}">${IV_KIND[q.kind][0]}</span><code>${A.esc(q.site)}</code></div>
           <p>${A.esc(q.ask)}</p><small>Ranked: ${A.esc(q.why)}</small>
           ${q.options ? `<div class="wf-range">${q.options.map((o, j) => `<button aria-pressed="false" data-action="iv-pick" data-value="${i}|${j}">${A.esc(o)}</button>`).join("")}</div>` : `<input class="at-knob-input at-gen-iv-text" placeholder="One sentence, in your words" data-iv-text="${i}" oninput="this.closest('.at-gen-iv-q').classList.toggle('done', !!this.value.trim()); document.querySelector('#iv-done').textContent = document.querySelectorAll('.at-gen-iv-q.done').length">`}</div></li>`).join("")}</ol>
-        <footer class="at-gen-iv-foot"><p class="mx-note">Unanswered questions defer to the next session; an uncovered path stays T0-strict deny. Nothing is promoted without this step: there is no automatic path from suggestion to rule.</p>
+        <footer class="at-gen-iv-foot"><p class="mx-note">Answer by hand, or select questions and delegate them: a model drafts the answers and you confirm each one. A draft is never ratified on its own. Unanswered questions defer to the next session; an uncovered path stays T0-strict deny.</p>
           ${A.btn("Ratify the batch", "toast", { primary: true, icon: "check", write: true, value: "Serving the interview is a new capability (R11)." })}</footer>
         ${A.tech([["Code", "<code>genesis/src/align.ts</code> · assembleInterview · INTERVIEW_CAP = 20 · ROUTER_EDGES"], ["Question kinds", "owner · tier · contested · intent (genesis/src/types.ts OpenQ)"], ["Today", "the library assembles the batch and feeds a Ratifier; no command, tool or flag reaches it"], ["Here", "questions drafted from this store: units with no owner, invariants and contracts still hints, two claims in one slot, units with no rationale"]])}</section>` })()}
 
