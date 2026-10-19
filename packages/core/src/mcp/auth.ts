@@ -1,10 +1,10 @@
-import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { LayerNode } from "../effect/layer-node"
 import path from "path"
-import { serviceUse } from "@orchestra/core/effect/service-use"
-import { Global } from "@orchestra/core/global"
+import { serviceUse } from "../effect/service-use"
+import { Global } from "../global"
 import { Effect, Layer, Context, Option, Schema } from "effect"
-import { FSUtil } from "@orchestra/core/fs-util"
-import { EffectFlock } from "@orchestra/core/util/effect-flock"
+import { FSUtil } from "../fs-util"
+import { EffectFlock } from "../util/effect-flock"
 
 export const Tokens = Schema.Struct({
   accessToken: Schema.mutableKey(Schema.String),

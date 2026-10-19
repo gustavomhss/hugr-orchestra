@@ -37,7 +37,7 @@ import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
 import type { SessionActiveOutput } from "../compat/vendored-client-promise"
-import { toggleMcp } from "./global-sync/mcp"
+import { authenticateMcpV2, toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
 import { notifySessionTabsRemoved } from "@/components/titlebar-session-events"
@@ -646,7 +646,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     session,
     homeSessions,
     mcp: {
-      toggle: async (directory: string, name: string) => {
+      toggle: async (directory: string, name: string, open: (url: string) => void) => {
         const key = directoryKey(directory)
         const sdk = sdkFor(key)
         const status = children.child(key, { bootstrap: false })[0].mcp[name]?.status
@@ -668,7 +668,19 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
             await serverSDK.api.mcp.disconnect({ server: name, location: { directory: key } })
           },
           authenticate: async () => {
-            await sdk.mcp.auth.authenticate({ name })
+            if ((await serverSDK.protocol) === "v1") {
+              await sdk.mcp.auth.authenticate({ name })
+              return
+            }
+            const location = { directory: key }
+            await authenticateMcpV2({
+              start: () => serverSDK.orchestra.mcp.authStart({ server: name, location }),
+              status: () =>
+                serverSDK.api.mcp
+                  .list({ location })
+                  .then((result) => result.data.find((server) => server.name === name)?.status.status),
+              open,
+            })
           },
           refresh: async () => {
             await queryClient.refetchQueries(queryOptionsApi.mcp(key))

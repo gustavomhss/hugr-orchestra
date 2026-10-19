@@ -35,6 +35,7 @@ export default function McpPage(props: ChapterPageProps) {
     serverSDK: serverSDK(),
     // Called through a wrapper: window.fetch throws when invoked as a method of another object.
     fetch: (url, init) => (platform.fetch ?? globalThis.fetch)(url, init),
+    open: (url) => platform.openExternal(url),
   })
   const [v1] = createResource(source.v1)
   // ServerSync keeps observing this profile's MCP status and resources after the page closes, so a

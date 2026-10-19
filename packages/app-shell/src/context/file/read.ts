@@ -22,7 +22,42 @@ export async function listFileNodes(sdk: DirectorySDK, path: string): Promise<Fi
 export async function readFileContent(sdk: DirectorySDK, path: string): Promise<FileContent | undefined> {
   if ((await sdk.protocol) === "v1") return sdk.client.file.read({ path }).then((x) => x.data)
   const bytes = await sdk.api.file.read({ path, location: { directory: sdk.directory } })
-  // A NUL byte marks binary content, which the viewers show without a text body.
+  const mimeType = MEDIA[path.slice(path.lastIndexOf(".") + 1).toLowerCase()]
+  // Images and audio keep their bytes as base64, as V1 serves them, so the media viewers can preview them. Other
+  // content with a NUL byte is binary, which the viewers show without a body.
+  if (mimeType && mimeType !== "image/svg+xml")
+    return { type: "binary", content: base64(bytes), encoding: "base64", mimeType }
   if (bytes.includes(0)) return { type: "binary", content: "" }
-  return { type: "text", content: new TextDecoder().decode(bytes) }
+  return { type: "text", content: new TextDecoder().decode(bytes), ...(mimeType ? { mimeType } : {}) }
+}
+
+const MEDIA: Record<string, string | undefined> = {
+  png: "image/png",
+  jpg: "image/jpeg",
+  jpeg: "image/jpeg",
+  gif: "image/gif",
+  webp: "image/webp",
+  avif: "image/avif",
+  bmp: "image/bmp",
+  ico: "image/x-icon",
+  tif: "image/tiff",
+  tiff: "image/tiff",
+  heic: "image/heic",
+  svg: "image/svg+xml",
+  mp3: "audio/mpeg",
+  wav: "audio/wav",
+  ogg: "audio/ogg",
+  m4a: "audio/mp4",
+  aac: "audio/aac",
+  flac: "audio/flac",
+  opus: "audio/opus",
+}
+
+// btoa takes a binary string; chunks keep String.fromCharCode under the engine's argument limit.
+function base64(bytes: Uint8Array) {
+  return btoa(
+    Array.from({ length: Math.ceil(bytes.length / 0x8000) }, (_, index) =>
+      String.fromCharCode(...bytes.subarray(index * 0x8000, (index + 1) * 0x8000)),
+    ).join(""),
+  )
 }

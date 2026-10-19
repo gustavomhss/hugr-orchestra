@@ -95,11 +95,6 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   const fromLocation: ServerApi["project"]["current"] = (value, options) =>
     input.current.location.get(value, options).then((info) => info.project)
   const lookup = { served: true }
-  // The V2 MCP service has no resource routes yet: the catalog answers empty instead of a 404 per poll.
-  const located = (value?: { location?: { directory?: string } }) => ({
-    directory: value?.location?.directory ?? "",
-    project: { id: "", directory: value?.location?.directory ?? "" },
-  })
   const current: ServerApi = {
     ...input.current,
     project: {
@@ -110,13 +105,6 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
           lookup.served = false
           return fromLocation(value, options)
         })
-      },
-    },
-    mcp: {
-      ...input.current.mcp,
-      resource: {
-        ...input.current.mcp.resource,
-        catalog: async (value) => ({ location: located(value), data: { resources: [], templates: [] } }),
       },
     },
   }

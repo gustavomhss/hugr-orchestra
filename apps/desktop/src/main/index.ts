@@ -52,7 +52,7 @@ import { spawnWslSidecar } from "./wsl/sidecar"
 import { migrate } from "./migrate"
 import { cleanupStoreFiles } from "./store-cleanup"
 import { resolveCliBinary, startBackgroundCli } from "./background-cli"
-import { startOwnedServe } from "./owned-serve"
+import { sidecarVersion, startOwnedServe } from "./owned-serve"
 import { startDockChannel } from "./dock-channel"
 import { readWslExpectedVersion } from "./cli-version"
 import { nativeT, setNativeTranslations } from "./native-translations"
@@ -86,10 +86,9 @@ const APP_IDS: Record<string, string> = {
   prod: "ai.hugr.orchestra",
 }
 const TEST_ONBOARDING = process.env.ORCHESTRA_TEST_ONBOARDING === "1"
-// "1": the shared background daemon. "owned": a desktop-owned `orchestra serve` child in place of the V1 sidecar.
-// Unset (default) keeps the V1 sidecar until the app's V2 route parity lands.
-const SIDECAR_VERSION =
-  process.env.ORCHESTRA_SIDECAR_V2 === "owned" ? "v2-owned" : process.env.ORCHESTRA_SIDECAR_V2 === "1" ? "v2" : "v1"
+// Default: a desktop-owned `orchestra serve` V2 child. "legacy" (or "0") falls back to the V1 sidecar for one release;
+// "1" uses the shared background daemon. See apps/desktop/README.md.
+const SIDECAR_VERSION = sidecarVersion(process.env.ORCHESTRA_SIDECAR_V2)
 const jsCallStackFeature = "DocumentPolicyIncludeJSCallStacksInCrashReports"
 
 let logger: ReturnType<typeof initLogging>

@@ -3,7 +3,7 @@ import { createServer } from "node:net"
 import type { Readable } from "node:stream"
 import { DesktopOmni } from "./omni-process"
 
-// The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app (B6 precondition 2). It
+// The desktop-owned V2 server: the bundled CLI as `orchestra serve`, a child of this app and its default server. It
 // replaces the V1 sidecar for the launch, never runs beside it, and is not the shared background daemon.
 // No electron import: index.ts resolves the CLI and the launch env, so this module runs under bun test.
 
@@ -81,6 +81,16 @@ export async function startOwnedServe(options: {
   }
 
   return { url, username: "orchestra", password, listener: { stop }, health: { wait: health } }
+}
+
+/**
+ * The server a launch uses, from `ORCHESTRA_SIDECAR_V2`: the owned V2 child unless "legacy" (or "0") asks for the V1
+ * sidecar, kept for one release as the fallback, or "1" for the shared background daemon.
+ */
+export function sidecarVersion(value: string | undefined) {
+  if (value === "legacy" || value === "0") return "v1" as const
+  if (value === "1") return "v2" as const
+  return "v2-owned" as const
 }
 
 async function healthy(url: string, password: string) {

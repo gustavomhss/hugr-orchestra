@@ -2423,6 +2423,36 @@ export type McpListOutput = {
   }>
 }
 
+export type McpResourcesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpResourcesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly resources: ReadonlyArray<{
+      readonly server: string
+      readonly name: string
+      readonly uri: string
+      readonly description?: string | null
+      readonly mimeType?: string | null
+    }>
+    readonly templates: ReadonlyArray<{
+      readonly server: string
+      readonly name: string
+      readonly uriTemplate: string
+      readonly description?: string | null
+      readonly mimeType?: string | null
+    }>
+  }
+}
+
 export type McpAddInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
@@ -2490,6 +2520,39 @@ export type McpDisconnectInput = {
 }
 
 export type McpDisconnectOutput = void
+
+export type McpAuthStartInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpAuthStartOutput = { readonly authorizationUrl: string; readonly oauthState: string }
+
+export type McpAuthCallbackInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly code: { readonly code: string }["code"]
+}
+
+export type McpAuthCallbackOutput =
+  | { readonly status: "connected" }
+  | { readonly status: "disabled" }
+  | { readonly status: "failed"; readonly error: string }
+  | { readonly status: "needs_auth" }
+  | { readonly status: "needs_client_registration"; readonly error: string }
+
+export type McpAuthRemoveInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpAuthRemoveOutput = void
 
 export type SkillsListInput = {
   readonly location?: {

@@ -2,13 +2,14 @@ import type { DirectorySDK } from "@/context/sdk"
 import type { ServerConnection } from "@/context/server"
 import type { ServerSDK } from "@/context/server-sdk"
 import { authTokenFromCredentials } from "@/utils/server"
+import { authenticateMcpV2 } from "@/context/global-sync/mcp"
 import { mcpErrorDetail } from "./mcp-actions"
 import { type McpEntry, mcpEntry, type McpServerConfig, type McpStatus } from "./mcp-model"
 
 type Fetch = (url: URL, init: RequestInit) => Promise<Response>
 
 // One profile's MCP reads and writes. V1 servers expose status, config, tools and profile config
-// writes; V2 servers expose status, connection and config writes through the current API.
+// writes; V2 servers expose status, connection, OAuth sign-in and config writes through the current API.
 // Query functions return null, never undefined, when the server cannot answer.
 export function createMcpSource(input: {
   server: ServerConnection.Any
@@ -16,6 +17,8 @@ export function createMcpSource(input: {
   sdk: DirectorySDK
   serverSDK: ServerSDK
   fetch: Fetch
+  /** Opens a V2 sign-in's authorization URL; V1 servers open the browser themselves. */
+  open: (url: string) => void
 }) {
   const v1 = () => input.serverSDK.protocol.then((protocol) => protocol === "v1")
   const location = { directory: input.directory }
@@ -53,9 +56,18 @@ export function createMcpSource(input: {
       if (await v1()) return void (await input.sdk.client.mcp.disconnect({ name }))
       await api().disconnect({ server: name, location })
     },
-    // The request stays open until the browser sign-in finishes, so the caller can abort it.
+    // Resolves when the browser sign-in finishes, so the caller can abort the wait.
     async authenticate(name: string, signal?: AbortSignal) {
-      await input.sdk.client.mcp.auth.authenticate({ name }, { signal })
+      if (await v1()) return void (await input.sdk.client.mcp.auth.authenticate({ name }, { signal }))
+      await authenticateMcpV2({
+        start: () => input.serverSDK.orchestra.mcp.authStart({ server: name, location }, { signal }),
+        status: () =>
+          api()
+            .list({ location })
+            .then((listed) => listed.data.find((server) => server.name === name)?.status.status),
+        open: input.open,
+        signal,
+      })
     },
     // Sessions of this profile mid-turn. A V1 config write disposes the project instance, which cancels them.
     async working() {

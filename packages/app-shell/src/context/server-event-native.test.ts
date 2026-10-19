@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
-import { createNativeEventAdapter, executionStatus } from "./server-event-native"
+import { createNativeEventAdapter, executionStatus, sessionUsage } from "./server-event-native"
 import { createV2SessionReducer } from "./server-session-v2-reducer"
 
 const location = { directory: "/repo" }
@@ -114,6 +114,34 @@ describe("createNativeEventAdapter", () => {
         time: { created: 3, completed: 9 },
       },
     ])
+  })
+
+  test("keeps the provider state of a V2 reasoning part", () => {
+    const providerMetadata = { anthropic: { signature: "sig" } }
+    const ended = {
+      id: "evt_r",
+      type: "session.next.reasoning.ended",
+      location,
+      data: { ...at(1), assistantMessageID: "msg_reply", reasoningID: "rsn_a", text: "thinking", providerMetadata },
+    }
+    Schema.decodeUnknownSync(SessionEvent.All)(ended)
+
+    expect(createNativeEventAdapter()(ended)).toMatchObject({
+      type: "session.reasoning.ended",
+      data: { ordinal: 0, text: "thinking", state: providerMetadata },
+    })
+  })
+
+  test("adds each settled V2 step's cost and tokens to the session's totals", () => {
+    const step = createNativeEventAdapter()(stream[8]!) as unknown as Parameters<typeof sessionUsage>[1]
+    const info = { id: "ses_1", cost: 1, tokens: { input: 10, output: 5, reasoning: 1, cache: { read: 2, write: 0 } } }
+    const total = sessionUsage(info, step)
+
+    expect(total?.cost).toBeCloseTo(1.01)
+    expect(total?.tokens).toEqual({ input: 13, output: 7, reasoning: 1, cache: { read: 2, write: 0 } })
+    const fresh: { id: string; cost?: number } = { id: "ses_1" }
+    expect(sessionUsage(fresh, step)).toMatchObject({ cost: 0.01, tokens: { input: 3, output: 2 } })
+    expect(sessionUsage(info, createNativeEventAdapter()(stream[2]!) as unknown as typeof step)).toBeUndefined()
   })
 
   test("leaves events without a session.next name to the existing adapter", () => {

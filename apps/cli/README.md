@@ -43,11 +43,12 @@ registration, and the server password. Daemon state uses Core's XDG state path
 under the `orchestra` application directory, with `server.json` and `password`
 files. The password is retained across server restarts.
 
-Desktop's opt-in V2 sidecar path (`ORCHESTRA_SIDECAR_V2=1`) consumes the compiled
-CLI artifact as its background server. In that mode, its main process verifies or
-installs the artifact, checks service status, starts the service, and obtains its
-password through CLI commands. Desktop defaults to the legacy sidecar; the
-legacy executable's commands and compatibility remain owned by `apps/orchestra`.
+Desktop runs the compiled CLI as its server: by default as its own `orchestra serve`
+child, or, with `ORCHESTRA_SIDECAR_V2=1`, as the shared background service, whose
+artifact, status, start and password its main process manages through CLI commands.
+`ORCHESTRA_SIDECAR_V2=legacy` keeps the V1 sidecar for one release (see
+`apps/desktop/README.md`); the legacy executable's commands and compatibility
+remain owned by `apps/orchestra`.
 
 ## Development and packaging
 

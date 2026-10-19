@@ -108,6 +108,8 @@ import type {
   CommandsListOutput,
   McpListInput,
   McpListOutput,
+  McpResourcesInput,
+  McpResourcesOutput,
   McpAddInput,
   McpAddOutput,
   McpRemoveInput,
@@ -116,6 +118,12 @@ import type {
   McpConnectOutput,
   McpDisconnectInput,
   McpDisconnectOutput,
+  McpAuthStartInput,
+  McpAuthStartOutput,
+  McpAuthCallbackInput,
+  McpAuthCallbackOutput,
+  McpAuthRemoveInput,
+  McpAuthRemoveOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -1059,6 +1067,18 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ),
+      resources: (input?: McpResourcesInput, requestOptions?: RequestOptions) =>
+        request<McpResourcesOutput>(
+          {
+            method: "GET",
+            path: `/api/mcp/resource`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
       add: (input: McpAddInput, requestOptions?: RequestOptions) =>
         request<McpAddOutput>(
           {
@@ -1101,6 +1121,43 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/mcp/${encodeURIComponent(input.server)}/disconnect`,
+            query: { location: input["location"] },
+            successStatus: 204,
+            declaredStatuses: [404, 401, 400],
+            empty: true,
+          },
+          requestOptions,
+        ),
+      authStart: (input: McpAuthStartInput, requestOptions?: RequestOptions) =>
+        request<McpAuthStartOutput>(
+          {
+            method: "POST",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/auth`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      authCallback: (input: McpAuthCallbackInput, requestOptions?: RequestOptions) =>
+        request<McpAuthCallbackOutput>(
+          {
+            method: "POST",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/auth/callback`,
+            query: { location: input["location"] },
+            body: { code: input["code"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      authRemove: (input: McpAuthRemoveInput, requestOptions?: RequestOptions) =>
+        request<McpAuthRemoveOutput>(
+          {
+            method: "DELETE",
+            path: `/api/mcp/${encodeURIComponent(input.server)}/auth`,
             query: { location: input["location"] },
             successStatus: 204,
             declaredStatuses: [404, 401, 400],
