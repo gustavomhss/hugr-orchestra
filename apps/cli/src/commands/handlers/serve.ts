@@ -1,8 +1,10 @@
 import { NodeHttpServer } from "@effect/platform-node"
 import { Credential } from "@orchestra/core/credential"
+import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
+import { SessionV2 } from "@orchestra/core/session"
 import { Context, Layer, Option } from "effect"
 import * as Effect from "effect/Effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
@@ -25,6 +27,16 @@ export default Runtime.handler(
         const address = yield* listen(input.hostname, input.port, password)
         if (input.register) yield* daemon.register(address)
         console.log(`server listening on ${HttpServer.formatAddress(address)}`)
+        // V1 transcripts on this database are copied to V2 once, after health already answers.
+        yield* Effect.gen(function* () {
+          const database = yield* Database.Service
+          const imported = yield* SessionV2.SessionLegacyImport.run(database.db)
+          if (imported > 0) console.log(`imported ${imported} V1 session transcripts`)
+        }).pipe(
+          Effect.provide(AppNodeBuilder.build(LayerNode.group([Database.node]))),
+          Effect.catchCause((cause) => Effect.logError("V1 session import failed", cause)),
+          Effect.forkScoped,
+        )
         return yield* Effect.never
       }),
     )
