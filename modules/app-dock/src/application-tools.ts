@@ -2,14 +2,17 @@ export * as AppDockTools from "./application-tools"
 
 import { Effect, JsonSchema, Layer, Schema, SchemaRepresentation } from "effect"
 import { tool, type Hooks, type ToolContext } from "@orchestra/plugin"
-import { makeGlobalNode } from "@orchestra/core/effect/app-node"
+import { AgentV2 } from "@orchestra/core/agent"
+import { makeGlobalNode, makeLocationNode } from "@orchestra/core/effect/app-node"
 import type { Host } from "@orchestra/core/host"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
 import { PermissionV2 } from "@orchestra/core/permission"
+import { PluginV2 } from "@orchestra/core/plugin"
 import { SessionStore } from "@orchestra/core/session"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
 import { createAppDockHooks } from "./app-dock"
+import { LINUX_DESCRIPTION, LINUX_PROMPT } from "./app-dock-linux"
 import { createLinuxWorkspaceHooks } from "./linux-workspace"
 import type { Transport } from "./transport"
 
@@ -100,6 +103,7 @@ export function contribution(port: Transport): Host.Contribution {
   )
   return {
     id: "app-dock",
+    locationNodes: [scopeNode],
     nodes: [
       makeGlobalNode({
         name: "app-dock/tools",
@@ -109,3 +113,45 @@ export function contribution(port: Transport): Host.Contribution {
     ],
   }
 }
+
+/**
+ * V1's `scopeLinuxWorkspace` on V2: the Linux workspace tools, and the Dock tools that act only on native controls,
+ * belong to the `linux` subagent alone. Every other agent gets V1's global denials ahead of its own rules (so its own
+ * rules still win, as agent permissions win over global ones in V1); the `linux` agent gets V1's exact ruleset.
+ */
+export function scope(draft: AgentV2.Draft) {
+  const linux = AgentV2.ID.make("linux")
+  draft
+    .list()
+    .filter((agent) => agent.id !== linux)
+    .forEach((agent) =>
+      draft.update(agent.id, (mutable) => {
+        mutable.permissions.unshift(
+          ...["linux_*", "ui_*", "dock_find", "dock_action"].map((action) => ({ action, resource: "*", effect: "deny" as const })),
+        )
+      }),
+    )
+  draft.update(linux, (agent) => {
+    agent.system ??= LINUX_PROMPT
+    agent.description ??= LINUX_DESCRIPTION
+    agent.mode = "subagent"
+    agent.permissions = [
+      { action: "*", resource: "*", effect: "deny" },
+      ...["linux_*", "ui_*", "linux", "dock", "todowrite"].map((action) => ({ action, resource: "*", effect: "allow" as const })),
+    ]
+  })
+}
+
+const scopeNode = makeLocationNode({
+  name: "app-dock/linux-scope",
+  layer: Layer.effectDiscard(
+    Effect.gen(function* () {
+      const plugins = yield* PluginV2.Service
+      const agents = yield* AgentV2.Service
+      yield* plugins.wait(PluginV2.ID.make("config-agent"))
+      yield* plugins.ensure(PluginV2.ID.make("app-dock/linux-scope"), () => agents.transform(scope).pipe(Effect.asVoid))
+    }),
+  ),
+  deps: [PluginV2.node, AgentV2.node],
+})
+

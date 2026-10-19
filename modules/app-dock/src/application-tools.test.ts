@@ -1,7 +1,9 @@
 import { describe, expect, test } from "bun:test"
 import { Effect, Layer } from "effect"
+import { AgentV2 } from "@orchestra/core/agent"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
+import { PermissionV2 } from "@orchestra/core/permission"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { Tool } from "@orchestra/core/tool/tool"
 import { AppDockTools } from "./application-tools"
@@ -50,4 +52,30 @@ describe("AppDockTools", () => {
     expect(f.sent).toEqual([expect.objectContaining({ type: "dock.rpc", op: "wait", args: expect.objectContaining({ milliseconds: 5 }) })])
     expect(JSON.stringify(output.content)).toContain("waited")
   })
+
+  test("scopes the Linux workspace tools to the linux subagent, as V1 does", () => {
+    const agents = new Map([["build", { ...AgentV2.Info.empty(AgentV2.ID.make("build")), permissions: [] }]]) as Map<
+      string,
+      Parameters<Parameters<AgentV2.Draft["update"]>[1]>[0]
+    >
+    AppDockTools.scope({
+      list: () => [...agents.values()],
+      get: (id) => agents.get(id),
+      default: () => undefined,
+      remove: (id) => void agents.delete(id),
+      update: (id, fn) => {
+        const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [] }
+        agents.set(id, agent)
+        fn(agent)
+      },
+    })
+    // A tool is hidden from an agent when its last rule for the tool name denies every resource.
+    const visible = (agent: string, tool: string) => PermissionV2.evaluate(tool, "*", agents.get(agent)!.permissions).effect !== "deny"
+    expect(["ui_look", "linux_exec", "dock_find", "dock_action"].map((tool) => visible("build", tool))).toEqual([false, false, false, false])
+    expect(visible("build", "dock_read")).toBe(true)
+    expect(["ui_look", "linux_exec", "todowrite"].map((tool) => visible("linux", tool))).toEqual([true, true, true])
+    expect(visible("linux", "dock_read")).toBe(false)
+    expect(agents.get("linux")?.mode).toBe("subagent")
+  })
 })
+
