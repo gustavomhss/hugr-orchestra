@@ -152,31 +152,13 @@ describe("InquiryCheck.run", () => {
     expect(rule(await run(base({ claims: [only], searches: [{ ...search, complete: false }] })), "R5").failed).toBe(1)
   })
 
-  // Mutation control: make `word` in src/research/inquiry-check.ts ignore claim.scope; the existential claim then fails R5.
-  test("R5 lets a declared scope decide, and names the wording that flagged an undeclared claim", async () => {
+  // Mutation control: drop `universal wording "${word}"` from the R5 reason in src/research/inquiry-check.ts.
+  test("R5 names the wording that flagged a claim, and a declared existential scope does not exempt it", async () => {
     const proposition = "snapshot lists only the last 12 sources"
     const flagged = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition })] }))
     expect(reasons(flagged, "R5")[0]).toContain('universal wording "only"')
     const declared = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition, scope: "existential" })] }))
-    expect(rule(declared, "R5")).toMatchObject({ checked: 0, failed: 0 })
-  })
-
-  // Mutation control: drop the `input.tier === "quick"` branch of R5 in src/research/inquiry-check.ts; the quick claim fails.
-  test("R5 at tier quick turns undeclared universal wording into a card limitation; a declared universal still fails", async () => {
-    const worded = claim([lines(file.ref, 1, 2)], { proposition: "snapshot lists only the last 12 sources" })
-    const quick = await run(base({ tier: "quick", claims: [worded] }))
-    expect(quick.result.verdict).toBe("pass")
-    expect(quick.limitations).toEqual(['R5 c1: universal wording "only" not backed by a complete search'])
-    expect(rule(await run(base({ tier: "focused", claims: [worded] })), "R5").failed).toBe(1)
-    expect(rule(await run(base({ tier: "quick", claims: [{ ...worded, scope: "universal" }] })), "R5").failed).toBe(1)
-  })
-
-  // Mutation control: restore the single-span containment of R9 in src/research/inquiry-check.ts; the joined range fails.
-  test("R9 accepts a cited range that adjacent evidence of the same file covers together, and nothing with a gap", async () => {
-    const split = [claim([lines(file.ref, 1, 4), lines(file.ref, 5, 8)])]
-    expect(rule(await run(base({ claims: split, answer: "see src/a.ts:2-7" })), "R9")).toMatchObject({ checked: 1, failed: 0 })
-    const gap = [claim([lines(file.ref, 1, 3), lines(file.ref, 5, 8)])]
-    expect(reasons(await run(base({ claims: gap, answer: "see src/a.ts:2-7" })), "R9")[0]).toContain("outside the evidence held")
+    expect(rule(declared, "R5")).toMatchObject({ checked: 1, failed: 1 })
   })
 
   // Mutation control: drop the git-history clause of `primary` in src/research/inquiry-check.ts; the blame claim fails R1.

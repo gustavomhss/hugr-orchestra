@@ -53,7 +53,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
       // the Session's code searches for R5/R6, URL liveness, and real paths so a symlinked citation resolves like read.
       const deps = Effect.gen(function* () {
         const messages = yield* MessageV2.stream(ctx.sessionID).pipe(Effect.provideService(Database.Service, database), Effect.orElseSucceed(() => []))
-        return { records, binding, domains: yield* AllowedDomains, searches: ResearchInquiry.searches(messages), links: yield* Links, tier: allowance.tier,
+        return { records, binding, domains: yield* AllowedDomains, searches: ResearchInquiry.searches(messages), links: yield* Links,
           ...(Option.isSome(fs) ? { real: (target: string) => fs.value.resolve(target).pipe(Effect.catchDefect(() => Effect.succeed(target))) } : {}) }
       })
       const subquestion = (ref: Research.RecordRef) => {
@@ -123,7 +123,7 @@ export const InquiryTool = Tool.define("inquiry", Effect.gen(function* () {
               : "open the inquiry first: inquiry open with the question and its subquestions")
           // The close checks its own claims and answer on a draft before writing anything, so a refused close leaves
           // nothing to drop; its failures refuse an answered close by name and become limitations short of answered.
-          const draft = ResearchInquiry.draft(state, input, allowance.tier)
+          const draft = ResearchInquiry.draft(state, input)
           if (typeof draft === "string") return yield* refuse(draft)
           const refusal = ResearchInquiry.refusal(draft, input.sufficiency)
           if (refusal) return yield* refuse(refusal)

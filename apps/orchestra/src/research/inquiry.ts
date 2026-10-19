@@ -126,7 +126,6 @@ export type Deps = {
   readonly searches: readonly InquiryCheck.Search[]
   readonly links: (urls: readonly string[], options: Liveness.Options) => Effect.Effect<readonly Liveness.Result[]>
   readonly real?: (target: string) => Effect.Effect<string>
-  readonly tier?: Research.Depth
 }
 
 /**
@@ -175,7 +174,6 @@ export const check = Effect.fn("ResearchInquiry.check")(function* (state: State,
     liveness: (urls) => urls.length ? deps.links(urls.slice(0, 256), { seen, captured }).pipe(Effect.map((list) => list.map((item) =>
       ({ url: item.url, status: item.status, ...(item.httpStatus !== undefined ? { httpStatus: item.httpStatus } : {}) })))) : Effect.succeed([]),
     ...(deps.real ? { real: deps.real } : {}),
-    ...(deps.tier ? { tier: deps.tier } : {}),
   })
 })
 
@@ -235,16 +233,15 @@ type Close = Extract<Research.InquiryInput, { action: "close" }>
 /**
  * The state a close is checked on before it writes anything: its implicit quick open (one subquestion, the question) and
  * its inline claims under provisional refs claim-1, claim-2..., so a failing close leaves no claim behind. A string is
- * the reason a claim cannot be placed. At tier quick a claim without subquestion takes the first one still uncovered.
+ * the reason a claim cannot be placed.
  */
-export function draft(state: State, close: Close, tier?: Research.Depth): State | string {
+export function draft(state: State, close: Close): State | string {
   const subquestions: Subquestion[] = state.phase === "none"
     ? [{ ref: provisional("subquestion-1"), question: close.question ?? "", claims: [] }]
     : state.subquestions.map((sub) => ({ ...sub, claims: [...sub.claims] }))
   const placed = (close.claims ?? []).map((claim, index) => {
     const sub = claim.subquestion ? subquestions.find((item) => item.ref.id === claim.subquestion!.id)
-      : subquestions.length === 1 ? subquestions[0]
-      : tier === "quick" ? subquestions.find((item) => !item.claims.length && !item.gap) ?? subquestions.at(-1) : undefined
+      : subquestions.length === 1 ? subquestions[0] : undefined
     sub?.claims.push(provisional(`claim-${index + 1}`))
     return { claim, index, sub }
   })

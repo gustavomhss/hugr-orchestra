@@ -169,17 +169,21 @@ describe("the inquiry state machine", () => {
       yield* fixture.sessions.remove(fixture.authority.id)
     }))
 
-  // Mutation control: make the quick fallback of ResearchInquiry.draft (src/research/inquiry.ts) never apply; the close is then
-  // refused "claim-1 needs subquestion".
-  it.instance("at tier quick inline claims without a subquestion cover the open subquestions in order", () =>
+  // Mutation control: let ResearchInquiry.draft (src/research/inquiry.ts) place an unassigned claim on the first subquestion
+  // when several are open; the close is then accepted and this goes red.
+  it.instance("an inline claim without a subquestion is refused when several are open, and nothing is written", () =>
     Effect.gen(function* () {
       const fixture = yield* setup()
       yield* fixture.write("g.ts", "export const g = 1\nexport const h = 2\n")
-      yield* fixture.inquiry({ action: "open", question: "What does g.ts export?", subquestions: ["g", "h"], profile: "understand" })
+      const open = opened(yield* fixture.inquiry({ action: "open", question: "What does g.ts export?", subquestions: ["g", "h"], profile: "understand" }))
       const source = yield* fixture.source("g.ts")
-      const closed = yield* fixture.inquiry({ action: "close", sufficiency: "answered", answer: "g.ts:1 exports g and g.ts:2 exports h.",
-        claims: [{ proposition: "g.ts exports g", nature: "extraction", evidence: [{ source, lines: { start: 1, end: 1 } }] },
-          { proposition: "g.ts exports h", nature: "extraction", evidence: [{ source, lines: { start: 2, end: 2 } }] }] })
+      const g = { proposition: "g.ts exports g", nature: "extraction" as const, evidence: [{ source, lines: { start: 1, end: 1 } }] }
+      const h = { proposition: "g.ts exports h", nature: "extraction" as const, evidence: [{ source, lines: { start: 2, end: 2 } }] }
+      expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "answered", answer: "g.ts:1-2 exports g and h.", claims: [g, h] })))
+        .toContain(`claim-1 needs subquestion, one of ${open.subquestions[0].id}, ${open.subquestions[1].id}`)
+      expect(yield* fixture.turn()).not.toContain("claims ")
+      const closed = yield* fixture.inquiry({ action: "close", sufficiency: "answered", answer: "g.ts:1-2 exports g and h.",
+        claims: [{ ...g, subquestion: open.subquestions[0] }, { ...h, subquestion: open.subquestions[1] }] })
       expect(closed.output).toContain("\"closed\":\"answered\"")
       yield* fixture.sessions.remove(fixture.authority.id)
     }))
