@@ -5,7 +5,7 @@ import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprot
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
-import { LLMEvent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
+import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
 import { Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
@@ -212,7 +212,7 @@ function server(tools: ReadonlyArray<ToolDefinition>, callID: (name: string) => 
 }
 
 function modelText(result: ToolResultValue) {
-  if (result.type === "content") return result.value.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n")
+  if (result.type === "content") return result.value.flatMap((part: ToolContent) => (part.type === "text" ? [part.text] : [])).join("\n")
   return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
 }
 
