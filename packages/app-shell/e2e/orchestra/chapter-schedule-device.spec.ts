@@ -51,7 +51,7 @@ test("due tasks dispatch while the page is open, recurring dates roll forward an
     .toEqual([
       {
         sessionID: (api.created[0] as { id: string }).id,
-        body: { id: expect.stringMatching(MESSAGE_ID), text: "Check the build." },
+        body: { id: expect.stringMatching(MESSAGE_ID), prompt: { text: "Check the build." } },
       },
     ])
   await expect(hourly.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)
@@ -159,7 +159,7 @@ test("a failed scheduled run is not retried; Run now retries the same slot with 
   await expect(page).toHaveURL(new RegExp(`/session/${slot}$`))
   expect(api.requests.map((body) => (body as { id: string }).id)).toEqual([slot, slot])
   expect(api.prompts).toEqual([
-    { sessionID: slot, body: { id: expect.stringMatching(MESSAGE_ID), text: "Check the build." } },
+    { sessionID: slot, body: { id: expect.stringMatching(MESSAGE_ID), prompt: { text: "Check the build." } } },
   ])
   await openSchedule(page)
   await expect(card.locator("p").nth(1)).toHaveText(/^Next: Jan 15, 2031, 10:30\sAM\s*America\/New_York · 1 run$/)

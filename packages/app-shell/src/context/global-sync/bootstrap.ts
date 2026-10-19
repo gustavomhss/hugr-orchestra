@@ -507,7 +507,11 @@ export async function bootstrapDirectory(input: {
           const result =
             (await input.protocol) === "v1"
               ? (await input.sdk.vcs.get()).data
-              : await input.branches?.({ location: { directory: input.directory } }).then((value) => value.data)
+              : // A server without the branch route has no branch to show; it is not retried.
+                await input
+                  .branches?.({ location: { directory: input.directory } })
+                  .then((value) => value.data)
+                  .catch(() => undefined)
           if (!result) return
           const next = { branch: result.branch ?? undefined, default_branch: result.default_branch ?? undefined }
           input.setStore("vcs", next)
