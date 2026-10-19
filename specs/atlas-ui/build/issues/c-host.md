@@ -33,6 +33,10 @@ brief is written with the fix already in it.
   `test/session/atlas-resume-compaction.test.ts`. So the test proves the parsing and the writing, but not a real
   provider's reply. Lead check before R11 is closed: make one live `POST /atlas/delegate` call in the dev app against
   the model the screen offers.
+- Closed 2026-10-19: one live `POST /atlas/delegate` call in the dev desktop app, with `opencode-go/deepseek-v4.1-flash`
+  on two open Tier questions, answered `ok: true` for both. `review.jsonl` gained two `answer` rows with
+  `drafted { model, why }`, and the screen showed each draft with Accept. Accept wrote the plain answer, and the
+  question left the open batch.
 
 ## 3. Delegation details D33 leaves open (C04a)
 
