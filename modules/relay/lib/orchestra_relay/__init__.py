@@ -34,6 +34,14 @@ def gated(builder, gates, dev=False):
             f.write(".relay/\n")
         print(f"relay: added .relay/ to {ignore}", file=sys.stderr)
     graph = {"name": root.name}
+    # Approvals go first, before any check node adds conditional edges of its own.
+    for node in [node for node, gate in gates.items() if isinstance(gate, dict) and gate.get("approve")]:
+        if any(node in (b.ends or {}).values() for branches in builder.branches.values() for b in branches.values()):
+            raise RelayError(
+                f'relay: node "{node}" is reached through a conditional edge, so relay cannot put its approval first.\n'
+                f'       Fix: route to a separate node that has one static edge to "{node}".'
+            )
+        builder.edges = {(start, f"{node}__relay_approve" if end == node else end) for start, end in builder.edges}
     for node, gate in gates.items():
         _gate(builder, root, graph, node, {"check": gate} if isinstance(gate, str) else gate)
     builder.edges = {(start, "relay__end" if end == END else end) for start, end in builder.edges}
@@ -152,12 +160,6 @@ def _gate(builder, root, graph, node, gate):
         return targets if last["outcome"] == "pass" else node
 
     if gate.get("approve"):
-        if any(node in (branch.ends or {}).values() for branches in builder.branches.values() for branch in branches.values()):
-            raise RelayError(
-                f'relay: node "{node}" is reached through a conditional edge, so relay cannot put its approval first.\n'
-                f'       Fix: route to a separate node that has one static edge to "{node}".'
-            )
-        builder.edges = {(start, approve if end == node else end) for start, end in builder.edges}
         builder.add_node(approve, run_approve)
         builder.add_conditional_edges(approve, route, [node, END])
     builder.add_node(check, run_check)
