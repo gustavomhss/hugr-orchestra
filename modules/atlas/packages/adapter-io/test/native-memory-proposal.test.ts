@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach, vi } from "vitest"
 import { appendFileSync, chmodSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
-import { proposeProjectRule, type AtlasBinding } from "../src/native-memory.js"
-import { appendReview, readReview, reviewLogPath } from "../src/review-log.js"
+import { decideProjectRule, proposeProjectRule, type AtlasBinding } from "../src/native-memory.js"
+import { appendReview, foldReview, readReview, reviewLogPath } from "../src/review-log.js"
 import { createDurableMemory } from "../src/memory-store.js"
 
 let root: string
@@ -128,5 +128,82 @@ describe("proposeProjectRule", () => {
 
   it("throws when at is empty", () => {
     expect(() => proposeProjectRule(binding(), RULE, "")).toThrow("proposeProjectRule needs the host's ISO time")
+  })
+})
+
+
+describe("decideProjectRule", () => {
+  const T3 = "2026-10-18T12:00:00.000Z"
+  const proposed = (): string => {
+    const v = proposeProjectRule(binding(), RULE, T1)
+    if (!v.ok) throw new Error(v.reason)
+    return v.proposalId
+  }
+  const rules = () =>
+    createDurableMemory(root)
+      .read()
+      .store.map((r) => [r.owner, r.kind, (r.entry as { rule: string }).rule, (r.entry as { scope: string }).scope])
+
+  it("indexed writes the rule as the proposing member, then closes the proposal", () => {
+    const id = proposed()
+    const v = decideProjectRule(binding({ memoryOwner: "steward" }), { proposalId: id, verdict: "indexed", by: "gus" }, T2)
+    if (!v.ok) throw new Error(v.reason)
+    expect(typeof v.ref?.eventId).toBe("string")
+    expect(rules()).toEqual([["backend", "project", RULE.rule, RULE.scope]])
+    const fold = foldReview(readReview(root).records)
+    expect(fold.openMemoryProposals).toHaveLength(0)
+    expect(fold.memoryDecisions).toEqual([
+      { kind: "memory-decision", proposalId: id, verdict: "indexed", at: T2, by: "gus", id: v.decisionId },
+    ])
+  })
+
+  it("an edited rule and scope replace the proposal's text in memory and in the decision", () => {
+    const id = proposed()
+    const edit = { rule: "run go vet before every handler test", scope: "packages/api/handlers" }
+    const v = decideProjectRule(binding(), { proposalId: id, verdict: "indexed", ...edit, by: "gus" }, T2)
+    if (!v.ok) throw new Error(v.reason)
+    expect(rules()).toEqual([["backend", "project", edit.rule, edit.scope]])
+    const decision = foldReview(readReview(root).records).memoryDecisions[0]
+    expect([decision?.rule, decision?.scope]).toEqual([edit.rule, edit.scope])
+  })
+
+  it("discarded only appends the decision", () => {
+    const id = proposed()
+    const v = decideProjectRule(binding(), { proposalId: id, verdict: "discarded", by: "gus" }, T2)
+    if (!v.ok) throw new Error(v.reason)
+    expect(v.ref).toBeUndefined()
+    expect(rules()).toEqual([])
+    const fold = foldReview(readReview(root).records)
+    expect([fold.openMemoryProposals.length, fold.memoryDecisions[0]?.verdict]).toEqual([0, "discarded"])
+  })
+
+  it("refuses a proposal that is not open", () => {
+    const id = proposed()
+    expect(decideProjectRule(binding(), { proposalId: id, verdict: "discarded", by: "gus" }, T2).ok).toBe(true)
+    expect(decideProjectRule(binding(), { proposalId: id, verdict: "indexed", by: "gus" }, T3)).toEqual({
+      ok: false,
+      refusal: "proposal-not-open",
+      reason: `no open memory proposal has id '${id}'`,
+    })
+    expect(rules()).toEqual([])
+  })
+
+  it("a refused write appends no decision and keeps the proposal open", () => {
+    const id = proposed()
+    const hit = binding({ scanner: { name: "gitleaks", command: scanner("hit", 1) } })
+    const v = decideProjectRule(hit, { proposalId: id, verdict: "indexed", by: "gus" }, T2)
+    expect(v).toMatchObject({ ok: false, refusal: "scanner-blocked" })
+    expect(rules()).toEqual([])
+    expect(foldReview(readReview(root).records).openMemoryProposals.map((p) => p.id)).toEqual([id])
+  })
+
+  it("refuses on a review log with a line that does not verify", () => {
+    const id = proposed()
+    appendFileSync(reviewLogPath(root), "{torn\n")
+    expect(decideProjectRule(binding(), { proposalId: id, verdict: "indexed", by: "gus" }, T2)).toMatchObject({
+      ok: false,
+      refusal: "store-partial",
+    })
+    expect(rules()).toEqual([])
   })
 })

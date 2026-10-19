@@ -387,6 +387,38 @@ export function proposeProjectRule(input: AtlasBinding, entry: unknown, at: stri
   return { ok: true, proposalId: appendReview(root, { ...body, at, by: owner }).id }
 }
 
+/** R1 (D30): what a person's decision on a memory proposal did. A refused `indexed` write is the door's own refusal. */
+export type DecisionVerdict =
+  | { readonly ok: true; readonly decisionId: string; readonly ref?: RecordRef }
+  | MemoryRejected
+  | { readonly ok: false; readonly refusal: "proposal-not-open"; readonly reason: string }
+export type ProjectRuleDecision = { readonly proposalId: string; readonly verdict: "indexed" | "discarded"; readonly rule?: string; readonly scope?: string; readonly by: string }
+
+/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
+ *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
+ *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
+ *  storage root and the scanner; its `memoryOwner` never writes. */
+export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict {
+  const binding = freezeBinding(input)
+  const root = binding.storage.root
+  const read = readReview(root)
+  if (read.unreadable === true || read.rejected > 0) {
+    const reason = `the review log at '${reviewLogPath(root)}' cannot be fully read, so the proposal's state is unknown`
+    return { ok: false, refusal: read.unreadable === true ? "store-unavailable" : "store-partial", reason }
+  }
+  const proposal = foldReview(read.records).openMemoryProposals.find((p) => p.id === decision.proposalId)
+  if (proposal === undefined) return { ok: false, refusal: "proposal-not-open", reason: `no open memory proposal has id '${decision.proposalId}'` }
+  const decided = (verdict: "indexed" | "discarded") =>
+    appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
+      ...(decision.scope ? { scope: decision.scope } : {}), at, by: decision.by }).id
+  if (decision.verdict === "discarded") return { ok: true, decisionId: decided("discarded") }
+  const member = { storage: binding.storage, source: binding.source, memoryOwner: proposal.member, execution: binding.execution }
+  const entry = { rule: decision.rule || proposal.rule, scope: decision.scope || proposal.scope }
+  const written = createNativeMemory({ ...member, ...(binding.scanner ? { scanner: binding.scanner } : {}) }).write(entry)
+  if (!written.ok) return written
+  return { ok: true, decisionId: decided("indexed"), ref: written.ref }
+}
+
 /** The proposal's own two fields, or why it is not one. D14's memory-proposal record has no `grounding`. */
 function projectCandidate(entry: unknown): { readonly rule: string; readonly scope: string } | string {
   if (typeof entry !== "object" || entry === null) return "a project-rule proposal is an object {rule, scope}"
