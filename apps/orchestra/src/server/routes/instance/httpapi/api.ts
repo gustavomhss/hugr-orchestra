@@ -7,6 +7,7 @@ import { Integration } from "@orchestra/core/integration"
 import { SkillV2 } from "@orchestra/core/skill"
 import { InstanceDisposed } from "@/server/event"
 import { Question } from "@/question"
+import { AtlasApi } from "./groups/atlas"
 import { ConfigApi } from "./groups/config"
 import { ControlApi } from "./groups/control"
 import { ControlPlaneApi } from "./groups/control-plane"
@@ -60,6 +61,7 @@ export const RootHttpApi = HttpApi.make("orchestra-root")
   .middleware(Authorization)
 
 export const InstanceHttpApi = HttpApi.make("orchestra-instance")
+  .addHttpApi(AtlasApi)
   .addHttpApi(ConfigApi)
   .addHttpApi(ExperimentalApi)
   .addHttpApi(FileApi)
