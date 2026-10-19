@@ -1,8 +1,8 @@
 # Open items
 
-## Waiting on the owner
+## Approved by the owner (2026-10-19)
 
-These touch rules in AGENTS.md that only the owner changes.
+These touch rules in AGENTS.md that only the owner changes. All three are approved; A06b and B-R9-01b add the allow-list rows, and the lead adds the CI Cadence sentence when merging lane B-O (see ORDER.md).
 
 1. **Spawn allow-list: `modules/atlas/boundary/src/generated/surface.js` (A06b).**
    - The surface bundle imports `child_process` through Atlas's git helper and secret scanner.

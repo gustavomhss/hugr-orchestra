@@ -55,7 +55,7 @@ Starts after A-S has merged.
    - B-R9-01b needs the owner's approval of the `repair-run.ts` allow-list row; see [OPEN.md](OPEN.md).
 2. **LEAD:** merge B-L and B-K into this lane. B-R1-01 needs B-K's B-R2-01b; the publish tasks need B-K's README counts.
 3. B-R1-01 → B-R4-01c → B-R7-01c → B-R9-01c
-4. **LEAD:** run the atlas CI job, then merge B-O into `atlas-ui-study`.
+4. **LEAD:** run the atlas CI job, then merge B-O into `atlas-ui-study`. In the same merge, append to AGENTS.md "CI Cadence" the sentence from `issues/b-o.md` item 10 (approved 2026-10-19).
 
 ## Track C (after A and B have merged)
 - C-R1 and C-R5 are written.
