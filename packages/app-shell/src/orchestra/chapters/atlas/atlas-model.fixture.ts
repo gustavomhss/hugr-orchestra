@@ -70,5 +70,9 @@ export function atlasFixture(): AtlasSnapshot {
     dependents: { "packages/a/src/x.ts": ["packages/b/src/y.ts"], "packages/b/src/y.ts": ["packages/c/src/z.ts"] },
     dependentCount: { "packages/a/src/x.ts": 1, "packages/b/src/y.ts": 1 },
     children: { ".": ["README.md", "packages"], packages: ["a", "b", "c"], "packages/a": ["src"] },
-  }
+    own: null,
+    memory: {},
+    orientation: [],
+    territories: [],
+}
 }

@@ -287,8 +287,9 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     }
     return [...map.values()].sort((a, b) => b.facts - a.facts)
   }
-  // Territories (contracts/src/territory.ts) are not in the snapshot (D3), so there are none.
-  const territories = (): AtlasTerritory[] => []
+  // Territories (contracts/src/territory.ts) come from TERRITORY-CATALOG.json (D3b); a tier Atlas does not know reads as T2.
+  const territories = (): AtlasTerritory[] =>
+    R.territories.map((t) => ({ name: t.name, owner: t.owner, tier: tierOf(t.tier), globs: [...t.globs] }))
   const territoryOf = (unitId: string) =>
     territories().find((t) =>
       t.globs.some((g) => g === `${unitId}/**` || (g.endsWith("/**") && unitId.startsWith(g.slice(0, -3)))),
@@ -434,9 +435,15 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     return [...out].sort()
   }
 
-  // What Orchestra serves is the committed Own snapshot (OWN-SNAPSHOT.json). It is not in the snapshot DTO (D3),
-  // so the model holds none; the mock's curated fixture is not shipped (D12).
-  const ownSnapshot: AtlasOwnSnapshot = { revision: "", units: [], catalog: false, packs: {} }
+  // What Orchestra serves is the committed Own snapshot (OWN-SNAPSHOT.json, D3b). A snapshot that does not parse
+  // (HOLD) serves no unit, so the model shows none.
+  const packs = R.own?.status === "READY" ? ownPacks(R.own.units) : {}
+  const ownSnapshot: AtlasOwnSnapshot = {
+    revision: (R.own?.sourceRevision ?? "").slice(0, 8),
+    units: Object.keys(packs),
+    catalog: R.territories.length > 0,
+    packs,
+  }
   // own-source.ts terrainOwner: the actors of the most specific policy scope that covers the unit path; [] when none does.
   const underScope = (path: string, scope: string) => scope === "" || path === scope || path.startsWith(`${scope}/`)
   const packOwner = (unitId: string) => {
@@ -485,11 +492,28 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     return [...map.values()].sort((a, b) => b.facts.length - a.facts.length)
   }
 
+  // .atlas/memory.jsonl by member (D3b). A rule's age counts the records written after it in the WHOLE log, every
+  // member included, which is what the header's decay counts. The logbook belongs to the orchestrator actor `orch`.
+  const records = Object.values(R.memory).flat()
+  const ageOf = (seq: number) => records.filter((r) => r.seq > seq).length
+  const recordsOf = (member: string, kind: string) => (R.memory[member] ?? []).filter((r) => r.kind === kind)
+  const memberOf = (id: AtlasMemberId): AtlasMember => ({
+    bound: id !== "maestro",
+    tasks: recordsOf(id, "task").map(taskOf),
+    prs: recordsOf(id, "pr").map(prOf),
+    rules: recordsOf(id, "project").map((r) => ({
+      rule: r.text,
+      scope: r.scope ?? "*",
+      age: ageOf(r.seq),
+      grounding: r.refs[0],
+      from: r.text,
+    })),
+  })
   const memory: Record<AtlasMemberId, AtlasMember> = {
-    backend: { bound: true, tasks: [], prs: [], rules: [] },
-    jimmy: { bound: true, tasks: [], prs: [], rules: [] },
-    archie: { bound: true, tasks: [], prs: [], rules: [] },
-    maestro: { bound: false, tasks: [], prs: [], rules: [], logbook: [] },
+    backend: memberOf("backend"),
+    jimmy: memberOf("jimmy"),
+    archie: memberOf("archie"),
+    maestro: { ...memberOf("maestro"), logbook: recordsOf("orch", "logbook").map((r) => r.text) },
   }
   const frecency = (r: AtlasMemoryRule) => Math.pow(0.5, r.age)
   const header = (member: AtlasMemberId) => {
@@ -680,6 +704,80 @@ export function createAtlasModel(snapshot: AtlasSnapshot) {
     health,
     activity,
     unitGraph,
-    fileGraph,
+  fileGraph,
   }
+}
+
+type AtlasMemoryWire = AtlasSnapshot["memory"][string][number]
+
+// OWN-SNAPSHOT.json units ({ unit, sourceBlobs, pack: OwnPackPlus }) arrive as plain JSON (`unknown` on the wire),
+// so each field is read defensively; a unit with no string id is skipped.
+function ownPacks(units: readonly unknown[]): Record<string, AtlasOwnPack> {
+  return Object.fromEntries(
+    units.flatMap((entry) => {
+      const unit = record(record(entry).unit)
+      const pack = record(record(entry).pack)
+      const shape = record(pack.shape)
+      if (typeof unit.id !== "string") return []
+      const own: AtlasOwnPack = {
+        summary: text(pack.unit),
+        owner: text(shape.owner),
+        tier: tierOf(shape.tier),
+        invariants: list(pack.invariants).map((row) => {
+          const item = record(row)
+          return { nodeId: text(item.nodeId), tier: tierOf(item.tier), claim: text(item.claim), freshness: text(item.freshness) }
+        }),
+        advisory: list(pack.advisory).length,
+        dependents: list(record(pack.edges).dependents).length,
+        tokenEstimate: typeof pack.tokenEstimate === "number" ? pack.tokenEstimate : 0,
+        sourceFiles: Object.keys(record(record(entry).sourceBlobs)).length,
+      }
+      return [[unit.id, own] as const]
+    }),
+  )
+}
+
+function taskOf(r: AtlasMemoryWire): AtlasMemoryTask {
+  const entry = record(r.entry)
+  return {
+    taskId: text(entry.taskId),
+    attempted: strings(entry.attempted),
+    failedWith: strings(entry.failedWith),
+    stoppedAt: text(entry.stoppedAt),
+    lesson: r.text,
+    ref: r.refs[0] ?? "",
+    source: ".atlas/memory.jsonl",
+  }
+}
+
+// A PR record has no title, and its knowledge delta is a list of facts, not per-unit counts: both stay empty.
+function prOf(r: AtlasMemoryWire): AtlasMemoryPr {
+  const entry = record(r.entry)
+  return {
+    prId: text(entry.prId),
+    title: "",
+    decisions: strings(entry.decisions),
+    reviewOutcomes: strings(entry.reviewOutcomes),
+    knowledgeDelta: [],
+  }
+}
+
+function record(value: unknown): Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value) ? (value as Record<string, unknown>) : {}
+}
+
+function list(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : []
+}
+
+function strings(value: unknown) {
+  return list(value).filter((item): item is string => typeof item === "string")
+}
+
+function text(value: unknown) {
+  return typeof value === "string" ? value : ""
+}
+
+function tierOf(value: unknown): "T0" | "T1" | "T2" {
+  return value === "T0" || value === "T1" ? value : "T2"
 }

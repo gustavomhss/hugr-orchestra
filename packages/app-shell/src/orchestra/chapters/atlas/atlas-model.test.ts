@@ -173,3 +173,106 @@ describe("atlas model: write path, health, memory and graphs", () => {
     })
   })
 })
+
+describe("atlas model: committed Own snapshot, memory and territories (D3b)", () => {
+  const territory = { name: "billing", owner: "backend", tier: "T1", globs: ["packages/a/**"] }
+
+  test("reads the committed Own snapshot's packs, and none from a snapshot on HOLD", () => {
+    const own = {
+      status: "READY" as const,
+      reason: null,
+      snapshot: "s1",
+      sourceRevision: "1a235323361717d13a44",
+      sourcePaths: ["packages/a/src/w.ts", "packages/a/src/x.ts"],
+      units: [
+        {
+          unit: { level: "module", id: "packages/a", grounding: null },
+          sourceBlobs: { "packages/a/src/x.ts": "c75db0d6", "packages/a/src/w.ts": "c8751049" },
+          pack: {
+            unit: "A owns x.",
+            invariants: [{ nodeId: "a:x", tier: "T1", claim: "x is atomic.", freshness: "FRESH" }],
+            shape: { contents: [], owner: "atlas-foundation", tier: "T1" },
+            edges: { dependents: ["k9"], dependencies: [] },
+            advisory: [{ nodeId: "a:y", tier: "T2", claim: "y is cached.", freshness: "FRESH" }],
+            tokenEstimate: 42,
+          },
+        },
+        { pack: {} },
+      ],
+      coverage: null,
+      skills: [],
+    }
+    const model = createAtlasModel({ ...atlasFixture(), own, territories: [territory] })
+    expect(model.snapshot).toEqual({
+      revision: "1a235323",
+      units: ["packages/a"],
+      catalog: true,
+      packs: {
+        "packages/a": {
+          summary: "A owns x.",
+          owner: "atlas-foundation",
+          tier: "T1",
+          invariants: [{ nodeId: "a:x", tier: "T1", claim: "x is atomic.", freshness: "FRESH" }],
+          advisory: 1,
+          dependents: 1,
+          tokenEstimate: 42,
+          sourceFiles: 2,
+        },
+      },
+    })
+    const held = createAtlasModel({ ...atlasFixture(), own: { ...own, status: "HOLD", reason: "snapshot-invalid", sourceRevision: null, units: [] } })
+    expect(held.snapshot).toEqual({ revision: "", units: [], catalog: false, packs: {} })
+  })
+
+  test("groups memory by member, ages rules over the whole log and gives the orchestrator's logbook to maestro", () => {
+    const record = (seq: number, member: string, kind: string, text: string, extra: { scope?: string; at?: string; refs?: string[]; entry?: unknown } = {}) => ({
+      eventId: `e${seq}`,
+      seq,
+      member,
+      kind,
+      text,
+      scope: extra.scope ?? null,
+      at: extra.at ?? null,
+      refs: extra.refs ?? [],
+      entry: extra.entry ?? {},
+    })
+    const memory = {
+      backend: [
+        record(1, "backend", "project", "Always run the gate.", { scope: "packages/a", refs: ["PR#1"] }),
+        record(2, "backend", "task", "Read the brief.", {
+          entry: { taskId: "t1", attempted: ["tried a"], failedWith: [], stoppedAt: "phase 2", lesson: "Read the brief." },
+        }),
+        record(3, "backend", "pr", "a; b", { entry: { prId: "7", decisions: ["a", "b"], reviewOutcomes: ["ok"], knowledgeDelta: [] } }),
+      ],
+      orch: [record(4, "orch", "logbook", "M1 shipped", { at: "2026-10-01" })],
+      stranger: [record(5, "stranger", "project", "Never x.", { scope: "*" })],
+      jimmy: [record(6, "jimmy", "project", "Never skip the brief.", { scope: "packages/b" })],
+    }
+    const model = createAtlasModel({ ...atlasFixture(), memory })
+    expect(model.memory.backend).toEqual({
+      bound: true,
+      tasks: [
+        { taskId: "t1", attempted: ["tried a"], failedWith: [], stoppedAt: "phase 2", lesson: "Read the brief.", ref: "", source: ".atlas/memory.jsonl" },
+      ],
+      prs: [{ prId: "7", title: "", decisions: ["a", "b"], reviewOutcomes: ["ok"], knowledgeDelta: [] }],
+      rules: [{ rule: "Always run the gate.", scope: "packages/a", age: 5, grounding: "PR#1", from: "Always run the gate." }],
+    })
+    expect(model.memory.jimmy.rules).toEqual([{ rule: "Never skip the brief.", scope: "packages/b", age: 0, grounding: undefined, from: "Never skip the brief." }])
+    expect(model.memory.maestro).toEqual({ bound: false, tasks: [], prs: [], rules: [], logbook: ["M1 shipped"] })
+    expect(model.memory.archie).toEqual({ bound: true, tasks: [], prs: [], rules: [] })
+    expect(model.header("jimmy").injected.map((r) => r.rule)).toEqual(["Never skip the brief."])
+    expect([model.header("backend").injected.length, model.header("backend").evicted.length]).toEqual([0, 1])
+  })
+
+  test("reads territories from the catalog and finds a unit's territory", () => {
+    const model = createAtlasModel({
+      ...atlasFixture(),
+      territories: [territory, { name: "loose", owner: "nobody", tier: "BAD", globs: [] }],
+    })
+    expect(model.territories()).toEqual([territory, { name: "loose", owner: "nobody", tier: "T2", globs: [] }])
+    expect(model.territoryOf("packages/a")?.name).toBe("billing")
+    expect(model.territoryOf("packages/b")).toBeUndefined()
+    expect(model.snapshot.catalog).toBe(true)
+    expect(model.activity()).toEqual([])
+  })
+})
