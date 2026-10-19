@@ -144,7 +144,8 @@ export type { DurableMemory, MemoryRead } from "./memory-store.js"
 export { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
 export type { ReviewBody, ReviewFold, ReviewInput, ReviewOf, ReviewRead, ReviewRecord, ReviewTier } from "./review-log.js"
 // R2/R3 — the store reads the review commands check against (staged keys; B-R3-01 adds the current fact by nodeKey).
-export { stagedNodeKeys } from "./review-store.js"
+export { currentFactOf, stagedNodeKeys } from "./review-store.js"
+export type { CurrentFact } from "./review-store.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,

@@ -6,10 +6,11 @@
 // watermark seam, and the git provenance seam — a store that arrived by commit reads as empty, never as data.
 
 import { join } from "node:path"
-import type { StoreProjection } from "@atlas/knowledge"
+import type { CurrentNode, GroundedFact, StoreProjection } from "@atlas/knowledge"
+import type { Hash } from "@atlas/contracts"
 import { CAS_REL } from "./okf-store.js"
 import { headSha } from "./run-git.js"
-import { createDiskStore } from "./store.js"
+import { createDiskStore, rehydrateProjection } from "./store.js"
 import type { DiskStore } from "./store.js"
 import { gitSidecarTrust } from "./store-provenance.js"
 
@@ -18,6 +19,22 @@ export function stagedNodeKeys(repoPath: string): ReadonlySet<string> | undefine
   // The store's own documented read-only decision: no `next`, so nothing is published.
   const read = openStore(repoPath).commitStaging<StoreProjection>((p) => ({ out: p }))
   return read.settled ? new Set(read.out.current.keys()) : undefined
+}
+
+/** A current fact: its projection row and its whole bytes read back from CAS. */
+export interface CurrentFact {
+  readonly node: CurrentNode
+  readonly fact: GroundedFact
+}
+
+/** The CURRENT fact at `nodeKey` in the governed projection, or `undefined` when no row has that key or its CAS
+ *  bytes are gone (the bytes ARE the fact: a row without them has nothing to re-emit or to propose). */
+export function currentFactOf(repoPath: string, nodeKey: string): CurrentFact | undefined {
+  const store = openStore(repoPath)
+  const node = rehydrateProjection(store).current.get(nodeKey)
+  if (node === undefined) return undefined
+  const fact = store.get(node.contentHash as Hash) as GroundedFact | undefined
+  return fact === undefined ? undefined : { node, fact }
 }
 
 function openStore(repoPath: string): DiskStore {

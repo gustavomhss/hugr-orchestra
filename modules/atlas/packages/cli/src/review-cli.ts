@@ -9,8 +9,12 @@
 import type { CommandTable } from "./cli-dispatch.js"
 import { emitCli } from "./cli-verdict.js"
 import { holdPorts, runHold, runRelease } from "./hold-cli.js"
+import { ratifyPorts, runDecide, runProposals, runPropose } from "./ratify-cli.js"
 
 export const REVIEW_COMMANDS: CommandTable = {
   hold: (input) => emitCli(runHold(holdPorts(), input.positionals, input.flags)),
   release: (input) => emitCli(runRelease(holdPorts(), input.positionals, input.flags)),
+  propose: (input) => emitCli(runPropose(ratifyPorts(input.deps), input.positionals, input.flags)),
+  proposals: (input) => emitCli(runProposals(ratifyPorts(input.deps))),
+  decide: (input) => emitCli(runDecide(ratifyPorts(input.deps), input.positionals, input.flags)),
 }

@@ -48,3 +48,10 @@ export function requireBy(flags: Readonly<Record<string, string>>): string | und
   const by = flags["by"]
   return by === undefined || by === "true" || by.trim().length === 0 ? undefined : by.trim()
 }
+
+/** `wanted` as an exact id, or as a prefix of at least 8 characters that matches exactly one id; else `undefined`. */
+export function resolveId(ids: readonly string[], wanted: string): string | undefined {
+  if (ids.includes(wanted)) return wanted
+  const hits = wanted.length >= 8 ? ids.filter((id) => id.startsWith(wanted)) : []
+  return hits.length === 1 ? hits[0] : undefined
+}
