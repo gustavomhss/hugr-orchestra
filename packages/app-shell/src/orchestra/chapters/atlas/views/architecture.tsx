@@ -5,6 +5,7 @@ import { atlasHref } from "../atlas-route"
 import { Icon } from "../kit/chips"
 import { AtlasLink } from "../kit/text"
 import { ARCH_CHAPTERS } from "./architecture-data"
+import { ArchOverview } from "./architecture-overview"
 import type { AtlasViewProps } from "./index"
 
 // Architecture: how Atlas keeps knowledge, one chapter at a time (specs/atlas-ui/mock/views-arch.js:165-183).
@@ -41,7 +42,7 @@ export default function AtlasArchitectureView(props: AtlasViewProps) {
       <section class="at-chapter">
         <Switch>
           <Match when={chapter() === "overview"}>
-            {null /* A28B: overview chapter */}
+            <ArchOverview model={props.model} />
           </Match>
           <Match when={chapter() === "write"}>
             {null /* A28C: write chapter */}
