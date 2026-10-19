@@ -17,7 +17,7 @@ import { AtlasContext, type AtlasContextValue } from "./atlas-context"
 import { createAtlasController } from "./atlas-controller"
 import { createAtlasModel } from "./atlas-model"
 import { AtlasRail } from "./atlas-rail"
-import { atlasHref, parseAtlasRoute, withQuery } from "./atlas-route"
+import { AtlasKeys, AtlasPalette, AtlasShortcuts } from "./atlas-palette"import { atlasHref, parseAtlasRoute, withQuery } from "./atlas-route"
 import { Btn } from "./kit/controls"
 import { Icon } from "./kit/chips"
 import { num } from "./kit/format"
@@ -187,7 +187,18 @@ export default function AtlasPage(props: ChapterPageProps) {
           )}
         </Show>
         <Toast toaster={toaster} />
-      </div>
+        <AtlasKeys
+          main={() => elements.main}
+          blocked={() =>
+            frame.palette !== undefined || frame.shortcuts || !!elements.main?.parentElement?.querySelector("dialog[open]")
+          }
+        />
+        <Show when={frame.palette !== undefined}>
+          <AtlasPalette prefix={frame.palette ?? ""} onClose={() => setFrame("palette", undefined)} />
+        </Show>
+        <Show when={frame.shortcuts}>
+          <AtlasShortcuts onClose={() => setFrame("shortcuts", false)} />
+        </Show>      </div>
     </AtlasContext.Provider>
   )
 }
