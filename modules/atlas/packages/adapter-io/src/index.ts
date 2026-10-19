@@ -167,7 +167,11 @@ export type { CurrentFact } from "./review-store.js"
 export { decideProposal, emitOutcomeOf } from "./review-decide.js"
 export type { DecideInput, DecideResult, EmitOutcome } from "./review-decide.js"
 // R11 — the store feed for the ratification interview (`atlas interview` / `atlas answer`).
-export { openQuestionsOf } from "./open-questions-source.js"
+export { interviewOf, openQuestionsOf } from "./open-questions-source.js"
+export type { InterviewQuestion } from "./open-questions-source.js"
+// R11 (D29) — the answer half of `atlas answer`, shared by the CLI runner and the Atlas screen's surface.
+export { answerQuestion } from "./review-answer.js"
+export type { AnswerInput, AnswerResult } from "./review-answer.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,

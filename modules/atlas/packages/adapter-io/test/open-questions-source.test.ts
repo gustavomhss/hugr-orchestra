@@ -6,7 +6,7 @@ import { upsert, emptyStore } from "@atlas/knowledge"
 import type { PredicateSlot } from "@atlas/knowledge"
 import type { Tier } from "@atlas/contracts"
 import { createDiskStore } from "../src/store.js"
-import { openQuestionsOf } from "../src/open-questions-source.js"
+import { interviewOf, openQuestionsOf } from "../src/open-questions-source.js"
 
 describe("open-questions-source", () => {
   let repo: ReturnType<typeof makeFixRepo>
@@ -40,5 +40,8 @@ describe("open-questions-source", () => {
     expect(qs.filter((q) => q.kind === "intent").map((q) => q.subject)).toEqual(["packages/a"])
     for (const q of qs) expect(q.rank).toBe(0)
     expect(openQuestionsOf(repo.repoPath, new Set([tierQ!.id])).some((q) => q.kind === "tier")).toBe(false)
+    // interviewOf reads the same store by default: one batch, no review log yet, so nothing is drafted or deferred.
+    const interview = interviewOf(repo.repoPath)
+    expect([interview.batch.map((q) => q.id).sort(), interview.deferred]).toEqual([qs.map((q) => q.id).sort(), 0])
   })
 })
