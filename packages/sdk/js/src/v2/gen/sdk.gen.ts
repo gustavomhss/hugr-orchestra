@@ -36,22 +36,40 @@ import type {
   AppSkillSaveResponses,
   AppSkillsErrors,
   AppSkillsResponses,
+  AtlasAnswerErrors,
+  AtlasAnswerResponses,
+  AtlasDecideErrors,
+  AtlasDecideResponses,
+  AtlasDelegateErrors,
+  AtlasDelegateResponses,
   AtlasDraftErrors,
   AtlasDraftResponses,
   AtlasEmitErrors,
   AtlasEmitResponses,
   AtlasHealthErrors,
   AtlasHealthResponses,
+  AtlasHoldErrors,
+  AtlasHoldResponses,
   AtlasLinkErrors,
   AtlasLinkResponses,
+  AtlasMemoryDecideErrors,
+  AtlasMemoryDecideResponses,
   AtlasOwnErrors,
   AtlasOwnResponses,
   AtlasPromoteErrors,
   AtlasPromoteResponses,
+  AtlasProposeErrors,
+  AtlasProposeResponses,
   AtlasReasoningErrors,
   AtlasReasoningResponses,
+  AtlasReleaseErrors,
+  AtlasReleaseResponses,
+  AtlasReviewErrors,
+  AtlasReviewResponses,
   AtlasSnapshotErrors,
   AtlasSnapshotResponses,
+  AtlasTerritoryErrors,
+  AtlasTerritoryResponses,
   AtlasVerifyErrors,
   AtlasVerifyResponses,
   Auth as Auth3,
@@ -1787,6 +1805,7 @@ export class Atlas extends HeyApiClient {
       directory?: string
       workspace?: string
       token?: string
+      nodeKeys?: Array<string>
     },
     options?: Options<never, ThrowOnError>,
   ) {
@@ -1798,6 +1817,7 @@ export class Atlas extends HeyApiClient {
             { in: "query", key: "directory" },
             { in: "query", key: "workspace" },
             { in: "body", key: "token" },
+            { in: "body", key: "nodeKeys" },
           ],
         },
       ],
@@ -1980,6 +2000,367 @@ export class Atlas extends HeyApiClient {
     )
     return (options?.client ?? this.client).post<AtlasVerifyResponses, AtlasVerifyErrors, ThrowOnError>({
       url: "/atlas/verify",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Get the Atlas review queue
+   *
+   * Held candidates, open tier proposals, open memory proposals and the interview batch with its drafts.
+   */
+  public review<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<AtlasReviewResponses, AtlasReviewErrors, ThrowOnError>({
+      url: "/atlas/review",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Hold a staged Atlas candidate
+   *
+   * Every promote skips a held candidate until it is released.
+   */
+  public hold<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      nodeKey?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "nodeKey" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasHoldResponses, AtlasHoldErrors, ThrowOnError>({
+      url: "/atlas/hold",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Release a held Atlas candidate
+   *
+   * The next promote presents the candidate again.
+   */
+  public release<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      nodeKey?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "nodeKey" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasReleaseResponses, AtlasReleaseErrors, ThrowOnError>({
+      url: "/atlas/release",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Propose an Atlas tier raise
+   *
+   * Record a proposal to raise a fact to T1 or T0 for a person to decide.
+   */
+  public propose<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      nodeKey?: string
+      toTier?: "T1" | "T0"
+      reason?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "nodeKey" },
+            { in: "body", key: "toTier" },
+            { in: "body", key: "reason" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasProposeResponses, AtlasProposeErrors, ThrowOnError>({
+      url: "/atlas/propose",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Decide an Atlas tier proposal
+   *
+   * Ratify a proposal, re-emitting the fact at its tier through the governed emit door, or reject it.
+   */
+  public decide<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      proposalId?: string
+      verdict?: "ratified" | "rejected"
+      reason?: string
+      token?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "proposalId" },
+            { in: "body", key: "verdict" },
+            { in: "body", key: "reason" },
+            { in: "body", key: "token" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasDecideResponses, AtlasDecideErrors, ThrowOnError>({
+      url: "/atlas/decide",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Answer an Atlas interview question
+   *
+   * Record a person's answer, or a model's draft that keeps the question open until a person accepts it.
+   */
+  public answer<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      questionId?: string
+      answer?: string
+      drafted?: {
+        model: string
+        why: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "questionId" },
+            { in: "body", key: "answer" },
+            { in: "body", key: "drafted" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasAnswerResponses, AtlasAnswerErrors, ThrowOnError>({
+      url: "/atlas/answer",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Decide an Atlas memory proposal
+   *
+   * Index a proposed project rule into the member's memory, or discard it.
+   */
+  public memoryDecide<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      proposalId?: string
+      verdict?: "indexed" | "discarded"
+      rule?: string
+      scope?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "proposalId" },
+            { in: "body", key: "verdict" },
+            { in: "body", key: "rule" },
+            { in: "body", key: "scope" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasMemoryDecideResponses, AtlasMemoryDecideErrors, ThrowOnError>({
+      url: "/atlas/memory-decide",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Declare an Atlas territory
+   *
+   * Write a territory, its owner, tier and globs to the territory catalog.
+   */
+  public territory<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      name?: string
+      owner?: string
+      tier?: "T0" | "T1" | "T2"
+      globs?: Array<string>
+      token?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "name" },
+            { in: "body", key: "owner" },
+            { in: "body", key: "tier" },
+            { in: "body", key: "globs" },
+            { in: "body", key: "token" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasTerritoryResponses, AtlasTerritoryErrors, ThrowOnError>({
+      url: "/atlas/territory",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Delegate Atlas interview questions to a model
+   *
+   * A model drafts an answer to each open question; each draft keeps its question open until a person accepts it.
+   */
+  public delegate<ThrowOnError extends boolean = false>(
+    parameters?: {
+      directory?: string
+      workspace?: string
+      questionIds?: Array<string>
+      providerID?: string
+      modelID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "directory" },
+            { in: "query", key: "workspace" },
+            { in: "body", key: "questionIds" },
+            { in: "body", key: "providerID" },
+            { in: "body", key: "modelID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<AtlasDelegateResponses, AtlasDelegateErrors, ThrowOnError>({
+      url: "/atlas/delegate",
       ...options,
       ...params,
       headers: {
