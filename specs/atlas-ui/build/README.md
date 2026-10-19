@@ -123,3 +123,4 @@ The lead then reviews the diff, runs the acceptance step, and commits.
 - Never run tests, typecheck, builds or installs. Never commit, push or switch branches.
 - When anything does not match the brief, stop and report the mismatch, word for word. Do not improvise.
 - End with a short report: the files changed, plus anything that differed from the brief.
+- The very last line of the answer is exactly `RESULT: DONE` when every step was applied, or `RESULT: STOPPED <one-line reason>` otherwise.
