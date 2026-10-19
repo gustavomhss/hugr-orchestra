@@ -10,6 +10,7 @@ import { AtlasLink, Rich } from "../kit/text"
 import { openAtlasSheet } from "../sheets/state"
 import type { AtlasViewProps } from "./index"
 import { type AtlasOwner, lastFolder, leafOf, owners, pickOwner, skillName } from "./ownership-data"
+import { OwnershipFlow } from "./ownership-flow"
 
 // Ownership: what Atlas knows per unit, packaged as skills (specs/atlas-ui/mock/views-own.js).
 const STATES = {
@@ -125,7 +126,7 @@ export default function AtlasOwnershipView(props: AtlasViewProps) {
         </p>
       </section>
 
-      {/* A29B: the publishing flow, HOLD demo, names, committed skill and owner words go here. */}
+      <OwnershipFlow model={props.model} route={props.route} />
     </div>
   )
 }
