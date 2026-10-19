@@ -12,6 +12,8 @@ import { createServer } from "node:http"
 import { createRoutes } from "@orchestra/server/routes"
 import { MaestroSeatsV2 } from "@orchestra/maestro/v2/seats"
 import { ClaudeCodeHost } from "@orchestra/engine-claude-code/v2/host"
+import { AppDockTools } from "@orchestra/app-dock/application-tools"
+import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
@@ -24,7 +26,7 @@ export default Runtime.handler(
         const daemon = yield* Daemon.Service
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
-        const address = yield* listen(input.hostname, input.port, password)
+        const address = yield* listen(input.hostname, input.port, password, hosts())
         if (input.register) yield* daemon.register(address)
         console.log(`server listening on ${HttpServer.formatAddress(address)}`)
         // V1 transcripts on this database are copied to V2 once, after health already answers.
@@ -43,20 +45,26 @@ export default Runtime.handler(
   }),
 )
 
-function listen(hostname: string, port: Option.Option<number>, password: string) {
-  if (Option.isSome(port)) return bind(hostname, port.value, password)
+function listen(hostname: string, port: Option.Option<number>, password: string, host: ReturnType<typeof hosts>) {
+  if (Option.isSome(port)) return bind(hostname, port.value, password, host)
   const next = (port: number): ReturnType<typeof bind> =>
-    bind(hostname, port, password).pipe(
+    bind(hostname, port, password, host).pipe(
       Effect.catch((error) => (port === 65_535 ? Effect.fail(error) : next(port + 1))),
     )
   return next(4096)
 }
 
-function bind(hostname: string, port: number, password: string) {
+function bind(hostname: string, port: number, password: string, host: ReturnType<typeof hosts>) {
   return Layer.build(
-    HttpRouter.serve(createRoutes({ password, host: [MaestroSeatsV2.contribution, ClaudeCodeHost.contribution] }), { disableListenLog: true, disableLogger: true }).pipe(
+    HttpRouter.serve(createRoutes({ password, host }), { disableListenLog: true, disableLogger: true }).pipe(
       Layer.provideMerge(NodeHttpServer.layer(() => createServer(), { port, host: hostname })),
       Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node]))),
     ),
   ).pipe(Effect.map((context) => Context.get(context, HttpServer.HttpServer).address))
+}
+
+// The Dock tools exist only when the desktop that owns this child handed it a Dock channel.
+function hosts() {
+  const dock = AppDockSocket.fromEnv()
+  return [MaestroSeatsV2.contribution, ClaudeCodeHost.contribution, ...(dock ? [AppDockTools.contribution(dock)] : [])]
 }

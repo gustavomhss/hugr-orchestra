@@ -37,6 +37,7 @@
         "@effect/platform-node": "catalog:",
         "@opentui/core": "catalog:",
         "@opentui/solid": "catalog:",
+        "@orchestra/app-dock": "workspace:*",
         "@orchestra/client": "workspace:*",
         "@orchestra/core": "workspace:*",
         "@orchestra/engine-claude-code": "workspace:*",
@@ -299,7 +300,9 @@
       "name": "@orchestra/app-dock",
       "version": "0.0.0",
       "dependencies": {
+        "@orchestra/core": "workspace:*",
         "@orchestra/plugin": "workspace:*",
+        "effect": "catalog:",
       },
       "devDependencies": {
         "@tsconfig/bun": "catalog:",
