@@ -24,6 +24,9 @@ export function ServerUnavailable(props: { onRetry: () => void }) {
 export function ServerRequired(
   props: ParentProps<{ server?: Accessor<ServerConnection.Any | undefined>; value?: unknown }>,
 ) {
+  // A provided value carries its own connection, and providers given one never read the app's server context
+  // (owner-scoped dialogs render without it), so neither does this gate.
+  if (props.value) return props.children
   const server = useServer()
   const retry = () => {
     const first = server.list[0]
@@ -31,7 +34,7 @@ export function ServerRequired(
     server.setActive(ServerConnection.key(first))
   }
   return (
-    <Show when={props.value || (props.server?.() ?? server.current)} fallback={<ServerUnavailable onRetry={retry} />}>
+    <Show when={props.server?.() ?? server.current} fallback={<ServerUnavailable onRetry={retry} />}>
       {props.children}
     </Show>
   )
