@@ -125,7 +125,7 @@
         ${link("#/review", "Review", "inbox", s.route === "review", count(M().curationCount(), "warm"))}
         ${link("#/activity", "Activity", "history", s.route === "activity")}
       </div>
-      <div class="context-group"><div class="context-label">THE ENGINE</div>
+      <div class="context-group"><div class="context-label">Engine</div>
         ${link("#/genesis", "Genesis", "sparkle", s.route === "genesis")}
         ${link("#/architecture", "Architecture", "stack", s.route === "architecture")}
         ${link("#/own", "Ownership", "territory", s.route === "own")}

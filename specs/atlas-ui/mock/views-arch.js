@@ -170,7 +170,7 @@
     return {
       crumbs: [["Atlas", "#/overview"], ["Architecture"]],
       html: `<div class="at-page wide">
-      <section class="at-gen-hero"><div><div class="mx-eyebrow">The engine · open knowledge (OKF)</div><h1>How Atlas keeps knowledge</h1></div></section>
+      <section class="at-gen-hero"><div><div class="mx-eyebrow">Engine · open knowledge (OKF)</div><h1>How Atlas keeps knowledge</h1></div></section>
       <nav class="at-chapters">${CHAPTERS.map(([id, label, icon], n) => `<a class="${id === ch ? "on" : ""}" href="#/architecture?ch=${id}"><span>${n + 1}</span>${A.icon(icon)}${label}</a>`).join("")}</nav>
       <section class="at-chapter">${body}</section>
       <div class="at-ch-next">${i ? `<a href="#/architecture?ch=${CHAPTERS[i - 1][0]}">${A.icon("back")}${CHAPTERS[i - 1][1]}</a>` : "<span></span>"}${i < CHAPTERS.length - 1 ? `<a class="primary" href="#/architecture?ch=${CHAPTERS[i + 1][0]}">Next: ${CHAPTERS[i + 1][1]}${A.icon("arrow")}</a>` : ""}</div>
