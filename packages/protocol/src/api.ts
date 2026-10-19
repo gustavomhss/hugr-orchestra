@@ -8,6 +8,7 @@ import { makeSessionGroup } from "./groups/session"
 import { makePermissionGroup } from "./groups/permission"
 import { FileSystemGroup } from "./groups/fs"
 import { CommandGroup } from "./groups/command"
+import { McpGroup } from "./groups/mcp"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
 import { EventGroup, makeEventGroup } from "./groups/event"
@@ -66,6 +67,7 @@ const makeApiFromGroup = <
     .add(makePermissionGroup(locationMiddleware, sessionLocationMiddleware))
     .add(FileSystemGroup.middleware(locationMiddleware))
     .add(CommandGroup.middleware(locationMiddleware))
+    .add(McpGroup.middleware(locationMiddleware))
     .add(SkillGroup.middleware(locationMiddleware))
     .add(BehaviorGroup.middleware(locationMiddleware))
     .add(eventGroup)

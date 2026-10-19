@@ -2400,6 +2400,97 @@ export type CommandsListOutput = {
   }>
 }
 
+export type ServerMcpListInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerMcpListOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly name: string
+    readonly status:
+      | { readonly status: "connected" }
+      | { readonly status: "disabled" }
+      | { readonly status: "failed"; readonly error: string }
+      | { readonly status: "needs_auth" }
+      | { readonly status: "needs_client_registration"; readonly error: string }
+  }>
+}
+
+export type ServerMcpAddInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly config: {
+    readonly config:
+      | {
+          readonly type: "local"
+          readonly command: ReadonlyArray<string>
+          readonly cwd?: string | undefined
+          readonly environment?: { readonly [x: string]: string } | undefined
+          readonly disabled?: boolean | undefined
+          readonly timeout?:
+            | { readonly startup?: number | undefined; readonly request?: number | undefined }
+            | undefined
+        }
+      | {
+          readonly type: "remote"
+          readonly url: string
+          readonly headers?: { readonly [x: string]: string } | undefined
+          readonly oauth?:
+            | {
+                readonly client_id?: string | undefined
+                readonly client_secret?: string | undefined
+                readonly scope?: string | undefined
+                readonly callback_port?: number | undefined
+                readonly redirect_uri?: string | undefined
+              }
+            | false
+            | undefined
+          readonly disabled?: boolean | undefined
+          readonly timeout?:
+            | { readonly startup?: number | undefined; readonly request?: number | undefined }
+            | undefined
+        }
+  }["config"]
+}
+
+export type ServerMcpAddOutput = void
+
+export type ServerMcpRemoveInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerMcpRemoveOutput = void
+
+export type ServerMcpConnectInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerMcpConnectOutput = void
+
+export type ServerMcpDisconnectInput = {
+  readonly server: { readonly server: string }["server"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerMcpDisconnectOutput = void
+
 export type SkillsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -6966,6 +7057,8 @@ export {
   isProviderNotFoundError,
   type PermissionNotFoundError,
   isPermissionNotFoundError,
+  type McpServerNotFoundError,
+  isMcpServerNotFoundError,
   type PtyNotFoundError,
   isPtyNotFoundError,
   type QuestionNotFoundError,

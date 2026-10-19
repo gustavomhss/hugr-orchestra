@@ -2,11 +2,9 @@ export * as McpProjectConfig from "./project-config"
 
 import path from "path"
 import { Effect, Schema } from "effect"
-import { KeyedMutex } from "@orchestra/core/effect/keyed-mutex"
+import { KeyedMutex } from "../effect/keyed-mutex"
 import { applyEdits, modify, parse, parseTree, type ParseError, printParseErrorCode } from "jsonc-parser"
-import { FSUtil } from "@orchestra/core/fs-util"
-import type { ConfigMCPV1 } from "@orchestra/core/v1/config/mcp"
-import { isRecord } from "@/util/record"
+import { FSUtil } from "../fs-util"
 
 /** A profile config file that cannot be read, parsed, or written as asked. */
 export class FileError extends Schema.TaggedErrorClass<FileError>()("McpProjectConfig.FileError", {
@@ -21,6 +19,9 @@ export const Entry = Schema.Struct({
   url: Schema.optional(Schema.String),
 })
 export type Entry = Schema.Schema.Type<typeof Entry>
+
+/** One server as `write` stores it: the shape `orchestra mcp add` writes, which V2 config reads through its V1 migration. */
+export type Written = { readonly type: "local" | "remote"; readonly [key: string]: unknown }
 
 type Document = { file: string; text?: string; value?: unknown; errors: readonly ParseError[] }
 
@@ -65,7 +66,7 @@ export const entries = Effect.fn("McpProjectConfig.entries")(function* (director
 export const write = Effect.fn("McpProjectConfig.write")(function* (
   directory: string,
   name: string,
-  config: ConfigMCPV1.Info,
+  config: Written,
 ) {
   return yield* exclusiveTo(
     directory,
@@ -212,4 +213,8 @@ function select(value: unknown): Entry {
       : {}),
     ...(typeof value.url === "string" ? { url: value.url } : {}),
   }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
 }

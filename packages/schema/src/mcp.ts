@@ -1,3 +1,5 @@
+export * as Mcp from "./mcp"
+
 import { Schema } from "effect"
 
 // Connection state of one configured MCP server, as reported to clients.
@@ -26,3 +28,7 @@ export const Status = Schema.Union([
   StatusNeedsClientRegistration,
 ]).annotate({ identifier: "MCPStatus", discriminator: "status" })
 export type Status = Schema.Schema.Type<typeof Status>
+
+// One configured MCP server of a Location and its connection state.
+export const Server = Schema.Struct({ name: Schema.String, status: Status }).annotate({ identifier: "McpServer" })
+export type Server = Schema.Schema.Type<typeof Server>

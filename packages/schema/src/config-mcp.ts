@@ -1,7 +1,7 @@
-export * as ConfigMCP from "./mcp"
+export * as ConfigMCP from "./config-mcp"
 
 import { Schema } from "effect"
-import { PositiveInt } from "../schema"
+import { PositiveInt } from "./schema"
 
 export class Timeout extends Schema.Class<Timeout>("ConfigV2.MCP.Timeout")({
   startup: PositiveInt.pipe(Schema.optional).annotate({

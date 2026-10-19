@@ -1,0 +1,50 @@
+import { Mcp } from "@orchestra/core/mcp"
+import { InvalidRequestError, McpServerNotFoundError } from "@orchestra/protocol/errors"
+import { Effect } from "effect"
+import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { Api } from "../api"
+import { response } from "../location"
+
+export const McpHandler = HttpApiBuilder.group(Api, "server.mcp", (handlers) =>
+  handlers
+    .handle("mcp.list", () => response(Mcp.Service.use((mcp) => mcp.list())))
+    .handle(
+      "mcp.add",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        yield* mcp.add(ctx.params.server, ctx.payload.config).pipe(Effect.mapError(invalid))
+      }),
+    )
+    .handle(
+      "mcp.remove",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        yield* mcp.remove(ctx.params.server).pipe(
+          Effect.catchTag("Mcp.NotFoundError", notFound),
+          Effect.catchTag("Mcp.ConfigError", (error) => Effect.fail(invalid(error))),
+        )
+      }),
+    )
+    .handle(
+      "mcp.connect",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        yield* mcp.connect(ctx.params.server).pipe(Effect.catchTag("Mcp.NotFoundError", notFound))
+      }),
+    )
+    .handle(
+      "mcp.disconnect",
+      Effect.fn(function* (ctx) {
+        const mcp = yield* Mcp.Service
+        yield* mcp.disconnect(ctx.params.server).pipe(Effect.catchTag("Mcp.NotFoundError", notFound))
+      }),
+    ),
+)
+
+function notFound(error: Mcp.NotFoundError) {
+  return Effect.fail(new McpServerNotFoundError({ server: error.name, message: `MCP server not found: ${error.name}` }))
+}
+
+function invalid(error: Mcp.ConfigError) {
+  return new InvalidRequestError({ message: error.message })
+}

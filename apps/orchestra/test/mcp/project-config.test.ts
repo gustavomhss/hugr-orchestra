@@ -4,7 +4,7 @@ import path from "path"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Effect } from "effect"
-import { McpProjectConfig } from "../../src/mcp/project-config"
+import { McpProjectConfig } from "@orchestra/core/mcp/project-config"
 import { tmpdir } from "../fixture/fixture"
 import { testEffect } from "../lib/effect"
 

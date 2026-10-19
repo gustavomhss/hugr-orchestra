@@ -1,4 +1,4 @@
-import { check, object } from "./assertions"
+import { array, check, locationData, object } from "./assertions"
 import { http, route } from "./dsl"
 import { type Scenario } from "./types"
 
@@ -87,5 +87,34 @@ export const mcpScenarios: Scenario[] = [
     .delete("/mcp/{name}/config", "mcp.config.remove")
     .mutating()
     .at((ctx) => ({ path: route("/mcp/{name}/config", { name: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
+  // V2 routes: the Location's MCP service.
+  http.protected.get("/api/mcp", "v2.mcp.list").json(200, locationData(array)),
+  http.protected
+    .put("/api/mcp/{server}", "v2.mcp.add")
+    .mutating()
+    .at((ctx) => ({
+      path: route("/api/mcp/{server}", { server: "httpapi-disabled" }),
+      headers: ctx.headers(),
+      body: { config: { type: "local", command: ["bun", "--version"], disabled: true } },
+    }))
+    .status(204, undefined, "none"),
+  http.protected
+    .delete("/api/mcp/{server}", "v2.mcp.remove")
+    .mutating()
+    .at((ctx) => ({ path: route("/api/mcp/{server}", { server: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
+  http.protected
+    .post("/api/mcp/{server}/connect", "v2.mcp.connect")
+    .mutating()
+    .at((ctx) => ({ path: route("/api/mcp/{server}/connect", { server: "httpapi-missing" }), headers: ctx.headers() }))
+    .json(404, object, "status"),
+  http.protected
+    .post("/api/mcp/{server}/disconnect", "v2.mcp.disconnect")
+    .mutating()
+    .at((ctx) => ({
+      path: route("/api/mcp/{server}/disconnect", { server: "httpapi-missing" }),
+      headers: ctx.headers(),
+    }))
     .json(404, object, "status"),
 ]
