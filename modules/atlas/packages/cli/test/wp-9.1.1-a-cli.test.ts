@@ -82,6 +82,9 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "promote",
       "hold",
       "release",
+      "propose",
+      "proposals",
+      "decide",
       "own",
       "relations",
       "negations",
@@ -119,6 +122,9 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       promote: "atlas-emit", // WRITE authority oracle (KNOW-8 governed promotion) — publishes THROUGH atlas-emit
       hold: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
       release: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
+      propose: "atlas-query", // REVIEW (R3) — appends to the review log only; no knowledge write
+      proposals: "atlas-query", // REVIEW (R3) — reads the review log
+      decide: "atlas-emit", // WRITE (R3) — ratify publishes THROUGH the existing atlas-emit door
       own: "atlas-query", // READ authority oracle (RETR-12 `own_<scope>` briefing) — a second projection of the
       //                     query readback over the SAME durable store; carries no write authority
       relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold) — intercepted before the
@@ -240,6 +246,7 @@ describe("SCN-CLI-2a/2b/2c — command × authority partition", () => {
     expect([...WRITE_PATHS].sort()).toEqual(["atlas-emit", "atlas-link", "atlas-memory-emit"])
     const writers = COMMANDS.filter((c) => authorityOf(c) === "write")
     expect([...writers].sort()).toEqual([
+      "decide",
       "derive-relations",
       "emit",
       "link",

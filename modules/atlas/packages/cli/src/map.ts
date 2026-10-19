@@ -78,6 +78,9 @@ export const COMMANDS = [
   "promote",
   "hold",
   "release",
+  "propose",
+  "proposals",
+  "decide",
   "own",
   "relations",
   "negations",
@@ -142,6 +145,10 @@ export const COMMAND_LEG: Record<Command, Leg> = {
   hold: "atlas-query", // REVIEW (R2): appends a `hold` record to .atlas/review.jsonl and writes no knowledge, so it binds
   //                     a READ leg — the `export` precedent (it writes a file, never the store). Runner: hold-cli.ts.
   release: "atlas-query", // REVIEW (R2): appends a `release` record to .atlas/review.jsonl; writes no knowledge.
+  propose: "atlas-query", // REVIEW (R3): appends a `proposal` record to .atlas/review.jsonl; writes no knowledge.
+  proposals: "atlas-query", // REVIEW (R3): reads the open proposals off the review log; writes nothing.
+  decide: "atlas-emit", // WRITE (R3): `ratify` re-emits the fact at the proposed tier THROUGH the governed emit door (the
+  //                       composed handler's `atlas-emit`, every gate applies); `reject` only appends a decision record.
   relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold); intercepted before the handler
   //                           (cli.ts) and driven over the composition root's `relations` leg, which reads the
   //                           SAME durable projection this leg's query readback rides. Carries NO write authority.
