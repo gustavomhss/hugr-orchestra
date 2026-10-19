@@ -22,7 +22,7 @@ import {
 } from "./atlas-review"
 
 // The Atlas screen's routes: reads and writes over the instance's Atlas store through the boundary's `./surface`
-// entry (maestro/atlas-surface.ts). The schemas transcribe modules/atlas/packages/adapter-io/src/surface/types.ts and
+// entry (server/atlas-surface.ts). The schemas transcribe modules/atlas/packages/adapter-io/src/surface/types.ts and
 // types-memory.ts field for field; a repository with no `.atlas/` answers `{ state: "empty" }` on every route.
 
 const root = "/atlas"
