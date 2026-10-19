@@ -134,7 +134,7 @@ export async function evidencePage(
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({
-          general: { newLayoutDesigns: true, shellToolPartsExpanded: true, shouldDisplayTabsToast: false },
+          general: { shellToolPartsExpanded: true, shouldDisplayTabsToast: false },
         }),
       )
       localStorage.setItem("orchestra-color-scheme", scheme)

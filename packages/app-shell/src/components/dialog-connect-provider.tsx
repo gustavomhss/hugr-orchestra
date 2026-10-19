@@ -1,12 +1,9 @@
 import { Button } from "@orchestra/ui/button"
 import { useDialog } from "@orchestra/ui/context/dialog"
-import { Dialog } from "@orchestra/ui/dialog"
 import { Icon } from "@orchestra/ui/icon"
-import { IconButton } from "@orchestra/ui/icon-button"
-import { List, type ListRef } from "@orchestra/ui/list"
+import { List } from "@orchestra/ui/list"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { Spinner } from "@orchestra/ui/spinner"
-import { Tag } from "@orchestra/ui/tag"
 import { TextField } from "@orchestra/ui/text-field"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { DialogBody, DialogHeader, DialogTitle, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
@@ -20,7 +17,6 @@ import {
   createMemo,
   createUniqueId,
   For,
-  type JSX,
   Match,
   onCleanup,
   onMount,
@@ -31,8 +27,7 @@ import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
 import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
-import { useSettings } from "@/context/settings"
-import { popularProviders, useProviderDiscovery, useProviders } from "@/hooks/use-providers"
+import { useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { createProviderResource } from "@/hooks/provider-catalog"
 import { formatServerError } from "@/utils/server-errors"
 import { authorizationURL, connectableIntegration } from "@/orchestra/chapters/providers-data"
@@ -62,9 +57,7 @@ export const DialogConnectProvider: Component<{
   const fallback = useProviderConnectController()
   const controller = props.controller ?? fallback
   const language = useLanguage()
-  const settings = useSettings()
   const sdk = useServerSDK()
-  const newLayout = settings.general.newLayoutDesigns
   // Back returns to the provider list from anything picked in it, and to wherever the dialog was opened from
   // (`controller.back`) when it opened straight on a provider.
   const picked = { value: false }
@@ -82,7 +75,7 @@ export const DialogConnectProvider: Component<{
     return (
       <Switch>
         <Match when={controller.selected() === CUSTOM_ID}>
-          <CustomProviderForm autofocus={!newLayout()} />
+          <CustomProviderForm autofocus={false} />
         </Match>
         <Match when={controller.selected() && controller.selected() !== CUSTOM_ID ? controller.selected() : undefined}>
           {(provider) => (
@@ -95,149 +88,40 @@ export const DialogConnectProvider: Component<{
           )}
         </Match>
         <Match when={true}>
-          <ProviderPicker
-            directory={props.directory}
-            onSelect={select}
-            onPrepare={newLayout() ? holdFocus : undefined}
-          />
+          <ProviderPickerV2 directory={props.directory} onSelect={select} onPrepare={holdFocus} />
         </Match>
       </Switch>
     )
   }
 
   return (
-    <Show
-      when={newLayout()}
-      fallback={
-        <Dialog
-          class="h-full"
-          transition
-          title={
-            <Show when={controller.selected()} fallback={language.t("command.provider.connect")}>
-              <IconButton
-                tabIndex={-1}
-                icon="arrow-left"
-                variant="ghost"
-                onClick={() => back.current()}
-                aria-label={language.t("common.goBack")}
-              />
-            </Show>
-          }
+    <DialogV2
+      containerClass="!h-[min(calc(100vh_-_16px),512px)] !w-[min(calc(100vw_-_16px),640px)]"
+      class="[font-family:var(--v2-font-family-sans)] [&_[data-slot=dialog-header]]:!px-5 [&_[data-slot=dialog-header-title]]:!text-[15px] [&_[data-slot=dialog-header-title]]:!tracking-[-0.13px]"
+    >
+      <DialogHeader closeLabel={language.t("common.close")}>
+        <Show
+          when={controller.selected()}
+          fallback={<DialogTitle>{language.t("command.provider.connect")}</DialogTitle>}
         >
+          <button
+            type="button"
+            class="flex size-5 items-center justify-center rounded-sm text-v2-icon-icon-muted hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
+            onClick={() => back.current()}
+            aria-label={language.t("common.goBack")}
+          >
+            <Icon name="arrow-left" size="small" />
+          </button>
+        </Show>
+      </DialogHeader>
+      <DialogBody class="min-h-0 flex-1 overflow-hidden px-2 pb-2">
+        <div ref={focusHost} tabIndex={-1} class="flex min-h-0 flex-1 flex-col outline-none">
           <Show when={sdk()} keyed>
             {(_client) => <Content />}
           </Show>
-        </Dialog>
-      }
-    >
-      <DialogV2
-        containerClass="!h-[min(calc(100vh_-_16px),512px)] !w-[min(calc(100vw_-_16px),640px)]"
-        class="[font-family:var(--v2-font-family-sans)] [&_[data-slot=dialog-header]]:!px-5 [&_[data-slot=dialog-header-title]]:!text-[15px] [&_[data-slot=dialog-header-title]]:!tracking-[-0.13px]"
-      >
-        <DialogHeader closeLabel={language.t("common.close")}>
-          <Show
-            when={controller.selected()}
-            fallback={<DialogTitle>{language.t("command.provider.connect")}</DialogTitle>}
-          >
-            <button
-              type="button"
-              class="flex size-5 items-center justify-center rounded-sm text-v2-icon-icon-muted hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
-              onClick={() => back.current()}
-              aria-label={language.t("common.goBack")}
-            >
-              <Icon name="arrow-left" size="small" />
-            </button>
-          </Show>
-        </DialogHeader>
-        <DialogBody class="min-h-0 flex-1 overflow-hidden px-2 pb-2">
-          <div ref={focusHost} tabIndex={-1} class="flex min-h-0 flex-1 flex-col outline-none">
-            <Show when={sdk()} keyed>
-              {(_client) => <Content />}
-            </Show>
-          </div>
-        </DialogBody>
-      </DialogV2>
-    </Show>
-  )
-}
-
-function ProviderPicker(props: {
-  directory?: Accessor<string | null | undefined>
-  onSelect: (provider: string) => void
-  onPrepare?: () => void
-}) {
-  const settings = useSettings()
-  if (settings.general.newLayoutDesigns())
-    return <ProviderPickerV2 directory={props.directory} onSelect={props.onSelect} onPrepare={props.onPrepare} />
-  const providers = useProviderDiscovery(props.directory)
-  const protocol = useServerProtocol()
-  const language = useLanguage()
-  const claudeMode = useClaudeMode(() => props.directory?.())
-  const popularGroup = () => language.t("dialog.provider.group.popular")
-  const otherGroup = () => language.t("dialog.provider.group.other")
-  const customLabel = () => language.t("settings.providers.tag.custom")
-  const note = (id: string) => {
-    if (id === "anthropic") return language.t("dialog.provider.anthropic.note")
-    if (id === "openai") return language.t("dialog.provider.openai.note")
-    if (id.startsWith("github-copilot")) return language.t("dialog.provider.copilot.note")
-    return undefined
-  }
-
-  return (
-    <Show
-      when={!providers.error()}
-      fallback={<ProviderLoadError error={providers.error()?.cause} retry={providers.retry} />}
-    >
-      <List
-        class="px-3"
-        search={{ placeholder: language.t("dialog.provider.search.placeholder"), autofocus: true }}
-        emptyMessage={language.t("dialog.provider.empty")}
-        activeIcon="plus-small"
-        key={(x) => x?.id}
-        items={() => {
-          language.locale()
-          // Only v1 servers can save a custom provider.
-          return [
-            { id: CLAUDE_MODE_ID, name: language.t("orchestra.providers.claudeMode.use") },
-            ...(protocol() === "v1" ? [{ id: CUSTOM_ID, name: customLabel() }] : []),
-            ...providers.all(),
-          ]
-        }}
-        filterKeys={["id", "name"]}
-        groupBy={(x) => (x.id === CLAUDE_MODE_ID || popularProviders.includes(x.id) ? popularGroup() : otherGroup())}
-        sortBy={(a, b) => {
-          if (a.id === CLAUDE_MODE_ID) return -1
-          if (b.id === CLAUDE_MODE_ID) return 1
-          if (a.id === CUSTOM_ID) return -1
-          if (b.id === CUSTOM_ID) return 1
-          if (popularProviders.includes(a.id) && popularProviders.includes(b.id))
-            return popularProviders.indexOf(a.id) - popularProviders.indexOf(b.id)
-          return a.name.localeCompare(b.name)
-        }}
-        sortGroupsBy={(a, b) => {
-          const popular = popularGroup()
-          if (a.category === popular && b.category !== popular) return -1
-          if (b.category === popular && a.category !== popular) return 1
-          return 0
-        }}
-        onSelect={(x) => {
-          if (!x) return
-          if (x.id === CLAUDE_MODE_ID) return void claudeMode()
-          props.onSelect(x.id)
-        }}
-      >
-        {(i) => (
-          <div class="px-1.25 w-full flex items-center gap-x-3">
-            <ProviderIcon data-slot="list-item-extra-icon" id={i.id === CLAUDE_MODE_ID ? "anthropic" : i.id} />
-            <span>{i.name}</span>
-            <Show when={i.id === CUSTOM_ID}>
-              <Tag>{language.t("settings.providers.tag.custom")}</Tag>
-            </Show>
-            <Show when={note(i.id)}>{(value) => <div class="text-14-regular text-text-weak">{value()}</div>}</Show>
-          </div>
-        )}
-      </List>
-    </Show>
+        </div>
+      </DialogBody>
+    </DialogV2>
   )
 }
 
@@ -331,7 +215,7 @@ function ProviderPickerV2(props: {
         />
       </div>
       <Show when={providers.error()}>
-        {(error) => <ProviderLoadError error={error().cause} retry={providers.retry} v2 />}
+        {(error) => <ProviderLoadError error={error().cause} retry={providers.retry} />}
       </Show>
       <div class="relative min-h-0 flex-1">
         <div class="flex size-full min-h-0 flex-col gap-4 overflow-y-auto pb-8 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -403,8 +287,6 @@ function ProviderConnection(props: {
   const dialog = useDialog()
   const serverSDK = useServerSDK()
   const language = useLanguage()
-  const settings = useSettings()
-  const newLayout = settings.general.newLayoutDesigns
   const providers = useProviders(props.directory)
   const directory = providers.directory
   const location = () => {
@@ -451,10 +333,7 @@ function ProviderConnection(props: {
       ?.methods.filter((method): method is ConnectMethod => method.type === "key" || method.type === "oauth")
     return values?.length ? values : fallback()
   })
-  const [store, setStore, dispatch, method, methodLabel, methodDetails] = createProviderConnectionState(
-    methods,
-    language.t,
-  )
+  const [store, setStore, dispatch, method, , methodDetails] = createProviderConnectionState(methods, language.t)
 
   async function selectMethod(index: number, inputs?: Record<string, string>) {
     if (timer.current !== undefined) {
@@ -493,24 +372,6 @@ function ProviderConnection(props: {
           dispatch({ type: "auth.error", error: formatError(e, language.t("orchestra.providers.oauth.failed")) })
         })
     }
-  }
-
-  // The same button in the dialog's two chromes.
-  function ActionButton(buttonProps: { onClick: () => void; children: JSX.Element }) {
-    return (
-      <Show
-        when={newLayout()}
-        fallback={
-          <Button class="self-start" onClick={buttonProps.onClick}>
-            {buttonProps.children}
-          </Button>
-        }
-      >
-        <ButtonV2 class="self-start" onClick={buttonProps.onClick}>
-          {buttonProps.children}
-        </ButtonV2>
-      </Show>
-    )
   }
 
   function AuthPromptsView() {
@@ -633,15 +494,6 @@ function ProviderConnection(props: {
     )
   }
 
-  let listRef: ListRef | undefined
-  function handleKey(e: KeyboardEvent) {
-    if (e.key === "Enter" && e.target instanceof HTMLInputElement) {
-      return
-    }
-    if (e.key === "Escape") return
-    listRef?.onKeyDown(e)
-  }
-
   let auto = false
   // A stored API key is only verified by the first request, so its toast must not claim the provider works.
   let keySaved = false
@@ -690,66 +542,34 @@ function ProviderConnection(props: {
   props.setBack(goBack)
 
   function MethodSelection() {
-    if (newLayout())
-      return (
-        <div class="flex flex-col gap-2">
-          <div class="px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
-            {language.t("provider.connect.selectMethod", { provider: provider().name })}
-          </div>
-          <div class="flex flex-col">
-            <For each={methods()}>
-              {(item, index) => {
-                const details = () => methodDetails(item)
-                return (
-                  <button
-                    type="button"
-                    class="group flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-[13px] leading-5 tracking-[-0.04px] hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
-                    onClick={() => void selectMethod(index())}
-                  >
-                    <span class="flex h-2 w-4 shrink-0 items-center justify-center rounded-[1px] bg-v2-background-bg-base shadow-[var(--v2-elevation-button-neutral)]">
-                      <span class="hidden h-0.5 w-2.5 bg-v2-icon-icon-base group-hover:block group-focus-visible:block" />
-                    </span>
-                    <span class="font-[530] text-v2-text-text-base">{details().label}</span>
-                    <Show when={details().hint}>
-                      {(hint) => <span class="font-[440] text-v2-text-text-muted">{hint()}</span>}
-                    </Show>
-                  </button>
-                )
-              }}
-            </For>
-          </div>
-        </div>
-      )
-
     return (
-      <>
-        <div class="text-14-regular text-text-base">
+      <div class="flex flex-col gap-2">
+        <div class="px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
           {language.t("provider.connect.selectMethod", { provider: provider().name })}
         </div>
-        <div>
-          <List
-            class="px-3"
-            ref={(ref) => {
-              listRef = ref
+        <div class="flex flex-col">
+          <For each={methods()}>
+            {(item, index) => {
+              const details = () => methodDetails(item)
+              return (
+                <button
+                  type="button"
+                  class="group flex h-9 w-full items-center gap-2 rounded-md px-3 text-left text-[13px] leading-5 tracking-[-0.04px] hover:bg-v2-overlay-simple-overlay-hover focus-visible:bg-v2-overlay-simple-overlay-hover focus-visible:outline-none"
+                  onClick={() => void selectMethod(index())}
+                >
+                  <span class="flex h-2 w-4 shrink-0 items-center justify-center rounded-[1px] bg-v2-background-bg-base shadow-[var(--v2-elevation-button-neutral)]">
+                    <span class="hidden h-0.5 w-2.5 bg-v2-icon-icon-base group-hover:block group-focus-visible:block" />
+                  </span>
+                  <span class="font-[530] text-v2-text-text-base">{details().label}</span>
+                  <Show when={details().hint}>
+                    {(hint) => <span class="font-[440] text-v2-text-text-muted">{hint()}</span>}
+                  </Show>
+                </button>
+              )
             }}
-            items={methods}
-            key={(m) => m?.label ?? m?.type}
-            onSelect={async (selected, index) => {
-              if (!selected) return
-              void selectMethod(index)
-            }}
-          >
-            {(i) => (
-              <div class="w-full flex items-center gap-x-2">
-                <div class="w-4 h-2 rounded-[1px] bg-input-base shadow-xs-border-base flex items-center justify-center">
-                  <div class="w-2.5 h-0.5 ml-0 bg-icon-strong-base hidden" data-slot="list-item-extra-icon" />
-                </div>
-                <span>{methodLabel(i)}</span>
-              </div>
-            )}
-          </List>
+          </For>
         </div>
-      </>
+      </div>
     )
   }
 
@@ -764,10 +584,7 @@ function ProviderConnection(props: {
       pending: false,
     })
 
-    onMount(() => {
-      if (!newLayout()) return
-      apiKey?.focus({ preventScroll: true })
-    })
+    onMount(() => apiKey?.focus({ preventScroll: true }))
 
     async function handleSubmit(e: SubmitEvent) {
       e.preventDefault()
@@ -799,84 +616,44 @@ function ProviderConnection(props: {
         .finally(() => setFormStore("pending", false))
     }
 
-    if (newLayout())
-      return (
-        <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
-          {language.t("provider.connect.apiKey.description", { provider: provider().name })}
-          <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
-            <SecretInputV2
-              ref={apiKey}
-              label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
-              name="apiKey"
-              data-input="provider-api-key"
-              placeholder={language.t("provider.connect.apiKey.placeholder")}
-              value={formStore.value}
-              invalid={formStore.error !== undefined}
-              aria-describedby={formStore.error ? errorID : undefined}
-              autocomplete="off"
-              spellcheck={false}
-              onInput={(event) => setFormStore("value", event.currentTarget.value)}
-            />
-            <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
-              {language.t("provider.connect.apiKey.labelOptional")}
-              <TextInputV2
-                ref={labelInput}
-                class="!w-full"
-                name="label"
-                placeholder={language.t("provider.connect.apiKey.labelPlaceholder")}
-                value={formStore.label}
-                onInput={(event) => setFormStore("label", event.currentTarget.value)}
-              />
-            </label>
-            <Show when={formStore.error}>
-              {(error) => (
-                <div id={errorID} role="alert" class="-mt-4 text-xs text-v2-state-fg-danger">
-                  {error()}
-                </div>
-              )}
-            </Show>
-            <ButtonV2
-              type="submit"
-              variant="contrast"
-              data-action="provider-connect-submit"
-              disabled={formStore.pending}
-            >
-              {language.t("common.continue")}
-            </ButtonV2>
-          </form>
-        </div>
-      )
-
     return (
-      <div class="flex flex-col gap-6">
-        <div class="text-14-regular text-text-base">
-          {language.t("provider.connect.apiKey.description", { provider: provider().name })}
-        </div>
-        <form onSubmit={handleSubmit} class="flex flex-col items-start gap-4">
-          <TextField
-            autofocus={!newLayout()}
+      <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
+        {language.t("provider.connect.apiKey.description", { provider: provider().name })}
+        <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
+          <SecretInputV2
             ref={apiKey}
-            type="password"
             label={language.t("provider.connect.apiKey.label", { provider: provider().name })}
-            placeholder={language.t("provider.connect.apiKey.placeholder")}
             name="apiKey"
+            data-input="provider-api-key"
+            placeholder={language.t("provider.connect.apiKey.placeholder")}
             value={formStore.value}
-            onChange={(v) => setFormStore("value", v)}
-            validationState={formStore.error ? "invalid" : undefined}
-            error={formStore.error}
+            invalid={formStore.error !== undefined}
+            aria-describedby={formStore.error ? errorID : undefined}
+            autocomplete="off"
+            spellcheck={false}
+            onInput={(event) => setFormStore("value", event.currentTarget.value)}
           />
-          <TextField
-            ref={labelInput}
-            type="text"
-            label={language.t("provider.connect.apiKey.labelOptional")}
-            placeholder={language.t("provider.connect.apiKey.labelPlaceholder")}
-            name="label"
-            value={formStore.label}
-            onChange={(v) => setFormStore("label", v)}
-          />
-          <Button class="w-auto" type="submit" size="large" variant="primary" disabled={formStore.pending}>
+          <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
+            {language.t("provider.connect.apiKey.labelOptional")}
+            <TextInputV2
+              ref={labelInput}
+              class="!w-full"
+              name="label"
+              placeholder={language.t("provider.connect.apiKey.labelPlaceholder")}
+              value={formStore.label}
+              onInput={(event) => setFormStore("label", event.currentTarget.value)}
+            />
+          </label>
+          <Show when={formStore.error}>
+            {(error) => (
+              <div id={errorID} role="alert" class="-mt-4 text-xs text-v2-state-fg-danger">
+                {error()}
+              </div>
+            )}
+          </Show>
+          <ButtonV2 type="submit" variant="contrast" data-action="provider-connect-submit" disabled={formStore.pending}>
             {language.t("common.continue")}
-          </Button>
+          </ButtonV2>
         </form>
       </div>
     )
@@ -890,10 +667,7 @@ function ProviderConnection(props: {
       error: undefined as string | undefined,
     })
 
-    onMount(() => {
-      if (!newLayout()) return
-      codeInput?.focus({ preventScroll: true })
-    })
+    onMount(() => codeInput?.focus({ preventScroll: true }))
 
     async function handleSubmit(e: SubmitEvent) {
       e.preventDefault()
@@ -924,71 +698,41 @@ function ProviderConnection(props: {
       setFormStore("error", formatError(result.error, language.t("provider.connect.oauth.code.invalid")))
     }
 
-    if (newLayout())
-      return (
-        <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
-          <div>
-            {language.t("provider.connect.oauth.code.visit.prefix")}
-            <ExternalLink href={store.authorization!.url} class="text-v2-text-text-base">
-              {language.t("provider.connect.oauth.code.visit.link")}
-            </ExternalLink>
-            {language.t("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
-          </div>
-          <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
-            <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
-              {language.t("provider.connect.oauth.code.label", { method: method()?.label ?? "" })}
-              <TextInputV2
-                ref={codeInput}
-                class="!w-full"
-                name="code"
-                placeholder={language.t("provider.connect.oauth.code.placeholder")}
-                value={formStore.value}
-                invalid={formStore.error !== undefined}
-                aria-describedby={formStore.error ? errorID : undefined}
-                autocomplete="off"
-                spellcheck={false}
-                onInput={(event) => setFormStore("value", event.currentTarget.value)}
-              />
-            </label>
-            <Show when={formStore.error}>
-              {(error) => (
-                <div id={errorID} role="alert" class="-mt-4 text-xs text-v2-state-fg-danger">
-                  {error()}
-                </div>
-              )}
-            </Show>
-            <ButtonV2 type="submit" variant="contrast">
-              {language.t("common.continue")}
-            </ButtonV2>
-          </form>
-        </div>
-      )
-
     return (
-      <div class="flex flex-col gap-6">
-        <div class="text-14-regular text-text-base">
+      <div class="flex flex-col gap-5 px-3 text-[13px] font-[440] leading-5 tracking-[-0.04px] text-v2-text-text-muted">
+        <div>
           {language.t("provider.connect.oauth.code.visit.prefix")}
-          <ExternalLink href={store.authorization!.url}>
+          <ExternalLink href={store.authorization!.url} class="text-v2-text-text-base">
             {language.t("provider.connect.oauth.code.visit.link")}
           </ExternalLink>
           {language.t("provider.connect.oauth.code.visit.suffix", { provider: provider().name })}
         </div>
-        <form onSubmit={handleSubmit} class="flex flex-col items-start gap-4">
-          <TextField
-            autofocus={!newLayout()}
-            ref={codeInput}
-            type="text"
-            label={language.t("provider.connect.oauth.code.label", { method: method()?.label ?? "" })}
-            placeholder={language.t("provider.connect.oauth.code.placeholder")}
-            name="code"
-            value={formStore.value}
-            onChange={(v) => setFormStore("value", v)}
-            validationState={formStore.error ? "invalid" : undefined}
-            error={formStore.error}
-          />
-          <Button class="w-auto" type="submit" size="large" variant="primary">
+        <form onSubmit={handleSubmit} class="flex flex-col items-start gap-5 self-stretch">
+          <label class="flex w-full flex-col gap-1 font-[530] leading-4 text-v2-text-text-base">
+            {language.t("provider.connect.oauth.code.label", { method: method()?.label ?? "" })}
+            <TextInputV2
+              ref={codeInput}
+              class="!w-full"
+              name="code"
+              placeholder={language.t("provider.connect.oauth.code.placeholder")}
+              value={formStore.value}
+              invalid={formStore.error !== undefined}
+              aria-describedby={formStore.error ? errorID : undefined}
+              autocomplete="off"
+              spellcheck={false}
+              onInput={(event) => setFormStore("value", event.currentTarget.value)}
+            />
+          </label>
+          <Show when={formStore.error}>
+            {(error) => (
+              <div id={errorID} role="alert" class="-mt-4 text-xs text-v2-state-fg-danger">
+                {error()}
+              </div>
+            )}
+          </Show>
+          <ButtonV2 type="submit" variant="contrast">
             {language.t("common.continue")}
-          </Button>
+          </ButtonV2>
         </form>
       </div>
     )
@@ -1077,25 +821,18 @@ function ProviderConnection(props: {
           <Spinner />
           <span>{language.t("provider.connect.status.waiting")}</span>
         </div>
-        <ActionButton onClick={goBack}>{language.t("common.cancel")}</ActionButton>
+        <ButtonV2 class="self-start" onClick={goBack}>
+          {language.t("common.cancel")}
+        </ButtonV2>
       </div>
     )
   }
 
   return (
-    <div class={newLayout() ? "flex min-h-0 flex-1 flex-col" : "flex flex-col gap-6 px-2.5 pb-3"}>
-      <div class={newLayout() ? "flex h-10 shrink-0 items-start gap-2 px-3" : "flex items-center gap-4 px-2.5"}>
-        <ProviderIcon
-          id={props.provider}
-          class={newLayout() ? "mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" : "size-5 shrink-0 icon-strong-base"}
-        />
-        <div
-          class={
-            newLayout()
-              ? "text-[15px] font-[530] leading-5 tracking-[-0.13px] text-v2-text-text-base"
-              : "text-16-medium text-text-strong"
-          }
-        >
+    <div class="flex min-h-0 flex-1 flex-col">
+      <div class="flex h-10 shrink-0 items-start gap-2 px-3">
+        <ProviderIcon id={props.provider} class="mt-0.5 size-4 shrink-0 text-v2-icon-icon-base" />
+        <div class="text-[15px] font-[530] leading-5 tracking-[-0.13px] text-v2-text-text-base">
           <Switch>
             <Match when={props.provider === "anthropic" && method()?.label?.toLowerCase().includes("max")}>
               {language.t("provider.connect.title.anthropicProMax")}
@@ -1104,12 +841,8 @@ function ProviderConnection(props: {
           </Switch>
         </div>
       </div>
-      <div class={newLayout() ? "flex min-h-0 flex-1 flex-col" : "flex flex-col gap-6 px-2.5 pb-10"}>
-        <div
-          onKeyDown={handleKey}
-          tabIndex={newLayout() ? undefined : 0}
-          autofocus={!newLayout() && store.methodIndex === undefined ? true : undefined}
-        >
+      <div class="flex min-h-0 flex-1 flex-col">
+        <div>
           <Switch>
             <Match when={loading()}>
               <div class="text-14-regular text-text-base">
@@ -1120,7 +853,7 @@ function ProviderConnection(props: {
               </div>
             </Match>
             <Match when={integration.error()}>
-              {(error) => <ProviderLoadError error={error().cause} retry={integration.retry} v2={newLayout()} />}
+              {(error) => <ProviderLoadError error={error().cause} retry={integration.retry} />}
             </Match>
             <Match when={store.methodIndex === undefined}>
               <MethodSelection />
@@ -1144,11 +877,12 @@ function ProviderConnection(props: {
                 </div>
                 {/* A stored sign-in only needs its refresh repeated; a failed attempt starts over. */}
                 <div class="mt-3 flex flex-col">
-                  <ActionButton
+                  <ButtonV2
+                    class="self-start"
                     onClick={() => void (store.connected ? complete() : selectMethod(store.methodIndex ?? 0))}
                   >
                     {language.t("orchestra.providers.retry")}
-                  </ActionButton>
+                  </ButtonV2>
                 </div>
               </div>
             </Match>
@@ -1172,17 +906,12 @@ function ProviderConnection(props: {
   )
 }
 
-function ProviderLoadError(props: { error: unknown; retry: () => unknown; v2?: boolean }) {
+function ProviderLoadError(props: { error: unknown; retry: () => unknown }) {
   const language = useLanguage()
   return (
     <div class="flex flex-col gap-3 px-3 py-2">
       <p role="alert">{formatServerError(props.error, language.t, language.t("common.requestFailed"))}</p>
-      <Show
-        when={props.v2}
-        fallback={<Button onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</Button>}
-      >
-        <ButtonV2 onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</ButtonV2>
-      </Show>
+      <ButtonV2 onClick={() => void props.retry()}>{language.t("orchestra.providers.retry")}</ButtonV2>
     </div>
   )
 }

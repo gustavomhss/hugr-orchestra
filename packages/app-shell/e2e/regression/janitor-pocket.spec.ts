@@ -120,7 +120,7 @@ for (const viewport of [
     )
     const timeline = await setupTimeline(page, {
       viewport,
-      settings: { newLayoutDesigns: true, janitorEnabled: true },
+      settings: { janitorEnabled: true },
       onPrompt: (input) => prompts.push(input),
       sessions: [session(), session({ id: janitorSessionID, title: "Janitor chat" })],
     })

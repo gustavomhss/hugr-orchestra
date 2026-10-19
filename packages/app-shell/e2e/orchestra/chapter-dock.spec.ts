@@ -207,36 +207,6 @@ test("a profile switch selects the other repository's native profile, ignoring l
   expect(final.live.map((item) => [item.url, item.profile])).toEqual([["https://example.com/a", profileA]])
 })
 
-test("outside Orchestra the Apps panel keeps its manual browser profiles", async ({ page }) => {
-  // The legacy layout retires on the oldInterfaceSunset date; run before it so the layout still renders.
-  await page.clock.setSystemTime(new Date(2026, 8, 1))
-  await setup(page, { bridge: true, session: true, legacy: true })
-  await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
-  await expect(page.locator('[data-component="orchestra-sidebar"]')).toHaveCount(0)
-  await expect(page.getByRole("heading", { name: sessionTitle })).toBeVisible({ timeout: 30_000 })
-  const apps = page.locator('[data-slot="session-side-panel-tab-bar"]').getByRole("tab", { name: "Apps" })
-  // The shared mock starts after the rail's one-time default, so the rail is closed here.
-  await expect(apps).toBeHidden()
-  await page.getByRole("button", { name: "Toggle review" }).click()
-  await apps.click()
-
-  const picker = page.getByRole("combobox", { name: "Browser profile" })
-  await expect(picker).toHaveValue("default")
-  await expect(picker.locator("option")).toHaveText(["Personal", "Work"])
-  await expect(page.getByRole("button", { name: "Create browser profile" })).toBeVisible()
-  await expect(tab(page, "Page /personal")).toHaveAttribute("aria-selected", "true")
-
-  await picker.selectOption("work")
-  await expect(tab(page, "Page /work")).toHaveAttribute("aria-selected", "true")
-  await expect(tab(page, "Page /personal")).toHaveCount(0)
-  await expect(picker).toHaveValue("work")
-  const opens = (await fake(page)).calls.filter((call) => call.type === "open")
-  expect(opens).toEqual([
-    { type: "open", url: "https://example.com/personal", profile: "default" },
-    { type: "open", url: "https://example.com/work", profile: "work" },
-  ])
-})
-
 test("loading, failure and retry are explicit", async ({ page }) => {
   await setup(page, { bridge: true, session: false })
   await page.goto("/")
@@ -333,7 +303,7 @@ async function chooseProfile(page: Page, name: string) {
   await expect(page.locator('[data-slot="orchestra-profile"]')).toContainText(name)
 }
 
-async function setup(page: Page, options: { bridge: boolean | "partial"; session: boolean; legacy?: boolean }) {
+async function setup(page: Page, options: { bridge: boolean | "partial"; session: boolean }) {
   await mockOrchestraServer(page, {
     directory,
     project: {
@@ -365,12 +335,8 @@ async function setup(page: Page, options: { bridge: boolean | "partial"; session
     return serverBResponse(route, url)
   })
   await page.addInitScript(
-    ({ serverA, serverB, directory, sessionID, session, legacy }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: !legacy, shouldDisplayTabsToast: false } }),
-      )
-      if (legacy) localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.17.20" }))
+    ({ serverA, serverB, directory, sessionID, session }) => {
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({
@@ -392,7 +358,7 @@ async function setup(page: Page, options: { bridge: boolean | "partial"; session
       localStorage.setItem("orchestra-color-scheme", "dark")
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     },
-    { serverA, serverB, directory, sessionID, session: options.session, legacy: !!options.legacy },
+    { serverA, serverB, directory, sessionID, session: options.session },
   )
   if (options.bridge) await page.addInitScript(installDockBridge, options.bridge === "partial")
 }

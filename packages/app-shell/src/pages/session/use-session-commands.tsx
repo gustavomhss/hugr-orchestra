@@ -113,11 +113,10 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
     hasReview,
     fileBrowser: actions.fileBrowser,
     cockpit: () => false,
-    permanent: settings.general.newLayoutDesigns,
   })
   const activeFileTab = tabState.activeFileTab
   const closableTab = tabState.closableTab
-  const shown = settings.visibility.fileTree
+  const shown = settings.general.showFileTree
 
   const messages = () => {
     const id = params.id
@@ -394,13 +393,7 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.session.new"),
       keybind: "mod+shift+s",
       slash: "new",
-      onSelect: (source) => {
-        if (settings.general.newLayoutDesigns()) {
-          command.trigger("tab.new", source)
-          return
-        }
-        navigate(`/${params.dir}/session`)
-      },
+      onSelect: (source) => command.trigger("tab.new", source),
     }),
     sessionCommand({
       id: "session.undo",
@@ -541,21 +534,11 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       title: language.t("command.tasks.toggle"),
       onSelect: () => {
         // Orchestra's rail keeps a permanent Tasks tab: reveal it and toggle the Tasks detail.
-        if (settings.general.newLayoutDesigns()) {
-          const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
-          updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
-          view().reviewPanel.open()
-          tabs().open("tasks")
-          tabs().setActive("tasks")
-          return
-        }
-        if (tabs().active() === "tasks") {
-          tabs().close("tasks")
-          return
-        }
+        const shown = view().reviewPanel.opened() && tabs().active() === "tasks"
+        updateCockpitView(sessionKey(), { tasks: !(shown && cockpitView(sessionKey()).tasks) })
+        view().reviewPanel.open()
         tabs().open("tasks")
         tabs().setActive("tasks")
-        view().reviewPanel.open()
       },
     }),
     viewCommand({

@@ -5,7 +5,6 @@ import { Credential } from "@orchestra/core/credential"
 import { Integration } from "@orchestra/core/integration"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
-import type { IntegrationEnvMethod, IntegrationKeyMethod, IntegrationOAuthMethod } from "@orchestra/sdk/v2/types"
 import { Effect } from "effect"
 
 type Overrides = Partial<Omit<PluginContext, "options">>
@@ -249,9 +248,7 @@ function method(value: Integration.Method) {
   }
 }
 
-function internalMethod(
-  value: IntegrationOAuthMethod | IntegrationKeyMethod | IntegrationEnvMethod,
-): Integration.Method {
+function internalMethod(value: typeof Integration.Method.Encoded): Integration.Method {
   if (value.type === "env") return value
   if (value.type === "key") return value
   return {

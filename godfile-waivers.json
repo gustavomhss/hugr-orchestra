@@ -6,12 +6,6 @@
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-09-08"
     },
-    "packages/app-shell/src/components/prompt-input.tsx": {
-      "maximumLines": 1694,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
-    },
     "packages/app-shell/src/i18n/am.ts": {
       "maximumLines": 1188,
       "reason": "Linux workspace dock labels extend the locale waiver.",
@@ -383,12 +377,6 @@
       "reason": "Linux workspace dock labels extend the locale waiver.",
       "authorizedBy": "stakeholder",
       "authorizedAt": "2026-10-05"
-    },
-    "packages/app-shell/src/pages/session/session-side-panel.tsx": {
-      "maximumLines": 936,
-      "reason": "Human waiver: pre-existing file over Godfile cap.",
-      "authorizedBy": "stakeholder",
-      "authorizedAt": "2026-09-08"
     },
     "packages/client/src/generated-effect/client.ts": {
       "maximumLines": 1218,

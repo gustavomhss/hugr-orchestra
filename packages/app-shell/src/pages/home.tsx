@@ -77,11 +77,7 @@ function NarrowHome(props: {
       <div class="shrink-0">
         <OrchestraHome home={props.home} />
       </div>
-      <HomeUtilityNav
-        class="flex shrink-0 pb-3"
-        onOpenSettings={props.projects.utility.settings}
-        language={props.projects.copy.language}
-      />
+      <HomeUtilityNav class="flex shrink-0 pb-3" language={props.projects.copy.language} />
     </div>
   )
 }

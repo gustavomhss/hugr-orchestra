@@ -19,7 +19,7 @@ import { useSessionLayout } from "@/pages/session/session-layout"
 import { SessionCrumbs } from "@/orchestra/crumbs"
 import { decode64 } from "@/utils/base64"
 import { requireServerKey } from "@/utils/session-route"
-import { StatusPopover, StatusPopoverV2 } from "../status-popover"
+import { StatusPopoverV2 } from "../status-popover"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
@@ -63,8 +63,8 @@ export function SessionHeader() {
     navigate("/")
   }
   const hotkey = createMemo(() => command.keybind("file.open"))
-  const search = settings.visibility.search
-  const status = settings.visibility.status
+  const search = settings.general.showSearch
+  const status = settings.general.showStatus
   const isDesktop = createMediaQuery("(min-width: 768px)")
 
   const toggleTerminal = () => {

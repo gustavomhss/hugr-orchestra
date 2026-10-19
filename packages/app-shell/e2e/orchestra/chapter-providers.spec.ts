@@ -437,10 +437,7 @@ async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dar
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory, scheme }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)

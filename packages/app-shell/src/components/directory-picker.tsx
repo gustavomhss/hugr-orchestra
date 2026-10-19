@@ -2,7 +2,6 @@ import { useDialog } from "@orchestra/ui/context/dialog"
 import { ServerConnection } from "@/context/server"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { useSettings } from "@/context/settings"
 import { errorMessage } from "@/pages/layout/helpers"
 import { showToast } from "@/utils/toast"
 import { lazy } from "solid-js"
@@ -22,7 +21,6 @@ type DirectoryPickerInput = {
 
 export function useDirectoryPicker() {
   const platform = usePlatform()
-  const settings = useSettings()
   const dialog = useDialog()
   const language = useLanguage()
 
@@ -48,7 +46,7 @@ export function useDirectoryPicker() {
     const cancel = () => {
       if (!selected) input.onSelect(null)
     }
-    if (platform.platform === "desktop" && settings.general.newLayoutDesigns()) {
+    if (platform.platform === "desktop") {
       dialog.show(() => <DialogSelectDirectoryV2 {...input} onSelect={onSelect} />, cancel)
       return
     }

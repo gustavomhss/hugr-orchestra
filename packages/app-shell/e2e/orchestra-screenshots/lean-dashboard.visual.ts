@@ -39,7 +39,7 @@ test("native Lean production page: profiles, controls, history and dark/light ca
   await page.addInitScript(({ profiles }) => {
     const server = "http://127.0.0.1:4096"
     const directory = profiles[0].worktree
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }))
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
     const projects = profiles.map((project) => ({ worktree: project.worktree, expanded: true }))
     localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [server],
       projects: { local: projects, [server]: projects }, lastProject: { local: directory, [server]: directory } }))

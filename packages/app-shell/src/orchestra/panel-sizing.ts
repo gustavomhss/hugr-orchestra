@@ -13,7 +13,6 @@ import type { ServerScope } from "@/utils/server-scope"
 export function createOrchestraPanelSizing(input: {
   scope: ServerScope
   platform: Platform
-  newSessionDesign: () => boolean
   isDesktop: () => boolean
   reviewOpen: () => boolean
   sidePanelOpen: () => boolean
@@ -25,7 +24,6 @@ export function createOrchestraPanelSizing(input: {
   resize: (width: number) => void
 }) {
   const compactReview = createMediaQuery("(max-width: 1180px)")
-  const orchestraDesktop = createMemo(() => input.newSessionDesign() && input.isDesktop())
   const [panelSizing, setPanelSizing] = persisted(
     Persist.serverGlobal(input.scope, "orchestra-session-panel"),
     createStore({ resized: false }),
@@ -36,7 +34,7 @@ export function createOrchestraPanelSizing(input: {
   const available = createMemo(() => {
     const width = input.rowWidth()
     if (width === undefined) return undefined
-    return width - (orchestraDesktop() ? 6 : input.newSessionDesign() ? 8 : 0)
+    return width - (input.isDesktop() ? 6 : 8)
   })
   const max = createMemo(() => {
     const width = available()
@@ -59,12 +57,12 @@ export function createOrchestraPanelSizing(input: {
   const width = createMemo(() => {
     if (!input.sidePanelOpen()) return "100%"
     if (input.resizeOpen()) return `${resizedWidth()}px`
-    if (orchestraDesktop()) return `calc(100% - ${Math.max(240, input.fileTreeWidth()) + 6}px)`
+    if (input.isDesktop()) return `calc(100% - ${Math.max(240, input.fileTreeWidth()) + 6}px)`
     return `calc(100% - ${input.fileTreeWidth()}px)`
   })
 
   return {
-    desktop: orchestraDesktop,
+    desktop: input.isDesktop,
     max,
     resizedWidth,
     width,

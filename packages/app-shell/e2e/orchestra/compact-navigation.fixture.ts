@@ -32,10 +32,7 @@ export async function setupCompactNavigation(
   })
   await page.addInitScript(
     ({ directory, server, locale, scheme, selected }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({

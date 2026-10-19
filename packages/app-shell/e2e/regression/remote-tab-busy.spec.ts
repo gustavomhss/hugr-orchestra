@@ -14,7 +14,7 @@ test.describe("legacy tab strip", () => {
     await mockServers(page)
     await page.addInitScript(
       ({ serverA, serverB, sessionA, sessionB }) => {
-        localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+        localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
         localStorage.setItem("orchestra.global.dat:server", JSON.stringify({ list: [serverB] }))
         localStorage.setItem(
           "orchestra.window.browser.dat:tabs",
@@ -47,7 +47,7 @@ test("desktop tabs filter by profile and show each server's own busy state", asy
   await mockServers(page)
   await page.addInitScript(
     ({ serverA, serverB, sessionA, sessionB, directoryA, directoryB }) => {
-      localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true } }))
+      localStorage.setItem("settings.v3", JSON.stringify({ general: {} }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({

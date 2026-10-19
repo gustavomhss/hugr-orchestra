@@ -149,11 +149,7 @@ export async function setup(
       localStorage.setItem(
         "settings.v3",
         JSON.stringify({
-          general: {
-            newLayoutDesigns: true,
-            shouldDisplayTabsToast: false,
-            newInterfaceNoticeDismissed: true,
-          },
+          general: { shouldDisplayTabsToast: false },
         }),
       )
       localStorage.setItem("orchestra-theme-id", "oc-2")

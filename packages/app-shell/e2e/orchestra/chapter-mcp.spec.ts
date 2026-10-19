@@ -565,10 +565,7 @@ async function openChapter(page: Page, wait = true) {
 async function setup(page: Page, state: ReturnType<typeof fixture>) {
   await page.addInitScript(
     ({ serverA, serverB, directory }) => {
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({

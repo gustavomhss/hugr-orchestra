@@ -46,7 +46,6 @@ describe("current session timeline rows", () => {
       (messageID) => normalized.parts.get(messageID) ?? [],
       true,
       "busy",
-      true,
       normalized.messages.filter((message) => message.role === "user"),
     )
 
@@ -82,7 +81,6 @@ describe("current session timeline rows", () => {
       (messageID) => normalized.parts.get(messageID) ?? [],
       true,
       "idle",
-      true,
       normalized.messages.filter((message) => message.role === "user"),
     )
 
@@ -123,7 +121,6 @@ describe("current session timeline rows", () => {
       (messageID) => normalized.parts.get(messageID) ?? [],
       true,
       "idle",
-      true,
       normalized.messages.filter((message) => message.role === "user"),
     )
 
@@ -156,7 +153,6 @@ describe("current session timeline rows", () => {
       () => [],
       true,
       "busy",
-      true,
       [...normalized.messages.filter((message) => message.role === "user"), optimistic],
     )
 
@@ -199,7 +195,6 @@ describe("current session timeline rows", () => {
       (messageID) => normalized.parts.get(messageID) ?? [],
       true,
       "busy",
-      true,
       normalized.messages.filter((message) => message.role === "user"),
     )
 
@@ -217,7 +212,6 @@ describe("current session timeline rows", () => {
         true,
         "idle",
         false,
-        true,
       ).flatMap((row) => (row._tag === "Error" ? [row.providerID] : []))
 
     expect(failed({ name: "ProviderAuthError", data: { providerID: "openai", message: "No API key" } })).toEqual([

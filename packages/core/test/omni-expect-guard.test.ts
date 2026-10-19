@@ -4,13 +4,17 @@
 // below with its reason.
 //
 // What "drives omni's spawn surface directly" means, exactly:
-// - The packages are the ones whose bunfig.toml preloads script/test-omni-control.ts, read from the files.
+// - The packages are the ones whose bunfig.toml preloads script/test-omni-control.ts, read from the files: every
+//   package registered in script/module-registry.json (packages/*, apps/*, modules/*, tooling/*), plus every
+//   packages/* and apps/* directory, registered or not.
 // - The surface is packages/core/src/omni.ts (the counter) plus every tracked source module that calls
-//   Omni.count("spawns"). Both are read from the source with the TypeScript parser, not listed here.
+//   Omni.count("spawns"), in <package>/src of a registered package or of packages/* and apps/*. Both are read from the
+//   source with the TypeScript parser, not listed here.
 // - A test file (*.test.ts, *.test.tsx) in those packages is flagged when one of its value imports (static, re-export or
 //   literal dynamic import; `import type` excluded) resolves to the surface, or to a test helper (a non-test file outside
 //   any src/ directory) that is itself flagged by the same rule, transitively. Specifiers resolve as relative paths,
-//   @orchestra/core/*, and orchestra's @/* and @test/*; anything else is a package and is not followed.
+//   @orchestra/core/*, @orchestra/<registered package>/* through the registry path and that package.json's exports (no
+//   node_modules), and orchestra's @/* and @test/*; anything else is a package and is not followed.
 // - It declares when its AST contains a call to an identifier or property named expectSpawn.
 //
 // Not covered, said plainly: tests that reach omni through general modules (AppProcess, Process, the spawner layer,
@@ -56,7 +60,12 @@ const ledger: Record<string, string> = {
 
 function guard(base: string, tracked: string[], exceptions: Record<string, string>) {
   const problems: string[] = []
-  const packages = tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/bunfig\.toml$/.test(file))
+  const registryFile = "script/module-registry.json"
+  if (!tracked.includes(registryFile)) return { problems: [`${registryFile} is not tracked`], flagged: [], checked: 0 }
+  const modules = (JSON.parse(readFileSync(path.join(base, registryFile), "utf8")) as { modules?: { name: string; path: string }[] }).modules ?? []
+  if (modules.length === 0) return { problems: [`${registryFile} registers no module`], flagged: [], checked: 0 }
+  const directories = new Set(modules.map((module) => module.path))
+  const packages = tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/bunfig\.toml$/.test(file) || (file.endsWith("/bunfig.toml") && directories.has(path.posix.dirname(file))))
     .filter((file) => preloadsControl(TOML.parse(readFileSync(path.join(base, file), "utf8")) as { test?: { preload?: unknown } }))
     .map((file) => path.posix.dirname(file) + "/")
   if (packages.length === 0) return { problems: ["no package preloads script/test-omni-control.ts"], flagged: [], checked: 0 }
@@ -73,18 +82,41 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
     call.arguments.length > 0 && ts.isStringLiteral(call.arguments[0]!) && call.arguments[0].text === "spawns"
   const counter = "packages/core/src/omni.ts"
   if (!set.has(counter)) return { problems: [`${counter} is not tracked`], flagged: [], checked: 0 }
-  const surface = new Set([counter, ...tracked.filter((file) => /^(?:packages|apps)\/[^/]+\/src\/.*\.tsx?$/.test(file) &&
+  const sources = (file: string) => /^(?:packages|apps)\/[^/]+\/src\/.*\.tsx?$/.test(file) ||
+    (/\.tsx?$/.test(file) && modules.some((module) => file.startsWith(`${module.path}/src/`)))
+  const surface = new Set([counter, ...tracked.filter((file) => sources(file) &&
     !/\.test\.tsx?$/.test(file) && readFileSync(path.join(base, file), "utf8").includes("Omni.count(") && calls(file, counts))])
   if (surface.size === 1) problems.push("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   const resolve = (from: string, specifier: string) => {
     const pkg = from.split("/").slice(0, 2).join("/")
-    const stem = specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier)
-      : specifier.startsWith("@orchestra/core/") ? `packages/core/src/${specifier.slice("@orchestra/core/".length)}`
-        : pkg === "apps/orchestra" && specifier.startsWith("@/") ? `apps/orchestra/src/${specifier.slice(2)}`
-          : pkg === "apps/orchestra" && specifier.startsWith("@test/") ? `apps/orchestra/test/${specifier.slice(6)}`
-            : undefined
-    if (stem === undefined) return undefined
-    return [stem, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`].find((candidate) => set.has(candidate))
+    const stems = [
+      specifier.startsWith(".") ? path.posix.join(path.posix.dirname(from), specifier)
+        : specifier.startsWith("@orchestra/core/") ? `packages/core/src/${specifier.slice("@orchestra/core/".length)}`
+          : pkg === "apps/orchestra" && specifier.startsWith("@/") ? `apps/orchestra/src/${specifier.slice(2)}`
+            : pkg === "apps/orchestra" && specifier.startsWith("@test/") ? `apps/orchestra/test/${specifier.slice(6)}`
+              : undefined,
+      registered(specifier),
+    ].flatMap((stem) => stem ?? [])
+    return stems.flatMap((stem) => [stem, `${stem}.ts`, `${stem}.tsx`, `${stem}/index.ts`]).find((candidate) => set.has(candidate))
+  }
+  // @orchestra/<registered>[/subpath] through the registry's path and that package.json's exports, as node would, but
+  // from the tracked files: a registered package needs no node_modules link to be followed.
+  const registered = (specifier: string) => {
+    const module = modules.find((entry) => entry.name.startsWith("@orchestra/") && (specifier === entry.name || specifier.startsWith(`${entry.name}/`)))
+    if (module === undefined || !set.has(`${module.path}/package.json`)) return undefined
+    const exported = (JSON.parse(readFileSync(path.join(base, module.path, "package.json"), "utf8")) as { exports?: unknown }).exports
+    if (typeof exported !== "object" || exported === null) return undefined
+    const subpath = `.${specifier.slice(module.name.length)}`
+    const entries = Object.entries(exported)
+    const hit = entries.find(([key]) => key === subpath) ?? entries.find(([key]) => {
+      const star = key.indexOf("*")
+      return star >= 0 && subpath.startsWith(key.slice(0, star)) && subpath.endsWith(key.slice(star + 1))
+    })
+    if (hit === undefined) return undefined
+    const star = hit[0].indexOf("*")
+    const target = exportTarget(hit[1])
+    if (target === undefined) return undefined
+    return path.posix.join(module.path, star < 0 ? target : target.replace("*", subpath.slice(star, subpath.length - (hit[0].length - star - 1))))
   }
   const imports = (file: string) => {
     const found: string[] = []
@@ -126,6 +158,13 @@ function guard(base: string, tracked: string[], exceptions: Record<string, strin
   return { problems, flagged, checked: tests.length }
 }
 
+// A package.json export target: a path, or the first path under a condition (default, import, bun, in that order).
+function exportTarget(value: unknown): string | undefined {
+  if (typeof value === "string") return value
+  if (typeof value !== "object" || value === null) return undefined
+  return ["default", "import", "bun"].map((condition) => exportTarget((value as Record<string, unknown>)[condition])).find((target) => target !== undefined)
+}
+
 test("every test file that drives omni's spawn surface declares its spawning tests or is in the ledger", () => {
   const listing = Bun.spawnSync(["git", "ls-files"], { cwd: root })
   expect(listing.exitCode).toBe(0)
@@ -133,18 +172,46 @@ test("every test file that drives omni's spawn surface declares its spawning tes
   const result = guard(root, tracked, ledger)
   expect(result.problems).toEqual([])
   expect(result.checked).toBeGreaterThan(100)
-  // The files this PR declares are seen as driving the surface: the reading engages the real tree.
+  // The files reached before registered packages were (the declared ones, and every ledger entry, which must be
+  // flagged to stand) are still reached: the reading engages the real tree and only ever grew.
   expect(result.flagged).toEqual(expect.arrayContaining([
     "packages/core/test/tcp-proxy.test.ts", "apps/orchestra/test/util/process-omni.test.ts", "apps/cli/test/distribution-process.test.ts",
-    "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts",
+    "apps/desktop/src/main/omni-process.test.ts", "apps/orchestra/test/mcp/omni-stdio.test.ts", ...Object.keys(ledger),
   ]))
 })
 
 test("teeth: undeclared, type-only, helper-reached, declared and stale-ledger files on a planted tree", async () => {
   const base = await mkdtemp(path.join(tmpdir(), "omni-expect-guard-"))
   try {
+    const control = '[test]\npreload = ["../../script/test-omni-control.ts"]\n'
     const files: Record<string, string> = {
-      "packages/core/bunfig.toml": '[test]\npreload = ["../../script/test-omni-control.ts"]\n',
+      "script/module-registry.json": JSON.stringify({ modules: [
+        { name: "@orchestra/core", path: "packages/core" }, { name: "@orchestra/probe", path: "modules/probe" },
+        { name: "@orchestra/plain", path: "modules/plain" },
+      ] }),
+      // modules/probe is registered and preloads the control: its src is surface and its tests are held, with its
+      // exports (a condition and a wildcard) resolved from package.json. modules/plain is registered without the
+      // control, modules/ghost has the control but is not registered: neither is reached.
+      "modules/probe/package.json": JSON.stringify({ exports: {
+        ".": "./src/index.ts", "./spawn": { types: "./src/spawn.d.ts", default: "./src/spawn.ts" }, "./lib/*": "./src/lib/*.ts",
+      } }),
+      "modules/probe/bunfig.toml": control,
+      "modules/probe/src/index.ts": "export const idle = 1\n",
+      "modules/probe/src/spawn.ts": 'export const go = () => Omni.count("spawns")\n',
+      "modules/probe/src/lib/count.ts": 'export const again = () => Omni.count("spawns")\n',
+      "modules/probe/test/module-own-undeclared.test.ts": 'import { go } from "../src/spawn"\ngo()\n',
+      "modules/probe/test/module-core-undeclared.test.ts": 'import { run } from "@orchestra/core/spawner"\nrun()\n',
+      "modules/probe/test/module-exports-undeclared.test.ts": 'import { go } from "@orchestra/probe/spawn"\ngo()\n',
+      "modules/probe/test/module-wild-undeclared.test.ts": 'import { again } from "@orchestra/probe/lib/count"\nagain()\n',
+      "modules/probe/test/module-declared.test.ts": 'import { go } from "@orchestra/probe/spawn"\nimport { expectSpawn } from "x"\nexpectSpawn(import.meta.path)\ngo()\n',
+      "modules/probe/test/idle.test.ts": 'import { idle } from "@orchestra/probe"\nidle\n',
+      "packages/core/test/cross-undeclared.test.ts": 'import { go } from "@orchestra/probe/spawn"\ngo()\n',
+      "modules/plain/package.json": "{}",
+      "modules/plain/bunfig.toml": '[test]\npreload = ["./setup.ts"]\n',
+      "modules/plain/test/plain.test.ts": 'import { run } from "../../../packages/core/src/spawner"\nrun()\n',
+      "modules/ghost/bunfig.toml": control,
+      "modules/ghost/test/ghost.test.ts": 'import { run } from "../../../packages/core/src/spawner"\nrun()\n',
+      "packages/core/bunfig.toml": control,
       "packages/other/bunfig.toml": '[test]\npreload = ["./setup.ts"]\n',
       "packages/core/src/omni.ts": "export function count(kind: string) {}\n",
       "packages/core/src/spawner.ts": 'import { Omni } from "./omni"\nexport const run = () => Omni.count("spawns")\n',
@@ -169,23 +236,34 @@ test("teeth: undeclared, type-only, helper-reached, declared and stale-ledger fi
       "packages/core/test/router.test.ts": "stale: router is not on the surface",
       "packages/core/test/declared.test.ts": "redundant: it declares",
     })
+    const undeclared = (file: string) => `${file} drives omni's spawn surface but no test in it calls expectSpawn(import.meta.path)`
     expect(result.flagged.toSorted()).toEqual([
-      "packages/core/test/declared.test.ts", "packages/core/test/dynamic.test.ts", "packages/core/test/ledgered.test.ts",
-      "packages/core/test/undeclared.test.ts", "packages/core/test/via-helper.test.ts",
+      "modules/probe/test/module-core-undeclared.test.ts", "modules/probe/test/module-declared.test.ts",
+      "modules/probe/test/module-exports-undeclared.test.ts", "modules/probe/test/module-own-undeclared.test.ts",
+      "modules/probe/test/module-wild-undeclared.test.ts",
+      "packages/core/test/cross-undeclared.test.ts", "packages/core/test/declared.test.ts", "packages/core/test/dynamic.test.ts",
+      "packages/core/test/ledgered.test.ts", "packages/core/test/undeclared.test.ts", "packages/core/test/via-helper.test.ts",
     ])
     expect(result.problems.toSorted()).toEqual([
       "ledger entry packages/core/test/declared.test.ts now calls expectSpawn; remove it",
       "ledger entry packages/core/test/router.test.ts no longer drives omni's spawn surface; remove it",
-      "packages/core/test/dynamic.test.ts drives omni's spawn surface but no test in it calls expectSpawn(import.meta.path)",
-      "packages/core/test/undeclared.test.ts drives omni's spawn surface but no test in it calls expectSpawn(import.meta.path)",
-      "packages/core/test/via-helper.test.ts drives omni's spawn surface but no test in it calls expectSpawn(import.meta.path)",
-    ])
+      undeclared("modules/probe/test/module-core-undeclared.test.ts"),
+      undeclared("modules/probe/test/module-exports-undeclared.test.ts"),
+      undeclared("modules/probe/test/module-own-undeclared.test.ts"),
+      undeclared("modules/probe/test/module-wild-undeclared.test.ts"),
+      undeclared("packages/core/test/cross-undeclared.test.ts"),
+      undeclared("packages/core/test/dynamic.test.ts"),
+      undeclared("packages/core/test/undeclared.test.ts"),
+      undeclared("packages/core/test/via-helper.test.ts"),
+    ].toSorted())
     // A clean tree passes, and a tree with no preloading package or no counting module is a named failure.
     expect(guard(base, tracked.filter((file) => !/(undeclared|dynamic|via-helper|router)\.test/.test(file)),
       { "packages/core/test/ledgered.test.ts": "reason" }).problems).toEqual([])
-    expect(guard(base, tracked.filter((file) => file !== "packages/core/bunfig.toml"), {}).problems)
+    expect(guard(base, tracked.filter((file) => !/^(?:packages\/core|modules\/probe|modules\/ghost)\/bunfig\.toml$/.test(file)), {}).problems)
       .toEqual(["no package preloads script/test-omni-control.ts"])
-    expect(guard(base, tracked.filter((file) => file !== "packages/core/src/spawner.ts"), {}).problems)
+    expect(guard(base, tracked.filter((file) => file !== "script/module-registry.json"), {}).problems)
+      .toEqual(["script/module-registry.json is not tracked"])
+    expect(guard(base, tracked.filter((file) => file !== "packages/core/src/spawner.ts" && !file.startsWith("modules/probe/src/")), {}).problems)
       .toContain("no source module calls Omni.count(\"spawns\"); the surface reading broke")
   } finally {
     await rm(base, { recursive: true, force: true })

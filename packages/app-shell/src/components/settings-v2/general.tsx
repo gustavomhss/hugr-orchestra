@@ -4,14 +4,12 @@ import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { SelectV2 } from "@orchestra/ui/v2/select-v2"
 import { Switch } from "@orchestra/ui/v2/switch-v2"
 import { TextInputV2 } from "@orchestra/ui/v2/text-input-v2"
-import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
 import { useUpdaterAction } from "../updater-action"
 import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
-import { LayoutRetirementNotice, LayoutTransitionToggle } from "./interface-transition"
 import { PalettePicker } from "@/orchestra/palette/picker"
 import {
   createAppearanceSettingsController,
@@ -258,7 +256,6 @@ export const SettingsGeneralV2: Component<{
 }> = (props) => {
   const language = useLanguage()
   const platform = usePlatform()
-  const dialog = useDialog()
   const settings = useSettings()
   const mobile = createMediaQuery("(max-width: 767px)")
   const updater = useUpdaterAction()
@@ -280,31 +277,6 @@ export const SettingsGeneralV2: Component<{
     if (!update) return
     void update.catch(() => setPinchZoom(!checked))
   }
-
-  const InterfaceSection = () => (
-    <LayoutTransitionToggle
-      title={language.t("settings.general.row.newInterface.title")}
-      badge={language.t("settings.general.row.newInterface.badge")}
-      description={language.t("settings.general.row.newInterface.description")}
-      checked={settings.general.newLayoutDesigns()}
-      onChange={(checked) => {
-        settings.general.setNewLayoutDesigns(checked)
-        if (checked) return
-        void import("@/components/dialog-settings").then((module) => {
-          void dialog.show(() => <module.DialogSettings />)
-        })
-      }}
-    />
-  )
-
-  const InterfaceNoticeSection = () => (
-    <LayoutRetirementNotice
-      title={language.t("settings.general.row.newInterfaceNotice.title")}
-      description={language.t("settings.general.row.newInterfaceNotice.description")}
-      dismiss={language.t("settings.general.row.newInterfaceNotice.dismiss")}
-      onDismiss={() => settings.general.dismissNewInterfaceNotice()}
-    />
-  )
 
   const GeneralSection = () => (
     <div class="settings-v2-section">
@@ -561,14 +533,6 @@ export const SettingsGeneralV2: Component<{
         <DisplaySection />
 
         <AdvancedSection />
-
-        <Show when={settings.general.layoutTransitionAvailable()}>
-          <InterfaceSection />
-        </Show>
-
-        <Show when={settings.general.newInterfaceNoticeVisible()}>
-          <InterfaceNoticeSection />
-        </Show>
       </div>
     </>
   )

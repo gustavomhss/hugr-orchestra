@@ -12,7 +12,6 @@ import {
   on,
   Show,
   Switch,
-  untrack,
 } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
@@ -58,7 +57,6 @@ const FAILURES_SHOWN = 6
 
 export function createExecutionEvidenceRenderer(input: {
   actions: EvidenceComposerActions
-  enabled: Accessor<boolean>
   sessionKey: Accessor<string>
 }) {
   const sdk = useSDK()
@@ -72,7 +70,7 @@ export function createExecutionEvidenceRenderer(input: {
 
   return (seam: ExecutionEvidenceInput) => {
     const initial = seam.part()
-    if (initial.type !== "tool" || !isShellTool(initial.tool) || !untrack(input.enabled)) return
+    if (initial.type !== "tool" || !isShellTool(initial.tool)) return
     const evidence = createMemo(() => {
       const part = seam.part()
       if (part.type !== "tool") return

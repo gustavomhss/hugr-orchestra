@@ -313,7 +313,7 @@ async function setup(page: Page) {
     return route.fallback()
   })
   await page.addInitScript(({ directory, otherDirectory, draftID, server, otherServer, otherID, otherURL }) => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }))
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
     localStorage.setItem("orchestra.global.dat:server", JSON.stringify({
       list: [server, otherServer], projects: { [server]: [{ worktree: directory, expanded: true }], [otherServer]: [{ worktree: otherDirectory, expanded: true }] },
     }))

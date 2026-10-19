@@ -7,12 +7,6 @@
       "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
     },
     {
-      "rule": "R1",
-      "file": "packages/core/src/compat/sdk-v2-types.ts",
-      "specifier": "@orchestra/sdk/v2/types",
-      "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
-    },
-    {
       "rule": "R11",
       "file": "apps/orchestra/src/agent/agent.ts",
       "specifier": "@/maestro/roster",
@@ -604,12 +598,6 @@
       "rule": "R3",
       "file": "apps/desktop/src/main/env.d.ts",
       "specifier": "../../../orchestra/dist/types/src/node",
-      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
-    },
-    {
-      "rule": "R3",
-      "file": "packages/app-shell/src/app.tsx",
-      "specifier": "@/pages/layout",
       "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
     },
     {
