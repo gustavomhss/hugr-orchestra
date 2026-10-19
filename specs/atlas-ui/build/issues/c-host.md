@@ -58,3 +58,17 @@ brief is written with the fix already in it.
 - If C01's surface `hold` uses that same check, `k1` is staged and the hold succeeds. If C01 checks staging some other
   way that refuses an untracked sidecar, the `ok: true` assertions fail. In that case, fix C01 to use
   `stagedNodeKeys`, as D31 requires ("the same checks"); do not weaken the test.
+
+## 5. The territory's `projectId` is filled by the host (C02a, C02b; from `issues/c-engine.md` item 2)
+
+- The host's `AtlasTerritoryInput` schema has no `projectId`. `AtlasSurface.territory` takes
+  `Omit<AtlasTerritoryInput, "projectId">` and passes `projectId: ctx.project.id` from `InstanceState.context`. That is
+  the same instance project `maestro/atlas-memory.ts` binds (`instance.project.id`).
+- No host test declares a territory over a store, because the write needs `ATLAS_RATIFY_TOKEN` (D22). The C02c
+  empty-route call covers decoding. C01e's tests cover the first-catalog path.
+- I checked the C01d, C01e and C01f types against these briefs. `AtlasReviewResult`, `AtlasReviewWriteResult`,
+  `AtlasInterviewQuestion`, the seven inputs and `AtlasPromoteInput.nodeKeys` match. Every surface field is `readonly`,
+  so the handlers pass `ctx.payload` unchanged.
+- `AtlasPromote` gains optional `held` and `unknown` (C01f). C02a mirrors both into the host `AtlasPromoteResult`.
+- C01d's `AtlasDelegateInput` and `AtlasDelegateOut` stay unused by the host. C04a keeps its own local `Input`,
+  `Drafted` and `Result` types, which have the same shapes.
