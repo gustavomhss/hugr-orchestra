@@ -5,7 +5,7 @@ export * as Vcs from "./vcs"
 
 import { Duration, Effect } from "effect"
 import { formatPatch, structuredPatch } from "diff"
-import { GitCli } from "./git-cli"
+import type { GitCli } from "./git-cli"
 import { VcsEvent } from "@orchestra/schema/vcs-event"
 import {
   Activity,

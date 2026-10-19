@@ -1,5 +1,3 @@
-export * as GitCli from "./git-cli"
-
 // The git command line the version-control views read: status, diffs, patches and history of a working directory.
 // Moved from V1 so the V2 server serves the same answers.
 
@@ -499,3 +497,5 @@ const layer = Layer.effect(
 )
 
 export const node = makeGlobalNode({ service: Service, layer: layer, deps: [AppProcess.node] })
+
+export * as GitCli from "./git-cli"
