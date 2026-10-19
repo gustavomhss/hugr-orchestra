@@ -80,6 +80,8 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       "node",
       "link",
       "promote",
+      "hold",
+      "release",
       "own",
       "relations",
       "negations",
@@ -115,6 +117,8 @@ describe("SCN-CLI-1a — every command maps to exactly one leg", () => {
       node: "atlas-query", // READ authority oracle (like doctor) — intercepted before the handler, no write authority
       link: "atlas-link", // WRITE authority oracle (WP-SAMEAS governed sameAs door)
       promote: "atlas-emit", // WRITE authority oracle (KNOW-8 governed promotion) — publishes THROUGH atlas-emit
+      hold: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
+      release: "atlas-query", // REVIEW (R2) — appends to the review log only; no knowledge write
       own: "atlas-query", // READ authority oracle (RETR-12 `own_<scope>` briefing) — a second projection of the
       //                     query readback over the SAME durable store; carries no write authority
       relations: "atlas-query", // READ authority oracle (#99a grounded-relation fold) — intercepted before the
