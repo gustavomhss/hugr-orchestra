@@ -50,7 +50,7 @@ function shellPath(file: string) {
   return process.platform === "win32" ? normalized.replace(/^([A-Za-z]):\//, (_, drive: string) => `/${drive.toLowerCase()}/`) : normalized
 }
 
-export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "aur" | "musl" | "provider" = "regression") => Effect.gen(function* () {
+export const fixture = (pkg: "core" | "cli", files?: string[], lane: "regression" | "musl" | "provider" = "regression") => Effect.gen(function* () {
   // The opt-in provider row runs as its own job with the qualification steps.
   const selected = [...workflow.jobs.qualification.strategy.matrix.include, ...workflow.jobs.provider.strategy.matrix.include].filter((row) =>
     row.lane === lane && row.package === pkg && row.platform === process.platform && row.cpu === (process.arch === "x64" ? "X64" : "ARM64"))

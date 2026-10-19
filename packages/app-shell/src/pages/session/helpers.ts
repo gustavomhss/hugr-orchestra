@@ -110,10 +110,10 @@ export const createSessionTabs = (input: TabsInput) => {
   }
 }
 
-// The side panel always offers Apps. Commands acting on its tabs must resolve them
-// the same way, or Mod+W closes a Tasks tab or file tab the panel shows as Apps.
-export const createSidePanelTabs = (input: Omit<TabsInput, "apps"> & { cockpit: Accessor<boolean> }) =>
-  createSessionTabs({ ...input, apps: () => true })
+// The side panel always offers Apps and keeps Context and Tasks permanent. Commands acting on its tabs must resolve
+// them the same way, or Mod+W closes a Tasks tab or file tab the panel shows as Apps.
+export const createSidePanelTabs = (input: Omit<TabsInput, "apps" | "permanent"> & { cockpit: Accessor<boolean> }) =>
+  createSessionTabs({ ...input, apps: () => true, permanent: () => true })
 
 export const focusTerminalById = (id: string) => {
   const wrapper = document.getElementById(`terminal-wrapper-${id}`)

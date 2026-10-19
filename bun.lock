@@ -37,6 +37,7 @@
         "@effect/platform-node": "catalog:",
         "@opentui/core": "catalog:",
         "@opentui/solid": "catalog:",
+        "@orchestra/client": "workspace:*",
         "@orchestra/core": "workspace:*",
         "@orchestra/maestro": "workspace:*",
         "@orchestra/sdk": "workspace:*",
@@ -740,6 +741,7 @@
       "dependencies": {
         "@orchestra/schema": "workspace:*",
         "semver": "^7.6.3",
+        "typescript": "catalog:",
       },
       "devDependencies": {
         "@tsconfig/bun": "catalog:",

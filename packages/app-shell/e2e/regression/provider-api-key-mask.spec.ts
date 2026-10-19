@@ -62,10 +62,7 @@ async function openSession(page: Page) {
     pageMessages: () => ({ items: [] }),
   })
   await page.addInitScript(() => {
-    localStorage.setItem(
-      "settings.v3",
-      JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-    )
+    localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
   })
   await page.goto(`/${base64Encode(directory)}/session/${sessionID}`)
   const control = page.locator('[data-action="prompt-model"]')

@@ -111,7 +111,12 @@ test("collapse preserves names, focus, routes, profile and titlebar geometry acr
   await expect(sidebar.getByRole("button", { name: "Choose repository profile" })).toBeFocused()
   await sidebar.getByRole("button", { name: "Chat", exact: true }).click()
   await expect(page.locator('[data-component="prompt-input-v2"]')).toBeVisible()
-  await expect(crumb.last()).toHaveText("session")
+  // Session and draft pages carry the chapter breadcrumb too: home / project / session title.
+  await expect(crumb.nth(2)).toHaveText("home")
+  await expect(crumb.nth(2).getByRole("button", { name: "home", exact: true })).toBeVisible()
+  await expect(crumb.nth(4).getByRole("button", { name: "Compact project", exact: true })).toBeVisible()
+  await expect(crumb.last()).toHaveText("New session")
+  expect((await header.boundingBox())!.height).toBe(frame!.height)
   const editor = page.locator('[data-component="prompt-input-v2"] [contenteditable="true"]')
   await editor.fill("Keep this draft while changing navigation")
   const route = page.url()

@@ -27,12 +27,12 @@ test.describe("Orchestra layout", () => {
   }
 })
 
-test.describe("legacy layout", () => {
+test.describe("narrow viewport", () => {
   test.use({ viewport: { width: 760, height: 522 } })
 
   test("matches the rounded panel corners to the dark new-session background", async ({ page }, testInfo) => {
     const corners = await readPanelCorners(page, testInfo, "dark")
-    // The Orchestra palette also themes the legacy layout; its near-black is #080c11.
+    // The Orchestra palette's near-black is #080c11.
     expect(
       corners.filter(
         ({ pixel: [red, green, blue, alpha] }) => !(red <= 8 && green <= 12 && blue <= 17 && alpha === 255),
@@ -59,10 +59,7 @@ async function readPanelCorners(page: Page, testInfo: TestInfo, scheme: "dark" |
   await page.addInitScript(
     ({ directory, draftID, server, scheme }) => {
       // The fixed tabs toast and its shadow sit next to the bottom-right panel corner.
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem("orchestra-theme-id", "oc-2")
       localStorage.setItem("orchestra-color-scheme", scheme)
       localStorage.setItem(

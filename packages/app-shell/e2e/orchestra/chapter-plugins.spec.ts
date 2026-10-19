@@ -71,7 +71,7 @@ async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" 
   )
   const prompts: Array<{ sessionID: string; body: unknown }> = []
   await setupTimeline(page, {
-    settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false },
+    settings: { shouldDisplayTabsToast: false },
     locale: "en",
     protocol,
     onPrompt: (input) => prompts.push(input),
@@ -266,6 +266,23 @@ test("V2 servers apply the profile's behaviors to turns without touching the pro
   await expect.poll(() => sets.slice(pushed).at(-1)?.behaviors).toEqual([])
 })
 
+test("a failed behavior sync offers Retry that pushes the set again", async ({ page }) => {
+  await openSession(page, "dark", "v2")
+  await serveV2Catalog(page)
+  const failing = await serveBehaviors(page, 500)
+  await openPlugins(page)
+  const note = chapter(page).locator('[data-slot="plugins-application"]')
+  await expect(note).toContainText("this server did not accept the latest change")
+  expect(failing.length).toBeGreaterThan(0)
+  await page.unroute("**/api/behavior**")
+  const sets = await serveBehaviors(page)
+  await note.getByRole("button", { name: "Retry", exact: true }).click()
+  await expect.poll(() => sets.at(-1)).toEqual({ directory, behaviors: [] })
+  await expect(note).toHaveText(
+    "Active behaviors are kept on this server for this profile and apply to every turn of its chats, including chats already open.",
+  )
+})
+
 test("V2 servers without the behavior route keep behaviors on the profile without claiming they reach turns", async ({
   page,
 }) => {
@@ -331,7 +348,7 @@ test("each repository profile owns its behaviors", async ({ page }) => {
     })
   })
   await page.addInitScript(() => {
-    localStorage.setItem("settings.v3", JSON.stringify({ general: { newLayoutDesigns: true }, notifications: {} }))
+    localStorage.setItem("settings.v3", JSON.stringify({ general: {}, notifications: {} }))
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
     localStorage.setItem("app-version.v1", JSON.stringify({ version: "1.18.27" }))
     localStorage.setItem(

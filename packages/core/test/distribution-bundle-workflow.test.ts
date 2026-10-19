@@ -29,7 +29,7 @@ const selector = await Bun.file(path.join(root, "apps/cli/script/test.ts")).text
 const distribution = [...new Bun.Glob("test/distribution-*.test.ts").scanSync({ cwd: path.join(root, "apps/cli") })].map((file) => `./${file.replaceAll("\\", "/")}`)
 const checkout = "actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5"
 const upload = "actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02"
-const localized = ["./test/fixture/distribution-aur/sandbox-evidence.test.ts", "./test/fixture/distribution-aur/bootstrap-config.test.ts",
+const localized = [
   ...["compiler-edge", "tool-result", "capture-bytes", "provenance"].map((file) => `./test/fixture/distribution-provider/${file}.test.ts`)]
 
 test("real bundle source passes structural coverage and generic CLI discovery checks", async () => {
@@ -48,7 +48,7 @@ test("real bundle source passes structural coverage and generic CLI discovery ch
       expect(exits, "CLI_SELECTOR_EXIT").toEqual([exitCode])
       const args = calls[0] ?? []
       const exclusions = args.filter((arg) => arg.startsWith("--path-ignore-patterns=")).map((arg) => `./${arg.slice("--path-ignore-patterns=".length)}`)
-      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-homebrew.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-aur.test.ts", "./test/fixture/distribution-aur-guest.test.ts", "./test/distribution-musl.test.ts", "./test/fixture/distribution-musl-guest.test.ts", "./test/distribution-provider.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts", "./test/distribution-recipes.test.ts"] : [])])
+      expect(exclusions).toEqual(["./test/distribution-native.test.ts", "./test/distribution-windows.test.ts", "./test/distribution-musl.test.ts", "./test/fixture/distribution-musl-guest.test.ts", "./test/distribution-provider.test.ts", "./test/artifact-native-lane.test.ts", "./test/artifact-case-alias.test.ts", ...(platform === "win32" ? ["./test/artifact-posix-race.test.ts"] : [])])
       expect(args).toEqual(["bun", "test", "--timeout", "30000", ...exclusions.map((file) => `--path-ignore-patterns=${file.slice(2)}`), "sentinel"])
       exclusions.forEach((file) => check(statSync(path.join(root, "apps/cli", file)).isFile(), `CLI_EXCLUSION_MISSING: ${file}`))
     }
@@ -75,7 +75,7 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_LANE", (value) => patchRows(value, (row) => ({ ...row, lane: "heavy" }))],
     ["BUNDLE_ROWS_REPEATED", (value) => patchMatrix(value, (rows) => [...rows.slice(0, -1), rows[0]])],
     ["BUNDLE_ROWS_REPEATED", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, lane: "regression" } : row)],
-    ["BUNDLE_ROWS", (value) => patchMatrix(value, (rows) => rows.filter((row) => row.lane !== "aur"))],
+    ["BUNDLE_ROWS", (value) => patchMatrix(value, (rows) => rows.filter((row) => row.lane !== "musl"))],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, cpu: "X86" } : row)],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, platform: "darwin" } : row)],
     ["BUNDLE_ROWS", (value) => patchRows(value, (row) => row.host === "windows-11-arm" ? { ...row, host: "windows-latest" } : row)],
@@ -84,15 +84,13 @@ test("mutations of parsed real source fail by defect name", () => {
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: undefined }))],
     ["BUNDLE_FILES", (value) => patchRows(value, (row) => ({ ...row, files: [] }))],
     ["BUNDLE_FILES_REPEATED", (value) => patchRows(value, (row) => ({ ...row, files: [...(row.files ?? []), ...(row.files?.slice(0, 1) ?? [])] }))],
-    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "regression" && row.package === "cli" && row.platform === "linux" ? { ...row, files: [...(row.files ?? []), "./test/distribution-aur.test.ts"] } : row)],
+    ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "regression" && row.package === "cli" && row.platform === "linux" ? { ...row, files: [...(row.files ?? []), "./test/distribution-musl.test.ts"] } : row)],
     ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: [...(row.files ?? []), "./test/packaged-skills-build.test.ts"] } : row)],
     ["BUNDLE_FILES_OVERLAP", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: [...(row.files ?? []), "./test/build-runtime.test.ts"] } : row)],
     ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: [...(row.files ?? []), "./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_EXACT_FILES", (value) => patchRows(value, (row) => row.package === "core" ? { ...row, files: row.files?.filter((file) => !file.endsWith("ripgrep-binary.test.ts")) } : row)],
     ["BUNDLE_NATIVE_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-native.test.ts")) }))],
-    ["BUNDLE_HOMEBREW_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-homebrew.test.ts")) }))],
     ["BUNDLE_WINDOWS_PROOF", (value) => patchRows(value, (row) => ({ ...row, files: row.files?.filter((file) => !file.endsWith("distribution-windows.test.ts")) }))],
-    ["BUNDLE_AUR_PROOF", (value) => patchRows(value, (row) => row.lane === "aur" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_MUSL_PROOF", (value) => patchRows(value, (row) => row.lane === "musl" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_PROVIDER_PROOF", (value) => patchRows(value, (row) => row.lane === "provider" ? { ...row, files: ["./test/artifact-native-lane.test.ts"] } : row)],
     ["BUNDLE_DENO", (value) => patchStep(value, "Install native Deno", () => undefined)],
@@ -123,7 +121,7 @@ test("mutations of parsed real source fail by defect name", () => {
 test("root discovery coverage rejects omissions in both directions and accepts row/file reordering", () => {
   expect(() => inspect(source, [])).toThrow("BUNDLE_DISTRIBUTION_DISCOVERY_EMPTY")
   expect(() => inspect(source, [...distribution, "./test/distribution-new.test.ts"])).toThrow("BUNDLE_UNREACHED: ./test/distribution-new.test.ts")
-  expect(() => inspect(source, distribution.filter((file) => file !== "./test/distribution-aur.test.ts"))).toThrow("BUNDLE_UNDISCOVERED: ./test/distribution-aur.test.ts")
+  expect(() => inspect(source, distribution.filter((file) => file !== "./test/distribution-musl.test.ts"))).toThrow("BUNDLE_UNDISCOVERED: ./test/distribution-musl.test.ts")
   inspect(patchMatrix(Schema.decodeUnknownSync(Workflow)(source), (rows) => rows.toReversed().map((row) => ({ ...row, files: row.files?.toReversed() }))))
 })
 
@@ -141,14 +139,13 @@ function inspect(input: unknown, discovered = distribution) {
   check(Object.keys(job.strategy.matrix).join() === "include", "BUNDLE_MATRIX")
   const provider = value.jobs.provider
   const rows = [...job.strategy.matrix.include, ...(provider?.strategy?.matrix.include ?? [])]
-  rows.forEach((row) => check(row.lane && ["regression", "aur", "musl", "provider"].includes(row.lane), `BUNDLE_LANE: ${row.package}/${row.host}`))
+  rows.forEach((row) => check(row.lane && ["regression", "musl", "provider"].includes(row.lane), `BUNDLE_LANE: ${row.package}/${row.host}`))
   check(new Set(rows.map((row) => `${row.lane}/${row.package}/${row.host}`)).size === rows.length, "BUNDLE_ROWS_REPEATED")
   check(JSON.stringify(rows.map((row) => [row.lane, row.package, row.host, row.cpu, row.platform]).toSorted()) === JSON.stringify([
     ["regression", "core", "ubuntu-latest", "X64", "linux"], ["regression", "core", "windows-latest", "X64", "win32"],
     ["regression", "cli", "ubuntu-latest", "X64", "linux"], ["regression", "cli", "windows-latest", "X64", "win32"],
     ["regression", "cli", "ubuntu-24.04-arm", "ARM64", "linux"], ["regression", "cli", "macos-14", "ARM64", "darwin"], ["regression", "cli", "macos-15-intel", "X64", "darwin"],
     ["regression", "cli", "windows-11-arm", "ARM64", "win32"],
-    ["aur", "cli", "ubuntu-latest", "X64", "linux"], ["aur", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
     ["musl", "cli", "ubuntu-latest", "X64", "linux"], ["musl", "cli", "ubuntu-24.04-arm", "ARM64", "linux"],
     ["provider", "cli", "ubuntu-latest", "X64", "linux"],
   ].toSorted()), "BUNDLE_ROWS")
@@ -195,9 +192,7 @@ function inspect(input: unknown, discovered = distribution) {
     })
     if (row.package === "cli") {
       check(files.includes("./test/distribution-native.test.ts") === (row.lane === "regression" && row.platform !== "win32"), `BUNDLE_NATIVE_PROOF: ${row.lane}/${row.host}`)
-      check(files.includes("./test/distribution-homebrew.test.ts") === (row.lane === "regression" && row.platform === "darwin"), `BUNDLE_HOMEBREW_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-windows.test.ts") === (row.lane === "regression" && row.platform === "win32"), `BUNDLE_WINDOWS_PROOF: ${row.lane}/${row.host}`)
-      check(files.includes("./test/distribution-aur.test.ts") === (row.lane === "aur"), `BUNDLE_AUR_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-musl.test.ts") === (row.lane === "musl"), `BUNDLE_MUSL_PROOF: ${row.lane}/${row.host}`)
       check(files.includes("./test/distribution-provider.test.ts") === (row.lane === "provider"), `BUNDLE_PROVIDER_PROOF: ${row.lane}/${row.host}`)
     }
@@ -208,8 +203,8 @@ function inspect(input: unknown, discovered = distribution) {
   rows.forEach((row) => {
     const expected = row.package === "core" ? ["packaged-skills", "packaged-skills-corruption", "setup-bun-cache", "test-ci-request", "distribution-bundle-workflow", "distribution-bundle-execution", "distribution-bundle-boundaries", "distribution-bundle-deno", "effect/cross-spawn-spawner", "session-runner-model", "ripgrep-binary", "ripgrep-bundle"].map((name) => `./test/${name}.test.ts`)
       : row.lane !== "regression" ? [`./test/distribution-${row.lane}.test.ts`]
-      : [...(row.host === "ubuntu-latest" ? discovered.filter((file) => !["homebrew", "windows", "aur", "musl", "provider"].some((name) => file === `./test/distribution-${name}.test.ts`))
-        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native", "homebrew"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
+      : [...(row.host === "ubuntu-latest" ? discovered.filter((file) => !["windows", "musl", "provider"].some((name) => file === `./test/distribution-${name}.test.ts`))
+        : (row.platform === "darwin" ? ["payload", "payload-integrity", "launcher", "native"] : row.platform === "win32" ? ["payload", "payload-integrity", "launcher", "windows"] : ["native", "payload-integrity", "install-preservation"]).map((name) => `./test/distribution-${name}.test.ts`)), ...(row.host === "ubuntu-latest" ? ["./test/build-runtime.test.ts"] : []), "./test/packaged-skills-build.test.ts", "./test/distribution-process.test.ts"]
     check(JSON.stringify(row.files?.toSorted()) === JSON.stringify([...new Set(expected)].toSorted()), `BUNDLE_EXACT_FILES: ${row.lane}/${row.package}/${row.host}`)
   })
   // Runtime conformance lives in distribution-bundle-execution.test.ts; unordered source lines cannot prove exit or IO behavior.

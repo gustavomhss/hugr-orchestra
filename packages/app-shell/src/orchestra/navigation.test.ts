@@ -9,9 +9,9 @@ const crumb = (route: Parameters<typeof breadcrumbLabel>[0]) => copy[breadcrumbL
 describe("breadcrumbLabel", () => {
   test("names built-in views by their lowercase reference view key", () => {
     expect(crumb({ type: "home" })).toBe("home")
-    expect(crumb({ type: "session", sessionId: "ses_1" })).toBe("session")
-    expect(crumb({ type: "draft", draftID: "draft_1" })).toBe("session")
-    expect(crumb({ type: "dir-new-sesssion", dir: "/repo", dirBase64: "L3JlcG8" })).toBe("session")
+    expect(crumb({ type: "session", sessionId: "ses_1" })).toBe("home")
+    expect(crumb({ type: "draft", draftID: "draft_1" })).toBe("home")
+    expect(crumb({ type: "dir-new-sesssion", dir: "/repo", dirBase64: "L3JlcG8" })).toBe("home")
     expect(crumb({ type: "chapter", chapter: "agents" })).toBe("agents")
     expect(crumb({ type: "chapter", chapter: "dock" })).toBe("dock")
     expect(crumb({ type: "chapter", chapter: "workspaces" })).toBe("workspaces")

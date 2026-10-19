@@ -376,6 +376,15 @@ function DesktopRoot(props: { windowState: DesktopWindowState }) {
     const cmd = useCommand()
     menuTrigger = (id) => cmd.trigger(id)
 
+    // The native macOS menu is built once, so tell it which commands can currently run (registered and not disabled).
+    createEffect(() => {
+      const available = [
+        ...new Set(cmd.options.filter((option) => !option.disabled && !option.id.startsWith("suggested.")).map((option) => option.id)),
+      ]
+      const timer = setTimeout(() => window.api.setMenuAvailability(available), 150)
+      onCleanup(() => clearTimeout(timer))
+    })
+
     const theme = useTheme()
 
     createEffect(() => {

@@ -26,7 +26,7 @@ for (const scheme of ["dark", "light"] as const) {
       },
       { scheme, server, directory, sessionID },
     )
-    await setupTimeline(page, { settings: { newLayoutDesigns: true, shouldDisplayTabsToast: false }, locale: "en" })
+    await setupTimeline(page, { settings: { shouldDisplayTabsToast: false }, locale: "en" })
     await expect(page.locator("body")).toHaveAttribute("data-new-layout", "")
     await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
     if (process.env.ORCHESTRA_HIT_AREA_MUTATION === "1") {

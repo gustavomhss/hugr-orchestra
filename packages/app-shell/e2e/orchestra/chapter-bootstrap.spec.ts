@@ -23,10 +23,7 @@ test("restored local profile loads agents and opens a draft through the mocked A
   await page.addInitScript(
     ({ server, directory }) => {
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
-      localStorage.setItem(
-        "settings.v3",
-        JSON.stringify({ general: { newLayoutDesigns: true, shouldDisplayTabsToast: false } }),
-      )
+      localStorage.setItem("settings.v3", JSON.stringify({ general: { shouldDisplayTabsToast: false } }))
       localStorage.setItem(
         "orchestra.global.dat:server",
         JSON.stringify({ projects: { local: [{ worktree: directory }] } }),

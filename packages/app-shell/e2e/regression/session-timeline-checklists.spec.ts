@@ -13,12 +13,8 @@ import {
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
-for (const scenario of [
-  { protocol: "v1", newLayoutDesigns: true },
-  { protocol: "v2", newLayoutDesigns: true },
-  { protocol: "v1", newLayoutDesigns: false },
-] as const) {
-  test(`renders confirmed historical checklists as read-only snapshots (${scenario.protocol}, ${scenario.newLayoutDesigns ? "virtual" : "legacy"})`, async ({
+for (const scenario of [{ protocol: "v1" }, { protocol: "v2" }] as const) {
+  test(`renders confirmed historical checklists as read-only snapshots (${scenario.protocol}, virtual)`, async ({
     page,
   }) => {
     const proposed = { todos: [{ content: "Unconfirmed proposal", status: "completed", priority: "high" }] }
@@ -28,7 +24,6 @@ for (const scenario of [
     ]
     await setupTimeline(page, {
       protocol: scenario.protocol,
-      settings: { newLayoutDesigns: scenario.newLayoutDesigns },
       messages: [
         userMessage(),
         assistantMessage([
@@ -105,7 +100,6 @@ test("preserves live V2 structured checklists with truncated output", async ({ p
   const confirmed = [{ content: "Live confirmed step", status: "completed", priority: "high" }]
   const timeline = await setupTimeline(page, {
     protocol: "v2",
-    settings: { newLayoutDesigns: true },
     messages: [
       userMessage(),
       assistantMessage(
@@ -185,7 +179,6 @@ test("preserves live V2 structured checklists with truncated output", async ({ p
 
 test("virtualizes checklist history and preserves snapshot collapse state", async ({ page }) => {
   await setupTimeline(page, {
-    settings: { newLayoutDesigns: true },
     messages: Array.from({ length: 150 }, (_, index) => {
       const id = `msg_${String(index + 1000).padStart(4, "0")}_todo_user`
       return [

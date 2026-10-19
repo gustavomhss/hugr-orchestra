@@ -9,7 +9,6 @@ import {
   setRangeEdge,
 } from "./editor-dom"
 import { materializePromptEditor, promptEditorPoint, readPromptEditor } from "@orchestra/session-ui/v2/prompt-input/interaction"
-import { normalizePaste } from "./paste"
 
 describe("prompt-input editor dom", () => {
   test("createTextFragment preserves newlines with consecutive br nodes", () => {
@@ -146,7 +145,7 @@ describe("prompt-input editor dom", () => {
     "round-trips literal text, including terminal LF and CR: %j",
     (text) => {
       const container = document.createElement("div")
-      container.appendChild(createTextFragment(normalizePaste(text)))
+      container.appendChild(createTextFragment(text))
       container.appendChild(createCaretPlaceholder())
       expect(readPromptEditor(container).segments.map((part) => part.content).join("")).toBe(text)
       expect(getTextLength(container)).toBe(text.length)

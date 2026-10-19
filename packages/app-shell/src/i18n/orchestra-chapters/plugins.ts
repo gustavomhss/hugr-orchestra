@@ -30,6 +30,7 @@ export const PLUGINS_COPY = {
     "Saved for this profile. This server does not accept per-prompt instructions, so behaviors are not applied to turns yet.",
   "orchestra.plugins.syncFailed":
     "Saved for this profile, but this server did not accept the latest change. Turns keep the behaviors it last accepted.",
+  "orchestra.plugins.syncRetry": "Retry",
   "orchestra.plugins.dialog.configure": "Configure {{name}}",
   "orchestra.plugins.dialog.add": "Add LLM behavior",
   "orchestra.plugins.dialog.subtitle": "Active behaviors are added to new chat messages in this profile.",

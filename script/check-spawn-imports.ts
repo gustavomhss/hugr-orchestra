@@ -17,22 +17,10 @@
 
 import { readFileSync } from "node:fs"
 import path from "node:path"
-import ts from "typescript"
+import { hits } from "@orchestra/script/spawn-imports"
 
-const MODULES: Record<string, string> = {
-  "cross-spawn": "cross-spawn",
-  "bun-pty": "bun-pty",
-  "@lydell/node-pty": "@lydell/node-pty",
-  child_process: "child_process",
-  "node:child_process": "child_process",
-  "hugr-omni": "hugr-omni",
-  "@modelcontextprotocol/sdk/client/stdio": "StdioClientTransport",
-  "@modelcontextprotocol/sdk/client/stdio.js": "StdioClientTransport",
-}
-const STDIO = "StdioClientTransport"
 const SOURCE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
 const SKIPPED = /^(?:packages|native)\/omni\/|(^|\/)(test|tests|fixture|fixtures|e2e|__tests__)\/|\.(test|spec)\.[^/]+$/
-const SPECIFIER = /(?:\bfrom\s*|\bimport\s*\(\s*|\brequire\s*\(\s*|\bimport\s+)["']([^"']+)["']/g
 
 const root = path.resolve(import.meta.dir, "..")
 if (import.meta.main) {
@@ -70,25 +58,6 @@ function check() {
   )
   console.log(`spawn-imports: ${files.length} files checked, ${found.size} allow-listed sites`)
   return [...unlisted, ...stale]
-}
-
-export function hits(file: string, text: string) {
-  const modules = [...text.matchAll(SPECIFIER)].flatMap((match) => {
-    const hit = match[1] === undefined ? undefined : MODULES[match[1]]
-    return hit === undefined ? [] : [hit]
-  })
-  return [...new Set([...modules, ...(namesStdio(file, text) ? [STDIO] : [])])].sort((a, b) => a.localeCompare(b))
-}
-
-// Whether the code (not a comment or a string) names the stdio transport: an identifier, or an element-access key.
-function namesStdio(file: string, text: string) {
-  if (!text.includes(STDIO)) return false
-  const kind = /\.(?:tsx|jsx)$/.test(file) ? ts.ScriptKind.TSX : /\.(?:js|mjs|cjs)$/.test(file) ? ts.ScriptKind.JS : ts.ScriptKind.TS
-  const visit = (node: ts.Node): boolean =>
-    (ts.isIdentifier(node) && node.text === STDIO) ||
-    (ts.isElementAccessExpression(node) && ts.isStringLiteralLike(node.argumentExpression) && node.argumentExpression.text === STDIO) ||
-    ts.forEachChild(node, visit) === true
-  return visit(ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true, kind))
 }
 
 function readAllowlist(): Record<string, string[]> | string {

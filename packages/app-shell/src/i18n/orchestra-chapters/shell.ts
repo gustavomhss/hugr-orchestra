@@ -1,6 +1,7 @@
 // Copy owned by the shell screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const SHELL_COPY = {
   "orchestra.shell.navigation": "Navigation",
+  "orchestra.shell.goHome": "Go home",
   "orchestra.shell.server.invalid": "Enter a valid server URL.",
   "orchestra.shell.server.failed": "Could not connect. Check the server URL and credentials.",
   "orchestra.shell.server.lost": "Lost connection to the server. Retrying…",
@@ -20,10 +21,9 @@ export const SHELL_COPY = {
   // The folder the desktop app creates in Documents on first launch.
   "orchestra.shell.onboarding.defaultProject": "Default Project",
   "orchestra.shell.settings.repository":
-    "Select a repository profile to manage this section. General, Servers, and Shortcuts are available without a repository.",
+    "Open a project to manage this section. General, Servers, and Shortcuts work without one.",
   // The reference names built-in views by their lowercase view key in the window breadcrumb.
   "orchestra.shell.crumb.home": "home",
-  "orchestra.shell.crumb.session": "session",
   "orchestra.shell.crumb.agents": "agents",
   "orchestra.shell.crumb.dock": "dock",
   "orchestra.shell.crumb.workspaces": "workspaces",

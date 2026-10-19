@@ -7,6 +7,8 @@ import type { Agent, Provider } from "@orchestra/sdk/v2/client"
 import { LanguageProvider, useLanguage } from "../../src/context/language"
 import { PlatformProvider } from "../../src/context/platform"
 import { SubagentModelPicker } from "../../src/components/subagent-model-picker"
+import { ServerUnavailable } from "../../src/components/server-unavailable"
+import { Empty } from "../../src/orchestra/actions/components"
 import { AgentsRoster } from "../../src/orchestra/chapters/agents-view"
 import { AgentDialog } from "../../src/orchestra/chapters/agents-dialog"
 import { agentModels } from "../../src/orchestra/chapters/agents-roster"
@@ -60,6 +62,7 @@ function Fixture() {
     rules: [] as ModelRule[],
     writes: [] as ModelRule[][],
     roster: false,
+    retries: 0,
     refreshed: false,
     editing: undefined as Agent | undefined,
     measurement: undefined as
@@ -209,6 +212,15 @@ function Fixture() {
             onClose={() => setState("editing", undefined)}
           />
         )}
+      </Show>
+      <Show when={params.has("failures")}>
+        <ServerUnavailable onRetry={() => setState("retries", (count) => count + 1)} />
+        <Empty
+          title="Provider request failed"
+          error="Unavailable"
+          retry={{ label: "Retry load", run: () => setState("retries", (count) => count + 1) }}
+        />
+        <output data-testid="retries">{state.retries}</output>
       </Show>
       <output data-testid="writes">{JSON.stringify(state.writes)}</output>
       <output data-testid="pending">{JSON.stringify(pending())}</output>

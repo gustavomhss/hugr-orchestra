@@ -458,7 +458,7 @@ export async function setupRelay(page: Page, input: { scheme?: "dark" | "light";
   const state = input.state ?? relayState()
   await page.addInitScript(
     ({ server, directory, scheme }) => {
-      const general = { newLayoutDesigns: true, shouldDisplayTabsToast: false, newInterfaceNoticeDismissed: true }
+      const general = { shouldDisplayTabsToast: false }
       const projects = {
         local: [{ worktree: directory, expanded: true }],
         [server]: [{ worktree: directory, expanded: true }],

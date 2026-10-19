@@ -154,7 +154,6 @@ test.describe("session timeline projection", () => {
     })
     await setupTimeline(page, {
       messages: [user, assistantMessage(), nextUser, nextAssistant],
-      settings: { newLayoutDesigns: true },
     })
     const scroller = page.locator(".scroll-view__viewport", { has: page.locator("[data-timeline-row]") })
     await scroller.evaluate((element) => (element.scrollTop = 0))

@@ -210,6 +210,7 @@ const api: ElectronAPI = {
   },
   setTitlebar: (theme) => ipcRenderer.invoke("set-titlebar", theme),
   setTitlebarFrame: (frame) => ipcRenderer.invoke("set-titlebar-frame", frame),
+  setMenuAvailability: (commands) => ipcRenderer.send("set-menu-availability", commands),
   runDesktopMenuAction: (action) => ipcRenderer.invoke("run-desktop-menu-action", action),
   setBackgroundColor: (color: string) => ipcRenderer.invoke("set-background-color", color),
   exportDebugLogs: () => ipcRenderer.invoke("export-debug-logs"),

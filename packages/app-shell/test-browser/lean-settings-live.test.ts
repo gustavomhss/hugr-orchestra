@@ -21,7 +21,6 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   }, 240000)
 } else {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
-  const { MemoryRouter, Route, createMemoryHistory } = await import("@solidjs/router")
   const { solidDom } = await import("./solid-dom")
   const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
     protocol: undefined, ready: false, error: undefined,
@@ -64,9 +63,6 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   const { SettingsGeneralV2 }: typeof import("@/components/settings-v2/general") = await import(
     solidDom("@/components/settings-v2/general", import.meta.dir)
   )
-  const { SettingsGeneral }: typeof import("@/components/settings-general") = await import(
-    solidDom("@/components/settings-general", import.meta.dir)
-  )
   const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", import.meta.dir))
   const { LanguageProvider, useLanguage }: typeof import("@/context/language") = await import(
     solidDom("@/context/language", import.meta.dir)
@@ -81,8 +77,8 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
   // profile screen, with per-profile KPIs, covered items, bytes and tokens saved and per-item switches. That screen's live
   // controls are covered by lean-profile-view (pending, failure, unsupported and paused states), lean-controller
   // (unsupported blocks writes, failures keep data, pending lanes confirm only HTTP snapshots), lean-chapter-route and
-  // lean-native-product (persisted disable through the real backend). An accidental mount in either mounted Settings
-  // section (the current one and the legacy one the layout still opens) must fail here. The rejected row's English copy
+  // lean-native-product (persisted disable through the real backend). An accidental mount in the Settings General section
+  // must fail here. The rejected row's English copy
   // is spelled out because its locale keys were deleted with it.
   const lean = [
     "Lean tool output", "Reduce supported tool output using the server's Lean setting.",
@@ -126,15 +122,6 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
 
   test("active SettingsGeneralV2 renders no Lean controls, whether the Lean capability is unavailable, editable or failed", async () => {
     const screen = mount(() => createComponent(SettingsGeneralV2, {}))
-    try { await expectNoLean(screen.host) } finally { screen.close() }
-  })
-
-  test("legacy SettingsGeneral renders no Lean controls, whether the Lean capability is unavailable, editable or failed", async () => {
-    const history = createMemoryHistory()
-    history.set({ value: "/", scroll: false, replace: true })
-    const screen = mount(() => createComponent(MemoryRouter, { history, get children() {
-      return createComponent(Route, { path: "/", component: SettingsGeneral })
-    } }))
     try { await expectNoLean(screen.host) } finally { screen.close() }
   })
 }

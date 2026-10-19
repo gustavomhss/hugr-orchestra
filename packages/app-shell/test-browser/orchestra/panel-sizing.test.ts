@@ -36,7 +36,6 @@ function createFixture(scope = `panel-sizing-test-${crypto.randomUUID()}` as Ser
   return createRoot((dispose) => {
     owners.push(dispose)
     const [state, setState] = createStore({
-      newSessionDesign: true,
       isDesktop: true,
       reviewOpen: true,
       sidePanelOpen: true,
@@ -49,7 +48,6 @@ function createFixture(scope = `panel-sizing-test-${crypto.randomUUID()}` as Ser
     const sizing = createOrchestraPanelSizing({
       scope,
       platform,
-      newSessionDesign: () => state.newSessionDesign,
       isDesktop: () => state.isDesktop,
       reviewOpen: () => state.reviewOpen,
       sidePanelOpen: () => state.sidePanelOpen,
@@ -151,23 +149,17 @@ describe("createOrchestraPanelSizing", () => {
     expect(fixture.sizing.width()).toBe("calc(100% - 246px)")
     fixture.setState("fileTreeWidth", 420)
     expect(fixture.sizing.width()).toBe("calc(100% - 426px)")
-    fixture.setState("newSessionDesign", false)
-    expect(fixture.sizing.desktop()).toBe(false)
-    expect(fixture.sizing.width()).toBe("calc(100% - 420px)")
-    fixture.setState({ newSessionDesign: true, isDesktop: false, fileTreeWidth: 180 })
+    fixture.setState({ isDesktop: false, fileTreeWidth: 180 })
     expect(fixture.sizing.desktop()).toBe(false)
     expect(fixture.sizing.width()).toBe("calc(100% - 180px)")
   })
 
   test("uses the existing unified and split clamps outside Orchestra review, retaining each layout gap", () => {
     const fixture = createFixture()
-    fixture.setState({ newSessionDesign: false, reviewOpen: false, width: 1600, rowWidth: 1700 })
-    expect(fixture.sizing.max()).toBe(1220)
-    expect(fixture.sizing.width()).toBe("1220px")
+    fixture.setState({ reviewOpen: false, width: 1600, rowWidth: 1700 })
+    expect(fixture.sizing.max()).toBe(1214)
+    expect(fixture.sizing.width()).toBe("1214px")
     fixture.setState("splitReview", true)
-    expect(fixture.sizing.max()).toBe(900)
-    expect(fixture.sizing.width()).toBe("900px")
-    fixture.setState("newSessionDesign", true)
     expect(fixture.sizing.max()).toBe(894)
     expect(fixture.sizing.width()).toBe("894px")
     fixture.setState("isDesktop", false)

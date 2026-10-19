@@ -3,7 +3,6 @@ import {
   createMemo,
   createSignal,
   For,
-  Index,
   on,
   onCleanup,
   onMount,
@@ -16,7 +15,6 @@ import { useNavigate } from "@solidjs/router"
 import { createMediaQuery } from "@solid-primitives/media"
 import { useMutation } from "@tanstack/solid-query"
 import { createVirtualizer, defaultRangeExtractor, elementScroll, type VirtualItem } from "@tanstack/solid-virtual"
-import { Button } from "@orchestra/ui/button"
 import {
   ContextToolGroup,
   Message,
@@ -25,14 +23,9 @@ import {
   partDefaultOpen,
   type UserActions,
 } from "@orchestra/session-ui/message-part"
-import { FileIcon } from "@orchestra/ui/file-icon"
-import { Icon } from "@orchestra/ui/icon"
-import { IconButton } from "@orchestra/ui/icon-button"
 import { Icon as IconV2 } from "@orchestra/ui/v2/icon"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
-import { DropdownMenu } from "@orchestra/ui/dropdown-menu"
 import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
-import { Dialog } from "@orchestra/ui/dialog"
 import { DialogFooter, DialogHeader, DialogTitleGroup, DialogV2 } from "@orchestra/ui/v2/dialog-v2"
 import { InlineInput } from "@orchestra/ui/inline-input"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
@@ -49,9 +42,7 @@ import type {
 } from "../../../compat/sdk-v2"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
-import { getFilename } from "@orchestra/core/util/path"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"
-import { SessionContextUsage } from "@/components/session-context-usage"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useLanguage } from "@/context/language"
 import { useSessionKey } from "@/pages/session/session-layout"
@@ -163,7 +154,7 @@ export function MessageTimeline(props: {
   // The approved turn chrome is styled for the desktop session layout only (session.css gates it at 768px).
   // The compact layout keeps the bare transcript; unstyled, the turn marks grow to the full row width.
   const desktop = createMediaQuery("(min-width: 768px)")
-  const turnChrome = () => settings.general.newLayoutDesigns() && desktop()
+  const turnChrome = () => desktop()
   const dialog = useDialog()
   const sessionArchive = useSessionArchive()
   const language = sessionRecoveryLanguage(useLanguage())
@@ -252,7 +243,6 @@ export function MessageTimeline(props: {
     parts: getMsgParts,
     status: sessionStatus,
     showReasoningSummaries: settings.general.showReasoningSummaries,
-    inlineComments: settings.general.newLayoutDesigns,
   })
   const activeMessageID = projection.activeMessageID
   const assistantMessagesByParent = projection.assistantMessagesByParent
@@ -537,7 +527,7 @@ export function MessageTimeline(props: {
   // 18px scroll-area fade below it. Mask position is not inherited: moving it restyles no row.
   const syncContentMask = () => {
     const root = listRoot()
-    if (!virtualContent || !root || !settings.general.newLayoutDesigns()) return
+    if (!virtualContent || !root) return
     virtualContent.style.maskPosition = `0 ${root.scrollTop}px`
   }
 
@@ -657,7 +647,7 @@ export function MessageTimeline(props: {
 
   const deleteSession = async (sessionID: string) => {
     const session = sync().session.get(sessionID)
-    if (!session) return false
+    if (!session) return true
 
     const sessions = (sync().data.session ?? []).filter((s) => !s.parentID && !s.time?.archived)
     const index = sessions.findIndex((s) => s.id === sessionID)
@@ -734,46 +724,27 @@ export function MessageTimeline(props: {
     const [state, setState] = createStore({ deleting: false })
     const handleDelete = async () => {
       setState("deleting", true)
-      await deleteSession(props.sessionID)
-      dialog.close()
+      if (await deleteSession(props.sessionID)) return dialog.close()
+      setState("deleting", false)
     }
 
-    if (settings.general.newLayoutDesigns())
-      return (
-        <DialogV2 fit>
-          <DialogHeader hideClose>
-            <DialogTitleGroup
-              title={language.t("session.delete.title")}
-              description={language.t("session.delete.confirm", { name: name() })}
-            />
-          </DialogHeader>
-          <DialogFooter>
-            <ButtonV2 variant="ghost" disabled={state.deleting} onClick={() => dialog.close()}>
-              {language.t("common.cancel")}
-            </ButtonV2>
-            <ButtonV2 variant="danger" disabled={state.deleting} onClick={handleDelete}>
-              {language.t("session.delete.button")}
-            </ButtonV2>
-          </DialogFooter>
-        </DialogV2>
-      )
-
     return (
-      <Dialog title={language.t("session.delete.title")} fit>
-        <div class="flex flex-col gap-4 pl-6 pr-2.5 pb-3">
-          <div class="flex flex-col gap-1 text-14-regular text-text-strong">
-            {language.t("session.delete.confirm", { name: name() })}
-          </div>
-          <div class="flex justify-end gap-2">
-            <Button variant="ghost" size="large" disabled={state.deleting} onClick={() => dialog.close()}>
-              {language.t("common.cancel")}
-            </Button>
-            <Button variant="primary" size="large" disabled={state.deleting} onClick={handleDelete}>
-              {language.t("session.delete.button")}
-            </Button>
-          </div>
-        </div>
-      </Dialog>
+      <DialogV2 fit>
+        <DialogHeader hideClose>
+          <DialogTitleGroup
+            title={language.t("session.delete.title")}
+            description={language.t("session.delete.confirm", { name: name() })}
+          />
+        </DialogHeader>
+        <DialogFooter>
+          <ButtonV2 variant="ghost" disabled={state.deleting} onClick={() => dialog.close()}>
+            {language.t("common.cancel")}
+          </ButtonV2>
+          <ButtonV2 variant="danger" disabled={state.deleting} onClick={handleDelete}>
+            {language.t("session.delete.button")}
+          </ButtonV2>
+        </DialogFooter>
+      </DialogV2>
     )
   }
 
@@ -866,7 +837,7 @@ export function MessageTimeline(props: {
                   message={message()}
                   showAssistantCopyPartID={assistantCopyPartID(row().userMessageID)}
                   turnDurationMs={turnDurationMs(row().userMessageID)}
-                  useV2Actions={settings.general.newLayoutDesigns()}
+                  useV2Actions
                   defaultOpen={defaultOpen()}
                   toolOpen={toolOpen[part().id] ?? defaultOpen()}
                   onToolOpenChange={(open) => setToolOpen(part().id, open)}
@@ -887,7 +858,7 @@ export function MessageTimeline(props: {
   function TimelineRowFrame(input: { row: Accessor<FramedTimelineRow>; children: JSX.Element }) {
     const anchor = () => {
       const row = input.row()
-      return row._tag === "CommentStrip" || (row._tag === "UserMessage" && row.anchor)
+      return row._tag === "UserMessage"
     }
     const previousAssistantPart = () => {
       const row = input.row()
@@ -917,50 +888,6 @@ export function MessageTimeline(props: {
     switch (row()._tag) {
       case "TurnGap":
         return <div data-timeline-row="TurnGap" aria-hidden="true" class="h-6" />
-      case "CommentStrip": {
-        const commentStripRow = row as Accessor<TimelineRowByTag<"CommentStrip">>
-        const comments = createMemo(() =>
-          getMsgParts(commentStripRow().userMessageID).flatMap((part) => MessageComment.fromPart(part) ?? []),
-        )
-        return (
-          <TimelineRowFrame row={commentStripRow}>
-            <div class="w-full px-4 md:px-5 pb-2">
-              <div class="ms-auto max-w-[82%] overflow-x-auto no-scrollbar">
-                <div class="flex w-max min-w-full justify-end gap-2">
-                  <Index each={comments()}>
-                    {(comment) => (
-                      <div
-                        classList={{
-                          "shrink-0 max-w-[260px] rounded-[6px] border-border-weak-base bg-background-stronger px-2.5 py-2": true,
-                          "border-[0.5px]": settings.general.newLayoutDesigns(),
-                          border: !settings.general.newLayoutDesigns(),
-                        }}
-                      >
-                        <div class="flex items-center gap-1.5 min-w-0 text-11-medium text-text-strong">
-                          <FileIcon node={{ path: comment().path, type: "file" }} class="size-3.5 shrink-0" />
-                          <span class="truncate">{getFilename(comment().path)}</span>
-                          <Show when={comment().selection}>
-                            {(selection) => (
-                              <span class="shrink-0 text-text-weak">
-                                {selection().startLine === selection().endLine
-                                  ? `:${selection().startLine}`
-                                  : `:${selection().startLine}-${selection().endLine}`}
-                              </span>
-                            )}
-                          </Show>
-                        </div>
-                        <div class="pt-1 text-12-regular text-text-strong whitespace-pre-wrap break-words">
-                          {comment().comment}
-                        </div>
-                      </div>
-                    )}
-                  </Index>
-                </div>
-              </div>
-            </div>
-          </TimelineRowFrame>
-        )
-      }
       case "UserMessage": {
         const userMessageRow = row as Accessor<TimelineRowByTag<"UserMessage">>
         const message = createMemo(() => {
@@ -968,7 +895,6 @@ export function MessageTimeline(props: {
           if (m?.role === "user") return m
         })
         const messageComments = createMemo(() => {
-          if (!settings.general.newLayoutDesigns()) return []
           return getMsgParts(userMessageRow().userMessageID).flatMap((part) => MessageComment.fromPart(part) ?? [])
         })
         return (
@@ -982,7 +908,7 @@ export function MessageTimeline(props: {
                         message={message()}
                         parts={getMsgParts(userMessageRow().userMessageID)}
                         actions={props.actions}
-                        useV2Actions={settings.general.newLayoutDesigns()}
+                        useV2Actions
                         comments={messageComments()}
                       />
                     </div>
@@ -1175,54 +1101,30 @@ export function MessageTimeline(props: {
       <div
         class="absolute left-1/2 -translate-x-1/2 z-[60] pointer-events-none transition-all duration-200 ease-out"
         classList={{
-          "bottom-8": settings.general.newLayoutDesigns(),
-          "bottom-6": !settings.general.newLayoutDesigns(),
+          "bottom-8": true,
           "opacity-100 translate-y-0 scale-100": props.scroll.overflow && props.scroll.jump,
           "opacity-0 translate-y-2 pointer-events-none": !props.scroll.overflow || !props.scroll.jump,
-          "scale-[0.8]": (!props.scroll.overflow || !props.scroll.jump) && settings.general.newLayoutDesigns(),
-          "scale-95": (!props.scroll.overflow || !props.scroll.jump) && !settings.general.newLayoutDesigns(),
+          "scale-[0.8]": !props.scroll.overflow || !props.scroll.jump,
         }}
       >
-        <Show
-          when={settings.general.newLayoutDesigns()}
-          fallback={
-            <button
-              type="button"
-              aria-label={language.t("session.messages.jumpToLatest")}
-              class="pointer-events-auto flex items-center justify-center w-10 h-8 bg-transparent border-none cursor-pointer p-0 group"
-              onClick={props.onResumeScroll}
-            >
-              <div
-                class="flex items-center justify-center w-8 h-6 rounded-[6px] border border-border-weaker-base bg-[color-mix(in_srgb,var(--surface-raised-stronger-non-alpha)_80%,transparent)] backdrop-blur-[0.75px] transition-colors group-hover:border-[var(--border-weak-base)] group-hover:[--icon-base:var(--icon-hover)]"
-                style={{
-                  "box-shadow":
-                    "0 51px 60px 0 rgba(0,0,0,0.10), 0 15px 18px 0 rgba(0,0,0,0.12), 0 6.386px 7.513px 0 rgba(0,0,0,0.12), 0 2.31px 2.717px 0 rgba(0,0,0,0.20)",
-                }}
-              >
-                <Icon name="arrow-down-to-line" size="small" />
-              </div>
-            </button>
-          }
+        <button
+          type="button"
+          aria-label={language.t("session.messages.jumpToLatest")}
+          class="pointer-events-auto flex items-center justify-center w-8 h-7 px-2 py-1.5 rounded-lg border-none cursor-pointer text-v2-text-text-base backdrop-blur-[2px]"
+          style={{
+            background: "color-mix(in srgb, var(--v2-background-bg-base) 92%, transparent)",
+            "box-shadow": "var(--v2-elevation-raised), 0px 2px 8px var(--v2-background-bg-base)",
+          }}
+          onClick={props.onResumeScroll}
         >
-          <button
-            type="button"
-            aria-label={language.t("session.messages.jumpToLatest")}
-            class="pointer-events-auto flex items-center justify-center w-8 h-7 px-2 py-1.5 rounded-lg border-none cursor-pointer text-v2-text-text-base backdrop-blur-[2px]"
-            style={{
-              background: "color-mix(in srgb, var(--v2-background-bg-base) 92%, transparent)",
-              "box-shadow": "var(--v2-elevation-raised), 0px 2px 8px var(--v2-background-bg-base)",
-            }}
-            onClick={props.onResumeScroll}
-          >
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
-              <path
-                d="M12.3333 8.66665L8 13L3.66667 8.66665M8 12.6667V2.83332"
-                stroke="currentColor"
-                stroke-linecap="square"
-              />
-            </svg>
-          </button>
-        </Show>
+          <svg width="16" height="16" viewBox="0 0 16 16" fill="none" aria-hidden="true">
+            <path
+              d="M12.3333 8.66665L8 13L3.66667 8.66665M8 12.6667V2.83332"
+              stroke="currentColor"
+              stroke-linecap="square"
+            />
+          </svg>
+        </button>
       </div>
       <ScrollView
         viewportRef={bindListRoot}
@@ -1239,9 +1141,7 @@ export function MessageTimeline(props: {
         class="relative min-w-0 w-full h-full"
         style={{
           // The new layout's header has no gradient tail, so stuck headers sit below the 18px fade.
-          "--sticky-accordion-top": !showHeader()
-            ? "0px"
-            : `${settings.general.newLayoutDesigns() ? headerHeight() + 18 : headerHeight() - 16}px`,
+          "--sticky-accordion-top": !showHeader() ? "0px" : `${headerHeight() + 18}px`,
         }}
       >
         <Show when={showHeader()}>
@@ -1256,16 +1156,11 @@ export function MessageTimeline(props: {
             }}
             classList={{
               "sticky top-0 z-30": true,
-              "bg-[linear-gradient(to_bottom,var(--v2-background-bg-base)_48px,transparent)]":
-                settings.general.newLayoutDesigns(),
-              "bg-[linear-gradient(to_bottom,var(--background-stronger)_48px,transparent)]":
-                !settings.general.newLayoutDesigns(),
+              "bg-[linear-gradient(to_bottom,var(--v2-background-bg-base)_48px,transparent)]": true,
               "w-full": true,
               "pb-4": true,
               "pr-3": true,
-              "pl-2.5": settings.general.newLayoutDesigns(),
-              "pl-2 md:pl-4": !settings.general.newLayoutDesigns(),
-              "md:max-w-200 md:mx-auto 2xl:max-w-[1000px]": props.centered && !settings.general.newLayoutDesigns(),
+              "pl-2.5": true,
             }}
           >
             <div data-slot="session-title-row" class="h-12 w-full flex items-center justify-between gap-2">
@@ -1273,7 +1168,6 @@ export function MessageTimeline(props: {
                 data-slot="session-title-main"
                 classList={{
                   "flex items-center gap-1 min-w-0 flex-1": true,
-                  "pr-3": !settings.general.newLayoutDesigns(),
                 }}
               >
                 <div class="flex items-center min-w-0 flex-1 w-full">
@@ -1302,9 +1196,7 @@ export function MessageTimeline(props: {
                           data-slot="session-title-child"
                           classList={{
                             "truncate text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
-                            "w-fit rounded-[6px] px-2 py-1 hover:bg-v2-overlay-simple-overlay-hover":
-                              settings.general.newLayoutDesigns(),
-                            "grow-1 min-w-0": !settings.general.newLayoutDesigns(),
+                            "w-fit rounded-[6px] px-2 py-1 hover:bg-v2-overlay-simple-overlay-hover": true,
                           }}
                           onClick={openTitleEditor}
                         >
@@ -1321,14 +1213,10 @@ export function MessageTimeline(props: {
                         disabled={titleMutation.isPending}
                         classList={{
                           "block text-[13px] font-[530] leading-4 tracking-[-0.04px] text-v2-text-text-base": true,
-                          "w-full flex-1 grow-1 min-w-0 pl-1 -ml-1 rounded-[6px]": !settings.general.newLayoutDesigns(),
-                          "field-sizing-content self-start rounded-[6px] px-2 py-1 ":
-                            settings.general.newLayoutDesigns(),
+                          "field-sizing-content self-start rounded-[6px] px-2 py-1 ": true,
                         }}
                         style={{
-                          "--inline-input-shadow": settings.general.newLayoutDesigns()
-                            ? "none"
-                            : "var(--shadow-xs-border-select)",
+                          "--inline-input-shadow": "none",
                         }}
                         onInput={(event) => setTitle("draft", event.currentTarget.value)}
                         onKeyDown={(event) => {
@@ -1349,7 +1237,7 @@ export function MessageTimeline(props: {
                     </Show>
                   </Show>
                 </div>
-                <Show when={settings.general.newLayoutDesigns() && !parentID() && sessionBrief()}>
+                <Show when={!parentID() && sessionBrief()}>
                   {(brief) => <p data-slot="session-title-brief">{brief()}</p>}
                 </Show>
               </div>
@@ -1359,140 +1247,70 @@ export function MessageTimeline(props: {
                     data-slot="session-title-actions"
                     classList={{
                       "shrink-0 flex items-center": true,
-                      "gap-2": settings.general.newLayoutDesigns(),
-                      "gap-3": !settings.general.newLayoutDesigns(),
+                      "gap-2": true,
                     }}
                   >
-                    <Show
-                      when={settings.general.newLayoutDesigns()}
-                      fallback={<SessionContextUsage placement="bottom" buttonAppearance="default" />}
-                    >
-                      <SessionHeadActions />
-                    </Show>
+                    <SessionHeadActions />
                     <Show when={!parentID()}>
-                      <Show
-                        when={settings.general.newLayoutDesigns()}
-                        fallback={
-                          <DropdownMenu
-                            gutter={4}
-                            placement="bottom-end"
-                            open={title.menuOpen}
-                            onOpenChange={(open) => {
-                              setTitle("menuOpen", open)
-                              if (open) return
+                      <MenuV2
+                        gutter={6}
+                        placement="bottom-end"
+                        open={title.menuOpen}
+                        onOpenChange={(open) => {
+                          setTitle("menuOpen", open)
+                          if (open) return
+                        }}
+                      >
+                        <MenuV2.Trigger
+                          as={IconButtonV2}
+                          icon={<IconV2 name="outline-dots" />}
+                          variant="ghost-muted"
+                          size="large"
+                          aria-label={language.t("common.moreOptions")}
+                          aria-expanded={title.menuOpen}
+                        />
+                        <MenuV2.Portal>
+                          <MenuV2.Content
+                            data-orchestra-menu="session"
+                            style={{ "min-width": "180px" }}
+                            onCloseAutoFocus={(event) => {
+                              if (!title.pendingRename) return
+                              event.preventDefault()
+                              setTitle("pendingRename", false)
+                              openTitleEditor()
                             }}
                           >
-                            <DropdownMenu.Trigger
-                              as={IconButton}
-                              icon="dot-grid"
-                              variant="ghost"
-                              class="size-6 rounded-md data-[expanded]:bg-surface-base-active"
-                              aria-label={language.t("common.moreOptions")}
-                              aria-expanded={title.menuOpen}
-                            />
-                            <DropdownMenu.Portal>
-                              <DropdownMenu.Content
-                                style={{ "min-width": "104px" }}
-                                onCloseAutoFocus={(event) => {
-                                  if (!title.pendingRename) return
-                                  event.preventDefault()
-                                  setTitle("pendingRename", false)
-                                  openTitleEditor()
-                                }}
-                              >
-                                <DropdownMenu.Item
-                                  onSelect={() => {
-                                    setTitle("pendingRename", true)
-                                    setTitle("menuOpen", false)
-                                  }}
-                                >
-                                  <DropdownMenu.ItemLabel>{language.t("common.rename")}</DropdownMenu.ItemLabel>
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item onSelect={() => exportSession(id)}>
-                                  <DropdownMenu.ItemLabel>{language.t("common.export")}</DropdownMenu.ItemLabel>
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Item
-                                  data-action="session-archive"
-                                  disabled={!sessionArchive.available()}
-                                  onSelect={() => void sessionArchive.archive(id)}
-                                >
-                                  <DropdownMenu.ItemLabel>
-                                    {language.t(
-                                      sessionArchive.available() ? "common.archive" : "session.archive.unavailable",
-                                    )}
-                                  </DropdownMenu.ItemLabel>
-                                </DropdownMenu.Item>
-                                <DropdownMenu.Separator />
-                                <DropdownMenu.Item
-                                  onSelect={() => dialog.show(() => <DialogDeleteSession sessionID={id} />)}
-                                >
-                                  <DropdownMenu.ItemLabel>{language.t("common.delete")}</DropdownMenu.ItemLabel>
-                                </DropdownMenu.Item>
-                              </DropdownMenu.Content>
-                            </DropdownMenu.Portal>
-                          </DropdownMenu>
-                        }
-                      >
-                        <MenuV2
-                          gutter={6}
-                          placement="bottom-end"
-                          open={title.menuOpen}
-                          onOpenChange={(open) => {
-                            setTitle("menuOpen", open)
-                            if (open) return
-                          }}
-                        >
-                          <MenuV2.Trigger
-                            as={IconButtonV2}
-                            icon={<IconV2 name="outline-dots" />}
-                            variant="ghost-muted"
-                            size="large"
-                            aria-label={language.t("common.moreOptions")}
-                            aria-expanded={title.menuOpen}
-                          />
-                          <MenuV2.Portal>
-                            <MenuV2.Content
-                              data-orchestra-menu="session"
-                              style={{ "min-width": "180px" }}
-                              onCloseAutoFocus={(event) => {
-                                if (!title.pendingRename) return
-                                event.preventDefault()
-                                setTitle("pendingRename", false)
-                                openTitleEditor()
+                            <MenuV2.Item
+                              onSelect={() => {
+                                setTitle("pendingRename", true)
+                                setTitle("menuOpen", false)
                               }}
                             >
-                              <MenuV2.Item
-                                onSelect={() => {
-                                  setTitle("pendingRename", true)
-                                  setTitle("menuOpen", false)
-                                }}
-                              >
-                                {language.t("orchestra.chat.menu.rename")}
-                              </MenuV2.Item>
-                              <MenuV2.Item onSelect={() => exportSession(id)}>
-                                {language.t("orchestra.chat.menu.export")}
-                              </MenuV2.Item>
-                              <MenuV2.Item
-                                data-action="session-archive"
-                                disabled={!sessionArchive.available()}
-                                onSelect={() => void sessionArchive.archive(id)}
-                              >
-                                {language.t(
-                                  sessionArchive.available()
-                                    ? "orchestra.chat.menu.archive"
-                                    : "session.archive.unavailable",
-                                )}
-                              </MenuV2.Item>
-                              <MenuV2.Item
-                                data-danger=""
-                                onSelect={() => dialog.show(() => <DialogDeleteSession sessionID={id} />)}
-                              >
-                                {language.t("orchestra.chat.menu.delete")}
-                              </MenuV2.Item>
-                            </MenuV2.Content>
-                          </MenuV2.Portal>
-                        </MenuV2>
-                      </Show>
+                              {language.t("orchestra.chat.menu.rename")}
+                            </MenuV2.Item>
+                            <MenuV2.Item onSelect={() => exportSession(id)}>
+                              {language.t("orchestra.chat.menu.export")}
+                            </MenuV2.Item>
+                            <MenuV2.Item
+                              data-action="session-archive"
+                              disabled={!sessionArchive.available()}
+                              onSelect={() => void sessionArchive.archive(id)}
+                            >
+                              {language.t(
+                                sessionArchive.available()
+                                  ? "orchestra.chat.menu.archive"
+                                  : "session.archive.unavailable",
+                              )}
+                            </MenuV2.Item>
+                            <MenuV2.Item
+                              data-danger=""
+                              onSelect={() => dialog.show(() => <DialogDeleteSession sessionID={id} />)}
+                            >
+                              {language.t("orchestra.chat.menu.delete")}
+                            </MenuV2.Item>
+                          </MenuV2.Content>
+                        </MenuV2.Portal>
+                      </MenuV2>
                     </Show>
                   </div>
                 )}

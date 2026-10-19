@@ -7,12 +7,6 @@
       "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
     },
     {
-      "rule": "R1",
-      "file": "packages/core/src/compat/sdk-v2-types.ts",
-      "specifier": "@orchestra/sdk/v2/types",
-      "reason": "D13: a legacy package is reached across layers; the FAC cards leave only the core compat facade"
-    },
-    {
       "rule": "R11",
       "file": "apps/orchestra/src/project/bootstrap.ts",
       "specifier": "@/maestro/upstream-v2",
@@ -410,12 +404,6 @@
     },
     {
       "rule": "R3",
-      "file": "packages/app-shell/src/app.tsx",
-      "specifier": "@/pages/layout",
-      "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
-    },
-    {
-      "rule": "R3",
       "file": "packages/core/src/config.ts",
       "specifier": "./v1/config/config",
       "reason": "D13: legacy import outside src/compat/; the FAC cards route it through the package facade"
@@ -560,24 +548,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/cli/test/distribution-aur.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-aur.test.ts",
-      "specifier": "../../../script/distribution-deno",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/distribution-homebrew.test.ts",
-      "specifier": "../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/cli/test/distribution-musl.test.ts",
       "specifier": "../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
@@ -627,12 +597,6 @@
     {
       "rule": "R5",
       "file": "apps/cli/test/fixture/artifact-native-windows-controls.ts",
-      "specifier": "../../../../packages/core/test/fixture/omni-expect",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/cli/test/fixture/distribution-aur-guest.test.ts",
       "specifier": "../../../../packages/core/test/fixture/omni-expect",
       "reason": "D8: relative import across a package root; retargets are deferred"
     },

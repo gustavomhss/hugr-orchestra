@@ -24,6 +24,9 @@ import { ClaudeHostProcess } from "./process-tool"
 
 export const NAME = "orchestra"
 
+/** Where the content-hashed plugin directories are published by default: `<ROOT>/<hash>/`. */
+export const ROOT = path.join(Global.Path.cache, "claude-host", "plugin-v2")
+
 /** A seat that needs `permissionMode` or its own MCP server: plugin agents ignore those fields (12, Agreement 3). */
 export type SdkOnly = Pick<AgentDefinition, "permissionMode" | "mcpServers">
 
@@ -73,7 +76,7 @@ export async function build(input: Input) {
     ...await skills(seats.map((item) => item.seat.id), input.playbooks ?? Skill.PLAYBOOKS_DIR),
   ])
   return {
-    path: await publish(input.root ?? path.join(Global.Path.cache, "claude-host", "plugin-v2"), files),
+    path: await publish(input.root ?? ROOT, files),
     seats: Object.fromEntries(defined.map((item) => [`${NAME}:${item.id}`, item.id])),
     sdkAgents: Object.fromEntries(defined.flatMap((item) => {
       const sdk = input.sdk?.[item.id]
@@ -138,6 +141,17 @@ function markdown(id: string, definition: Required<Pick<AgentDefinition, "descri
     "",
     definition.prompt,
   ].join("\n")
+}
+
+/**
+ * The source of a skill file Claude Code reads from a published plugin (`<ROOT>/<hash>/skills/<name>/...`): the same
+ * file in its seat's skill root, or in Maestro's playbooks. The published tree is a byte copy of that source.
+ */
+export function source(filepath: string) {
+  const [hash, kind, name, ...rest] = path.relative(ROOT, filepath).split(path.sep)
+  if (!hash || hash === ".." || path.isAbsolute(hash) || kind !== "skills" || !name) return
+  const seat = Object.values(Seats.all).find((item) => item.skills.includes(name))
+  return path.join(seat ? SeatSkillRoot.roots[seat.id] : Skill.PLAYBOOKS_DIR, name, ...rest)
 }
 
 // The seats' entry skills (from the seat skill roots, which compiled builds extract) and Maestro's playbooks.
