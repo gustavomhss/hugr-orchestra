@@ -71,6 +71,7 @@ import { Ripgrep } from "@orchestra/core/ripgrep"
 import { SessionProjector } from "@orchestra/core/session/projector"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
@@ -298,6 +299,7 @@ export function createRoutes(
       SessionV2.node,
       SessionExecution.node,
       SessionSubagentModels.node,
+      SessionProcess.node,
       ScheduledTask.node,
       ScheduledTask.daemonNode,
     ]),
