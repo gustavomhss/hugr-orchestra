@@ -54,8 +54,18 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
         expect(screen.row(id).querySelector('[data-lean-value="tokens"]')?.textContent).toBe("0")
         expect(screen.switch(id).getAttribute("aria-label")).toContain("for this profile")
       }
-      expect(screen.row("jest").textContent).toContain("Plaintext preserved")
-      expect(screen.row("vitest").textContent).toContain("Plaintext preserved")
+      for (const id of ["jest", "vitest", "bun", "npm"] as const) {
+        expect(screen.row(id).textContent).toContain("Summarized when large")
+        screen.open(id)
+        expect(screen.host.querySelector(".lean-detail .lean-notice")?.textContent).toContain(
+          id === "jest" || id === "vitest"
+            ? "Terminal SGR formatting may be normalized."
+            : "No item-specific filter.",
+        )
+        expect(screen.host.querySelector(".lean-detail .lean-notice")?.textContent).toContain(
+          "With Lean enabled, output over 4 KiB is summarized; failure blocks from failed commands stay in full. Recover the complete original with lean_recall.",
+        )
+      }
       screen.set("data", {
         ...data,
         savings: { ...data.savings, tokenCalls: 1 },
@@ -189,13 +199,13 @@ if (process.env.LEAN_PROFILE_VIEW_DOM !== "1") {
     }
   })
 
-  test("Portuguese page keeps paired labels and preservation language", async () => {
+  test("Portuguese page keeps paired labels and summary language", async () => {
     await loadLocaleDict("br")
     const screen = mount({}, "br")
     try {
       expect(screen.host.textContent).toContain("Bytes economizados")
       expect(screen.host.textContent).toContain("Tokens economizados estimados")
-      expect(screen.row("vitest").textContent).toContain("Texto preservado")
+      expect(screen.row("vitest").textContent).toContain("Saídas grandes são resumidas")
       expect(screen.switch("pytest").getAttribute("aria-label")).toBe("Ativar pytest neste perfil")
       screen.set("data", { ...info(), savings: { ...info().savings, tokenCalls: 1 } })
       expect(screen.host.querySelector(".lean-summary [data-lean-coverage]")?.textContent).toBe(
