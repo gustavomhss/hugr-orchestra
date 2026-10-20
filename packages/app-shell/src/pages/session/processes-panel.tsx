@@ -151,7 +151,15 @@ export function BackgroundProcessesPanel() {
     sdk()
       .protocol.then(async (protocol): Promise<readonly SessionProcess[]> => {
         if (protocol === "v1") return (await sdk().client.session.processes({ sessionID })).data ?? []
-        return serverSDK().orchestra.sessions.processes({ sessionID })
+        const items = await serverSDK().orchestra.sessions.processes({ sessionID })
+        return items.map((item) => ({
+          ...item,
+          processes: item.processes.map((node) => ({
+            pid: node.pid,
+            ...(node.parentPid === undefined ? {} : { parentPid: node.parentPid }),
+            ...(node.name === undefined ? {} : { name: node.name }),
+          })),
+        }))
       })
       .then((items) => {
         if (params.id !== sessionID) return
