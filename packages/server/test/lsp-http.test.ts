@@ -14,13 +14,13 @@ import { Context, Effect, Layer, LayerMap, Option } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { HttpApi, HttpApiBuilder } from "effect/unstable/httpapi"
 import { LspHandler } from "../src/handlers/lsp"
-import { layer as locationLayer } from "../src/location"
+import { LocationMiddleware, layer as locationLayer } from "../src/location"
 import { authorizationLayer } from "../src/middleware/authorization"
 import { schemaErrorLayer } from "../src/middleware/schema-error"
 import { ServerAuth } from "../src/auth"
 
 const api = HttpApi.make("server")
-  .add(LspGroup)
+  .add(LspGroup.middleware(LocationMiddleware))
   .middleware(Authorization)
   .middleware(SchemaErrorMiddleware)
 const auth = ServerAuth.headers({ username: "orchestra", password: "secret" })
@@ -43,7 +43,7 @@ function serve(input: { locations: Locations }) {
       (web) => Effect.promise(() => web.dispose()),
     )
     const request = (pathname: string, init: RequestInit = {}) =>
-      Effect.sync(() =>
+      Effect.promise(() =>
         web.handler(
           new Request(new URL(pathname, "http://orchestra.test"), {
             ...init,
