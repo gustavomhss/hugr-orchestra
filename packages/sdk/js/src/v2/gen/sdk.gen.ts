@@ -225,7 +225,9 @@ import type {
   ProjectListResponses,
   ProjectUpdateErrors,
   ProjectUpdateResponses,
+  PromptAgentAttachment,
   PromptInput,
+  PromptInputFileAttachment,
   ProviderAuthErrors,
   ProviderAuthResponses,
   ProviderClaudeCodeAccountErrors,
@@ -448,6 +450,8 @@ import type {
   TuiShowToastResponses,
   TuiSubmitPromptErrors,
   TuiSubmitPromptResponses,
+  V2ActivitySessionErrors,
+  V2ActivitySessionResponses,
   V2AgentFileGetErrors,
   V2AgentFileGetResponses,
   V2AgentFileUpdateErrors,
@@ -460,6 +464,8 @@ import type {
   V2CommandListResponses,
   V2ConfigGetErrors,
   V2ConfigGetResponses,
+  V2ConfigShellsErrors,
+  V2ConfigShellsResponses,
   V2ConfigUpdateErrors,
   V2ConfigUpdateResponses,
   V2CredentialRemoveErrors,
@@ -496,6 +502,12 @@ import type {
   V2IntegrationOauthCompleteResponses,
   V2IntegrationOauthStatusErrors,
   V2IntegrationOauthStatusResponses,
+  V2LeanGetErrors,
+  V2LeanGetResponses,
+  V2LeanHistoryErrors,
+  V2LeanHistoryResponses,
+  V2LeanUpdateErrors,
+  V2LeanUpdateResponses,
   V2LocationGetErrors,
   V2LocationGetResponses,
   V2McpAddErrors,
@@ -534,8 +546,12 @@ import type {
   V2ProjectCopyRemoveResponses,
   V2ProjectDirectoriesErrors,
   V2ProjectDirectoriesResponses,
+  V2ProjectInitGitErrors,
+  V2ProjectInitGitResponses,
   V2ProjectListErrors,
   V2ProjectListResponses,
+  V2ProjectUpdateErrors,
+  V2ProjectUpdateResponses,
   V2ProviderGetErrors,
   V2ProviderGetResponses,
   V2ProviderListErrors,
@@ -636,6 +652,8 @@ import type {
   V2SessionActiveResponses,
   V2SessionArchiveErrors,
   V2SessionArchiveResponses,
+  V2SessionCommandErrors,
+  V2SessionCommandResponses,
   V2SessionCompactErrors,
   V2SessionCompactResponses,
   V2SessionContextErrors,
@@ -644,6 +662,10 @@ import type {
   V2SessionCreateResponses,
   V2SessionEventsErrors,
   V2SessionEventsResponses,
+  V2SessionForkErrors,
+  V2SessionForkResponses,
+  V2SessionGenerateErrors,
+  V2SessionGenerateResponses,
   V2SessionGetErrors,
   V2SessionGetResponses,
   V2SessionGetSubagentModelsErrors,
@@ -658,6 +680,8 @@ import type {
   V2SessionMessageResponses,
   V2SessionMessagesErrors,
   V2SessionMessagesResponses,
+  V2SessionMoveErrors,
+  V2SessionMoveResponses,
   V2SessionPermissionCreateErrors,
   V2SessionPermissionCreateResponses,
   V2SessionPermissionGetErrors,
@@ -686,10 +710,18 @@ import type {
   V2SessionRevertStageResponses,
   V2SessionSetSubagentModelsErrors,
   V2SessionSetSubagentModelsResponses,
+  V2SessionShellErrors,
+  V2SessionShellResponses,
+  V2SessionSkillErrors,
+  V2SessionSkillResponses,
   V2SessionSwitchAgentErrors,
   V2SessionSwitchAgentResponses,
   V2SessionSwitchModelErrors,
   V2SessionSwitchModelResponses,
+  V2SessionSyntheticErrors,
+  V2SessionSyntheticResponses,
+  V2SessionTodoErrors,
+  V2SessionTodoResponses,
   V2SessionWaitErrors,
   V2SessionWaitResponses,
   V2SkillListErrors,
@@ -698,6 +730,14 @@ import type {
   V2SkillRemoveResponses,
   V2SkillSaveErrors,
   V2SkillSaveResponses,
+  V2VcsActivityErrors,
+  V2VcsActivityResponses,
+  V2VcsDiffErrors,
+  V2VcsDiffResponses,
+  V2VcsGetErrors,
+  V2VcsGetResponses,
+  V2VcsStatusErrors,
+  V2VcsStatusResponses,
   VcsActivityErrors,
   VcsActivityResponses,
   VcsApplyErrors,
@@ -7426,9 +7466,56 @@ export class Session3 extends HeyApiClient {
   }
 
   /**
+   * Run command
+   *
+   * Render a configured command or an MCP prompt (`server:prompt`) with its arguments and admit the result as one session input.
+   */
+  public command<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      id?: string
+      command?: string
+      arguments?: string
+      files?: Array<PromptInputFileAttachment>
+      agents?: Array<PromptAgentAttachment>
+      delivery?: "steer" | "queue"
+      resume?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "id" },
+            { in: "body", key: "command" },
+            { in: "body", key: "arguments" },
+            { in: "body", key: "files" },
+            { in: "body", key: "agents" },
+            { in: "body", key: "delivery" },
+            { in: "body", key: "resume" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionCommandResponses, V2SessionCommandErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/command",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
    * Compact session
    *
-   * Compact a session conversation.
+   * Summarize the conversation now into a compaction checkpoint. `compacted` is false when there was nothing to summarize. A running Session is refused as busy.
    */
   public compact<ThrowOnError extends boolean = false>(
     parameters: {
@@ -7439,6 +7526,243 @@ export class Session3 extends HeyApiClient {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
     return (options?.client ?? this.client).post<V2SessionCompactResponses, V2SessionCompactErrors, ThrowOnError>({
       url: "/api/session/{sessionID}/compact",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Fork session
+   *
+   * Create a Session at the same location with a copy of the history before `messageID` (all of it when omitted), stopping at a staged revert.
+   */
+  public fork<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      messageID?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "messageID" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionForkResponses, V2SessionForkErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/fork",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Move session
+   *
+   * Move the Session to another directory or workspace of its project.
+   */
+  public move<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      location?: LocationRef
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionMoveResponses, V2SessionMoveErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/move",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Run shell command
+   *
+   * Run a shell command in the Session's location and record it with its output for the next turn. No turn starts.
+   */
+  public shell<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      id?: string
+      command?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "id" },
+            { in: "body", key: "command" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionShellResponses, V2SessionShellErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/shell",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Load skill
+   *
+   * Record a skill's instructions as context, then run a turn unless resume is false.
+   */
+  public skill<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      skill?: string
+      resume?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "skill" },
+            { in: "body", key: "resume" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionSkillResponses, V2SessionSkillErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/skill",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Add synthetic context
+   *
+   * Record text as synthetic context, then run a turn unless resume is false.
+   */
+  public synthetic<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      id?: string
+      text?: string
+      resume?: boolean
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "id" },
+            { in: "body", key: "text" },
+            { in: "body", key: "resume" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionSyntheticResponses, V2SessionSyntheticErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/synthetic",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Generate text
+   *
+   * Run one tool-less completion of the prompt after the Session's history with its model. Nothing is recorded.
+   */
+  public generate<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+      prompt?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "sessionID" },
+            { in: "body", key: "prompt" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).post<V2SessionGenerateResponses, V2SessionGenerateErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/generate",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Get session todos
+   *
+   * The Session's current todo list, as its agent last wrote it.
+   */
+  public todo<ThrowOnError extends boolean = false>(
+    parameters: {
+      sessionID: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
+    return (options?.client ?? this.client).get<V2SessionTodoResponses, V2SessionTodoErrors, ThrowOnError>({
+      url: "/api/session/{sessionID}/todo",
       ...options,
       ...params,
     })
@@ -8457,6 +8781,157 @@ export class Fs extends HeyApiClient {
   }
 }
 
+export class Vcs2 extends HeyApiClient {
+  /**
+   * Get branch
+   *
+   * The current branch and the repository's default branch; both absent outside a git repository.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2VcsGetResponses, V2VcsGetErrors, ThrowOnError>({
+      url: "/api/vcs",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * List changed files
+   *
+   * Changed files against HEAD with their line counts.
+   */
+  public status<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2VcsStatusResponses, V2VcsStatusErrors, ThrowOnError>({
+      url: "/api/vcs/status",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Diff changes
+   *
+   * Diffs of the working tree against HEAD (`working`) or against the merge base with the default branch (`branch`).
+   */
+  public diff<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      mode: "working" | "branch"
+      context?: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "mode" },
+            { in: "query", key: "context" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2VcsDiffResponses, V2VcsDiffErrors, ThrowOnError>({
+      url: "/api/vcs/diff",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Get commit activity
+   *
+   * Commits, merges, authors and changed lines between two epoch-millisecond bounds.
+   */
+  public activity<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      since: string
+      until: string
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "since" },
+            { in: "query", key: "until" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2VcsActivityResponses, V2VcsActivityErrors, ThrowOnError>({
+      url: "/api/vcs/activity",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Activity extends HeyApiClient {
+  /**
+   * Get Session activity
+   *
+   * Recorded Session activity of the location's project over a period (of the directory alone outside git).
+   */
+  public session<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      period: "7d" | "30d" | "90d" | "all"
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { in: "query", key: "period" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2ActivitySessionResponses, V2ActivitySessionErrors, ThrowOnError>({
+      url: "/api/activity/session",
+      ...options,
+      ...params,
+    })
+  }
+}
+
 export class Command2 extends HeyApiClient {
   /**
    * List commands
@@ -9405,6 +9880,202 @@ export class Project2 extends HeyApiClient {
       ...params,
     })
   }
+
+  /**
+   * Update project
+   *
+   * Rename a project or change its icon or start command.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      projectID: string
+      name?: string
+      icon?: {
+        color?: string
+        override?: string
+      }
+      commands?: ProjectCommands
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "projectID" },
+            { in: "body", key: "name" },
+            { in: "body", key: "icon" },
+            { in: "body", key: "commands" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2ProjectUpdateResponses, V2ProjectUpdateErrors, ThrowOnError>({
+      url: "/api/project/{projectID}",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Initialize git
+   *
+   * Make the requested directory a git repository with an empty first commit and return its recorded project.
+   */
+  public initGit<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).post<V2ProjectInitGitResponses, V2ProjectInitGitErrors, ThrowOnError>({
+      url: "/api/project/git",
+      ...options,
+      ...params,
+    })
+  }
+}
+
+export class Lean extends HeyApiClient {
+  /**
+   * Get Lean dashboard
+   *
+   * The saved profile's Lean switches and what Lean saved per item in this Location.
+   */
+  public get<ThrowOnError extends boolean = false>(
+    parameters?: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
+    return (options?.client ?? this.client).get<V2LeanGetResponses, V2LeanGetErrors, ThrowOnError>({
+      url: "/api/lean",
+      ...options,
+      ...params,
+    })
+  }
+
+  /**
+   * Update Lean preferences
+   *
+   * Switch Lean or one of its items on or off for the saved profile, and return the dashboard.
+   */
+  public update<ThrowOnError extends boolean = false>(
+    parameters: {
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+      leanProfileUpdate: LeanProfileUpdate
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "query", key: "location" },
+            { key: "leanProfileUpdate", map: "body" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).patch<V2LeanUpdateResponses, V2LeanUpdateErrors, ThrowOnError>({
+      url: "/api/lean",
+      ...options,
+      ...params,
+      headers: {
+        "Content-Type": "application/json",
+        ...options?.headers,
+        ...params.headers,
+      },
+    })
+  }
+
+  /**
+   * Get Lean item history
+   *
+   * The latest executions one Lean item saved output on in this Location.
+   */
+  public history<ThrowOnError extends boolean = false>(
+    parameters: {
+      itemID:
+        | "cargo"
+        | "go"
+        | "pytest"
+        | "jest"
+        | "vitest"
+        | "git"
+        | "rg"
+        | "tsc"
+        | "node"
+        | "pnpm"
+        | "eslint"
+        | "biome"
+        | "ruff"
+        | "pyright"
+        | "pylint"
+        | "bun"
+        | "esbuild"
+        | "golangci"
+        | "markdownlint"
+        | "mypy"
+        | "next"
+        | "npm"
+        | "pip"
+        | "playwright"
+        | "prettier"
+        | "rollup"
+        | "shellcheck"
+        | "stylelint"
+        | "uv"
+        | "vite"
+        | "webpack"
+        | "yarn"
+        | "shell"
+        | "read"
+        | "webfetch"
+        | "glob"
+        | "grep"
+      location?: {
+        directory?: string
+        workspace?: string
+      }
+    },
+    options?: Options<never, ThrowOnError>,
+  ) {
+    const params = buildClientParams(
+      [parameters],
+      [
+        {
+          args: [
+            { in: "path", key: "itemID" },
+            { in: "query", key: "location" },
+          ],
+        },
+      ],
+    )
+    return (options?.client ?? this.client).get<V2LeanHistoryResponses, V2LeanHistoryErrors, ThrowOnError>({
+      url: "/api/lean/history/{itemID}",
+      ...options,
+      ...params,
+    })
+  }
 }
 
 export class Config4 extends HeyApiClient {
@@ -9441,6 +10112,18 @@ export class Config4 extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
+    })
+  }
+
+  /**
+   * List shells
+   *
+   * The shells installed on the server host; `acceptable` ones can run commands, the rest only terminals.
+   */
+  public shells<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
+    return (options?.client ?? this.client).get<V2ConfigShellsResponses, V2ConfigShellsErrors, ThrowOnError>({
+      url: "/api/config/shells",
+      ...options,
     })
   }
 }
@@ -10841,6 +11524,16 @@ export class V2 extends HeyApiClient {
     return (this._fs ??= new Fs({ client: this.client }))
   }
 
+  private _vcs?: Vcs2
+  get vcs(): Vcs2 {
+    return (this._vcs ??= new Vcs2({ client: this.client }))
+  }
+
+  private _activity?: Activity
+  get activity(): Activity {
+    return (this._activity ??= new Activity({ client: this.client }))
+  }
+
   private _command?: Command2
   get command(): Command2 {
     return (this._command ??= new Command2({ client: this.client }))
@@ -10889,6 +11582,11 @@ export class V2 extends HeyApiClient {
   private _project?: Project2
   get project(): Project2 {
     return (this._project ??= new Project2({ client: this.client }))
+  }
+
+  private _lean?: Lean
+  get lean(): Lean {
+    return (this._lean ??= new Lean({ client: this.client }))
   }
 
   private _config?: Config4

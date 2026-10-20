@@ -983,6 +983,7 @@ export type GlobalEvent = {
           sessionID: string
           messageID: string
           text: string
+          files?: Array<PromptFileAttachment>
         }
       }
     | {
@@ -4101,6 +4102,12 @@ export type PromptInput = {
   agents?: Array<PromptAgentAttachment>
 }
 
+export type SessionCompactResult = {
+  data: {
+    compacted: boolean
+  }
+}
+
 export type MessageNotFoundError = {
   _tag: "MessageNotFoundError"
   sessionID: string
@@ -4392,17 +4399,42 @@ export type ProjectCopyError = {
 
 export type ConfigSettings = {
   model?: string
+  shell?: string
   disabledProviders: Array<string>
+}
+
+export type ConfigCustomProvider = {
+  name?: string
+  env?: Array<string>
+  api: {
+    type: "aisdk"
+    package: string
+    url?: string
+  }
+  request?: {
+    headers?: {
+      [key: string]: string
+    }
+  }
+  models?: {
+    [key: string]: {
+      name?: string
+    }
+  }
 }
 
 export type ConfigPatch = {
   model?: string
+  shell?: string
   agents?: {
     [key: string]: {
       engine?: "orchestra" | "claude-code"
     }
   }
   disabledProviders?: Array<string>
+  providers?: {
+    [key: string]: ConfigCustomProvider
+  }
 }
 
 export type RelayDocumentView = {
@@ -5349,6 +5381,7 @@ export type SyncEventSessionNextSynthetic = {
       sessionID: string
       messageID: string
       text: string
+      files?: Array<PromptFileAttachment>
     }
   }
 }
@@ -6473,6 +6506,7 @@ export type SessionMessageSynthetic = {
   }
   sessionID: string
   text: string
+  files?: Array<PromptFileAttachment>
   type: "synthetic"
 }
 
@@ -6820,6 +6854,7 @@ export type SessionNextSynthetic = {
     sessionID: string
     messageID: string
     text: string
+    files?: Array<PromptFileAttachment>
   }
 }
 
@@ -10431,6 +10466,7 @@ export type EventSessionNextSynthetic = {
     sessionID: string
     messageID: string
     text: string
+    files?: Array<PromptFileAttachment>
   }
 }
 
@@ -17506,6 +17542,59 @@ export type V2SessionPromptResponses = {
 
 export type V2SessionPromptResponse = V2SessionPromptResponses[keyof V2SessionPromptResponses]
 
+export type V2SessionCommandData = {
+  body: {
+    id?: string
+    command: string
+    arguments?: string
+    files?: Array<PromptInputFileAttachment>
+    agents?: Array<PromptAgentAttachment>
+    delivery?: "steer" | "queue"
+    resume?: boolean
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/command"
+}
+
+export type V2SessionCommandErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type V2SessionCommandError = V2SessionCommandErrors[keyof V2SessionCommandErrors]
+
+export type V2SessionCommandResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: SessionInputAdmitted
+  }
+}
+
+export type V2SessionCommandResponse = V2SessionCommandResponses[keyof V2SessionCommandResponses]
+
 export type V2SessionCompactData = {
   body?: never
   path: {
@@ -17529,21 +17618,318 @@ export type V2SessionCompactErrors = {
    */
   404: SessionNotFoundError
   /**
-   * ServiceUnavailableError
+   * ConflictError
    */
-  503: ServiceUnavailableError
+  409: ConflictError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
 }
 
 export type V2SessionCompactError = V2SessionCompactErrors[keyof V2SessionCompactErrors]
 
 export type V2SessionCompactResponses = {
   /**
+   * SessionCompactResult
+   */
+  200: SessionCompactResult
+}
+
+export type V2SessionCompactResponse = V2SessionCompactResponses[keyof V2SessionCompactResponses]
+
+export type V2SessionForkData = {
+  body: {
+    messageID?: string
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/fork"
+}
+
+export type V2SessionForkErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError | MessageNotFoundError
+   */
+  404: MessageNotFoundError | SessionNotFoundError
+}
+
+export type V2SessionForkError = V2SessionForkErrors[keyof V2SessionForkErrors]
+
+export type V2SessionForkResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: SessionV2Info
+  }
+}
+
+export type V2SessionForkResponse = V2SessionForkResponses[keyof V2SessionForkResponses]
+
+export type V2SessionMoveData = {
+  body: {
+    location: LocationRef
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/move"
+}
+
+export type V2SessionMoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SessionMoveError = V2SessionMoveErrors[keyof V2SessionMoveErrors]
+
+export type V2SessionMoveResponses = {
+  /**
    * <No Content>
    */
   204: void
 }
 
-export type V2SessionCompactResponse = V2SessionCompactResponses[keyof V2SessionCompactResponses]
+export type V2SessionMoveResponse = V2SessionMoveResponses[keyof V2SessionMoveResponses]
+
+export type V2SessionShellData = {
+  body: {
+    id?: string
+    command: string
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/shell"
+}
+
+export type V2SessionShellErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SessionShellError = V2SessionShellErrors[keyof V2SessionShellErrors]
+
+export type V2SessionShellResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionShellResponse = V2SessionShellResponses[keyof V2SessionShellResponses]
+
+export type V2SessionSkillData = {
+  body: {
+    skill: string
+    resume?: boolean
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/skill"
+}
+
+export type V2SessionSkillErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SessionSkillError = V2SessionSkillErrors[keyof V2SessionSkillErrors]
+
+export type V2SessionSkillResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2SessionSkillResponse = V2SessionSkillResponses[keyof V2SessionSkillResponses]
+
+export type V2SessionSyntheticData = {
+  body: {
+    id?: string
+    text: string
+    resume?: boolean
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/synthetic"
+}
+
+export type V2SessionSyntheticErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * ConflictError
+   */
+  409: ConflictError
+}
+
+export type V2SessionSyntheticError = V2SessionSyntheticErrors[keyof V2SessionSyntheticErrors]
+
+export type V2SessionSyntheticResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: {
+      id: string
+    }
+  }
+}
+
+export type V2SessionSyntheticResponse = V2SessionSyntheticResponses[keyof V2SessionSyntheticResponses]
+
+export type V2SessionGenerateData = {
+  body: {
+    prompt: string
+  }
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/generate"
+}
+
+export type V2SessionGenerateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+  /**
+   * UnknownError
+   */
+  500: UnknownError1
+}
+
+export type V2SessionGenerateError = V2SessionGenerateErrors[keyof V2SessionGenerateErrors]
+
+export type V2SessionGenerateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: {
+      text: string
+    }
+  }
+}
+
+export type V2SessionGenerateResponse = V2SessionGenerateResponses[keyof V2SessionGenerateResponses]
+
+export type V2SessionTodoData = {
+  body?: never
+  path: {
+    sessionID: string
+  }
+  query?: never
+  url: "/api/session/{sessionID}/todo"
+}
+
+export type V2SessionTodoErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * SessionNotFoundError
+   */
+  404: SessionNotFoundError
+}
+
+export type V2SessionTodoError = V2SessionTodoErrors[keyof V2SessionTodoErrors]
+
+export type V2SessionTodoResponses = {
+  /**
+   * Success
+   */
+  200: {
+    data: Array<Todo>
+  }
+}
+
+export type V2SessionTodoResponse = V2SessionTodoResponses[keyof V2SessionTodoResponses]
 
 export type V2SessionWaitData = {
   body?: never
@@ -17567,10 +17953,6 @@ export type V2SessionWaitErrors = {
    * SessionNotFoundError
    */
   404: SessionNotFoundError
-  /**
-   * ServiceUnavailableError
-   */
-  503: ServiceUnavailableError
 }
 
 export type V2SessionWaitError = V2SessionWaitErrors[keyof V2SessionWaitErrors]
@@ -18969,6 +19351,196 @@ export type V2FsFindResponses = {
 
 export type V2FsFindResponse = V2FsFindResponses[keyof V2FsFindResponses]
 
+export type V2VcsGetData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/vcs"
+}
+
+export type V2VcsGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2VcsGetError = V2VcsGetErrors[keyof V2VcsGetErrors]
+
+export type V2VcsGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: VcsInfo
+  }
+}
+
+export type V2VcsGetResponse = V2VcsGetResponses[keyof V2VcsGetResponses]
+
+export type V2VcsStatusData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/vcs/status"
+}
+
+export type V2VcsStatusErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2VcsStatusError = V2VcsStatusErrors[keyof V2VcsStatusErrors]
+
+export type V2VcsStatusResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<VcsFileStatus>
+  }
+}
+
+export type V2VcsStatusResponse = V2VcsStatusResponses[keyof V2VcsStatusResponses]
+
+export type V2VcsDiffData = {
+  body?: never
+  path?: never
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    mode: "working" | "branch"
+    context?: string
+  }
+  url: "/api/vcs/diff"
+}
+
+export type V2VcsDiffErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2VcsDiffError = V2VcsDiffErrors[keyof V2VcsDiffErrors]
+
+export type V2VcsDiffResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Array<VcsFileDiff>
+  }
+}
+
+export type V2VcsDiffResponse = V2VcsDiffResponses[keyof V2VcsDiffResponses]
+
+export type V2VcsActivityData = {
+  body?: never
+  path?: never
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    since: string
+    until: string
+  }
+  url: "/api/vcs/activity"
+}
+
+export type V2VcsActivityErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2VcsActivityError = V2VcsActivityErrors[keyof V2VcsActivityErrors]
+
+export type V2VcsActivityResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: VcsActivity
+  }
+}
+
+export type V2VcsActivityResponse = V2VcsActivityResponses[keyof V2VcsActivityResponses]
+
+export type V2ActivitySessionData = {
+  body?: never
+  path?: never
+  query: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+    period: "7d" | "30d" | "90d" | "all"
+  }
+  url: "/api/activity/session"
+}
+
+export type V2ActivitySessionErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ActivitySessionError = V2ActivitySessionErrors[keyof V2ActivitySessionErrors]
+
+export type V2ActivitySessionResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: SessionActivity
+  }
+}
+
+export type V2ActivitySessionResponse = V2ActivitySessionResponses[keyof V2ActivitySessionResponses]
+
 export type V2CommandListData = {
   body?: never
   path?: never
@@ -20198,6 +20770,243 @@ export type V2ProjectDirectoriesResponses = {
 
 export type V2ProjectDirectoriesResponse = V2ProjectDirectoriesResponses[keyof V2ProjectDirectoriesResponses]
 
+export type V2ProjectUpdateData = {
+  body: {
+    name?: string
+    icon?: {
+      color?: string
+      override?: string
+    }
+    commands?: ProjectCommands
+  }
+  path: {
+    projectID: string
+  }
+  query?: never
+  url: "/api/project/{projectID}"
+}
+
+export type V2ProjectUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ProjectUpdateError = V2ProjectUpdateErrors[keyof V2ProjectUpdateErrors]
+
+export type V2ProjectUpdateResponses = {
+  /**
+   * Project
+   */
+  200: Project
+}
+
+export type V2ProjectUpdateResponse = V2ProjectUpdateResponses[keyof V2ProjectUpdateResponses]
+
+export type V2ProjectInitGitData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/project/git"
+}
+
+export type V2ProjectInitGitErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ProjectInitGitError = V2ProjectInitGitErrors[keyof V2ProjectInitGitErrors]
+
+export type V2ProjectInitGitResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: Project
+  }
+}
+
+export type V2ProjectInitGitResponse = V2ProjectInitGitResponses[keyof V2ProjectInitGitResponses]
+
+export type V2LeanGetData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/lean"
+}
+
+export type V2LeanGetErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2LeanGetError = V2LeanGetErrors[keyof V2LeanGetErrors]
+
+export type V2LeanGetResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: LeanProfileDashboard
+  }
+}
+
+export type V2LeanGetResponse = V2LeanGetResponses[keyof V2LeanGetResponses]
+
+export type V2LeanUpdateData = {
+  body: LeanProfileUpdate
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/lean"
+}
+
+export type V2LeanUpdateErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2LeanUpdateError = V2LeanUpdateErrors[keyof V2LeanUpdateErrors]
+
+export type V2LeanUpdateResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: LeanProfileDashboard
+  }
+}
+
+export type V2LeanUpdateResponse = V2LeanUpdateResponses[keyof V2LeanUpdateResponses]
+
+export type V2LeanHistoryData = {
+  body?: never
+  path: {
+    itemID:
+      | "cargo"
+      | "go"
+      | "pytest"
+      | "jest"
+      | "vitest"
+      | "git"
+      | "rg"
+      | "tsc"
+      | "node"
+      | "pnpm"
+      | "eslint"
+      | "biome"
+      | "ruff"
+      | "pyright"
+      | "pylint"
+      | "bun"
+      | "esbuild"
+      | "golangci"
+      | "markdownlint"
+      | "mypy"
+      | "next"
+      | "npm"
+      | "pip"
+      | "playwright"
+      | "prettier"
+      | "rollup"
+      | "shellcheck"
+      | "stylelint"
+      | "uv"
+      | "vite"
+      | "webpack"
+      | "yarn"
+      | "shell"
+      | "read"
+      | "webfetch"
+      | "glob"
+      | "grep"
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/lean/history/{itemID}"
+}
+
+export type V2LeanHistoryErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type V2LeanHistoryError = V2LeanHistoryErrors[keyof V2LeanHistoryErrors]
+
+export type V2LeanHistoryResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: LeanProfileHistory
+  }
+}
+
+export type V2LeanHistoryResponse = V2LeanHistoryResponses[keyof V2LeanHistoryResponses]
+
 export type V2ConfigGetData = {
   body?: never
   path?: never
@@ -20255,6 +21064,39 @@ export type V2ConfigUpdateResponses = {
 }
 
 export type V2ConfigUpdateResponse = V2ConfigUpdateResponses[keyof V2ConfigUpdateResponses]
+
+export type V2ConfigShellsData = {
+  body?: never
+  path?: never
+  query?: never
+  url: "/api/config/shells"
+}
+
+export type V2ConfigShellsErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2ConfigShellsError = V2ConfigShellsErrors[keyof V2ConfigShellsErrors]
+
+export type V2ConfigShellsResponses = {
+  /**
+   * Success
+   */
+  200: Array<{
+    path: string
+    name: string
+    acceptable: boolean
+  }>
+}
+
+export type V2ConfigShellsResponse = V2ConfigShellsResponses[keyof V2ConfigShellsResponses]
 
 export type V2RelayDocumentListData = {
   body?: never
