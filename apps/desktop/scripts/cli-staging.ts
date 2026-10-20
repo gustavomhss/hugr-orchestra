@@ -8,38 +8,15 @@ import {
   copyCliRipgrep,
   copyCliTreeSitter,
   nativeCliTarget,
+  omniCompanions,
   readCliManifest,
+  requireOmniPair,
   verifyCliArtifact,
 } from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
 export function desktopCliTargets(platform: string, arch: string) {
   return [nativeCliTarget(platform, arch), ...(platform === "win32" ? ["linux-arm64", "linux-x64-baseline"] : [])]
-}
-
-// A Windows build's Linux CLIs run in WSL guests. They are omni builds whose preflight needs this pair next to the
-// binary, so src/main/wsl/artifact.ts installs the pair from omni-<target>/ in the bundle (hashing those bytes) and
-// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin.
-export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as const
-
-export class WslOmniPairMissingError extends Error {
-  constructor(target: string, path: string) {
-    super(
-      `WSL omni pair missing for ${target}: ${path} must be a regular file. Build the Linux CLI with OMNI_ARTIFACTS so it ships ${omniCompanions.join(" and ")} next to the binary.`,
-    )
-    this.name = "WslOmniPairMissingError"
-  }
-}
-
-// Both files of the pair as regular files in one directory, or a named error.
-export function requireOmniPair(directory: string, target: string) {
-  return Promise.all(
-    omniCompanions.map(async (name) => {
-      const path = join(directory, name)
-      if (!(await lstat(path).catch(() => undefined))?.isFile()) throw new WslOmniPairMissingError(target, path)
-      return path
-    }),
-  )
 }
 
 export async function stageCliArtifacts(input: {

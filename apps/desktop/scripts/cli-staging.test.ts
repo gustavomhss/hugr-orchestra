@@ -4,10 +4,10 @@ import { chmod, mkdir, mkdtemp, open, readFile, readdir, rename, rm, stat, symli
 import { RipgrepRelease } from "@orchestra/core/ripgrep/release"
 import { tmpdir } from "node:os"
 import { dirname, join } from "node:path"
-import { cliRipgrepKey, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
-import { stageCliArtifacts, desktopCliTargets, WslOmniPairMissingError } from "./cli-staging"
+import { cliRipgrepKey, omniCompanions, OmniPairMissingError, readCliManifest, verifyCliArtifact } from "../src/main/cli-artifacts"
+import { stageCliArtifacts, desktopCliTargets } from "./cli-staging"
 // The pair's names come from the installer, so staging is held to what the WSL install reads.
-import { installGuestScript, installWslArtifact, omniCompanions } from "../src/main/wsl/artifact"
+import { installGuestScript, installWslArtifact } from "../src/main/wsl/artifact"
 import { installCliArtifact } from "../src/main/cli-install"
 import { writeTreeSitterBundle } from "../src/main/cli-tree-sitter.fixture"
 import { fixtureSignature, writeRipgrepBundle } from "../src/main/cli-ripgrep.fixture"
@@ -45,7 +45,7 @@ async function fixture(targets = ["linux-x64-baseline"], binary = (target: strin
       await writeTreeSitterBundle(join(dir, "bin", "tree-sitter"), target)
       await writeRipgrepBundle(join(dir, "bin", "ripgrep"), cliRipgrepKey(target)!)
       if (target.startsWith("linux-"))
-        await Promise.all(omniCompanions.map((name) => writeFile(join(dir, "bin", name), `${name} ${target}`)))
+        await Promise.all(omniCompanions(target).map((name) => writeFile(join(dir, "bin", name), `${name} ${target}`)))
     }),
   )
   // Staged rg stand-ins are "signed" (cli-ripgrep.fixture.ts), so staging checks them with the stand-in signature.
@@ -102,7 +102,7 @@ test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and re
   await stageCliArtifacts(input)
   await Promise.all(
     ["linux-arm64", "linux-x64-baseline"].flatMap((target) =>
-      omniCompanions.map(async (name) => {
+      omniCompanions(target).map(async (name) => {
         const path = join(input.directory, `omni-${target}`, name)
         expect(await readFile(path, "utf8")).toBe(`${name} ${target}`)
         if (process.platform !== "win32" && name === "hugr-omni-supervisor")
@@ -111,11 +111,11 @@ test("Windows staging places each Linux CLI's omni pair in omni-<target>/ and re
     ),
   )
   const before = await readFile(join(input.directory, "manifest.json"), "utf8")
-  for (const name of omniCompanions) {
+  for (const name of omniCompanions("linux-arm64")) {
     const path = join(input.dist, "cli-linux-arm64", "bin", name)
     await rename(path, `${path}.away`)
     const error = await stageCliArtifacts(input).catch((error: unknown) => error)
-    expect(error).toBeInstanceOf(WslOmniPairMissingError)
+    expect(error).toBeInstanceOf(OmniPairMissingError)
     expect((error as Error).message).toContain(`linux-arm64: ${path}`)
     expect(await readFile(join(input.directory, "manifest.json"), "utf8")).toBe(before)
     expect(await readFile(join(input.directory, "omni-linux-arm64", name), "utf8")).toBe(`${name} linux-arm64`)
@@ -145,9 +145,9 @@ test("prebuilt handoff carries the omni pair and refuses a producer without it",
     "hugr_omni.node linux-x64-baseline",
   )
   await rm(join(input.directory, "omni-linux-x64-baseline", "hugr-omni-supervisor"))
-  await expect(stageCliArtifacts(received)).rejects.toBeInstanceOf(WslOmniPairMissingError)
+  await expect(stageCliArtifacts(received)).rejects.toBeInstanceOf(OmniPairMissingError)
   await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toBeInstanceOf(
-    WslOmniPairMissingError,
+    OmniPairMissingError,
   )
 }, STAGING_TIMEOUT)
 
@@ -195,7 +195,7 @@ test("WSL install accepts the staged Windows bundle end to end through the real 
   // On Linux the real guest script ran and accepted the host's tree-sitter digest.
   if (process.platform !== "linux") return
   await Promise.all(
-    [...omniCompanions, "orchestra"].map(async (name) =>
+    [...omniCompanions("linux-x64-baseline"), "orchestra"].map(async (name) =>
       expect(await sha(join(home, ".orchestra/bin", name))).toBe(
         await sha(name === "orchestra" ? binary.path : join(omni, name)),
       ),

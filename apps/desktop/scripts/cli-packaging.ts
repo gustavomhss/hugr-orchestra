@@ -6,9 +6,9 @@ import {
   cliTreeSitterTarget,
   nativeCliTarget,
   readCliManifest,
+  requireOmniPair,
   verifyCliArtifact,
 } from "../src/main/cli-artifacts"
-import { requireOmniPair } from "./cli-staging"
 
 /**
  * Checks a packaged CLI bundle: the manifest's version, each target's bytes, the WSL guests' omni pairs, every target's

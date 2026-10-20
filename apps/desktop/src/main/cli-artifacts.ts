@@ -17,6 +17,33 @@ export function nativeCliTarget(platform: string, arch: string): string {
   return `${platform === "win32" ? "windows" : platform}-${arch}${arch === "x64" ? "-baseline" : ""}`
 }
 
+// The omni pair a CLI loads from beside its binary: the addon plus its supervisor, named .exe on Windows. The CLI
+// build ships them in bin/ from OMNI_ARTIFACTS; producers stage them in omni-<target>/ and the installer copies them
+// next to the installed binary.
+export function omniCompanions(target: string) {
+  return ["hugr_omni.node", target.startsWith("windows-") ? "hugr-omni-supervisor.exe" : "hugr-omni-supervisor"]
+}
+
+export class OmniPairMissingError extends Error {
+  constructor(target: string, path: string) {
+    super(
+      `Omni pair missing for ${target}: ${path} must be a regular file. Build the CLI with OMNI_ARTIFACTS so it ships ${omniCompanions(target).join(" and ")} next to the binary.`,
+    )
+    this.name = "OmniPairMissingError"
+  }
+}
+
+// Both files of the pair as regular files in one directory, or a named error.
+export function requireOmniPair(directory: string, target: string) {
+  return Promise.all(
+    omniCompanions(target).map(async (name) => {
+      const path = join(directory, name)
+      if (!(await lstat(path).catch(() => undefined))?.isFile()) throw new OmniPairMissingError(target, path)
+      return path
+    }),
+  )
+}
+
 // A CLI loads maestro-arsenal's tree-sitter from tree-sitter/ beside its binary. The bundle keeps each target's copy in
 // tree-sitter-<target>/, staged from the CLI build's bin/tree-sitter.
 export function cliTreeSitterTarget(target: string) {
