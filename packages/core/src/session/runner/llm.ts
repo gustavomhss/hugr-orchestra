@@ -9,7 +9,8 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
@@ -32,20 +33,30 @@ import { SessionCompaction } from "../compaction"
 import { SessionEvent } from "../event"
 import { SessionHistory } from "../history"
 import { SessionInput } from "../input"
-import type { SessionMessage } from "../message"
+import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
+import { SessionTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
 import { createLLMEventPublisher } from "./publish-llm-event"
 import { ExecutionHost } from "./execution-host"
 import { toLLMMessages } from "./to-llm-message"
+import { SessionMentions } from "./mentions"
+import { SessionTitle } from "./title"
+import { ReadToolFileSystem } from "../../tool/read-filesystem"
 import { MAX_STEPS_PROMPT } from "./max-steps"
 import { Snapshot } from "../../snapshot"
 import { makeLocationNode } from "../../effect/app-node"
 import { llmClient } from "../../effect/app-node-platform"
 import { RelayWorkflowSession } from "../../relay-workflow-session"
+import { FSUtil } from "../../fs-util"
+import { AppProcess } from "../../process"
+import { SkillV2 } from "../../skill"
+import { SkillTool } from "../../tool/skill"
+import { BashTool } from "../../tool/bash"
+import { ChildProcess } from "effect/unstable/process"
 
 /**
  * Runs one durable coding-agent Session until it settles.
@@ -97,6 +108,8 @@ import { RelayWorkflowSession } from "../../relay-workflow-session"
  * explicit loop starts the next provider turn after local settlement. Configured agent step limits bound the loop.
  */
 
+const SHELL_OUTPUT_BYTES = 1024 * 1024
+
 const layer = Layer.effect(
   Service,
   Effect.gen(function* () {
@@ -105,6 +118,7 @@ const layer = Layer.effect(
     const agents = yield* AgentV2.Service
     const tools = yield* ToolRegistry.Service
     const mcp = yield* Mcp.Service
+    const reader = yield* ReadToolFileSystem.Service
     const models = yield* SessionRunnerModel.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const store = yield* SessionStore.Service
@@ -117,6 +131,9 @@ const layer = Layer.effect(
     const database = yield* Database.Service
     const hosts = yield* ExecutionHost.Service
     const permissions = yield* PermissionV2.Service
+    const fs = yield* FSUtil.Service
+    const appProcess = yield* AppProcess.Service
+    const skills = yield* SkillV2.Service
     const workflowHosts = yield* RelayWorkflowSession.Service
     const nativeHost = yield* RelayWorkflowSession.NativeHost
     const workflowContext = Context.make(Database.Service, database).pipe(
@@ -125,6 +142,7 @@ const layer = Layer.effect(
     )
     const db = database.db
     const compaction = SessionCompaction.make({ events, llm, subagentModels, config: yield* config.entries() })
+    const nameSession = SessionTitle.make({ db, events, store, agents, models, subagentModels, llm })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID).pipe(
         Effect.catchDefect((cause) =>
@@ -133,6 +151,21 @@ const layer = Layer.effect(
       )
       if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
       return session
+    })
+
+    // A Session's own permission rules, after its agent's as V1 merged them, so a Session rule wins over the agent's.
+    const sessionRules = Effect.fn("SessionRunner.sessionRules")(function* (sessionID: SessionSchema.ID) {
+      const row = yield* db
+        .select({ permission: SessionTable.permission })
+        .from(SessionTable)
+        .where(eq(SessionTable.id, sessionID))
+        .get()
+        .pipe(Effect.orDie)
+      return (row?.permission ?? []).map((rule) => ({
+        action: rule.permission,
+        resource: rule.pattern,
+        effect: rule.action,
+      }))
     })
 
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
@@ -202,7 +235,10 @@ const layer = Layer.effect(
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
       const agent = yield* agents.select(session.agent)
-      const effectiveRules = agent.info?.permissions.map((rule) => ({ ...rule })) ?? []
+      const effectiveRules = [
+        ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
+        ...(yield* sessionRules(session.id)),
+      ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
@@ -215,7 +251,30 @@ const layer = Layer.effect(
           promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
           promoted += yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
         }
-        if (promoted > 0) currentStep = 1
+        if (promoted > 0) {
+          currentStep = 1
+          // Beside the turn, as V1 named a Session after its first prompt; a failed title leaves the default one.
+          yield* nameSession(session.id).pipe(
+            Effect.catchCause((cause) =>
+              Effect.logWarning("Session title generation failed", cause).pipe(
+                Effect.annotateLogs({ sessionID: session.id }),
+              ),
+            ),
+            Effect.forkDetach,
+          )
+          // Attachments are read once, as they are promoted; the admitted prompt keeps its URIs.
+          for (const input of yield* SessionInput.promotedAfter(db, session.id, cutoff)) {
+            const mentions = yield* SessionMentions.read({ reader, mcp, fs }, input.prompt)
+            if (mentions.text)
+              yield* events.publish(SessionEvent.Synthetic, {
+                sessionID: session.id,
+                messageID: SessionMessage.ID.create(),
+                timestamp: yield* DateTime.now,
+                text: mentions.text,
+                ...(mentions.files.length === 0 ? {} : { files: mentions.files }),
+              })
+          }
+        }
       }
       const system =
         initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(agent), session.id))
@@ -489,7 +548,7 @@ const layer = Layer.effect(
       )
     })
 
-    const run = Effect.fn("SessionRunner.run")(function* (input: {
+    const drain = Effect.fn("SessionRunner.run")(function* (input: {
       readonly sessionID: SessionSchema.ID
       readonly force: boolean
     }) {
@@ -516,8 +575,149 @@ const layer = Layer.effect(
       yield* tools.session({ operation: "session-idle", sessionID: input.sessionID }).pipe(Effect.exit)
     })
 
+    // A drain that fails outside a provider turn (no model, an unsupported API, a blocked context) would otherwise
+    // leave the person waiting with nothing on screen. It is recorded as a failed assistant step, as V1 recorded the
+    // error on the turn; a provider failure has already failed its own step.
+    const recordFailure = Effect.fnUntraced(function* (sessionID: SessionSchema.ID, cause: Cause.Cause<unknown>) {
+      if (Cause.hasInterruptsOnly(cause)) return
+      const failure = Cause.squash(cause)
+      if (failure instanceof LLMError) return
+      const session = yield* store.get(sessionID)
+      if (!session) return
+      const agent = yield* agents.select(session.agent)
+      const assistantMessageID = SessionMessage.ID.create()
+      yield* events.publish(SessionEvent.Step.Started, {
+        sessionID,
+        timestamp: yield* DateTime.now,
+        assistantMessageID,
+        agent: agent.id,
+        model: session.model ??
+          agent.info?.model ?? { id: ModelV2.ID.make("unknown"), providerID: ProviderV2.ID.make("unknown") },
+      })
+      yield* events.publish(SessionEvent.Step.Failed, {
+        sessionID,
+        timestamp: yield* DateTime.now,
+        assistantMessageID,
+        error: { type: "unknown", message: failure instanceof Error && failure.message ? failure.message : String(failure) },
+      })
+    })
+
+    const run = (input: { readonly sessionID: SessionSchema.ID; readonly force: boolean }) =>
+      drain(input).pipe(
+        Effect.tapCause((cause) =>
+          recordFailure(input.sessionID, cause).pipe(Effect.catchCause(() => Effect.void)),
+        ),
+      )
+
+    const affinity = (session: SessionSchema.Info) => ({
+      headers: {
+        "x-session-affinity": session.id,
+        "X-Session-Id": session.id,
+        ...(session.parentID ? { "x-parent-session-id": session.parentID } : {}),
+      },
+    })
+
+    const compact = Effect.fn("SessionRunner.compact")(function* (sessionID: SessionSchema.ID) {
+      const session = yield* getSession(sessionID)
+      const history = yield* SessionHistory.load(db, session.id)
+      if (history.length === 0) return false
+      const model = yield* models.resolve(session)
+      return yield* compaction.compact({
+        sessionID: session.id,
+        entries: history.map((message, seq) => ({ seq, message })),
+        model,
+        request: LLM.request({ model, http: affinity(session) }),
+      })
+    })
+
+    const generate = Effect.fn("SessionRunner.generate")(function* (input: {
+      readonly sessionID: SessionSchema.ID
+      readonly prompt: string
+    }) {
+      const session = yield* getSession(input.sessionID)
+      const model = yield* models.resolve(session)
+      yield* subagentModels.assert(session.id, SessionRunnerModel.reference(model))
+      const history = yield* SessionHistory.load(db, session.id)
+      const chunks: string[] = []
+      yield* llm
+        .stream(
+          LLM.request({ model, http: affinity(session), messages: toLLMMessages(history, model), prompt: input.prompt }),
+        )
+        .pipe(
+          Stream.runForEach((event) => {
+            if (LLMEvent.is.providerError(event)) return Effect.die(new Error(event.message))
+            if (LLMEvent.is.textDelta(event)) chunks.push(event.text)
+            return Effect.void
+          }),
+        )
+      return chunks.join("")
+    })
+
+    // A person's `!` command, run as V1 ran it: in the Location, with the configured shell, outside the agent's
+    // sandbox. An interrupt stops it and still records what it printed.
+    const shell = Effect.fn("SessionRunner.shell")(function* (input: {
+      readonly sessionID: SessionSchema.ID
+      readonly command: string
+      readonly callID?: string
+    }) {
+      const callID = input.callID ?? `call_${crypto.randomUUID()}`
+      yield* events.publish(SessionEvent.Shell.Started, {
+        sessionID: input.sessionID,
+        messageID: SessionMessage.ID.create(),
+        timestamp: yield* DateTime.now,
+        callID,
+        command: input.command,
+      })
+      const command = ChildProcess.make(input.command, [], {
+        cwd: location.directory,
+        shell: BashTool.configuredShell(yield* config.entries()),
+        stdin: "ignore",
+        detached: process.platform !== "win32",
+        forceKillAfter: Duration.seconds(3),
+      })
+      const ended = (output: string) =>
+        Effect.gen(function* () {
+          yield* events.publish(SessionEvent.Shell.Ended, {
+            sessionID: input.sessionID,
+            timestamp: yield* DateTime.now,
+            callID,
+            output,
+          })
+        })
+      yield* appProcess.run(command, { combineOutput: true, maxOutputBytes: SHELL_OUTPUT_BYTES }).pipe(
+        Effect.map((result) => {
+          const output = (result.output ?? result.stdout).toString("utf8")
+          const truncated = result.outputTruncated ? "\n[output truncated]" : ""
+          const exit = result.exitCode === 0 ? "" : `\n[exit code ${result.exitCode}]`
+          return `${output}${truncated}${exit}`
+        }),
+        Effect.catchTag("AppProcessError", (error) => Effect.succeed(error.message)),
+        Effect.onInterrupt(() => ended("User aborted the command")),
+        Effect.flatMap(ended),
+      )
+    })
+
+    const skill = Effect.fn("SessionRunner.skill")(function* (input: {
+      readonly sessionID: SessionSchema.ID
+      readonly skill: string
+    }) {
+      const found = (yield* skills.list()).find((item) => item.name === input.skill)
+      if (!found) return false
+      yield* events.publish(SessionEvent.Synthetic, {
+        sessionID: input.sessionID,
+        messageID: SessionMessage.ID.create(),
+        timestamp: yield* DateTime.now,
+        text: yield* SkillTool.load(fs, found).pipe(Effect.orDie),
+      })
+      return true
+    })
+
     return Service.of({
       run,
+      compact,
+      generate,
+      shell,
+      skill,
     })
   }),
 )
@@ -531,6 +731,7 @@ export const node = makeLocationNode({
     AgentV2.node,
     ToolRegistry.node,
     Mcp.node,
+    ReadToolFileSystem.node,
     SessionRunnerModel.node,
     SessionSubagentModels.node,
     SessionStore.node,
@@ -544,6 +745,9 @@ export const node = makeLocationNode({
     RelayWorkflowSession.node,
     ExecutionHost.node,
     PermissionV2.node,
+    FSUtil.node,
+    AppProcess.node,
+    SkillV2.node,
   ],
 })
 

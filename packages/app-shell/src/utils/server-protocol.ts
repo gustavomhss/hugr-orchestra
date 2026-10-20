@@ -72,9 +72,29 @@ function answer(
   timeoutMs: number,
   attempt = 1,
 ): Promise<object | undefined> {
-  return probe(server, fetcher, path, signal, timeoutMs).catch(() => {
+  return probe(server, fetcher, path, signal, timeoutMs).catch(async () => {
     signal.throwIfAborted()
-    return attempt < probeAttempts ? answer(server, fetcher, path, signal, timeoutMs, attempt + 1) : undefined
+    if (attempt >= probeAttempts) return undefined
+    // An unreachable server refuses at once; the pause keeps the retries from becoming a burst.
+    await pause(probeRetryMs * attempt, signal)
+    return answer(server, fetcher, path, signal, timeoutMs, attempt + 1)
+  })
+}
+
+const probeRetryMs = 100
+
+function pause(ms: number, signal: AbortSignal) {
+  return new Promise<void>((resolve, reject) => {
+    const done = () => {
+      signal.removeEventListener("abort", stop)
+      resolve()
+    }
+    const timer = setTimeout(done, ms)
+    const stop = () => {
+      clearTimeout(timer)
+      reject(signal.reason)
+    }
+    signal.addEventListener("abort", stop, { once: true })
   })
 }
 
@@ -108,7 +128,8 @@ export async function detectServerProtocol(
     }, {
       attempts: options.attempts ?? 60,
       delay: options.retryDelayMs ?? 500,
-      factor: 1,
+      factor: 2,
+      maxDelay: 5_000,
       retryIf: (error) => error instanceof ServerProtocolUnresolvedError && !abort.signal.aborted,
     }),
     cancelled.promise,

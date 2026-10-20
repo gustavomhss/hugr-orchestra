@@ -1,7 +1,7 @@
 export * as SessionV2 from "./session"
 export * from "./session/schema"
 
-import { DateTime, Effect, Layer, Schema, Context, Stream } from "effect"
+import { Cause, DateTime, Effect, Layer, Option, Schema, Context, Stream } from "effect"
 import { ListAnchor } from "@orchestra/schema/session"
 import { and, asc, desc, eq, gt, lt } from "drizzle-orm"
 import { ProjectV2 } from "./project"
@@ -21,7 +21,6 @@ import { AgentV2 } from "./agent"
 import { SessionV1 } from "./v1/session"
 import { InstallationVersion } from "./installation/version"
 import { Slug } from "./util/slug"
-import { ProjectTable } from "./project/sql"
 import path from "path"
 import { existsSync } from "fs"
 import { SessionRunner } from "./session/runner/index"
@@ -59,6 +58,10 @@ export { ListAnchor }
 // Public through the session entry so product modules need no deep import (R7).
 export { SessionStore }
 export { SessionLegacyImport } from "./session/legacy-import"
+export { SessionActivity } from "./session/activity"
+export { LeanProfilePreferences } from "./session/lean-profile-preferences"
+export { LeanProject } from "./session/lean-project"
+export { SessionTodo } from "./session/todo"
 
 const ListInputBase = {
   workspaceID: WorkspaceV2.ID.pipe(Schema.optional),
@@ -93,21 +96,31 @@ type CreateInput = {
   location: Location.Ref
 }
 
-type CompactInput = {
-  sessionID: SessionSchema.ID
-  prompt?: Prompt
-}
-
 export class NotFoundError extends Schema.TaggedErrorClass<NotFoundError>()("Session.NotFoundError", {
   sessionID: SessionSchema.ID,
 }) {}
 
-export class OperationUnavailableError extends Schema.TaggedErrorClass<OperationUnavailableError>()(
-  "Session.OperationUnavailableError",
-  {
-    operation: Schema.Literals(["move", "shell", "skill", "switchAgent", "compact", "wait"]),
-  },
-) {}
+/** The Session is running; the operation would interleave with its drain. */
+export class BusyError extends Schema.TaggedErrorClass<BusyError>()("Session.BusyError", {
+  sessionID: SessionSchema.ID,
+}) {}
+
+export class SkillNotFoundError extends Schema.TaggedErrorClass<SkillNotFoundError>()("Session.SkillNotFoundError", {
+  sessionID: SessionSchema.ID,
+  skill: Schema.String,
+}) {}
+
+/** Compaction or generation could not run: no model, an unsupported API, a provider failure. */
+export class RunFailedError extends Schema.TaggedErrorClass<RunFailedError>()("Session.RunFailedError", {
+  sessionID: SessionSchema.ID,
+  message: Schema.String,
+}) {}
+
+/** A Session moves only within its own project. */
+export class MoveError extends Schema.TaggedErrorClass<MoveError>()("Session.MoveError", {
+  sessionID: SessionSchema.ID,
+  directory: Schema.String,
+}) {}
 
 export { ContextSnapshotDecodeError, MessageDecodeError } from "./session/error"
 
@@ -127,7 +140,10 @@ export type MessageNotFoundError = SessionRevert.MessageNotFoundError
 export type Error =
   | NotFoundError
   | MessageDecodeError
-  | OperationUnavailableError
+  | BusyError
+  | SkillNotFoundError
+  | MoveError
+  | RunFailedError
   | PromptConflictError
   | PromptBlockedError
 
@@ -176,20 +192,46 @@ export interface Interface {
     delivery?: SessionInput.Delivery
     resume?: boolean
   }) => Effect.Effect<SessionInput.Admitted, NotFoundError | PromptConflictError | PromptBlockedError>
+  /** Copies the history before `messageID` (and before a staged revert) into a new Session. */
+  readonly fork: (input: {
+    sessionID: SessionSchema.ID
+    messageID?: SessionMessage.ID
+  }) => Effect.Effect<SessionSchema.Info, NotFoundError | MessageNotFoundError>
+  /** Moves the Session to another directory or workspace of its project. */
+  readonly move: (input: {
+    sessionID: SessionSchema.ID
+    location: Location.Ref
+  }) => Effect.Effect<void, NotFoundError | BusyError | MoveError>
+  /** Runs a person's shell command in the Session's Location and records it with its output; no turn follows. */
   readonly shell: (input: {
-    id?: EventV2.ID
+    id?: string
     sessionID: SessionSchema.ID
     command: string
-    resume?: boolean
-  }) => Effect.Effect<void, OperationUnavailableError>
+  }) => Effect.Effect<void, NotFoundError | BusyError>
+  /** Records a skill's instructions as context, then runs a turn unless `resume` is false. */
   readonly skill: (input: {
-    id?: EventV2.ID
     sessionID: SessionSchema.ID
     skill: string
     resume?: boolean
-  }) => Effect.Effect<void, OperationUnavailableError>
-  readonly compact: (input: CompactInput) => Effect.Effect<void, NotFoundError | OperationUnavailableError>
-  readonly wait: (id: SessionSchema.ID) => Effect.Effect<void, NotFoundError | OperationUnavailableError>
+  }) => Effect.Effect<void, NotFoundError | BusyError | SkillNotFoundError>
+  /** Records text as synthetic context, then runs a turn unless `resume` is false. */
+  readonly synthetic: (input: {
+    id?: SessionMessage.ID
+    sessionID: SessionSchema.ID
+    text: string
+    resume?: boolean
+  }) => Effect.Effect<SessionMessage.ID, NotFoundError | BusyError>
+  /** One tool-less completion of `prompt` after the Session's history; nothing is recorded. */
+  readonly generate: (input: {
+    sessionID: SessionSchema.ID
+    prompt: string
+  }) => Effect.Effect<string, NotFoundError | RunFailedError>
+  /** Summarizes the history now; false when there was nothing to summarize. */
+  readonly compact: (input: {
+    sessionID: SessionSchema.ID
+  }) => Effect.Effect<boolean, NotFoundError | BusyError | RunFailedError>
+  /** Waits until the Session has no active execution. */
+  readonly wait: (id: SessionSchema.ID) => Effect.Effect<void, NotFoundError>
   readonly active: Effect.Effect<ReadonlySet<SessionSchema.ID>>
   readonly resume: (sessionID: SessionSchema.ID) => Effect.Effect<void, NotFoundError | SessionRunner.RunError>
   readonly interrupt: (sessionID: SessionSchema.ID) => Effect.Effect<void>
@@ -218,6 +260,7 @@ const layer = Layer.effect(
     const locations = yield* LocationServiceMap.Service
     const global = yield* Global.Service
     const decodeMessage = Schema.decodeUnknownEffect(SessionMessage.Message)
+    const encodeMessage = Schema.encodeSync(SessionMessage.Message)
     const isDurableSessionEvent = Schema.is(SessionEvent.Durable)
     const decode = (row: typeof SessionMessageTable.$inferSelect) =>
       decodeMessage({ ...row.data, id: row.id, type: row.type }).pipe(
@@ -267,6 +310,35 @@ const layer = Layer.effect(
       )
     })
 
+    // Session execution places the Session and hands over its Location's runner.
+    const runner = <A, E>(session: SessionSchema.Info, use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>) =>
+      execution.withRunner(session.id, use)
+
+    // Session operations hold the Session as a drain would, so none interleaves with a running turn.
+    const exclusive = <A, E>(session: SessionSchema.Info, effect: Effect.Effect<A, E>) =>
+      execution
+        .exclusive(session.id, effect)
+        .pipe(
+          Effect.flatMap(
+            Option.match({
+              onNone: () => Effect.fail(new BusyError({ sessionID: session.id })),
+              onSome: Effect.succeed,
+            }),
+          ),
+        )
+
+    // A turn after recorded context runs in the background; the request that recorded it does not wait for the turn.
+    const resumeDetached = (sessionID: SessionSchema.ID) =>
+      execution.resume(sessionID).pipe(
+        Effect.catchCause((cause) =>
+          Cause.hasInterruptsOnly(cause)
+            ? Effect.void
+            : Effect.logError("Failed to resume Session", cause).pipe(Effect.annotateLogs({ sessionID })),
+        ),
+        Effect.forkDetach,
+        Effect.asVoid,
+      )
+
     const result = Service.of({
       create: Effect.fn("V2Session.create")(function* (input) {
         const sessionID = input.id ?? SessionSchema.ID.create()
@@ -274,12 +346,7 @@ const layer = Layer.effect(
         if (recorded) return recorded
         if (input.parentID) yield* result.get(input.parentID)
         const project = yield* projects.resolve(input.location.directory)
-        yield* db
-          .insert(ProjectTable)
-          .values({ id: project.id, worktree: project.directory, vcs: project.vcs?.type, sandboxes: [] })
-          .onConflictDoNothing()
-          .run()
-          .pipe(Effect.orDie)
+        yield* ProjectV2.record(db, events, project)
         const now = Date.now()
         const info = SessionV1.SessionInfo.make({
           id: sessionID,
@@ -431,14 +498,120 @@ const layer = Layer.effect(
           }),
         ),
       ),
-      shell: Effect.fn("V2Session.shell")(function* () {
-        return yield* new OperationUnavailableError({ operation: "shell" })
+      fork: Effect.fn("V2Session.fork")(function* (input) {
+        const source = yield* result.get(input.sessionID)
+        const rows = yield* db
+          .select()
+          .from(SessionMessageTable)
+          .where(eq(SessionMessageTable.session_id, source.id))
+          .orderBy(asc(SessionMessageTable.seq))
+          .all()
+          .pipe(Effect.orDie)
+        const target = input.messageID ? rows.findIndex((row) => row.id === input.messageID) : rows.length
+        if (target < 0) return yield* new MessageNotFoundError({ sessionID: source.id, messageID: input.messageID! })
+        const reverted = source.revert ? rows.findIndex((row) => row.id === source.revert?.messageID) : -1
+        const kept = rows.slice(0, reverted < 0 ? target : Math.min(target, reverted))
+        const forked = yield* result.create({ location: source.location, agent: source.agent, model: source.model })
+        yield* SessionLegacyRow.rename(db, events, { sessionID: forked.id, title: forkedTitle(source.title) })
+        // As the V1 import does: copied rows take negative sequences below every event the fork will project.
+        yield* db
+          .transaction(
+            () =>
+              Effect.forEach(
+                kept,
+                (row, index) =>
+                  decode(row).pipe(
+                    Effect.orDie,
+                    Effect.flatMap((message) => {
+                      const { id, type, ...data } = encodeMessage({
+                        ...message,
+                        id: SessionMessage.ID.create(),
+                        ...(message.type === "synthetic" ? { sessionID: forked.id } : {}),
+                      })
+                      return db
+                        .insert(SessionMessageTable)
+                        .values({
+                          id: SessionMessage.ID.make(id),
+                          session_id: forked.id,
+                          type,
+                          seq: index - kept.length,
+                          time_created: row.time_created,
+                          data,
+                        })
+                        .run()
+                    }),
+                  ),
+                { discard: true },
+              ),
+            { behavior: "immediate" },
+          )
+          .pipe(Effect.orDie)
+        return yield* result.get(forked.id)
       }),
-      skill: Effect.fn("V2Session.skill")(function* () {
-        return yield* new OperationUnavailableError({ operation: "skill" })
+      move: Effect.fn("V2Session.move")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        const project = yield* projects.resolve(input.location.directory)
+        if (project.id !== session.projectID)
+          return yield* new MoveError({ sessionID: session.id, directory: input.location.directory })
+        const subdirectory = path.relative(project.directory, input.location.directory).replaceAll("\\", "/")
+        yield* exclusive(
+          session,
+          Effect.gen(function* () {
+            yield* events.publish(
+              SessionEvent.Moved,
+              {
+                sessionID: session.id,
+                timestamp: yield* DateTime.now,
+                location: input.location,
+                ...(subdirectory ? { subdirectory: RelativePath.make(subdirectory) } : {}),
+              },
+              { location: input.location },
+            )
+          }),
+        )
+      }),
+      shell: Effect.fn("V2Session.shell")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        yield* exclusive(
+          session,
+          runner(session, (runner) => runner.shell({ sessionID: session.id, command: input.command, callID: input.id })),
+        )
+      }),
+      skill: Effect.fn("V2Session.skill")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        const found = yield* exclusive(
+          session,
+          runner(session, (runner) => runner.skill({ sessionID: session.id, skill: input.skill })),
+        )
+        if (!found) return yield* new SkillNotFoundError({ sessionID: session.id, skill: input.skill })
+        if (input.resume !== false) yield* resumeDetached(session.id)
+      }),
+      synthetic: Effect.fn("V2Session.synthetic")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        const messageID = input.id ?? SessionMessage.ID.create()
+        yield* exclusive(
+          session,
+          Effect.gen(function* () {
+            yield* events.publish(SessionEvent.Synthetic, {
+              sessionID: session.id,
+              messageID,
+              timestamp: yield* DateTime.now,
+              text: input.text,
+            })
+          }),
+        )
+        if (input.resume !== false) yield* resumeDetached(session.id)
+        return messageID
+      }),
+      generate: Effect.fn("V2Session.generate")(function* (input) {
+        const session = yield* result.get(input.sessionID)
+        return yield* runner(session, (runner) => runner.generate({ sessionID: session.id, prompt: input.prompt })).pipe(
+          Effect.mapError((error) => new RunFailedError({ sessionID: session.id, message: messageOf(error) })),
+        )
       }),
       switchAgent: Effect.fn("V2Session.switchAgent")(function* (input) {
-        yield* result.get(input.sessionID)
+        // As a model switch: choosing the agent the Session already has records nothing.
+        if ((yield* result.get(input.sessionID)).agent === input.agent) return
         yield* events.publish(SessionEvent.AgentSwitched, {
           sessionID: input.sessionID,
           messageID: SessionMessage.ID.create(),
@@ -462,12 +635,17 @@ const layer = Layer.effect(
         })
       }),
       compact: Effect.fn("V2Session.compact")(function* (input) {
-        yield* result.get(input.sessionID)
-        return yield* new OperationUnavailableError({ operation: "compact" })
+        const session = yield* result.get(input.sessionID)
+        return yield* exclusive(
+          session,
+          runner(session, (runner) => runner.compact(session.id)).pipe(
+            Effect.mapError((error) => new RunFailedError({ sessionID: session.id, message: messageOf(error) })),
+          ),
+        )
       }),
       wait: Effect.fn("V2Session.wait")(function* (sessionID) {
         yield* result.get(sessionID)
-        return yield* new OperationUnavailableError({ operation: "wait" })
+        yield* execution.exclusive(sessionID, Effect.void, { wait: true })
       }),
       active: execution.active,
       resume: Effect.fn("V2Session.resume")(function* (sessionID) {
@@ -503,6 +681,16 @@ const layer = Layer.effect(
     return result
   }),
 )
+
+function messageOf(error: unknown) {
+  return error instanceof Error && error.message ? error.message : String(error)
+}
+
+function forkedTitle(title: string) {
+  const match = title.match(/^(.+) \(fork #(\d+)\)$/)
+  if (!match) return `${title} (fork #1)`
+  return `${match[1]} (fork #${Number(match[2]) + 1})`
+}
 
 const resolvePrompt = (input: PromptInput.Prompt) =>
   Prompt.make({

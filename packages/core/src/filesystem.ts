@@ -62,15 +62,7 @@ const baseLayer = Layer.effect(
     const fs = yield* FSUtil.Service
     const location = yield* Location.Service
     const search = yield* FileSystemSearch.Service
-    const root = yield* fs.realPath(location.directory).pipe(Effect.orDie)
-    const resolve = Effect.fnUntraced(function* (input?: RelativePath) {
-      const absolute = path.resolve(location.directory, input ?? ".")
-      if (!FSUtil.contains(location.directory, absolute))
-        return yield* Effect.die(new Error("Path escapes the location"))
-      const real = yield* fs.realPath(absolute).pipe(Effect.orDie)
-      if (!FSUtil.contains(root, real)) return yield* Effect.die(new Error("Path escapes the location"))
-      return { absolute, real, directory: location.directory, root }
-    })
+    const resolve = (input?: RelativePath) => within(fs, location.directory, input)
     return Service.of({
       find: search.find,
       glob: search.glob,
@@ -84,32 +76,51 @@ const baseLayer = Layer.effect(
           mime: FSUtil.mimeType(target.real),
         }
       }),
-      list: Effect.fn("FileSystem.list")(function* (input = {}) {
-        const target = yield* resolve(input.path)
-        const info = yield* fs.stat(target.real).pipe(Effect.orDie)
-        if (info.type !== "Directory") return yield* Effect.die(new Error("Path is not a directory"))
-        return yield* fs.readDirectoryEntries(target.real).pipe(
-          Effect.orDie,
-          Effect.map((items) =>
-            items
-              .flatMap((item) => {
-                if (item.type !== "file" && item.type !== "directory") return []
-                const absolute = path.join(target.absolute, item.name)
-                const relative = path.relative(target.directory, absolute)
-                return [
-                  Entry.make({
-                    path: RelativePath.make(relative + (item.type === "directory" ? path.sep : "")),
-                    type: item.type,
-                  }),
-                ]
-              })
-              .sort((a, b) => (a.type === b.type ? a.path.localeCompare(b.path) : a.type === "directory" ? -1 : 1)),
-          ),
-        )
-      }),
+      list: (input = {}) => list(fs, location.directory, input),
     })
   }),
 )
+
+const within = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, input?: RelativePath) {
+  const root = yield* fs.realPath(directory).pipe(Effect.orDie)
+  const absolute = path.resolve(directory, input ?? ".")
+  if (!FSUtil.contains(directory, absolute)) return yield* Effect.die(new Error("Path escapes the location"))
+  const real = yield* fs.realPath(absolute).pipe(Effect.orDie)
+  if (!FSUtil.contains(root, real)) return yield* Effect.die(new Error("Path escapes the location"))
+  return { absolute, real, directory, root }
+})
+
+/**
+ * The direct children of a directory under `directory`, directories first. It needs only the filesystem, so a
+ * directory browser lists folders without starting their Location's services.
+ */
+export const list = Effect.fn("FileSystem.list")(function* (
+  fs: FSUtil.Interface,
+  directory: string,
+  input: ListInput = {},
+) {
+  const target = yield* within(fs, directory, input.path)
+  const info = yield* fs.stat(target.real).pipe(Effect.orDie)
+  if (info.type !== "Directory") return yield* Effect.die(new Error("Path is not a directory"))
+  return yield* fs.readDirectoryEntries(target.real).pipe(
+    Effect.orDie,
+    Effect.map((items) =>
+      items
+        .flatMap((item) => {
+          if (item.type !== "file" && item.type !== "directory") return []
+          const absolute = path.join(target.absolute, item.name)
+          const relative = path.relative(target.directory, absolute)
+          return [
+            Entry.make({
+              path: RelativePath.make(relative + (item.type === "directory" ? path.sep : "")),
+              type: item.type,
+            }),
+          ]
+        })
+        .sort((a, b) => (a.type === b.type ? a.path.localeCompare(b.path) : a.type === "directory" ? -1 : 1)),
+    ),
+  )
+})
 
 export const node = makeLocationNode({
   service: Service,

@@ -162,7 +162,8 @@ describe("SessionRunnerLLM policy", () => {
       expect(requests).toHaveLength(2)
       expect(authorizations).toHaveLength(1)
       expect(authorizations[0]?.model).toEqual(captured)
-      expect((yield* session.context(sessionID)).filter((message) => message.type === "assistant").map((message) => String(message.model.id))).toEqual(["api-deployment", "api-deployment"])
+      // The denied drain left a failed step; the two turns that ran used the deployment.
+      expect((yield* session.context(sessionID)).flatMap((message) => (message.type === "assistant" && message.error === undefined ? [String(message.model.id)] : []))).toEqual(["api-deployment", "api-deployment"])
     }),
   )
 
@@ -210,7 +211,7 @@ describe("SessionRunnerLLM policy", () => {
       streamGate = undefined
       streamStarted = undefined
       expect(requests).toHaveLength(1)
-      expect((yield* session.context(sessionID)).filter((message) => message.type === "assistant")).toMatchObject([{ finish: "stop", content: [{ text: "Turn finished" }] }])
+      expect((yield* session.context(sessionID)).filter((message) => message.type === "assistant" && message.error === undefined)).toMatchObject([{ finish: "stop", content: [{ text: "Turn finished" }] }])
       expect(yield* session.resume(sessionID).pipe(Effect.flip)).toBeInstanceOf(SessionSubagentModels.ModelDeniedError)
       expect(requests).toHaveLength(1)
       yield* policies.set(otherSessionID, { mode: "inherit" })

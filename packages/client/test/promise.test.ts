@@ -27,6 +27,7 @@ test("exposes every standard HTTP API group", () => {
     "credentials",
     "permissions",
     "files",
+    "vcs",
     "commands",
     "mcp",
     "skills",
@@ -37,6 +38,7 @@ test("exposes every standard HTTP API group", () => {
     "references",
     "projectCopies",
     "projects",
+    "lean",
     "config",
     "relayDocuments",
     "relayPublish",
@@ -257,6 +259,7 @@ test("session methods use the public HTTP contract", async () => {
       if (url.includes("/message/")) return Response.json({ data: modelSwitchedMessage })
       if (url.endsWith("/api/session/active")) return Response.json({ data: { ses_test: { type: "running" } } })
       if (init?.method === "POST" && url.endsWith("/api/session")) return Response.json(session)
+      if (url.endsWith("/compact")) return Response.json({ data: { compacted: true } })
       if (init?.method === "POST") return new Response(null, { status: 204 })
       return Response.json({ data: [session.data], cursor: { next: "next" } })
     },

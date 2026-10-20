@@ -637,28 +637,20 @@ describe("session HttpApi", () => {
   )
 
   it.instance(
-    "returns v2 public unavailable errors for unfinished session mutations",
+    "compacts and waits for an idle v2 session",
     () =>
       Effect.gen(function* () {
         const test = yield* TestInstance
         const headers = { "x-orchestra-directory": test.directory }
-        const session = yield* createSession({ title: "v2 unavailable" })
+        const session = yield* createSession({ title: "v2 idle operations" })
 
+        // Nothing has been said yet, so there is nothing to summarize.
         const compact = yield* request(`/api/session/${session.id}/compact`, { method: "POST", headers })
-        expect(compact.status).toBe(503)
-        expect(yield* responseJson(compact)).toEqual({
-          _tag: "ServiceUnavailableError",
-          message: "Session compact is not available yet",
-          service: "session.compact",
-        })
+        expect(compact.status).toBe(200)
+        expect(yield* responseJson(compact)).toEqual({ data: { compacted: false } })
 
         const wait = yield* request(`/api/session/${session.id}/wait`, { method: "POST", headers })
-        expect(wait.status).toBe(503)
-        expect(yield* responseJson(wait)).toEqual({
-          _tag: "ServiceUnavailableError",
-          message: "Session wait is not available yet",
-          service: "session.wait",
-        })
+        expect(wait.status).toBe(204)
       }),
     { git: true, config: { formatter: false, lsp: false } },
   )

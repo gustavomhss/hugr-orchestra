@@ -26,7 +26,7 @@ import {
 import { compareMessages, messageKey, normalizeSessionMessages } from "@/utils/session-message"
 import { dropSessionCaches, pickSessionCacheEvictions, SESSION_CACHE_LIMIT } from "./global-sync/session-cache"
 import { createV2SessionReducer, type V2SessionReduction } from "./server-session-v2-reducer"
-import { executionStatus, sessionUsage } from "./server-event-native"
+import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
 import type { ServerApi } from "@/utils/server"
@@ -45,7 +45,7 @@ function needsOlderTurnRoot(source: readonly SessionMessageInfo[]) {
     (message) =>
       message.type === "user" ||
       message.type === "shell" ||
-      message.type === "assistant" ||
+      message.type === "assistant" || message.type === "compaction" ||
       (message.type === "synthetic" && message.description?.trim()),
   )
   return boundary?.type === "assistant"
@@ -191,7 +191,8 @@ function reconcileFetched<T extends { id: string }>(
   return options.compare ? items.sort(options.compare) : items
 }
 
-type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2"> }
+type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
+type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2">; todo?: TodoRead }
 
 export function createServerSession(
   client: OrchestraClient,
@@ -838,14 +839,14 @@ export function createServerSession(
     const touched = new Set(reduction.touched)
     let parentID: string | undefined
     for (const message of reduction.messages) {
-      if (message.type === "user" || (message.type === "synthetic" && message.description?.trim()))
+      if (message.type === "user" || message.type === "compaction" || (message.type === "synthetic" && message.description?.trim()))
         parentID = message.id
       if (message.type === "shell") {
         if (touched.has(message.id)) touched.add(`${message.id}:assistant`)
         parentID = undefined
       }
       if (message.type === "assistant" && touched.has(message.id) && parentID) touched.add(parentID)
-      if (message.type === "compaction" && touched.has(message.id) && parentID) touched.add(parentID)
+      if (message.type === "compaction" && touched.has(message.id)) touched.add(`${message.id}:assistant`)
     }
 
     const normalized = normalizeSessionMessages(reduction.sessionID, reduction.messages)
@@ -906,7 +907,7 @@ export function createServerSession(
         path: event.data.subpath,
         time: { ...info.time, updated: event.created },
       })
-    const usage = info && sessionUsage(info, event)
+    const usage = info && (sessionSelection(info, event) ?? sessionUsage(info, event))
     if (usage) remember(usage)
     // if (event.type === "session.archived") {
     //   if (info) remember({ ...info, time: { ...info.time, archived: event.created, updated: event.created } })
@@ -1345,15 +1346,14 @@ export function createServerSession(
     async todo(sessionID: string, request?: { force?: boolean }) {
       touch(sessionID)
       if (data.todo[sessionID] !== undefined && !request?.force) return
-      if ((await options?.protocol) === "v2") {
-        setData("todo", sessionID, [])
-        return
-      }
+      const v2 = (await options?.protocol) === "v2" ? options?.todo : undefined
       return runInflight(inflightTodo, sessionID, () => {
         const active = recovery.generation(sessionID)
-        return (options?.retry ?? retry)(() => client.session.todo({ sessionID })).then((result) => {
+        const read = (): Promise<Todo[]> =>
+          v2 ? v2(sessionID).then((todos) => [...todos]) : client.session.todo({ sessionID }).then((result) => result.data ?? [])
+        return (options?.retry ?? retry)(read).then((todos) => {
           if (generations.get(sessionID) !== active) return
-          setData("todo", sessionID, reconcile(result.data ?? [], { key: "id" }))
+          setData("todo", sessionID, reconcile(todos, { key: "id" }))
         })
       })
     },

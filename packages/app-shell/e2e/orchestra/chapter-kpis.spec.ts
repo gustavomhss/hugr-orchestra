@@ -144,8 +144,8 @@ for (const scheme of ["dark", "light"] as const) {
     const models = home(page).locator('[data-component="home-model-row"]')
     expect(await models.locator(".home-chip").allTextContents()).toEqual(["gpt", "sonnet"])
     expect(await models.locator(".home-row-value").allTextContents()).toEqual(["1.2M", "600k"])
-    expect(requests.map((url) => [url.origin, url.pathname, url.searchParams.get("directory")])).toEqual([
-      [serverA, "/session/activity", directory],
+    expect(requests.map((url) => [url.origin, url.pathname, url.searchParams.get("location[directory]")])).toEqual([
+      [serverA, "/api/activity/session", directory],
     ])
     expect(requests[0]!.searchParams.get("period")).toBe("30d")
     await home(page).getByRole("button", { name: "View all" }).click()
@@ -276,7 +276,7 @@ for (const switchKind of ["server", "worktree"] as const) {
       requests.some(
         (url) =>
           url.origin === (switchKind === "server" ? serverB : serverA) &&
-          url.searchParams.get("directory") === (switchKind === "server" ? directory : `${directory}-other`),
+          url.searchParams.get("location[directory]") === (switchKind === "server" ? directory : `${directory}-other`),
       ),
     ).toBe(true)
   })
@@ -625,18 +625,20 @@ async function setup(
         project,
         { ...project, id: "project-other", name: "Recorded repo B", worktree: `${directory}-other` },
       ])
-    if (url.pathname === "/session/activity") {
+    // The V2 server's location answers: the data wrapped with the location it was read in.
+    const located = (data: unknown) => ({ location: { directory, project: { id: project.id, directory } }, data })
+    if (url.pathname === "/api/activity/session") {
       input.requests?.push(url)
       const period = url.searchParams.get("period")!
-      if (url.origin === serverB || url.searchParams.get("directory") === `${directory}-other`)
-        return json(route, response(period, days30, true, [fact(8, 7, { ...gpt, assistant: 1, tokens: 777 })]))
+      if (url.origin === serverB || url.searchParams.get("location[directory]") === `${directory}-other`)
+        return json(route, located(response(period, days30, true, [fact(8, 7, { ...gpt, assistant: 1, tokens: 777 })])))
       if (input.activity?.mode === "missing") return json(route, {}, 404)
-      if (input.activity?.mode === "empty") return json(route, response(period, days30, true, []))
+      if (input.activity?.mode === "empty") return json(route, located(response(period, days30, true, [])))
       if (input.activity?.mode === "truncated")
-        return json(route, { ...response(period, days30, true, facts30), truncated: true })
+        return json(route, located({ ...response(period, days30, true, facts30), truncated: true }))
       await input.gate
       if (input.failure?.enabled) return json(route, {}, 500)
-      await json(route, activityFor(period))
+      await json(route, located(activityFor(period)))
       input.finished?.()
       return
     }
@@ -645,11 +647,11 @@ async function setup(
       const reply = pullRequestReply(input.pullRequests?.mode ?? "github")
       return json(route, reply.body, reply.status)
     }
-    if (url.pathname === "/vcs/activity") {
+    if (url.pathname === "/api/vcs/activity") {
       input.gitRequests?.push(url)
       const mode = input.git?.mode ?? "ok"
       if (mode === "missing") return json(route, {}, 404)
-      return json(route, gitFor(Number(url.searchParams.get("since")), mode))
+      return json(route, located(gitFor(Number(url.searchParams.get("since")), mode)))
     }
     if (url.origin !== serverB) return route.fallback()
     if (url.pathname === "/global/health") return json(route, {}, 404)

@@ -153,8 +153,9 @@ for (const engine of ["claude-code", "orchestra"] as const)
     if (engine === "claude-code") {
       expect(result).toEqual(Exit.succeed(true))
       expect(queries).toHaveLength(1)
+      // The refusal names the dispatches that bind, instead of only the code.
       expect(denied).toMatchObject([{ hookSpecificOutput: { permissionDecision: "deny",
-        permissionDecisionReason: expect.stringContaining("binding_missing") } }])
+        permissionDecisionReason: expect.stringMatching(/^binding_missing: .*subagent_type "orchestra:jimmy-quick".*task tool/) } }])
       expect(yield* LogicalTask.read(child.id)).toBeUndefined()
       const missing = yield* Effect.exit(execution.tool(child.id, "unbound-call", "research_view", Effect.void))
       expect(Exit.isFailure(missing)).toBe(true)
@@ -174,3 +175,37 @@ for (const engine of ["claude-code", "orchestra"] as const)
     expect(yield* ClaudeResearchFixture.charges(child.id)).toMatchObject([{ kind: "provider", dispatchCallID: "ordinary-dispatch", amount: 1 }])
     expect(queries).toEqual([])
   }), 30_000)
+
+// Orchestra's task tool enters the allowance in its own fiber and then runs the child's turn; on Claude Code that turn is
+// the query's main conversation, whose hooks run in the query's runtime, so the host must adopt the entered frame.
+it.instance("task-dispatched jimmy on claude-code binds its research tools and provider turns to the dispatch", () => Effect.gen(function* () {
+  queries.length = 0
+  denied.length = 0
+  const instance = yield* TestInstance
+  const remote = yield* TestLLMServer
+  yield* Effect.promise(() => Bun.write(path.join(instance.directory, "orchestra.json"), JSON.stringify({
+    ...testProviderConfig(remote.url), enabled_providers: ["test"], model: "test/test-model", small_model: "test/test-model",
+    plugin: [], mcp: {}, compaction: { auto: false }, agent: { jimmy: { engine: "claude-code", model: "test/test-model" } },
+  })))
+  const sessions = yield* Session.Service
+  const host = yield* ClaudeHost.Service
+  const execution = yield* ResearchExecution.Service
+  const authority = yield* sessions.create({ agent: "maestro", title: "Research authority" })
+  const child = yield* sessions.create({ parentID: authority.id, agent: "jimmy", title: "Task-dispatched research" })
+  yield* LogicalTask.ensure({ executionSessionID: child.id, authoritySessionID: authority.id,
+    projectID: child.projectID, memberID: "jimmy", source: "host" })
+  const user = yield* sessions.updateMessage({ id: MessageID.ascending(), sessionID: child.id, role: "user", agent: "jimmy",
+    model: { providerID: "test", modelID: "test-model" } as SessionV1.User["model"], time: { created: Date.now() } })
+  yield* sessions.updatePart({ id: PartID.ascending(), messageID: user.id, sessionID: child.id,
+    type: "text", text: "Investigate conditions" })
+  expect(yield* execution.enter(child.id, "task-dispatch", host.turn({ sessionID: child.id, user }), { tier: "focused" }))
+    .toBe(true)
+  expect(queries).toHaveLength(1)
+  expect(denied).toMatchObject([{ hookSpecificOutput: { permissionDecision: "allow" } }])
+  expect(yield* ClaudeResearchFixture.charges(child.id)).toMatchObject([
+    { dispatchCallID: "task-dispatch", kind: "tool", amount: 1 },
+    { dispatchCallID: "task-dispatch", kind: "provider", amount: 1 },
+  ])
+  expect(yield* remote.calls).toBe(0)
+  yield* host.release(child.id)
+}), 30_000)

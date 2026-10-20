@@ -57,7 +57,7 @@ export function createShellSettingsController() {
     async () => {
       const sdk = serverSdk()
       if ((await sdk.protocol) === "v1") return readShells((await sdk.client.pty.shells()).data)
-      return []
+      return readShells(await sdk.orchestra.config.shells())
     },
     { initialValue: [] as readonly ShellOption[] },
   )
