@@ -569,6 +569,7 @@ const scenarios: Scenario[] = [
     .get("/api/provider/{providerID}", "v2.provider.get")
     .at((ctx) => ({ path: route("/api/provider/{providerID}", { providerID: "missing" }), headers: ctx.headers() }))
     .json(404, object, "status"),
+  http.protected.get("/api/lsp", "v2.lsp.status").json(200, locationData(array)),
   http.protected.get("/api/permission/request", "v2.permission.request.list").json(200, (body) => {
     object(body)
     object(body.location)
