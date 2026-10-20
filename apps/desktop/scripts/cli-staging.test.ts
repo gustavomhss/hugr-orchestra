@@ -340,6 +340,27 @@ test("the installed CLI carries its bundle's omni pair beside the binary, and a 
   await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
   for (const name of omniCompanions("darwin-arm64"))
     expect(await readFile(join(directory, name), "utf8")).toBe(`${name} darwin-arm64`)
+
+  const windowsInput = await fixture(["windows-x64-baseline"])
+  await stageCliArtifacts(windowsInput)
+  const windowsCache = join(windowsInput.root, "cache")
+  const windowsInstalled = await installCliArtifact(windowsInput.directory, "windows-x64-baseline", windowsCache, { signature: fixtureSignature })
+  const windowsDirectory = dirname(windowsInstalled.path)
+  for (const name of omniCompanions("windows-x64-baseline"))
+    expect(await readFile(join(windowsDirectory, name), "utf8")).toBe(`${name} windows-x64-baseline`)
+  // A 0.2.1-era cache without the pair is rebuilt in place, pair included, not returned as installed.
+  await Promise.all(omniCompanions("windows-x64-baseline").map((name) => rm(join(windowsDirectory, name))))
+  await installCliArtifact(windowsInput.directory, "windows-x64-baseline", windowsCache, { signature: fixtureSignature })
+  expect(await readFile(join(windowsDirectory, "hugr_omni.node"), "utf8")).toBe("hugr_omni.node windows-x64-baseline")
+  expect(await readFile(join(windowsDirectory, "hugr-omni-supervisor.exe"), "utf8")).toBe("hugr-omni-supervisor.exe windows-x64-baseline")
+}, STAGING_TIMEOUT)
+
+test("installCliArtifact rejects a source bundle without its omni pair", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  await rm(join(input.directory, "omni-darwin-arm64"), { recursive: true })
+  const cache = join(input.root, "cache")
+  await expect(installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })).rejects.toBeInstanceOf(OmniPairMissingError)
 }, STAGING_TIMEOUT)
 
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {

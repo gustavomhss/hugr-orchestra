@@ -97,7 +97,7 @@ export async function stageCliArtifacts(input: {
         join(staging, `tree-sitter-${target}`),
         target,
       )
-// Every CLI's preflight needs its omni pair (the addon and the supervisor) next to the binary, so the bundle
+      // Every CLI's preflight needs its omni pair (the addon and the supervisor) next to the binary, so the bundle
       // keeps each target's copy in omni-<target>/ and the installer copies it beside the installed CLI. A producer
       // directory is itself a staged bundle, so there it sits in omni-<target>/ rather than bin/.
       const pair = await requireOmniPair(
