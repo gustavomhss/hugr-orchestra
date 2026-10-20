@@ -325,6 +325,22 @@ test("the installed CLI takes its bundle's rg along, checked against the pin, an
   )
 }, STAGING_TIMEOUT)
 
+test("the installed CLI carries its bundle's omni pair beside the binary, and a cache without it is re-installed", async () => {
+  const input = await fixture(["darwin-arm64"])
+  await stageCliArtifacts(input)
+  const cache = join(input.root, "cache")
+  const installed = await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  const directory = dirname(installed.path)
+  for (const name of omniCompanions("darwin-arm64"))
+    expect(await readFile(join(directory, name), "utf8")).toBe(`${name} darwin-arm64`)
+  expect((await stat(join(directory, "hugr-omni-supervisor"))).mode & 0o777).toBe(0o755)
+  // A 0.2.1-era cache without the pair is rebuilt in place, pair included, not returned as installed.
+  await Promise.all(omniCompanions("darwin-arm64").map((name) => rm(join(directory, name))))
+  await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
+  for (const name of omniCompanions("darwin-arm64"))
+    expect(await readFile(join(directory, name), "utf8")).toBe(`${name} darwin-arm64`)
+}, STAGING_TIMEOUT)
+
 test("prebuilt handoff verifies producer bytes before native signing and preserves output on mismatch", async () => {
   const input = await fixture(desktopCliTargets("win32", "x64"))
   await stageCliArtifacts(input)
