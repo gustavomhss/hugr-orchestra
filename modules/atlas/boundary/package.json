@@ -19,6 +19,14 @@
     "./native-memory": {
       "types": "./src/generated/native-memory.d.ts",
       "default": "./src/generated/native-memory.js"
+    },
+    "./surface": {
+      "types": "./src/generated/surface.d.ts",
+      "default": "./src/generated/surface.js"
+    },
+    "./mine": {
+      "types": "./src/generated/mine.d.ts",
+      "default": "./src/generated/mine.js"
     }
   },
   "scripts": {
@@ -27,7 +35,12 @@
     "typecheck": "tsgo --noEmit",
     "test": "bun test --timeout 30000"
   },
+  "dependencies": {
+    "web-tree-sitter": "0.23.2"
+  },
   "devDependencies": {
+    "@bufbuild/protobuf": "2.12.0",
+    "@c4312/scip": "0.1.0",
     "@noble/hashes": "1.8.0",
     "@tsconfig/bun": "catalog:",
     "@types/bun": "catalog:",

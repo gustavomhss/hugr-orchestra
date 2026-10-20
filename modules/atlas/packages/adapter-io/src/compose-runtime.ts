@@ -11,7 +11,7 @@
 import type { Hash } from "@atlas/contracts"
 import type { AnchorsApi, CheckApi, DoctorSource, DraftApi, SlotsApi } from "@atlas/tools"
 import type { WiredHandler } from "./wire.js"
-import type { PromoteOut } from "./governed-promote.js"
+import type { PromoteOut, PromoteSelect } from "./governed-promote.js"
 import type { OwnLeg } from "./own-source.js"
 import type { RelationLeg } from "./relation-source.js"
 import type { NegationLeg } from "./negation-source.js"
@@ -39,7 +39,7 @@ export interface ComposedRuntime {
    * of it is the sidecar + CAS files it names), which is why `driftFacts` above can already read back what
    * the handler wrote — so a promoted fact is visible to the very next `atlas query`.
    */
-  readonly promote: (at: Hash) => PromoteOut
+  readonly promote: (at: Hash, select?: PromoteSelect) => PromoteOut
   /**
    * The `own_<scope>` READ leg (RETR-12) — `own(scope)` composes the curated, mechanically-ranked briefing
    * for a scope-unit through `@atlas/retrieval`'s `createOwn`, over the feed in `own-source.ts`.

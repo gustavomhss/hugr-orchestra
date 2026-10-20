@@ -35,6 +35,7 @@ export { headSha } from "./run-git.js"
 export {
   createSiteProposer,
   advisoryClaimParser,
+  admitAnswerText, // D39 — the answer gate over a reply the host already holds
   makeDependencyClaimParser,
   DEP_UNPARSEABLE_REASON,
   makeCountClaimParser,
@@ -105,7 +106,7 @@ export {
   REJECTED_CANDIDATE_UNREADABLE,
   REJECTED_DEGENERATE_CANDIDATE,
 } from "./governed-promote.js"
-export type { GovernedPromoteDeps, PromoteOut, PromotedRow } from "./governed-promote.js"
+export type { GovernedPromoteDeps, PromoteOut, PromoteSelect, PromotedRow } from "./governed-promote.js"
 export { createGovernedLink } from "./governed-link.js"
 export type { GovernedLinkDeps } from "./governed-link.js"
 export type { LinkOut } from "@atlas/tools"
@@ -139,6 +140,39 @@ export {
 // already follow.
 export { createDurableMemory, memoryLogPath } from "./memory-store.js"
 export type { DurableMemory, MemoryRead } from "./memory-store.js"
+// D14 — the shared review log (`.atlas/review.jsonl`): holds, ratification proposals and decisions, interview answers
+// and memory proposals, one appended content-keyed record each. Contract: specs/atlas-ui/build/tasks/B-L-API.md §1.
+export {
+  appendReview,
+  foldReview,
+  foldReviewLog,
+  readReview,
+  resolveReviewId,
+  REVIEW_INVARIANT,
+  reviewLogPath,
+} from "./review-log.js"
+export type {
+  ReviewBody,
+  ReviewFold,
+  ReviewInput,
+  ReviewOf,
+  ReviewRead,
+  ReviewRecord,
+  ReviewRefusal,
+  ReviewTier,
+} from "./review-log.js"
+// R2/R3 — the store reads the review commands check against (staged keys; B-R3-01 adds the current fact by nodeKey).
+export { currentFactOf, stagedNodeKeys } from "./review-store.js"
+export type { CurrentFact } from "./review-store.js"
+// R3 (D29) — the decision half of `atlas decide`, shared by the CLI runner and the Atlas screen's surface.
+export { decideProposal, emitOutcomeOf } from "./review-decide.js"
+export type { DecideInput, DecideResult, EmitOutcome } from "./review-decide.js"
+// R11 — the store feed for the ratification interview (`atlas interview` / `atlas answer`).
+export { interviewOf, openQuestionsOf } from "./open-questions-source.js"
+export type { InterviewQuestion } from "./open-questions-source.js"
+// R11 (D29) — the answer half of `atlas answer`, shared by the CLI runner and the Atlas screen's surface.
+export { answerQuestion } from "./review-answer.js"
+export type { AnswerInput, AnswerResult } from "./review-answer.js"
 export { createMemoryEmit } from "./memory-emit.js"
 export type {
   MemoryEmit,
@@ -301,3 +335,17 @@ export { budgetLeg, territoriesLeg, OFF_ATLAS_THRESHOLD } from "./calibration-le
 export type { BudgetLeg, BudgetReport, TerritoriesLeg } from "./calibration-ledger.js"
 export { budgetVerdict, territoriesVerdict } from "./calibration-verdicts.js"
 export type { TerritoriesData, TerritoryRow } from "./calibration-verdicts.js"
+
+// R4 (D22) — `atlas territory`: add or replace one territory in TERRITORY-CATALOG.json through
+// `publishTerritoryCatalog` (lane B-O; specs/atlas-ui/build/issues/b-o.md item 3).
+export { declareTerritory, TERRITORY_CATALOG_FILE } from "./territory-write.js"
+export type { TerritoryDeclaration, TerritoryWrite } from "./territory-write.js"
+
+// R7 (D21) — `atlas own-export`: the reviewed Own snapshot built from the live store (lane B-O).
+export { buildOwnExport } from "./own-export.js"
+export type { OwnExport } from "./own-export.js"
+
+// D37 — the durable-store ignore rule `atlas init` and the surface's `install` both write (moved from @atlas/cli).
+export { ATLAS_IGNORE_BLOCK, ATLAS_IGNORE_PATTERN, ATLAS_POLICY_NEGATION, ensureAtlasIgnored } from "./gitignore.js"
+export type { IgnoreOutcome, IgnoreResult } from "./gitignore.js"
+export { PROPOSE_TEMPLATE } from "./propose-template.js" // D39 — the advisory template as text, for the bundled mine

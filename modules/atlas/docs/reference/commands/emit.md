@@ -12,13 +12,19 @@ and `memory-emit` (`packages/tools/src/handler.ts` — `WRITE_PATHS: ['atlas-emi
 ## Invocation
 
 ```
-atlas emit <factJsonPath> --at <sha>
+atlas emit <factJsonPath> --at <sha> [--replace]
 ```
 
 - `<factJsonPath>` — required. A file holding one `GroundedFact` as JSON.
 - `--at <sha>` — **required**. The anchor rev the citation must re-derive at. Both `--at <sha>` and
   `--at=<sha>` work (`at` is a valued flag in `packages/cli/src/parse.ts`); a bare `--at` with no value, or
   `--at=`, is refused as missing.
+- `--replace` — optional, a bare flag (`--replace` or `--replace=true`; any other value is refused, exit `1`). When the
+  fact lands on a node that already exists at the same tier, its claim REPLACES the node's claim set instead of being
+  added to it, so `atlas query` serves only the new claim; the old claim stays in the CAS and in history. Every gate
+  still runs: the authorization and ratification gates are the ones the node already requires, and a `T0` still needs
+  `ATLAS_RATIFY_TOKEN=billy`. Raising the tier already replaces; `--replace` is for a rewrite at the same tier. It only
+  changes an advisory fact: a predicate re-emit always replaces its body. The MCP tool takes it as `replace: true`.
 - Any other flag is folded into the argument bag and ignored.
 
 Two environment variables reach the door (read by `composeRuntime`, never off the fact payload):

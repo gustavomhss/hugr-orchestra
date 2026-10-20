@@ -1,0 +1,79 @@
+name: atlas-guard
+
+# R10 (specs/atlas-ui/build/DECISIONS.md D25): a PR that changes code under an Own unit without refreshing it must not
+# merge. This runs the Own snapshot guard on every pull request whose diff touches a file the committed
+# OWN-SNAPSHOT.json anchors (`sourceBlobs`), the snapshot itself, or the static Own skills. A deliberate, light
+# exception to the per-epic CI cadence (AGENTS.md "CI Cadence"): for any other diff the job stops after one
+# `git diff` and passes. Making it required is a branch-protection setting the owner turns on.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: atlas-guard-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+jobs:
+  own-snapshot:
+    name: atlas own-snapshot guard
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: modules/atlas
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          # The diff needs the base commit; the guard needs history back to the snapshot's sourceRevision.
+          fetch-depth: 0
+
+      - name: Detect Own-anchored changes
+        id: scope
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          set -euo pipefail
+          # Repository-root paths, like `git diff --name-only` prints them.
+          changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+          # Every anchored source path of the snapshot at the PR's merge commit. A missing or unparsable snapshot
+          # lists none; the snapshot path itself is always watched, so deleting or breaking it still runs the guard.
+          anchors=$(node -e 'try { const s = JSON.parse(require("node:fs").readFileSync("OWN-SNAPSHOT.json", "utf8")); for (const u of s.units ?? []) for (const p of Object.keys(u.sourceBlobs ?? {})) console.log(`modules/atlas/${p}`) } catch {}')
+          watched=$(printf '%s\n' "$anchors" "modules/atlas/OWN-SNAPSHOT.json" | grep -v '^$' || true)
+          hits=$(printf '%s\n' "$changed" | grep -Fx -f <(printf '%s\n' "$watched") || true)
+          skills=$(printf '%s\n' "$changed" | grep -E '^modules/atlas/\.orchestra/skills/own/' || true)
+          if [ -z "$hits$skills" ]; then
+            echo "relevant=false" >> "$GITHUB_OUTPUT"
+            echo "No Own-anchored path changed; nothing to guard."
+            exit 0
+          fi
+          echo "relevant=true" >> "$GITHUB_OUTPUT"
+          printf 'Own-anchored paths changed:\n%s\n%s\n' "$hits" "$skills"
+
+      - name: Setup Node
+        if: steps.scope.outputs.relevant == 'true'
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: modules/atlas/package-lock.json
+
+      - name: Install Atlas dependencies
+        if: steps.scope.outputs.relevant == 'true'
+        run: npm ci
+
+      # The guard loads the compiled Own snapshot contract (packages/retrieval/dist/src/own-snapshot.js).
+      - name: Build the Own snapshot contract
+        if: steps.scope.outputs.relevant == 'true'
+        run: npx tsc -b packages/retrieval
+
+      - name: Run the Own snapshot guard
+        if: steps.scope.outputs.relevant == 'true'
+        run: npm run own-snapshot-guard

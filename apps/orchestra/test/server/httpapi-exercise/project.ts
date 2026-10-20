@@ -1,6 +1,7 @@
 import { array, check, isRecord, object } from "./assertions"
 import { http, route } from "./dsl"
 import { leanScenarios } from "./lean"
+import { atlasScenarios } from "./atlas"
 import { type Scenario } from "./types"
 
 // Project routes, moved out of index.ts unchanged, plus the Lean dashboard routes under /project/lean.
@@ -96,4 +97,5 @@ export const projectScenarios: Scenario[] = [
     }))
     .json(200, array, "status"),
   ...leanScenarios,
+  ...atlasScenarios,
 ]

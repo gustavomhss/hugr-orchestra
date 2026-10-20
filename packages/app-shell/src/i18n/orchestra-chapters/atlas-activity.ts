@@ -1,0 +1,28 @@
+// Copy owned by the Atlas activity view (A26). Keys: orchestra.atlas.activity.<name>, English verbatim from specs/atlas-ui/mock.
+export const ATLAS_ACTIVITY_COPY = {
+  "orchestra.atlas.activity.crumb": "Activity",
+  "orchestra.atlas.activity.eyebrow": "Atlas",
+  "orchestra.atlas.activity.title": "Activity",
+  "orchestra.atlas.activity.line": "What agents read from Atlas, what they saved, and when they were held.",
+  "orchestra.atlas.activity.show.all": "All",
+  "orchestra.atlas.activity.show.reads": "Reads",
+  "orchestra.atlas.activity.show.memory": "Memory",
+  "orchestra.atlas.activity.show.holds": "Holds",
+  "orchestra.atlas.activity.show.code": "Code",
+  "orchestra.atlas.activity.help":
+    "From the receipts Orchestra keeps on each tool call: atlasContext for reads and holds, atlasMemory and atlasResume for memory. A held call returns its reason and evidence; the next step is Orchestra's own text. Atlas itself keeps no write log.",
+  "orchestra.atlas.activity.empty": "Nothing recorded yet.",
+  "orchestra.atlas.activity.code.one": "Commit {{sha}} changed {{n}} fact",
+  "orchestra.atlas.activity.code.other": "Commit {{sha}} changed {{n}} facts",
+  "orchestra.atlas.activity.onHold": "On hold",
+  "orchestra.atlas.activity.time": "{{day}} · {{clock}} UTC",
+  "orchestra.atlas.activity.event.saved": "{{name}} saved a checkpoint",
+  "orchestra.atlas.activity.event.notSaved": "{{name}}'s checkpoint was not saved",
+  "orchestra.atlas.activity.event.resumed": "{{name}} was resumed with its checkpoint",
+  "orchestra.atlas.activity.event.noCheckpoint": "{{name}}'s resume found no checkpoint",
+  "orchestra.atlas.activity.event.recalled": "{{name}} recalled its task memory",
+  "orchestra.atlas.activity.event.froze": "{{name}} froze {{count}} units for {{target}}",
+  "orchestra.atlas.activity.event.catalog": "{{name}} read the unit catalog",
+  "orchestra.atlas.activity.event.briefing": "{{name}} read the briefing for {{unit}}",
+  "orchestra.atlas.activity.event.held": "{{name}} was held",
+}

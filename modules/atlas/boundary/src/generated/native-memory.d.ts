@@ -477,9 +477,28 @@ export type ReconcileVerdict = {
 	readonly present: false;
 	readonly store: StoreState;
 };
+/** R5 (D23): one of the binding owner's own `task` checkpoints, as a resume picker lists it. It carries no time: a
+ *  record has none, and log order is never \"latest\" (F3-D3), so the list claims nothing about recency. */
+export interface ResumableRecord {
+	readonly ref: RecordRef;
+	readonly taskId: string;
+	readonly stoppedAt: string;
+	readonly lesson: string;
+}
+/** R5 (D23). File order. An `unavailable` store lists nothing and says so; it is never an empty `complete` list. */
+export interface ResumableList {
+	readonly records: readonly ResumableRecord[];
+	readonly store: StoreState;
+}
 /** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
  *  bound write takes no caller-supplied score. */
 export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">;
+/** R1 (D18): what proposing a `project` rule did. A refusal has the emit door's `MemoryRejected` shape. */
+export type ProposalVerdict = {
+	readonly ok: true;
+	readonly proposalId: string;
+	readonly reconciled?: true;
+} | MemoryRejected;
 /** The entries the bound write and reconcile doors accept: a seat's own `task`/`pr` checkpoint or `project` rule.
  *  `logbook` is orchestrator-only and never reaches a seat's binding. */
 export type BoundEntry = TaskMemoryEntry | PrMemoryEntry | ProjectRuleProposal;
@@ -490,7 +509,40 @@ export interface NativeMemory {
 	resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict;
 	write(entry: BoundEntry): WriteVerdict;
 	reconcile(entry: BoundEntry): ReconcileVerdict;
+	/** R5: the binding owner's own task checkpoints (its `legacyOwners` included). Takes no owner: the binding is the
+	 *  only owner this surface reads as (clauses 2-4). */
+	listResumable(): ResumableList;
 }
 export declare function createNativeMemory(input: AtlasBinding): NativeMemory;
+/**
+ * R1 (D18) — a seat's `project` rule becomes a PROPOSAL in the shared review log (`.atlas/review.jsonl`, D14), never
+ * a rule: a person indexes it (the host then `write`s it as the member) or discards it. It is judged as `write`
+ * judges it up to the cap: the `project` template with Atlas's own frecency, the binding owner, and the NAMED
+ * scanner — the review log travels in git, so an unscanned rule must never reach it. The MEM-3 cap is judged at
+ * indexing. An identical OPEN proposal by the same owner reconciles to its id. `at` is the host's clock (ISO-8601).
+ */
+export declare function proposeProjectRule(input: AtlasBinding, entry: unknown, at: string): ProposalVerdict;
+/** R1 (D30): what a person's decision on a memory proposal did. A refused `indexed` write is the door's own refusal. */
+export type DecisionVerdict = {
+	readonly ok: true;
+	readonly decisionId: string;
+	readonly ref?: RecordRef;
+} | MemoryRejected | {
+	readonly ok: false;
+	readonly refusal: "proposal-not-open";
+	readonly reason: string;
+};
+export type ProjectRuleDecision = {
+	readonly proposalId: string;
+	readonly verdict: "indexed" | "discarded";
+	readonly rule?: string;
+	readonly scope?: string;
+	readonly by: string;
+};
+/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
+ *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
+ *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
+ *  storage root and the scanner; its `memoryOwner` never writes. */
+export declare function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict;
 
 export {};

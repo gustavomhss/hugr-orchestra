@@ -2570,6 +2570,490 @@ export type Config = {
   }
 }
 
+export type AtlasEmpty = {
+  state: "empty"
+}
+
+export type AtlasDrift = {
+  hunks: Array<{
+    at: string
+    lines: Array<string>
+  }>
+  stat: string
+  commits: Array<[string, string]>
+}
+
+export type AtlasFact = {
+  key: string
+  hash: string
+  claim: string
+  file: string
+  family: string
+  tier: string
+  scope: string
+  derivedAt: string
+  subtree: string
+  obvious: string | null
+  promoted: boolean
+  why: string | null
+  kind: string | null
+  authoring: string | null
+  storedFreshness: string | null
+  obviousBy: string | null
+  anchor: {
+    kind: string
+    qualifiedPath: string
+  } | null
+  slot: string | null
+  seal: string | null
+  supersededBy: string | null
+  sameAs: Array<string> | null
+  provenance: {
+    [key: string]: {
+      source: string
+      trusted: boolean
+      sha?: string | null
+    }
+  } | null
+  drift?: AtlasDrift | null
+}
+
+export type AtlasOwnSnapshot = {
+  status: "READY" | "HOLD"
+  reason: string | null
+  snapshot: string | null
+  sourceRevision: string | null
+  sourcePaths: Array<string>
+  units: Array<unknown>
+  coverage: {
+    snapshot: string
+    sourceRevision: string
+    units: Array<string>
+  } | null
+  skills: Array<{
+    path: string
+    size: number
+    head: string
+  }>
+}
+
+export type AtlasMemoryRecord = {
+  eventId: string
+  seq: number
+  member: string
+  kind: string
+  text: string
+  scope: string | null
+  at: string | null
+  refs: Array<string>
+  entry: unknown
+}
+
+export type AtlasOrientationEvent = {
+  eventId: string
+  seq: number
+  channel: string
+  label: string
+  supersedes: Array<string>
+}
+
+export type AtlasTerritory = {
+  name: string
+  owner: string
+  tier: string
+  globs: Array<string>
+}
+
+export type AtlasSnapshot = {
+  state: "ok"
+  project: string
+  head: string
+  builtAt: string
+  gen: number
+  stagingGen: number
+  identity: string | null
+  casObjects: number
+  policy: {
+    [key: string]: Array<string>
+  }
+  t0Keywords: Array<string>
+  scip: boolean
+  tracked: {
+    projection: boolean
+    cas: number
+    staging: boolean
+    policy: boolean
+    memory: boolean
+  }
+  sealed: number
+  casAudit: {
+    objects: number
+    referenced: number
+    missing: number
+    orphan: number
+  }
+  generations: Array<string>
+  abstained: number
+  langs: {
+    [key: string]: number
+  }
+  facts: Array<AtlasFact>
+  candidates: Array<AtlasFact>
+  dependents: {
+    [key: string]: Array<string>
+  }
+  dependentCount: {
+    [key: string]: number
+  }
+  children: {
+    [key: string]: Array<string>
+  }
+  own: AtlasOwnSnapshot | null
+  memory: {
+    [key: string]: Array<AtlasMemoryRecord>
+  }
+  orientation: Array<AtlasOrientationEvent>
+  territories: Array<AtlasTerritory>
+}
+
+export type AtlasSnapshotResult = AtlasEmpty | AtlasSnapshot
+
+export type ServiceUnavailableError = {
+  _tag: "ServiceUnavailableError"
+  message: string
+  service?: string
+}
+
+export type AtlasReasoningResult =
+  | AtlasEmpty
+  | {
+      state: "ok"
+      id: string
+      text: string
+    }
+  | {
+      state: "missing"
+      id: string
+    }
+
+export type AtlasOwn = {
+  state: "ok"
+  scope: string
+  tool: string
+  pack: unknown
+  readRefusal: string | null
+}
+
+export type AtlasOwnResult = AtlasEmpty | AtlasOwn
+
+export type AtlasHealth = {
+  state: "ok"
+  actor: string
+  provenance: "trusted" | "tracked-staging" | "tracked-provable"
+  readRefusal: string | null
+  readAdvisory: string | null
+  cas: {
+    objects: number
+    corrupt: Array<string>
+    unreadable: Array<string>
+    missing: Array<string>
+    orphan: number
+    referenced: number
+    sound: boolean
+  }
+  proofs: {
+    sealedProven: number
+    reProven: number
+    broken: number
+    unverifiable: number
+    dangling: number
+  }
+  index: {
+    scipRel: string
+    scip:
+      | {
+          kind: "absent"
+        }
+      | {
+          kind: "unreadable"
+          reason: string
+        }
+      | {
+          kind: "present"
+          documents: number
+        }
+    configured: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+    holes: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+  }
+  hotSet: number
+}
+
+export type AtlasHealthResult = AtlasEmpty | AtlasHealth
+
+export type AtlasPromote = {
+  state: "ok"
+  read: boolean
+  refusal?: "contended" | "unreadable" | "untrusted" | null
+  candidates: number
+  promoted: number
+  refused: number
+  rows: Array<{
+    nodeKey: string
+    settled: boolean
+    id?: string | null
+    rejected?: string | null
+  }>
+  held?: Array<string> | null
+  unknown?: Array<string> | null
+}
+
+export type AtlasPromoteResult = AtlasEmpty | AtlasPromote
+
+export type AtlasDraft = {
+  state: "ok"
+  ok: boolean
+  rejected?: string | null
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    draft: {
+      fact: unknown
+      rev: string
+      operation: "CREATE" | "UPDATE"
+      route: "auto-accept" | "full-ratify"
+      requires?: string | null
+    }
+    check: {
+      wouldEmit: boolean
+      gates: Array<{
+        gate: "shape" | "truth" | "authz" | "ratify"
+        pass: boolean
+        reason?: string | null
+        remedy?: string | null
+      }>
+    } | null
+  } | null
+}
+
+export type AtlasDraftResult = AtlasEmpty | AtlasDraft
+
+export type AtlasEmit = {
+  state: "ok"
+  ok: boolean
+  rejected?: string | null
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    emitted: boolean
+    id?: string | null
+    nodeKey?: string | null
+    rejected?: string | null
+  } | null
+}
+
+export type AtlasEmitResult = AtlasEmpty | AtlasEmit
+
+export type AtlasLink = {
+  state: "ok"
+  ok: boolean
+  rejected?: string | null
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    linked: boolean
+    rejected?: string | null
+    a?: string | null
+    b?: string | null
+    retracted?: boolean | null
+  } | null
+}
+
+export type AtlasLinkResult = AtlasEmpty | AtlasLink
+
+export type AtlasVerify = {
+  state: "ok"
+  ok: boolean
+  rejected?: string | null
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    kind: "dependency" | "count" | "definition" | "negation"
+    verdict: "proven" | "refuted" | "abstain"
+    reason?: string | null
+    oracle: string
+    target: string
+    scope: string
+  } | null
+}
+
+export type AtlasVerifyResult = AtlasEmpty | AtlasVerify
+
+export type AtlasReviewProposal = {
+  id: string
+  nodeKey: string
+  toTier: "T1" | "T0"
+  reason: string
+  by: string
+  at: string
+}
+
+export type AtlasMemoryProposal = {
+  id: string
+  member: string
+  rule: string
+  scope: string
+  by: string
+  at: string
+}
+
+export type AtlasInterviewDraft = {
+  answer: string
+  model: string
+  why: string
+  by: string
+  at: string
+}
+
+export type AtlasInterviewQuestion = {
+  id: string
+  kind: "owner" | "tier" | "contested" | "intent"
+  subject: string
+  ask: string
+  rank: number
+  site: string
+  options: Array<string> | null
+  nodeKey: string | null
+  draft: AtlasInterviewDraft | null
+}
+
+export type AtlasReview = {
+  state: "ok"
+  unreadable: boolean
+  held: Array<string>
+  proposals: Array<AtlasReviewProposal>
+  memoryProposals: Array<AtlasMemoryProposal>
+  interview: {
+    batch: Array<AtlasInterviewQuestion>
+    deferred: number
+  }
+}
+
+export type AtlasReviewResult = AtlasEmpty | AtlasReview
+
+export type AtlasReviewWrite = {
+  state: "ok"
+  ok: boolean
+  rejected?: string | null
+  guidance: {
+    next: string
+    invariant: string
+  }
+  data?: {
+    id: string
+  } | null
+}
+
+export type AtlasReviewWriteResult = AtlasEmpty | AtlasReviewWrite
+
+export type AtlasDelegate = {
+  state: "ok"
+  drafted: Array<{
+    questionId: string
+    ok: boolean
+    rejected: string | null
+  }>
+}
+
+export type AtlasDelegateResult = AtlasEmpty | AtlasDelegate
+
+export type AtlasInstall = {
+  state: "ok"
+  installed: boolean
+  refusal: "already-installed" | "no-git" | "no-actor" | null
+  actor: string
+  scopes: Array<string>
+  gitignore: "installed" | "already-present" | "partial-repaired" | "failed" | null
+  index: {
+    scipRel: string
+    scip:
+      | {
+          kind: "absent"
+        }
+      | {
+          kind: "unreadable"
+          reason: string
+        }
+      | {
+          kind: "present"
+          documents: number
+        }
+    configured: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+    holes: Array<{
+      plan: {
+        lang: string
+        tool: string
+        args: Array<string>
+        version?: string | null
+      }
+      files: number
+    }>
+  } | null
+}
+
+export type AtlasIndex = {
+  state: "ok"
+  ran: boolean
+  tool: string | null
+  exitCode: number | null
+  documents: number | null
+  message: string | null
+}
+
+export type AtlasIndexResult = AtlasEmpty | AtlasIndex
+
+export type AtlasMine = {
+  state: "ok"
+  sites: number
+  facts: number
+  complete: boolean
+  why: string | null
+  refusal: "contended" | "unreadable" | "untrusted" | null
+}
+
+export type AtlasMineResult = AtlasEmpty | AtlasMine
+
 export type Model = {
   id: string
   providerID: string
@@ -3095,12 +3579,6 @@ export type LeanProfileDashboard = {
   complete: boolean
   savings: LeanProfileSavings
   items: Array<LeanProfileItem>
-}
-
-export type ServiceUnavailableError = {
-  _tag: "ServiceUnavailableError"
-  message: string
-  service?: string
 }
 
 export type LeanProfileUpdate = {
@@ -3688,10 +4166,36 @@ export type McpServer = {
   status: McpStatus
 }
 
+export type McpResource1 = {
+  server: string
+  name: string
+  uri: string
+  description?: string
+  mimeType?: string
+}
+
+export type McpResourceTemplate = {
+  server: string
+  name: string
+  uriTemplate: string
+  description?: string
+  mimeType?: string
+}
+
+export type McpResourceCatalog = {
+  resources: Array<McpResource1>
+  templates: Array<McpResourceTemplate>
+}
+
 export type McpServerNotFoundError1 = {
   _tag: "McpServerNotFoundError"
   server: string
   message: string
+}
+
+export type McpAuthStart = {
+  authorizationUrl: string
+  oauthState: string
 }
 
 export type OutputFormat1 =
@@ -4358,9 +4862,9 @@ export type RelayAuthoringSkillBinding = {
   content: string
 }
 
-export type AtlasKnowledgeReference = string
+export type AtlasKnowledgeReference = unknown & unknown & unknown
 
-export type AtlasKnowledgeUnitId = string
+export type AtlasKnowledgeUnitId = unknown & unknown & unknown
 
 export type AtlasKnowledgeTarget = {
   kind: "assignment" | "work-package"
@@ -4369,9 +4873,9 @@ export type AtlasKnowledgeTarget = {
 
 export type AtlasKnowledgeUnit = {
   unit: AtlasKnowledgeUnitId
-  name: string
+  name: unknown
   sourceIdentity: AtlasKnowledgeReference
-  sourceRevision: string
+  sourceRevision: unknown
   contentHash: AtlasKnowledgeReference
   receiptHash: AtlasKnowledgeReference
   bodyHash: AtlasKnowledgeReference
@@ -4381,12 +4885,12 @@ export type AtlasKnowledgeUnit = {
 export type AtlasKnowledgeAnchor = {
   reference: AtlasKnowledgeReference
   projectID: string
-  authorSessionID: string
-  assistantMessageID: string
-  callID: string
+  authorSessionID: unknown
+  assistantMessageID: unknown
+  callID: unknown
   memberID: "archie"
   target: AtlasKnowledgeTarget
-  units: Array<AtlasKnowledgeUnit>
+  units: unknown & unknown
 }
 
 export type RelayArmWorkflowDefinition = {
@@ -11402,6 +11906,745 @@ export type EventSubscribeResponses = {
 
 export type EventSubscribeResponse = EventSubscribeResponses[keyof EventSubscribeResponses]
 
+export type AtlasSnapshotData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/snapshot"
+}
+
+export type AtlasSnapshotErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasSnapshotError = AtlasSnapshotErrors[keyof AtlasSnapshotErrors]
+
+export type AtlasSnapshotResponses = {
+  /**
+   * AtlasSnapshotResult
+   */
+  200: AtlasSnapshotResult
+}
+
+export type AtlasSnapshotResponse = AtlasSnapshotResponses[keyof AtlasSnapshotResponses]
+
+export type AtlasReasoningData = {
+  body?: never
+  path: {
+    id: string
+  }
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/reasoning/{id}"
+}
+
+export type AtlasReasoningErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasReasoningError = AtlasReasoningErrors[keyof AtlasReasoningErrors]
+
+export type AtlasReasoningResponses = {
+  /**
+   * AtlasReasoningResult
+   */
+  200: AtlasReasoningResult
+}
+
+export type AtlasReasoningResponse = AtlasReasoningResponses[keyof AtlasReasoningResponses]
+
+export type AtlasOwnData = {
+  body?: never
+  path?: never
+  query: {
+    directory?: string
+    workspace?: string
+    scope: string
+  }
+  url: "/atlas/own"
+}
+
+export type AtlasOwnErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasOwnError = AtlasOwnErrors[keyof AtlasOwnErrors]
+
+export type AtlasOwnResponses = {
+  /**
+   * AtlasOwnResult
+   */
+  200: AtlasOwnResult
+}
+
+export type AtlasOwnResponse = AtlasOwnResponses[keyof AtlasOwnResponses]
+
+export type AtlasHealthData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/health"
+}
+
+export type AtlasHealthErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasHealthError = AtlasHealthErrors[keyof AtlasHealthErrors]
+
+export type AtlasHealthResponses = {
+  /**
+   * AtlasHealthResult
+   */
+  200: AtlasHealthResult
+}
+
+export type AtlasHealthResponse = AtlasHealthResponses[keyof AtlasHealthResponses]
+
+export type AtlasPromoteData = {
+  body?: {
+    token?: string
+    nodeKeys?: Array<string>
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/promote"
+}
+
+export type AtlasPromoteErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasPromoteError = AtlasPromoteErrors[keyof AtlasPromoteErrors]
+
+export type AtlasPromoteResponses = {
+  /**
+   * AtlasPromoteResult
+   */
+  200: AtlasPromoteResult
+}
+
+export type AtlasPromoteResponse = AtlasPromoteResponses[keyof AtlasPromoteResponses]
+
+export type AtlasDraftData = {
+  body?: {
+    anchor: string
+    slot: string
+    claim: string
+    supersede?: boolean
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/draft"
+}
+
+export type AtlasDraftErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasDraftError = AtlasDraftErrors[keyof AtlasDraftErrors]
+
+export type AtlasDraftResponses = {
+  /**
+   * AtlasDraftResult
+   */
+  200: AtlasDraftResult
+}
+
+export type AtlasDraftResponse = AtlasDraftResponses[keyof AtlasDraftResponses]
+
+export type AtlasEmitData = {
+  body?: {
+    fact: unknown
+    at: string
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/emit"
+}
+
+export type AtlasEmitErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasEmitError = AtlasEmitErrors[keyof AtlasEmitErrors]
+
+export type AtlasEmitResponses = {
+  /**
+   * AtlasEmitResult
+   */
+  200: AtlasEmitResult
+}
+
+export type AtlasEmitResponse = AtlasEmitResponses[keyof AtlasEmitResponses]
+
+export type AtlasLinkData = {
+  body?: {
+    a: string
+    b: string
+    retract?: boolean
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/link"
+}
+
+export type AtlasLinkErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasLinkError = AtlasLinkErrors[keyof AtlasLinkErrors]
+
+export type AtlasLinkResponses = {
+  /**
+   * AtlasLinkResult
+   */
+  200: AtlasLinkResult
+}
+
+export type AtlasLinkResponse = AtlasLinkResponses[keyof AtlasLinkResponses]
+
+export type AtlasVerifyData = {
+  body?: {
+    kind: string
+    target: string
+    scope: string
+    world?: string
+    min?: number
+    exact?: boolean
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/verify"
+}
+
+export type AtlasVerifyErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasVerifyError = AtlasVerifyErrors[keyof AtlasVerifyErrors]
+
+export type AtlasVerifyResponses = {
+  /**
+   * AtlasVerifyResult
+   */
+  200: AtlasVerifyResult
+}
+
+export type AtlasVerifyResponse = AtlasVerifyResponses[keyof AtlasVerifyResponses]
+
+export type AtlasReviewData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/review"
+}
+
+export type AtlasReviewErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasReviewError = AtlasReviewErrors[keyof AtlasReviewErrors]
+
+export type AtlasReviewResponses = {
+  /**
+   * AtlasReviewResult
+   */
+  200: AtlasReviewResult
+}
+
+export type AtlasReviewResponse = AtlasReviewResponses[keyof AtlasReviewResponses]
+
+export type AtlasHoldData = {
+  body?: {
+    nodeKey: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/hold"
+}
+
+export type AtlasHoldErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasHoldError = AtlasHoldErrors[keyof AtlasHoldErrors]
+
+export type AtlasHoldResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasHoldResponse = AtlasHoldResponses[keyof AtlasHoldResponses]
+
+export type AtlasReleaseData = {
+  body?: {
+    nodeKey: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/release"
+}
+
+export type AtlasReleaseErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasReleaseError = AtlasReleaseErrors[keyof AtlasReleaseErrors]
+
+export type AtlasReleaseResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasReleaseResponse = AtlasReleaseResponses[keyof AtlasReleaseResponses]
+
+export type AtlasProposeData = {
+  body?: {
+    nodeKey: string
+    toTier: "T1" | "T0"
+    reason: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/propose"
+}
+
+export type AtlasProposeErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasProposeError = AtlasProposeErrors[keyof AtlasProposeErrors]
+
+export type AtlasProposeResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasProposeResponse = AtlasProposeResponses[keyof AtlasProposeResponses]
+
+export type AtlasDecideData = {
+  body?: {
+    proposalId: string
+    verdict: "ratified" | "rejected"
+    reason: string
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/decide"
+}
+
+export type AtlasDecideErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasDecideError = AtlasDecideErrors[keyof AtlasDecideErrors]
+
+export type AtlasDecideResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasDecideResponse = AtlasDecideResponses[keyof AtlasDecideResponses]
+
+export type AtlasAnswerData = {
+  body?: {
+    questionId: string
+    answer: string
+    drafted?: {
+      model: string
+      why: string
+    }
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/answer"
+}
+
+export type AtlasAnswerErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasAnswerError = AtlasAnswerErrors[keyof AtlasAnswerErrors]
+
+export type AtlasAnswerResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasAnswerResponse = AtlasAnswerResponses[keyof AtlasAnswerResponses]
+
+export type AtlasMemoryDecideData = {
+  body?: {
+    proposalId: string
+    verdict: "indexed" | "discarded"
+    rule?: string
+    scope?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/memory-decide"
+}
+
+export type AtlasMemoryDecideErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasMemoryDecideError = AtlasMemoryDecideErrors[keyof AtlasMemoryDecideErrors]
+
+export type AtlasMemoryDecideResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasMemoryDecideResponse = AtlasMemoryDecideResponses[keyof AtlasMemoryDecideResponses]
+
+export type AtlasTerritoryData = {
+  body?: {
+    name: string
+    owner: string
+    tier: "T0" | "T1" | "T2"
+    globs: Array<string>
+    token?: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/territory"
+}
+
+export type AtlasTerritoryErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasTerritoryError = AtlasTerritoryErrors[keyof AtlasTerritoryErrors]
+
+export type AtlasTerritoryResponses = {
+  /**
+   * AtlasReviewWriteResult
+   */
+  200: AtlasReviewWriteResult
+}
+
+export type AtlasTerritoryResponse = AtlasTerritoryResponses[keyof AtlasTerritoryResponses]
+
+export type AtlasDelegateData = {
+  body?: {
+    questionIds: Array<string>
+    providerID: string
+    modelID: string
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/delegate"
+}
+
+export type AtlasDelegateErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasDelegateError = AtlasDelegateErrors[keyof AtlasDelegateErrors]
+
+export type AtlasDelegateResponses = {
+  /**
+   * AtlasDelegateResult
+   */
+  200: AtlasDelegateResult
+}
+
+export type AtlasDelegateResponse = AtlasDelegateResponses[keyof AtlasDelegateResponses]
+
+export type AtlasInstallData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/install"
+}
+
+export type AtlasInstallErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasInstallError = AtlasInstallErrors[keyof AtlasInstallErrors]
+
+export type AtlasInstallResponses = {
+  /**
+   * AtlasInstall
+   */
+  200: AtlasInstall
+}
+
+export type AtlasInstallResponse = AtlasInstallResponses[keyof AtlasInstallResponses]
+
+export type AtlasIndexData = {
+  body?: never
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/index"
+}
+
+export type AtlasIndexErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasIndexError = AtlasIndexErrors[keyof AtlasIndexErrors]
+
+export type AtlasIndexResponses = {
+  /**
+   * AtlasIndexResult
+   */
+  200: AtlasIndexResult
+}
+
+export type AtlasIndexResponse = AtlasIndexResponses[keyof AtlasIndexResponses]
+
+export type AtlasMineData = {
+  body?: {
+    providerID: string
+    modelID: string
+    ceiling: number
+  }
+  path?: never
+  query?: {
+    directory?: string
+    workspace?: string
+  }
+  url: "/atlas/mine"
+}
+
+export type AtlasMineErrors = {
+  /**
+   * Bad request
+   */
+  400: BadRequestError
+  /**
+   * ServiceUnavailableError
+   */
+  503: ServiceUnavailableError
+}
+
+export type AtlasMineError = AtlasMineErrors[keyof AtlasMineErrors]
+
+export type AtlasMineResponses = {
+  /**
+   * AtlasMineResult
+   */
+  200: AtlasMineResult
+}
+
+export type AtlasMineResponse = AtlasMineResponses[keyof AtlasMineResponses]
+
 export type ConfigGetData = {
   body?: never
   path?: never
@@ -17800,6 +19043,43 @@ export type V2McpListResponses = {
 
 export type V2McpListResponse = V2McpListResponses[keyof V2McpListResponses]
 
+export type V2McpResourceCatalogData = {
+  body?: never
+  path?: never
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/resource"
+}
+
+export type V2McpResourceCatalogErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+}
+
+export type V2McpResourceCatalogError = V2McpResourceCatalogErrors[keyof V2McpResourceCatalogErrors]
+
+export type V2McpResourceCatalogResponses = {
+  /**
+   * Success
+   */
+  200: {
+    location: LocationInfo
+    data: McpResourceCatalog
+  }
+}
+
+export type V2McpResourceCatalogResponse = V2McpResourceCatalogResponses[keyof V2McpResourceCatalogResponses]
+
 export type V2McpRemoveData = {
   body?: never
   path: {
@@ -17957,6 +19237,128 @@ export type V2McpDisconnectResponses = {
 }
 
 export type V2McpDisconnectResponse = V2McpDisconnectResponses[keyof V2McpDisconnectResponses]
+
+export type V2McpAuthRemoveData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth"
+}
+
+export type V2McpAuthRemoveErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthRemoveError = V2McpAuthRemoveErrors[keyof V2McpAuthRemoveErrors]
+
+export type V2McpAuthRemoveResponses = {
+  /**
+   * <No Content>
+   */
+  204: void
+}
+
+export type V2McpAuthRemoveResponse = V2McpAuthRemoveResponses[keyof V2McpAuthRemoveResponses]
+
+export type V2McpAuthStartData = {
+  body?: never
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth"
+}
+
+export type V2McpAuthStartErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthStartError = V2McpAuthStartErrors[keyof V2McpAuthStartErrors]
+
+export type V2McpAuthStartResponses = {
+  /**
+   * McpAuthStart
+   */
+  200: McpAuthStart
+}
+
+export type V2McpAuthStartResponse = V2McpAuthStartResponses[keyof V2McpAuthStartResponses]
+
+export type V2McpAuthCallbackData = {
+  body: {
+    code: string
+  }
+  path: {
+    server: string
+  }
+  query?: {
+    location?: {
+      directory?: string
+      workspace?: string
+    }
+  }
+  url: "/api/mcp/{server}/auth/callback"
+}
+
+export type V2McpAuthCallbackErrors = {
+  /**
+   * InvalidRequestError
+   */
+  400: InvalidRequestError
+  /**
+   * UnauthorizedError
+   */
+  401: UnauthorizedError
+  /**
+   * McpServerNotFoundError
+   */
+  404: McpServerNotFoundError1
+}
+
+export type V2McpAuthCallbackError = V2McpAuthCallbackErrors[keyof V2McpAuthCallbackErrors]
+
+export type V2McpAuthCallbackResponses = {
+  /**
+   * MCPStatus
+   */
+  200: McpStatus
+}
+
+export type V2McpAuthCallbackResponse = V2McpAuthCallbackResponses[keyof V2McpAuthCallbackResponses]
 
 export type V2SkillRemoveData = {
   body?: never

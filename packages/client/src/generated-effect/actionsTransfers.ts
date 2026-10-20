@@ -6,18 +6,18 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint39_0Request = Parameters<RawClient["server.actionsTransfer"]["actions.transfer.info"]>[0]
-type Endpoint39_0Input = {
-  readonly bindingID: Endpoint39_0Request["params"]["bindingID"]
-  readonly location?: Endpoint39_0Request["query"]["location"]
-  readonly revision: Endpoint39_0Request["query"]["revision"]
-  readonly kind: Endpoint39_0Request["query"]["kind"]
-  readonly id: Endpoint39_0Request["query"]["id"]
-  readonly runID?: Endpoint39_0Request["query"]["runID"]
-  readonly attempt?: Endpoint39_0Request["query"]["attempt"]
-  readonly path?: Endpoint39_0Request["query"]["path"]
+type Endpoint40_0Request = Parameters<RawClient["server.actionsTransfer"]["actions.transfer.info"]>[0]
+type Endpoint40_0Input = {
+  readonly bindingID: Endpoint40_0Request["params"]["bindingID"]
+  readonly location?: Endpoint40_0Request["query"]["location"]
+  readonly revision: Endpoint40_0Request["query"]["revision"]
+  readonly kind: Endpoint40_0Request["query"]["kind"]
+  readonly id: Endpoint40_0Request["query"]["id"]
+  readonly runID?: Endpoint40_0Request["query"]["runID"]
+  readonly attempt?: Endpoint40_0Request["query"]["attempt"]
+  readonly path?: Endpoint40_0Request["query"]["path"]
 }
-const Endpoint39_0 = (raw: RawClient["server.actionsTransfer"]) => (input: Endpoint39_0Input) =>
+const Endpoint40_0 = (raw: RawClient["server.actionsTransfer"]) => (input: Endpoint40_0Input) =>
   raw["actions.transfer.info"]({
     params: { bindingID: input["bindingID"] },
     query: {
@@ -31,4 +31,4 @@ const Endpoint39_0 = (raw: RawClient["server.actionsTransfer"]) => (input: Endpo
     },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup39 = (raw: RawClient["server.actionsTransfer"]) => ({ info: Endpoint39_0(raw) })
+export const adaptGroup40 = (raw: RawClient["server.actionsTransfer"]) => ({ info: Endpoint40_0(raw) })

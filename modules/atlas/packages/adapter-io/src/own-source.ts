@@ -55,7 +55,7 @@ import { createResolve } from "@atlas/index"
 // run, over the SAME composition-root `axes` this feed already receives. Never a second freshness notion.
 import { driftDetect } from "@atlas/grounding"
 import type { Axes, AxisForest, IndexNode } from "@atlas/index"
-import { currentNodes, tierRank } from "@atlas/knowledge"
+import { currentNodes, isRetired, tierRank } from "@atlas/knowledge"
 import type { GroundedFact } from "@atlas/knowledge"
 import type { Freshness, Hash, NodeKey, Tier } from "@atlas/contracts"
 import { underScope } from "./anchor-scope.js"
@@ -103,7 +103,7 @@ function allRows(store: DiskStore): readonly Row[] {
   const rows: Row[] = []
   for (const node of currentNodes(rehydrateProjection(store))) {
     const fact = store.get(node.contentHash as Hash) as GroundedFact | undefined
-    if (fact !== undefined) rows.push({ node, fact })
+    if (fact !== undefined && !isRetired(fact)) rows.push({ node, fact }) // R6: a retired fact leaves both own bands
   }
   return rows
 }
@@ -151,7 +151,7 @@ function terrainTier(rows: readonly Row[]): Tier {
  * `.atlas/policy.json` the write door gates on, so "who owns this" and "who may write this" are one answer.
  * Empty when no declared scope covers the unit — the fail-closed default, where nobody may write anything.
  */
-function terrainOwner(policy: AtlasPolicy, scope: string): string {
+export function terrainOwner(policy: AtlasPolicy, scope: string): string {
   const covering = Object.keys(policy.authz.scopes)
     .filter((key) => underScope(scope, key))
     .sort((a, b) => (b.length - a.length !== 0 ? b.length - a.length : a < b ? -1 : 1))

@@ -1,0 +1,230 @@
+// Overview, Knowledge, a unit and a fact. Layers follow specs/atlas-ui/DESIGN.md: the first viewport answers the
+// screen's one job, one tap opens the rest, and hashes and Atlas codes live only in Technical details.
+;(function (A) {
+  const M = () => A.m
+  const R = () => A.m.R
+  const plural = (n, one, many = `${one}s`) => `${A.num(n)} ${n === 1 ? one : many}`
+  const pct = (a, b) => (b ? Math.round((a / b) * 100) : 0)
+  A.views = {}
+  A.plural = plural
+  const unitHref = (path) => `#/unit/${encodeURIComponent(path)}`
+  const kpi = (label, value, foot, tone = "") => `<div class="at-kpi ${tone}"><span>${label}</span><b>${value}</b><small>${foot}</small></div>`
+  const acc = (id, glyph, title, purpose, summary, body, open = false) =>
+    `<details class="at-acc" data-acc="${id}" ${open ? "open" : ""}><summary><span class="at-acc-ic">${A.icon(glyph)}</span><span class="at-acc-t"><strong>${title}</strong><small>${purpose}</small></span><span class="at-acc-sum">${summary}</span>${A.icon("chev", "at-acc-chev")}</summary><div class="at-acc-body">${body}</div></details>`
+  A.acc = acc
+  A.kpi = kpi
+  // Seven rows, then "Show N more" (DESIGN.md layout rules).
+  A.seven = (rows, id, render, first = 7) => {
+    const n = Number(A.state.query[`n-${id}`] ?? first)
+    const more = rows.length > n ? `<div class="at-more"><span>${A.num(rows.length - n)} more</span>${A.btn(`Show ${Math.min(25, rows.length - n)} more`, "more", { value: `${id}|${n + 25}` })}</div>` : ""
+    return rows.slice(0, n).map(render).join("") + more
+  }
+  const dot = (u) => `<span class="at-sdot ${u.drifted ? "warm" : "good"}" data-tip="${u.drifted ? `${u.drifted} changed` : "All up to date"}"></span>`
+
+  // A fact row: the sentence on one line, the file as text, at most two chips (state, then tier / family / example).
+  const factRow = (x, state, opts = {}) => `<div class="at-item ${state.query.fact === x.key ? "selected" : ""}" data-action="open" data-value="${x.key}" tabindex="0" role="button">
+    ${A.chip((x.kind === "candidate" && !x.promotedNow) ? "pending" : M().state(x))}
+    <div class="at-item-main"><div class="at-item-text clamp">${A.esc(x.claim)}</div>
+    <div class="at-item-meta">${opts.noFile ? "" : `<span class="at-meta-file">${A.esc(opts.short ? x.file.split("/").at(-1) : x.file)}</span>`}${x.slot ? `<span>${A.esc(x.slot)}</span>` : ""}${opts.extra ?? ""}</div></div>${A.second(x)}</div>`
+  A.factRow = factRow
+
+  /* ---------- A unit: what an agent learns here, and whether it still holds ---------- */
+  A.views.unit = (state) => {
+    const path = state.params[0] || "packages/knowledge"
+    const q = state.query
+    const node = M().findNode(path === "(root)" ? "" : path)
+    const isUnit = M().units().some((u) => u.id === path)
+    const unitId = M().unitOf(`${path}/x`) === path ? path : M().unitOf(path)
+    const b = path === "(root)" ? { ...M().briefing(""), here: M().live().filter((x) => M().unitOf(x.file) === "(root)") } : M().briefing(path)
+    const here = b.here
+    const fresh = here.filter((x) => M().state(x) === "fresh").length
+    const terr = M().territoryOf(unitId)
+    const strict = here.some((x) => x.tier === "T0") ? "T0" : here.some((x) => x.tier === "T1") ? "T1" : "T2"
+    const published = M().snapshot.units.includes(path)
+    const snap = M().snapshot.packs[path]
+    const sent = b.inv.length + b.gotchas.length + b.adv.length
+    const leaf = path.split("/").at(-1)
+
+    // Briefing: the bands in the order `atlas own` pays them.
+    const band = (cls, title, tip, list, empty) => `<section class="at-band ${cls}"><header class="at-band-head"><h3>${title}</h3>${A.help(tip)}<span class="wf-count">${list.length}</span></header>${list.length ? list.map((x) => factRow(x, state, { short: true })).join("") : `<div class="at-band-empty">${empty}</div>`}</section>`
+    const publishLine = published
+      ? `<div class="at-snapline good">${A.icon("checkc")}<span>Agents get the published version${snap ? ` (${plural(snap.invariants.length, "ratified fact")}, ${snap.advisory} hints)` : ""}, not the live one below.</span>${A.help(`Own snapshot, revision ${M().snapshot.revision}. Served only while its source files are byte-identical; otherwise reads hold as artifacts-invalid.`)}${A.btn("Republish", "republish", { value: path, cap: "R7" })}</div>`
+      : `<div class="at-snapline">${A.icon("info")}<span>Not published: agents get nothing for this unit yet.</span>${A.btn("Publish", "republish", { value: path, cap: "R7" })}</div>`
+    // A store in git serves only re-proven sealed facts, so `own` sends nothing from it (compose.ts createOwnLeg over read access).
+    const blind = M().provenance() !== "trusted"
+    const briefing = path === "(root)" ? `<div class="at-band-empty">Atlas has no unit for top-level files; their facts are listed under Facts by kind.</div>` : `${publishLine}${blind ? `<div class="ins-note">${A.icon("lock")}<span>From this store agents get an empty briefing. Below is what it would send if the store were local.</span></div>` : ""}
+      ${band("gov", "Ratified", "Governing band (T0, T1), paid first out of 1,500 characters.", b.inv, "Nothing ratified here yet.")}
+      ${b.gotchas.length ? band("gotcha", "Watch out", "Gotcha band: ratified gotcha and rationale facts.", b.gotchas, "") : ""}
+      ${b.pointers.length ? `<section class="at-band"><header class="at-band-head"><h3>Go deeper</h3>${A.help("Manifest pointers own_<leaf>, at most 12: names only; the agent pulls them.")}<span class="wf-count">${b.pointers.length}</span></header>${b.pointers.map((p) => `<a class="at-linkrow" href="${unitHref(p.path)}">${A.icon("folder")}<code class="at-mono">${A.esc(p.path.slice(path.length + 1) || p.name)}</code></a>`).join("")}</section>` : ""}
+      ${band("adv", "Hints", "Advisory band (T2): at most 750 characters, paid last, stops at the first fact that does not fit.", b.adv, "No hints.")}
+      ${b.pull.length ? `<details class="at-sub-acc" data-acc="pull-${path}"><summary>${A.icon("chev")}<span>Left out for space</span><span class="wf-count">${b.pull.length}</span></summary>${A.seven(b.pull, "pull", (x) => factRow(x, state, { short: true }))}</details>` : ""}`
+
+    // Facts by kind (slot).
+    const typeOf = (x) => (x.slot ? M().SLOT_GROUPS.find((g) => g[2].includes(x.slot))?.[0] : "Not sorted yet")
+    const type = q.type ?? ""
+    const kinds = [...M().SLOT_GROUPS.map(([g]) => g), "Not sorted yet"].map((g) => [g, here.filter((x) => typeOf(x) === g).length]).filter(([, n]) => n)
+    const shown = here.filter((x) => !type || typeOf(x) === type)
+    const href = (patch) => `${unitHref(path)}?${new URLSearchParams(Object.fromEntries(Object.entries({ type, conn: q.conn, ...patch }).filter(([, v]) => v)))}`
+    const kindsBody = `<div class="at-acc-tools"><div class="at-typechips">${[["", here.length], ...kinds].map(([g, n]) => `<button class="at-typechip ${type === g ? "on" : ""}" data-action="go" data-value="${href({ type: g })}">${g || "All"}<span>${n}</span></button>`).join("")}</div>${A.help("Kinds are Atlas slots: Contract, Property, Guidance, Structure. Sorting a fact writes a new fact at (anchor, slot).")}</div>
+      ${A.seven(shown, `kind${type}`, (x) => factRow(x, state, { short: true }))}`
+
+    // Proven structure: the other fact families, each from its own read command (relations, negations, transitions,
+    // test-vacuities). This store holds none; illustrated mode adds marked examples for a few units.
+    const ps = A.illustrations?.structure?.[path] ?? {}
+    const abstainWord = { "scope-open": "the scope can still grow", "target-not-global": "the target isn't one global symbol", "scope-empty": "the scope holds no code", "target-unresolvable": "the target couldn't be found", "escape-open": "code in the scope can reach out dynamically", "scope-dynamic": "code in the scope loads modules at run time" }
+    const hollowWord = { "assertion-only-in-catch": "its only assertion sits in a catch block", "no-assertion-in-test": "it asserts nothing", "assertion-never-invoked": "its assertion never runs" }
+    const ex = '<span class="at-pill">example</span>'
+    const sRow = (glyph, text, tail = "") => `<div class="at-linkrow static">${A.icon(glyph)}<span>${text}</span><span class="grow"></span>${tail}${ex}</div>`
+    const structure = [
+      ["links", "Links", "atlas relations · depends-on edges proven from the code index", (ps.links ?? []).map((l) => sRow("relations", `<code class="at-mono">${A.esc(l.a)}</code> depends on <code class="at-mono">${A.esc(l.b)}</code>`, '<span class="at-state good">Machine-proven</span>'))],
+      ["never", "Never calls", "atlas negations · nothing in the scope calls a target", [...(ps.never ?? []).map((n) => sRow("minusc", `Nothing in <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>`)),
+        ...(ps.abstained ?? []).map((n) => sRow("info", `Couldn't decide whether <code class="at-mono">${A.esc(n.scope)}</code> calls <code class="at-mono">${A.esc(n.target)}</code>: ${abstainWord[n.reason] ?? A.esc(n.reason)}`))]],
+      ["changes", "Code changes", "atlas transitions · what changed in a unit between two commits", (ps.changes ?? []).map((c) => sRow("commit", `<code class="at-mono">${A.esc(c.unit)}</code> changed between <code class="at-sha">${A.esc(c.before)}</code> and <code class="at-sha">${A.esc(c.after)}</code>`))],
+      ["hollow", "Hollow tests", "atlas test-vacuities · tests that cannot fail", (ps.hollow ?? []).map((t) => sRow("warning", `“${A.esc(t.test)}” can't fail: ${hollowWord[t.shape] ?? A.esc(t.shape)}`))],
+    ]
+    const structureCount = structure.reduce((n, [, , , rows]) => n + rows.length, 0)
+    const structureBody = structure.map(([id, label, tip, rows]) => `<div class="at-struct"><div class="at-struct-head"><strong>${label}</strong>${A.help(tip)}<span class="wf-count">${rows.length}</span></div>${rows.join("") || '<div class="at-band-empty">None yet.</div>'}</div>`).join("") + `<p class="at-stew-intro">Proven facts come from <b>More producers</b> in Review.</p>`
+
+    // Connections: what depends on it (own `edges.dependents`). Atlas has no forward closure, so "what it uses" is
+    // always empty in the pack (adapter-io/src/own-source.ts) and the UI says so instead of computing it.
+    const usedFacts = M().live().filter((x) => b.depFiles.includes(x.file)).sort((a, z) => a.key.localeCompare(z.key))
+    const connBody = `<div class="at-acc-tools"><strong class="at-acc-label">Used by</strong>${A.help("Files that import this unit directly or indirectly, from the code index. The briefing sends the keys of the first 8 of their facts.")}</div>
+      ${usedFacts.length ? A.seven(usedFacts, "used", (x) => factRow(x, state)) : '<div class="at-band-empty">Nothing outside depends on it.</div>'}
+      <div class="at-linkrow static muted">${A.icon("minusc")}<span>What it uses</span>${A.help("Atlas's index only answers what depends on a unit, so the briefing's dependencies band is always empty.")}<span class="grow"></span><small>Not recorded</small></div>`
+
+    const finer = node ? [...node.children.values()].sort((x, y) => x.path.localeCompare(y.path)) : []
+    const finerBody = finer.length ? A.seven(finer, "finer", (c) => `<a class="at-linkrow" href="${unitHref(c.path)}">${A.icon(c.file ? "fact" : "folder")}<code class="at-mono">${A.esc(c.name)}</code><span class="grow"></span>${c.drifted ? `<span class="at-sdot warm"></span>` : ""}<small>${plural(c.facts, "fact")}</small></a>`) : `<div class="at-band-empty">Nothing finer: this is a single file.</div>`
+    const pins = (A.illustrations?.pinned ?? []).filter((p) => p.units.includes(path))
+    const pinsBody = pins.map((p) => `<a class="at-linkrow" href="#/memory/${p.member}/task/${encodeURIComponent(p.plan)}">${A.icon("lock")}<span>${A.esc(p.plan)} · revision ${p.revision}</span><span class="grow"></span>${p.stale ? `<span class="at-state warm" data-tip="anchor-source-drift · a frozen unit changed after this revision">${A.icon("drift")}Out of date</span>` : `<span class="at-state good">${A.icon("checkc")}Current</span>`}<span class="at-pill">example</span></a>`).join("") + `<p class="at-stew-intro">If this unit changes, these plan steps hold until the plan is recorded again.</p>`
+
+    const owner = M().packOwner(path === "(root)" ? "" : unitId)
+    const tech = A.tech([
+      ["Atlas command", `<code>atlas own ${A.esc(path)}</code> · tool <code>own_${A.esc(leaf)}</code>`],
+      ["Grounding source", "tree"],
+      ["Pack owner", owner.length ? owner.map(A.esc).join(", ") : "none: no write-policy scope covers this path"],
+      ["Strictest tier", strict],
+      ["tokenEstimate", `${A.num(b.used)} characters of ${A.num(b.cap)}`],
+      ["advisoryDropped", b.pull.filter((x) => !M().governing(x)).length],
+      ["Pointers", b.pointers.length ? `${b.pointers.length} of ${b.pointerTotal} · pull <code>atlas own &lt;child&gt;</code> · hits 0` : "none"],
+      ["refresh · complement", `<code>poke:own_${A.esc(leaf)}</code> · <code>relate:${A.esc(path)}</code>`],
+      ["Query pack", `<code>atlas query ${A.esc(path)}</code> · two bands of up to 2,000 characters each; stale when any fact changed`],
+      ["Anchors", `<code>atlas anchors ${A.esc(path)}</code> · file units at ${A.esc(R().head)}`],
+    ])
+
+    const segs = path.split("/")
+    const crumbs = [["Atlas", "#/overview"], ["Knowledge", "#/knowledge"], ...(isUnit ? [[path, null, true]] : [[unitId, unitHref(unitId), true], [path.slice(unitId.length + 1), null, true]])]
+    // Accordions that draw on open: the briefing build and the file map.
+    const after = () => {
+      const when = (id, run) => { const d = document.querySelector(`details[data-acc="${id}"]`); if (!d) return; let done = false; const go = () => { if (d.open && !done) { done = true; run() } }; d.addEventListener("toggle", go); go() }
+      when("unit-build", () => A.buildBriefing(document.querySelector("#unit-brief-build"), path))
+      when("unit-map", () => {
+        const fg = M().fileGraph(path)
+        const st = (f) => { const xs = M().live().filter((x) => x.file === f); return xs.some((x) => M().state(x) === "drifted") ? "warm" : "good" }
+        A.graph(document.querySelector("#unit-map"), { id: "unitmap", length: 90, repel: 1600, labelMin: 11,
+          nodes: [...fg.files.map((f) => ({ id: f, label: f, short: f.slice(path.length + 1).split("/").at(-1), r: 5 + Math.min(10, (R().dependents[f] ?? []).length / 2), gw: 2, tone: st(f), tip: `<b>${A.esc(f.slice(path.length + 1))}</b><span>${A.num((R().dependents[f] ?? []).length)} files import it</span>` })),
+            ...fg.outside.map(([u, n]) => ({ id: `unit:${u}`, label: u, short: u.split("/").slice(1).join("/") || u, r: 7 + Math.min(10, n), tone: "ext", gw: 0.15, pin: true, tip: `<b>${A.esc(u)}</b><span>${n} imports into ${A.esc(leaf)}</span>` }))],
+          edges: fg.edges,
+          onSelect: (id) => {
+            const host = document.querySelector("#unit-map-pick")
+            if (!id) return (host.innerHTML = "")
+            if (id.startsWith("unit:")) return (host.innerHTML = `<div class="at-pick-head"><strong>${A.esc(id.slice(5))}</strong><span class="grow"></span>${A.btn("Open", "go", { value: unitHref(id.slice(5)), primary: true })}</div>`)
+            const facts = M().live().filter((x) => x.file === id)
+            host.innerHTML = `<div class="at-pick-head"><code class="at-mono">${A.esc(id.slice(path.length + 1))}</code><span class="grow"></span>${A.btn("Open file", "go", { value: unitHref(id) })}</div>${facts.map((x) => factRow(x, state, { noFile: true })).join("")}`
+          } })
+      })
+    }
+    return {
+      crumbs,
+      after,
+      html: `<div class="at-page narrow">
+      <div class="at-agent-head"><span class="at-avatar unit">${A.icon(node?.file ? "fact" : "stack")}</span><div><div class="mx-eyebrow">${isUnit ? `Unit · ${A.esc(path.includes("/") ? path.split("/")[0] : "repository root")}` : `inside <a class="mx-link" href="${unitHref(unitId)}">${A.esc(unitId.split("/").slice(1).join("/") || unitId)}</a>`}</div><h1 class="mono">${A.esc(isUnit ? (path.split("/").slice(1).join("/") || path) : segs.slice(-2).join("/"))}</h1>
+        <p>${terr ? `${A.esc(terr.name)} · ${A.agent(terr.owner)}` : "No territory"}</p></div><span class="grow"></span>
+        ${terr ? "" : A.btn("Declare territory", "territory", { value: path, cap: "R4" })}${A.btn("Add fact…", "add-fact", { value: path, icon: "plus", write: true })}</div>
+      <div class="at-kpis">
+        ${kpi("Facts", here.length, `${here.filter((x) => M().governing(x)).length} ratified`)}
+        ${kpi("Up to date", `${pct(fresh, here.length)}%`, here.length - fresh ? `${here.length - fresh} changed` : "nothing changed", here.length - fresh ? "warn" : "")}
+        ${kpi("In the briefing", blind || path === "(root)" ? 0 : sent, blind ? "store in git: nothing sent" : `${A.num(b.used)} of 1,500 characters`)}
+        ${kpi("Depends on it", b.depFactsTotal, b.depFactsTotal ? "facts elsewhere" : "nothing outside")}</div>
+      ${acc("unit-brief", "stack", "Briefing", "What an agent gets for this unit", plural(sent, "fact"), briefing, true)}
+      ${path === "(root)" ? "" : acc("unit-build", "play", "Watch it being built", "The same order and limits Atlas uses, step by step", `${A.num(b.used)} / 1,500`, '<div id="unit-brief-build"></div>')}
+      ${path === "(root)" || node?.file ? "" : acc("unit-map", "graph", "Map", "Its files, and the code elsewhere that imports them", `${M().fileGraph(path).files.length} files`, '<div class="at-graph-host" id="unit-map"></div><div class="at-graph-legend"><span><i class="lg good"></i>file holds</span><span><i class="lg warm"></i>file changed</span><span><i class="lg ext"></i>another unit</span><span class="grow"></span><span class="at-hint">Click a file to see its blast radius</span></div><div id="unit-map-pick" class="at-graph-pick"></div>')}
+      ${acc("unit-kinds", "fact", "Facts by kind", "Every fact here, by the kind of claim it makes", `${here.length}`, kindsBody)}
+      ${acc("unit-structure", "relations", "Proven structure", "Links, calls that never happen, code changes, hollow tests", structureCount ? `${structureCount}` : "none yet", structureBody)}
+      ${acc("unit-conn", "graph", "Connections", "What depends on it", `${usedFacts.length}`, connBody)}
+      ${acc("unit-finer", "folder", "Inside", "Folders and files in this unit", `${finer.length}`, finerBody)}
+      ${pins.length ? acc("unit-pins", "lock", "Pinned by plans", "Plans that froze this unit", `${pins.length}`, pinsBody) : ""}
+      ${tech}
+      </div>`,
+    }
+  }
+
+  /* ---------- A fact: can I trust this sentence, and where did it come from? ---------- */
+  A.views.detail = (key, state, page = false) => {
+    const x = M().byKey[key]
+    if (!x) return ""
+    const staged = x.kind === "candidate" && !x.promotedNow
+    const st = staged ? "pending" : M().state(x)
+    const why = x.why && R().reasoning[x.why]
+    const same = M().live().filter((y) => y.file === x.file && y.key !== x.key)
+    const importers = R().dependents[x.file] ?? []
+    const full = state.query.why === "all"
+    const order = state.list ?? []
+    const index = order.indexOf(key)
+    const sec = (id, title, body, open = false) => `<details class="ins-acc" data-acc="fact-${id}" ${open ? "open" : ""}><summary>${A.icon("chev")}<span>${title}</span></summary><div class="ins-acc-body">${body}</div></details>`
+    const hunk = (h) => `<div class="at-code"><div class="at-code-head"><span>@@ ${A.esc(h.at)} @@</span></div><pre>${h.lines.map((l) => `<div class="ln ${l[0] === "+" ? "add" : l[0] === "-" ? "del" : ""}"><span></span><span>${A.esc(l.slice(1))}</span></div>`).join("")}</pre></div>`
+    const changed = x.drift && !x.regrounded ? sec("changed", `What changed <span class="at-state warm" data-tip="doctor why: semantic. The old content exists nowhere at HEAD.">Content gone</span>`, `<p class="ins-sub">The file changed in ${plural(x.drift.commits.length, "commit")} (${A.esc(x.drift.stat)}). ${staged ? "Leave it in Mined." : `Atlas suggests retiring it, but a retire still points at the old code and is refused today, so rewrite the sentence for the current code ${A.help("doctor reground plans a retire; the truth gate re-derives the old anchor and refuses it as ungrounded (R6).")}`}</p>
+      ${x.drift.commits.map(([sha, subj]) => `<div class="at-commit"><code class="at-sha">${A.esc(sha)}</code><span>${A.esc(subj)}</span></div>`).join("")}${x.drift.hunks.slice(0, 1).map(hunk).join("")}`, true) : ""
+    const history = `<ul class="at-timeline">
+      <li><span class="at-tl-dot blue">${A.icon("sparkle")}</span><div class="at-tl-body"><strong>Mined</strong><small>by genesis, from the whole file</small></div></li>
+      ${staged ? `<li><span class="at-tl-dot">${A.icon("clock")}</span><div class="at-tl-body"><strong>Waiting in Mined</strong><small>not accepted yet</small></div></li>`
+        : `<li><span class="at-tl-dot good">${A.icon("check")}</span><div class="at-tl-body"><strong>Accepted</strong><small>derived at commit <code class="at-sha">${A.esc(x.derivedAt)}</code></small></div></li>`}
+      ${x.tier !== "T2" ? `<li><span class="at-tl-dot good">${A.icon("shield")}</span><div class="at-tl-body"><strong>${x.tier === "T0" ? "Made core" : "Ratified"}</strong><small>who approved is not recorded</small></div></li>` : x.proposedTier ? `<li><span class="at-tl-dot warm">${A.icon("clock")}</span><div class="at-tl-body"><strong>Proposed for ${x.proposedTier === "T0" ? "Core" : "Ratified"}</strong><small>by ${A.esc(x.proposedBy)} · example</small></div></li>` : ""}
+      <li><span class="at-tl-dot">${A.icon("minusc")}</span><div class="at-tl-body"><strong>No proof</strong><small>a stated sentence; nothing machine-checks it</small></div></li>
+      ${x.retired ? `<li><span class="at-tl-dot">${A.icon("minusc")}</span><div class="at-tl-body"><strong>Replaced</strong><small>still sent to agents (R6)</small></div></li>` : ""}
+    </ul>`
+    const related = `${same.length ? `<h5>On the same file</h5>${same.slice(0, 4).map((y) => `<div class="ins-rel" data-action="open" data-value="${y.key}" tabindex="0">${A.chip(M().state(y))}<span class="ins-rel-claim">${A.esc(y.claim)}</span></div>`).join("")}` : ""}
+      <h5>Same as</h5><div class="at-linkrow static"><span>No equivalent linked</span><span class="grow"></span>${staged ? "" : A.btn("Link…", "link-fact", { value: x.key })}</div>
+      <h5>Broader · narrower</h5><div class="at-linkrow static"><span>None found</span>${A.help("atlas query reports subsumes pairs: a fact whose claim covers another's.")}</div>
+      <h5>Files that import it</h5>${importers.slice(0, 5).map((f) => `<a class="at-linkrow" href="#/unit/${encodeURIComponent(f)}">${A.icon("code")}<code class="at-mono">${A.esc(f)}</code></a>`).join("") || '<p class="mx-note">None found in the imports.</p>'}`
+    const writers = R().policy[x.scope] ?? []
+    const tech = A.tech([
+      ["kind · family", `${A.esc(x.kind ?? "advisory")} · ${A.esc(x.family)}`], ["id (anchor)", `<code>${A.esc(x.anchor?.qualifiedPath ?? x.file)}</code> · ${A.esc(x.anchor?.kind ?? "file")}`],
+      ["nodeKey", A.hashv(x.key)], ["contentHash", A.hashv(x.hash)], ["subtreeHash", A.hashv(x.subtree)],
+      ["tier · authoring", `${A.esc(x.tier)} · ${A.esc(x.retired ? "SUPERSEDED" : x.authoring ?? "ADVISORY")}`], ["Stored freshness", A.esc(x.storedFreshness ?? "FRESH")],
+      ["Scope", `<code>${A.esc(x.scope)}</code> · written by ${writers.map(A.esc).join(", ") || "nobody"}`], ["Slot", A.esc(x.slot ?? "none")],
+      ["Obviousness", `${A.esc(x.obvious ?? "—")} · by ${A.esc(x.obviousBy ?? "harness-predicate")} · the check is pinned to false, so every mined fact is “obvious”`],
+      ["Seal · witness", "none · none"], ["supersededBy · sameAs", "none · none"],
+      ["Generation", staged ? `staging ${R().stagingGen}` : `projection ${R().gen}`], x.why ? ["answerRef", A.hashv(x.why)] : null,
+      ["Check a claim", `${A.btn("Check against the code…", "verify", { value: x.file })}`],
+    ])
+    const body = `
+      <p class="ins-claim">${A.esc(x.claim)}</p>
+      <div class="ins-states">${A.chip(st)}${A.second(x)}<span class="ins-meta">${A.origin(x)} · ${A.esc(x.file.split("/").at(-1))}</span></div>
+      ${M().provenance() !== "trusted" && !staged ? `<div class="ins-note">${A.icon("lock")}<span>Not sent to agents: this store is in git and the fact has no proof.</span></div>` : ""}
+      ${changed}
+      ${sec("code", "Code it's about", `<a class="at-fileline" href="#/unit/${encodeURIComponent(x.file)}">${A.icon("fact")}${A.file(x.file)}${A.icon("arrow")}</a><p class="mx-note">The whole file: any change to it changes this fact. Unit <a class="mx-link" href="#/unit/${encodeURIComponent(M().unitOf(x.file))}">${A.esc(M().unitOf(x.file))}</a>.</p>`)}
+      ${why ? sec("why", "How it was derived", `<div class="at-reasoning ${full ? "" : "short"}">${A.esc(full ? why : why.slice(0, 520))}${full || why.length <= 520 ? "" : "…"}</div>${why.length > 520 ? `<button class="mx-link" data-action="toggle-why">${full ? "Show less" : "Read all"}</button>` : ""}<p class="mx-note">The miner's reasoning. Agents never receive it.</p>`) : ""}
+      ${sec("history", "History", history)}
+      ${sec("related", "Related", related)}
+      ${tech}`
+    if (page) return body
+    const actions = staged
+      ? `${A.btn("Keep for later", "discard", { value: x.key, write: true, cap: "R2" })}${A.btn("Accept", "promote", { value: x.key, write: true, primary: true, cap: "R2" })}`
+      : st === "drifted" ? `${A.btn("Rewrite", "edit", { value: x.key, write: true, primary: true, cap: "R8" })}`
+      : st === "retired" ? `<span class="at-hint">Replaced · still sent (R6)</span>`
+      : `${A.btn("Edit", "edit", { value: x.key, write: true })}${x.slot ? "" : A.btn("Classify", "classify", { value: x.key, write: true })}${A.btn("Retire", "retire", { value: x.key, write: true })}${M().governing(x) ? "" : A.btn("Ratify…", "ratify", { value: x.key, write: true, primary: true })}`
+    return `<header class="ins-head"><span class="ins-kind">${A.icon("fact")}<span>${A.esc(M().unitOf(x.file))}</span></span>
+      ${A.btn("", "step", { icon: "up", value: "-1", label: "Previous (k)", tip: "Previous (k)", disabled: index <= 0 })}${A.btn("", "step", { icon: "down", value: "1", label: "Next (j)", tip: "Next (j)", disabled: index < 0 || index >= order.length - 1 })}
+      ${A.btn("", "go", { icon: "expand", value: `#/fact/${x.key}`, label: "Open as page", tip: "Open as page" })}${A.btn("", "close", { icon: "close", label: "Close (Esc)", tip: "Close (Esc)" })}</header>
+      <div class="ins-body">${body}</div><footer class="ins-foot">${A.btn("", "copy-link", { icon: "link", value: x.key, label: "Copy link", tip: "Copy link" })}<span class="grow"></span>${actions}</footer>`
+  }
+
+  A.views.fact = (state) => {
+    const x = M().byKey[state.params[0]]
+    if (!x) return { crumbs: [["Atlas", "#/overview"], ["Fact"]], html: `<div class="at-page narrow">${A.empty("No fact with this key", "It may never have been accepted.", A.btn("Back to knowledge", "go", { value: "#/knowledge" }))}</div>` }
+    return {
+      crumbs: [["Atlas", "#/overview"], ["Knowledge", "#/knowledge"], [x.file.split("/").at(-1), null, true]],
+      html: `<div class="at-page narrow"><div class="mx-heading"><div><div class="mx-eyebrow">${A.esc(M().unitOf(x.file))}</div></div><div class="heading-actions">${A.btn("Back", "back", { icon: "back" })}${A.btn("Copy link", "copy-link", { icon: "link", value: x.key })}</div></div><div class="at-pagecard">${A.views.detail(x.key, state, true)}</div></div>`,
+    }
+  }
+})(window.Atlas)

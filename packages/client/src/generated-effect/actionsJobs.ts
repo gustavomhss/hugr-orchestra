@@ -6,73 +6,73 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint35_0Request = Parameters<RawClient["server.actionsJob"]["actions.job.retry"]>[0]
-type Endpoint35_0Input = {
-  readonly bindingID: Endpoint35_0Request["params"]["bindingID"]
-  readonly jobID: Endpoint35_0Request["params"]["jobID"]
-  readonly location?: Endpoint35_0Request["query"]["location"]
-  readonly revision: Endpoint35_0Request["query"]["revision"]
-  readonly id: Endpoint35_0Request["payload"]["id"]
-  readonly input: Endpoint35_0Request["payload"]["input"]
+type Endpoint36_0Request = Parameters<RawClient["server.actionsJob"]["actions.job.retry"]>[0]
+type Endpoint36_0Input = {
+  readonly bindingID: Endpoint36_0Request["params"]["bindingID"]
+  readonly jobID: Endpoint36_0Request["params"]["jobID"]
+  readonly location?: Endpoint36_0Request["query"]["location"]
+  readonly revision: Endpoint36_0Request["query"]["revision"]
+  readonly id: Endpoint36_0Request["payload"]["id"]
+  readonly input: Endpoint36_0Request["payload"]["input"]
 }
-const Endpoint35_0 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint35_0Input) =>
+const Endpoint36_0 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint36_0Input) =>
   raw["actions.job.retry"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_1Request = Parameters<RawClient["server.actionsJob"]["actions.job.play"]>[0]
-type Endpoint35_1Input = {
-  readonly bindingID: Endpoint35_1Request["params"]["bindingID"]
-  readonly jobID: Endpoint35_1Request["params"]["jobID"]
-  readonly location?: Endpoint35_1Request["query"]["location"]
-  readonly revision: Endpoint35_1Request["query"]["revision"]
-  readonly id: Endpoint35_1Request["payload"]["id"]
-  readonly input: Endpoint35_1Request["payload"]["input"]
+type Endpoint36_1Request = Parameters<RawClient["server.actionsJob"]["actions.job.play"]>[0]
+type Endpoint36_1Input = {
+  readonly bindingID: Endpoint36_1Request["params"]["bindingID"]
+  readonly jobID: Endpoint36_1Request["params"]["jobID"]
+  readonly location?: Endpoint36_1Request["query"]["location"]
+  readonly revision: Endpoint36_1Request["query"]["revision"]
+  readonly id: Endpoint36_1Request["payload"]["id"]
+  readonly input: Endpoint36_1Request["payload"]["input"]
 }
-const Endpoint35_1 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint35_1Input) =>
+const Endpoint36_1 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint36_1Input) =>
   raw["actions.job.play"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_2Request = Parameters<RawClient["server.actionsJob"]["actions.job.cancel"]>[0]
-type Endpoint35_2Input = {
-  readonly bindingID: Endpoint35_2Request["params"]["bindingID"]
-  readonly jobID: Endpoint35_2Request["params"]["jobID"]
-  readonly location?: Endpoint35_2Request["query"]["location"]
-  readonly revision: Endpoint35_2Request["query"]["revision"]
-  readonly id: Endpoint35_2Request["payload"]["id"]
-  readonly input: Endpoint35_2Request["payload"]["input"]
+type Endpoint36_2Request = Parameters<RawClient["server.actionsJob"]["actions.job.cancel"]>[0]
+type Endpoint36_2Input = {
+  readonly bindingID: Endpoint36_2Request["params"]["bindingID"]
+  readonly jobID: Endpoint36_2Request["params"]["jobID"]
+  readonly location?: Endpoint36_2Request["query"]["location"]
+  readonly revision: Endpoint36_2Request["query"]["revision"]
+  readonly id: Endpoint36_2Request["payload"]["id"]
+  readonly input: Endpoint36_2Request["payload"]["input"]
 }
-const Endpoint35_2 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint35_2Input) =>
+const Endpoint36_2 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint36_2Input) =>
   raw["actions.job.cancel"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint35_3Request = Parameters<RawClient["server.actionsJob"]["actions.job.erase"]>[0]
-type Endpoint35_3Input = {
-  readonly bindingID: Endpoint35_3Request["params"]["bindingID"]
-  readonly jobID: Endpoint35_3Request["params"]["jobID"]
-  readonly location?: Endpoint35_3Request["query"]["location"]
-  readonly revision: Endpoint35_3Request["query"]["revision"]
-  readonly id: Endpoint35_3Request["payload"]["id"]
-  readonly input: Endpoint35_3Request["payload"]["input"]
+type Endpoint36_3Request = Parameters<RawClient["server.actionsJob"]["actions.job.erase"]>[0]
+type Endpoint36_3Input = {
+  readonly bindingID: Endpoint36_3Request["params"]["bindingID"]
+  readonly jobID: Endpoint36_3Request["params"]["jobID"]
+  readonly location?: Endpoint36_3Request["query"]["location"]
+  readonly revision: Endpoint36_3Request["query"]["revision"]
+  readonly id: Endpoint36_3Request["payload"]["id"]
+  readonly input: Endpoint36_3Request["payload"]["input"]
 }
-const Endpoint35_3 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint35_3Input) =>
+const Endpoint36_3 = (raw: RawClient["server.actionsJob"]) => (input: Endpoint36_3Input) =>
   raw["actions.job.erase"]({
     params: { bindingID: input["bindingID"], jobID: input["jobID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup35 = (raw: RawClient["server.actionsJob"]) => ({
-  retry: Endpoint35_0(raw),
-  play: Endpoint35_1(raw),
-  cancel: Endpoint35_2(raw),
-  erase: Endpoint35_3(raw),
+export const adaptGroup36 = (raw: RawClient["server.actionsJob"]) => ({
+  retry: Endpoint36_0(raw),
+  play: Endpoint36_1(raw),
+  cancel: Endpoint36_2(raw),
+  erase: Endpoint36_3(raw),
 })

@@ -202,6 +202,9 @@ export interface PromptFactory {
 export function createPromptFactory(deps: {
   source: SourceReader
   templatePath?: string
+  /** [D39] The template's text, for a bundle that ships without `prompts/` (the Orchestra boundary). Wins over
+   *  `templatePath`; the digest is over these bytes, the same as reading the file they came from. */
+  templateText?: string
   /** OPT-IN cross-unit context (the ENRICH fix, A4-LEVER.md). ABSENT ⇒ byte-identical to the shipped
    *  anchored-unit-only prompt — the default arm is unchanged. PRESENT ⇒ the template MUST carry `{{RELATED}}`
    *  and `build` interpolates the sibling context; the grounding anchor and `evidenceSpan` are UNTOUCHED — a
@@ -215,7 +218,7 @@ export function createPromptFactory(deps: {
   const path = deps.templatePath ?? shippedTemplatePath()
   let raw: string
   try {
-    raw = readFileSync(path, "utf8")
+    raw = deps.templateText ?? readFileSync(path, "utf8")
   } catch (e) {
     throw new PromptError("template-unreadable", `the prompt template at ${path} could not be read: ${String(e)}`)
   }

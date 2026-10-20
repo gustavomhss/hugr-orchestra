@@ -1,11 +1,12 @@
 import { Database } from "@orchestra/core/database/database"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { httpClient } from "@orchestra/core/effect/app-node-platform"
+import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { EventV2 } from "@orchestra/core/event"
 import { Credential } from "@orchestra/core/credential"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { AppProcess } from "@orchestra/core/process"
+import { Npm } from "@orchestra/core/npm"
 import { GitCli } from "@orchestra/core/git-cli"
 import { Global } from "@orchestra/core/global"
 import { ProjectV2 } from "@orchestra/core/project"
@@ -53,6 +54,8 @@ const applicationServices = LayerNode.group([
   LocationServiceMap.node,
   FSUtil.node,
   AppProcess.node,
+  Npm.node,
+  llmClient,
   GitCli.node,
   Global.node,
   ProjectV2.node,

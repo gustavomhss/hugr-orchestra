@@ -1,11 +1,11 @@
 // @atlas/adapter-io — src/native-memory.ts  (the BOUND Memory composition — F3 work package A1)
 //
-// ── REFERENCE MODEL — NO PRODUCTION CALLERS INSIDE THIS TREE ─────────────────────────────────────────────
-// Declared in `harness/gates/reference-model-guard.mjs`. Its consumer is a HARNESS outside the Atlas tree
-// (Orchestra's backend specialist, through the installed boundary package — F3 clause 27, work package A3), so no
-// module under `packages/*/src` calls it and none should: the CLI/MCP doors compose Memory through
-// `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3 clause 4 forbids
-// exactly that route here. The entry goes stale when an in-tree caller appears, and the gate says so.
+// ── CALLERS ──────────────────────────────────────────────────────────────────────────────────────────────
+// Orchestra's backend specialist composes this through the installed boundary package (F3 clause 27). The CLI/MCP
+// doors compose Memory through `compose.ts`, which resolves the owner from `ATLAS_ACTOR ?? git user.email`, and F3
+// clause 4 forbids exactly that route here. The one in-tree caller is the Atlas screen's surface
+// (`surface/review.ts`), which calls `decideProjectRule`; it writes as the PROPOSAL's member and never as the
+// surface's resolved actor, so clause 4 still holds.
 //
 // ── WHAT THIS FILE IS ────────────────────────────────────────────────────────────────────────────────────
 // The four Memory doors (`createDurableMemory`, `createMemoryRead`, `createMemoryEmit`, the scanner) composed
@@ -46,7 +46,7 @@
 // append is still a single `O_APPEND` write, so no record is lost or spliced — the bound is on the GATES.
 
 import { isAbsolute } from "node:path"
-import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, versioned } from "@atlas/memory"
+import { INITIAL_PROJECT_FRECENCY, prClosingFold, put, taskClosingFold, tok, validate, versioned } from "@atlas/memory"
 import type {
   Awareness,
   ClosingFold,
@@ -69,6 +69,7 @@ import type { DurableMemory, MemoryRead } from "./memory-store.js"
 import { createMemoryEmit } from "./memory-emit.js"
 import type { MemoryRejected } from "./memory-emit.js"
 import { createMemoryRead } from "./memory-read.js"
+import { appendReview, foldReview, readReview, reviewLogPath } from "./review-log.js"
 import { createAwarenessStore } from "./awareness-store.js"
 import { createDurableOrientation } from "./orientation-store.js"
 import { KNOWN_SCANNERS, detectAvailableScanner, runScanner } from "./scanner.js"
@@ -157,9 +158,27 @@ export type ReconcileVerdict =
   | { readonly present: true; readonly ref: RecordRef }
   | { readonly present: false; readonly store: StoreState }
 
+/** R5 (D23): one of the binding owner's own `task` checkpoints, as a resume picker lists it. It carries no time: a
+ *  record has none, and log order is never \"latest\" (F3-D3), so the list claims nothing about recency. */
+export interface ResumableRecord {
+  readonly ref: RecordRef
+  readonly taskId: string
+  readonly stoppedAt: string
+  readonly lesson: string
+}
+/** R5 (D23). File order. An `unavailable` store lists nothing and says so; it is never an empty `complete` list. */
+export interface ResumableList {
+  readonly records: readonly ResumableRecord[]
+  readonly store: StoreState
+}
 /** A `project` rule as a seat proposes it: Atlas owns the initial `frecency` (clause 22, work package A2), so the
  *  bound write takes no caller-supplied score. */
 export type ProjectRuleProposal = Omit<ProjectMemoryEntry, "frecency">
+
+/** R1 (D18): what proposing a `project` rule did. A refusal has the emit door's `MemoryRejected` shape. */
+export type ProposalVerdict =
+  | { readonly ok: true; readonly proposalId: string; readonly reconciled?: true }
+  | MemoryRejected
 /** The entries the bound write and reconcile doors accept: a seat's own `task`/`pr` checkpoint or `project` rule.
  *  `logbook` is orchestrator-only and never reaches a seat's binding. */
 export type BoundEntry = TaskMemoryEntry | PrMemoryEntry | ProjectRuleProposal
@@ -171,6 +190,9 @@ export interface NativeMemory {
   resolveFold(unit: ResumeUnit, ref?: RecordRef): FoldVerdict
   write(entry: BoundEntry): WriteVerdict
   reconcile(entry: BoundEntry): ReconcileVerdict
+  /** R5: the binding owner's own task checkpoints (its `legacyOwners` included). Takes no owner: the binding is the
+   *  only owner this surface reads as (clauses 2-4). */
+  listResumable(): ResumableList
 }
 
 export function createNativeMemory(input: AtlasBinding): NativeMemory {
@@ -287,6 +309,27 @@ export function createNativeMemory(input: AtlasBinding): NativeMemory {
       if (ref !== undefined && read.log.has(ref.eventId as Hash)) return { present: true, ref }
       return { present: false, store: state }
     },
+
+    listResumable(): ResumableList {
+      const read = store.read()
+      const state = storeStateOf(read)
+      if (state === "unavailable") return { records: [], store: state }
+      // A partial store still lists what verified (each line carries its own content hash) and says it is partial.
+      const records = [...read.log.entries()].flatMap(([eventId, ev]): ResumableRecord[] => {
+        const record = ev.payload as MemoryRecord
+        if (!owners.has(record.owner) || record.kind !== "task") return []
+        const entry = record.entry as TaskMemoryEntry
+        return [
+          {
+            ref: { contentHash: ev.contentHash, eventId },
+            taskId: entry.taskId,
+            stoppedAt: entry.stoppedAt,
+            lesson: entry.lesson,
+          },
+        ]
+      })
+      return { records, store: state }
+    },
   }
 }
 
@@ -308,6 +351,99 @@ export function readBoundHeader(input: HeaderBinding): BoundHeader {
     createAwarenessStore(root).read(),
     createDurableOrientation(root).orientation(),
   )
+}
+
+/**
+ * R1 (D18) — a seat's `project` rule becomes a PROPOSAL in the shared review log (`.atlas/review.jsonl`, D14), never
+ * a rule: a person indexes it (the host then `write`s it as the member) or discards it. It is judged as `write`
+ * judges it up to the cap: the `project` template with Atlas's own frecency, the binding owner, and the NAMED
+ * scanner — the review log travels in git, so an unscanned rule must never reach it. The MEM-3 cap is judged at
+ * indexing. An identical OPEN proposal by the same owner reconciles to its id. `at` is the host's clock (ISO-8601).
+ */
+export function proposeProjectRule(input: AtlasBinding, entry: unknown, at: string): ProposalVerdict {
+  const binding = freezeBinding(input)
+  if (typeof at !== "string" || at === "") throw new Error("native-memory: proposeProjectRule needs the host's ISO time `at`")
+  const owner = binding.memoryOwner
+  const root = binding.storage.root
+  const candidate = projectCandidate(entry)
+  if (typeof candidate === "string") return { ok: false, refusal: "template-invalid", reason: candidate }
+  const complete: ProjectMemoryEntry = { ...candidate, frecency: INITIAL_PROJECT_FRECENCY }
+  const template = validate("project", complete)
+  if (!template.valid) return { ok: false, refusal: "template-invalid", reason: `MEM-5 template: ${template.reasons.join("; ")}` }
+  const read = readReview(root)
+  const log = reviewLogPath(root)
+  if (read.unreadable === true) return { ok: false, refusal: "store-unavailable", reason: `the review log at '${log}' could not be read` }
+  if (read.rejected > 0) {
+    const reason = `the review log at '${log}' has ${read.rejected} line(s) that do not verify, so an identical open proposal cannot be ruled out`
+    return { ok: false, refusal: "store-partial", reason }
+  }
+  const open = foldReview(read.records).openMemoryProposals.find(
+    (p) => p.member === owner && p.rule === complete.rule && p.scope === complete.scope,
+  )
+  if (open !== undefined) return { ok: true, proposalId: open.id, reconciled: true }
+  const blocked = scanProposal(binding, put("memory", complete, owner))
+  if (blocked !== undefined) return blocked
+  const body = { kind: "memory-proposal", member: owner, rule: complete.rule, scope: complete.scope } as const
+  return { ok: true, proposalId: appendReview(root, { ...body, at, by: owner }).id }
+}
+
+/** R1 (D30): what a person's decision on a memory proposal did. A refused `indexed` write is the door's own refusal. */
+export type DecisionVerdict =
+  | { readonly ok: true; readonly decisionId: string; readonly ref?: RecordRef }
+  | MemoryRejected
+  | { readonly ok: false; readonly refusal: "proposal-not-open"; readonly reason: string }
+export type ProjectRuleDecision = { readonly proposalId: string; readonly verdict: "indexed" | "discarded"; readonly rule?: string; readonly scope?: string; readonly by: string }
+
+/** R1 (D30) — `indexed` writes the rule through the bound `write` AS THE PROPOSAL'S MEMBER (template, MEM-3 cap and
+ *  named scanner judged there), then appends the `memory-decision`; a refused write appends nothing and the proposal
+ *  stays open. `discarded` only appends. A non-empty `rule`/`scope` replaces the proposal's text. The binding gives the
+ *  storage root and the scanner; its `memoryOwner` never writes. */
+export function decideProjectRule(input: AtlasBinding, decision: ProjectRuleDecision, at: string): DecisionVerdict {
+  const binding = freezeBinding(input)
+  const root = binding.storage.root
+  const read = readReview(root)
+  if (read.unreadable === true || read.rejected > 0) {
+    const reason = `the review log at '${reviewLogPath(root)}' cannot be fully read, so the proposal's state is unknown`
+    return { ok: false, refusal: read.unreadable === true ? "store-unavailable" : "store-partial", reason }
+  }
+  const proposal = foldReview(read.records).openMemoryProposals.find((p) => p.id === decision.proposalId)
+  if (proposal === undefined) return { ok: false, refusal: "proposal-not-open", reason: `no open memory proposal has id '${decision.proposalId}'` }
+  const decided = (verdict: "indexed" | "discarded") =>
+    appendReview(root, { kind: "memory-decision", proposalId: proposal.id, verdict, ...(decision.rule ? { rule: decision.rule } : {}),
+      ...(decision.scope ? { scope: decision.scope } : {}), at, by: decision.by }).id
+  if (decision.verdict === "discarded") return { ok: true, decisionId: decided("discarded") }
+  const member = { storage: binding.storage, source: binding.source, memoryOwner: proposal.member, execution: binding.execution }
+  const entry = { rule: decision.rule || proposal.rule, scope: decision.scope || proposal.scope }
+  const written = createNativeMemory({ ...member, ...(binding.scanner ? { scanner: binding.scanner } : {}) }).write(entry)
+  if (!written.ok) return written
+  return { ok: true, decisionId: decided("indexed"), ref: written.ref }
+}
+
+/** The proposal's own two fields, or why it is not one. D14's memory-proposal record has no `grounding`. */
+function projectCandidate(entry: unknown): { readonly rule: string; readonly scope: string } | string {
+  if (typeof entry !== "object" || entry === null) return "a project-rule proposal is an object {rule, scope}"
+  const e = entry as Record<string, unknown>
+  if ("frecency" in e) return "`frecency` is assigned by Atlas policy (INITIAL_PROJECT_FRECENCY); an entry may not supply it"
+  const extra = Object.keys(e).filter((k) => k !== "rule" && k !== "scope")
+  if (extra.length > 0) return `a project-rule proposal carries only \`rule\` and \`scope\` (D14); unexpected: ${extra.join(", ")}`
+  if (typeof e.rule !== "string" || typeof e.scope !== "string" || e.rule.trim() === "" || e.scope.trim() === "")
+    return "a project-rule proposal needs a non-empty string `rule` and `scope`"
+  return { rule: e.rule, scope: e.scope }
+}
+
+/** MEM-9 on a proposal: the same named scanner `write` resolves. Absent or failing is refused, never passed. */
+function scanProposal(binding: AtlasBinding, record: MemoryRecord): MemoryRejected | undefined {
+  const scanner = scannerFor(binding).scanner
+  const why = "MEM-9 pre-write scan:"
+  if (scanner === undefined)
+    return { ok: false, refusal: "scanner-unavailable", reason: `${why} no NAMED scanner is configured; nothing was appended`, scanner: "" }
+  try {
+    if (!scanner.scan(record)) return undefined
+    return { ok: false, refusal: "scanner-blocked", reason: `${why} '${scanner.name}' found a secret in this rule`, scanner: scanner.name }
+  } catch (e) {
+    const reason = `${why} scanner '${scanner.name}' could not complete (${e instanceof Error ? e.message : String(e)}) — refused, never passed`
+    return { ok: false, refusal: "scanner-unavailable", reason, scanner: scanner.name }
+  }
 }
 
 /** Clause 7. A legacy owner's `project` rules rank as the binding owner's own: the read door ranks a snapshot in

@@ -26,6 +26,7 @@
     "./groups/fs": "./src/groups/fs.ts",
     "./groups/health": "./src/groups/health.ts",
     "./groups/integration": "./src/groups/integration.ts",
+    "./groups/atlas": "./src/groups/atlas.ts",
     "./groups/lean": "./src/groups/lean.ts",
     "./groups/location": "./src/groups/location.ts",
     "./groups/lsp": "./src/groups/lsp.ts",

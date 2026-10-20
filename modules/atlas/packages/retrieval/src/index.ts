@@ -21,3 +21,7 @@ export * from "./poke.js" // WP-6.21.RETR — debounced once-per-scope poke (N=2
 export * from "./drop.js" // WP-6.22.RETR — injection-ceiling drop-order (ledger hitRate, 2 pins never drop) + stale-not-trusted
 export * from "./ledger.js" // WP-6.18.RETR — RETR-8 hits ledger (budget()) + caps tuned by observed hits (feeds the sealed dropOrder)
 export * from "./offatlas.js" // WP-6.18.RETR — RETR-13 per-territory off-atlas MISS-oracle (served-0 ⇒ rate 0, θ-threshold calibration prompt)
+
+// R4 (D22) — the territory-catalog door `atlas territory` writes through (adapter-io/src/territory-write.ts). Named,
+// not `export *`: host-context.ts is the installed host entry and re-exports `OWN_CAP`, which own.js already exports.
+export { publishTerritoryCatalog, territoryCatalog } from "./host-context.js"

@@ -40,6 +40,13 @@ export const ARITY: Record<Command, number> = {
   // under that one composed store. A path argument would let the two disagree (read one repo's candidates,
   // publish into another's knowledge), which is a confusion no gate downstream is positioned to catch.
   promote: 0,
+  hold: 1, // hold <nodeKey> --by <actor> — the staged row a curator keeps out of every `promote` (R2)
+  release: 1, // release <nodeKey> --by <actor> — lets a held row back into the next `promote` (R2)
+  propose: 3, // propose <nodeKey> <T1|T0> <reason...> --by <actor> — the reason is one or more words (R3)
+  proposals: 0, // proposals — the open ratification proposals (R3)
+  decide: 3, // decide <proposalId> <ratify|reject> <reason...> --by <actor> (R3)
+  interview: 0, // interview [--json] — the ranked ratification batch, at most 20 per session (R11)
+  answer: 2, // answer <questionId> <answer...> --by <actor> (R11)
   own: 1, // own <scope> — the scope-unit path the briefing is composed for (RETR-12)
   // `relations <unit> [out|in|both]` — the unit is the only REQUIRED positional; the direction is an OPTIONAL
   // second positional (defaults to `both`, validated by the shared verdict builder), so arity is 1.
@@ -107,6 +114,13 @@ export const ARITY: Record<Command, number> = {
   // into (EPIC-1-b PERSIST-9). A target that already hosts a store is REFUSED by the leg, not merged with.
   // Exactly TWO positionals.
   import: 2,
+  // `territory <name> <glob...> --owner <seat> --tier <T0|T1|T2> [--project <id>]` — the name plus at least one
+  // glob (R4); the runner refuses a missing glob, so the parser only needs the name.
+  territory: 1,
+  // `own-export <unit...> --out <file>` — at least one unit path (R7); `--out` is a valued flag.
+  "own-export": 1,
+  // `repair --worklist <file>` takes NO positional; the worklist file rides the valued flag (R9).
+  repair: 0,
 }
 
 // [ENTRY-CLI-5 clean-up] this used to be a HAND-TRANSCRIBED string literal — a second copy of `COMMANDS`
@@ -127,7 +141,7 @@ function isCommand(s: string): s is Command {
  * flag simply folds into the bag (a bare `--x` becomes `'true'`) — never a parse error, preserving totality.
  *  EXPORTED — `help.ts` (ENTRY-CLI-5) lists these as the flags help names, rather than a second hand-
  *  transcribed set. */
-export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id"])
+export const VALUED_FLAGS = new Set(["at", "by", "scope", "world", "min", "owner", "kind", "task-id", "pr-id", "tier", "project", "out", "worklist"])
 
 /**
  * Fold one `-x`/`--x`/`--x=y`/`--x y` token into the flag bag — a bare flag is `'true'`. For a VALUED flag in

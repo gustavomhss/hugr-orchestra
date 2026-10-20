@@ -58,7 +58,7 @@ import { Database } from "@orchestra/core/database/database"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { httpClient } from "@orchestra/core/effect/app-node-platform"
+import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { EventV2 } from "@orchestra/core/event"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { Npm } from "@orchestra/core/npm"
@@ -91,6 +91,7 @@ import {
 import { EventApi } from "./groups/event"
 import { PtyConnectApi } from "./groups/pty"
 import { eventHandlers } from "./handlers/event"
+import { atlasHandlers } from "./handlers/atlas"
 import { configHandlers } from "./handlers/config"
 import { controlHandlers } from "./handlers/control"
 import { controlPlaneHandlers } from "./handlers/control-plane"
@@ -164,6 +165,7 @@ const ptyConnectApiRoutes = HttpApiBuilder.layer(PtyConnectApi).pipe(
 )
 const instanceApiRoutes = HttpApiBuilder.layer(InstanceHttpApi).pipe(
   Layer.provide([
+    atlasHandlers,
     configHandlers,
     experimentalHandlers,
     fileHandlers,
@@ -224,6 +226,7 @@ type RouteRequirements =
 
 const app = LayerNode.group([
   Npm.node,
+  llmClient,
   FSUtil.node,
   AppProcess.node,
   Database.node,
