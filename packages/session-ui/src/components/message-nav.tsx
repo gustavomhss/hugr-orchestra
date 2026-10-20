@@ -53,7 +53,7 @@ export function MessageNav(
                 </Match>
                 <Match when={local.size === "normal"}>
                   <button data-slot="message-nav-message-button" onClick={handleClick} onKeyDown={handleKeyPress}>
-                    <DiffChanges changes={message.summary?.diffs ?? []} variant="bars" />
+                    <DiffChanges changes={[...(message.summary?.diffs ?? [])]} variant="bars" />
                     <div
                       data-slot="message-nav-title-preview"
                       data-active={message.id === local.current?.id || undefined}

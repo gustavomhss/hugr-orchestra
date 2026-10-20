@@ -305,7 +305,9 @@ export function SessionTurn(
     return undefined
   })
   const errorText = createMemo(() => {
-    const msg = error()?.data?.message
+    const data = error()?.data
+    if (!data || typeof data !== "object") return ""
+    const msg = "message" in data ? data.message : undefined
     if (typeof msg === "string") return unwrap(msg)
     if (msg === undefined || msg === null) return ""
     // oxlint-disable-next-line no-base-to-string -- msg is unknown from error data, coercion is intentional
