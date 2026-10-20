@@ -1,6 +1,7 @@
-import { For, Show } from "solid-js"
+import { createMemo, For, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
+import { useModels } from "@/context/models"
 import { isAtlasEmpty } from "../atlas-api"
 import { useAtlas } from "../atlas-context"
 import { atlasHref } from "../atlas-route"
@@ -9,19 +10,11 @@ import { Btn, Tech } from "../kit/controls"
 import { AtDialog, AtDialogFoot } from "../kit/dialog"
 import { num } from "../kit/format"
 import { Rich } from "../kit/text"
-import { mineCommand } from "../views/genesis-data"
 import { DoneFoot, LockedNote, useCopy, WritingAs } from "./parts"
 import { promoteSummary } from "./promote-data"
 import { type AtlasSheetProps, atlasSheetState, keepPromoteRun, openAtlasSheet } from "./state"
 
 // The sheets Review opens (specs/atlas-ui/mock/app.js:195-248, actions :402-417).
-
-const MINE_KINDS = [
-  ["", "orchestra.atlas.genesis.knob.kinds.default"],
-  ["advisory", "orchestra.atlas.genesis.kind.advisory"],
-  ["dependency", "orchestra.atlas.genesis.kind.dependency"],
-  ["count", "orchestra.atlas.genesis.kind.count"],
-] as const
 
 // [title, text, command] of each producer. The surface cannot run them (issue item 7), so each copies its command.
 const PRODUCERS = [
@@ -278,12 +271,46 @@ export function ReconcileSheet(props: AtlasSheetProps<"reconcile">) {
   )
 }
 
+type MineKey = { providerID: string; modelID: string }
+
+// D40/D41: Genesis asks the chosen connected model about each site it ranks, up to the ceiling, and stages what passes
+// admission as candidates in Review. Nothing is promoted here.
 export function MineSheet(props: AtlasSheetProps<"mine">) {
   const atlas = useAtlas()
   const language = useLanguage()
   const words = useAtlasWords()
-  const copy = useCopy()
-  const [form, setForm] = createStore({ kinds: "", budget: "200" })
+  const models = useModels()
+  const choices = createMemo(() =>
+    models.list().filter((model) => models.visible({ providerID: model.provider.id, modelID: model.id })),
+  )
+  const [form, setForm] = createStore({ providerID: "", modelID: "", ceiling: "20" })
+  const same = (model: ReturnType<typeof choices>[number], key: MineKey) =>
+    model.provider.id === key.providerID && model.id === key.modelID
+  // The person's pick, else the most recently used connected model, else the first one.
+  const chosen = () =>
+    choices().find((model) => same(model, form)) ??
+    models.recent.list().flatMap((key) => choices().filter((model) => same(model, key)))[0] ??
+    choices()[0]
+  const ceiling = () => Math.min(200, Math.max(1, Math.floor(Number(form.ceiling) || 20)))
+  const pending = () => atlas.controller.state.pending.includes("mine")
+  const run = async () => {
+    const model = chosen()
+    if (!model) return
+    const result = await atlas.controller.mine({ providerID: model.provider.id, modelID: model.id, ceiling: ceiling() })
+    if (!result || isAtlasEmpty(result)) return
+    props.onClose()
+    if (result.facts > 0)
+      return atlas.toast(
+        language.t("orchestra.atlas.sheets.mine.staged", { n: num(result.facts), sites: num(result.sites) }),
+        "sparkle",
+      )
+    atlas.toast(
+      result.refusal
+        ? language.t("orchestra.atlas.sheets.mine.refused", { reason: result.refusal })
+        : (result.why ?? language.t("orchestra.atlas.sheets.mine.none")),
+      "warning",
+    )
+  }
   return (
     <AtDialog
       title={language.t("orchestra.atlas.sheets.mine.title")}
@@ -291,34 +318,53 @@ export function MineSheet(props: AtlasSheetProps<"mine">) {
       onClose={props.onClose}
       footer={
         <AtDialogFoot
-          label={language.t("orchestra.atlas.sheets.copyCommand")}
+          label={language.t(pending() ? "orchestra.atlas.sheets.mine.running" : "orchestra.atlas.sheets.mine.confirm")}
+          disabled={!chosen() || pending()}
           onCancel={props.onClose}
-          onConfirm={() => {
-            // The surface cannot run `atlas mine` (issue item 7): the sheet copies the command with the chosen knobs.
-            copy(mineCommand({ kinds: form.kinds, budget: form.budget === "200" ? "" : form.budget }))
-            props.onClose()
-          }}
+          onConfirm={() => void run()}
         />
       }
     >
       <div class="mx-field">
-        <span>{language.t("orchestra.atlas.sheets.mine.kinds")}</span>
-        <div class="wf-range">
-          <For each={MINE_KINDS}>
-            {(kind) => (
-              <button type="button" aria-pressed={form.kinds === kind[0]} onClick={() => setForm("kinds", kind[0])}>
-                {language.t(kind[1])}
-              </button>
-            )}
-          </For>
-        </div>
+        <span>{language.t("orchestra.atlas.sheets.mine.model")}</span>
+        <Show
+          when={choices().length}
+          fallback={<small class="muted">{language.t("orchestra.atlas.sheets.mine.noModel")}</small>}
+        >
+          <select
+            aria-label={language.t("orchestra.atlas.sheets.mine.model")}
+            onChange={(event) => {
+              const model = choices()[Number(event.currentTarget.value)]
+              if (model) setForm({ providerID: model.provider.id, modelID: model.id })
+            }}
+          >
+            <For each={choices()}>
+              {(model, index) => (
+                <option value={String(index())} selected={model === chosen()}>
+                  {`${model.provider.name} · ${model.name}`}
+                </option>
+              )}
+            </For>
+          </select>
+        </Show>
       </div>
       <div class="mx-fields">
         <label class="mx-field">
           <span>{language.t("orchestra.atlas.sheets.mine.budget")}</span>
-          <input type="number" min="1" value={form.budget} onInput={(event) => setForm("budget", event.currentTarget.value)} />
+          <input
+            type="number"
+            min="1"
+            max="200"
+            value={form.ceiling}
+            onInput={(event) => setForm("ceiling", event.currentTarget.value)}
+          />
         </label>
       </div>
+      <Show when={pending()}>
+        <p class="muted" role="status">
+          {language.t("orchestra.atlas.sheets.mine.wait", { n: num(ceiling()) })}
+        </p>
+      </Show>
       <Show when={atlas.model() && !atlas.model()?.writable()}>
         <div class="ins-note">
           <Icon name="lock" />
@@ -327,12 +373,11 @@ export function MineSheet(props: AtlasSheetProps<"mine">) {
       </Show>
       <Tech
         rows={[
+          [language.t("orchestra.atlas.sheets.mine.tech.runs"), <Rich text={language.t("orchestra.atlas.sheets.mine.tech.runs.value")} />],
           [
-            language.t("orchestra.atlas.sheets.mine.tech.command"),
-            <Rich text={language.t("orchestra.atlas.sheets.mine.tech.command.value")} />,
+            language.t("orchestra.atlas.sheets.mine.tech.writes"),
+            <Rich text={language.t("orchestra.atlas.sheets.mine.tech.writes.value")} />,
           ],
-          [language.t("orchestra.atlas.sheets.mine.tech.knobs"), <Rich text={language.t("orchestra.atlas.sheets.mine.tech.knobs.value")} />],
-          [language.t("orchestra.atlas.sheets.mine.tech.model"), <Rich text={language.t("orchestra.atlas.sheets.mine.tech.model.value")} />],
         ]}
       />
     </AtDialog>
