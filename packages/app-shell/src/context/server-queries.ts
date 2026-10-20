@@ -95,12 +95,16 @@ export const loadMcpResourcesQuery = (
 export const loadLspQuery = (
   scope: ServerScope,
   directory: string,
-  sdk: OrchestraClient,
+  api: ServerApi["lsp"],
+  legacy?: OrchestraClient,
   protocol?: Promise<"v1" | "v2">,
 ) =>
   queryOptions({
     queryKey: [scope, directory, "lsp"] as const,
-    queryFn: async () => ((await protocol) === "v2" ? [] : sdk.lsp.status().then((r) => r.data ?? [])),
+    queryFn: async () => {
+      if ((await protocol) === "v1" && legacy) return (await legacy.lsp.status()).then((r) => r.data ?? [])
+      return api.status({ location: { directory } }).then((r) => r.data ?? [])
+    },
   })
 
 export function makeQueryOptionsApi(
@@ -124,7 +128,7 @@ export function makeQueryOptionsApi(
     mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
     mcpResources: (directory: PathKey) =>
       loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    lsp: (directory: PathKey) => loadLspQuery(scope, directory, sdkFor(directory), protocol),
+    lsp: (directory: PathKey) => loadLspQuery(scope, directory, serverAPI.lsp, sdkFor(directory), protocol),
     sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
   }
 }

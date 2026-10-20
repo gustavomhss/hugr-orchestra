@@ -1614,7 +1614,6 @@ export const node = LayerNode.make({
     Permission.node,
     FSUtil.node,
     MCP.node,
-    LSP.node,
     ToolRegistry.node,
     ResearchExecution.node,
     Truncate.node,

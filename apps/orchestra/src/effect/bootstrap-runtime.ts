@@ -3,7 +3,6 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 
 import { Plugin } from "@/plugin"
-import { LSP } from "@/lsp/lsp"
 import { Format } from "@/format"
 import { Vcs } from "@/project/vcs"
 import { Snapshot } from "@/snapshot"
@@ -12,7 +11,7 @@ import * as Observability from "@orchestra/core/observability"
 import { memoMap } from "@orchestra/core/effect/memo-map"
 
 export const BootstrapLayer = AppNodeBuilder.build(
-  LayerNode.group([Config.node, Plugin.node, Format.node, LSP.node, Vcs.node, Snapshot.node]),
+  LayerNode.group([Config.node, Plugin.node, Format.node, Vcs.node, Snapshot.node]),
 ).pipe(Layer.provide(Observability.layer))
 
 export const BootstrapRuntime = ManagedRuntime.make(BootstrapLayer, { memoMap })

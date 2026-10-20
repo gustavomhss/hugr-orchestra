@@ -1,7 +1,7 @@
 // Whether an LSP client's server is still there, and its one shutdown. The connection closing or being disposed, the
 // process exiting, or a shutdown that began all mark the client dead, so the LSP service prunes and replaces it.
 import type { MessageConnection } from "vscode-jsonrpc/node"
-import { Process } from "@/util/process"
+import { stop } from "./launch"
 import type * as LSPServer from "./server"
 
 export function track(connection: MessageConnection, process: LSPServer.Handle["process"]) {
@@ -31,7 +31,7 @@ export function track(connection: MessageConnection, process: LSPServer.Handle["
         connection.dispose()
         // A failed stop still leaves the client dead; caching that rejection would make every prune fail and keep
         // the dead client owned forever.
-        await Process.stop(process).catch(() => undefined)
+        await stop(process).catch(() => undefined)
       })()
       return state.shutdown
     },

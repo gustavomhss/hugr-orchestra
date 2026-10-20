@@ -88,7 +88,7 @@ files directly.
 - `session` — platform — `src/session/`, `src/session.ts` — packages/core
 - `agent` — platform — `src/agent/`, `src/agent.ts` — packages/core
 - `system-context` — platform — `src/system-context/` — packages/core
-- `tool` — platform — `src/tool/`, `src/tool-output-store.ts`, `src/mcp/`, `src/mcp.ts` — packages/core
+- `tool` — platform — `src/tool/`, `src/tool-output-store.ts`, `src/mcp/`, `src/mcp.ts`, `src/lsp/`, `src/lsp.ts` — packages/core
 - `tool-safety` — platform — `src/tool-safety.ts`, `src/tool-safety-*`, `src/sandbox-parents.ts`, `src/sandbox-project-config.ts` — packages/core
 - `relay` — platform — `src/relay.ts`, `src/relay-*` — packages/core
 - `config` — platform — `src/config/`, `src/config.ts`, `src/behavior.ts`, `src/policy.ts`, `src/flag/` — packages/core

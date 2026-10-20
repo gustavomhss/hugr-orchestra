@@ -158,6 +158,8 @@ import type {
   McpAuthCallbackOutput,
   McpAuthRemoveInput,
   McpAuthRemoveOutput,
+  ServerLspStatusInput,
+  ServerLspStatusOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -1418,6 +1420,20 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [404, 401, 400],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    "server.lsp": {
+      status: (input?: ServerLspStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerLspStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/lsp`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
           },
           requestOptions,
         ),

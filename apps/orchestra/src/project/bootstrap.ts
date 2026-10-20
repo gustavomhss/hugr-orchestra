@@ -64,7 +64,6 @@ export const node = makeGlobalNode({
   deps: [
     Config.node,
     Format.node,
-    LSP.node,
     Plugin.node,
     Project.node,
     Snapshot.node,

@@ -2,9 +2,7 @@
 // instance ends. A client started while the instance closes is stopped instead of kept.
 import * as LSPClient from "./client"
 import type * as LSPServer from "./server"
-import { Process } from "@/util/process"
-import type { InstanceContext } from "@/project/instance-context"
-import type { RuntimeFlags } from "@/effect/runtime-flags"
+import { stop } from "./launch"
 
 export interface Owner {
   closing: boolean
@@ -27,7 +25,7 @@ export async function prune(s: Owner) {
 
 export async function schedule(
   s: Owner,
-  input: { server: LSPServer.Info; root: string; key: string; ctx: InstanceContext; flags: RuntimeFlags.Info },
+  input: { server: LSPServer.Info; root: string; key: string; ctx: { directory: string; worktree: string; project?: { id: string } }; flags: { experimentalLspTy?: boolean; disableLspDownload?: boolean } },
 ) {
   const { server, root, key, ctx, flags } = input
   await prune(s)
@@ -45,7 +43,7 @@ export async function schedule(
 
   if (!handle) return undefined
   if (s.closing) {
-    await Process.stop(handle.process)
+    await stop(handle.process)
     return undefined
   }
   const client = await LSPClient.create({
@@ -56,7 +54,7 @@ export async function schedule(
     instance: ctx,
   }).catch(async () => {
     s.broken.add(key)
-    await Process.stop(handle.process)
+    await stop(handle.process)
     return undefined
   })
 
@@ -68,7 +66,7 @@ export async function schedule(
 
   const existing = s.clients.find((x) => x.root === root && x.serverID === server.id && x.connected)
   if (existing) {
-    await Process.stop(handle.process)
+    await stop(handle.process)
     return existing
   }
 

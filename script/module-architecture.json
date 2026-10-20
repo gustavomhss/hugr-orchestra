@@ -232,7 +232,7 @@
         "session": { "kind": "platform", "entry": "src/session.ts", "patterns": ["src/session/", "src/session.ts"] },
         "agent": { "kind": "platform", "entry": "src/agent.ts", "patterns": ["src/agent/", "src/agent.ts"] },
         "system-context": { "kind": "platform", "entry": "src/system-context/index.ts", "patterns": ["src/system-context/"] },
-        "tool": { "kind": "platform", "patterns": ["src/tool/", "src/tool-output-store.ts", "src/mcp/", "src/mcp.ts"] },
+        "tool": { "kind": "platform", "patterns": ["src/tool/", "src/tool-output-store.ts", "src/mcp/", "src/mcp.ts", "src/lsp/", "src/lsp.ts"] },
         "tool-safety": {
           "kind": "platform",
           "entry": "src/tool-safety.ts",
