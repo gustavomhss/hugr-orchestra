@@ -333,7 +333,8 @@ test("the installed CLI carries its bundle's omni pair beside the binary, and a 
   const directory = dirname(installed.path)
   for (const name of omniCompanions("darwin-arm64"))
     expect(await readFile(join(directory, name), "utf8")).toBe(`${name} darwin-arm64`)
-  expect((await stat(join(directory, "hugr-omni-supervisor"))).mode & 0o777).toBe(0o755)
+  if (process.platform !== "win32")
+    expect((await stat(join(directory, "hugr-omni-supervisor"))).mode & 0o777).toBe(0o755)
   // A 0.2.1-era cache without the pair is rebuilt in place, pair included, not returned as installed.
   await Promise.all(omniCompanions("darwin-arm64").map((name) => rm(join(directory, name))))
   await installCliArtifact(input.directory, "darwin-arm64", cache, { signature: fixtureSignature })
