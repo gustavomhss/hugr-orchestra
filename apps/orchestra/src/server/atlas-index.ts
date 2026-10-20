@@ -10,7 +10,8 @@ import type { Unavailable } from "@/server/atlas-surface"
 // D38: Orchestra runs the indexer the store's plan names, from the repository root, so Genesis has the code graph it
 // ranks sites by. TypeScript first, else Python, else nothing: both tools write the one `.atlas/index.scip` the readers
 // open. The package comes from Orchestra's package cache at the version Atlas pins (adapter-io/src/scip.ts) and runs with
-// Orchestra's own Bun, so the machine needs no Node. A failed run reports the tail of its stderr.
+// the runtime Orchestra itself runs on (Bun, or Electron's Node in the V1 desktop sidecar), so the machine needs no Node.
+// A failed run reports the tail of its stderr.
 
 export type Result =
   | { readonly state: "empty" }
@@ -52,7 +53,7 @@ export const index = Effect.fn("AtlasIndex.index")(function* (services: Services
     .run(
       ChildProcess.make(process.execPath, [bin, ...args], {
         cwd: root,
-        env: { BUN_BE_BUN: "1" },
+        env: process.versions.bun ? { BUN_BE_BUN: "1" } : { ELECTRON_RUN_AS_NODE: "1" },
         extendEnv: true,
         stdin: "ignore",
       }),
