@@ -149,15 +149,13 @@ export function BackgroundProcessesPanel() {
   // Session processes are available on both V1 and V2 routes.
   const refresh = (sessionID: string) =>
     sdk()
-      .protocol.then((protocol) =>
-        protocol === "v1"
-          ? sdk().client.session.processes({ sessionID })
-          : serverSDK().orchestra.sessions.processes({ sessionID }).then((result) => ({ data: [...result.data] })),
-      )
-      .then((result) => {
-        if (!result) return
+      .protocol.then(async (protocol): Promise<readonly SessionProcess[]> => {
+        if (protocol === "v1") return (await sdk().client.session.processes({ sessionID })).data ?? []
+        return serverSDK().orchestra.sessions.processes({ sessionID })
+      })
+      .then((items) => {
         if (params.id !== sessionID) return
-        setState("items", reconcile(sortProcesses(result.data ?? []), { key: "id" }))
+        setState("items", reconcile(sortProcesses([...items]), { key: "id" }))
       })
       .catch(() => undefined)
 
@@ -165,11 +163,10 @@ export function BackgroundProcessesPanel() {
     const sessionID = params.id
     if (!sessionID) return Promise.resolve()
     return sdk()
-      .protocol.then((protocol) =>
-        protocol === "v1"
-          ? sdk().client.session.processStop({ sessionID, processID }, { throwOnError: true })
-          : serverSDK().orchestra.sessions.processStop({ sessionID, processID }),
-      )
+      .protocol.then(async (protocol) => {
+        if (protocol === "v1") await sdk().client.session.processStop({ sessionID, processID }, { throwOnError: true })
+        else await serverSDK().orchestra.sessions.processStop({ sessionID, processID })
+      })
       .then(() => refresh(sessionID))
   })
 
