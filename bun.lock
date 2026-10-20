@@ -881,6 +881,7 @@
         "@opentui/solid": "catalog:",
         "@orchestra/core": "workspace:*",
         "@orchestra/plugin": "workspace:*",
+        "@orchestra/schema": "workspace:*",
         "@orchestra/sdk": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "clipboardy": "4.0.0",
