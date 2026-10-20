@@ -53,9 +53,7 @@
   "dependencies": {
     "@kobalte/core": "catalog:",
     "@noble/hashes": "1.8.0",
-    "@opencode-ai/client": "file:../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
     "@orchestra/core": "workspace:*",
-    "@orchestra/sdk": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@pierre/diffs": "catalog:",

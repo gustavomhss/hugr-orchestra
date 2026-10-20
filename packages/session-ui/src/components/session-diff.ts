@@ -1,7 +1,11 @@
 import { parseDiffFromFile, parsePatchFiles, type FileDiffMetadata } from "@pierre/diffs"
 import { parsePatch } from "diff"
-import type { SnapshotFileDiff, VcsFileDiff } from "../compat/sdk-v2"
-import type { FileDiffInfo } from "../compat/vendored-client-promise"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { Vcs } from "@orchestra/schema/vcs"
+import type { FileDiffInfo } from "../types"
+
+type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type VcsFileDiff = typeof Vcs.FileDiff.Encoded
 
 type LegacyDiff = {
   file: string

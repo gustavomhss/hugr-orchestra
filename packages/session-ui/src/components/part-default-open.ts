@@ -1,4 +1,7 @@
-import type { Part as PartType, ToolPart } from "../compat/sdk-v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+
+type PartType = typeof SessionV1.Part.Encoded
+type ToolPart = typeof SessionV1.ToolPart.Encoded
 
 function deletionOnly(part: ToolPart) {
   if (!("metadata" in part.state)) return false

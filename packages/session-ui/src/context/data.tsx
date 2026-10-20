@@ -1,8 +1,16 @@
-import type { Message, Session, Part, SnapshotFileDiff, SessionStatus, Provider } from "../compat/sdk-v2"
-import type { FileDiffInfo } from "../compat/vendored-client-promise"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
+import type { FileDiffInfo, Provider } from "../types"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 import type { Capability } from "@orchestra/schema/capability"
+
+type Session = typeof SessionV1.SessionInfo.Encoded
+type Message = typeof SessionV1.Info.Encoded
+type Part = typeof SessionV1.Part.Encoded
+type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type SessionStatus = typeof SessionStatusEvent.Info.Encoded
 
 export type NormalizedProviderListResponse = {
   all: Map<string, Provider>

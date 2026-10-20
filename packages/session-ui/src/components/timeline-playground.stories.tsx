@@ -1,20 +1,20 @@
 // @ts-nocheck
 import { createSignal, createMemo, createEffect, on, For, Show, batch } from "solid-js"
 import { createStore, produce } from "solid-js/store"
-import type {
-  Message,
-  UserMessage,
-  AssistantMessage,
-  Part,
-  TextPart,
-  ReasoningPart,
-  ToolPart,
-  FilePart,
-  AgentPart,
-} from "@orchestra/sdk/v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
 import { DataProvider } from "../context/data"
 import { FileComponentProvider } from "@orchestra/ui/context/file"
 import { SessionTurn } from "./session-turn"
+
+type Message = typeof SessionV1.Info.Encoded
+type UserMessage = typeof SessionV1.User.Encoded
+type AssistantMessage = typeof SessionV1.Assistant.Encoded
+type Part = typeof SessionV1.Part.Encoded
+type TextPart = typeof SessionV1.TextPart.Encoded
+type ReasoningPart = typeof SessionV1.ReasoningPart.Encoded
+type ToolPart = typeof SessionV1.ToolPart.Encoded
+type FilePart = typeof SessionV1.FilePart.Encoded
+type AgentPart = typeof SessionV1.AgentPart.Encoded
 
 // ---------------------------------------------------------------------------
 // ID helpers

@@ -1,7 +1,10 @@
 import { expect, test } from "bun:test"
 import { createRequire } from "node:module"
 import type { LeanMetrics } from "../../../schema/src/lean-metrics"
-import type { Session, ToolPart } from "@orchestra/sdk/v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+
+type Session = typeof SessionV1.SessionInfo.Encoded
+type ToolPart = typeof SessionV1.ToolPart.Encoded
 
 // Keep browser conditions and HappyDOM isolated from the package's non-DOM tests.
 if (process.env.LEAN_TOOL_METRICS_DOM !== "1") {

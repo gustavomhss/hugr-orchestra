@@ -15,8 +15,9 @@ import { getDirectory, getFilename } from "@orchestra/core/util/path"
 import { checksum } from "@orchestra/core/util/encode"
 import { createEffect, createMemo, For, Match, onCleanup, Show, Switch, untrack, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
-import { type FileContent, type SnapshotFileDiff, type VcsFileDiff } from "../compat/sdk-v2"
-import type { FileDiffInfo } from "../compat/vendored-client-promise"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { Vcs } from "@orchestra/schema/vcs"
+import type { FileContent, FileDiffInfo } from "../types"
 import { PreloadMultiFileDiffResult } from "@pierre/diffs/ssr"
 import { type SelectedLineRange } from "@pierre/diffs"
 import { Dynamic } from "solid-js/web"
@@ -25,6 +26,9 @@ import { cloneSelectedLineRange, previewSelectedLines } from "../pierre/selectio
 import { createLineCommentController } from "./line-comment-annotations"
 import type { LineCommentEditorProps } from "./line-comment"
 import { normalize, text, type ViewDiff } from "./session-diff"
+
+type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type VcsFileDiff = typeof Vcs.FileDiff.Encoded
 
 const MAX_DIFF_CHANGED_LINES = 500
 const REVIEW_MOUNT_MARGIN = 300

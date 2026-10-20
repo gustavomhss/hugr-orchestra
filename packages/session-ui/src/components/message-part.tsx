@@ -16,20 +16,8 @@ import {
 import { createStore } from "solid-js/store"
 import stripAnsi from "strip-ansi"
 import { Dynamic } from "solid-js/web"
-import {
-  AgentPart,
-  AssistantMessage,
-  FilePart,
-  Message as MessageType,
-  Part as PartType,
-  ReasoningPart,
-  Session,
-  TextPart,
-  ToolPart,
-  UserMessage,
-  QuestionAnswer,
-  QuestionInfo,
-} from "../compat/sdk-v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { QuestionV1 } from "@orchestra/schema/v1/question"
 import { useData } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 import { useDialog } from "@orchestra/ui/context/dialog"
@@ -70,6 +58,19 @@ import { createEditTool } from "./message-part/edit"
 import { findTaskAgent, type AgentEntry } from "./message-part-agent"
 import { SessionProgressIndicatorV2 } from "../v2/components/session-progress-indicator-v2"
 import { ResearchResult } from "./research-result"
+
+type AgentPart = typeof SessionV1.AgentPart.Encoded
+type AssistantMessage = typeof SessionV1.Assistant.Encoded
+type FilePart = typeof SessionV1.FilePart.Encoded
+type MessageType = typeof SessionV1.Info.Encoded
+type PartType = typeof SessionV1.Part.Encoded
+type ReasoningPart = typeof SessionV1.ReasoningPart.Encoded
+type Session = typeof SessionV1.SessionInfo.Encoded
+type TextPart = typeof SessionV1.TextPart.Encoded
+type ToolPart = typeof SessionV1.ToolPart.Encoded
+type UserMessage = typeof SessionV1.User.Encoded
+type QuestionAnswer = typeof QuestionV1.Answer.Encoded
+type QuestionInfo = typeof QuestionV1.Info.Encoded
 
 async function writeClipboard(text: string): Promise<boolean> {
   const body = typeof document === "undefined" ? undefined : document.body
