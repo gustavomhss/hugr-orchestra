@@ -1,6 +1,6 @@
 import { EOL } from "os"
 import path from "path"
-import { rm } from "node:fs/promises"
+import { rm, access } from "node:fs/promises"
 import { Effect } from "effect"
 import { Global } from "@orchestra/core/global"
 import { Commands } from "../commands"
@@ -9,6 +9,12 @@ import { Spawn } from "../../services/process"
 
 type Method = "npm" | "github"
 
+const hasDirectory = (directory: string) =>
+  Effect.tryPromise(() => access(directory)).pipe(
+    Effect.map(() => true),
+    Effect.catch(() => Effect.succeed(false)),
+  )
+
 export default Runtime.handler(
   Commands.commands.uninstall,
   Effect.fn("cli.uninstall")(function* (input) {
@@ -16,7 +22,7 @@ export default Runtime.handler(
     const targets = removalTargets(input, method)
 
     for (const target of targets.directories) {
-      if (!(yield* Effect.promise(() => Bun.file(target.path).exists()))) continue
+      if (!(yield* hasDirectory(target.path))) continue
       process.stdout.write(
         `  ${target.keep ? "○" : "✓"} ${target.label}: ${target.path}${target.keep ? " (keeping)" : ""}` + EOL,
       )
@@ -51,7 +57,7 @@ export default Runtime.handler(
         process.stdout.write(`Skipping ${target.label} (kept)` + EOL)
         continue
       }
-      if (!(yield* Effect.promise(() => Bun.file(target.path).exists()))) continue
+      if (!(yield* hasDirectory(target.path))) continue
       yield* Effect.tryPromise(() => rm(target.path, { recursive: true, force: true }))
       process.stdout.write(`Removed ${target.label}` + EOL)
     }

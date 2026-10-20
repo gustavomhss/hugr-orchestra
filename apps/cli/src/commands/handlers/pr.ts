@@ -1,15 +1,22 @@
 import { EOL } from "os"
 import path from "path"
 import { Effect } from "effect"
+import { access } from "node:fs/promises"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Spawn } from "../../services/process"
+
+const hasDirectory = (directory: string) =>
+  Effect.tryPromise(() => access(directory)).pipe(
+    Effect.map(() => true),
+    Effect.catch(() => Effect.succeed(false)),
+  )
 
 export default Runtime.handler(
   Commands.commands.pr,
   Effect.fn("cli.pr")(function* (input) {
     const cwd = process.cwd()
-    if (!(yield* Effect.promise(() => Bun.file(path.join(cwd, ".git")).exists()))) {
+    if (!(yield* hasDirectory(path.join(cwd, ".git")))) {
       return yield* Effect.fail(new Error("Could not find git repository. Please run this command from a git repository."))
     }
 
