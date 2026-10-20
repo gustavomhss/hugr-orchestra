@@ -250,7 +250,7 @@ function run(db: DatabaseService, event: SessionEvent.Event, replay = false) {
       updateShell: updateMessage,
       appendMessage,
     }
-    yield* SessionMessageUpdater.update(adapter, event)
+    yield* SessionMessageUpdater.update(adapter, event).pipe(Effect.orDie)
   })
 }
 

@@ -59,7 +59,7 @@ export const Razor: Info = {
 
 let roslynLanguageServerInstall: Promise<string | undefined> | undefined
 
-async function getRoslynLanguageServer(disableLspDownload: boolean) {
+async function getRoslynLanguageServer(disableLspDownload?: boolean) {
   const existing = which("roslyn-language-server")
   if (existing) return existing
 
@@ -72,7 +72,7 @@ async function getRoslynLanguageServer(disableLspDownload: boolean) {
   return roslynLanguageServerInstall
 }
 
-async function installRoslynLanguageServer(disableLspDownload: boolean) {
+async function installRoslynLanguageServer(disableLspDownload?: boolean) {
   if (!which("dotnet")) {
     return
   }

@@ -111,7 +111,7 @@ export async function spawn(cmd: string, argsOrOpts?: string[] | Options, opts?:
   const stdin = cfg.stdin === "pipe" ? new Input(Promise.resolve(child)) : null
 
   const adapter = {
-    pid: undefined,
+    pid: undefined as number | undefined,
     stdin,
     stdout,
     stderr,

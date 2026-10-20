@@ -57,7 +57,7 @@ export const layer = Layer.effect(
     return LocationMiddleware.of((effect) =>
       Effect.gen(function* () {
         const request = yield* HttpServerRequest.HttpServerRequest
-        return yield* effect.pipe(Effect.provide(locations.get(ref(request))))
+        return yield* (effect.pipe(Effect.provide(locations.get(ref(request))))) as Effect.Effect<HttpServerResponse, never, HttpServerRequest>
       }),
     )
   }),

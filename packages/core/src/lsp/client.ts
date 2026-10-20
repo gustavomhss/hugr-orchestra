@@ -558,7 +558,7 @@ export async function create(input: {
         request.path = FSUtil.normalizePath(
           path.isAbsolute(request.path) ? request.path : path.resolve(input.directory, request.path),
         )
-        const text = await FSUtil.readText(request.path)
+        const text = await Bun.file(request.path).text()
         const extension = path.extname(request.path)
         const languageId = LANGUAGE_EXTENSIONS[extension] ?? "plaintext"
 

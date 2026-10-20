@@ -7,6 +7,7 @@ import { FSUtil } from "../fs-util"
 import { AppProcess } from "../process"
 import { ChildProcess } from "effect/unstable/process"
 import { Effect } from "effect"
+import { LayerNode } from "../effect/layer-node"
 import { which } from "@orchestra/core/util/which"
 import { Module } from "@orchestra/core/util/module"
 import { confined, type Child } from "./launch"
@@ -16,12 +17,28 @@ import { Npm } from "@orchestra/core/npm"
 export type InstanceContext = { directory: string; worktree: string; project?: { id: string } }
 export type RuntimeFlags = { experimentalLspTy?: boolean; disableLspDownload?: boolean }
 
-export const exists = (p: string) => Effect.runPromise(existsSafe(p))
-export const readText = (p: string) => Effect.runPromise(FSUtil.readFileString(p))
+export const exists = async (p: string) => {
+  try {
+    await fs.stat(p)
+    return true
+  } catch {
+    return false
+  }
+}
+export const readText = (p: string) => fs.readFile(p, "utf-8")
 export const write = async (p: string, content: string | Buffer | Uint8Array, mode?: number) => {
   const data = typeof content === "string" ? new TextEncoder().encode(content) : new Uint8Array(content as any)
-  await Effect.runPromise(FSUtil.writeFile(p, data))
-  if (mode) await Effect.runPromise(FSUtil.chmod(p, mode))
+  try {
+    await fs.writeFile(p, data)
+  } catch (e: any) {
+    if (e?.code === "ENOENT") {
+      await fs.mkdir(path.dirname(p), { recursive: true })
+      await fs.writeFile(p, data)
+    } else {
+      throw e
+    }
+  }
+  if (mode) await fs.chmod(p, mode)
 }
 export const writeStream = async (p: string, body: any) => {
   const { createWriteStream } = await import("node:fs")
@@ -29,7 +46,19 @@ export const writeStream = async (p: string, body: any) => {
   const { Readable } = await import("node:stream")
   await pipeline(Readable.fromWeb(body), createWriteStream(p))
 }
-export const findUp = (target: string, start: string, stop?: string) => Effect.runPromise(findUp(target, start, stop))
+export const findUp = async (target: string, start: string, stop?: string) => {
+  const result: string[] = []
+  let current = start
+  while (true) {
+    const search = path.join(current, target)
+    if (await exists(search)) result.push(search)
+    if (stop === current) break
+    const parent = path.dirname(current)
+    if (parent === current) break
+    current = parent
+  }
+  return result
+}
 export async function* up(options: { targets: string[]; start: string; stop?: string }) {
   let current = options.start
   while (true) {
@@ -53,11 +82,11 @@ export const pathExists = async (p: string) =>
     .then(() => true)
     .catch(() => false)
 export const run = async (cmd: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) => {
-  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: opts.cwd, env: opts.env }))).pipe(Effect.provide(AppProcess.node)))
+  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: opts.cwd, env: opts.env }))).pipe(Effect.provide(LayerNode.compile(AppProcess.node))))
   return { code: result.exitCode, stdout: result.stdout, stderr: result.stderr }
 }
 export const output = async (cmd: string[], opts: { cwd?: string; env?: NodeJS.ProcessEnv } = {}) => {
-  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: opts.cwd, env: opts.env }))).pipe(Effect.provide(AppProcess.node)))
+  const result = await Effect.runPromise(AppProcess.Service.use((app) => app.run(ChildProcess.make(cmd[0], cmd.slice(1), { cwd: opts.cwd, env: opts.env }))).pipe(Effect.provide(LayerNode.compile(AppProcess.node))))
   return { code: result.exitCode, stdout: result.stdout, stderr: result.stderr, text: result.stdout.toString() }
 }
 

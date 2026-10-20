@@ -149,7 +149,7 @@ const layer = Layer.effect(
 
     const state = yield* Effect.acquireRelease(
       Effect.gen(function* () {
-        const cfg = yield* config.get()
+        const cfg = { lsp: Config.latest(yield* config.entries(), "lsp") }
 
         const servers: Record<string, LSPServer.Info> = {}
 
@@ -162,10 +162,11 @@ const layer = Layer.effect(
 
           filterExperimentalServers(servers, flags)
 
-          if (cfg.lsp !== true) {
+          if (cfg.lsp && cfg.lsp !== true) {
             for (const [name, item] of Object.entries(cfg.lsp)) {
               const existing = servers[name]
-              if (item.disabled) {
+              const entry = item as { disabled?: boolean; command?: string[]; extensions?: string[]; env?: Record<string,string>; initialization?: Record<string, unknown> }
+              if (entry.disabled) {
                 yield* Effect.logInfo(`LSP server ${name} is disabled`)
                 delete servers[name]
                 continue
@@ -174,14 +175,14 @@ const layer = Layer.effect(
                 ...existing,
                 id: name,
                 root: existing?.root ?? (async (_file, ctx) => ctx.directory),
-                extensions: item.extensions ?? existing?.extensions ?? [],
+                extensions: entry.extensions ?? existing?.extensions ?? [],
                 // A configured command is trusted like any configured program, unless it runs workspace code: the program
                 // lives in the workspace, is a runner (npx, uv run, ...) or is a version-manager shim.
                 spawn: async (root) => ({
-                  process: (await ToolSafetySandbox.runsWorkspaceCode(ctx.directory, item.command[0], item.command.slice(1), root))
-                    ? await confined(item.command[0], item.command.slice(1), { cwd: root, env: { ...process.env, ...item.env } })
-                    : await lspspawn(item.command[0], item.command.slice(1), { cwd: root, env: { ...process.env, ...item.env } }),
-                  initialization: item.initialization,
+                  process: (await ToolSafetySandbox.runsWorkspaceCode(ctx.directory, entry.command![0], entry.command!.slice(1), root))
+                    ? await confined(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } })
+                    : await lspspawn(entry.command![0], entry.command!.slice(1), { cwd: root, env: { ...process.env, ...entry.env } }),
+                  initialization: entry.initialization,
                 }),
               }
             }
@@ -208,7 +209,6 @@ const layer = Layer.effect(
     )
 
     const getClients = Effect.fnUntraced(function* (file: string) {
-      const location = yield* Location.Service
       const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
       if (!FSUtil.contains(ctx.directory, file) && !FSUtil.contains(ctx.project.directory, file)) return [] as LSPClient.Info[]
       const s = state
@@ -285,7 +285,6 @@ const layer = Layer.effect(
     })
 
     const status = Effect.fn("LSP.status")(function* () {
-      const location = yield* Location.Service
       const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
       const s = state
       const result: Status[] = []
@@ -301,7 +300,6 @@ const layer = Layer.effect(
     })
 
     const hasClients = Effect.fn("LSP.hasClients")(function* (file: string) {
-      const location = yield* Location.Service
       const ctx = { directory: location.directory, worktree: location.project.directory, project: location.project }
       const s = state
       return yield* Effect.promise(async () => {
@@ -477,6 +475,6 @@ export * as Diagnostic from "./diagnostic"
 export const node = makeLocationNode({
   service: Service,
   layer: layer,
-  deps: [Config.node, Location.node, FSUtil.node, EventV2.node],
+  deps: [Config.node, Location.node, EventV2.node],
 })
 
