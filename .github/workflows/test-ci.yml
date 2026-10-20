@@ -246,7 +246,17 @@ jobs:
           cd "$DIRECTORY"
           case "$RUNNER" in
             pytest) python -m pytest -p no:cacheprovider "${args[@]}" ;;
-            bun) GITHUB_ACTIONS=false bun test "${args[@]}" ;;
+            bun)
+              # The app unit runner resolves solid-js/web to its default build via the
+              # `solid` condition (solid-sonner imports `use`, which only that build exports);
+              # without it, raw `bun test` resolves the `node` build and the app suite fails.
+              # test-ci bypasses the package's own `test:unit` script, so reproduce it here.
+              if [ "$DIRECTORY" = "packages/app-shell" ]; then
+                GITHUB_ACTIONS=false bun test --conditions=solid "${args[@]}"
+              else
+                GITHUB_ACTIONS=false bun test "${args[@]}"
+              fi
+              ;;
             node)
               for file in "${args[@]}"; do
                 case "$file" in
