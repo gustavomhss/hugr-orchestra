@@ -485,7 +485,18 @@ test("packaging verifies effective root version and all Windows guest bytes", as
   await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toThrow("digest")
   const native = await fixture(["windows-x64-baseline"])
   await stageCliArtifacts(native)
+  // The packaging check refuses a bundle missing its omni pair, for the host target as for a guest: here the two
+  // Linux guests are absent from a Windows-only bundle, and the native pair is removed by name next.
   await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version, checks)).rejects.toThrow("missing")
+  await Promise.all(
+    omniCompanions("windows-x64-baseline").map((name) => rename(join(native.directory, "omni-windows-x64-baseline", name), join(native.directory, "omni-windows-x64-baseline", `${name}.away`))),
+  )
+  await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version, checks)).rejects.toThrow(
+    "windows-x64-baseline",
+  )
+  await Promise.all(
+    omniCompanions("windows-x64-baseline").map((name) => rename(join(native.directory, "omni-windows-x64-baseline", `${name}.away`), join(native.directory, "omni-windows-x64-baseline", name))),
+  )
 }, STAGING_TIMEOUT)
 
 test("staging rejects empty, duplicate and traversal targets before touching output", async () => {
