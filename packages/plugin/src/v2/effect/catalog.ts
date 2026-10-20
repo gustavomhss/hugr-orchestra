@@ -1,5 +1,6 @@
 import type { Model } from "@orchestra/schema/model"
 import type { Provider } from "@orchestra/schema/provider"
+import type { Mutable } from "../mutable.js"
 
 type ModelV2Info = typeof Model.Info.Encoded
 type ProviderV2Info = typeof Provider.Info.Encoded
@@ -14,12 +15,12 @@ export interface CatalogDraft {
   readonly provider: {
     list(): readonly CatalogProviderRecord[]
     get(providerID: string): CatalogProviderRecord | undefined
-    update(providerID: string, update: (provider: ProviderV2Info) => void): void
+    update(providerID: string, update: (provider: Mutable<ProviderV2Info>) => void): void
     remove(providerID: string): void
   }
   readonly model: {
     get(providerID: string, modelID: string): ModelV2Info | undefined
-    update(providerID: string, modelID: string, update: (model: ModelV2Info) => void): void
+    update(providerID: string, modelID: string, update: (model: Mutable<ModelV2Info>) => void): void
     remove(providerID: string, modelID: string): void
     readonly default: {
       get(): { providerID: string; modelID: string } | undefined

@@ -1,6 +1,7 @@
 import type { Connection } from "@orchestra/schema/connection"
 import type { Credential } from "@orchestra/schema/credential"
 import type { Integration } from "@orchestra/schema/integration"
+import type { Mutable } from "../mutable.js"
 
 type ConnectionInfo = typeof Connection.Info.Encoded
 type CredentialOAuth = typeof Credential.OAuth.Encoded
@@ -48,7 +49,7 @@ export type IntegrationMethodRegistration =
 export interface IntegrationDraft {
   list(): readonly IntegrationRef[]
   get(id: string): IntegrationRef | undefined
-  update(id: string, update: (integration: IntegrationRef) => void): void
+  update(id: string, update: (integration: Mutable<IntegrationRef>) => void): void
   remove(id: string): void
   readonly method: {
     list(integrationID: string): readonly IntegrationMethod[]
