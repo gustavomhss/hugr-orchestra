@@ -1,5 +1,5 @@
 import { For, Show } from "solid-js"
-import type { PermissionRequest } from "../../../compat/sdk-v2"
+import type { PermissionRequest } from "@/v2-types"
 import { Button } from "@orchestra/ui/button"
 import { DockPrompt } from "@orchestra/session-ui/dock-prompt"
 import { Icon } from "@orchestra/ui/icon"

@@ -1,12 +1,11 @@
+import type { Agent, Config } from "@/v2-wire"
 import type {
-  Agent,
   AssistantMessage,
-  Config,
   Message,
   Part,
   ToolPart,
   ToolStateCompleted,
-} from "../../compat/sdk-v2-client"
+} from "@/v2-types"
 import type { SessionMessageAssistantTool, SessionMessageInfo } from "../../compat/vendored-client-promise"
 import type { State } from "@/context/global-sync/types"
 import type { ServerProtocol } from "@/utils/server-protocol"

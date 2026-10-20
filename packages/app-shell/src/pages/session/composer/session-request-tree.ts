@@ -1,4 +1,4 @@
-import type { PermissionRequest, QuestionRequest, Session } from "../../../compat/sdk-v2-client"
+import type { PermissionRequest, QuestionRequest, Session } from "@/v2-types"
 
 function sessionTreeRequest<T>(
   session: Session[],

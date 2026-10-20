@@ -1,4 +1,4 @@
-import type { SnapshotFileDiff } from "../../../compat/sdk-v2"
+import type { SnapshotFileDiff } from "@/v2-types"
 import type { PartGroup } from "@orchestra/session-ui/message-part"
 import { Data, Equal } from "effect"
 
