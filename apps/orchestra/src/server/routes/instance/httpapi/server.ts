@@ -58,7 +58,7 @@ import { Database } from "@orchestra/core/database/database"
 import { ResearchArtifacts } from "@orchestra/core/research/artifacts"
 import { AppNodeBuilderV1 } from "@/effect/app-node-builder-v1"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { httpClient } from "@orchestra/core/effect/app-node-platform"
+import { httpClient, llmClient } from "@orchestra/core/effect/app-node-platform"
 import { EventV2 } from "@orchestra/core/event"
 import { ModelsDev } from "@orchestra/core/models-dev"
 import { Npm } from "@orchestra/core/npm"
@@ -225,6 +225,7 @@ type RouteRequirements =
 
 const app = LayerNode.group([
   Npm.node,
+  llmClient,
   FSUtil.node,
   AppProcess.node,
   Database.node,
