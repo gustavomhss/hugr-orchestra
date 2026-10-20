@@ -1,4 +1,8 @@
-import type { ModelV2Info, ProviderV2Info } from "../../compat/sdk-v2-types.js"
+import type { Model } from "@orchestra/schema/model"
+import type { Provider } from "@orchestra/schema/provider"
+
+type ModelV2Info = typeof Model.Info.Encoded
+type ProviderV2Info = typeof Provider.Info.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface CatalogProviderRecord {

@@ -1,4 +1,6 @@
-import type { CommandV2Info } from "../../compat/sdk-v2-types.js"
+import type { Command } from "@orchestra/schema/command"
+
+type CommandV2Info = typeof Command.Info.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface CommandDraft {

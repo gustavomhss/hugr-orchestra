@@ -1,14 +1,16 @@
-import type {
-  ConnectionInfo,
-  CredentialOAuth,
-  CredentialValue,
-  IntegrationEnvMethod,
-  IntegrationInputs,
-  IntegrationKeyMethod,
-  IntegrationMethod,
-  IntegrationOAuthMethod,
-  IntegrationRef,
-} from "../../compat/sdk-v2-types.js"
+import type { Connection } from "@orchestra/schema/connection"
+import type { Credential } from "@orchestra/schema/credential"
+import type { Integration } from "@orchestra/schema/integration"
+
+type ConnectionInfo = typeof Connection.Info.Encoded
+type CredentialOAuth = typeof Credential.OAuth.Encoded
+type CredentialValue = typeof Credential.Value.Encoded
+type IntegrationEnvMethod = typeof Integration.EnvMethod.Encoded
+type IntegrationInputs = typeof Integration.Inputs.Encoded
+type IntegrationKeyMethod = typeof Integration.KeyMethod.Encoded
+type IntegrationMethod = typeof Integration.Method.Encoded
+type IntegrationOAuthMethod = typeof Integration.OAuthMethod.Encoded
+type IntegrationRef = typeof Integration.Ref.Encoded
 import type { Effect, Scope } from "effect"
 import type { Hooks } from "./registration.js"
 

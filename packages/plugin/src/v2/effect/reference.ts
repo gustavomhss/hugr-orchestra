@@ -1,4 +1,7 @@
-import type { ReferenceGitSource, ReferenceLocalSource } from "../../compat/sdk-v2-types.js"
+import type { Reference } from "@orchestra/schema/reference"
+
+type ReferenceGitSource = typeof Reference.GitSource.Encoded
+type ReferenceLocalSource = typeof Reference.LocalSource.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface ReferenceDraft {

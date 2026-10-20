@@ -1,4 +1,6 @@
-import type { AgentV2Info } from "../../compat/sdk-v2-types.js"
+import type { Agent } from "@orchestra/schema/agent"
+
+type AgentV2Info = typeof Agent.Info.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface AgentDraft {

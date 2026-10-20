@@ -1,5 +1,7 @@
 import type { LanguageModelV3 } from "@ai-sdk/provider"
-import type { ModelV2Info } from "../../compat/sdk-v2-types.js"
+import type { Model } from "@orchestra/schema/model"
+
+type ModelV2Info = typeof Model.Info.Encoded
 import type { Hooks } from "./registration.js"
 
 export type AISDKHooks = Hooks<{

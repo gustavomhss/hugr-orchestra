@@ -708,6 +708,8 @@
       "version": "1.18.27",
       "dependencies": {
         "@ai-sdk/provider": "3.0.8",
+        "@orchestra/protocol": "workspace:*",
+        "@orchestra/schema": "workspace:*",
         "@orchestra/sdk": "workspace:*",
         "effect": "catalog:",
         "zod": "catalog:",

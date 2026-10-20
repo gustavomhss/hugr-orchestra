@@ -1,4 +1,6 @@
-import type { SkillV2Source } from "../../compat/sdk-v2-types.js"
+import type { Skill } from "@orchestra/schema/skill"
+
+type SkillV2Source = typeof Skill.Source.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface SkillDraft {
