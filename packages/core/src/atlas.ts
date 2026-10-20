@@ -324,7 +324,12 @@ export const mine = Effect.fn("AtlasMine.mine")(function* (services: MineService
     (site) =>
       ask(site.prompt).pipe(
         Effect.map((text) => [[site.key, text] as const]),
-        Effect.catch(() => Effect.succeed([])),
+        Effect.catch((error) =>
+          Effect.logWarning("Atlas mine: the model call failed; the site abstains", {
+            site: site.key,
+            error: firstLine(error),
+          }).pipe(Effect.as([])),
+        ),
       ),
     { concurrency: 4 },
   )

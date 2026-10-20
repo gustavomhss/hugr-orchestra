@@ -7,6 +7,7 @@ import { AppProcess } from "@orchestra/core/process"
 import { SessionRunnerModel } from "@orchestra/core/session/runner/model"
 import { LLM, LLMClient, LLMEvent, SystemPart } from "@orchestra/llm"
 import { ServiceUnavailableError } from "@orchestra/protocol/errors"
+import { SessionID } from "@orchestra/schema/session-id"
 import { Effect, Stream } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
@@ -48,12 +49,24 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
           selected,
           yield* SessionRunnerModel.credential(catalog, integrations, selected),
         )
-        return (prompt: string) =>
-          client.stream(LLM.request({ model: resolved, system: [SystemPart.make(system)], prompt })).pipe(
-            Stream.filter(LLMEvent.is.textDelta),
-            Stream.map((event) => event.text),
-            Stream.mkString,
-          )
+        return (prompt: string) => {
+          // Gateways such as OpenCode Go refuse a request without a session to route it by; each call is its own.
+          const sessionID = SessionID.descending()
+          return client
+            .stream(
+              LLM.request({
+                model: resolved,
+                http: { headers: { "x-session-affinity": sessionID, "X-Session-Id": sessionID } },
+                system: [SystemPart.make(system)],
+                prompt,
+              }),
+            )
+            .pipe(
+              Stream.filter(LLMEvent.is.textDelta),
+              Stream.map((event) => event.text),
+              Stream.mkString,
+            )
+        }
       })
     })
     return handlers
