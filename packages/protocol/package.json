@@ -28,6 +28,7 @@
     "./groups/integration": "./src/groups/integration.ts",
     "./groups/lean": "./src/groups/lean.ts",
     "./groups/location": "./src/groups/location.ts",
+    "./groups/lsp": "./src/groups/lsp.ts",
     "./groups/mcp": "./src/groups/mcp.ts",
     "./groups/message": "./src/groups/message.ts",
     "./groups/model": "./src/groups/model.ts",

@@ -41,6 +41,7 @@ import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
 import { SessionLegacyRow } from "./session/legacy-row"
 import { SessionSubagentModels } from "./session/subagent-models"
+import { PermissionV1 } from "@orchestra/schema/permission-v1"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -185,6 +186,8 @@ export interface Interface {
     sessionID: SessionSchema.ID
     model: ModelV2.Ref
   }) => Effect.Effect<void, NotFoundError>
+  readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
+  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: PermissionV1.Ruleset }) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
   readonly prompt: (input: {
     id?: SessionMessage.ID
     sessionID: SessionSchema.ID
@@ -298,15 +301,16 @@ const layer = Layer.effect(
       const session = yield* result.get(input.sessionID)
       if ((yield* SessionInput.find(db, input.id)) || (yield* store.message(input.id))) return []
       return yield* hook(session, { operation: "prompt", text: input.prompt.text, messageID: input.id }).pipe(
-        Effect.catch((error) =>
-          Effect.fail(
+        Effect.catch((error) => {
+          const err = error as { _tag?: string; reason?: string; message?: string }
+          return Effect.fail(
             new PromptBlockedError({
               sessionID: session.id,
-              reason: error._tag === "ToolSafety.Denied" ? error.reason : "relay-hook-location-acquisition",
-              detail: error._tag === "ToolSafety.Denied" ? error.message : "Prompt hooks could not be evaluated.",
+              reason: err._tag === "ToolSafety.Denied" ? (err.reason ?? "relay-hook-location-acquisition") : "relay-hook-location-acquisition",
+              detail: err._tag === "ToolSafety.Denied" ? (err.message ?? "Prompt hooks could not be evaluated.") : "Prompt hooks could not be evaluated.",
             }),
-          ),
-        ),
+          )
+        }),
       )
     })
 
@@ -634,6 +638,17 @@ const layer = Layer.effect(
           model: input.model,
         })
       }),
+      getPermission: Effect.fn("V2Session.getPermission")(function* (sessionID) {
+        yield* result.get(sessionID)
+        const row = yield* db.select({ permission: SessionTable.permission }).from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie)
+        return row?.permission ?? []
+      }),
+      setPermission: Effect.fn("V2Session.setPermission")(function* (input) {
+        yield* result.get(input.sessionID)
+        const permission = [...input.permission]
+        yield* events.publish(SessionEvent.PermissionChanged, { sessionID: input.sessionID, timestamp: yield* DateTime.now, permission })
+        return permission
+      }),
       compact: Effect.fn("V2Session.compact")(function* (input) {
         const session = yield* result.get(input.sessionID)
         return yield* exclusive(
@@ -662,6 +677,7 @@ const layer = Layer.effect(
             Effect.provideService(Database.Service, database),
             Effect.provideService(EventV2.Service, events),
             Effect.provide(locations.get(session.location)),
+            Effect.mapError((error) => error as NotFoundError | MessageNotFoundError | Snapshot.Error),
           )
         }),
         clear: Effect.fn("V2Session.revert.clear")(function* (sessionID) {
@@ -669,6 +685,7 @@ const layer = Layer.effect(
           yield* SessionRevert.clear(session).pipe(
             Effect.provideService(EventV2.Service, events),
             Effect.provide(locations.get(session.location)),
+            Effect.mapError((error) => error as NotFoundError | Snapshot.Error),
           )
         }),
         commit: Effect.fn("V2Session.revert.commit")(function* (sessionID) {

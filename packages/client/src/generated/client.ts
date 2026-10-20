@@ -26,6 +26,10 @@ import type {
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
   SessionsSetSubagentModelsOutput,
+  SessionsGetPermissionInput,
+  SessionsGetPermissionOutput,
+  SessionsSetPermissionInput,
+  SessionsSetPermissionOutput,
   SessionsSwitchAgentInput,
   SessionsSwitchAgentOutput,
   SessionsSwitchModelInput,
@@ -68,6 +72,10 @@ import type {
   SessionsInterruptOutput,
   SessionsMessageInput,
   SessionsMessageOutput,
+  SessionsProcessesInput,
+  SessionsProcessesOutput,
+  SessionsProcessStopInput,
+  SessionsProcessStopOutput,
   MessagesListInput,
   MessagesListOutput,
   ModelsListInput,
@@ -150,6 +158,8 @@ import type {
   McpAuthCallbackOutput,
   McpAuthRemoveInput,
   McpAuthRemoveOutput,
+  ServerLspStatusInput,
+  ServerLspStatusOutput,
   SkillsListInput,
   SkillsListOutput,
   SkillsSaveInput,
@@ -590,6 +600,29 @@ export function make(options: ClientOptions) {
           },
           requestOptions,
         ).then((value) => value.data),
+      getPermission: (input: SessionsGetPermissionInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsGetPermissionOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/permission-rules`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      setPermission: (input: SessionsSetPermissionInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsSetPermissionOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/permission-rules`,
+            body: { permission: input["permission"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
       switchAgent: (input: SessionsSwitchAgentInput, requestOptions?: RequestOptions) =>
         request<SessionsSwitchAgentOutput>(
           {
@@ -836,6 +869,29 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/message/${encodeURIComponent(input.messageID)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      processes: (input: SessionsProcessesInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsProcessesOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/processes`,
+            query: { tail: input["tail"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      processStop: (input: SessionsProcessStopInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsProcessStopOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/processes/${encodeURIComponent(input.processID)}/stop`,
             successStatus: 200,
             declaredStatuses: [404, 400, 401],
             empty: false,
@@ -1364,6 +1420,20 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [404, 401, 400],
             empty: true,
+          },
+          requestOptions,
+        ),
+    },
+    "server.lsp": {
+      status: (input?: ServerLspStatusInput, requestOptions?: RequestOptions) =>
+        request<ServerLspStatusOutput>(
+          {
+            method: "GET",
+            path: `/api/lsp`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
           },
           requestOptions,
         ),

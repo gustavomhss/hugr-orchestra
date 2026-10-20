@@ -30,6 +30,7 @@ test("exposes every standard HTTP API group", () => {
     "vcs",
     "commands",
     "mcp",
+    "server.lsp",
     "skills",
     "behaviors",
     "events",

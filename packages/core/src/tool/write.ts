@@ -10,6 +10,8 @@ import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, Schema } from "effect"
 import { makeLocationNode } from "../effect/app-node"
 import { FileMutation } from "../file-mutation"
+import { FSUtil } from "../fs-util"
+import { LSP } from "../lsp"
 import { LocationMutation } from "../location-mutation"
 import { PermissionV2 } from "../permission"
 import { ToolRegistry } from "./registry"
@@ -31,17 +33,17 @@ export const Output = Schema.Struct({
   target: Schema.String,
   resource: Schema.String,
   existed: Schema.Boolean,
+  diagnostics: Schema.optional(Schema.String),
 })
 export type Output = typeof Output.Type
 
 export const toModelOutput = (output: Output) =>
-  `${output.existed ? "Wrote" : "Created"} file successfully: ${output.resource}`
+  `${output.existed ? "Wrote" : "Created"} file successfully: ${output.resource}` + (output.diagnostics ? `\n\n${output.diagnostics}` : "")
 
 /** Deferred V2 write UX integrations remain visible at the model-facing seam. */
 // TODO: Add formatter integration after V2 formatter runtime exists.
 // TODO: Publish watcher/file-edit events after V2 watcher integration exists.
 // TODO: Add snapshots / undo after design exists.
-// TODO: Add LSP notification and diagnostics after V2 LSP runtime exists.
 
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
@@ -49,6 +51,7 @@ const layer = Layer.effectDiscard(
     const mutation = yield* LocationMutation.Service
     const files = yield* FileMutation.Service
     const permission = yield* PermissionV2.Service
+    const lsp = yield* LSP.Service
 
     yield* tools
       .register({
@@ -86,7 +89,12 @@ const layer = Layer.effectDiscard(
                   agent: context.agent,
                   source,
                 })
-                return yield* files.writeTextPreservingBom({ target, content: input.content })
+                const result = yield* files.writeTextPreservingBom({ target, content: input.content })
+                yield* lsp.touchFile(result.target, "document")
+                const diagnostics = yield* lsp.diagnostics()
+                const normalized = FSUtil.normalizePath(result.target)
+                const diagnosticReport = LSP.Diagnostic.report(result.target, diagnostics[normalized] ?? [])
+                return { ...result, diagnostics: diagnosticReport || undefined }
               }).pipe(Effect.mapError(() => new ToolFailure({ message: `Unable to write ${input.path}` }))),
           }),
           "edit",
@@ -99,5 +107,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/write",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, FileMutation.node, PermissionV2.node, LSP.node],
 })

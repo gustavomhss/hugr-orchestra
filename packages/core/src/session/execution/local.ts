@@ -19,6 +19,7 @@ const layer = Layer.effect(
         if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
         return yield* SessionRunner.Service.use((runner) => runner.run({ sessionID, force })).pipe(
           Effect.provide(locations.get(session.location)),
+          Effect.mapError((error) => error as SessionRunner.RunError),
           Effect.tapCause((cause) =>
             Cause.hasInterruptsOnly(cause)
               ? Effect.void
@@ -34,12 +35,15 @@ const layer = Layer.effect(
       resume: (sessionID, options) => coordinator.run(sessionID, options),
       wake: coordinator.wake,
       exclusive: coordinator.exclusive,
-      withRunner: (sessionID, use) =>
+      withRunner: <A, E>(sessionID: SessionSchema.ID, use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>) =>
         Effect.gen(function* () {
           const session = yield* store.get(sessionID)
           if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
-          return yield* SessionRunner.Service.use(use).pipe(Effect.provide(locations.get(session.location)))
-        }),
+          return yield* SessionRunner.Service.use(use).pipe(
+            Effect.provide(locations.get(session.location)),
+            Effect.mapError((error) => error as E),
+          )
+        }) as Effect.Effect<A, E, never>,
     })
   }),
 )

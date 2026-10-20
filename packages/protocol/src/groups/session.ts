@@ -1,6 +1,7 @@
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { SessionInput } from "@orchestra/schema/session-input"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
+import { PermissionV1 } from "@orchestra/schema/permission-v1"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { Session } from "@orchestra/schema/session"
 import { Project } from "@orchestra/schema/project"
@@ -101,6 +102,22 @@ export const SessionHistoryQuery = Schema.Struct({
   limit: Schema.NumberFromString.pipe(Schema.decodeTo(SessionHistoryLimit), Schema.optional),
   after: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
 })
+
+export const ProcessNode = Schema.Struct({
+  pid: Schema.Int,
+  parentPid: Schema.optional(Schema.Int),
+  name: Schema.optional(Schema.String),
+}).annotate({ identifier: "SessionProcessNode" })
+
+export const SessionProcess = Schema.Struct({
+  id: Schema.String,
+  pid: Schema.Int,
+  title: Schema.String,
+  started: Schema.Finite,
+  processes: Schema.Array(ProcessNode),
+  output: Schema.String,
+  written: Schema.Finite,
+}).annotate({ identifier: "SessionProcess" })
 
 const SessionsQueryCursor = SessionsCursor.annotate({
   description: "Opaque pagination cursor returned as cursor.previous or cursor.next in the previous response.",
@@ -253,6 +270,31 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
           identifier: "v2.session.setSubagentModels",
           summary: "Set session subagent model policy",
           description: "Durably replace the outgoing subagent model policy; inheritance and an empty allowlist are distinct.",
+        })),
+    )
+    .add(
+      HttpApiEndpoint.get("session.getPermission", "/api/session/:sessionID/permission-rules", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: PermissionV1.Ruleset }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({
+          identifier: "v2.session.getPermission",
+          summary: "Get session permission rules",
+        })),
+    )
+    .add(
+      HttpApiEndpoint.post("session.setPermission", "/api/session/:sessionID/permission-rules", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ permission: PermissionV1.Ruleset }),
+        success: Schema.Struct({ data: PermissionV1.Ruleset }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({
+          identifier: "v2.session.setPermission",
+          summary: "Set session permission rules",
         })),
     )
     .add(
@@ -600,6 +642,39 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.message",
             summary: "Get session message",
             description: "Retrieve one projected message owned by the Session.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.processes", "/api/session/:sessionID/processes", {
+        params: { sessionID: Session.ID },
+        query: Schema.Struct({
+          tail: Schema.NumberFromString.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Array(SessionProcess) }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.processes",
+            summary: "List background processes",
+            description: "List the process trees a session's shell tool left running.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.processStop", "/api/session/:sessionID/processes/:processID/stop", {
+        params: { sessionID: Session.ID, processID: Schema.String },
+        success: Schema.Struct({ data: Schema.Boolean }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.processStop",
+            summary: "Stop background process",
+            description: "Stop one background process tree of a session.",
           }),
         ),
     )

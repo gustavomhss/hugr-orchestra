@@ -14,6 +14,7 @@ import { SessionMessage } from "./session-message"
 import { Revert } from "./revert"
 import { PromptContext } from "./prompt-context"
 import { SessionSubagentModels } from "./session-subagent-models"
+import { PermissionV1 } from "./permission-v1"
 
 export { FileAttachment }
 
@@ -82,6 +83,13 @@ export const SubagentModelsChanged = Event.define({
   schema: { ...Base, policy: SessionSubagentModels.Policy },
 })
 export type SubagentModelsChanged = typeof SubagentModelsChanged.Type
+
+export const PermissionChanged = Event.define({
+  type: "session.next.permission.changed",
+  ...options,
+  schema: { ...Base, permission: PermissionV1.Ruleset },
+})
+export type PermissionChanged = typeof PermissionChanged.Type
 
 export const ArchiveChanged = Event.define({
   type: "session.next.archive.changed",
@@ -470,6 +478,7 @@ export const DurableDefinitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,
+  PermissionChanged,
   ArchiveChanged,
   Moved,
   Prompted,
@@ -503,6 +512,7 @@ export const Definitions = Event.inventory(
   AgentSwitched,
   ModelSwitched,
   SubagentModelsChanged,
+  PermissionChanged,
   ArchiveChanged,
   Moved,
   Prompted,

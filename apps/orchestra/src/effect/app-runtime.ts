@@ -60,6 +60,7 @@ import { SessionStore } from "@orchestra/core/session/store"
 import { SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionExecutionLocal } from "@orchestra/core/session/execution/local"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { ArsenalObservations } from "@orchestra/maestro/arsenal-observations"
 
@@ -121,6 +122,7 @@ export const AppLayer = AppNodeBuilderV1.build(
     SessionV2.node,
     SessionExecution.node,
     SessionSubagentModels.node,
+    SessionProcess.node,
     ArsenalObservations.node,
   ]),
   [[SessionExecution.node, SessionExecutionLocal.node]],

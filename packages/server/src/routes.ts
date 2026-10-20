@@ -14,6 +14,7 @@ import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { PtyTicket } from "@orchestra/core/pty/ticket"
 import { ScheduledTask } from "@orchestra/core/scheduled-task"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { LocationServiceMap } from "@orchestra/core/location-service-map"
@@ -42,6 +43,7 @@ const applicationServices = LayerNode.group([
   SessionV2.node,
   SessionExecution.node,
   SessionSubagentModels.node,
+  SessionProcess.node,
   ScheduledTask.node,
   ScheduledTask.daemonNode,
   PermissionSaved.node,

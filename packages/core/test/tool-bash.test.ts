@@ -145,7 +145,6 @@ describe("BashTool", () => {
           Effect.gen(function* () {
             const definitions = yield* toolDefinitions(registry)
             expect(definitions.map((tool) => tool.name)).toEqual(["bash"])
-            expect(definitions[0]?.inputSchema).not.toHaveProperty("properties.background")
             expect(definitions[0]?.inputSchema).not.toHaveProperty("properties.description")
             expect(definitions[0]?.outputSchema).not.toHaveProperty("properties.output")
             expect(definitions[0]?.outputSchema).not.toHaveProperty("properties.command")
