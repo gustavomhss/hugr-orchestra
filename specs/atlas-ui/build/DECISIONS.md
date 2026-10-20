@@ -289,7 +289,7 @@ code or run Genesis. Only the CLI could (`atlas init`, a hand-written `policy.js
 - **D38 Index (host).** `POST /atlas/index` runs the plan's indexer from the repository root. It runs `scip-typescript`
   when the plan configures it, else `scip-python`, else nothing (both write the one `.atlas/index.scip`). The package
   (`@sourcegraph/scip-typescript@0.4.0`, `@sourcegraph/scip-python@0.6.6`, the versions `scip.ts` pins) comes from
-  Orchestra's package cache (`Npm.which`) and runs with Orchestra's own Bun (`BUN_BE_BUN=1`) through `AppProcess`, with a
+  Orchestra's package cache (`Npm.which`) and runs on the runtime the server runs on (Bun with `BUN_BE_BUN=1`, or Electron's Node with `ELECTRON_RUN_AS_NODE=1` on the V1 desktop sidecar) through `AppProcess`, with a
   ten-minute limit. TypeScript without a root `tsconfig.json` adds `--infer-tsconfig`. The result is
   `{ state: "ok", ran, tool, exitCode, documents, message }`; a failed run carries the last 300 characters of stderr.
 - **D39 Mine (engine).** Mining stays the CLI's governed pass (`driveMinePass`), advisory arm only. The surface cannot
@@ -308,3 +308,9 @@ code or run Genesis. Only the CLI could (`atlas init`, a hand-written `policy.js
   `.gitignore`), then runs install and index in sequence and reloads. The Genesis "Run atlas mine" sheet stops copying a
   command: it picks a connected model (the delegate sheet's picker) and a ceiling, runs `/atlas/mine`, and toasts the
   staged count, or the why line when none.
+- **D42 Track D smoke (2026-10-19).** Dev desktop on the V1 sidecar (`ORCHESTRA_SIDECAR_V2=legacy`), fresh TypeScript
+  repository: Set up Atlas wrote the policy and `.gitignore`, `scip-typescript` indexed 2 documents, Mine with
+  `opencode-go/deepseek-v4.1-flash` visited 2 sites and staged 1 candidate, and Accept all with an approval key
+  promoted it. Two fixes came out of it: the bundled mine pass embeds the advisory template (`PROPOSE_TEMPLATE`), and
+  the indexer runs on Electron's Node on the V1 sidecar. The desktop's default V2 server has no Atlas routes yet: the
+  chapter shows "This server does not provide Atlas" there (follow-up, see OPEN.md).

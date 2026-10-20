@@ -32,3 +32,10 @@ These keep their `New capability` markers. Each needs a host design that the mer
 - **R7 republish.** `buildOwnExport` writes nothing; publishing also needs the skill materializer, which is a repo script.
 - **R8 replace in place** and **R9 repair** stay CLI-side (`atlas repair`, the worklist workflow).
 - **R1 a person's own rule** (Add rule, a lesson's Index): needs a `memoryPropose`-and-index write; stays marked.
+
+## Atlas on the V2 server
+
+The desktop runs its own V2 `orchestra serve` child by default since dev #842. The Atlas routes exist only on the
+legacy httpapi, so on the default desktop the chapter answers "This server does not provide Atlas"; it works with
+`ORCHESTRA_SIDECAR_V2=legacy`. Port the 21 routes to the V2 Protocol and server the way Lean was ported
+(`packages/protocol/src/groups/lean.ts`, `packages/server/src/handlers/lean.ts`, `chapters/lean-api.ts`).
