@@ -1,14 +1,6 @@
-import type {
-  Config,
-  OrchestraClient,
-  Path,
-  PermissionRequest,
-  Project,
-  ProviderAuthResponse,
-  QuestionRequest,
-  ReferenceInfo,
-  Session,
-} from "../../compat/sdk-v2-client"
+import type { OrchestraClient, Project } from "../../compat/sdk-v2-client"
+import type { PermissionRequest, QuestionRequest, ReferenceInfo, Session } from "@/v2-types"
+import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type {
   AgentListInput,
   AgentListOutput,

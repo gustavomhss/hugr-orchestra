@@ -1,4 +1,5 @@
-import type { Event, Session, SessionV2Info, V2SessionListResponse } from "../../compat/sdk-v2-client"
+import type { Session, SessionV2Info } from "@/v2-types"
+import type { Event, V2SessionListResponse } from "@/v2-wire"
 import type { QueryClient } from "@tanstack/solid-query"
 import { trimSessions } from "./session-trim"
 import { pathKey } from "@/utils/path-key"

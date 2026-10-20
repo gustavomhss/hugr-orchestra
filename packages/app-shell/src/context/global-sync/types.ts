@@ -1,17 +1,15 @@
 import type {
-  Agent,
-  Config,
   LspStatus,
   Message,
   Part,
-  Path,
   PermissionRequest,
   QuestionRequest,
   ReferenceInfo,
   SessionStatus,
   Todo,
   VcsInfo,
-} from "../../compat/sdk-v2-client"
+} from "@/v2-types"
+import type { Agent, Config, Path } from "@/v2-wire"
 import type { FileDiffInfo } from "../../compat/vendored-client-promise"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "../../compat/vendored-client-promise"
