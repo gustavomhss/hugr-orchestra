@@ -1,4 +1,4 @@
-import type { Workspace } from "../compat/sdk-v2"
+import type { Workspace } from "../compat/schema"
 import { useDialog } from "../ui/dialog"
 import { DialogSelect, type DialogSelectOption } from "../ui/dialog-select"
 import { useProject } from "../context/project"

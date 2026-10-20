@@ -34,7 +34,7 @@ import type {
   UserMessage,
   TextPart,
   ReasoningPart,
-} from "../../compat/sdk-v2"
+} from "../../compat/schema"
 import { useLocal } from "../../context/local"
 import { Locale } from "../../util/locale"
 import { webSearchProviderLabel } from "../../util/tool-display"

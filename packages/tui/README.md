@@ -14,7 +14,7 @@ Terminal UI used by the CLI.
 
 ## Dependencies and boundaries
 
-- Layer `terminal-ui`: may use core (it runs in the backend process), plugin, ui and client.
+- Layer `terminal-ui`: may use core (it runs in the backend process), plugin, schema, ui and client.
 - The legacy SDK is reached only through `packages/tui/src/compat`.
 
 ## Assets, schemas and generated files

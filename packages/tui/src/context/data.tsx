@@ -17,7 +17,7 @@ import type {
   SessionV2Info,
   SkillV2Info,
   V2Event,
-} from "../compat/sdk-v2"
+} from "../compat/schema"
 import { createStore, produce } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"

@@ -50,6 +50,7 @@
   "dependencies": {
     "@orchestra/core": "workspace:*",
     "@orchestra/plugin": "workspace:*",
+    "@orchestra/schema": "workspace:*",
     "@orchestra/sdk": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@opentui/core": "catalog:",

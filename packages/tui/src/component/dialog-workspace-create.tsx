@@ -1,4 +1,4 @@
-import type { ExperimentalWorkspaceAdapterListResponse, Workspace } from "../compat/sdk-v2"
+import type { ExperimentalWorkspaceAdapterListResponse, Workspace } from "../compat/schema"
 import { useDialog } from "../ui/dialog"
 import { DialogSelect, type DialogSelectOption } from "../ui/dialog-select"
 import { useSync } from "../context/sync"

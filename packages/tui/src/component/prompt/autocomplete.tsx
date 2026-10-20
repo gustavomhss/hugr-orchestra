@@ -22,7 +22,7 @@ import type { PromptInfo } from "../../prompt/history"
 import { useFrecency } from "../../prompt/frecency"
 import { useBindings, useCommandSlashes, useOrchestraModeStack } from "../../keymap"
 import { displayCharAt, mentionTriggerIndex } from "../../prompt/display"
-import type { FileSystemEntry } from "../../compat/sdk-v2"
+import type { FileSystemEntry } from "../../compat/schema"
 import { agentMention } from "../../util/agent"
 
 function removeLineRange(input: string) {

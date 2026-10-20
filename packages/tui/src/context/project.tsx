@@ -1,5 +1,5 @@
 import { batch } from "solid-js"
-import type { Path, Workspace } from "../compat/sdk-v2"
+import type { Path, Workspace } from "../compat/schema"
 import { createStore, reconcile } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"
