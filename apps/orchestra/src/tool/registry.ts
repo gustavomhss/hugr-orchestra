@@ -70,6 +70,7 @@ import { InstanceStore } from "@/project/instance-store"
 import { EffectBridge } from "@/effect/bridge"
 import { Question } from "../question"
 import { Todo } from "../session/todo"
+import { LSP } from "@/lsp/lsp"
 import { Instruction } from "../session/instruction"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { EventV2Bridge } from "@/event-v2-bridge"
@@ -765,6 +766,7 @@ export const node = LayerNode.make({
     BackgroundProcess.node,
     SessionStatus.node,
     Provider.node,
+    LSP.node,
     Instruction.node,
     FSUtil.node,
     EventV2Bridge.node,

@@ -1,3 +1,4 @@
+import { SessionProcess } from "@orchestra/core/session-process"
 import { describe, expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import path from "node:path"
@@ -47,6 +48,7 @@ const services = Layer.unwrap(
         SessionV2.node,
         SessionProjector.node,
         SessionSubagentModels.node,
+        SessionProcess.node,
         SessionExecution.node,
         LocationServiceMap.node,
         AppProcess.node,
@@ -138,7 +140,7 @@ describe("session permission rules HttpApi", () => {
       expect(yield* ack.json).toEqual({ data: rules })
 
       const row = yield* database.db.select().from(SessionTable).where(eq(SessionTable.id, id)).get()
-      expect(row?.permission).toEqual(rules)
+      expect(JSON.stringify(row?.permission)).toBe(JSON.stringify(rules))
 
       const events = yield* database.db
         .select()

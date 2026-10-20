@@ -21,6 +21,7 @@ import { EventV2Bridge } from "@/event-v2-bridge"
 import { Format } from "@/format"
 import { Git } from "@/git"
 import { Installation } from "@/installation"
+import { LSP } from "@/lsp/lsp"
 import { MCP } from "@/mcp"
 import { McpAuth } from "@orchestra/core/mcp/auth"
 import { Permission } from "@/permission"
@@ -261,6 +262,7 @@ const app = LayerNode.group([
   SessionContinuity.node,
   Instruction.node,
   LLM.node,
+  LSP.node,
   MCP.node,
   McpAuth.node,
   Command.node,
