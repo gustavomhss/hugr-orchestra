@@ -9,12 +9,17 @@ import type { Provider } from "@orchestra/schema/provider"
 import type { Reference } from "@orchestra/schema/reference"
 import type { Skill } from "@orchestra/schema/skill"
 
+// The plugin contract keeps IDs Encoded but leaves request and variant bodies open:
+// plugins may add arbitrary provider options such as `fetch`.
 type Request = {
   readonly headers: Record<string, string>
   readonly body: Record<string, unknown>
 }
+type Variant = Omit<(typeof Model.Info.Encoded)["variants"][number], "body"> & {
+  readonly body: Record<string, unknown>
+}
 
-export type AgentInfo = typeof Agent.Info.Encoded
+export type AgentInfo = Omit<typeof Agent.Info.Encoded, "request"> & { readonly request: Request }
 export type CommandInfo = typeof Command.Info.Encoded
 export type ConnectionInfo = typeof Connection.Info.Encoded
 export type CredentialOAuth = typeof Credential.OAuth.Encoded
@@ -26,8 +31,9 @@ export type IntegrationKeyMethod = typeof Integration.KeyMethod.Encoded
 export type IntegrationMethod = typeof Integration.Method.Encoded
 export type IntegrationOAuthMethod = typeof Integration.OAuthMethod.Encoded
 export type IntegrationRef = typeof Integration.Ref.Encoded
-export type ModelInfo = Omit<typeof Model.Info.Encoded, "request"> & {
+export type ModelInfo = Omit<typeof Model.Info.Encoded, "request" | "variants"> & {
   readonly request: Request & { readonly variant?: string }
+  readonly variants: readonly Variant[]
 }
 export type ProviderInfo = Omit<typeof Provider.Info.Encoded, "request"> & { readonly request: Request }
 export type ReferenceGitSource = typeof Reference.GitSource.Encoded
