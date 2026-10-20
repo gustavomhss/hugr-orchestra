@@ -596,6 +596,7 @@
         "@opentelemetry/context-async-hooks": "2.6.1",
         "@opentelemetry/exporter-trace-otlp-http": "0.214.0",
         "@opentelemetry/sdk-trace-base": "2.6.1",
+        "@orchestra/atlas-boundary": "workspace:*",
         "@orchestra/effect-drizzle-sqlite": "workspace:*",
         "@orchestra/effect-sqlite-node": "workspace:*",
         "@orchestra/llm": "workspace:*",
@@ -811,6 +812,7 @@
       "version": "1.18.27",
       "dependencies": {
         "@orchestra/core": "workspace:*",
+        "@orchestra/llm": "workspace:*",
         "@orchestra/protocol": "workspace:*",
         "@orchestra/relay": "workspace:*",
         "@orchestra/schema": "workspace:*",

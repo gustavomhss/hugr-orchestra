@@ -6,6 +6,7 @@ import { Dynamic } from "solid-js/web"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
 import { ServerConnection } from "@/context/server"
+import { useServerSDK } from "@/context/server-sdk"
 import type { ChapterPageProps } from "@/orchestra/chapter-route"
 import { setCrumbTrail } from "@/orchestra/crumbs"
 import { formatServerError } from "@/utils/server-errors"
@@ -31,6 +32,7 @@ import { atlasInspector, atlasViews } from "./views"
 export default function AtlasPage(props: ChapterPageProps) {
   const language = useLanguage()
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
   const location = useLocation()
   const navigate = useNavigate()
   const route = createMemo(() => parseAtlasRoute(location.pathname, location.search))
@@ -42,7 +44,7 @@ export default function AtlasPage(props: ChapterPageProps) {
   void controller.select({
     server: ServerConnection.key(props.server),
     directory: props.directory,
-    transport: createAtlasAPI(sdk()),
+    transport: createAtlasAPI(sdk(), serverSDK().orchestra),
   })
   onCleanup(() => controller.dispose())
   onCleanup(() => setCrumbTrail([]))

@@ -25,6 +25,7 @@
   },
   "dependencies": {
     "@orchestra/core": "workspace:*",
+    "@orchestra/llm": "workspace:*",
     "@orchestra/protocol": "workspace:*",
     "@orchestra/relay": "workspace:*",
     "@orchestra/schema": "workspace:*",

@@ -41,6 +41,7 @@ export const groupNames = {
   "server.projectCopy": "projectCopies",
   "server.project": "projects",
   "server.lean": "lean",
+  "server.atlas": "atlas",
   "server.config": "config",
   "server.relay.document": "relayDocuments",
   "server.relay.publish": "relayPublish",

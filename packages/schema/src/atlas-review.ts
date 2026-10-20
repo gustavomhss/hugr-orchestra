@@ -2,7 +2,7 @@ import { Schema } from "effect"
 
 // The wire shapes of the Atlas review routes (DECISIONS.md D31, D35), transcribing
 // modules/atlas/packages/adapter-io/src/surface/types-review.ts. An absent value is `null` on the wire, never omitted.
-// The `AtlasEmpty` unions and the write verdict are composed in groups/atlas.ts, which owns `AtlasEmpty`; this file
+// The `AtlasEmpty` unions and the write verdict are composed in atlas-screen.ts, which owns `AtlasEmpty`; this file
 // imports nothing from it, so the two modules never import each other.
 
 const Tier = Schema.Literals(["T1", "T0"])

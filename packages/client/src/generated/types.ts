@@ -3864,6 +3864,1004 @@ export type LeanHistoryOutput = {
   }
 }
 
+export type AtlasSnapshotInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasSnapshotOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly project: string
+        readonly head: string
+        readonly builtAt: string
+        readonly gen: number
+        readonly stagingGen: number
+        readonly identity: string | null
+        readonly casObjects: number
+        readonly policy: { readonly [x: string]: ReadonlyArray<string> }
+        readonly t0Keywords: ReadonlyArray<string>
+        readonly scip: boolean
+        readonly tracked: {
+          readonly projection: boolean
+          readonly cas: number
+          readonly staging: boolean
+          readonly policy: boolean
+          readonly memory: boolean
+        }
+        readonly sealed: number
+        readonly casAudit: {
+          readonly objects: number
+          readonly referenced: number
+          readonly missing: number
+          readonly orphan: number
+        }
+        readonly generations: ReadonlyArray<string>
+        readonly abstained: number
+        readonly langs: { readonly [x: string]: number }
+        readonly facts: ReadonlyArray<{
+          readonly key: string
+          readonly hash: string
+          readonly claim: string
+          readonly file: string
+          readonly family: string
+          readonly tier: string
+          readonly scope: string
+          readonly derivedAt: string
+          readonly subtree: string
+          readonly obvious: string | null
+          readonly promoted: boolean
+          readonly why: string | null
+          readonly kind: string | null
+          readonly authoring: string | null
+          readonly storedFreshness: string | null
+          readonly obviousBy: string | null
+          readonly anchor: { readonly kind: string; readonly qualifiedPath: string } | null
+          readonly slot: string | null
+          readonly seal: string | null
+          readonly supersededBy: string | null
+          readonly sameAs: ReadonlyArray<string> | null
+          readonly provenance: {
+            readonly [x: string]: { readonly source: string; readonly trusted: boolean; readonly sha?: string | null }
+          } | null
+          readonly drift?: {
+            readonly hunks: ReadonlyArray<{ readonly at: string; readonly lines: ReadonlyArray<string> }>
+            readonly stat: string
+            readonly commits: ReadonlyArray<readonly [string, string]>
+          } | null
+        }>
+        readonly candidates: ReadonlyArray<{
+          readonly key: string
+          readonly hash: string
+          readonly claim: string
+          readonly file: string
+          readonly family: string
+          readonly tier: string
+          readonly scope: string
+          readonly derivedAt: string
+          readonly subtree: string
+          readonly obvious: string | null
+          readonly promoted: boolean
+          readonly why: string | null
+          readonly kind: string | null
+          readonly authoring: string | null
+          readonly storedFreshness: string | null
+          readonly obviousBy: string | null
+          readonly anchor: { readonly kind: string; readonly qualifiedPath: string } | null
+          readonly slot: string | null
+          readonly seal: string | null
+          readonly supersededBy: string | null
+          readonly sameAs: ReadonlyArray<string> | null
+          readonly provenance: {
+            readonly [x: string]: { readonly source: string; readonly trusted: boolean; readonly sha?: string | null }
+          } | null
+          readonly drift?: {
+            readonly hunks: ReadonlyArray<{ readonly at: string; readonly lines: ReadonlyArray<string> }>
+            readonly stat: string
+            readonly commits: ReadonlyArray<readonly [string, string]>
+          } | null
+        }>
+        readonly dependents: { readonly [x: string]: ReadonlyArray<string> }
+        readonly dependentCount: { readonly [x: string]: number }
+        readonly children: { readonly [x: string]: ReadonlyArray<string> }
+        readonly own: {
+          readonly status: "READY" | "HOLD"
+          readonly reason: string | null
+          readonly snapshot: string | null
+          readonly sourceRevision: string | null
+          readonly sourcePaths: ReadonlyArray<string>
+          readonly units: ReadonlyArray<JsonValue>
+          readonly coverage: {
+            readonly snapshot: string
+            readonly sourceRevision: string
+            readonly units: ReadonlyArray<string>
+          } | null
+          readonly skills: ReadonlyArray<{ readonly path: string; readonly size: number; readonly head: string }>
+        } | null
+        readonly memory: {
+          readonly [x: string]: ReadonlyArray<{
+            readonly eventId: string
+            readonly seq: number
+            readonly member: string
+            readonly kind: string
+            readonly text: string
+            readonly scope: string | null
+            readonly at: string | null
+            readonly refs: ReadonlyArray<string>
+            readonly entry: JsonValue
+          }>
+        }
+        readonly orientation: ReadonlyArray<{
+          readonly eventId: string
+          readonly seq: number
+          readonly channel: string
+          readonly label: string
+          readonly supersedes: ReadonlyArray<string>
+        }>
+        readonly territories: ReadonlyArray<{
+          readonly name: string
+          readonly owner: string
+          readonly tier: string
+          readonly globs: ReadonlyArray<string>
+        }>
+      }
+}
+
+export type AtlasReasoningInput = {
+  readonly id: { readonly id: string }["id"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasReasoningOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | { readonly state: "ok"; readonly id: string; readonly text: string }
+    | { readonly state: "missing"; readonly id: string }
+}
+
+export type AtlasOwnInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly scope: string
+  }["location"]
+  readonly scope: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+    readonly scope: string
+  }["scope"]
+}
+
+export type AtlasOwnOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly scope: string
+        readonly tool: string
+        readonly pack: JsonValue
+        readonly readRefusal: string | null
+      }
+}
+
+export type AtlasHealthInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasHealthOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly actor: string
+        readonly provenance: "trusted" | "tracked-staging" | "tracked-provable"
+        readonly readRefusal: string | null
+        readonly readAdvisory: string | null
+        readonly cas: {
+          readonly objects: number
+          readonly corrupt: ReadonlyArray<string>
+          readonly unreadable: ReadonlyArray<string>
+          readonly missing: ReadonlyArray<string>
+          readonly orphan: number
+          readonly referenced: number
+          readonly sound: boolean
+        }
+        readonly proofs: {
+          readonly sealedProven: number
+          readonly reProven: number
+          readonly broken: number
+          readonly unverifiable: number
+          readonly dangling: number
+        }
+        readonly index: {
+          readonly scipRel: string
+          readonly scip:
+            | { readonly kind: "absent" }
+            | { readonly kind: "unreadable"; readonly reason: string }
+            | { readonly kind: "present"; readonly documents: number }
+          readonly configured: ReadonlyArray<{
+            readonly plan: {
+              readonly lang: string
+              readonly tool: string
+              readonly args: ReadonlyArray<string>
+              readonly version?: string | null
+            }
+            readonly files: number
+          }>
+          readonly holes: ReadonlyArray<{
+            readonly plan: {
+              readonly lang: string
+              readonly tool: string
+              readonly args: ReadonlyArray<string>
+              readonly version?: string | null
+            }
+            readonly files: number
+          }>
+        }
+        readonly hotSet: number
+      }
+}
+
+export type AtlasPromoteInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly token?: {
+    readonly token?: string | undefined
+    readonly nodeKeys?: ReadonlyArray<string> | undefined
+  }["token"]
+  readonly nodeKeys?: {
+    readonly token?: string | undefined
+    readonly nodeKeys?: ReadonlyArray<string> | undefined
+  }["nodeKeys"]
+}
+
+export type AtlasPromoteOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly read: boolean
+        readonly refusal?: "contended" | "unreadable" | "untrusted" | null
+        readonly candidates: number
+        readonly promoted: number
+        readonly refused: number
+        readonly rows: ReadonlyArray<{
+          readonly nodeKey: string
+          readonly settled: boolean
+          readonly id?: string | null
+          readonly rejected?: string | null
+        }>
+        readonly held?: ReadonlyArray<string> | null
+        readonly unknown?: ReadonlyArray<string> | null
+      }
+}
+
+export type AtlasDraftInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly anchor: {
+    readonly anchor: string
+    readonly slot: string
+    readonly claim: string
+    readonly supersede?: boolean | undefined
+    readonly token?: string | undefined
+  }["anchor"]
+  readonly slot: {
+    readonly anchor: string
+    readonly slot: string
+    readonly claim: string
+    readonly supersede?: boolean | undefined
+    readonly token?: string | undefined
+  }["slot"]
+  readonly claim: {
+    readonly anchor: string
+    readonly slot: string
+    readonly claim: string
+    readonly supersede?: boolean | undefined
+    readonly token?: string | undefined
+  }["claim"]
+  readonly supersede?: {
+    readonly anchor: string
+    readonly slot: string
+    readonly claim: string
+    readonly supersede?: boolean | undefined
+    readonly token?: string | undefined
+  }["supersede"]
+  readonly token?: {
+    readonly anchor: string
+    readonly slot: string
+    readonly claim: string
+    readonly supersede?: boolean | undefined
+    readonly token?: string | undefined
+  }["token"]
+}
+
+export type AtlasDraftOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: {
+          readonly draft: {
+            readonly fact: JsonValue
+            readonly rev: string
+            readonly operation: "CREATE" | "UPDATE"
+            readonly route: "auto-accept" | "full-ratify"
+            readonly requires?: string | null
+          }
+          readonly check: {
+            readonly wouldEmit: boolean
+            readonly gates: ReadonlyArray<{
+              readonly gate: "shape" | "truth" | "authz" | "ratify"
+              readonly pass: boolean
+              readonly reason?: string | null
+              readonly remedy?: string | null
+            }>
+          } | null
+        } | null
+      }
+}
+
+export type AtlasEmitInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly fact: { readonly fact: unknown; readonly at: string; readonly token?: string | undefined }["fact"]
+  readonly at: { readonly fact: unknown; readonly at: string; readonly token?: string | undefined }["at"]
+  readonly token?: { readonly fact: unknown; readonly at: string; readonly token?: string | undefined }["token"]
+}
+
+export type AtlasEmitOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: {
+          readonly emitted: boolean
+          readonly id?: string | null
+          readonly nodeKey?: string | null
+          readonly rejected?: string | null
+        } | null
+      }
+}
+
+export type AtlasLinkInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly a: {
+    readonly a: string
+    readonly b: string
+    readonly retract?: boolean | undefined
+    readonly token?: string | undefined
+  }["a"]
+  readonly b: {
+    readonly a: string
+    readonly b: string
+    readonly retract?: boolean | undefined
+    readonly token?: string | undefined
+  }["b"]
+  readonly retract?: {
+    readonly a: string
+    readonly b: string
+    readonly retract?: boolean | undefined
+    readonly token?: string | undefined
+  }["retract"]
+  readonly token?: {
+    readonly a: string
+    readonly b: string
+    readonly retract?: boolean | undefined
+    readonly token?: string | undefined
+  }["token"]
+}
+
+export type AtlasLinkOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: {
+          readonly linked: boolean
+          readonly rejected?: string | null
+          readonly a?: string | null
+          readonly b?: string | null
+          readonly retracted?: boolean | null
+        } | null
+      }
+}
+
+export type AtlasVerifyInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly kind: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["kind"]
+  readonly target: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["target"]
+  readonly scope: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["scope"]
+  readonly world?: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["world"]
+  readonly min?: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["min"]
+  readonly exact?: {
+    readonly kind: string
+    readonly target: string
+    readonly scope: string
+    readonly world?: string | undefined
+    readonly min?: number | undefined
+    readonly exact?: boolean | undefined
+  }["exact"]
+}
+
+export type AtlasVerifyOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: {
+          readonly kind: "dependency" | "count" | "definition" | "negation"
+          readonly verdict: "proven" | "refuted" | "abstain"
+          readonly reason?: string | null
+          readonly oracle: string
+          readonly target: string
+          readonly scope: string
+        } | null
+      }
+}
+
+export type AtlasReviewInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasReviewOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly unreadable: boolean
+        readonly held: ReadonlyArray<string>
+        readonly proposals: ReadonlyArray<{
+          readonly id: string
+          readonly nodeKey: string
+          readonly toTier: "T1" | "T0"
+          readonly reason: string
+          readonly by: string
+          readonly at: string
+        }>
+        readonly memoryProposals: ReadonlyArray<{
+          readonly id: string
+          readonly member: string
+          readonly rule: string
+          readonly scope: string
+          readonly by: string
+          readonly at: string
+        }>
+        readonly interview: {
+          readonly batch: ReadonlyArray<{
+            readonly id: string
+            readonly kind: "owner" | "tier" | "contested" | "intent"
+            readonly subject: string
+            readonly ask: string
+            readonly rank: number
+            readonly site: string
+            readonly options: ReadonlyArray<string> | null
+            readonly nodeKey: string | null
+            readonly draft: {
+              readonly answer: string
+              readonly model: string
+              readonly why: string
+              readonly by: string
+              readonly at: string
+            } | null
+          }>
+          readonly deferred: number
+        }
+      }
+}
+
+export type AtlasHoldInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly nodeKey: { readonly nodeKey: string }["nodeKey"]
+}
+
+export type AtlasHoldOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasReleaseInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly nodeKey: { readonly nodeKey: string }["nodeKey"]
+}
+
+export type AtlasReleaseOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasProposeInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly nodeKey: { readonly nodeKey: string; readonly toTier: "T1" | "T0"; readonly reason: string }["nodeKey"]
+  readonly toTier: { readonly nodeKey: string; readonly toTier: "T1" | "T0"; readonly reason: string }["toTier"]
+  readonly reason: { readonly nodeKey: string; readonly toTier: "T1" | "T0"; readonly reason: string }["reason"]
+}
+
+export type AtlasProposeOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasDecideInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly proposalId: {
+    readonly proposalId: string
+    readonly verdict: "ratified" | "rejected"
+    readonly reason: string
+    readonly token?: string | undefined
+  }["proposalId"]
+  readonly verdict: {
+    readonly proposalId: string
+    readonly verdict: "ratified" | "rejected"
+    readonly reason: string
+    readonly token?: string | undefined
+  }["verdict"]
+  readonly reason: {
+    readonly proposalId: string
+    readonly verdict: "ratified" | "rejected"
+    readonly reason: string
+    readonly token?: string | undefined
+  }["reason"]
+  readonly token?: {
+    readonly proposalId: string
+    readonly verdict: "ratified" | "rejected"
+    readonly reason: string
+    readonly token?: string | undefined
+  }["token"]
+}
+
+export type AtlasDecideOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasAnswerInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly questionId: {
+    readonly questionId: string
+    readonly answer: string
+    readonly drafted?: { readonly model: string; readonly why: string } | undefined
+  }["questionId"]
+  readonly answer: {
+    readonly questionId: string
+    readonly answer: string
+    readonly drafted?: { readonly model: string; readonly why: string } | undefined
+  }["answer"]
+  readonly drafted?: {
+    readonly questionId: string
+    readonly answer: string
+    readonly drafted?: { readonly model: string; readonly why: string } | undefined
+  }["drafted"]
+}
+
+export type AtlasAnswerOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasMemoryDecideInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly proposalId: {
+    readonly proposalId: string
+    readonly verdict: "indexed" | "discarded"
+    readonly rule?: string | undefined
+    readonly scope?: string | undefined
+  }["proposalId"]
+  readonly verdict: {
+    readonly proposalId: string
+    readonly verdict: "indexed" | "discarded"
+    readonly rule?: string | undefined
+    readonly scope?: string | undefined
+  }["verdict"]
+  readonly rule?: {
+    readonly proposalId: string
+    readonly verdict: "indexed" | "discarded"
+    readonly rule?: string | undefined
+    readonly scope?: string | undefined
+  }["rule"]
+  readonly scope?: {
+    readonly proposalId: string
+    readonly verdict: "indexed" | "discarded"
+    readonly rule?: string | undefined
+    readonly scope?: string | undefined
+  }["scope"]
+}
+
+export type AtlasMemoryDecideOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasTerritoryInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly name: {
+    readonly name: string
+    readonly owner: string
+    readonly tier: "T0" | "T1" | "T2"
+    readonly globs: ReadonlyArray<string>
+    readonly token?: string | undefined
+  }["name"]
+  readonly owner: {
+    readonly name: string
+    readonly owner: string
+    readonly tier: "T0" | "T1" | "T2"
+    readonly globs: ReadonlyArray<string>
+    readonly token?: string | undefined
+  }["owner"]
+  readonly tier: {
+    readonly name: string
+    readonly owner: string
+    readonly tier: "T0" | "T1" | "T2"
+    readonly globs: ReadonlyArray<string>
+    readonly token?: string | undefined
+  }["tier"]
+  readonly globs: {
+    readonly name: string
+    readonly owner: string
+    readonly tier: "T0" | "T1" | "T2"
+    readonly globs: ReadonlyArray<string>
+    readonly token?: string | undefined
+  }["globs"]
+  readonly token?: {
+    readonly name: string
+    readonly owner: string
+    readonly tier: "T0" | "T1" | "T2"
+    readonly globs: ReadonlyArray<string>
+    readonly token?: string | undefined
+  }["token"]
+}
+
+export type AtlasTerritoryOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ok: boolean
+        readonly rejected?: string | null
+        readonly guidance: { readonly next: string; readonly invariant: string }
+        readonly data?: { readonly id: string } | null
+      }
+}
+
+export type AtlasDelegateInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly questionIds: {
+    readonly questionIds: ReadonlyArray<string>
+    readonly providerID: string
+    readonly modelID: string
+  }["questionIds"]
+  readonly providerID: {
+    readonly questionIds: ReadonlyArray<string>
+    readonly providerID: string
+    readonly modelID: string
+  }["providerID"]
+  readonly modelID: {
+    readonly questionIds: ReadonlyArray<string>
+    readonly providerID: string
+    readonly modelID: string
+  }["modelID"]
+}
+
+export type AtlasDelegateOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly drafted: ReadonlyArray<{
+          readonly questionId: string
+          readonly ok: boolean
+          readonly rejected: string | null
+        }>
+      }
+}
+
+export type AtlasInstallInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasInstallOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly state: "ok"
+    readonly installed: boolean
+    readonly refusal: "already-installed" | "no-git" | "no-actor" | null
+    readonly actor: string
+    readonly scopes: ReadonlyArray<string>
+    readonly gitignore: "installed" | "already-present" | "partial-repaired" | "failed" | null
+    readonly index: {
+      readonly scipRel: string
+      readonly scip:
+        | { readonly kind: "absent" }
+        | { readonly kind: "unreadable"; readonly reason: string }
+        | { readonly kind: "present"; readonly documents: number }
+      readonly configured: ReadonlyArray<{
+        readonly plan: {
+          readonly lang: string
+          readonly tool: string
+          readonly args: ReadonlyArray<string>
+          readonly version?: string | null
+        }
+        readonly files: number
+      }>
+      readonly holes: ReadonlyArray<{
+        readonly plan: {
+          readonly lang: string
+          readonly tool: string
+          readonly args: ReadonlyArray<string>
+          readonly version?: string | null
+        }
+        readonly files: number
+      }>
+    } | null
+  }
+}
+
+export type AtlasIndexInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type AtlasIndexOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly ran: boolean
+        readonly tool: string | null
+        readonly exitCode: number | null
+        readonly documents: number | null
+        readonly message: string | null
+      }
+}
+
+export type AtlasMineInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly providerID: { readonly providerID: string; readonly modelID: string; readonly ceiling: number }["providerID"]
+  readonly modelID: { readonly providerID: string; readonly modelID: string; readonly ceiling: number }["modelID"]
+  readonly ceiling: { readonly providerID: string; readonly modelID: string; readonly ceiling: number }["ceiling"]
+}
+
+export type AtlasMineOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data:
+    | { readonly state: "empty" }
+    | {
+        readonly state: "ok"
+        readonly sites: number
+        readonly facts: number
+        readonly complete: boolean
+        readonly why: string | null
+        readonly refusal: "contended" | "unreadable" | "untrusted" | null
+      }
+}
+
 export type ConfigGetOutput = {
   readonly model?: string | undefined
   readonly shell?: string | undefined

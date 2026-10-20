@@ -160,9 +160,13 @@ export const fromCatalogModel = (
     model.api.settings?.generation === undefined ? {} : model.api.settings.generation,
   )
   if (Option.isNone(generation))
-    return Effect.fail(new ModelUnavailableError({
-      providerID: model.providerID, modelID: model.id, cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
-    }))
+    return Effect.fail(
+      new ModelUnavailableError({
+        providerID: model.providerID,
+        modelID: model.id,
+        cause: "Invalid api.settings.generation: expected canonical GenerationOptions",
+      }),
+    )
   const resolved =
     credential?.type !== "key" || credential.metadata === undefined
       ? model
@@ -253,32 +257,40 @@ export const locationLayer = Layer.effect(
             modelID: session.model.id,
           })
         if (!selected) return yield* new ModelNotSelectedError({ sessionID: session.id })
-        const provider = yield* catalog.provider.get(selected.providerID)
-        const virtual = Catalog.parseVirtualID(selected.providerID)
-        const baseID = virtual?.base ?? selected.providerID
-        const fallback = provider?.integrationID ?? Integration.ID.make(baseID)
-        let connection
-        if (virtual) {
-          connection = (yield* integrations.get(Integration.ID.make(baseID)))?.connections.find(
-            (item) => item.type === "credential" && item.id === virtual.credentialID,
-          )
-          if (!connection)
-            return yield* new ModelUnavailableError({
-              providerID: selected.providerID,
-              modelID: selected.id,
-              cause: `credential ${virtual.credentialID} not found`,
-            })
-        }
-        connection = connection ?? (yield* integrations.connection.active(fallback))
-        return yield* resolve(
-          session,
-          selected,
-          connection ? yield* integrations.connection.resolve(connection) : undefined,
-        )
+        return yield* resolve(session, selected, yield* credential(catalog, integrations, selected))
       }),
     })
   }),
 )
+
+/**
+ * The credential a catalog model runs with: a virtual provider's own credential connection, else the provider's
+ * active connection. Also used to run a model outside any Session (the Atlas screen's one-shot model calls).
+ */
+export const credential = Effect.fn("SessionRunnerModel.credential")(function* (
+  catalog: Catalog.Interface,
+  integrations: Integration.Interface,
+  selected: ModelV2.Info,
+) {
+  const provider = yield* catalog.provider.get(selected.providerID)
+  const virtual = Catalog.parseVirtualID(selected.providerID)
+  const baseID = virtual?.base ?? selected.providerID
+  const fallback = provider?.integrationID ?? Integration.ID.make(baseID)
+  if (virtual) {
+    const connection = (yield* integrations.get(Integration.ID.make(baseID)))?.connections.find(
+      (item) => item.type === "credential" && item.id === virtual.credentialID,
+    )
+    if (!connection)
+      return yield* new ModelUnavailableError({
+        providerID: selected.providerID,
+        modelID: selected.id,
+        cause: `credential ${virtual.credentialID} not found`,
+      })
+    return yield* integrations.connection.resolve(connection)
+  }
+  const connection = yield* integrations.connection.active(fallback)
+  return connection ? yield* integrations.connection.resolve(connection) : undefined
+})
 
 export const node = makeLocationNode({
   service: Service,

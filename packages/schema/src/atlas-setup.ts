@@ -1,6 +1,6 @@
 import { Schema } from "effect"
 
-// D38 and D40 wire shapes (an absent value is `null`, never omitted). This file imports nothing from atlas.ts; the
+// D38 and D40 wire shapes (an absent value is `null`, never omitted). This file imports nothing from atlas-screen.ts; the
 // unions that need `AtlasEmpty` live there.
 
 export const AtlasIndexOk = Schema.Struct({

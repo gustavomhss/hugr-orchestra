@@ -198,6 +198,48 @@ import type {
   LeanUpdateOutput,
   LeanHistoryInput,
   LeanHistoryOutput,
+  AtlasSnapshotInput,
+  AtlasSnapshotOutput,
+  AtlasReasoningInput,
+  AtlasReasoningOutput,
+  AtlasOwnInput,
+  AtlasOwnOutput,
+  AtlasHealthInput,
+  AtlasHealthOutput,
+  AtlasPromoteInput,
+  AtlasPromoteOutput,
+  AtlasDraftInput,
+  AtlasDraftOutput,
+  AtlasEmitInput,
+  AtlasEmitOutput,
+  AtlasLinkInput,
+  AtlasLinkOutput,
+  AtlasVerifyInput,
+  AtlasVerifyOutput,
+  AtlasReviewInput,
+  AtlasReviewOutput,
+  AtlasHoldInput,
+  AtlasHoldOutput,
+  AtlasReleaseInput,
+  AtlasReleaseOutput,
+  AtlasProposeInput,
+  AtlasProposeOutput,
+  AtlasDecideInput,
+  AtlasDecideOutput,
+  AtlasAnswerInput,
+  AtlasAnswerOutput,
+  AtlasMemoryDecideInput,
+  AtlasMemoryDecideOutput,
+  AtlasTerritoryInput,
+  AtlasTerritoryOutput,
+  AtlasDelegateInput,
+  AtlasDelegateOutput,
+  AtlasInstallInput,
+  AtlasInstallOutput,
+  AtlasIndexInput,
+  AtlasIndexOutput,
+  AtlasMineInput,
+  AtlasMineOutput,
   ConfigGetOutput,
   ConfigUpdateInput,
   ConfigUpdateOutput,
@@ -1683,6 +1725,303 @@ export function make(options: ClientOptions) {
             method: "GET",
             path: `/api/lean/history/${encodeURIComponent(input.itemID)}`,
             query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    atlas: {
+      snapshot: (input?: AtlasSnapshotInput, requestOptions?: RequestOptions) =>
+        request<AtlasSnapshotOutput>(
+          {
+            method: "GET",
+            path: `/api/atlas/snapshot`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      reasoning: (input: AtlasReasoningInput, requestOptions?: RequestOptions) =>
+        request<AtlasReasoningOutput>(
+          {
+            method: "GET",
+            path: `/api/atlas/reasoning/${encodeURIComponent(input.id)}`,
+            query: { location: input["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      own: (input: AtlasOwnInput, requestOptions?: RequestOptions) =>
+        request<AtlasOwnOutput>(
+          {
+            method: "GET",
+            path: `/api/atlas/own`,
+            query: { location: input["location"], scope: input["scope"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      health: (input?: AtlasHealthInput, requestOptions?: RequestOptions) =>
+        request<AtlasHealthOutput>(
+          {
+            method: "GET",
+            path: `/api/atlas/health`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      promote: (input?: AtlasPromoteInput, requestOptions?: RequestOptions) =>
+        request<AtlasPromoteOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/promote`,
+            query: { location: input?.["location"] },
+            body: { token: input?.["token"], nodeKeys: input?.["nodeKeys"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      draft: (input: AtlasDraftInput, requestOptions?: RequestOptions) =>
+        request<AtlasDraftOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/draft`,
+            query: { location: input["location"] },
+            body: {
+              anchor: input["anchor"],
+              slot: input["slot"],
+              claim: input["claim"],
+              supersede: input["supersede"],
+              token: input["token"],
+            },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      emit: (input: AtlasEmitInput, requestOptions?: RequestOptions) =>
+        request<AtlasEmitOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/emit`,
+            query: { location: input["location"] },
+            body: { fact: input["fact"], at: input["at"], token: input["token"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      link: (input: AtlasLinkInput, requestOptions?: RequestOptions) =>
+        request<AtlasLinkOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/link`,
+            query: { location: input["location"] },
+            body: { a: input["a"], b: input["b"], retract: input["retract"], token: input["token"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      verify: (input: AtlasVerifyInput, requestOptions?: RequestOptions) =>
+        request<AtlasVerifyOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/verify`,
+            query: { location: input["location"] },
+            body: {
+              kind: input["kind"],
+              target: input["target"],
+              scope: input["scope"],
+              world: input["world"],
+              min: input["min"],
+              exact: input["exact"],
+            },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      review: (input?: AtlasReviewInput, requestOptions?: RequestOptions) =>
+        request<AtlasReviewOutput>(
+          {
+            method: "GET",
+            path: `/api/atlas/review`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      hold: (input: AtlasHoldInput, requestOptions?: RequestOptions) =>
+        request<AtlasHoldOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/hold`,
+            query: { location: input["location"] },
+            body: { nodeKey: input["nodeKey"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      release: (input: AtlasReleaseInput, requestOptions?: RequestOptions) =>
+        request<AtlasReleaseOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/release`,
+            query: { location: input["location"] },
+            body: { nodeKey: input["nodeKey"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      propose: (input: AtlasProposeInput, requestOptions?: RequestOptions) =>
+        request<AtlasProposeOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/propose`,
+            query: { location: input["location"] },
+            body: { nodeKey: input["nodeKey"], toTier: input["toTier"], reason: input["reason"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      decide: (input: AtlasDecideInput, requestOptions?: RequestOptions) =>
+        request<AtlasDecideOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/decide`,
+            query: { location: input["location"] },
+            body: {
+              proposalId: input["proposalId"],
+              verdict: input["verdict"],
+              reason: input["reason"],
+              token: input["token"],
+            },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      answer: (input: AtlasAnswerInput, requestOptions?: RequestOptions) =>
+        request<AtlasAnswerOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/answer`,
+            query: { location: input["location"] },
+            body: { questionId: input["questionId"], answer: input["answer"], drafted: input["drafted"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      memoryDecide: (input: AtlasMemoryDecideInput, requestOptions?: RequestOptions) =>
+        request<AtlasMemoryDecideOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/memory-decide`,
+            query: { location: input["location"] },
+            body: {
+              proposalId: input["proposalId"],
+              verdict: input["verdict"],
+              rule: input["rule"],
+              scope: input["scope"],
+            },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      territory: (input: AtlasTerritoryInput, requestOptions?: RequestOptions) =>
+        request<AtlasTerritoryOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/territory`,
+            query: { location: input["location"] },
+            body: {
+              name: input["name"],
+              owner: input["owner"],
+              tier: input["tier"],
+              globs: input["globs"],
+              token: input["token"],
+            },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      delegate: (input: AtlasDelegateInput, requestOptions?: RequestOptions) =>
+        request<AtlasDelegateOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/delegate`,
+            query: { location: input["location"] },
+            body: { questionIds: input["questionIds"], providerID: input["providerID"], modelID: input["modelID"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      install: (input?: AtlasInstallInput, requestOptions?: RequestOptions) =>
+        request<AtlasInstallOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/install`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      index: (input?: AtlasIndexInput, requestOptions?: RequestOptions) =>
+        request<AtlasIndexOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/index`,
+            query: { location: input?.["location"] },
+            successStatus: 200,
+            declaredStatuses: [503, 401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      mine: (input: AtlasMineInput, requestOptions?: RequestOptions) =>
+        request<AtlasMineOutput>(
+          {
+            method: "POST",
+            path: `/api/atlas/mine`,
+            query: { location: input["location"] },
+            body: { providerID: input["providerID"], modelID: input["modelID"], ceiling: input["ceiling"] },
             successStatus: 200,
             declaredStatuses: [503, 401, 400],
             empty: false,
