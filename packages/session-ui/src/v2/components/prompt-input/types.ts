@@ -1,4 +1,6 @@
-import type { FilePartSource } from "../../../compat/sdk-v2-client"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+
+type FilePartSource = typeof SessionV1.FilePartSource.Encoded
 
 type PromptInputV2PartBase = {
   content: string

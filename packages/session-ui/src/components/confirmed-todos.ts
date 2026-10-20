@@ -1,4 +1,6 @@
-import type { Todo } from "../compat/sdk-v2"
+import type { SessionTodo } from "@orchestra/schema/session-todo"
+
+type Todo = typeof SessionTodo.Info.Encoded
 
 export function confirmedTodos(state: { status?: string; metadata?: Record<string, unknown>; output?: string }) {
   if (state.status !== "completed") return

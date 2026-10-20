@@ -1,6 +1,8 @@
 import { bundledLanguagesInfo } from "shiki"
 import { getFilename } from "@orchestra/core/util/path"
-import type { FilePart } from "../compat/sdk-v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+
+type FilePart = typeof SessionV1.FilePart.Encoded
 
 export function attached(part: FilePart) {
   return part.url.startsWith("data:") && !inline(part)

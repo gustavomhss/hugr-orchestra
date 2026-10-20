@@ -1,11 +1,7 @@
-import {
-  AssistantMessage,
-  type SnapshotFileDiff,
-  Message as MessageType,
-  Part as PartType,
-} from "../compat/sdk-v2-client"
-import type { FileDiffInfo } from "../compat/vendored-client-promise"
-import type { SessionStatus } from "../compat/sdk-v2"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
+import type { FileDiffInfo } from "../types"
 import { useData } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 
@@ -26,6 +22,12 @@ import { TextReveal } from "@orchestra/ui/text-reveal"
 import { createAutoScroll } from "@orchestra/ui/hooks"
 import { useI18n } from "@orchestra/ui/context/i18n"
 import { normalize } from "./session-diff"
+
+type AssistantMessage = typeof SessionV1.Assistant.Encoded
+type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type MessageType = typeof SessionV1.Info.Encoded
+type PartType = typeof SessionV1.Part.Encoded
+type SessionStatus = typeof SessionStatusEvent.Info.Encoded
 
 function record(value: unknown): value is Record<string, unknown> {
   return !!value && typeof value === "object" && !Array.isArray(value)
@@ -303,7 +305,9 @@ export function SessionTurn(
     return undefined
   })
   const errorText = createMemo(() => {
-    const msg = error()?.data?.message
+    const data = error()?.data
+    if (!data || typeof data !== "object") return ""
+    const msg = "message" in data ? data.message : undefined
     if (typeof msg === "string") return unwrap(msg)
     if (msg === undefined || msg === null) return ""
     // oxlint-disable-next-line no-base-to-string -- msg is unknown from error data, coercion is intentional

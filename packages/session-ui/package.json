@@ -14,6 +14,7 @@
     "./line-comment-styles": "./src/components/line-comment-styles.ts",
     "./pierre": "./src/pierre/index.ts",
     "./context": "./src/context/index.ts",
+    "./types": "./src/types.ts",
     "./styles": "./src/styles/index.css",
     "./v2/*.css": "./src/v2/components/*.css",
     "./v2/prompt-input": "./src/v2/components/prompt-input/index.tsx",
@@ -53,9 +54,7 @@
   "dependencies": {
     "@kobalte/core": "catalog:",
     "@noble/hashes": "1.8.0",
-    "@opencode-ai/client": "file:../app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
     "@orchestra/core": "workspace:*",
-    "@orchestra/sdk": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@pierre/diffs": "catalog:",

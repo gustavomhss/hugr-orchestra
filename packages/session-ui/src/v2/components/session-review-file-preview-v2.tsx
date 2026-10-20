@@ -6,8 +6,9 @@ import { useFileComponent } from "@orchestra/ui/context/file"
 import { useI18n } from "@orchestra/ui/context/i18n"
 import { mediaKindFromPath } from "../../pierre/media"
 import { cloneSelectedLineRange, previewSelectedLines } from "../../pierre/selection-bridge"
-import type { FileContent, SnapshotFileDiff, VcsFileDiff } from "../../compat/sdk-v2"
-import type { FileDiffInfo } from "../../compat/vendored-client-promise"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { Vcs } from "@orchestra/schema/vcs"
+import type { FileContent, FileDiffInfo } from "../../types"
 import { createEffect, createMemo, onCleanup, Show, untrack } from "solid-js"
 import { createStore } from "solid-js/store"
 import { Dynamic } from "solid-js/web"
@@ -27,6 +28,9 @@ import { shouldVirtualizeReviewDiff } from "./session-review-file-preview-v2-vir
 import { LineCommentV2OverflowIcon } from "@orchestra/ui/v2/line-comment-v2"
 import { MenuV2 } from "@orchestra/ui/v2/menu-v2"
 import "./session-review-v2.css"
+
+type SnapshotFileDiff = typeof FileDiff.Info.Encoded
+type VcsFileDiff = typeof Vcs.FileDiff.Encoded
 
 type ReviewDiff = (SnapshotFileDiff & { file: string }) | FileDiffInfo | VcsFileDiff
 

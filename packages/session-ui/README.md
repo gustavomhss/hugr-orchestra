@@ -16,7 +16,7 @@ Solid components that render Sessions: messages, parts, diffs and review.
 ## Dependencies and boundaries
 
 - Layer `ui`: may use the ui, schema, client and contract layers, and only the `browserSafe` core helpers.
-- The legacy SDK and the vendored upstream client tarball listed in `script/rename-ledger.ts` are reached only through `packages/session-ui/src/compat`.
+- The legacy SDK and the vendored upstream client tarball are not reached from this package.
 
 ## Assets, schemas and generated files
 
