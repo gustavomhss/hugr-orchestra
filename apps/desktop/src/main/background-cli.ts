@@ -5,6 +5,7 @@ import { fileURLToPath } from "node:url"
 import { promisify } from "node:util"
 import { app } from "electron"
 import { nativeCliTarget, signatureCheck, verifyCliArtifact } from "./cli-artifacts"
+import { cliEnv } from "./cli-env"
 import { installCliArtifact } from "./cli-install"
 
 const execFileAsync = promisify(execFile)
@@ -83,9 +84,7 @@ async function run(
   options: { redact?: boolean; stateHome?: string } = {},
 ) {
   logger.log("v2 CLI command started", { binary, args })
-  const env = { ...process.env }
-  if (options.stateHome === undefined) delete env.XDG_STATE_HOME
-  else env.XDG_STATE_HOME = options.stateHome
+  const env = cliEnv(process.env, options.stateHome)
   return execFileAsync(binary, args, { env, windowsHide: true }).then(
     (result) => {
       const stdout = result.stdout.trim()
