@@ -1,9 +1,6 @@
+import type { ConnectionInfo, CredentialValue } from "../types.js"
 import type { IntegrationDraft, IntegrationMethodRegistration } from "../effect/integration.js"
-import type { Connection } from "@orchestra/schema/connection"
-import type { Credential } from "@orchestra/schema/credential"
 
-type ConnectionInfo = typeof Connection.Info.Encoded
-type CredentialValue = typeof Credential.Value.Encoded
 import type { Hooks } from "./registration.js"
 
 export type { IntegrationDraft, IntegrationMethodRegistration }

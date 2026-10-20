@@ -1,6 +1,4 @@
-import type { FileSystem as FileSystemSchema } from "@orchestra/schema/filesystem"
-
-type FileSystemEntry = typeof FileSystemSchema.Entry.Encoded
+import type { FileSystemEntry } from "../types.js"
 import type { Effect } from "effect"
 
 export interface FileSystem {

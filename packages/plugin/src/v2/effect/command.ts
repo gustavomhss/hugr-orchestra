@@ -1,13 +1,12 @@
-import type { Command } from "@orchestra/schema/command"
+import type { CommandInfo } from "../types.js"
 import type { Mutable } from "../mutable.js"
 
-type CommandV2Info = typeof Command.Info.Encoded
 import type { Hooks } from "./registration.js"
 
 export interface CommandDraft {
-  list(): readonly CommandV2Info[]
-  get(name: string): CommandV2Info | undefined
-  update(name: string, update: (command: Mutable<CommandV2Info>) => void): void
+  list(): readonly CommandInfo[]
+  get(name: string): CommandInfo | undefined
+  update(name: string, update: (command: Mutable<CommandInfo>) => void): void
   remove(name: string): void
 }
 
