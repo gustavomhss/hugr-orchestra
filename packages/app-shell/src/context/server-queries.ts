@@ -1,3 +1,4 @@
+import type { Orchestra } from "@orchestra/client"
 import type { Config, OrchestraClient } from "../compat/sdk-v2-client"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
@@ -91,19 +92,19 @@ export const loadMcpResourcesQuery = (
     placeholderData: {},
   })
 
-// The V2 server runs no language servers yet (its edit and write tools leave LSP for later), so it is not asked.
 export const loadLspQuery = (
   scope: ServerScope,
   directory: string,
-  api: ServerApi["lsp"],
+  orchestra: ReturnType<typeof Orchestra.make> | undefined,
   legacy?: OrchestraClient,
   protocol?: Promise<"v1" | "v2">,
 ) =>
   queryOptions({
     queryKey: [scope, directory, "lsp"] as const,
     queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return (await legacy.lsp.status()).then((r) => r.data ?? [])
-      return api.status({ location: { directory } }).then((r) => r.data ?? [])
+      if ((await protocol) === "v1" && legacy) return legacy.lsp.status().then((r) => r.data ?? [])
+      if (!orchestra) return []
+      return orchestra["server.lsp"].status({ location: { directory } }).then((result) => [...result.data])
     },
   })
 
@@ -114,6 +115,7 @@ export function makeQueryOptionsApi(
   sdkFor: (dir: PathKey) => OrchestraClient,
   protocol: Promise<"v1" | "v2">,
   readV2Config?: () => Promise<Config>,
+  orchestra?: ReturnType<typeof Orchestra.make>,
 ) {
   return {
     globalConfig: () => loadGlobalConfigQuery(scope, serverSDK(), protocol, readV2Config),
@@ -128,7 +130,7 @@ export function makeQueryOptionsApi(
     mcp: (directory: PathKey) => loadMcpQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
     mcpResources: (directory: PathKey) =>
       loadMcpResourcesQuery(scope, directory, serverAPI.mcp, sdkFor(directory), protocol),
-    lsp: (directory: PathKey) => loadLspQuery(scope, directory, serverAPI.lsp, sdkFor(directory), protocol),
+    lsp: (directory: PathKey) => loadLspQuery(scope, directory, orchestra, sdkFor(directory), protocol),
     sessions: (directory: PathKey) => ({ queryKey: [scope, directory, "loadSessions"] as const }),
   }
 }

@@ -153,6 +153,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
     sdkFor,
     serverSDK.protocol,
     readV2Config,
+    serverSDK.orchestra,
   )
 
   const [configQuery, providerQuery, pathQuery] = useQueries(() => ({

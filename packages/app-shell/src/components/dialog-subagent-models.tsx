@@ -93,7 +93,7 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
         if (!owns() || !sessionID) throw new DOMException("", "AbortError")
         const result = await origin.orchestra.sessions.setPermission({ sessionID, permission })
         if (!owns()) throw new DOMException("", "AbortError")
-        return result ?? []
+        return [...(result ?? [])]
       }}
       policy={{
         read: () => policy?.read() ?? { policy: { mode: "inherit" } },

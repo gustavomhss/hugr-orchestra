@@ -5,6 +5,7 @@ import { IconButton } from "@orchestra/ui/icon-button"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { useServerSDK } from "@/context/server-sdk"
 import { useSessionLayout } from "./session-layout"
 import {
   PROCESS_POLL_MS,
@@ -138,6 +139,7 @@ export function ProcessesList(props: {
  */
 export function BackgroundProcessesPanel() {
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
   const { params } = useSessionLayout()
   const [state, setState] = createStore({
     items: [] as SessionProcess[],
@@ -150,7 +152,7 @@ export function BackgroundProcessesPanel() {
       .protocol.then((protocol) =>
         protocol === "v1"
           ? sdk().client.session.processes({ sessionID })
-          : sdk().client.sessions.processes({ sessionID }),
+          : serverSDK().orchestra.sessions.processes({ sessionID }).then((result) => ({ data: [...result.data] })),
       )
       .then((result) => {
         if (!result) return
@@ -166,7 +168,7 @@ export function BackgroundProcessesPanel() {
       .protocol.then((protocol) =>
         protocol === "v1"
           ? sdk().client.session.processStop({ sessionID, processID }, { throwOnError: true })
-          : sdk().client.sessions.processStop({ sessionID, processID }, { throwOnError: true }),
+          : serverSDK().orchestra.sessions.processStop({ sessionID, processID }),
       )
       .then(() => refresh(sessionID))
   })
