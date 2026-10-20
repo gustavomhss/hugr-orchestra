@@ -1,6 +1,5 @@
-import type { SnapshotFileDiff, VcsFileDiff } from "../compat/sdk-v2"
+import type { Message, SnapshotFileDiff, VcsFileDiff } from "@/v2-types"
 import type { FileDiffInfo } from "../compat/vendored-client-promise"
-import type { Message } from "../compat/sdk-v2-client"
 
 type Diff = FileDiffInfo | SnapshotFileDiff | VcsFileDiff
 

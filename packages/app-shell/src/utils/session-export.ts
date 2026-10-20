@@ -1,4 +1,4 @@
-import type { Message, Part, Session } from "../compat/sdk-v2-client"
+import type { Message, Part, Session } from "@/v2-types"
 import type { SessionMessageInfo } from "../compat/vendored-client-promise"
 import { downloadText } from "./download"
 import type { ServerApi } from "./server"
