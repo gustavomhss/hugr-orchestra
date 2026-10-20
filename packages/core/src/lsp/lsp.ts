@@ -474,7 +474,8 @@ export * as Diagnostic from "./diagnostic"
 
 export const node = makeLocationNode({
   service: Service,
-  layer: layer,
+  // Server discovery failures surface per file; a broken LSP setup must not fail the Location.
+  layer: layer.pipe(Layer.orDie),
   deps: [Config.node, Location.node, EventV2.node],
 })
 

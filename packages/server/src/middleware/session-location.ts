@@ -51,7 +51,7 @@ export const sessionLocationLayer = Layer.effect(
             message: `Session not found: ${sessionID}`,
           })
 
-        return yield* (effect.pipe(
+        return yield* effect.pipe(
           Effect.provide(
             locations.get(
               Location.Ref.make({
@@ -60,7 +60,7 @@ export const sessionLocationLayer = Layer.effect(
               }),
             ),
           ),
-        ) as Effect.Effect<HttpServerResponse, never, never>)
+        )
       }),
     )
   }),
