@@ -22,6 +22,9 @@ export type AtlasCall =
   | "memoryDecide"
   | "territory"
   | "delegate"
+  | "install"
+  | "index"
+  | "mine"
 // A call's 200 payload.
 export type AtlasOutput<K extends AtlasCall> = NonNullable<Awaited<ReturnType<AtlasClient[K]>>["data"]>
 // A call's parameters without the routing query; the transport adds the directory.

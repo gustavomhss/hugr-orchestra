@@ -38,6 +38,9 @@ function fake(draft: AtlasOutput<"draft">, emit: AtlasOutput<"emit">) {
     memoryDecide: () => unused(),
     territory: () => unused(),
     delegate: () => unused(),
+    install: () => unused(),
+    index: () => unused(),
+    mine: () => unused(),
     draft: (input) => {
       sent.push({ name: "draft", input })
       return Promise.resolve(draft)

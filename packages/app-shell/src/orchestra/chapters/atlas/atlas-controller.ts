@@ -18,6 +18,8 @@ export type AtlasWrite =
   | "memoryDecide"
   | "territory"
   | "delegate"
+  | "setup"
+  | "mine"
 export type AtlasController = ReturnType<typeof createAtlasController>
 type State = {
   key?: string
@@ -164,6 +166,18 @@ export function createAtlasController(describe: (error: unknown) => { message: s
       write("territory", (transport, signal) => transport.territory(input, signal)),
     delegate: (input: AtlasInput<"delegate">) =>
       write("delegate", (transport, signal) => transport.delegate(input, signal)),
+    mine: (input: AtlasInput<"mine">) => write("mine", (transport, signal) => transport.mine(input, signal)),
+    // D41: install, then index the code when install set Atlas up, then reread. One pending mark covers both, so the
+    // empty state keeps showing progress until the store is read back.
+    setup: async () => {
+      setState({ pending: [...state.pending, "setup"], error: undefined })
+      const installed = await run((transport, signal) => transport.install(signal))
+      const indexed = installed?.installed ? await run((transport, signal) => transport.index(signal)) : undefined
+      if (life.disposed) return { installed, indexed }
+      setState("pending", state.pending.filter((item) => item !== "setup"))
+      await refresh()
+      return { installed, indexed }
+    },
     async select(next: AtlasOwner) {
       if (life.disposed) return
       cancel()

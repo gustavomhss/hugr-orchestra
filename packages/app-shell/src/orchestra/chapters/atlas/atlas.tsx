@@ -24,6 +24,7 @@ import { Icon } from "./kit/chips"
 import { num } from "./kit/format"
 import { createToaster, Toast } from "./kit/toast"
 import { AtlasSheetHost } from "./sheets/host"
+import { AtlasSetup } from "./views/setup"
 import { atlasInspector, atlasViews } from "./views"
 
 // The Atlas chapter (D7): the sub-navigation rail, the main view chosen by the URL, the fact inspector, the toast.
@@ -157,6 +158,7 @@ export default function AtlasPage(props: ChapterPageProps) {
                   </span>
                   <h2>{language.t("orchestra.atlas.frame.empty.title")}</h2>
                   <p>{language.t("orchestra.atlas.frame.empty.body")}</p>
+                  <AtlasSetup />
                 </div>
               </div>
             </Match>

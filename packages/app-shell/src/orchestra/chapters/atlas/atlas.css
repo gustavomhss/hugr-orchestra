@@ -1557,3 +1557,11 @@ html[data-color-scheme="light"] .at-tree-pane { background: rgba(255, 255, 255, 
 .at-dot:hover, .at-dot:focus-visible { transform: scale(1.7); box-shadow: 0 0 0 1.5px var(--mx-strong); outline: none; }
 @media (max-width: 900px) { .at-map { grid-template-columns: 1fr; } }
 .at-map-sw { display: inline-block; inline-size: 8px; block-size: 8px; margin-inline-end: 7px; border-radius: 2px; vertical-align: 0; }
+
+.at-setup {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+}

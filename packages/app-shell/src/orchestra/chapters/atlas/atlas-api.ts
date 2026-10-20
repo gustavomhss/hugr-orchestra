@@ -68,5 +68,11 @@ export function createAtlasAPI(sdk: Pick<DirectorySDK, "client" | "directory" | 
       response(() => sdk.client.atlas.territory({ ...input, directory: sdk.directory }, options(signal)), signal),
     delegate: (input: AtlasInput<"delegate">, signal?: AbortSignal): Promise<AtlasOutput<"delegate">> =>
       response(() => sdk.client.atlas.delegate({ ...input, directory: sdk.directory }, options(signal)), signal),
+    install: (signal?: AbortSignal): Promise<AtlasOutput<"install">> =>
+      response(() => sdk.client.atlas.install({ directory: sdk.directory }, options(signal)), signal),
+    index: (signal?: AbortSignal): Promise<AtlasOutput<"index">> =>
+      response(() => sdk.client.atlas.index({ directory: sdk.directory }, options(signal)), signal),
+    mine: (input: AtlasInput<"mine">, signal?: AbortSignal): Promise<AtlasOutput<"mine">> =>
+      response(() => sdk.client.atlas.mine({ ...input, directory: sdk.directory }, options(signal)), signal),
   }
 }

@@ -39,6 +39,9 @@ function fake(overrides: Partial<AtlasTransport> = {}) {
     memoryDecide: () => answer("memoryDecide", {} as unknown as AtlasOutput<"memoryDecide">),
     territory: () => answer("territory", {} as unknown as AtlasOutput<"territory">),
     delegate: () => answer("delegate", {} as unknown as AtlasOutput<"delegate">),
+    install: () => answer("install", {} as unknown as AtlasOutput<"install">),
+    index: () => answer("index", {} as unknown as AtlasOutput<"index">),
+    mine: () => answer("mine", {} as unknown as AtlasOutput<"mine">),
     ...overrides,
   }
   return { calls, transport }
