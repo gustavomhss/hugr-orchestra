@@ -1,5 +1,6 @@
 import type { Orchestra } from "@orchestra/client"
-import type { Config, OrchestraClient } from "../compat/sdk-v2-client"
+import type { Config } from "@/v2-wire"
+import type { OrchestraClient } from "../compat/sdk-v2-client"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
 import type {

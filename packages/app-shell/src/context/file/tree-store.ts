@@ -1,5 +1,5 @@
 import { createStore, produce, reconcile } from "solid-js/store"
-import type { FileNode } from "../../compat/sdk-v2"
+import type { FileNode } from "@/v2-wire"
 
 type DirectoryState = {
   expanded: boolean
