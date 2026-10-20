@@ -26,6 +26,10 @@ import type {
   SessionsGetSubagentModelsOutput,
   SessionsSetSubagentModelsInput,
   SessionsSetSubagentModelsOutput,
+  SessionsGetPermissionInput,
+  SessionsGetPermissionOutput,
+  SessionsSetPermissionInput,
+  SessionsSetPermissionOutput,
   SessionsSwitchAgentInput,
   SessionsSwitchAgentOutput,
   SessionsSwitchModelInput,
@@ -586,6 +590,29 @@ export function make(options: ClientOptions) {
             body: { policy: input["policy"] },
             successStatus: 200,
             declaredStatuses: [404, 503, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      getPermission: (input: SessionsGetPermissionInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsGetPermissionOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/permission-rules`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      setPermission: (input: SessionsSetPermissionInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsSetPermissionOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/permission-rules`,
+            body: { permission: input["permission"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
             empty: false,
           },
           requestOptions,

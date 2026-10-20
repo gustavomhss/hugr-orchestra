@@ -91,14 +91,9 @@ export const DialogSubagentModels: Component<{ sessionID?: string; directory: st
       readRules={() => (sessionID ? (directoryState.session.get(sessionID)?.permission ?? []) : [])}
       writeRules={async (permission) => {
         if (!owns() || !sessionID) throw new DOMException("", "AbortError")
-        const result = await origin.client.session.update({
-          sessionID,
-          directory,
-          permission,
-        })
+        const result = await origin.orchestra.sessions.setPermission({ sessionID, permission })
         if (!owns()) throw new DOMException("", "AbortError")
-        if (!result.data) throw new Error("Session update returned no data")
-        return result.data.permission ?? []
+        return result ?? []
       }}
       policy={{
         read: () => policy?.read() ?? { policy: { mode: "inherit" } },

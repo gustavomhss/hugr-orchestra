@@ -534,6 +534,35 @@ export type SessionsSetSubagentModelsOutput = {
       }
 }["data"]
 
+export type SessionsGetPermissionInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsGetPermissionOutput = {
+  readonly data: ReadonlyArray<{
+    readonly permission: string
+    readonly pattern: string
+    readonly action: "allow" | "deny" | "ask"
+  }>
+}["data"]
+
+export type SessionsSetPermissionInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly permission: {
+    readonly permission: ReadonlyArray<{
+      readonly permission: string
+      readonly pattern: string
+      readonly action: "allow" | "deny" | "ask"
+    }>
+  }["permission"]
+}
+
+export type SessionsSetPermissionOutput = {
+  readonly data: ReadonlyArray<{
+    readonly permission: string
+    readonly pattern: string
+    readonly action: "allow" | "deny" | "ask"
+  }>
+}["data"]
+
 export type SessionsSwitchAgentInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
   readonly agent: { readonly agent: string }["agent"]
@@ -1158,6 +1187,22 @@ export type SessionsHistoryOutput = {
                   readonly variant?: string
                 }>
               }
+        }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.permission.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: {
+          readonly timestamp: number
+          readonly sessionID: string
+          readonly permission: ReadonlyArray<{
+            readonly permission: string
+            readonly pattern: string
+            readonly action: "allow" | "deny" | "ask"
+          }>
         }
       }
     | {

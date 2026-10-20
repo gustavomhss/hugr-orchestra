@@ -91,6 +91,12 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
       .handle("session.setSubagentModels", Effect.fn(function* (ctx) {
         return { data: yield* policyResult(subagentModels.set(ctx.params.sessionID, ctx.payload.policy)) }
       }))
+      .handle("session.getPermission", Effect.fn(function* (ctx) {
+        return { data: yield* typedNotFound(session.getPermission(ctx.params.sessionID)) }
+      }))
+      .handle("session.setPermission", Effect.fn(function* (ctx) {
+        return { data: yield* typedNotFound(session.setPermission({ sessionID: ctx.params.sessionID, permission: ctx.payload.permission })) }
+      }))
       .handle(
         "session.list",
         Effect.fn(function* (ctx) {

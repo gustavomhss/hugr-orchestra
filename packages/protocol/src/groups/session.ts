@@ -1,6 +1,7 @@
 import { SessionMessage } from "@orchestra/schema/session-message"
 import { SessionInput } from "@orchestra/schema/session-input"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
+import { PermissionV1 } from "@orchestra/schema/permission-v1"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { Session } from "@orchestra/schema/session"
 import { Project } from "@orchestra/schema/project"
@@ -253,6 +254,31 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
           identifier: "v2.session.setSubagentModels",
           summary: "Set session subagent model policy",
           description: "Durably replace the outgoing subagent model policy; inheritance and an empty allowlist are distinct.",
+        })),
+    )
+    .add(
+      HttpApiEndpoint.get("session.getPermission", "/api/session/:sessionID/permission-rules", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: PermissionV1.Ruleset }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({
+          identifier: "v2.session.getPermission",
+          summary: "Get session permission rules",
+        })),
+    )
+    .add(
+      HttpApiEndpoint.post("session.setPermission", "/api/session/:sessionID/permission-rules", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ permission: PermissionV1.Ruleset }),
+        success: Schema.Struct({ data: PermissionV1.Ruleset }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(OpenApi.annotations({
+          identifier: "v2.session.setPermission",
+          summary: "Set session permission rules",
         })),
     )
     .add(

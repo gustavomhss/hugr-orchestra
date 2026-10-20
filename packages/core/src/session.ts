@@ -41,6 +41,7 @@ import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
 import { SessionLegacyRow } from "./session/legacy-row"
 import { SessionSubagentModels } from "./session/subagent-models"
+import { PermissionV1 } from "./v1/permission"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State
@@ -185,6 +186,8 @@ export interface Interface {
     sessionID: SessionSchema.ID
     model: ModelV2.Ref
   }) => Effect.Effect<void, NotFoundError>
+  readonly getPermission: (sessionID: SessionSchema.ID) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
+  readonly setPermission: (input: { sessionID: SessionSchema.ID; permission: PermissionV1.Ruleset }) => Effect.Effect<PermissionV1.Ruleset, NotFoundError>
   readonly prompt: (input: {
     id?: SessionMessage.ID
     sessionID: SessionSchema.ID
@@ -633,6 +636,17 @@ const layer = Layer.effect(
           timestamp: yield* DateTime.now,
           model: input.model,
         })
+      }),
+      getPermission: Effect.fn("V2Session.getPermission")(function* (sessionID) {
+        yield* result.get(sessionID)
+        const row = yield* db.select({ permission: SessionTable.permission }).from(SessionTable).where(eq(SessionTable.id, sessionID)).get().pipe(Effect.orDie)
+        return row?.permission ?? []
+      }),
+      setPermission: Effect.fn("V2Session.setPermission")(function* (input) {
+        yield* result.get(input.sessionID)
+        const permission = [...input.permission]
+        yield* events.publish(SessionEvent.PermissionChanged, { sessionID: input.sessionID, timestamp: yield* DateTime.now, permission })
+        return permission
       }),
       compact: Effect.fn("V2Session.compact")(function* (input) {
         const session = yield* result.get(input.sessionID)
