@@ -485,17 +485,14 @@ test("packaging verifies effective root version and all Windows guest bytes", as
   await expect(verifyPackagedCli(input.directory, "win32", "x64", input.version, checks)).rejects.toThrow("digest")
   const native = await fixture(["windows-x64-baseline"])
   await stageCliArtifacts(native)
-  // The packaging check refuses a bundle missing its omni pair, for the host target as for a guest: here the two
-  // Linux guests are absent from a Windows-only bundle, and the native pair is removed by name next.
+  // The packaging check refuses a bundle without the Windows guests' CLIs or their omni pairs.
   await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version, checks)).rejects.toThrow("missing")
-  await Promise.all(
-    omniCompanions("windows-x64-baseline").map((name) => rename(join(native.directory, "omni-windows-x64-baseline", name), join(native.directory, "omni-windows-x64-baseline", `${name}.away`))),
-  )
-  await expect(verifyPackagedCli(native.directory, "win32", "x64", native.version, checks)).rejects.toThrow(
-    "windows-x64-baseline",
-  )
-  await Promise.all(
-    omniCompanions("windows-x64-baseline").map((name) => rename(join(native.directory, "omni-windows-x64-baseline", `${name}.away`), join(native.directory, "omni-windows-x64-baseline", name))),
+  // The host target's pair is checked too: a staged Linux bundle without it refuses by name.
+  const host = await fixture(["linux-x64-baseline"])
+  await stageCliArtifacts(host)
+  await rm(join(host.directory, "omni-linux-x64-baseline"), { recursive: true })
+  await expect(verifyPackagedCli(host.directory, "linux", "x64", host.version, checks)).rejects.toThrow(
+    "linux-x64-baseline",
   )
 }, STAGING_TIMEOUT)
 
