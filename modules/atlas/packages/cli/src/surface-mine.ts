@@ -1,5 +1,9 @@
 // @atlas/cli — src/surface-mine.ts  (the Atlas screen's Genesis mining; @orchestra/atlas-boundary `./mine` — D39)
 //
+// ── REFERENCE MODEL — EXTERNAL STATIC HOST BOUNDARY
+// Declared in harness/gates/reference-model-guard.mjs. The host builds this exact entry into the boundary's `./mine`
+// subpath; no Atlas-local runtime imports it.
+//
 // The Orchestra host asks its models asynchronously and cannot import this package from the surface (the layer ring),
 // so it mines in two synchronous calls around its own model calls. Both run the CLI's own governed pass
 // (`driveMinePass`), advisory arm, with the history source `atlas mine` injects: `mineSites` with a proposer that

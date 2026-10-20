@@ -18,7 +18,7 @@
 // forces the classification to be DECLARED rather than discovered by the next reviewer.
 //
 // ── DECLARED COUNTS (gate-checked; a drift here FAILS this gate) ────────────────────────────────────────
-//   declared-modules: 37 · dead-value-exports: 129 · type-reachable: 4
+//   declared-modules: 38 · dead-value-exports: 131 · type-reachable: 4
 //   These three are read back from THIS file and asserted against the measured tree at the foot of the run
 //   (see "THE HEADER STATES COUNTS, AND THIS CHECKS THEM"). No count is QUOTED anywhere else in this
 //   header — a quoted integer that nothing checks is exactly what rotted here (task #143); this one cannot.
@@ -137,6 +137,10 @@ const BUILTIN_LEDGER = {
 
   // ── @atlas/adapter-io — the outer ring, where a reader is most likely to assume "shipped". ────────────
   "packages/adapter-io/src/poke-file.ts": { values: 3, shipped: null, banner: true }, // the third transport; nothing constructs it (task #36)
+  // specs/atlas-ui/build D39 — the Atlas screen's Genesis mining (`mineSites`, `mineWith`). Its consumer is the Orchestra
+  // host, through the `./mine` boundary subpath the host build bundles from this exact file; nothing in this tree calls
+  // it but its suite. Measured with this gate's own analyser: declared-modules 37 → 38, dead-value-exports 129 → 131.
+  "packages/cli/src/surface-mine.ts": { values: 2, shipped: null, banner: true },
   // F3 / A1 — the BOUND Memory composition (`createNativeMemory`, `storeStateOf`). Declared, not pre-wired, and  // for a different reason than the rest of this cluster: its consumer is a harness OUTSIDE this subtree
   // (Orchestra's backend specialist, through the installed boundary package, F3 work package A3), and the one in-tree
   // composition root (`compose.ts`) is precisely the route F3 clause 4 forbids it — `composeRuntime` resolves
