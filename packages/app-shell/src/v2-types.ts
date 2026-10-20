@@ -5,22 +5,22 @@
 // the legacy (vendored opencode-ai-client 1.17.13) field shapes, which are authoritative
 // for those names.
 
-import { AgentFile } from "@orchestra/schema/agent-file"
-import { Command } from "@orchestra/schema/command"
-import { FileDiff } from "@orchestra/schema/file-diff"
-import { Lsp } from "@orchestra/schema"
-import { Mcp } from "@orchestra/schema/mcp"
-import { Permission } from "@orchestra/schema/permission"
-import { PermissionV1 } from "@orchestra/schema/v1/permission"
-import { Question } from "@orchestra/schema/question"
-import { Reference } from "@orchestra/schema/reference"
-import { ScheduledTask } from "@orchestra/schema/scheduled-task"
-import { Session } from "@orchestra/schema/session"
-import { SessionMessage } from "@orchestra/schema/session-message"
-import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
-import { SessionTodo } from "@orchestra/schema/session-todo"
-import { SessionV1 } from "@orchestra/schema/session-v1"
-import { Vcs } from "@orchestra/schema/vcs"
+import type { AgentFile } from "@orchestra/schema/agent-file"
+import type { Command } from "@orchestra/schema/command"
+import type { FileDiff } from "@orchestra/schema/file-diff"
+import type { Lsp } from "@orchestra/schema"
+import type { Permission } from "@orchestra/schema/permission"
+import type { PermissionV1 } from "@orchestra/schema/v1/permission"
+import type { Question } from "@orchestra/schema/question"
+import type { Reference } from "@orchestra/schema/reference"
+import type { Revert } from "@orchestra/schema/revert"
+import type { ScheduledTask } from "@orchestra/schema/scheduled-task"
+import type { Session } from "@orchestra/schema/session"
+import type { SessionMessage } from "@orchestra/schema/session-message"
+import type { SessionStatusEvent } from "@orchestra/schema/session-status-event"
+import type { SessionTodo } from "@orchestra/schema/session-todo"
+import type { SessionV1 } from "@orchestra/schema/session-v1"
+import type { Vcs } from "@orchestra/schema/vcs"
 
 export type Mutable<T> = T extends readonly (infer U)[] ? Mutable<U>[] : T extends object ? { -readonly [K in keyof T]: Mutable<T[K]> } : T
 
@@ -36,15 +36,21 @@ export type AssistantMessage = Mutable<typeof SessionV1.Assistant.Encoded>
 export type UserMessage = Mutable<typeof SessionV1.User.Encoded>
 export type LspStatus = Mutable<typeof Lsp.Status.Encoded>
 export type SessionV2Info = Mutable<typeof Session.Info.Encoded>
-export type CommandInfo = Mutable<typeof Command.Info.Encoded>
+export type CommandV2Info = Mutable<typeof Command.Info.Encoded>
 export type PermissionRequest = Mutable<typeof PermissionV1.Request.Encoded>
 export type QuestionRequest = Mutable<typeof Question.Request.Encoded>
 export type SessionStatus = Mutable<typeof SessionStatusEvent.Info.Encoded>
 export type Todo = Mutable<typeof SessionTodo.Info.Encoded>
 export type VcsInfo = Mutable<typeof Vcs.Info.Encoded>
-export type McpResource = Mutable<typeof Mcp.Resource.Encoded>
+export type McpResource = {
+  name: string
+  uri: string
+  description?: string
+  mimeType?: string
+  client: string
+}
 export type PermissionV2Request = Mutable<typeof Permission.Request.Encoded>
-export type FileDiffInfo = Mutable<typeof FileDiff.Info.Encoded>
+export type FileDiff = Mutable<typeof Revert.FileDiff.Encoded>
 export type SessionMessageAssistant = Mutable<typeof SessionMessage.Assistant.Encoded>
 export type SessionMessageUser = Mutable<typeof SessionMessage.User.Encoded>
 export type FilePart = Mutable<typeof SessionV1.FilePart.Encoded>
@@ -398,10 +404,6 @@ type McpStatusConnected = {
   status: "connected"
 }
 
-type McpStatusPending = {
-  status: "pending"
-}
-
 type McpStatusDisabled = {
   status: "disabled"
 }
@@ -436,7 +438,7 @@ type SessionRevert = {
 export type Project = {
   id: string
   worktree: string
-  vcs?: string
+  vcs?: "git"
   name?: string
   icon?: {
     url?: string
@@ -482,7 +484,7 @@ export type SessionInfo = {
   revert?: SessionRevert
 }
 
-export type IntegrationMethod = IntegrationOAuthMethod | IntegrationCommandMethod | IntegrationKeyMethod | IntegrationEnvMethod
+export type IntegrationMethod = IntegrationOAuthMethod | IntegrationKeyMethod | IntegrationEnvMethod
 
 type IntegrationOAuthMethod = {
   id: string
@@ -501,17 +503,9 @@ type IntegrationEnvMethod = {
   names: Array<string>
 }
 
-type IntegrationCommandMethod = {
-  id: string
-  type: "command"
-  label: string
-  command: Array<string>
-}
-
 export type McpServer = {
   name: string
-  status: McpStatusConnected | McpStatusPending | McpStatusDisabled | McpStatusFailed | McpStatusNeedsAuth | McpStatusNeedsClientRegistration
-  integrationID?: string
+  status: McpStatusConnected | McpStatusDisabled | McpStatusFailed | McpStatusNeedsAuth | McpStatusNeedsClientRegistration
 }
 
 export type SessionMessageInfo =

@@ -14,9 +14,10 @@
 // `ProjectCurrent`. Declarations are copied verbatim.
 //
 // Provenance guard: the content hash of the emitted block is written to
-// packages/app-shell/script/v2-wire.sha256. When a committed hash exists and the freshly
-// computed hash differs, the extractor fails and writes nothing; only an explicit update
-// of the committed hash (after review of the wire change) lets regeneration through.
+// packages/app-shell/script/v2-wire.sha256. When a committed hash exists the extractor
+// verifies the on-disk v2-wire.ts against it (failing on tampering) and fails when the
+// freshly computed hash differs; only an explicit update of the committed hash (after
+// review of the wire change) lets regeneration through.
 
 import { createHash } from "node:crypto"
 import { existsSync, mkdtempSync, readFileSync, writeFileSync } from "node:fs"
@@ -243,16 +244,30 @@ function main() {
   const block = buildBlock(closure(ROOTS, resolver))
   const hash = createHash("sha256").update(block).digest("hex")
   const committed = existsSync(HASH_FILE) ? readFileSync(HASH_FILE, "utf8").trim() : undefined
-  if (committed !== undefined && committed !== hash) {
+
+  if (committed === undefined) {
+    writeFileSync(OUT, block)
+    writeFileSync(HASH_FILE, `${hash}\n`)
+    console.log(`v2-wire: ${resolver.byName.size} declarations, roots ${ROOTS.length}, sha256 ${hash}`)
+    console.log("v2-wire: no committed hash; wrote the initial provenance hash")
+    return
+  }
+
+  const onDisk = createHash("sha256").update(readFileSync(OUT, "utf8")).digest("hex")
+  if (onDisk !== committed) {
+    console.error(`WIRE_HASH_MISMATCH: on-disk v2-wire.ts hashes to ${onDisk}, committed hash is ${committed}. ` +
+      `The generated file was tampered with or is stale; the provenance guard refuses to rewrite it.`)
+    process.exit(1)
+  }
+
+  if (hash !== committed) {
     console.error(`WIRE_HASH_MISMATCH: computed ${hash}, committed ${committed}. The pinned wire sources changed; ` +
       `the extraction is provenance-guarded. Review the diff, then commit a new packages/app-shell/script/v2-wire.sha256.`)
     process.exit(1)
   }
-  writeFileSync(OUT, block)
-  writeFileSync(HASH_FILE, `${hash}\n`)
+
   console.log(`v2-wire: ${resolver.byName.size} declarations, roots ${ROOTS.length}, sha256 ${hash}`)
-  if (committed === undefined) console.log("v2-wire: no committed hash; wrote the initial provenance hash")
-  else console.log("v2-wire: hash matches the committed provenance hash")
+  console.log("v2-wire: hash matches the committed provenance hash")
 }
 
 main()
