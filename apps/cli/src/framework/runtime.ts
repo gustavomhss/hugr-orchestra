@@ -2,6 +2,13 @@ import * as Effect from "effect/Effect"
 import * as Command from "effect/unstable/cli/Command"
 import { Spec } from "./spec"
 import { Daemon } from "../services/daemon"
+import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
+import { Database } from "@orchestra/core/database/database"
+
+// The environment every handler runs in: the daemon connection, the blessed
+// child-process spawner, and the local database (used by `db` and transcript
+// import when no server route exists yet).
+export type HandlerRequirements = Daemon.Service | ChildProcessSpawner | Database.Service
 
 export type Input<Value> =
   Value extends Spec.Node<infer _Name, infer Command, infer _Commands>
@@ -10,9 +17,9 @@ export type Input<Value> =
       ? Input
       : never
 
-type RuntimeHandler = (input: unknown) => Effect.Effect<void, unknown, Daemon.Service>
+type RuntimeHandler = (input: unknown) => Effect.Effect<void, unknown, HandlerRequirements>
 type Loader<Node extends Spec.Any> = () => Promise<{
-  default: (input: Input<Node>) => Effect.Effect<void, any, Daemon.Service>
+  default: (input: Input<Node>) => Effect.Effect<void, any, HandlerRequirements>
 }>
 type ProvidedCommand = Command.Command<string, unknown, unknown, unknown, Daemon.Service>
 

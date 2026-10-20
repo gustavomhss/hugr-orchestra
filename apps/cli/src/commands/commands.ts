@@ -1,6 +1,86 @@
 import { Argument, Flag } from "effect/unstable/cli"
 import { Spec } from "../framework/spec"
 
+const session = Spec.make("session", {
+  description: "Manage sessions",
+  commands: [
+    Spec.make("list", {
+      description: "List sessions",
+      params: {
+        limit: Flag.integer("limit").pipe(
+          Flag.withAlias("n"),
+          Flag.withDefault(50),
+          Flag.withDescription("Limit to N most recent sessions"),
+        ),
+        format: Flag.choice("format", ["table", "json"]).pipe(Flag.withDefault("table")),
+      },
+    }),
+    Spec.make("delete", {
+      description: "Delete a session",
+      params: { sessionID: Argument.string("session ID to delete") },
+    }),
+  ],
+})
+
+const models = Spec.make("models", {
+  description: "List available models from the catalog",
+  params: {
+    provider: Argument.string("provider ID to filter models by").pipe(Argument.optional),
+    json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("Emit raw model records as JSON")),
+  },
+})
+
+const upgrade = Spec.make("upgrade", {
+  description: "Upgrade Orchestra to the latest or a specific version",
+  params: {
+    target: Argument.string("version to upgrade to, e.g. 1.0.1 or v1.0.1").pipe(Argument.optional),
+    method: Flag.choice("method", ["npm", "github"])
+      .pipe(Flag.withAlias("m"), Flag.withDefault("npm"), Flag.withDescription("Installation channel to use")),
+  },
+})
+
+const uninstall = Spec.make("uninstall", {
+  description: "Uninstall Orchestra and remove related files",
+  params: {
+    "keep-config": Flag.boolean("keep-config").pipe(Flag.withAlias("c"), Flag.withDefault(false)),
+    "keep-data": Flag.boolean("keep-data").pipe(Flag.withAlias("d"), Flag.withDefault(false)),
+    "dry-run": Flag.boolean("dry-run").pipe(Flag.withDefault(false), Flag.withDescription("Show what would be removed without removing")),
+    force: Flag.boolean("force").pipe(Flag.withAlias("f"), Flag.withDefault(false), Flag.withDescription("Skip confirmation prompts")),
+  },
+})
+
+const pr = Spec.make("pr", {
+  description: "Check out a GitHub PR branch against the current repository",
+  params: {
+    number: Argument.integer("PR number to checkout").pipe(Argument.withDescription("PR number to checkout")),
+  },
+})
+
+const db = Spec.make("db", {
+  description: "Database tools",
+  commands: [
+    Spec.make("query", {
+      description: "Run an SQL query against the local database",
+      params: { sql: Argument.string("SQL query to execute").pipe(Argument.variadic({ min: 1 })) },
+    }),
+    Spec.make("path", { description: "Print the database path" }),
+    Spec.make("compact", {
+      description:
+        "Delete duplicate snapshot events from the event log (local use only; incompatible with experimental workspace sync)",
+    }),
+  ],
+})
+
+const transcriptExport = Spec.make("export", {
+  description: "Export a session transcript as JSON",
+  params: { sessionID: Argument.string("session ID to export").pipe(Argument.optional) },
+})
+
+const transcriptImport = Spec.make("import", {
+  description: "Import a session transcript from a JSON file",
+  params: { file: Argument.string("path to the JSON file") },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -32,6 +112,14 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
         }),
       ],
     }),
+    session,
+    models,
+    upgrade,
+    uninstall,
+    pr,
+    db,
+    transcriptExport,
+    transcriptImport,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",

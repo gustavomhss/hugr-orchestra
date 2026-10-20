@@ -46,6 +46,7 @@
         "@orchestra/server": "workspace:*",
         "@orchestra/tui": "workspace:*",
         "@parcel/watcher": "2.5.1",
+        "drizzle-orm": "catalog:",
         "effect": "catalog:",
         "solid-js": "catalog:",
       },
