@@ -1,4 +1,5 @@
 import { SessionTodo, SessionV2 } from "@orchestra/core/session"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
@@ -47,6 +48,7 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
     const session = yield* SessionV2.Service
     const subagentModels = yield* SessionSubagentModels.Service
     const appProcess = yield* AppProcess.Service
+    const sessionProcess = yield* SessionProcess.Service
     const fs = yield* FSUtil.Service
 
     const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
@@ -552,6 +554,37 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         Effect.fn(function* (ctx) {
           yield* session.interrupt(ctx.params.sessionID)
           return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
+        "session.processes",
+        Effect.fn(function* (ctx) {
+          yield* session.get(ctx.params.sessionID).pipe(typedNotFound)
+          const items = yield* sessionProcess.list(ctx.params.sessionID, ctx.query.tail)
+          return {
+            data: items.map((item) => ({
+              id: item.id,
+              pid: item.pid,
+              title: item.title,
+              started: item.started,
+              processes: item.processes.map((node) => ({
+                pid: node.pid,
+                ...(node.parentPid === null ? {} : { parentPid: node.parentPid }),
+                ...(node.name === null ? {} : { name: node.name }),
+              })),
+              output: item.output,
+              written: item.written,
+            })),
+          }
+        }),
+      )
+      .handle(
+        "session.processStop",
+        Effect.fn(function* (ctx) {
+          yield* session.get(ctx.params.sessionID).pipe(typedNotFound)
+          const stopped = yield* sessionProcess.cancel(ctx.params.sessionID, ctx.params.processID)
+          if (!stopped) return yield* Effect.fail(new SessionNotFoundError({ sessionID: ctx.params.sessionID, message: `Process not found: ${ctx.params.processID}` }))
+          return { data: true }
         }),
       )
       .handle(

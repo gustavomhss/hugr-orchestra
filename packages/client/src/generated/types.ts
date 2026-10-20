@@ -1826,6 +1826,34 @@ export type SessionsMessageOutput = {
       }
 }["data"]
 
+export type SessionsProcessesInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly tail?: { readonly tail?: number | undefined }["tail"]
+}
+
+export type SessionsProcessesOutput = {
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly pid: number
+    readonly title: string
+    readonly started: number
+    readonly processes: ReadonlyArray<{
+      readonly pid: number
+      readonly parentPid?: number | undefined
+      readonly name?: string | undefined
+    }>
+    readonly output: string
+    readonly written: number
+  }>
+}["data"]
+
+export type SessionsProcessStopInput = {
+  readonly sessionID: { readonly sessionID: string; readonly processID: string }["sessionID"]
+  readonly processID: { readonly sessionID: string; readonly processID: string }["processID"]
+}
+
+export type SessionsProcessStopOutput = { readonly data: boolean }["data"]
+
 export type MessagesListInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
   readonly limit?: {

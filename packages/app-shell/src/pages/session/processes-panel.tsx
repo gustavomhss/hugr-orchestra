@@ -144,10 +144,14 @@ export function BackgroundProcessesPanel() {
     foreground: !document.hidden,
   })
 
-  // Session processes are a V1 route; on V2 the panel stays empty.
+  // Session processes are available on both V1 and V2 routes.
   const refresh = (sessionID: string) =>
     sdk()
-      .protocol.then((protocol) => (protocol === "v1" ? sdk().client.session.processes({ sessionID }) : undefined))
+      .protocol.then((protocol) =>
+        protocol === "v1"
+          ? sdk().client.session.processes({ sessionID })
+          : sdk().client.sessions.processes({ sessionID }),
+      )
       .then((result) => {
         if (!result) return
         if (params.id !== sessionID) return
@@ -159,7 +163,11 @@ export function BackgroundProcessesPanel() {
     const sessionID = params.id
     if (!sessionID) return Promise.resolve()
     return sdk()
-      .client.session.processStop({ sessionID, processID }, { throwOnError: true })
+      .protocol.then((protocol) =>
+        protocol === "v1"
+          ? sdk().client.session.processStop({ sessionID, processID }, { throwOnError: true })
+          : sdk().client.sessions.processStop({ sessionID, processID }, { throwOnError: true }),
+      )
       .then(() => refresh(sessionID))
   })
 

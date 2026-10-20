@@ -72,6 +72,10 @@ import type {
   SessionsInterruptOutput,
   SessionsMessageInput,
   SessionsMessageOutput,
+  SessionsProcessesInput,
+  SessionsProcessesOutput,
+  SessionsProcessStopInput,
+  SessionsProcessStopOutput,
   MessagesListInput,
   MessagesListOutput,
   ModelsListInput,
@@ -863,6 +867,29 @@ export function make(options: ClientOptions) {
           {
             method: "GET",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/message/${encodeURIComponent(input.messageID)}`,
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      processes: (input: SessionsProcessesInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsProcessesOutput }>(
+          {
+            method: "GET",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/processes`,
+            query: { tail: input["tail"] },
+            successStatus: 200,
+            declaredStatuses: [404, 400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ).then((value) => value.data),
+      processStop: (input: SessionsProcessStopInput, requestOptions?: RequestOptions) =>
+        request<{ readonly data: SessionsProcessStopOutput }>(
+          {
+            method: "POST",
+            path: `/api/session/${encodeURIComponent(input.sessionID)}/processes/${encodeURIComponent(input.processID)}/stop`,
             successStatus: 200,
             declaredStatuses: [404, 400, 401],
             empty: false,

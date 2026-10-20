@@ -103,6 +103,22 @@ export const SessionHistoryQuery = Schema.Struct({
   after: Schema.NumberFromString.pipe(Schema.decodeTo(NonNegativeInt), Schema.optional),
 })
 
+export const ProcessNode = Schema.Struct({
+  pid: Schema.Int,
+  parentPid: Schema.optional(Schema.Int),
+  name: Schema.optional(Schema.String),
+}).annotate({ identifier: "SessionProcessNode" })
+
+export const SessionProcess = Schema.Struct({
+  id: Schema.String,
+  pid: Schema.Int,
+  title: Schema.String,
+  started: Schema.Finite,
+  processes: Schema.Array(ProcessNode),
+  output: Schema.String,
+  written: Schema.Finite,
+}).annotate({ identifier: "SessionProcess" })
+
 const SessionsQueryCursor = SessionsCursor.annotate({
   description: "Opaque pagination cursor returned as cursor.previous or cursor.next in the previous response.",
 })
@@ -626,6 +642,39 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
             identifier: "v2.session.message",
             summary: "Get session message",
             description: "Retrieve one projected message owned by the Session.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.processes", "/api/session/:sessionID/processes", {
+        params: { sessionID: Session.ID },
+        query: Schema.Struct({
+          tail: Schema.NumberFromString.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Array(SessionProcess) }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.processes",
+            summary: "List background processes",
+            description: "List the process trees a session's shell tool left running.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.processStop", "/api/session/:sessionID/processes/:processID/stop", {
+        params: { sessionID: Session.ID, processID: Schema.String },
+        success: Schema.Struct({ data: Schema.Boolean }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.processStop",
+            summary: "Stop background process",
+            description: "Stop one background process tree of a session.",
           }),
         ),
     )
