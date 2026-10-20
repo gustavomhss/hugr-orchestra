@@ -436,23 +436,23 @@ const Endpoint3_31 = (raw: RawClient["server.session"]) => (input: Endpoint3_31I
     Effect.map((value) => value.data),
   )
 
-type Endpoint3_30Request = Parameters<RawClient["server.session"]["session.processes"]>[0]
-type Endpoint3_30Input = {
-  readonly sessionID: Endpoint3_30Request["params"]["sessionID"]
-  readonly tail?: Endpoint3_30Request["query"]["tail"]
+type Endpoint3_32Request = Parameters<RawClient["server.session"]["session.processes"]>[0]
+type Endpoint3_32Input = {
+  readonly sessionID: Endpoint3_32Request["params"]["sessionID"]
+  readonly tail?: Endpoint3_32Request["query"]["tail"]
 }
-const Endpoint3_30 = (raw: RawClient["server.session"]) => (input: Endpoint3_30Input) =>
+const Endpoint3_32 = (raw: RawClient["server.session"]) => (input: Endpoint3_32Input) =>
   raw["session.processes"]({ params: { sessionID: input["sessionID"] }, query: { tail: input["tail"] } }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
   )
 
-type Endpoint3_31Request = Parameters<RawClient["server.session"]["session.processStop"]>[0]
-type Endpoint3_31Input = {
-  readonly sessionID: Endpoint3_31Request["params"]["sessionID"]
-  readonly processID: Endpoint3_31Request["params"]["processID"]
+type Endpoint3_33Request = Parameters<RawClient["server.session"]["session.processStop"]>[0]
+type Endpoint3_33Input = {
+  readonly sessionID: Endpoint3_33Request["params"]["sessionID"]
+  readonly processID: Endpoint3_33Request["params"]["processID"]
 }
-const Endpoint3_31 = (raw: RawClient["server.session"]) => (input: Endpoint3_31Input) =>
+const Endpoint3_33 = (raw: RawClient["server.session"]) => (input: Endpoint3_33Input) =>
   raw["session.processStop"]({ params: { sessionID: input["sessionID"], processID: input["processID"] } }).pipe(
     Effect.mapError(mapClientError),
     Effect.map((value) => value.data),
@@ -468,7 +468,6 @@ const adaptGroup3 = (raw: RawClient["server.session"]) => ({
   remove: Endpoint3_6(raw),
   getSubagentModels: Endpoint3_7(raw),
   setSubagentModels: Endpoint3_8(raw),
-<<<<<<< HEAD
   getPermission: Endpoint3_9(raw),
   setPermission: Endpoint3_10(raw),
   switchAgent: Endpoint3_11(raw),
@@ -492,31 +491,8 @@ const adaptGroup3 = (raw: RawClient["server.session"]) => ({
   events: Endpoint3_29(raw),
   interrupt: Endpoint3_30(raw),
   message: Endpoint3_31(raw),
-=======
-  switchAgent: Endpoint3_9(raw),
-  switchModel: Endpoint3_10(raw),
-  prompt: Endpoint3_11(raw),
-  command: Endpoint3_12(raw),
-  compact: Endpoint3_13(raw),
-  fork: Endpoint3_14(raw),
-  move: Endpoint3_15(raw),
-  shell: Endpoint3_16(raw),
-  skill: Endpoint3_17(raw),
-  synthetic: Endpoint3_18(raw),
-  generate: Endpoint3_19(raw),
-  todo: Endpoint3_20(raw),
-  wait: Endpoint3_21(raw),
-  stage: Endpoint3_22(raw),
-  clear: Endpoint3_23(raw),
-  commit: Endpoint3_24(raw),
-  context: Endpoint3_25(raw),
-  history: Endpoint3_26(raw),
-  events: Endpoint3_27(raw),
-  interrupt: Endpoint3_28(raw),
-  message: Endpoint3_29(raw),
-  processes: Endpoint3_30(raw),
-  processStop: Endpoint3_31(raw),
->>>>>>> 98d36706df (feat(core): run background shell processes per session on V2)
+  processes: Endpoint3_32(raw),
+  processStop: Endpoint3_33(raw),
 })
 
 type Endpoint5_0Request = Parameters<RawClient["server.message"]["session.messages"]>[0]

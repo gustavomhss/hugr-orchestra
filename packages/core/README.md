@@ -85,7 +85,7 @@ files directly.
 - Enforced by `bun run check:boundaries`; exceptions in `script/boundary-ledger.json`.
 
 ### Domains
-- `session` — platform — `src/session/`, `src/session.ts` — packages/core
+- `session` — platform — `src/session/`, `src/session.ts`, `src/session-process.ts` — packages/core
 - `agent` — platform — `src/agent/`, `src/agent.ts` — packages/core
 - `system-context` — platform — `src/system-context/` — packages/core
 - `tool` — platform — `src/tool/`, `src/tool-output-store.ts`, `src/mcp/`, `src/mcp.ts`, `src/lsp/`, `src/lsp.ts` — packages/core

@@ -41,7 +41,7 @@ import { SessionDurable } from "@orchestra/schema/durable-event-manifest"
 import { SessionArchive } from "./session/archive"
 import { SessionLegacyRow } from "./session/legacy-row"
 import { SessionSubagentModels } from "./session/subagent-models"
-import { PermissionV1 } from "./v1/permission"
+import { PermissionV1 } from "@orchestra/schema/permission-v1"
 
 export const RevertState = Revert.State
 export type RevertState = Revert.State

@@ -9,7 +9,6 @@ import { Identifier } from "./id/id"
 import { makeGlobalNode } from "./effect/app-node"
 import { OmniBackground } from "./omni-background"
 import { SessionV2 } from "./session"
-import { SessionV1 } from "./v1/session"
 
 export const RING_BYTES = OmniBackground.RING_BYTES
 export const TAIL_BYTES = OmniBackground.TAIL_BYTES
@@ -215,7 +214,7 @@ const make = Effect.gen(function* () {
 
   const off = yield* events.listen((event) => {
     const data = event.data as { sessionID?: unknown }
-    if (event.type !== SessionV1.Event.Deleted.type) return Effect.void
+    if (event.type !== "session.deleted") return Effect.void
     if (typeof data?.sessionID !== "string") return Effect.void
     return stopSession(data.sessionID).pipe(Effect.ignore)
   })

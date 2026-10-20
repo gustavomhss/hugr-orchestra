@@ -229,7 +229,7 @@
         { "path": "src/github-copilot", "kind": "collection", "status": "vendored" }
       ],
       "domains": {
-        "session": { "kind": "platform", "entry": "src/session.ts", "patterns": ["src/session/", "src/session.ts"] },
+        "session": { "kind": "platform", "entry": "src/session.ts", "patterns": ["src/session/", "src/session.ts", "src/session-process.ts"] },
         "agent": { "kind": "platform", "entry": "src/agent.ts", "patterns": ["src/agent/", "src/agent.ts"] },
         "system-context": { "kind": "platform", "entry": "src/system-context/index.ts", "patterns": ["src/system-context/"] },
         "tool": { "kind": "platform", "patterns": ["src/tool/", "src/tool-output-store.ts", "src/mcp/", "src/mcp.ts", "src/lsp/", "src/lsp.ts"] },
