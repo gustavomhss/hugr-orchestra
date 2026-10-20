@@ -1,11 +1,13 @@
-import type { AgentV2Info } from "../../compat/sdk-v2-types.js"
+import type { AgentInfo } from "../types.js"
+import type { Mutable } from "../mutable.js"
+
 import type { Hooks } from "./registration.js"
 
 export interface AgentDraft {
-  list(): readonly AgentV2Info[]
-  get(id: string): AgentV2Info | undefined
+  list(): readonly Mutable<AgentInfo>[]
+  get(id: string): Mutable<AgentInfo> | undefined
   default(id: string | undefined): void
-  update(id: string, update: (agent: AgentV2Info) => void): void
+  update(id: string, update: (agent: Mutable<AgentInfo>) => void): void
   remove(id: string): void
 }
 

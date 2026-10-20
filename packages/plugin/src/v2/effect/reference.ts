@@ -1,4 +1,4 @@
-import type { ReferenceGitSource, ReferenceLocalSource } from "../../compat/sdk-v2-types.js"
+import type { ReferenceGitSource, ReferenceLocalSource } from "../types.js"
 import type { Hooks } from "./registration.js"
 
 export interface ReferenceDraft {

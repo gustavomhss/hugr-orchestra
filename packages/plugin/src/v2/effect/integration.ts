@@ -1,14 +1,6 @@
-import type {
-  ConnectionInfo,
-  CredentialOAuth,
-  CredentialValue,
-  IntegrationEnvMethod,
-  IntegrationInputs,
-  IntegrationKeyMethod,
-  IntegrationMethod,
-  IntegrationOAuthMethod,
-  IntegrationRef,
-} from "../../compat/sdk-v2-types.js"
+import type { ConnectionInfo, CredentialOAuth, CredentialValue, IntegrationEnvMethod, IntegrationInputs, IntegrationKeyMethod, IntegrationMethod, IntegrationOAuthMethod, IntegrationRef } from "../types.js"
+import type { Mutable } from "../mutable.js"
+
 import type { Effect, Scope } from "effect"
 import type { Hooks } from "./registration.js"
 
@@ -46,7 +38,7 @@ export type IntegrationMethodRegistration =
 export interface IntegrationDraft {
   list(): readonly IntegrationRef[]
   get(id: string): IntegrationRef | undefined
-  update(id: string, update: (integration: IntegrationRef) => void): void
+  update(id: string, update: (integration: Mutable<IntegrationRef>) => void): void
   remove(id: string): void
   readonly method: {
     list(integrationID: string): readonly IntegrationMethod[]

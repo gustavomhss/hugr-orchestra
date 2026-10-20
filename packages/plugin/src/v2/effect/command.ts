@@ -1,10 +1,12 @@
-import type { CommandV2Info } from "../../compat/sdk-v2-types.js"
+import type { CommandInfo } from "../types.js"
+import type { Mutable } from "../mutable.js"
+
 import type { Hooks } from "./registration.js"
 
 export interface CommandDraft {
-  list(): readonly CommandV2Info[]
-  get(name: string): CommandV2Info | undefined
-  update(name: string, update: (command: CommandV2Info) => void): void
+  list(): readonly CommandInfo[]
+  get(name: string): CommandInfo | undefined
+  update(name: string, update: (command: Mutable<CommandInfo>) => void): void
   remove(name: string): void
 }
 

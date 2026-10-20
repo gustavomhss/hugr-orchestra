@@ -1,9 +1,9 @@
-import type { SkillV2Source } from "../../compat/sdk-v2-types.js"
+import type { SkillSource } from "../types.js"
 import type { Hooks } from "./registration.js"
 
 export interface SkillDraft {
-  source(source: SkillV2Source): void
-  list(): readonly SkillV2Source[]
+  source(source: SkillSource): void
+  list(): readonly SkillSource[]
 }
 
 export type SkillHooks = Hooks<{

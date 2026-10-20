@@ -2,6 +2,7 @@ export * as VariantPlugin from "./variant"
 
 import { Effect } from "effect"
 import type { ModelV2 } from "../model"
+import type { DeepMutable } from "../schema"
 import { define } from "./internal"
 
 export const Plugin = define({
@@ -30,7 +31,7 @@ export const Plugin = define({
 // Reads only the API identity, so it accepts the plugin context model without depending on its open-ended bodies.
 export function generate(
   model: Pick<typeof ModelV2.Info.Encoded, "id" | "api">,
-): (typeof ModelV2.Info.Encoded)["variants"] {
+): DeepMutable<(typeof ModelV2.Info.Encoded)["variants"]> {
   if (model.api.type !== "aisdk" || model.api.package !== "@ai-sdk/openai-compatible") return []
   const ids = `${model.id} ${model.api.id}`.toLowerCase()
   if (!["glm-5.2", "glm-5-2", "glm-5p2"].some((name) => ids.includes(name))) return []

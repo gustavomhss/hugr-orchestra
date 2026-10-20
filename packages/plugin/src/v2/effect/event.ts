@@ -1,8 +1,8 @@
-import type { Event as SDKEvent } from "../../compat/sdk-v2-types.js"
+import type { OrchestraEvent } from "@orchestra/protocol/groups/event"
 import type { Stream } from "effect"
 
 export type EventMap = {
-  [Item in SDKEvent as Item["type"]]: Item
+  [Item in OrchestraEvent as Item["type"]]: Item
 }
 
 export interface Event {

@@ -1,4 +1,4 @@
-import type { FileSystemEntry } from "../../compat/sdk-v2-types.js"
+import type { FileSystemEntry } from "../types.js"
 import type { Effect } from "effect"
 
 export interface FileSystem {
