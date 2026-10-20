@@ -34,11 +34,12 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
           )
         }).pipe(Effect.mapError(unavailable)),
       )
-    // One plain call to the chosen model; `system` keeps the model off its general coding prompt.
-    const model = (providerID: string, modelID: string, system: string) =>
-      Effect.gen(function* () {
-        const catalog = yield* Catalog.Service
-        const integrations = yield* Integration.Service
+    // One plain call to the chosen model; `system` keeps the model off its general coding prompt. The Location's catalog
+    // and integrations are read per request, so the returned Effect needs nothing more.
+    const model = Effect.fn(function* (providerID: string, modelID: string, system: string) {
+      const catalog = yield* Catalog.Service
+      const integrations = yield* Integration.Service
+      return Effect.gen(function* () {
         const selected = (yield* catalog.model.available()).find(
           (item) => item.providerID === providerID && item.id === modelID,
         )
@@ -54,6 +55,7 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
             Stream.mkString,
           )
       })
+    })
     return handlers
       .handle("atlas.snapshot", () => at((atlas) => atlas.snapshot()))
       .handle("atlas.reasoning", (ctx) => at((atlas) => atlas.reasoning(ctx.params.id)))
@@ -75,27 +77,28 @@ export const AtlasHandler = HttpApiBuilder.group(Api, "server.atlas", (handlers)
       .handle("atlas.install", () => at((atlas) => atlas.install()))
       .handle("atlas.index", () => at((atlas) => atlas.index()))
       .handle("atlas.delegate", (ctx) =>
-        at((atlas) =>
-          Atlas.delegate(
-            {
-              atlas,
-              draft: (prompt) =>
-                model(ctx.payload.providerID, ctx.payload.modelID, Atlas.DELEGATE_SYSTEM).pipe(
-                  Effect.flatMap((call) => call(prompt)),
-                  Effect.map(Atlas.decodeReply),
-                ),
-            },
-            ctx.payload,
-          ),
-        ),
+        Effect.gen(function* () {
+          const ask = yield* model(ctx.payload.providerID, ctx.payload.modelID, Atlas.DELEGATE_SYSTEM)
+          return yield* at((atlas) =>
+            Atlas.delegate(
+              {
+                atlas,
+                draft: (prompt) =>
+                  ask.pipe(
+                    Effect.flatMap((call) => call(prompt)),
+                    Effect.map(Atlas.decodeReply),
+                  ),
+              },
+              ctx.payload,
+            ),
+          )
+        }),
       )
       .handle("atlas.mine", (ctx) =>
-        at((atlas) =>
-          Atlas.mine(
-            { atlas, model: model(ctx.payload.providerID, ctx.payload.modelID, Atlas.MINE_SYSTEM) },
-            ctx.payload,
-          ),
-        ),
+        Effect.gen(function* () {
+          const ask = yield* model(ctx.payload.providerID, ctx.payload.modelID, Atlas.MINE_SYSTEM)
+          return yield* at((atlas) => Atlas.mine({ atlas, model: ask }, ctx.payload))
+        }),
       )
   }),
 )
