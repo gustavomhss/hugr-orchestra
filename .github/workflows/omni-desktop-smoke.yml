@@ -86,14 +86,16 @@ jobs:
           done
           bun apps/cli/script/export-artifacts.ts --dist apps/cli/dist --out windows-cli --version "$ORCHESTRA_VERSION" \
             --target windows-x64-baseline --target linux-arm64 --target linux-x64-baseline
-          # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each WSL guest's
+          # A producer directory holds each target's tree-sitter-<target>/ and ripgrep-<target>/, and each CLI's
           # omni pair in omni-<target>/ (scripts/cli-staging.ts reads them there).
           for target in $targets; do
             bin="apps/cli/dist/cli-$target/bin"
             cp -R "$bin/tree-sitter" "windows-cli/tree-sitter-$target"
             cp -R "$bin/ripgrep" "windows-cli/ripgrep-$target"
-            if [[ "$target" == linux-* ]]; then
-              mkdir -p "windows-cli/omni-$target"
+            mkdir -p "windows-cli/omni-$target"
+            if [[ "$target" == windows-* ]]; then
+              cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor.exe" "windows-cli/omni-$target/"
+            else
               cp "$bin/hugr_omni.node" "$bin/hugr-omni-supervisor" "windows-cli/omni-$target/"
             fi
           done

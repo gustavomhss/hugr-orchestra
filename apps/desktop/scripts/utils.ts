@@ -1,7 +1,7 @@
 import { $ } from "bun"
-import { join } from "node:path"
+import { dirname, join } from "node:path"
 import { desktopCliTargets, stageCliArtifacts } from "./cli-staging"
-import { nativeCliTarget, ripgrepSigning, signatureCheck } from "../src/main/cli-artifacts"
+import { nativeCliTarget, omniCompanions, ripgrepSigning, signatureCheck } from "../src/main/cli-artifacts"
 import { ResourcePaths } from "./resource-paths"
 
 export type Channel = "dev" | "beta" | "prod"
@@ -44,6 +44,11 @@ export async function buildCliToResources(input: { targets?: readonly string[]; 
         const entitlements = kind === "cli" ? ["--entitlements", join(paths.desktop, "resources/entitlements.plist")] : []
         const options = identity === "-" ? [] : ["--options", "runtime", "--timestamp", ...entitlements]
         await $`codesign --force --sign ${identity} ${options} ${path}`
+        // hugr_omni.node and its supervisor need no JIT, so the staged pair is signed like the rg and the app's own
+        // Resources/omni pair (the empty entitlements.omni.plist); a signed build's deep verification then passes.
+        if (kind === "cli")
+          for (const name of omniCompanions(target))
+            await $`codesign --force --sign ${identity} ${identity === "-" ? [] : ["--options", "runtime", "--timestamp"]} ${join(dirname(path), `omni-${target}`, name)}`
       }
       if (kind === "cli" && target === nativeCliTarget(process.platform, process.arch)) {
         const reported = (await $`${path} --version`.text()).trim()
