@@ -134,7 +134,7 @@ export namespace Timeline {
         : groupParts(assistantPartRefs).map((group) => ({ type: "part" as const, group }))
     if (previousUserMessage) rows.push(new TimelineRow.TurnGap({ userMessageID: userMessage.id }))
 
-    rows.push(new TimelineRow.UserMessage({ userMessageID: userMessage.id }))
+    if (!compaction) rows.push(new TimelineRow.UserMessage({ userMessageID: userMessage.id }))
 
     if (compaction) {
       rows.push(

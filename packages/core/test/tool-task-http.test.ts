@@ -1,3 +1,4 @@
+import { SessionProcess } from "@orchestra/core/session-process"
 import { expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -37,6 +38,7 @@ const services = AppNodeBuilder.build(
     SessionExecution.node,
     SessionV2.node,
     SessionSubagentModels.node,
+    SessionProcess.node,
   ]),
   [[SessionExecution.node, SessionExecutionLocal.node]],
 )

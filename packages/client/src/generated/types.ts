@@ -534,6 +534,35 @@ export type SessionsSetSubagentModelsOutput = {
       }
 }["data"]
 
+export type SessionsGetPermissionInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
+
+export type SessionsGetPermissionOutput = {
+  readonly data: ReadonlyArray<{
+    readonly permission: string
+    readonly pattern: string
+    readonly action: "allow" | "deny" | "ask"
+  }>
+}["data"]
+
+export type SessionsSetPermissionInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly permission: {
+    readonly permission: ReadonlyArray<{
+      readonly permission: string
+      readonly pattern: string
+      readonly action: "allow" | "deny" | "ask"
+    }>
+  }["permission"]
+}
+
+export type SessionsSetPermissionOutput = {
+  readonly data: ReadonlyArray<{
+    readonly permission: string
+    readonly pattern: string
+    readonly action: "allow" | "deny" | "ask"
+  }>
+}["data"]
+
 export type SessionsSwitchAgentInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
   readonly agent: { readonly agent: string }["agent"]
@@ -1163,6 +1192,22 @@ export type SessionsHistoryOutput = {
     | {
         readonly id: string
         readonly metadata?: { readonly [x: string]: JsonValue }
+        readonly type: "session.next.permission.changed"
+        readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
+        readonly location?: { readonly directory: string; readonly workspaceID?: string }
+        readonly data: {
+          readonly timestamp: number
+          readonly sessionID: string
+          readonly permission: ReadonlyArray<{
+            readonly permission: string
+            readonly pattern: string
+            readonly action: "allow" | "deny" | "ask"
+          }>
+        }
+      }
+    | {
+        readonly id: string
+        readonly metadata?: { readonly [x: string]: JsonValue }
         readonly type: "session.next.archive.changed"
         readonly durable?: { readonly aggregateID: string; readonly seq: number; readonly version: number }
         readonly location?: { readonly directory: string; readonly workspaceID?: string }
@@ -1780,6 +1825,34 @@ export type SessionsMessageOutput = {
         readonly time: { readonly created: number }
       }
 }["data"]
+
+export type SessionsProcessesInput = {
+  readonly sessionID: { readonly sessionID: string }["sessionID"]
+  readonly tail?: { readonly tail?: number | undefined }["tail"]
+}
+
+export type SessionsProcessesOutput = {
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly pid: number
+    readonly title: string
+    readonly started: number
+    readonly processes: ReadonlyArray<{
+      readonly pid: number
+      readonly parentPid?: number | undefined
+      readonly name?: string | undefined
+    }>
+    readonly output: string
+    readonly written: number
+  }>
+}["data"]
+
+export type SessionsProcessStopInput = {
+  readonly sessionID: { readonly sessionID: string; readonly processID: string }["sessionID"]
+  readonly processID: { readonly sessionID: string; readonly processID: string }["processID"]
+}
+
+export type SessionsProcessStopOutput = { readonly data: boolean }["data"]
 
 export type MessagesListInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
@@ -2999,6 +3072,26 @@ export type McpAuthRemoveInput = {
 }
 
 export type McpAuthRemoveOutput = void
+
+export type ServerLspStatusInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type ServerLspStatusOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: ReadonlyArray<{
+    readonly id: string
+    readonly name: string
+    readonly root: string
+    readonly status: "connected" | "error"
+  }>
+}
 
 export type SkillsListInput = {
   readonly location?: {

@@ -5,6 +5,7 @@ import { IconButton } from "@orchestra/ui/icon-button"
 import { ButtonV2 } from "@orchestra/ui/v2/button-v2"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { useServerSDK } from "@/context/server-sdk"
 import { useSessionLayout } from "./session-layout"
 import {
   PROCESS_POLL_MS,
@@ -138,20 +139,31 @@ export function ProcessesList(props: {
  */
 export function BackgroundProcessesPanel() {
   const sdk = useSDK()
+  const serverSDK = useServerSDK()
   const { params } = useSessionLayout()
   const [state, setState] = createStore({
     items: [] as SessionProcess[],
     foreground: !document.hidden,
   })
 
-  // Session processes are a V1 route; on V2 the panel stays empty.
+  // Session processes are available on both V1 and V2 routes.
   const refresh = (sessionID: string) =>
     sdk()
-      .protocol.then((protocol) => (protocol === "v1" ? sdk().client.session.processes({ sessionID }) : undefined))
-      .then((result) => {
-        if (!result) return
+      .protocol.then(async (protocol): Promise<readonly SessionProcess[]> => {
+        if (protocol === "v1") return (await sdk().client.session.processes({ sessionID })).data ?? []
+        const items = await serverSDK().orchestra.sessions.processes({ sessionID })
+        return items.map((item) => ({
+          ...item,
+          processes: item.processes.map((node) => ({
+            pid: node.pid,
+            ...(node.parentPid === undefined ? {} : { parentPid: node.parentPid }),
+            ...(node.name === undefined ? {} : { name: node.name }),
+          })),
+        }))
+      })
+      .then((items) => {
         if (params.id !== sessionID) return
-        setState("items", reconcile(sortProcesses(result.data ?? []), { key: "id" }))
+        setState("items", reconcile(sortProcesses([...items]), { key: "id" }))
       })
       .catch(() => undefined)
 
@@ -159,7 +171,10 @@ export function BackgroundProcessesPanel() {
     const sessionID = params.id
     if (!sessionID) return Promise.resolve()
     return sdk()
-      .client.session.processStop({ sessionID, processID }, { throwOnError: true })
+      .protocol.then(async (protocol) => {
+        if (protocol === "v1") await sdk().client.session.processStop({ sessionID, processID }, { throwOnError: true })
+        else await serverSDK().orchestra.sessions.processStop({ sessionID, processID })
+      })
       .then(() => refresh(sessionID))
   })
 

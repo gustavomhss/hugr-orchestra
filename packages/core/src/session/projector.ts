@@ -250,7 +250,7 @@ function run(db: DatabaseService, event: SessionEvent.Event, replay = false) {
       updateShell: updateMessage,
       appendMessage,
     }
-    yield* SessionMessageUpdater.update(adapter, event)
+    yield* SessionMessageUpdater.update(adapter, event).pipe(Effect.orDie)
   })
 }
 
@@ -457,6 +457,15 @@ const layer = Layer.effectDiscard(
           .run()
           .pipe(Effect.orDie)
         yield* run(db, event)
+      }),
+    )
+    yield* events.project(SessionEvent.PermissionChanged, (event) =>
+      Effect.gen(function* () {
+        yield* db.update(SessionTable)
+          .set({ permission: [...event.data.permission], time_updated: DateTime.toEpochMillis(event.data.timestamp) })
+          .where(eq(SessionTable.id, event.data.sessionID))
+          .run()
+          .pipe(Effect.orDie)
       }),
     )
     yield* events.project(SessionEvent.Prompted, (event) =>

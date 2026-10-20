@@ -58,6 +58,7 @@ export const groupNames = {
   "server.actionsResource": "actionsResources",
   "server.actionsTransfer": "actionsTransfers",
   "server.actionsSource": "actionsSource",
+  "server.lsp": "server.lsp",
 } as const
 
 export const endpointNames = {

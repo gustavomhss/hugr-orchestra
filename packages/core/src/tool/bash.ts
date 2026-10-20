@@ -10,10 +10,12 @@ import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
 import { Location } from "../location"
 import { AppProcess } from "../process"
+import { SessionProcess } from "../session-process"
 import { PermissionV2 } from "../permission"
 import { PositiveInt } from "../schema"
 import { ToolRegistry } from "./registry"
 import { Tool } from "./tool"
+import { Option } from "effect"
 import { Tools } from "./tools"
 import { ToolSafety } from "../tool-safety"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
@@ -29,6 +31,9 @@ export const Input = Schema.Struct({
   command: Schema.String.annotate({ description: "The command to execute" }),
   workdir: Schema.String.pipe(Schema.optional).annotate({
     description: "The directory to run the command in, relative to the working directory, which is the default",
+  }),
+  background: Schema.Boolean.pipe(Schema.optional).annotate({
+    description: "Run the command in the background and return a process ID",
   }),
   timeout: PositiveInt.check(Schema.isLessThanOrEqualTo(MAX_TIMEOUT_MS))
     .pipe(Schema.optional)
@@ -47,6 +52,7 @@ const Output = Schema.Struct({
   ...StructuredOutput.fields,
   output: Schema.String,
   warnings: Schema.Array(Schema.String).pipe(Schema.optional),
+  processID: Schema.String.pipe(Schema.optional),
 })
 
 type Output = typeof Output.Type
@@ -81,8 +87,6 @@ const isTimeout = (error: AppProcess.AppProcessError) =>
 // TODO: Add plugin shell.env environment augmentation once V2 plugin hooks exist.
 // TODO: Add durable/live progress metadata streaming for long-running commands once V2 tool invocation progress context is wired.
 // TODO: Persist background job status and define restart recovery before exposing remote observation.
-// TODO: Re-add model-facing background launch only with owner-bound get/wait/cancel tools and completion delivery.
-// TODO: Add HTTP background-job observation only after durable status, restart recovery, and authorization are defined.
 // TODO: Revisit process-group cleanup and platform coverage with shell-specific tests if current AppProcess semantics do not fully cover it.
 // TODO: Revisit binary output handling if stdout/stderr decoding is text-only.
 // TODO: Stream full shell output into managed storage while retaining only a bounded in-memory preview.
@@ -111,6 +115,7 @@ const layer = Layer.effectDiscard(
     const mutation = yield* LocationMutation.Service
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
+    const sessionProcess = yield* Effect.serviceOption(SessionProcess.Service)
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
     const location = yield* Location.Service
@@ -189,6 +194,25 @@ const layer = Layer.effectDiscard(
 
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
+
+              if (input.background) {
+                if (Option.isNone(sessionProcess))
+                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
+                const shell = configuredShell(yield* config.entries())
+                const launched = yield* sessionProcess.value.launch({
+                  sessionID: context.sessionID,
+                  command: input.command,
+                  title: input.command,
+                  cwd: target.canonical,
+                  shell,
+                })
+                return {
+                  output: `Started background process ${launched.processID}.`,
+                  truncated: false,
+                  processID: launched.processID,
+                  ...(warnings.length ? { warnings } : {}),
+                }
+              }
 
               const shell = configuredShell(yield* config.entries())
               const command = ChildProcess.make(input.command, [], {

@@ -1,6 +1,6 @@
 import { describe, expect, mock, test } from "bun:test"
 import type { SessionMessageInfo } from "@opencode-ai/client/promise"
-import type { AssistantMessage, UserMessage } from "@orchestra/sdk/v2"
+import type { AssistantMessage, Part, UserMessage } from "@orchestra/sdk/v2"
 import { normalizeSessionMessages } from "@/utils/session-message"
 
 mock.module("@orchestra/session-ui/message-part", () => ({
@@ -224,5 +224,18 @@ describe("current session timeline rows", () => {
       undefined,
     ])
     expect(failed({ name: "UnknownError", data: { message: "Boom" } })).toEqual([undefined])
+  })
+  test("renders a compaction turn as its divider without an empty user bubble", () => {
+    const rows = Timeline.constructMessageRows(
+      { id: "msg_compaction" } as UserMessage,
+      (id) => (id === "msg_compaction" ? [{ id: "part_compaction", type: "compaction" } as Part] : []),
+      [],
+      1,
+      false,
+      "idle",
+      false,
+    )
+
+    expect(rows.some((row) => row._tag === "UserMessage")).toBe(false)
   })
 })

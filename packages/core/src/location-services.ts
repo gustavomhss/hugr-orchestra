@@ -16,6 +16,7 @@ import { Image } from "./image"
 import { Integration } from "./integration"
 import { Location } from "./location"
 import { LocationMutation } from "./location-mutation"
+import { LSP } from "./lsp"
 import { LocationServiceMap } from "./location-service-map"
 import { Mcp } from "./mcp"
 import { PermissionV2 } from "./permission"
@@ -83,6 +84,7 @@ export const locationServices = LayerNode.group([
   ReadToolFileSystem.node,
   BuiltInTools.node,
   Mcp.node,
+  LSP.node,
   SessionRunnerModel.node,
   Snapshot.node,
   Relay.node,

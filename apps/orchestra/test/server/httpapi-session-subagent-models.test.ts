@@ -1,3 +1,4 @@
+import { SessionProcess } from "@orchestra/core/session-process"
 import { describe, expect } from "bun:test"
 import { NodeHttpServer, NodeServices } from "@effect/platform-node"
 import path from "node:path"
@@ -47,6 +48,7 @@ const services = Layer.unwrap(
         SessionV2.node,
         SessionExecution.node,
         SessionSubagentModels.node,
+        SessionProcess.node,
         LocationServiceMap.node,
         AppProcess.node,
         FSUtil.node,
