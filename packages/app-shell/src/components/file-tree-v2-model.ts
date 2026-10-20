@@ -1,4 +1,4 @@
-import type { FileNode } from "../compat/sdk-v2"
+import type { FileNode } from "@/v2-wire"
 
 export type FileTreeV2Model = {
   children: ReadonlyMap<string, readonly FileTreeV2Node[]>

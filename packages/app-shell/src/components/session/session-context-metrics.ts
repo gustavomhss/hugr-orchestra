@@ -1,4 +1,4 @@
-import type { AssistantMessage, Message, Part } from "../../compat/sdk-v2-client"
+import type { AssistantMessage, Message, Part } from "@/v2-types"
 
 type Parts = Record<string, Part[] | undefined>
 

@@ -1,4 +1,4 @@
-import type { LspStatus } from "../compat/sdk-v2-client"
+import type { LspStatus } from "@/v2-types"
 import type { McpServer } from "../compat/vendored-client-promise"
 
 export function hasServiceNeedingAttention(input: { mcp: Array<McpServer["status"]["status"]> }) {

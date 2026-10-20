@@ -1,4 +1,4 @@
-import type { PermissionActionConfig, PermissionRuleConfig } from "../../../compat/sdk-v2-client"
+import type { PermissionActionConfig, PermissionRuleConfig } from "@/v2-wire"
 import { matchWildcard } from "@/utils/wildcard"
 
 // Sections of the routed Settings view, in navigation order: the Settings dialog's tabs first (General, Shortcuts,
