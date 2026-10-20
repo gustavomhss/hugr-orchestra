@@ -272,7 +272,7 @@ test("valid publication reuses before an abandoned lock; corrupt or partial publ
   await expect(PackagedSkills.materialize({ cache, version: "1", trees, lockTimeoutMs: 0 }))
     .rejects.toThrow("Incomplete packaged skill tree")
   expect((await fs.lstat(`${target}.lock`)).ino).toBe(lock.ino)
-  expect(await fs.readdir(path.dirname(target))).toEqual([
+  expect((await fs.readdir(path.dirname(target))).sort()).toEqual([
     path.basename(target), `${path.basename(target)}.lock`, `${path.basename(target)}.stage-other`,
   ])
 }))
