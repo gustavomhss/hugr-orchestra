@@ -1,5 +1,5 @@
 import { createOrchestraClient } from "../compat/sdk-v2"
-import type { GlobalEvent } from "../compat/sdk-v2"
+import type { GlobalEvent } from "../compat/schema"
 import { Flag } from "@orchestra/core/flag/flag"
 import { createSimpleContext } from "./helper"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"

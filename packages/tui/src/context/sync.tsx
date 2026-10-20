@@ -18,7 +18,7 @@ import type {
   ProviderAuthMethod,
   VcsInfo,
   SnapshotFileDiff,
-} from "../compat/sdk-v2"
+} from "../compat/schema"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { useProject } from "./project"
 import { useEvent } from "./event"

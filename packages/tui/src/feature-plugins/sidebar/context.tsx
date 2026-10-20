@@ -1,4 +1,4 @@
-import type { AssistantMessage } from "../../compat/sdk-v2"
+import type { AssistantMessage } from "../../compat/schema"
 import type { TuiPlugin, TuiPluginApi } from "@orchestra/plugin/tui"
 import type { BuiltinTuiPlugin } from "../builtins"
 import { createMemo } from "solid-js"
