@@ -61,6 +61,10 @@ function fixture(source: "native" | "legacy" | "markdown", engine?: "orchestra" 
   })))
 }
 
+// The parent Session is also named by the `title` agent beside its first turn; only the turns are counted here.
+const turns = (requests: LLMRequest[]) =>
+  requests.filter((request) => !request.system.some((part) => part.text.startsWith("You are a title generator")))
+
 function application(directory: string, requests: LLMRequest[], missing?: "session" | "execution") {
   const client = LLMClient.Service.of({
     prepare: () => Effect.die("Unexpected prepare"),
@@ -121,7 +125,7 @@ it.live("cold create → durable admit → resume acquires native Task with the 
     const children = (yield* sessions.list()).filter((session) => session.parentID === parent.id)
     expect(children).toHaveLength(1)
     expect(children[0]).toMatchObject({ agent: "worker", model, location: parent.location })
-    expect(requests).toHaveLength(3)
+    expect(turns(requests)).toHaveLength(3)
     expect((yield* execution.active).size).toBe(0)
     expect(yield* sessions.messages({ sessionID: children[0].id, order: "asc" })).toEqual(expect.arrayContaining([
       expect.objectContaining({ type: "assistant", content: expect.arrayContaining([expect.objectContaining({ type: "text", text: "answer:child" })]) }),
@@ -153,7 +157,7 @@ for (const source of ["native", "legacy", "markdown"] as const) {
         const children = (yield* sessions.list()).filter((session) => session.parentID === parent.id)
         if (engine === "orchestra") {
           expect(children).toHaveLength(1)
-          expect(requests).toHaveLength(3)
+          expect(turns(requests)).toHaveLength(3)
           return
         }
         const messages = yield* sessions.messages({ sessionID: parent.id, order: "asc" })
@@ -161,7 +165,7 @@ for (const source of ["native", "legacy", "markdown"] as const) {
           .find((part): part is SessionMessage.AssistantTool => part.type === "tool" && part.name === "task")
         expect(call?.state).toMatchObject({ status: "error", error: { message: "Task target requires an unsupported engine: worker" } })
         expect(children).toHaveLength(0)
-        expect(requests).toHaveLength(2)
+        expect(turns(requests)).toHaveLength(2)
       }).pipe(Effect.provide(application(tmp.path, requests)))
     }), 30_000)
   }

@@ -107,8 +107,8 @@ const setup = Effect.fn("CodeIndexWiringTest.setup")(function* () {
 })
 
 const failure = (exit: Exit.Exit<unknown, unknown>) => Exit.isFailure(exit) ? Cause.pretty(exit.cause) : ""
-// The registry appends the retained-evidence line to the tool's own JSON.
-const located = (output: string) => JSON.parse(output.split("\n\nRetained source evidence:")[0]) as CodeIndex.LocateResult
+// The result is the first line; the located lines and the registry's retained-evidence line follow it.
+const located = (output: string) => JSON.parse(output.split("\n")[0]) as CodeIndex.LocateResult
 
 describe("the wired code index", () => {
   it.instance("code_query answers real callers and code_locate a ranked range from the real build", () =>

@@ -17,8 +17,17 @@ export function ConnectionError(props: {
   const serverToken = "\u0000server\u0000"
   const unreachable = createMemo(() => language.t("app.server.unreachable", { server: serverToken }).split(serverToken))
 
-  const timer = setInterval(() => props.onRetry?.(), 1000)
-  onCleanup(() => clearInterval(timer))
+  // Retries back off from one second to fifteen, so an unreachable server is not asked every second forever.
+  const retry = { delay: 1_000, timer: undefined as ReturnType<typeof setTimeout> | undefined }
+  const schedule = () => {
+    retry.timer = setTimeout(() => {
+      props.onRetry?.()
+      retry.delay = Math.min(retry.delay * 2, 15_000)
+      schedule()
+    }, retry.delay)
+  }
+  schedule()
+  onCleanup(() => clearTimeout(retry.timer))
 
   return (
     <div

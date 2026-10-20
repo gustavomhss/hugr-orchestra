@@ -461,6 +461,8 @@ function ConnectionGate(props: ParentProps<{ disableHealthCheck?: boolean; start
             const res = yield* Effect.promise(() => checkServerHealth(http))
             if (res.healthy) return true
             if (checkMode() === "background" || type === "http") return false
+            // A sidecar that is still starting refuses at once; without a pause this loop asks it continuously.
+            yield* Effect.sleep("500 millis")
           }
         }).pipe(
           Effect.timeoutOrElse({ duration: "10 seconds", orElse: () => Effect.succeed(false) }),

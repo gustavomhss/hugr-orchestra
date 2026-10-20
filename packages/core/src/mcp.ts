@@ -1,8 +1,9 @@
 export * as Mcp from "./mcp"
 
 // The Location's MCP servers: connects the configured servers, adds their tools to the Location's tool registry behind
-// V2 permissions, lists their resources, and edits the profile's own config files. Remote servers connect with the
-// OAuth tokens V1 stored (`mcp-auth.json`); one without valid tokens reports `needs_auth` until a sign-in completes.
+// V2 permissions, lists and reads their resources and prompts, and edits the profile's own config files. Remote servers
+// connect with the OAuth tokens V1 stored (`mcp-auth.json`); one without valid tokens reports `needs_auth` until a
+// sign-in completes.
 
 import path from "node:path"
 import { UnauthorizedError } from "@modelcontextprotocol/sdk/client/auth.js"
@@ -15,6 +16,7 @@ import {
   ToolListChangedNotificationSchema,
   type CallToolResult,
   type ListToolsResult,
+  type ReadResourceResult,
 } from "@modelcontextprotocol/sdk/types.js"
 import { ToolFailure, type ToolContent } from "@orchestra/llm"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
@@ -50,6 +52,13 @@ export class AuthError extends Schema.TaggedErrorClass<AuthError>()("Mcp.AuthErr
   message: Schema.String,
 }) {}
 
+export class RequestError extends Schema.TaggedErrorClass<RequestError>()("Mcp.RequestError", {
+  message: Schema.String,
+}) {}
+
+/** One prompt a connected server offers, with the server that offers it. */
+export type Prompt = Awaited<ReturnType<typeof McpCatalog.prompts>>[number] & { server: string }
+
 export interface Interface {
   /**
    * Starts the configured servers on first use and waits until each one connected or failed. Servers start lazily, as
@@ -65,6 +74,16 @@ export interface Interface {
   readonly remove: (name: string) => Effect.Effect<void, NotFoundError | ConfigError>
   /** The resources and resource templates of the connected servers. */
   readonly resources: () => Effect.Effect<Mcp.ResourceCatalog>
+  /** Reads a resource by URI from the connected server that lists it; undefined when no connected server lists it. */
+  readonly readResource: (uri: string) => Effect.Effect<ReadResourceResult["contents"] | undefined, RequestError>
+  /** The prompts of the connected servers. */
+  readonly prompts: () => Effect.Effect<Prompt[]>
+  /** Renders a server's prompt with its arguments and returns the text of its messages. */
+  readonly getPrompt: (
+    server: string,
+    name: string,
+    args: Record<string, string>,
+  ) => Effect.Effect<string, NotFoundError | RequestError>
   /**
    * Starts an OAuth sign-in for a remote server and returns the URL the owner opens. The local callback server
    * completes the sign-in in the background and reconnects the server; an already authorized server reconnects at once
@@ -329,10 +348,13 @@ const layer = Layer.effect(
       }
     })
 
+    const connected = () =>
+      Array.from(entries).flatMap(([server, current]) => (current.client ? [{ server, client: current.client }] : []))
+
     const resources = Effect.fn("Mcp.resources")(function* () {
       yield* ready()
       const listed = yield* Effect.forEach(
-        Array.from(entries).flatMap(([server, current]) => (current.client ? [{ server, client: current.client }] : [])),
+        connected(),
         (item) =>
           Effect.all([
             Effect.tryPromise(() => McpCatalog.resources(item.client, DEFAULT_TIMEOUT)).pipe(Effect.orElseSucceed(() => [])),
@@ -361,6 +383,42 @@ const layer = Layer.effect(
         resources: listed.flatMap((item) => item.resources),
         templates: listed.flatMap((item) => item.templates),
       }
+    })
+
+    const readResource = Effect.fn("Mcp.readResource")(function* (uri: string) {
+      const owner = (yield* resources()).resources.find((resource) => resource.uri === uri)
+      const client = owner && entries.get(owner.server)?.client
+      if (!client) return undefined
+      const result = yield* Effect.tryPromise({
+        try: () => client.readResource({ uri }, { timeout: DEFAULT_TIMEOUT }),
+        catch: (error) => new RequestError({ message: messageOf(error) }),
+      })
+      return result.contents
+    })
+
+    const prompts = Effect.fn("Mcp.prompts")(function* () {
+      yield* ready()
+      const listed = yield* Effect.forEach(
+        connected(),
+        (item) =>
+          Effect.tryPromise(() => McpCatalog.prompts(item.client, DEFAULT_TIMEOUT)).pipe(
+            Effect.map((found) => found.map((prompt) => ({ ...prompt, server: item.server }))),
+            Effect.orElseSucceed(() => []),
+          ),
+        { concurrency: "unbounded" },
+      )
+      return listed.flat()
+    })
+
+    const getPrompt = Effect.fn("Mcp.getPrompt")(function* (server: string, name: string, args: Record<string, string>) {
+      yield* ready()
+      const client = entries.get(server)?.client
+      if (!client) return yield* new NotFoundError({ name: server })
+      const result = yield* Effect.tryPromise({
+        try: () => client.getPrompt({ name, arguments: args }, { timeout: DEFAULT_TIMEOUT }),
+        catch: (error) => new RequestError({ message: messageOf(error) }),
+      })
+      return result.messages.map((message) => (message.content.type === "text" ? message.content.text : "")).join("\n")
     })
 
     const abandon = (name: string) =>
@@ -486,7 +544,21 @@ const layer = Layer.effect(
         )
       })
 
-    return Service.of({ ready, list, connect, disconnect, add, remove, resources, startAuth, finishAuth, removeAuth })
+    return Service.of({
+      ready,
+      list,
+      connect,
+      disconnect,
+      add,
+      remove,
+      resources,
+      readResource,
+      prompts,
+      getPrompt,
+      startAuth,
+      finishAuth,
+      removeAuth,
+    })
   }),
 )
 

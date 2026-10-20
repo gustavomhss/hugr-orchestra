@@ -179,6 +179,8 @@ export const useSessionCommands = (actions: SessionCommandContext) => {
       const data = await fetchSessionExport({
         sessionID,
         client: sdk().client,
+        api: sdk().api,
+        protocol: sdk().protocol,
       })
       const filename = sessionExportFilename(data.info)
       downloadSessionExport(filename, data)

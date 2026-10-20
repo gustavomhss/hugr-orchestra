@@ -22,6 +22,7 @@ import { Model } from "@orchestra/schema/model"
 import { Location } from "@orchestra/schema/location"
 import { Revert } from "@orchestra/schema/revert"
 import { SessionEvent } from "@orchestra/schema/session-event"
+import { SessionTodo } from "@orchestra/schema/session-todo"
 
 const SessionsQueryFields = {
   workspace: Workspace.ID.pipe(Schema.optional),
@@ -308,17 +309,163 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
         ),
     )
     .add(
+      HttpApiEndpoint.post("session.command", "/api/session/:sessionID/command", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          command: Schema.String,
+          arguments: Schema.String.pipe(Schema.optional),
+          files: PromptInput.Prompt.fields.files,
+          agents: PromptInput.Prompt.fields.agents,
+          delivery: SessionInput.Delivery.pipe(Schema.optional),
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: SessionInput.Admitted }),
+        error: [ConflictError, SessionNotFoundError, InvalidRequestError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.command",
+            summary: "Run command",
+            description:
+              "Render a configured command or an MCP prompt (`server:prompt`) with its arguments and admit the result as one session input.",
+          }),
+        ),
+    )
+    .add(
       HttpApiEndpoint.post("session.compact", "/api/session/:sessionID/compact", {
         params: { sessionID: Session.ID },
-        success: HttpApiSchema.NoContent,
-        error: [SessionNotFoundError, ServiceUnavailableError],
+        success: Schema.Struct({ data: Schema.Struct({ compacted: Schema.Boolean }) }).annotate({
+          identifier: "SessionCompactResult",
+        }),
+        error: [SessionNotFoundError, ConflictError, UnknownError],
       })
         .middleware(sessionLocationMiddleware)
         .annotateMerge(
           OpenApi.annotations({
             identifier: "v2.session.compact",
             summary: "Compact session",
-            description: "Compact a session conversation.",
+            description:
+              "Summarize the conversation now into a compaction checkpoint. `compacted` is false when there was nothing to summarize. A running Session is refused as busy.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.fork", "/api/session/:sessionID/fork", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ messageID: SessionMessage.ID.pipe(Schema.optional) }),
+        success: Schema.Struct({ data: Session.Info }),
+        error: [SessionNotFoundError, MessageNotFoundError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.fork",
+            summary: "Fork session",
+            description:
+              "Create a Session at the same location with a copy of the history before `messageID` (all of it when omitted), stopping at a staged revert.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.move", "/api/session/:sessionID/move", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ location: Location.Ref }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, ConflictError, InvalidRequestError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.move",
+            summary: "Move session",
+            description: "Move the Session to another directory or workspace of its project.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.shell", "/api/session/:sessionID/shell", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ id: Schema.String.pipe(Schema.optional), command: Schema.NonEmptyString }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.shell",
+            summary: "Run shell command",
+            description:
+              "Run a shell command in the Session's location and record it with its output for the next turn. No turn starts.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.skill", "/api/session/:sessionID/skill", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ skill: Schema.String, resume: Schema.Boolean.pipe(Schema.optional) }),
+        success: HttpApiSchema.NoContent,
+        error: [SessionNotFoundError, ConflictError, InvalidRequestError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.skill",
+            summary: "Load skill",
+            description: "Record a skill's instructions as context, then run a turn unless resume is false.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.synthetic", "/api/session/:sessionID/synthetic", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({
+          id: SessionMessage.ID.pipe(Schema.optional),
+          text: Schema.String,
+          resume: Schema.Boolean.pipe(Schema.optional),
+        }),
+        success: Schema.Struct({ data: Schema.Struct({ id: SessionMessage.ID }) }),
+        error: [SessionNotFoundError, ConflictError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.synthetic",
+            summary: "Add synthetic context",
+            description: "Record text as synthetic context, then run a turn unless resume is false.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.post("session.generate", "/api/session/:sessionID/generate", {
+        params: { sessionID: Session.ID },
+        payload: Schema.Struct({ prompt: Schema.String }),
+        success: Schema.Struct({ data: Schema.Struct({ text: Schema.String }) }),
+        error: [SessionNotFoundError, UnknownError],
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.generate",
+            summary: "Generate text",
+            description:
+              "Run one tool-less completion of the prompt after the Session's history with its model. Nothing is recorded.",
+          }),
+        ),
+    )
+    .add(
+      HttpApiEndpoint.get("session.todo", "/api/session/:sessionID/todo", {
+        params: { sessionID: Session.ID },
+        success: Schema.Struct({ data: Schema.Array(SessionTodo.Info) }),
+        error: SessionNotFoundError,
+      })
+        .middleware(sessionLocationMiddleware)
+        .annotateMerge(
+          OpenApi.annotations({
+            identifier: "v2.session.todo",
+            summary: "Get session todos",
+            description: "The Session's current todo list, as its agent last wrote it.",
           }),
         ),
     )
@@ -326,7 +473,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
       HttpApiEndpoint.post("session.wait", "/api/session/:sessionID/wait", {
         params: { sessionID: Session.ID },
         success: HttpApiSchema.NoContent,
-        error: [SessionNotFoundError, ServiceUnavailableError],
+        error: SessionNotFoundError,
       })
         .middleware(sessionLocationMiddleware)
         .annotateMerge(

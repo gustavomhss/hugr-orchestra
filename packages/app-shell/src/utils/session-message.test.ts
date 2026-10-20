@@ -291,7 +291,7 @@ describe("normalizeSessionMessages", () => {
 
     const result = normalizeSessionMessages("ses_1", source)
 
-    expect(result.messages).toHaveLength(2)
+    expect(result.messages).toHaveLength(4)
     expect(result.messages[0]).toMatchObject({
       id: "msg_3",
       role: "user",
@@ -304,8 +304,12 @@ describe("normalizeSessionMessages", () => {
       "msg_3:file:0",
       "msg_3:file:1",
       "msg_3:agent:0",
-      "msg_5:compaction",
     ])
+    // A compaction is its own turn, as V1 recorded it: a divider and the summary as the reply.
+    expect(result.messages[2]).toMatchObject({ id: "msg_5", role: "user" })
+    expect(result.messages[3]).toMatchObject({ id: "msg_5:assistant", role: "assistant", parentID: "msg_5", summary: true })
+    expect(result.parts.get("msg_5")).toMatchObject([{ id: "msg_5:compaction", type: "compaction", auto: true }])
+    expect(result.parts.get("msg_5:assistant")).toMatchObject([{ type: "text", text: "summary" }])
     expect(result.parts.get("msg_3")?.[2]).toMatchObject({
       type: "file",
       source: {

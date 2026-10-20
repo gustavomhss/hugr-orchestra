@@ -140,6 +140,37 @@ describe("InquiryCheck.run", () => {
     expect(rule(incomplete, "R5").failed).toBe(1)
   })
 
+  // Mutation control: drop the `|| terms(entry).some(...)` branch of `searched` in src/research/inquiry-check.ts; the claim
+  // that names a searched alternative without restating it in conditions then fails R5.
+  test("R5 finds a complete search whose term the proposition names, without restated conditions", async () => {
+    const only = claim([lines(file.ref, 1, 2)], { proposition: "Only Sanic imports StaticHandleMixin" })
+    const search = { tool: "code_search" as const, complete: true, scope: ["StaticHandleMixin|def _apply_static", "sanic/**/*.py"] }
+    expect((await run(base({ claims: [only], searches: [search] }))).result.verdict).toBe("pass")
+    // A term inside a longer identifier, or an incomplete search, still proves nothing.
+    const longer = claim([lines(file.ref, 1, 2)], { proposition: "Only Sanic imports XStaticHandleMixinY" })
+    expect(rule(await run(base({ claims: [longer], searches: [search] })), "R5").failed).toBe(1)
+    expect(rule(await run(base({ claims: [only], searches: [{ ...search, complete: false }] })), "R5").failed).toBe(1)
+  })
+
+  // Mutation control: drop `universal wording "${word}"` from the R5 reason in src/research/inquiry-check.ts.
+  test("R5 names the wording that flagged a claim, and a declared existential scope does not exempt it", async () => {
+    const proposition = "snapshot lists only the last 12 sources"
+    const flagged = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition })] }))
+    expect(reasons(flagged, "R5")[0]).toContain('universal wording "only"')
+    const declared = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { proposition, scope: "existential" })] }))
+    expect(rule(declared, "R5")).toMatchObject({ checked: 1, failed: 1 })
+  })
+
+  // Mutation control: drop the git-history clause of `primary` in src/research/inquiry-check.ts; the blame claim fails R1.
+  test("R1 takes a host git history capture as primary, but not a native tool's displayed output", async () => {
+    const blame = receipt("blame", { kind: "tool-output", uri: "native:s/m/c/git-blame" }, { mediaType: "application/json" })
+    const quote = (source: Research.SourceRef) => cast<Research.Evidence>({ source, quote: "x" })
+    const history = await run(base({ sources: [file, page, output, blame], claims: [claim([quote(blame.ref)])] }))
+    expect(reasons(history, "R1")).toEqual([])
+    const grep = await run(base({ claims: [claim([quote(output.ref)])] }))
+    expect(reasons(grep, "R1")[0]).toContain("no primary source")
+  })
+
   test("R7 and R8 fail when answered and degrade to coverage failures when partial", async () => {
     const open = [{ ref: rec("h1"), proposition: "p", status: "open" as const, evidence: [] }]
     const answered = await run(base({ claims: [claim([lines(file.ref, 1, 2)], { subquestion: rec("other") })], hypotheses: open }))

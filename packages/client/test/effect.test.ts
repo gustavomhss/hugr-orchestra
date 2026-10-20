@@ -103,6 +103,9 @@ test("session methods retain decoded Effect inputs and outputs", async () => {
     if (request.method === "POST" && url.endsWith("/api/session")) {
       return Effect.succeed(HttpClientResponse.fromWeb(request, Response.json(session)))
     }
+    if (url.endsWith("/compact")) {
+      return Effect.succeed(HttpClientResponse.fromWeb(request, Response.json({ data: { compacted: true } })))
+    }
     if (request.method === "POST") {
       return Effect.succeed(HttpClientResponse.fromWeb(request, new Response(null, { status: 204 })))
     }

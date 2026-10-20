@@ -104,7 +104,7 @@ const setup = Effect.fn("InquiryCardTest.setup")(function* () {
 })
 
 const Opened = Schema.Struct({ question: Research.RecordRef, subquestions: Schema.Array(Research.RecordRef) })
-const located = (output: string) => JSON.parse(output.split("\n\nRetained source evidence:")[0]) as CodeIndex.LocateResult
+const located = (output: string) => JSON.parse(output.split("\n")[0]) as CodeIndex.LocateResult
 
 const repo = (directory: string) => Effect.promise(async () => {
   await Bun.write(path.join(directory, "src/x.ts"), "export function viaExports(value: number) {\n  return value + 1\n}\n")
@@ -131,7 +131,7 @@ describe("inquiry check and card v2", () => {
         subquestion: open.subquestions[0], proposition: "a is defined in a.ts", nature: "extraction", evidence: [] })).metadata.inquiry).claim
       expect((yield* fixture.inquiry({ action: "check" })).output).toContain("claim has no evidence")
       expect(yield* fixture.refused(fixture.inquiry({ action: "close", sufficiency: "answered", answer: "a.ts:1 defines a." })))
-        .toContain("the last check failed")
+        .toContain("the closing check failed: R2")
       yield* fixture.inquiry({ action: "drop", ref: bare, reason: "restated with evidence" })
       yield* fixture.inquiry({ action: "claim", subquestion: open.subquestions[0], proposition: "a is defined in a.ts", nature: "extraction",
         evidence: [{ source, lines: { start: 1, end: 1 } }] })
@@ -161,7 +161,11 @@ describe("inquiry check and card v2", () => {
     Effect.gen(function* () {
       const fixture = yield* setup()
       const open = yield* fixture.open(["Which function doubles the relayed value"])
-      const result = located((yield* fixture.call("code_locate", { terms: ["relayed"], paths: ["src/**"] })).output)
+      const output = (yield* fixture.call("code_locate", { terms: ["relayed"], paths: ["src/**"] })).output
+      const result = located(output)
+      // The located lines come back with the ranges, so a claim cites them without a second read.
+      // Mutation control: drop the `shown(state.snapshot)` part of the output in src/tool/code-locate.ts.
+      expect(output).toContain("4:   return viaExports(value) * 2")
       const range = result.ranges.find((item) => item.path === "src/y.ts")
       if (!range) throw new Error(`code_locate returned no src/y.ts range: ${JSON.stringify(result.ranges)}`)
       expect(range.endLine).toBeGreaterThanOrEqual(4)

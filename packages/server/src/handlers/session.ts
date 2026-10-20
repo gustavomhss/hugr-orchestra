@@ -1,4 +1,5 @@
-import { SessionV2 } from "@orchestra/core/session"
+import { SessionTodo, SessionV2 } from "@orchestra/core/session"
+import { SlashCommand } from "@orchestra/core/slash-command"
 import { SessionSubagentModels } from "@orchestra/core/session/subagent-models"
 import { DateTime, Effect, Stream } from "effect"
 import { HttpApiBuilder, HttpApiSchema } from "effect/unstable/httpapi"
@@ -7,12 +8,15 @@ import { SessionsCursor } from "@orchestra/protocol/groups/session"
 import {
   ConflictError,
   InvalidCursorError,
+  InvalidRequestError,
   MessageNotFoundError,
   ServiceUnavailableError,
   SessionNotFoundError,
   UnknownError,
 } from "@orchestra/protocol/errors"
 import { AbsolutePath } from "@orchestra/core/schema"
+import { AppProcess } from "@orchestra/core/process"
+import { FSUtil } from "@orchestra/core/fs-util"
 
 const DefaultSessionsLimit = 50
 const DefaultSessionHistoryLimit = 50
@@ -24,10 +28,50 @@ const typedNotFound = <A, R>(effect: Effect.Effect<A, SessionV2.NotFoundError, R
       new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` }),
   )
 
+// The errors the V2 Session operations share, mapped onto the public ones.
+const operationErrors = {
+  "Session.NotFoundError": (error: SessionV2.NotFoundError) =>
+    Effect.fail(new SessionNotFoundError({ sessionID: error.sessionID, message: `Session not found: ${error.sessionID}` })),
+  "Session.BusyError": (error: SessionV2.BusyError) =>
+    Effect.fail(new ConflictError({ message: `Session is busy: ${error.sessionID}`, resource: error.sessionID })),
+  // A model or history failure while compacting or generating reaches the caller in its own words.
+  "Session.RunFailedError": (error: SessionV2.RunFailedError) => Effect.fail(new UnknownError({ message: error.message })),
+}
+const missingOrBusy = {
+  "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+  "Session.BusyError": operationErrors["Session.BusyError"],
+}
+
 export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handlers) =>
   Effect.gen(function* () {
     const session = yield* SessionV2.Service
     const subagentModels = yield* SessionSubagentModels.Service
+    const appProcess = yield* AppProcess.Service
+    const fs = yield* FSUtil.Service
+
+    const admit = (input: Parameters<SessionV2.Interface["prompt"]>[0]) =>
+      session.prompt(input).pipe(
+        Effect.catchTag("Session.NotFoundError", (error) =>
+          Effect.fail(
+            new SessionNotFoundError({
+              sessionID: error.sessionID,
+              message: `Session not found: ${error.sessionID}`,
+            }),
+          ),
+        ),
+        Effect.catchTag("Session.PromptConflictError", (error) =>
+          Effect.fail(
+            new ConflictError({
+              message: `Prompt message ID conflicts with an existing durable record: ${error.messageID}`,
+              resource: error.messageID,
+            }),
+          ),
+        ),
+        // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
+        Effect.catchTag("Session.PromptBlockedError", (error) =>
+          Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
+        ),
+      )
 
     const policyResult = <A>(effect: Effect.Effect<A, SessionSubagentModels.Error>) => effect.pipe(
       Effect.catchTag("SessionSubagentModels.NotFoundError", (error) =>
@@ -191,84 +235,164 @@ export const SessionHandler = HttpApiBuilder.group(Api, "server.session", (handl
         "session.prompt",
         Effect.fn(function* (ctx) {
           return {
-            data: yield* session
-              .prompt({
-                sessionID: ctx.params.sessionID,
-                id: ctx.payload.id,
-                prompt: ctx.payload.prompt,
-                delivery: ctx.payload.delivery,
-                resume: ctx.payload.resume,
-              })
-              .pipe(
-                Effect.catchTag("Session.NotFoundError", (error) =>
-                  Effect.fail(
-                    new SessionNotFoundError({
-                      sessionID: error.sessionID,
-                      message: `Session not found: ${error.sessionID}`,
-                    }),
-                  ),
-                ),
-                Effect.catchTag("Session.PromptConflictError", (error) =>
-                  Effect.fail(
-                    new ConflictError({
-                      message: `Prompt message ID conflicts with an existing durable record: ${error.messageID}`,
-                      resource: error.messageID,
-                    }),
-                  ),
-                ),
-                // A hook refused the prompt before admission; nothing was recorded, and the hook's words say why.
-                Effect.catchTag("Session.PromptBlockedError", (error) =>
-                  Effect.fail(new ConflictError({ message: error.detail, resource: error.sessionID })),
-                ),
-              ),
+            data: yield* admit({
+              sessionID: ctx.params.sessionID,
+              id: ctx.payload.id,
+              prompt: ctx.payload.prompt,
+              delivery: ctx.payload.delivery,
+              resume: ctx.payload.resume,
+            }),
+          }
+        }),
+      )
+      .handle(
+        "session.command",
+        Effect.fn(function* (ctx) {
+          const resolved = yield* SlashCommand.render(ctx.payload.command, ctx.payload.arguments ?? "").pipe(
+            Effect.flatMap(SlashCommand.resolve),
+            Effect.provideService(AppProcess.Service, appProcess),
+            Effect.provideService(FSUtil.Service, fs),
+            Effect.catchTags({
+              "SlashCommand.NotFoundError": (error) =>
+                Effect.fail(new InvalidRequestError({ message: `Command not found: ${error.name}`, field: "command" })),
+              "Mcp.NotFoundError": (error) =>
+                Effect.fail(new UnknownError({ message: `MCP server is not connected: ${error.name}` })),
+              "Mcp.RequestError": (error) => Effect.fail(new UnknownError({ message: error.message })),
+            }),
+          )
+          // A command's own agent and model are the Session's from this prompt on, as the app's own choice would be.
+          if (resolved.agent)
+            yield* session.switchAgent({ sessionID: ctx.params.sessionID, agent: resolved.agent }).pipe(typedNotFound)
+          if (resolved.model)
+            yield* session.switchModel({ sessionID: ctx.params.sessionID, model: resolved.model }).pipe(typedNotFound)
+          return {
+            data: yield* admit({
+              sessionID: ctx.params.sessionID,
+              id: ctx.payload.id,
+              prompt: {
+                text: resolved.prompt.text,
+                files: [...resolved.prompt.files, ...(ctx.payload.files ?? [])],
+                agents: [...resolved.prompt.agents, ...(ctx.payload.agents ?? [])],
+              },
+              delivery: ctx.payload.delivery,
+              resume: ctx.payload.resume,
+            }),
           }
         }),
       )
       .handle(
         "session.compact",
         Effect.fn(function* (ctx) {
-          yield* session.compact({ sessionID: ctx.params.sessionID }).pipe(
-            Effect.catchTag("Session.NotFoundError", (error) =>
-              Effect.fail(
-                new SessionNotFoundError({
-                  sessionID: error.sessionID,
-                  message: `Session not found: ${error.sessionID}`,
-                }),
-              ),
+          const compacted = yield* session
+            .compact({ sessionID: ctx.params.sessionID })
+            .pipe(Effect.catchTags(operationErrors))
+          return { data: { compacted } }
+        }),
+      )
+      .handle(
+        "session.fork",
+        Effect.fn(function* (ctx) {
+          return {
+            data: yield* session.fork({ sessionID: ctx.params.sessionID, messageID: ctx.payload.messageID }).pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.MessageNotFoundError": (error) =>
+                  Effect.fail(
+                    new MessageNotFoundError({
+                      sessionID: error.sessionID,
+                      messageID: error.messageID,
+                      message: `Message not found: ${error.messageID}`,
+                    }),
+                  ),
+              }),
             ),
-            Effect.catchTag("Session.OperationUnavailableError", (error) =>
-              Effect.fail(
-                new ServiceUnavailableError({
-                  message: `Session ${error.operation} is not available yet`,
-                  service: `session.${error.operation}`,
-                }),
-              ),
-            ),
+          }
+        }),
+      )
+      .handle(
+        "session.move",
+        Effect.fn(function* (ctx) {
+          yield* session.move({ sessionID: ctx.params.sessionID, location: ctx.payload.location }).pipe(
+            Effect.catchTags({
+              "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+              "Session.BusyError": operationErrors["Session.BusyError"],
+              "Session.MoveError": (error) =>
+                Effect.fail(
+                  new InvalidRequestError({
+                    message: `${error.directory} is not in the Session's project`,
+                    field: "location",
+                  }),
+                ),
+            }),
           )
           return HttpApiSchema.NoContent.make()
         }),
       )
       .handle(
+        "session.shell",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .shell({ sessionID: ctx.params.sessionID, id: ctx.payload.id, command: ctx.payload.command })
+            .pipe(Effect.catchTags(missingOrBusy))
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
+        "session.skill",
+        Effect.fn(function* (ctx) {
+          yield* session
+            .skill({ sessionID: ctx.params.sessionID, skill: ctx.payload.skill, resume: ctx.payload.resume })
+            .pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.BusyError": operationErrors["Session.BusyError"],
+                "Session.SkillNotFoundError": (error) =>
+                  Effect.fail(new InvalidRequestError({ message: `Skill not found: ${error.skill}`, field: "skill" })),
+              }),
+            )
+          return HttpApiSchema.NoContent.make()
+        }),
+      )
+      .handle(
+        "session.synthetic",
+        Effect.fn(function* (ctx) {
+          const id = yield* session
+            .synthetic({
+              sessionID: ctx.params.sessionID,
+              id: ctx.payload.id,
+              text: ctx.payload.text,
+              resume: ctx.payload.resume,
+            })
+            .pipe(Effect.catchTags(missingOrBusy))
+          return { data: { id } }
+        }),
+      )
+      .handle(
+        "session.generate",
+        Effect.fn(function* (ctx) {
+          const text = yield* session
+            .generate({ sessionID: ctx.params.sessionID, prompt: ctx.payload.prompt })
+            .pipe(
+              Effect.catchTags({
+                "Session.NotFoundError": operationErrors["Session.NotFoundError"],
+                "Session.RunFailedError": operationErrors["Session.RunFailedError"],
+              }),
+            )
+          return { data: { text } }
+        }),
+      )
+      .handle(
+        "session.todo",
+        Effect.fn(function* (ctx) {
+          yield* session.get(ctx.params.sessionID).pipe(typedNotFound)
+          const todos = yield* SessionTodo.Service
+          return { data: yield* todos.get(ctx.params.sessionID) }
+        }),
+      )
+      .handle(
         "session.wait",
         Effect.fn(function* (ctx) {
-          yield* session.wait(ctx.params.sessionID).pipe(
-            Effect.catchTag("Session.NotFoundError", (error) =>
-              Effect.fail(
-                new SessionNotFoundError({
-                  sessionID: error.sessionID,
-                  message: `Session not found: ${error.sessionID}`,
-                }),
-              ),
-            ),
-            Effect.catchTag("Session.OperationUnavailableError", (error) =>
-              Effect.fail(
-                new ServiceUnavailableError({
-                  message: `Session ${error.operation} is not available yet`,
-                  service: `session.${error.operation}`,
-                }),
-              ),
-            ),
-          )
+          yield* session.wait(ctx.params.sessionID).pipe(typedNotFound)
           return HttpApiSchema.NoContent.make()
         }),
       )

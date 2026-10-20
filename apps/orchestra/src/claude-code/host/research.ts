@@ -157,6 +157,8 @@ export const make = Effect.gen(function* () {
   // Per dispatch: the retained ref of each native Read span by its bytes' digest, and whether its inquiry closed.
   const spans = new Map<SessionID, Map<string, { readonly digest: string; readonly ref: Research.SourceRef }>>()
   const concluded = new Set<SessionID>()
+  // The query's own conversation, when a task-tool dispatch of the seat runs it (adopt); Agent children are in `join`.
+  const primary: { sessionID?: SessionID } = {}
   const query = { closed: false }
   const close = yield* Effect.cached(
     Scope.close(scope, Exit.void).pipe(Effect.andThen(Effect.sync(() => deadlines.clear()))),
@@ -168,13 +170,7 @@ export const make = Effect.gen(function* () {
     Effect.suspend<A, E | Research.Error | TerminalClosed, R>(() => {
       if (query.closed || terminal.has(sessionID)) return Effect.fail(closed(sessionID))
       const frame = frames.get(sessionID)
-      if (!frame)
-        return Effect.fail(
-          new Research.Error({
-            code: "binding_missing",
-            message: "Research dispatch was not admitted by PreToolUse[Agent]",
-          }),
-        )
+      if (!frame) return Effect.fail(new Research.Error({ code: "binding_missing", message: UNBOUND }))
       const hold = holds.get(sessionID)
       if (hold) return Effect.fail(hold)
       return effect.pipe(Effect.provideService(ResearchExecution.Current, frame))
@@ -297,6 +293,25 @@ export const make = Effect.gen(function* () {
           { tier },
         )
       }),
+    /**
+     * Bind, at each turn of the query's own conversation, the dispatch Orchestra's task tool admitted for it: that tool
+     * enters the allowance in the turn's fiber, while these hooks run in the query's runtime. A turn outside a dispatch
+     * unbinds it, so it never charges an earlier one. Its deadline and stop stay with the task tool's admission.
+     */
+    adopt: (sessionID: SessionID) =>
+      Effect.gen(function* () {
+        const current = yield* ResearchExecution.Current
+        const frame = current?.allowance.binding.executionSessionID === sessionID ? current : undefined
+        primary.sessionID = sessionID
+        if (frames.get(sessionID)?.allowance.dispatchCallID === frame?.allowance.dispatchCallID) return
+        // A resumed task dispatch gets a fresh allowance, so its turn count, holds, spans and closed inquiry start over.
+        turns.delete(sessionID)
+        holds.delete(sessionID)
+        spans.delete(sessionID)
+        concluded.delete(sessionID)
+        if (frame) frames.set(sessionID, frame)
+        else frames.delete(sessionID)
+      }),
     /** Parent terminal metadata may consume this reason without interrupting the parent Query. */
     stopReason: (sessionID: SessionID) =>
       Effect.sync(() => {
@@ -376,8 +391,8 @@ export const make = Effect.gen(function* () {
     /** Complete assistant blocks share the Messages API id (SDK 0.3.289); progress summaries are not model turns. */
     observe: (join: ClaudeHostJoin.Join, message: SDKMessage) =>
       Effect.gen(function* () {
-        if (message.type !== "assistant" || !message.parent_tool_use_id) return
-        const sessionID = join.child(message.parent_tool_use_id)
+        if (message.type !== "assistant") return
+        const sessionID = message.parent_tool_use_id ? join.child(message.parent_tool_use_id) : primary.sessionID
         const frame = sessionID ? frames.get(sessionID) : undefined
         if (!sessionID || !frame) return
         const seen = turns.get(sessionID) ?? new Set<string>()
@@ -407,6 +422,12 @@ export const make = Effect.gen(function* () {
 })
 
 export type Runtime = Effect.Success<typeof make>
+
+// The research seat binds its allowance only at a dispatch; say which ones, since the code alone names no fix.
+const UNBOUND = `${ResearchSeatTools.SEAT} has no research dispatch in this Session. Its allowance binds only when it is ` +
+  `dispatched: from a Claude Code parent with Agent and subagent_type ` +
+  `${Research.Depth.literals.map((tier) => `"orchestra:${ResearchSeatTools.SEAT}-${tier}"`).join(", ")}, or by Orchestra's ` +
+  `task tool. A Session started or resumed outside such a dispatch cannot use research tools`
 
 // The byte offset of a 1-based line in the file as it is now; Read reports lines only.
 function offset(file: string, line: number) {

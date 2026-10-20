@@ -1,6 +1,6 @@
 export * as SessionInput from "./input"
 
-import { and, asc, eq, isNull, lte } from "drizzle-orm"
+import { and, asc, eq, gt, isNull, lte } from "drizzle-orm"
 import { DateTime, Effect, Option, Schema } from "effect"
 import { Event } from "@orchestra/schema/event"
 import { Admitted, Delivery } from "@orchestra/schema/session-input"
@@ -249,6 +249,22 @@ export const projectPrompted = Effect.fn("SessionInput.projectPrompted")(functio
     })
     .run()
     .pipe(Effect.orDie)
+})
+
+/** The inputs of the Session promoted after the given sequence, in promotion order. */
+export const promotedAfter = Effect.fn("SessionInput.promotedAfter")(function* (
+  db: Pick<DatabaseService, "select">,
+  sessionID: SessionSchema.ID,
+  seq: number,
+) {
+  const rows = yield* db
+    .select()
+    .from(SessionInputTable)
+    .where(and(eq(SessionInputTable.session_id, sessionID), gt(SessionInputTable.promoted_seq, seq)))
+    .orderBy(asc(SessionInputTable.promoted_seq))
+    .all()
+    .pipe(Effect.orDie)
+  return rows.map(fromRow)
 })
 
 export const hasPending = Effect.fn("SessionInput.hasPending")(function* (

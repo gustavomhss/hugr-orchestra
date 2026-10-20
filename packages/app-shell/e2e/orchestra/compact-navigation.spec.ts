@@ -138,9 +138,9 @@ test("V2 profile card counts agents and shows the branch only when the server re
   await setupCompactNavigation(page, { protocol: "v2", selected: true })
   const vcs: string[] = []
   // `unroute` matches a predicate by reference, so the same function must remove the route below.
-  const legacyVcs = (url: URL) => url.pathname === "/vcs"
-  // A V2 server without the legacy endpoint: the card drops the branch instead of showing a stale one.
-  await page.route(legacyVcs, (route) => {
+  const branchRoute = (url: URL) => url.pathname === "/api/vcs"
+  // A V2 server without the branch route: the card drops the branch instead of showing a stale one.
+  await page.route(branchRoute, (route) => {
     vcs.push(route.request().url())
     return route.fulfill({ status: 404, contentType: "application/json", body: "{}" })
   })
@@ -148,12 +148,13 @@ test("V2 profile card counts agents and shows the branch only when the server re
   await page.goto("/orchestra/skills")
   const meta = page.locator('[data-slot="orchestra-profile"] small')
   await expect(meta).toHaveText("1 agent")
-  await expect.poll(() => vcs.length).toBe(1)
-  // A retry would follow the 404 after about a second.
+  // The card and the directory's bootstrap both read the branch (the bootstrap again on each event reconnect), so
+  // the check is what the card shows: nothing while the route answers 404.
+  await expect.poll(() => vcs.length).toBeGreaterThan(0)
   await page.waitForTimeout(1_500)
-  expect(vcs.length, "the branch is asked once, without retries").toBe(1)
-  // The same V2 server answering the legacy endpoint shows the branch it reports.
-  await page.unroute(legacyVcs)
+  await expect(meta).toHaveText("1 agent")
+  // The same V2 server answering the branch route shows the branch it reports.
+  await page.unroute(branchRoute)
   await page.reload()
   await expect(meta).toHaveText("1 agent · main")
 })

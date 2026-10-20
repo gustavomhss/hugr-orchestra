@@ -2240,20 +2240,8 @@
     },
     {
       "rule": "R7",
-      "file": "apps/orchestra/src/session/activity.ts",
-      "specifier": "@orchestra/core/session/sql",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
       "file": "apps/orchestra/src/session/compaction.ts",
       "specifier": "@orchestra/core/session/compaction",
-      "reason": "D8: deep import into a cohesive module; retargets are optional later work"
-    },
-    {
-      "rule": "R7",
-      "file": "apps/orchestra/src/session/lean-project.ts",
-      "specifier": "@orchestra/core/session/sql",
       "reason": "D8: deep import into a cohesive module; retargets are optional later work"
     },
     {

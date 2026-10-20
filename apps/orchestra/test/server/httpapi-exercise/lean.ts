@@ -50,4 +50,38 @@ export const leanScenarios: Scenario[] = [
       },
       "status",
     ),
+  // V2: the same dashboard in the requested Location, wrapped with that Location.
+  http.protected
+    .get("/api/lean", "v2.lean.get")
+    .json(200, (body, ctx) => { object(body); object(body.location); dashboard(body.data, ctx.directory) }, "status"),
+  http.protected
+    .patch("/api/lean", "v2.lean.update")
+    .mutating()
+    .at((ctx) => ({ path: "/api/lean", headers: ctx.headers(), body: { itemID: "cargo", enabled: false } }))
+    .json(
+      200,
+      (body, ctx) => {
+        object(body)
+        const value = dashboard(body.data, ctx.directory)
+        const items = value.items
+        array(items)
+        const cargo = items.find((item) => isRecord(item) && item.id === "cargo")
+        object(cargo)
+        check(cargo.enabled === false, "V2 Lean item update should persist the disabled item")
+      },
+      "status",
+    ),
+  http.protected
+    .get("/api/lean/history/{itemID}", "v2.lean.history")
+    .at((ctx) => ({ path: route("/api/lean/history/{itemID}", { itemID: "cargo" }), headers: ctx.headers() }))
+    .json(
+      200,
+      (body, ctx) => {
+        object(body)
+        const value = scoped(body.data, ctx.directory)
+        check(value.itemID === "cargo", "V2 Lean history should answer for the requested item")
+        array(value.executions)
+      },
+      "status",
+    ),
 ]

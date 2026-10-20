@@ -1,6 +1,6 @@
 export * as SessionExecution from "./execution"
 
-import { Context, Effect, Layer } from "effect"
+import { Context, Effect, Layer, type Option } from "effect"
 import { LayerNode } from "../effect/layer-node"
 import { Node } from "../effect/app-node"
 import { SessionRunner } from "./runner/index"
@@ -18,6 +18,20 @@ export interface Interface {
   readonly wake: (sessionID: SessionSchema.ID) => Effect.Effect<void>
   /** Interrupt active work owned by this process. Idle interruption is a no-op. */
   readonly interrupt: (sessionID: SessionSchema.ID) => Effect.Effect<void>
+  /**
+   * Runs one Session operation as its active execution, never beside a drain. `None` means the Session was busy; with
+   * `wait` it runs once the active execution settles instead.
+   */
+  readonly exclusive: <A, E>(
+    sessionID: SessionSchema.ID,
+    effect: Effect.Effect<A, E>,
+    options?: { readonly wait?: boolean },
+  ) => Effect.Effect<Option.Option<A>, E>
+  /** Runs `use` with the runner of the Location the Session is placed in. */
+  readonly withRunner: <A, E>(
+    sessionID: SessionSchema.ID,
+    use: (runner: SessionRunner.Interface) => Effect.Effect<A, E>,
+  ) => Effect.Effect<A, E>
 }
 
 /** Routes execution from a Session ID to the runner owned by that Session's Location. */
@@ -33,5 +47,7 @@ export const noopLayer = Layer.succeed(
     resume: () => Effect.void,
     wake: () => Effect.void,
     interrupt: () => Effect.void,
+    exclusive: (_, effect) => Effect.asSome(effect),
+    withRunner: () => Effect.die("No Session runner is placed by the recording-only execution layer"),
   }),
 )

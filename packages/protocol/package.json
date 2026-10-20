@@ -26,6 +26,7 @@
     "./groups/fs": "./src/groups/fs.ts",
     "./groups/health": "./src/groups/health.ts",
     "./groups/integration": "./src/groups/integration.ts",
+    "./groups/lean": "./src/groups/lean.ts",
     "./groups/location": "./src/groups/location.ts",
     "./groups/mcp": "./src/groups/mcp.ts",
     "./groups/message": "./src/groups/message.ts",
@@ -44,6 +45,7 @@
     "./groups/schedule": "./src/groups/schedule.ts",
     "./groups/session": "./src/groups/session.ts",
     "./groups/skill": "./src/groups/skill.ts",
+    "./groups/vcs": "./src/groups/vcs.ts",
     "./middleware/authorization": "./src/middleware/authorization.ts",
     "./middleware/schema-error": "./src/middleware/schema-error.ts"
   },

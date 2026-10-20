@@ -81,14 +81,17 @@ export const make = Effect.gen(function* () {
       return yield* new Research.Error({ code: "publication_uncertain", message: "Historical commit projection is malformed" })
     const complete = !result.truncated && (["compare", "diff", "show", "resolve"].includes(input.operation)
       || (shallow.text().trim() === "false" && projection.count <= limit))
-    const receipt = yield* capture({ origin, representation: "structured-json", mediaType: "application/json", content: JSON.stringify({
+    const content = JSON.stringify({
       operation: input.operation, ...(input.operation === "compare" ? { paths: relatives, files: changed, stat: input.stat === true }
         : relatives.length > 0 ? { path: relatives[0] } : {}),
       revision, ...(base ? { base } : {}), ...(input.operation === "search" && input.message !== undefined ? { message: input.message } : {}),
       complete, ...projection.fields,
       scope: "committed-history-only", shallow: shallow.text().trim() === "true", dirtyWorkingTreeObserved: false,
-    }), complete, derivedFrom: received.ref, transformation: "native-git-history-v1" })
-    return { title: `Research history: ${input.operation}`, output: JSON.stringify(receipt), metadata: { researchSource: receipt, researchReceived: received } }
+    })
+    const receipt = yield* capture({ origin, representation: "structured-json", mediaType: "application/json", content, complete,
+      derivedFrom: received.ref, transformation: "native-git-history-v1" })
+    // The output is the projection itself, so the seat sees the commits or lines it retained without a research_view.
+    return { title: `Research history: ${input.operation}`, output: content, metadata: { researchSource: receipt, researchReceived: received } }
   }).pipe(Effect.orDie)
 })
 
@@ -136,11 +139,13 @@ function status(git: Git.Interface, exec: Git.Options, ctx: Tool.Context,
       catch: () => new Research.Error({ code: "unsupported", message: "Working tree status is not lossless UTF-8 text" }) })
     const parsed = porcelain(text)
     if (!parsed) return yield* new Research.Error({ code: "publication_uncertain", message: "Working tree status projection is malformed" })
-    const receipt = yield* capture({ origin, representation: "structured-json", mediaType: "application/json", content: JSON.stringify({
+    const content = JSON.stringify({
       operation: "status", head: Option.getOrNull(head), ...parsed, complete: true,
       scope: "working-tree-status", dirtyWorkingTreeObserved: true,
-    }), complete: true, derivedFrom: received.ref, transformation: "native-git-status-v1" })
-    return { title: "Research history: status", output: JSON.stringify(receipt), metadata: { researchSource: receipt, researchReceived: received } }
+    })
+    const receipt = yield* capture({ origin, representation: "structured-json", mediaType: "application/json", content, complete: true,
+      derivedFrom: received.ref, transformation: "native-git-status-v1" })
+    return { title: "Research history: status", output: content, metadata: { researchSource: receipt, researchReceived: received } }
   })
 }
 

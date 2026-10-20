@@ -47,6 +47,34 @@ describe("toLLMMessages", () => {
     expect(messages.map((message) => message.id)).toEqual([id("text"), id("reasoning")])
   })
 
+  test("sends only inline media; names URI attachments and inlines text", () => {
+    const [message] = toLLMMessages(
+      [
+        SessionMessage.User.make({
+          id: id("user"),
+          type: "user",
+          text: "Look",
+          files: [
+            FileAttachment.make({ uri: "file:///repo/a.ts", mime: "text/x-typescript", name: "a.ts" }),
+            FileAttachment.make({ uri: "notes://today", mime: "text/plain" }),
+            FileAttachment.make({ uri: "data:text/plain;base64,aGVsbG8=", mime: "text/plain", name: "pasted.txt" }),
+            FileAttachment.make({ uri: "data:image/png;base64,aGVsbG8=", mime: "image/png", name: "hello.png" }),
+          ],
+          time: { created },
+        }),
+      ],
+      model,
+    )
+
+    expect(message?.content).toEqual([
+      { type: "text", text: "Look" },
+      { type: "text", text: "[Attached text/x-typescript: a.ts]" },
+      { type: "text", text: "[Attached text/plain: notes://today]" },
+      { type: "text", text: "pasted.txt:\nhello" },
+      { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
+    ])
+  })
+
   test("maps every top-level V2 Session message type", () => {
     const file = FileAttachment.make({ uri: "data:image/png;base64,aGVsbG8=", mime: "image/png", name: "hello.png" })
     const messages = toLLMMessages(
@@ -82,6 +110,7 @@ describe("toLLMMessages", () => {
           type: "synthetic",
           sessionID: SessionV2.ID.make("ses_translate"),
           text: "Synthetic context",
+          files: [file],
           time: { created },
         }),
         SessionMessage.Shell.make({
@@ -113,12 +142,19 @@ describe("toLLMMessages", () => {
         content: [
           { type: "text", text: "Inspect this image" },
           { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
+          {
+            type: "text",
+            text: "Use the above message and context to generate a prompt and call the task tool with subagent: explore",
+          },
         ],
         metadata: { agents: [{ name: "explore" }] },
       }),
     )
     expect(messages.slice(2).map((message) => message.content)).toEqual([
-      [{ type: "text", text: "Synthetic context" }],
+      [
+        { type: "text", text: "Synthetic context" },
+        { type: "media", mediaType: "image/png", data: "data:image/png;base64,aGVsbG8=", filename: "hello.png" },
+      ],
       [{ type: "text", text: "Shell command: pwd\n\n/project" }],
       [
         {

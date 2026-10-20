@@ -33,6 +33,13 @@ const layer = Layer.effect(
       interrupt: coordinator.interrupt,
       resume: (sessionID, options) => coordinator.run(sessionID, options),
       wake: coordinator.wake,
+      exclusive: coordinator.exclusive,
+      withRunner: (sessionID, use) =>
+        Effect.gen(function* () {
+          const session = yield* store.get(sessionID)
+          if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
+          return yield* SessionRunner.Service.use(use).pipe(Effect.provide(locations.get(session.location)))
+        }),
     })
   }),
 )

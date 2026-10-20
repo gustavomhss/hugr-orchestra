@@ -46,6 +46,19 @@ export const toModelOutput = (skill: SkillV2.Info, files: ReadonlyArray<string>)
   ].join("\n")
 }
 
+/** The skill's model-facing content with a sample of the files beside its `SKILL.md`. */
+export const load = Effect.fn("SkillTool.load")(function* (fs: FSUtil.Interface, skill: SkillV2.Info) {
+  const directory = path.dirname(skill.location)
+  const files =
+    path.basename(skill.location) === "SKILL.md"
+      ? (yield* fs.glob("**/*", { cwd: directory, absolute: true, include: "file", dot: true }))
+          .filter((file) => path.basename(file) !== "SKILL.md")
+          .toSorted()
+          .slice(0, FILE_LIMIT)
+      : []
+  return toModelOutput(skill, files)
+})
+
 const unableToLoad = (name: string, error?: unknown) =>
   new ToolFailure({ message: `Unable to load skill ${name}`, error })
 
@@ -76,18 +89,10 @@ const layer = Layer.effectDiscard(
                   agent: context.agent,
                   source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
                 })
-                const directory = path.dirname(skill.location)
-                const files =
-                  path.basename(skill.location) === "SKILL.md"
-                    ? (yield* fs.glob("**/*", { cwd: directory, absolute: true, include: "file", dot: true }))
-                        .filter((file) => path.basename(file) !== "SKILL.md")
-                        .toSorted()
-                        .slice(0, FILE_LIMIT)
-                    : []
                 return {
                   name: skill.name,
-                  directory,
-                  output: toModelOutput(skill, files),
+                  directory: path.dirname(skill.location),
+                  output: yield* load(fs, skill),
                 }
               }).pipe(Effect.mapError((error) => unableToLoad(input.name, error)))
             }),
