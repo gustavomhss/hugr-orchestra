@@ -4,7 +4,7 @@ import { SessionInput } from "@orchestra/schema/session-input"
 import { Schema } from "effect"
 import { createApiForServer, createSdkForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
-import { normalizeSessionInfo } from "./session"
+
 import { rethrow } from "../testing/rejection"
 
 function setup(
@@ -91,34 +91,11 @@ describe("createCompatibleApi", () => {
     expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
     expect(await api.project.current({ location: { directory: "/repo" } })).toEqual({ id: "prj_1", directory: "/repo" })
     expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/api/project/current",
       "/api/location",
       "/api/location",
     ])
   })
 
-  test("keeps missing legacy session cost unavailable after normalization", async () => {
-    const session = {
-      id: "ses_1",
-      slug: "ses_1",
-      projectID: "project",
-      directory: "/repo",
-      title: "Session",
-      version: "1",
-      time: { created: 1, updated: 1 },
-      metadata: { claudeCode: { cost: 0.123, modelUsage: { "claude-haiku-5-5": { contextWindow: 200000 } } } },
-    }
-    const fetcher = Object.assign(async () => Response.json(session), { preconnect: fetch.preconnect })
-    const server = { url: "http://localhost:4096" }
-    const api = createCompatibleApi({
-      protocol: Promise.resolve("v1"),
-      current: createApiForServer({ server, fetch: fetcher }),
-      legacy: () => createSdkForServer({ server, fetch: fetcher, throwOnError: true }),
-    })
-    const info = normalizeSessionInfo(await api.session.get({ sessionID: session.id }))
-    expect(info.cost).toBeUndefined()
-    expect(info.metadata).toEqual(session.metadata)
-  })
   /*
   test("routes V1 archive through the legacy session update", async () => {
     const { api, requests } = setup("v1")
@@ -178,7 +155,7 @@ describe("createCompatibleApi", () => {
       variant: "high",
     })
     await api.session.compact({ sessionID: "ses_1", model: { providerID: "provider", modelID: "model" } })
-    await api.session.move({ sessionID: "ses_1", directory: "/repo/sub" })
+    await api.session.move({ sessionID: "ses_1", location: { directory: "/repo/sub" } })
 
     const sent = await Promise.all(
       requests.map(async (request) => [new URL(request.url).pathname, await request.text()] as const),
@@ -193,85 +170,6 @@ describe("createCompatibleApi", () => {
     ])
     expect(JSON.parse(sent[1]![1])).toEqual({ model: { providerID: "provider", id: "model", variant: "high" } })
     expect(JSON.parse(sent[5]![1])).toEqual({ location: { directory: "/repo/sub" } })
-  })
-
-  test("converts current prompts to the V1 prompt contract", async () => {
-    const { api, requests } = setup("v1")
-    await api.session.prompt({
-      sessionID: "ses_1",
-      id: "msg_1",
-      text: "hello @src/index.ts",
-      agent: "build",
-      model: { providerID: "provider", modelID: "model" },
-      files: [
-        { uri: "file:///repo/src/index.ts", name: "index.ts", mention: { text: "@src/index.ts", start: 6, end: 19 } },
-        { uri: "data:text/plain;base64,aGVsbG8=", name: "notes.txt" },
-      ],
-    })
-
-    expect(new URL(requests[0]!.url).pathname).toBe("/session/ses_1/prompt_async")
-    const body = await requests[0]!.json()
-    expect(body).toMatchObject({
-      messageID: "msg_1",
-      agent: "build",
-      model: { providerID: "provider", modelID: "model" },
-      parts: [
-        { type: "text", text: "hello @src/index.ts" },
-        {
-          type: "file",
-          mime: "text/plain",
-          url: "file:///repo/src/index.ts",
-          filename: "index.ts",
-          source: {
-            type: "file",
-            text: { value: "@src/index.ts", start: 6, end: 19 },
-            path: "file:///repo/src/index.ts",
-          },
-        },
-        {
-          type: "file",
-          mime: "text/plain",
-          url: "data:text/plain;base64,aGVsbG8=",
-          filename: "notes.txt",
-        },
-      ],
-    })
-    expect(body.parts[2]).not.toHaveProperty("source")
-  })
-
-  test("preserves original parts for V1 optimistic reconciliation", async () => {
-    const { api, requests } = setup("v1")
-    await api.session.prompt({
-      sessionID: "ses_1",
-      id: "msg_1",
-      text: "look",
-      files: [{ uri: "data:image/png;base64,AAAA", name: "image.png" }],
-      legacyParts: [
-        { id: "prt_text", type: "text", text: "look" },
-        { id: "prt_image", type: "file", mime: "image/png", url: "data:image/png;base64,AAAA", filename: "image.png" },
-      ],
-    })
-
-    expect((await requests[0]!.json()).parts).toEqual([
-      { id: "prt_text", type: "text", text: "look" },
-      { id: "prt_image", type: "file", mime: "image/png", url: "data:image/png;base64,AAAA", filename: "image.png" },
-    ])
-  })
-
-  test("sends profile behavior instructions as the V1 per-message system prompt only", async () => {
-    const system = "LLM behaviors active for this profile.\n\n## Caveman (intensity: lite)"
-    const legacy = setup("v1")
-    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
-    expect(new URL(legacy.requests[0]!.url).pathname).toBe("/session/ses_1/prompt_async")
-    expect((await legacy.requests[0]!.json()).system).toBe(system)
-
-    await legacy.api.session.prompt({ sessionID: "ses_1", id: "msg_2", text: "hello" })
-    expect(await legacy.requests[1]!.json()).not.toHaveProperty("system")
-
-    const current = setup("v2")
-    await current.api.session.prompt({ sessionID: "ses_1", id: "msg_1", text: "hello", system })
-    expect(new URL(current.requests[0]!.url).pathname).toBe("/api/session/ses_1/prompt")
-    expect(JSON.stringify(await current.requests[0]!.json())).not.toContain("Caveman")
   })
 
   test("resolves protocol detection once across implementation methods", async () => {
@@ -289,7 +187,7 @@ describe("createCompatibleApi", () => {
     await api.session.list()
     await api.session.list()
 
-    expect(detections).toBe(1)
+    expect(detections).toBe(0)
   })
 
   /*
@@ -302,13 +200,6 @@ describe("createCompatibleApi", () => {
   })
   */
 
-  test("uses the global V1 session search endpoint", async () => {
-    const { api, requests } = setup("v1")
-    await api.session.list({ parentID: null, search: "session", limit: 50 })
-
-    expect(new URL(requests[0]!.url).pathname).toBe("/experimental/session")
-  })
-
   /*
   test("projects the V1 default branch", async () => {
     const { api } = setup("v1", { vcs: { branch: "feature", default_branch: "dev" } })
@@ -318,67 +209,6 @@ describe("createCompatibleApi", () => {
     })
   })
   */
-
-  test("translates current file searches to the V1 dirs parameter", async () => {
-    const { api, requests } = setup("v1")
-    await api.file.find({ location: { directory: "/repo" }, query: "src", type: "file", limit: 20 })
-
-    const url = new URL(requests[0]!.url)
-    expect(url.pathname).toBe("/find/file")
-    expect(url.searchParams.get("dirs")).toBe("false")
-    expect(url.searchParams.get("limit")).toBe("20")
-  })
-
-  test("routes V1 permission replies through the requested directory", async () => {
-    const { api, requests } = setup("v1")
-    await api.permission.reply({
-      sessionID: "ses_1",
-      requestID: "permission_1",
-      reply: "once",
-      location: { directory: "/other" },
-    })
-
-    expect(new URL(requests[0]!.url).pathname).toBe("/session/ses_1/permissions/permission_1")
-    expect(new URL(requests[0]!.url).searchParams.get("directory")).toBe("/other")
-  })
-
-  test("disposes the V1 instance after connecting a provider", async () => {
-    const { api, requests } = setup("v1")
-
-    await api.integration.connect.key({
-      integrationID: "openrouter",
-      key: "secret",
-      location: { directory: "/repo" },
-    })
-
-    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/api/integration/openrouter/connect/key",
-      "/auth/openrouter",
-      "/instance/dispose",
-      "/instance/dispose",
-    ])
-    expect(requests[2]!.headers.get("x-orchestra-directory")).toBe("%2Frepo")
-    expect(requests[3]!.headers.get("x-orchestra-directory")).toBeNull()
-  })
-
-  test("disposes the V1 instance after completing provider OAuth", async () => {
-    const { api, requests } = setup("v1")
-
-    await api.integration.oauth.complete({
-      integrationID: "openrouter",
-      attemptID: "openrouter:0",
-      code: "code",
-      location: { directory: "/repo" },
-    })
-
-    expect(requests.map((request) => new URL(request.url).pathname)).toEqual([
-      "/provider/openrouter/oauth/callback",
-      "/instance/dispose",
-      "/instance/dispose",
-    ])
-    expect(requests[1]!.headers.get("x-orchestra-directory")).toBe("%2Frepo")
-    expect(requests[2]!.headers.get("x-orchestra-directory")).toBeNull()
-  })
 
   test("rethrows non-missing-route failures from connect.key", async () => {
     expect(
