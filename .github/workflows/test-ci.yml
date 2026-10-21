@@ -247,10 +247,11 @@ jobs:
           case "$RUNNER" in
             pytest) python -m pytest -p no:cacheprovider "${args[@]}" ;;
             bun)
-              # The app unit runner resolves solid-js/web to its default build via the
-              # `solid` condition (solid-sonner imports `use`, which only that build exports);
-              # without it, raw `bun test` resolves the `node` build and the app suite fails.
-              # test-ci bypasses the package's own `test:unit` script, so reproduce it here.
+              # solid-sonner's compiled dist/index.js imports `use` from solid-js/web, a
+              # browser-only export that fails under bun's default (`node`) conditions.
+              # The `solid` condition routes solid-sonner to its untranspiled dist/index.jsx
+              # source, which does not make that import. test-ci bypasses the package's own
+              # `test:unit` script (which already passes `--conditions=solid`), so reproduce it.
               if [ "$DIRECTORY" = "packages/app-shell" ]; then
                 GITHUB_ACTIONS=false bun test --conditions=solid "${args[@]}"
               else
