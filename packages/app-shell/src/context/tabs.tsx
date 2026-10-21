@@ -1,4 +1,5 @@
-import type { Session } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createStore, produce } from "solid-js/store"
 import { Persist, persisted, removePersisted, draftPersistedKeys } from "@/utils/persist"

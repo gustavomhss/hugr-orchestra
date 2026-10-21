@@ -89,7 +89,9 @@ export default function Workspaces(props: ChapterPageProps) {
       return
     }
     const project = result.value.project
-    const workspaces = project ? repositoryWorkspaces(project, result.value.directories) : []
+    const workspaces = project
+      ? repositoryWorkspaces(project, result.value.directories as unknown as Parameters<typeof repositoryWorkspaces>[1])
+      : []
     setState({ protocol: result.value.protocol, project, workspaces, status: workspaces.length ? "ready" : "empty" })
     if (!project) return
     remember(project.worktree, workspaces)

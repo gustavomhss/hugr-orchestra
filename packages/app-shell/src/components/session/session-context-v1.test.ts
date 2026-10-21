@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { AssistantMessage, Part, Session, UserMessage } from "@orchestra/sdk/v2/client"
+import type { AssistantMessage, Part, Session, UserMessage } from "@/v2-wire"
+
+
 import { createServerSession } from "@/context/server-session"
 import { createSdkForServer } from "@/utils/server"
 import { getSessionContext, getSessionCost } from "./session-context-metrics"

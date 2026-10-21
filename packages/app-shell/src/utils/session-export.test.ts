@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionInfo, SessionMessageInfo } from "../compat/vendored-client-promise"
+import type { SessionInfo } from "@/v2-types"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
 import { fetchSessionExport, type SessionExportApi, type SessionExportClient } from "./session-export"
 
 const info: SessionInfo = {

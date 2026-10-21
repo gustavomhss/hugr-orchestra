@@ -1,7 +1,8 @@
 import { Agent } from "@orchestra/schema/agent"
 import { Model } from "@orchestra/schema/model"
 import { Provider } from "@orchestra/schema/provider"
-import type { AgentListOutput, ModelListOutput, ProviderListOutput } from "../compat/vendored-client-promise"
+import type { AgentListOutput, ModelListOutput, ProviderListOutput } from "@/v2-wire"
+
 import { normalizeAgentList, normalizeProviderList } from "@/context/global-sync/utils"
 
 export function mixedEngineCatalog() {

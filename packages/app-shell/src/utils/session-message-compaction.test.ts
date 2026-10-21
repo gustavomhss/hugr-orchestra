@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionMessageInfo } from "../compat/vendored-client-promise"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
 import { normalizeSessionMessages } from "./session-message"
 
 // Kept apart from session-message.test.ts, which loads the Solid server SDK the plain test runner cannot resolve.

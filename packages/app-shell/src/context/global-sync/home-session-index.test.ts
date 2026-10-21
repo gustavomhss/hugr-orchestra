@@ -1,6 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { QueryClient } from "@tanstack/solid-query"
-import type { Session, SessionV2Info } from "@orchestra/sdk/v2/client"
+import type { Session, SessionV2Info } from "@/v2-wire"
+
+
 import {
   applyHomeSessionEvent,
   appendHomeSessionEvent,

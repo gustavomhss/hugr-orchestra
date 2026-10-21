@@ -17,7 +17,8 @@ import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from
 import { findLast } from "@orchestra/core/util/array"
 import { createSidePanelTabs } from "@/pages/session/helpers"
 import { extractPromptFromParts } from "@/utils/prompt"
-import type { Message, Part, UserMessage } from "@/v2-types"
+import type { Message, Part, UserMessage } from "@/v2-wire"
+
 import { useSessionLayout } from "@/pages/session/session-layout"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"

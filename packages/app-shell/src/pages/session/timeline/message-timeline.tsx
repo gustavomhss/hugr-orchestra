@@ -33,13 +33,8 @@ import { SessionRetry } from "@orchestra/session-ui/session-retry"
 import { isScrollKeyTarget, scrollKey, scrollKeyOwner, ScrollView } from "@orchestra/ui/scroll-view"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextShimmer } from "@orchestra/ui/text-shimmer"
-import type {
-  AssistantMessage,
-  Message as MessageType,
-  Part as PartType,
-  ToolPart,
-  UserMessage,
-} from "@/v2-types"
+import type { AssistantMessage, Message as MessageType, Part as PartType, ToolPart, UserMessage } from "@/v2-wire"
+
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"

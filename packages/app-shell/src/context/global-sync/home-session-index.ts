@@ -1,4 +1,5 @@
-import type { Session, SessionV2Info } from "@/v2-types"
+import type { Session, SessionV2Info } from "@/v2-wire"
+
 import type { Event, V2SessionListResponse } from "@/v2-wire"
 import type { QueryClient } from "@tanstack/solid-query"
 import { trimSessions } from "./session-trim"

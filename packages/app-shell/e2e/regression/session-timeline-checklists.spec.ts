@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import type { OrchestraEvent } from "@opencode-ai/client/promise"
+import type { OrchestraEvent } from "@orchestra/client"
 import {
   assistantID,
   assistantMessage,

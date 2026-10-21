@@ -1,6 +1,7 @@
 import { createMemo, Show } from "solid-js"
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
-import type { Session } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"

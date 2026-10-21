@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { Message, Part, PermissionRequest, Project, QuestionRequest, Session } from "@orchestra/sdk/v2/client"
+import type { PermissionRequest, Project, QuestionRequest } from "@/v2-types"
+import type { Message, Part, Session } from "@/v2-wire"
+
+
 import { createStore } from "solid-js/store"
 import type { State } from "./types"
 import { applyDirectoryEvent, applyGlobalEvent, cleanupDroppedSessionCaches } from "./event-reducer"

@@ -1,8 +1,13 @@
 import { describe, expect, test } from "bun:test"
 import { createStore } from "solid-js/store"
 import { QueryClient } from "@tanstack/solid-query"
-import type { Config, OrchestraClient, Project, Session } from "@orchestra/sdk/v2/client"
-import type { AgentApi, CatalogApi, CommandApi, ReferenceApi } from "@opencode-ai/client/promise"
+import type { Config } from "@/v2-wire"
+import type { Project } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
+import type { ServerApi, ServerSdk } from "@/utils/server"
+
+import type { CatalogApi } from "./bootstrap"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import {
   bootstrapDirectory,
@@ -18,7 +23,6 @@ import type { State, VcsCache } from "./types"
 import { createServerSession } from "../server-session"
 import { sessionPermissionRequest, sessionQuestionRequest } from "@/pages/session/composer/session-request-tree"
 import { ServerScope } from "@/utils/server-scope"
-import type { ServerApi } from "@/utils/server"
 
 type ProjectApi = ServerApi["project"]
 
@@ -99,7 +103,7 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
       question: { list: async () => ({ data: [] }) },
       v2: { reference: { list: async () => ({ data: { data: [] } }) } },
       provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-    } as unknown as OrchestraClient,
+    } as unknown as ServerSdk,
     api,
     readV2Config: () => gate.then(() => ({ model: "anthropic/claude" })),
     store: state[0],
@@ -133,7 +137,7 @@ describe("bootstrapDirectory", () => {
             throw new Error("legacy directory config should not be called")
           },
         },
-      } as unknown as OrchestraClient,
+      } as unknown as ServerSdk,
       api,
       store,
       setStore,
@@ -177,7 +181,7 @@ describe("bootstrapDirectory", () => {
           question: { list: async () => ({ data: [] }) },
           v2: { reference: { list: async () => ({ data: { data: [] } }) } },
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as OrchestraClient,
+        } as unknown as ServerSdk,
         api: { ...api, agent: { list: agents } } as unknown as typeof api,
         readV2Config: async () => ({ model: "anthropic/claude" }),
         store,
@@ -230,7 +234,7 @@ describe("bootstrapDirectory", () => {
             question: { list: async () => ({ data: [] }) },
             v2: { reference: { list: async () => ({ data: { data: [] } }) } },
             provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-          } as unknown as OrchestraClient,
+          } as unknown as ServerSdk,
           api,
           store,
           setStore,
@@ -274,7 +278,7 @@ describe("bootstrapDirectory", () => {
           question: { list: async () => ({ data: [] }) },
           v2: { reference: { list: async () => ({ data: { data: [] } }) } },
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-        } as unknown as OrchestraClient,
+        } as unknown as ServerSdk,
         api,
         readV2Config: () => read().then(() => ({ model: "anthropic/claude" })),
         store,
@@ -351,7 +355,7 @@ describe("bootstrapDirectory", () => {
     }
     const session = createServerSession({
       session: { get: async (input: { sessionID: string }) => ({ data: sessions[input.sessionID] }) },
-    } as unknown as OrchestraClient)
+    } as unknown as ServerSdk)
     const [store, setStore] = directoryState()
     const testApi = {
       ...api,
@@ -378,7 +382,7 @@ describe("bootstrapDirectory", () => {
         question: { list: async () => ({ data: [{ id: "que_1", sessionID: "child" }] }) },
         v2: { reference: { list: async () => ({ data: { data: [] } }) } },
         provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-      } as unknown as OrchestraClient,
+      } as unknown as ServerSdk,
       api: testApi as unknown as typeof api,
       store,
       setStore,
@@ -408,7 +412,7 @@ describe("config queries", () => {
           },
         },
       },
-    } as unknown as OrchestraClient
+    } as unknown as ServerSdk
 
     const result = await new QueryClient().fetchQuery(
       loadGlobalConfigQuery(ServerScope.local, sdk, Promise.resolve("v2")),
@@ -455,7 +459,7 @@ describe("config queries", () => {
         calls.push(input)
         return { location: {}, data: [] }
       },
-    } as unknown as AgentApi
+    } as unknown as ServerApi["agent"]
 
     const result = await new QueryClient().fetchQuery(loadAgentsQuery(ServerScope.local, "/repo", api))
 
@@ -473,7 +477,7 @@ describe("config queries", () => {
           data: [{ name: "review", template: "Review files" /* source: "command" as const */ }],
         }
       },
-    } as unknown as CommandApi
+    } as unknown as ServerApi["command"]
 
     const result = await loadCommands("/repo", api)
 
@@ -501,7 +505,7 @@ describe("config queries", () => {
         calls.push(input)
         return { location: {}, data: [{ name: "AGENTS.md", path: "/repo/AGENTS.md", source: "instructions" }] }
       },
-    } as unknown as ReferenceApi
+    } as unknown as ServerApi["reference"]
 
     const result = await new QueryClient().fetchQuery(loadReferencesQuery(ServerScope.local, "/repo", api))
 

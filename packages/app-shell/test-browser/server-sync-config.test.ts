@@ -1,7 +1,8 @@
 import { expect, test } from "bun:test"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
-import type { Config } from "@orchestra/sdk/v2/client"
+import type { Config } from "@/v2-wire"
+
 import type { ServerSDK } from "@/context/server-sdk"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { solidDom } from "./solid-dom"

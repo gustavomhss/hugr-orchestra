@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "../compat/vendored-client-promise"
+import type { OpenCodeEvent } from "@/v2-legacy"
 import type { Event } from "@/v2-wire"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"

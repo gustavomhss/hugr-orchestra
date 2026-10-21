@@ -1,4 +1,5 @@
-import type { Session } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"

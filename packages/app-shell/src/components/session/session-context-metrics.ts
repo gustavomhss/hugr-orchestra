@@ -1,4 +1,5 @@
-import type { AssistantMessage, Message, Part } from "@/v2-types"
+import type { AssistantMessage, Message, Part } from "@/v2-wire"
+
 
 type Parts = Record<string, Part[] | undefined>
 

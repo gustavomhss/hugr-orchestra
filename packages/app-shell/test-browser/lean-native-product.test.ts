@@ -5,7 +5,10 @@ import http from "node:http"
 import { mkdtemp, mkdir, realpath, rm, symlink } from "node:fs/promises"
 import { createRequire } from "node:module"
 import { createHash } from "node:crypto"
-import type { Config, Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
+import type { Config } from "@/v2-wire"
+import type { Message, Part, Session, ToolPart } from "@/v2-wire"
+
+
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 
 // Adapted from orchestra/test/lean-package.test.ts at 66172f566642a3f66580b001082aba4448e75946

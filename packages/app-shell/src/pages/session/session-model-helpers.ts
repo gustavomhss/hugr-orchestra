@@ -1,5 +1,6 @@
 import { createEffect, on } from "solid-js"
-import type { UserMessage } from "@/v2-types"
+import type { UserMessage } from "@/v2-wire"
+
 
 type Local = {
   session: {

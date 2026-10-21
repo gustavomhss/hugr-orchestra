@@ -1,4 +1,5 @@
-import type { Message, Part } from "@/v2-types"
+import type { Message, Part } from "@/v2-wire"
+
 
 export type SessionContextBreakdownKey = "system" | "user" | "assistant" | "tool" | "other"
 

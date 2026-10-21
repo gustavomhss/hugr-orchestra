@@ -1,18 +1,13 @@
-import type {
-  LspStatus,
-  Message,
-  Part,
-  PermissionRequest,
-  QuestionRequest,
-  ReferenceInfo,
-  SessionStatus,
-  Todo,
-  VcsInfo,
-} from "@/v2-types"
+import type { LspStatus, PermissionRequest, QuestionRequest, ReferenceInfo, VcsInfo } from "@/v2-types"
+import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
+
 import type { Agent, Config, Path } from "@/v2-wire"
-import type { FileDiffInfo } from "../../compat/vendored-client-promise"
+import type { FileDiffInfo, SessionMessageInfo } from "@/v2-legacy"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
-import type { CommandInfo, McpResource, McpServer, SessionMessageInfo } from "../../compat/vendored-client-promise"
+import type { CommandInfo } from "@/v2-wire"
+import type { McpResource, McpServer } from "@/v2-wire"
+
+
 import type { Accessor } from "solid-js"
 import type { SetStoreFunction, Store } from "solid-js/store"
 import type { AppSession } from "@/utils/session"

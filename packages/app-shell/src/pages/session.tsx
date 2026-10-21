@@ -1,4 +1,6 @@
-import type { FilePart, UserMessage } from "@/v2-types"
+import type { FilePart } from "@/v2-types"
+import type { UserMessage } from "@/v2-wire"
+
 import type { Project } from "@/v2-types"
 import { getFilename } from "@orchestra/core/util/path"
 import { useDialog } from "@orchestra/ui/context/dialog"

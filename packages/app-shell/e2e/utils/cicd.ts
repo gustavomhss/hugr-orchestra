@@ -1,5 +1,6 @@
 import { expect, type Page, type Route, type WebSocketRoute } from "@playwright/test"
-import type { ModelInfo } from "@opencode-ai/client/promise"
+import type { ModelInfo } from "../../v2-wire"
+
 import { mockOrchestraServer } from "./mock-server"
 
 // Shared fixture for the CI/CD chapter spec: two servers with one repository profile each, a

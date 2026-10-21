@@ -1,34 +1,24 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
-import type { AgentPartInput, FilePartInput, Session, TextPartInput } from "@/v2-types"
-import type {
-  Project,
-  ProjectCurrent,
-  SessionApi,
-  SessionCommandInput,
-  SessionCommandOutput,
-  SessionCompactInput,
-  SessionCompactOutput,
-  SessionInfo,
-  SessionPromptInput,
-  SessionPromptOutput,
-  SessionShellInput,
-  SessionShellOutput,
-} from "../compat/vendored-client-promise"
+import type { AgentPartInput, FilePartInput, TextPartInput } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
+import type { Project, SessionInfo } from "@/v2-types"
+import type { ProjectCurrent, SessionCommandInput, SessionCommandOutput, SessionCompactInput, SessionCompactOutput, SessionPromptInput, SessionPromptOutput, SessionShellInput, SessionShellOutput } from "@/v2-wire"
 
 type LegacyFor = (directory?: string) => unknown
-type RequestOptions = NonNullable<Parameters<SessionApi["prompt"]>[1]>
-type CompatibleSessionApi = Omit<
-  SessionApi,
-  "prompt" | "command" | "shell" | "compact" | "rename" | "archive" | "remove"
+type RequestOptions = NonNullable<Parameters<ServerApi["session"]["prompt"]>[1]>
+export type CompatibleSessionApi = Omit<
+  ServerApi["session"],
+  "prompt" | "command" | "shell" | "compact" | "rename" | "remove"
 > & {
   prompt: (input: SessionPromptInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionPromptOutput>
   command: (input: SessionCommandInput, options?: RequestOptions) => Promise<SessionCommandOutput>
   shell: (input: SessionShellInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionShellOutput>
   compact: (input: SessionCompactInput & { model?: LegacyPrompt["model"] }) => Promise<SessionCompactOutput>
-  rename: (input: Parameters<SessionApi["rename"]>[0] & LegacyLocation) => ReturnType<SessionApi["rename"]>
-  // archive: (input: Parameters<SessionApi["archive"]>[0] & LegacyLocation) => ReturnType<SessionApi["archive"]>
-  remove: (input: Parameters<SessionApi["remove"]>[0] & LegacyLocation) => ReturnType<SessionApi["remove"]>
+  rename: (input: Parameters<ServerApi["session"]["rename"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["rename"]>
+  archive: (input: Parameters<ServerApi["session"]["archive"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["archive"]>
+  remove: (input: Parameters<ServerApi["session"]["remove"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["remove"]>
 }
 type CompatiblePermissionApi = Omit<ServerApi["permission"], "reply"> & {
   reply: (

@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { AssistantMessage, Message, UserMessage } from "@orchestra/sdk/v2"
+import type { AssistantMessage, Message, UserMessage } from "@/v2-wire"
+
+
 import { isTimelineReady, loadOlderTimeline, selectUserMessages, selectVisibleUserMessages } from "./model"
 import { rethrow } from "../../../testing/rejection"
 

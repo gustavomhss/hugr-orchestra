@@ -1,7 +1,7 @@
 import { Orchestra } from "@orchestra/client"
 import { createOrchestraClient } from "@orchestra/sdk/v2/client"
-import { OpenCode, type OpenCodeClient } from "../compat/vendored-client-promise"
 import type { ServerConnection } from "@/context/server"
+import type { ServerApi } from "@/server-api"
 import { decode64 } from "@/utils/base64"
 
 type LegacyPromptValue = {
@@ -64,6 +64,10 @@ export function authFromToken(token: string | null) {
   }
 }
 
+/**
+ * The legacy SDK client: the app's HTTP client for the routes the current client does not expose (the generated
+ * `v2` groups and the V1 compatibility surface). This is the app-shell's single boundary to that package.
+ */
 export function createSdkForServer({
   server,
   ...config
@@ -91,7 +95,7 @@ export function createApiForServer(input: {
   server: ServerConnection.HttpBase
   fetch?: typeof globalThis.fetch
 }) {
-  const options = {
+  const orchestra = Orchestra.make({
     baseUrl: input.server.url,
     fetch: input.fetch,
     headers: input.server.password
@@ -102,8 +106,7 @@ export function createApiForServer(input: {
           })}`,
         }
       : undefined,
-  }
-  const orchestra = Orchestra.make(options)
+  })
   const select = async (sessionID: string, value: object, requestOptions?: { signal?: AbortSignal }) => {
     if ("agent" in value && typeof value.agent === "string" && value.agent)
       await orchestra.sessions.switchAgent({ sessionID, agent: value.agent }, requestOptions)
@@ -393,7 +396,7 @@ export function createApiForServer(input: {
     },
     vcs: orchestra.vcs,
     config: orchestra.config,
-  } as unknown as OpenCodeClient
+  } as unknown as ServerApi
 }
 
 // `{ providerID, modelID }` from the composer or `{ providerID, id, variant }` from a command.
@@ -405,4 +408,11 @@ function selectedModel(value: unknown, variant: unknown) {
   return { providerID: value.providerID, id, ...(typeof chosen === "string" ? { variant: chosen } : {}) }
 }
 
-export type ServerApi = OpenCodeClient
+/** The legacy-shaped view of the current API: the groups the app calls, in their legacy shape. */
+export type { ServerApi } from "@/server-api"
+
+/** The legacy SDK client: the app's HTTP client for the routes the current client does not expose. */
+export type ServerSdk = ReturnType<typeof createSdkForServer>
+
+/** The current server's HTTP client. */
+export type ServerClient = ReturnType<typeof Orchestra.make>

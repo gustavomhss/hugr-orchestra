@@ -1,18 +1,12 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { retry } from "@orchestra/core/util/retry"
-import type { SessionApi, SessionMessageInfo } from "../compat/vendored-client-promise"
+import type { FileDiffInfo, SessionMessageInfo } from "@/v2-legacy"
+
 import type { ServerCurrentEvent } from "./server-sdk"
-import type {
-  Message,
-  Part,
-  PermissionRequest,
-  QuestionRequest,
-  Session,
-  SessionStatus,
-  Todo,
-} from "@/v2-types"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "../compat/vendored-client-promise"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { Message, Part, Session, SessionStatus, Todo } from "@/v2-wire"
+
+import type { ServerApi, ServerSdk } from "@/utils/server"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
 import { message as cleanMessage } from "@/utils/diffs"
@@ -29,7 +23,6 @@ import { createV2SessionReducer, type V2SessionReduction } from "./server-sessio
 import { executionStatus, sessionSelection, sessionUsage } from "./server-event-native"
 import { eventSessionID, projectSessionManagementEvent } from "./session-management-state"
 import { createSessionRecovery } from "./session-recovery"
-import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
 
@@ -195,12 +188,12 @@ type TodoRead = (sessionID: string) => Promise<readonly { content: string; statu
 type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v2">; todo?: TodoRead }
 
 export function createServerSession(
-  client: OrchestraClient,
-  sessionApiOrOptions?: SessionApi | ServerSessionOptions,
+  client: ServerSdk,
+  sessionApiOrOptions?: Pick<ServerApi["session"], "get" | "message"> | ServerSessionOptions,
   messageApi?: MessageApi,
   currentOptions?: ServerSessionOptions,
 ) {
-  const sessionApi = messageApi ? (sessionApiOrOptions as SessionApi) : undefined
+  const sessionApi = messageApi ? (sessionApiOrOptions as Pick<ServerApi["session"], "get" | "message">) : undefined
   const options = messageApi ? currentOptions : (sessionApiOrOptions as ServerSessionOptions | undefined)
   const [data, setData] = createStore({
     info: {} as Record<string, AppSession | undefined>,

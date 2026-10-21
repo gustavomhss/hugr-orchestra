@@ -1,6 +1,8 @@
 import { readFile } from "node:fs/promises"
 import { expect, type Page } from "@playwright/test"
-import type { ModelInfo, SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { ModelInfo } from "../../v2-wire"
+import type { SessionMessageInfo } from "../../v2-types"
+
 import {
   assistantMessage,
   directory,

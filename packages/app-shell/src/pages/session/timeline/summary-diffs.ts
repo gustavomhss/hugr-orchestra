@@ -1,4 +1,5 @@
-import type { SnapshotFileDiff } from "@/v2-types"
+import type { SnapshotFileDiff } from "@/v2-wire"
+
 import type { SummaryDiff } from "./timeline-row"
 
 export function uniqueSummaryDiffs(diffs: SnapshotFileDiff[] | undefined) {

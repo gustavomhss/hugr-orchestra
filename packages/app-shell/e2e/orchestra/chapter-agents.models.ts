@@ -1,4 +1,5 @@
-import type { Model, Provider } from "@orchestra/sdk/v2/client"
+import type { Model, Provider } from "../../v2-wire"
+
 
 function model(id: string, name: string): Model {
   return {

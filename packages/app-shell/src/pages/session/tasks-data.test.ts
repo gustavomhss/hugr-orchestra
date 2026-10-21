@@ -1,12 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import {
-  createOrchestraClient,
-  type AssistantMessage,
-  type Message,
-  type Part,
-  type Session,
-  type UserMessage,
-} from "@orchestra/sdk/v2/client"
+import type { AssistantMessage, Message, Part, Session, UserMessage } from "@/v2-wire"
+
+import { createSdkForServer } from "@/utils/server"
+
 import { ServerConnection } from "@/context/server"
 import { createServerSession } from "@/context/server-session"
 import { ServerScope } from "@/utils/server-scope"
@@ -313,8 +309,8 @@ describe("deriveTasks stats", () => {
     const pages = [Promise.withResolvers<Response>(), Promise.withResolvers<Response>()]
     const requests: string[] = []
     const store = createServerSession(
-      createOrchestraClient({
-        baseUrl: "http://tasks.test",
+      createSdkForServer({
+        server: { url: "http://tasks.test" },
         throwOnError: true,
         fetch: (async (request) => {
           const url = new URL(request instanceof Request ? request.url : String(request))

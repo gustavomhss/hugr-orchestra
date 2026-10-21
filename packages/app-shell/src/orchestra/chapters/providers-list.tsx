@@ -107,7 +107,7 @@ export function ProviderList(props: {
   const data = createMemo(() => {
     if (protocol() === "v2") {
       const value = v2Data()
-      return value ? fromV2(value) : undefined
+      return value ? fromV2(value as unknown as Parameters<typeof fromV2>[0]) : undefined
     }
     return undefined
   })

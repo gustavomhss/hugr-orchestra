@@ -1,6 +1,7 @@
 import { getFilename } from "@orchestra/core/util/path"
 import type { Project } from "@/v2-types"
-import type { SessionInfo } from "../compat/vendored-client-promise"
+import type { SessionInfo } from "@/v2-types"
+
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { createMemo, onCleanup } from "solid-js"
 import { commandPaletteOptions, useCommand, type CommandOption } from "@/context/command"

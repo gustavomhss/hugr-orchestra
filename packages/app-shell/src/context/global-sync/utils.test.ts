@@ -1,10 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type {
-  AgentListOutput,
-  ModelDefaultOutput,
-  ModelListOutput,
-  ProviderListOutput,
-} from "@opencode-ai/client/promise"
+import type { AgentListOutput, ModelDefaultOutput, ModelListOutput, ProviderListOutput } from "@/v2-wire"
+
 import { directoryKey, normalizeAgentList, normalizePermissionRequest, normalizeProviderList } from "./utils"
 import { mixedEngineAgents, mixedEngineCatalog } from "@/testing/model-execution-fixture"
 

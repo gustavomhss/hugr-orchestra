@@ -7,7 +7,8 @@ import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { ServerConnection } from "../src/context/server"
 import { createServerContextCache } from "../src/context/global"
 import { ServerScope } from "../src/utils/server-scope"
-import type { Config } from "@orchestra/sdk/v2/client"
+import type { Config } from "@/v2-wire"
+
 import { DOMFormData } from "../happydom"
 
 const compiler = createRequire(Bun.resolveSync("vite-plugin-solid", import.meta.dir))

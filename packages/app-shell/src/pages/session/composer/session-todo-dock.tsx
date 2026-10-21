@@ -1,4 +1,5 @@
-import type { Todo } from "@/v2-types"
+import type { Todo } from "@/v2-wire"
+
 import { AnimatedNumber } from "@orchestra/ui/animated-number"
 import { Checkbox } from "@orchestra/ui/checkbox"
 import { IconButton } from "@orchestra/ui/icon-button"

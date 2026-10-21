@@ -1,6 +1,9 @@
-import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@/v2-types"
-import type { FileDiffInfo } from "../../compat/vendored-client-promise"
-import type { SessionMessageInfo } from "../../compat/vendored-client-promise"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
+
+import type { FileDiffInfo } from "@/v2-legacy"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
 
 export const SESSION_CACHE_LIMIT = 40
 

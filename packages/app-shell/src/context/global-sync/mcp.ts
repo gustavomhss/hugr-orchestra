@@ -1,4 +1,6 @@
-import type { McpServer } from "../../compat/vendored-client-promise"
+import type { McpServer } from "@/v2-wire"
+
+
 
 export async function toggleMcp(input: {
   status: McpServer["status"]["status"]

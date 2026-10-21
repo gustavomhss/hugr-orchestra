@@ -1,7 +1,9 @@
 import { createHash, randomUUID } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type { FilePartInput, ProviderListResponse, TextPartInput } from "@orchestra/sdk/v2/client"
+import type { FilePartInput, TextPartInput } from "../../v2-types"
+import type { ProviderListResponse } from "../../v2-wire"
+
 import { mockOrchestraServer } from "../utils/mock-server"
 
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`

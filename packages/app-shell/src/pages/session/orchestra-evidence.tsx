@@ -1,4 +1,5 @@
-import type { Message, Part } from "@/v2-types"
+import type { Message, Part } from "@/v2-wire"
+
 import { Icon } from "@orchestra/ui/v2/icon"
 import {
   type Accessor,

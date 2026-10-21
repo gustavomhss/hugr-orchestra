@@ -1,7 +1,8 @@
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type { Project } from "@/v2-types"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
-import type { SessionStatus } from "@/v2-types"
+import type { ServerSdk } from "@/utils/server"
+import type { SessionStatus } from "@/v2-wire"
+
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
 import { type Accessor, type ParentProps, batch, createMemo, getOwner, onCleanup, onMount, untrack } from "solid-js"
@@ -32,7 +33,8 @@ import { retry } from "@orchestra/core/util/retry"
 import type { ServerScope } from "@/utils/server-scope"
 import { createHomeSessionIndexCache } from "./global-sync/home-session-index"
 import { persisted } from "@/utils/persist"
-import type { SessionActiveOutput } from "../compat/vendored-client-promise"
+import type { SessionActiveOutput } from "@/v2-wire"
+
 import { authenticateMcpV2, toggleMcp } from "./global-sync/mcp"
 import { createServerSession, type ServerSession } from "./server-session"
 import { createProviderRefresher, makeQueryOptionsApi } from "./server-queries"
@@ -108,7 +110,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const owner = getOwner()
   if (!owner) throw new Error("ServerSync must be created within owner")
 
-  const sdkCache = new Map<string, OrchestraClient>()
+  const sdkCache = new Map<string, ServerSdk>()
   const booting = new Map<string, Promise<void>>()
   const sessionLoads = new Map<string, Promise<void>>()
   const sessionMeta = new Map<string, { limit: number }>()

@@ -1,22 +1,20 @@
-import type {
-  AgentListOutput,
-  ModelDefaultOutput,
-  ModelListOutput,
-  PermissionV2Request,
-  ProviderListOutput,
-} from "../../compat/vendored-client-promise"
-import type { Project } from "@/v2-types"
-import type { PermissionRequest } from "@/v2-types"
-import type { Agent, Provider, ProviderListResponse } from "@/v2-wire"
-import type { Project as CurrentProject } from "../../compat/vendored-client-promise"
+import type { PermissionRequest, PermissionV2Request, Project } from "@/v2-types"
+import type { Agent, CurrentProject, Provider, ProviderListResponse } from "@/v2-wire"
+import type { ServerApi } from "@/utils/server"
+
+type AgentListData = Awaited<ReturnType<ServerApi["agent"]["list"]>>["data"]
+type ProviderListData = Awaited<ReturnType<ServerApi["provider"]["list"]>>["data"]
+type ModelListData = Awaited<ReturnType<ServerApi["model"]["list"]>>["data"]
+type ModelDefaultData = Awaited<ReturnType<ServerApi["model"]["default"]>>["data"]
+
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 export { pathKey as directoryKey, type PathKey as DirectoryKey } from "@/utils/path-key"
 
 export const cmp = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Agent[] {
+export function normalizeAgentList(input: AgentListData | Agent[]): Agent[] {
   if (input.every((agent) => !("request" in agent))) return input as Agent[]
-  return (input as AgentListOutput["data"]).map((agent) => ({
+  return (input as AgentListData).map((agent) => ({
     id: agent.id,
     name: agent.id,
     description: agent.description,
@@ -42,7 +40,7 @@ export function normalizeAgentList(input: AgentListOutput["data"] | Agent[]): Ag
 }
 
 // This fork's server sends `request: { headers, body }` without `settings`; a missing value must not throw.
-function settings(agent: AgentListOutput["data"][number]): Record<string, unknown> {
+function settings(agent: AgentListData[number]): Record<string, unknown> {
   return agent.request.settings ?? {}
 }
 
@@ -65,9 +63,9 @@ export function normalizePermissionRequest(input: PermissionV2Request | Permissi
 }
 
 export function normalizeProviderList(
-  providers: ProviderListOutput["data"] | ProviderListResponse,
-  models?: ModelListOutput["data"],
-  defaultModel?: ModelDefaultOutput["data"],
+  providers: ProviderListData | ProviderListResponse,
+  models?: ModelListData,
+  defaultModel?: ModelDefaultData,
 ): NormalizedProviderListResponse {
   if (!Array.isArray(providers)) {
     return {
@@ -189,7 +187,7 @@ export function sanitizeProject(project: Project) {
   }
 }
 
-export function normalizeProjectInfo(project: Project | CurrentProject): Project {
+export function normalizeProjectInfo(project: Project): Project {
   return {
     ...project,
     vcs: project.vcs === "git" ? "git" : undefined,

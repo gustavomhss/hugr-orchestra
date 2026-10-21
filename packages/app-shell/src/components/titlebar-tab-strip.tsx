@@ -27,7 +27,8 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { showToast } from "@/utils/toast"
 import { canStartTabDrag, isTabCloseTarget } from "./titlebar-tab-gesture"
 import { adjacentTabKey, mergeVisibleTabOrder, tabMatchesProfile } from "./titlebar-tab-order"
-import type { Session } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import { agentKey } from "@/context/agent-identity"
 
 function SessionTabSlot(props: {

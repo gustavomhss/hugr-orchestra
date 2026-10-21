@@ -1,14 +1,8 @@
 import { createMemo } from "solid-js"
 import { createStore } from "solid-js/store"
-import type {
-  AssistantMessage,
-  Message,
-  Part,
-  PermissionRequest,
-  QuestionRequest,
-  Session,
-  SessionStatus,
-} from "@/v2-types"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { AssistantMessage, Message, Part, Session, SessionStatus } from "@/v2-wire"
+
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"

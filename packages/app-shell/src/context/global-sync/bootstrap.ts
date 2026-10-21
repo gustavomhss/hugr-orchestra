@@ -1,22 +1,13 @@
 import type { Project } from "@/v2-types"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
-import type { OpenCodeClient } from "../../compat/vendored-client-promise"
-import type { PermissionRequest, QuestionRequest, ReferenceInfo, Session } from "@/v2-types"
+import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { CompatibleApi, CompatibleSessionApi } from "@/utils/server-compat"
+import type { PermissionRequest, QuestionRequest, ReferenceInfo } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
-import type {
-  AgentListInput,
-  CatalogApi,
-  AgentListOutput,
-  CommandInfo,
-  CommandListInput,
-  CommandListOutput,
-  ProjectCurrentInput,
-  ProjectCurrentOutput,
-  ProjectListOutput,
-  ReferenceListInput,
-  ReferenceListOutput,
-  SessionApi,
-} from "../../compat/vendored-client-promise"
+import type { AgentListInput, AgentListOutput, CommandInfo, CommandListInput, CommandListOutput, ProjectCurrentInput, ProjectCurrentOutput, ReferenceListInput, ReferenceListOutput } from "@/v2-wire"
+import type { ProjectListOutput } from "@/v2-types"
+
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
 import { retry } from "@orchestra/core/util/retry"
@@ -100,7 +91,7 @@ function showErrors(input: {
 
 export const loadGlobalConfigQuery = (
   scope: ServerScope,
-  sdk: OrchestraClient,
+  sdk: ServerSdk,
   protocol?: Promise<ServerProtocol>,
   readV2?: () => Promise<Config>,
 ) =>
@@ -111,15 +102,15 @@ export const loadGlobalConfigQuery = (
     },
   })
 
-type ProjectApi = {
-  readonly list: () => Promise<ProjectListOutput>
-  readonly current: (input?: ProjectCurrentInput) => Promise<ProjectCurrentOutput>
-}
+type ProjectApi = ServerApi["project"]
 
-type McpApi = OpenCodeClient["mcp"]
-type PermissionApi = OpenCodeClient["permission"]
-type QuestionApi = OpenCodeClient["question"]
-type VcsApi = OpenCodeClient["vcs"]
+/** The provider and model groups of the current API. */
+export type CatalogApi = Pick<ServerApi, "provider" | "model">
+
+type McpApi = ServerApi["mcp"]
+type PermissionApi = ServerApi["permission"]
+type QuestionApi = ServerApi["question"]
+type VcsApi = ServerApi["vcs"]
 
 export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
   queryOptions({
@@ -138,7 +129,7 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
   })
 
 export async function bootstrapGlobal(input: {
-  serverSDK: OrchestraClient
+  serverSDK: ServerSdk
   readV2Config?: () => Promise<Config>
   serverAPI: CatalogApi & { readonly project: ProjectApi }
   protocol?: Promise<ServerProtocol>
@@ -205,7 +196,7 @@ function warmSessions(input: {
   ids: string[]
   store: Store<State>
   setStore: SetStoreFunction<State>
-  api: SessionApi
+  api: ServerApi["session"]
 }) {
   const known = new Set(input.store.session.map((item) => item.id))
   const ids = [...new Set(input.ids)].filter((id) => !!id && !known.has(id))
@@ -255,7 +246,7 @@ export const loadProvidersQuery = (
   scope: ServerScope,
   directory: string | null,
   sdk: CatalogApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
@@ -288,23 +279,17 @@ export async function loadDefaultModel(
   )
 }
 
-type AgentListApi = {
-  readonly list: (input?: AgentListInput) => Promise<AgentListOutput>
-}
+type AgentListApi = ServerApi["agent"]
 
-type CommandListApi = {
-  readonly list: (input?: CommandListInput) => Promise<CommandListOutput>
-}
+type CommandListApi = ServerApi["command"]
 
-type ReferenceListApi = {
-  readonly list: (input?: ReferenceListInput) => Promise<ReferenceListOutput>
-}
+type ReferenceListApi = ServerApi["reference"]
 
 export const loadAgentsQuery = (
   scope: ServerScope,
   directory: string,
   sdk: AgentListApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
@@ -318,7 +303,7 @@ export const loadAgentsQuery = (
 export const loadCommands = (
   directory: string,
   api: CommandListApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<ServerProtocol>,
 ): Promise<CommandInfo[]> =>
   retry(async () => {
@@ -328,7 +313,7 @@ export const loadCommands = (
 export const loadPathQuery = (
   scope: ServerScope,
   directory: string | null,
-  sdk: OrchestraClient,
+  sdk: ServerSdk,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions<Path>({
@@ -343,7 +328,7 @@ export const loadReferencesQuery = (
   scope: ServerScope,
   directory: string,
   api: ReferenceListApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions<ReferenceInfo[]>({
@@ -359,8 +344,8 @@ export async function bootstrapDirectory(input: {
   directory: string
   scope: ServerScope
   mcp: boolean
-  sdk: OrchestraClient
-  api: CatalogApi & {
+  sdk: ServerSdk
+  api: CompatibleApi & {
     readonly agent: AgentListApi
     readonly command: CommandListApi
     readonly mcp: McpApi
@@ -368,7 +353,7 @@ export async function bootstrapDirectory(input: {
     readonly project: ProjectApi
     readonly question: QuestionApi
     readonly reference: ReferenceListApi
-    readonly session: SessionApi
+    readonly session: CompatibleSessionApi
     readonly vcs: VcsApi
   }
   store: Store<State>

@@ -1,5 +1,9 @@
-import type { SessionApi, SessionInfo, SessionListInput } from "../compat/vendored-client-promise"
-import type { Session, SessionV2Info } from "@/v2-types"
+import type { SessionInfo } from "@/v2-types"
+import type { SessionListInput } from "@/v2-wire"
+import type { ServerApi } from "@/utils/server"
+
+import type { Session, SessionV2Info } from "@/v2-wire"
+
 import { withTimestampedFallback } from "./session-title"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import { SessionEvent } from "@orchestra/schema/session-event"
@@ -178,7 +182,7 @@ export function mergeSessionManagementInfo<T extends SessionManagementInfo>(curr
   }
 }
 
-export async function listAllSessions(api: Pick<SessionApi, "list">, input: Omit<SessionListInput, "cursor">) {
+export async function listAllSessions(api: Pick<ServerApi["session"], "list">, input: Omit<SessionListInput, "cursor">) {
   const load = async (cursor?: string): Promise<AppSession[]> => {
     const result = await api.list({ ...input, limit: input.limit ?? 100, cursor })
     const sessions = result.data.map(normalizeSessionInfo)

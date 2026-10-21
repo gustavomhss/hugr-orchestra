@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { Message, Part } from "@orchestra/sdk/v2/client"
+import type { Message, Part } from "@/v2-wire"
+
+
 import { estimateSessionContextBreakdown } from "./session-context-breakdown"
 
 const user = (id: string) => {

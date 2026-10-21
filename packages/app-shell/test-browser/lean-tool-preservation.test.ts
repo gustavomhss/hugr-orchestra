@@ -1,5 +1,7 @@
 import { expect, test } from "bun:test"
-import type { AssistantMessage, Session, ToolPart } from "@orchestra/sdk/v2/client"
+import type { AssistantMessage, Session, ToolPart } from "@/v2-wire"
+
+
 
 if (process.env.LEAN_WRAPPER_DOM !== "1") {
   for (const name of ["production wrapper benchmark", "rejected Lean wrapper removed preserves output and errors"]) {

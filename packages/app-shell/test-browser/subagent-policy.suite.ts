@@ -4,7 +4,8 @@ import { createComponent } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/v2-wire"
+
 import { clearPending, pendingPolicy } from "@/components/draft-subagent-models"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 

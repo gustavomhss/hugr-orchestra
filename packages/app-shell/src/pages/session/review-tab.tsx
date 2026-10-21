@@ -1,7 +1,9 @@
 import { createEffect, onCleanup, type JSX } from "solid-js"
 import { makeEventListener } from "@solid-primitives/event-listener"
-import type { SnapshotFileDiff, VcsFileDiff } from "@/v2-types"
-import type { FileDiffInfo } from "../../compat/vendored-client-promise"
+import type { VcsFileDiff } from "@/v2-types"
+import type { SnapshotFileDiff } from "@/v2-wire"
+
+import type { FileDiffInfo } from "@/v2-legacy"
 import { SessionReview } from "@orchestra/session-ui/session-review"
 import type {
   SessionReviewCommentActions,

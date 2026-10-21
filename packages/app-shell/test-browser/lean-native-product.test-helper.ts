@@ -1,7 +1,9 @@
 import { expect } from "bun:test"
 import type { LeanDashboard } from "@orchestra/schema/lean-dashboard"
 import type { LeanMetrics } from "@orchestra/schema/lean-metrics"
-import type { ToolPart } from "@orchestra/sdk/v2/client"
+import type { ToolPart } from "@/v2-wire"
+
+
 
 // Exercise the actual profile collector with the fetched durable native part, not a UI clone. The collector and the
 // dashboard schema load as plain modules, as the backend runs them, while the test body renders solidDom() copies

@@ -5,7 +5,9 @@ import { createComponent } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { Dialog } from "@kobalte/core/dialog"
-import type { Agent, AgentFileInfo, AgentFileInput, Provider } from "@orchestra/sdk/v2/client"
+import type { Agent, Provider } from "@/v2-wire"
+import type { AgentFileInfo, AgentFileInput } from "@/v2-types"
+
 import type { ModelRule } from "@/components/subagent-model-rules"
 
 // Compile the actual form and providers with Solid. Isolate the first-party graph from other tests' module mocks
