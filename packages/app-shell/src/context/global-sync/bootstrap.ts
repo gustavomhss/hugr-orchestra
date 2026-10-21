@@ -386,6 +386,7 @@ export async function bootstrapDirectory(input: {
   queryClient: QueryClient
   session?: ServerSession
   protocol?: Promise<ServerProtocol>
+  readV2Config?: () => Promise<Config>
   /** The V2 server's branch read (`GET /api/vcs`); V1 answers through the legacy SDK. */
   branches?: (input: {
     location: { directory: string }
@@ -422,7 +423,9 @@ export async function bootstrapDirectory(input: {
           input.setStore,
           "config",
           retry(async () => {
-            return
+            if (!input.readV2Config) return
+            const data = await input.readV2Config()
+            input.setStore("config", reconcile(data, { merge: false }))
           }),
           latest,
         ),

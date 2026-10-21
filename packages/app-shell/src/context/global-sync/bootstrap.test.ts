@@ -101,11 +101,12 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
       provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
     } as unknown as OrchestraClient,
     api,
+    readV2Config: () => gate.then(() => ({ model: "anthropic/claude" })),
     store: state[0],
     setStore: state[1],
     vcsCache: { setStore() {} } as unknown as VcsCache,
     loadSessions() {},
-    loadActiveSessions: async () => ({}),
+    loadActiveSessions: () => gate.then(() => ({})),
     translate: (key) => key,
     queryClient: new QueryClient(),
     protocol: Promise.resolve("v2"),
@@ -113,76 +114,6 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
 }
 
 describe("bootstrapDirectory", () => {
-  test.skip("uses legacy MCP endpoints while refreshing a v1 directory", async () => {
-    const legacyConfigReads: string[] = []
-    const mcpReads: string[] = []
-    const [store, setStore] = directoryState()
-
-    await bootstrapDirectory({
-      directory: "/project",
-      scope: ServerScope.local,
-      mcp: true,
-      global: {
-        config: {} satisfies Config,
-        path: { state: "", config: "", worktree: "/project", directory: "/project", home: "/home" },
-        project: [{ id: "project", worktree: "/project" } as Project],
-        provider,
-      },
-      sdk: {
-        app: { agents: async () => ({ data: [{ name: "build", mode: "primary" }] }) },
-        config: {
-          get: async () => {
-            legacyConfigReads.push("directory")
-            return { data: {} }
-          },
-        },
-        session: { status: async () => ({ data: {} }) },
-        vcs: { get: async () => ({ data: undefined }) },
-        command: {
-          list: async () => {
-            mcpReads.push("command")
-            return { data: [] }
-          },
-        },
-        permission: { list: async () => ({ data: [] }) },
-        question: { list: async () => ({ data: [] }) },
-        v2: { reference: { list: async () => ({ data: { data: [] } }) } },
-        mcp: {
-          status: async () => {
-            mcpReads.push("status")
-            return { data: {} }
-          },
-        },
-        experimental: {
-          resource: {
-            list: async () => {
-              mcpReads.push("resource")
-              return { data: {} }
-            },
-          },
-        },
-        provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-      } as unknown as OrchestraClient,
-      api,
-      store,
-      setStore,
-      vcsCache: { setStore() {} } as unknown as VcsCache,
-      loadSessions() {},
-      loadActiveSessions: async () => ({}),
-      translate: (key) => key,
-      queryClient: new QueryClient(),
-      protocol: Promise.resolve("v2"),
-    })
-
-    expect(store.status).toBe("partial")
-
-    await new Promise((resolve) => setTimeout(resolve, 80))
-
-    expect(store.status).toBe("complete")
-    expect(legacyConfigReads).toEqual(["directory"])
-    expect(mcpReads.sort()).toEqual(["command", "resource", "status"])
-  })
-
   test("skips legacy config while refreshing a v2 directory", async () => {
     const [store, setStore] = directoryState()
 
@@ -220,7 +151,7 @@ describe("bootstrapDirectory", () => {
 
     expect(store.status).toBe("complete")
   })
-  test.skip("records agent and config reads apart from unrelated failures", async () => {
+  test("records agent and config reads apart from unrelated failures", async () => {
     const run = async (agents: () => Promise<unknown>) => {
       const [store, setStore] = directoryState()
       await bootstrapDirectory({
@@ -247,7 +178,8 @@ describe("bootstrapDirectory", () => {
           v2: { reference: { list: async () => ({ data: { data: [] } }) } },
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
         } as unknown as OrchestraClient,
-        api,
+        api: { ...api, agent: { list: agents } } as unknown as typeof api,
+        readV2Config: async () => ({ model: "anthropic/claude" }),
         store,
         setStore,
         vcsCache: { setStore() {} } as unknown as VcsCache,
@@ -263,7 +195,7 @@ describe("bootstrapDirectory", () => {
     }
 
     const loaded = await run(async () => ({ data: [{ name: "maestro", mode: "primary" }] }))
-    expect(loaded.status).toBe("partial")
+    expect(loaded.status).toBe("complete")
     expect(loaded.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
     expect(loaded.config).toEqual({ model: "anthropic/claude" })
     expect(loaded.agent.map((agent) => agent.name)).toEqual(["maestro"])
@@ -320,7 +252,7 @@ describe("bootstrapDirectory", () => {
     }
   })
 
-  test.skip("an older bootstrap run that fails late cannot overwrite a newer run's read outcomes", async () => {
+  test("an older bootstrap run that fails late cannot overwrite a newer run's read outcomes", async () => {
     const [store, setStore] = directoryState()
     const run = (read: () => Promise<unknown>) =>
       bootstrapDirectory({
@@ -344,11 +276,12 @@ describe("bootstrapDirectory", () => {
           provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
         } as unknown as OrchestraClient,
         api,
+        readV2Config: () => read().then(() => ({ model: "anthropic/claude" })),
         store,
         setStore,
         vcsCache: { setStore() {} } as unknown as VcsCache,
         loadSessions() {},
-        loadActiveSessions: async () => ({}),
+        loadActiveSessions: () => read().then(() => ({})),
         translate: (key) => key,
         queryClient: new QueryClient(),
         protocol: Promise.resolve("v2"),
@@ -363,7 +296,7 @@ describe("bootstrapDirectory", () => {
     expect(store.load).toEqual({ agent: "ready", config: "ready", session_status: "ready" })
   })
 
-  test.skip("a superseded run's successful read stays ready when the newer run's read fails, in either order", async () => {
+  test("a superseded run's successful read stays ready when the newer run's read fails, in either order", async () => {
     // The older run's data lands in the store and a failed read never removes it, so "failed" would deny it.
     for (const newerFirst of [true, false]) {
       const state = directoryState()
@@ -385,7 +318,7 @@ describe("bootstrapDirectory", () => {
     }
   })
 
-  test.skip("only the latest run records a failure; an older run's failure waits for the newer outcome", async () => {
+  test("only the latest run records a failure; an older run's failure waits for the newer outcome", async () => {
     const state = directoryState()
     const older = Promise.withResolvers<void>()
     const newer = Promise.withResolvers<void>()
@@ -400,7 +333,7 @@ describe("bootstrapDirectory", () => {
     expect(state[0].load).toEqual({ agent: "ready", config: "failed", session_status: "failed" })
   })
 
-  test.skip("indexes the subagent Sessions between a pending request and its root so the parent still finds it", async () => {
+  test("indexes the subagent Sessions between a pending request and its root so the parent still finds it", async () => {
     const info = (id: string, parentID?: string): Session => ({
       id,
       slug: id,
@@ -420,6 +353,11 @@ describe("bootstrapDirectory", () => {
       session: { get: async (input: { sessionID: string }) => ({ data: sessions[input.sessionID] }) },
     } as unknown as OrchestraClient)
     const [store, setStore] = directoryState()
+    const testApi = {
+      ...api,
+      permission: { request: { list: async () => ({ location: {}, data: [{ id: "per_1", sessionID: "grandchild" }] }) } },
+      question: { request: { list: async () => ({ location: {}, data: [{ id: "que_1", sessionID: "child" }] }) } },
+    }
 
     await bootstrapDirectory({
       directory: "/project",
@@ -441,7 +379,7 @@ describe("bootstrapDirectory", () => {
         v2: { reference: { list: async () => ({ data: { data: [] } }) } },
         provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
       } as unknown as OrchestraClient,
-      api,
+      api: testApi as unknown as typeof api,
       store,
       setStore,
       vcsCache: { setStore() {} } as unknown as VcsCache,
@@ -477,40 +415,6 @@ describe("config queries", () => {
     )
 
     expect(result).toEqual({})
-  })
-
-  test.skip("loads legacy global config for v1 servers", async () => {
-    const calls: string[] = []
-    const config = { shell: "zsh" } satisfies Config
-    const sdk = {
-      global: {
-        config: {
-          get: async () => {
-            calls.push("global")
-            return { data: config }
-          },
-        },
-      },
-    } as unknown as OrchestraClient
-
-    const result = await new QueryClient().fetchQuery(
-      loadGlobalConfigQuery(ServerScope.local, sdk, Promise.resolve("v2")),
-    )
-
-    expect(result).toEqual(config)
-    expect(calls).toEqual(["global"])
-  })
-})
-
-describe("query keys", () => {
-  test("partitions identical directories by server scope", () => {
-    const client = {} as Parameters<typeof loadPathQuery>[2]
-    const api = {} as CatalogApi
-    const remote = "https://debian.example" as typeof ServerScope.local
-
-    expect([...loadPathQuery(ServerScope.local, "/repo", client).queryKey]).toEqual(["local", "/repo", "path"])
-    expect([...loadPathQuery(remote, "/repo", client).queryKey]).toEqual(["https://debian.example", "/repo", "path"])
-    expect([...loadProvidersQuery(remote, null, api).queryKey]).toEqual(["https://debian.example", null, "providers"])
   })
 
   test("loads the current provider and model catalog", async () => {

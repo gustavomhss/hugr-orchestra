@@ -47,7 +47,7 @@ export default function Workspaces(props: ChapterPageProps) {
     requests.disposed = true
   })
 
-  const rootKey = () => (state.project ? pathKey(state.project!.worktree) : "")
+  const rootKey = () => (state.project ? pathKey(state.project.worktree) : "")
   const active = () => activeWorkspace(state.workspaces, preference.active[rootKey()])
   const isActive = (directory: string) => pathKey(active() ?? "") === pathKey(directory)
   const workspace = (directory: string) => state.workspaces.find((item) => item.directory === directory)
@@ -72,10 +72,10 @@ export default function Workspaces(props: ChapterPageProps) {
     const result = await serverSDK()
       .protocol.then(async (protocol) => {
         const project = repositoryProject(await listProjects(protocol), props.directory)
-        if (!project || false) return { protocol, project, directories: undefined }
+        if (!project) return { protocol, project, directories: undefined }
         const directories = await serverSDK().api.project.directories({
-          projectID: project!.id,
-          location: { directory: project!.worktree },
+          projectID: project.id,
+          location: { directory: project.worktree },
         })
         return { protocol, project, directories }
       })
@@ -92,7 +92,7 @@ export default function Workspaces(props: ChapterPageProps) {
     const workspaces = project ? repositoryWorkspaces(project, result.value.directories) : []
     setState({ protocol: result.value.protocol, project, workspaces, status: workspaces.length ? "ready" : "empty" })
     if (!project) return
-    remember(project!.worktree, workspaces)
+    remember(project.worktree, workspaces)
     const branches = await readBranches(result.value.protocol, workspaces)
     if (!current()) return
     setState("branches", branches)
@@ -169,19 +169,15 @@ export default function Workspaces(props: ChapterPageProps) {
     }
     setState({ busy: true, error: undefined })
     const result = await (
-      false
-        ? serverSDK()
-            .client.worktree.create({ directory: project!.worktree, worktreeCreateInput: { name: target!.name } })
-            .then((response) => response.data?.directory)
-        : serverSDK()
-            .api.projectCopy.create({
-              projectID: project!.id,
-              strategy: WORKTREE_STRATEGY,
-              directory: target!.directory,
-              name: target!.name,
-              location: { directory: project!.worktree },
-            })
-            .then((copy) => copy.directory)
+      serverSDK()
+        .api.projectCopy.create({
+          projectID: project.id,
+          strategy: WORKTREE_STRATEGY,
+          directory: target.directory,
+          name: target.name,
+          location: { directory: project.worktree },
+        })
+        .then((copy) => copy.directory)
     ).then(
       (directory) => ({ directory }),
       (error: unknown) => ({ error }),
@@ -208,18 +204,14 @@ export default function Workspaces(props: ChapterPageProps) {
     if (!project || !target || target.root || !target.removable || isActive(directory)) return
     setState({ busy: true, error: undefined })
     const result = await (
-      false
-        ? serverSDK()
-            .client.worktree.remove({ directory: project!.worktree, worktreeRemoveInput: { directory } })
-            .then((response) => response.data === true)
-        : serverSDK()
-            .api.projectCopy.remove({
-              projectID: project!.id,
-              directory,
-              force,
-              location: { directory: project!.worktree },
-            })
-            .then(() => true)
+      serverSDK()
+        .api.projectCopy.remove({
+          projectID: project.id,
+          directory,
+          force,
+          location: { directory: project.worktree },
+        })
+        .then(() => true)
     ).then(
       (removed) => ({ removed }),
       (error: unknown) => ({ error }),
@@ -237,7 +229,7 @@ export default function Workspaces(props: ChapterPageProps) {
       return
     }
     setPreference("names", pathKey(directory), undefined)
-    mirrorSandboxes(project!.worktree, (sandboxes) => sandboxes.filter((item) => pathKey(item) !== pathKey(directory)))
+    mirrorSandboxes(project.worktree, (sandboxes) => sandboxes.filter((item) => pathKey(item) !== pathKey(directory)))
     setState({ busy: false, dialog: undefined })
     void load(true)
   }
@@ -365,7 +357,7 @@ export default function Workspaces(props: ChapterPageProps) {
         busy={state.busy}
         error={state.error}
         home={home()}
-        copyParent={state.project ? defaultCopyParent(state.project!.worktree) : ""}
+        copyParent={state.project ? defaultCopyParent(state.project.worktree) : ""}
         workspace={(directory) => {
           const item = workspace(directory)
           return item && { ...item, active: isActive(directory) }
