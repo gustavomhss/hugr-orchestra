@@ -225,9 +225,7 @@ import type {
   ProjectListResponses,
   ProjectUpdateErrors,
   ProjectUpdateResponses,
-  PromptAgentAttachment,
   PromptInput,
-  PromptInputFileAttachment,
   ProviderAuthErrors,
   ProviderAuthResponses,
   ProviderClaudeCodeAccountErrors,
@@ -450,64 +448,18 @@ import type {
   TuiShowToastResponses,
   TuiSubmitPromptErrors,
   TuiSubmitPromptResponses,
-  V2ActivitySessionErrors,
-  V2ActivitySessionResponses,
   V2AgentFileGetErrors,
   V2AgentFileGetResponses,
   V2AgentFileUpdateErrors,
   V2AgentFileUpdateResponses,
   V2AgentListErrors,
   V2AgentListResponses,
-  V2AtlasAnswerErrors,
-  V2AtlasAnswerResponses,
-  V2AtlasDecideErrors,
-  V2AtlasDecideResponses,
-  V2AtlasDelegateErrors,
-  V2AtlasDelegateResponses,
-  V2AtlasDraftErrors,
-  V2AtlasDraftResponses,
-  V2AtlasEmitErrors,
-  V2AtlasEmitResponses,
-  V2AtlasHealthErrors,
-  V2AtlasHealthResponses,
-  V2AtlasHoldErrors,
-  V2AtlasHoldResponses,
-  V2AtlasIndexErrors,
-  V2AtlasIndexResponses,
-  V2AtlasInstallErrors,
-  V2AtlasInstallResponses,
-  V2AtlasLinkErrors,
-  V2AtlasLinkResponses,
-  V2AtlasMemoryDecideErrors,
-  V2AtlasMemoryDecideResponses,
-  V2AtlasMineErrors,
-  V2AtlasMineResponses,
-  V2AtlasOwnErrors,
-  V2AtlasOwnResponses,
-  V2AtlasPromoteErrors,
-  V2AtlasPromoteResponses,
-  V2AtlasProposeErrors,
-  V2AtlasProposeResponses,
-  V2AtlasReasoningErrors,
-  V2AtlasReasoningResponses,
-  V2AtlasReleaseErrors,
-  V2AtlasReleaseResponses,
-  V2AtlasReviewErrors,
-  V2AtlasReviewResponses,
-  V2AtlasSnapshotErrors,
-  V2AtlasSnapshotResponses,
-  V2AtlasTerritoryErrors,
-  V2AtlasTerritoryResponses,
-  V2AtlasVerifyErrors,
-  V2AtlasVerifyResponses,
   V2BehaviorSetErrors,
   V2BehaviorSetResponses,
   V2CommandListErrors,
   V2CommandListResponses,
   V2ConfigGetErrors,
   V2ConfigGetResponses,
-  V2ConfigShellsErrors,
-  V2ConfigShellsResponses,
   V2ConfigUpdateErrors,
   V2ConfigUpdateResponses,
   V2CredentialRemoveErrors,
@@ -544,16 +496,8 @@ import type {
   V2IntegrationOauthCompleteResponses,
   V2IntegrationOauthStatusErrors,
   V2IntegrationOauthStatusResponses,
-  V2LeanGetErrors,
-  V2LeanGetResponses,
-  V2LeanHistoryErrors,
-  V2LeanHistoryResponses,
-  V2LeanUpdateErrors,
-  V2LeanUpdateResponses,
   V2LocationGetErrors,
   V2LocationGetResponses,
-  V2LspStatusErrors,
-  V2LspStatusResponses,
   V2McpAddErrors,
   V2McpAddResponses,
   V2McpAuthCallbackErrors,
@@ -590,12 +534,8 @@ import type {
   V2ProjectCopyRemoveResponses,
   V2ProjectDirectoriesErrors,
   V2ProjectDirectoriesResponses,
-  V2ProjectInitGitErrors,
-  V2ProjectInitGitResponses,
   V2ProjectListErrors,
   V2ProjectListResponses,
-  V2ProjectUpdateErrors,
-  V2ProjectUpdateResponses,
   V2ProviderGetErrors,
   V2ProviderGetResponses,
   V2ProviderListErrors,
@@ -696,8 +636,6 @@ import type {
   V2SessionActiveResponses,
   V2SessionArchiveErrors,
   V2SessionArchiveResponses,
-  V2SessionCommandErrors,
-  V2SessionCommandResponses,
   V2SessionCompactErrors,
   V2SessionCompactResponses,
   V2SessionContextErrors,
@@ -706,13 +644,7 @@ import type {
   V2SessionCreateResponses,
   V2SessionEventsErrors,
   V2SessionEventsResponses,
-  V2SessionForkErrors,
-  V2SessionForkResponses,
-  V2SessionGenerateErrors,
-  V2SessionGenerateResponses,
   V2SessionGetErrors,
-  V2SessionGetPermissionErrors,
-  V2SessionGetPermissionResponses,
   V2SessionGetResponses,
   V2SessionGetSubagentModelsErrors,
   V2SessionGetSubagentModelsResponses,
@@ -726,8 +658,6 @@ import type {
   V2SessionMessageResponses,
   V2SessionMessagesErrors,
   V2SessionMessagesResponses,
-  V2SessionMoveErrors,
-  V2SessionMoveResponses,
   V2SessionPermissionCreateErrors,
   V2SessionPermissionCreateResponses,
   V2SessionPermissionGetErrors,
@@ -736,10 +666,6 @@ import type {
   V2SessionPermissionListResponses,
   V2SessionPermissionReplyErrors,
   V2SessionPermissionReplyResponses,
-  V2SessionProcessesErrors,
-  V2SessionProcessesResponses,
-  V2SessionProcessStopErrors,
-  V2SessionProcessStopResponses,
   V2SessionPromptErrors,
   V2SessionPromptResponses,
   V2SessionQuestionListErrors,
@@ -758,22 +684,12 @@ import type {
   V2SessionRevertCommitResponses,
   V2SessionRevertStageErrors,
   V2SessionRevertStageResponses,
-  V2SessionSetPermissionErrors,
-  V2SessionSetPermissionResponses,
   V2SessionSetSubagentModelsErrors,
   V2SessionSetSubagentModelsResponses,
-  V2SessionShellErrors,
-  V2SessionShellResponses,
-  V2SessionSkillErrors,
-  V2SessionSkillResponses,
   V2SessionSwitchAgentErrors,
   V2SessionSwitchAgentResponses,
   V2SessionSwitchModelErrors,
   V2SessionSwitchModelResponses,
-  V2SessionSyntheticErrors,
-  V2SessionSyntheticResponses,
-  V2SessionTodoErrors,
-  V2SessionTodoResponses,
   V2SessionWaitErrors,
   V2SessionWaitResponses,
   V2SkillListErrors,
@@ -782,14 +698,6 @@ import type {
   V2SkillRemoveResponses,
   V2SkillSaveErrors,
   V2SkillSaveResponses,
-  V2VcsActivityErrors,
-  V2VcsActivityResponses,
-  V2VcsDiffErrors,
-  V2VcsDiffResponses,
-  V2VcsGetErrors,
-  V2VcsGetResponses,
-  V2VcsStatusErrors,
-  V2VcsStatusResponses,
   VcsActivityErrors,
   VcsActivityResponses,
   VcsApplyErrors,
@@ -7399,64 +7307,6 @@ export class Session3 extends HeyApiClient {
   }
 
   /**
-   * Get session permission rules
-   */
-  public getPermission<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
-    return (options?.client ?? this.client).get<
-      V2SessionGetPermissionResponses,
-      V2SessionGetPermissionErrors,
-      ThrowOnError
-    >({
-      url: "/api/session/{sessionID}/permission-rules",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Set session permission rules
-   */
-  public setPermission<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      permission?: PermissionRuleset
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "permission" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<
-      V2SessionSetPermissionResponses,
-      V2SessionSetPermissionErrors,
-      ThrowOnError
-    >({
-      url: "/api/session/{sessionID}/permission-rules",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
    * Switch session agent
    *
    * Switch the agent used by subsequent provider turns.
@@ -7576,56 +7426,9 @@ export class Session3 extends HeyApiClient {
   }
 
   /**
-   * Run command
-   *
-   * Render a configured command or an MCP prompt (`server:prompt`) with its arguments and admit the result as one session input.
-   */
-  public command<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      id?: string
-      command?: string
-      arguments?: string
-      files?: Array<PromptInputFileAttachment>
-      agents?: Array<PromptAgentAttachment>
-      delivery?: "steer" | "queue"
-      resume?: boolean
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "id" },
-            { in: "body", key: "command" },
-            { in: "body", key: "arguments" },
-            { in: "body", key: "files" },
-            { in: "body", key: "agents" },
-            { in: "body", key: "delivery" },
-            { in: "body", key: "resume" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionCommandResponses, V2SessionCommandErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/command",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
    * Compact session
    *
-   * Summarize the conversation now into a compaction checkpoint. `compacted` is false when there was nothing to summarize. A running Session is refused as busy.
+   * Compact a session conversation.
    */
   public compact<ThrowOnError extends boolean = false>(
     parameters: {
@@ -7636,243 +7439,6 @@ export class Session3 extends HeyApiClient {
     const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
     return (options?.client ?? this.client).post<V2SessionCompactResponses, V2SessionCompactErrors, ThrowOnError>({
       url: "/api/session/{sessionID}/compact",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Fork session
-   *
-   * Create a Session at the same location with a copy of the history before `messageID` (all of it when omitted), stopping at a staged revert.
-   */
-  public fork<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      messageID?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "messageID" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionForkResponses, V2SessionForkErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/fork",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Move session
-   *
-   * Move the Session to another directory or workspace of its project.
-   */
-  public move<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      location?: LocationRef
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "location" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionMoveResponses, V2SessionMoveErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/move",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Run shell command
-   *
-   * Run a shell command in the Session's location and record it with its output for the next turn. No turn starts.
-   */
-  public shell<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      id?: string
-      command?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "id" },
-            { in: "body", key: "command" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionShellResponses, V2SessionShellErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/shell",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Load skill
-   *
-   * Record a skill's instructions as context, then run a turn unless resume is false.
-   */
-  public skill<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      skill?: string
-      resume?: boolean
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "skill" },
-            { in: "body", key: "resume" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionSkillResponses, V2SessionSkillErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/skill",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Add synthetic context
-   *
-   * Record text as synthetic context, then run a turn unless resume is false.
-   */
-  public synthetic<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      id?: string
-      text?: string
-      resume?: boolean
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "id" },
-            { in: "body", key: "text" },
-            { in: "body", key: "resume" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionSyntheticResponses, V2SessionSyntheticErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/synthetic",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Generate text
-   *
-   * Run one tool-less completion of the prompt after the Session's history with its model. Nothing is recorded.
-   */
-  public generate<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      prompt?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "body", key: "prompt" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2SessionGenerateResponses, V2SessionGenerateErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/generate",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Get session todos
-   *
-   * The Session's current todo list, as its agent last wrote it.
-   */
-  public todo<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "path", key: "sessionID" }] }])
-    return (options?.client ?? this.client).get<V2SessionTodoResponses, V2SessionTodoErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/todo",
       ...options,
       ...params,
     })
@@ -8022,70 +7588,6 @@ export class Session3 extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<V2SessionMessageResponses, V2SessionMessageErrors, ThrowOnError>({
       url: "/api/session/{sessionID}/message/{messageID}",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * List background processes
-   *
-   * List the process trees a session's shell tool left running.
-   */
-  public processes<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      tail?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "query", key: "tail" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2SessionProcessesResponses, V2SessionProcessesErrors, ThrowOnError>({
-      url: "/api/session/{sessionID}/processes",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Stop background process
-   *
-   * Stop one background process tree of a session.
-   */
-  public processStop<ThrowOnError extends boolean = false>(
-    parameters: {
-      sessionID: string
-      processID: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "sessionID" },
-            { in: "path", key: "processID" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<
-      V2SessionProcessStopResponses,
-      V2SessionProcessStopErrors,
-      ThrowOnError
-    >({
-      url: "/api/session/{sessionID}/processes/{processID}/stop",
       ...options,
       ...params,
     })
@@ -8868,28 +8370,17 @@ export class Fs extends HeyApiClient {
    * Serve one file relative to the requested location.
    */
   public read<ThrowOnError extends boolean = false>(
-    parameters: {
+    parameters?: {
       location?: {
         directory?: string
         workspace?: string
       }
-      path: string
     },
     options?: Options<never, ThrowOnError>,
   ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "query", key: "path" },
-          ],
-        },
-      ],
-    )
+    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
     return (options?.client ?? this.client).get<V2FsReadResponses, V2FsReadErrors, ThrowOnError>({
-      url: "/api/fs/read",
+      url: "/api/fs/read/*",
       ...options,
       ...params,
     })
@@ -8960,157 +8451,6 @@ export class Fs extends HeyApiClient {
     )
     return (options?.client ?? this.client).get<V2FsFindResponses, V2FsFindErrors, ThrowOnError>({
       url: "/api/fs/find",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Vcs2 extends HeyApiClient {
-  /**
-   * Get branch
-   *
-   * The current branch and the repository's default branch; both absent outside a git repository.
-   */
-  public get<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2VcsGetResponses, V2VcsGetErrors, ThrowOnError>({
-      url: "/api/vcs",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * List changed files
-   *
-   * Changed files against HEAD with their line counts.
-   */
-  public status<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2VcsStatusResponses, V2VcsStatusErrors, ThrowOnError>({
-      url: "/api/vcs/status",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Diff changes
-   *
-   * Diffs of the working tree against HEAD (`working`) or against the merge base with the default branch (`branch`).
-   */
-  public diff<ThrowOnError extends boolean = false>(
-    parameters: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      mode: "working" | "branch"
-      context?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "query", key: "mode" },
-            { in: "query", key: "context" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2VcsDiffResponses, V2VcsDiffErrors, ThrowOnError>({
-      url: "/api/vcs/diff",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Get commit activity
-   *
-   * Commits, merges, authors and changed lines between two epoch-millisecond bounds.
-   */
-  public activity<ThrowOnError extends boolean = false>(
-    parameters: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      since: string
-      until: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "query", key: "since" },
-            { in: "query", key: "until" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2VcsActivityResponses, V2VcsActivityErrors, ThrowOnError>({
-      url: "/api/vcs/activity",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Activity extends HeyApiClient {
-  /**
-   * Get Session activity
-   *
-   * Recorded Session activity of the location's project over a period (of the directory alone outside git).
-   */
-  public session<ThrowOnError extends boolean = false>(
-    parameters: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      period: "7d" | "30d" | "90d" | "all"
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "query", key: "period" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2ActivitySessionResponses, V2ActivitySessionErrors, ThrowOnError>({
-      url: "/api/activity/session",
       ...options,
       ...params,
     })
@@ -9447,30 +8787,6 @@ export class Mcp2 extends HeyApiClient {
   private _auth?: Auth3
   get auth(): Auth3 {
     return (this._auth ??= new Auth3({ client: this.client }))
-  }
-}
-
-export class Lsp2 extends HeyApiClient {
-  /**
-   * LSP status
-   *
-   * List the Location's connected language servers and their status.
-   */
-  public status<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2LspStatusResponses, V2LspStatusErrors, ThrowOnError>({
-      url: "/api/lsp",
-      ...options,
-      ...params,
-    })
   }
 }
 
@@ -10089,983 +9405,6 @@ export class Project2 extends HeyApiClient {
       ...params,
     })
   }
-
-  /**
-   * Update project
-   *
-   * Rename a project or change its icon or start command.
-   */
-  public update<ThrowOnError extends boolean = false>(
-    parameters: {
-      projectID: string
-      name?: string
-      icon?: {
-        color?: string
-        override?: string
-      }
-      commands?: ProjectCommands
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "projectID" },
-            { in: "body", key: "name" },
-            { in: "body", key: "icon" },
-            { in: "body", key: "commands" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).patch<V2ProjectUpdateResponses, V2ProjectUpdateErrors, ThrowOnError>({
-      url: "/api/project/{projectID}",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Initialize git
-   *
-   * Make the requested directory a git repository with an empty first commit and return its recorded project.
-   */
-  public initGit<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).post<V2ProjectInitGitResponses, V2ProjectInitGitErrors, ThrowOnError>({
-      url: "/api/project/git",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Lean extends HeyApiClient {
-  /**
-   * Get Lean dashboard
-   *
-   * The saved profile's Lean switches and what Lean saved per item in this Location.
-   */
-  public get<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2LeanGetResponses, V2LeanGetErrors, ThrowOnError>({
-      url: "/api/lean",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Update Lean preferences
-   *
-   * Switch Lean or one of its items on or off for the saved profile, and return the dashboard.
-   */
-  public update<ThrowOnError extends boolean = false>(
-    parameters: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      leanProfileUpdate: LeanProfileUpdate
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { key: "leanProfileUpdate", map: "body" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).patch<V2LeanUpdateResponses, V2LeanUpdateErrors, ThrowOnError>({
-      url: "/api/lean",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Get Lean item history
-   *
-   * The latest executions one Lean item saved output on in this Location.
-   */
-  public history<ThrowOnError extends boolean = false>(
-    parameters: {
-      itemID:
-        | "cargo"
-        | "go"
-        | "pytest"
-        | "jest"
-        | "vitest"
-        | "git"
-        | "rg"
-        | "tsc"
-        | "node"
-        | "pnpm"
-        | "eslint"
-        | "biome"
-        | "ruff"
-        | "pyright"
-        | "pylint"
-        | "bun"
-        | "esbuild"
-        | "golangci"
-        | "markdownlint"
-        | "mypy"
-        | "next"
-        | "npm"
-        | "pip"
-        | "playwright"
-        | "prettier"
-        | "rollup"
-        | "shellcheck"
-        | "stylelint"
-        | "uv"
-        | "vite"
-        | "webpack"
-        | "yarn"
-        | "shell"
-        | "read"
-        | "webfetch"
-        | "glob"
-        | "grep"
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "itemID" },
-            { in: "query", key: "location" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2LeanHistoryResponses, V2LeanHistoryErrors, ThrowOnError>({
-      url: "/api/lean/history/{itemID}",
-      ...options,
-      ...params,
-    })
-  }
-}
-
-export class Atlas2 extends HeyApiClient {
-  /**
-   * Get the Atlas snapshot
-   *
-   * Facts, candidates, drift, store files, dependents, the tree, committed Own, Memory and territories.
-   */
-  public snapshot<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2AtlasSnapshotResponses, V2AtlasSnapshotErrors, ThrowOnError>({
-      url: "/api/atlas/snapshot",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Get a staged fact's reasoning
-   *
-   * The model reasoning a staged row's answerRef names, by the fact's 12-character why.
-   */
-  public reasoning<ThrowOnError extends boolean = false>(
-    parameters: {
-      id: string
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "path", key: "id" },
-            { in: "query", key: "location" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2AtlasReasoningResponses, V2AtlasReasoningErrors, ThrowOnError>({
-      url: "/api/atlas/reasoning/{id}",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Get an Atlas own briefing
-   *
-   * The live own briefing Atlas composes for one scope.
-   */
-  public own<ThrowOnError extends boolean = false>(
-    parameters: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      scope: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "query", key: "scope" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).get<V2AtlasOwnResponses, V2AtlasOwnErrors, ThrowOnError>({
-      url: "/api/atlas/own",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Get Atlas store health
-   *
-   * Provenance, CAS audit, proof re-verification, index plan and hot-set size.
-   */
-  public health<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2AtlasHealthResponses, V2AtlasHealthErrors, ThrowOnError>({
-      url: "/api/atlas/health",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Promote staged Atlas candidates
-   *
-   * Present every staged row to the governed emit door, as atlas promote does.
-   */
-  public promote<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      token?: string
-      nodeKeys?: Array<string>
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "token" },
-            { in: "body", key: "nodeKeys" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasPromoteResponses, V2AtlasPromoteErrors, ThrowOnError>({
-      url: "/api/atlas/promote",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Draft and check an Atlas fact
-   *
-   * Compose a fact at an anchor and dry-run the emit gates; nothing is written.
-   */
-  public draft<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      anchor?: string
-      slot?: string
-      claim?: string
-      supersede?: boolean
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "anchor" },
-            { in: "body", key: "slot" },
-            { in: "body", key: "claim" },
-            { in: "body", key: "supersede" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasDraftResponses, V2AtlasDraftErrors, ThrowOnError>({
-      url: "/api/atlas/draft",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Emit an Atlas fact
-   *
-   * Write a drafted fact through the governed emit door at the draft's rev.
-   */
-  public emit<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      fact?: unknown
-      at?: string
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "fact" },
-            { in: "body", key: "at" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasEmitResponses, V2AtlasEmitErrors, ThrowOnError>({
-      url: "/api/atlas/emit",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Link two Atlas facts
-   *
-   * Assert, or retract, that two facts are the same fact, through the governed link door.
-   */
-  public link<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      a?: string
-      b?: string
-      retract?: boolean
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "a" },
-            { in: "body", key: "b" },
-            { in: "body", key: "retract" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasLinkResponses, V2AtlasLinkErrors, ThrowOnError>({
-      url: "/api/atlas/link",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Verify a claim against the code index
-   *
-   * Prove, refute or abstain on a dependency, count, definition or negation claim; nothing is written.
-   */
-  public verify<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      kind?: string
-      target?: string
-      scope?: string
-      world?: string
-      min?: number
-      exact?: boolean
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "kind" },
-            { in: "body", key: "target" },
-            { in: "body", key: "scope" },
-            { in: "body", key: "world" },
-            { in: "body", key: "min" },
-            { in: "body", key: "exact" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasVerifyResponses, V2AtlasVerifyErrors, ThrowOnError>({
-      url: "/api/atlas/verify",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Get the Atlas review queue
-   *
-   * Held candidates, open tier proposals, open memory proposals and the interview batch with its drafts.
-   */
-  public review<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).get<V2AtlasReviewResponses, V2AtlasReviewErrors, ThrowOnError>({
-      url: "/api/atlas/review",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Hold a staged Atlas candidate
-   *
-   * Every promote skips a held candidate until it is released.
-   */
-  public hold<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      nodeKey?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "nodeKey" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasHoldResponses, V2AtlasHoldErrors, ThrowOnError>({
-      url: "/api/atlas/hold",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Release a held Atlas candidate
-   *
-   * The next promote presents the candidate again.
-   */
-  public release<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      nodeKey?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "nodeKey" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasReleaseResponses, V2AtlasReleaseErrors, ThrowOnError>({
-      url: "/api/atlas/release",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Propose an Atlas tier raise
-   *
-   * Record a proposal to raise a fact to T1 or T0 for a person to decide.
-   */
-  public propose<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      nodeKey?: string
-      toTier?: "T1" | "T0"
-      reason?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "nodeKey" },
-            { in: "body", key: "toTier" },
-            { in: "body", key: "reason" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasProposeResponses, V2AtlasProposeErrors, ThrowOnError>({
-      url: "/api/atlas/propose",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Decide an Atlas tier proposal
-   *
-   * Ratify a proposal, re-emitting the fact at its tier through the governed emit door, or reject it.
-   */
-  public decide<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      proposalId?: string
-      verdict?: "ratified" | "rejected"
-      reason?: string
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "proposalId" },
-            { in: "body", key: "verdict" },
-            { in: "body", key: "reason" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasDecideResponses, V2AtlasDecideErrors, ThrowOnError>({
-      url: "/api/atlas/decide",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Answer an Atlas interview question
-   *
-   * Record a person's answer, or a model's draft that keeps the question open until a person accepts it.
-   */
-  public answer<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      questionId?: string
-      answer?: string
-      drafted?: {
-        model: string
-        why: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "questionId" },
-            { in: "body", key: "answer" },
-            { in: "body", key: "drafted" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasAnswerResponses, V2AtlasAnswerErrors, ThrowOnError>({
-      url: "/api/atlas/answer",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Decide an Atlas memory proposal
-   *
-   * Index a proposed project rule into the member's memory, or discard it.
-   */
-  public memoryDecide<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      proposalId?: string
-      verdict?: "indexed" | "discarded"
-      rule?: string
-      scope?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "proposalId" },
-            { in: "body", key: "verdict" },
-            { in: "body", key: "rule" },
-            { in: "body", key: "scope" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasMemoryDecideResponses, V2AtlasMemoryDecideErrors, ThrowOnError>(
-      {
-        url: "/api/atlas/memory-decide",
-        ...options,
-        ...params,
-        headers: {
-          "Content-Type": "application/json",
-          ...options?.headers,
-          ...params.headers,
-        },
-      },
-    )
-  }
-
-  /**
-   * Declare an Atlas territory
-   *
-   * Write a territory, its owner, tier and globs to the territory catalog.
-   */
-  public territory<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      name?: string
-      owner?: string
-      tier?: "T0" | "T1" | "T2"
-      globs?: Array<string>
-      token?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "name" },
-            { in: "body", key: "owner" },
-            { in: "body", key: "tier" },
-            { in: "body", key: "globs" },
-            { in: "body", key: "token" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasTerritoryResponses, V2AtlasTerritoryErrors, ThrowOnError>({
-      url: "/api/atlas/territory",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Delegate Atlas interview questions to a model
-   *
-   * A model drafts an answer to each open question; each draft keeps its question open until a person accepts it.
-   */
-  public delegate<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      questionIds?: Array<string>
-      providerID?: string
-      modelID?: string
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "questionIds" },
-            { in: "body", key: "providerID" },
-            { in: "body", key: "modelID" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasDelegateResponses, V2AtlasDelegateErrors, ThrowOnError>({
-      url: "/api/atlas/delegate",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
-
-  /**
-   * Set Atlas up in this project
-   *
-   * Create the store, write a policy granting the acting person every scope, and make git ignore the store.
-   */
-  public install<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).post<V2AtlasInstallResponses, V2AtlasInstallErrors, ThrowOnError>({
-      url: "/api/atlas/install",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Index the project's code for Atlas
-   *
-   * Run the SCIP indexer the store's plan names, from the project root, and report the result.
-   */
-  public index<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams([parameters], [{ args: [{ in: "query", key: "location" }] }])
-    return (options?.client ?? this.client).post<V2AtlasIndexResponses, V2AtlasIndexErrors, ThrowOnError>({
-      url: "/api/atlas/index",
-      ...options,
-      ...params,
-    })
-  }
-
-  /**
-   * Mine candidate facts with a model
-   *
-   * Ask a model about each site Genesis ranks and stage the facts that pass admission as candidates.
-   */
-  public mine<ThrowOnError extends boolean = false>(
-    parameters?: {
-      location?: {
-        directory?: string
-        workspace?: string
-      }
-      providerID?: string
-      modelID?: string
-      ceiling?: number
-    },
-    options?: Options<never, ThrowOnError>,
-  ) {
-    const params = buildClientParams(
-      [parameters],
-      [
-        {
-          args: [
-            { in: "query", key: "location" },
-            { in: "body", key: "providerID" },
-            { in: "body", key: "modelID" },
-            { in: "body", key: "ceiling" },
-          ],
-        },
-      ],
-    )
-    return (options?.client ?? this.client).post<V2AtlasMineResponses, V2AtlasMineErrors, ThrowOnError>({
-      url: "/api/atlas/mine",
-      ...options,
-      ...params,
-      headers: {
-        "Content-Type": "application/json",
-        ...options?.headers,
-        ...params.headers,
-      },
-    })
-  }
 }
 
 export class Config4 extends HeyApiClient {
@@ -11102,18 +9441,6 @@ export class Config4 extends HeyApiClient {
         ...options?.headers,
         ...params.headers,
       },
-    })
-  }
-
-  /**
-   * List shells
-   *
-   * The shells installed on the server host; `acceptable` ones can run commands, the rest only terminals.
-   */
-  public shells<ThrowOnError extends boolean = false>(options?: Options<never, ThrowOnError>) {
-    return (options?.client ?? this.client).get<V2ConfigShellsResponses, V2ConfigShellsErrors, ThrowOnError>({
-      url: "/api/config/shells",
-      ...options,
     })
   }
 }
@@ -12514,16 +10841,6 @@ export class V2 extends HeyApiClient {
     return (this._fs ??= new Fs({ client: this.client }))
   }
 
-  private _vcs?: Vcs2
-  get vcs(): Vcs2 {
-    return (this._vcs ??= new Vcs2({ client: this.client }))
-  }
-
-  private _activity?: Activity
-  get activity(): Activity {
-    return (this._activity ??= new Activity({ client: this.client }))
-  }
-
   private _command?: Command2
   get command(): Command2 {
     return (this._command ??= new Command2({ client: this.client }))
@@ -12532,11 +10849,6 @@ export class V2 extends HeyApiClient {
   private _mcp?: Mcp2
   get mcp(): Mcp2 {
     return (this._mcp ??= new Mcp2({ client: this.client }))
-  }
-
-  private _lsp?: Lsp2
-  get lsp(): Lsp2 {
-    return (this._lsp ??= new Lsp2({ client: this.client }))
   }
 
   private _skill?: Skill
@@ -12577,16 +10889,6 @@ export class V2 extends HeyApiClient {
   private _project?: Project2
   get project(): Project2 {
     return (this._project ??= new Project2({ client: this.client }))
-  }
-
-  private _lean?: Lean
-  get lean(): Lean {
-    return (this._lean ??= new Lean({ client: this.client }))
-  }
-
-  private _atlas?: Atlas2
-  get atlas(): Atlas2 {
-    return (this._atlas ??= new Atlas2({ client: this.client }))
   }
 
   private _config?: Config4
