@@ -361,8 +361,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         : createCompatibleApi({
             protocol: server.protocol,
             current: server.currentApi,
-            legacy: (directory) =>
-              server.createClient({ directory: directory ?? sessionDirectory, throwOnError: true }),
             directory: sessionDirectory,
           }).session
 

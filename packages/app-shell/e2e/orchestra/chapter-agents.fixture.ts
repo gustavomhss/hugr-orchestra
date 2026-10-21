@@ -1,5 +1,5 @@
 import { expect, type Page, type Request } from "@playwright/test"
-import type { ProviderListResponse } from "../../v2-wire"
+import type { ProviderListResponse } from "@/v2-wire"
 
 import { mockOrchestraServer } from "../utils/mock-server"
 import { agentProvider } from "./chapter-agents.models"

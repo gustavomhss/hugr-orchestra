@@ -41,7 +41,6 @@ type LegacyLocation = { directory?: string }
 type CompatibleInput = {
   protocol?: Promise<ServerProtocol>
   current: ServerApi
-  legacy?: (directory?: string) => unknown
   directory?: string
 }
 
@@ -100,10 +99,4 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
         ),
     },
   } as unknown as CompatibleApi
-}
-
-function isMissingRoute(error: unknown) {
-  const status =
-    error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
-  return status === 404 || status === 405
 }

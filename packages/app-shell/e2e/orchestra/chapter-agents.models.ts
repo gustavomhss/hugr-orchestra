@@ -1,4 +1,4 @@
-import type { Model, Provider } from "../../v2-wire"
+import type { Model, Provider } from "@/v2-wire"
 
 
 function model(id: string, name: string): Model {

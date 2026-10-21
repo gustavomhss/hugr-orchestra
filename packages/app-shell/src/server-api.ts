@@ -4,7 +4,9 @@
 // app's contract, not the current API's generated ones: the app keeps the legacy field names and envelopes
 // (the `data` envelope, the mutable payloads) that its state and reducers work with.
 
-import type { AgentFileInfo, AgentFileInput, IntegrationMethod, Message, PermissionRequest, Project, ProjectListOutput, QuestionRequest, Session, SessionInfo, SessionV2Info, Todo, ToolPart,  } from "@/v2-types"
+import type { SessionsEventsOutput } from "@orchestra/client"
+
+import type { AgentFileInfo, AgentFileInput, IntegrationMethod, Message, PermissionRequest, Project, ProjectListOutput, QuestionRequest, Session, SessionInfo, SessionV2Info, Todo, ToolPart } from "@/v2-types"
 import type { SessionMessageInfo } from "@/v2-legacy"
 
 import type {
@@ -34,7 +36,6 @@ import type {
   SessionCompactInput,
   SessionCompactOutput,
   SessionListInput,
-  SessionPendingMessage,
   SessionProcess,
   SessionPromptInput,
   SessionPromptOutput,
@@ -109,7 +110,7 @@ export type ServerApi = {
       input: { sessionID: string; limit?: number; before?: string },
       requestOptions?: RequestOptions,
     ) => Promise<{ data: Message[]; parts: Record<string, ToolPart[]> }>
-    events: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<SessionMessageInfo[]>
+    events: (input: { sessionID: string }, requestOptions?: RequestOptions) => AsyncIterable<SessionsEventsOutput>
     interrupt: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<void>
     processes: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<SessionProcess[]>
     getPermission: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<PermissionRequest[]>
@@ -119,7 +120,6 @@ export type ServerApi = {
     ) => Promise<void>
     getSubagentModels: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<unknown>
     setSubagentModels: (input: { sessionID: string; policy: unknown }, requestOptions?: RequestOptions) => Promise<unknown>
-    pending: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<SessionPendingMessage[]>
     revert: {
       stage: (input: { sessionID: string; messageID: string }, requestOptions?: RequestOptions) => Promise<{ messageID: string }>
       clear: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<void>

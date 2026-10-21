@@ -1,5 +1,5 @@
 import { Orchestra } from "@orchestra/client"
-import { createOrchestraClient } from "@orchestra/sdk/v2/client"
+import { createOrchestraClient } from "../compat/sdk-v2-client"
 import type { ServerConnection } from "@/context/server"
 import type { ServerApi } from "@/server-api"
 import { decode64 } from "@/utils/base64"

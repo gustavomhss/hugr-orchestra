@@ -1,5 +1,5 @@
 import { expect, type Page, type Route, type WebSocketRoute } from "@playwright/test"
-import type { ModelInfo } from "../../v2-wire"
+import type { ModelInfo } from "@/v2-wire"
 
 import { mockOrchestraServer } from "./mock-server"
 

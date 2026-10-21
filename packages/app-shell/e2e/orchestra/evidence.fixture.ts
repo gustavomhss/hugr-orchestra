@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises"
 import { expect, type Page } from "@playwright/test"
-import type { ModelInfo } from "../../v2-wire"
-import type { SessionMessageInfo } from "../../v2-types"
+import type { ModelInfo } from "@/v2-wire"
+import type { WireSessionMessageInfo } from "@/v2-types"
 
 import {
   assistantMessage,
@@ -32,7 +32,7 @@ export async function evidencePage(
     directory?: string
     metadata?: Record<string, unknown>
     protocol?: "v2"
-    raw?: SessionMessageInfo[]
+    raw?: WireSessionMessageInfo[]
     secondServer?: string
     scheme?: "light" | "dark"
     locale?: "en" | "ar"
@@ -95,7 +95,7 @@ export async function evidencePage(
     enabled: true,
     limit: { context: 200_000, output: 8192 },
   }
-  const raw: SessionMessageInfo[] = input.raw ?? [
+  const raw: WireSessionMessageInfo[] = input.raw ?? [
     { id: "msg_1000_timeline_user", type: "user", text: "Check these test results.", time: { created: 1700000000000 } },
     {
       id: "msg_1001_timeline_assistant",

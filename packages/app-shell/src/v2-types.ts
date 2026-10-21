@@ -508,7 +508,7 @@ export type McpServer = {
   status: McpStatusConnected | McpStatusDisabled | McpStatusFailed | McpStatusNeedsAuth | McpStatusNeedsClientRegistration
 }
 
-export type SessionMessageInfo =
+export type WireSessionMessageInfo =
   | WireSessionMessageAgentSelected
   | WireSessionMessageModelSelected
   | WireSessionMessageUser

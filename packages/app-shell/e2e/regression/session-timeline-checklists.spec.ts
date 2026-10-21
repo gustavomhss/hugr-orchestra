@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test"
-import type { OrchestraEvent } from "@orchestra/client"
+import type { OpenCodeEvent } from "@/v2-legacy-events"
 import {
   assistantID,
   assistantMessage,
@@ -13,7 +13,8 @@ import {
   userMessage,
 } from "../performance/timeline-stability/fixture"
 
-for (const scenario of [{ protocol: "v1" }, { protocol: "v2" }] as const) {
+// The V1 server protocol is gone; the timeline speaks the current one only.
+for (const scenario of [{ protocol: "v2" }] as const) {
   test(`renders confirmed historical checklists as read-only snapshots (${scenario.protocol}, virtual)`, async ({
     page,
   }) => {
@@ -121,7 +122,7 @@ test("preserves live V2 structured checklists with truncated output", async ({ p
   await expect(page.getByText("Waiting for confirmation", { exact: true })).toBeVisible()
   await expect(live).toHaveCount(0)
 
-  const send = (event: OrchestraEvent) => timeline.transport.writeRaw(`data: ${JSON.stringify(event)}\n\n`)
+  const send = (event: OpenCodeEvent) => timeline.transport.writeRaw(`data: ${JSON.stringify(event)}\n\n`)
   await send({
     id: "evt_v2_success",
     type: "session.tool.success",

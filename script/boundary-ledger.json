@@ -512,12 +512,6 @@
     },
     {
       "rule": "R4",
-      "file": "apps/storybook/.storybook/mocks/app/context/server-sdk.ts",
-      "specifier": "@opencode-ai/client/promise",
-      "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"
-    },
-    {
-      "rule": "R4",
       "file": "apps/storybook/.storybook/mocks/app/context/server-sync.ts",
       "specifier": "@orchestra/sdk/v2/client",
       "reason": "D7: undeclared workspace import; 70-90 makes no manifest dependency edits"

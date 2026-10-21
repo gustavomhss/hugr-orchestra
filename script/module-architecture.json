@@ -534,16 +534,6 @@
       "compat": { ".": "sdk", "./v2": "sdk-v2", "./v2/client": "sdk-v2-client", "./v2/types": "sdk-v2-types" }
     },
     {
-      "path": "packages/app-shell/vendor/opencode-ai-client-1.17.13-v2.tgz",
-      "specifier": "@opencode-ai/client",
-      "label": "the vendored upstream client tarball listed in script/rename-ledger.ts",
-      "status": "legacy",
-      "successor": "packages/client",
-      "reason": "published upstream client that cannot be rebuilt from this tree",
-      "decision": "D14",
-      "compat": { ".": "vendored-client", "./promise": "vendored-client-promise" }
-    },
-    {
       "path": "apps/orchestra",
       "status": "legacy",
       "successor": "apps/cli and packages/server",

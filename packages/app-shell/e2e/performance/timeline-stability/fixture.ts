@@ -2,10 +2,9 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { Event } from "@orchestra/schema/event"
 import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import { SessionV1 } from "@orchestra/schema/session-v1"
-import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, UserMessage } from "../../../v2-wire"
+import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, ToolState, UserMessage } from "@/v2-wire"
 
-import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, ToolState, UserMessage, GlobalEvent } from "../../../src/v2-legacy"
-import type { ToolState } from "../../../v2-wire"
+import type { GlobalEvent } from "@/v2-legacy"
 
 import { expect, type Page } from "@playwright/test"
 import { Schema } from "effect"

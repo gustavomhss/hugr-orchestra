@@ -4,8 +4,7 @@
 // wire declarations (`@/v2-wire`), and the legacy client packages that used to own them are gone. This module
 // owns them locally.
 
-import type { SessionInfo, SessionMessageInfo as ContractSessionMessageInfo } from "@/v2-types"
-import type {  } from "@/v2-legacy"
+import type { SessionInfo, WireSessionMessageInfo } from "@/v2-types"
 
 import type { Event, Message, Part, Session, Todo } from "@/v2-wire"
 
@@ -25,13 +24,13 @@ export type FileDiffInfo = {
  * The bundled client's assistant and user messages: the members of the session-message union, not the schema's
  * own message shapes (the bundled client's content parts carry no id).
  */
-export type SessionMessageAssistant = Extract<ContractSessionMessageInfo, { type: "assistant" }>
-export type SessionMessageUser = Extract<ContractSessionMessageInfo, { type: "user" }>
+export type SessionMessageAssistant = Extract<WireSessionMessageInfo, { type: "assistant" }>
+export type SessionMessageUser = Extract<WireSessionMessageInfo, { type: "user" }>
 
 /** The bundled client's skill message: the one member the local contract's union does not carry. */
 export type SessionMessageSkill = {
   id: string
-  metadata?: { [x: string]: unknown }
+  metadata?: { [x: string]: JsonValue }
   time: { created: number }
   type: "skill"
   skill: string
@@ -40,7 +39,7 @@ export type SessionMessageSkill = {
 }
 
 /** The session-message union, with the skill message the local contract's union omits. */
-export type SessionMessageInfo = ContractSessionMessageInfo | SessionMessageSkill
+export type SessionMessageInfo = WireSessionMessageInfo | SessionMessageSkill
 
 /** The bundled client's pending session message: the legacy shape the store's inbox carries. */
 export type SessionPendingMessage = SessionPendingUserMessage | SessionPendingSyntheticMessage;
@@ -55,37 +54,6 @@ type SessionPendingSyntheticMessage = {
     type: "synthetic";
     data: SessionPendingSyntheticData1;
     delivery: "steer" | "queue";
-};
-
-type SessionPendingUser = {
-    admittedSeq: number;
-    id: string;
-    sessionID: string;
-    timeCreated: number;
-    type: "user";
-    data: SessionPendingUserData;
-    delivery: "steer" | "queue";
-};
-
-type SessionPendingSynthetic = {
-    admittedSeq: number;
-    id: string;
-    sessionID: string;
-    timeCreated: number;
-    type: "synthetic";
-    data: SessionPendingSyntheticData;
-    delivery: "steer" | "queue";
-};
-
-type SessionPendingSyntheticData = SessionPendingSyntheticData1
-
-type SessionPendingUserData = {
-    text: string;
-    files?: Array<PromptFileAttachment>;
-    agents?: Array<PromptAgentAttachment>;
-    metadata?: {
-        [x: string]: JsonValue;
-    };
 };
 
 type SessionPendingUserData1 = {

@@ -1,6 +1,10 @@
 import { useProviders } from "@/hooks/use-providers"
 import { useServerSync } from "@/context/server-sync"
-import type { IntegrationMethod, IntegrationOauthConnectInput } from "@opencode-ai/client/promise"
+import type { IntegrationMethod } from "@/v2-types"
+import type { ServerApi } from "@/server-api"
+
+// The mocked API is the app-shell's own contract, so its oauth connect input comes from there.
+type IntegrationOauthConnectInput = Parameters<ServerApi["integration"]["oauth"]["connect"]>[0]
 
 const providers = [
   "opencode",

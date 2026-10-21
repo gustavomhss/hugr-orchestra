@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { PromptInput } from "@orchestra/schema/prompt-input"
 import { SessionInput } from "@orchestra/schema/session-input"
 import { Schema } from "effect"
-import { createApiForServer, createSdkForServer } from "./server"
+import { createApiForServer } from "./server"
 import { createCompatibleApi } from "./server-compat"
 
 import { rethrow } from "../testing/rejection"
@@ -65,7 +65,6 @@ function setup(
   const api = createCompatibleApi({
     protocol: typeof protocol === "string" ? Promise.resolve(protocol) : protocol,
     current: createApiForServer({ server, fetch: fetcher }),
-    legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
     directory: "/repo",
   })
   return { api, requests }
@@ -227,7 +226,6 @@ describe("createCompatibleApi", () => {
           const api = createCompatibleApi({
             protocol: Promise.resolve("v2"),
             current: createApiForServer({ server, fetch: fetcher }),
-            legacy: (directory) => createSdkForServer({ server, fetch: fetcher, directory, throwOnError: true }),
             directory: "/repo",
           })
           await api.integration.connect.key({
