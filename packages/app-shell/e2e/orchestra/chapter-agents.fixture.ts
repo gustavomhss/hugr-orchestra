@@ -114,7 +114,7 @@ export async function setup(
     wait?: Promise<void>
     waitOther?: Promise<void>
     response?: { state: string }
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     models?: boolean
     files?: Record<string, AgentFile>
     // `html`: an older server answers unknown routes with its web app and status 200.

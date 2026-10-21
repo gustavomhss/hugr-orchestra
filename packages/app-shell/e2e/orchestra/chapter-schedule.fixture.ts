@@ -68,7 +68,7 @@ function recorder() {
 // `shared` lets a second page of the same context reuse the first page's recorder and sessions.
 export async function setup(
   page: Page,
-  input: { scheme?: "dark" | "light"; protocol?: "v1" | "v2"; legacy?: boolean } = {},
+  input: { scheme?: "dark" | "light"; protocol?: "v2"; legacy?: boolean } = {},
   shared?: ReturnType<typeof recorder>,
 ) {
   const protocol = input.protocol ?? "v2"

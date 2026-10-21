@@ -33,7 +33,7 @@ export async function createPipeline(page: Page) {
 // Server PTY double: records creates, gate input and removal attempts; `exit` ends the run like the
 // server (status first, then a normal close), and `missing` answers like a server that lost the
 // session. Register it after `setup`: Playwright tries the most recently registered route first.
-export async function mockPty(page: Page, protocol: "v1" | "v2") {
+export async function mockPty(page: Page, protocol: "v2") {
   const state = {
     creates: [] as Record<string, unknown>[],
     inputs: [] as string[],
@@ -159,7 +159,7 @@ export async function chooseProfile(page: Page, name: string) {
 export async function setup(
   page: Page,
   options: {
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     state?: "empty" | "error" | "unavailable"
     gitlab?: boolean
     listFailure?: () => boolean

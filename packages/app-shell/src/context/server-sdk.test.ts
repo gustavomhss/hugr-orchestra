@@ -20,15 +20,15 @@ describe("createServerProtocolPromise", () => {
     })
     try {
       const protocol = createServerProtocolPromise({ url: listener.url.origin }, fetch)
-      expect(await Promise.all([protocol, protocol, protocol.then((kind) => kind)])).toEqual(["v1", "v1", "v1"])
-      expect(await protocol).toBe("v1")
+      expect(await Promise.all([protocol, protocol, protocol.then((kind) => kind)])).toEqual(["v2", "v2", "v2"])
+      expect(await protocol).toBe("v2")
       expect(probes).toBe(1)
     } finally {
       listener.stop(true)
     }
   })
 
-  test.each(["v1", "v2"] as const)("existing consumers recover a failed connection as %s", async (kind) => {
+  test("existing consumers recover a failed connection as v2", async () => {
     const state = { ready: false, probes: 0, detected: undefined as ServerProtocol | undefined }
     const paths: string[] = []
     const listener = Bun.serve({
@@ -36,11 +36,9 @@ describe("createServerProtocolPromise", () => {
       fetch: (request) => {
         const path = new URL(request.url).pathname
         paths.push(path)
-        if (path === "/global/health" || path === "/api/health") {
+        if (path === "/api/health") {
           state.probes++
           if (!state.ready) return Response.json({}, { status: 503 })
-          if (path === "/global/health") return kind === "v1"
-            ? Response.json({ healthy: true }) : Response.json({}, { status: 404 })
           return Response.json({ pid: 123 })
         }
         return Response.json([])
@@ -57,20 +55,18 @@ describe("createServerProtocolPromise", () => {
         current: createApiForServer({ server, fetch }),
         legacy: (directory) => createSdkForServer({ server, fetch, directory, throwOnError: true }),
       })
-      expect(await rejection(api.project.list())).toBeInstanceOf(ServerProtocolUnresolvedError)
+      expect(await rejection(protocol)).toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(state.detected).toBeUndefined()
-      expect(state.probes).toBe(6)
+      expect(state.probes).toBe(3)
       state.ready = true
       expect(await api.project.list()).toEqual([])
-      expect(await chain).toEqual({ kind })
-      expect(await protocol).toBe(kind)
-      expect(state.detected).toBe(kind)
+      expect(await chain).toEqual({ kind: "v2" })
+      expect(await protocol).toBe("v2")
+      expect(state.detected).toBe("v2")
       const probes = state.probes
       await api.project.list()
       expect(state.probes).toBe(probes)
-      expect(paths.filter((path) => !path.endsWith("/health"))).toEqual(
-        [kind === "v1" ? "/project" : "/api/project", kind === "v1" ? "/project" : "/api/project"],
-      )
+      expect(paths.filter((path) => !path.endsWith("/health"))).toEqual(["/api/project", "/api/project"])
     } finally {
       listener.stop(true)
     }

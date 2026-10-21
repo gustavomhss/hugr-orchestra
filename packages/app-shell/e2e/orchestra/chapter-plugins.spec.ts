@@ -53,7 +53,7 @@ async function serveV2Catalog(page: Page) {
 }
 
 // Theme, version and the profile list are seeded the same way for every protocol.
-async function openSession(page: Page, scheme: "dark" | "light", protocol: "v1" | "v2") {
+async function openSession(page: Page, scheme: "dark" | "light", protocol: "v2") {
   await page.addInitScript(
     (input) => {
       localStorage.setItem("orchestra-theme-id", "oc-2")

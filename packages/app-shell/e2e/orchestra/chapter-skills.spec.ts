@@ -434,7 +434,7 @@ async function chooseProfile(page: Page, name: string) {
 async function setup(
   page: Page,
   input: {
-    protocol: "v1" | "v2"
+    protocol: "v2"
     requests?: string[]
     scheme?: "dark" | "light"
     response?: { status: number; skills: SkillFixture[]; hidden?: string[]; raw?: unknown }

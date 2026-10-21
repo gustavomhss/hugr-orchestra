@@ -30,7 +30,7 @@ export function SubagentModelPicker(props: {
   providers: readonly Provider[]
   status: "pending" | "error" | "success"
   supported: boolean | undefined
-  protocol?: "v1" | "v2"
+  protocol?: "v2"
   loadFailed?: boolean
   rulesReady: boolean
   readRules: () => ModelRule[]

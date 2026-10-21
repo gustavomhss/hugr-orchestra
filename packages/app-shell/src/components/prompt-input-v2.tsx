@@ -509,8 +509,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   const protocol = useServerProtocol()
   const draftSession = createDraftSessionState({ sessionID: () => props.sessionID, pendingKey: () => props.pendingKey })
   const unresolved = () => !!props.sessionID && (
-    protocol() === undefined || (protocol() === "v2" &&
-      (draftSession.loading() || !!draftSession.error() || !draftSession.policy()))
+    protocol() === undefined || draftSession.loading() || !!draftSession.error() || !draftSession.policy()
   )
   const life = { active: true }
   onCleanup(() => { life.active = false })
@@ -527,7 +526,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
   }
   const label = () => {
     if (props.sessionID && protocol() === undefined) return language.t("common.loading")
-    if (!props.sessionID || protocol() === "v2") {
+    if (!props.sessionID || protocol() !== undefined) {
       const current = draftSession.policy()
       if (draftSession.error()) return language.t("dialog.subagentModels.saveFailed")
       if (draftSession.loading() || !current) return language.t("common.loading")
@@ -566,11 +565,7 @@ function PromptInputV2SubagentModelsControl(props: { sessionID?: string; pending
         onClick={open}
       >
         <span class="truncate leading-4">
-          {props.sessionID && protocol() === "v1"
-            ? hasModelScope(rules())
-              ? language.t("orchestra.chat.models.count", { count: label() })
-              : language.t("orchestra.chat.models.all")
-            : language.t("session.tasks.models.label", { count: label() })}
+          {language.t("session.tasks.models.label", { count: label() })}
         </span>
         <span class="-ms-0.5 -me-1 flex shrink-0">
           <Icon name="chevron-down" />

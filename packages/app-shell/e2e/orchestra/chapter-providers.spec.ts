@@ -433,7 +433,7 @@ async function openProviders(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/providers$/)
 }
 
-async function setup(page: Page, protocol: "v1" | "v2", mock: Mock, scheme: "dark" | "light" = "dark") {
+async function setup(page: Page, protocol: "v2", mock: Mock, scheme: "dark" | "light" = "dark") {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory, scheme }) => {

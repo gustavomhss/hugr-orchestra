@@ -346,7 +346,7 @@ export default function McpPage(props: ChapterPageProps) {
           <McpEditDialog
             card={selected()}
             names={cards().map((card) => card.name)}
-            writable={!v1.loading && v1() === true}
+            writable={!v1.loading && false}
             read={v1.loading || status.isPending ? "loading" : status.isError ? "error" : "ready"}
             retrying={status.isFetching}
             onRetry={() => void status.refetch()}
@@ -365,7 +365,7 @@ export default function McpPage(props: ChapterPageProps) {
             <McpToolsDialog
               card={card()}
               status={label(card())}
-              supported={!v1.loading && v1() === true}
+              supported={!v1.loading && false}
               read={v1.loading || tools.isPending ? "loading" : tools.isError ? "error" : "ready"}
               retrying={tools.isFetching}
               onRetry={() => void tools.refetch()}

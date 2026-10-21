@@ -6,49 +6,26 @@ const listen = (fetch: (request: Request) => Response | Promise<Response>) =>
   Bun.serve({ port: 0, hostname: "127.0.0.1", fetch })
 
 describe("detectServerProtocol", () => {
-  test("prefers the legacy health endpoint when both API generations exist", async () => {
-    const paths: string[] = []
-    const listener = listen((request) => {
-      paths.push(new URL(request.url).pathname)
-      return Response.json({ healthy: true, version: "2.0.0", pid: 123 })
-    })
-    try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v1")
-      expect(paths).toEqual(["/global/health"])
-    } finally {
-      listener.stop(true)
-    }
-  })
-
-  test.each([
-    { body: { healthy: true, version: "2.0.0", pid: 123 }, kind: "v2" },
-    { body: { healthy: true }, kind: "v1" },
-  ])("recognizes API health $kind", async ({ body, kind }) => {
+  test("recognizes API health v2", async () => {
+    const body = { healthy: true, version: "2.0.0", pid: 123 }
     const listener = listen((request) => new URL(request.url).pathname === "/global/health"
       ? Response.json({}, { status: 404 }) : Response.json(body))
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe(kind)
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v2")
     } finally {
       listener.stop(true)
     }
   })
 
-  test.each(["v1", "v2"] as const)("retries real 503 probes until %s is ready", async (kind) => {
-    const counts = { legacy: 0, current: 0 }
+  test("retries real 503 probes until v2 is ready", async () => {
+    let current = 0
     const listener = listen((request) => {
-      if (new URL(request.url).pathname === "/global/health") {
-        counts.legacy++
-        if (kind === "v2") return Response.json({}, { status: 404 })
-        return counts.legacy < 3 ? Response.json({}, { status: 503 }) : Response.json({ healthy: true })
-      }
-      counts.current++
-      if (kind === "v1") return Response.json({}, { status: 503 })
-      return counts.current < 3 ? Response.json({}, { status: 503 }) : Response.json({ pid: 123 })
+      current++
+      return current < 3 ? Response.json({}, { status: 503 }) : Response.json({ pid: 123 })
     })
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe(kind)
-      expect(counts.legacy).toBe(kind === "v1" ? 3 : 1)
-      expect(counts.current).toBe(kind === "v1" ? 0 : 3)
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetch, { retryDelayMs: 10 })).toBe("v2")
+      expect(current).toBe(3)
     } finally {
       listener.stop(true)
     }
@@ -57,15 +34,14 @@ describe("detectServerProtocol", () => {
   test("a timed out health probe can recover on the next actual probe", async () => {
     let probes = 0
     const listener = listen(async (request) => {
-      if (new URL(request.url).pathname !== "/global/health") return Response.json({}, { status: 404 })
       probes++
       if (probes === 1) await Bun.sleep(200)
-      return Response.json({ healthy: true })
+      return Response.json({ pid: 123 })
     })
     try {
       expect(await detectServerProtocol({ url: listener.url.origin }, fetch, {
         probeTimeoutMs: 50, retryDelayMs: 10, timeoutMs: 1_000,
-      })).toBe("v1")
+      })).toBe("v2")
       expect(probes).toBe(2)
     } finally {
       listener.stop(true)
@@ -82,7 +58,7 @@ describe("detectServerProtocol", () => {
       expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, {
         attempts: 2, retryDelayMs: 10,
       }))).toBeInstanceOf(ServerProtocolUnresolvedError)
-      expect(probes).toBe(12)
+      expect(probes).toBe(6)
     } finally {
       listener.stop(true)
     }
@@ -121,7 +97,7 @@ describe("detectServerProtocol", () => {
       abort.abort(reason)
       expect(await rejected).toBe(reason)
       await Bun.sleep(20)
-      expect(paths).toEqual(["/global/health"])
+      expect(paths).toEqual(["/api/health"])
       expect(await rejection(detectServerProtocol({ url: listener.url.origin }, fetch, { signal: abort.signal })))
         .toBe(reason)
       expect(paths).toHaveLength(1)
@@ -130,18 +106,6 @@ describe("detectServerProtocol", () => {
     }
   })
 
-  test("a cold legacy health response is not replaced with an invented V2 selection", async () => {
-    const listener = listen(async (request) => {
-      if (new URL(request.url).pathname !== "/global/health") return Response.json({}, { status: 404 })
-      await Bun.sleep(5_100)
-      return Response.json({ healthy: true })
-    })
-    try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v1")
-    } finally {
-      listener.stop(true)
-    }
-  }, 10_000)
   test("an injected unanswered probe retries the same endpoint before advancing", async () => {
     const calls: string[] = []
     const listener = listen((request) => {
@@ -156,8 +120,8 @@ describe("detectServerProtocol", () => {
       return fetch(input, { ...init, headers })
     }, { preconnect: fetch.preconnect })
     try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetcher, { attempts: 1 })).toBe("v1")
-      expect(calls).toEqual(["/global/health", "/global/health"])
+      expect(await detectServerProtocol({ url: listener.url.origin }, fetcher, { attempts: 1 })).toBe("v2")
+      expect(calls).toEqual(["/api/health", "/api/health"])
     } finally {
       listener.stop(true)
     }
@@ -175,29 +139,13 @@ describe("detectServerProtocol", () => {
       const server = { url: listener.url.origin }
       expect(await rejection(detectServerProtocol(server, fetcher, { attempts: 1 })))
         .toBeInstanceOf(ServerProtocolUnresolvedError)
-      expect(calls).toEqual([...Array(3).fill("/global/health"), ...Array(3).fill("/api/health")])
+      expect(calls).toEqual([...Array(3).fill("/api/health")])
       state.ready = true
-      expect(await detectServerProtocol(server, fetcher, { attempts: 1 })).toBe("v1")
-      expect(calls).toHaveLength(7)
+      expect(await detectServerProtocol(server, fetcher, { attempts: 1 })).toBe("v2")
+      expect(calls).toHaveLength(4)
     } finally {
       listener.stop(true)
     }
   })
 
-  test("an answered non-V1 legacy probe advances without retry", async () => {
-    const paths: string[] = []
-    const listener = listen((request) => {
-      const path = new URL(request.url).pathname
-      paths.push(path)
-      return path === "/global/health"
-        ? Response.json({}, { status: 404 })
-        : Response.json({ healthy: true, version: "2.0.0", pid: 123 })
-    })
-    try {
-      expect(await detectServerProtocol({ url: listener.url.origin }, fetch)).toBe("v2")
-      expect(paths).toEqual(["/global/health", "/api/health"])
-    } finally {
-      listener.stop(true)
-    }
-  })
 })

@@ -16,7 +16,7 @@ type Workspace = { directory: string; root: boolean; removable: boolean; active:
 // The mock's native `<dialog class="mx-dialog">`: one element, its content keyed by the open dialog.
 export function WorkspacesDialog(props: {
   dialog?: WorkspaceDialog
-  protocol: "v1" | "v2"
+  protocol: "v2"
   busy: boolean
   error?: string
   home?: string
@@ -194,7 +194,7 @@ export function WorkspacesDialog(props: {
                         directoryEditable={false}
                         branch={props.branch(workspace().directory) ?? ""}
                         branchPlaceholder={language.t(
-                          props.protocol === "v1"
+                          false
                             ? "orchestra.workspaces.field.noBranch"
                             : "orchestra.workspaces.field.unknownBranch",
                         )}

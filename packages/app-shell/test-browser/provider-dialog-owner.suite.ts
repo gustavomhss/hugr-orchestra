@@ -15,7 +15,7 @@ const subject = (path: string) => `${Bun.resolveSync(path, import.meta.dir)}?pro
 const calls: Request[] = []
 const modelCatalogs: string[][] = []
 const failures: unknown[] = []
-const controls = { protocol: "v2" as "v1" | "v2" }
+const controls = { protocol: "v2" as "v2" }
 const nativeHTTP = { FormData, Request, Response, Headers, fetch }
 const a: ServerConnection.Http = {
   type: "http",

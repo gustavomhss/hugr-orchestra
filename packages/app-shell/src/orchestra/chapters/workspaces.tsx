@@ -34,7 +34,7 @@ export default function Workspaces(props: ChapterPageProps) {
   const [preference, setPreference, , preferenceReady] = persistedWorkspaces(serverSDK().scope)
   const [state, setState] = createStore({
     status: "loading" as "loading" | "ready" | "empty" | "error" | "unavailable",
-    protocol: "v2" as "v1" | "v2",
+    protocol: "v2" as "v2",
     project: undefined as Project | undefined,
     workspaces: [] as ReturnType<typeof repositoryWorkspaces>,
     branches: {} as Record<string, string | undefined>,
@@ -72,7 +72,7 @@ export default function Workspaces(props: ChapterPageProps) {
     const result = await serverSDK()
       .protocol.then(async (protocol) => {
         const project = repositoryProject(await listProjects(protocol), props.directory)
-        if (!project || protocol === "v1") return { protocol, project, directories: undefined }
+        if (!project) return { protocol, project, directories: undefined }
         const directories = await serverSDK().api.project.directories({
           projectID: project.id,
           location: { directory: project.worktree },
@@ -111,21 +111,14 @@ export default function Workspaces(props: ChapterPageProps) {
       setPreference("active", key, undefined)
   }
 
-  async function listProjects(protocol: "v1" | "v2") {
-    if (protocol !== "v1") return serverSDK().api.project.list()
-    // The legacy compatibility adapter throws only the response body, losing
-    // the status needed to distinguish an unsupported endpoint from an error.
-    const result = await serverSDK().client.project.list(undefined, { throwOnError: false })
-    if (!result.response.ok) throw new Error("UnexpectedStatus", { cause: { status: result.response.status } })
-    return result.data ?? []
+  async function listProjects(protocol: "v2") {
+    return serverSDK().api.project.list()
   }
 
-  async function readBranches(protocol: "v1" | "v2", workspaces: readonly { directory: string }[]) {
+  async function readBranches(protocol: "v2", workspaces: readonly { directory: string }[]) {
     const entries = await Promise.all(
       workspaces.map((item) =>
-        (protocol === "v1"
-          ? serverSDK().client.vcs.get({ directory: item.directory }).then((result) => result.data?.branch)
-          : serverSDK().orchestra.vcs.get({ location: { directory: item.directory } }).then((result) => result.data.branch)
+        (serverSDK().orchestra.vcs.get({ location: { directory: item.directory } }).then((result) => result.data.branch)
         ).then(
             (branch) => [pathKey(item.directory), branch ?? undefined] as const,
             () => [pathKey(item.directory), undefined] as const,
@@ -176,19 +169,15 @@ export default function Workspaces(props: ChapterPageProps) {
     }
     setState({ busy: true, error: undefined })
     const result = await (
-      state.protocol === "v1"
-        ? serverSDK()
-            .client.worktree.create({ directory: project.worktree, worktreeCreateInput: { name: target.name } })
-            .then((response) => response.data?.directory)
-        : serverSDK()
-            .api.projectCopy.create({
-              projectID: project.id,
-              strategy: WORKTREE_STRATEGY,
-              directory: target.directory,
-              name: target.name,
-              location: { directory: project.worktree },
-            })
-            .then((copy) => copy.directory)
+      serverSDK()
+        .api.projectCopy.create({
+          projectID: project.id,
+          strategy: WORKTREE_STRATEGY,
+          directory: target.directory,
+          name: target.name,
+          location: { directory: project.worktree },
+        })
+        .then((copy) => copy.directory)
     ).then(
       (directory) => ({ directory }),
       (error: unknown) => ({ error }),
@@ -204,8 +193,6 @@ export default function Workspaces(props: ChapterPageProps) {
     const created = result.directory
     setPreference("names", pathKey(created), label)
     // V1 records new worktrees as project sandboxes; keep the shared project store in step until it refetches.
-    if (state.protocol === "v1")
-      mirrorSandboxes(project.worktree, (sandboxes) => [...sandboxes.filter((item) => item !== created), created])
     setState({ busy: false, dialog: undefined })
     void load(true)
   }
@@ -217,18 +204,14 @@ export default function Workspaces(props: ChapterPageProps) {
     if (!project || !target || target.root || !target.removable || isActive(directory)) return
     setState({ busy: true, error: undefined })
     const result = await (
-      state.protocol === "v1"
-        ? serverSDK()
-            .client.worktree.remove({ directory: project.worktree, worktreeRemoveInput: { directory } })
-            .then((response) => response.data === true)
-        : serverSDK()
-            .api.projectCopy.remove({
-              projectID: project.id,
-              directory,
-              force,
-              location: { directory: project.worktree },
-            })
-            .then(() => true)
+      serverSDK()
+        .api.projectCopy.remove({
+          projectID: project.id,
+          directory,
+          force,
+          location: { directory: project.worktree },
+        })
+        .then(() => true)
     ).then(
       (removed) => ({ removed }),
       (error: unknown) => ({ error }),

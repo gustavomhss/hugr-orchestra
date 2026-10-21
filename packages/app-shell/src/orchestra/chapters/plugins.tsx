@@ -41,10 +41,8 @@ export default function PluginsPage(props: ChapterPageProps) {
   // A V1 prompt carries the behaviors itself. A V2 server keeps the profile's active set and applies it to every turn
   // of the profile's sessions; until it accepts the set this page shows, enabled behaviors are saved, not active.
   const [server, setServer] = createSignal<"supported" | "unsupported" | "failed">()
-  const applied = () => protocol() === "v1" || (protocol() === "v2" && server() === "supported")
+  const applied = () => server() === "supported"
   const note = () => {
-    if (protocol() === "v1") return "orchestra.plugins.applied"
-    if (protocol() !== "v2") return
     if (server() === "supported") return "orchestra.plugins.appliedServer"
     if (server() === "unsupported") return "orchestra.plugins.notApplied"
     if (server() === "failed") return "orchestra.plugins.syncFailed"
@@ -56,7 +54,7 @@ export default function PluginsPage(props: ChapterPageProps) {
   const [attempt, setAttempt] = createSignal(0)
   createEffect(() => {
     attempt()
-    if (protocol() !== "v2" || store().loading()) return
+    if (store().loading()) return
     const input = {
       location: { directory: directory() },
       behaviorSetInput: { behaviors: behaviorInstructions(store().behaviors()) },

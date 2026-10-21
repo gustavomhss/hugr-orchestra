@@ -2,7 +2,7 @@ import type { ServerConnection } from "@/context/server"
 import { retry } from "@orchestra/core/util/retry"
 import { authTokenFromCredentials } from "./server"
 
-export type ServerProtocol = "v1" | "v2"
+export type ServerProtocol = "v2"
 
 export type ServerProtocolOptions = {
   signal?: AbortSignal
@@ -115,15 +115,10 @@ export async function detectServerProtocol(
   return Promise.race([
     retry(async () => {
       abort.signal.throwIfAborted()
-      // Cold local servers can take longer than five seconds to initialize their Location services.
-      const legacy = await answer(server, fetcher, "/global/health", abort.signal, options.probeTimeoutMs ?? 20_000)
-      abort.signal.throwIfAborted()
-      if (legacy && "healthy" in legacy && legacy.healthy === true) return "v1" as const
-
       const current = await answer(server, fetcher, "/api/health", abort.signal, options.probeTimeoutMs ?? 20_000)
       abort.signal.throwIfAborted()
       if (current && "pid" in current && typeof current.pid === "number") return "v2" as const
-      if (current && "healthy" in current && current.healthy === true) return "v1" as const
+      if (current && "healthy" in current && current.healthy === true) return "v2" as const
       throw new ServerProtocolUnresolvedError()
     }, {
       attempts: options.attempts ?? 60,

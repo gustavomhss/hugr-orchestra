@@ -54,16 +54,6 @@ export function OrchestraPullRequest(props: { sessionID?: string; files: () => P
       }),
     })
     if (vcs) return
-    void sdk()
-      .protocol.then((protocol) => (protocol === "v1" ? sdk().client.vcs.get() : undefined))
-      .then((result) => {
-        if (!result) return
-        if (state.step !== "edit") return
-        if (!state.proposal.from && result.data?.branch) setState("proposal", "from", result.data.branch)
-        if (!state.proposal.base && result.data?.default_branch)
-          setState("proposal", "base", result.data.default_branch)
-      })
-      .catch(() => undefined)
   }
   // A request in flight keeps the dialog open so its answer, and any address, is never dropped.
   const close = () => !state.busy && setState("step", undefined)

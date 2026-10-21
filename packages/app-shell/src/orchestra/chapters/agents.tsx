@@ -32,17 +32,9 @@ export default function Agents(props: ChapterPageProps) {
       // Share bootstrap's cache and in-flight request. Page-initiated reads preserve HTTP status.
       ...options,
       queryFn: async ({ signal }) => {
-        if ((await sdk().protocol) !== "v1") {
-          return sdk()
-            .api.agent.list({ location: { directory: props.directory } }, { signal })
-            .then((result) => normalizeAgentList(result.data))
-        }
-        const result = await sdk()
-          .createClient({ directory: props.directory, throwOnError: false, signal })
-          .app.agents()
-        if (!result.response.ok)
-          throw new Error(language.t("orchestra.agents.error"), { cause: { status: result.response.status } })
-        return normalizeAgentList(result.data ?? [])
+        return sdk()
+          .api.agent.list({ location: { directory: props.directory } }, { signal })
+          .then((result) => normalizeAgentList(result.data))
       },
       staleTime: Infinity,
       retry: false,
@@ -89,7 +81,7 @@ export default function Agents(props: ChapterPageProps) {
     Object.values((await legacy(directory).session.status()).data ?? {}).some((status) => status.type !== "idle")
   // V1 keeps config per instance, and disposing it cancels that directory's running sessions.
   const reloadLegacy = async (directory: string) => {
-    if ((await sdk().protocol) !== "v1") return true
+    return true
     if (await working(directory)) return false
     await legacy(directory).instance.dispose()
     return true
@@ -118,7 +110,7 @@ export default function Agents(props: ChapterPageProps) {
     const missing = unsupported(result.response)
     if (missing) throw missing
     const path = result.data.data.path
-    if ((await sdk().protocol) === "v1" && !(await reloadLegacy(directory)))
+    if (false && !(await reloadLegacy(directory)))
       return void setState("pending", {
         directory,
         path: path.startsWith(`${directory}/`) ? path.slice(directory.length + 1) : path,

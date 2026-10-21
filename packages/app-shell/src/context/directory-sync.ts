@@ -143,17 +143,7 @@ export const createDirSyncContext = (
         setStore("session", reconcile(sessions, { key: "id" }))
       },
       more: createMemo(() => current()[0].session.length >= current()[0].limit),
-      archive: async (sessionID: string) => {
-        if ((await serverSDK.protocol) !== "v1") return
-        await serverSDK.client.session.update({ sessionID, directory, time: { archived: Date.now() } })
-        current()[1](
-          "session",
-          produce((draft) => {
-            const match = Binary.search(draft, sessionID, (session) => session.id)
-            if (match.found) draft.splice(match.index, 1)
-          }),
-        )
-      },
+      archive: async (_sessionID: string) => {},
     },
     mcp: {
       toggle: (name: string, open: (url: string) => void) => serverSync.mcp.toggle(directory, name, open),

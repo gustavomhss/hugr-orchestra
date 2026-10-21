@@ -114,7 +114,7 @@ export function createDeviceSchedule(props: { directory: string; store: DeviceSt
       setState("error", "")
       const ids = slot === undefined ? undefined : slotIDs(id, slot)
       const signal = AbortSignal.timeout(TIMEOUT)
-      const v2 = (await sdk().protocol) !== "v1"
+      const v2 = true
       const result = await abortable(
         sdk().api.session.create(
           { id: ids?.session, agent: AGENT, location: { directory: props.directory } },

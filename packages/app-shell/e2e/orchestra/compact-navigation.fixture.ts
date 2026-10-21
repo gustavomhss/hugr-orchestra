@@ -7,7 +7,7 @@ export async function setupCompactNavigation(
     locale?: "en" | "ar"
     scheme?: "dark" | "light"
     projectName?: string
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     // Home shows no profile until one is chosen; a returning user has the repository chosen and persisted.
     selected?: boolean
   } = {},

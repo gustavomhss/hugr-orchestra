@@ -42,10 +42,9 @@ export function createLeanAPI(
     const protocol = await sdk.protocol
     signal?.throwIfAborted()
     if (protocol === "v2" && v2) return current(v2, decode)
-    if (protocol !== "v1") throw new LeanAPIError("unsupported")
     // Retain the SDK's directory/auth/fetch/error interceptors; inspect HTTP status before throwing.
     const result = await run()
-    if (result.response && [404, 405, 501].includes(result.response.status)) throw new LeanAPIError("unsupported")
+    if (result.response && [404, 405, 501].includes(result.response!.status)) throw new LeanAPIError("unsupported")
     if (result.error !== undefined) throw result.error
     try {
       return decode(result.data)

@@ -97,7 +97,7 @@ export async function setupTimeline(
     locale?: string
     deviceScaleFactor?: number
     seedHistory?: boolean
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     onPrompt?: (input: { sessionID: string; body: unknown }) => void
   } = {},
 ) {

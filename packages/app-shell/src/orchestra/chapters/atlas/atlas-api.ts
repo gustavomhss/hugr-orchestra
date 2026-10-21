@@ -44,16 +44,15 @@ export function createAtlasAPI(sdk: Pick<DirectorySDK, "client" | "directory" | 
     input: object,
     run: () => Promise<{ data?: AtlasOutput<K>; error?: unknown; response?: Response }>,
     signal?: AbortSignal,
-  ) => {
+  ): Promise<AtlasOutput<K>> => {
     const protocol = await sdk.protocol
     signal?.throwIfAborted()
     if (protocol === "v2") return current(call, input, signal)
-    if (protocol !== "v1") throw new AtlasAPIError("unsupported")
     const result = await run()
-    if (result.response && [404, 405, 501].includes(result.response.status)) throw new AtlasAPIError("unsupported")
+    if (result.response && [404, 405, 501].includes(result.response!.status)) throw new AtlasAPIError("unsupported")
     if (result.error !== undefined) throw result.error
     if (result.data === undefined) throw new AtlasAPIError("invalid")
-    return result.data
+    return result.data!
   }
   const options = (signal?: AbortSignal) => ({ signal, throwOnError: false as const })
   return {

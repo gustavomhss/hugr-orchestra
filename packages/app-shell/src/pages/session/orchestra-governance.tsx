@@ -87,7 +87,7 @@ export function DialogOrchestraGovernance(props: {
         sessionID: props.sessionID,
         working: sessionWorking(sync.data.session_working(props.sessionID), sync.data.load.session_status),
         messages: sync.data.message[props.sessionID] ?? [],
-        source: protocol() === "v2" ? sync.data.session_message[props.sessionID] : undefined,
+        source: sync.data.session_message[props.sessionID],
         parts: (messageID) => sync.data.part[messageID],
       }),
     undefined,
@@ -96,10 +96,6 @@ export function DialogOrchestraGovernance(props: {
   const session = () => sync.session.get(props.sessionID)
   const capability = createMemo(() => maestroCapability(sync.data.agent, sync.data.load.agent))
   const own = createMemo(() => ownSource(sync.data.config, protocol(), sync.data.load.config))
-  const configured = () => {
-    const source = own()
-    if (source.state === "configured") return source
-  }
   const waiting = () =>
     (sync.data.permission[props.sessionID]?.length ?? 0) + (sync.data.question[props.sessionID]?.length ?? 0) > 0
   const loaded = () => sync.data.message[props.sessionID] !== undefined
@@ -256,20 +252,7 @@ export function DialogOrchestraGovernance(props: {
               <div>
                 <dt>{language.t("orchestra.governance.own")}</dt>
                 <dd>
-                  <span>
-                    <Switch fallback={language.t("orchestra.governance.own.unknown")}>
-                      <Match when={configured()}>
-                        {(source) => (
-                          <span title={source().directory}>
-                            {language.t("orchestra.governance.own.configured", { project: source().projectID })}
-                          </span>
-                        )}
-                      </Match>
-                      <Match when={own().state === "missing"}>{language.t("orchestra.governance.own.missing")}</Match>
-                      <Match when={own().state === "checking"}>{language.t("orchestra.governance.own.checking")}</Match>
-                      <Match when={own().state === "failed"}>{language.t("orchestra.governance.own.failed")}</Match>
-                    </Switch>
-                  </span>
+                  <span>{language.t("orchestra.governance.own.unknown")}</span>
                 </dd>
               </div>
             </dl>

@@ -7,7 +7,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 const [state, setState] = createStore({
   route: "/route",
   directory: undefined as string | null | undefined,
-  protocol: "v2" as "v1" | "v2",
+  protocol: "v2" as "v2",
   server: "a" as "a" | "b",
 })
 const refreshed: Array<string | null | undefined> = []

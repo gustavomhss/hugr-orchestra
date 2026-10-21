@@ -100,7 +100,7 @@ export function createHomeController() {
           // An empty folder only becomes a repository when the person agrees.
           if (files.data.length > 0 || !(await confirmInitGit(item))) return ctx.sdk.api.project.current({ location })
           const result =
-            (await ctx.sdk.protocol) === "v1"
+            false
               ? await ctx.sdk.client.project.initGit({ directory: item })
               : await ctx.sdk.orchestra.projects.initGit({ location })
           // The chapters asked while the question was open and cached the shared "global" project; the folder has its own now.

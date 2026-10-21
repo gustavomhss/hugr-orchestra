@@ -4,12 +4,12 @@ import { FileIcon } from "@orchestra/ui/file-icon"
 import { List } from "@orchestra/ui/list"
 import type { ListRef } from "@orchestra/ui/list"
 import { getDirectory, getFilename } from "@orchestra/core/util/path"
-import { createMemo, createResource, createSignal } from "solid-js"
+import { createMemo, createSignal } from "solid-js"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { cleanPickerInput, createDirectorySearch, displayPickerPath } from "./directory-picker-domain"
-import type { Path } from "@/v2-wire"
+
 
 interface DialogSelectDirectoryProps {
   title?: string
@@ -59,23 +59,8 @@ export function DialogSelectDirectory(props: DialogSelectDirectoryProps) {
   const [filter, setFilter] = createSignal("")
   let list: ListRef | undefined
 
-  const missingHome = createMemo(() => !sync.data.path.home)
-  const [fallbackPath] = createResource(
-    () => (missingHome() ? true : undefined),
-    async (): Promise<Path | undefined> => {
-      if ((await sdk.protocol) !== "v1") return
-      return sdk.client.path
-        .get()
-        .then((result) => result.data)
-        .catch(() => undefined)
-    },
-    { initialValue: undefined },
-  )
-
-  const home = createMemo(() => sync.data.path.home || fallbackPath()?.home || "")
-  const start = createMemo(
-    () => sync.data.path.home || sync.data.path.directory || fallbackPath()?.home || fallbackPath()?.directory,
-  )
+  const home = createMemo(() => sync.data.path.home || "")
+  const start = createMemo(() => sync.data.path.home || sync.data.path.directory || "")
 
   const directories = createDirectorySearch({
     sdk,

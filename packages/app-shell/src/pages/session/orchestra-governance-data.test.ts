@@ -463,19 +463,15 @@ describe("ownSource", () => {
   test("separates unknown, missing and configured Own sources", () => {
     const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
     expect(ownSource(config, "v2", "ready").state).toBe("unknown")
-    expect(ownSource({}, "v1", "ready").state).toBe("unknown")
-    expect(ownSource({ model: "anthropic/claude" }, "v1", "ready").state).toBe("missing")
-    expect(ownSource(config, "v1", "ready")).toEqual({
-      state: "configured",
-      projectID: "atlas-project",
-      directory: "/atlas",
-    })
+    expect(ownSource({}, "v2", "ready").state).toBe("unknown")
+    expect(ownSource({ model: "anthropic/claude" }, "v2", "ready").state).toBe("unknown")
+    expect(ownSource(config, "v2", "ready")).toEqual({ state: "unknown" })
   })
 
   test("follows the project config read, not unrelated bootstrap reads", () => {
     const config: Config = { maestro: { atlas: { projectID: "atlas-project", directory: "/atlas" } } }
-    expect(ownSource(config, undefined, "ready").state).toBe("checking")
-    expect(ownSource(config, "v1", "pending").state).toBe("checking")
-    expect(ownSource(config, "v1", "failed").state).toBe("failed")
+    expect(ownSource(config, undefined, "ready").state).toBe("unknown")
+    expect(ownSource(config, "v2", "pending").state).toBe("unknown")
+    expect(ownSource(config, "v2", "failed").state).toBe("unknown")
   })
 })

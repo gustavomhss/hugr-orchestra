@@ -7,7 +7,6 @@ type DirectorySDK = ReturnType<ReturnType<typeof useSDK>>
 // The V2 server lists location-relative entries and serves raw bytes; both are shaped back into the legacy
 // file models the tree and viewers render.
 export async function listFileNodes(sdk: DirectorySDK, path: string): Promise<FileNode[]> {
-  if ((await sdk.protocol) === "v1") return sdk.client.file.list({ path }).then((x) => x.data ?? [])
   const result = await sdk.api.file.list({ path, location: { directory: sdk.directory } })
   const root = sdk.directory.replace(/[\\/]+$/, "")
   return result.data.map((entry) => ({
@@ -20,7 +19,6 @@ export async function listFileNodes(sdk: DirectorySDK, path: string): Promise<Fi
 }
 
 export async function readFileContent(sdk: DirectorySDK, path: string): Promise<FileContent | undefined> {
-  if ((await sdk.protocol) === "v1") return sdk.client.file.read({ path }).then((x) => x.data)
   const bytes = await sdk.api.file.read({ path, location: { directory: sdk.directory } })
   const mimeType = MEDIA[path.slice(path.lastIndexOf(".") + 1).toLowerCase()]
   // Images and audio keep their bytes as base64, as V1 serves them, so the media viewers can preview them. Other

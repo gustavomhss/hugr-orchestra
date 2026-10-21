@@ -1,6 +1,6 @@
 import type { Orchestra } from "@orchestra/client"
 import type { Config } from "@/v2-wire"
-import type { OrchestraClient } from "../compat/sdk-v2-client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
 import type {
@@ -44,7 +44,7 @@ export const loadMcpQuery = (
   directory: string,
   api: McpListApi,
   legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
+  protocol?: Promise<"v2">,
 ): ApiQueryOptions<Record<string, McpServer["status"]>, readonly [ServerScope, string, "mcp"]> =>
   queryOptions<
     Record<string, McpServer["status"]>,
@@ -54,7 +54,6 @@ export const loadMcpQuery = (
   >({
     queryKey: [scope, directory, "mcp"] as const,
     queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return (await legacy.mcp.status()).data ?? {}
       return api
         .list({ location: { directory } })
         .then((result) => Object.fromEntries(result.data.map((server) => [server.name, server.status])))
@@ -66,7 +65,7 @@ export const loadMcpResourcesQuery = (
   directory: string,
   api: McpResourceApi,
   legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
+  protocol?: Promise<"v2">,
 ): ApiQueryOptions<Record<string, McpResource>, readonly [ServerScope, string, "mcpResources"]> =>
   queryOptions<
     Record<string, McpResource>,
@@ -76,18 +75,10 @@ export const loadMcpResourcesQuery = (
   >({
     queryKey: [scope, directory, "mcpResources"] as const,
     queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) {
-        return Object.fromEntries(
-          Object.entries((await legacy.experimental.resource.list()).data ?? {}).map(([key, resource]) => [
-            key,
-            { ...resource, server: resource.client },
-          ]),
-        )
-      }
       return api.resource
         .catalog({ location: { directory } })
         .then((result) =>
-          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])),
+          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])) as unknown as Record<string, McpResource>,
         )
     },
     placeholderData: {},
@@ -98,12 +89,11 @@ export const loadLspQuery = (
   directory: string,
   orchestra: ReturnType<typeof Orchestra.make> | undefined,
   legacy?: OrchestraClient,
-  protocol?: Promise<"v1" | "v2">,
+  protocol?: Promise<"v2">,
 ) =>
   queryOptions({
     queryKey: [scope, directory, "lsp"] as const,
     queryFn: async () => {
-      if ((await protocol) === "v1" && legacy) return legacy.lsp.status().then((r) => r.data ?? [])
       if (!orchestra) return []
       return orchestra["server.lsp"].status({ location: { directory } }).then((result) => [...result.data])
     },
@@ -114,7 +104,7 @@ export function makeQueryOptionsApi(
   serverSDK: () => OrchestraClient,
   serverAPI: ServerApi,
   sdkFor: (dir: PathKey) => OrchestraClient,
-  protocol: Promise<"v1" | "v2">,
+  protocol: Promise<"v2">,
   readV2Config?: () => Promise<Config>,
   orchestra?: ReturnType<typeof Orchestra.make>,
 ) {

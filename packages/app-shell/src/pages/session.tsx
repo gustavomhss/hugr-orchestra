@@ -676,7 +676,7 @@ export default function Page() {
 
   const gitMutation = useMutation(() => ({
     mutationFn: async () =>
-      (await sdk().protocol) === "v1"
+      false
         ? sdk().client.project.initGit()
         : serverSDK()
             .orchestra.projects.initGit({ location: { directory: sdk().directory } })

@@ -8,7 +8,7 @@ import { createEffect, createMemo, createResource, createSignal, For, onCleanup,
 import { useGlobal } from "@/context/global"
 import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
-import type { Path } from "@/v2-wire"
+
 import {
   absoluteTreePath,
   activeTreeNavigation,
@@ -66,26 +66,9 @@ export function DialogSelectDirectoryV2(props: DialogSelectDirectoryV2Props) {
   let pathArea: HTMLDivElement | undefined
   let navigation = 0
 
-  const missingBase = createMemo(() => !(sync.data.path.home || sync.data.path.directory))
-  const [fallbackPath] = createResource(
-    () => (missingBase() ? true : undefined),
-    async (): Promise<Path | undefined> => {
-      if ((await sdk.protocol) !== "v1") return
-      return sdk.client.path
-        .get()
-        .then((result) => result.data)
-        .catch(() => undefined)
-    },
-    { initialValue: undefined },
-  )
-  const home = createMemo(() => sync.data.path.home || fallbackPath()?.home || "")
+  const home = createMemo(() => sync.data.path.home || "")
   const start = createMemo(
-    () =>
-      props.start ||
-      sync.data.path.home ||
-      sync.data.path.directory ||
-      fallbackPath()?.home ||
-      fallbackPath()?.directory,
+    () => props.start || sync.data.path.home || sync.data.path.directory || "",
   )
   const search = createDirectorySearch({ sdk, home, base: () => root() || start() })
   const [suggestions] = createResource(input, async (value) => {

@@ -257,29 +257,6 @@ test("owner switch during ACK keeps source draft and admitted Session for retry"
 })
 
 describe("prompt admission and worktree selection", () => {
-  test("saves the first restriction selected while session creation is pending", async () => {
-    state.protocol = "v1"
-    const gate = Promise.withResolvers<void>()
-    state.createSessionGate = gate.promise
-    const key = "late-first-restriction"
-    const submit = createPromptSubmit({
-      ...submitInput(),
-      prompt: createPromptState({ prompt: "first" }),
-      info: () => undefined,
-      pendingKey: () => key,
-    })
-    const result = submit.handleSubmit({ preventDefault: () => undefined } as Event)
-    await state.createStarted.promise
-    togglePending(key, "provider", "restricted")
-    gate.resolve()
-    await result
-    expect(savedRules[0]?.permission).toEqual([
-      { permission: "task", pattern: "*/*", action: "deny" },
-      { permission: "task", pattern: "provider/restricted", action: "allow" },
-    ])
-    expect(promptInputs).toHaveLength(1)
-    clearPending(key)
-  })
 
   test("locks a draft before worktree/session admission and preserves later typing", async () => {
     const gate = Promise.withResolvers<void>()
@@ -302,78 +279,6 @@ describe("prompt admission and worktree selection", () => {
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "first" })
     expect(draft.current()[0]).toMatchObject({ content: "later typing" })
-  })
-
-  test("retains rules, text, worktree and created ID on permission failure; retry saves before sending", async () => {
-    state.protocol = "v1"
-    state.rulesFailure = true
-    const key = "local:draft:rules-retry"
-    togglePending(key, "provider", "allowed")
-    const expected = pendingRules(key)
-    const draft = createPromptState({ prompt: "restricted" })
-    const submit = createPromptSubmit({
-      ...submitInput(),
-      prompt: draft,
-      info: () => undefined,
-      pendingKey: () => key,
-      newSessionWorktree: () => "create",
-    })
-    const event = { preventDefault: () => undefined } as Event
-    await submit.handleSubmit(event)
-    expect(promptInputs).toEqual([])
-    expect(pendingRules(key)).toEqual(expected)
-    expect(draft.current()[0]).toMatchObject({ content: "restricted" })
-    expect(createdSessions).toEqual(["/repo/main/new"])
-    expect(promoted).toEqual([])
-
-    state.rulesFailure = false
-    const gate = Promise.withResolvers<void>()
-    state.rulesGate = gate.promise
-    state.rulesStarted = Promise.withResolvers<void>()
-    const retry = submit.handleSubmit(event)
-    await state.rulesStarted.promise
-    expect(promptInputs).toEqual([])
-    expect(pendingRules(key)).toEqual(expected)
-    gate.resolve()
-    await retry
-    expect(state.worktreeCreates).toBe(1)
-    expect(createdSessions).toEqual(["/repo/main/new"])
-    expect(savedRules).toEqual([
-      { sessionID: "session-1", directory: "/repo/main/new", permission: expected },
-      { sessionID: "session-1", directory: "/repo/main/new", permission: expected },
-    ])
-    expect(pendingRules(key)).toEqual([])
-    expect(promptInputs).toHaveLength(1)
-    expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "restricted" })
-    clearPending(key)
-  })
-
-  test("acknowledges picker changes made while the first permission write is pending", async () => {
-    state.protocol = "v1"
-    const key = "local:draft:rules-edited"
-    togglePending(key, "provider", "allowed")
-    const gate = Promise.withResolvers<void>()
-    state.rulesGate = gate.promise
-    const submit = createPromptSubmit({
-      ...submitInput(),
-      prompt: createPromptState({ prompt: "restricted" }),
-      info: () => undefined,
-      pendingKey: () => key,
-    })
-    const submitted = submit.handleSubmit({ preventDefault: () => undefined } as Event)
-    await state.rulesStarted.promise
-    togglePending(key, "provider", "allowed")
-    gate.resolve()
-    await submitted
-    expect(savedRules.map((save) => save.permission)).toEqual([
-      [
-        { permission: "task", pattern: "*/*", action: "deny" },
-        { permission: "task", pattern: "provider/allowed", action: "allow" },
-      ],
-      [{ permission: "task", pattern: "*/*", action: "deny" }],
-    ])
-    expect(promptInputs).toHaveLength(1)
-    clearPending(key)
   })
 
   test("reads the latest worktree accessor value per submit", async () => {

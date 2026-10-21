@@ -241,7 +241,7 @@ async function openAtlas(page: Page) {
   await expect(page).toHaveURL(/\/orchestra\/atlas$/)
 }
 
-async function setup(page: Page, input: { protocol: "v1" | "v2"; requests: string[] }) {
+async function setup(page: Page, input: { protocol: "v2"; requests: string[] }) {
   await page.setViewportSize({ width: 1440, height: 960 })
   await page.addInitScript(
     ({ server, directory }) => {

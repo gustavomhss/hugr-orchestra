@@ -174,14 +174,8 @@ export function maestroCapability(agents: readonly Agent[], read: State["load"][
 }
 
 // Project config is only read from servers on the v1 protocol; elsewhere its absence says nothing.
-export function ownSource(config: Config, protocol: ServerProtocol | undefined, read: State["load"]["config"]) {
-  if (protocol === "v2") return { state: "unknown" as const }
-  if (protocol === undefined || read === "pending") return { state: "checking" as const }
-  if (read === "failed") return { state: "failed" as const }
-  if (Object.keys(config).length === 0) return { state: "unknown" as const }
-  const atlas = config.maestro?.atlas
-  if (!atlas) return { state: "missing" as const }
-  return { state: "configured" as const, projectID: atlas.projectID, directory: atlas.directory }
+export function ownSource(_config: Config, _protocol: ServerProtocol | undefined, _read: State["load"]["config"]) {
+  return { state: "unknown" as const }
 }
 
 function approvalState(record: GovernanceRecord | undefined): ApprovalState {

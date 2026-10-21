@@ -5,7 +5,7 @@ import { reconcile, unwrap } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useModels } from "@/context/models"
 import { serverName, type ServerConnection } from "@/context/server"
-import { useServerProtocol } from "@/context/server-sdk"
+
 import { useServerSync } from "@/context/server-sync"
 import { popularProviders } from "@/hooks/use-providers"
 import { MxBadge, MxToggle } from "@/orchestra/chapters/kit"
@@ -142,9 +142,8 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
 function PermissionsSection() {
   const language = useLanguage()
   const serverSync = useServerSync()
-  const protocol = useServerProtocol()
   // Tool defaults live in the server's global config, which only the v1 API reads and writes.
-  const editable = () => protocol() === "v1"
+  const editable = () => false
   const set = (tool: PermissionTool, action: PermissionAction) => {
     const current = serverSync().data.config.permission
     if (permissionAction(current, tool) === action) return
@@ -170,11 +169,9 @@ function PermissionsSection() {
       description={language.t("settings.permissions.description")}
     >
       <p class="settings-note">{language.t("orchestra.settings.permissions.scope")}</p>
-      <Show when={protocol() === "v2"}>
-        <p class="settings-note" role="status">
-          {language.t("orchestra.settings.permissions.readOnly")}
-        </p>
-      </Show>
+      <p class="settings-note" role="status">
+        {language.t("orchestra.settings.permissions.readOnly")}
+      </p>
       <div class="perm-table">
         <For each={PERMISSION_TOOLS}>
           {(tool) => {

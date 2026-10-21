@@ -42,7 +42,7 @@ test("V1 custom disconnect surfaces removal/config failures and never disables a
     if (state.removeFails) throw new Error("hidden-source/private-credential-path")
   }
   const input = {
-    protocol: "v1" as const,
+    protocol: "v2" as const,
     directory: "/profile-b",
     failed: "Request failed",
     sdk: {

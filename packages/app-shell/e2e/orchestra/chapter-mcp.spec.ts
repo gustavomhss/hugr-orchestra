@@ -41,7 +41,7 @@ function fixture() {
       string,
       Record<string, string[]>
     >,
-    protocol: "v1" as "v1" | "v2",
+    protocol: "v1" as "v2",
     configError: false,
     events: {} as Record<string, { directory: string; payload: { type: string; properties: Record<string, never> } }[]>,
     loadError: false,

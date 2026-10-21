@@ -11,7 +11,7 @@ import type {
   SessionStatus,
   Todo,
 } from "@/v2-types"
-import type { OrchestraClient } from "../compat/sdk-v2-client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { FileDiffInfo } from "../compat/vendored-client-promise"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"
@@ -192,7 +192,7 @@ function reconcileFetched<T extends { id: string }>(
 }
 
 type TodoRead = (sessionID: string) => Promise<readonly { content: string; status: string; priority: string }[]>
-type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v1" | "v2">; todo?: TodoRead }
+type ServerSessionOptions = { retry?: typeof retry; protocol?: Promise<"v2">; todo?: TodoRead }
 
 export function createServerSession(
   client: OrchestraClient,
@@ -504,7 +504,7 @@ export function createServerSession(
     )
 
   const fetchMessages = async (sessionID: string, limit: number, before?: string, onAttempt?: () => void) => {
-    if (messageApi && (await options?.protocol) !== "v1") {
+    if (messageApi) {
       const request = (cursor?: string) =>
         (options?.retry ?? retry)(() => {
           onAttempt?.()
@@ -551,7 +551,7 @@ export function createServerSession(
   }
 
   const fetchMessage = async (sessionID: string, messageID: string, onAttempt?: () => void) => {
-    if (sessionApi && (await options?.protocol) !== "v1") {
+    if (sessionApi) {
       const response = await (options?.retry ?? retry)(() => {
         onAttempt?.()
         return sessionApi.message({ sessionID, messageID })
