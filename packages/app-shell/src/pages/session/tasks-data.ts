@@ -8,7 +8,7 @@ import type {
   QuestionRequest,
   Session,
   SessionStatus,
-} from "../../compat/sdk-v2-client"
+} from "@/v2-types"
 import { useServerSDK } from "@/context/server-sdk"
 import { useSync } from "@/context/sync"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"

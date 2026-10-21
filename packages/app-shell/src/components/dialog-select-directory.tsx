@@ -9,7 +9,7 @@ import { useLanguage } from "@/context/language"
 import { ServerConnection } from "@/context/server"
 import { useGlobal } from "@/context/global"
 import { cleanPickerInput, createDirectorySearch, displayPickerPath } from "./directory-picker-domain"
-import type { Path } from "../compat/sdk-v2-client"
+import type { Path } from "@/v2-wire"
 
 interface DialogSelectDirectoryProps {
   title?: string

@@ -1,4 +1,4 @@
-import type { SnapshotFileDiff } from "../../../compat/sdk-v2"
+import type { SnapshotFileDiff } from "@/v2-types"
 import type { SummaryDiff } from "./timeline-row"
 
 export function uniqueSummaryDiffs(diffs: SnapshotFileDiff[] | undefined) {

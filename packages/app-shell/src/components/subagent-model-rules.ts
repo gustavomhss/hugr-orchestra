@@ -1,6 +1,6 @@
 import { matchWildcard } from "@/utils/wildcard"
 import { createStore } from "solid-js/store"
-import type { Provider } from "../compat/sdk-v2-client"
+import type { Provider } from "@/v2-wire"
 import type { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
 import type { Schema } from "effect"
 

@@ -5,7 +5,7 @@ import type {
   SessionMessageShell,
   SessionMessageUser,
 } from "../compat/vendored-client-promise"
-import type { AssistantMessage, FilePart, Message, Part, ToolPart, UserMessage } from "../compat/sdk-v2"
+import type { AssistantMessage, FilePart, Message, Part, ToolPart, UserMessage } from "@/v2-types"
 import { Option, Schema } from "effect"
 
 const emptyTokens = { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }

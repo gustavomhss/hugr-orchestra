@@ -39,7 +39,7 @@ import type {
   Part as PartType,
   ToolPart,
   UserMessage,
-} from "../../../compat/sdk-v2"
+} from "@/v2-types"
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"

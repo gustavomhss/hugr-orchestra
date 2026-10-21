@@ -1,4 +1,4 @@
-import type { Session } from "../../compat/sdk-v2-client"
+import type { Session } from "@/v2-types"
 import { showToast } from "@/utils/toast"
 import { base64Encode } from "@orchestra/core/util/encode"
 import { Binary } from "@orchestra/core/util/binary"

@@ -1,7 +1,7 @@
 import { createMemo, type Accessor } from "solid-js"
 import { createQuery, skipToken, useQueryClient } from "@tanstack/solid-query"
 import { debounce } from "@solid-primitives/scheduled"
-import type { VcsFileDiff } from "../../compat/sdk-v2"
+import type { VcsFileDiff } from "@/v2-types"
 import { Button } from "@orchestra/ui/button"
 import { useSDK } from "@/context/sdk"
 import { useServerSDK } from "@/context/server-sdk"

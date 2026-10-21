@@ -1,4 +1,4 @@
-import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "../../compat/sdk-v2-client"
+import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@/v2-types"
 import type { FileDiffInfo } from "../../compat/vendored-client-promise"
 import type { SessionMessageInfo } from "../../compat/vendored-client-promise"
 

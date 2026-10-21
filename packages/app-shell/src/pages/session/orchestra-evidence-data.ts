@@ -1,4 +1,4 @@
-import type { ToolPart } from "../../compat/sdk-v2"
+import type { ToolPart } from "@/v2-types"
 import type { SessionMessageInfo } from "../../compat/vendored-client-promise"
 import {
   detectTestRunner,

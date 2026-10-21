@@ -1,6 +1,7 @@
 import { For, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Agent, AgentFileInfo, AgentFileInput } from "../../compat/sdk-v2-client"
+import type { Agent } from "@/v2-wire"
+import type { AgentFileInfo, AgentFileInput } from "@/v2-types"
 import { useLanguage } from "@/context/language"
 import { agentKey } from "@/context/agent-identity"
 import {

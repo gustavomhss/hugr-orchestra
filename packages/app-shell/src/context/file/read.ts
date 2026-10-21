@@ -1,5 +1,5 @@
 import { getFilename } from "@orchestra/core/util/path"
-import type { FileContent, FileNode } from "../../compat/sdk-v2"
+import type { FileContent, FileNode } from "@/v2-wire"
 import type { useSDK } from "../sdk"
 
 type DirectorySDK = ReturnType<ReturnType<typeof useSDK>>

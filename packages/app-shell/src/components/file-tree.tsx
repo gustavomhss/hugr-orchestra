@@ -17,7 +17,7 @@ import {
   type ParentProps,
 } from "solid-js"
 import { Dynamic } from "solid-js/web"
-import type { FileNode } from "../compat/sdk-v2"
+import type { FileNode } from "@/v2-wire"
 
 const MAX_DEPTH = 128
 

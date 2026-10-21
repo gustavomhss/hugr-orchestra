@@ -4,14 +4,14 @@ import type { SessionApi, SessionMessageInfo } from "../compat/vendored-client-p
 import type { ServerCurrentEvent } from "./server-sdk"
 import type {
   Message,
-  OrchestraClient,
   Part,
   PermissionRequest,
   QuestionRequest,
   Session,
   SessionStatus,
   Todo,
-} from "../compat/sdk-v2-client"
+} from "@/v2-types"
+import type { OrchestraClient } from "../compat/sdk-v2-client"
 import type { FileDiffInfo } from "../compat/vendored-client-promise"
 import { batch } from "solid-js"
 import { createStore, produce, reconcile } from "solid-js/store"

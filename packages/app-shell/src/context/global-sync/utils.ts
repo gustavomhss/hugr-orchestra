@@ -5,7 +5,9 @@ import type {
   PermissionV2Request,
   ProviderListOutput,
 } from "../../compat/vendored-client-promise"
-import type { Agent, PermissionRequest, Project, Provider, ProviderListResponse } from "../../compat/sdk-v2-client"
+import type { Project } from "../../compat/sdk-v2-client"
+import type { PermissionRequest } from "@/v2-types"
+import type { Agent, Provider, ProviderListResponse } from "@/v2-wire"
 import type { Project as CurrentProject } from "../../compat/vendored-client-promise"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 export { pathKey as directoryKey, type PathKey as DirectoryKey } from "@/utils/path-key"

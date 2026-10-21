@@ -1,5 +1,5 @@
 import { createStore } from "solid-js/store"
-import type { Session } from "../../compat/sdk-v2-client"
+import type { Session } from "@/v2-types"
 import type { SubagentModelPolicy } from "../subagent-model-rules"
 import type { FailedPolicyWrite } from "./submission-policy"
 import type { AdmissionRequest } from "./submission-types"

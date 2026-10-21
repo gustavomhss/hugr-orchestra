@@ -1,15 +1,15 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { produce, reconcile, type SetStoreFunction, type Store } from "solid-js/store"
+import type { Project } from "../../compat/sdk-v2-client"
 import type {
   Message,
   Part,
   PermissionRequest,
-  Project,
   QuestionRequest,
   Session,
   SessionStatus,
   Todo,
-} from "../../compat/sdk-v2-client"
+} from "@/v2-types"
 import type { FileDiffInfo } from "../../compat/vendored-client-promise"
 import type { State, VcsCache } from "./types"
 import { trimSessions } from "./session-trim"

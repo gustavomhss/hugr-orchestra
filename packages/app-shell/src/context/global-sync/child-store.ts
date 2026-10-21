@@ -1,7 +1,7 @@
 import { createRoot, createSignal, getOwner, onCleanup, runWithOwner, type Owner } from "solid-js"
 import { createStore, type SetStoreFunction, type Store } from "solid-js/store"
 import { Persist, persisted } from "@/utils/persist"
-import type { VcsInfo } from "../../compat/sdk-v2-client"
+import type { VcsInfo } from "@/v2-types"
 import {
   DIR_IDLE_TTL_MS,
   MAX_DIR_STORES,

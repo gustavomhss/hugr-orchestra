@@ -1,4 +1,5 @@
-import type { FilePart, Project, UserMessage } from "../compat/sdk-v2"
+import type { FilePart, UserMessage } from "@/v2-types"
+import type { Project } from "../compat/sdk-v2"
 import { getFilename } from "@orchestra/core/util/path"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { useMutation } from "@tanstack/solid-query"

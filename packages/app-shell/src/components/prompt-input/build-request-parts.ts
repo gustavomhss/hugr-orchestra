@@ -1,5 +1,5 @@
 import { getFilename } from "@orchestra/core/util/path"
-import { type AgentPartInput, type FilePartInput, type Part, type TextPartInput } from "../../compat/sdk-v2-client"
+import type { AgentPartInput, FilePartInput, Part, TextPartInput } from "@/v2-types"
 import type { FileSelection } from "@/context/file"
 import { encodeFilePath } from "@/context/file/path"
 import type { AgentPart, FileAttachmentPart, ImageAttachmentPart, Prompt } from "@/context/prompt"

@@ -1,11 +1,10 @@
+import type { Agent, Provider } from "@/v2-wire"
 import type {
-  Agent,
   AgentFileAction,
   AgentFileInfo,
   AgentFileInput,
   AgentFilePermission,
-  Provider,
-} from "../../compat/sdk-v2-client"
+} from "@/v2-types"
 import { agentKey } from "@/context/agent-identity"
 import { modelUnavailable } from "@/components/subagent-model-rules"
 

@@ -1,5 +1,5 @@
 import type { SessionMessageInfo } from "../../../compat/vendored-client-promise"
-import type { AssistantMessage, Message, Part, SessionStatus, UserMessage } from "../../../compat/sdk-v2"
+import type { AssistantMessage, Message, Part, SessionStatus, UserMessage } from "@/v2-types"
 import { createMemo, type Accessor } from "solid-js"
 import { reuseTimelineRows } from "./row-reconciliation"
 import { Timeline, TimelineRow } from "./rows"

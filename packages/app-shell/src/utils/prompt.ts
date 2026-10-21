@@ -1,4 +1,5 @@
-import type { AgentPart as MessageAgentPart, FilePart, Part, TextPart } from "../compat/sdk-v2"
+import type { AgentPart as MessageAgentPart } from "@/v2-wire"
+import type { FilePart, Part, TextPart } from "@/v2-types"
 import type { AgentPart, FileAttachmentPart, ImageAttachmentPart, Prompt } from "@/context/prompt"
 import { createLegacyBlobReference } from "@/utils/draft-store"
 

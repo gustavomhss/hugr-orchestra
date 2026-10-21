@@ -12,7 +12,7 @@ import { HugrMark } from "@/orchestra/brand"
 import { IconButtonV2 } from "@orchestra/ui/v2/icon-button-v2"
 import { KeybindV2 } from "@orchestra/ui/v2/keybind-v2"
 import { TooltipV2 } from "@orchestra/ui/v2/tooltip-v2"
-import type { SnapshotFileDiff, VcsFileDiff } from "../../compat/sdk-v2"
+import type { SnapshotFileDiff, VcsFileDiff } from "@/v2-types"
 import type { FileDiffInfo } from "../../compat/vendored-client-promise"
 import { useDialog } from "@orchestra/ui/context/dialog"
 
