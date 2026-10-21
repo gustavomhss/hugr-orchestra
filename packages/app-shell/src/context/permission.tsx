@@ -260,7 +260,7 @@ function createServerPermissionState(input: { sdk: ServerSDK; sync: ServerSync }
     }
     return input.sdk.api.permission.request
       .list({ location: { directory } })
-      .then((result) => result.data.map(normalizePermissionRequest))
+      .then((result) => (result.data as unknown as Parameters<typeof normalizePermissionRequest>[0][]).map(normalizePermissionRequest))
   }
 
   function respondOnce(permission: PermissionRequest, directory?: string) {

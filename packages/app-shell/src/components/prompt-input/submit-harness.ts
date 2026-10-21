@@ -531,7 +531,7 @@ beforeAll(async () => {
   const { useSync } = await import("@/context/sync")
   const { useServerSync } = await import("@/context/server-sync")
   followupInput = (draft) => ({
-    api: policyFixture.sdk.api.session as import("./submit").FollowupSendInput["api"],
+    api: policyFixture.sdk.api.session as unknown as import("./submit").FollowupSendInput["api"],
     sync: useSync()(), serverSync: useServerSync()(), draft,
   })
   followupSystem = mod.followupSystem

@@ -231,7 +231,7 @@ export function SessionContextTab() {
       const data = await fetchSessionExport({
         sessionID,
         client: sdk().client,
-        api: sdk().api,
+        api: sdk().api as unknown as import("@/utils/session-export").SessionExportApi,
         protocol: sdk().protocol,
       })
       const filename = sessionExportFilename(data.info)

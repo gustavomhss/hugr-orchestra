@@ -87,7 +87,7 @@ export const loadMcpResourcesQuery = (
       return api.resource
         .catalog({ location: { directory } })
         .then((result) =>
-          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])),
+          Object.fromEntries(result.data.resources.map((resource) => [`${resource.server}:${resource.uri}`, resource])) as unknown as Record<string, McpResource>,
         )
     },
     placeholderData: {},

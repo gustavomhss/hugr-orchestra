@@ -1,11 +1,12 @@
 import type { Project } from "@/v2-types"
 import type { OrchestraClient } from "../../compat/sdk-v2-client"
+import type { OpenCodeClient } from "../../compat/vendored-client-promise"
 import type { PermissionRequest, QuestionRequest, ReferenceInfo, Session } from "@/v2-types"
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type {
   AgentListInput,
-  AgentListOutput,
   CatalogApi,
+  AgentListOutput,
   CommandInfo,
   CommandListInput,
   CommandListOutput,
@@ -37,7 +38,6 @@ import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { normalizeSessionInfo, type AppSession } from "@/utils/session"
 import type { ServerProtocol } from "@/utils/server-protocol"
-import type { ServerApi } from "@/utils/server"
 
 type GlobalStore = {
   ready: boolean
@@ -117,10 +117,10 @@ type ProjectApi = {
   readonly current: (input?: ProjectCurrentInput) => Promise<ProjectCurrentOutput>
 }
 
-type McpApi = ServerApi["mcp"]
-type PermissionApi = ServerApi["permission"]
-type QuestionApi = ServerApi["question"]
-type VcsApi = ServerApi["vcs"]
+type McpApi = OpenCodeClient["mcp"]
+type PermissionApi = OpenCodeClient["permission"]
+type QuestionApi = OpenCodeClient["question"]
+type VcsApi = OpenCodeClient["vcs"]
 
 export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
   queryOptions({
@@ -525,7 +525,7 @@ export async function bootstrapDirectory(input: {
             if ((await input.protocol) === "v1") return (await input.sdk.permission.list()).data ?? []
             return input.api.permission.request
               .list({ location: { directory: input.directory } })
-              .then((result) => result.data.map(normalizePermissionRequest))
+              .then((result: unknown) => ((result as { data: Parameters<typeof normalizePermissionRequest>[0][] }).data).map(normalizePermissionRequest))
           })().then((permissions) => {
             const ids = permissions.map((permission) => permission.sessionID)
             const grouped = groupBySession(
@@ -561,11 +561,11 @@ export async function bootstrapDirectory(input: {
             if ((await input.protocol) === "v1") return (await input.sdk.question.list()).data ?? []
             return input.api.question.request
               .list({ location: { directory: input.directory } })
-              .then((result) => result.data)
+              .then((result: unknown) => (result as { data: unknown[] }).data)
           })().then((questions) => {
-            const ids = questions.map((question) => question.sessionID)
+            const ids = (questions as QuestionRequest[]).map((question) => question.sessionID)
             const grouped = groupBySession(
-              questions.filter((question) => !!question.id && !!question.sessionID) as QuestionRequest[],
+              (questions as QuestionRequest[]).filter((question) => !!question.id && !!question.sessionID),
             )
             const warm = input.session
               ? indexRequestSessions({ ids, directory: input.directory, session: input.session, setStore: input.setStore })
