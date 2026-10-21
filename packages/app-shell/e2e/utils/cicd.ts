@@ -217,7 +217,7 @@ export async function setup(
     if (path === "/api/mcp") return json(route, { location: { directory }, data: [] })
     if (path === "/api/mcp/resource")
       return json(route, { location: { directory }, data: { resources: [], templates: [] } })
-    if (path === "/file" || path === "/api/fs/list" || path === "/file/content" || path.startsWith("/api/fs/read/")) {
+    if (path === "/file" || path === "/api/fs/list" || path === "/file/content" || path === "/api/fs/read") {
       requests.push(url)
       const target = url.searchParams.get(path.startsWith("/api/") ? "location[directory]" : "directory")
       if (target !== directory) return json(route, {}, 400)

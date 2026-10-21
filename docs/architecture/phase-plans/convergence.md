@@ -25,7 +25,7 @@ line). Runtime call counts are regex over `client.X.Y(` / `api.X.Y(` chains and 
      `/api/mcp*` (5), `/api/project*` (3), `/api/vcs/{status,diff}`, `/api/shell*` (4), `/api/form*` (6),
      `/api/session/:id/{rename,fork,move,command,shell,skill,synthetic,pending,background,generate,instructions*}`,
      `/api/generate`, `/api/plugin`, `/api/server`, `/api/service/stop`, `/api/debug/location`,
-     `/api/experimental/*`, `/api/integration/:id/connect/command*`, `/api/fs/read/*` (omitted from generation on
+     `/api/experimental/*`, `/api/integration/:id/connect/command*`, `/api/fs/read` (omitted from generation on
      purpose; raw transport). No server in the repo serves `/api/mcp`, `/api/project*`, `/api/session/:id/rename`
      (grep of apps/orchestra/src, packages/server/src, packages/protocol/src).
 2. **app-shell already runs two protocols.** `utils/server-protocol.ts` probes `/global/health` first: the legacy

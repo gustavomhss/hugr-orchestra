@@ -40,6 +40,7 @@ test("exposes every standard HTTP API group", () => {
     "projectCopies",
     "projects",
     "lean",
+    "atlas",
     "config",
     "relayDocuments",
     "relayPublish",
@@ -79,7 +80,7 @@ test("exposes every standard HTTP API group", () => {
     "attemptComplete",
     "attemptCancel",
   ])
-  expect(Object.keys(client.files)).toEqual(["list", "find"])
+  expect(Object.keys(client.files)).toEqual(["read", "list", "find"])
   expect(Object.keys(client.ptys)).toEqual(["list", "create", "get", "update", "remove"])
 })
 

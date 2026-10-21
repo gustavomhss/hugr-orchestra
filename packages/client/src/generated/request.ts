@@ -7,4 +7,5 @@ export interface RequestDescriptor {
   readonly successStatus: number
   readonly declaredStatuses: ReadonlyArray<number>
   readonly empty: boolean
+  readonly binary?: boolean
 }

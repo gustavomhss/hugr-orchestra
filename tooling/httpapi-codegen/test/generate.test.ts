@@ -355,17 +355,16 @@ describe("HttpApiCodegen.generate", () => {
       ),
     ).toThrow("Unsupported Promise success encoding: session.text")
 
-    expect(() =>
-      emitPromise(
-        compileContract(
-          api(
-            HttpApiEndpoint.get("binary", "/binary", {
-              success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()),
-            }),
-          ),
+    const binaryOutput = emitPromise(
+      compileContract(
+        api(
+          HttpApiEndpoint.get("binary", "/binary", {
+            success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()),
+          }),
         ),
       ),
-    ).toThrow("Unsupported Promise success encoding: session.binary")
+    )
+    expect(binaryOutput.files.find((file) => file.path === "client.ts")?.content).toContain("binary: true")
 
     expect(() =>
       emitPromise(compileContract(api(HttpApiEndpoint.get("read", "/file/*", { success: Schema.String })))),

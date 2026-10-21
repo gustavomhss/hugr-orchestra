@@ -22,8 +22,11 @@ const FindQuery = Schema.Struct({
 export const makeFileSystemGroup = <I extends HttpApiMiddleware.AnyId, S>(locationMiddleware: Context.Key<I, S>) =>
   HttpApiGroup.make("server.fs")
   .add(
-    HttpApiEndpoint.get("fs.read", "/api/fs/read/*", {
-      query: LocationQuery,
+    HttpApiEndpoint.get("fs.read", "/api/fs/read", {
+      query: Schema.Struct({
+        ...LocationQuery.fields,
+        path: RelativePath,
+      }),
       success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()),
     })
       .middleware(locationMiddleware)

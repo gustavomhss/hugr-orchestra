@@ -6155,7 +6155,7 @@
         }
       }
     },
-    "/api/fs/read/*": {
+    "/api/fs/read": {
       "get": {
         "tags": ["filesystem"],
         "operationId": "v2.fs.read",
@@ -6199,6 +6199,14 @@
             "required": false,
             "style": "deepObject",
             "explode": true
+          },
+          {
+            "name": "path",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "security": [],
