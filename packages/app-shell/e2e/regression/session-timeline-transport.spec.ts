@@ -123,7 +123,7 @@ test("passes through non-event fetches", async ({ page }) => {
     return response.json()
   })
 
-  expect(health).toEqual({ healthy: true })
+  expect(health).toEqual({ healthy: true, pid: expect.any(Number), version: expect.any(String) })
   await expect.poll(async () => (await timeline.transport.connections()).length).toBe(1)
 })
 
