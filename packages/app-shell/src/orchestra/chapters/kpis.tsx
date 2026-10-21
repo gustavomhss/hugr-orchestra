@@ -119,7 +119,7 @@ export function KpiDashboard(props: {
     setPulls({ status: "loading" })
     setState("expanded", false)
     // The V2 server answers through its own routes; a V1 sidecar through the legacy SDK.
-    const v2 = props.sdk.protocol.then((kind) => kind !== "v1")
+    const v2 = Promise.resolve(true)
     const location = { directory: props.directory }
     void cached("activity", period, async (abort) =>
       (await v2)

@@ -20,7 +20,7 @@ export function createMcpSource(input: {
   /** Opens a V2 sign-in's authorization URL; V1 servers open the browser themselves. */
   open: (url: string) => void
 }) {
-  const v1 = () => input.serverSDK.protocol.then((protocol) => protocol === "v1")
+  const v1 = () => input.serverSDK.protocol.then((protocol) => false)
   const location = { directory: input.directory }
   const api = () => input.serverSDK.api.mcp
 

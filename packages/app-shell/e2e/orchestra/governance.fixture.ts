@@ -130,7 +130,7 @@ export async function setupGovernance(
   page: Page,
   input: {
     scheme?: "dark" | "light"
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     locale?: "en" | "ar"
     title?: string
     agents: (typeof build)[]

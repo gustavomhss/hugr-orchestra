@@ -137,7 +137,7 @@ export async function setupResearchTimeline(
   page: Page,
   input: {
     value: ReturnType<typeof researchEnvelope>
-    protocol: "v1" | "v2"
+    protocol: "v2"
     status?: "running" | "completed"
   },
 ) {

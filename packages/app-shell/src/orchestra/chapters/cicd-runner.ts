@@ -135,7 +135,7 @@ export function createPipelines(input: Input) {
     const current = () => !entry.stopped && live.get(id) === entry && entry.connection === connection
     const protocol = await input.sdk.protocol
     if (!current()) return
-    const ticket = protocol === "v1" ? await connectTicket(ptyID).catch(() => undefined) : undefined
+    const ticket = undefined
     if (!current()) return
     const server = input.sdk.server
     const socket = (input.socket ?? ((url) => new WebSocket(url)))(
@@ -318,14 +318,6 @@ export function createPipelines(input: Input) {
 
   // V1 reports a missing PTY only through its HTTP status, so read it without the throwing adapter.
   async function inspect(ptyID: string): Promise<PtyState> {
-    if ((await input.sdk.protocol) === "v1")
-      return input.sdk.client.pty
-        .get({ ptyID, directory: input.directory }, { throwOnError: false })
-        .then((result) => {
-          if (result.response.status === 404) return "missing" as const
-          return result.data ? { status: result.data.status, exitCode: result.data.exitCode } : undefined
-        })
-        .catch(() => undefined)
     return input.sdk.api.pty
       .get({ ptyID, location: target })
       .then((result) => ({ status: result.data.status, exitCode: result.data.exitCode }))
@@ -333,26 +325,10 @@ export function createPipelines(input: Input) {
   }
 
   async function removePty(ptyID: string) {
-    if ((await input.sdk.protocol) === "v1")
-      return input.sdk.client.pty
-        .remove({ ptyID, directory: input.directory }, { throwOnError: false })
-        .then((result) =>
-          result.response.ok || result.response.status === 404 ? undefined : `HTTP ${result.response.status}`,
-        )
-        .catch((error: unknown) => errorText(error))
     return input.sdk.api.pty
       .remove({ ptyID, location: target })
       .then(() => undefined)
       .catch((error: unknown) => (missing(error) ? undefined : errorText(error)))
-  }
-
-  function connectTicket(ptyID: string) {
-    return input.sdk.client.pty
-      .connectToken(
-        { ptyID, directory: input.directory },
-        { throwOnError: false, headers: { "x-orchestra-ticket": "1" } },
-      )
-      .then((result) => (result.response.status === 200 ? result.data?.ticket : undefined))
   }
 
   return {

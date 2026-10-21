@@ -164,10 +164,7 @@ export function OrchestraSidebar(props: {
         conn && target.project && directory
           ? async () => {
               const sdk = global.ensureServerCtx(conn).sdk
-              if ((await sdk.protocol) !== "v1")
-                return (await sdk.orchestra.vcs.get({ location: { directory } })).data.branch ?? null
-              const result = await sdk.createClient({ directory, throwOnError: true }).vcs.get()
-              return result.data?.branch ?? null
+              return (await sdk.orchestra.vcs.get({ location: { directory } })).data.branch ?? null
             }
           : skipToken,
       retry: false,

@@ -479,7 +479,7 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
   expect(legacyAuth).toEqual([])
 })
 
-async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v1" | "v2" = "v1") {
+async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v2" = "v1") {
   await page.addInitScript(
     ({ server, directory }) => {
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))

@@ -160,7 +160,7 @@ async function openTerminal(page: Page) {
   return dock
 }
 
-async function setup(page: Page, protocol: "v1" | "v2", respond: (route: Route, attempt: number) => Promise<void>) {
+async function setup(page: Page, protocol: "v2", respond: (route: Route, attempt: number) => Promise<void>) {
   const creates: { title?: string }[] = []
   const connections: string[] = []
   const errors: string[] = []

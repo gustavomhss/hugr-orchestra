@@ -516,7 +516,7 @@ async function drafts(page: Page) {
   return page.evaluate(() => JSON.parse(localStorage.getItem("orchestra.window.browser.dat:tabs") ?? "[]"))
 }
 
-async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?: "v1" | "v2" } = {}) {
+async function setup(page: Page, options: { scheme?: "dark" | "light"; protocol?: "v2" } = {}) {
   const protocol = options.protocol ?? "v2"
   const state = {
     status: 200,

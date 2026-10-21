@@ -99,7 +99,17 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
       current: fromLocation,
     },
   }
-  return current as unknown as CompatibleApi
+  return {
+    ...current,
+    session: {
+      ...current.session,
+      move: (input: { sessionID: string; directory?: string }, options?: RequestOptions) =>
+        (current.session.move as (value: unknown, requestOptions?: RequestOptions) => Promise<void>)(
+          { sessionID: input.sessionID, location: { directory: input.directory ?? "" } },
+          options,
+        ),
+    },
+  } as unknown as CompatibleApi
 }
 
 function isMissingRoute(error: unknown) {

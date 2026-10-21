@@ -8,7 +8,7 @@ import { createCompatibleApi } from "./server-compat"
 import { rethrow } from "../testing/rejection"
 
 function setup(
-  protocol: "v1" | "v2" | Promise<"v1" | "v2">,
+  protocol: "v2" | Promise<"v2">,
   responses?: { vcs?: { branch: string; default_branch: string } },
 ) {
   const requests: Request[] = []
@@ -29,7 +29,7 @@ function setup(
       }
       if (request.method === "POST" && request.url.endsWith("/prompt_async"))
         return new Response(undefined, { status: 204 })
-      if (new URL(request.url).pathname.endsWith("/connect/key") && protocol === "v1") {
+      if (new URL(request.url).pathname.endsWith("/connect/key") && false) {
         return new Response("not found", { status: 404 })
       }
       if (request.method === "POST" && request.url.endsWith("/prompt")) {
@@ -155,7 +155,7 @@ describe("createCompatibleApi", () => {
       variant: "high",
     })
     await api.session.compact({ sessionID: "ses_1", model: { providerID: "provider", modelID: "model" } })
-    await api.session.move({ sessionID: "ses_1", location: { directory: "/repo/sub" } })
+    await api.session.move({ sessionID: "ses_1", directory: "/repo/sub" })
 
     const sent = await Promise.all(
       requests.map(async (request) => [new URL(request.url).pathname, await request.text()] as const),
@@ -174,7 +174,7 @@ describe("createCompatibleApi", () => {
 
   test("resolves protocol detection once across implementation methods", async () => {
     let detections = 0
-    const resolved = Promise.resolve<"v1" | "v2">("v2")
+    const resolved = Promise.resolve<"v2">("v2")
     const protocol = new Proxy(resolved, {
       get(target, property) {
         if (property !== "then") return Reflect.get(target, property, target)

@@ -15,7 +15,7 @@ import { useSync } from "@/context/sync"
 import { type ServerHealth } from "@/utils/server-health"
 import { useGlobal } from "@/context/global"
 import { useMcpToggle } from "@/context/mcp"
-import { useServerProtocol } from "@/context/server-sdk"
+
 
 const pluginEmptyMessage = (value: string, file: string): JSXElement => {
   const parts = value.split(file)
@@ -251,7 +251,6 @@ function ServerStatusList(props: { state: ServerStatusState }) {
 export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
   const sync = useSync()
   const language = useLanguage()
-  const protocol = useServerProtocol()
 
   const fail = (err: unknown) => {
     showToast({
@@ -271,11 +270,6 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
   const mcpConnected = createMemo(() => mcpNames().filter((name) => mcpStatus(name) === "connected").length)
   const lspItems = createMemo(() => sync().data.lsp ?? [])
   const lspCount = createMemo(() => lspItems().length)
-  const plugins = createMemo(() =>
-    (sync().data.config.plugin ?? []).map((item) => (typeof item === "string" ? item : item[0])),
-  )
-  const pluginCount = createMemo(() => plugins().length)
-  const pluginEmpty = createMemo(() => pluginEmptyMessage(language.t("dialog.plugins.empty"), "orchestra.json"))
 
   return (
     <div class="flex items-center gap-1 w-[360px] rounded-xl shadow-[var(--shadow-lg-border-base)]">
@@ -296,12 +290,7 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
             {lspCount() > 0 ? `${lspCount()} ` : ""}
             {language.t("status.popover.tab.lsp")}
           </Tabs.Trigger>
-          <Show when={protocol() === "v1"}>
-            <Tabs.Trigger value="plugins" data-slot="tab" class="text-12-regular">
-              {pluginCount() > 0 ? `${pluginCount()} ` : ""}
-              {language.t("status.popover.tab.plugins")}
-            </Tabs.Trigger>
-          </Show>
+
         </Tabs.List>
 
         <Tabs.Content value="mcp">
@@ -394,27 +383,7 @@ export function StatusPopoverBody(props: { shown: Accessor<boolean> }) {
           </div>
         </Tabs.Content>
 
-        <Show when={protocol() === "v1"}>
-          <Tabs.Content value="plugins">
-            <div class="flex flex-col px-2 pb-2">
-              <div class="flex flex-col p-3 bg-background-base rounded-sm min-h-14">
-                <Show
-                  when={plugins().length > 0}
-                  fallback={<div class="text-14-regular text-text-base text-center my-auto">{pluginEmpty()}</div>}
-                >
-                  <For each={plugins()}>
-                    {(plugin) => (
-                      <div class="flex items-center gap-2 w-full px-2 py-1">
-                        <div class="size-1.5 rounded-full shrink-0 bg-icon-success-base" />
-                        <span class="text-14-regular text-text-base truncate">{plugin}</span>
-                      </div>
-                    )}
-                  </For>
-                </Show>
-              </div>
-            </div>
-          </Tabs.Content>
-        </Show>
+
       </Tabs>
     </div>
   )

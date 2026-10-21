@@ -11,7 +11,7 @@ class Socket extends EventTarget {
   closed() { this.dispatchEvent(new CloseEvent("close", { code: 1000 })) }
 }
 
-function fixture(protocol: "v1" | "v2") {
+function fixture(protocol: "v2") {
   const sockets: Socket[] = []
   const timers: (() => void)[] = []
   const state = { gets: 0, tickets: [] as ReturnType<typeof Promise.withResolvers<Response>>[], removes: [] as ReturnType<typeof Promise.withResolvers<Response>>[] }

@@ -83,7 +83,7 @@ export function useProviderDiscovery(directory?: Accessor<string | null | undefi
         .then((result) => result.data.map((item) => ({ id: item.id, name: item.name }))),
   )
   return {
-    all: () => (protocol() === "v1" ? [...providers.all().values()] : (integrations.data() ?? [])),
+    all: () => (integrations.data() ?? []),
     loading: () => !protocol() || providers.directory() === undefined || integrations.loading(),
     error: integrations.error,
     retry: integrations.retry,

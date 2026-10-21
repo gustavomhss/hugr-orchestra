@@ -203,16 +203,6 @@ export const Terminal = (props: TerminalProps) => {
   }
 
   const pushSize = async (cols: number, rows: number) => {
-    if ((await sdk().protocol) === "v1") {
-      return sdk()
-        .client.pty.update({
-          ptyID: id,
-          size: { cols, rows },
-        })
-        .catch((err) => {
-          debugTerminal("failed to sync terminal size", err)
-        })
-    }
     return sdk()
       .api.pty.update({
         ptyID: id,
@@ -477,15 +467,6 @@ export const Terminal = (props: TerminalProps) => {
       }
 
       const gone = async () => {
-        if ((await sdk().protocol) === "v1") {
-          return sdk()
-            .client.pty.get({ ptyID: id }, { throwOnError: false })
-            .then((result) => result.response.status === 404)
-            .catch((err) => {
-              debugTerminal("failed to inspect terminal session", err)
-              return false
-            })
-        }
         return sdk()
           .api.pty.get({ ptyID: id, location: { directory } })
           .then((result) => result.data.status === "exited")
@@ -496,34 +477,7 @@ export const Terminal = (props: TerminalProps) => {
           })
       }
 
-      const connectToken = async () => {
-        if ((await sdk().protocol) === "v1") {
-          const result = await sdk()
-            .client.pty.connectToken(
-              { ptyID: id, directory },
-              {
-                throwOnError: false,
-                headers: { "x-orchestra-ticket": "1" },
-              },
-            )
-            .catch((err: unknown) => {
-              if (err instanceof Error && err.message.includes("Request is not supported")) return
-              throw err
-            })
-          if (!result) return
-          if (result.response.status === 200 && result.data?.ticket) return result.data.ticket
-          if (result.response.status === 404 || result.response.status === 405) return
-          if (result.response.status === 403) throw new Error(language.t("terminal.connectTicket.csrfError"))
-          throw new Error(language.t("terminal.connectTicket.statusError", { status: result.response.status }))
-        }
-        // return sdk()
-        //   .api.pty.connectToken({
-        //     ptyID: id,
-        //     location: { directory },
-        //     "x-orchestra-ticket": "1",
-        //   })
-        //   .then((result) => result.data.ticket)
-      }
+      const connectToken = async () => undefined
 
       const retry = (err: unknown) => {
         if (disposed) return
@@ -552,8 +506,7 @@ export const Terminal = (props: TerminalProps) => {
           fail(err)
           return undefined
         })
-        const protocol = await sdk().protocol
-        // if (protocol === "v2" && !ticket) return
+        const protocol = "v2" as const
         if (once.value) return
         if (disposed) return
 

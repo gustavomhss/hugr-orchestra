@@ -29,7 +29,7 @@ export async function evidencePage(
     workdir?: string
     directory?: string
     metadata?: Record<string, unknown>
-    protocol?: "v1" | "v2"
+    protocol?: "v2"
     raw?: SessionMessageInfo[]
     secondServer?: string
     scheme?: "light" | "dark"

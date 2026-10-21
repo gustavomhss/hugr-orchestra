@@ -1,5 +1,5 @@
 import type { Project } from "@/v2-types"
-import type { OrchestraClient } from "../../compat/sdk-v2-client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { OpenCodeClient } from "../../compat/vendored-client-promise"
 import type { PermissionRequest, QuestionRequest, ReferenceInfo, Session } from "@/v2-types"
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
@@ -107,8 +107,7 @@ export const loadGlobalConfigQuery = (
   queryOptions({
     queryKey: [scope, "config"],
     queryFn: async () => {
-      if ((await protocol) !== "v1") return readV2 ? retry(readV2) : {}
-      return retry(() => sdk.global.config.get().then((x) => x.data!))
+      return readV2 ? retry(readV2) : {}
     },
   })
 
@@ -263,10 +262,6 @@ export const loadProvidersQuery = (
     queryKey: [scope, directory, "providers"],
     queryFn: () =>
       retry(async () => {
-        if ((await protocol) === "v1" && legacy) {
-          const result = await legacy.provider.list()
-          return normalizeProviderList(result.data!)
-        }
         const location = directory ? { location: { directory } } : undefined
         const [providers, models, defaultModel] = await Promise.all([
           sdk.provider.list(location),
@@ -316,7 +311,6 @@ export const loadAgentsQuery = (
     queryKey: [scope, directory, "agents"],
     queryFn: () =>
       retry(async () => {
-        if ((await protocol) === "v1" && legacy) return normalizeAgentList((await legacy.app.agents()).data ?? [])
         return sdk.list({ location: { directory } }).then((result) => normalizeAgentList(result.data))
       }),
   })
@@ -328,20 +322,6 @@ export const loadCommands = (
   protocol?: Promise<ServerProtocol>,
 ): Promise<CommandInfo[]> =>
   retry(async () => {
-    if ((await protocol) === "v1" && legacy) {
-      return ((await legacy.command.list()).data ?? []).map((command) => {
-        const [providerID, id] = command.model?.split("/") ?? []
-        return {
-          name: command.name,
-          template: command.template,
-          description: command.description,
-          agent: command.agent,
-          model: providerID && id ? { providerID, id } : undefined,
-          subtask: command.subtask,
-          // source: command.source === "skill" ? undefined : command.source,
-        }
-      })
-    }
     return api.list({ location: { directory } }).then((result) => result.data)
   })
 
@@ -354,8 +334,7 @@ export const loadPathQuery = (
   queryOptions<Path>({
     queryKey: [scope, directory, "path"],
     queryFn: async () => {
-      if ((await protocol) !== "v1")
-        return { state: "", config: "", worktree: "", directory: directory ?? "", home: "" }
+      return { state: "", config: "", worktree: "", directory: directory ?? "", home: "" }
       return retry(() => sdk.path.get({ directory: directory ?? undefined }).then((result) => result.data!))
     },
   })
@@ -371,7 +350,6 @@ export const loadReferencesQuery = (
     queryKey: [scope, directory, "references"] as const,
     queryFn: () =>
       retry(async () => {
-        if ((await protocol) === "v1" && legacy) return (await legacy.v2.reference.list()).data?.data ?? []
         return api.list({ location: { directory } }).then((result) => result.data)
       }).catch(() => []),
     placeholderData: [],
@@ -444,43 +422,13 @@ export async function bootstrapDirectory(input: {
           input.setStore,
           "config",
           retry(async () => {
-            if ((await input.protocol) !== "v1") return
-            return input.sdk.config.get().then((x) => input.setStore("config", reconcile(x.data!, { merge: false })))
+            return
           }),
           latest,
         ),
       async () => {
         // v2 statuses come from the server-wide active session seed, whose failure is not this directory's.
-        if ((await input.protocol) !== "v1")
-          return settle(input.setStore, "session_status", input.loadActiveSessions(), latest).catch(() => undefined)
-        return settle(
-          input.setStore,
-          "session_status",
-          retry(async () => {
-            const x = await input.sdk.session.status()
-            if (!input.session) {
-              input.setStore("session_status", x.data!)
-              return
-            }
-            const statuses = x.data ?? {}
-            input.session.set(
-              "session_status",
-              produce((draft) => {
-                for (const sessionID of Object.keys(draft)) {
-                  if (statuses[sessionID]) continue
-                  if (input.session?.get(sessionID)?.directory === input.directory) delete draft[sessionID]
-                }
-              }),
-            )
-            for (const [sessionID, status] of Object.entries(statuses)) {
-              input.session.set("session_status", sessionID, reconcile(status))
-            }
-            await Promise.all(
-              Object.keys(statuses).map((sessionID) => input.session!.resolve(sessionID).catch(() => undefined)),
-            )
-          }),
-          latest,
-        )
+        return settle(input.setStore, "session_status", input.loadActiveSessions(), latest).catch(() => undefined)
       },
       !seededProject &&
         (() =>
@@ -498,7 +446,7 @@ export async function bootstrapDirectory(input: {
       () =>
         retry(async () => {
           const result =
-            (await input.protocol) === "v1"
+            false
               ? (await input.sdk.vcs.get()).data
               : // A server without the branch route has no branch to show; it is not retried.
                 await input
@@ -522,7 +470,6 @@ export async function bootstrapDirectory(input: {
       () =>
         retry(() =>
           (async () => {
-            if ((await input.protocol) === "v1") return (await input.sdk.permission.list()).data ?? []
             return input.api.permission.request
               .list({ location: { directory: input.directory } })
               .then((result: unknown) => ((result as { data: Parameters<typeof normalizePermissionRequest>[0][] }).data).map(normalizePermissionRequest))
@@ -558,7 +505,6 @@ export async function bootstrapDirectory(input: {
       () =>
         retry(() =>
           (async () => {
-            if ((await input.protocol) === "v1") return (await input.sdk.question.list()).data ?? []
             return input.api.question.request
               .list({ location: { directory: input.directory } })
               .then((result: unknown) => (result as { data: unknown[] }).data)

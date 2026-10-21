@@ -718,10 +718,6 @@ export function createPromptSubmit(input: PromptSubmitInput) {
 // treat as "cannot confirm".
 async function sessionHasNoMessages(server: ServerSDK, sessionID: string, directory: string) {
   const signal = AbortSignal.timeout(5_000)
-  if ((await server.protocol) === "v1") {
-    const result = await server.client.session.messages({ sessionID, directory, limit: 1 }, { signal })
-    return (result.data ?? []).length === 0
-  }
   const page = await server.currentApi.message.list({ sessionID, limit: 1, order: "desc" }, { signal })
   return page.data.length === 0
 }

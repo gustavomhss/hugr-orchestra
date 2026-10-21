@@ -74,7 +74,7 @@ export default function Cicd(props: ChapterPageProps) {
   const [vcs] = createResource(() =>
     sdk()
       .protocol.then((protocol) =>
-        protocol === "v1"
+        false
           ? sdk()
               .client.vcs.get(undefined, { signal: abort.signal, throwOnError: false })
               .then((result) => result.data?.branch)
@@ -95,27 +95,15 @@ export default function Cicd(props: ChapterPageProps) {
 
   const [inventory, actions] = createResource(() =>
     loadWorkflows(async (path) => {
-      if ((await sdk().protocol) !== "v1")
-        return sdk()
-          .api.file.list({ path, location: { directory: props.directory } }, { signal: abort.signal })
-          .then((result) => result.data)
-      const result = await sdk().client.file.list({ path }, { signal: abort.signal, throwOnError: false })
-      if (!result.response.ok) throw new Error("Workflow list failed", { cause: { status: result.response.status } })
-      return result.data ?? []
+      return sdk()
+        .api.file.list({ path, location: { directory: props.directory } }, { signal: abort.signal })
+        .then((result) => result.data)
     }),
   )
   const [source] = createResource(
     () => dialogOf("source")?.path,
     async (path) => {
       const content = async () => {
-        if ((await sdk().protocol) === "v1") {
-          const result = await sdk().client.file.read({ path }, { signal: abort.signal, throwOnError: false })
-          if (!result.response.ok)
-            throw new Error("Workflow read failed", { cause: { status: result.response.status } })
-          if (!result.data || result.data.type !== "text" || result.data.encoding === "base64")
-            throw new Error("Unsupported workflow content")
-          return result.data.content
-        }
         return sdk()
           .api.file.read({ path, location: { directory: props.directory } }, { signal: abort.signal })
           .then((bytes) => new TextDecoder().decode(bytes))

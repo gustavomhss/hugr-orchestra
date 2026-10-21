@@ -15,7 +15,7 @@ import {
 } from "@/components/titlebar-session-events"
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
-let kind: "v1" | "v2" = "v1"
+let kind: "v2" = "v1"
 // A V1 server whose /api/health reports a pid also serves the V2 archive routes, as the desktop sidecar does.
 let sidecar = false
 let active: "A" | "B" = "B"

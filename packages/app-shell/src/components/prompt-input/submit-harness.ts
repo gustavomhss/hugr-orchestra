@@ -23,8 +23,8 @@ export const legacyBaseline: ModelRule[] = []
 export const legacySessionPermissions = new Map<string, ModelRule[]>()
 type FixtureServer = {
   scope: ServerScope
-  protocol: Promise<"v1" | "v2">
-  protocolKind: () => string
+  protocol: Promise<"v2">
+  protocolKind: () => "v2"
   client: ReturnType<typeof clientFor>
   currentApi: ServerApi
   createClient: (options: { directory?: string }) => ReturnType<typeof clientFor>
@@ -278,8 +278,8 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
   const client = clientFor("/repo/main")
   const current = createApiForServer({ server: { url: "http://fixture.invalid" } })
   return {
-    scope, get protocol() { return Promise.resolve(state.protocol === "v1" ? "v1" as const : "v2" as const) },
-    protocolKind: () => state.protocol,
+     scope, get protocol() { return Promise.resolve("v2" as const) },
+     protocolKind: () => "v2",
     client, currentApi: {
       ...current,
       session: { ...current.session, ...client.api.session },

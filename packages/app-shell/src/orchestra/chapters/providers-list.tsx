@@ -109,8 +109,7 @@ export function ProviderList(props: {
       const value = v2Data()
       return value ? fromV2(value) : undefined
     }
-    if (protocol() !== "v1" || !sync().ready || (child && !child.provider_ready)) return
-    return fromV1({ all: [...providers.all().values()], connected: providers.connected(), config: sync().data.config })
+    return undefined
   })
   const failed = () => protocol() === "v2" && v2.state === "errored"
   const profile = createMemo(() => {
@@ -258,7 +257,7 @@ export function ProviderList(props: {
         </Show>
         <Show when={data()}>
           <Show
-            when={protocol() === "v1"}
+            when={false}
             fallback={
               <div class="providers-route">
                 <span class="providers-route-label">{language.t("orchestra.providers.route")}</span>
@@ -391,7 +390,7 @@ export function ProviderList(props: {
 export function disconnectProvider(
   card: ProviderCard,
   input: {
-    protocol: "v1" | "v2" | undefined
+    protocol: "v2" | undefined
     sdk: ReturnType<ReturnType<typeof useServerSDK>>
     sync: ReturnType<ReturnType<typeof useServerSync>>
     directory: string

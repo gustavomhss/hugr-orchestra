@@ -81,14 +81,9 @@ export function createEditProjectModel(props: { project: LocalProject; server: S
           icon: { color: store.color || "", override: store.iconOverride || "" },
           commands: { start },
         }
-        const project =
-          (await serverCtx().sdk.protocol) === "v1"
-            ? await serverCtx()
-                .sdk.client.project.update({ ...edit, directory: props.project.worktree })
-                .then((result) => result.data)
-            : await serverCtx()
-                .sdk.orchestra.projects.update(edit)
-                .then((result) => ({ ...result, sandboxes: [...result.sandboxes] }))
+        const project = await serverCtx()
+          .sdk.orchestra.projects.update(edit)
+          .then((result) => ({ ...result, sandboxes: [...result.sandboxes] }))
         if (!project) return
         serverCtx().sync.set("project", (items) =>
           items.map((item) => (item.id === project.id ? normalizeProjectInfo(project) : item)),

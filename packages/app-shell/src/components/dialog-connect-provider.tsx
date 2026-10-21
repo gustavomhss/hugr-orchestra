@@ -25,7 +25,7 @@ import {
 } from "solid-js"
 import { createStore } from "solid-js/store"
 import { ExternalLink } from "@/components/external-link"
-import { useServerProtocol, useServerSDK } from "@/context/server-sdk"
+import { useServerSDK } from "@/context/server-sdk"
 import { useLanguage } from "@/context/language"
 import { useProviderDiscovery, useProviders } from "@/hooks/use-providers"
 import { createProviderResource } from "@/hooks/provider-catalog"
@@ -131,7 +131,6 @@ function ProviderPickerV2(props: {
   onPrepare?: () => void
 }) {
   const providers = useProviderDiscovery(props.directory)
-  const protocol = useServerProtocol()
   const language = useLanguage()
   const claudeMode = useClaudeMode(() => props.directory?.())
   const [store, setStore] = createStore({
@@ -140,14 +139,11 @@ function ProviderPickerV2(props: {
     connecting: undefined as string | undefined,
   })
   const featured = [CLAUDE_MODE_ID, "anthropic", "openai", "google", "openrouter", "vercel"]
-  const custom = () => ({ id: CUSTOM_ID, name: language.t("dialog.provider.custom.label") })
   const all = createMemo(() => {
     language.locale()
     const query = store.filter.trim().toLowerCase()
-    // Only v1 servers can save a custom provider.
     const values = [
       { id: CLAUDE_MODE_ID, name: language.t("orchestra.providers.claudeMode.use") },
-      ...(protocol() === "v1" ? [custom()] : []),
       ...providers.all(),
     ]
     if (!query) return values

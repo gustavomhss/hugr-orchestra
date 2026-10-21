@@ -1,6 +1,6 @@
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type { Project } from "@/v2-types"
-import type { OrchestraClient } from "../compat/sdk-v2-client"
+import type { OrchestraClient } from "@orchestra/sdk/v2/client"
 import type { SessionStatus } from "@/v2-types"
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"
@@ -12,7 +12,7 @@ import { ServerSDK } from "./server-sdk"
 import { bootstrapDirectory, bootstrapGlobal, clearProviderRev, loadCommands } from "./global-sync/bootstrap"
 import { createChildStoreManager } from "./global-sync/child-store"
 import { applyDirectoryEvent, applyGlobalEvent } from "./global-sync/event-reducer"
-import { estimateRootSessionTotal, loadRootSessions, loadRootSessionsV1 } from "./global-sync/session-load"
+import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
 import { trimSessions } from "./global-sync/session-trim"
 import type { ProjectMeta } from "./global-sync/types"
 import { SESSION_RECENT_LIMIT } from "./global-sync/types"
@@ -158,18 +158,6 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   const activeSessions = () =>
     loadActiveSessionsQuery(serverSDK.scope, {
       active: async () => {
-        if ((await serverSDK.protocol) === "v1") {
-          const statuses = (await serverSDK.client.session.status()).data ?? {}
-          seedActiveSessionStatuses(session, statuses)
-          for (const sessionID of Object.keys(statuses)) {
-            void session.resolve(sessionID).catch(() => undefined)
-          }
-          return Object.fromEntries(
-            Object.entries(statuses).flatMap(([sessionID, status]) =>
-              status.type === "idle" ? [] : [[sessionID, { type: "running" as const }]],
-            ),
-          )
-        }
         const active = await serverSDK.api.session.active()
         seedActiveSessionStatuses(session, active)
         for (const sessionID of Object.keys(active)) {
@@ -331,10 +319,8 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         ...queryOptionsApi.sessions(key),
         queryFn: () =>
           serverSDK.protocol
-            .then((protocol) =>
-              protocol === "v1"
-                ? loadRootSessionsV1({ client: sdkFor(directory), directory, limit })
-                : loadRootSessions({ api: serverSDK.api.session, directory, limit }),
+            .then(() =>
+              loadRootSessions({ api: serverSDK.api.session, directory, limit }),
             )
             .then((x) => {
               const nonArchived = fences.visible((x.data ?? []).filter((s) => !!s?.id), session.get)
@@ -608,7 +594,6 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
 
   const updateConfigMutation = useMutation(() => ({
     mutationFn: async (config: Config) => {
-      if ((await serverSDK.protocol) === "v1") return serverSDK.client.global.config.update({ config })
       // V2 keeps the default model, shell, per-agent engines and disabled providers in its global config document.
       return serverSDK.orchestra.config.update({
         model: config.model,
@@ -660,24 +645,12 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         await toggleMcp({
           status,
           connect: async () => {
-            if ((await serverSDK.protocol) === "v1") {
-              await sdk.mcp.connect({ name })
-              return
-            }
             await serverSDK.api.mcp.connect({ server: name, location: { directory: key } })
           },
           disconnect: async () => {
-            if ((await serverSDK.protocol) === "v1") {
-              await sdk.mcp.disconnect({ name })
-              return
-            }
             await serverSDK.api.mcp.disconnect({ server: name, location: { directory: key } })
           },
           authenticate: async () => {
-            if ((await serverSDK.protocol) === "v1") {
-              await sdk.mcp.auth.authenticate({ name })
-              return
-            }
             const location = { directory: key }
             await authenticateMcpV2({
               start: () => serverSDK.orchestra.mcp.authStart({ server: name, location }),

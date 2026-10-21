@@ -22,7 +22,7 @@ if (process.env.LEAN_SETTINGS_DOM !== "1") {
 } else {
   const { createComponent, createStore, render } = await import("./lean-dom.test-helper")
   const { solidDom } = await import("./solid-dom")
-  const [state, setState] = createStore<{ protocol: "v1" | "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
+  const [state, setState] = createStore<{ protocol: "v2" | undefined; ready: boolean; error: unknown; config: Config }>({
     protocol: undefined, ready: false, error: undefined,
     config: { tool_output: { max_lines: 42, max_bytes: 900, lean: { enabled: false } } },
   })

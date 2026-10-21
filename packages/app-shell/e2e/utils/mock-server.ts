@@ -5,7 +5,7 @@ const emptyList = new Set(["/skill", "/command", "/lsp", "/formatter", "/vcs/sta
 const emptyObject = new Set(["/global/config", "/config", "/provider/auth", "/mcp", "/experimental/resource"])
 
 export interface MockServerConfig {
-  protocol?: "v1" | "v2"
+  protocol?: "v2"
   // Orchestra opens the review rail once per app storage. Mocked pages start after that default unless a
   // spec asks for a fresh profile, so specs that toggle the rail keep exact open/closed oracles.
   freshRail?: boolean

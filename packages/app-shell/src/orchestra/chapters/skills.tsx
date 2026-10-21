@@ -66,15 +66,6 @@ export default function Skills(props: ChapterPageProps) {
   async function load() {
     const entries = await serverSDK().protocol.then(async (protocol) => {
       if (abort.signal.aborted) return []
-      if (protocol === "v1") {
-        const result = await sdk().client.app.skills(
-          { directory: props.directory },
-          { signal: abort.signal, throwOnError: false },
-        )
-        if (!result.response.ok) throw new Error("Skills request failed", { cause: { status: result.response.status } })
-        if (!result.data) throw new Error("Skills response missing")
-        return result.data
-      }
       return (
         await serverSDK().currentApi.skill.list({ location: { directory: props.directory } }, { signal: abort.signal })
       ).data
@@ -97,13 +88,9 @@ export default function Skills(props: ChapterPageProps) {
     const protocol = await serverSDK().protocol
     // V2 goes through the legacy SDK's generated v2 group: `currentApi` is the vendored @opencode-ai/client
     // release, which predates the skill write routes.
-    const result = await (
-      protocol === "v1"
-        ? sdk().client.app.skillSave({ directory: props.directory, skillSaveInput: input }, { throwOnError: false })
-        : sdk().client.v2.skill.save(
-            { location: { directory: props.directory }, skillV2SaveInput: input },
-            { throwOnError: false },
-          )
+    const result = await sdk().client.v2.skill.save(
+      { location: { directory: props.directory }, skillV2SaveInput: input },
+      { throwOnError: false },
     ).catch(() => undefined)
     if (!result?.data) return writeFailure(result?.response?.status, result?.error)
     const saved = "data" in result.data ? result.data.data : result.data
@@ -115,13 +102,9 @@ export default function Skills(props: ChapterPageProps) {
 
   async function remove(current: SkillDialogState, skill: SkillEntry) {
     const protocol = await serverSDK().protocol
-    const result = await (
-      protocol === "v1"
-        ? sdk().client.app.skillRemove({ directory: props.directory, path: skill.location }, { throwOnError: false })
-        : sdk().client.v2.skill.remove(
-            { location: { directory: props.directory }, path: skill.location },
-            { throwOnError: false },
-          )
+    const result = await sdk().client.v2.skill.remove(
+      { location: { directory: props.directory }, path: skill.location },
+      { throwOnError: false },
     ).catch(() => undefined)
     if (!result?.response?.ok) return writeFailure(result?.response?.status, result?.error)
     if (abort.signal.aborted) return

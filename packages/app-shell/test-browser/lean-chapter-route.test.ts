@@ -48,7 +48,7 @@ if (process.env.LEAN_CHAPTER_DOM !== "1") {
       savings: { bytesSaved: bytes, tokensSaved: bytes / 4, calls: 1, tokenCalls: 1 } })),
   })
   type Event = { name: string; details: { type: string } }
-  async function nativeServer(bytes: number, name: string, protocol: "v1" | "v2" = "v1") {
+  async function nativeServer(bytes: number, name: string, protocol: "v2" = "v1") {
     const data = new Map<string, LeanDashboard.Info>()
     const provider: NormalizedProviderListResponse = { all: new Map(), connected: [], default: {} }
     const catalogs = new Map<string, { directory: string; provider_ready: boolean; provider: typeof provider }>()

@@ -84,7 +84,7 @@ const shells = [
 async function load(items: { info: UserMessage | AssistantMessage; parts: Part[] }[]) {
   const fetcher = Object.assign(async () => Response.json(items), { preconnect: fetch.preconnect })
   const store = createServerSession(createSdkForServer({ server: { url: "http://localhost:4096" }, fetch: fetcher }), {
-    protocol: Promise.resolve("v1"),
+    protocol: Promise.resolve("v2"),
   })
   store.remember(session)
   await store.sync(session.id)
