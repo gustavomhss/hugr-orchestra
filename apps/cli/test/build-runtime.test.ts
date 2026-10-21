@@ -179,7 +179,7 @@ async function authenticatedHealth(url: string, password: string, pid: number) {
     signal: AbortSignal.timeout(10_000),
   })
   expect(good.status).toBe(200)
-  expect(await good.json()).toEqual({ healthy: true, pid })
+  expect(await good.json()).toEqual({ healthy: true, pid, version: expect.any(String) })
   const bad = await fetch(new URL("/api/health", url), {
     headers: { authorization: `Basic ${Buffer.from("orchestra:wrong-credential").toString("base64")}` },
     signal: AbortSignal.timeout(10_000),

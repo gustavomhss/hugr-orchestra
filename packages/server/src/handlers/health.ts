@@ -1,7 +1,10 @@
+import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Effect } from "effect"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
 import { Api } from "../api"
 
 export const HealthHandler = HttpApiBuilder.group(Api, "server.health", (handlers) =>
-  handlers.handle("health.get", () => Effect.succeed({ healthy: true as const, pid: process.pid })),
+  handlers.handle("health.get", () =>
+    Effect.succeed({ healthy: true as const, pid: process.pid, version: InstallationVersion }),
+  ),
 )
