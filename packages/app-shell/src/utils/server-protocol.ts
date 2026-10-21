@@ -2,7 +2,7 @@ import type { ServerConnection } from "@/context/server"
 import { retry } from "@orchestra/core/util/retry"
 import { authTokenFromCredentials } from "./server"
 
-export type ServerProtocol = "v1" | "v2"
+export type ServerProtocol = "v2"
 
 export type ServerProtocolOptions = {
   signal?: AbortSignal

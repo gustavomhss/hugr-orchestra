@@ -1,7 +1,7 @@
 import { usePlatform } from "@/context/platform"
 import { ServerConnection } from "@/context/server"
-import { authTokenFromCredentials, createSdkForServer } from "./server"
-import { ClientError, OpenCode } from "../compat/vendored-client"
+import { authTokenFromCredentials } from "./server"
+import { ClientError, Orchestra } from "@orchestra/client"
 import { Accessor, createEffect, onCleanup } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 
@@ -85,7 +85,7 @@ export async function checkServerHealth(
       .catch(() => ({ healthy: false }))
   }
   const attempt = async (count: number): Promise<ServerHealth> => {
-    const current = await OpenCode.make({
+    const current = await Orchestra.make({
       baseUrl: server.url,
       fetch,
       headers: server.password
@@ -95,19 +95,17 @@ export async function checkServerHealth(
         : undefined,
     })
       .health.get({ signal })
-      .then((x) =>
-        typeof x.healthy === "boolean"
-          ? { data: { healthy: x.healthy, version: x.version } }
-          : { error: new Error("Invalid health response") },
-      )
+      .then((x) => {
+        const value = x as { healthy?: unknown; version?: unknown }
+        return typeof value.healthy === "boolean"
+          ? { data: { healthy: value.healthy, version: typeof value.version === "string" ? value.version : undefined } }
+          : { error: new Error("Invalid health response") }
+      })
       .catch((error) => ({ error }))
     if ("data" in current && current.data) return current.data
     if (signal?.aborted) return { healthy: false }
 
-    return createSdkForServer({ server, fetch, signal })
-      .global.health()
-      .then((x) => (x.error ? next(count, x.error) : { healthy: x.data?.healthy === true, version: x.data?.version }))
-      .catch((error) => next(count, error))
+    return next(count, "error" in current ? current.error : new Error("Invalid health response"))
   }
   return attempt(0).finally(() => timeout?.clear?.())
 }

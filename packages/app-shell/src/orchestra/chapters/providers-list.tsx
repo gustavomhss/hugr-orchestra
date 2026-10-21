@@ -425,7 +425,6 @@ export function disconnectProvider(
       return
     }
     await input.sdk.client.auth.remove({ providerID: card.id }, { throwOnError: true })
-    await input.sdk.client.global.dispose()
   }
   return run().catch(() => {
     throw new Error(input.failed)
