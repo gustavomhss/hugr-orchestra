@@ -28,7 +28,7 @@ On V2 every `sdk.api.*` call goes to the vendored `@opencode-ai/client` 1.17.13 
 | call | consumer | proposed |
 |---|---|---|
 | file.list | context/file.tsx:84 | CLOSED: `GET /api/fs/list` via context/file/read.ts |
-| file.read | context/file.tsx:184, pages/session/review-tab.tsx:58, pages/session/v2/review-panel-v2.tsx:140 | CLOSED: `GET /api/fs/read/*` via context/file/read.ts (binary => no body) |
+| file.read | context/file.tsx:184, pages/session/review-tab.tsx:58, pages/session/v2/review-panel-v2.tsx:140 | CLOSED: `GET /api/fs/read` via context/file/read.ts (binary => no body) |
 | global.config.update | context/server-sync.tsx:598 (providers-list.tsx:220,415 default model / disabled providers; orchestra/claude-mode-entry.ts:9 Maestro engine) | new global config write route, or V2 `model.default` set + behavior route |
 | project.initGit | pages/home/home-controller.tsx:102, pages/session.tsx:689 | new `POST /api/project/git/init` (empty-folder path only) |
 | session.processes / processStop | pages/session/processes-panel.tsx:149,160 | gate to V1 or V2 shell routes (`/api/shell*` absent) |

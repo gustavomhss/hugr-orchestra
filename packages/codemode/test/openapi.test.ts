@@ -187,7 +187,7 @@ describe("OpenAPI.fromSpec", () => {
     expect(result.skipped.filter((item) => item.reason === "SSE operations are not supported")).toHaveLength(3)
     expect(result.skipped).toContainEqual({
       method: "GET",
-      path: "/api/fs/read/*",
+      path: "/api/fs/read",
       reason: "binary responses are not supported",
     })
     expect(toolAt(result.tools, "v2.health.get")).not.toBeUndefined()

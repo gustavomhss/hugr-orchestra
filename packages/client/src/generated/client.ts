@@ -124,6 +124,8 @@ import type {
   PermissionsGetOutput,
   PermissionsReplyInput,
   PermissionsReplyOutput,
+  FilesReadInput,
+  FilesReadOutput,
   FilesListInput,
   FilesListOutput,
   FilesFindInput,
@@ -391,6 +393,9 @@ export function make(options: ClientOptions) {
         await response.body?.cancel()
       } catch {}
       return undefined as A
+    }
+    if (descriptor.binary) {
+      return new Uint8Array(await response.arrayBuffer()) as A
     }
     return (await json(response)) as A
   }
@@ -1253,6 +1258,19 @@ export function make(options: ClientOptions) {
         ),
     },
     files: {
+      read: (input: FilesReadInput, requestOptions?: RequestOptions) =>
+        request<FilesReadOutput>(
+          {
+            method: "GET",
+            path: `/api/fs/read`,
+            query: { location: input["location"], path: input["path"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+            binary: true,
+          },
+          requestOptions,
+        ),
       list: (input?: FilesListInput, requestOptions?: RequestOptions) =>
         request<FilesListOutput>(
           {

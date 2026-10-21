@@ -27,7 +27,7 @@ for (const protocol of ["v1", "v2"] as const) {
       ".github/workflows/release.yamlGitHub ActionsView",
     ])
     expect(
-      requests.filter((url) => url.pathname === "/file/content" || url.pathname.startsWith("/api/fs/read/")),
+      requests.filter((url) => url.pathname === "/file/content" || url.pathname === "/api/fs/read"),
     ).toEqual([])
     const ci = await openSource(page, ".github/workflows/ci.yml")
     await expect(ci.locator('[data-slot="cicd-source"]')).toHaveText(source)
@@ -44,12 +44,12 @@ for (const protocol of ["v1", "v2"] as const) {
           .map((url) => url.searchParams.get("path")),
       )
       .toEqual(["", ".github", ".github/workflows"])
-    const reads = requests.filter((url) => url.pathname === "/file/content" || url.pathname.startsWith("/api/fs/read/"))
+    const reads = requests.filter((url) => url.pathname === "/file/content" || url.pathname === "/api/fs/read")
     expect(
       reads.map((url) =>
         protocol === "v1"
           ? url.searchParams.get("path")
-          : decodeURIComponent(url.pathname.slice("/api/fs/read/".length)),
+          : url.searchParams.get("path"),
       ),
     ).toEqual([".github/workflows/ci.yml", ".github/workflows/release.yaml"])
     expect(
@@ -104,7 +104,7 @@ test("profiles on different servers keep separate inventories and discard a late
       requests.some(
         (url) =>
           url.origin === serverB &&
-          url.pathname.startsWith("/api/fs/read/") &&
+          url.pathname === "/api/fs/read" &&
           url.searchParams.get("location[directory]") === directory,
       ),
     )
