@@ -6,12 +6,12 @@ import {
   cliTreeSitterTarget,
   nativeCliTarget,
   readCliManifest,
+  requireOmniPair,
   verifyCliArtifact,
 } from "../src/main/cli-artifacts"
-import { requireOmniPair } from "./cli-staging"
 
 /**
- * Checks a packaged CLI bundle: the manifest's version, each target's bytes, the WSL guests' omni pairs, every target's
+ * Checks a packaged CLI bundle: the manifest's version, each target's bytes, every target's omni pair, every target's
  * tree-sitter, and the pinned rg each target ships in ripgrep-<target>/ (RIPGREP_BUNDLED=false, Nix, ships none). A
  * signed rg must pass `signature`; `signing` names the targets whose rg must be signed.
  */
@@ -30,7 +30,7 @@ export async function verifyPackagedCli(
   const guests = platform === "win32" ? ["linux-arm64", "linux-x64-baseline"] : []
   const targets = [nativeCliTarget(platform, arch), ...guests]
   await Promise.all(targets.map((target) => verifyCliArtifact(directory, target)))
-  await Promise.all(guests.map((target) => requireOmniPair(join(directory, `omni-${target}`), target)))
+  await Promise.all(targets.map((target) => requireOmniPair(join(directory, `omni-${target}`), target)))
   if (RipgrepBundle.enabled())
     await Promise.all(
       targets.map((target) =>

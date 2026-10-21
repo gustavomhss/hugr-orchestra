@@ -8,38 +8,15 @@ import {
   copyCliRipgrep,
   copyCliTreeSitter,
   nativeCliTarget,
+  omniCompanions,
   readCliManifest,
+  requireOmniPair,
   verifyCliArtifact,
 } from "../src/main/cli-artifacts"
 import type { CliArtifactManifest } from "../src/main/cli-artifacts"
 
 export function desktopCliTargets(platform: string, arch: string) {
   return [nativeCliTarget(platform, arch), ...(platform === "win32" ? ["linux-arm64", "linux-x64-baseline"] : [])]
-}
-
-// A Windows build's Linux CLIs run in WSL guests. They are omni builds whose preflight needs this pair next to the
-// binary, so src/main/wsl/artifact.ts installs the pair from omni-<target>/ in the bundle (hashing those bytes) and
-// refuses the install without it. The Linux CLI build already ships the pair in dist/cli-<target>/bin.
-export const omniCompanions = ["hugr_omni.node", "hugr-omni-supervisor"] as const
-
-export class WslOmniPairMissingError extends Error {
-  constructor(target: string, path: string) {
-    super(
-      `WSL omni pair missing for ${target}: ${path} must be a regular file. Build the Linux CLI with OMNI_ARTIFACTS so it ships ${omniCompanions.join(" and ")} next to the binary.`,
-    )
-    this.name = "WslOmniPairMissingError"
-  }
-}
-
-// Both files of the pair as regular files in one directory, or a named error.
-export function requireOmniPair(directory: string, target: string) {
-  return Promise.all(
-    omniCompanions.map(async (name) => {
-      const path = join(directory, name)
-      if (!(await lstat(path).catch(() => undefined))?.isFile()) throw new WslOmniPairMissingError(target, path)
-      return path
-    }),
-  )
 }
 
 export async function stageCliArtifacts(input: {
@@ -86,7 +63,6 @@ export async function stageCliArtifacts(input: {
   }
   await mkdir(dirname(input.directory), { recursive: true })
   const staging = await mkdtemp(join(dirname(input.directory), ".cli-stage-"))
-  const windows = input.targets.some((target) => target.startsWith("windows-"))
   return Promise.allSettled(
     input.targets.map(async (target) => {
       const source = join(input.dist, `cli-${target}`)
@@ -121,16 +97,17 @@ export async function stageCliArtifacts(input: {
         join(staging, `tree-sitter-${target}`),
         target,
       )
-      // A producer directory is itself a staged bundle, so its pair sits in omni-<target>/ rather than bin/.
-      if (windows && target.startsWith("linux-")) {
-        const pair = await requireOmniPair(
-          input.prebuilt === undefined ? join(source, "bin") : join(input.prebuilt, `omni-${target}`),
-          target,
-        )
-        await mkdir(join(staging, `omni-${target}`))
-        await Promise.all(pair.map((file) => copyFile(file, join(staging, `omni-${target}`, basename(file)))))
-        await chmod(join(staging, `omni-${target}`, omniCompanions[1]), 0o755)
-      }
+      // Every CLI's preflight needs its omni pair (the addon and the supervisor) next to the binary, so the bundle
+      // keeps each target's copy in omni-<target>/ and the installer copies it beside the installed CLI. A producer
+      // directory is itself a staged bundle, so there it sits in omni-<target>/ rather than bin/.
+      const pair = await requireOmniPair(
+        input.prebuilt === undefined ? join(source, "bin") : join(input.prebuilt, `omni-${target}`),
+        target,
+      )
+      await mkdir(join(staging, `omni-${target}`))
+      await Promise.all(pair.map((file) => copyFile(file, join(staging, `omni-${target}`, basename(file)))))
+      if (process.platform !== "win32")
+        await chmod(join(staging, `omni-${target}`, omniCompanions(target)[1]), 0o755)
       // Every CLI ships the pinned rg it runs (its server never downloads one) in ripgrep-<target>/: the installed CLI
       // and WSL guests copy it beside the binary, the desktop server is pointed at it. It is signed like the CLI.
       if (RipgrepBundle.enabled() && cliRipgrepKey(target)) {
