@@ -1,6 +1,6 @@
 import { Binary } from "@orchestra/core/util/binary"
 import { produce, reconcile, type SetStoreFunction, type Store } from "solid-js/store"
-import type { Project } from "../../compat/sdk-v2-client"
+import type { Project } from "@/v2-types"
 import type {
   Message,
   Part,

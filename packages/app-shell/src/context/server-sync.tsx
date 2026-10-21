@@ -1,5 +1,6 @@
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
-import type { OrchestraClient, Project } from "../compat/sdk-v2-client"
+import type { Project } from "@/v2-types"
+import type { OrchestraClient } from "../compat/sdk-v2-client"
 import type { SessionStatus } from "@/v2-types"
 import { showToast } from "@/utils/toast"
 import { getFilename } from "@orchestra/core/util/path"

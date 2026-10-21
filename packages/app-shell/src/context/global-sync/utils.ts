@@ -5,7 +5,7 @@ import type {
   PermissionV2Request,
   ProviderListOutput,
 } from "../../compat/vendored-client-promise"
-import type { Project } from "../../compat/sdk-v2-client"
+import type { Project } from "@/v2-types"
 import type { PermissionRequest } from "@/v2-types"
 import type { Agent, Provider, ProviderListResponse } from "@/v2-wire"
 import type { Project as CurrentProject } from "../../compat/vendored-client-promise"

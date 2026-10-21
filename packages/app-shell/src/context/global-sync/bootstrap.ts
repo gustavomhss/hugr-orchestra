@@ -1,4 +1,5 @@
-import type { OrchestraClient, Project } from "../../compat/sdk-v2-client"
+import type { Project } from "@/v2-types"
+import type { OrchestraClient } from "../../compat/sdk-v2-client"
 import type { PermissionRequest, QuestionRequest, ReferenceInfo, Session } from "@/v2-types"
 import type { Config, Path, ProviderAuthResponse } from "@/v2-wire"
 import type {
