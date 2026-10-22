@@ -9,18 +9,21 @@ import { mock } from "bun:test"
 // One shared surface does that: whichever test file the runner loads first freezes it, and the names the other
 // files need are already in it. A test overrides only the part it drives.
 
-// The desktop constructs these three Electron classes and reads no member off them, so one placeholder
-// constructor serves all of them. A plain function keeps the mock free of an empty class, and it stays
-// constructible and usable with instanceof, which the App Dock's view lookup relies on.
-function Placeholder() {}
+// The desktop constructs these three Electron classes and reads no member off them, so a placeholder
+// constructor serves each of them. A plain function keeps the mock free of an empty class, and it stays
+// constructible and usable with instanceof, which the App Dock's view lookup relies on. They stay three
+// distinct constructors, so a mock instance of one is never an instance of another.
+function BrowserWindow() {}
+function Menu() {}
+function WebContentsView() {}
 
 // The named exports the desktop's own sources import from "electron", with placeholder values. electron-mock.test.ts
 // keeps this list equal to the imports the desktop actually makes.
 export const electronMock = {
   app: {},
-  BrowserWindow: Placeholder,
-  Menu: Placeholder,
-  WebContentsView: Placeholder,
+  BrowserWindow,
+  Menu,
+  WebContentsView,
   clipboard: {},
   contextBridge: {},
   crashReporter: {},
