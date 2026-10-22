@@ -31,3 +31,4 @@
 - `apps/desktop/src/main/app-dock-rpc.ts` and `apps/desktop/src/main/linux-workspace-rpc.ts` have different authorities: never unify them.
 - `apps/desktop/src/main/app-dock-runtime.ts`, `apps/desktop/src/main/app-dock-runtime-docker.ts`, `apps/desktop/src/main/linux-workspace-access.ts`, `apps/desktop/src/main/linux-workspace-omni.ts`, `apps/desktop/src/main/background-cli.ts` and `apps/desktop/src/main/shell-env.ts` are listed in `script/spawn-allowlist.json`.
 - `.github/workflows/native.yml` names App Dock paths, so do not move them.
+- Desktop tests mock Electron only through `apps/desktop/src/main/electron-mock.fixture.ts`.

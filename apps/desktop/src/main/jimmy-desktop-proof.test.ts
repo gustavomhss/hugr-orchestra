@@ -218,9 +218,14 @@ test("owned recursive cleanup preserves real Bun two-case completion", async () 
 // The desktop tests mock the Electron module for the whole process (electron-mock.fixture.ts), so the real
 // binary path comes from a child process: a fresh module registry is the only one the package still answers.
 function electronBinary() {
-  const result = Bun.spawnSync([process.execPath, "-p", "require('electron')"], { cwd: desktop })
+  const marker = "ORCHESTRA_ELECTRON_BINARY="
+  const result = Bun.spawnSync([process.execPath, "-p", `'${marker}' + require('electron')`], { cwd: desktop })
   if (result.exitCode !== 0) throw new Error(`Electron binary resolution failed: ${result.stderr.toString()}`)
-  return result.stdout.toString().trim()
+  // node_modules/electron/index.js prints "Downloading Electron binary..." on stdout when the binary is
+  // missing, so the path is the marked line, never the whole output.
+  const marked = result.stdout.toString().split("\n").find((line) => line.startsWith(marker))
+  if (!marked) throw new Error(`Electron binary resolution failed: ${result.stdout.toString()}`)
+  return marked.slice(marker.length).trim()
 }
 
 async function runProof(root: string, install: string, electron: string, mutant: boolean) {
