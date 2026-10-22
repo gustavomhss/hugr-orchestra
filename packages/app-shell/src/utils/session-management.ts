@@ -1,6 +1,6 @@
 import { createSignal } from "solid-js"
 import { Orchestra } from "@orchestra/client"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
+import type { ServerSdk } from "@/utils/server"
 import type { ServerConnection } from "@/context/server"
 import type { ServerProtocol } from "./server-protocol"
 import { authTokenFromCredentials } from "./server"
@@ -14,7 +14,7 @@ export function createSessionManagementForServer(input: {
   server: ServerConnection.HttpBase
   fetch: typeof globalThis.fetch
   protocol: Promise<ServerProtocol>
-  legacy: Pick<OrchestraClient, "session">
+  legacy: Pick<ServerSdk, "session">
   signal?: AbortSignal
 }) {
   const http = { ...input.server }

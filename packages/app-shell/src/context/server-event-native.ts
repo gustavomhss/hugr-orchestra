@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "../compat/vendored-client-promise"
+import type { OpenCodeEvent } from "@/v2-legacy"
 import type { ServerCurrentEvent } from "./server-sdk"
 
 type NativeEvent = {

@@ -1,6 +1,10 @@
 import { describe, expect, mock, test } from "bun:test"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
-import type { AssistantMessage, Part, UserMessage } from "@orchestra/sdk/v2"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
+import type { AssistantMessage, Part, UserMessage } from "@/v2-wire"
+
+
 import { normalizeSessionMessages } from "@/utils/session-message"
 
 mock.module("@orchestra/session-ui/message-part", () => ({

@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionNotFoundError } from "@orchestra/sdk/v2/client"
+import type { SessionNotFoundError } from "@/v2-wire"
+
 import type { ConfigInvalidError, ProviderModelNotFoundError } from "./server-errors"
 import { formatServerError, hookRefusal, isSessionNotFoundError, parseReadableConfigInvalidError } from "./server-errors"
 

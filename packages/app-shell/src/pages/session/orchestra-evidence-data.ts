@@ -1,5 +1,8 @@
-import type { ToolPart } from "@/v2-types"
-import type { SessionMessageInfo } from "../../compat/vendored-client-promise"
+import type { ToolPart } from "@/v2-wire"
+
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
 import {
   detectTestRunner,
   failedCount,

@@ -86,8 +86,8 @@ export default function Skills(props: ChapterPageProps) {
 
   async function save(current: SkillDialogState, input: SkillSaveInput) {
     const protocol = await serverSDK().protocol
-    // V2 goes through the legacy SDK's generated v2 group: `currentApi` is the vendored @opencode-ai/client
-    // release, which predates the skill write routes.
+    // V2 goes through the legacy SDK's generated v2 group: the current API client does not expose the skill
+    // write routes yet.
     const result = await sdk().client.v2.skill.save(
       { location: { directory: props.directory }, skillV2SaveInput: input },
       { throwOnError: false },

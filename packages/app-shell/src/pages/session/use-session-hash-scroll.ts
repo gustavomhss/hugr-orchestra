@@ -1,4 +1,5 @@
-import type { UserMessage } from "@/v2-types"
+import type { UserMessage } from "@/v2-wire"
+
 import { useLocation, useNavigate } from "@solidjs/router"
 import { createEffect, createMemo, onCleanup, onMount } from "solid-js"
 import { messageIdFromHash } from "./message-id-from-hash"

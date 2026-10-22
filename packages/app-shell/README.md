@@ -86,6 +86,6 @@ and [Linux workspace access guide](../desktop/docs/linux-workspace-access.md).
 - Status: `canonical`
 - Owner: UI maintainer
 - Public entry: explicit `exports` in package.json
-- Legacy and compatibility: the vendored upstream client tarball listed in script/rename-ledger.ts (legacy, successor `packages/client`)
+- Legacy and compatibility: none
 - Enforced by `bun run check:boundaries`; exceptions in `script/boundary-ledger.json`.
 <!-- module-contract:end -->

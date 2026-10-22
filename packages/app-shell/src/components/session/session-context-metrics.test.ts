@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { Message } from "@orchestra/sdk/v2/client"
+import type { Message } from "@/v2-wire"
+
+
 import { getSessionContext, getSessionCost } from "./session-context-metrics"
 
 const assistant = (

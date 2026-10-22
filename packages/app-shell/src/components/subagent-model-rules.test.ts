@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/v2-wire"
+
 import {
   allowsEveryModel,
   connectedSubagentModels,

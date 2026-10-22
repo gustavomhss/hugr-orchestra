@@ -2,17 +2,10 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import { Event } from "@orchestra/schema/event"
 import { SessionStatusEvent } from "@orchestra/schema/session-status-event"
 import { SessionV1 } from "@orchestra/schema/session-v1"
-import type {
-  AssistantMessage,
-  GlobalEvent,
-  Message,
-  Part,
-  Session,
-  SessionStatus,
-  ToolPart,
-  ToolState,
-  UserMessage,
-} from "@orchestra/sdk/v2/client"
+import type { AssistantMessage, Message, Part, Session, SessionStatus, ToolPart, ToolState, UserMessage } from "@/v2-wire"
+
+import type { GlobalEvent } from "@/v2-legacy"
+
 import { expect, type Page } from "@playwright/test"
 import { Schema } from "effect"
 import { mockOrchestraServer } from "../../utils/mock-server"

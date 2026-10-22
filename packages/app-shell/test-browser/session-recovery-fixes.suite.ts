@@ -14,7 +14,8 @@ import { createServerSession } from "@/context/server-session"
 import { createHomeSessionIndexCache, homeSessionIndexKey } from "@/context/global-sync/home-session-index"
 import { normalizeSessionInfo, type AppSession } from "@/utils/session"
 import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/v2-wire"
+
 
 const id = "ses_recovery_fixes"
 const directory = "/repo"

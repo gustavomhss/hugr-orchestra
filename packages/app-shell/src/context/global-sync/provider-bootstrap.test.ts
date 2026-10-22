@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
-import { OpenCode } from "@opencode-ai/client/promise"
+import { Orchestra } from "@orchestra/client"
 import { QueryClient } from "@tanstack/solid-query"
-import { loadProvidersQuery } from "./bootstrap"
+import { loadProvidersQuery, type CatalogApi } from "./bootstrap"
 import { ServerScope } from "@/utils/server-scope"
 
 function server(status: Record<string, number> = {}, htmlDefault = false) {
   const requests: URL[] = []
-  const api = OpenCode.make({
+  const client = Orchestra.make({
     baseUrl: "http://catalog.test",
     fetch: Object.assign(
       async (input: RequestInfo | URL) => {
@@ -42,7 +42,14 @@ function server(status: Record<string, number> = {}, htmlDefault = false) {
       { preconnect() {} },
     ),
   })
-  return { api, requests }
+  const api = {
+    provider: { list: (value?: { location?: { directory?: string } }) => client.providers.list(value) },
+    model: {
+      list: (value?: { location?: { directory?: string } }) => client.models.list(value),
+      default: (value?: { location?: { directory?: string } }) => client.models.default(value),
+    },
+  }
+  return { api: api as unknown as CatalogApi, requests }
 }
 
 for (const status of [404, 405, 501]) {

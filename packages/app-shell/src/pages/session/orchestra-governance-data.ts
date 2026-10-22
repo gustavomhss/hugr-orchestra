@@ -1,12 +1,10 @@
 import type { Agent, Config } from "@/v2-wire"
-import type {
-  AssistantMessage,
-  Message,
-  Part,
-  ToolPart,
-  ToolStateCompleted,
-} from "@/v2-types"
-import type { SessionMessageAssistantTool, SessionMessageInfo } from "../../compat/vendored-client-promise"
+import type { ToolStateCompleted } from "@/v2-types"
+import type { AssistantMessage, Message, Part, ToolPart } from "@/v2-wire"
+
+import type { SessionMessageAssistantTool } from "@/v2-wire"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
 import type { State } from "@/context/global-sync/types"
 import type { ServerProtocol } from "@/utils/server-protocol"
 import { agentKey } from "@/context/agent-identity"

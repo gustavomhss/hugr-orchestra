@@ -1,6 +1,9 @@
 import { describe, expect, test } from "bun:test"
-import type { Message, Part, PermissionRequest, QuestionRequest, SessionStatus, Todo } from "@orchestra/sdk/v2/client"
-import type { FileDiffInfo } from "@opencode-ai/client/promise"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { Message, Part, SessionStatus, Todo } from "@/v2-wire"
+
+
+import type { FileDiffInfo } from "@/v2-legacy"
 import { dropSessionCaches, pickSessionCacheEvictions } from "./session-cache"
 
 const msg = (id: string, sessionID: string) =>

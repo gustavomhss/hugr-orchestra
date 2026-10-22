@@ -1,4 +1,6 @@
-import type { PermissionRequest, QuestionRequest, Session } from "@/v2-types"
+import type { PermissionRequest, QuestionRequest } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 
 function sessionTreeRequest<T>(
   session: Session[],

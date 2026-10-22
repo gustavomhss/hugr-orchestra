@@ -19,7 +19,8 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/.github/scripts/archie-host-*.ts",
-        "$TURBO_ROOT$/.github/scripts/tsconfig.archie.json"
+        "$TURBO_ROOT$/.github/scripts/tsconfig.archie.json",
+        "$TURBO_ROOT$/packages/app-shell/src/**"
       ]
     },
     "build": {

@@ -1,5 +1,6 @@
 import { Binary } from "@orchestra/core/util/binary"
-import type { Message, Part, Session } from "@/v2-types"
+import type { Message, Part, Session } from "@/v2-wire"
+
 import { batch, createMemo } from "solid-js"
 import { produce, reconcile, type SetStoreFunction } from "solid-js/store"
 import type { createServerSdkContext } from "./server-sdk"

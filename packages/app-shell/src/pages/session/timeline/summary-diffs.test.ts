@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { SnapshotFileDiff } from "@orchestra/sdk/v2"
+import type { SnapshotFileDiff } from "@/v2-wire"
+
+
 import { uniqueSummaryDiffs } from "./summary-diffs"
 
 const diff = (file: string, additions: number) =>

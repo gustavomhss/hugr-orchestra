@@ -6,7 +6,9 @@ import {
   parseDeepLink,
   parseNewSessionDeepLink,
 } from "./deep-links"
-import { type Session } from "@orchestra/sdk/v2/client"
+import { Session } from "@/v2-wire"
+
+
 import {
   childSessionOnPath,
   closeHomeProject,

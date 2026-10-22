@@ -1,6 +1,7 @@
 import { getFilename } from "@orchestra/core/util/path"
 import type { Project } from "@/v2-types"
-import type { SessionInfo } from "../compat/vendored-client-promise"
+import type { SessionInfo } from "@/v2-types"
+
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { createMemo, onCleanup } from "solid-js"
 import { commandPaletteOptions, useCommand, type CommandOption } from "@/context/command"
@@ -146,7 +147,7 @@ export function createCommandPaletteModel(props: { filesOnly?: () => boolean; on
     server: ServerConnection.key(serverSDK.server),
     opened: serverCtx.projects.list,
     stored: () => serverCtx.sync.data.project,
-    load: (search, signal) => serverSDK.api.session.list({ parentID: null, search, limit: 50 }, { signal }),
+    load: (search, signal) => serverSDK.api.session.list({ search, limit: 50 }, { signal }),
     untitled: () => language.t("command.session.new"),
     category: () => language.t("command.category.session"),
   })

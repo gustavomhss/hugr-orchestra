@@ -1,5 +1,8 @@
-import type { Message, Part, Session } from "@/v2-types"
-import type { SessionMessageInfo } from "../compat/vendored-client-promise"
+import type { Message, Part, Session } from "@/v2-wire"
+
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
 import { downloadText } from "./download"
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"

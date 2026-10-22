@@ -1,6 +1,7 @@
 import { expect, mock, test } from "bun:test"
 import path from "node:path"
-import type { Config } from "@orchestra/sdk/v2/client"
+import type { Config } from "@/v2-wire"
+
 
 async function child(args: string[], env = process.env) {
   const proc = Bun.spawn([Bun.which("bun")!, ...args], {

@@ -203,9 +203,14 @@ These are not V1 network requests, but they keep the UI coupled to V1 data contr
   - `src/utils/session-message.ts`
 - [ ] Replace current agent, provider, and model adapters to legacy SDK structures.
   - `src/context/global-sync/utils.ts`
-- [ ] Replace legacy `Session`, `Message`, `Part`, `PermissionRequest`, `QuestionRequest`, `Project`, `FileNode`, `FileDiffInfo`, and `Event` types throughout app state and rendering.
+- [x] Replace legacy `Session`, `Message`, `Part`, `PermissionRequest`, `QuestionRequest`, `Project`, `FileNode`, `FileDiffInfo`, and `Event` types throughout app state and rendering.
+  - The app-shell owns the remaining legacy shapes in `src/v2-types.ts`, `src/v2-wire.ts` and `src/v2-legacy.ts`.
 - [ ] Remove the `@orchestra/sdk` runtime dependency after all legacy calls and types are gone.
   - `package.json`
+  - The names no longer come from the SDK. What is left is the SDK's generated HTTP client, reached from
+    `src/utils/server.ts`: it serves the routes the current client does not expose (the generated `v2` groups
+    and the V1 compatibility surface) and keeps the HTTP status of a refused call, which the current client
+    drops for a declared error status.
 
 ## Test Infrastructure
 

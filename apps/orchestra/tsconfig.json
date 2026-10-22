@@ -14,5 +14,9 @@
       "@/*": ["./src/*"],
       "@test/*": ["./test/*"]
     }
-  }
+  },
+  // The app-shell tests reach app-shell source by relative path (ledger R5). This reference resolves
+  // those imports against app-shell's declarations, so the app-shell's own "@/" alias never lands on
+  // this package's paths.
+  "references": [{ "path": "../../packages/app-shell" }]
 }

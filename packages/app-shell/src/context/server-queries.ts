@@ -1,17 +1,14 @@
 import type { Orchestra } from "@orchestra/client"
 import type { Config } from "@/v2-wire"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
+import type { ServerSdk } from "@/utils/server"
 import type { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { queryOptions, type QueryClient, type SolidQueryOptions } from "@tanstack/solid-query"
-import type {
-  McpListInput,
-  McpListOutput,
-  McpResource,
-  McpResourceCatalogInput,
-  McpResourceCatalogOutput,
-  McpServer,
-} from "../compat/vendored-client-promise"
+import type { McpListInput, McpListOutput, McpResourceCatalogInput, McpResourceCatalogOutput } from "@/v2-wire"
+import type { McpResource, McpServer } from "@/v2-wire"
+
+
 import type { ServerApi } from "@/utils/server"
+import type { CompatibleApi } from "@/utils/server-compat"
 import type { ServerScope } from "@/utils/server-scope"
 import type { PathKey } from "@/utils/path-key"
 import { directoryKey } from "./global-sync/utils"
@@ -24,15 +21,9 @@ import {
   loadReferencesQuery,
 } from "./global-sync/bootstrap"
 
-type McpListApi = {
-  readonly list: (input?: McpListInput) => Promise<McpListOutput>
-}
+type McpListApi = ServerApi["mcp"]
 
-type McpResourceApi = {
-  readonly resource: {
-    readonly catalog: (input?: McpResourceCatalogInput) => Promise<McpResourceCatalogOutput>
-  }
-}
+type McpResourceApi = ServerApi["mcp"]
 
 type ApiQueryOptions<T, K extends readonly unknown[]> = SolidQueryOptions<T, Error, T, K> & {
   initialData?: undefined
@@ -43,7 +34,7 @@ export const loadMcpQuery = (
   scope: ServerScope,
   directory: string,
   api: McpListApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<"v2">,
 ): ApiQueryOptions<Record<string, McpServer["status"]>, readonly [ServerScope, string, "mcp"]> =>
   queryOptions<
@@ -64,7 +55,7 @@ export const loadMcpResourcesQuery = (
   scope: ServerScope,
   directory: string,
   api: McpResourceApi,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<"v2">,
 ): ApiQueryOptions<Record<string, McpResource>, readonly [ServerScope, string, "mcpResources"]> =>
   queryOptions<
@@ -88,7 +79,7 @@ export const loadLspQuery = (
   scope: ServerScope,
   directory: string,
   orchestra: ReturnType<typeof Orchestra.make> | undefined,
-  legacy?: OrchestraClient,
+  legacy?: ServerSdk,
   protocol?: Promise<"v2">,
 ) =>
   queryOptions({
@@ -101,9 +92,9 @@ export const loadLspQuery = (
 
 export function makeQueryOptionsApi(
   scope: ServerScope,
-  serverSDK: () => OrchestraClient,
-  serverAPI: ServerApi,
-  sdkFor: (dir: PathKey) => OrchestraClient,
+  serverSDK: () => ServerSdk,
+  serverAPI: CompatibleApi,
+  sdkFor: (dir: PathKey) => ServerSdk,
   protocol: Promise<"v2">,
   readV2Config?: () => Promise<Config>,
   orchestra?: ReturnType<typeof Orchestra.make>,

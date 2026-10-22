@@ -2,7 +2,8 @@ import { Binary } from "@orchestra/core/util/binary"
 import { createMemo } from "solid-js"
 import { useServerSync } from "./server-sync"
 import { useSDK } from "./sdk"
-import type { Message, Part } from "@/v2-types"
+import type { Message, Part } from "@/v2-wire"
+
 import { messageKey } from "@/utils/session-message"
 
 const SKIP_PARTS = new Set(["patch", "step-start", "step-finish"])

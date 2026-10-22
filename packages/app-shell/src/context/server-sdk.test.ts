@@ -1,10 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import { adaptServerEvent, coalesceServerEvents, createServerProtocolPromise, enqueueServerEvent, resumeStreamAfterPageShow } from "./server-sdk"
-import type { OpenCodeEvent } from "@opencode-ai/client/promise"
-import type { Event } from "@orchestra/sdk/v2/client"
+import type { OpenCodeEvent } from "@/v2-legacy"
+import type { Event } from "@/v2-wire"
+
 import { ServerProtocolUnresolvedError, type ServerProtocol } from "@/utils/server-protocol"
 import { createCompatibleApi } from "@/utils/server-compat"
-import { createApiForServer, createSdkForServer } from "@/utils/server"
+import { createApiForServer } from "@/utils/server"
 import { rejection } from "@/testing/rejection"
 
 describe("createServerProtocolPromise", () => {
@@ -53,7 +54,6 @@ describe("createServerProtocolPromise", () => {
       const api = createCompatibleApi({
         protocol,
         current: createApiForServer({ server, fetch }),
-        legacy: (directory) => createSdkForServer({ server, fetch, directory, throwOnError: true }),
       })
       expect(await rejection(protocol)).toBeInstanceOf(ServerProtocolUnresolvedError)
       expect(state.detected).toBeUndefined()

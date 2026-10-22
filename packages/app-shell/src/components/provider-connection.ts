@@ -1,4 +1,6 @@
-import type { IntegrationMethod, IntegrationOauthConnectOutput } from "../compat/vendored-client-promise"
+import type { IntegrationMethod } from "@/v2-types"
+import type { IntegrationOauthConnectOutput } from "@/v2-wire"
+
 import { createMemo, type Accessor } from "solid-js"
 import { createStore, produce } from "solid-js/store"
 import type { useLanguage } from "@/context/language"

@@ -1,11 +1,9 @@
-import type {
-  SessionMessageAssistant,
-  SessionMessageAssistantTool,
-  SessionMessageInfo,
-  SessionMessageShell,
-  SessionMessageUser,
-} from "../compat/vendored-client-promise"
-import type { AssistantMessage, FilePart, Message, Part, ToolPart, UserMessage } from "@/v2-types"
+import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/v2-legacy"
+import type { SessionMessageAssistantTool, SessionMessageShell } from "@/v2-wire"
+
+import type { FilePart } from "@/v2-types"
+import type { AssistantMessage, Message, Part, ToolPart, UserMessage } from "@/v2-wire"
+
 import { Option, Schema } from "effect"
 
 const emptyTokens = { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } }

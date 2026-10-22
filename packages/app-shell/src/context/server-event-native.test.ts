@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionMessageInfo } from "@opencode-ai/client/promise"
+import type { SessionMessageInfo } from "@/v2-legacy"
+
+
 import { SessionEvent } from "@orchestra/schema/session-event"
 import { Schema } from "effect"
 import { createNativeEventAdapter, executionStatus, sessionUsage } from "./server-event-native"

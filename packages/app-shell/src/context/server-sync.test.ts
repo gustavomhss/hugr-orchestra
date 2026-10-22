@@ -1,12 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
-import type {
-  McpListInput,
-  McpResourceCatalogInput,
-  SessionApi,
-  SessionInfo,
-  SessionListInput,
-} from "@opencode-ai/client/promise"
+import type { ServerSdk } from "@/utils/server"
+import type { McpListInput, McpResourceCatalogInput, SessionListInput } from "@/v2-wire"
+import type { SessionInfo } from "@/v2-types"
+
 import { QueryClient } from "@tanstack/solid-query"
 import { canDisposeDirectory, pickDirectoriesToEvict } from "./global-sync/eviction"
 import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/session-load"
@@ -85,7 +81,7 @@ describe("active session query", () => {
   })
 
   test("does not overwrite statuses already written by events", () => {
-    const session = createServerSession({} as OrchestraClient)
+    const session = createServerSession({} as ServerSdk)
     session.set("session_status", "ses_retry", { type: "retry", attempt: 2, message: "retrying", next: 10 })
 
     seedActiveSessionStatuses(session, {
@@ -134,7 +130,7 @@ describe("loadRootSessions", () => {
           calls.push(query)
           return { data: [sessionInfo("session-1")], cursor: {} }
         },
-      } satisfies Pick<SessionApi, "list">,
+      } satisfies Pick<ServerApi["session"], "list">,
       directory: "dir",
       limit: 10,
     })
@@ -143,7 +139,7 @@ describe("loadRootSessions", () => {
       expect.objectContaining({ id: "session-1", directory: "dir", slug: "session-1", version: "" }),
     ])
     expect(result.limited).toBe(true)
-    expect(calls).toEqual([{ directory: "dir", parentID: null, limit: 10, order: "desc" }])
+    expect(calls).toEqual([{ directory: "dir", limit: 10, order: "desc" }])
   })
 
   test("propagates list failures", async () => {
@@ -154,7 +150,7 @@ describe("loadRootSessions", () => {
             list: async () => {
               throw new Error("failed")
             },
-          } satisfies Pick<SessionApi, "list">,
+          } satisfies Pick<ServerApi["session"], "list">,
           directory: "dir",
           limit: 25,
         }),

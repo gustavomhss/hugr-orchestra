@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { SessionApi, SessionInfo, SessionListInput } from "@opencode-ai/client/promise"
+import type { SessionInfo } from "@/v2-types"
+import type { SessionListInput } from "@/v2-wire"
+import type { ServerApi } from "@/utils/server"
+
 import { listAllSessions, normalizeSessionInfo } from "./session"
 
 describe("normalizeSessionInfo", () => {
@@ -58,7 +61,7 @@ describe("listAllSessions", () => {
         calls.push(query)
         return pages.get(query.cursor) ?? { data: [], cursor: {} }
       },
-    } satisfies Pick<SessionApi, "list">
+    } satisfies Pick<ServerApi["session"], "list">
 
     const result = await listAllSessions(api, { directory: "/repo", order: "desc" })
 
@@ -78,7 +81,7 @@ describe("listAllSessions", () => {
         if (query.cursor) return { data: [], cursor: { next: "unused" } }
         return { data: [sessionInfo("session-1")], cursor: { next: "terminal" } }
       },
-    } satisfies Pick<SessionApi, "list">
+    } satisfies Pick<ServerApi["session"], "list">
 
     const result = await listAllSessions(api, { directory: "/repo", limit: 25 })
 

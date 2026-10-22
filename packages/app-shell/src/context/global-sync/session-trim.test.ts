@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type { PermissionRequest, Session } from "@orchestra/sdk/v2/client"
+import type { PermissionRequest } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
+
 import { trimSessions } from "./session-trim"
 
 const session = (input: { id: string; parentID?: string; created: number; updated?: number; archived?: number }) =>

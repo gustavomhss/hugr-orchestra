@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test"
-import type { Agent } from "@orchestra/sdk/v2/client"
+import type { Agent } from "@/v2-wire"
+
 import {
   agentDraft,
   agentFileInput,

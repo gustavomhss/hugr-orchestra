@@ -1,11 +1,9 @@
-import type { SessionApi } from "../../compat/vendored-client-promise"
 import { normalizeSessionInfo } from "@/utils/session"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
+import type { ServerApi, ServerSdk } from "@/utils/server"
 
-export async function loadRootSessions(input: { api: Pick<SessionApi, "list">; directory: string; limit: number }) {
+export async function loadRootSessions(input: { api: Pick<ServerApi["session"], "list">; directory: string; limit: number }) {
   const result = await input.api.list({
     directory: input.directory,
-    parentID: null,
     limit: input.limit,
     order: "desc",
   })
@@ -16,7 +14,7 @@ export async function loadRootSessions(input: { api: Pick<SessionApi, "list">; d
   } as const
 }
 
-export async function loadRootSessionsV1(input: { client: OrchestraClient; directory: string; limit: number }) {
+export async function loadRootSessionsV1(input: { client: ServerSdk; directory: string; limit: number }) {
   try {
     const result = await input.client.session.list({ directory: input.directory, roots: true, limit: input.limit })
     return { data: result.data, limit: input.limit, limited: true } as const

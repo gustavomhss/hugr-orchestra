@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { Part } from "@orchestra/sdk/v2"
+import type { Part } from "@/v2-wire"
+
+
 import { extractPromptFromParts } from "./prompt"
 
 describe("extractPromptFromParts", () => {

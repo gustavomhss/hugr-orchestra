@@ -1,4 +1,5 @@
-import type { SessionMessageInfo, SessionPendingMessage } from "../compat/vendored-client-promise"
+import type { SessionMessageInfo, SessionPendingMessage } from "@/v2-legacy"
+
 import type { ServerCurrentEvent } from "./server-sdk"
 
 type Assistant = Extract<SessionMessageInfo, { type: "assistant" }>

@@ -1,6 +1,7 @@
 import { expect, spyOn, test } from "bun:test"
-import type { SessionApi, SessionInfo } from "@opencode-ai/client/promise"
-import type { OrchestraClient } from "@orchestra/sdk/v2/client"
+import type { SessionInfo } from "@/v2-types"
+
+import type { ServerSdk } from "@/utils/server"
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { State } from "@/context/global-sync/types"
@@ -36,9 +37,9 @@ function policyEvent(id: string, seq: number, policy: AppSession["subagentModels
   }
 }
 
-function projection(get: SessionApi["get"], list: () => SessionInfo[] = () => []) {
+function projection(get: ServerApi["session"]["get"], list: () => SessionInfo[] = () => []) {
   return createRoot((dispose) => {
-    const server = createServerSession({} as OrchestraClient, { get } as SessionApi, {} as ServerApi["message"])
+    const server = createServerSession({} as ServerSdk, { get } as ServerApi["session"], {} as ServerApi["message"])
     const [store, setStore] = createStore({
       status: "complete", session: [], sessionTotal: 0, limit: 10,
       message: {}, session_message: {}, part: {}, part_text_accum_delta: {},

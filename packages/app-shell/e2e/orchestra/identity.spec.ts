@@ -1,5 +1,5 @@
 import { expect, test, type Locator } from "@playwright/test"
-import type { GlobalEvent } from "@orchestra/sdk/v2/client"
+import type { GlobalEvent } from "../../src/v2-legacy"
 import {
   completedAssistantInfo,
   directory,

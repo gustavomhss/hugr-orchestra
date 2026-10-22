@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { Message, Part } from "@orchestra/sdk/v2/client"
+import type { Message, Part } from "@/v2-wire"
+
+
 import { applyOptimisticAdd, applyOptimisticRemove, mergeOptimisticPage } from "./sync"
 
 type Text = Extract<Part, { type: "text" }>

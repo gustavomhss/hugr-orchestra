@@ -1,4 +1,6 @@
-import type { PermissionRequest, Session } from "@/v2-types"
+import type { PermissionRequest } from "@/v2-types"
+import type { Session } from "@/v2-wire"
+
 import { cmp } from "./utils"
 import { SESSION_RECENT_LIMIT, SESSION_RECENT_WINDOW } from "./types"
 

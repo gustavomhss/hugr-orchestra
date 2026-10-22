@@ -3,7 +3,8 @@ import {
   connectedSubagentModels, createModelPolicyEditor, createModelRuleEditor, effectiveModelState, modelUnavailable, sameModelPolicy,
   type ModelPolicySnapshot, type ModelRule, type SubagentModelPolicy,
 } from "./subagent-model-rules"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/v2-wire"
+
 import { clearPending, pendingPolicy, pendingSelection, togglePending } from "./draft-subagent-models"
 import { applySessionManagementEvent, mergeSessionManagementInfo, normalizeSessionInfo } from "@/utils/session"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"

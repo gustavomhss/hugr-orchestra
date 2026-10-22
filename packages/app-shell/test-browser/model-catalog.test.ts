@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
-import type { Provider } from "@orchestra/sdk/v2/client"
+import type { Provider } from "@/v2-wire"
+
 import { createRoot } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createModelCatalog } from "../src/hooks/provider-catalog"

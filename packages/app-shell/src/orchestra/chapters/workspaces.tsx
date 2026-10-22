@@ -75,7 +75,6 @@ export default function Workspaces(props: ChapterPageProps) {
         if (!project) return { protocol, project, directories: undefined }
         const directories = await serverSDK().api.project.directories({
           projectID: project.id,
-          location: { directory: project.worktree },
         })
         return { protocol, project, directories }
       })

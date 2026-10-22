@@ -1,4 +1,4 @@
-import type { OpenCodeEvent } from "../compat/vendored-client-promise"
+import type { OpenCodeEvent } from "@/v2-legacy"
 import type { Event } from "@/v2-wire"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
@@ -484,15 +484,7 @@ function createServerSdkContextBase(
     legacy: sdk,
     signal: abort.signal,
   })
-  const legacy = (directory?: string) =>
-    createSdkForServer({
-      signal: abort.signal,
-      server: http,
-      fetch: scopedFetch(),
-      throwOnError: true,
-      directory,
-    })
-  const api = createCompatibleApi({ protocol, current: currentApi, legacy })
+  const api = createCompatibleApi({ protocol, current: currentApi })
 
   return {
     server,
@@ -595,7 +587,6 @@ function createDirSdkContext(directory: string, serverSDK: ServerSDKBase) {
     api: createCompatibleApi({
       protocol: serverSDK.protocol,
       current: serverSDK.currentApi,
-      legacy: (next) => serverSDK.createClient({ directory: next ?? directory, throwOnError: true }),
       directory,
     }),
     event: emitter,

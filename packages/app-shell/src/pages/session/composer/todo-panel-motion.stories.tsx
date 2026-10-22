@@ -1,7 +1,9 @@
 // @ts-nocheck
 import { createEffect, createMemo, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
-import type { Todo } from "@orchestra/sdk/v2"
+import type { Todo } from "@/v2-wire"
+
+
 import { useServerSync } from "@/context/global-sync"
 import { PromptInputV2Composer, usePromptInputV2Controller } from "@/components/prompt-input-v2"
 import { usePrompt } from "@/context/prompt"

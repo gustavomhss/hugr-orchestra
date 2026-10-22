@@ -1,11 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import type {
-  OpenCodeEvent,
-  SessionMessageAssistant,
-  SessionMessageInfo,
-  SessionMessageToolStateCompleted,
-  SessionMessageUser,
-} from "@opencode-ai/client/promise"
+import type { OpenCodeEvent } from "@/v2-legacy"
+import type { SessionMessageAssistant, SessionMessageInfo, SessionMessageUser } from "@/v2-legacy"
+import type { SessionMessageToolStateCompleted } from "@/v2-wire"
+
 import { confirmedTodos } from "@orchestra/session-ui/confirmed-todos"
 import { createV2SessionReducer } from "../context/server-session-v2-reducer"
 import { normalizeSessionMessages } from "./session-message"

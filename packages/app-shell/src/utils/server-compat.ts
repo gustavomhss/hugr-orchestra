@@ -1,34 +1,22 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
-import type { AgentPartInput, FilePartInput, Session, TextPartInput } from "@/v2-types"
-import type {
-  Project,
-  ProjectCurrent,
-  SessionApi,
-  SessionCommandInput,
-  SessionCommandOutput,
-  SessionCompactInput,
-  SessionCompactOutput,
-  SessionInfo,
-  SessionPromptInput,
-  SessionPromptOutput,
-  SessionShellInput,
-  SessionShellOutput,
-} from "../compat/vendored-client-promise"
+import type { AgentPartInput, FilePartInput, TextPartInput } from "@/v2-types"
 
-type LegacyFor = (directory?: string) => unknown
-type RequestOptions = NonNullable<Parameters<SessionApi["prompt"]>[1]>
-type CompatibleSessionApi = Omit<
-  SessionApi,
-  "prompt" | "command" | "shell" | "compact" | "rename" | "archive" | "remove"
+import type { SessionCommandInput, SessionCompactInput, SessionPromptInput } from "@/server-api"
+import type { SessionCommandOutput, SessionCompactOutput, SessionPromptOutput, SessionShellInput, SessionShellOutput } from "@/v2-wire"
+
+type RequestOptions = NonNullable<Parameters<ServerApi["session"]["prompt"]>[1]>
+export type CompatibleSessionApi = Omit<
+  ServerApi["session"],
+  "prompt" | "command" | "shell" | "compact" | "rename" | "remove" | "move"
 > & {
   prompt: (input: SessionPromptInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionPromptOutput>
   command: (input: SessionCommandInput, options?: RequestOptions) => Promise<SessionCommandOutput>
   shell: (input: SessionShellInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionShellOutput>
   compact: (input: SessionCompactInput & { model?: LegacyPrompt["model"] }) => Promise<SessionCompactOutput>
-  rename: (input: Parameters<SessionApi["rename"]>[0] & LegacyLocation) => ReturnType<SessionApi["rename"]>
-  // archive: (input: Parameters<SessionApi["archive"]>[0] & LegacyLocation) => ReturnType<SessionApi["archive"]>
-  remove: (input: Parameters<SessionApi["remove"]>[0] & LegacyLocation) => ReturnType<SessionApi["remove"]>
+  rename: (input: { sessionID: string; title: string } & LegacyLocation) => ReturnType<ServerApi["session"]["rename"]>
+  remove: (input: { sessionID: string } & LegacyLocation) => ReturnType<ServerApi["session"]["remove"]>
+  move: (input: { sessionID: string; directory?: string } & LegacyLocation) => ReturnType<ServerApi["session"]["move"]>
 }
 type CompatiblePermissionApi = Omit<ServerApi["permission"], "reply"> & {
   reply: (
@@ -51,40 +39,7 @@ type LegacyLocation = { directory?: string }
 type CompatibleInput = {
   protocol?: Promise<ServerProtocol>
   current: ServerApi
-  legacy?: (directory?: string) => unknown
   directory?: string
-}
-
-function mime(uri: string) {
-  const match = /^data:([^;,]+)/.exec(uri)
-  return match?.[1] ?? "application/octet-stream"
-}
-
-function sessionInfo(session: Session): SessionInfo & Pick<Session, "metadata"> & { costAvailable: boolean } {
-  return {
-    id: session.id,
-    parentID: session.parentID,
-    projectID: session.projectID,
-    agent: session.agent,
-    model: session.model && {
-      id: session.model.id,
-      providerID: session.model.providerID,
-      variant: session.model.variant,
-    },
-    cost: session.cost ?? 0,
-    costAvailable: session.cost !== undefined,
-    ...(session.metadata === undefined ? {} : { metadata: session.metadata }),
-    tokens: session.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    time: session.time,
-    title: session.title,
-    location: { directory: session.directory, workspaceID: session.workspaceID },
-    subpath: session.path,
-    revert: session.revert && {
-      messageID: session.revert.messageID,
-      partID: session.revert.partID,
-      snapshot: session.revert.snapshot,
-    },
-  }
 }
 
 export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
@@ -104,16 +59,7 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
     session: {
       ...current.session,
       move: (input: { sessionID: string; directory?: string }, options?: RequestOptions) =>
-        (current.session.move as (value: unknown, requestOptions?: RequestOptions) => Promise<void>)(
-          { sessionID: input.sessionID, location: { directory: input.directory ?? "" } },
-          options,
-        ),
+        current.session.move({ sessionID: input.sessionID, location: { directory: input.directory ?? "" } }, options),
     },
   } as unknown as CompatibleApi
-}
-
-function isMissingRoute(error: unknown) {
-  const status =
-    error instanceof Error && "cause" in error ? (error.cause as { status?: unknown } | null)?.status : undefined
-  return status === 404 || status === 405
 }

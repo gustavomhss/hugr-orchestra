@@ -1,9 +1,11 @@
 import { describe, expect, test } from "bun:test"
 import type { retry } from "@orchestra/core/util/retry"
-import type { OpenCodeEvent, SessionApi } from "@opencode-ai/client/promise"
-import type { Message, OrchestraClient, Part, Session } from "@orchestra/sdk/v2/client"
+import type { OpenCodeEvent } from "@/v2-legacy"
+import type { Message, Part, Session } from "@/v2-wire"
+import type { ServerApi, ServerSdk } from "@/utils/server"
+
+type SessionApi = Pick<ServerApi["session"], "get" | "message">
 import { createServerSession } from "./server-session"
-import type { ServerApi } from "@/utils/server"
 
 type MessageApi = ServerApi["message"]
 
@@ -85,7 +87,7 @@ function messageClient(...responses: Array<MessageResponse | Promise<MessageResp
         return responses[index++]
       },
     },
-  } as unknown as OrchestraClient
+  } as unknown as ServerSdk
   return Object.assign(client, {
     requests,
     requested(count: number) {
@@ -118,7 +120,7 @@ function rootMessageClient(
         return roots[rootIndex++]
       },
     },
-  } as unknown as OrchestraClient
+  } as unknown as ServerSdk
   return Object.assign(client, {
     requests,
     rootRequests,
@@ -157,7 +159,7 @@ function setup(sessions: Record<string, Session>) {
       diff: async () => ({ data: [] }),
       todo: async () => ({ data: [] }),
     },
-  } as unknown as OrchestraClient
+  } as unknown as ServerSdk
   return { get, messages, store: createServerSession(client) }
 }
 
@@ -250,7 +252,7 @@ describe("server session", () => {
           throw new Error("legacy message endpoint called")
         },
       },
-    } as unknown as OrchestraClient
+    } as unknown as ServerSdk
     const messageApi = {
       list: async (input: unknown) => {
         requests.push(input)
@@ -293,7 +295,7 @@ describe("server session", () => {
         return pages.shift()!
       },
     } as unknown as MessageApi
-    const store = createServerSession({} as OrchestraClient, {} as SessionApi, messageApi)
+    const store = createServerSession({} as ServerSdk, {} as SessionApi, messageApi)
     store.remember(session("root"))
 
     await store.sync("root")

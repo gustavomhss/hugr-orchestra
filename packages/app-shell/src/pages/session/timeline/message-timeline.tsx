@@ -33,13 +33,8 @@ import { SessionRetry } from "@orchestra/session-ui/session-retry"
 import { isScrollKeyTarget, scrollKey, scrollKeyOwner, ScrollView } from "@orchestra/ui/scroll-view"
 import { TextReveal } from "@orchestra/ui/text-reveal"
 import { TextShimmer } from "@orchestra/ui/text-shimmer"
-import type {
-  AssistantMessage,
-  Message as MessageType,
-  Part as PartType,
-  ToolPart,
-  UserMessage,
-} from "@/v2-types"
+import type { AssistantMessage, Part, ToolPart, UserMessage } from "@/v2-wire"
+
 import { showToast } from "@/utils/toast"
 import { downloadSessionExport, fetchSessionExport, sessionExportFilename } from "@/utils/session-export"
 import { shouldMarkBoundaryGesture, normalizeWheelDelta } from "@/pages/session/message-gesture"
@@ -69,8 +64,9 @@ import type { ExecutionEvidenceInput } from "../orchestra-evidence"
 import { withoutShellProjections } from "../orchestra-evidence-data"
 import { isTaskTool } from "@orchestra/core/util/task-tool"
 
-const emptyMessages: MessageType[] = []
-const emptyParts: PartType[] = []
+// The wire's `Message` is the user and assistant message union; the session-ui row component keeps the `Message` name.
+const emptyMessages: Array<UserMessage | AssistantMessage> = []
+const emptyParts: Part[] = []
 const emptyTools: ToolPart[] = []
 const emptyAssistantMessages: AssistantMessage[] = []
 const idle = { type: "idle" as const }
@@ -83,7 +79,7 @@ const timelineFallbackItemSize = 60
 let lastHeaderHeight = 64
 const timelineCache = new Map<string, { measurements: VirtualItem[]; toolOpen: Record<string, boolean | undefined> }>()
 
-const taskDescription = (part: PartType, sessionID: string) => {
+const taskDescription = (part: Part, sessionID: string) => {
   if (part.type !== "tool" || !isTaskTool(part.tool)) return
   if (("metadata" in part.state ? part.state.metadata : undefined)?.sessionId !== sessionID) return
   const value = part.state.input?.description

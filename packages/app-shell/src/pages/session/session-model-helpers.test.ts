@@ -1,5 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import type { UserMessage } from "@orchestra/sdk/v2"
+import type { UserMessage } from "@/v2-wire"
+
+
 import { resetSessionModel, restorePromptModel, syncPromptModel, syncSessionModel } from "./session-model-helpers"
 
 const message = (input?: { agent?: string; model?: UserMessage["model"] }) =>

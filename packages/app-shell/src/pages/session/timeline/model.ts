@@ -1,4 +1,5 @@
-import type { Message, UserMessage } from "@/v2-types"
+import type { Message, UserMessage } from "@/v2-wire"
+
 import { createMemo, createResource, onCleanup, untrack, type Accessor } from "solid-js"
 import { useServerSync } from "@/context/server-sync"
 import { useSync } from "@/context/sync"

@@ -1,4 +1,6 @@
-import type { McpServer } from "../../compat/vendored-client-promise"
+import type { McpServer } from "@/v2-wire"
+
+
 
 export type McpStatus = McpServer["status"]
 export type McpTransport = "stdio" | "http"
