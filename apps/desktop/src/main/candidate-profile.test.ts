@@ -141,7 +141,8 @@ test("server blocks shell import/reintroduced secrets in candidate mode; normal 
   run(resolve(import.meta.dir), `
     import { mock } from "bun:test"; import assert from "node:assert/strict";
     let shellReads = 0;
-    mock.module("electron", () => ({ app: {}, utilityProcess: {}, BrowserWindow: {}, screen: {} }));
+    const { mockElectron } = await import("./electron-mock.fixture.ts");
+    mockElectron({ app: {}, utilityProcess: {}, BrowserWindow: {}, screen: {} });
     mock.module("./logging", () => ({ getLogger: () => ({}) }));
     mock.module("./store", () => ({ getStore: () => { throw Error("unexpected store read") } }));
     mock.module("./shell-env", () => ({ getUserShell: () => "synthetic-shell", loadShellEnv: () => {

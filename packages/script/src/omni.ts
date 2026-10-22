@@ -112,6 +112,9 @@ export function requireOmniFiles(files: OmniFiles, target: { os: string; arch: s
     }
     // Only a POSIX host can witness the execute bit: NTFS stores none, so a Windows host producing a Unix target
     // would refuse every supervisor here. copyOmni marks the shipped copy executable either way.
+    // The witness covers a locally produced artifact: a downloaded one lost its mode at the transport boundary,
+    // and the workflow that downloads it restores the mode there (packages/script/test/omni-artifact-exec-bit.test.ts).
+    // The content guarantees above still reject a broken producer artifact on that path.
     if (kind === "supervisor" && target.os !== "win32" && process.platform !== "win32" && !(stat.mode & 0o111))
       throw new Error(`OMNI_SUPERVISOR_NOT_EXECUTABLE: ${file}`)
   }

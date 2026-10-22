@@ -1,7 +1,8 @@
-import { expect, mock, test } from "bun:test"
+import { expect, test } from "bun:test"
 import type { BrowserWindow } from "electron"
 import { EventEmitter } from "node:events"
 import type { AppDockEvent } from "./app-dock"
+import { mockElectron } from "./electron-mock.fixture"
 
 // The Electron module only resolves inside the Electron runtime. These fakes stand at its boundary: the
 // window's child views, a view's visibility, and a page's window-open request. The Dock under test is real.
@@ -57,9 +58,8 @@ class FakeView {
     this.visible = visible
   }
 }
-const electron = {
+mockElectron({
   app: { isPackaged: true },
-  shell: {},
   session: {
     fromPartition: () => ({
       setPermissionRequestHandler: () => undefined,
@@ -68,8 +68,7 @@ const electron = {
     }),
   },
   WebContentsView: FakeView,
-}
-mock.module("electron", () => ({ ...electron, default: electron }))
+})
 
 const { createAppDock } = await import("./app-dock")
 

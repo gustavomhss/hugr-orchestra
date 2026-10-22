@@ -4,7 +4,7 @@ import { spawn } from "node:child_process"
 import { createHash } from "node:crypto"
 import { existsSync, fstatSync, writeFileSync, writeSync } from "node:fs"
 import { cp, mkdir, mkdtemp, readFile, realpath, rm, stat } from "node:fs/promises"
-import { builtinModules, createRequire } from "node:module"
+import { builtinModules } from "node:module"
 import { createConnection, createServer } from "node:net"
 import { tmpdir } from "node:os"
 import path from "node:path"
@@ -62,7 +62,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     expectSpawn(import.meta.path)
     await command([process.execPath, "run", "generate"], path.join(repo, "packages/client"), env, 60000)
     await command([process.execPath, "script/build-node.ts"], path.join(repo, "apps/orchestra"), env, 90000)
-    const require = createRequire(path.join(desktop, "package.json"))
+    const electron = electronBinary()
     await command([process.execPath, "run", "--silent", "electron-vite", "build", "--config", "src/main/jimmy-desktop-proof.vite.ts"], desktop, env, 90000)
     const install = path.join(root, "install/apps/desktop")
     await mkdir(install, { recursive: true })
@@ -116,7 +116,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
     await Promise.all([...bare, `@lydell/node-pty-${process.platform}-${process.arch}`].map((name) => copyDependency(name, desktop)))
     const compiled = await readFile(path.join(install, "out/main/sidecar.js"), "utf8")
     expect(compiled).toContain("JIMMY_NODE_IDENTITY=")
-    const positive = await runProof(root, install, require("electron"), false)
+    const positive = await runProof(root, install, electron, false)
     // Remove the real compiled API route from a separate owned artifact, not a fake service/fetch response.
     const mutant = path.join(root, "mutant/apps/desktop")
     await cp(install, mutant, { recursive: true, dereference: true })
@@ -131,7 +131,7 @@ test.skipIf(process.env.ORCHESTRA_JIMMY_DESKTOP_PROOF !== "1")("real Electron pr
       changes.push(file)
     }
     expect(changes.length, "Native bridge mutation must alter a compiled route").toBeGreaterThan(0)
-    const failure = await runProof(root, mutant, require("electron"), true).then(() => undefined, (error: unknown) => String(error))
+    const failure = await runProof(root, mutant, electron, true).then(() => undefined, (error: unknown) => String(error))
     expect(failure).toContain("generated native artifact bridge")
     stage("mutant-asserted")
     const evidence = { schema: "jimmy-desktop-proof-v1", sha: process.env.GITHUB_SHA, runID: process.env.GITHUB_RUN_ID, ...positive, mutation: { changes, failure } }
@@ -214,6 +214,19 @@ test("owned recursive cleanup preserves real Bun two-case completion", async () 
     await cleanupProofRoot(root)
   }
 }, 90000)
+
+// The desktop tests mock the Electron module for the whole process (electron-mock.fixture.ts), so the real
+// binary path comes from a child process: a fresh module registry is the only one the package still answers.
+function electronBinary() {
+  const marker = "ORCHESTRA_ELECTRON_BINARY="
+  const result = Bun.spawnSync([process.execPath, "-p", `'${marker}' + require('electron')`], { cwd: desktop })
+  if (result.exitCode !== 0) throw new Error(`Electron binary resolution failed: ${result.stderr.toString()}`)
+  // node_modules/electron/index.js prints "Downloading Electron binary..." on stdout when the binary is
+  // missing, so the path is the marked line, never the whole output.
+  const marked = result.stdout.toString().split("\n").find((line) => line.startsWith(marker))
+  if (!marked) throw new Error(`Electron binary resolution failed: ${result.stdout.toString()}`)
+  return marked.slice(marker.length).trim()
+}
 
 async function runProof(root: string, install: string, electron: string, mutant: boolean) {
   const owned = path.join(root, mutant ? "negative" : "positive")

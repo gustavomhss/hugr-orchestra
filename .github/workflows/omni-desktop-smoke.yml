@@ -78,6 +78,11 @@ jobs:
           ORCHESTRA_CHANNEL: beta
         run: |
           set -euo pipefail
+          # download-artifact transfers file bytes, not Unix execute bits; the CLI build refuses a non-executable supervisor.
+          for supervisor in "$OMNI_ARTIFACTS"/*/hugr-omni-supervisor; do
+            chmod +x "$supervisor"
+            [ -x "$supervisor" ] || { echo "::error::omni supervisor is not executable: $supervisor"; exit 1; }
+          done
           ORCHESTRA_VERSION="$(bun -p 'require("./apps/orchestra/package.json").version')"
           export ORCHESTRA_VERSION
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
