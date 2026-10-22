@@ -22,7 +22,7 @@ import {
   normalizeProjectInfo,
   normalizeProviderList,
 } from "./utils"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError, isLocationNotFoundError } from "@/utils/server-errors"
 import { QueryClient, queryOptions } from "@tanstack/solid-query"
 import { loadMcpQuery, loadMcpResourcesQuery } from "../server-sync"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
@@ -376,6 +376,8 @@ export async function bootstrapDirectory(input: {
   branches?: (input: {
     location: { directory: string }
   }) => Promise<{ data: { branch?: string | null; default_branch?: string | null } }>
+  /** Takes over the reload-failed toast when the server reports the directory no longer exists. */
+  onMissingDirectory?: (directory: string) => void
 }) {
   const loading = input.store.status !== "complete"
   const seededProject = projectID(input.directory, input.global.project)
@@ -540,6 +542,8 @@ export async function bootstrapDirectory(input: {
         input.queryClient
           .fetchQuery(loadProvidersQuery(input.scope, input.directory, input.api, input.sdk, input.protocol))
           .catch((err) => {
+            if (input.onMissingDirectory && isLocationNotFoundError(err))
+              return input.onMissingDirectory(input.directory)
             const project = getFilename(input.directory)
             showToast({
               variant: "error",
@@ -551,7 +555,9 @@ export async function bootstrapDirectory(input: {
 
     await waitForPaint()
     const slowErrs = errors(await runAll(slow))
-    if (slowErrs.length > 0) {
+    const missing = input.onMissingDirectory && slowErrs.some(isLocationNotFoundError)
+    if (missing) input.onMissingDirectory?.(input.directory)
+    if (slowErrs.length > 0 && !missing) {
       console.error("Failed to finish bootstrap instance", slowErrs[0])
       const project = getFilename(input.directory)
       showToast({

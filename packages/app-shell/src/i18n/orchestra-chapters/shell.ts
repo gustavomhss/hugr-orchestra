@@ -35,6 +35,9 @@ export const SHELL_COPY = {
   "orchestra.shell.profile.agents.one": "{{count}} agent",
   "orchestra.shell.profile.agents.other": "{{count}} agents",
   "orchestra.shell.project.close": "Close project",
+  "orchestra.shell.project.missing.title": "{{project}} folder not found",
+  "orchestra.shell.project.missing.description":
+    "{{directory}} no longer exists. Close the project, or restore the folder and reopen it.",
   "orchestra.shell.project.editUnsupported": "This server does not support editing projects.",
   "orchestra.shell.project.addFailed": "Could not add the project",
   "orchestra.shell.project.initGit.title": "Set up git for this folder?",

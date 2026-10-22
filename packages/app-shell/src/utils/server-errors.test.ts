@@ -2,7 +2,13 @@ import { describe, expect, test } from "bun:test"
 import type { SessionNotFoundError } from "@/v2-wire"
 
 import type { ConfigInvalidError, ProviderModelNotFoundError } from "./server-errors"
-import { formatServerError, hookRefusal, isSessionNotFoundError, parseReadableConfigInvalidError } from "./server-errors"
+import {
+  formatServerError,
+  hookRefusal,
+  isLocationNotFoundError,
+  isSessionNotFoundError,
+  parseReadableConfigInvalidError,
+} from "./server-errors"
 
 function fill(text: string, vars?: Record<string, string | number>) {
   if (!vars) return text
@@ -183,6 +189,22 @@ describe("isSessionNotFoundError", () => {
         "ses_tab",
       ),
     ).toBe(false)
+  })
+})
+
+describe("isLocationNotFoundError", () => {
+  const body = { _tag: "InvalidRequestError", kind: "location_not_found", message: "Directory not found: /gone" }
+
+  test("matches the server's missing-directory body, thrown as is or wrapped by a boundary", () => {
+    expect(isLocationNotFoundError(body)).toBe(true)
+    expect(isLocationNotFoundError(new Error("Unknown error", { cause: body }))).toBe(true)
+  })
+
+  test("rejects other invalid requests and other errors", () => {
+    expect(isLocationNotFoundError({ ...body, kind: "location_unavailable" })).toBe(false)
+    expect(isLocationNotFoundError({ ...body, _tag: "SessionNotFoundError" })).toBe(false)
+    expect(isLocationNotFoundError(new Error("Directory not found: /gone"))).toBe(false)
+    expect(isLocationNotFoundError(undefined)).toBe(false)
   })
 })
 

@@ -129,7 +129,7 @@ function createServerCtx(
   })
   onCleanup(() => queryClient.clear())
   const sdk = createServerSdkContext(conn, scope)
-  const sync = createServerSyncContext(sdk)
+  const sync = createServerSyncContext(sdk, { closeProject: (directory) => projects.close(directory) })
 
   function enrich(project: { worktree: string; expanded: boolean }) {
     const [childStore] = sync.child(project.worktree, { bootstrap: false })
