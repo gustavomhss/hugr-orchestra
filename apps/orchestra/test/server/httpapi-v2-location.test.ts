@@ -1,4 +1,6 @@
 import { afterEach, describe, expect, test } from "bun:test"
+import { mkdir, rm } from "node:fs/promises"
+import path from "node:path"
 import { EventV2 } from "@orchestra/core/event"
 import { Location } from "@orchestra/core/location"
 import { Context, Schema } from "effect"
@@ -135,6 +137,41 @@ describe("v2 location HttpApi", () => {
     expect(skill.body.location?.directory).toBe(target.path)
     expect(neither.status).toBe(200)
     expect(neither.body.location?.directory).toBe(other.path)
+  })
+
+  test("answers a missing location directory with a declared 400 on every location route", async () => {
+    await using tmp = await tmpdir({ git: true })
+    const missing = path.join(tmp.path, "removed-project")
+
+    for (const route of ["/api/location", "/api/provider", "/api/command", "/api/agent"]) {
+      const response = await request(`${route}?location[directory]=${encodeURIComponent(missing)}`, tmp.path)
+      expect({ route, status: response.status }).toEqual({ route, status: 400 })
+      expect(await response.json()).toMatchObject({
+        _tag: "InvalidRequestError",
+        kind: "location_not_found",
+        field: "location.directory",
+        message: `Directory not found: ${missing}`,
+      })
+    }
+  })
+
+  test("keeps a booted session readable and removable after its directory is removed", async () => {
+    await using root = await tmpdir({ git: true })
+    const project = path.join(root.path, "project")
+    await mkdir(project)
+    const created = await request("/api/session", root.path, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ location: { directory: project } }),
+    })
+    expect(created.status).toBe(200)
+    const session = ((await created.json()) as { data: { id: string } }).data
+    expect((await request(`/api/session/${session.id}/todo`, root.path)).status).toBe(200)
+
+    // Only a failed boot is a bad request: the Location booted above serves database-backed routes from the cache.
+    await rm(project, { recursive: true })
+    expect((await request(`/api/session/${session.id}/todo`, root.path)).status).toBe(200)
+    expect((await request(`/api/session/${session.id}`, root.path, { method: "DELETE" })).status).toBeLessThan(300)
   })
 
   test("streams native EventV2 payloads across locations", async () => {

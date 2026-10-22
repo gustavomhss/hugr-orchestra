@@ -102,6 +102,15 @@ describe("formatServerError", () => {
     )
   })
 
+  test("returns the server's message from a declared typed body, thrown as is or wrapped by a boundary", () => {
+    const body = { _tag: "InvalidRequestError", kind: "location_not_found", message: "Directory not found: /gone" }
+
+    expect(formatServerError(body, language.t)).toBe("Directory not found: /gone")
+    expect(formatServerError(new Error("Unknown error", { cause: body }), language.t)).toBe(
+      "Directory not found: /gone",
+    )
+  })
+
   test("formats provider model errors using provider/model", () => {
     const error = {
       name: "ProviderModelNotFoundError",
