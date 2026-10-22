@@ -155,7 +155,7 @@ describe("v2 location HttpApi", () => {
     }
   })
 
-  test("answers a session whose directory was removed with a declared 400", async () => {
+  test("keeps a booted session readable and removable after its directory is removed", async () => {
     await using root = await tmpdir({ git: true })
     const project = path.join(root.path, "project")
     await mkdir(project)
@@ -168,10 +168,10 @@ describe("v2 location HttpApi", () => {
     const session = ((await created.json()) as { data: { id: string } }).data
     expect((await request(`/api/session/${session.id}/todo`, root.path)).status).toBe(200)
 
+    // Only a failed boot is a bad request: the Location booted above serves database-backed routes from the cache.
     await rm(project, { recursive: true })
-    const response = await request(`/api/session/${session.id}/todo`, root.path)
-    expect(response.status).toBe(400)
-    expect(await response.json()).toMatchObject({ _tag: "InvalidRequestError", kind: "location_not_found" })
+    expect((await request(`/api/session/${session.id}/todo`, root.path)).status).toBe(200)
+    expect((await request(`/api/session/${session.id}`, root.path, { method: "DELETE" })).status).toBeLessThan(300)
   })
 
   test("streams native EventV2 payloads across locations", async () => {
