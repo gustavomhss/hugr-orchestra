@@ -29,6 +29,16 @@ export function formatServerError(error: unknown, translate?: Translator, fallba
   const unwrapped = unwrapNamedError(error)
   if (isConfigInvalidErrorLike(unwrapped)) return parseReadableConfigInvalidError(unwrapped, translate)
   if (isProviderModelNotFoundErrorLike(unwrapped)) return parseReadableProviderModelNotFoundError(unwrapped, translate)
+  // The client throws a declared error's typed body (`{ _tag, message }`) as is, or a boundary wraps it as the cause of
+  // a generic Error; its message is the server's own words, so it wins over the wrapper's.
+  if (
+    unwrapped &&
+    typeof unwrapped === "object" &&
+    "message" in unwrapped &&
+    typeof unwrapped.message === "string" &&
+    unwrapped.message
+  )
+    return unwrapped.message
   if (error instanceof Error && error.message) return error.message
   if (typeof error === "string" && error) return error
   if (fallback) return fallback

@@ -10,7 +10,7 @@ import { Effect, Layer, Schema } from "effect"
 import { HttpRouter } from "effect/unstable/http"
 import { HttpApiMiddleware } from "effect/unstable/httpapi"
 import { InvalidRequestError, SessionNotFoundError } from "@orchestra/protocol/errors"
-import type { LocationServices } from "../location"
+import { requireDirectory, type LocationServices } from "../location"
 
 export class SessionLocationMiddleware extends HttpApiMiddleware.Service<
   SessionLocationMiddleware,
@@ -51,16 +51,13 @@ export const sessionLocationLayer = Layer.effect(
             message: `Session not found: ${sessionID}`,
           })
 
-        return yield* effect.pipe(
-          Effect.provide(
-            locations.get(
-              Location.Ref.make({
-                directory: AbsolutePath.make(row.directory),
-                workspaceID: row.workspaceID ? WorkspaceV2.ID.make(row.workspaceID) : undefined,
-              }),
-            ),
-          ),
+        const location = yield* requireDirectory(
+          Location.Ref.make({
+            directory: AbsolutePath.make(row.directory),
+            workspaceID: row.workspaceID ? WorkspaceV2.ID.make(row.workspaceID) : undefined,
+          }),
         )
+        return yield* effect.pipe(Effect.provide(locations.get(location)))
       }),
     )
   }),
