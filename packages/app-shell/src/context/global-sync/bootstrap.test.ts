@@ -118,6 +118,53 @@ function overlappingRun(state: ReturnType<typeof directoryState>, gate: Promise<
 }
 
 describe("bootstrapDirectory", () => {
+  test("hands a removed project directory to onMissingDirectory once instead of a reload failure", async () => {
+    const [store, setStore] = directoryState()
+    const gone = { _tag: "InvalidRequestError", kind: "location_not_found", message: "Directory not found: /project" }
+    const fail = async () => {
+      throw gone
+    }
+    const missing: string[] = []
+
+    await bootstrapDirectory({
+      directory: "/project",
+      scope: ServerScope.local,
+      mcp: false,
+      global: {
+        config: {} satisfies Config,
+        path: { state: "", config: "", worktree: "", directory: "", home: "/home" },
+        project: [],
+        provider,
+      },
+      sdk: {} as unknown as ServerSdk,
+      api: {
+        agent: { list: fail },
+        provider: { list: fail },
+        model: { list: fail, default: fail },
+        permission: { request: { list: fail } },
+        project: { list: fail, current: fail },
+        question: { request: { list: fail } },
+        reference: { list: fail },
+        vcs: { get: fail },
+      } as unknown as Parameters<typeof bootstrapDirectory>[0]["api"],
+      readV2Config: fail,
+      store,
+      setStore,
+      vcsCache: { setStore() {} } as unknown as VcsCache,
+      loadSessions() {},
+      loadActiveSessions: fail,
+      translate: (key) => key,
+      queryClient: new QueryClient(),
+      protocol: Promise.resolve("v2"),
+      onMissingDirectory: (directory) => missing.push(directory),
+    })
+
+    await new Promise((resolve) => setTimeout(resolve, 80))
+
+    expect(missing).toEqual(["/project"])
+    expect(store.status).toBe("partial")
+  })
+
   test("skips legacy config while refreshing a v2 directory", async () => {
     const [store, setStore] = directoryState()
 

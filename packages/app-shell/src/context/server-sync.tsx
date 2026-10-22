@@ -17,7 +17,7 @@ import { estimateRootSessionTotal, loadRootSessions } from "./global-sync/sessio
 import { trimSessions } from "./global-sync/session-trim"
 import type { ProjectMeta } from "./global-sync/types"
 import { SESSION_RECENT_LIMIT } from "./global-sync/types"
-import { formatServerError } from "@/utils/server-errors"
+import { formatServerError, isLocationNotFoundError } from "@/utils/server-errors"
 import { queryOptions, useMutation, useQueries, useQuery, useQueryClient } from "@tanstack/solid-query"
 import type { SolidQueryOptions } from "@tanstack/solid-query"
 import { createRefreshQueue } from "./global-sync/queue"
@@ -105,10 +105,36 @@ export function seedActiveSessionStatuses(
   }
 }
 
-export function createServerSyncContextInner(serverSDK: ServerSDK) {
+export function createServerSyncContextInner(
+  serverSDK: ServerSDK,
+  options: { closeProject?: (directory: string) => void } = {},
+) {
   const language = useLanguage()
   const owner = getOwner()
   if (!owner) throw new Error("ServerSync must be created within owner")
+
+  // Every load of a project whose folder was removed fails the same way: warn once per directory, with a way out.
+  const missingDirectories = new Set<string>()
+  const directoryMissing = (directory: string) => {
+    const key = directoryKey(directory)
+    if (missingDirectories.has(key)) return
+    missingDirectories.add(key)
+    const closeProject = options.closeProject
+    const close = closeProject && {
+      label: language.t("orchestra.shell.project.close"),
+      onClick: () => {
+        missingDirectories.delete(key)
+        closeProject(directory)
+      },
+    }
+    showToast({
+      variant: "error",
+      persistent: true,
+      title: language.t("orchestra.shell.project.missing.title", { project: getFilename(directory) }),
+      description: language.t("orchestra.shell.project.missing.description", { directory }),
+      actions: [...(close ? [close] : []), { label: language.t("common.dismiss"), onClick: "dismiss" }],
+    })
+  }
 
   const sdkCache = new Map<string, ServerSdk>()
   const booting = new Map<string, Promise<void>>()
@@ -271,6 +297,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
       void loadCommands(directory, serverSDK.api.command, sdkFor(directory), serverSDK.protocol)
         .then((commands) => setStore("command", commands))
         .catch((err) => {
+          if (isLocationNotFoundError(err)) return directoryMissing(directory)
           showToast({
             variant: "error",
             title: language.t("toast.project.reloadFailed.title", { project: getFilename(directory) }),
@@ -402,6 +429,7 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
         session,
         protocol: serverSDK.protocol,
         branches: (value) => serverSDK.orchestra.vcs.get(value),
+        onMissingDirectory: directoryMissing,
       })
     })
 
@@ -673,8 +701,11 @@ export function createServerSyncContextInner(serverSDK: ServerSDK) {
   }
 }
 
-export function createServerSyncContext(serverSDK: ServerSDK) {
-  const inner = createServerSyncContextInner(serverSDK)
+export function createServerSyncContext(
+  serverSDK: ServerSDK,
+  options: { closeProject?: (directory: string) => void } = {},
+) {
+  const inner = createServerSyncContextInner(serverSDK, options)
   return Object.assign(inner, {
     ensureDirSyncContext: createRefCountMap(
       (dir) => createDirSyncContext(dir, inner, serverSDK),

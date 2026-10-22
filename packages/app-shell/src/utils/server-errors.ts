@@ -75,6 +75,14 @@ export function isSessionNotFoundError(error: unknown, sessionID: string) {
   return value._tag === "SessionNotFoundError" && value.sessionID === sessionID
 }
 
+/** The server's answer for a Location whose directory no longer exists, e.g. a project folder that was removed. */
+export function isLocationNotFoundError(error: unknown) {
+  const unwrapped = unwrapNamedError(error)
+  if (typeof unwrapped !== "object" || unwrapped === null) return false
+  const value = unwrapped as Record<string, unknown>
+  return value._tag === "InvalidRequestError" && value.kind === "location_not_found"
+}
+
 /** The hook that stopped a prompt before the server admitted it, with the hook's own words. */
 export function hookRefusal(error: unknown) {
   const unwrapped = unwrapNamedError(error)
