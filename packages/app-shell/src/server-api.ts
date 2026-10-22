@@ -3,51 +3,55 @@
 // The adapter in `@/utils/server` builds this surface from the current API client. The shapes here are the
 // app's contract, not the current API's generated ones: the app keeps the legacy field names and envelopes
 // (the `data` envelope, the mutable payloads) that its state and reducers work with.
+//
+// Every input is the input the generated client sends: `ClientInput` reads it off the client, so the contract
+// cannot drift from the wire. `server-api-parity.ts` holds this contract and the adapter to the same shape.
 
-import type { SessionsEventsOutput } from "@orchestra/client"
+import type { Orchestra, SessionsEventsOutput } from "@orchestra/client"
 
-import type { AgentFileInfo, AgentFileInput, IntegrationMethod, Message, PermissionRequest, Project, ProjectListOutput, QuestionRequest, Session, SessionInfo, SessionV2Info, Todo, ToolPart } from "@/v2-types"
+import type { AgentFileInfo, IntegrationMethod, Message, PermissionRequest, ProjectListOutput, QuestionRequest, SessionInfo, Todo, ToolPart } from "@/v2-types"
 import type { SessionMessageInfo } from "@/v2-legacy"
 
 import type {
-  AgentListInput,
   AgentListOutput,
-  CommandListInput,
   CommandListOutput,
   Config,
-  Event,
   IntegrationOauthConnectOutput,
-  McpListInput,
   McpListOutput,
-  McpResourceCatalogInput,
   McpResourceCatalogOutput,
   ModelDefaultOutput,
   ModelListOutput,
-  ModelRef,
-  ProjectCurrentInput,
   ProjectCurrentOutput,
   ProviderListOutput,
   Pty,
-  ReferenceListInput,
   ReferenceListOutput,
   SessionActiveOutput,
-  SessionCommandInput,
   SessionCommandOutput,
-  SessionCompactInput,
   SessionCompactOutput,
-  SessionListInput,
   SessionProcess,
-  SessionPromptInput,
   SessionPromptOutput,
-  SessionShellInput,
   SessionShellOutput,
 } from "@/v2-wire"
 import type { FileDiffInfo, OpenCodeEvent } from "@/v2-legacy"
 
-export type RequestOptions = { signal?: AbortSignal; headers?: HeadersInit }
+/** The generated client: the wire the adapter speaks. */
+type Client = ReturnType<typeof Orchestra.make>
 
-/** The location a call is scoped to. */
-export type LocationInput = { directory?: string; workspaceID?: string }
+type ClientMethod<G extends keyof Client, M extends keyof Client[G]> = Client[G][M] extends (...args: never[]) => unknown
+  ? Client[G][M]
+  : never
+
+/** The input the client sends for a group method. */
+export type ClientInput<G extends keyof Client, M extends keyof Client[G]> = ClientMethod<G, M> extends (first: infer First, ...rest: never[]) => unknown
+  ? First
+  : never
+
+/** The output the client returns for a group method. */
+export type ClientOutput<G extends keyof Client, M extends keyof Client[G]> = ClientMethod<G, M> extends (...args: never[]) => infer Result
+  ? Awaited<Result>
+  : never
+
+export type RequestOptions = { signal?: AbortSignal; headers?: HeadersInit }
 
 /** A file or directory entry. */
 export type FileEntry = { path: string; name?: string; type: "file" | "directory" }
@@ -64,6 +68,47 @@ export type MessageListOutput = {
   cursor: { previous?: string; next?: string }
 }
 
+/** The prompt the app sends: the flat shape the adapter translates into the client's prompt. */
+export type SessionPromptInput = {
+  sessionID: string
+  id?: string
+  text: string
+  files?: ReadonlyArray<{ uri: string; name?: string; description?: string; mention?: { text: string; start: number; end: number } }>
+  agents?: ReadonlyArray<{ name: string; mention?: { text: string; start: number; end: number } }>
+  delivery?: "steer" | "queue"
+  resume?: boolean
+  agent?: string
+  model?: { providerID: string; modelID: string }
+  variant?: string
+}
+
+/** The command the app sends: the flat shape the adapter translates into the client's command. */
+export type SessionCommandInput = {
+  sessionID: string
+  id?: string
+  command: string
+  arguments?: string
+  files?: ReadonlyArray<{ uri: string; name?: string; description?: string; mention?: { text: string; start: number; end: number } }>
+  agents?: ReadonlyArray<{ name: string; mention?: { text: string; start: number; end: number } }>
+  delivery?: "steer" | "queue"
+  resume?: boolean
+  agent?: string
+  model?: { providerID: string; id?: string; modelID?: string; variant?: string }
+  variant?: string
+}
+
+/** The compaction the app sends: the flat shape the adapter translates into the client's compaction. */
+export type SessionCompactInput = {
+  sessionID: string
+  id?: string
+  agent?: string
+  model?: { providerID: string; modelID: string }
+  variant?: string
+}
+
+/** The staged revert the app sends: the flat shape the adapter translates into the client's stage. */
+export type SessionStageInput = { sessionID: string; messageID: string }
+
 /**
  * The legacy-shaped view of the current API. Every group the adapter exposes, with the legacy envelopes and
  * field names the app's state and reducers work with.
@@ -71,230 +116,164 @@ export type MessageListOutput = {
 export type ServerApi = {
   health: { get: (requestOptions?: RequestOptions) => Promise<{ healthy: boolean; pid?: number }> }
   location: {
-    get: (
-      input?: { directory?: string; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ project: ProjectCurrentOutput }>
+    get: (input?: ClientInput<"location", "get">, requestOptions?: RequestOptions) => Promise<{ project: ProjectCurrentOutput }>
   }
   agent: {
-    list: (input?: AgentListInput, requestOptions?: RequestOptions) => Promise<AgentListOutput>
-    getFile: (input: AgentFileInput, requestOptions?: RequestOptions) => Promise<AgentFileInfo>
-    updateFile: (input: AgentFileInput, requestOptions?: RequestOptions) => Promise<AgentFileInfo>
+    list: (input?: ClientInput<"agents", "list">, requestOptions?: RequestOptions) => Promise<AgentListOutput>
+    getFile: (input: ClientInput<"agents", "getFile">, requestOptions?: RequestOptions) => Promise<AgentFileInfo>
+    updateFile: (input: ClientInput<"agents", "updateFile">, requestOptions?: RequestOptions) => Promise<AgentFileInfo>
   }
   session: {
-    list: (input?: SessionListInput, requestOptions?: RequestOptions) => Promise<SessionListOutput>
-    create: (
-      input: { id?: string; agent?: string; model?: ModelRef; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<SessionInfo>
+    list: (input?: ClientInput<"sessions", "list">, requestOptions?: RequestOptions) => Promise<SessionListOutput>
+    create: (input: ClientInput<"sessions", "create">, requestOptions?: RequestOptions) => Promise<SessionInfo>
     active: (requestOptions?: RequestOptions) => Promise<SessionActiveOutput>
-    get: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<SessionInfo>
-    remove: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<void>
-    fork: (input: { sessionID: string; messageID?: string }, requestOptions?: RequestOptions) => Promise<SessionInfo>
-    switchAgent: (input: { sessionID: string; agent: string }, requestOptions?: RequestOptions) => Promise<void>
-    switchModel: (input: { sessionID: string; model: ModelRef }, requestOptions?: RequestOptions) => Promise<void>
-    rename: (input: { sessionID: string; title: string }, requestOptions?: RequestOptions) => Promise<void>
-    move: (
-      input: { sessionID: string; directory: string; workspaceID?: string },
-      requestOptions?: RequestOptions,
-    ) => Promise<void>
+    get: (input: ClientInput<"sessions", "get">, requestOptions?: RequestOptions) => Promise<SessionInfo>
+    remove: (input: ClientInput<"sessions", "remove">, requestOptions?: RequestOptions) => Promise<void>
+    fork: (input: ClientInput<"sessions", "fork">, requestOptions?: RequestOptions) => Promise<SessionInfo>
+    switchAgent: (input: ClientInput<"sessions", "switchAgent">, requestOptions?: RequestOptions) => Promise<void>
+    switchModel: (input: ClientInput<"sessions", "switchModel">, requestOptions?: RequestOptions) => Promise<void>
+    rename: (input: ClientInput<"sessions", "rename">, requestOptions?: RequestOptions) => Promise<void>
+    move: (input: ClientInput<"sessions", "move">, requestOptions?: RequestOptions) => Promise<void>
     prompt: (input: SessionPromptInput, requestOptions?: RequestOptions) => Promise<SessionPromptOutput>
     command: (input: SessionCommandInput, requestOptions?: RequestOptions) => Promise<SessionCommandOutput>
-    shell: (input: SessionShellInput, requestOptions?: RequestOptions) => Promise<SessionShellOutput>
+    shell: (input: ClientInput<"sessions", "shell">, requestOptions?: RequestOptions) => Promise<SessionShellOutput>
     compact: (input: SessionCompactInput, requestOptions?: RequestOptions) => Promise<SessionCompactOutput>
-    archive: (input: { sessionID: string; archived: boolean }, requestOptions?: RequestOptions) => Promise<void>
-    todo: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<Todo[]>
-    message: (input: { sessionID: string; messageID: string }, requestOptions?: RequestOptions) => Promise<SessionMessageInfo>
-    context: (input: { sessionID: string; messageID?: string; limit?: number }, requestOptions?: RequestOptions) => Promise<SessionMessageInfo[]>
-    history: (
-      input: { sessionID: string; limit?: number; before?: string },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Message[]; parts: Record<string, ToolPart[]> }>
-    events: (input: { sessionID: string }, requestOptions?: RequestOptions) => AsyncIterable<SessionsEventsOutput>
-    interrupt: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<void>
-    processes: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<SessionProcess[]>
-    getPermission: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<PermissionRequest[]>
-    setPermission: (
-      input: { sessionID: string; permission: PermissionRequest[] },
-      requestOptions?: RequestOptions,
-    ) => Promise<void>
-    getSubagentModels: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<unknown>
-    setSubagentModels: (input: { sessionID: string; policy: unknown }, requestOptions?: RequestOptions) => Promise<unknown>
+    archive: (input: ClientInput<"sessions", "archive">, requestOptions?: RequestOptions) => Promise<void>
+    todo: (input: ClientInput<"sessions", "todo">, requestOptions?: RequestOptions) => Promise<Todo[]>
+    message: (input: ClientInput<"sessions", "message">, requestOptions?: RequestOptions) => Promise<SessionMessageInfo>
+    context: (input: ClientInput<"sessions", "context">, requestOptions?: RequestOptions) => Promise<SessionMessageInfo[]>
+    history: (input: ClientInput<"sessions", "history">, requestOptions?: RequestOptions) => Promise<{ data: Message[]; parts: Record<string, ToolPart[]> }>
+    events: (input: ClientInput<"sessions", "events">, requestOptions?: RequestOptions) => AsyncIterable<SessionsEventsOutput>
+    interrupt: (input: ClientInput<"sessions", "interrupt">, requestOptions?: RequestOptions) => Promise<void>
+    processes: (input: ClientInput<"sessions", "processes">, requestOptions?: RequestOptions) => Promise<SessionProcess[]>
+    getPermission: (input: ClientInput<"sessions", "getPermission">, requestOptions?: RequestOptions) => Promise<PermissionRequest[]>
+    setPermission: (input: ClientInput<"sessions", "setPermission">, requestOptions?: RequestOptions) => Promise<void>
+    getSubagentModels: (input: ClientInput<"sessions", "getSubagentModels">, requestOptions?: RequestOptions) => Promise<unknown>
+    setSubagentModels: (input: ClientInput<"sessions", "setSubagentModels">, requestOptions?: RequestOptions) => Promise<unknown>
     revert: {
-      stage: (input: { sessionID: string; messageID: string }, requestOptions?: RequestOptions) => Promise<{ messageID: string }>
-      clear: (input: { sessionID: string }, requestOptions?: RequestOptions) => Promise<void>
-      commit: (input: { sessionID: string; messageID: string }, requestOptions?: RequestOptions) => Promise<void>
+      stage: (input: SessionStageInput, requestOptions?: RequestOptions) => Promise<{ messageID: string }>
+      clear: (input: ClientInput<"sessions", "clear">, requestOptions?: RequestOptions) => Promise<void>
+      commit: (input: ClientInput<"sessions", "commit">, requestOptions?: RequestOptions) => Promise<void>
     }
   }
   message: {
-    list: (
-      input: { sessionID: string; limit?: number; cursor?: string; order?: "asc" | "desc" },
-      requestOptions?: RequestOptions,
-    ) => Promise<MessageListOutput>
+    list: (input: ClientInput<"messages", "list">, requestOptions?: RequestOptions) => Promise<MessageListOutput>
   }
   model: {
-    list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<ModelListOutput>
-    default: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<ModelDefaultOutput>
+    list: (input?: ClientInput<"models", "list">, requestOptions?: RequestOptions) => Promise<ModelListOutput>
+    default: (input?: ClientInput<"models", "default">, requestOptions?: RequestOptions) => Promise<ModelDefaultOutput>
   }
   provider: {
-    list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<ProviderListOutput>
-    get: (input: { id: string }, requestOptions?: RequestOptions) => Promise<unknown>
+    list: (input?: ClientInput<"providers", "list">, requestOptions?: RequestOptions) => Promise<ProviderListOutput>
+    get: (input: ClientInput<"providers", "get">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   integration: {
-    list: (
-      input?: { location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Array<{ id: string; name: string }> }>
+    list: (input?: ClientInput<"integrations", "list">, requestOptions?: RequestOptions) => Promise<ClientOutput<"integrations", "list">>
     get: (
-      input: { integrationID: string; location?: LocationInput },
+      input: ClientInput<"integrations", "get">,
       requestOptions?: RequestOptions,
     ) => Promise<{ data: { name?: string; methods: IntegrationMethod[] } }>
     connect: {
       key: (
-        input: { integrationID: string; key: string; label?: string; location?: LocationInput },
+        input: ClientInput<"integrations", "connectKey">,
         requestOptions?: RequestOptions,
       ) => Promise<unknown>
     }
     oauth: {
       connect: (
-        input: {
-          integrationID: string
-          methodID?: string
-          label?: string
-          inputs?: unknown
-          location?: LocationInput
-        },
+        input: ClientInput<"integrations", "connectOauth">,
         requestOptions?: RequestOptions,
       ) => Promise<IntegrationOauthConnectOutput>
       status: (
-        input: { integrationID: string; attemptID?: string; location?: LocationInput },
+        input: ClientInput<"integrations", "oauthStatus">,
         requestOptions?: RequestOptions,
       ) => Promise<{ data: { attemptID: string; status?: string; message?: string; method?: IntegrationMethod } }>
       complete: (
-        input: { integrationID: string; attemptID: string; code: string; location?: LocationInput; value?: unknown },
+        input: ClientInput<"integrations", "oauthComplete">,
         requestOptions?: RequestOptions,
       ) => Promise<unknown>
       cancel: (
-        input: { integrationID: string; attemptID?: string; location?: LocationInput; value?: unknown },
+        input: ClientInput<"integrations", "oauthCancel">,
         requestOptions?: RequestOptions,
       ) => Promise<unknown>
     }
   }
   mcp: {
-    list: (input?: McpListInput, requestOptions?: RequestOptions) => Promise<McpListOutput>
-    add: (input: { server: string; config?: unknown; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    remove: (input: { server: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    connect: (input: { server: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    disconnect: (input: { server: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
+    list: (input?: ClientInput<"mcp", "list">, requestOptions?: RequestOptions) => Promise<McpListOutput>
+    add: (input: ClientInput<"mcp", "add">, requestOptions?: RequestOptions) => Promise<unknown>
+    remove: (input: ClientInput<"mcp", "remove">, requestOptions?: RequestOptions) => Promise<unknown>
+    connect: (input: ClientInput<"mcp", "connect">, requestOptions?: RequestOptions) => Promise<unknown>
+    disconnect: (input: ClientInput<"mcp", "disconnect">, requestOptions?: RequestOptions) => Promise<unknown>
     resource: {
-      catalog: (input?: McpResourceCatalogInput, requestOptions?: RequestOptions) => Promise<McpResourceCatalogOutput>
+      catalog: (input?: ClientInput<"mcp", "resources">, requestOptions?: RequestOptions) => Promise<McpResourceCatalogOutput>
     }
   }
   credential: {
-    update: (input: { credentialID: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    remove: (input: { credentialID: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
+    update: (input: ClientInput<"credentials", "update">, requestOptions?: RequestOptions) => Promise<unknown>
+    remove: (input: ClientInput<"credentials", "remove">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   project: {
     list: (requestOptions?: RequestOptions) => Promise<ProjectListOutput>
-    current: (input?: { directory?: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<ProjectCurrentOutput>
-    directories: (
-      input: { projectID: string; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<ProjectListOutput>
-    update: (input: { projectID: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    initGit: (input?: { directory?: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
+    current: (input?: ClientInput<"location", "get">, requestOptions?: RequestOptions) => Promise<ProjectCurrentOutput>
+    directories: (input: ClientInput<"projects", "directories">, requestOptions?: RequestOptions) => Promise<ClientOutput<"projects", "directories">>
+    update: (input: ClientInput<"projects", "update">, requestOptions?: RequestOptions) => Promise<unknown>
+    initGit: (input?: ClientInput<"projects", "initGit">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   permission: {
     request: {
-      list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<{ data: PermissionRequest[] }>
+      list: (input?: ClientInput<"permissions", "listRequests">, requestOptions?: RequestOptions) => Promise<{ data: PermissionRequest[] }>
     }
     saved: {
-      list: (
-      input?: { location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Array<{ id: string; name: string }> }>
-      remove: (input: { id: string }, requestOptions?: RequestOptions) => Promise<unknown>
+      list: (input?: ClientInput<"permissions", "listSaved">, requestOptions?: RequestOptions) => Promise<{ data: Array<{ id: string; name: string }> }>
+      remove: (input: ClientInput<"permissions", "removeSaved">, requestOptions?: RequestOptions) => Promise<unknown>
     }
-    create: (input: { sessionID?: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<unknown>
-    list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<{ data: PermissionRequest[] }>
-    get: (input: { id: string }, requestOptions?: RequestOptions) => Promise<unknown>
-    reply: (
-      input: { requestID: string; reply: string; sessionID?: string; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<unknown>
+    create: (input: ClientInput<"permissions", "create">, requestOptions?: RequestOptions) => Promise<unknown>
+    list: (input: ClientInput<"permissions", "list">, requestOptions?: RequestOptions) => Promise<{ data: PermissionRequest[] }>
+    get: (input: ClientInput<"permissions", "get">, requestOptions?: RequestOptions) => Promise<unknown>
+    reply: (input: ClientInput<"permissions", "reply">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   file: {
-    read: (input: { path: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<Uint8Array>
-    list: (
-      input?: { path?: string; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: FileEntry[] }>
-    find: (
-      input: { query: string; type?: string; limit?: number; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: FileEntry[] }>
+    read: (input: ClientInput<"files", "read">, requestOptions?: RequestOptions) => Promise<Uint8Array>
+    list: (input?: ClientInput<"files", "list">, requestOptions?: RequestOptions) => Promise<{ data: FileEntry[] }>
+    find: (input: ClientInput<"files", "find">, requestOptions?: RequestOptions) => Promise<{ data: FileEntry[] }>
   }
   command: {
-    list: (input?: CommandListInput, requestOptions?: RequestOptions) => Promise<CommandListOutput>
+    list: (input?: ClientInput<"commands", "list">, requestOptions?: RequestOptions) => Promise<CommandListOutput>
   }
   skill: {
-    list: (
-      input?: { location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Array<{ name: string; location?: string; description?: string }> }>
+    list: (input?: ClientInput<"skills", "list">, requestOptions?: RequestOptions) => Promise<{ data: Array<{ name: string; location?: string; description?: string }> }>
   }
   event: {
     subscribe: (requestOptions?: RequestOptions) => AsyncIterable<OpenCodeEvent & { location?: { directory?: string } }>
   }
   pty: {
-    create: (
-      input: { title: string; command?: string; args?: string[]; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Pty }>
-    get: (input: { ptyID: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<{ data: Pty }>
-    update: (
-      input: { ptyID: string; title?: string; size?: { cols: number; rows: number }; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: Pty }>
-    remove: (input: { ptyID: string; location?: LocationInput }, requestOptions?: RequestOptions) => Promise<void>
+    create: (input: ClientInput<"ptys", "create">, requestOptions?: RequestOptions) => Promise<{ data: Pty }>
+    get: (input: ClientInput<"ptys", "get">, requestOptions?: RequestOptions) => Promise<{ data: Pty }>
+    update: (input: ClientInput<"ptys", "update">, requestOptions?: RequestOptions) => Promise<{ data: Pty }>
+    remove: (input: ClientInput<"ptys", "remove">, requestOptions?: RequestOptions) => Promise<void>
   }
   question: {
     request: {
-      list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<{ data: QuestionRequest[] }>
+      list: (input?: ClientInput<"questions", "listRequests">, requestOptions?: RequestOptions) => Promise<{ data: QuestionRequest[] }>
     }
-    list: (input?: { location?: { directory?: string } }, requestOptions?: RequestOptions) => Promise<{ data: QuestionRequest[] }>
-    reply: (
-      input: { sessionID: string; requestID: string; answers: string[][] },
-      requestOptions?: RequestOptions,
-    ) => Promise<unknown>
-    reject: (input: { sessionID: string; requestID: string }, requestOptions?: RequestOptions) => Promise<unknown>
+    list: (input: ClientInput<"questions", "list">, requestOptions?: RequestOptions) => Promise<{ data: QuestionRequest[] }>
+    reply: (input: ClientInput<"questions", "reply">, requestOptions?: RequestOptions) => Promise<unknown>
+    reject: (input: ClientInput<"questions", "reject">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   reference: {
-    list: (input?: ReferenceListInput, requestOptions?: RequestOptions) => Promise<ReferenceListOutput>
+    list: (input?: ClientInput<"references", "list">, requestOptions?: RequestOptions) => Promise<ReferenceListOutput>
   }
   projectCopy: {
-    create: (
-      input: { projectID: string; strategy: string; directory: string; name?: string; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ name: string; directory?: string }>
-    remove: (
-      input: { projectID: string; directory: string; force?: boolean; location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<unknown>
-    refresh: (input: { projectID: string; directory: string }, requestOptions?: RequestOptions) => Promise<unknown>
+    create: (input: ClientInput<"projectCopies", "create">, requestOptions?: RequestOptions) => Promise<{ name: string; directory?: string }>
+    remove: (input: ClientInput<"projectCopies", "remove">, requestOptions?: RequestOptions) => Promise<unknown>
+    refresh: (input: ClientInput<"projectCopies", "refresh">, requestOptions?: RequestOptions) => Promise<unknown>
   }
   vcs: {
-    get: (
-      input?: { location?: LocationInput },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: { branch?: string; defaultBranch?: string } }>
-    diff: (
-      input?: { location?: LocationInput; mode?: string; context?: unknown },
-      requestOptions?: RequestOptions,
-    ) => Promise<{ data: FileDiffInfo[] }>
+    get: (input?: ClientInput<"vcs", "get">, requestOptions?: RequestOptions) => Promise<{ data: { branch?: string; defaultBranch?: string } }>
+    diff: (input: ClientInput<"vcs", "diff">, requestOptions?: RequestOptions) => Promise<{ data: FileDiffInfo[] }>
   }
   config: {
     get: (requestOptions?: RequestOptions) => Promise<{ data?: Config }>
-    update: (input: { config: Config }, requestOptions?: RequestOptions) => Promise<unknown>
+    update: (input: ClientInput<"config", "update">, requestOptions?: RequestOptions) => Promise<unknown>
   }
 }

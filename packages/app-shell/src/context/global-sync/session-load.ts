@@ -4,7 +4,6 @@ import type { ServerApi, ServerSdk } from "@/utils/server"
 export async function loadRootSessions(input: { api: Pick<ServerApi["session"], "list">; directory: string; limit: number }) {
   const result = await input.api.list({
     directory: input.directory,
-    parentID: null,
     limit: input.limit,
     order: "desc",
   })

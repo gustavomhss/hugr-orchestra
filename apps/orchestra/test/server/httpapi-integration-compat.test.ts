@@ -24,7 +24,7 @@ test("missing canonical and alias OAuth status share a typed transport refusal",
   expect(replies[1].body).toEqual(replies[0].body)
 }, 30_000)
 
-test("vendored OAuth DELETE cancels only its integration owner and removes canonical attempt state", async () => {
+test("OAuth DELETE cancels only its integration owner and removes canonical attempt state", async () => {
   await using tmp = await tmpdir(oauthProject)
   const api = Orchestra.make({
     baseUrl: "http://localhost",
@@ -67,7 +67,7 @@ test("vendored OAuth DELETE cancels only its integration owner and removes canon
   expect((await api.integrations.get({ integrationID: "compat-a", location })).data?.connections).toHaveLength(0)
 }, 60_000)
 
-test("vendored OAuth paths validate authoritative ownership and share canonical attempts", async () => {
+test("OAuth paths validate authoritative ownership and share canonical attempts", async () => {
   await using tmp = await tmpdir(oauthProject)
   const requests: string[] = []
   const api = Orchestra.make({

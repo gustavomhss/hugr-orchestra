@@ -42,7 +42,7 @@ const api = {
   question: { request: { list: async () => ({ location: {}, data: [] }) } },
   reference: { list: async () => ({ location: {}, data: [] }) },
   vcs: { get: async () => ({ location: {}, data: {} }) },
-} as unknown as ServerApi
+} as unknown as Parameters<typeof bootstrapDirectory>[0]["api"]
 
 function directoryState() {
   return createStore<State>({

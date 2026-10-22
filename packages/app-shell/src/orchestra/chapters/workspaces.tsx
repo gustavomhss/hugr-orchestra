@@ -75,7 +75,6 @@ export default function Workspaces(props: ChapterPageProps) {
         if (!project) return { protocol, project, directories: undefined }
         const directories = await serverSDK().api.project.directories({
           projectID: project.id,
-          location: { directory: project.worktree },
         })
         return { protocol, project, directories }
       })
@@ -89,9 +88,7 @@ export default function Workspaces(props: ChapterPageProps) {
       return
     }
     const project = result.value.project
-    const workspaces = project
-      ? repositoryWorkspaces(project, result.value.directories as unknown as Parameters<typeof repositoryWorkspaces>[1])
-      : []
+    const workspaces = project ? repositoryWorkspaces(project, result.value.directories) : []
     setState({ protocol: result.value.protocol, project, workspaces, status: workspaces.length ? "ready" : "empty" })
     if (!project) return
     remember(project.worktree, workspaces)

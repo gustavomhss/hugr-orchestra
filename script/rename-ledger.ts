@@ -97,16 +97,17 @@ export const protectedStrings: Protected[] = [
 
   // Third-party packages
   {
-    // app and session-ui depend on upstream's published @opencode-ai/client 1.17.13, vendored as a tarball that cannot
-    // be rebuilt from this tree. It keeps its published name and exports until it is replaced by the workspace client.
+    // The upstream @opencode-ai/client 1.17.13 tarball is no longer vendored: the app-shell compiles against the
+    // workspace client. Its published name survives only in the provenance of the legacy wire the app-shell still
+    // declares; the extractor reads the tarball when one is vendored and skips it otherwise.
     pattern: /@opencode-ai\/client\b|opencode-ai-client-1\.17\.13-v2\.tgz/g,
     paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$|^script\/(?:module-architecture|boundary-ledger)\.json$/,
-    reason: "vendored upstream @opencode-ai/client tarball, kept under its published name",
+    reason: "provenance of the legacy wire, from the upstream client tarball that is no longer vendored",
   },
   {
     pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
     paths: /^packages\/app(?:-shell)?\/src\//,
-    reason: "names exported by the vendored upstream @opencode-ai/client tarball",
+    reason: "legacy names of the upstream client the app-shell no longer vendors",
   },
   {
     pattern: /(?:@gitlab\/)?opencode-(?:gitlab|poe|openai-codex|copilot)-auth\b/g,

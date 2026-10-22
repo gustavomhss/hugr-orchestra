@@ -1,24 +1,22 @@
 import type { ServerApi } from "./server"
 import type { ServerProtocol } from "./server-protocol"
 import type { AgentPartInput, FilePartInput, TextPartInput } from "@/v2-types"
-import type { Session } from "@/v2-wire"
 
-import type { Project, SessionInfo } from "@/v2-types"
-import type { ProjectCurrent, SessionCommandInput, SessionCommandOutput, SessionCompactInput, SessionCompactOutput, SessionPromptInput, SessionPromptOutput, SessionShellInput, SessionShellOutput } from "@/v2-wire"
+import type { SessionCommandInput, SessionCompactInput, SessionPromptInput } from "@/server-api"
+import type { SessionCommandOutput, SessionCompactOutput, SessionPromptOutput, SessionShellInput, SessionShellOutput } from "@/v2-wire"
 
-type LegacyFor = (directory?: string) => unknown
 type RequestOptions = NonNullable<Parameters<ServerApi["session"]["prompt"]>[1]>
 export type CompatibleSessionApi = Omit<
   ServerApi["session"],
-  "prompt" | "command" | "shell" | "compact" | "rename" | "remove"
+  "prompt" | "command" | "shell" | "compact" | "rename" | "remove" | "move"
 > & {
   prompt: (input: SessionPromptInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionPromptOutput>
   command: (input: SessionCommandInput, options?: RequestOptions) => Promise<SessionCommandOutput>
   shell: (input: SessionShellInput & LegacyPrompt, options?: RequestOptions) => Promise<SessionShellOutput>
   compact: (input: SessionCompactInput & { model?: LegacyPrompt["model"] }) => Promise<SessionCompactOutput>
-  rename: (input: Parameters<ServerApi["session"]["rename"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["rename"]>
-  archive: (input: Parameters<ServerApi["session"]["archive"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["archive"]>
-  remove: (input: Parameters<ServerApi["session"]["remove"]>[0] & LegacyLocation) => ReturnType<ServerApi["session"]["remove"]>
+  rename: (input: { sessionID: string; title: string } & LegacyLocation) => ReturnType<ServerApi["session"]["rename"]>
+  remove: (input: { sessionID: string } & LegacyLocation) => ReturnType<ServerApi["session"]["remove"]>
+  move: (input: { sessionID: string; directory?: string } & LegacyLocation) => ReturnType<ServerApi["session"]["move"]>
 }
 type CompatiblePermissionApi = Omit<ServerApi["permission"], "reply"> & {
   reply: (
@@ -44,38 +42,6 @@ type CompatibleInput = {
   directory?: string
 }
 
-function mime(uri: string) {
-  const match = /^data:([^;,]+)/.exec(uri)
-  return match?.[1] ?? "application/octet-stream"
-}
-
-function sessionInfo(session: Session): SessionInfo & Pick<Session, "metadata"> & { costAvailable: boolean } {
-  return {
-    id: session.id,
-    parentID: session.parentID,
-    projectID: session.projectID,
-    agent: session.agent,
-    model: session.model && {
-      id: session.model.id,
-      providerID: session.model.providerID,
-      variant: session.model.variant,
-    },
-    cost: session.cost ?? 0,
-    costAvailable: session.cost !== undefined,
-    ...(session.metadata === undefined ? {} : { metadata: session.metadata }),
-    tokens: session.tokens ?? { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
-    time: session.time,
-    title: session.title,
-    location: { directory: session.directory, workspaceID: session.workspaceID },
-    subpath: session.path,
-    revert: session.revert && {
-      messageID: session.revert.messageID,
-      partID: session.revert.partID,
-      snapshot: session.revert.snapshot,
-    },
-  }
-}
-
 export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
   // The Orchestra V2 server has no project lookup route; its location answer carries the resolved project. A
   // server that answers the lookup keeps it; the first failure switches this API to the location route.
@@ -93,10 +59,7 @@ export function createCompatibleApi(input: CompatibleInput): CompatibleApi {
     session: {
       ...current.session,
       move: (input: { sessionID: string; directory?: string }, options?: RequestOptions) =>
-        (current.session.move as (value: unknown, requestOptions?: RequestOptions) => Promise<void>)(
-          { sessionID: input.sessionID, location: { directory: input.directory ?? "" } },
-          options,
-        ),
+        current.session.move({ sessionID: input.sessionID, location: { directory: input.directory ?? "" } }, options),
     },
   } as unknown as CompatibleApi
 }
