@@ -113,7 +113,10 @@ jobs:
         run: |
           set -euo pipefail
           # download-artifact transfers file bytes, not Unix execute bits; the CLI build refuses a non-executable supervisor.
-          chmod +x "$OMNI_ARTIFACTS"/linux-*/hugr-omni-supervisor
+          for supervisor in "$OMNI_ARTIFACTS"/*/hugr-omni-supervisor; do
+            chmod +x "$supervisor"
+            [ -x "$supervisor" ] || { echo "::error::omni supervisor is not executable: $supervisor"; exit 1; }
+          done
           targets="windows-x64-baseline linux-arm64 linux-x64-baseline"
           for target in $targets; do
             bun apps/cli/script/build.ts --skip-install --target "$target"
