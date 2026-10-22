@@ -542,8 +542,8 @@ export async function bootstrapDirectory(input: {
         input.queryClient
           .fetchQuery(loadProvidersQuery(input.scope, input.directory, input.api, input.sdk, input.protocol))
           .catch((err) => {
-            if (input.onMissingDirectory && isLocationNotFoundError(err))
-              return input.onMissingDirectory(input.directory)
+            // The run's failures below hand a missing directory over once.
+            if (input.onMissingDirectory && isLocationNotFoundError(err)) throw err
             const project = getFilename(input.directory)
             showToast({
               variant: "error",
