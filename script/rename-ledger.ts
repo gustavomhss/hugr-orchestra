@@ -100,13 +100,13 @@ export const protectedStrings: Protected[] = [
     // The upstream @opencode-ai/client 1.17.13 tarball is no longer vendored: the app-shell compiles against the
     // workspace client. Its published name survives only in the provenance of the legacy wire the app-shell still
     // declares; the extractor reads the tarball when one is vendored and skips it otherwise.
-    pattern: /@opencode-ai\/client\b|opencode-ai-client-1\.17\.13-v2\.tgz/g,
+    pattern: /@opencode-ai\/client\b|opencode-ai-client[\s-]1\.17\.13(?:-v2(?:\.tgz)?)?/g,
     paths: /^packages\/(?:app(?:-shell)?|session-ui)\/|^bun\.lock$|^script\/(?:module-architecture|boundary-ledger)\.json$/,
     reason: "provenance of the legacy wire, from the upstream client tarball that is no longer vendored",
   },
   {
     pattern: /\bOpenCode(?:Event|Client)\b|\bOpenCode(?=\.make\b)|(?<=import \{ (?:ClientError, )?)OpenCode\b/g,
-    paths: /^packages\/app(?:-shell)?\/src\//,
+    paths: /^packages\/app(?:-shell)?\/(?:src|e2e)\//,
     reason: "legacy names of the upstream client the app-shell no longer vendors",
   },
   {
