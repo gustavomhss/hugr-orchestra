@@ -1,4 +1,4 @@
-import { expect, mock, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { Effect } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
@@ -6,15 +6,11 @@ import { FSUtil } from "@orchestra/core/fs-util"
 import { Omni } from "@orchestra/core/omni"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { ToolSafetySandbox } from "@orchestra/core/tool-safety-sandbox"
+import { mockElectron } from "./electron-mock.fixture"
 
-// The same names as the other desktop tests' Electron mock: Bun keeps the first mock.module for the whole process.
-const electron = {
-  app: {},
-  shell: {},
-  session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) },
-  WebContentsView: class {},
-}
-mock.module("electron", () => ({ ...electron, default: electron }))
+// The shared fixture declares every name the desktop imports from Electron, so the mock this file freezes
+// holds them all whichever test file the runner loads first.
+mockElectron({ session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) } })
 
 const { OmniHost } = await import("./omni-host")
 

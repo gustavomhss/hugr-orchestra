@@ -1,18 +1,10 @@
-import { expect, mock, test } from "bun:test"
+import { expect, test } from "bun:test"
 import { rejection } from "./rejection.fixture"
+import { mockElectron } from "./electron-mock.fixture"
 
-// The Electron module only resolves inside the Electron runtime; open() needs a partition session.
-// Bun keeps a module mock for the rest of the test process, so it also needs the default export that later
-// files reach through `import electron from "electron"` (store.ts, imported by wsl/servers.test.ts). A later
-// mock.module("electron") can only replace the values of names this first mock declares, so it also declares the
-// names app-dock-popups.test.ts imports through app-dock.ts.
-const electron = {
-  app: {},
-  shell: {},
-  session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) },
-  WebContentsView: class {},
-}
-mock.module("electron", () => ({ ...electron, default: electron }))
+// The Electron module only resolves inside the Electron runtime; open() needs a partition session. The shared
+// fixture declares every name the desktop imports, so the mock this file freezes holds them all.
+mockElectron({ session: { fromPartition: () => ({ setCertificateVerifyProc: () => undefined }) } })
 
 const { AppDockLinux } = await import("./app-dock-linux")
 

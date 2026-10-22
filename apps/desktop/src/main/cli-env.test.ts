@@ -1,10 +1,10 @@
-import { afterEach, beforeEach, expect, mock, test } from "bun:test"
+import { afterEach, beforeEach, expect, test } from "bun:test"
 import { mkdtemp, rm, writeFile } from "node:fs/promises"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
+import { mockElectron } from "./electron-mock.fixture"
 
-const electron = { app: {} }
-mock.module("electron", () => ({ ...electron, default: electron }))
+mockElectron()
 
 const { cliEnv } = await import("./cli-env")
 
