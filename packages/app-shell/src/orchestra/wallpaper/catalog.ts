@@ -76,3 +76,8 @@ export const WALLPAPER_DIM_MAX = 0.8
 export function wallpaperSrc(id: string) {
   return WALLPAPERS.find((item) => item.id === id)?.src
 }
+
+export function clampWallpaperDim(value: unknown) {
+  const dim = Number(value)
+  return Number.isFinite(dim) ? Math.min(WALLPAPER_DIM_MAX, Math.max(0, dim)) : 0
+}

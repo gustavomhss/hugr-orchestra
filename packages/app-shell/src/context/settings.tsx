@@ -3,7 +3,7 @@ import { createEffect, createMemo } from "solid-js"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
-import { WALLPAPER_DEFAULT, WALLPAPER_DIM_MAX, wallpaperSrc } from "@/orchestra/wallpaper/catalog"
+import { WALLPAPER_DEFAULT, WALLPAPER_DIM_MAX, clampWallpaperDim, wallpaperSrc } from "@/orchestra/wallpaper/catalog"
 
 export interface NotificationSettings {
   agent: boolean
@@ -240,10 +240,7 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       const wallpaper = wallpaperSrc(store.appearance?.wallpaper ?? WALLPAPER_DEFAULT)
       if (wallpaper) root.style.setProperty("--orchestra-wallpaper", `url("${wallpaper}")`)
       else root.style.removeProperty("--orchestra-wallpaper")
-      const dim = Math.min(
-        WALLPAPER_DIM_MAX,
-        Math.max(0, store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim),
-      )
+      const dim = clampWallpaperDim(store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim)
       root.style.setProperty("--orchestra-wallpaper-dim", String(dim))
     })
 
@@ -352,15 +349,11 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
           setStore("appearance", "wallpaper", value)
         },
         wallpaperDim: withFallback(
-          () =>
-            Math.min(
-              WALLPAPER_DIM_MAX,
-              Math.max(0, store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim),
-            ),
+          () => clampWallpaperDim(store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim),
           defaultSettings.appearance.wallpaperDim,
         ),
         setWallpaperDim(value: number) {
-          setStore("appearance", "wallpaperDim", Math.min(WALLPAPER_DIM_MAX, Math.max(0, value)))
+          setStore("appearance", "wallpaperDim", clampWallpaperDim(value))
         },
       },
       keybinds: {
