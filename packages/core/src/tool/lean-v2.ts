@@ -5,6 +5,7 @@ import { ToolRegistry } from "./registry"
 import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { LeanProcessor } from "./lean-processor"
 import { LeanTelemetry } from "./lean-telemetry"
+import { LeanSummary } from "./lean-summary"
 import { ToolSafety } from "./tool-safety"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 

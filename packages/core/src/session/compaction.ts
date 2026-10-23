@@ -181,7 +181,7 @@ export const buildPrompt = (input: { readonly previousSummary?: string; readonly
 
 export const make = (dependencies: Dependencies) => {
   const config = settings(dependencies.config)
-  const summarize = Effect.fnUntraced(function* (input: Input, reason: "auto" | "manual") {
+  const summarize = Effect.fn("SessionCompaction.summarize")(function* (input: Input, reason: "auto" | "manual") {
     const context = input.model.route.defaults.limits?.context
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
     const previousSummary = input.entries.find((entry) => entry.message.type === "compaction")?.message
@@ -226,7 +226,11 @@ export const make = (dependencies: Dependencies) => {
           return Effect.void
         }),
         Effect.as(true),
-        Effect.catchTag("LLM.Error", () => Effect.succeed(false)),
+        // Catch all LLM-related errors broadly (LLMError and its subclasses)
+        Effect.catchAll((error) => {
+          failed = true
+          return Effect.succeed(false)
+        }),
       )
     const summary = chunks.join("")
     if (!summarized || failed || !summary.trim()) return false
@@ -252,8 +256,10 @@ export const make = (dependencies: Dependencies) => {
     const context = input.model.route.defaults.limits?.context
     if (context === undefined || context <= 0) return false
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
+    // Estimate tokens on entries directly (before request construction) to avoid circular estimation
+    const entriesEstimate = estimate({ system: input.request.system, messages: input.entries.map((e) => e.message), tools: input.request.tools })
     if (
-      estimate({ system: input.request.system, messages: input.request.messages, tools: input.request.tools }) <=
+      entriesEstimate <=
       context - Math.max(output, config.buffer)
     )
       return false

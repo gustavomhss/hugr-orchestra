@@ -8,8 +8,11 @@ import { SessionV2 } from "@orchestra/core/session"
 import { SessionStore } from "@orchestra/core/session/store"
 import { SessionCompaction } from "@orchestra/core/session/compaction"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
-import { ToolFailure } from "@orchestra/llm"
 import { ModelV2 } from "@orchestra/core/model"
+
+class ContinuityToolFailure extends Schema.TaggedErrorClass<ContinuityToolFailure>()("Continuity.ToolFailure", {
+  message: Schema.String,
+}) {}
 
 const ParametersRecall = Schema.Struct({
   action: Schema.Literals(["lookup", "search", "archive"]),
@@ -48,11 +51,11 @@ const makeLayer = Effect.gen(function* () {
         Effect.gen(function* () {
           const agent = yield* agents.get(ctx.agent)
           if (!agent) {
-            return yield* Effect.fail(new ToolFailure({ message: "Agent not found" }))
+            return yield* Effect.fail(new ContinuityToolFailure({ message: "Agent not found" }))
           }
           const session = yield* sessions.get(ctx.sessionID).pipe(Effect.orDie)
           if (!session) {
-            return yield* Effect.fail(new ToolFailure({ message: "Session not found" }))
+            return yield* Effect.fail(new ContinuityToolFailure({ message: "Session not found" }))
           }
 
           if (params.action === "lookup" && params.message_id) {
@@ -82,11 +85,11 @@ const makeLayer = Effect.gen(function* () {
         Effect.gen(function* () {
           const agent = yield* agents.get(ctx.agent)
           if (!agent) {
-            return yield* Effect.fail(new ToolFailure({ message: "Agent not found" }))
+            return yield* Effect.fail(new ContinuityToolFailure({ message: "Agent not found" }))
           }
           const session = yield* sessions.get(ctx.sessionID).pipe(Effect.orDie)
           if (!session) {
-            return yield* Effect.fail(new ToolFailure({ message: "Session not found" }))
+            return yield* Effect.fail(new ContinuityToolFailure({ message: "Session not found" }))
           }
           const compacted = yield* compaction.compact({
             sessionID: ctx.sessionID,

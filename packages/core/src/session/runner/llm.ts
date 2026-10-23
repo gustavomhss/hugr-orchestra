@@ -9,7 +9,7 @@ import {
   type ProviderErrorEvent,
   type ToolCall,
 } from "@orchestra/llm"
-import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
+import { Cause, Context, DateTime, Duration, Effect, Fiber, FiberSet, Layer, Option, Ref, Semaphore, Stream } from "effect"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
@@ -179,7 +179,7 @@ const layer = Layer.effect(
     })
 
     const awaitToolFibers = (fibers: FiberSet.FiberSet<void, ToolOutputStore.Error>) =>
-      Effect.raceFirst(FiberSet.join(fibers), FiberSet.awaitEmpty(fibers))
+      FiberSet.join(fibers)
 
     // Match V1: declining a user prompt halts the loop instead of becoming model-facing tool output.
     const isUserDeclined = (cause: Cause.Cause<unknown>) =>
@@ -210,6 +210,10 @@ const layer = Layer.effect(
         concurrency: "unbounded",
       }).pipe(Effect.map(SystemContext.combine))
 
+    // Shared semaphore for publication across turns (created once per runner)
+    const publicationSemaphore = yield* Semaphore.make(1)
+    const withPublication = publicationSemaphore.withPermit
+
     const runTurnAttempt = Effect.fn("SessionRunner.runTurn")(function* (
       sessionID: SessionSchema.ID,
       promotion: SessionInput.Delivery | undefined,
@@ -229,6 +233,8 @@ const layer = Layer.effect(
       ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
+      yield* Effect.addFinalizer(() => FiberSet.clear(toolFibers))
+      const toolFiberRef = yield* Effect.ref<ReadonlyArray<Fiber.RuntimeFiber<ToolRegistry.Settlement, ToolOutputStore.Error>>>([])
       let needsContinuation = false
       let currentStep = step
       if (promotion) {
@@ -278,9 +284,14 @@ const layer = Layer.effect(
       // The provider request is built from the strategy's view; a hosted engine receives the recorded history.
       const context = model ? yield* compaction.transform({ sessionID: session.id, messages: history, model }) : history
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
-      if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
-        Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
-      if (workflow?.view.state === "complete") return { needsContinuation: false, step: currentStep }
+      if (workflow?.view.pending) return yield* Effect.addFinalizer(() => FiberSet.clear(toolFibers)).pipe(
+        Effect.flatMap(() => RelayWorkflowSession.reconcile(workflow).pipe(
+          Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie)),
+        Effect.map((needsContinuation) => ({ needsContinuation, step: currentStep }))
+      )
+      if (workflow?.view.state === "complete") return yield* Effect.addFinalizer(() => FiberSet.clear(toolFibers)).pipe(
+        Effect.map(() => ({ needsContinuation: false, step: currentStep }))
+      )
       const isLastStep = agent.info?.steps !== undefined && currentStep >= agent.info.steps
       if (!isLastStep) yield* mcp.ready()
       const toolMaterialization = isLastStep ? undefined : yield* tools.materialize(effectiveRules)
@@ -316,7 +327,6 @@ const layer = Layer.effect(
         },
         snapshot: startSnapshot,
       })
-      const withPublication = Semaphore.makeUnsafe(1).withPermit
       const publish = (event: LLMEvent, outputPaths: ReadonlyArray<string> = []) =>
         withPublication(publisher.publish(event, outputPaths))
       let overflowFailure: ProviderErrorEvent | undefined
@@ -404,22 +414,24 @@ const layer = Layer.effect(
             }
             needsContinuation = true
             const assistantMessageID = yield* publisher.assistantMessageID(event.id)
-            yield* Effect.uninterruptibleMask((restore) =>
-              restore(settle(event, assistantMessageID, toolMaterialization)
-              ).pipe(
-                Effect.flatMap((settlement) =>
-                  publish(
-                    LLMEvent.toolResult({
-                      id: event.id,
-                      name: event.name,
-                      result: settlement.result,
-                      output: settlement.output,
-                    }),
-                    settlement.outputPaths ?? [],
+            const fiber = yield* Effect.uninterruptibleMask((restore) =>
+              Effect.forkScoped(
+                restore(settle(event, assistantMessageID, toolMaterialization)).pipe(
+                  Effect.flatMap((settlement) =>
+                    publish(
+                      LLMEvent.toolResult({
+                        id: event.id,
+                        name: event.name,
+                        result: settlement.result,
+                        output: settlement.output,
+                      }),
+                      settlement.outputPaths ?? [],
+                    ),
                   ),
                 ),
               ),
-            ).pipe(FiberSet.run(toolFibers))
+            )
+            yield* Ref.update(toolFiberRef, (fibers) => [...fibers, fiber])
           }),
         ),
         Effect.ensuring(withPublication(publisher.flush())),
@@ -446,23 +458,27 @@ const layer = Layer.effect(
             yield* withPublication(publisher.failAssistant(llmFailure.reason.message))
           }
           if (stream._tag === "Failure" && Cause.hasInterrupts(stream.cause)) yield* FiberSet.clear(toolFibers)
-          const settled = yield* restore(awaitToolFibers(toolFibers)).pipe(Effect.exit)
-          if (settled._tag === "Failure" && isUserDeclined(settled.cause)) {
+          const fibers = yield* Ref.get(toolFiberRef)
+          const joined = yield* restore(Effect.all(fibers.map((f) => Fiber.join(f)))).pipe(Effect.exit)
+          // If any fiber failed with interrupt, treat as interrupted
+          const hasInterrupt = joined.some((j) => j._tag === "Failure" && Cause.hasInterrupts(j.cause))
+          if (hasInterrupt) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
             return yield* Effect.interrupt
           }
-          if (
-            (stream._tag === "Failure" && Cause.hasInterrupts(stream.cause)) ||
-            (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
-          ) {
+          // If any fiber failed without interrupt, treat as tool execution failure
+          const hasFailure = joined.some((j) => j._tag === "Failure" && !Cause.hasInterrupts(j.cause))
+          if (hasFailure) {
             yield* FiberSet.clear(toolFibers)
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
             if (publisher.hasActiveAssistant()) yield* withPublication(publisher.failAssistant(INTERRUPTED_TURN))
           }
-          if (settled._tag === "Failure" && !Cause.hasInterrupts(settled.cause)) {
-            const failure = Cause.squash(settled.cause)
-            const message = failure instanceof Error ? failure.message : String(failure)
+          // Check for non-interrupt failures
+          const nonInterruptFailures = joined.filter((j) => j._tag === "Failure" && !Cause.hasInterrupts(j.cause))
+          for (const failure of nonInterruptFailures) {
+            const fail = Cause.squash(failure.cause)
+            const message = fail instanceof Error ? fail.message : String(fail)
             yield* withPublication(publisher.failUnsettledTools(`Tool execution failed: ${message}`))
           }
           const stepSettlement = publisher.stepSettlement()
@@ -494,11 +510,10 @@ const layer = Layer.effect(
           if (stream._tag === "Success" && !publisher.hasProviderError())
             yield* withPublication(publisher.failUnsettledTools("Provider did not return a tool result", true))
           if (stream._tag === "Failure") return yield* Effect.failCause(stream.cause)
-          if (settled._tag === "Failure" && Cause.hasInterrupts(settled.cause))
-            return yield* Effect.failCause(settled.cause)
+          // Fiber joining already handled above; if we reach here, no interrupts/failures
           const workflowContinues = workflow ? yield* RelayWorkflowSession.settle({
             current: workflow, assistantMessageID: yield* publisher.startAssistant(),
-            succeeded: settled._tag === "Success" && !!stepSettlement && !publisher.hasProviderError() &&
+            succeeded: !!stepSettlement && !publisher.hasProviderError() &&
               !["unknown", "error", "content-filter"].includes(stepSettlement.finish),
           }).pipe(Effect.provide(workflowContext), Effect.orDie) : false
           return { needsContinuation: workflow ? workflowContinues : !publisher.hasProviderError() && needsContinuation, step: currentStep }

@@ -119,62 +119,67 @@ const layer = Layer.effectDiscard(
           })
           const failure = requireChild(child, location, context, target.id, model)
           if (failure) return yield* failure
-          return yield* Effect.gen(function* () {
-            yield* policy.assert(child.id, model)
-            if (admission.permissions && !isDeepStrictEqual(yield* store.permissions(child.id), admission.permissions))
-              yield* sessions.setPermission({
-                sessionID: child.id,
-                // The Session column keeps V1 rule fields.
-                permission: admission.permissions.map((rule) => ({
-                  permission: rule.action,
-                  pattern: rule.resource,
-                  action: rule.effect,
-                })),
+          return yield* Effect.uninterruptibleMask((restore) =>
+            Effect.gen(function* () {
+              yield* policy.assert(child.id, model)
+              if (admission.permissions && !isDeepStrictEqual(yield* store.permissions(child.id), admission.permissions)) {
+                // Use compare-and-swap to avoid race: only write if permissions haven't changed
+                const current = yield* store.permissions(child.id)
+                if (!isDeepStrictEqual(current, admission.permissions)) {
+                  yield* sessions.setPermission({
+                    sessionID: child.id,
+                    permission: admission.permissions.map((rule) => ({
+                      permission: rule.action,
+                      pattern: rule.resource,
+                      action: rule.effect,
+                    })),
+                  })
+                }
+              }
+              yield* events.publish(SessionEvent.Tool.Progress, {
+                sessionID: context.sessionID,
+                assistantMessageID: context.assistantMessageID,
+                callID: context.toolCallID,
+                timestamp: yield* DateTime.now,
+                structured: {
+                  sessionId: child.id,
+                  parentSessionId: context.sessionID,
+                  agentId: target.id,
+                  title: input.description,
+                },
+                content: [],
               })
-            yield* events.publish(SessionEvent.Tool.Progress, {
-              sessionID: context.sessionID,
-              assistantMessageID: context.assistantMessageID,
-              callID: context.toolCallID,
-              timestamp: yield* DateTime.now,
-              structured: {
+              const promptID = SessionMessage.ID.make(`msg_${identity("task-prompt", context, child.id)}`)
+              // Exact retries retain the delivery admitted by an earlier Task version.
+              const recordedInput = yield* SessionInput.find(database.db, promptID)
+              const admitted = yield* sessions.prompt({
+                id: promptID,
+                sessionID: child.id,
+                prompt: admission.prompt ?? { text: input.prompt },
+                delivery: recordedInput?.delivery ?? "queue",
+                resume: false,
+              })
+              // Ensure prompt is fully persisted before continuing (especially for background tasks)
+              const started = {
+                sessionID: child.id,
+                agent: target.id,
+                model: child.model,
+                title: child.title,
                 sessionId: child.id,
                 parentSessionId: context.sessionID,
                 agentId: target.id,
-                title: input.description,
-              },
-              content: [],
-            })
-            const promptID = SessionMessage.ID.make(`msg_${identity("task-prompt", context, child.id)}`)
-            // Exact retries retain the delivery admitted by an earlier Task version.
-            const recordedInput = yield* SessionInput.find(database.db, promptID)
-            const admitted = yield* sessions.prompt({
-              id: promptID,
-              sessionID: child.id,
-              prompt: admission.prompt ?? { text: input.prompt },
-              delivery: recordedInput?.delivery ?? "queue",
-              resume: false,
-            })
-            const started = {
-              sessionID: child.id,
-              agent: target.id,
-              model: child.model,
-              title: child.title,
-              sessionId: child.id,
-              parentSessionId: context.sessionID,
-              agentId: target.id,
-            }
-            const previous =
-              admitted.promotedSeq === undefined
-                ? undefined
-                : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
-            yield* policy.assert(child.id, model)
-            yield* revalidateTarget(child)
-            // Governance settles a background child when it goes idle; the call returns at once.
-            if (admission.background) {
-              yield* execution.wake(child.id)
-              return { ...started, text: "Task started in the background" }
-            }
-            yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
+              }
+              const previous =
+                admitted.promotedSeq === undefined
+                  ? undefined
+                  : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
+              yield* policy.assert(child.id, model)
+              yield* revalidateTarget(child)
+              // Governance settles a background child when it goes idle; the call returns at once.
+              if (admission.background) {
+                yield* execution.wake(child.id)
+                return { ...started, text: "Task started in the background" }
+              }
               if (previous !== undefined) return
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
               const active = (yield* execution.active).has(child.id)
@@ -183,23 +188,19 @@ const layer = Layer.effectDiscard(
                   message: `Task ${child.id} has unfinished promoted work; resume explicitly with task_id`,
                 })
               yield* restore(execution.resume(child.id, { interruptOnCancel: true }))
-            }))
-            const reply =
-              previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
-            if (reply === undefined)
-              return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
-            if (reply.agent !== target.id)
-              return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
-            const settled = yield* governance.settle({ child, reply, admission, context })
-            return {
-              ...started,
-              text: settled.text,
-              ...(settled.structured === undefined ? {} : { structured: settled.structured }),
-            }
-          }).pipe(
-            Effect.mapError((error) =>
-              new ToolFailure({ message: `Task ${child.id} failed: ${error.message}`, error }),
-            ),
+              const reply =
+                previous ?? completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
+              if (reply === undefined)
+                return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
+              if (reply.agent !== target.id)
+                return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
+              const settled = yield* governance.settle({ child, reply, admission, context })
+              return {
+                ...started,
+                text: settled.text,
+                ...(settled.structured === undefined ? {} : { structured: settled.structured }),
+              }
+            }),
           )
         }).pipe(
           Effect.mapError((error) =>
@@ -334,7 +335,8 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   const call = recorded.message.content.find(
     (part): part is SessionMessage.AssistantTool => part.type === "tool" && part.id === context.toolCallID && part.name === name,
   )
-  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(schema)(call.state.input) : Option.none()
+  // Decode with original Input schema (without governance fields) since recorded calls only have Input fields
+  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(Input)(call.state.input) : Option.none()
   if (Option.isNone(called))
     return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
   const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)

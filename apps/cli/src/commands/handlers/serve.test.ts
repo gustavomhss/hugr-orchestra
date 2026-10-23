@@ -3,7 +3,8 @@ import { describe, expect, test } from "bun:test"
 describe("cli serve K1", () => {
   test("hosts function includes Maestro, Continuity, and Claude Code contributions", async () => {
     const { hosts } = await import("./serve")
-    const contributions = hosts()
+    const continuity = await import("../../../../../modules/continuity/src/v2")
+    const contributions = hosts(continuity.ContinuityHost)
     const ids = contributions.map((c) => c.id)
     expect(ids).toContain("maestro")
     expect(ids).toContain("continuity")

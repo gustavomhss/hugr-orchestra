@@ -82,7 +82,7 @@ const registryLayer = Layer.effect(
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
 
-const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
+    const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
       const registration =
         local.get(input.call.name)?.at(-1)?.registration ?? applications.entries().get(input.call.name)
       if (!registration)
@@ -136,22 +136,17 @@ const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInp
             ? ToolSafetyOutput.nudge(bounded.output, bounded.outputPaths, yield* resources.limits())
             : bounded.output
           const result = ToolOutput.toResultValue(projected)
-          
+
           // Generate Lean metadata for eligible tools
           const leanMetadata = yield* Effect.gen(function* () {
-            const modelRef = input.model
-            const model = modelRef ? yield* Effect.serviceOption(LeanV2.Service).pipe(
-              Effect.flatMap(Effect.orDie),
-              Effect.andThen(() => Effect.succeed(modelRef))
-            ) : Effect.succeed({ providerID: "", id: "" } as any)
-            
             // Only generate Lean metadata for eligible tools with non-empty output
             if (!LeanSummary.supported(input.call.name)) return undefined
             if (result.type === "error") return undefined
-            
+
             const beforeText = JSON.stringify(input.call.input)
             const afterText = projected.content?.map(c => c.type === "text" ? c.text : "").join("\n") ?? ""
-            
+            if (afterText.length === 0) return undefined
+
             const leanCtx = {
               owner: {
                 projectID: invocation.projectID ?? "global",
@@ -159,22 +154,22 @@ const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInp
                 sessionID: input.sessionID,
                 callID: input.call.id,
               },
-              model: modelRef ?? { providerID: "", id: "" },
+              model: input.model ?? { providerID: "", id: "" },
               orchestraProfile: undefined,
               producer: "tool" as const,
               eligible: LeanSummary.supported(input.call.name),
               tool: input.call.name,
               callID: input.call.id,
-              partID: "", // Would need to be passed from caller
+              partID: "",
               messageID: input.assistantMessageID,
               sessionID: input.sessionID,
               before: beforeText,
               after: afterText,
-              durationMs: 0, // Would need timing info
+              durationMs: 0,
               status: result.type === "error" ? "error" : "completed",
               exitCode: undefined,
             }
-            
+
             return LeanTelemetry.measure({
               owner: leanCtx.owner,
               model: leanCtx.model,
@@ -190,7 +185,7 @@ const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInp
               durationMs: leanCtx.durationMs,
             })
           })
-          
+
           if (leanMetadata) {
             // Add Lean metadata to the output
             const leanJson = JSON.stringify(leanMetadata)
@@ -206,7 +201,7 @@ const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInp
               outputPaths: bounded.outputPaths,
             }
           }
-          
+
           if (result.type === "error")
             return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
           return bounded.outputPaths.length > 0

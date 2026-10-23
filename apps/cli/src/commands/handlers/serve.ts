@@ -5,13 +5,11 @@ import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
 import { PermissionSaved } from "@orchestra/core/permission/saved"
 import { SessionV2 } from "@orchestra/core/session"
-import { Context, Layer, Option } from "effect"
-import * as Effect from "effect/Effect"
+import { Context, Effect, Layer, Option } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { createRoutes } from "@orchestra/server/routes"
 import { MaestroSeatsV2 } from "@orchestra/maestro/v2/seats"
-import { ContinuityV2, ContinuityHost } from "../../../../../modules/continuity/src/v2"
 import { ClaudeCodeHost } from "@orchestra/engine-claude-code/v2/host"
 import { AppDockTools } from "@orchestra/app-dock/application-tools"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
@@ -34,7 +32,8 @@ export default Runtime.handler(
         const daemon = yield* Daemon.Service
         // A desktop-owned child gets a per-launch password in env and never touches the daemon's password file.
         const password = process.env.ORCHESTRA_SERVER_PASSWORD || (yield* daemon.password())
-        const listening = yield* listen(input.hostname, input.port, password, hosts())
+        const continuity = yield* Effect.tryPromise(() => import("../../../../../modules/continuity/src/v2"))
+        const listening = yield* listen(input.hostname, input.port, password, hosts(continuity.ContinuityHost.contribution))
         const address = listening.address
         // Closing the server waits for every open connection, and the event stream never ends on its own. Scope
         // finalizers run in reverse, so this drops the connections before the server closes.
@@ -77,7 +76,7 @@ function bind(hostname: string, port: number, password: string, host: ReturnType
 }
 
 // The Dock tools exist only when the desktop that owns this child handed it a Dock channel.
-export function hosts() {
+export function hosts(continuityContribution: { id: string; locationNodes: unknown[] }) {
   const dock = AppDockSocket.fromEnv()
-  return [MaestroSeatsV2.contribution, ContinuityHost.contribution, ClaudeCodeHost.contribution, ...(dock ? [AppDockTools.contribution(dock)] : [])]
+  return [MaestroSeatsV2.contribution, continuityContribution, ClaudeCodeHost.contribution, ...(dock ? [AppDockTools.contribution(dock)] : [])]
 }

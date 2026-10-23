@@ -21,6 +21,12 @@ export interface MaestroAdmission extends TaskGovernance.Admission {
   readonly taskPriority?: "normal" | "high" | "low"
 }
 
+const GovernanceInput = Schema.Struct({
+  ...TaskGovernance.allowAll.input,
+  taskPriority: Schema.String.pipe(Schema.optional).annotate({ description: "Task priority: normal | high | low" }),
+  background: Schema.Boolean.pipe(Schema.optional).annotate({ description: "Run child in background" }),
+})
+
 export const node = makeLocationNode({
   service: TaskGovernance.Service,
   layer: Layer.effect(
@@ -68,7 +74,9 @@ export const node = makeLocationNode({
             : []),
         ]
 
-        const background = taskInput.background === true || taskInput.taskPriority === "low"
+        // Decode governance input safely
+        const decoded = Schema.decodeUnknownOption(GovernanceInput)(taskInput)
+        const background = decoded.background === true || decoded.taskPriority === "low"
 
         return {
           childID,
@@ -100,7 +108,9 @@ export const node = makeLocationNode({
         const text = (reply?.content ?? [])
           .flatMap((part) => (part.type === "text" ? [part.text] : []))
           .join("\n")
-        const receipt = (admission as MaestroAdmission).receipt as { reservationID?: string; writeRoots?: readonly string[] } | undefined
+        // Type guard: admission is MaestroAdmission when this governance is used
+        const maestroAdmission = admission as MaestroAdmission
+        const receipt = maestroAdmission.receipt
         const structured: Record<string, unknown> = {
           sessionID: child.id,
           agent: child.agent,
@@ -112,10 +122,7 @@ export const node = makeLocationNode({
       })
 
       return TaskGovernance.Service.of({
-        input: {
-          taskPriority: Schema.String.pipe(Schema.optional).annotate({ description: "Task priority: normal | high | low" }),
-          background: Schema.Boolean.pipe(Schema.optional).annotate({ description: "Run child in background" }),
-        },
+        input: GovernanceInput,
         admit,
         beforeTurn,
         settle,
