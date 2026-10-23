@@ -3,6 +3,7 @@ import { createEffect, createMemo } from "solid-js"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
+import { WALLPAPER_DEFAULT, WALLPAPER_DIM_MAX, wallpaperSrc } from "@/orchestra/wallpaper/catalog"
 
 export interface NotificationSettings {
   agent: boolean
@@ -40,6 +41,8 @@ export interface Settings {
     mono: string
     sans: string
     terminal: string
+    wallpaper: string
+    wallpaperDim: number
   }
   keybinds: Record<string, string>
   permissions: {
@@ -152,6 +155,8 @@ const defaultSettings: Settings = {
     mono: "",
     sans: "",
     terminal: "",
+    wallpaper: WALLPAPER_DEFAULT,
+    wallpaperDim: 0,
   },
   keybinds: {},
   permissions: {
@@ -226,6 +231,20 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       const root = document.documentElement
       root.style.setProperty("--font-family-mono", monoFontFamily(store.appearance?.mono))
       root.style.setProperty("--font-family-sans", sansFontFamily(store.appearance?.sans))
+    })
+
+    // The workspace photo and its darken layer; theme.css falls back to the default backdrop without these.
+    createEffect(() => {
+      if (typeof document === "undefined") return
+      const root = document.documentElement
+      const wallpaper = wallpaperSrc(store.appearance?.wallpaper ?? WALLPAPER_DEFAULT)
+      if (wallpaper) root.style.setProperty("--orchestra-wallpaper", `url("${wallpaper}")`)
+      else root.style.removeProperty("--orchestra-wallpaper")
+      const dim = Math.min(
+        WALLPAPER_DIM_MAX,
+        Math.max(0, store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim),
+      )
+      root.style.setProperty("--orchestra-wallpaper-dim", String(dim))
     })
 
     createEffect(() => {
@@ -324,6 +343,24 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
         terminalFont: withFallback(() => store.appearance?.terminal, defaultSettings.appearance.terminal),
         setTerminalFont(value: string) {
           setStore("appearance", "terminal", value.trim() ? value : "")
+        },
+        wallpaper: withFallback(() => {
+          const id = store.appearance?.wallpaper
+          return id && wallpaperSrc(id) ? id : defaultSettings.appearance.wallpaper
+        }, defaultSettings.appearance.wallpaper),
+        setWallpaper(value: string) {
+          setStore("appearance", "wallpaper", value)
+        },
+        wallpaperDim: withFallback(
+          () =>
+            Math.min(
+              WALLPAPER_DIM_MAX,
+              Math.max(0, store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim),
+            ),
+          defaultSettings.appearance.wallpaperDim,
+        ),
+        setWallpaperDim(value: number) {
+          setStore("appearance", "wallpaperDim", Math.min(WALLPAPER_DIM_MAX, Math.max(0, value)))
         },
       },
       keybinds: {

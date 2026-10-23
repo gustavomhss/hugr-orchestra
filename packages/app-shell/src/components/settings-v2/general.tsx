@@ -11,6 +11,7 @@ import { useSettings } from "@/context/settings"
 import { SettingsListV2 } from "./parts/list"
 import { SettingsRowV2 } from "./parts/row"
 import { PalettePicker } from "@/orchestra/palette/picker"
+import { WallpaperDim, WallpaperPicker } from "@/orchestra/wallpaper/picker"
 import {
   createAppearanceSettingsController,
   createPermissionScopeController,
@@ -147,6 +148,15 @@ const AppearanceSection: Component<{ controller: AppearanceSettingsController }>
             <div data-slot="settings-v2-row-description">{language.t("orchestra.settings.palette.description")}</div>
           </div>
           <PalettePicker label={language.t("orchestra.settings.palette.title")} />
+        </div>
+
+        <div data-component="settings-v2-row" data-slot="orchestra-wallpaper-row">
+          <div data-slot="settings-v2-row-copy">
+            <div data-slot="settings-v2-row-title">{language.t("orchestra.settings.wallpaper.title")}</div>
+            <div data-slot="settings-v2-row-description">{language.t("orchestra.settings.wallpaper.description")}</div>
+          </div>
+          <WallpaperPicker label={language.t("orchestra.settings.wallpaper.title")} />
+          <WallpaperDim />
         </div>
 
         <FontSetting kind="ui" fonts={props.controller.fonts} />

@@ -1,0 +1,80 @@
+/* The Settings background picker. */
+.orchestra-wallpapers {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 8px;
+}
+
+.orchestra-wallpapers [role="radio"] {
+  display: flex;
+  min-inline-size: 0;
+  flex-direction: column;
+  gap: 6px;
+  padding: 5px 5px 7px;
+  border: 1px solid var(--orchestra-border-muted);
+  border-radius: 9px;
+  background: transparent;
+  color: var(--orchestra-body);
+  font: inherit;
+  font-size: 12px;
+  line-height: 16px;
+  cursor: pointer;
+}
+
+.orchestra-wallpapers [role="radio"]:hover {
+  border-color: var(--orchestra-border);
+}
+
+.orchestra-wallpapers [role="radio"][aria-checked="true"] {
+  border-color: var(--orchestra-accent);
+}
+
+.orchestra-wallpapers [role="radio"]:focus-visible {
+  outline: 2px solid var(--orchestra-accent);
+  outline-offset: 2px;
+}
+
+.orchestra-wallpapers img {
+  inline-size: 100%;
+  aspect-ratio: 16 / 10;
+  border-radius: 5px;
+  object-fit: cover;
+  pointer-events: none;
+}
+
+.orchestra-wallpapers [data-slot="name"] {
+  overflow: hidden;
+  padding-inline: 2px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  text-align: start;
+}
+
+/* The picker spans its Settings row: title and description above, photos and the darken control below. */
+[data-component="settings-v2-row"][data-slot="orchestra-wallpaper-row"] {
+  flex-direction: column;
+  flex-wrap: nowrap;
+  align-items: stretch;
+  gap: 10px;
+}
+
+.orchestra-wallpaper-dim {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--orchestra-muted);
+  font-size: 12px;
+  line-height: 16px;
+}
+
+.orchestra-wallpaper-dim input {
+  flex: 1;
+  accent-color: var(--orchestra-accent);
+}
+
+.orchestra-wallpaper-dim [data-slot="value"] {
+  min-inline-size: 3ch;
+  color: var(--orchestra-body);
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
