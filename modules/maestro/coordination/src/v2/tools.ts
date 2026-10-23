@@ -279,7 +279,7 @@ const layer = Layer.effectDiscard(
           }),
       }),
 
-      maestro_record_review: Tool.make({
+      maestro_record_validation_review: Tool.make({
         description: "Record a Maestro review of validation. Maestro only.",
         input: Schema.Struct({
           validationRecordID: Schema.String,

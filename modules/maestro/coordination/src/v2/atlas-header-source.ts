@@ -1,7 +1,7 @@
 export * as AtlasHeaderSource from "./atlas-header-source"
 
 import { Effect, Layer, Scope } from "effect"
-import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
+import { SystemContextRegistry, SystemContext } from "@orchestra/core/system-context"
 import { AgentV2 } from "@orchestra/core/agent"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 
