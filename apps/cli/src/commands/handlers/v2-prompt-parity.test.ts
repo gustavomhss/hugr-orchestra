@@ -103,6 +103,7 @@ describe("V2 prompt-registry parity guard (static)", () => {
       "maestro_",
       "maestro_record_plan_revision",
       "maestro-governed",
+      "lean_recall",
     ]
 
     for (const ref of uniqueRefs) {

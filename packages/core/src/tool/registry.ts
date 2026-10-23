@@ -18,6 +18,11 @@ import { ToolSafety } from "../tool-safety"
 import { Location } from "../location"
 import { EventV2 } from "../event"
 import { ToolSafetyOutput } from "../tool-safety-output"
+import { LeanV2 } from "./lean-v2"
+import { LeanMetrics } from "@orchestra/schema/lean-metrics"
+import { LeanProcessor } from "./lean-processor"
+import { LeanTelemetry } from "./lean-telemetry"
+import { LeanSummary } from "./lean-summary"
 
 export type ExecuteInput = {
   readonly sessionID: SessionSchema.ID
@@ -77,7 +82,7 @@ const registryLayer = Layer.effect(
     type Registration = { readonly identity: object; readonly tool: AnyTool }
     const local = new Map<string, Array<{ readonly token: object; readonly registration: Registration }>>()
 
-    const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
+const settleWith = Effect.fn("ToolRegistry.settle")(function* (input: ExecuteInput, advertised?: object) {
       const registration =
         local.get(input.call.name)?.at(-1)?.registration ?? applications.entries().get(input.call.name)
       if (!registration)
@@ -119,8 +124,8 @@ const registryLayer = Layer.effect(
             Effect.map((output) => ({ output })),
             Effect.catchTag("LLM.ToolFailure", (failure) => failure.error instanceof ToolSafety.Denied
               ? Effect.fail(failure.error) : safety.inspect(failure).pipe(
-                Effect.as({ result: { type: "error" as const, value: failure.message } }),
-              ),
+                  Effect.as({ result: { type: "error" as const, value: failure.message } }),
+                ),
             ),
           )
           if ("result" in pending) return pending
@@ -131,6 +136,77 @@ const registryLayer = Layer.effect(
             ? ToolSafetyOutput.nudge(bounded.output, bounded.outputPaths, yield* resources.limits())
             : bounded.output
           const result = ToolOutput.toResultValue(projected)
+          
+          // Generate Lean metadata for eligible tools
+          const leanMetadata = yield* Effect.gen(function* () {
+            const modelRef = input.model
+            const model = modelRef ? yield* Effect.serviceOption(LeanV2.Service).pipe(
+              Effect.flatMap(Effect.orDie),
+              Effect.andThen(() => Effect.succeed(modelRef))
+            ) : Effect.succeed({ providerID: "", id: "" } as any)
+            
+            // Only generate Lean metadata for eligible tools with non-empty output
+            if (!LeanSummary.supported(input.call.name)) return undefined
+            if (result.type === "error") return undefined
+            
+            const beforeText = JSON.stringify(input.call.input)
+            const afterText = projected.content?.map(c => c.type === "text" ? c.text : "").join("\n") ?? ""
+            
+            const leanCtx = {
+              owner: {
+                projectID: invocation.projectID ?? "global",
+                directory: invocation.directory ?? "",
+                sessionID: input.sessionID,
+                callID: input.call.id,
+              },
+              model: modelRef ?? { providerID: "", id: "" },
+              orchestraProfile: undefined,
+              producer: "tool" as const,
+              eligible: LeanSummary.supported(input.call.name),
+              tool: input.call.name,
+              callID: input.call.id,
+              partID: "", // Would need to be passed from caller
+              messageID: input.assistantMessageID,
+              sessionID: input.sessionID,
+              before: beforeText,
+              after: afterText,
+              durationMs: 0, // Would need timing info
+              status: result.type === "error" ? "error" : "completed",
+              exitCode: undefined,
+            }
+            
+            return LeanTelemetry.measure({
+              owner: leanCtx.owner,
+              model: leanCtx.model,
+              orchestraProfile: leanCtx.orchestraProfile,
+              producer: leanCtx.producer,
+              eligible: leanCtx.eligible,
+              status: leanCtx.status,
+              reason: leanCtx.eligible ? "summarized" : "below-threshold",
+              filterProfile: undefined,
+              itemID: LeanProcessor.identify(beforeText),
+              before: beforeText,
+              after: afterText,
+              durationMs: leanCtx.durationMs,
+            })
+          })
+          
+          if (leanMetadata) {
+            // Add Lean metadata to the output
+            const leanJson = JSON.stringify(leanMetadata)
+            return {
+              result,
+              output: projected ? {
+                ...projected,
+                content: projected.content ? [
+                  ...projected.content,
+                  { type: "lean_metadata" as const, lean: leanJson }
+                ] : undefined,
+              } : undefined,
+              outputPaths: bounded.outputPaths,
+            }
+          }
+          
           if (result.type === "error")
             return bounded.outputPaths.length > 0 ? { result, outputPaths: bounded.outputPaths } : { result }
           return bounded.outputPaths.length > 0
