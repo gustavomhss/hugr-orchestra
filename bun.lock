@@ -39,6 +39,7 @@
         "@opentui/solid": "catalog:",
         "@orchestra/app-dock": "workspace:*",
         "@orchestra/client": "workspace:*",
+        "@orchestra/continuity": "workspace:*",
         "@orchestra/core": "workspace:*",
         "@orchestra/engine-claude-code": "workspace:*",
         "@orchestra/maestro": "workspace:*",
@@ -340,6 +341,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@orchestra/core": "workspace:*",
+        "@orchestra/llm": "workspace:*",
         "effect": "catalog:",
         "jsonc-parser": "3.3.1",
       },

@@ -45,7 +45,7 @@ const layer = Layer.effect(
             `Here is some useful information about the environment you are running in:`,
             `<env>`,
             `  Working directory: ${ctx.directory}`,
-            `  Workspace root folder: ${ctx.worktree}`,
+            `  Workspace root folder: ${ctx.project.vcs === "git" ? ctx.worktree : `${ctx.directory} (no git repository)`}`,
             `  Is directory a git repo: ${ctx.project.vcs === "git" ? "yes" : "no"}`,
             `  Platform: ${process.platform}`,
             `  Today's date: ${new Date().toDateString()}`,

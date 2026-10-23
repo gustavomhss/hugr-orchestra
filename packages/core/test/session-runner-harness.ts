@@ -19,6 +19,7 @@ import { QuestionV2 } from "@orchestra/core/question"
 import { ReferenceGuidance } from "@orchestra/core/reference/guidance"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionCompaction } from "@orchestra/core/session/compaction"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { SessionProjector } from "@orchestra/core/session/projector"
@@ -35,6 +36,7 @@ import { SystemContext } from "@orchestra/core/system-context"
 import { SystemContextRegistry } from "@orchestra/core/system-context/registry"
 import { ApplicationTools } from "@orchestra/core/tool/application-tools"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
+import { TaskGovernance } from "@orchestra/core/tool/task-governance"
 import { Tool } from "@orchestra/core/tool/tool"
 import { Effect, Layer } from "effect"
 import { testEffect } from "./lib/effect"
@@ -72,10 +74,18 @@ export function make(input: {
   permissions?: Layer.Layer<PermissionV2.Service>
   /** Replaces the compaction-only config, for example to configure MCP servers. */
   config?: Layer.Layer<Config.Service>
+  /** Replaces the default compaction strategy. */
+  compaction?: Layer.Layer<SessionCompaction.Service>
+  /** Replaces the allow-all Task governance. */
+  governance?: Layer.Layer<TaskGovernance.Service>
 }) {
   const permissions = input.permissions ?? PermissionFixture.normalLayer
   const config = input.config ?? defaultConfig
-  const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
+  const hosts: LayerNode.Replacements = [
+    ...(input.hosts ? [[ExecutionHost.node, input.hosts] as const] : []),
+    ...(input.compaction ? [[SessionCompaction.node, input.compaction] as const] : []),
+    ...(input.governance ? [[TaskGovernance.node, input.governance] as const] : []),
+  ]
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [
     [Snapshot.node, Snapshot.noopLayer],

@@ -82,6 +82,11 @@ it.instance("native identity survives rename; tools isolate owners and reconcile
     expect(AtlasMemory.supports({ ...archie, native: undefined })).toBe(false)
     expect(AtlasMemory.supports({ ...jimmy, native: false })).toBe(false)
     expect(AtlasMemory.supports({ id: "atlas", native: true })).toBe(false)
+    expect(AtlasMemory.contextReader({ id: "maestro", native: true })).toBe("maestro")
+    expect(AtlasMemory.contextReader({ id: "maestro", native: false })).toBeUndefined()
+    expect(AtlasMemory.contextReader({ id: "maestro", native: undefined })).toBeUndefined()
+    expect(AtlasMemory.contextReader({ id: "archie", native: true })).toBe("archie")
+    expect(AtlasMemory.contextReader(undefined)).toBeUndefined()
     const emit = yield* Tool.init(yield* AtlasMemoryEmitTool)
     const recall = yield* Tool.init(yield* AtlasMemoryRecallTool)
     const refs = yield* Effect.forEach(["backend", "jimmy", "archie"] as const, Effect.fnUntraced(function* (member) {

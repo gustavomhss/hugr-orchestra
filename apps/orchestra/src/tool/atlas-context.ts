@@ -64,7 +64,7 @@ export const AtlasContextTool = Tool.define("atlas_context", Effect.gen(function
     execute: (input: Schema.Schema.Type<typeof Parameters>, ctx: Tool.Context): Effect.Effect<Tool.ExecuteResult<{ truncated?: boolean; atlasContext: AtlasContextReceipt; researchSource?: Research.SourceReceipt }>> => Effect.gen(function* () {
       if (!ctx.agentID || !ctx.callID || !ctx.messageID) return unavailable("missing-native-call-identity")
       const agent = yield* agents.get(ctx.agentID)
-      const member = AtlasMemory.owner(agent)
+      const member = AtlasMemory.contextReader(agent)
       if (!member || agent.id !== ctx.agentID) return unavailable("native-atlas-owner-required")
       if (input.action === "anchor" && member !== "archie") return unavailable("native-archie-required")
       yield* ctx.ask({ permission: "atlas_context", patterns: [member], always: [member], metadata: {} })

@@ -1,6 +1,6 @@
 export * as SessionRunner from "./index"
 
-import type { LLMError } from "@orchestra/llm"
+import type { LLMError, ToolFailure } from "@orchestra/llm"
 import { Context, Effect } from "effect"
 import { SessionSchema } from "../schema"
 import type { ContextSnapshotDecodeError, MessageDecodeError } from "../error"
@@ -17,6 +17,8 @@ export type RunError =
   | SystemContext.InitializationBlocked
   | ToolOutputStore.Error
   | SessionSubagentModels.Error
+  /** `TaskGovernance.beforeTurn` refused the provider turn. */
+  | ToolFailure
 
 /** Error message recorded on an assistant turn the runner stopped because its drain was interrupted. */
 export const INTERRUPTED_TURN = "Provider turn interrupted"

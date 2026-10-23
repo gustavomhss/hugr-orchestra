@@ -5,6 +5,8 @@ description: Run the governed approval chain from preconditions to verified disp
 
 # Maestro Governed
 
+> **Status (2026-10-22):** V1 — pendente no V2 (ORC-001 in `ORCHESTRA-INTEGRATION-ISSUES.md`). The `maestro_*` tools named below are not yet registered on the V2 serve. Original text kept as history.
+
 ## Trigger and rationale
 
 Use only when the owner explicitly asks for governed or auditable work; normal work never needs it. The chain exists so
@@ -17,7 +19,7 @@ one. Inside the chain, call only the governed tools in order.
 
 Check these before admission. Any failure is a HOLD to report, never a reason to improvise.
 
-1. Atlas is configured: `maestro_catalog_context` answers without a HOLD.
+1. Atlas is configured: `maestro_catalog_context` answers without a HOLD. **[V1 — pendente no V2, ORC-007]** Maestro also reads Atlas through `atlas_context` (`catalog`, `unit`) by owner decision; V2 has no Maestro tool yet.
 2. Clean tree: `git status --porcelain --untracked-files=all` prints nothing. Untracked files count.
 3. Reviewable delta: the plan-stage cold review (`lucy`) judges the plan, its workflow and the committed diff from
    `merge-base(HEAD, <primary remote>/HEAD)` to `HEAD`, never your prose. It must be non-empty, and
@@ -30,7 +32,7 @@ Check these before admission. Any failure is a HOLD to report, never a reason to
 1. In the same turn as the owner's request, load `frame-request` and build the `admit-request-v1` assessment.
 2. `maestro_record_admission` with `methodVersion: "admit-request-v1"`. `READY_TO_DRAFT` gives the
    `admissionMessageID`; `ORIENT` means answer instead; `CLARIFY` means ask its one question and stop.
-3. `maestro_catalog_context`. Note `projectID`. Choose territories by exact name and units with complete briefings:
+3. `maestro_catalog_context`. **[V1 — pendente no V2, ORC-007]** Note `projectID`. Choose territories by exact name and units with complete briefings:
    `truncated: false`, empty `pullReachable`, `advisoryDropped: 0`, `tokenEstimate` at most 1500, every drill unit
    present. No covering unit means HOLD; never take a nearest match.
 4. `maestro_record_plan_revision`. `goal` and `reviewRequirement` are single `{value, source}` fields; `acceptance`, `scope` (exact territory names), `constraints`, `assumptions` and `risks` are arrays of them; `units` is an array of plain unit-ID strings. `source` is `stakeholder` (the owner said it), `orientation` (observed), `maestro` (a Maestro-authored proposal) or `upstream` (authored by the `archie` Task you name in `upstream`, which the host verifies). Never relabel content to fit the schema. To run a published workflow, also pass `workflow` with its id from `maestro_workflows`. Never upgrade inference to stakeholder. Any changed field is a new revision.

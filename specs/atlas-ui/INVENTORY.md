@@ -1,5 +1,7 @@
 # Atlas UI — inventory of what the code exposes
 
+> **Status (2026-10-22):** V1 — pendente no V2 (ver ORC-001 em `ORCHESTRA-INTEGRATION-ISSUES.md`). As afirmações marcadas abaixo descrevem o V1. Decisão do owner: o Maestro passa a ler o Atlas por `atlas_context` (`catalog` e `unit`), sem `anchor`; `atlas_memory_*` continua só com os seats. O texto original foi mantido como histórico.
+
 2026-10-18. Every field below exists in code; the UI may show these and nothing else. Paths are relative to `modules/atlas/packages/` (Atlas) or `packages/orchestra/src/` (Orchestra). "Real store" = the standalone Atlas repository's `.atlas/` used by the mock.
 
 ## 1. Envelope and exit codes (every command)
@@ -75,6 +77,6 @@
 - **Memory write outcomes:** `admitted` (optionally `reconciled`), `refused`, `unavailable`, `uncertain` (`orch/maestro/atlas-memory.ts:41`, `orch/tool/atlas-memory.ts:115`). Writes need a secret scanner (gitleaks from the backend toolkit, else PATH); none ⇒ `scanner-unavailable`.
 - **Memory placement:** one `.atlas/memory.jsonl` per execution worktree, shared by all members, committed with the code. Cap 500 words, counted over every rule the owner ever wrote. A seat recalls only its own task/PR by id.
 - **Header degraded forms:** `degraded="rules-partial"` plus a warning line; `degraded="unavailable"` replaces the header (`orch/maestro/atlas-header.ts:46,61`). Only constitution and taste can be seeded; nothing writes mission, terrain, ontology or orientation.
-- **Seat tools:** `atlasMemory: true` grants `atlas_context`, `atlas_memory_recall`, `atlas_memory_emit` (backend, jimmy, archie); Archie also `anchor`; Maestro `maestro_catalog_context` (`orch/maestro/roster.ts:107`).
+- **Seat tools:** `atlasMemory: true` grants `atlas_context`, `atlas_memory_recall`, `atlas_memory_emit` (backend, jimmy, archie); Archie also `anchor`; Maestro `maestro_catalog_context` (`orch/maestro/roster.ts:107`). **[V1 — pendente no V2, ORC-007]** Decisão do owner (2026-10-22): o Maestro também recebe `atlas_context` `catalog` e `unit` (sem `anchor`).
 - **Republish preconditions** (`modules/atlas/scripts/materialize-own-snapshot.mjs`): input not under `.atlas`, `sourceRevision` an ancestor of HEAD, every anchor blob equal at the revision and now; writes `OWN-SNAPSHOT.json`, `.orchestra/skills/own/**`, `OWN-COVERAGE.json`. The script calls `exportOwnSnapshot`; nothing builds the reviewed snapshot JSON from the live store, and nothing in Orchestra or the CLI runs it.
 - **Archie anchors:** up to 8 units / 128 KiB per reference; Relay checks body hashes before a step (`anchor-source-drift`).

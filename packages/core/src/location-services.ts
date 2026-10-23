@@ -31,6 +31,7 @@ import { Reference } from "./reference"
 import { ReferenceGuidance } from "./reference/guidance"
 import { Relay } from "./relay"
 import { RelayHookRecovery } from "./relay-hook-recovery"
+import { SessionCompaction } from "./session/compaction"
 import * as SessionRunnerLLM from "./session/runner/llm"
 import { SessionRunnerModel } from "./session/runner/model"
 import { SessionTodo } from "./session/todo"
@@ -42,6 +43,7 @@ import { SystemContextRegistry } from "./system-context/registry"
 import { BuiltInTools } from "./tool/builtins"
 import { ReadToolFileSystem } from "./tool/read-filesystem"
 import { ToolRegistry } from "./tool/registry"
+import { TaskGovernance } from "./tool/task-governance"
 import { ToolOutputStore } from "./tool-output-store"
 
 export { LocationServiceMap } from "./location-service-map"
@@ -89,6 +91,8 @@ export const locationServices = LayerNode.group([
   Snapshot.node,
   Relay.node,
   RelayHookRecovery.node,
+  TaskGovernance.node,
+  SessionCompaction.node,
   SessionRunnerLLM.node,
 ])
 

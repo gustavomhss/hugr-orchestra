@@ -119,7 +119,10 @@ export const before = Effect.fn("ToolSafetyGit.before")(function* (input: {
     }
     const operation = tokens.shift()
     if (operation !== "add" && operation !== "commit") {
-      if (tokens.includes("add") || tokens.includes("commit"))
+      // With only `-C` before it, the first token is the subcommand: `git worktree add` or `git log --grep commit`
+      // stage nothing. Any other global option can take a value or redirect hooks, config or the index, so a later
+      // add/commit word stays unbound.
+      if (operation?.startsWith("-") && (tokens.includes("add") || tokens.includes("commit")))
         return yield* new ToolSafety.Denied({ reason: "git-hygiene-global-option-unbound" })
       if (segment !== parsed.at(-1) && !["status", "diff", "log", "show", "ls-files", "rev-parse"].includes(operation ?? ""))
         return yield* new ToolSafety.Denied({ reason: "git-hygiene-preceding-command-unbound" })

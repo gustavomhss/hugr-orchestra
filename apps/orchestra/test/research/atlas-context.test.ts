@@ -44,7 +44,7 @@ const it = testEffect(TestAppNodeBuilder.build(LayerNode.group([
   ToolRegistry.node,
 ]), [[RuntimeFlags.node, RuntimeFlags.layer({ pure: true, disableDefaultPlugins: true, disableExternalSkills: true })]]))
 
-const fixture = Effect.fn("AtlasDiscoveryTest.fixture")(function* (count = 2, member: AtlasMemory.Owner = "jimmy", maxBytes?: number) {
+const fixture = Effect.fn("AtlasDiscoveryTest.fixture")(function* (count = 2, member: AtlasMemory.Owner | "maestro" = "jimmy", maxBytes?: number) {
   const fs = yield* FileSystem.FileSystem
   const git = yield* Git.Service
   const config = yield* Config.Service
@@ -292,7 +292,7 @@ it.instance("closed branches reject authority args; missing/foreign member never
       { ...anchor, units: Array.from({ length: 9 }, (_, index) => `unit-${index}`) },
       { ...anchor, units: ["packages/unit-0", "packages/unit-0"] },
     ].map((input) => expect(decode(input)._tag).toBe("None"))
-    yield* Effect.forEach([undefined, "maestro", "unknown", "impostor", "context-renamed", LEGACY_BACKEND_ID], (agentID) =>
+    yield* Effect.forEach([undefined, "unknown", "impostor", "context-renamed", LEGACY_BACKEND_ID], (agentID) =>
       Effect.forEach([{ action: "catalog" }, { action: "unit", unit: "packages/unit-0" },
         { action: "anchor", target: { kind: "assignment", id: "brief-1" }, units: ["packages/unit-0"] }] as const, Effect.fnUntraced(function* (input) {
         const result = yield* tool.execute(input, { ...data.ctx, agentID, agent: "archie" })
@@ -305,6 +305,25 @@ it.instance("closed branches reject authority args; missing/foreign member never
       expect(JSON.parse(result.output)).toEqual({ status: "unavailable", reason: "missing-native-call-identity" })
     }))
     expect(data.asks).toEqual([])
+  }), { git: true },
+)
+
+it.instance("native Maestro reads catalog and unit context but cannot anchor as Archie", () =>
+  Effect.gen(function* () {
+    const data = yield* fixture(2, "maestro")
+    const agents = yield* Agent.Service
+    expect(yield* agents.get("maestro")).toMatchObject({ id: "maestro", native: true })
+    const tool = yield* Tool.init(yield* AtlasContextTool)
+    const catalog = yield* tool.execute({ action: "catalog" }, { ...data.ctx, agent: "maestro" })
+    expect(JSON.parse(catalog.output).units.map((unit: { unit: string }) => unit.unit)).toEqual(["packages/unit-0", "packages/unit-1"])
+    const unit = yield* tool.execute({ action: "unit", unit: "packages/unit-0" }, { ...data.ctx, agent: "maestro" })
+    expect(unit.metadata.atlasContext).toMatchObject({ unit: "packages/unit-0", coverage: { state: "complete" } })
+    const anchored = yield* tool.execute({ action: "anchor", target: { kind: "assignment", id: "brief-1" },
+      units: ["packages/unit-0"] }, { ...data.ctx, agent: "maestro" })
+    expect(JSON.parse(anchored.output)).toEqual({ status: "unavailable", reason: "native-archie-required" })
+    expect(data.asks).toEqual(Array.from({ length: 2 }, () => ({
+      permission: "atlas_context", patterns: ["maestro"], always: ["maestro"], metadata: {},
+    })))
   }), { git: true },
 )
 

@@ -1,9 +1,11 @@
 export * as SessionCompaction from "./compaction"
 
-import { LLM, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
-import { DateTime, Effect, Stream } from "effect"
-import type { Config } from "../config"
-import type { EventV2 } from "../event"
+import { LLM, LLMClient, LLMError, LLMEvent, Message, type LLMRequest, type Model } from "@orchestra/llm"
+import { Context, DateTime, Effect, Layer, Stream } from "effect"
+import { Config } from "../config"
+import { makeLocationNode } from "../effect/app-node"
+import { llmClient } from "../effect/app-node-platform"
+import { EventV2 } from "../event"
 import { SessionEvent } from "./event"
 import { SessionMessage } from "./message"
 import { SessionSchema } from "./schema"
@@ -56,7 +58,7 @@ When combining:
 - If a blocker has been resolved, update the summary to reflect that while keeping any details still needed to continue the work.
 - Update "Objective" and "Next Move" to reflect the current work state.`
 
-type Entry = {
+export type Entry = {
   readonly seq: number
   readonly message: SessionMessage.Message
 }
@@ -76,7 +78,7 @@ type Dependencies = {
   readonly subagentModels: SessionSubagentModels.Interface
 }
 
-type Input = {
+export type Input = {
   readonly sessionID: SessionSchema.ID
   readonly entries: readonly Entry[]
   readonly model: Model
@@ -179,7 +181,7 @@ export const buildPrompt = (input: { readonly previousSummary?: string; readonly
 
 export const make = (dependencies: Dependencies) => {
   const config = settings(dependencies.config)
-  const summarize = Effect.fnUntraced(function* (input: Input, reason: "auto" | "manual") {
+  const summarize = Effect.fn("SessionCompaction.summarize")(function* (input: Input, reason: "auto" | "manual") {
     const context = input.model.route.defaults.limits?.context
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
     const previousSummary = input.entries.find((entry) => entry.message.type === "compaction")?.message
@@ -224,7 +226,11 @@ export const make = (dependencies: Dependencies) => {
           return Effect.void
         }),
         Effect.as(true),
-        Effect.catchTag("LLM.Error", () => Effect.succeed(false)),
+        // Catch all LLM-related errors broadly (LLMError and its subclasses)
+        Effect.catchAll((error) => {
+          failed = true
+          return Effect.succeed(false)
+        }),
       )
     const summary = chunks.join("")
     if (!summarized || failed || !summary.trim()) return false
@@ -250,8 +256,10 @@ export const make = (dependencies: Dependencies) => {
     const context = input.model.route.defaults.limits?.context
     if (context === undefined || context <= 0) return false
     const output = input.request.generation?.maxTokens ?? input.model.route.defaults.limits?.output ?? 0
+    // Estimate tokens on entries directly (before request construction) to avoid circular estimation
+    const entriesEstimate = estimate({ system: input.request.system, messages: input.entries.map((e) => e.message), tools: input.request.tools })
     if (
-      estimate({ system: input.request.system, messages: input.request.messages, tools: input.request.tools }) <=
+      entriesEstimate <=
       context - Math.max(output, config.buffer)
     )
       return false
@@ -263,3 +271,51 @@ export const make = (dependencies: Dependencies) => {
     compactAfterOverflow,
   }
 }
+
+/**
+ * The Location's compaction strategy. The runner calls it instead of `make`; a product replaces `node` through
+ * `Host.Contribution.replacements` to change how a Session's context is kept within the model's window.
+ */
+export interface Interface {
+  /** Compacts on request, whatever the context size; false when there is nothing to summarize or the summary failed. */
+  readonly compact: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  /** Compacts before a provider turn whose request would not fit; true when the turn must be rebuilt. */
+  readonly compactIfNeeded: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  /** Compacts after the provider reported a context overflow; true when the turn may be retried once. */
+  readonly compactAfterOverflow: (input: Input) => Effect.Effect<boolean, SessionSubagentModels.Error>
+  /** Non-destructive view of the history a request is built from. The default returns it unchanged. */
+  readonly transform: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly messages: ReadonlyArray<SessionMessage.Message>
+    readonly model: Model
+  }) => Effect.Effect<ReadonlyArray<SessionMessage.Message>>
+  /** Runs after a step has ended. The default does nothing. */
+  readonly afterStep: (input: {
+    readonly sessionID: SessionSchema.ID
+    readonly tokens: SessionEvent.Step.Ended["data"]["tokens"]
+    readonly model: Model
+  }) => Effect.Effect<void>
+}
+
+export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionCompaction") {}
+
+const layer = Layer.effect(
+  Service,
+  Effect.gen(function* () {
+    const events = yield* EventV2.Service
+    const llm = yield* LLMClient.Service
+    const subagentModels = yield* SessionSubagentModels.Service
+    const config = yield* Config.Service
+    return Service.of({
+      ...make({ events, llm, subagentModels, config: yield* config.entries() }),
+      transform: (input) => Effect.succeed(input.messages),
+      afterStep: () => Effect.void,
+    })
+  }),
+)
+
+export const node = makeLocationNode({
+  service: Service,
+  layer,
+  deps: [EventV2.node, llmClient, SessionSubagentModels.node, Config.node],
+})
