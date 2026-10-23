@@ -16,8 +16,8 @@ const ParametersRecall = Schema.Struct({
   message_id: Schema.String.pipe(Schema.optional),
   part_id: Schema.String.pipe(Schema.optional),
   query: Schema.String.pipe(Schema.optional),
-  limit: Schema.Int.pipe(Schema.optional).pipe(Schema.default(10)),
-  offset: Schema.Int.pipe(Schema.optional).pipe(Schema.default(0)),
+  limit: Schema.Int.pipe(Schema.optional),
+  offset: Schema.Int.pipe(Schema.optional),
 })
 
 const ParametersCompact = Schema.Struct({})
@@ -112,8 +112,8 @@ const makeLayer = Effect.gen(function* () {
         message_id: Schema.String.pipe(Schema.optional),
         part_id: Schema.String.pipe(Schema.optional),
         query: Schema.String.pipe(Schema.optional),
-        limit: Schema.Int.pipe(Schema.optional).pipe(Schema.default(10)),
-        offset: Schema.Int.pipe(Schema.optional).pipe(Schema.default(0)),
+        limit: Schema.Int.pipe(Schema.optional),
+        offset: Schema.Int.pipe(Schema.optional),
       }),
       output: Schema.Struct({
         matches: Schema.Array(Schema.Struct({
