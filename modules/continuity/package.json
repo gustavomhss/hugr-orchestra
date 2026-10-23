@@ -11,13 +11,15 @@
     "./dry-transport": "./src/dry-transport.ts",
     "./masking": "./src/masking.ts",
     "./raw-payload": "./src/raw-payload.ts",
-    "./request-source": "./src/request-source.ts"
+    "./request-source": "./src/request-source.ts",
+    "./v2": "./src/v2/index.ts"
   },
   "scripts": {
     "typecheck": "tsgo --noEmit"
   },
   "dependencies": {
     "@orchestra/core": "workspace:*",
+    "@orchestra/llm": "workspace:*",
     "effect": "catalog:",
     "jsonc-parser": "3.3.1"
   },
