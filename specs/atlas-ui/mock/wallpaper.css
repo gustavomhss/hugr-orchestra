@@ -1,0 +1,191 @@
+/* Wallpaper theme preview: the approved Atlas screen with a photo background and a per-photo material.
+   The page itself is the Atlas mock (index.html); this file only re-paints the backdrop, the shell glass
+   and the rails from the vars that wallpaper.js writes, so what you see is the real screen at real size. */
+
+:root {
+  --wp-photo: url("../../../packages/app-shell/public/orchestra/mtn-src.jpg");
+  --wp-veil: linear-gradient(rgba(9, 14, 20, 0), rgba(9, 14, 20, 0));
+  --wp-dim: 0;
+  --wp-glass: rgba(13, 23, 33, 0.77);
+  --wp-side: rgba(15, 25, 36, 0.42);
+  --wp-filter: blur(24px) brightness(1) saturate(1);
+}
+
+html[data-color-scheme] body[data-new-layout] {
+  background-color: #0c1520;
+  background-image:
+    linear-gradient(rgba(8, 12, 17, var(--wp-dim)), rgba(8, 12, 17, var(--wp-dim))),
+    var(--wp-veil),
+    var(--wp-photo);
+  background-size: cover, cover, cover;
+  background-position: center, center, center;
+  background-repeat: no-repeat;
+  background-attachment: fixed, fixed, fixed;
+}
+
+html[data-color-scheme] body[data-new-layout] .shell {
+  background: var(--wp-glass);
+  -webkit-backdrop-filter: var(--wp-filter);
+  backdrop-filter: var(--wp-filter);
+}
+
+html[data-color-scheme] body[data-new-layout] .sidebar,
+html[data-color-scheme] body[data-new-layout] .atlas-context {
+  background: var(--wp-side);
+}
+
+html[data-color-scheme="light"] body[data-new-layout] {
+  background-color: #b9c8d3;
+}
+
+/* The panel that drives the preview. */
+.wp-panel {
+  position: fixed;
+  z-index: 60;
+  inset-block-start: 44px;
+  inset-inline-end: 22px;
+  inline-size: 268px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px;
+  border: 1px solid rgba(176, 198, 219, 0.2);
+  border-radius: 10px;
+  background: rgba(9, 15, 23, 0.92);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: #c4cfda;
+  font-size: 11px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.5);
+}
+
+.wp-panel h3 {
+  margin: 0;
+  font-size: 9px;
+  letter-spacing: 0.1em;
+  color: #c9b78f;
+  font-weight: 400;
+}
+
+.wp-thumbs {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 5px;
+}
+
+.wp-thumbs button {
+  position: relative;
+  padding: 0;
+  border: 1px solid rgba(176, 198, 219, 0.18);
+  border-radius: 6px;
+  overflow: hidden;
+  background: #0b1219;
+  cursor: pointer;
+  aspect-ratio: 16 / 10;
+}
+
+.wp-thumbs button img {
+  display: block;
+  inline-size: 100%;
+  block-size: 100%;
+  object-fit: cover;
+}
+
+.wp-thumbs button[aria-pressed="true"] {
+  border-color: #65aef2;
+  box-shadow: 0 0 0 1px #65aef2;
+}
+
+.wp-variants {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.wp-variants button {
+  padding: 5px 4px;
+  border: 1px solid rgba(176, 198, 219, 0.18);
+  border-radius: 6px;
+  background: #0b1219;
+  color: #9aacbe;
+  font-size: 10px;
+  cursor: pointer;
+}
+
+.wp-variants button[aria-pressed="true"] {
+  border-color: #65aef2;
+  color: #d5e7f8;
+  background: rgba(79, 117, 154, 0.24);
+}
+
+.wp-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wp-row input[type="range"] {
+  flex: 1;
+  accent-color: #65aef2;
+}
+
+.wp-tokens {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 2px 8px;
+  color: #8fa3b6;
+  font-size: 10px;
+  font-family: "JetBrainsMono Nerd Font Mono", ui-monospace, monospace;
+}
+
+.wp-tokens b {
+  color: #d5e7f8;
+  font-weight: 400;
+}
+
+.wp-readout {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 6px;
+}
+
+.wp-readout span {
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  font-family: "JetBrainsMono Nerd Font Mono", ui-monospace, monospace;
+  font-size: 9.5px;
+}
+
+.wp-readout span.pass {
+  color: #a7d3b5;
+  background: rgba(90, 160, 115, 0.16);
+}
+
+.wp-readout span.warn {
+  color: #e0c48c;
+  background: rgba(190, 150, 70, 0.16);
+}
+
+.wp-readout span.bad {
+  color: #e2a5a2;
+  background: rgba(180, 90, 85, 0.18);
+}
+
+/* The palette also reaches the shell's own accents, which the mock hardcodes. */
+.nav-item.active {
+  color: var(--mx-strong);
+  background: color-mix(in srgb, var(--mx-blue) 22%, transparent);
+  box-shadow: inset 2px 0 0 var(--mx-blue);
+}
+
+.context-item.selected {
+  background: var(--mx-enabled);
+  border-color: var(--mx-line);
+}
+
+.wp-thumbs button[aria-pressed="true"],
+.wp-variants button[aria-pressed="true"] {
+  border-color: var(--mx-blue);
+  box-shadow: 0 0 0 1px var(--mx-blue);
+}

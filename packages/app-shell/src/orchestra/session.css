@@ -269,10 +269,10 @@
     position: absolute;
     inset: 0;
     background:
-      var(--orchestra-workspace-overlay),
+      var(--orchestra-wallpaper-overlay, var(--orchestra-workspace-overlay)),
       linear-gradient(
-        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0)),
-        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
+        rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0)),
+        rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0))
       ),
       var(--orchestra-wallpaper, url("/orchestra/mtn-src.jpg")) center / cover no-repeat;
     filter: var(--orchestra-session-filter);
