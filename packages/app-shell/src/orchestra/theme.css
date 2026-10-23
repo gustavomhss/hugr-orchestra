@@ -447,14 +447,19 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     grid-template-rows: minmax(0, 1fr);
     gap: 6px;
     padding: 6px;
-    background: url("/orchestra/mtn-src.jpg") center / cover no-repeat;
+    background: var(--orchestra-wallpaper, url("/orchestra/mtn-src.jpg")) center / cover no-repeat;
   }
 
   html[data-color-scheme] body[data-new-layout] .orchestra-workspace::before {
     content: "";
     position: absolute;
     inset: 0;
-    background: var(--orchestra-workspace-overlay);
+    background:
+      var(--orchestra-workspace-overlay),
+      linear-gradient(
+        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0)),
+        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
+      );
     pointer-events: none;
   }
 
