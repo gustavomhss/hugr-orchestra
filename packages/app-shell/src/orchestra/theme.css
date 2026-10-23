@@ -455,23 +455,23 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     position: absolute;
     inset: 0;
     background:
-      var(--orchestra-workspace-overlay),
+      var(--orchestra-wallpaper-overlay, var(--orchestra-workspace-overlay)),
       linear-gradient(
-        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0)),
-        rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
+        rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0)),
+        rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0))
       );
     pointer-events: none;
   }
 
   html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs) {
     position: relative;
-    border: 1px solid var(--orchestra-glass-border);
+    border: 1px solid var(--orchestra-wallpaper-glass-border, var(--orchestra-glass-border));
     border-radius: 9px;
     overflow: hidden;
-    background: var(--orchestra-glass-background);
-    box-shadow: var(--orchestra-glass-shadow);
-    -webkit-backdrop-filter: var(--orchestra-glass-filter);
-    backdrop-filter: var(--orchestra-glass-filter);
+    background: var(--orchestra-wallpaper-glass-background, var(--orchestra-glass-background));
+    box-shadow: var(--orchestra-wallpaper-glass-shadow, var(--orchestra-glass-shadow));
+    -webkit-backdrop-filter: var(--orchestra-wallpaper-glass-filter, var(--orchestra-glass-filter));
+    backdrop-filter: var(--orchestra-wallpaper-glass-filter, var(--orchestra-glass-filter));
   }
 
   /* The compositor blurs a backdrop again over its element's whole drawn area, drop shadow included,

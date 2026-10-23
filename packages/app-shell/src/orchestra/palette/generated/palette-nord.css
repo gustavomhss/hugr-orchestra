@@ -102,16 +102,16 @@ html[data-orchestra-palette="nord"][data-color-scheme][dir="rtl"] body[data-new-
     background: var(--orchestra-wallpaper, url("/orchestra/mtn-src.jpg")) center / cover no-repeat;
   }
   html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] .orchestra-workspace::before {
-    background: var(--orchestra-workspace-overlay),
+    background: var(--orchestra-wallpaper-overlay, var(--orchestra-workspace-overlay)),
         linear-gradient(
-          rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0)),
-          rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
+          rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0)),
+          rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0))
         );
   }
   html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs) {
-    border: 1px solid var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
-    box-shadow: var(--orchestra-glass-shadow);
+    border: 1px solid var(--orchestra-wallpaper-glass-border, var(--orchestra-glass-border));
+    background: var(--orchestra-wallpaper-glass-background, var(--orchestra-glass-background));
+    box-shadow: var(--orchestra-wallpaper-glass-shadow, var(--orchestra-glass-shadow));
   }
   html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] .orchestra-toolbar-shadow > div {
     box-shadow: var(--orchestra-toolbar-drop);
@@ -438,10 +438,10 @@ html[data-orchestra-palette="nord"][data-color-scheme][dir="rtl"] body[data-new-
     box-shadow: var(--orchestra-session-shadow);
   }
   [data-orchestra-palette="nord"] body[data-new-layout] .orchestra-glass-layer > [data-orchestra-glass] > div > div {
-    background: var(--orchestra-workspace-overlay),
+    background: var(--orchestra-wallpaper-overlay, var(--orchestra-workspace-overlay)),
         linear-gradient(
-          rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0)),
-          rgba(8, 12, 17, var(--orchestra-wallpaper-dim, 0))
+          rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0)),
+          rgb(var(--orchestra-wallpaper-veil-color, 8 12 17) / var(--orchestra-wallpaper-dim, 0))
         ),
         var(--orchestra-wallpaper, url("/orchestra/mtn-src.jpg")) center / cover no-repeat;
   }

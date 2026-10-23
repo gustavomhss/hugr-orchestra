@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en" dir="ltr" data-color-scheme="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Atlas · Orchestra · Wallpaper theme preview</title>
+    <link rel="icon" href="../../../packages/app-shell/public/orchestra/hugr-symbol-inverse.svg" />
+    <!-- The real chapter kit and Relay parts from the app, so the preview uses production tokens and controls. -->
+    <link rel="stylesheet" href="../../../packages/app-shell/src/orchestra/chapters/kit.css" />
+    <link rel="stylesheet" href="../../../packages/app-shell/src/orchestra/relay/relay.css" />
+    <link rel="stylesheet" href="shell.css" />
+    <link rel="stylesheet" href="atlas.css" />
+    <link rel="stylesheet" href="wallpaper.css" />
+  </head>
+  <body data-new-layout class="atlas-mock wf-scope">
+    <div class="preview-bar">
+      <span><b>WALLPAPER THEME PREVIEW</b> · Atlas at real size · per-photo material</span>
+      <div>
+        <label class="preview-state">Data
+          <select id="preview-data" aria-label="Preview data">
+            <option value="illustrated">Illustrated</option>
+            <option value="real">Real store only</option>
+          </select>
+        </label>
+        <label class="preview-state">State
+          <select id="preview-state" aria-label="Preview data state">
+            <option value="ready">Ready</option>
+            <option value="building">Building the index</option>
+            <option value="held">Not connected</option>
+          </select>
+        </label>
+        <button type="button" data-action="palette">⌘K Search</button>
+        <button type="button" data-action="shortcuts">? Shortcuts</button>
+        <button type="button" data-action="theme" aria-label="Toggle light and dark">Light / dark</button>
+        <button type="button" data-action="direction" aria-label="Toggle layout direction">LTR / RTL</button>
+        <a href="#/gallery">All screens</a>
+      </div>
+    </div>
+    <div class="shell">
+      <aside class="sidebar" aria-label="Orchestra navigation">
+        <img class="brand" src="../../../packages/app-shell/public/orchestra/hugr-horizontal-compact-inverse.svg" alt="HuGR Orchestra" />
+        <div class="nav-group">WORKSPACE</div>
+        <nav id="sidebar-nav"></nav>
+        <div class="profile"><span class="avatar">A</span><span><strong>atlas</strong><small>Local workspace · dev</small></span></div>
+      </aside>
+      <div class="surface">
+        <header class="titlebar">
+          <nav id="breadcrumbs" aria-label="Breadcrumb"></nav>
+          <div class="titlebar-right">
+            <span class="wf-dot good"></span>Local workspace
+            <button type="button" class="key" data-action="palette" aria-label="Open command palette">⌘ K</button>
+          </div>
+        </header>
+        <div class="atlas-workbench" id="workbench">
+          <div id="atlas-context"></div>
+          <main id="main" tabindex="-1"></main>
+          <aside id="inspector" class="at-inspector" aria-label="Details" hidden></aside>
+        </div>
+      </div>
+    </div>
+    <dialog id="dialog" class="mx-dialog" aria-labelledby="dialog-title"></dialog>
+    <div id="palette-root"></div>
+    <div id="toast" role="status" aria-live="polite" hidden></div>
+    <!-- Classic scripts so the preview opens straight from disk (file://) without a server. -->
+    <script src="ui.js"></script>
+    <script src="data-real.js"></script>
+    <script src="data-spawns.js"></script>
+    <script src="data-illustrate.js"></script>
+    <script src="model.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/force-graph@1.43.5/dist/force-graph.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+    <script src="graph.js"></script>
+    <script src="views.js"></script>
+    <script src="views-more.js"></script>
+    <script src="views-memory.js"></script>
+    <script src="views-explore.js"></script>
+    <script src="views-arch.js"></script>
+    <script src="views-own.js"></script>
+    <script src="app.js"></script>
+    <script src="wallpaper.js"></script>
+  </body>
+</html>

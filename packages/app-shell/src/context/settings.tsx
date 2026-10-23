@@ -1,9 +1,15 @@
 import { createStore, reconcile } from "solid-js/store"
-import { createEffect, createMemo } from "solid-js"
+import { createEffect, createMemo, onMount, onCleanup } from "solid-js"
 import { createSimpleContext } from "@orchestra/ui/context"
 import { persisted } from "@/utils/persist"
 import { usePlatform } from "@/context/platform"
-import { WALLPAPER_DEFAULT, WALLPAPER_DIM_MAX, clampWallpaperDim, wallpaperSrc } from "@/orchestra/wallpaper/catalog"
+import {
+  WALLPAPER_DEFAULT,
+  WALLPAPER_DIM_MAX,
+  clampWallpaperDim,
+  wallpaperSrc,
+  wallpaperTheme,
+} from "@/orchestra/wallpaper/catalog"
 
 export interface NotificationSettings {
   agent: boolean
@@ -233,15 +239,95 @@ export const { use: useSettings, provider: SettingsProvider } = createSimpleCont
       root.style.setProperty("--font-family-sans", sansFontFamily(store.appearance?.sans))
     })
 
-    // The workspace photo and its darken layer; theme.css falls back to the default backdrop without these.
-    createEffect(() => {
+    const applyWallpaperTheme = () => {
       if (typeof document === "undefined") return
+      const body = document.body
       const root = document.documentElement
-      const wallpaper = wallpaperSrc(store.appearance?.wallpaper ?? WALLPAPER_DEFAULT)
+      const id = store.appearance?.wallpaper ?? WALLPAPER_DEFAULT
+      const scheme = root.dataset.colorScheme === "light" ? "light" : "dark"
+      const theme = wallpaperTheme(id, scheme)
+
+      // Always set the photo and dim (the dim slider adds to the theme's veil)
+      const wallpaper = wallpaperSrc(id)
       if (wallpaper) root.style.setProperty("--orchestra-wallpaper", `url("${wallpaper}")`)
       else root.style.removeProperty("--orchestra-wallpaper")
+
       const dim = clampWallpaperDim(store.appearance?.wallpaperDim ?? defaultSettings.appearance.wallpaperDim)
       root.style.setProperty("--orchestra-wallpaper-dim", String(dim))
+
+      if (!theme) {
+        // Default backdrop: no theme, palette owns everything
+        for (const p of [
+          "--orchestra-wallpaper-veil-color",
+          "--orchestra-wallpaper-veil-top",
+          "--orchestra-wallpaper-veil-bottom",
+          "--orchestra-wallpaper-glass-tint",
+          "--orchestra-wallpaper-glass-alpha",
+          "--orchestra-wallpaper-glass-filter",
+          "--orchestra-wallpaper-glass-background",
+          "--orchestra-wallpaper-glass-border",
+          "--orchestra-wallpaper-overlay",
+          "--orchestra-wallpaper-ink-strong",
+          "--orchestra-wallpaper-ink-body",
+          "--orchestra-wallpaper-ink-muted",
+          "--orchestra-wallpaper-ink-faint",
+          "--orchestra-wallpaper-ink-accent",
+          "--orchestra-wallpaper-ink-accent-dim",
+          "--orchestra-wallpaper-ink-line",
+        ]) {
+          root.style.removeProperty(p)
+          document.body.style.removeProperty(p)
+        }
+        return
+      }
+
+      const m = theme.material
+      const p = theme.palette
+
+      // Material: glass filter, glass background, veil, overlay
+      root.style.setProperty("--orchestra-wallpaper-veil-color", `${m.veil[0]} ${m.veil[1]} ${m.veil[2]}`)
+      const vt = Math.min(1, m.veilTop + clampWallpaperDim(store.appearance?.wallpaperDim ?? 0))
+      const vb = Math.min(1, m.veilBottom + clampWallpaperDim(store.appearance?.wallpaperDim ?? 0))
+      root.style.setProperty("--orchestra-wallpaper-veil-top", String(vt))
+      root.style.setProperty("--orchestra-wallpaper-veil-bottom", String(vb))
+
+      root.style.setProperty("--orchestra-wallpaper-glass-tint", `${m.tint[0]} ${m.tint[1]} ${m.tint[2]}`)
+      root.style.setProperty("--orchestra-wallpaper-glass-alpha", String(m.alpha))
+      root.style.setProperty(
+        "--orchestra-wallpaper-glass-filter",
+        `blur(${m.blur}px) brightness(${m.brightness}) saturate(${m.saturate})`,
+      )
+
+      const a = m.alpha
+      root.style.setProperty(
+        "--orchestra-wallpaper-glass-background",
+        `linear-gradient(180deg, rgb(${m.tint.split(" ").join(" ")} / ${a}) 0%, rgb(${m.tint.split(" ").join(" ")} / ${Math.round(a * 0.94 * 100) / 100}) 46%, rgb(${m.tint.split(" ").join(" ")} / ${Math.min(1, Math.round(a * 1.06 * 100) / 100)}) 100%)`,
+      )
+
+      const vtEff = Math.min(1, m.veilTop + clampWallpaperDim(store.appearance?.wallpaperDim ?? 0))
+      const vbEff = Math.min(1, m.veilBottom + clampWallpaperDim(store.appearance?.wallpaperDim ?? 0))
+      root.style.setProperty(
+        "--orchestra-wallpaper-overlay",
+        `linear-gradient(rgb(${m.veil.split(" ").join(" ")} / ${vtEff}), rgb(${m.veil.split(" ").join(" ")} / ${vbEff}))`,
+      )
+
+      root.style.setProperty("--orchestra-wallpaper-glass-border", `rgb(${p.line} / 1)`)
+
+      // Palette: write inline on body so it beats palette rules
+      document.body.style.setProperty("--orchestra-wallpaper-ink-strong", p.strong)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-body", p.body)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-muted", p.muted)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-faint", p.faint)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-accent", p.accent)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-accent-dim", p.accentDim)
+      document.body.style.setProperty("--orchestra-wallpaper-ink-line", p.line)
+    }
+
+    // The theme follows the color scheme, and a recolored palette can change it under the user's hands.
+    onMount(() => {
+      const observer = new MutationObserver(() => applyWallpaperTheme())
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["data-color-scheme"] })
+      onCleanup(() => observer.disconnect())
     })
 
     createEffect(() => {
