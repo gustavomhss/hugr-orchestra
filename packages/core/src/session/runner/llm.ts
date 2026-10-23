@@ -10,7 +10,6 @@ import {
   type ToolCall,
 } from "@orchestra/llm"
 import { Cause, Context, DateTime, Duration, Effect, FiberSet, Layer, Option, Semaphore, Stream } from "effect"
-import { eq } from "drizzle-orm"
 import { AgentV2 } from "../../agent"
 import { CapabilityInvocation } from "../../capability/invocation"
 import { Config } from "../../config"
@@ -26,6 +25,7 @@ import { SystemContextRegistry } from "../../system-context/registry"
 import { SkillGuidance } from "../../skill/guidance"
 import { ReferenceGuidance } from "../../reference/guidance"
 import { ToolRegistry } from "../../tool/registry"
+import { TaskGovernance } from "../../tool/task-governance"
 import { Mcp } from "../../mcp"
 import { ToolOutputStore } from "../../tool-output-store"
 import { SessionContextEpoch } from "../context-epoch"
@@ -36,7 +36,6 @@ import { SessionInput } from "../input"
 import { SessionMessage } from "../message"
 import { SessionSchema } from "../schema"
 import { SessionStore } from "../store"
-import { SessionTable } from "../sql"
 import { SessionSubagentModels } from "../subagent-models"
 import { INTERRUPTED_TURN, type RunError, Service } from "./index"
 import { SessionRunnerModel } from "./model"
@@ -141,7 +140,8 @@ const layer = Layer.effect(
       Context.add(RelayWorkflowSession.NativeHost, nativeHost),
     )
     const db = database.db
-    const compaction = SessionCompaction.make({ events, llm, subagentModels, config: yield* config.entries() })
+    const compaction = yield* SessionCompaction.Service
+    const governance = yield* TaskGovernance.Service
     const nameSession = SessionTitle.make({ db, events, store, agents, models, subagentModels, llm })
     const getSession = Effect.fn("SessionRunner.getSession")(function* (sessionID: SessionSchema.ID) {
       const session = yield* store.get(sessionID).pipe(
@@ -151,21 +151,6 @@ const layer = Layer.effect(
       )
       if (!session) return yield* Effect.die(`Session not found: ${sessionID}`)
       return session
-    })
-
-    // A Session's own permission rules, after its agent's as V1 merged them, so a Session rule wins over the agent's.
-    const sessionRules = Effect.fn("SessionRunner.sessionRules")(function* (sessionID: SessionSchema.ID) {
-      const row = yield* db
-        .select({ permission: SessionTable.permission })
-        .from(SessionTable)
-        .where(eq(SessionTable.id, sessionID))
-        .get()
-        .pipe(Effect.orDie)
-      return (row?.permission ?? []).map((rule) => ({
-        action: rule.permission,
-        resource: rule.pattern,
-        effect: rule.action,
-      }))
     })
 
     const getContext = Effect.fn("SessionRunner.getContext")(function* (sessionID: SessionSchema.ID) {
@@ -234,10 +219,13 @@ const layer = Layer.effect(
       const session = yield* getSession(sessionID)
       if (session.location.directory !== location.directory || session.location.workspaceID !== location.workspaceID)
         return yield* Effect.interrupt
+      // A refusal fails the drain before any input is promoted; `run` records it as the turn's error.
+      yield* governance.beforeTurn(session)
       const agent = yield* agents.select(session.agent)
+      // A Session's own rules follow its agent's, as V1 merged them, so a Session rule wins over the agent's.
       const effectiveRules = [
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
-        ...(yield* sessionRules(session.id)),
+        ...(yield* store.permissions(session.id)),
       ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
@@ -286,7 +274,9 @@ const layer = Layer.effect(
       const model = host ? undefined : yield* models.resolve(session)
       const modelRef = model ? SessionRunnerModel.reference(model) : (session.model ?? agent.info?.model)
       const entries = yield* SessionHistory.entriesForRunner(db, session.id, system.baselineSeq)
-      const context = entries.map((entry) => entry.message)
+      const history = entries.map((entry) => entry.message)
+      // The provider request is built from the strategy's view; a hosted engine receives the recorded history.
+      const context = model ? yield* compaction.transform({ sessionID: session.id, messages: history, model }) : history
       const workflow = yield* RelayWorkflowSession.current(session.id).pipe(Effect.provide(workflowContext), Effect.orDie)
       if (workflow?.view.pending) return { needsContinuation: yield* RelayWorkflowSession.reconcile(workflow).pipe(
         Effect.provide(workflowContext), Effect.map((next) => next === true), Effect.orDie), step: currentStep }
@@ -497,6 +487,7 @@ const layer = Layer.effect(
                 files,
               }),
             )
+            if (model) yield* compaction.afterStep({ sessionID: session.id, tokens: stepSettlement.tokens, model })
           }
           if (publisher.hasProviderError())
             yield* withPublication(publisher.failUnsettledTools("Tool execution interrupted"))
@@ -735,6 +726,8 @@ export const node = makeLocationNode({
     SessionRunnerModel.node,
     SessionSubagentModels.node,
     SessionStore.node,
+    SessionCompaction.node,
+    TaskGovernance.node,
     Location.node,
     SystemContextRegistry.node,
     SkillGuidance.node,

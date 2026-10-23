@@ -1,5 +1,7 @@
 # O modelo do Atlas, para quem vai desenhar a interface
 
+> **Status (2026-10-22):** V1 — pendente no V2 (ver ORC-001 em `ORCHESTRA-INTEGRATION-ISSUES.md`). As afirmações marcadas abaixo descrevem o V1. Decisão do owner: o Maestro passa a ler o Atlas por `atlas_context` (`catalog` e `unit`), sem `anchor`; `atlas_memory_*` continua só com os seats. O texto original foi mantido como histórico.
+
 Base: `dev` @ `6ea9383245`, 2026-10-18.
 
 Fontes:
@@ -153,7 +155,7 @@ São **campos separados** no pack, de propósito, para que nenhuma tela mostre u
 
   O teto é de **1500 caracteres** de afirmação, pagos nesta ordem (`retrieval/src/own.ts:167-232`): governantes e *gotchas* (preenchimento guloso: o que não cabe é nomeado e os seguintes ainda podem caber); até 12 **ponteiros** `own_<folha>`, um por subescopo, com custo igual ao tamanho do nome; e o advisory por último, com sub-teto de 750, parando no primeiro que não cabe. Fatos com drift entram com o próprio frescor. Não chama LLM, e a mesma entrada sempre dá os mesmos bytes.
 - **No Orchestra, hoje:**
-  - backend, jimmy e archie lêem um **snapshot Own pré-construído** (`OWN-SNAPSHOT.json`, que hoje tem 1 unidade) mais um **catálogo de territórios** (`TERRITORY-CATALOG.json`, que não existe no repo), pela ferramenta `atlas_context` (ações `catalog`, `unit` e, só para o Archie, `anchor`); o Maestro lê o catálogo por `maestro_catalog_context`;
+  - backend, jimmy e archie lêem um **snapshot Own pré-construído** (`OWN-SNAPSHOT.json`, que hoje tem 1 unidade) mais um **catálogo de territórios** (`TERRITORY-CATALOG.json`, que não existe no repo), pela ferramenta `atlas_context` (ações `catalog`, `unit` e, só para o Archie, `anchor`); o Maestro lê o catálogo por `maestro_catalog_context`; **[V1 — pendente no V2, ORC-007]** Decisão do owner (2026-10-22): o Maestro passa a ler também por `atlas_context` (`catalog` e `unit`; `anchor` segue só com o Archie);
   - o snapshot **não sai do store vivo**: `scripts/materialize-own-snapshot.mjs` materializa um JSON revisado e recusa entrada vinda de `.atlas/`. A unidade de hoje (`packages/genesis`) é um fixture curado, com dono `atlas-foundation` e 1 invariante T1 que o store não tem;
   - o host serve o snapshot só enquanto os arquivos-fonte dele (`sourceBlobs`) estão byte a byte iguais e a revisão é ancestral do HEAD; senão, para com `artifacts-invalid`;
   - se faltar qualquer coisa, a ferramenta **para (HOLD)** com um de mais de 50 motivos nomeados. Hoje o motivo é `provider-unconfigured`; configurado, ainda pararia, porque o catálogo não existe.

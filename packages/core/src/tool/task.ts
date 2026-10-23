@@ -24,6 +24,7 @@ import { SessionStore } from "../session/store"
 import { SessionSubagentModels } from "../session/subagent-models"
 import { ToolRegistry } from "./registry"
 import { ToolText } from "./text"
+import { TaskGovernance } from "./task-governance"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
 
@@ -47,6 +48,7 @@ export const Output = Schema.Struct({
   sessionId: SessionSchema.ID,
   parentSessionId: SessionSchema.ID,
   agentId: AgentV2.ID,
+  structured: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 })
 
 export const description = ToolText.task
@@ -64,18 +66,24 @@ const layer = Layer.effectDiscard(
     const execution = yield* SessionExecution.Service
     const events = yield* EventV2.Service
     const policy = yield* SessionSubagentModels.Service
+    const governance = yield* TaskGovernance.Service
+    // Governance-supplied fields extend the Task input; the default adds none.
+    const schema = Schema.Struct({ ...Input.fields, ...governance.input }) as unknown as typeof Input
     yield* tools.register({
       [name]: Tool.make({
         description,
-        input: Input,
+        input: schema,
         output: Output,
         toModelOutput: ({ output }) => [
           { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
         ],
         execute: (input, context) => Effect.gen(function* () {
-          yield* requireParent(store, location, context, input)
+          const parent = yield* requireParent(store, location, context, input, schema)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const childID = input.task_id ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+          // Governance decides on the call before any child exists; an explicit task_id still names the child to resume.
+          const admission = yield* governance.admit({ parent, target, input, context })
+          const childID =
+            input.task_id ?? admission.childID ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${childID}` })
@@ -99,7 +107,7 @@ const layer = Layer.effectDiscard(
             source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
           })
           // Approval may wait while placement, ancestry, or the hard ceiling changes.
-          yield* requireParent(store, location, context, input)
+          yield* requireParent(store, location, context, input, schema)
           yield* policy.assertChild(context.sessionID, model)
           yield* revalidateTarget(existing)
           const child = yield* sessions.create({
@@ -113,6 +121,16 @@ const layer = Layer.effectDiscard(
           if (failure) return yield* failure
           return yield* Effect.gen(function* () {
             yield* policy.assert(child.id, model)
+            if (admission.permissions && !isDeepStrictEqual(yield* store.permissions(child.id), admission.permissions))
+              yield* sessions.setPermission({
+                sessionID: child.id,
+                // The Session column keeps V1 rule fields.
+                permission: admission.permissions.map((rule) => ({
+                  permission: rule.action,
+                  pattern: rule.resource,
+                  action: rule.effect,
+                })),
+              })
             yield* events.publish(SessionEvent.Tool.Progress, {
               sessionID: context.sessionID,
               assistantMessageID: context.assistantMessageID,
@@ -132,16 +150,30 @@ const layer = Layer.effectDiscard(
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
-              prompt: { text: input.prompt },
+              prompt: admission.prompt ?? { text: input.prompt },
               delivery: recordedInput?.delivery ?? "queue",
               resume: false,
             })
+            const started = {
+              sessionID: child.id,
+              agent: target.id,
+              model: child.model,
+              title: child.title,
+              sessionId: child.id,
+              parentSessionId: context.sessionID,
+              agentId: target.id,
+            }
             const previous =
               admitted.promotedSeq === undefined
                 ? undefined
                 : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             yield* policy.assert(child.id, model)
             yield* revalidateTarget(child)
+            // Governance settles a background child when it goes idle; the call returns at once.
+            if (admission.background) {
+              yield* execution.wake(child.id)
+              return { ...started, text: "Task started in the background" }
+            }
             yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
               if (previous !== undefined) return
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
@@ -158,15 +190,11 @@ const layer = Layer.effectDiscard(
               return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
+            const settled = yield* governance.settle({ child, reply, admission, context })
             return {
-              sessionID: child.id,
-              agent: target.id,
-              model: child.model,
-              text: reply.content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
-              title: child.title,
-              sessionId: child.id,
-              parentSessionId: context.sessionID,
-              agentId: target.id,
+              ...started,
+              text: settled.text,
+              ...(settled.structured === undefined ? {} : { structured: settled.structured }),
             }
           }).pipe(
             Effect.mapError((error) =>
@@ -200,6 +228,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     captureGlobal(SessionExecution.Service),
     EventV2.node,
     SessionSubagentModels.node,
+    TaskGovernance.node,
   ],
 })
 
@@ -288,6 +317,7 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   location: Location.Interface,
   context: Tool.Context,
   input: typeof Input.Type,
+  schema: typeof Input,
 ) {
   const parent = yield* store.get(context.sessionID)
   if (!parent) return yield* new ToolFailure({ message: `Task parent not found: ${context.sessionID}` })
@@ -304,7 +334,7 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   const call = recorded.message.content.find(
     (part): part is SessionMessage.AssistantTool => part.type === "tool" && part.id === context.toolCallID && part.name === name,
   )
-  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(Input)(call.state.input) : Option.none()
+  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(schema)(call.state.input) : Option.none()
   if (Option.isNone(called))
     return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
   const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)

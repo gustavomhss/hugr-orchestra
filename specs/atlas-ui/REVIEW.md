@@ -1,5 +1,7 @@
 # Review de fidelidade: mock × Atlas real
 
+> **Status (2026-10-22):** V1 — pendente no V2 (ver ORC-001 em `ORCHESTRA-INTEGRATION-ISSUES.md`). As afirmações marcadas abaixo descrevem o V1. Decisão do owner: o Maestro passa a ler o Atlas por `atlas_context` (`catalog` e `unit`), sem `anchor`; `atlas_memory_*` continua só com os seats. O texto original foi mantido como histórico.
+
 2026-10-18 · base `dev` @ `6ea9383245` · mock v3 (commit `2ce0cb8f03`).
 
 Dois revisores independentes compararam cada afirmação do mock com o código do Atlas e do Orchestra. Os achados mais graves foram reconferidos no código. Caminhos relativos a `modules/atlas/packages/` (Atlas) ou `packages/orchestra/src/` (Orchestra).
@@ -234,7 +236,7 @@ Três revisores sem contexto, cada um com um ângulo novo: fidelidade dos númer
 - **Folhas:** amostra do mine (`budgetSpent` conta sites, frase real de cobertura), hot set (`over` é booleano), texto do init (`.gitignore`), rótulo do Ratify ao escolher Core, rodapé "locked" para `tracked-staging`.
 - **Docs:**
   - a identidade da execução fica só no recibo, não no registro;
-  - o Maestro lê por `maestro_catalog_context`;
+  - o Maestro lê por `maestro_catalog_context`; **[V1 — pendente no V2, ORC-007]** (no V2 o Maestro ainda não tem essa tool; a decisão do owner é ler por `atlas_context` `catalog`/`unit`);
   - o script de republicação chama `exportOwnSnapshot`;
   - são 50+ motivos de hold;
   - os campos dos recibos e da âncora foram completados;

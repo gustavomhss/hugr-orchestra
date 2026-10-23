@@ -27,7 +27,17 @@ const locationLayer = Layer.succeed(
     ),
   ),
 )
+const noRepoLocationLayer = Layer.succeed(
+  Location.Service,
+  Location.Service.of(location({ directory })),
+)
 const builtInsNode = LayerNode.group([SystemContextBuiltIns.node, SystemContextRegistry.node])
+const noRepoIt = testEffect(
+  AppNodeBuilder.build(builtInsNode, [
+    [Location.node, noRepoLocationLayer],
+    [Global.node, Global.layerWith({ config: "/global" })],
+  ]),
+)
 const it = testEffect(
   AppNodeBuilder.build(builtInsNode, [
     [Location.node, locationLayer],
@@ -72,6 +82,22 @@ describe("SystemContextBuiltIns", () => {
           "</env>",
           "",
           `Today's date: ${localDate(timestamp)}`,
+        ].join("\n"),
+      )
+    }),
+  )
+
+  noRepoIt.effect("reports the working directory and no repository instead of the filesystem root", () =>
+    Effect.gen(function* () {
+      yield* TestClock.setTime(timestamp)
+      const context = yield* SystemContextRegistry.Service
+      const initialized = yield* SystemContext.initialize(yield* context.load())
+
+      expect(initialized.baseline).toContain(
+        [
+          `  Working directory: ${directory}`,
+          `  Workspace root folder: ${directory} (no git repository)`,
+          "  Is directory a git repo: no",
         ].join("\n"),
       )
     }),

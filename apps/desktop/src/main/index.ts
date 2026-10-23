@@ -182,6 +182,23 @@ const main = Effect.gen(function* () {
     getStore().set(FIRST_LAUNCH_ONBOARDING_COMPLETE_KEY, true)
   } else initializeOldLayoutEligibility(app.getPath("userData"))
   logger = initLogging()
+
+  // U11: Warn if running from deletable build output (apps/desktop/dist)
+  if (app.isPackaged) {
+    const exePath = app.getPath("exe")
+    if (exePath.includes("apps/desktop/dist")) {
+      logger.warn("Running from deletable build output", { exePath })
+      const { dialog } = yield* Effect.promise(() => import("electron"))
+      dialog.showMessageBox({
+        type: "warning",
+        title: "Running from build output",
+        message: "Orchestra is running from a deletable build output directory (apps/desktop/dist).",
+        detail: "The resources in this directory may be deleted on the next build. For a stable experience, install the app or run from a packaged distribution.",
+        buttons: ["OK"],
+      })
+    }
+  }
+
   initCrashReporter()
   OmniBoot.setup()
 
