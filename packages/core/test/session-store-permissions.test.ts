@@ -13,7 +13,7 @@ import { testEffect } from "./lib/effect"
 
 const it = testEffect(AppNodeBuilder.build(LayerNode.group([Database.node, SessionStore.node])))
 
-const insert = (id: string, permission?: typeof SessionTable.$inferInsert.permission) =>
+const insert = (id: SessionSchema.ID, permission?: (typeof SessionTable.$inferInsert)["permission"]) =>
   Effect.gen(function* () {
     const { db } = yield* Database.Service
     yield* db
@@ -31,7 +31,7 @@ const insert = (id: string, permission?: typeof SessionTable.$inferInsert.permis
 
 describe("SessionStore.permissions", () => {
   it.effect("maps the Session's recorded V1 rules to V2 rules in order", () => Effect.gen(function* () {
-    yield* insert("ses_with_rules", [
+    yield* insert(SessionSchema.ID.make("ses_with_rules"), [
       { permission: "task", pattern: "worker", action: "allow" },
       { permission: "bash", pattern: "*", action: "deny" },
     ])
@@ -43,7 +43,7 @@ describe("SessionStore.permissions", () => {
   }))
 
   it.effect("is empty for a Session without rules and for an unknown Session", () => Effect.gen(function* () {
-    yield* insert("ses_without_rules")
+    yield* insert(SessionSchema.ID.make("ses_without_rules"))
     const store = yield* SessionStore.Service
     expect(yield* store.permissions(SessionSchema.ID.make("ses_without_rules"))).toEqual([])
     expect(yield* store.permissions(SessionSchema.ID.make("ses_unknown"))).toEqual([])
