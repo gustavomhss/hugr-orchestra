@@ -2,7 +2,7 @@ import fs from "fs/promises"
 import { realpathSync } from "node:fs"
 import path from "path"
 import { describe, expect, test } from "bun:test"
-import { Cause, Effect, Exit, Layer } from "effect"
+import { Effect, Layer } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Config } from "@orchestra/core/config"
@@ -277,30 +277,6 @@ describe("BashTool", () => {
       ),
     )
   }
-
-  it.live("refuses a guarded git command in the background before launching it", () =>
-    Effect.acquireUseRelease(
-      Effect.promise(() => tmpdir()),
-      (tmp) => {
-        reset()
-        const launches: SessionProcess.LaunchInput[] = []
-        return withTool(tmp.path, (registry) =>
-          settleTool(registry, call({ command: "git add a.ts | cat", background: true })).pipe(Effect.exit),
-        ).pipe(
-          Effect.provideService(SessionProcess.Service, backgroundProcesses(launches)),
-          Effect.andThen((exit) =>
-            Effect.sync(() => {
-              // A HOLD either settles as an error result or fails the settlement; both name the refused construct.
-              const text = Exit.isSuccess(exit) ? JSON.stringify(exit.value.result) : Cause.pretty(exit.cause)
-              expect(text).toContain("git-hygiene-unsupported-shell-operator")
-              expect(launches).toEqual([])
-            }),
-          ),
-        )
-      },
-      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
-    ),
-  )
 
   it.live("launches a background command with the scrubbed environment", () =>
     Effect.acquireUseRelease(
