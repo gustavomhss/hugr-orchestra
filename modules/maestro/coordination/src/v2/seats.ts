@@ -12,6 +12,7 @@ import { ArsenalNative } from "../arsenal-native"
 import { Seats } from "../seats"
 import { MaestroSeats } from "./seats-service"
 import { MaestroSkillSourcesV2 } from "./skill-sources"
+import { MaestroToolsV2 } from "./tools"
 
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
@@ -124,9 +125,9 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents and the Arsenal's native safety owner in every Location. */
+/** Maestro on V2: native seats as agents, Maestro's native tools and the Arsenal's native safety owner in every Location. */
 export const contribution: Host.Contribution = {
   id: "maestro",
   replacements: ArsenalNative.nativeRegistryReplacements,
-  locationNodes: [MaestroSeats.node, node],
+  locationNodes: [MaestroSeats.node, node, MaestroToolsV2.node],
 }
