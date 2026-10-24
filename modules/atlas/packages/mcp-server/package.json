@@ -20,6 +20,11 @@
     "@atlas/tools": "*",
     "@modelcontextprotocol/sdk": "1.29.0"
   },
+  "devDependencies": {
+    "@atlas/contracts": "*",
+    "@atlas/kernel": "*",
+    "@atlas/knowledge": "*"
+  },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b"

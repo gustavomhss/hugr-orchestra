@@ -77,7 +77,9 @@
         "@lydell/node-pty": "catalog:",
         "@orchestra/app": "workspace:*",
         "@orchestra/app-dock": "workspace:*",
+        "@orchestra/plugin": "workspace:*",
         "@orchestra/script": "workspace:*",
+        "@orchestra/sdk": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "@sentry/solid": "catalog:",
         "@sentry/vite-plugin": "catalog:",
@@ -260,6 +262,7 @@
     "apps/storybook": {
       "name": "@orchestra/storybook",
       "devDependencies": {
+        "@orchestra/sdk": "workspace:*",
         "@orchestra/session-ui": "workspace:*",
         "@orchestra/ui": "workspace:*",
         "@solidjs/meta": "catalog:",

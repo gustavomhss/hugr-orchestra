@@ -9,6 +9,7 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "catalog:",
+    "@orchestra/sdk": "workspace:*",
     "@orchestra/session-ui": "workspace:*",
     "@orchestra/ui": "workspace:*",
     "@solidjs/meta": "catalog:",
