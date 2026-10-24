@@ -1,5 +1,7 @@
 export * as ConfigMigrateV1 from "./migrate"
 
+import { Schema } from "effect"
+import { ConfigMaestro } from "@orchestra/schema/config-maestro"
 import { ConfigV1 } from "./config"
 import { ConfigAgentV1 } from "./agent"
 import { ConfigMCPV1 } from "./mcp"
@@ -73,7 +75,8 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     ),
     experimental: policies(info),
     relay: info.relay,
-    maestro: info.maestro,
+    // Encoded, so a decoded V1 value's undefined keys stay absent as the V2 document schema requires.
+    maestro: info.maestro && Schema.encodeSync(ConfigMaestro.Info)(info.maestro),
     providers: providers(info.provider),
   }
 }
