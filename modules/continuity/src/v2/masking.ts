@@ -1,6 +1,6 @@
 export * as ContinuityMaskingV2 from "./masking"
 
-import { Message, ToolResultPart, type ToolCallPart } from "@orchestra/llm"
+import { Message, ToolResultPart, type ToolCallPart, type ToolContent } from "@orchestra/llm"
 import { Token } from "@orchestra/core/util/token"
 import { ATTACHMENT_TOKENS, ERROR_LINES, PROTECTED, TAIL_STEPS, describe } from "../masking-rules"
 import { ContinuityArchive } from "./archive"
@@ -94,7 +94,7 @@ export function chunks(sessionID: string, candidate: Candidate) {
 export function output(result: ToolResultPart) {
   if (result.result.type === "content")
     return result.result.value
-      .map((item) => (item.type === "text" ? item.text : `[Attached ${item.mime}${item.name ? `: ${item.name}` : ""}]`))
+      .map((item: ToolContent) => (item.type === "text" ? item.text : `[Attached ${item.mime}${item.name ? `: ${item.name}` : ""}]`))
       .join("\n")
   const value = result.result.value
   return typeof value === "string" ? value : (JSON.stringify(value) ?? "")
@@ -127,7 +127,7 @@ function before(messages: readonly Message[], cutoff: number, masks: Masks): Can
         return []
       const found = calls.get(part.id)
       if (!found || !/^msg/.test(found.messageID)) return []
-      const files = part.result.type === "content" ? part.result.value.filter((item) => item.type === "file").length : 0
+      const files = part.result.type === "content" ? part.result.value.filter((item: ToolContent) => item.type === "file").length : 0
       // The stub drops attachments too: an old screenshot is often the largest thing in the request.
       const saved =
         Token.estimate(output(part)) - Token.estimate(stub(found.call, part, "x".repeat(64))) + files * ATTACHMENT_TOKENS
