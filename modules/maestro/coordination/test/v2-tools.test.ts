@@ -3,7 +3,7 @@ import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
 import { and, eq, like } from "drizzle-orm"
-import { DateTime, Effect, Layer, Schema } from "effect"
+import { DateTime, Effect, Layer, Schema, Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -81,7 +81,7 @@ const run = <A, E>(
   body: Effect.Effect<
     A,
     E,
-    ToolRegistry.Service | Database.Service | EventV2.Service | AgentV2.Service | Location.Service
+    ToolRegistry.Service | Database.Service | EventV2.Service | AgentV2.Service | Location.Service | Scope.Scope
   >,
 ) =>
   Effect.runPromise(
