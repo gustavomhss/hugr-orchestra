@@ -66,6 +66,10 @@ export const make = Effect.gen(function* () {
           const prompt = pending.map((message) => message.text).join("\n\n").trim()
           if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
+          // `handed`: Claude Code took the prompt from its input. Its transcript then holds the prompt, so a turn that
+          // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
+          // billing) leaves the prompt to be sent again.
+          const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
           // Claude Code's tool_use id for an Orchestra tool, learned in canUseTool; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
@@ -102,10 +106,23 @@ export const make = Effect.gen(function* () {
           const query = yield* Effect.acquireRelease(
             // Streaming input, which in-process MCP servers need; the turn ends at the `result` frame and the finalizer
             // closes the input with the query.
-            Effect.sync(() => sdk.query({ prompt: input(prompt, abort.signal), options: lifetime.options })),
+            Effect.sync(() =>
+              sdk.query({ prompt: input(prompt, abort.signal, () => void (progress.handed = true)), options: lifetime.options }),
+            ),
             () =>
               Effect.sync(() => abort.abort()).pipe(
                 Effect.andThen(Effect.promise(() => lifetime.join().catch(() => undefined))),
+                Effect.andThen(
+                  Effect.suspend(() =>
+                    progress.handed && (progress.answered || !progress.resulted)
+                      ? turn.state.update((value) => {
+                          const record = ClaudeCodeTranscript.record(value) ? value : {}
+                          const prior = Array.isArray(record.delivered) ? record.delivered : []
+                          return { ...record, delivered: [...new Set([...prior, ...pending.map((item) => item.id)])] }
+                        })
+                      : Effect.void,
+                  ),
+                ),
               ),
           )
           const names = new Map<string, string>()
@@ -113,6 +130,9 @@ export const make = Effect.gen(function* () {
             Stream.takeUntil((message) => message.type === "result"),
             Stream.mapEffect((message) =>
               Effect.gen(function* () {
+                if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error)
+                  progress.answered = true
+                if (message.type === "result") progress.resulted = true
                 if (message.type === "system" && message.subtype === "init")
                   yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), sessionId: message.session_id }))
                 if (message.type === "result" && message.subtype === "success" && !message.is_error)
@@ -224,8 +244,10 @@ function modelText(result: ToolResultValue) {
   return typeof result.value === "string" ? result.value : JSON.stringify(result.value)
 }
 
-async function* input(text: string, signal: AbortSignal): AsyncGenerator<SDKUserMessage> {
+async function* input(text: string, signal: AbortSignal, handed: () => void): AsyncGenerator<SDKUserMessage> {
   yield { type: "user", message: { role: "user", content: text }, parent_tool_use_id: null }
+  // The SDK asks for the next message only after it wrote this one to Claude Code.
+  handed()
   await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }))
 }
 
