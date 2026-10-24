@@ -72,10 +72,15 @@ export function make(input: {
   permissions?: Layer.Layer<PermissionV2.Service>
   /** Replaces the compaction-only config, for example to configure MCP servers. */
   config?: Layer.Layer<Config.Service>
+  /** Further node replacements, applied to the runner and to the application graph. */
+  replacements?: LayerNode.Replacements
 }) {
   const permissions = input.permissions ?? PermissionFixture.normalLayer
   const config = input.config ?? defaultConfig
-  const hosts: LayerNode.Replacements = input.hosts ? [[ExecutionHost.node, input.hosts]] : []
+  const extra: LayerNode.Replacements = [
+    ...(input.hosts ? [[ExecutionHost.node, input.hosts] as const] : []),
+    ...(input.replacements ?? []),
+  ]
   const echoNode = makeLocationNode({ name: "test/session-runner-tools", layer: input.echo, deps: [ToolRegistry.node] })
   const runnerLayer = AppNodeBuilder.build(node, [
     [Snapshot.node, Snapshot.noopLayer],
@@ -87,7 +92,7 @@ export function make(input: {
     [ReferenceGuidance.node, referenceGuidance],
     [PermissionV2.node, permissions],
     [Config.node, config],
-    ...hosts,
+    ...extra,
   ])
   const execution = Layer.effect(
     SessionExecution.Service,
@@ -141,7 +146,7 @@ export function make(input: {
         [Snapshot.node, Snapshot.noopLayer],
         [SessionExecution.node, execution],
         [Config.node, config],
-        ...hosts,
+        ...extra,
       ],
     ),
   )

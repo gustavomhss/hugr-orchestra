@@ -297,6 +297,7 @@
     "./tool/registry": "./src/tool/registry.ts",
     "./tool/skill": "./src/tool/skill.ts",
     "./tool/task": "./src/tool/task.ts",
+    "./tool/task-governance": "./src/tool/task-governance.ts",
     "./tool/text": "./src/tool/text.ts",
     "./tool/todowrite": "./src/tool/todowrite.ts",
     "./tool/tool": "./src/tool/tool.ts",

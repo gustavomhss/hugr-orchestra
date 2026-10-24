@@ -2,6 +2,7 @@ export * as SessionStore from "./store"
 
 import { eq } from "drizzle-orm"
 import { Context, Effect, Layer, Schema } from "effect"
+import type { Permission } from "@orchestra/schema/permission"
 import { Database } from "../database/database"
 import { makeGlobalNode } from "../effect/app-node"
 import { SessionHistory } from "./history"
@@ -21,6 +22,8 @@ export interface Interface {
   readonly message: (
     messageID: SessionMessage.ID,
   ) => Effect.Effect<{ readonly sessionID: SessionSchema.ID; readonly message: SessionMessage.Message } | undefined>
+  /** The Session's own permission rules as V2 rules; empty for none or an unknown Session. */
+  readonly permissions: (sessionID: SessionSchema.ID) => Effect.Effect<Permission.Ruleset>
 }
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SessionStore") {}
@@ -55,6 +58,20 @@ const layer = Layer.effect(
               message: yield* decodeMessage({ ...row.data, id: row.id, type: row.type }).pipe(Effect.orDie),
             }
           : undefined
+      }),
+      permissions: Effect.fn("SessionStore.permissions")(function* (sessionID) {
+        const row = yield* db
+          .select({ permission: SessionTable.permission })
+          .from(SessionTable)
+          .where(eq(SessionTable.id, sessionID))
+          .get()
+          .pipe(Effect.orDie)
+        // The column keeps V1 rule fields.
+        return (row?.permission ?? []).map((rule) => ({
+          action: rule.permission,
+          resource: rule.pattern,
+          effect: rule.action,
+        }))
       }),
     })
   }),
