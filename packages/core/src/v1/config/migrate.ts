@@ -73,6 +73,7 @@ export function migrate(info: typeof ConfigV1.Info.Type) {
     ),
     experimental: policies(info),
     relay: info.relay,
+    maestro: info.maestro,
     providers: providers(info.provider),
   }
 }

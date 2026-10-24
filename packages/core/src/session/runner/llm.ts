@@ -205,8 +205,8 @@ const layer = Layer.effect(
     const continueAfterOverflowCompaction = (step: number) =>
       new TurnTransitionError({ _tag: "ContinueAfterOverflowCompaction", step })
 
-    const loadSystemContext = (agent: AgentV2.Selection) =>
-      Effect.all([systemContext.load(), skillGuidance.load(agent), referenceGuidance.load()], {
+    const loadSystemContext = (sessionID: SessionSchema.ID, agent: AgentV2.Selection) =>
+      Effect.all([systemContext.load({ sessionID, agent: agent.id }), skillGuidance.load(agent), referenceGuidance.load()], {
         concurrency: "unbounded",
       }).pipe(Effect.map(SystemContext.combine))
 
@@ -227,7 +227,7 @@ const layer = Layer.effect(
         ...(agent.info?.permissions.map((rule) => ({ ...rule })) ?? []),
         ...(yield* store.permissions(session.id)),
       ]
-      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
+      const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(session.id, agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
       let needsContinuation = false
       let currentStep = step
@@ -265,7 +265,7 @@ const layer = Layer.effect(
         }
       }
       const system =
-        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(agent), session.id))
+        initialized ?? (yield* SessionContextEpoch.prepare(db, events, loadSystemContext(session.id, agent), session.id))
       // An agent whose engine names an execution host runs this provider turn through it (AGENTS "V2 Session Core").
       const engine = agent.info?.engine === "orchestra" ? undefined : agent.info?.engine
       const host = engine ? hosts.get(engine) : undefined

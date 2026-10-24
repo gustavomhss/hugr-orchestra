@@ -11,8 +11,22 @@ export interface Entry {
 
 export interface Interface {
   readonly register: (entry: Entry) => Effect.Effect<void, never, Scope.Scope>
-  readonly load: () => Effect.Effect<SystemContext.SystemContext>
+  /** Loads every entry; a provider turn passes its Session and agent, which entries read through `Turn`. */
+  readonly load: (turn?: TurnInfo) => Effect.Effect<SystemContext.SystemContext>
 }
+
+export interface TurnInfo {
+  readonly sessionID: string
+  readonly agent: string
+}
+
+/**
+ * The Session and agent whose provider turn is loading system context, or undefined outside a turn. It is set only while
+ * entries load, so a per-agent or per-Session entry reads it in its `load` and closes its sources over the value.
+ */
+export const Turn = Context.Reference<TurnInfo | undefined>("@orchestra/v2/SystemContextRegistry/Turn", {
+  defaultValue: () => undefined,
+})
 
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/SystemContextRegistry") {}
 
@@ -36,10 +50,12 @@ const layer = Layer.effect(
           (entry) => Ref.update(entries, (current) => current.filter((item) => item !== entry)),
         )
       }),
-      load: Effect.fn("SystemContextRegistry.load")(function* () {
+      load: Effect.fn("SystemContextRegistry.load")(function* (turn) {
         const current = (yield* Ref.get(entries)).toSorted((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0))
         return SystemContext.combine(
-          yield* Effect.forEach(current, (entry) => entry.load, { concurrency: "unbounded" }),
+          yield* Effect.forEach(current, (entry) => entry.load, { concurrency: "unbounded" }).pipe(
+            Effect.provideService(Turn, turn),
+          ),
         )
       }),
     })
