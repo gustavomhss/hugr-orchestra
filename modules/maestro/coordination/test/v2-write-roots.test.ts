@@ -2,13 +2,13 @@ import { expect, test } from "bun:test"
 import { mkdir, symlink } from "node:fs/promises"
 import path from "node:path"
 import { ToolFailure } from "@orchestra/llm"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, type Scope } from "effect"
 import { Project } from "@orchestra/core/project"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { WriteRootsV2 } from "../src/v2/governance/write-roots"
 import { admit, governanceLayer, safetyLayer, session, worktree } from "./fixture/v2-governance"
 
-const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, body: (directory: string) => Effect.Effect<A, E, R>) =>
+const run = <A, E, R>(layer: (directory: string) => Layer.Layer<R, unknown>, body: (directory: string) => Effect.Effect<A, E, R | Scope.Scope>) =>
   Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {

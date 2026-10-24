@@ -1,6 +1,6 @@
 import { expect, test } from "bun:test"
 import { ToolFailure } from "@orchestra/llm"
-import { Effect, Layer } from "effect"
+import { Effect, Layer, type Scope } from "effect"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { EventV2 } from "@orchestra/core/event"
 import { TaskGovernance } from "@orchestra/core/tool/task-governance"
@@ -8,7 +8,7 @@ import { GovernanceInputV2 } from "../src/v2/governance/input"
 import { WorkflowGateV2 } from "../src/v2/governance/workflow"
 import { admit, event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
-const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>>>) =>
+const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>) =>
   Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
