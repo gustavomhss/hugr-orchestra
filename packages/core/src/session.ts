@@ -63,6 +63,9 @@ export { SessionActivity } from "./session/activity"
 export { LeanProfilePreferences } from "./session/lean-profile-preferences"
 export { LeanProject } from "./session/lean-project"
 export { SessionTodo } from "./session/todo"
+export { SessionCompaction } from "./session/compaction"
+export { SessionHistory } from "./session/history"
+export { SessionEvent, SessionMessage, SessionSubagentModels }
 
 const ListInputBase = {
   workspaceID: WorkspaceV2.ID.pipe(Schema.optional),

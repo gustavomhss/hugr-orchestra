@@ -340,6 +340,7 @@
       "version": "0.0.0",
       "dependencies": {
         "@orchestra/core": "workspace:*",
+        "@orchestra/llm": "workspace:*",
         "effect": "catalog:",
         "jsonc-parser": "3.3.1",
       },
