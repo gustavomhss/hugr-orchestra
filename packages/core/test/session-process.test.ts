@@ -63,6 +63,34 @@ describe("SessionProcess", () => {
     }).pipe(Effect.provide(layer)),
   )
 
+  it.live("withholds a background process's output once it shows a recognized secret", () =>
+    Effect.gen(function* () {
+      const processes = yield* SessionProcess.Service
+      const sessionID = "ses_session_process_secret"
+      // Built at runtime so the repository never holds a secret-shaped literal.
+      const token = "gh" + "p_" + "y".repeat(40)
+      const delivered: string[] = []
+      const sessions = {
+        synthetic: (input: { text: string }) => Effect.sync(() => delivered.push(input.text)),
+        wait: () => Effect.void,
+      } as unknown as SessionV2.Interface
+      // The pause keeps the token ahead of the exit, so every read below sees it in the ring.
+      const launched = yield* processes
+        .launch({ sessionID, command: `printf '%s\\n' ${token}; sleep 0.3`, title: "leaks" })
+        .pipe(Effect.provideService(SessionV2.Service, sessions))
+      const waited = yield* processes.wait(sessionID, launched.id)
+      yield* Effect.suspend(() => (delivered.length ? Effect.void : Effect.fail("pending"))).pipe(
+        Effect.retry({ schedule: Schedule.spaced("20 millis"), times: 250 }),
+      )
+      const got = yield* processes.get(sessionID, launched.id)
+      const texts = [delivered[0] ?? "", waited.info?.output ?? "", got?.output ?? ""]
+      texts.forEach((text) => {
+        expect(text).not.toContain(token)
+        expect(text).toContain("output withheld")
+      })
+    }).pipe(Effect.provide(layer)),
+  )
+
   it.live("forgets the oldest finished processes beyond the kept count", () =>
     Effect.gen(function* () {
       const processes = yield* SessionProcess.Service
