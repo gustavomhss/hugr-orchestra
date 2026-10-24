@@ -11,7 +11,7 @@ import {
   textFromEvents,
   translationConfig,
   unexpectedChanges,
-} from "./translate-app"
+} from "../../../script/translate-app"
 
 describe("translate app", () => {
   test("parses one locale with the public model defaults", () => {
