@@ -9,7 +9,7 @@ import { SessionSchema } from "@orchestra/core/session"
 import type { ExecutionHost } from "@orchestra/core/session/runner"
 import { Effect, Layer, Stream } from "effect"
 import { ClaudeCodeSDK } from "../src/sdk"
-import { ClaudeCodeHost } from "../src/v2/host"
+import { ClaudeCodeHost, permission } from "../src/v2/host"
 
 // The V2 Claude Code host, driven through the SDK seam with scripted frames: no Claude Code process, no Claude API.
 // One SDK query is one provider turn; the next turn resumes the same Claude Code session with only the new message.
@@ -191,4 +191,10 @@ test("Claude Code's approvals become V2 permission checks: allowed runs, a deny 
     { behavior: "allow", updatedInput: { file_path: "/project/src/a.ts" } },
     { behavior: "deny", message: "Orchestra's permission rules deny this call." },
   ])
+})
+
+test("a file whose name starts with two dots inside the workspace is matched by its relative path", () => {
+  expect(permission("Read", { file_path: "/project/..cache/x" }, "/project")).toEqual({ action: "read", resources: ["..cache/x"] })
+  expect(permission("Read", { file_path: "/project/../outside/x" }, "/project")).toEqual({ action: "read", resources: ["/project/../outside/x"] })
+  expect(permission("Read", { file_path: "/other/x" }, "/project")).toEqual({ action: "read", resources: ["/other/x"] })
 })

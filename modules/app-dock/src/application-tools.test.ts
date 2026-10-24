@@ -77,5 +77,32 @@ describe("AppDockTools", () => {
     expect(visible("linux", "dock_read")).toBe(false)
     expect(agents.get("linux")?.mode).toBe("subagent")
   })
+
+  test("the linux agent keeps the owner's dock rule as configured, and allows dock when none is set", () => {
+    // config-agent pushes the owner's global permissions onto every agent before the scope runs.
+    const cases = [
+      { global: [{ action: "dock", resource: "*", effect: "ask" as const }], effect: "ask" },
+      { global: [], effect: "allow" },
+    ]
+    for (const { global, effect } of cases) {
+      const agents = new Map([["linux", { ...AgentV2.Info.empty(AgentV2.ID.make("linux")), permissions: [...global] }]]) as Map<
+        string,
+        Parameters<Parameters<AgentV2.Draft["update"]>[1]>[0]
+      >
+      AppDockTools.scope({
+        list: () => [...agents.values()],
+        get: (id) => agents.get(id),
+        default: () => undefined,
+        remove: (id) => void agents.delete(id),
+        update: (id, fn) => {
+          const agent = agents.get(id) ?? { ...AgentV2.Info.empty(id), permissions: [] }
+          agents.set(id, agent)
+          fn(agent)
+        },
+      })
+      expect(PermissionV2.evaluate("dock", "wait", agents.get("linux")!.permissions).effect).toBe(effect)
+      expect(PermissionV2.evaluate("linux", "exec", agents.get("linux")!.permissions).effect).toBe("allow")
+    }
+  })
 })
 

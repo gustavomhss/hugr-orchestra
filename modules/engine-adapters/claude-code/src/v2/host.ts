@@ -221,13 +221,14 @@ async function* input(text: string, signal: AbortSignal): AsyncGenerator<SDKUser
   await new Promise((resolve) => signal.addEventListener("abort", resolve, { once: true }))
 }
 
-function permission(tool: string, input: Record<string, unknown>, directory: string) {
+export function permission(tool: string, input: Record<string, unknown>, directory: string) {
   const rule = PERMISSIONS[tool]
   const value = rule ? input[rule.field] : undefined
   if (!rule || typeof value !== "string") return { action: tool.toLowerCase(), resources: ["*"] }
   if (!rule.path || !path.isAbsolute(value)) return { action: rule.action, resources: [value] }
   const relative = path.relative(directory, value)
-  return { action: rule.action, resources: [relative.startsWith("..") || path.isAbsolute(relative) ? value : relative] }
+  const outside = relative === ".." || relative.startsWith(".." + path.sep) || path.isAbsolute(relative)
+  return { action: rule.action, resources: [outside ? value : relative] }
 }
 
 function denial(error: { readonly _tag: string }) {
