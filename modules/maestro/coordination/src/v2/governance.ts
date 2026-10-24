@@ -22,7 +22,7 @@ export interface MaestroAdmission extends TaskGovernance.Admission {
 }
 
 const GovernanceInput = Schema.Struct({
-  ...TaskGovernance.allowAll.input,
+  ...TaskGovernance.GovernanceInputSchema.fields,
   taskPriority: Schema.String.pipe(Schema.optional).annotate({ description: "Task priority: normal | high | low" }),
   background: Schema.Boolean.pipe(Schema.optional).annotate({ description: "Run child in background" }),
 })

@@ -233,8 +233,8 @@ const layer = Layer.effect(
       ]
       const initialized = yield* SessionContextEpoch.initialize(db, loadSystemContext(agent), session.id)
       const toolFibers = yield* FiberSet.make<void, ToolOutputStore.Error>()
-      yield* Effect.addFinalizer(() => FiberSet.clear(toolFibers))
-      const toolFiberRef = yield* Effect.ref<ReadonlyArray<Fiber.RuntimeFiber<ToolRegistry.Settlement, ToolOutputStore.Error>>>([])
+      yield* Effect.addFinalizer(() => FiberSet.interruptAll(toolFibers))
+      const toolFiberRef = yield* Ref.make<ReadonlyArray<Fiber.RuntimeFiber<ToolRegistry.Settlement, ToolOutputStore.Error>>>([])
       let needsContinuation = false
       let currentStep = step
       if (promotion) {
@@ -242,8 +242,9 @@ const layer = Layer.effect(
         let promoted = 0
         if (promotion === "steer") promoted = yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
         if (promotion === "queue") {
+          // V2: promote exactly ONE queued input at the idle boundary
           promoted += Number(yield* SessionInput.promoteNextQueued(db, events, session.id))
-          promoted += yield* SessionInput.promoteSteers(db, events, session.id, cutoff)
+          // Steers are promoted separately in "steer" promotion; don't promote them here
         }
         if (promoted > 0) {
           currentStep = 1

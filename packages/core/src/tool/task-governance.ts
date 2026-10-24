@@ -3,7 +3,7 @@ export * as TaskGovernance from "./task-governance"
 import type { ToolFailure } from "@orchestra/llm"
 import type { Permission } from "@orchestra/schema/permission"
 import type { PromptInput } from "@orchestra/schema/prompt-input"
-import { Context, Effect, Layer, type Schema } from "effect"
+import { Context, Effect, Layer, Schema } from "effect"
 import type { AgentV2 } from "../agent"
 import { makeLocationNode } from "../effect/app-node"
 import type { SessionMessage } from "../session/message"
@@ -30,6 +30,12 @@ export interface Admission {
   /** Opaque value handed back to `settle`. */
   readonly receipt?: unknown
 }
+
+/** Governance input schema for Task tool — validates governance fields at call time. */
+export const GovernanceInputSchema = Schema.Struct({
+  taskPriority: Schema.String.pipe(Schema.optional).annotate({ description: "Task priority: normal | high | low" }),
+  background: Schema.Boolean.pipe(Schema.optional).annotate({ description: "Run child in background" }),
+})
 
 /**
  * Location-scoped policy for Task delegation. The default admits every call unchanged; a product replaces `node`
@@ -59,8 +65,13 @@ export interface Interface {
 export class Service extends Context.Service<Service, Interface>()("@orchestra/v2/TaskGovernance") {}
 
 export const allowAll = Service.of({
-  input: {},
-  admit: () => Effect.succeed({}),
+  input: GovernanceInputSchema,
+  admit: (input) => Schema.decodeUnknownEffect(GovernanceInputSchema)(input.input).pipe(
+    Effect.map((decoded) => ({
+      background: decoded.background,
+      taskPriority: decoded.taskPriority,
+    })),
+  ),
   beforeTurn: () => Effect.void,
   settle: (input) =>
     Effect.succeed({

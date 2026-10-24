@@ -68,7 +68,7 @@ const layer = Layer.effectDiscard(
     const policy = yield* SessionSubagentModels.Service
     const governance = yield* TaskGovernance.Service
     // Governance-supplied fields extend the Task input; the default adds none.
-    const schema = Schema.Struct({ ...Input.fields, ...governance.input }) as unknown as typeof Input
+    const schema = Schema.Struct({ ...Input.fields, ...TaskGovernance.GovernanceInputSchema.fields }) as unknown as typeof Input
     yield* tools.register({
       [name]: Tool.make({
         description,
@@ -81,7 +81,8 @@ const layer = Layer.effectDiscard(
           const parent = yield* requireParent(store, location, context, input, schema)
           const target = yield* requireTarget(agents, input.subagent_type)
           // Governance decides on the call before any child exists; an explicit task_id still names the child to resume.
-          const admission = yield* governance.admit({ parent, target, input, context })
+          const governanceInput = yield* Schema.decodeUnknownEffect(TaskGovernance.GovernanceInputSchema)(input)
+          const admission = yield* governance.admit({ parent, target, input: governanceInput, context })
           const childID =
             input.task_id ?? admission.childID ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
           const existing = yield* store.get(childID)
