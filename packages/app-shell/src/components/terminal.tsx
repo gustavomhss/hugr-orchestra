@@ -13,6 +13,7 @@ import type { LocalPTY } from "@/context/terminal"
 import { disposeIfDisposable, getHoveredLinkText, setOptionIfSupported } from "@/utils/runtime-adapters"
 import { createTerminalTheme } from "@/utils/terminal-theme"
 import { terminalWriter } from "@/utils/terminal-writer"
+import { fetchPtyTicket } from "@/utils/pty-ticket"
 import { terminalWebSocketURL } from "@/utils/terminal-websocket-url"
 
 const TOGGLE_TERMINAL_ID = "terminal.toggle"
@@ -144,8 +145,6 @@ export const Terminal = (props: TerminalProps) => {
   const auth = connection.http
   const username = auth?.username ?? "orchestra"
   const password = auth?.password ?? ""
-  const authToken = connection.type === "http" ? connection.authToken : false
-  const sameOrigin = new URL(url, location.href).origin === location.origin
   let container!: HTMLDivElement
   const [local, others] = splitProps(props, [
     "pty",
@@ -477,7 +476,8 @@ export const Terminal = (props: TerminalProps) => {
           })
       }
 
-      const connectToken = async () => undefined
+      const connectToken = () =>
+        fetchPtyTicket({ url, ptyID: id, directory, username, password, fetch: platform.fetch })
 
       const retry = (err: unknown) => {
         if (disposed) return
@@ -506,22 +506,16 @@ export const Terminal = (props: TerminalProps) => {
           fail(err)
           return undefined
         })
-        const protocol = "v2" as const
         if (once.value) return
         if (disposed) return
 
         const socket = new WebSocket(
           terminalWebSocketURL({
-            protocol,
             url,
             id,
             directory,
             cursor: seek,
             ticket,
-            sameOrigin,
-            username,
-            password,
-            authToken,
           }),
         )
         socket.binaryType = "arraybuffer"

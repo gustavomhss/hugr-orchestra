@@ -124,6 +124,20 @@ const trimTerminal = (pty: LocalPTY) => {
   }
 }
 
+// The server owns a PTY's title and size, so a local edit must reach it or it reverts on the next load.
+export function updateServerPty(
+  api: Pick<DirectorySDK["api"]["pty"], "update">,
+  location: { directory: string },
+  pty: Partial<LocalPTY> & { id: string },
+) {
+  return api.update({
+    ptyID: pty.id,
+    location,
+    title: pty.title,
+    size: pty.cols && pty.rows ? { rows: pty.rows, cols: pty.cols } : undefined,
+  })
+}
+
 function terminalPersistTarget(scope: ServerScopeValue, dir: string, legacy?: string[]) {
   return Persist.serverWorkspace(scope, dir, "terminal", legacy)
 }
@@ -233,15 +247,13 @@ function createWorkspaceTerminalSession(
     if (index >= 0) {
       setStore("all", index, (item) => ({ ...item, ...pty }))
     }
-    const doUpdate = async () => {
-    }
-    doUpdate().catch((error: unknown) => {
-      if (previous) {
-        const currentIndex = store.all.findIndex((item) => item.id === pty.id)
-        if (currentIndex >= 0) setStore("all", currentIndex, previous)
-      }
-      console.error("Failed to update terminal", error)
-    })
+    updateServerPty(sdk.api.pty, location, pty).catch((error: unknown) => {
+        if (previous) {
+          const currentIndex = store.all.findIndex((item) => item.id === pty.id)
+          if (currentIndex >= 0) setStore("all", currentIndex, previous)
+        }
+        console.error("Failed to update terminal", error)
+      })
   }
 
   const clone = async (id: string) => {

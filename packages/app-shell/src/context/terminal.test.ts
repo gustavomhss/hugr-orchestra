@@ -5,6 +5,7 @@ let getWorkspaceTerminalCacheKey: typeof import("./terminal").getWorkspaceTermin
 let getLegacyTerminalStorageKeys: (dir: string, legacySessionID?: string) => string[]
 let migrateTerminalState: (value: unknown) => unknown
 let isTerminalGoneError: (error: unknown) => boolean
+let updateServerPty: typeof import("./terminal").updateServerPty
 
 beforeAll(async () => {
   mock.module("@solidjs/router", () => ({
@@ -24,6 +25,7 @@ beforeAll(async () => {
   getLegacyTerminalStorageKeys = mod.getLegacyTerminalStorageKeys
   migrateTerminalState = mod.migrateTerminalState
   isTerminalGoneError = mod.isTerminalGoneError
+  updateServerPty = mod.updateServerPty
 })
 
 describe("getWorkspaceTerminalCacheKey", () => {
@@ -103,5 +105,16 @@ describe("isTerminalGoneError", () => {
     expect(isTerminalGoneError({ _tag: "PtyForbiddenError" })).toBe(false)
     expect(isTerminalGoneError(Object.assign(new Error("request failed"), { cause: { status: 500 } }))).toBe(false)
     expect(isTerminalGoneError(undefined)).toBe(false)
+  })
+})
+
+describe("updateServerPty", () => {
+  test("sends the renamed title and size to the V2 pty route", async () => {
+    const calls: unknown[] = []
+    const api = { update: async (input: unknown) => void calls.push(input) } as unknown as Parameters<typeof updateServerPty>[0]
+    await updateServerPty(api, { directory: "/repo" }, { id: "pty_1", title: "logs", cols: 100, rows: 30 })
+    expect(calls).toEqual([
+      { ptyID: "pty_1", location: { directory: "/repo" }, title: "logs", size: { rows: 30, cols: 100 } },
+    ])
   })
 })
