@@ -39,9 +39,11 @@ describe("SessionProcess", () => {
       // Only the two calls the registry makes; the first synthetic lands mid-turn and is refused.
       const sessions = {
         synthetic: (input: { sessionID: SessionV2.ID; text: string }) =>
-          state.busy
-            ? Effect.fail(new SessionV2.BusyError({ sessionID: input.sessionID }))
-            : Effect.sync(() => delivered.push(input.text)),
+          Effect.suspend(() =>
+            state.busy
+              ? Effect.fail(new SessionV2.BusyError({ sessionID: input.sessionID }))
+              : Effect.sync(() => delivered.push(input.text)),
+          ),
         wait: () =>
           Effect.sync(() => {
             state.waits++

@@ -248,7 +248,9 @@ const make = Effect.gen(function* () {
 function deliver(sessions: SessionV2.Interface, sessionID: SessionV2.ID, text: string): Effect.Effect<void> {
   return sessions.synthetic({ sessionID, text, resume: true }).pipe(
     Effect.asVoid,
-    Effect.catchTag("Session.BusyError", () => sessions.wait(sessionID).pipe(Effect.andThen(deliver(sessions, sessionID, text)))),
+    Effect.catchTag("Session.BusyError", () =>
+      sessions.wait(sessionID).pipe(Effect.andThen(Effect.suspend(() => deliver(sessions, sessionID, text)))),
+    ),
     Effect.ignore,
   )
 }
