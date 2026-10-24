@@ -91,12 +91,12 @@ const makeLayer = Effect.gen(function* () {
           if (!session) {
             return yield* Effect.fail(new ContinuityToolFailure({ message: "Session not found" }))
           }
-          const compacted = yield* compaction.compact({
+const compacted = yield* compaction.compact({
             sessionID: ctx.sessionID,
             entries: [],
             model: {
-              id: "test" as any,
-              provider: "test",
+              id: ModelV2.ID.make("test"),
+              provider: ModelV2.ProviderID.make("test"),
               route: { defaults: { limits: { context: 100000, output: 4096 } } },
             },
             request: { system: [], messages: [], tools: [] },
