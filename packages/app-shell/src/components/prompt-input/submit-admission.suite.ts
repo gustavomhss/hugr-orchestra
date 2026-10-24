@@ -16,6 +16,7 @@ import {
   promotedDrafts,
   prompt,
   promptInputs,
+  projectCopyRequests,
   savedRules,
   sentShell,
   sessionCreateInputs,
@@ -279,6 +280,28 @@ describe("prompt admission and worktree selection", () => {
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "first" })
     expect(draft.current()[0]).toMatchObject({ content: "later typing" })
+  })
+
+  test("creates a new workspace through the V2 project copy route and readies it", async () => {
+    projectCopyRequests.length = 0
+    const draft = createPromptState({ prompt: "first" })
+    const submit = createPromptSubmit({
+      ...submitInput(),
+      prompt: draft,
+      info: () => undefined,
+      newSessionWorktree: () => "create",
+    })
+    await submit.handleSubmit({ preventDefault: () => undefined } as Event)
+    expect(projectCopyRequests).toEqual([
+      {
+        projectID: "project",
+        strategy: "git_worktree",
+        directory: "/repo/main-workspaces",
+        name: expect.stringMatching(/^session-/),
+        location: { directory: "/repo/main" },
+      },
+    ])
+    expect(createdSessions.at(-1)).toBe("/repo/main/new")
   })
 
   test("reads the latest worktree accessor value per submit", async () => {

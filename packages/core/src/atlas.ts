@@ -36,6 +36,7 @@ import { Effect, Option, Schema } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import type { Npm } from "./npm"
 import type { AppProcess } from "./process"
+import { Project } from "./project"
 
 // The host side of the Atlas screen, shared by the legacy instance routes and the V2 server. `open` binds the Atlas
 // surface (the boundary's `./surface` entry) to one store root and runs each read or write in process. The surface is
@@ -100,7 +101,7 @@ export interface Interface {
 export type Dependencies = { readonly npm: Npm.Interface; readonly processes: AppProcess.Interface }
 
 /** The store root (D5): the project worktree, or the directory when the project has none ("/"). */
-export const storeRoot = (worktree: string, directory: string) => (worktree === "/" ? directory : worktree)
+export const storeRoot = (worktree: string, directory: string) => (Project.isRoot(worktree) ? directory : worktree)
 
 /**
  * The surface over the store at `root`. `projectID` is the Orchestra project id the first territory catalog records

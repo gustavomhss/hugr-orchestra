@@ -38,7 +38,7 @@ const FileReadCommand = effectCmd({
       description: "File path to read",
     }),
   handler: Effect.fn("Cli.debug.file.read")(function* (args) {
-    const file = yield* filesystem(FileSystem.Service.use((svc) => svc.read({ path: RelativePath.make(args.path) })))
+    const file = yield* filesystem(FileSystem.Service.use((svc) => svc.read({ path: RelativePath.make(args.path) }).pipe(Effect.orDie)))
     process.stdout.write(
       JSON.stringify(
         { content: Buffer.from(file.content).toString("base64"), encoding: "base64", mime: file.mime },

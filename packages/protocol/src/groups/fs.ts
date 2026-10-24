@@ -3,6 +3,7 @@ import { Location } from "@orchestra/schema/location"
 import { PositiveInt, RelativePath } from "@orchestra/schema/schema"
 import { type Context, Schema } from "effect"
 import { HttpApiEndpoint, HttpApiGroup, HttpApiMiddleware, HttpApiSchema, OpenApi } from "effect/unstable/httpapi"
+import { InvalidRequestError } from "../errors"
 import { LocationQuery, locationQueryOpenApi } from "./location"
 
 const ListQuery = Schema.Struct({
@@ -28,6 +29,7 @@ export const makeFileSystemGroup = <I extends HttpApiMiddleware.AnyId, S>(locati
         path: RelativePath,
       }),
       success: Schema.Uint8Array.pipe(HttpApiSchema.asUint8Array()),
+      error: InvalidRequestError,
     })
       .middleware(locationMiddleware)
       .annotateMerge(locationQueryOpenApi)
