@@ -6,8 +6,16 @@ import { RelativePath } from "@orchestra/core/schema"
 import { Effect } from "effect"
 import { HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 import { HttpApiBuilder } from "effect/unstable/httpapi"
+import { InvalidRequestError } from "@orchestra/protocol/errors"
 import { Api } from "../api"
 import { ref, response } from "../location"
+
+// The declared 400 for a path fs.read cannot serve, so the client sees why instead of an empty 500.
+const readFailure = {
+  outside: { kind: "path_outside_location", message: "Path is outside the location" },
+  missing: { kind: "file_not_found", message: "File not found" },
+  "not-file": { kind: "not_a_file", message: "Not a file" },
+}
 
 export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handlers) =>
   Effect.gen(function* () {
@@ -16,9 +24,17 @@ export const FileSystemHandler = HttpApiBuilder.group(Api, "server.fs", (handler
     return handlers
       .handleRaw("fs.read", (ctx) =>
         Effect.gen(function* () {
-          const file = yield* (yield* FileSystem.Service).read({
-            path: RelativePath.make(ctx.query.path),
-          })
+          const fs = yield* FileSystem.Service
+          const file = yield* fs.read({ path: RelativePath.make(ctx.query.path) }).pipe(
+            Effect.mapError(
+              (error) =>
+                new InvalidRequestError({
+                  message: `${readFailure[error.reason].message}: ${error.path}`,
+                  kind: readFailure[error.reason].kind,
+                  field: "path",
+                }),
+            ),
+          )
           return HttpServerResponse.uint8Array(file.content, { contentType: file.mime })
         }),
       )

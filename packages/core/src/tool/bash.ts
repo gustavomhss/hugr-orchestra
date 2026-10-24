@@ -10,6 +10,7 @@ import { FSUtil } from "../fs-util"
 import { LocationMutation } from "../location-mutation"
 import { Location } from "../location"
 import { AppProcess } from "../process"
+import { Project } from "../project"
 import { SessionProcess } from "../session-process"
 import { PermissionV2 } from "../permission"
 import { PositiveInt } from "../schema"
@@ -206,7 +207,7 @@ const layer = Layer.effectDiscard(
               const timeout = input.timeout ?? DEFAULT_TIMEOUT_MS
               const profile = yield* ToolSafety.RuntimeProfile
               yield* ToolSafetyGit.before({ command: input.command, directory: location.directory,
-                projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+                projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
                 cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
                 neverTouch: profile?.neverTouch,
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))

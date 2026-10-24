@@ -23,6 +23,12 @@ export type ID = ProjectSchema.ID
 export const Vcs = ProjectSchema.Vcs
 export type Vcs = ProjectSchema.Vcs
 
+/**
+ * True for the shared project of a directory outside any repository, whose directory `resolve` sets to the
+ * filesystem root: `/`, or a drive root such as `C:\` on Windows. Its directories are the Location's own, not the root.
+ */
+export const isRoot = (directory: string, paths: path.PlatformPath = path) => paths.parse(directory).root === directory
+
 export class Info extends Schema.Class<Info>("Project.Info")({
   id: ID,
 }) {}
