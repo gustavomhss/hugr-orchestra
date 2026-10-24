@@ -43,7 +43,8 @@ export type Data = {
 }
 
 export type Draft = {
-  source: (source: Source) => void
+  /** Adds a source after the others, so its skills win same-name conflicts; `first` puts it before them instead. */
+  source: (source: Source, options?: { readonly first?: boolean }) => void
   list: () => readonly Source[]
 }
 
@@ -66,8 +67,9 @@ const layer = Layer.effect(
     const state = State.create<Data, Draft>({
       initial: () => ({ sources: [] }),
       draft: (draft) => ({
-        source: (source) => {
+        source: (source, options) => {
           if (draft.sources.some((item) => Source.equals(item, source))) return
+          if (options?.first) return void draft.sources.unshift(source as Types.DeepMutable<Source>)
           draft.sources.push(source as Types.DeepMutable<Source>)
         },
         list: () => draft.sources as Source[],

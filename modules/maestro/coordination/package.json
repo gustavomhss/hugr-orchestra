@@ -25,7 +25,9 @@
     "./task-hash": "./src/task-hash.ts",
     "./upstream-result": "./src/upstream-result.ts",
     "./work-contract": "./src/work-contract.ts",
-    "./v2/seats": "./src/v2/seats.ts"
+    "./v2/seats": "./src/v2/seats.ts",
+    "./v2/seats-service": "./src/v2/seats-service.ts",
+    "./v2/skill-sources": "./src/v2/skill-sources.ts"
   },
   "scripts": {
     "test": "bun test --timeout 30000",
