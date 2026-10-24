@@ -9,7 +9,7 @@ html[data-color-scheme] body[data-mx-kit] {
   --mx-soft: rgba(170, 196, 220, 0.055);
   --mx-raised: rgba(19, 28, 38, 0.55);
   --mx-modal: #111922;
-  --mx-dim: #8d9cab;
+  --mx-dim: #9aa8b7;
   --mx-strong: #e1e9f0;
   --mx-blue: #9abfe5;
   --mx-good: #92bea7;
@@ -58,7 +58,7 @@ html[data-color-scheme="light"] body[data-mx-kit] {
 .mx-dialog {
   font-family: var(--mx-sans);
   font-optical-sizing: none;
-  font-size: 16px;
+  font-size: var(--orchestra-font-size-xl);
   font-weight: 400;
   line-height: normal;
 }
@@ -81,7 +81,7 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 .mx-eyebrow {
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
   margin-block-end: 8px;
@@ -89,7 +89,7 @@ html[data-color-scheme="light"] .mx-dialog {
 .mx-heading h1 {
   margin: 0;
   color: var(--mx-strong);
-  font-size: 30px;
+  font-size: var(--orchestra-font-size-4xl);
   letter-spacing: -0.035em;
   font-family: var(--mx-emphasis);
   font-weight: 600;
@@ -99,7 +99,7 @@ html[data-color-scheme="light"] .mx-dialog {
   margin: 9px 0 0;
   max-inline-size: 540px;
   color: var(--mx-dim);
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
   line-height: 1.6;
 }
 .mx-toolbar {
@@ -115,11 +115,11 @@ html[data-color-scheme="light"] .mx-dialog {
   block-size: 34px;
   padding: 0 11px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
   color: var(--mx-strong);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   outline: none;
 }
 .mx-search:focus {
@@ -137,7 +137,7 @@ html[data-color-scheme="light"] .mx-dialog {
   min-inline-size: 0;
   padding: 18px;
   border: 1px solid var(--mx-line);
-  border-radius: 11px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--mx-raised);
   box-shadow: var(--mx-highlight);
 }
@@ -154,7 +154,7 @@ html[data-color-scheme="light"] .mx-dialog {
   flex: none;
   place-items: center;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-soft);
   color: var(--mx-blue);
 }
@@ -164,7 +164,7 @@ html[data-color-scheme="light"] .mx-dialog {
   display: block;
 }
 .mx-card h3 {
-  font-size: 14px;
+  font-size: var(--orchestra-font-size-lg);
   letter-spacing: -0.015em;
   margin: 0;
   color: var(--mx-strong);
@@ -174,7 +174,7 @@ html[data-color-scheme="light"] .mx-dialog {
 .mx-card p {
   margin: 12px 0;
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.65;
 }
 .mx-meta {
@@ -190,7 +190,7 @@ html[data-color-scheme="light"] .mx-dialog {
   align-items: center;
   gap: 5px;
   border: 1px solid var(--mx-line);
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   padding: 2px 6px;
   color: var(--mx-dim);
   font: 10px/15px var(--mx-mono);
@@ -221,11 +221,11 @@ html[data-color-scheme="light"] .mx-dialog {
   min-block-size: 30px;
   padding: 0 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--mx-soft);
   color: var(--mx-strong);
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
   white-space: nowrap;
 }
@@ -257,7 +257,7 @@ html[data-color-scheme="light"] .mx-dialog {
   background: transparent;
   color: var(--mx-blue);
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 .mx-toggle {
@@ -268,7 +268,7 @@ html[data-color-scheme="light"] .mx-dialog {
   display: inline-block;
   padding: 0;
   border: 1px solid var(--mx-line);
-  border-radius: 12px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--mx-soft);
   cursor: pointer;
 }
@@ -300,14 +300,14 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 .mx-section {
   margin: 26px 0 12px;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-family: var(--mx-emphasis);
   font-weight: 600;
   color: var(--mx-strong);
 }
 .mx-table {
   border: 1px solid var(--mx-line);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   overflow: hidden;
   background: var(--mx-raised);
 }
@@ -328,7 +328,7 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 .mx-row strong {
   display: block;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
   font-weight: 600;
@@ -336,36 +336,36 @@ html[data-color-scheme="light"] .mx-dialog {
 .mx-row small {
   display: block;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   margin-block-start: 4px;
   line-height: 1.45;
 }
 .mx-empty {
   padding: 38px 20px;
   border: 1px dashed var(--mx-line);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   text-align: center;
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.7;
 }
 .mx-note {
   margin: 18px 0 0;
   color: var(--mx-dim);
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.6;
 }
 .mx-error {
   margin: 0 0 15px;
   color: var(--mx-bad);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .mx-log {
   margin: 14px 0 0;
   padding: 12px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
   color: var(--mx-dim);
   font: 11px/1.7 var(--mx-mono);
@@ -380,7 +380,7 @@ html[data-color-scheme="light"] .mx-dialog {
   flex-direction: column;
   padding: 0;
   border: 1px solid var(--mx-line);
-  border-radius: 14px;
+  border-radius: var(--orchestra-radius-xl);
   background: var(--mx-modal);
   color: var(--mx-strong);
   box-shadow: var(--mx-shadow);
@@ -396,14 +396,14 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 .mx-dialog-head h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: var(--orchestra-font-size-2xl);
   font-family: var(--mx-emphasis);
   font-weight: 600;
   letter-spacing: -0.025em;
 }
 .mx-dialog-head p {
   margin: 7px 0 0;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-dim);
   line-height: 1.6;
 }
@@ -432,7 +432,7 @@ html[data-color-scheme="light"] .mx-dialog {
   margin-block-end: 16px;
 }
 .mx-field > span {
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-dim);
 }
 .mx-field input,
@@ -443,12 +443,12 @@ html[data-color-scheme="light"] .mx-dialog {
   block-size: 35px;
   padding: 7px 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--mx-raised);
   color: var(--mx-strong);
   outline: 0;
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .mx-field textarea {
@@ -470,7 +470,7 @@ html[data-color-scheme="light"] .mx-dialog {
   min-inline-size: 180px;
   padding: 5px;
   border: 1px solid var(--mx-line);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
 }
@@ -479,11 +479,11 @@ html[data-color-scheme="light"] .mx-dialog {
   inline-size: 100%;
   padding: 8px 10px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font-family: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
 }

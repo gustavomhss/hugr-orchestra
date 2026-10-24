@@ -1,3 +1,31 @@
+/* Orchestra's scales. Every radius and font size in Orchestra's stylesheets comes from here. Radii nest
+   concentrically: a panel's radius plus the gutter around it is its container's radius (10 + 6 = 16). */
+:root {
+  --orchestra-radius-xs: 4px;
+  --orchestra-radius-sm: 6px;
+  --orchestra-radius-md: 8px;
+  --orchestra-radius-lg: 10px;
+  --orchestra-radius-xl: 16px;
+  --orchestra-radius-full: 999px;
+
+  --orchestra-font-size-2xs: 10px;
+  --orchestra-font-size-xs: 11px;
+  --orchestra-font-size-sm: 12px;
+  --orchestra-font-size-md: 13px;
+  --orchestra-font-size-lg: 14px;
+  --orchestra-font-size-xl: 16px;
+  --orchestra-font-size-2xl: 20px;
+  --orchestra-font-size-3xl: 24px;
+  --orchestra-font-size-4xl: 30px;
+
+  --orchestra-ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --orchestra-duration-fast: 120ms;
+  --orchestra-duration-base: 180ms;
+
+  /* Fine grain over every glass: it breaks gradient banding and gives the tint a material surface. */
+  --orchestra-grain: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>");
+}
+
 /* App-owned skin. Body scope also reaches menus, dialogs, and toasts rendered through portals. */
 /* Prefix first: Tailwind's optimizer otherwise drops the standard backdrop property. */
 html[data-color-scheme] body[data-new-layout] {
@@ -7,9 +35,9 @@ html[data-color-scheme] body[data-new-layout] {
   --glass-shadow: var(--orchestra-glass-shadow);
   --orchestra-text: #eef1f5;
   --orchestra-body: #c7d0d9;
-  --orchestra-muted: #8c9aaa;
+  --orchestra-muted: #9aa8b7;
   --orchestra-faint: #7b8c9e;
-  --orchestra-accent: #7ea5cc;
+  --orchestra-accent: #88aed4;
   --orchestra-warm: #c9b78f;
   --orchestra-success: #9dbfae;
   --orchestra-danger: #d29e9b;
@@ -24,21 +52,41 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-label: #7d8b9b;
   --orchestra-toolbar-brand: #b9c4cf;
   --orchestra-toolbar-button: #657383;
+  /* The photograph stays visible: the glass carries the tint that keeps text legible, not a veil over
+     the whole workspace, so there is something behind the glass for it to refract. */
   --orchestra-workspace-overlay:
-    linear-gradient(180deg, rgba(9, 14, 20, 0.7), rgba(9, 14, 20, 0.58) 42%, rgba(9, 14, 20, 0.74)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(26, 37, 50, 0.42), transparent 68%);
+    linear-gradient(180deg, rgba(9, 14, 20, 0.5), rgba(9, 14, 20, 0.32) 42%, rgba(9, 14, 20, 0.56)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(26, 37, 50, 0.32), transparent 68%);
 
+  /* Chrome glass: the sidebar, the tab strip and the toolbar. A wide blur that lifts saturation reads as
+     glass; a narrow one that darkens and desaturates reads as tinted plastic. */
   --orchestra-glass-background: linear-gradient(
     180deg,
-    rgba(26, 36, 48, 0.5) 0%,
-    rgba(13, 19, 26, 0.46) 46%,
-    rgba(10, 15, 21, 0.54) 100%
+    rgba(32, 44, 58, 0.54) 0%,
+    rgba(17, 24, 33, 0.62) 46%,
+    rgba(11, 16, 23, 0.66) 100%
   );
-  --orchestra-glass-filter: blur(8px) brightness(0.74) saturate(0.9);
-  --orchestra-glass-border: rgba(160, 179, 197, 0.16);
+  --orchestra-glass-filter: blur(28px) brightness(0.8) saturate(1.6);
+  --orchestra-glass-border: rgba(160, 179, 197, 0.1);
+  /* The rim catches light from above and fades down the sides; drawn as a masked ring (see below). */
+  --orchestra-glass-rim: linear-gradient(
+    180deg,
+    rgba(226, 238, 250, 0.26) 0%,
+    rgba(226, 238, 250, 0.08) 28%,
+    rgba(226, 238, 250, 0.03) 70%,
+    rgba(226, 238, 250, 0.06) 100%
+  );
+  --orchestra-glass-sheen: radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), transparent 60%);
   --orchestra-glass-shadow:
-    inset 0 1px 0 rgba(214, 231, 247, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.4),
-    0 4px 12px rgba(0, 0, 0, 0.2);
+    inset 0 1px 0 rgba(214, 231, 247, 0.1), inset 0 -1px 0 rgba(0, 0, 0, 0.28), 0 1px 2px rgba(0, 0, 0, 0.36),
+    0 10px 30px rgba(0, 0, 0, 0.24);
+
+  /* Float glass: menus, popovers and dialogs. The strongest glass, because nothing sits on it but text
+     and it is open only briefly. */
+  --orchestra-float-background: linear-gradient(180deg, rgba(30, 40, 53, 0.72), rgba(18, 25, 34, 0.8));
+  --orchestra-float-filter: blur(40px) brightness(0.9) saturate(1.8);
+  --orchestra-scrim: rgba(5, 9, 14, 0.42);
+  --orchestra-scrim-filter: blur(6px) saturate(1.1);
 
   --orchestra-sidebar-text: #b4c0cf;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.045);
@@ -78,7 +126,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-tab-icon: #aebdcb;
   --orchestra-branch-color: #d5ae68;
   --orchestra-branch-font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  --orchestra-branch-font-size: 10px;
+  --orchestra-branch-font-size: var(--orchestra-font-size-2xs);
   --orchestra-branch-font-weight: 500;
 
   --orchestra-surface: rgba(32, 43, 55, 0.7);
@@ -261,20 +309,33 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-toolbar-brand: #2b3440;
   --orchestra-toolbar-button: #5f6874;
   --orchestra-workspace-overlay:
-    linear-gradient(180deg, rgba(226, 231, 236, 0.5), rgba(226, 231, 236, 0.34) 42%, rgba(222, 228, 234, 0.56)),
-    radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.5), transparent 68%);
+    linear-gradient(180deg, rgba(226, 231, 236, 0.4), rgba(226, 231, 236, 0.22) 42%, rgba(222, 228, 234, 0.46)),
+    radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
 
   --orchestra-glass-background: linear-gradient(
     180deg,
     rgba(255, 255, 255, 0.62) 0%,
-    rgba(248, 250, 252, 0.5) 46%,
-    rgba(240, 244, 247, 0.6) 100%
+    rgba(248, 250, 252, 0.54) 46%,
+    rgba(240, 244, 247, 0.64) 100%
   );
-  --orchestra-glass-filter: blur(16px) brightness(1.04) saturate(0.96);
-  --orchestra-glass-border: rgba(70, 84, 98, 0.16);
+  --orchestra-glass-filter: blur(28px) brightness(1.06) saturate(1.6);
+  --orchestra-glass-border: rgba(70, 84, 98, 0.12);
+  --orchestra-glass-rim: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.95) 0%,
+    rgba(255, 255, 255, 0.45) 30%,
+    rgba(255, 255, 255, 0.2) 70%,
+    rgba(255, 255, 255, 0.35) 100%
+  );
+  --orchestra-glass-sheen: radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), transparent 60%);
   --orchestra-glass-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95), inset 0 -1px 0 rgba(120, 136, 152, 0.14), 0 1px 2px rgba(38, 50, 64, 0.14),
-    0 4px 12px rgba(38, 50, 64, 0.08);
+    inset 0 1px 0 rgba(255, 255, 255, 0.9), inset 0 -1px 0 rgba(120, 136, 152, 0.12), 0 1px 2px rgba(38, 50, 64, 0.12),
+    0 10px 30px rgba(38, 50, 64, 0.1);
+
+  --orchestra-float-background: linear-gradient(180deg, rgba(255, 255, 255, 0.8), rgba(246, 248, 251, 0.86));
+  --orchestra-float-filter: blur(40px) brightness(1.08) saturate(1.8);
+  --orchestra-scrim: rgba(40, 52, 66, 0.2);
+  --orchestra-scrim-filter: blur(6px) saturate(1.1);
 
   --orchestra-sidebar-text: #4b5460;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.55);
@@ -334,6 +395,38 @@ html[data-color-scheme="light"][dir="rtl"] body[data-new-layout] {
   --orchestra-sidebar-active-background: linear-gradient(270deg, rgba(96, 138, 180, 0.28), rgba(120, 160, 200, 0.18));
 }
 
+/* Float glass for everything that opens over the workspace. Specificity beats the shared components'
+   own surface; the rim is an inset ring because these boxes keep their 1px border for layout. */
+html[data-color-scheme]
+  body[data-new-layout]
+  :is(
+    [data-component="popover-content"],
+    [data-component="dropdown-menu-content"],
+    [data-component="dropdown-menu-sub-content"],
+    [data-component="context-menu-content"],
+    [data-component="context-menu-sub-content"],
+    [data-component="select-content"],
+    [data-component="hover-card-content"],
+    [data-component="menu-v2-content"],
+    .orchestra-profile-menu,
+    [data-component="dialog"] [data-slot="dialog-container"],
+    [data-component="dialog-v2"] [data-slot="dialog-container"]
+  ) {
+  border-color: var(--orchestra-glass-border);
+  background: var(--orchestra-grain), var(--orchestra-float-background);
+  box-shadow:
+    inset 0 1px 0 color-mix(in srgb, var(--orchestra-text) 10%, transparent),
+    var(--orchestra-surface-float-shadow);
+  -webkit-backdrop-filter: var(--orchestra-float-filter);
+  backdrop-filter: var(--orchestra-float-filter);
+}
+
+html[data-color-scheme] body[data-new-layout] [data-component="dialog-overlay"] {
+  background-color: var(--orchestra-scrim);
+  -webkit-backdrop-filter: var(--orchestra-scrim-filter);
+  backdrop-filter: var(--orchestra-scrim-filter);
+}
+
 body[data-new-layout] [data-component="tooltip"] {
   color: var(--text-strong);
 }
@@ -370,7 +463,7 @@ html[data-color-scheme="light"] .orchestra-brand [data-slot="orchestra-brand-log
 
 .orchestra-brand [data-slot="orchestra-brand-descriptor"] {
   color: var(--orchestra-brand-descriptor);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 14px;
   letter-spacing: 0.01em;
 }
@@ -421,7 +514,7 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     margin: 12px;
     overflow: hidden;
     border: 1px solid var(--orchestra-shell-border);
-    border-radius: 13px;
+    border-radius: var(--orchestra-radius-xl);
     background: var(--orchestra-shell-background);
     box-shadow: var(--orchestra-shell-shadow);
   }
@@ -430,10 +523,10 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     block-size: 45px;
     min-block-size: 45px;
     border-block-end: 1px solid var(--orchestra-toolbar-border);
-    background: var(--orchestra-toolbar-background);
+    background: var(--orchestra-grain), var(--orchestra-toolbar-background);
     box-shadow: var(--orchestra-toolbar-highlight);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: var(--orchestra-glass-filter);
+    backdrop-filter: var(--orchestra-glass-filter);
     anchor-name: --orchestra-toolbar;
   }
 
@@ -463,15 +556,33 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
     pointer-events: none;
   }
 
-  html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs) {
+  html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"]) {
     position: relative;
     border: 1px solid var(--orchestra-glass-border);
-    border-radius: 9px;
+    border-radius: var(--orchestra-radius-lg);
     overflow: hidden;
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
     backdrop-filter: var(--orchestra-glass-filter);
+  }
+
+  /* The rim: a 1px ring masked out of a gradient, over the flat border, so the edge brightens where
+   * light would hit it. It paints nothing inside the ring and takes no pointer events. */
+  html[data-color-scheme] body[data-new-layout] :is(.orchestra-glass, .orchestra-sidebar, .orchestra-session-tabs, [data-component="orchestra-home"])::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: 2;
+    padding: 1px;
+    border-radius: inherit;
+    background: var(--orchestra-glass-rim);
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
   }
 
   /* The compositor blurs a backdrop again over its element's whole drawn area, drop shadow included,
@@ -487,7 +598,7 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
   }
 
   html[data-color-scheme] body[data-new-layout] [data-glass-plate] {
-    border-radius: 9px;
+    border-radius: var(--orchestra-radius-lg);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
     backdrop-filter: var(--orchestra-glass-filter);
     pointer-events: none;

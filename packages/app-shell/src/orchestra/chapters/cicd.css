@@ -45,9 +45,9 @@ html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
   align-items: center;
   padding: 8px 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   background: var(--mx-soft);
   cursor: pointer;
 }

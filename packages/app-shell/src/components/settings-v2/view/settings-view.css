@@ -17,7 +17,7 @@
 }
 .orchestra-settings .kicker {
   color: #788899;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   font-family: var(--mx-emphasis);
   font-weight: 600;
   letter-spacing: 0.1em;
@@ -26,7 +26,7 @@
 .orchestra-settings .mast h1 {
   margin: 9px 0 0;
   color: #ebeff3;
-  font-size: 30px;
+  font-size: var(--orchestra-font-size-4xl);
   line-height: 36px;
   font-weight: 600;
   letter-spacing: -0.035em;
@@ -52,11 +52,11 @@
 .orchestra-settings .settings-nav button {
   padding: 7px 10px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: #8c9daf;
   font: inherit;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   text-align: start;
   cursor: pointer;
 }
@@ -83,21 +83,21 @@
 .orchestra-settings .settings-sec > h3 {
   margin: 0 0 3px;
   color: #e2e9f0;
-  font-size: 14px;
+  font-size: var(--orchestra-font-size-lg);
   font-family: var(--mx-emphasis);
   font-weight: 600;
 }
 .orchestra-settings .settings-sec > p {
   margin: 0 0 11px;
   color: #8c9daf;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   line-height: 18px;
 }
 
 .orchestra-settings .perm-table {
   overflow: hidden;
   border: 1px solid rgba(163, 184, 203, 0.13);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
 }
 .orchestra-settings .perm-tool {
   display: flex;
@@ -111,11 +111,11 @@
 }
 .orchestra-settings .perm-tool .tname {
   color: #c3ccd6;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
 }
 .orchestra-settings .perm-tool .tdesc {
   color: #75859a;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .orchestra-settings .perm-tool .seg {
   margin-inline-start: auto;
@@ -123,7 +123,7 @@
   flex: none;
   overflow: hidden;
   border: 1px solid rgba(163, 184, 203, 0.16);
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
 }
 .orchestra-settings .perm-tool .seg button {
   inline-size: 56px;
@@ -132,7 +132,7 @@
   background: transparent;
   color: #8c9daf;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   cursor: pointer;
 }
 .orchestra-settings .perm-tool .seg button:disabled {
@@ -144,17 +144,17 @@
 .orchestra-settings .perm-tool .tnote {
   margin-block-start: 2px;
   color: #c9b78f;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .orchestra-settings .settings-note {
   margin: 0 0 11px;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .orchestra-settings .settings-field-note {
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .orchestra-settings .settings-scope {
   margin: 0 0 14px;
@@ -222,7 +222,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
   color: #dbe4ec;
-  font-size: 13.5px;
+  font-size: var(--orchestra-font-size-lg);
   font-family: var(--mx-emphasis);
   font-weight: 600;
 }
@@ -268,14 +268,14 @@
 .orchestra-settings .settings-inherited .settings-v2-section-title {
   padding: 0;
   color: #e2e9f0;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-family: var(--mx-emphasis);
   font-weight: 600;
 }
 .orchestra-settings .settings-inherited [data-component="settings-v2-list"] {
   overflow: hidden;
   border: 1px solid rgba(163, 184, 203, 0.13);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: none;
   box-shadow: none;
   padding-inline: 0;
@@ -296,14 +296,14 @@
 }
 .orchestra-settings .settings-inherited [data-slot="settings-v2-row-title"] {
   color: #c3ccd6;
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   font-weight: 400;
   line-height: normal;
 }
 .orchestra-settings .settings-inherited [data-slot="settings-v2-row-description"] {
   margin: 0;
   color: #75859a;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: normal;
 }
 

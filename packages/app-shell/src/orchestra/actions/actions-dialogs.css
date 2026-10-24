@@ -7,7 +7,7 @@
 
 /* Header: provider/scope eyebrow, title, close glyph. */
 .actions-page .actions-dialog .dialog-head h2 { margin: 0; font: 600 16px/1.4 var(--mx-emphasis); letter-spacing: -.02em; overflow-wrap: anywhere; }
-.actions-page .actions-dialog .ad-eyebrow { margin-block-end: 5px; color: var(--actions-dim); font-size: 10px; line-height: 1.5; }
+.actions-page .actions-dialog .ad-eyebrow { margin-block-end: 5px; color: var(--actions-dim); font-size: var(--orchestra-font-size-2xs); line-height: 1.5; }
 .actions-page .actions-dialog .ad-mark { flex: none; }
 .actions-page .actions-dialog .mx-btn.icon { inline-size: 30px; flex: none; padding: 0; }
 /* The resource dialogs' close glyph; relay.css sizes button glyphs at 14px, the mock at 16px. */
@@ -15,11 +15,11 @@
 
 /* Fields. */
 .actions-page .actions-dialog .ad-group legend { padding: 0; color: var(--actions-strong); font-weight: 500; }
-.actions-page .actions-dialog .mx-field > :is(span, label) { color: var(--actions-dim); font-size: 11px; line-height: 1.5; }
+.actions-page .actions-dialog .mx-field > :is(span, label) { color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); line-height: 1.5; }
 .actions-page .actions-dialog .ad-required { margin-inline-start: 4px; color: var(--actions-dim); }
 /* Scope-catalog alerts keep their own colour. */
 .actions-page .actions-dialog .mx-field small:not([role="alert"]) { color: var(--actions-dim); }
-.actions-page .actions-dialog .mx-field .ad-code { font-family: var(--mx-mono); font-size: 11px; }
+.actions-page .actions-dialog .mx-field .ad-code { font-family: var(--mx-mono); font-size: var(--orchestra-font-size-xs); }
 .actions-page .actions-dialog .mx-field :is(input, select, textarea):focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
 
 /* Checkbox: label and hint stack beside the box. */
@@ -27,19 +27,19 @@
 .actions-page .actions-dialog .check-field { display: flex; }
 .actions-page .actions-dialog .check-field input[type="checkbox"] { margin: 3px 0 0; }
 .actions-page .actions-dialog .check-field > span { display: flex; min-inline-size: 0; flex-direction: column; gap: 3px; }
-.actions-page .actions-dialog .check-field strong { color: var(--actions-strong); font-size: 12px; font-weight: 400; }
-.actions-page .actions-dialog .check-field small { color: var(--actions-dim); font-size: 11px; line-height: 1.6; }
+.actions-page .actions-dialog .check-field strong { color: var(--actions-strong); font-size: var(--orchestra-font-size-sm); font-weight: 400; }
+.actions-page .actions-dialog .check-field small { color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); line-height: 1.6; }
 .actions-page .actions-dialog .ad-disabled strong { color: var(--actions-dim); }
 
 /* Info cards: a 16px glyph beside a title and detail. */
-.actions-page .actions-dialog .info-card { color: var(--actions-dim); font-size: 11px; line-height: 1.7; }
+.actions-page .actions-dialog .info-card { color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); line-height: 1.7; }
 .actions-page .actions-dialog .ad-note > svg { margin-block-start: 2px; color: var(--actions-blue); }
-.actions-page .actions-dialog .ad-note strong { color: var(--actions-strong); font-size: 11px; font-weight: 500; }
+.actions-page .actions-dialog .ad-note strong { color: var(--actions-strong); font-size: var(--orchestra-font-size-xs); font-weight: 500; }
 .actions-page .actions-dialog .ad-note p { margin: 4px 0 0; line-height: 1.65; }
 /* A plain muted line, like a field hint, for a group with nothing to fill in. */
-.actions-page .actions-dialog .ad-hint { margin: 0; color: var(--actions-dim); font-size: 11px; line-height: 1.6; }
+.actions-page .actions-dialog .ad-hint { margin: 0; color: var(--actions-dim); font-size: var(--orchestra-font-size-xs); line-height: 1.6; }
 
 /* Footer: error on the start side, actions on the end side. */
-.actions-page .actions-dialog .ad-error { min-inline-size: 0; color: var(--actions-bad); font-size: 11px; line-height: 1.6; overflow-wrap: anywhere; }
+.actions-page .actions-dialog .ad-error { min-inline-size: 0; color: var(--actions-bad); font-size: var(--orchestra-font-size-xs); line-height: 1.6; overflow-wrap: anywhere; }
 .actions-page .actions-dialog .mx-dialog-foot > .ad-footer-actions { margin-inline-start: auto; }
-.actions-page .actions-dialog .ad-footer-actions .mx-btn { min-block-size: 34px; font-size: 11px; }
+.actions-page .actions-dialog .ad-footer-actions .mx-btn { min-block-size: 34px; font-size: var(--orchestra-font-size-xs); }

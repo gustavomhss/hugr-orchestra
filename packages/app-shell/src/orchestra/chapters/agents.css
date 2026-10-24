@@ -13,7 +13,7 @@
 }
 .agents-kicker {
   color: #788899;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   font-weight: 580;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -21,7 +21,7 @@
 .agents-mast h1 {
   margin: 9px 0 0;
   color: #ebeff3;
-  font-size: 30px;
+  font-size: var(--orchestra-font-size-4xl);
   line-height: 36px;
   font-weight: 600;
   letter-spacing: -0.035em;
@@ -58,7 +58,7 @@
   min-inline-size: 0;
   overflow: hidden;
   color: #dbe4ec;
-  font-size: 13.5px;
+  font-size: var(--orchestra-font-size-lg);
   font-weight: 560;
   text-overflow: ellipsis;
   white-space: nowrap;

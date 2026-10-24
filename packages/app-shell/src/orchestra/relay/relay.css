@@ -71,7 +71,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
   text-decoration: none;
 }
 .wf-scope .mx-field .mx-hint {
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
   color: var(--mx-dim);
   line-height: 1.5;
 }
@@ -139,7 +139,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
   gap: 2px;
   padding: 3px;
   border: 1px solid rgba(160, 181, 200, 0.15);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: rgba(24, 33, 43, 0.6);
 }
 .wf-range button {
@@ -149,11 +149,11 @@ html[data-color-scheme="light"] body[data-new-layout] {
   block-size: 26px;
   padding: 0 11px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: #8d9cab;
   font: inherit;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   cursor: pointer;
 }
 .wf-range button:hover {
@@ -174,10 +174,10 @@ html[data-color-scheme="light"] body[data-new-layout] {
   block-size: 16px;
   place-items: center;
   padding: 0 4px;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
   background: rgba(255, 255, 255, 0.07);
   color: #9fb0c0;
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   font-variant-numeric: tabular-nums;
 }
 .wf-range button[aria-pressed="true"] .wf-count,
@@ -232,11 +232,11 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] .wf-count {
   gap: 6px;
   padding: 0 9px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: #8d9cab;
   font: inherit;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   white-space: nowrap;
   cursor: pointer;
 }
@@ -306,14 +306,14 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   align-items: center;
   gap: 7px;
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   white-space: nowrap;
 }
 .wf-state small {
   display: inline;
   margin: 0;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-lhead,
 .wf-lrow {
@@ -325,7 +325,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 .wf-lhead {
   padding: 0 15px 8px;
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -383,7 +383,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 .wf-scope .wf-xlink {
   margin: -14px 0 22px;
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.6;
 }
 .wf-scope .wf-xlink a {
@@ -404,9 +404,9 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   margin: 0 0 12px;
   padding: 9px 12px;
   border: 1px solid var(--wf-warm-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .wf-scope .wf-retained.mx-error {
@@ -499,7 +499,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   padding: 14px;
 }
 .wf-tpl-grid .mx-card h3 {
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
 }
 .wf-tpl-grid .wf-chain {
   margin: 0;
@@ -525,7 +525,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
   font-weight: 600;
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
 }
 .wf-empty .mx-btn {
   margin-block-start: 14px;
@@ -543,7 +543,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 .hk-scope {
   margin: 0 0 16px;
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.6;
 }
 /* The state column carries the install state, the last decision, and an update or publish action, so it wraps. */
@@ -603,10 +603,10 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   margin: 0 0 16px;
   padding: 12px 14px;
   border: 1px solid color-mix(in srgb, var(--mx-bad) 55%, transparent);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: color-mix(in srgb, var(--mx-bad) 10%, transparent);
   color: var(--mx-bad);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .hk-damaged p,
@@ -615,7 +615,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
 }
 .hk-damaged small {
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .hk-damaged-actions {
   display: flex;
@@ -636,7 +636,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   gap: 10px;
   padding: 7px 8px 7px 12px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-soft);
 }
 .hk-order-n {
@@ -648,7 +648,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   min-inline-size: 0;
   overflow: hidden;
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -668,7 +668,7 @@ html[data-color-scheme="light"] .wf-tab[aria-pressed="true"] {
   flex-direction: column;
   font-family: var(--mx-sans);
   font-optical-sizing: none;
-  font-size: 16px;
+  font-size: var(--orchestra-font-size-xl);
   font-weight: 400;
   line-height: normal;
   color-scheme: dark;
@@ -717,12 +717,12 @@ html[data-color-scheme="light"] .wf-editor {
   align-items: center;
   gap: 7px;
   min-inline-size: 0;
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
 }
 .wf-crumb a {
   color: var(--mx-dim);
   text-decoration: none;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
   white-space: nowrap;
 }
 .wf-crumb a:hover {
@@ -741,7 +741,7 @@ html[data-color-scheme="light"] .wf-editor {
   block-size: 28px;
   padding: 0 6px;
   border: 1px solid transparent;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font: 600 13px var(--mx-emphasis);
@@ -786,7 +786,7 @@ html[data-color-scheme="light"] .wf-editor {
   align-items: center;
   gap: 6px;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   white-space: nowrap;
 }
 .wf-save .wf-ic {
@@ -809,7 +809,7 @@ html[data-color-scheme="light"] .wf-editor {
   min-block-size: 26px;
   padding: 0 8px;
   border: 1px solid var(--mx-line);
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-bad);
   font: 10.5px var(--mx-mono);
@@ -832,7 +832,7 @@ html[data-color-scheme="light"] .wf-editor {
   gap: 8px;
   margin-inline-start: 4px;
   color: var(--mx-strong);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 /* The visible reason Publish is off; the full text is in the title when the width cuts it. */
 .wf-publish-reason {
@@ -840,7 +840,7 @@ html[data-color-scheme="light"] .wf-editor {
   max-inline-size: 28ch;
   overflow: hidden;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -850,20 +850,20 @@ html[data-color-scheme="light"] .wf-editor {
   gap: 10px;
   margin-block-start: 16px;
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 .wf-dialog-switch small {
   display: block;
   margin-block-start: 2px;
   color: var(--mx-dim);
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.5;
 }
 .wf-draft-reason {
   margin-inline-start: 8px;
   color: var(--mx-dim);
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-body {
   position: relative;
@@ -1006,7 +1006,7 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-group {
   position: absolute;
   border: 1px solid var(--cv-group-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--cv-group-body);
 }
 .wf-group-head {
@@ -1016,10 +1016,10 @@ html[data-color-scheme="light"] .wf-editor {
   block-size: 44px;
   padding: 0 10px 0 14px;
   border-block-end: 1px solid var(--cv-group-line);
-  border-radius: 8px 8px 0 0;
+  border-radius: var(--orchestra-radius-md) var(--orchestra-radius-md) 0 0;
   background: var(--cv-group-head);
   color: var(--mx-strong);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: grab;
 }
 .wf-group-head b {
@@ -1040,14 +1040,14 @@ html[data-color-scheme="light"] .wf-editor {
 .wf-group-head .mx-link {
   flex: none;
   margin-inline-start: auto;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-group-name {
   min-inline-size: 0;
   inline-size: 120px;
   padding: 2px 6px;
   border: 1px solid var(--mx-blue);
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--mx-modal);
   color: var(--mx-strong);
   font: 600 11.5px var(--mx-emphasis);
@@ -1088,7 +1088,7 @@ html[data-color-scheme="light"] .wf-editor {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-dim);
   cursor: pointer;
@@ -1117,7 +1117,7 @@ html[data-color-scheme="light"] .wf-editor {
   place-items: center;
   padding: 0;
   border: 1px solid var(--cv-node-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--cv-node);
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.18);
   cursor: grab;
@@ -1144,7 +1144,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   box-shadow: 0 10px 24px rgba(0, 0, 0, 0.3);
 }
 .wf-node.round .wf-tile {
-  border-radius: 28px 8px 8px 28px;
+  border-radius: 28px var(--orchestra-radius-md) var(--orchestra-radius-md) 28px;
 }
 .wf-node.issue .wf-tile {
   border-color: var(--mx-bad);
@@ -1207,7 +1207,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   inline-size: 132px;
   transform: translateX(-50%);
   color: var(--cv-label);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 14px;
   text-align: center;
   /* The canvas plane reads left to right; a name in another script still sets its own direction. */
@@ -1315,7 +1315,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
 }
@@ -1343,7 +1343,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-dim);
   cursor: pointer;
@@ -1379,7 +1379,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   place-items: center;
   padding: 0;
   border: 1px solid var(--cv-node-line);
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--cv-node);
   color: var(--mx-dim);
   cursor: pointer;
@@ -1419,18 +1419,18 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   flex-direction: column;
   padding: 4px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
 }
 .wf-ctx button {
   padding: 7px 10px;
   border: 0;
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
 }
@@ -1459,11 +1459,11 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   max-inline-size: calc(100% - 90px);
   padding: 7px 8px 7px 12px;
   border: 1px solid var(--mx-line);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .wf-banner.warm {
   border-color: var(--wf-warm-line);
@@ -1476,7 +1476,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
 }
 .wf-banner small {
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-controls {
   position: absolute;
@@ -1521,7 +1521,7 @@ html[data-color-scheme="light"] .wf-node.sel .wf-tile {
   block-size: 108px;
   overflow: hidden;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-modal);
   box-shadow: var(--mx-pop-shadow);
   cursor: pointer;
@@ -1614,7 +1614,7 @@ html[data-color-scheme="light"] .wf-drawer {
 .wf-drawer-head p {
   margin: 3px 0 0;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-drawer .mx-search {
   max-inline-size: none;
@@ -1630,7 +1630,7 @@ html[data-color-scheme="light"] .wf-drawer {
 .wf-drawer-group {
   padding: 12px 8px 6px;
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -1641,7 +1641,7 @@ html[data-color-scheme="light"] .wf-drawer {
   gap: 11px;
   padding: 9px 8px;
   border: 1px solid transparent;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: transparent;
   color: var(--mx-strong);
   font: inherit;
@@ -1679,7 +1679,7 @@ html[data-color-scheme="light"] .wf-drawer {
   flex: none;
   place-items: center;
   border: 1px solid var(--cv-node-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: var(--cv-node);
 }
 .wf-pick-tile svg {
@@ -1694,14 +1694,14 @@ html[data-color-scheme="light"] .wf-drawer {
   display: block;
   margin-block-start: 3px;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.45;
 }
 .wf-drawer-foot {
   padding: 10px 16px;
   border-block-start: 1px solid var(--mx-line);
   color: var(--mx-dim);
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.5;
 }
 
@@ -1782,7 +1782,7 @@ html[data-color-scheme="light"] .wf-drawer {
   block-size: 32px;
 }
 .wf-ndv-title h2 {
-  font-size: 16px;
+  font-size: var(--orchestra-font-size-xl);
   overflow-wrap: anywhere;
 }
 .wf-ndv-title p {
@@ -1868,18 +1868,18 @@ html[data-color-scheme="light"] .wf-drawer {
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--mx-line);
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
 }
 .wf-mini-seg button,
 .wf-seg button {
   block-size: 20px;
   padding: 0 7px;
   border: 0;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
   background: transparent;
   color: var(--mx-dim);
   font: inherit;
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
   cursor: pointer;
 }
 .wf-seg button {
@@ -1901,7 +1901,7 @@ html[data-color-scheme="light"] .wf-drawer {
   grid-template-columns: 92px minmax(0, 1fr);
   gap: 7px 10px;
   margin: 0;
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .wf-kv dt {
   color: var(--mx-dim);
@@ -1909,7 +1909,7 @@ html[data-color-scheme="light"] .wf-drawer {
 .wf-kv dd {
   margin: 0;
   color: var(--mx-strong);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
   overflow-wrap: anywhere;
 }
@@ -1926,7 +1926,7 @@ html[data-color-scheme="light"] .wf-drawer {
 .wf-check {
   padding: 9px 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
 }
 .wf-check-top {
@@ -1956,9 +1956,9 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-col-empty {
   padding: 26px 14px;
   border: 1px dashed var(--mx-line);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.6;
   text-align: center;
 }
@@ -1972,7 +1972,7 @@ html[data-color-scheme="light"] .wf-check.bad {
   gap: 12px;
   margin: 2px 0 10px;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .wf-ctl-list {
   display: grid;
@@ -1982,7 +1982,7 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-ctl {
   padding: 11px 12px;
   border: 1px solid var(--mx-line);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
 }
 .wf-ctl-top {
@@ -1996,7 +1996,7 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-ctl textarea {
   inline-size: 100%;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font: 11px/1.6 var(--mx-mono);
@@ -2005,7 +2005,7 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-ctl-top input {
   block-size: 28px;
   padding: 0 8px;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
 }
 .wf-ctl input.cmd {
   block-size: 32px;
@@ -2028,7 +2028,7 @@ html[data-color-scheme="light"] .wf-check.bad {
   gap: 14px;
   margin-block-start: 9px;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-ctl-foot label {
   display: inline-flex;
@@ -2047,7 +2047,7 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-ctl-params {
   margin-block-start: 8px;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.5;
 }
 .wf-ctl-params ul {
@@ -2061,7 +2061,7 @@ html[data-color-scheme="light"] .wf-check.bad {
 .wf-proto {
   margin-block-end: 8px;
   border: 1px solid var(--mx-line);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
 }
 .wf-proto > button {
@@ -2071,11 +2071,11 @@ html[data-color-scheme="light"] .wf-check.bad {
   gap: 9px;
   padding: 10px 12px;
   border: 0;
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   background: transparent;
   color: var(--mx-strong);
   font: inherit;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: start;
   cursor: pointer;
 }
@@ -2108,7 +2108,7 @@ html[data-color-scheme="light"] .wf-check.bad {
   margin: 0 12px 12px;
   padding: 9px 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font: 11.5px/1.65 var(--mx-mono);
@@ -2131,9 +2131,9 @@ html[data-color-scheme="light"] .wf-check.bad {
   margin: 0 0 14px;
   padding: 10px 12px;
   border: 1px solid rgba(217, 154, 148, 0.38);
-  border-radius: 9px;
+  border-radius: var(--orchestra-radius-md);
   color: var(--mx-strong);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .wf-alert .wf-ic {
@@ -2167,7 +2167,7 @@ html[data-color-scheme="light"] .wf-alert.warm {
 .wf-note {
   margin: 0 0 10px;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .wf-proto > .mx-field {
@@ -2197,7 +2197,7 @@ html[data-color-scheme="light"] .wf-alert.warm {
 .wf-runs-filter .wf-tab {
   block-size: 24px;
   padding: 0 8px;
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-runs-list {
   min-block-size: 0;
@@ -2215,7 +2215,7 @@ html[data-color-scheme="light"] .wf-alert.warm {
   inline-size: 100%;
   padding: 10px;
   border: 0;
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--mx-strong);
   font: inherit;
@@ -2249,7 +2249,7 @@ html[data-color-scheme="light"] .wf-run[aria-selected="true"] {
   grid-column: 2 / 4;
   overflow: hidden;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -2294,7 +2294,7 @@ html[data-color-scheme="light"] .wf-run[aria-selected="true"] {
   margin: 0 0 18px;
   overflow: hidden;
   border: 1px solid var(--wf-warm-line);
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--wf-warm-card);
   box-shadow:
     inset 0 1px 0 rgba(255, 240, 214, 0.07),
@@ -2320,13 +2320,13 @@ html[data-color-scheme="light"] .wf-wait {
 .wf-wait-body {
   padding: 12px 15px 14px;
   color: var(--mx-strong);
-  font-size: 12.5px;
+  font-size: var(--orchestra-font-size-md);
   line-height: 1.6;
 }
 .wf-wait-body code {
   padding: 1px 6px;
   border: 1px solid var(--wf-warm-line);
-  border-radius: 5px;
+  border-radius: var(--orchestra-radius-sm);
   background: rgba(0, 0, 0, 0.18);
   color: var(--mx-warm);
   font: 11px var(--mx-mono);
@@ -2341,7 +2341,7 @@ html[data-color-scheme="light"] .wf-wait-body code {
   margin-block-start: 12px;
   padding: 8px 10px;
   border: 1px solid var(--wf-warm-line);
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: rgba(0, 0, 0, 0.16);
   color: var(--mx-strong);
   font: 12px/1.5 var(--mx-sans);
@@ -2368,7 +2368,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
 .wf-wait-foot small {
   margin-inline-end: auto;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-wait-foot small.bad {
   color: var(--mx-bad);
@@ -2383,13 +2383,13 @@ html[data-color-scheme="light"] .wf-wait-foot {
 .wf-phase {
   padding: 9px 10px 10px;
   border: 1px solid var(--mx-line);
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--mx-raised);
 }
 .wf-phase .bar {
   block-size: 3px;
   margin-block-end: 8px;
-  border-radius: 3px;
+  border-radius: var(--orchestra-radius-xs);
   background: var(--mx-line);
 }
 .wf-phase.good .bar {
@@ -2416,7 +2416,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
   display: block;
   margin-block-start: 2px;
   color: var(--mx-dim);
-  font-size: 10.5px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .wf-steps .mx-row {
   display: grid;
@@ -2427,7 +2427,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
 .wf-steps .wf-steps-head {
   padding: 9px 15px;
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -2436,7 +2436,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
   font: inherit;
 }
 .wf-steps .mx-row strong {
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .wf-steps .mx-row small {
   margin-block-start: 2px;
@@ -2462,7 +2462,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
   padding: 7px 15px;
   background: var(--mx-soft);
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
   letter-spacing: 0.12em;
   text-transform: uppercase;
 }
@@ -2478,7 +2478,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
   inline-size: 150px;
   flex: none;
   color: var(--mx-dim);
-  font-size: 11.5px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .wf-audit .mx-row span:last-child {
   color: var(--mx-strong);
@@ -2491,7 +2491,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
 }
 .wf-keys .mx-row {
   padding: 8px 0;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   color: var(--mx-strong);
 }
 .wf-keys .mx-row span:last-child {
@@ -2505,7 +2505,7 @@ html[data-color-scheme="light"] .wf-wait-foot {
   display: inline-block;
   padding: 0 4px;
   border: 1px solid rgba(160, 181, 200, 0.2);
-  border-radius: 3px;
+  border-radius: var(--orchestra-radius-xs);
   font: 10px var(--mx-mono);
   color: inherit;
 }
