@@ -205,8 +205,8 @@ export const live: Layer.Layer<
               metadata: typeof result === "object" ? result?.metadata : undefined,
               title: typeof result === "object" ? result?.title : undefined,
             }
-          } catch (e: any) {
-            return { result: "", error: e.message ?? String(e) }
+          } catch (e) {
+            return { result: "", error: e instanceof Error ? e.message : String(e) }
           }
         }
 

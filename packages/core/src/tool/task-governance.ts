@@ -10,6 +10,13 @@ import type { SessionMessage } from "../session/message"
 import type { SessionSchema } from "../session/schema"
 import type { Tool } from "./tool"
 
+/**
+ * Governance contract (Pillar D / V2 Session Core):
+ * - `admit`: called before any child Session creation; must not design or decide — only observe the call and admit/reject.
+ * - `beforeTurn`: called at the start of every provider turn; may read Session state but must not modify it.
+ * - `settle`: turns the child's reply into the Task result; never invents IDs, relabels upstream work, or claims authorship.
+ * See AGENTS.md and ORCHESTRA-FIX-PLAN.md (U3) for the contract.
+ */
 /** What governance decided for one admitted Task call. Every field is optional; an empty admission keeps today's Task. */
 export interface Admission {
   /** The child Session id to create or adopt; default: the id Task derives from the call. */
