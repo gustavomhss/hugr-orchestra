@@ -16,6 +16,7 @@ import { Tools } from "./tools"
 import { makeLocationNode } from "../effect/app-node"
 import { ToolSafety } from "../tool-safety"
 import { Location } from "../location"
+import { Project } from "../project"
 import { EventV2 } from "../event"
 import { ToolSafetyOutput } from "../tool-safety-output"
 
@@ -104,7 +105,7 @@ const registryLayer = Layer.effect(
         agent: input.agent,
         directory: location?.directory,
         projectID: location?.project.id,
-        projectDirectory: location?.project.directory === "/" ? location.directory : location?.project.directory,
+        projectDirectory: location && Project.isRoot(location.project.directory) ? location.directory : location?.project.directory,
       }
       return yield* safety.run(
         invocation,
@@ -172,7 +173,7 @@ const registryLayer = Layer.effect(
           ...input,
           directory: location.directory,
           projectID: location.project.id,
-          projectDirectory: location.project.directory === "/" ? location.directory : location.project.directory,
+          projectDirectory: Project.isRoot(location.project.directory) ? location.directory : location.project.directory,
         })
         .pipe(
           Effect.provideService(ToolSafety.RuntimeProfileLoader, effectiveLoader),

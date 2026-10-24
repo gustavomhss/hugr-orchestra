@@ -31,6 +31,12 @@ export type ListInput = typeof ListInput.Type
 
 export { FindInput }
 
+/** A path a read or list cannot serve: outside the Location, missing, or of the wrong kind. */
+export class PathError extends Schema.TaggedErrorClass<PathError>()("FileSystem.PathError", {
+  path: Schema.String,
+  reason: Schema.Literals(["outside", "missing", "not-file"]),
+}) {}
+
 export class GlobInput extends Schema.Class<GlobInput>("FileSystem.GlobInput")({
   pattern: Schema.String,
   path: RelativePath.pipe(Schema.optional),
@@ -47,7 +53,7 @@ export class GrepInput extends Schema.Class<GrepInput>("FileSystem.GrepInput")({
 export const Event = FileSystem.Event
 
 export interface Interface {
-  readonly read: (input: ReadInput) => Effect.Effect<{ readonly content: Uint8Array; readonly mime: string }>
+  readonly read: (input: ReadInput) => Effect.Effect<{ readonly content: Uint8Array; readonly mime: string }, PathError>
   readonly list: (input?: ListInput) => Effect.Effect<Entry[]>
   readonly find: (input: FindInput) => Effect.Effect<Entry[], FileSystemSearch.SearchError>
   readonly glob: (input: GlobInput) => Effect.Effect<readonly Entry[], FileSystemSearch.SearchError>
@@ -70,7 +76,7 @@ const baseLayer = Layer.effect(
       read: Effect.fn("FileSystem.read")(function* (input) {
         const target = yield* resolve(input.path)
         const info = yield* fs.stat(target.real).pipe(Effect.orDie)
-        if (info.type !== "File") return yield* Effect.die(new Error("Path is not a file"))
+        if (info.type !== "File") return yield* new PathError({ path: input.path, reason: "not-file" })
         return {
           content: yield* fs.readFile(target.real).pipe(Effect.orDie),
           mime: FSUtil.mimeType(target.real),
@@ -83,10 +89,11 @@ const baseLayer = Layer.effect(
 
 const within = Effect.fnUntraced(function* (fs: FSUtil.Interface, directory: string, input?: RelativePath) {
   const root = yield* fs.realPath(directory).pipe(Effect.orDie)
-  const absolute = path.resolve(directory, input ?? ".")
-  if (!FSUtil.contains(directory, absolute)) return yield* Effect.die(new Error("Path escapes the location"))
-  const real = yield* fs.realPath(absolute).pipe(Effect.orDie)
-  if (!FSUtil.contains(root, real)) return yield* Effect.die(new Error("Path escapes the location"))
+  const relative = input ?? "."
+  const absolute = path.resolve(directory, relative)
+  if (!FSUtil.contains(directory, absolute)) return yield* new PathError({ path: relative, reason: "outside" })
+  const real = yield* fs.realPath(absolute).pipe(Effect.mapError(() => new PathError({ path: relative, reason: "missing" })))
+  if (!FSUtil.contains(root, real)) return yield* new PathError({ path: relative, reason: "outside" })
   return { absolute, real, directory, root }
 })
 
@@ -99,7 +106,7 @@ export const list = Effect.fn("FileSystem.list")(function* (
   directory: string,
   input: ListInput = {},
 ) {
-  const target = yield* within(fs, directory, input.path)
+  const target = yield* within(fs, directory, input.path).pipe(Effect.orDie)
   const info = yield* fs.stat(target.real).pipe(Effect.orDie)
   if (info.type !== "Directory") return yield* Effect.die(new Error("Path is not a directory"))
   return yield* fs.readDirectoryEntries(target.real).pipe(
