@@ -478,6 +478,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 content: [...event.data.content],
                 outputPaths: event.data.outputPaths ? [...event.data.outputPaths] : [],
                 result: event.data.result,
+                ...(event.data.metadata ? { metadata: { ...event.data.metadata } } : {}),
               }),
             )
           }
@@ -506,6 +507,7 @@ export function update(adapter: Adapter, event: SessionEvent.Event) {
                 structured: "structured" in match.state ? match.state.structured : {},
                 content: "content" in match.state ? match.state.content : [],
                 result: event.data.result,
+                ...(event.data.metadata ? { metadata: { ...event.data.metadata } } : {}),
               }),
             )
           }

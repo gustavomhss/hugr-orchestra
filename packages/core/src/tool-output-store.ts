@@ -1,12 +1,15 @@
 export * as ToolOutputStore from "./tool-output-store"
 
 import path from "path"
-import { Context, Duration, Effect, Layer, Option, Schedule, Schema } from "effect"
+import { Context, Duration, Effect, Exit, Layer, Option, Schedule, Schema } from "effect"
+import type { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import { Config } from "./config"
 import { FSUtil } from "./fs-util"
 import { Global } from "./global"
 import { makeGlobalNode, makeLocationNode } from "./effect/app-node"
 import { SessionSchema } from "./session/schema"
+import { LeanProfilePreferences } from "./session/lean-profile-preferences"
+import { LeanOutput } from "./tool/lean-output"
 import { Identifier } from "./util/identifier"
 import type { ToolOutput } from "@orchestra/llm"
 
@@ -39,8 +42,19 @@ export class StorageError extends Schema.TaggedErrorClass<StorageError>()("ToolO
 
 export type Error = StorageError
 
+/** Lean controls for one project directory, read per call after execution so a dashboard toggle applies at once. */
+export interface Lean {
+  readonly enabled: boolean
+  readonly unavailable?: "config_unavailable" | "preferences_unavailable" | "preferences_scope_mismatch"
+  readonly items?: LeanCoverage.Settings
+  readonly profileID?: string
+  /** Data root of the Lean store of complete originals. */
+  readonly root: string
+}
+
 export interface Interface {
   readonly limits: () => Effect.Effect<{ readonly maxLines: number; readonly maxBytes: number }>
+  readonly lean: (owner: LeanProfilePreferences.Owner) => Effect.Effect<Lean>
   readonly bound: (input: BoundInput) => Effect.Effect<BoundResult, Error>
   readonly cleanup: () => Effect.Effect<void>
 }
@@ -126,6 +140,19 @@ const layer = Layer.effect(
       return { maxLines: configured.max_lines ?? MAX_LINES, maxBytes: configured.max_bytes ?? MAX_BYTES }
     })
 
+    const preferences = LeanProfilePreferences.make(fs, global)
+    const lean = Effect.fn("ToolOutputStore.lean")(function* (owner: LeanProfilePreferences.Owner) {
+      const root = global.data
+      if (Option.isNone(config)) return { enabled: false, unavailable: "config_unavailable" as const, root }
+      const configured = yield* LeanOutput.configured().pipe(Effect.provideService(Config.Service, config.value))
+      const read = yield* preferences.read(owner).pipe(Effect.exit)
+      if (Exit.isFailure(read)) return { enabled: false, unavailable: "preferences_unavailable" as const, root }
+      const scope = read.value.scope
+      if (scope.projectID !== owner.projectID || scope.directory !== owner.directory || !scope.profileID)
+        return { enabled: false, unavailable: "preferences_scope_mismatch" as const, root }
+      return { enabled: read.value.enabled ?? configured, items: read.value.items, profileID: scope.profileID, root }
+    })
+
     const write = Effect.fn("ToolOutputStore.write")(function* (content: string) {
       const file = path.join(directory, `tool_${Identifier.ascending()}`)
       yield* fs.ensureDir(directory).pipe(Effect.mapError((cause) => new StorageError({ operation: "write", cause })))
@@ -188,7 +215,7 @@ const layer = Layer.effect(
       }
     })
 
-    return Service.of({ limits, bound, cleanup })
+    return Service.of({ limits, lean, bound, cleanup })
   }),
 )
 

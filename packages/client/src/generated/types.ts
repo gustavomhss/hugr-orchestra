@@ -1091,6 +1091,7 @@ export type SessionsContextOutput = {
                     readonly outputPaths?: ReadonlyArray<string>
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
                 | {
                     readonly status: "error"
@@ -1102,6 +1103,7 @@ export type SessionsContextOutput = {
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly error: { readonly type: "unknown"; readonly message: string }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
               readonly time: {
                 readonly created: number
@@ -1503,6 +1505,7 @@ export type SessionsHistoryOutput = {
           >
           readonly outputPaths?: ReadonlyArray<string>
           readonly result?: JsonValue
+          readonly metadata?: { readonly [x: string]: JsonValue }
           readonly provider: {
             readonly executed: boolean
             readonly metadata?: { readonly [x: string]: { readonly [x: string]: JsonValue } }
@@ -1522,6 +1525,7 @@ export type SessionsHistoryOutput = {
           readonly callID: string
           readonly error: { readonly type: "unknown"; readonly message: string }
           readonly result?: JsonValue
+          readonly metadata?: { readonly [x: string]: JsonValue }
           readonly provider: {
             readonly executed: boolean
             readonly metadata?: { readonly [x: string]: { readonly [x: string]: JsonValue } }
@@ -1784,6 +1788,7 @@ export type SessionsMessageOutput = {
                     readonly outputPaths?: ReadonlyArray<string>
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
                 | {
                     readonly status: "error"
@@ -1795,6 +1800,7 @@ export type SessionsMessageOutput = {
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly error: { readonly type: "unknown"; readonly message: string }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
               readonly time: {
                 readonly created: number
@@ -1992,6 +1998,7 @@ export type MessagesListOutput = {
                     readonly outputPaths?: ReadonlyArray<string>
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
                 | {
                     readonly status: "error"
@@ -2003,6 +2010,7 @@ export type MessagesListOutput = {
                     readonly structured: { readonly [x: string]: JsonValue }
                     readonly error: { readonly type: "unknown"; readonly message: string }
                     readonly result?: JsonValue
+                    readonly metadata?: { readonly [x: string]: JsonValue }
                   }
               readonly time: {
                 readonly created: number

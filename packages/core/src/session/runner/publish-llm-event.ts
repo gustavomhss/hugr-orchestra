@@ -5,6 +5,7 @@ import { ModelV2 } from "@orchestra/core/model"
 import { SessionEvent } from "@orchestra/core/session/event"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { SessionSchema } from "@orchestra/core/session/schema"
+import { LeanOutput } from "@orchestra/core/tool/lean-output"
 
 type Input = {
   readonly sessionID: SessionSchema.ID
@@ -349,6 +350,8 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           executed: event.providerExecuted === true || tool.providerExecuted,
           ...(event.providerMetadata === undefined ? {} : { metadata: event.providerMetadata }),
         }
+        // Host metadata of an Orchestra settlement of this call, such as Lean measurements.
+        const metadata = LeanOutput.take({ sessionID: input.sessionID, callID: event.id })
         if ("error" in result) {
           yield* events.publish(SessionEvent.Tool.Failed, {
             sessionID: input.sessionID,
@@ -357,6 +360,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
             callID: event.id,
             error: result.error,
             result: event.result,
+            ...(metadata ? { metadata } : {}),
             provider,
           })
           return
@@ -368,6 +372,7 @@ export const createLLMEventPublisher = (events: EventV2.Interface, input: Input)
           callID: event.id,
           ...result,
           outputPaths,
+          ...(metadata ? { metadata } : {}),
           ...(provider.executed ? { result: event.result } : {}),
           provider,
         })

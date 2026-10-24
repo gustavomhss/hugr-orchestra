@@ -70,7 +70,8 @@ type Config<
 }
 
 type Runtime = {
-  readonly permission?: string
+  /** Several actions hide the tool only when every one of them is wholly denied. */
+  readonly permission?: string | ReadonlyArray<string>
   readonly definition: (name: string) => ToolDefinition
   readonly settle: (call: ToolCall, context: Context) => Effect.Effect<ToolOutput, ToolFailure>
 }
@@ -182,7 +183,7 @@ export const validateName = (name: string) =>
 
 export const withPermission = <Input extends SchemaType<any>, Output extends SchemaType<any>>(
   tool: Definition<Input, Output>,
-  permission: string,
+  permission: string | ReadonlyArray<string>,
 ) => {
   const decorated = Object.freeze({}) as Definition<Input, Output>
   runtimes.set(decorated, { ...runtimeOf(tool), permission })

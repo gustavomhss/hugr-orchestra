@@ -377,6 +377,8 @@ export namespace Tool {
       content: Schema.Array(ToolContent),
       outputPaths: Schema.Array(Schema.String).pipe(optional),
       result: Schema.Unknown.pipe(optional),
+      /** Host settlement facts that never reach the model, such as `lean` measurements. */
+      metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
       provider: Schema.Struct({
         executed: Schema.Boolean,
         metadata: ProviderMetadata.pipe(optional),
@@ -392,6 +394,7 @@ export namespace Tool {
       ...ToolBase,
       error: UnknownError,
       result: Schema.Unknown.pipe(optional),
+      metadata: Schema.Record(Schema.String, Schema.Unknown).pipe(optional),
       provider: Schema.Struct({
         executed: Schema.Boolean,
         metadata: ProviderMetadata.pipe(optional),

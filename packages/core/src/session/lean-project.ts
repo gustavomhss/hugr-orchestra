@@ -2,7 +2,7 @@ export * as LeanProject from "./lean-project"
 
 import { Database } from "../database/database"
 import { ProjectV2 } from "../project"
-import { MessageTable, PartTable, SessionTable } from "./sql"
+import { MessageTable, PartTable, SessionMessageTable, SessionTable } from "./sql"
 import { LeanProcessor } from "../tool/lean-processor"
 import { LeanCoverage } from "@orchestra/schema/lean-coverage"
 import { LeanDashboard } from "@orchestra/schema/lean-dashboard"
@@ -20,7 +20,7 @@ const COMMAND_LIMIT = 4096
 const subject = sql`coalesce(json_extract(${PartTable.data}, '$.state.input.command'), json_extract(${PartTable.data}, '$.state.input.filePath'),
   json_extract(${PartTable.data}, '$.state.input.url'), json_extract(${PartTable.data}, '$.state.input.pattern'))`
 
-/** Only native instrumented legacy parts currently contain this provenance. No V2/SDK telemetry inference. */
+/** Native instrumented legacy parts and V2 Session message tool parts carry this provenance. No SDK telemetry inference. */
 export const collect = Effect.fn("LeanProject.collect")(function* (scope: LeanDashboard.Scope, limit = MAX_PARTS, latest = false) {
   const database = yield* Database.Service
   return yield* collectWith(database, scope, limit, latest)
@@ -62,10 +62,75 @@ const collectWith = Effect.fn("LeanProject.collectWith")(function* (database: Da
       : [asc(MessageTable.time_created), asc(MessageTable.id), asc(PartTable.id)]))
     .limit(Math.min(MAX_PARTS, Math.max(1, limit)) + 1).all()
     .pipe(Effect.mapError((error) => new LeanProfilePreferences.Unavailable({ message: String(error) })))
-  return projectRows(scope, rows.slice(0, Math.min(MAX_PARTS, Math.max(1, limit))).map((row) => ({
+  const bound = Math.min(MAX_PARTS, Math.max(1, limit))
+  const legacy = rows.slice(0, bound).map((row) => ({
     ...row,
     revert: row.hasRevert ? { messageID: row.revertMessageID ?? "", ...(row.revertPartID === null ? {} : { partID: row.revertPartID }) } : null,
-  })), rows.length <= Math.min(MAX_PARTS, Math.max(1, limit)))
+  }))
+  const current = yield* sessionMessageRows(database, scope, bound, latest)
+  // A call recorded in both stores counts once, from its legacy part.
+  const recorded = new Set(legacy.map((row) => JSON.stringify([row.sessionID, row.callID])))
+  const merged = [...legacy, ...current.rows.filter((row) => !recorded.has(JSON.stringify([row.sessionID, row.callID])))]
+    .toSorted((a, b) => latest
+      ? Number(b.time) - Number(a.time) || b.created - a.created || compareID(b.messageID, a.messageID) || compareID(b.partID, a.partID)
+      : a.created - b.created || compareID(a.messageID, b.messageID) || compareID(a.partID, b.partID))
+  return projectRows(scope, merged.slice(0, bound), rows.length <= bound && current.complete && merged.length <= bound)
+})
+
+/**
+ * V2 tool parts live inside assistant `session_message` rows. A staged revert hides messages after its boundary
+ * message; a boundary that no longer exists makes the Session uncertain, as for legacy parts.
+ */
+const sessionMessageRows = Effect.fn("LeanProject.sessionMessageRows")(function* (database: Database.Interface, scope: LeanDashboard.Scope, bound: number, latest: boolean) {
+  const subject = sql`coalesce(json_extract(part.value, '$.state.input.command'), json_extract(part.value, '$.state.input.path'),
+    json_extract(part.value, '$.state.input.url'), json_extract(part.value, '$.state.input.pattern'))`
+  const lean = sql`json_extract(part.value, '$.state.metadata.lean')`
+  const rows = yield* database.db.all<{
+    sessionID: string
+    messageID: string
+    seq: number
+    created: number
+    callID: unknown
+    tool: unknown
+    status: unknown
+    command: unknown
+    commandLength: number | null
+    exit: unknown
+    time: unknown
+    metrics: string | null
+    metricsOverbound: number
+    hasRevert: number
+    boundarySeq: number | null
+  }>(sql`SELECT ${SessionMessageTable.session_id} AS sessionID, ${SessionMessageTable.id} AS messageID,
+      ${SessionMessageTable.seq} AS seq, ${SessionMessageTable.time_created} AS created,
+      json_extract(part.value, '$.id') AS callID, json_extract(part.value, '$.name') AS tool,
+      json_extract(part.value, '$.state.status') AS status,
+      substr(${subject}, 1, ${COMMAND_LIMIT}) AS command, length(${subject}) AS commandLength,
+      json_extract(part.value, '$.state.structured.exit') AS exit, json_extract(part.value, '$.time.completed') AS time,
+      CASE WHEN length(CAST(${lean} AS BLOB)) <= ${MAX_METRICS_BYTES} THEN ${lean} END AS metrics,
+      CASE WHEN length(CAST(${lean} AS BLOB)) > ${MAX_METRICS_BYTES} THEN 1 ELSE 0 END AS metricsOverbound,
+      ${SessionTable.revert} IS NOT NULL AS hasRevert,
+      (SELECT boundary.seq FROM ${SessionMessageTable} boundary
+        WHERE boundary.id = json_extract(${SessionTable.revert}, '$.messageID') AND boundary.session_id = ${SessionTable.id}) AS boundarySeq
+    FROM ${SessionMessageTable}
+    INNER JOIN ${SessionTable} ON ${SessionTable.id} = ${SessionMessageTable.session_id}
+    INNER JOIN json_each(${SessionMessageTable.data}, '$.content') AS part
+    WHERE ${SessionTable.project_id} = ${scope.projectID} AND ${SessionTable.directory} = ${scope.directory}
+      AND ${SessionMessageTable.type} = 'assistant'
+      AND json_extract(part.value, '$.type') = 'tool' AND json_type(part.value, '$.state.metadata.lean') IS NOT NULL
+    ORDER BY ${latest ? sql`time DESC, ${SessionMessageTable.seq} DESC, part.key DESC` : sql`${SessionMessageTable.seq} ASC, part.key ASC`}
+    LIMIT ${bound + 1}`)
+    .pipe(Effect.mapError((error) => new LeanProfilePreferences.Unavailable({ message: String(error) })))
+  const kept = rows.slice(0, bound)
+  return {
+    complete: rows.length <= bound && !kept.some((row) => row.hasRevert && row.boundarySeq === null),
+    rows: kept.flatMap((row): Row[] => row.hasRevert && (row.boundarySeq === null || row.seq >= row.boundarySeq) ? [] : [{
+      tool: row.tool, sessionID: row.sessionID, messageID: row.messageID, partID: typeof row.callID === "string" ? row.callID : "",
+      callID: row.callID, status: row.status, command: row.command, commandLength: row.commandLength, exit: row.exit,
+      time: row.time, created: row.created, metrics: row.metrics, metricsOverbound: row.metricsOverbound,
+      revert: null, boundaryTime: null, boundaryPart: null,
+    }]),
+  }
 })
 
 export interface Row {
