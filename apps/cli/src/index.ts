@@ -2,7 +2,6 @@
 
 import { NodeRuntime, NodeServices } from "@effect/platform-node"
 import { InstallationVersion } from "@orchestra/core/installation/version"
-import { Database } from "@orchestra/core/database/database"
 import { Effect } from "effect"
 import { CliOutput } from "effect/unstable/cli"
 import { Commands } from "./commands/commands"
@@ -49,7 +48,6 @@ Runtime.run(Commands, Handlers, { version: InstallationVersion }).pipe(
     formatVersion: (_name, version) => version,
   }),
   Effect.provide(Daemon.layer),
-  Effect.provide(Database.layerFromPath(Database.path())),
   Effect.provide(NodeServices.layer),
   Effect.scoped,
   NodeRuntime.runMain,

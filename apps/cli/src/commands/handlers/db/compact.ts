@@ -31,5 +31,8 @@ export default Runtime.handler(
         `DB pages: ${pagesBefore.toLocaleString()} -> ${pagesAfter.toLocaleString()} (-${(100 * (1 - pagesAfter / Math.max(pagesBefore, 1))).toFixed(1)}%)` + EOL,
       )
     }
-  }),
+  },
+  // Opening the database applies migrations, so only these commands do it.
+  Effect.provide(Database.layerFromPath(Database.path())),
+  ),
 )
