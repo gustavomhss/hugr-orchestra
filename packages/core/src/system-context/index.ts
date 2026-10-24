@@ -2,6 +2,9 @@ export * as SystemContext from "./index"
 
 import { Effect, Option, Schema } from "effect"
 
+// Public through the system-context entry so product modules need no deep import (R7).
+export { SystemContextRegistry } from "./registry"
+
 /**
  * Models privileged system context as independently refreshable typed sources.
  *

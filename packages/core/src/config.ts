@@ -19,6 +19,7 @@ import { ConfigCommand } from "./config/command"
 import { ConfigExperimental } from "./config/experimental"
 import { ConfigFormatter } from "./config/formatter"
 import { ConfigLSP } from "./config/lsp"
+import { ConfigMaestro } from "@orchestra/schema/config-maestro"
 import { ConfigMCP } from "@orchestra/schema/config-mcp"
 import { ConfigPlugin } from "./config/plugin"
 import { ConfigProvider } from "./config/provider"
@@ -97,6 +98,9 @@ export class Info extends Schema.Class<Info>("Config.Info")({
   }),
   experimental: ConfigExperimental.Experimental.pipe(Schema.optional),
   relay: ConfigRelay.Info.pipe(Schema.optional).annotate({ description: "Relay workflow and hook engine settings" }),
+  maestro: ConfigMaestro.Info.pipe(Schema.optional).annotate({
+    description: "Project-bound static Atlas/Own context for governed Maestro work",
+  }),
   providers: Schema.Record(Schema.String, ConfigProvider.Info).pipe(Schema.optional),
 }) {}
 

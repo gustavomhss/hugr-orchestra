@@ -11,9 +11,12 @@ import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
 import { MaestroGovernanceV2 } from "./governance"
 import { Seats } from "../seats"
+import { MaestroAtlasHeaderV2 } from "./atlas-header-source"
+import { MaestroAtlasRestoreV2 } from "./atlas-restore"
 import { MaestroSeats } from "./seats-service"
 import { MaestroSkillSourcesV2 } from "./skill-sources"
 import { MaestroToolsV2 } from "./tools"
+import { MaestroAtlasToolV2 } from "./tools/atlas"
 
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
@@ -126,9 +129,16 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents, Maestro's native tools, the Arsenal's native safety owner and Maestro's Task governance in every Location. */
+/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the Arsenal's native safety owner and Maestro's Task governance in every Location. */
 export const contribution: Host.Contribution = {
   id: "maestro",
   replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],
-  locationNodes: [MaestroSeats.node, node, MaestroToolsV2.node],
+  locationNodes: [
+    MaestroSeats.node,
+    node,
+    MaestroToolsV2.node,
+    MaestroAtlasToolV2.node,
+    MaestroAtlasHeaderV2.node,
+    MaestroAtlasRestoreV2.node,
+  ],
 }
