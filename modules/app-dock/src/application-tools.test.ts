@@ -81,9 +81,9 @@ describe("AppDockTools", () => {
   test("the linux agent keeps the owner's dock rule as configured, and allows dock when none is set", () => {
     // config-agent pushes the owner's global permissions onto every agent before the scope runs.
     const cases = [
-      { global: [{ action: "dock", resource: "*", effect: "ask" as const }], effect: "ask" },
+      { global: [{ action: "dock", resource: "*", effect: "ask" }], effect: "ask" },
       { global: [], effect: "allow" },
-    ]
+    ] as const
     for (const { global, effect } of cases) {
       const agents = new Map([["linux", { ...AgentV2.Info.empty(AgentV2.ID.make("linux")), permissions: [...global] }]]) as Map<
         string,
