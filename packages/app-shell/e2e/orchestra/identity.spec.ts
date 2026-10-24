@@ -12,7 +12,7 @@ import {
 import { setupIdentity } from "./identity.fixture"
 
 // Frozen glass material values (orchestra/theme.css), normalized by Chromium's computed-style engine.
-const grain = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")`
+const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
 const glass = {
   dark: {
     backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.54) 0%, rgba(17, 24, 33, 0.62) 46%, rgba(11, 16, 23, 0.66) 100%)`,
