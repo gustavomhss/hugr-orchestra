@@ -21,10 +21,10 @@ function repo() {
   git(cwd, "init", "--initial-branch=main", "--quiet")
   git(cwd, "config", "user.email", "test@example.com")
   git(cwd, "config", "user.name", "Godfile Test")
-  mkdirSync(join(cwd, "foundation/atlas"), { recursive: true })
+  mkdirSync(join(cwd, "modules/atlas"), { recursive: true })
   writeFileSync(join(cwd, "legacy.ts"), lines(HARD_LIMIT_LOC + 1))
   writeFileSync(join(cwd, "near.ts"), lines(TARGET_LOC + 1))
-  writeFileSync(join(cwd, "foundation/atlas/vendor.ts"), lines(HARD_LIMIT_LOC + 1))
+  writeFileSync(join(cwd, "modules/atlas/vendor.ts"), lines(HARD_LIMIT_LOC + 1))
   git(cwd, "add", ".")
   git(cwd, "commit", "-m", "baseline")
   return cwd
@@ -63,7 +63,7 @@ describe("godfile", () => {
         { file: "legacy.ts", lines: HARD_LIMIT_LOC + 1, baseLines: HARD_LIMIT_LOC + 1, kind: "legacy" },
       ]),
     )
-    expect(report.warnings.some((finding) => finding.file.startsWith("foundation/atlas/"))).toBeFalse()
+    expect(report.warnings.some((finding) => finding.file.startsWith("modules/atlas/"))).toBeFalse()
   })
 
   test("fails when a legacy hard-limit file grows", () => {
@@ -100,7 +100,7 @@ describe("godfile", () => {
     )
   })
 
-  test.each(["foundation/atlas/vendor.ts", "vendor.txt"])(
+  test.each(["modules/atlas/vendor.ts", "vendor.txt"])(
     "a rename from %s into governed source has no legacy baseline",
     (original) => {
       const cwd = repo()
