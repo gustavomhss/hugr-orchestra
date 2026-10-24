@@ -103,11 +103,10 @@ const layer = Layer.effectDiscard(
               if (!session) return unavailable("session-placement-unavailable")
               if (input.action === "anchor") return anchorUnavailable(session.projectID)
               const placement = { projectID: session.projectID, directory: session.location.directory }
-              const result = yield* (
+              const result =
                 input.action === "catalog"
-                  ? MaestroAtlasSourceV2.catalog(services, placement)
-                  : MaestroAtlasSourceV2.unit(services, placement, input.unit)
-              ).pipe(Effect.result)
+                  ? yield* Effect.result(MaestroAtlasSourceV2.catalog(services, placement))
+                  : yield* Effect.result(MaestroAtlasSourceV2.unit(services, placement, input.unit))
               if (result._tag === "Failure")
                 return {
                   title: `Atlas context held: ${result.failure.reason}`,
