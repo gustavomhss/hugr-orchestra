@@ -66,6 +66,7 @@
     "./config/tool-output": "./src/config/tool-output.ts",
     "./control-plane/move-session": "./src/control-plane/move-session.ts",
     "./control-plane/workspace.sql": "./src/control-plane/workspace.sql.ts",
+    "./claude-account": "./src/claude-account.ts",
     "./credential": "./src/credential.ts",
     "./cross-spawn-spawner": "./src/cross-spawn-spawner.ts",
     "./database/database": "./src/database/database.ts",

@@ -10,6 +10,7 @@ import { makeFileSystemGroup } from "./groups/fs"
 import { VcsGroup } from "./groups/vcs"
 import { CommandGroup } from "./groups/command"
 import { McpGroup } from "./groups/mcp"
+import { ClaudeCodeGroup } from "./groups/claude-code"
 import { LspGroup } from "./groups/lsp"
 import { SkillGroup } from "./groups/skill"
 import { BehaviorGroup } from "./groups/behavior"
@@ -85,6 +86,7 @@ const makeApiFromGroup = <
     .add(LeanGroup.middleware(locationMiddleware))
     .add(AtlasGroup.middleware(locationMiddleware))
     .add(ConfigGroup)
+    .add(ClaudeCodeGroup)
     .add(RelayDocumentGroup.middleware(locationMiddleware))
     .add(RelayPublishGroup.middleware(locationMiddleware))
     .add(RelayHookGroup.middleware(locationMiddleware))

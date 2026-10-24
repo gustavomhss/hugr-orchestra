@@ -12,6 +12,7 @@
     "./host/options": "./src/host/options.ts",
     "./sdk": "./src/sdk.ts",
     "./transcript": "./src/transcript.ts",
+    "./v2/account": "./src/v2/account.ts",
     "./v2/host": "./src/v2/host.ts"
   },
   "scripts": {

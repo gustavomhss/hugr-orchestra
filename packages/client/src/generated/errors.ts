@@ -118,6 +118,11 @@ export type ProjectCopyError = {
 export const isProjectCopyError = (value: unknown): value is ProjectCopyError =>
   typeof value === "object" && value !== null && "name" in value && value["name"] === "ProjectCopyError"
 
+export type ClaudeCodeLoginError = { readonly _tag: "ClaudeCodeLoginError"; readonly message: string }
+
+export const isClaudeCodeLoginError = (value: unknown): value is ClaudeCodeLoginError =>
+  typeof value === "object" && value !== null && "_tag" in value && value["_tag"] === "ClaudeCodeLoginError"
+
 export type RelayInvalidError = { readonly _tag: "RelayInvalidError"; readonly code: string; readonly message: string }
 
 export const isRelayInvalidError = (value: unknown): value is RelayInvalidError =>

@@ -256,6 +256,10 @@ import type {
   ConfigUpdateInput,
   ConfigUpdateOutput,
   ConfigShellsOutput,
+  ClaudeCodeAccountOutput,
+  ClaudeCodeLoginOutput,
+  ClaudeCodeLoginCodeInput,
+  ClaudeCodeLoginCodeOutput,
   RelayDocumentsListInput,
   RelayDocumentsListOutput,
   RelayDocumentsCreateInput,
@@ -2144,6 +2148,42 @@ export function make(options: ClientOptions) {
       shells: (requestOptions?: RequestOptions) =>
         request<ConfigShellsOutput>(
           { method: "GET", path: `/api/config/shells`, successStatus: 200, declaredStatuses: [401, 400], empty: false },
+          requestOptions,
+        ),
+    },
+    claudeCode: {
+      account: (requestOptions?: RequestOptions) =>
+        request<ClaudeCodeAccountOutput>(
+          {
+            method: "GET",
+            path: `/api/claude-code/account`,
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      login: (requestOptions?: RequestOptions) =>
+        request<ClaudeCodeLoginOutput>(
+          {
+            method: "POST",
+            path: `/api/claude-code/login`,
+            successStatus: 200,
+            declaredStatuses: [400, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+      loginCode: (input: ClaudeCodeLoginCodeInput, requestOptions?: RequestOptions) =>
+        request<ClaudeCodeLoginCodeOutput>(
+          {
+            method: "POST",
+            path: `/api/claude-code/login/code`,
+            body: { code: input["code"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
+          },
           requestOptions,
         ),
     },

@@ -8,6 +8,7 @@ import { FileSystemHandler } from "./handlers/fs"
 import { VcsHandler } from "./handlers/vcs"
 import { CommandHandler } from "./handlers/command"
 import { McpHandler } from "./handlers/mcp"
+import { ClaudeCodeHandler } from "./handlers/claude-code"
 import { LspHandler } from "./handlers/lsp"
 import { SkillHandler } from "./handlers/skill"
 import { BehaviorHandler } from "./handlers/behavior"
@@ -68,6 +69,7 @@ export const handlers = Layer.mergeAll(
   LeanHandler,
   AtlasHandler,
   ConfigHandler,
+  ClaudeCodeHandler,
   RelayDocumentHandler,
   RelayPublishHandler,
   RelayHookHandler,

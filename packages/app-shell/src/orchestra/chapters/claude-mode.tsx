@@ -30,24 +30,21 @@ export function ClaudeModeSection() {
   })
   const engine = () =>
     state.engine ?? (sync().data.config.agent?.maestro?.engine === "claude-code" ? "claude-code" : "orchestra")
-  const claude = () => sdk().client.provider.claudeCode
-  // Sign-in failures arrive as `{ name, data: { message } }`; the message is Claude Code's own stderr.
+  const claude = () => sdk().orchestra.claudeCode
+  // Sign-in failures arrive as a declared `ClaudeCodeLoginError` body; its message is Claude Code's own stderr.
   const failed = (error: unknown) =>
     language.t("orchestra.providers.claudeMode.failed", {
-      message: errorMessage(
-        error && typeof error === "object" && "data" in error ? error.data : error,
-        language.t("common.requestFailed"),
-      ),
+      message: errorMessage(error, language.t("common.requestFailed")),
     })
 
   const refresh = async () => {
-    const result = await claude()
-      .account(undefined, { throwOnError: false })
+    const account = await claude()
+      .account()
       .catch(() => undefined)
     setState("loaded", true)
-    if (!result?.data) return
-    setState("account", result.data)
-    if (result.data.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
+    if (!account) return
+    setState("account", account)
+    if (account.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
   }
   onMount(() => void refresh())
   createEffect(() => {
@@ -72,7 +69,8 @@ export function ClaudeModeSection() {
   const signIn = async () => {
     setState({ signing: true, url: undefined, code: "", error: undefined })
     const result = await claude()
-      .login(undefined, { throwOnError: false })
+      .login()
+      .then((data) => ({ data, error: undefined }))
       .catch((error: unknown) => ({ data: undefined, error }))
     if (result.data) return setState("url", result.data.url)
     setState({ signing: false, error: failed(result.error) })
@@ -83,8 +81,9 @@ export function ClaudeModeSection() {
     if (!code || state.sending) return
     setState({ sending: true, error: undefined })
     const result = await claude()
-      .loginCode({ code }, { throwOnError: false })
-      .catch((error: unknown) => ({ data: undefined, error }))
+      .loginCode({ code })
+      .then(() => ({ error: undefined }))
+      .catch((error: unknown) => ({ error }))
     setState("sending", false)
     if (result.error) return setState("error", failed(result.error))
     setState("code", "")
