@@ -146,12 +146,12 @@ export function findDrift(source: Dictionary, target: Dictionary, locale?: Local
     extra: Object.keys(target).filter((key) => !Object.hasOwn(source, key) && !pluralVariants.has(key)),
     placeholders: [
       ...Object.keys(source).filter(
-        (key) => Object.hasOwn(target, key) && tokens(source[key]).join() !== tokens(target[key]).join(),
+        (key) => Object.hasOwn(target, key) && tokens(source[key] ?? "").join() !== tokens(target[key] ?? "").join(),
       ),
       ...Array.from(pluralVariants.entries())
         .filter(
           ([key, sourceKey]) =>
-            Object.hasOwn(target, key) && tokens(source[sourceKey]).join() !== tokens(target[key]).join(),
+            Object.hasOwn(target, key) && tokens(source[sourceKey] ?? "").join() !== tokens(target[key] ?? "").join(),
         )
         .map(([key]) => key),
     ],
@@ -186,7 +186,7 @@ export function modelVariants(output: string, model: string) {
   const marker = `${model}\n`
   const start = normalized.indexOf(marker)
   if (start < 0) throw new Error(`Model not found: ${model}`)
-  const provider = model.split("/")[0]
+  const provider = model.split("/")[0] ?? model
   const rest = normalized.slice(start + marker.length)
   const next = rest.search(new RegExp(`^${escapeRegExp(provider)}/`, "m"))
   const metadata: unknown = JSON.parse((next < 0 ? rest : rest.slice(0, next)).trim())
@@ -267,7 +267,7 @@ Examples:
     return
   }
 
-  const selected = options.target === "all" ? locales : [options.target]
+  const selected = options.target === "all" ? locales : [options.target as Locale]
   const plans = await Promise.all(selected.map((locale) => inspect(locale)))
   plans.forEach(report)
   const pending = plans.filter((plan) => plan.domains.some((domain) => changed(domain.drift)))
@@ -516,7 +516,7 @@ function pluralFamilies(dictionary: Dictionary) {
     .filter(
       (key) =>
         key.endsWith(".one") &&
-        dictionary[key].includes("{{count}}") &&
+        dictionary[key]?.includes("{{count}}") &&
         dictionary[`${key.slice(0, -4)}.other`]?.includes("{{count}}"),
     )
     .map((key) => key.slice(0, -4))
