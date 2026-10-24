@@ -101,14 +101,15 @@ export async function spawn(cmd: string, argsOrOpts?: string[] | Options, opts?:
     cwd: cfg.cwd,
     inheritEnv: false,
     env: cfg.env === null ? {} : Omni.childEnv(cfg.env ?? undefined),
-    stdin: cfg.stdin === "pipe" ? "pipe" : "closed",
+    // A language server speaks JSON-RPC over stdio, so every launch opens all three pipes, as V1's launcher did.
+    stdin: "pipe",
     text: false,
     backpressure: true,
   }) as Pipe
 
-  const stdout = cfg.stdout === "pipe" ? new Output() : null
-  const stderr = cfg.stderr === "pipe" ? new Output() : null
-  const stdin = cfg.stdin === "pipe" ? new Input(Promise.resolve(child)) : null
+  const stdout = new Output()
+  const stderr = new Output()
+  const stdin = new Input(Promise.resolve(child))
 
   const adapter = {
     pid: undefined as number | undefined,
