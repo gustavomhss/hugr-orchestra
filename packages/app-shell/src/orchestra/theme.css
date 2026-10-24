@@ -36,7 +36,7 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-text: #eef1f5;
   --orchestra-body: #c7d0d9;
   --orchestra-muted: #9aa8b7;
-  --orchestra-faint: #7b8c9e;
+  --orchestra-faint: #96aabc;
   --orchestra-accent: #88aed4;
   --orchestra-warm: #c9b78f;
   --orchestra-success: #9dbfae;
@@ -49,9 +49,9 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-toolbar-border: rgba(155, 174, 192, 0.08);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(214, 231, 247, 0.06);
   --orchestra-toolbar-drop: 0 6px 20px rgba(0, 0, 0, 0.22);
-  --orchestra-toolbar-label: #7d8b9b;
+  --orchestra-toolbar-label: #98a9b9;
   --orchestra-toolbar-brand: #b9c4cf;
-  --orchestra-toolbar-button: #657383;
+  --orchestra-toolbar-button: #7d8ca0;
   /* The photograph stays visible: the glass carries the tint that keeps text legible, not a veil over
      the whole workspace, so there is something behind the glass for it to refract. */
   --orchestra-workspace-overlay:
@@ -103,23 +103,23 @@ html[data-color-scheme] body[data-new-layout] {
   --orchestra-sidebar-active-icon: #c8dcec;
   --orchestra-sidebar-key-background: rgba(7, 11, 16, 0.18);
   --orchestra-sidebar-key-border: rgba(143, 163, 182, 0.24);
-  --orchestra-sidebar-key-text: #8d9dad;
+  --orchestra-sidebar-key-text: #9cacbc;
   --orchestra-sidebar-rule: rgba(149, 169, 188, 0.16);
   --orchestra-sidebar-profile-background: rgba(18, 30, 41, 0.6);
   --orchestra-sidebar-profile-border: rgba(144, 166, 187, 0.21);
   --orchestra-sidebar-profile-hover-border: rgba(160, 184, 207, 0.32);
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.04), 0 1px 2px rgba(0, 0, 0, 0.18);
   --orchestra-sidebar-profile-text: var(--orchestra-text);
-  --orchestra-sidebar-profile-muted: #8798aa;
+  --orchestra-sidebar-profile-muted: #9bacbe;
   --orchestra-sidebar-profile-chevron: #8fa0b2;
   --orchestra-sidebar-profile-logo: #2c70bd;
   --orchestra-sidebar-profile-logo-text: #fff;
-  --orchestra-brand-descriptor: #8c9db2;
-  --orchestra-sidebar-footer: #7b8c9e;
+  --orchestra-brand-descriptor: #9bacc1;
+  --orchestra-sidebar-footer: #96aabc;
   --orchestra-wip-text: var(--orchestra-warm);
   --orchestra-wip-background: var(--orchestra-overlay-hover);
 
-  --orchestra-tab-text: #81909f;
+  --orchestra-tab-text: #98a9b8;
   --orchestra-tab-hover-background: rgba(173, 196, 217, 0.045);
   --orchestra-tab-hover-text: #bcc8d4;
   --orchestra-tab-active-text: #e0e7ee;
@@ -292,7 +292,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
      (the palette gate in orchestra/palette). Danger was the dark scheme's pink, nearly invisible here. */
   --orchestra-body: #3e4651;
   --orchestra-muted: #3d4651;
-  --orchestra-faint: #68707a;
+  --orchestra-faint: #3c444e;
   --orchestra-accent: #164775;
   --orchestra-warm: #564218;
   --orchestra-success: #1f4d3a;
@@ -305,9 +305,9 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-toolbar-border: rgba(70, 84, 98, 0.12);
   --orchestra-toolbar-highlight: inset 0 1px 0 rgba(255, 255, 255, 0.95);
   --orchestra-toolbar-drop: 0 6px 16px rgba(40, 50, 62, 0.09);
-  --orchestra-toolbar-label: #6b7480;
+  --orchestra-toolbar-label: #3b4450;
   --orchestra-toolbar-brand: #2b3440;
-  --orchestra-toolbar-button: #5f6874;
+  --orchestra-toolbar-button: #57606c;
   --orchestra-workspace-overlay:
     linear-gradient(180deg, rgba(226, 231, 236, 0.4), rgba(226, 231, 236, 0.22) 42%, rgba(222, 228, 234, 0.46)),
     radial-gradient(1100px 780px at 12% 4%, rgba(255, 255, 255, 0.4), transparent 68%);
@@ -337,15 +337,15 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-scrim: rgba(40, 52, 66, 0.2);
   --orchestra-scrim-filter: blur(6px) saturate(1.1);
 
-  --orchestra-sidebar-text: #4b5460;
+  --orchestra-sidebar-text: #3b4450;
   --orchestra-sidebar-hover-background: rgba(255, 255, 255, 0.55);
   --orchestra-sidebar-hover-text: #161b21;
   --orchestra-sidebar-active-background: linear-gradient(90deg, rgba(96, 138, 180, 0.28), rgba(120, 160, 200, 0.18));
   --orchestra-sidebar-active-text: #141a21;
   --orchestra-sidebar-active-accent: #3f6f9f;
   --orchestra-sidebar-active-highlight: rgba(255, 255, 255, 0.6);
-  --orchestra-sidebar-icon: #5d6672;
-  --orchestra-sidebar-active-icon: #2f6bbf;
+  --orchestra-sidebar-icon: #555e6a;
+  --orchestra-sidebar-active-icon: #205cb0;
   --orchestra-sidebar-key-background: rgba(255, 255, 255, 0.4);
   --orchestra-sidebar-key-border: rgba(70, 84, 98, 0.2);
   --orchestra-sidebar-secondary: #5c646e;
@@ -359,20 +359,20 @@ html[data-color-scheme="light"] body[data-new-layout] {
   --orchestra-sidebar-profile-shadow: inset 0 1px rgba(255, 255, 255, 0.8), 0 1px 2px rgba(40, 50, 62, 0.1);
   --orchestra-sidebar-profile-text: #1d232a;
   --orchestra-sidebar-profile-muted: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-profile-chevron: #6b7480;
+  --orchestra-sidebar-profile-chevron: #57606c;
   --orchestra-sidebar-profile-logo: #2f6bbf;
   --orchestra-brand-descriptor: var(--orchestra-sidebar-secondary);
-  --orchestra-sidebar-footer: #59616a;
+  --orchestra-sidebar-footer: #3d454e;
   /* The reference's near-transparent amber mark misses AA on the light glass over the photograph. */
-  --orchestra-wip-text: #6b5630;
+  --orchestra-wip-text: #57421c;
   --orchestra-wip-background: rgba(255, 255, 255, 0.5);
 
-  --orchestra-tab-text: #5f6874;
+  --orchestra-tab-text: #3b4450;
   --orchestra-tab-hover-background: rgba(40, 56, 74, 0.035);
   --orchestra-tab-hover-text: #354150;
   --orchestra-tab-active-text: #25313e;
-  --orchestra-tab-icon: #536477;
-  --orchestra-branch-color: #8a641f;
+  --orchestra-tab-icon: #4f6073;
+  --orchestra-branch-color: #5f4000;
 
   --orchestra-surface: rgba(255, 255, 255, 0.6);
   --orchestra-surface-hover: rgba(255, 255, 255, 0.9);
@@ -502,7 +502,7 @@ html[data-color-scheme="light"] .orchestra-mark [data-slot="orchestra-brand-logo
   }
 
   html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-theme-toggle"]:not(:hover) {
-    background: rgba(40, 56, 74, 0.08);
+    background: var(--orchestra-overlay-pressed);
   }
   html[data-color-scheme] body[data-new-layout] .orchestra-shell {
     position: relative;

@@ -1,9 +1,6 @@
 /* CI/CD extras on top of the shared mock kit (kit.css). Values ported from mock-features.js. */
 .mx-page[data-mx-page="cicd"] {
-  --cicd-accent: #7ea5cc;
-}
-html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
-  --cicd-accent: #3f6f9f;
+  --cicd-accent: var(--orchestra-accent);
 }
 
 /* Mock `.ic`: 16-unit stroke icons. */
@@ -27,7 +24,7 @@ html[data-color-scheme="light"] .mx-page[data-mx-page="cicd"] {
   margin: auto;
 }
 .cicd-dialog::backdrop {
-  background: var(--mx-backdrop, rgba(3, 9, 16, 0.55));
+  background: var(--mx-backdrop);
   backdrop-filter: blur(5px);
 }
 .cicd-dialog-form {

@@ -64,7 +64,7 @@ body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-field-text: #dbe4ec;
   --zen-placeholder: #757575;
   --zen-option: #141b23;
-  --zen-empty: #7c8b9b;
+  --zen-empty: #8090a0;
   --zen-empty-strong: #cdd6df;
   --zen-error: rgba(201, 138, 132, 0.14);
   --zen-error-text: #e0b0aa;
@@ -76,11 +76,11 @@ body[data-new-layout] :is(.zen-browser-shell, .zen-tab-menu) {
   --zen-popover-border: rgba(163, 184, 203, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
   --zen-find-shadow: none;
-  --zen-popover-title: #6c7c8e;
+  --zen-popover-title: #7c8da2;
   --zen-popover-text: #c3ccd6;
-  --zen-popover-dim: #75859a;
+  --zen-popover-dim: #7d8ea4;
   --zen-popover-hover: rgba(255, 255, 255, 0.06);
-  --zen-library-empty: #6b7480;
+  --zen-library-empty: #838d9c;
   --zen-focus: #9dbde4;
 }
 
@@ -100,19 +100,19 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-page: rgba(255, 255, 255, 0.5);
   --zen-text: #1f2833;
   --zen-muted: #5f6874;
-  --zen-label: #8a929c;
+  --zen-label: #5e646c;
   --zen-hover: rgba(40, 56, 74, 0.06);
   --zen-ws-hover: rgba(40, 56, 74, 0.05);
   --zen-control-hover: rgba(40, 56, 74, 0.07);
   --zen-control-hover-text: #2b3440;
-  --zen-active-control: #2f6bbf;
+  --zen-active-control: #2a66ba;
   --zen-icon: rgba(255, 255, 255, 0.75);
   --zen-input: rgba(255, 255, 255, 0.8);
   --zen-profile-input: rgba(255, 255, 255, 0.9);
   --zen-field: rgba(240, 243, 247, 0.95);
   --zen-field-text: #1f2833;
   --zen-option: #fff;
-  --zen-empty: #6b7480;
+  --zen-empty: #5f6874;
   --zen-empty-strong: #1f2833;
   --zen-error: rgba(156, 74, 66, 0.12);
   --zen-error-text: #8a3f38;
@@ -124,11 +124,11 @@ html[data-color-scheme="light"] body[data-new-layout] :is(.zen-browser-shell, .z
   --zen-popover-border: rgba(70, 84, 98, 0.18);
   --zen-popover-shadow: 0 16px 40px rgba(60, 74, 92, 0.18);
   --zen-find-shadow: 0 16px 40px rgba(60, 74, 92, 0.18);
-  --zen-popover-title: #8a929c;
+  --zen-popover-title: #5e646c;
   --zen-popover-text: #3a434e;
-  --zen-popover-dim: #6b7480;
+  --zen-popover-dim: #5f6874;
   --zen-popover-hover: rgba(40, 56, 74, 0.06);
-  --zen-library-empty: #8a929c;
+  --zen-library-empty: #5e646c;
   --zen-focus: #2f6bbf;
 }
 

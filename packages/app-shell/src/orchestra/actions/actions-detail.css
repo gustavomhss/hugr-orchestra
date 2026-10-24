@@ -19,7 +19,7 @@
 .actions-page .graph-world { position: relative; inline-size: 1010px; block-size: 460px; }
 .actions-page .actions-node, .actions-page .wf-node { position: absolute; inline-size: 56px; block-size: 56px; }
 .actions-page .actions-node-tile, .actions-page .wf-tile { position: absolute; inset: 0; display: grid; place-items: center; inline-size: 56px; block-size: 56px; border: 1px solid var(--actions-cv-node-line); border-radius: var(--orchestra-radius-md); background: var(--actions-cv-node); color: var(--actions-blue); }
-.actions-page .actions-node-tile, .actions-page .wf-tile { padding: 0; box-shadow: 0 1px 2px rgba(0, 0, 0, .18); }
+.actions-page .actions-node-tile, .actions-page .wf-tile { padding: 0; box-shadow: 0 1px 2px color-mix(in srgb, black 18%, transparent); }
 .actions-page .wf-node:hover .wf-tile { border-color: var(--actions-blue); }
 .actions-page .wf-node:focus-within .wf-tile { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
 .actions-page .wf-tile:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }
@@ -39,8 +39,8 @@
 .actions-page .actions-port.out, .actions-page .wf-port.out { right: -5px; }
 .actions-page .actions-port.p0, .actions-page .wf-port.out.p0 { top: 13.5px; }
 .actions-page .actions-port.p1, .actions-page .wf-port.out.p1 { top: 33.5px; }
-.actions-page .wf-node.sel .wf-tile { border-color: var(--actions-blue); box-shadow: 0 0 0 2px rgba(154, 191, 229, .28); }
-.actions-page .actions-node.sel .actions-node-tile { border-color: var(--actions-blue); box-shadow: 0 0 0 2px rgba(154, 191, 229, .28); }
+.actions-page .wf-node.sel .wf-tile { border-color: var(--actions-blue); box-shadow: 0 0 0 2px color-mix(in srgb, var(--actions-blue) 28%, transparent); }
+.actions-page .actions-node.sel .actions-node-tile { border-color: var(--actions-blue); box-shadow: 0 0 0 2px color-mix(in srgb, var(--actions-blue) 28%, transparent); }
 .actions-page .actions-node:hover .actions-node-tile { border-color: var(--actions-blue); }
 .actions-page .actions-node.dim { opacity: .4; }
 .actions-page .wf-node.dim { opacity: .4; }
@@ -53,7 +53,7 @@
 .actions-page .graph-scene { position: relative; margin-inline: auto; }
 .actions-page .graph-world { transform-origin: top left; }
 .actions-page .graph-caption > span { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; }
-.actions-page .canvas-controls { inline-size: max-content; max-inline-size: 100%; flex-wrap: wrap; box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, .24)); }
+.actions-page .canvas-controls { inline-size: max-content; max-inline-size: 100%; flex-wrap: wrap; box-shadow: var(--mx-pop-shadow); }
 
 /* Inspector, jobs, artifacts, logs, and source. */
 .actions-page .job-inspector { inline-size: 320px; flex: none; border-inline-start: 1px solid var(--actions-line); background: var(--actions-modal); }
@@ -113,7 +113,7 @@
 .actions-page .source-footer { border-radius: 0 0 var(--orchestra-radius-md) var(--orchestra-radius-md); font-size: var(--orchestra-font-size-sm); line-height: 1.7; }
 .actions-page .graph-wire { fill: none; stroke: var(--actions-cv-wire); stroke-width: 1.25; }
 [data-color-scheme="light"] .actions-page .wf-node.sel .wf-tile,
-[data-color-scheme="light"] .actions-page .actions-node.sel .actions-node-tile { box-shadow: 0 0 0 2px rgba(55, 110, 165, .22); }
+[data-color-scheme="light"] .actions-page .actions-node.sel .actions-node-tile { box-shadow: 0 0 0 2px color-mix(in srgb, var(--actions-blue) 22%, transparent); }
 @media (max-width: 850px) {
   .actions-page .graph-layout.with-inspector, .actions-page .log-layout { flex-direction: column; }
   .actions-page .job-inspector { inline-size: 100%; border-inline-start: 0; border-block-start: 1px solid var(--actions-line); }

@@ -19,7 +19,7 @@
     --orchestra-session-heading: #e9eef3;
     --orchestra-session-body: #c2ccd6;
     --orchestra-session-secondary: #93a2b2;
-    --orchestra-session-meta: #7a8b9d;
+    --orchestra-session-meta: #7e90a2;
     --orchestra-session-rule: rgba(160, 181, 200, 0.1);
     --orchestra-session-message-rule: rgba(160, 181, 200, 0.09);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(26, 36, 47, 0.66), rgba(19, 27, 36, 0.62));
@@ -41,9 +41,13 @@
     --orchestra-composer-border: rgba(163, 184, 203, 0.18);
     --orchestra-composer-shadow: inset 0 1px 0 rgba(214, 231, 247, 0.06), 0 8px 22px rgba(0, 0, 0, 0.28);
     --orchestra-composer-text: #dbe3ea;
-    --orchestra-composer-placeholder: #78889a;
+    --orchestra-composer-placeholder: #7c8d9f;
     --orchestra-composer-control: #aab7c4;
     --orchestra-send-background: linear-gradient(180deg, #3f7fc4, #2f66a8);
+    --orchestra-send-border: rgba(88, 134, 196, 0.5);
+    --orchestra-send-shadow: 0 2px 8px rgba(47, 102, 168, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    --orchestra-apps-chrome: rgba(19, 27, 36, 0.55);
+    --orchestra-apps-host: rgba(19, 27, 36, 0.42);
     --orchestra-rail-tab-text: #8b9bab;
     --orchestra-rail-tab-hover: #cfd8e0;
     --orchestra-rail-tab-hover-background: rgba(255, 255, 255, 0.05);
@@ -61,7 +65,7 @@
     --orchestra-task-mark-border: rgba(154, 176, 196, 0.18);
     --orchestra-task-mark-text: #93a6b8;
     --orchestra-task-title: #d6dde4;
-    --orchestra-task-meta: #7a8a9c;
+    --orchestra-task-meta: #7e8fa1;
     --orchestra-task-rule: rgba(160, 181, 200, 0.08);
     --orchestra-permission-background: linear-gradient(180deg, rgba(48, 42, 32, 0.72), rgba(30, 28, 25, 0.8));
     --orchestra-permission-border: rgba(201, 183, 143, 0.3);
@@ -112,8 +116,8 @@
       0 4px 12px rgba(38, 50, 64, 0.08);
     --orchestra-session-heading: #141920;
     --orchestra-session-body: #3f4854;
-    --orchestra-session-secondary: #68717c;
-    --orchestra-session-meta: #666e79;
+    --orchestra-session-secondary: #5c6570;
+    --orchestra-session-meta: #5e6671;
     --orchestra-session-rule: rgba(70, 84, 98, 0.12);
     --orchestra-session-message-rule: rgba(70, 84, 98, 0.1);
     --orchestra-evidence-background: linear-gradient(180deg, rgba(255, 255, 255, 0.78), rgba(247, 249, 251, 0.7));
@@ -125,7 +129,7 @@
     --orchestra-evidence-delete: #9c4a42;
     --orchestra-evidence-number: #8a929c;
     --orchestra-file-text: #4d5661;
-    --orchestra-file-add: #2f7a4c;
+    --orchestra-file-add: #257244;
     --orchestra-file-delete: #9c4a42;
     --orchestra-file-active: linear-gradient(90deg, #dde5ed, #e7ecf2);
     --orchestra-file-active-border: rgba(70, 84, 98, 0.12);
@@ -134,10 +138,12 @@
     --orchestra-composer-border: rgba(70, 84, 98, 0.18);
     --orchestra-composer-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.9), 0 8px 20px rgba(40, 50, 62, 0.08);
     --orchestra-composer-text: #1a1f26;
-    --orchestra-composer-placeholder: #8b939d;
+    --orchestra-composer-placeholder: #5f656d;
     --orchestra-composer-control: #4d5661;
     --orchestra-send-background: linear-gradient(180deg, #4a86d6, #3a6fba);
-    --orchestra-rail-tab-text: #66707b;
+    --orchestra-apps-chrome: rgba(255, 255, 255, 0.62);
+    --orchestra-apps-host: rgba(255, 255, 255, 0.5);
+    --orchestra-rail-tab-text: #5e6873;
     --orchestra-rail-tab-hover: #1f2833;
     --orchestra-rail-tab-active: rgba(96, 138, 180, 0.22);
     --orchestra-rail-tab-active-text: #141a21;
@@ -145,13 +151,13 @@
     --orchestra-rail-badge-background: rgba(0, 0, 0, 0.06);
     --orchestra-rail-badge-text: #5d6672;
     --orchestra-rail-badge-active-background: rgba(88, 134, 196, 0.16);
-    --orchestra-rail-badge-active-text: #2f6bbf;
+    --orchestra-rail-badge-active-text: #2a66ba;
     --orchestra-card-background: linear-gradient(180deg, rgba(255, 255, 255, 0.9), rgba(247, 249, 251, 0.84));
     --orchestra-task-mark-background: #eef2f6;
     --orchestra-task-mark-border: rgba(70, 84, 98, 0.16);
     --orchestra-task-mark-text: #5d6672;
     --orchestra-task-title: #20262e;
-    --orchestra-task-meta: #67707b;
+    --orchestra-task-meta: #5f6873;
     --orchestra-task-rule: rgba(70, 84, 98, 0.1);
     --orchestra-permission-background: linear-gradient(180deg, rgba(255, 253, 248, 0.96), rgba(250, 247, 240, 0.94));
     --orchestra-permission-border: rgba(160, 130, 80, 0.34);
@@ -430,7 +436,7 @@
     [data-session-layout="surface"]
     [data-session-layout="timeline-region"]
     .scroll-view__thumb::after {
-    background-color: rgba(140, 160, 180, 0.3);
+    background-color: var(--orchestra-border-strong);
   }
 
   body[data-new-layout]
@@ -642,9 +648,7 @@
     border-radius: var(--orchestra-radius-md);
     background-image: var(--orchestra-send-background) !important;
     color: white;
-    box-shadow:
-      0 2px 8px rgba(47, 102, 168, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.2);
+    box-shadow: var(--orchestra-send-shadow);
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-child-prompt"] {
@@ -767,12 +771,10 @@
     [data-session-layout="surface"]
     [data-slot="permission-footer-actions"]
     [data-variant="primary"] {
-    border: 1px solid rgba(88, 134, 196, 0.5);
-    background: linear-gradient(180deg, #3d7cc2, #2f66a8);
+    border: 1px solid var(--orchestra-send-border);
+    background: var(--orchestra-send-background);
     color: white;
-    box-shadow:
-      0 2px 8px rgba(47, 102, 168, 0.4),
-      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    box-shadow: var(--orchestra-send-shadow);
   }
 
   body[data-new-layout]
@@ -1076,13 +1078,6 @@
     outline-offset: -2px;
   }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-slot="permission-footer-actions"]
-    [data-variant="primary"] {
-    background: linear-gradient(180deg, #4a86d6, #3a6fba);
-  }
 
   /* Native Apps chrome is paint-only. Keep Zen spacing, sizing, scale, host
    * bounds, observer, and native view lifecycle in their existing owner. */
@@ -1094,28 +1089,14 @@
     [data-session-layout="surface"]
     [data-session-tab="apps"]
     :is(.zen-browser-sidebar, .zen-urlbar) {
-    background: rgba(19, 27, 36, 0.55);
+    background: var(--orchestra-apps-chrome);
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-session-tab="apps"] .zen-browser-host {
-    background: rgba(19, 27, 36, 0.42);
+    background: var(--orchestra-apps-host);
   }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-session-tab="apps"]
-    :is(.zen-browser-sidebar, .zen-urlbar) {
-    background: rgba(255, 255, 255, 0.62);
-  }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-session-tab="apps"]
-    .zen-browser-host {
-    background: rgba(255, 255, 255, 0.5);
-  }
 }
 
 @layer components {
@@ -1149,7 +1130,7 @@
   }
 
   html[data-color-scheme="light"] body[data-new-layout] [data-session-layout="surface"] {
-    --orchestra-chat-who: #3f6f9f;
+    --orchestra-chat-who: #376795;
     --orchestra-chat-button-border: rgba(70, 84, 98, 0.2);
     --orchestra-chat-button-background: rgba(255, 255, 255, 0.6);
     --orchestra-chat-button-text: #3a434e;
@@ -1327,7 +1308,7 @@
     [data-session-layout="surface"]
     [data-slot="orchestra-turn-body"]
     :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
-    color: #c8d2dc;
+    color: var(--orchestra-session-body);
     font-size: var(--orchestra-font-size-md);
     font-weight: 400;
   }
@@ -1336,7 +1317,7 @@
     [data-session-layout="surface"]
     [data-slot="orchestra-turn-body"]
     :is([data-slot="basic-tool-tool-subtitle"], [data-slot="shell-submessage-value"]) {
-    color: #8b9bab;
+    color: var(--orchestra-session-secondary);
     font: 12px / 16px var(--font-family-mono);
   }
 
@@ -1344,29 +1325,11 @@
     [data-session-layout="surface"]
     [data-slot="orchestra-turn-body"]
     [data-slot="context-tool-group-summary"] {
-    color: #8b9bab;
+    color: var(--orchestra-session-secondary);
     font-size: var(--orchestra-font-size-sm);
   }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-slot="orchestra-turn-body"]
-    :is([data-slot="basic-tool-tool-title"], [data-slot="context-tool-group-label"]) {
-    color: #3f4854;
-  }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-slot="orchestra-turn-body"]
-    :is(
-      [data-slot="basic-tool-tool-subtitle"],
-      [data-slot="shell-submessage-value"],
-      [data-slot="context-tool-group-summary"]
-    ) {
-    color: #6b7480;
-  }
 
   /* The send control keeps the mock's blue even before a prompt is written. */
   body[data-new-layout]
@@ -1416,7 +1379,7 @@
     border-radius: var(--orchestra-radius-sm);
     background: transparent;
     box-shadow: none;
-    color: #7f8d9d;
+    color: var(--orchestra-session-secondary);
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="session-side-panel-open-file"] {
@@ -1434,7 +1397,7 @@
     block-size: 24px;
     min-inline-size: 24px;
     border-radius: var(--orchestra-radius-sm);
-    color: #7f8d9d;
+    color: var(--orchestra-session-secondary);
   }
 
   /* The shared tabs skin draws an opaque, pointer-transparent mask after a sticky "+" to cover tabs
@@ -1461,7 +1424,7 @@
 @media (min-width: 768px) {
   body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-12-regular.text-text-weak {
     margin-block-start: 4px;
-    color: #7c8b9b;
+    color: var(--orchestra-session-secondary);
     font-size: var(--orchestra-font-size-xs);
     letter-spacing: 0.06em;
     text-transform: uppercase;
@@ -1477,64 +1440,42 @@
     .grid
     .text-12-regular.text-text-weak {
     margin: 0;
-    color: #7f8fa0;
+    color: var(--orchestra-session-secondary);
     letter-spacing: normal;
     text-transform: none;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .grid .text-12-medium {
-    color: #cdd6df;
+    color: var(--orchestra-session-body);
     font: 500 12.5px var(--font-family-mono);
     overflow-wrap: anywhere;
   }
 
   body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .text-11-regular {
-    color: #8c9daf;
+    color: var(--orchestra-session-secondary);
     font-size: var(--orchestra-font-size-sm);
   }
 
   /* The breakdown note says these are approximate window tokens, apart from cumulative cost. */
   body[data-new-layout] [data-session-layout="surface"] [data-session-tab="context"] .hidden.text-11-regular {
     display: block;
-    color: #65768a;
+    color: var(--orchestra-session-meta);
     font-size: var(--orchestra-font-size-xs);
     line-height: 15px;
   }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-session-tab="context"]
-    .text-12-regular.text-text-weak {
-    color: #6b7480;
-  }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-session-tab="context"]
-    .grid
-    .text-12-medium {
-    color: #2b3440;
-  }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-session-tab="context"]
-    .text-11-regular {
-    color: #5f6874;
-  }
 }
 
 /* Session "•••" menu as the mock's .mx-menu (portaled, so not under the surface). */
 body[data-new-layout] [data-orchestra-menu="session"] {
   min-inline-size: 180px;
   padding: 5px;
-  border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+  border: 1px solid var(--mx-line, var(--orchestra-border-muted));
   border-radius: var(--orchestra-radius-md);
-  background: var(--mx-modal, #111922);
-  box-shadow: var(--mx-pop-shadow, 0 14px 35px rgba(0, 0, 0, 0.24));
+  background: var(--mx-modal, var(--orchestra-surface-float));
+  box-shadow: var(--mx-pop-shadow, var(--orchestra-surface-float-shadow));
 }
 
 /* menu-v2.css sizes the item at 28px and types its inner content slot, so both are overridden here. */
@@ -1546,7 +1487,7 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-i
 }
 
 body[data-new-layout] [data-orchestra-menu="session"] [data-slot="menu-v2-item-content"] {
-  color: var(--mx-strong, #e1e9f0);
+  color: var(--mx-strong, var(--orchestra-text));
   font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
   font-optical-sizing: none;
   font-size: var(--orchestra-font-size-sm);
@@ -1556,11 +1497,11 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-slot="menu-v2-item-c
 }
 
 body[data-new-layout] [data-orchestra-menu="session"] [data-component="menu-v2-item"]:is(:hover, [data-highlighted]) {
-  background: var(--mx-soft, rgba(170, 196, 220, 0.055));
+  background: var(--mx-soft, var(--orchestra-overlay-hover));
 }
 
 body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="menu-v2-item-content"] {
-  color: var(--mx-bad, #d99a94);
+  color: var(--mx-bad, var(--orchestra-danger));
 }
 
 /* Header "•••": the mock writes three bullets in the 12px button text rather than a light glyph. */
@@ -1615,7 +1556,7 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="
     inline-size: 24px;
     min-inline-size: 24px;
     block-size: 24px;
-    color: #7f8d9d;
+    color: var(--orchestra-session-secondary);
   }
 
   body[data-new-layout]
@@ -1648,17 +1589,11 @@ body[data-new-layout] [data-orchestra-menu="session"] [data-danger] [data-slot="
 
   /* The change-mode selector reads like the rail's other quiet controls. */
   body[data-new-layout] [data-slot="orchestra-review-mode"] [data-slot="select-v2-value-text"] {
-    color: #8b9bab;
+    color: var(--orchestra-session-secondary);
     font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
     font-optical-sizing: none;
     font-size: var(--orchestra-font-size-sm);
     font-weight: 400;
   }
 
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-slot="orchestra-review-mode"]
-    [data-slot="select-v2-value-text"] {
-    color: #5f6874;
-  }
 }

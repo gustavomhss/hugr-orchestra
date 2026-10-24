@@ -12,7 +12,7 @@
   margin-block-end: 22px;
 }
 .agents-kicker {
-  color: #788899;
+  color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-xs);
   font-weight: 580;
   letter-spacing: 0.1em;
@@ -20,14 +20,14 @@
 }
 .agents-mast h1 {
   margin: 9px 0 0;
-  color: #ebeff3;
+  color: var(--orchestra-text);
   font-size: var(--orchestra-font-size-4xl);
   line-height: 36px;
   font-weight: 600;
   letter-spacing: -0.035em;
 }
 .agents-mast h1 span {
-  color: #8e9cab;
+  color: var(--orchestra-muted);
   font-weight: 450;
 }
 .agents-grid {
@@ -57,7 +57,7 @@
 .agent-top b {
   min-inline-size: 0;
   overflow: hidden;
-  color: #dbe4ec;
+  color: var(--orchestra-body);
   font-size: var(--orchestra-font-size-lg);
   font-weight: 560;
   text-overflow: ellipsis;
@@ -65,7 +65,7 @@
 }
 .agent-role {
   margin-inline-start: auto;
-  color: #7f8fa0;
+  color: var(--orchestra-muted);
   font: 10.5px var(--mx-mono);
 }
 .agents-ic {
@@ -90,22 +90,6 @@
   text-align: end;
 }
 
-html[data-color-scheme="light"] .agents-kicker {
-  color: #6f7883;
-}
-html[data-color-scheme="light"] .agents-mast h1 {
-  color: #171c23;
-}
-html[data-color-scheme="light"] .agents-mast h1 span {
-  color: #666f7a;
-}
-html[data-color-scheme="light"] .agent-top b {
-  color: #1f2833;
-}
-html[data-color-scheme="light"] .agent-role {
-  color: #6b7480;
-}
-
 /* The native modal dialog: the form scrolls its body between the fixed head and foot, as in the mock.
    The app's preflight zeroes margins, so restore the UA centering of a modal dialog. */
 .agents-dialog {
@@ -123,7 +107,7 @@ html[data-color-scheme="light"] .agent-role {
   margin: 0;
 }
 .agents-dialog::backdrop {
-  background: var(--mx-backdrop, rgba(3, 9, 16, 0.55));
+  background: var(--mx-backdrop);
   backdrop-filter: blur(5px);
 }
 .agents-fieldset {

@@ -22,7 +22,7 @@
 .actions-page .actions-node-result small { display: inline; }
 
 /* Matrix executions: one box per matrix definition with its runner executions inside. */
-.actions-page .actions-matrix-group.selected { border-color: var(--actions-blue); box-shadow: 0 0 0 1px rgba(154, 191, 229, .15); }
+.actions-page .actions-matrix-group.selected { border-color: var(--actions-blue); box-shadow: 0 0 0 1px color-mix(in srgb, var(--actions-blue) 15%, transparent); }
 .actions-page .actions-matrix-group .wf-group-head { cursor: default; }
 .actions-page .actions-matrix-group .wf-group-head > button { min-inline-size: 0; padding: 0; border: 0; background: none; color: inherit; font: inherit; cursor: pointer; }
 .actions-page .actions-matrix-group .wf-group-head > button:focus-visible { outline: 2px solid var(--actions-blue); outline-offset: 2px; }

@@ -169,15 +169,8 @@
   }
 
   [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
-    background: rgba(200, 220, 238, 0.09);
+    background: var(--orchestra-overlay-pressed);
     opacity: 1;
-  }
-
-  html[data-color-scheme="light"]
-    [data-orchestra-tabs]
-    [data-slot="tab-close"]
-    [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
-    background: rgba(40, 56, 74, 0.08);
   }
 
   #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > [data-component="tooltip"] {

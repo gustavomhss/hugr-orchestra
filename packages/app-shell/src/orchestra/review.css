@@ -92,7 +92,7 @@
     gap: 2px;
     padding: 3px;
     border-radius: var(--orchestra-radius-sm);
-    background: rgba(255, 255, 255, 0.04);
+    background: var(--orchestra-overlay-hover);
   }
 
   body[data-new-layout] [data-slot="orchestra-review-views"] button {
@@ -101,26 +101,13 @@
     border: 0;
     border-radius: var(--orchestra-radius-sm);
     background: transparent;
-    color: #8695a5;
+    color: var(--orchestra-muted);
     font-size: var(--orchestra-font-size-sm);
   }
 
   body[data-new-layout] [data-slot="orchestra-review-views"] button[data-active] {
-    background: rgba(46, 58, 72, 0.9);
-    color: #dbe3ea;
-  }
-
-  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] {
-    background: rgba(0, 0, 0, 0.04);
-  }
-
-  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] button {
-    color: #5f6874;
-  }
-
-  html[data-color-scheme="light"] body[data-new-layout] [data-slot="orchestra-review-views"] button[data-active] {
-    background: rgba(96, 138, 180, 0.22);
-    color: #141a21;
+    background: var(--orchestra-surface-active);
+    color: var(--orchestra-text);
   }
 
   body[data-new-layout] [data-slot="orchestra-review-views"] button:focus-visible {

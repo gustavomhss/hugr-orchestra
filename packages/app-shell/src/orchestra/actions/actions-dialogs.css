@@ -3,7 +3,7 @@
 /* Every Actions dialog opens with showModal(), so it sits in the top layer and centers on the viewport.
    The mock's blurred backdrop is what separates it from the content column behind it. */
 .actions-page .actions-dialog { box-shadow: var(--mx-shadow); }
-.actions-page .actions-dialog::backdrop { background: var(--mx-backdrop, rgba(3, 9, 16, .55)); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
+.actions-page .actions-dialog::backdrop { background: var(--mx-backdrop); -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px); }
 
 /* Header: provider/scope eyebrow, title, close glyph. */
 .actions-page .actions-dialog .dialog-head h2 { margin: 0; font: 600 16px/1.4 var(--mx-emphasis); letter-spacing: -.02em; overflow-wrap: anywhere; }

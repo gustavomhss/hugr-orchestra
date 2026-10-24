@@ -138,10 +138,10 @@
     justify-content: center;
     gap: 7px;
     padding: 0 7px;
-    border: 1px solid var(--mx-line, rgba(166, 189, 211, 0.14));
+    border: 1px solid var(--mx-line);
     border-radius: var(--orchestra-radius-sm);
-    background: var(--mx-soft, rgba(170, 196, 220, 0.055));
-    color: var(--mx-strong, #e1e9f0);
+    background: var(--mx-soft);
+    color: var(--mx-strong);
     font-size: var(--orchestra-font-size-xs);
     white-space: nowrap;
   }
@@ -150,8 +150,8 @@
     [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
     :is([data-action="prompt-attach"], [data-slot="orchestra-compose-tools"] > button):hover {
-    border-color: var(--mx-blue, #9abfe5);
-    background: var(--mx-raised, rgba(19, 28, 38, 0.55));
+    border-color: var(--mx-blue);
+    background: var(--mx-raised);
   }
 
   body[data-new-layout]
@@ -196,19 +196,10 @@
     [data-component="session-prompt-dock"]
     [data-slot="prompt-input-v2-controls"]
     [data-component="button-v2"] {
-    color: #aab7c4;
+    color: var(--orchestra-body);
     font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
     font-optical-sizing: none;
     font-size: var(--orchestra-font-size-sm);
-  }
-
-  html[data-color-scheme="light"]
-    body[data-new-layout]
-    [data-session-layout="surface"]
-    [data-component="session-prompt-dock"]
-    [data-slot="prompt-input-v2-controls"]
-    [data-component="button-v2"] {
-    color: #4d5661;
   }
 
   /* The add menu draws the mock's 1.4px "+" (.ic) instead of the shared glyph. */
@@ -255,7 +246,7 @@
     [data-component="session-prompt-dock"]
     [data-action="prompt-submit"][data-icon="arrow-up"]::after {
     content: "➤";
-    color: #fff;
+    color: var(--mx-primary-text);
     font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
     font-size: var(--orchestra-font-size-lg);
     line-height: 1;
@@ -267,8 +258,8 @@
     [data-session-layout="surface"]
     [data-slot="orchestra-compose-tools"]
     > [data-action="prompt-delivery"][data-delivery="queue"] {
-    border-color: var(--mx-blue, #9abfe5);
-    color: var(--mx-blue, #9abfe5);
+    border-color: var(--mx-blue);
+    color: var(--mx-blue);
   }
 
   body[data-new-layout]
