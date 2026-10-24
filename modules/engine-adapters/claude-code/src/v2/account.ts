@@ -92,7 +92,7 @@ const layer = Layer.effect(
     // A finished sign-in invalidates the cached status so the account route sees the new login at once.
     const [account, refresh] = yield* Effect.cachedInvalidateWithTTL(readAccount, "30 seconds")
     // One `claude auth login` per server process: a new sign-in replaces an unfinished one.
-    const running: { current?: { fiber: Fiber.Fiber<void>; codes: Queue.Queue<Uint8Array, Cause.Done> } } = {}
+    const running: { current?: { fiber: Fiber.Fiber<unknown>; codes: Queue.Queue<Uint8Array, Cause.Done> } } = {}
 
     const stop = Effect.gen(function* () {
       const previous = running.current
