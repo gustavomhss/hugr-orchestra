@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import { SessionProcess } from "@orchestra/core/session-process"
+import { SessionV2 } from "@orchestra/core/session"
 import { LayerNode } from "@orchestra/core/effect/layer-node"
-import { Effect } from "effect"
+import { Effect, Schedule } from "effect"
 import { it } from "./lib/effect"
 
 const layer = LayerNode.compile(SessionProcess.node)
@@ -26,6 +27,59 @@ describe("SessionProcess", () => {
       expect(yield* processes.list(sessionID)).toHaveLength(0)
 
       yield* processes.stopSession(sessionID)
+    }).pipe(Effect.provide(layer)),
+  )
+
+  it.live("delivers a finished process's notice once the busy Session settles", () =>
+    Effect.gen(function* () {
+      const processes = yield* SessionProcess.Service
+      const sessionID = "ses_session_process_busy"
+      const delivered: string[] = []
+      const state = { busy: true, waits: 0 }
+      // Only the two calls the registry makes; the first synthetic lands mid-turn and is refused.
+      const sessions = {
+        synthetic: (input: { sessionID: SessionV2.ID; text: string }) =>
+          Effect.suspend(() =>
+            state.busy
+              ? Effect.fail(new SessionV2.BusyError({ sessionID: input.sessionID }))
+              : Effect.sync(() => delivered.push(input.text)),
+          ),
+        wait: () =>
+          Effect.sync(() => {
+            state.waits++
+            state.busy = false
+          }),
+      } as unknown as SessionV2.Interface
+      const launched = yield* processes
+        .launch({ sessionID, command: "exit 3", title: "fails" })
+        .pipe(Effect.provideService(SessionV2.Service, sessions))
+      yield* processes.wait(sessionID, launched.id)
+      yield* Effect.suspend(() => (delivered.length ? Effect.void : Effect.fail("pending"))).pipe(
+        Effect.retry({ schedule: Schedule.spaced("20 millis"), times: 250 }),
+      )
+      expect(delivered).toHaveLength(1)
+      expect(delivered[0]).toContain('Background process "fails" failed: exit 3')
+      expect(state.waits).toBe(1)
+    }).pipe(Effect.provide(layer)),
+  )
+
+  it.live("forgets the oldest finished processes beyond the kept count", () =>
+    Effect.gen(function* () {
+      const processes = yield* SessionProcess.Service
+      const sessionID = "ses_session_process_evict"
+      const launched = yield* Effect.forEach(
+        Array.from({ length: SessionProcess.FINISHED_KEPT + 1 }),
+        () =>
+          processes
+            .launch({ sessionID, command: "true", title: "done" })
+            .pipe(Effect.tap((info) => processes.wait(sessionID, info.id))),
+      )
+      const first = launched[0]!.id
+      yield* Effect.suspend(() =>
+        processes.get(sessionID, first).pipe(Effect.flatMap((info) => (info ? Effect.fail("kept") : Effect.void))),
+      ).pipe(Effect.retry({ schedule: Schedule.spaced("20 millis"), times: 250 }))
+      expect(yield* processes.get(sessionID, first)).toBeUndefined()
+      expect(yield* processes.get(sessionID, launched.at(-1)!.id)).toBeDefined()
     }).pipe(Effect.provide(layer)),
   )
 })
