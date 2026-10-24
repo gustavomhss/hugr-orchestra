@@ -45,7 +45,7 @@ test("Maestro lists every playbook, a same-name skill from another source wins, 
     ),
   ).finally(() => fs.rm(other, { recursive: true, force: true }))
 
-  expect(result.sources.map((source) => (source.type === "directory" ? source.path : ""))).toEqual([
+  expect(result.sources.map((source) => (source.type === "directory" ? String(source.path) : ""))).toEqual([
     SeatSkillRoot.playbooks,
     other,
   ])
