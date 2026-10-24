@@ -524,6 +524,15 @@
     background: var(--orchestra-composer-background);
   }
 
+  /* The revert dock tucks 18px under the composer. The composer is translucent, so that hidden strip would
+     show through as a second edge; cut it away and give the dock the composer's own fill. */
+  body[data-new-layout] [data-session-layout="surface"] [data-component="session-revert-dock"] {
+    border: 1px solid var(--orchestra-composer-border);
+    border-radius: var(--orchestra-radius-lg);
+    background: var(--orchestra-composer-background);
+    mask-image: linear-gradient(to bottom, #000 calc(100% - 18px), transparent calc(100% - 18px));
+  }
+
   body[data-new-layout]
     [data-session-layout="surface"]
     [data-component="session-prompt-dock"]
@@ -1024,7 +1033,14 @@
 
   body[data-new-layout] [data-session-layout="surface"] [data-slot="task-meta"] {
     color: var(--orchestra-task-meta);
-    font: 11.5px / 16px var(--font-family-mono);
+    font-family: var(--font-family-sans);
+    font-size: var(--orchestra-font-size-sm);
+    line-height: 16px;
+    font-variant-numeric: tabular-nums;
+  }
+
+  body[data-new-layout] [data-session-layout="surface"] [data-slot="task-time"] {
+    font: inherit;
   }
 
   /* A finished row reads as secondary through its mark and title. The shared panel dims the whole

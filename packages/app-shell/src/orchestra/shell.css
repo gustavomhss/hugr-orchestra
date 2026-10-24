@@ -257,6 +257,10 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
   min-block-size: 0;
   flex: 1;
   overflow-y: auto;
+  /* Content scrolling under the profile card fades out instead of being cut; the end padding lets
+     the last row scroll clear of the fade. */
+  padding-block-end: 16px;
+  mask-image: linear-gradient(to bottom, #000 calc(100% - 16px), transparent);
   scrollbar-width: thin;
   scrollbar-color: var(--glass-border) transparent;
 }
@@ -363,15 +367,13 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 
 /* The reference's chapter marker (.mx-origin), marking screens to revisit before production. */
 :is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
-  border: 1px solid var(--orchestra-border-muted);
   border-radius: var(--orchestra-radius-sm);
   background: var(--orchestra-wip-background);
   color: var(--orchestra-wip-text);
-  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
   font-size: var(--orchestra-font-size-2xs);
-  font-weight: 400;
+  font-weight: 500;
   line-height: 16px;
-  letter-spacing: 0;
+  letter-spacing: 0.02em;
   white-space: nowrap;
 }
 
@@ -766,4 +768,23 @@ body[data-new-layout] [data-slot="dialog-close-button"]:focus-visible {
 [data-navigation="compact"] .orchestra-profile-avatar[data-component="project-avatar-v2"] {
   inline-size: 30px;
   block-size: 30px;
+}
+
+/* The palette's search field is the float glass itself, divided from the results by one hairline, not a
+   filled box inside the box. */
+body[data-new-layout] .command-palette-v2-search {
+  padding: 4px 6px;
+  border-block-end: 1px solid var(--orchestra-border-muted);
+}
+
+body[data-new-layout] .command-palette-v2-search [data-component="text-input-v2"],
+body[data-new-layout]
+  .command-palette-v2-search
+  [data-component="text-input-v2"]:where(:hover, :focus-within):not([data-disabled], [data-invalid]) {
+  height: 44px;
+  background: transparent;
+}
+
+body[data-new-layout] .command-palette-v2-search [data-component="text-input-v2"] [data-slot="text-input-v2-input"] {
+  font-size: var(--orchestra-font-size-lg);
 }

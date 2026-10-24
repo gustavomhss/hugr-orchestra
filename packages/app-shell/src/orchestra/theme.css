@@ -26,6 +26,14 @@
   --orchestra-grain: url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E");
 }
 
+/* Reduced motion stills every transition and animation that reads the motion tokens. */
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --orchestra-duration-fast: 0ms;
+    --orchestra-duration-base: 0ms;
+  }
+}
+
 /* App-owned skin. Body scope also reaches menus, dialogs, and toasts rendered through portals. */
 /* Prefix first: Tailwind's optimizer otherwise drops the standard backdrop property. */
 html[data-color-scheme] body[data-new-layout] {

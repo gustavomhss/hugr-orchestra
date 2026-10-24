@@ -10,6 +10,7 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSessionArchive } from "@/pages/session/session-archive"
 import { showToast } from "@/utils/toast"
 import type { SessionManagement } from "@/utils/session-management"
+import { sessionTitle } from "@/utils/session-title"
 
 /** The dialog stays pinned to the server and directory where its history was opened. */
 export function DialogArchivedSessions(props: { directory: string }) {
@@ -40,7 +41,7 @@ export function DialogArchivedSessions(props: { directory: string }) {
         </Show>
         <For each={visible()}>{(session) => (
           <div class="flex items-center gap-2" data-session-id={session.id}>
-            <span class="flex-1 min-w-0 truncate"><bdi dir="auto">{session.title}</bdi></span>
+            <span class="flex-1 min-w-0 truncate"><bdi dir="auto">{sessionTitle(session.title)}</bdi></span>
             <Button disabled={actions.busy(session.id) || !actions.restorable()} onClick={() => {
               void actions.restore(session.id, session).then((restored) => {
                 if (!restored) return
@@ -49,7 +50,7 @@ export function DialogArchivedSessions(props: { directory: string }) {
                   variant: "success",
                   icon: "circle-check",
                   title: language.t("orchestra.chat.archived.restored"),
-                  description: session.title,
+                  description: sessionTitle(session.title),
                   actions: [{
                     label: language.t("common.open"),
                     onClick: () => tabs.select(tabs.addSessionTab({ server: ServerConnection.key(source.server), sessionId: session.id })),

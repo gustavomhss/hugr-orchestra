@@ -188,6 +188,13 @@
 .home-bars i:last-child {
   background: var(--orchestra-accent);
 }
+/* One day of data is a point, not a trend: keep it a single slim mark at the end. */
+.home-bars:has(> i:only-child) {
+  justify-content: flex-end;
+}
+.home-bars i:only-child {
+  flex: 0 0 10px;
+}
 .home-status {
   margin: 14px 0 0;
   color: var(--orchestra-muted);
@@ -286,11 +293,8 @@
 .home-row-sub {
   margin-top: 3px;
   color: var(--mx-dim);
-  font:
-    11.5px/16px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
+  font: var(--orchestra-font-size-sm)/16px var(--mx-sans);
+  font-variant-numeric: tabular-nums;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -348,11 +352,7 @@
   border-radius: var(--orchestra-radius-full);
   color: var(--orchestra-success);
   background: color-mix(in srgb, var(--orchestra-success) 13%, transparent);
-  font:
-    10.5px/16px ui-monospace,
-    SFMono-Regular,
-    Menlo,
-    monospace;
+  font: 500 var(--orchestra-font-size-xs)/16px var(--mx-sans);
   font-weight: 500;
   vertical-align: 2px;
 }

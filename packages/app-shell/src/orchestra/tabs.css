@@ -73,10 +73,10 @@
     font-size: var(--orchestra-font-size-sm);
     line-height: 16px;
     transition:
-      background 0.16s ease,
-      border-color 0.16s ease,
-      color 0.16s ease,
-      box-shadow 0.16s ease;
+      background var(--orchestra-duration-base) var(--orchestra-ease-out),
+      border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
+      color var(--orchestra-duration-base) var(--orchestra-ease-out),
+      box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
   }
 
   [data-orchestra-tabs] [data-titlebar-tab]:hover {
@@ -157,8 +157,8 @@
     color: inherit;
     opacity: 0;
     transition:
-      opacity 0.16s ease,
-      background 0.16s ease;
+      opacity var(--orchestra-duration-base) var(--orchestra-ease-out),
+      background var(--orchestra-duration-base) var(--orchestra-ease-out);
   }
 
   [data-orchestra-tabs]

@@ -225,7 +225,6 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
   background: var(--v2-state-fg-warning);
 }
 [data-orchestra-palette="nord"] :is(.orchestra-wip-chip, .orchestra-wip-mark, .orchestra-attention-chip) {
-  border: 1px solid var(--orchestra-border-muted);
   background: var(--orchestra-wip-background);
   color: var(--orchestra-wip-text);
 }
@@ -296,6 +295,15 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
 [data-orchestra-palette="nord"] [data-navigation="compact"] .orchestra-attention-chip {
   border: 0;
   background: var(--orchestra-wip-text);
+}
+[data-orchestra-palette="nord"] body[data-new-layout] .command-palette-v2-search {
+  border-block-end: 1px solid var(--orchestra-border-muted);
+}
+[data-orchestra-palette="nord"] body[data-new-layout] .command-palette-v2-search [data-component="text-input-v2"],
+[data-orchestra-palette="nord"] body[data-new-layout]
+  .command-palette-v2-search
+  [data-component="text-input-v2"]:where(:hover, :focus-within):not([data-disabled], [data-invalid]) {
+  background: transparent;
 }
 /* orchestra/tabs.css */
 @media (min-width: 768px) {
@@ -593,6 +601,10 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
       [data-session-layout="surface"]
       [data-component="session-prompt-dock"]
       [data-component="prompt-input-v2"] {
+    border: 1px solid var(--orchestra-composer-border);
+    background: var(--orchestra-composer-background);
+  }
+  [data-orchestra-palette="nord"] body[data-new-layout] [data-session-layout="surface"] [data-component="session-revert-dock"] {
     border: 1px solid var(--orchestra-composer-border);
     background: var(--orchestra-composer-background);
   }
@@ -1234,7 +1246,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-mx-kit] {
   --mx-enabled: rgba(90, 163, 180, 0.22);
 }
 [data-orchestra-palette="nord"] .mx-eyebrow {
-  color: var(--mx-dim);
+  color: var(--orchestra-muted);
 }
 [data-orchestra-palette="nord"] .mx-heading h1 {
   color: var(--mx-strong);
@@ -1280,8 +1292,8 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-mx-kit] {
 [data-orchestra-palette="nord"] .mx-badge.bad {
   color: var(--mx-bad);
 }
-[data-orchestra-palette="nord"] .mx-card-foot {
-  border-block-start: 1px solid var(--mx-line);
+[data-orchestra-palette="nord"] .mx-card-foot .mx-btn:not(.primary, .danger, :hover) {
+  background: transparent;
 }
 [data-orchestra-palette="nord"] .mx-btn {
   border: 1px solid var(--mx-line);

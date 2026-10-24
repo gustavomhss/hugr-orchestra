@@ -6,7 +6,7 @@
 }
 .agents-mast {
   display: flex;
-  align-items: end;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 28px;
   margin-block-end: 22px;
@@ -14,7 +14,8 @@
 .agents-kicker {
   color: var(--orchestra-muted);
   font-size: var(--orchestra-font-size-xs);
-  font-weight: 580;
+  font-family: var(--mx-emphasis);
+  font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
 }
@@ -66,7 +67,7 @@
 .agent-role {
   margin-inline-start: auto;
   color: var(--orchestra-muted);
-  font: 10.5px var(--mx-mono);
+  font: var(--orchestra-font-size-xs) var(--mx-sans);
 }
 .agents-ic {
   inline-size: 16px;

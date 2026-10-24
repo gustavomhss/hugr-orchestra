@@ -313,7 +313,7 @@ html[data-color-scheme="light"] body[data-new-layout] {
 }
 .wf-lrow {
   cursor: pointer;
-  transition: background-color 0.14s ease;
+  transition: background-color var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 .wf-lrow:hover {
   background: var(--mx-soft);
@@ -449,8 +449,8 @@ html[data-color-scheme="light"] body[data-new-layout] {
   font: inherit;
   color: inherit;
   transition:
-    border-color 0.14s ease,
-    background-color 0.14s ease;
+    border-color var(--orchestra-duration-fast) var(--orchestra-ease-out),
+    background-color var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 .wf-tpl:hover {
   border-color: var(--mx-blue);
@@ -937,7 +937,7 @@ html[data-color-scheme="light"] .wf-editor {
   transform-origin: 0 0;
 }
 .wf-world.animate {
-  transition: transform 0.18s ease;
+  transition: transform var(--orchestra-duration-base) var(--orchestra-ease-out);
 }
 .wf-wires {
   position: absolute;
@@ -1104,8 +1104,8 @@ html[data-color-scheme="light"] .wf-editor {
   box-shadow: var(--wf-tile-shadow);
   cursor: grab;
   transition:
-    border-color 0.14s ease,
-    box-shadow 0.14s ease;
+    border-color var(--orchestra-duration-fast) var(--orchestra-ease-out),
+    box-shadow var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 .wf-node:hover .wf-tile {
   border-color: var(--cv-node-hover);
@@ -1562,7 +1562,7 @@ html[data-color-scheme="light"] .wf-editor {
   border-inline-start: 1px solid var(--mx-line);
   background: var(--mx-modal);
   box-shadow: var(--wf-drawer-shadow);
-  animation: wf-slide 0.16s ease-out;
+  animation: wf-slide var(--orchestra-duration-base) var(--orchestra-ease-out);
 }
 @keyframes wf-slide {
   from {
@@ -1715,7 +1715,7 @@ html[data-color-scheme="light"] .wf-editor {
   padding: 20px;
   background: var(--mx-backdrop);
   backdrop-filter: blur(5px);
-  animation: wf-fade 0.14s ease-out;
+  animation: wf-fade var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 @keyframes wf-fade {
   from {
@@ -2069,7 +2069,7 @@ html[data-color-scheme="light"] .wf-editor {
   inline-size: 12px;
   block-size: 12px;
   color: var(--mx-dim);
-  transition: transform 0.14s ease;
+  transition: transform var(--orchestra-duration-fast) var(--orchestra-ease-out);
 }
 .wf-proto > button[aria-expanded="true"] .wf-ic {
   transform: rotate(90deg);
