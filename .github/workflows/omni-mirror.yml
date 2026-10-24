@@ -16,7 +16,6 @@ on:
     tags:
       - "omni-v*"
     paths:
-      - "packages/omni/**"
       - "native/omni/**"
       - ".github/workflows/omni-mirror.yml"
       - "script/omni-mirror.sh"
