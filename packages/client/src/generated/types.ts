@@ -5080,6 +5080,18 @@ export type ConfigShellsOutput = ReadonlyArray<{
   readonly acceptable: boolean
 }>
 
+export type ClaudeCodeAccountOutput = {
+  readonly signedIn: boolean
+  readonly email?: string | undefined
+  readonly subscription?: string | undefined
+}
+
+export type ClaudeCodeLoginOutput = { readonly url: string }
+
+export type ClaudeCodeLoginCodeInput = { readonly code: { readonly code: string }["code"] }
+
+export type ClaudeCodeLoginCodeOutput = boolean
+
 export type RelayDocumentsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -9195,6 +9207,8 @@ export {
   isQuestionNotFoundError,
   type ProjectCopyError,
   isProjectCopyError,
+  type ClaudeCodeLoginError,
+  isClaudeCodeLoginError,
   type RelayInvalidError,
   isRelayInvalidError,
   type RelayNotFoundError,

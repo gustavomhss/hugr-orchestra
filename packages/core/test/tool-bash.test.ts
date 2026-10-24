@@ -14,6 +14,7 @@ import { PermissionV2 } from "@orchestra/core/permission"
 import { AppProcess } from "@orchestra/core/process"
 import { AbsolutePath } from "@orchestra/core/schema"
 import { SessionV2 } from "@orchestra/core/session"
+import { SessionProcess } from "@orchestra/core/session-process"
 import { BashTool } from "@orchestra/core/tool/bash"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
@@ -132,6 +133,21 @@ const call = (input: typeof BashTool.Input.Type, id = "call-bash") => ({
   ...toolIdentity,
   call: { type: "tool-call" as const, id, name: "bash", input },
 })
+
+// Records launches instead of spawning; the bash tool hands the registry its command and confinement.
+const backgroundProcesses = (launches: SessionProcess.LaunchInput[]) =>
+  SessionProcess.Service.of({
+    launch: (input) =>
+      Effect.sync(() => {
+        launches.push(input)
+        return { id: "job_test", processID: "job_test", pid: 1, title: input.title ?? "", started: 0, processes: [], output: "", written: 0 }
+      }),
+    list: () => Effect.succeed([]),
+    get: () => Effect.succeed(undefined),
+    wait: () => Effect.succeed({ timedOut: false }),
+    cancel: () => Effect.succeed(false),
+    stopSession: () => Effect.void,
+  })
 
 const it = testEffect(Layer.empty)
 
@@ -261,6 +277,41 @@ describe("BashTool", () => {
       ),
     )
   }
+
+  it.live("launches a background command with the scrubbed environment", () =>
+    Effect.acquireUseRelease(
+      Effect.promise(() => tmpdir()),
+      (tmp) => {
+        reset()
+        const launches: SessionProcess.LaunchInput[] = []
+        const previous = process.env.GH_TOKEN
+        process.env.GH_TOKEN = "ghp_background_test_token"
+        return withTool(tmp.path, (registry) => settleTool(registry, call({ command: "env", background: true }))).pipe(
+          Effect.provideService(SessionProcess.Service, backgroundProcesses(launches)),
+          Effect.andThen((settled) =>
+            Effect.gen(function* () {
+              expect(settled.output?.structured).toMatchObject({ truncated: false })
+              expect(launches).toHaveLength(1)
+              const launched = launches[0]!
+              expect(launched.prepare).toBeDefined()
+              if (typeof launched.command === "string") throw new Error("expected a built command")
+              const spawned = yield* Effect.scoped(launched.prepare!(launched.command))
+              if (spawned._tag !== "StandardCommand") throw new Error("expected standard command")
+              expect(spawned.options.extendEnv).toBe(false)
+              expect(spawned.options.env).not.toHaveProperty("GH_TOKEN")
+            }),
+          ),
+          Effect.ensuring(
+            Effect.sync(() => {
+              if (previous === undefined) delete process.env.GH_TOKEN
+              if (previous !== undefined) process.env.GH_TOKEN = previous
+            }),
+          ),
+        )
+      },
+      (tmp) => Effect.promise(() => tmp[Symbol.asyncDispose]()),
+    ),
+  )
 
   it.live("approves an explicit external workdir before bash execution", () =>
     Effect.acquireUseRelease(

@@ -24,6 +24,11 @@
     "@atlas/persist": "*",
     "@atlas/tools": "*"
   },
+  "devDependencies": {
+    "@atlas/grounding": "*",
+    "@atlas/index": "*",
+    "@atlas/retrieval": "*"
+  },
   "scripts": {
     "build": "tsc -b",
     "typecheck": "tsc -b"

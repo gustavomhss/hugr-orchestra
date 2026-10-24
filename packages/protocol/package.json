@@ -19,6 +19,7 @@
     "./groups/actions-workflow": "./src/groups/actions-workflow.ts",
     "./groups/agent": "./src/groups/agent.ts",
     "./groups/behavior": "./src/groups/behavior.ts",
+    "./groups/claude-code": "./src/groups/claude-code.ts",
     "./groups/config": "./src/groups/config.ts",
     "./groups/command": "./src/groups/command.ts",
     "./groups/credential": "./src/groups/credential.ts",

@@ -5,13 +5,6 @@ on:
   pull_request:
     paths:
       - ".github/workflows/omni-delivery-campaign.yml"
-      - "packages/omni/campaign/**"
-      - "packages/omni/crates/**"
-      - "packages/omni/bindings/node/**"
-      - "packages/omni/Cargo.toml"
-      - "packages/omni/Cargo.lock"
-      - "packages/omni/rust-toolchain.toml"
-      - "packages/omni/.cargo/**"
       - "native/omni/campaign/**"
       - "native/omni/crates/**"
       - "native/omni/bindings/node/**"

@@ -3,7 +3,7 @@ import { DialogProvider, useDialog } from "@orchestra/ui/context/dialog"
 import { createMemo, onCleanup, onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
-import type { Agent, Provider } from "../../v2-wire"
+import type { Agent, Provider } from "../../src/v2-wire"
 
 import { LanguageProvider, useLanguage } from "../../src/context/language"
 import { PlatformProvider } from "../../src/context/platform"

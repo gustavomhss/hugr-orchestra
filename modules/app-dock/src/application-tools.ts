@@ -135,9 +135,17 @@ export function scope(draft: AgentV2.Draft) {
     agent.system ??= LINUX_PROMPT
     agent.description ??= LINUX_DESCRIPTION
     agent.mode = "subagent"
+    // The `linux` and `dock` rules the owner configured (pushed onto every agent before this runs) survive as they are,
+    // so an ask or deny stays one; with none configured they default to allow, as V1 does.
+    const configured = (action: string) => {
+      const rules = agent.permissions.filter((rule) => rule.action === action)
+      return rules.length > 0 ? rules : [{ action, resource: "*", effect: "allow" as const }]
+    }
     agent.permissions = [
       { action: "*", resource: "*", effect: "deny" },
-      ...["linux_*", "ui_*", "linux", "dock", "todowrite"].map((action) => ({ action, resource: "*", effect: "allow" as const })),
+      ...["linux_*", "ui_*", "todowrite"].map((action) => ({ action, resource: "*", effect: "allow" as const })),
+      ...configured("linux"),
+      ...configured("dock"),
     ]
   })
 }

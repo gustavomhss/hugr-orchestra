@@ -62,7 +62,7 @@ During restructuring, verification is limited to the new focused cases and packa
 
 Importing the path helper or tree-sitter admission module does not discover a workspace. Source build operations perform discovery when called; packaged admission continues to use installed resource paths. Desktop staging, Electron packaging, CLI grammar preparation, and Script version/team readers use the registered source locations.
 
-From `packages/desktop`, `bun typecheck tsconfig.packaging.json` checks the packaging scripts and Electron configurations listed in that config. It does not check unrelated GUI proof scripts.
+From `apps/desktop`, `bun typecheck tsconfig.packaging.json` checks the packaging scripts and Electron configurations listed in that config. It does not check unrelated GUI proof scripts.
 
 Nix generates its bootstrap alias config outside the checkout:
 
@@ -70,7 +70,7 @@ Nix generates its bootstrap alias config outside the checkout:
 bun --no-install nix/scripts/workspace-config.ts --source /absolute/checkout --out /absolute/evidence/workspace-paths.json
 ```
 
-The config has an absolute source base and registered Script/Core mappings. `check-distribution.sh` passes the same config to both native output oracles and their children. The dependency fingerprint includes both registries, registered module paths, and toolchain/domain paths; missing registered manifests fail explicitly. Native Nix execution and output controls remain part of final qualification.
+The config has an absolute source base and registered Script/Core mappings. `nix/check-distribution.sh` passes the same config to both native output oracles and their children. The dependency fingerprint includes both registries, registered module paths, and toolchain/domain paths; missing registered manifests fail explicitly. Native Nix execution and output controls remain part of final qualification.
 
 ## Portable recovery bundles
 

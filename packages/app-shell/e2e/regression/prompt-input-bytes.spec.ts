@@ -1,8 +1,8 @@
 import { createHash, randomUUID } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type { FilePartInput, TextPartInput } from "../../v2-types"
-import type { ProviderListResponse } from "../../v2-wire"
+import type { FilePartInput, TextPartInput } from "../../src/v2-types"
+import type { ProviderListResponse } from "../../src/v2-wire"
 
 import { mockOrchestraServer } from "../utils/mock-server"
 
