@@ -53,6 +53,15 @@ it.live("Git -C staging refuses managed data without changing index; source-only
     expect((yield* Effect.flip(check("git commit -m source"))).reason).toBe("git-hygiene-managed-or-protected-data")
     expect((yield* Effect.flip(check("git -C missing add ."))).reason).toBe("git-hygiene-cwd-acquisition")
     expect((yield* Effect.flip(check("git -c core.hooksPath=/dev/null add ."))).reason).toBe("git-hygiene-global-option-unbound")
+    expect((yield* Effect.flip(check("git --git-dir=other commit -m x"))).reason).toBe("git-hygiene-global-option-unbound")
+    expect((yield* Effect.flip(check("git --no-pager -c x=y add source.ts"))).reason).toBe("git-hygiene-global-option-unbound")
+    expect((yield* Effect.flip(check("git -c core.hooksPath=/dev/null -C . add ."))).reason).toBe("git-hygiene-global-option-unbound")
+    expect((yield* Effect.flip(check("git --work-tree . add ."))).reason).toBe("git-hygiene-global-option-unbound")
+    // A subcommand other than add/commit stages nothing, whatever words follow it.
+    yield* check("git worktree add -b topic ../topic HEAD")
+    yield* check("git -C . worktree add -b topic ../topic HEAD")
+    yield* check("git remote add origin https://example.invalid/repo.git")
+    yield* check("git log --grep commit")
   }),
 )
 

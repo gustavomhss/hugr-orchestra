@@ -129,6 +129,10 @@ it.instance(
       expect(yield* visible({ ...backend, native: false, permission: [] })).toEqual([])
       expect(yield* visible({ ...backend, native: undefined })).toEqual([])
       expect(yield* visible(maestro)).toEqual([])
+      // Maestro reads Atlas context by atlas_context only; the bound memory tools stay with the seats.
+      const names = (yield* registry.tools({ ...ref, agent: maestro })).map((tool) => tool.id)
+      expect(names).toContain("atlas_context")
+      expect(names.filter((id) => id.startsWith("atlas_memory_"))).toEqual([])
       const schemas = (yield* registry.tools({ ...ref, agent: backend })).filter((tool) =>
         tool.id.startsWith("atlas_memory_"),
       )

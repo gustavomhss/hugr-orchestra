@@ -29,6 +29,12 @@ export function supports(agent: { id?: string; native?: boolean }) {
   return owner(agent) !== undefined
 }
 
+// Atlas context reads (catalog, unit) also reach native Maestro. Anchor and the memory tools stay with the seats.
+export function contextReader(agent: { id?: string; native?: boolean } | undefined): Owner | "maestro" | undefined {
+  if (agent?.native === true && agent.id === "maestro") return "maestro"
+  return owner(agent)
+}
+
 export const UnitParam = Schema.optional(
   Schema.Union([
     Schema.Struct({ kind: Schema.Literal("task"), id: Schema.NonEmptyString }),

@@ -116,7 +116,7 @@ export function discovery(agent: Agent.Info) {
  * ordinary permissions.
  */
 export function hidden(agent: Agent.Info, id: string, plugin: boolean) {
-  if (!plugin && id === AtlasContextTool.id) return !AtlasMemory.supports(agent)
+  if (!plugin && id === AtlasContextTool.id) return !AtlasMemory.contextReader(agent)
   if (plugin && agent.id === ResearchSeatTools.SEAT) return true
   if (!discovery(agent)) return IDS.includes(id)
   if (!SEEN.includes(id)) return true

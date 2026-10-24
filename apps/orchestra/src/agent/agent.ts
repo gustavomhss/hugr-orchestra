@@ -177,7 +177,7 @@ const layer = Layer.effect(
             description: "High-agency development orchestrator. Uses governed approval only when explicitly requested.",
             prompt: AgentPrompt.maestro,
             options: {},
-            permission: Permission.merge(defaults, Permission.fromConfig({ question: "allow" }), team, user),
+            permission: Permission.merge(defaults, Permission.fromConfig({ question: "allow", atlas_context: "allow" }), team, user),
             mode: "primary",
             native: true,
           },
