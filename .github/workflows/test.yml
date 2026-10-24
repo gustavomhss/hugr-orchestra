@@ -63,13 +63,6 @@ jobs:
           fi
 
           changed=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
-          # WAIVER (human-authorized 2026-09-25) — PR #126 may skip Atlas while it repairs
-          # Atlas guard debt and Maestro documentation only. Any other path, including Atlas product
-          # code, still runs the full Atlas job. This exception applies to no other PR.
-          if [ "$PR_NUMBER" = "126" ] && [ -n "$changed" ] && ! printf '%s\n' "$changed" | grep -Evq '^(specs/hugr-maestro/.*\.md|\.github/workflows/test\.yml)$'; then
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
           if printf '%s\n' "$changed" | grep -Eq '^(modules/atlas/|\.github/workflows/test\.yml$)'; then
             echo "changed=true" >> "$GITHUB_OUTPUT"
           else
