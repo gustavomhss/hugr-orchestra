@@ -31,6 +31,22 @@ export const catalogScenarios: Scenario[] = [
     .at((ctx) => ({ path: "/api/pull-request", headers: ctx.headers(), body: pullRequest }))
     .probe({ path: "/api/pull-request", body: pullRequest })
     .json(400, noPullRequestRemote, "status"),
+  // No Claude Code binary is signed in or reachable in the isolated fixtures: the status reads signed out and a
+  // sign-in is refused with the declared error, without starting a process.
+  http.protected
+    .get("/api/claude-code/account", "v2.claudeCode.account")
+    .global()
+    .json(200, (body) => {
+      object(body)
+      check(typeof body.signedIn === "boolean", "account must report whether Claude Code is signed in")
+    }),
+  http.protected
+    .post("/api/claude-code/login/code", "v2.claudeCode.loginCode")
+    .global()
+    .at(() => ({ path: "/api/claude-code/login/code", body: { code: "abc#state" } }))
+    .json(200, (body) => {
+      check(body === false, "a code with no running sign-in must be refused")
+    }),
   http.protected.get("/api/command", "v2.command.list").json(200, locationData(array)),
   http.protected.get("/api/project", "v2.project.list").json(200, array),
   // Writes the isolated global config document and reloads open locations.

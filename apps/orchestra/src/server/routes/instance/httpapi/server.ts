@@ -14,6 +14,8 @@ import { Config } from "@/config/config"
 import { ClaudeCodeSDK } from "@orchestra/engine-claude-code/sdk"
 import { HostCatalog } from "./handlers/catalog"
 import { HostAgentExecution } from "./handlers/agent-execution"
+import { ClaudeAccount } from "@orchestra/core/claude-account"
+import { ClaudeCodeAccount } from "@orchestra/engine-claude-code/v2/account"
 import { Credential } from "@orchestra/core/credential"
 import { Workspace } from "@/control-plane/workspace"
 import { Env } from "@/env"
@@ -286,6 +288,7 @@ const app = LayerNode.group([
   ProjectCopy.node,
   PtyTicket.node,
   ArsenalBindings.node,
+  ClaudeAccount.node,
 ])
 
 export function createRoutes(
@@ -309,6 +312,8 @@ export function createRoutes(
     [
       [LocationServiceMap.node, locationServiceMapV2],
       [SessionExecution.node, SessionExecutionLocal.node],
+      // The V2 sign-in routes of this server answer from the same Claude Code binary as the V1 provider routes.
+      [ClaudeAccount.node, ClaudeCodeAccount.node],
     ],
   )
 
