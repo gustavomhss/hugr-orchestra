@@ -23,6 +23,7 @@ import { SessionSchema } from "../session/schema"
 import { SessionStore } from "../session/store"
 import { SessionSubagentModels } from "../session/subagent-models"
 import { ToolRegistry } from "./registry"
+import { TaskGovernance } from "./task-governance"
 import { ToolText } from "./text"
 import { Tool } from "./tool"
 import { Tools } from "./tools"
@@ -47,6 +48,8 @@ export const Output = Schema.Struct({
   sessionId: SessionSchema.ID,
   parentSessionId: SessionSchema.ID,
   agentId: AgentV2.ID,
+  /** Structured result a Location's TaskGovernance derived from the child's reply. */
+  structured: Schema.Record(Schema.String, Schema.Unknown).pipe(Schema.optional),
 })
 
 export const description = ToolText.task
@@ -64,18 +67,27 @@ const layer = Layer.effectDiscard(
     const execution = yield* SessionExecution.Service
     const events = yield* EventV2.Service
     const policy = yield* SessionSubagentModels.Service
+    const governance = yield* TaskGovernance.Service
+    // Governance fields are recorded with the call, so the recorded input decodes with this same schema.
+    const taskInput = Schema.Struct({ ...Input.fields, ...governance.input })
+    const decodeCalled = Schema.decodeUnknownOption(taskInput)
     yield* tools.register({
       [name]: Tool.make({
         description,
-        input: Input,
+        input: taskInput,
         output: Output,
         toModelOutput: ({ output }) => [
           { type: "text", text: `task_id: ${output.sessionID}\n\n<task_result>\n${output.text}\n</task_result>` },
         ],
-        execute: (input, context) => Effect.gen(function* () {
-          yield* requireParent(store, location, context, input)
+        execute: (called, context) => Effect.gen(function* () {
+          const input = yield* Schema.decodeUnknownEffect(Input)(called).pipe(
+            Effect.mapError((error) => new ToolFailure({ message: `Invalid tool input: ${error.message}` })),
+          )
+          const parent = yield* requireParent(store, location, context, decodeCalled, called)
           const target = yield* requireTarget(agents, input.subagent_type)
-          const childID = input.task_id ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
+          const admission = yield* governance.admit({ parent, target, input: called, context })
+          const childID =
+            input.task_id ?? admission.childID ?? SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
           const existing = yield* store.get(childID)
           if (input.task_id && !existing)
             return yield* new ToolFailure({ message: `Task child not found: ${childID}` })
@@ -99,7 +111,7 @@ const layer = Layer.effectDiscard(
             source: { type: "tool", messageID: context.assistantMessageID, callID: context.toolCallID },
           })
           // Approval may wait while placement, ancestry, or the hard ceiling changes.
-          yield* requireParent(store, location, context, input)
+          yield* requireParent(store, location, context, decodeCalled, called)
           yield* policy.assertChild(context.sessionID, model)
           yield* revalidateTarget(existing)
           const child = yield* sessions.create({
@@ -111,6 +123,17 @@ const layer = Layer.effectDiscard(
           })
           const failure = requireChild(child, location, context, target.id, model)
           if (failure) return yield* failure
+          const permissions = admission.permissions?.map((rule) => ({
+            action: rule.action,
+            resource: rule.resource,
+            effect: rule.effect,
+          }))
+          // Compared first so an exact retry records no second permission change.
+          if (permissions && !isDeepStrictEqual(permissions, yield* store.permissions(child.id)))
+            yield* sessions.setPermission({
+              sessionID: child.id,
+              permission: permissions.map((rule) => ({ permission: rule.action, pattern: rule.resource, action: rule.effect })),
+            })
           return yield* Effect.gen(function* () {
             yield* policy.assert(child.id, model)
             yield* events.publish(SessionEvent.Tool.Progress, {
@@ -132,7 +155,7 @@ const layer = Layer.effectDiscard(
             const admitted = yield* sessions.prompt({
               id: promptID,
               sessionID: child.id,
-              prompt: { text: input.prompt },
+              prompt: admission.prompt ?? { text: input.prompt },
               delivery: recordedInput?.delivery ?? "queue",
               resume: false,
             })
@@ -142,6 +165,20 @@ const layer = Layer.effectDiscard(
                 : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
             yield* policy.assert(child.id, model)
             yield* revalidateTarget(child)
+            if (admission.background) {
+              // Advisory: the admitted prompt is durable, so a lost wake leaves it for the next drain.
+              yield* execution.wake(child.id)
+              return {
+                sessionID: child.id,
+                agent: target.id,
+                model: child.model,
+                text: "Task started in the background",
+                title: child.title,
+                sessionId: child.id,
+                parentSessionId: context.sessionID,
+                agentId: target.id,
+              }
+            }
             yield* Effect.uninterruptibleMask((restore) => Effect.gen(function* () {
               if (previous !== undefined) return
               // This snapshot gates post-crash eligibility only; the coordinator decides cancellation ownership.
@@ -158,15 +195,17 @@ const layer = Layer.effectDiscard(
               return yield* new ToolFailure({ message: `Task ${child.id} finished without a completed assistant reply` })
             if (reply.agent !== target.id)
               return yield* new ToolFailure({ message: `Task ${child.id} reply agent differs from the recorded child` })
+            const settled = yield* governance.settle({ child, reply, admission, context })
             return {
               sessionID: child.id,
               agent: target.id,
               model: child.model,
-              text: reply.content.flatMap((part) => (part.type === "text" ? [part.text] : [])).join("\n"),
+              text: settled.text,
               title: child.title,
               sessionId: child.id,
               parentSessionId: context.sessionID,
               agentId: target.id,
+              ...(settled.structured === undefined ? {} : { structured: settled.structured }),
             }
           }).pipe(
             Effect.mapError((error) =>
@@ -200,6 +239,7 @@ export const node: LayerNode.Node<never, never, typeof Node.tags.values.location
     captureGlobal(SessionExecution.Service),
     EventV2.node,
     SessionSubagentModels.node,
+    TaskGovernance.node,
   ],
 })
 
@@ -287,7 +327,8 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   store: SessionStore.Interface,
   location: Location.Interface,
   context: Tool.Context,
-  input: typeof Input.Type,
+  decodeCalled: (value: unknown) => Option.Option<{ readonly [key: string]: unknown }>,
+  input: { readonly [key: string]: unknown },
 ) {
   const parent = yield* store.get(context.sessionID)
   if (!parent) return yield* new ToolFailure({ message: `Task parent not found: ${context.sessionID}` })
@@ -304,7 +345,7 @@ const requireParent = Effect.fn("TaskTool.requireParent")(function* (
   const call = recorded.message.content.find(
     (part): part is SessionMessage.AssistantTool => part.type === "tool" && part.id === context.toolCallID && part.name === name,
   )
-  const called = call && call.state.status !== "pending" ? Schema.decodeUnknownOption(Input)(call.state.input) : Option.none()
+  const called = call && call.state.status !== "pending" ? decodeCalled(call.state.input) : Option.none()
   if (Option.isNone(called))
     return yield* new ToolFailure({ message: "Task invocation has no valid recorded called input" })
   const childID = SessionSchema.ID.make(`ses_${identity("task-child", context)}`)
