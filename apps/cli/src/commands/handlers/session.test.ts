@@ -65,6 +65,18 @@ describe("session list", () => {
   })
 })
 
+describe("session list when empty", () => {
+  test("prints an empty JSON array for --format json and nothing for the table", async () => {
+    const server = stubServer(() => Response.json({ data: [], cursor: {} }))
+    try {
+      expect(await withCapturedStdout(() => runWith(list({ limit: 50, format: "json" }), clientUrl(server)))).toBe("[]\n")
+      expect(await withCapturedStdout(() => runWith(list({ limit: 50, format: "table" }), clientUrl(server)))).toBe("")
+    } finally {
+      server.stop(true)
+    }
+  })
+})
+
 describe("session delete", () => {
   test("deletes the session and confirms", async () => {
     const server = stubServer((request) => {
@@ -91,6 +103,20 @@ describe("session delete", () => {
       await expect(runWith(del({ sessionID: "ses/missing" }), clientUrl(server))).rejects.toThrow(
         "Session not found: ses/missing",
       )
+    } finally {
+      server.stop(true)
+    }
+  })
+
+  test("does not call an undeclared 404 a missing session", async () => {
+    const server = stubServer(() => new Response("not found", { status: 404 }))
+    try {
+      const failure = await runWith(del({ sessionID: "ses/abc" }), clientUrl(server)).then(
+        () => undefined,
+        (error: unknown) => error,
+      )
+      expect(failure).toBeDefined()
+      expect(String(failure)).not.toContain("Session not found")
     } finally {
       server.stop(true)
     }

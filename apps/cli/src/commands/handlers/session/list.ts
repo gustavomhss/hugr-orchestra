@@ -13,7 +13,11 @@ export default Runtime.handler(
     const response = yield* Effect.promise(() =>
       client.sessions.list({ limit: input.limit, order: "desc" }),
     )
-    if (response.data.length === 0) return
+    // A JSON consumer needs a document even when there is nothing to list.
+    if (response.data.length === 0) {
+      if (input.format === "json") process.stdout.write("[]" + EOL)
+      return
+    }
     process.stdout.write((input.format === "json" ? formatJSON(response.data) : formatTable(response.data)) + EOL)
   }),
 )

@@ -25,6 +25,7 @@ import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 import { useSync } from "@/context/sync"
 import { Identifier } from "@/utils/id"
 import { Worktree as WorktreeState } from "@/utils/worktree"
+import { copyTarget, defaultCopyParent, repositoryProject, WORKTREE_STRATEGY } from "@/orchestra/chapters/workspaces-model"
 import { setCursorPosition } from "./editor-dom"
 import { formatServerError, hookRefusal } from "@/utils/server-errors"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
@@ -315,21 +316,31 @@ export function createPromptSubmit(input: PromptSubmitInput) {
     const worktreeSelection = admission.selection
 
     let sessionDirectory = admission.directory ?? projectDirectory
-    const client = directorySDK.client
     let session = admission.session ?? input.info()
 
     if (isNewSession) {
       if (!admission.directory && worktreeSelection === "create") {
-        const createdWorktree = await client.worktree
-          .create({ directory: projectDirectory })
-          .then((x) => x.data)
-          .catch((err) => {
-            if (ownsSource()) showToast({
-              title: language.t("prompt.toast.worktreeCreateFailed.title"),
-              description: errorMessage(err),
-            })
-            return undefined
-          })
+        // V2 has no worktree route of its own: a new workspace is a git-worktree copy of the project, which the server
+        // creates before it answers, so the directory is ready on return.
+        const project = repositoryProject(serverState.data.project, projectDirectory)
+        const target = project && copyTarget(defaultCopyParent(project.worktree), `session-${Date.now().toString(36)}`)
+        const createdWorktree = !project || !target
+          ? undefined
+          : await server.currentApi.projectCopy
+              .create({
+                projectID: project.id,
+                strategy: WORKTREE_STRATEGY,
+                directory: target.directory,
+                name: target.name,
+                location: { directory: project.worktree },
+              })
+              .catch((err: unknown) => {
+                if (ownsSource()) showToast({
+                  title: language.t("prompt.toast.worktreeCreateFailed.title"),
+                  description: errorMessage(err),
+                })
+                return undefined
+              })
 
         if (!createdWorktree?.directory) {
           if (!ownsSource()) return false
@@ -342,7 +353,7 @@ export function createPromptSubmit(input: PromptSubmitInput) {
         sessionDirectory = createdWorktree.directory
         admission.directory = sessionDirectory
         if (!ownsSource() || controller.signal.aborted) return false
-        WorktreeState.pending(directorySDK.scope, sessionDirectory)
+        WorktreeState.ready(directorySDK.scope, sessionDirectory)
       }
 
       if (!admission.directory && worktreeSelection !== "main" && worktreeSelection !== "create") {
