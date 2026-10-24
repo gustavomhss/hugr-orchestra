@@ -71,9 +71,13 @@ const fixture = (summary: () => string | undefined, gate: Effect.Effect<void> = 
     yield* compaction.transform({ sessionID, messages: [], model: target })
     expect(yield* compaction.compactIfNeeded(yield* input())).toBe(false)
     const session = shared.session(sessionID)
-    const settled = Effect.suspend(() => (session.running ? Deferred.await(session.running) : Effect.succeed(false)))
+    // Captures the running summary now: once released it may finish, and clear `running`, before the test resumes.
+    const pending = () => {
+      const running = session.running
+      return running ? Deferred.await(running) : Effect.succeed(false)
+    }
     const history = SessionHistory.load(database.db, sessionID)
-    return { compaction, client, session, settled, input, prompt, history }
+    return { compaction, client, session, pending, input, prompt, history }
   })
 
 describe("ContinuityStrategy background summary", () => {
@@ -99,9 +103,10 @@ describe("ContinuityStrategy background summary", () => {
         const gate = yield* Deferred.make<void>()
         const f = yield* fixture(() => SUMMARY, Deferred.await(gate))
         yield* f.compaction.afterStep({ sessionID, tokens: tokens(9_000), model: undefined })
+        const done = f.pending()
         yield* f.compaction.afterStep({ sessionID, tokens: tokens(9_000), model: undefined })
         yield* Deferred.succeed(gate, undefined)
-        expect(yield* f.settled).toBe(true)
+        expect(yield* done).toBe(true)
         expect(f.client.requests).toHaveLength(1)
       }),
     ))
@@ -112,9 +117,12 @@ describe("ContinuityStrategy background summary", () => {
         const gate = yield* Deferred.make<void>()
         const f = yield* fixture(() => SUMMARY, Deferred.await(gate))
         yield* f.compaction.afterStep({ sessionID, tokens: tokens(9_000), model: undefined })
+        const done = f.pending()
+        expect(f.session.running).toBeDefined()
         yield* f.prompt("msg_three", "THREE")
         yield* Deferred.succeed(gate, undefined)
-        expect(yield* f.settled).toBe(false)
+        expect(yield* done).toBe(false)
+        expect(f.client.requests).toHaveLength(1)
         expect((yield* f.history).map((message) => message.type)).toEqual(["user", "user", "user"])
         expect(f.session.failures).toBe(0)
       }),
@@ -126,7 +134,7 @@ describe("ContinuityStrategy background summary", () => {
         const f = yield* fixture(() => undefined)
         for (const attempt of [1, 2, 3]) {
           yield* f.compaction.afterStep({ sessionID, tokens: tokens(9_000), model: undefined })
-          expect(yield* f.settled).toBe(false)
+          expect(yield* f.pending()).toBe(false)
           expect(f.session.failures).toBe(attempt)
         }
         yield* f.compaction.afterStep({ sessionID, tokens: tokens(9_000), model: undefined })
