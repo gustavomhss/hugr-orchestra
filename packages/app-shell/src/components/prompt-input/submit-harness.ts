@@ -3,7 +3,6 @@ import { createRoot, getOwner } from "solid-js"
 import { createStore, type Store, type SetStoreFunction } from "solid-js/store"
 import type { Prompt, PromptStore } from "@/context/prompt"
 import { pendingRules } from "../draft-subagent-models"
-import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
 import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
@@ -57,6 +56,7 @@ export const policyFixture: { server: FixtureServer; sdk: FixtureSDK } = {
 
 export const createdClients: string[] = []
 export const createdSessions: string[] = []
+export const projectCopyRequests: unknown[] = []
 export const sessionCreateInputs: Array<{
   agent?: string
   model?: { id: string; providerID: string; variant?: string }
@@ -265,13 +265,6 @@ export const clientFor = (directory: string) => {
       command: async () => ({ data: undefined }),
       abort: async () => ({ data: undefined }),
     },
-    worktree: {
-      create: async () => {
-        state.worktreeCreates++
-        Worktree.ready(ServerScope.local, `${directory}/new`)
-        return { data: { directory: `${directory}/new` } }
-      },
-    },
   }
 }
 
@@ -284,6 +277,13 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
     client, currentApi: {
       ...current,
       session: { ...current.session, ...client.api.session },
+      projectCopy: {
+        create: async (input: unknown) => {
+          state.worktreeCreates++
+          projectCopyRequests.push(input)
+          return { directory: "/repo/main/new" }
+        },
+      },
       message: {
         list: async () => {
           if (state.messageCount === undefined) throw new Error("server unreachable")
