@@ -33,7 +33,7 @@ export const config = (info: unknown) => [
 export const archiveDirectory = (id: string) =>
   path.join(Global.Path.data, "continuity", ContinuityArchive.hash(id))
 
-export const seed = Effect.gen(function* () {
+export const seed = (id = sessionID) => Effect.gen(function* () {
   const database = yield* Database.Service
   yield* database.db
     .insert(ProjectTable)
@@ -42,7 +42,7 @@ export const seed = Effect.gen(function* () {
     .run()
   yield* database.db
     .insert(SessionTable)
-    .values({ id: sessionID, project_id: Project.ID.global, slug: "test", directory: "/project", title: "t", version: "t" })
+    .values({ id, project_id: Project.ID.global, slug: id, directory: "/project", title: "t", version: "t" })
     .onConflictDoNothing()
     .run()
 })
@@ -50,13 +50,13 @@ export const seed = Effect.gen(function* () {
 const encode = Schema.encodeSync(SessionMessage.Message)
 
 /** Stores one Session message row as the projector would. */
-export const store = (message: SessionMessage.Message, seq: number) =>
+export const store = (message: SessionMessage.Message, seq: number, id = sessionID) =>
   Effect.gen(function* () {
     const database = yield* Database.Service
     const { id: _, type, ...data } = encode(message)
     yield* database.db
       .insert(SessionMessageTable)
-      .values({ id: message.id, session_id: sessionID, type, seq, time_created: seq, data })
+      .values({ id: message.id, session_id: id, type, seq, time_created: seq, data })
       .run()
   })
 

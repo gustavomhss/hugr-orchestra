@@ -58,6 +58,8 @@ export type Session = {
   last?: SessionCompaction.Input
   /** The running background summary; it resolves true when it recorded a summary. */
   running?: Deferred.Deferred<boolean>
+  /** A background summary landed since the last turn check: that turn restarts on the compacted history. */
+  landed: boolean
   failures: number
   /** A requested compaction (`context_compact`) waiting for the next provider turn. */
   requested: boolean
@@ -79,7 +81,7 @@ export function state(value: Settings): Interface {
     session: (sessionID) => {
       const found = sessions.get(sessionID)
       if (found) return found
-      const created: Session = { masks: new Map(), loaded: false, failures: 0, requested: false }
+      const created: Session = { masks: new Map(), loaded: false, failures: 0, requested: false, landed: false }
       sessions.set(sessionID, created)
       return created
     },
@@ -171,8 +173,18 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
     return masked + (yield* mask(input.sessionID, session, input.request.messages, ContinuityMaskingV2.urgent)) > 0
   })
 
-  // A running background summary finishes before the turn reads the context; true when it recorded a summary.
-  const settle = (session: Session) => (session.running ? Deferred.await(session.running) : Effect.succeed(false))
+  // A running background summary finishes first. A summary that landed after the turn read its context restarts the
+  // turn; one restart at most, since the flag is consumed.
+  const landed = (session: Session) =>
+    (session.running ? Deferred.await(session.running) : Effect.void).pipe(
+      Effect.andThen(
+        Effect.sync(() => {
+          const value = session.landed
+          session.landed = false
+          return value
+        }),
+      ),
+    )
 
   const succeeded = (session: Session) => (compacted: boolean) =>
     Effect.sync(() => {
@@ -215,7 +227,10 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
         Effect.catch(() => Effect.succeed("failed" as const)),
         Effect.tap((outcome) =>
           Effect.gen(function* () {
-            if (outcome === "committed") session.failures = 0
+            if (outcome === "committed") {
+              session.failures = 0
+              session.landed = true
+            }
             if (outcome !== "failed") return
             session.failures++
             if (session.failures === MAX_FAILURES) yield* Effect.logWarning("continuity circuit open", { sessionID })
@@ -234,15 +249,14 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
   return {
     compact: Effect.fn("ContinuityStrategy.compact")(function* (input) {
       const session = dependencies.state.session(input.sessionID)
-      yield* settle(session)
+      if (yield* landed(session)) return true
       if (yield* core.compact(input).pipe(Effect.flatMap(succeeded(session)))) return true
       return yield* relieve(input, true)
     }),
     compactIfNeeded: Effect.fn("ContinuityStrategy.compactIfNeeded")(function* (input) {
       const session = dependencies.state.session(input.sessionID)
       session.last = input
-      // The turn read its context before the summary landed: restart it on the compacted history.
-      if (yield* settle(session)) return true
+      if (yield* landed(session)) return true
       if (session.requested) {
         session.requested = false
         if (yield* core.compact(input).pipe(Effect.flatMap(succeeded(session)))) return true
@@ -254,7 +268,7 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
     }),
     compactAfterOverflow: Effect.fn("ContinuityStrategy.compactAfterOverflow")(function* (input) {
       const session = dependencies.state.session(input.sessionID)
-      if (yield* settle(session)) return true
+      if (yield* landed(session)) return true
       if (yield* core.compactAfterOverflow(input).pipe(Effect.flatMap(succeeded(session)))) return true
       return yield* relieve(input, true)
     }),
