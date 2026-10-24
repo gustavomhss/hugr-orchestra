@@ -240,6 +240,11 @@ export async function sidecarLaunchEnv(userDataPath: string, candidateProfile?: 
     process.platform === "win32" ? "claude.exe" : "claude",
   )
   await access(claudeExecutable)
+  // A build wipes its own output (ORC-006): an app launched from there loses these resources while it runs.
+  if (app.isPackaged && process.resourcesPath.split(sep).join("/").includes("/apps/desktop/dist"))
+    getLogger().warn("running from a build output that the next build deletes; install the app elsewhere", {
+      resources: process.resourcesPath,
+    })
   return {
     ...createSidecarEnv(candidateProfile),
     // The SDK gets an explicit real-file path; its bundled module cannot resolve optional native packages.
