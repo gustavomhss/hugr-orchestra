@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
-import { ClaudeHostOptions } from "@orchestra/engine-claude-code/host/options"
-import { ResearchSeatTools } from "@orchestra/core/research/seat-tools"
 import { productHost } from "./fixture/product-host"
 
 // U9: every tool the Maestro prompt and the Claude Code engine's appended prompt tell the model to call is registered
@@ -17,12 +15,12 @@ const promptNames = [
   ...[...prompt.matchAll(/`([a-z][a-z0-9]*(?:_[a-z0-9]+)*(?:_\*)?)`/g)].map((match) => match[1]).filter((name) => name.includes("_")),
 ]
 
+// Booting the host first resolves core's import cycles from `serve`'s order; the engine's options load after it.
+const host = await productHost()
+const { ClaudeHostOptions } = await import("@orchestra/engine-claude-code/host/options")
+const { ResearchSeatTools } = await import("@orchestra/core/research/seat-tools")
 // The engine's text for Maestro with a research seat present, so its conditional lines are rendered too.
-const engineText = ClaudeHostOptions.append("maestro", {
-  archie: "archie",
-  backend: "backend",
-  research: ResearchSeatTools.SEAT,
-})
+const engineText = ClaudeHostOptions.append("maestro", { archie: "archie", backend: "backend", research: ResearchSeatTools.SEAT })
 const engineNames = [...engineText.matchAll(/mcp__orchestra__([a-z][a-z0-9_]*\*?)/g)].map((match) => match[1])
 
 // Lean recall is named by no prompt but belongs to the Lean profile of every agent.
@@ -46,7 +44,6 @@ test("the parity sources actually name tools", () => {
     expect(engineNames).toContain(name)
 })
 
-test("every tool the prompts reference is registered in the composed registry", async () => {
-  const host = await productHost()
+test("every tool the prompts reference is registered in the composed registry", () => {
   expect(missingFrom(host.tools).toSorted()).toEqual(missing.toSorted())
-}, 60_000)
+})
