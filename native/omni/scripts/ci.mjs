@@ -53,6 +53,9 @@ const steps = [
   // The suite on this OS.
   { name: "build", cmd: ["cargo", "build", "--workspace", "--bins"] },
   { name: "build addon", cmd: ["cargo", "build", "-p", "hugr-omni-node"] },
+  // The teeth of the docs-block checker. Its run cases need the workspace binaries and the addon built above, and network
+  // once for TypeScript; the lint lane already fetches TypeScript, so Linux only.
+  { name: "readme-check teeth", on: lint, cmd: ["node", "--test", "scripts/readme-check/check.test.mjs"] },
   { name: "cargo test", cmd: ["cargo", "test", "--workspace", "--no-fail-fast", "--", ...filter] },
   { name: "TS runner teeth", cmd: ["node", "bindings/node/test/teeth.mjs"] },
   { name: "TS contract (node 22)", cmd: ["node", "bindings/node/test/contract.mjs"] },
