@@ -48,7 +48,6 @@
     "**/*.d.ts",
     "**/sdk.gen.ts",
     // hugr-omni keeps its own gate (native/omni/scripts/ci.mjs).
-    "packages/omni/**",
     "native/omni/**"
   ]
 }

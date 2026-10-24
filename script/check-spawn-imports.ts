@@ -20,7 +20,7 @@ import path from "node:path"
 import { hits } from "@orchestra/script/spawn-imports"
 
 const SOURCE = /\.(ts|tsx|mts|cts|js|jsx|mjs|cjs)$/
-const SKIPPED = /^(?:packages|native)\/omni\/|(^|\/)(test|tests|fixture|fixtures|e2e|__tests__)\/|\.(test|spec)\.[^/]+$/
+const SKIPPED = /^native\/omni\/|(^|\/)(test|tests|fixture|fixtures|e2e|__tests__)\/|\.(test|spec)\.[^/]+$/
 
 const root = path.resolve(import.meta.dir, "..")
 if (import.meta.main) {

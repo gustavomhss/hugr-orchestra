@@ -39,7 +39,7 @@ const steps = [
   { name: "file-size guard (own tests)", on: lint, cmd: ["python3", "scripts/test_file_size_guard.py"] },
   { name: "plan sections", on: lint, cmd: ["python3", "scripts/plan-sections-check.py"] },
   { name: "rustfmt", on: lint, cmd: ["cargo", "fmt", "--all", "--", "--check"] },
-  { name: "surface checks (own tests)", on: lint, release: true, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs", "scripts/skill-check/check.test.mjs"] },
+  { name: "surface checks (own tests)", on: lint, cmd: ["node", "--test", "scripts/surface-check/surface.test.mjs", "scripts/guarantees-check/check.test.mjs", "scripts/skill-check/check.test.mjs"] },
   { name: "surface parity", on: lint, cmd: ["node", "scripts/surface-check/parity.mjs"] },
   { name: "binding surface", on: lint, cmd: ["node", "scripts/surface-check/binding.mjs"] },
   { name: "guarantees ledger", on: lint, cmd: ["node", "scripts/guarantees-check/check.mjs"] },

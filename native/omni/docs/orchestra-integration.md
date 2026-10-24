@@ -4,8 +4,8 @@ Status: **v3** (2026-10-06, lead). §10 (round-2 amendments) overrides anything 
 v2 history: v1 was reviewed by three independent reviewers (architecture, tests/CI,
 packaging/OS with live probes); every BLOCKER and MAJOR is folded in below (§9 lists them and where each landed).
 
-Owner decision (2026-10-06): omni lives in Orchestra at `packages/omni`. `github.com/gustavomhss/hugr-omni` is a
-read-only mirror of that folder (`git subtree split --prefix=packages/omni` reproduces the mirror's `main` exactly,
+Owner decision (2026-10-06): omni lives in Orchestra at `native/omni`. `github.com/gustavomhss/hugr-omni` is a
+read-only mirror of that folder (`git subtree split --prefix=native/omni` reproduces the mirror's `main` exactly,
 verified: `415038b`).
 
 **End state.**
@@ -51,7 +51,7 @@ verified: `415038b`).
   - Use `bun run test:ci <pkg> [files] --os linux|windows|both`, with one package per run.
   - It runs only on `ci-run-*` branches and uses `bun test` only.
   - The epic suite (`test.yml`) is label- and dispatch-gated, with about 16 jobs; the account cap is 20 concurrent jobs.
-  - omni's own gate (`node packages/omni/scripts/ci.mjs`) is not under that guard.
+  - omni's own gate (`node native/omni/scripts/ci.mjs`) is not under that guard.
 - **Probe results** (§7) changed the delivery design: Bun copies a bunfs `.node` to `$TMPDIR`, and `process.env`
   writes under Bun do not reach native code.
 - **omni bugs the integration exposed** (all must be fixed before Wave 2, WP-H):
@@ -117,7 +117,7 @@ verified: `415038b`).
 - **D-L8 Delivery: files on disk, never embedded.** The addon and the supervisor are always real files side by side:
   - **CLI:** `bin/orchestra[.exe]`, `bin/hugr_omni.node`, `bin/hugr-omni-supervisor[.exe]`.
   - **Desktop:** `Resources/omni/`.
-  - **Dev:** `packages/omni/target/*`.
+  - **Dev:** `native/omni/target/*`.
   - The path is handed to the binding by JS, through `hugr-omni`'s new `configure({addon, supervisor})` (WP-H). It
     never travels through environment variables.
   - The desktop main process and the utilityProcess each configure their own path, and each has its own supervisor.
@@ -130,10 +130,10 @@ verified: `415038b`).
 - **D-L10 Unchanged layering.** `@orchestra/sdk`, published and client-light, stays on cross-spawn with its own
   `process.ts`.
 - **D-L11 Skills.**
-  - One source: `packages/omni/skills/<name>/SKILL.md`.
+  - One source: `native/omni/skills/<name>/SKILL.md`.
   - Orchestra loads it via `skills.paths`. The loader is fixed to resolve relative entries against the config
     file's directory (`skill/index.ts:272-273`).
-  - Claude Code loads it via `packages/omni/.claude-plugin/plugin.json`.
+  - Claude Code loads it via `native/omni/.claude-plugin/plugin.json`.
 - **D-L12 PipedCommand** delegates to legacy (`1`) or fails (`strict`). Its only producer is denied when the sandbox
   is on.
 
@@ -157,7 +157,7 @@ verified: `415038b`).
 | `cli/bin/orchestra.cjs` (`spawnSync`) | Launcher host detection (`sysctl`, PowerShell, `ldd`) before any orchestra code loads; synchronous and bounded. |
 | `cli/script/runtime-proof.ts`, `desktop/scripts/install-electron.ts` (`spawnSync`, `execFile`) | Build and proof scripts; not a shipped process path. |
 | `desktop/scripts/lean-candidate.ts` (`spawn`, detached process groups) | CI-only macOS candidate build and packaging script; owns each tool's process group to enforce deadlines and kill TERM-resistant descendants. Not a shipped process path. |
-| `script/src/tree-sitter-prebuilds.ts` (`child_process`) | Packaging step: rebuilds mislabeled tree-sitter prebuilds with node-gyp before electron-builder packs; a build script, not a shipped process path. |
+| `packages/script/src/tree-sitter-prebuilds.ts` (`child_process`) | Packaging step: rebuilds mislabeled tree-sitter prebuilds with node-gyp before electron-builder packs; a build script, not a shipped process path. |
 | `orchestra/script/claude-code-engine/smoke.ts` (`execFileSync`) | Test harness initializes its throwaway git repository; this is not a shipped process path. |
 | `.github/scripts/maestro-authoring-run.ts`, `.github/scripts/archie-authoring-pair.ts` (`spawn`, `execFileSync`) | Lead-declared, 2026-10-11: owner-run Archie authoring harnesses. They launch the real candidate runtime in one detached, owned process group and must signal and reap that group; not a shipped process path. |
 | `.github/scripts/archie-host-acceptance.ts` (`spawn`, `execFileSync`) | Lead-declared, 2026-10-11: owner-run Archie host acceptance harness. It seeds a scratch git project and launches the real isolated runtime and offline verifier as owned children, then signals and reaps only those children; not a shipped process path. |
@@ -186,13 +186,13 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 
 **WP0 Foundation** (the lead or one agent; owns every shared file)
 
-- **Tooling ignores.** `.oxlintrc.json` and `.prettierignore` ignore `packages/omni/**`.
+- **Tooling ignores.** `.oxlintrc.json` and `.prettierignore` ignore `native/omni/**`.
 - **Workspaces.**
-  - The root `workspaces` gets `packages/omni/bindings/node`.
+  - The root `workspaces` gets `native/omni/bindings/node`.
   - `"hugr-omni": "workspace:*"` goes into core, orchestra, desktop and maestro-arsenal, all at once.
   - maestro-arsenal also gets `@orchestra/core`.
   - Add a root `omni:build` script and regenerate `bun.lock`.
-- **omni gate from either root.** `packages/omni/scripts/file-size-guard.py` scans its own subtree.
+- **omni gate from either root.** `native/omni/scripts/file-size-guard.py` scans its own subtree.
 - **Core surface.** Frozen signatures, with implementations stubbed where another WP owns them:
   - `core/src/omni.ts`: loader, counters, `omni-env`;
   - `core/src/flag/flag.ts`: the three-state parser;
@@ -202,14 +202,14 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   - `script/test-ci.ts` gets `--env KEY=VALUE` (allow-listed keys, values `^[A-Za-z0-9_]+$`), `--os macos`, and a
     `runner: bun|node` field.
   - `test-ci.yml` exports allow-listed env via `$GITHUB_ENV`, adds a macOS leg and the node runner, and restores the
-    **omni binary cache**: built addon and supervisor, keyed by `hashFiles('packages/omni/crates/**',
-    'packages/omni/Cargo.lock', 'packages/omni/bindings/node/src/**')`. Cargo runs only on a cache miss.
+    **omni binary cache**: built addon and supervisor, keyed by `hashFiles('native/omni/crates/**',
+    'native/omni/Cargo.lock', 'native/omni/bindings/node/src/**')`. Cargo runs only on a cache miss.
   - `cache-warm.yml` saves that cache on `dev`.
 - **Probe (d).** A Worker that loads omni is terminated, on Bun and Node. It is red today (H1) and becomes WP-H's
   acceptance test.
 - **Validation.**
   - `bun install --frozen-lockfile`, `bun turbo typecheck`, `bun run check:godfile`.
-  - `node packages/omni/scripts/ci.mjs` green inside Orchestra and in a clean clone of the split.
+  - `node native/omni/scripts/ci.mjs` green inside Orchestra and in a clean clone of the split.
   - `test:ci core test/omni-loader.test.ts --os both` covers the parser, the counters and env stripping.
 
 **WP-H omni hardening** (omni only; blocks Wave 2; includes contract scenarios where the contract changes)
@@ -237,7 +237,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   step moves from `--release` into the fast gate.
 - **Validation.** `node scripts/ci.mjs` green on all three OSes (the mirror CI or `omni.yml`), plus `--release` once.
 
-**WP7 Skillkit** (`packages/omni/skills/**`, `scripts/skill-check/**`, `.claude-plugin/**`)
+**WP7 Skillkit** (`native/omni/skills/**`, `scripts/skill-check/**`, `.claude-plugin/**`)
 
 - **Skills.** Nine skills, each pointing to the canonical docs rather than copying them:
   - `omni-processes`
@@ -262,7 +262,7 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
 - **Validation.**
   - skill-check is green, and red on broken fixtures.
   - An Orchestra session lists the omni skills.
-  - `claude --plugin-dir packages/omni` lists them too.
+  - `claude --plugin-dir native/omni` lists them too.
 
 **WP8a omni targets** (omni only; after WP-H in the same files, so sequenced)
 - **New builds:**
@@ -379,12 +379,12 @@ bounded (≤ 20 s against a 600 s hang). They are not latency budgets.
   - `plugin/azure`, `plugin/meta`, `tool/truncation`;
   - the `maestro-arsenal` tests.
 
-**WP6 CI, mirror, artifacts** (`.github/workflows/omni*.yml`, `packages/omni/scripts/build-artifacts.mjs`)
+**WP6 CI, mirror, artifacts** (`.github/workflows/omni*.yml`, `native/omni/scripts/build-artifacts.mjs`)
 
 - **`omni.yml`.**
-  - Triggers: the epic label, dispatch, and pushes to `dev` that touch `packages/omni/**`.
-  - Runs on 3 OSes, with `working-directory: packages/omni` and `node scripts/ci.mjs`.
-- **`omni-mirror.yml`** runs on pushes to `dev` that touch `packages/omni/**`:
+  - Triggers: the epic label, dispatch, and pushes to `dev` that touch `native/omni/**`.
+  - Runs on 3 OSes, with `working-directory: native/omni` and `node scripts/ci.mjs`.
+- **`omni-mirror.yml`** runs on pushes to `dev` that touch `native/omni/**`:
   1. split;
   2. run ci.mjs once on Linux, on the split checkout;
   3. fast-forward push using `OMNI_MIRROR_DEPLOY_KEY`. It never forces, and a non-fast-forward turns the job red.
@@ -569,7 +569,7 @@ Probes were run by reviewer 3 on macOS x64 with Bun 1.3.14 and Node 22.17.1. P6 
 | When | What |
 |---|---|
 | Per `test:ci` push inside a WP | Only the WP's new test file plus the files it touched; `strict` on Linux and `=1` on Windows; binary cache; positive control on. |
-| Per WP merge into `omni-native` | Regression set once per OS: Linux and macOS `strict`, Windows `=1` (cmd.exe the only delegation). Node-runner smoke once on Linux. `omni.yml` only if `packages/omni` changed. About 4 jobs. The "unset" cell comes from the epic suite. |
+| Per WP merge into `omni-native` | Regression set once per OS: Linux and macOS `strict`, Windows `=1` (cmd.exe the only delegation). Node-runner smoke once on Linux. `omni.yml` only if `native/omni` changed. About 4 jobs. The "unset" cell comes from the epic suite. |
 | Epic label before the flip | `test.yml` unchanged, plus one Linux `strict` orchestra shard set fed by the binary cache. |
 | Flip (WP9) | `test.yml` with omni artifacts and default-on; Windows `=0` cell until WP8b; compiled-CLI and packaged-desktop crash smokes; V2 and V7 on the owner's Mac. |
 | Release | omni `--release` (Bun, Deno, K9) and the artifacts workflow. |
