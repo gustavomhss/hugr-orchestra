@@ -71,23 +71,28 @@ export interface Interface {
 /** Per-Location continuity state shared by the compaction strategy and the context tools. */
 export class Service extends Context.Service<Service, Interface>()("@orchestra/continuity/v2/State") {}
 
+/** Continuity state for one Location: settings and per-Session masks, summaries and requests. */
+export function state(value: Settings): Interface {
+  const sessions = new Map<SessionV2.ID, Session>()
+  return {
+    settings: value,
+    session: (sessionID) => {
+      const found = sessions.get(sessionID)
+      if (found) return found
+      const created: Session = { masks: new Map(), loaded: false, failures: 0, requested: false }
+      sessions.set(sessionID, created)
+      return created
+    },
+  }
+}
+
 export const stateNode = makeLocationNode({
   service: Service,
   layer: Layer.effect(
     Service,
     Effect.gen(function* () {
       const config = yield* Config.Service
-      const sessions = new Map<SessionV2.ID, Session>()
-      return Service.of({
-        settings: settings(yield* config.entries()),
-        session: (sessionID) => {
-          const found = sessions.get(sessionID)
-          if (found) return found
-          const created: Session = { masks: new Map(), loaded: false, failures: 0, requested: false }
-          sessions.set(sessionID, created)
-          return created
-        },
-      })
+      return Service.of(state(settings(yield* config.entries())))
     }),
   ),
   deps: [Config.node],
@@ -182,7 +187,7 @@ export function make(dependencies: Dependencies): SessionCompaction.Interface {
     const events: EventV2.Interface = {
       ...dependencies.events,
       publish: (definition, data, options) =>
-        definition !== SessionEvent.Compaction.Ended
+        definition.type !== SessionEvent.Compaction.Ended.type
           ? dependencies.events.publish(definition, data, options)
           : dependencies.store.context(sessionID).pipe(
               Effect.orDie,
@@ -284,10 +289,10 @@ export const node = makeLocationNode({
       const subagentModels = yield* SessionSubagentModels.Service
       const config = yield* Config.Service
       const store = yield* SessionStore.Service
-      const state = yield* Service
+      const shared = yield* Service
       const scope = yield* Scope.Scope
       return SessionCompaction.Service.of(
-        make({ events, llm, subagentModels, config: yield* config.entries(), store, state, scope }),
+        make({ events, llm, subagentModels, config: yield* config.entries(), store, state: shared, scope }),
       )
     }),
   ),
