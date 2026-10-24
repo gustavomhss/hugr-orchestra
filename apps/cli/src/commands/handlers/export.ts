@@ -41,7 +41,7 @@ async function readMessages(client: ReturnType<typeof Orchestra.make>, sessionID
       cursor ? { sessionID, limit: PAGE_SIZE, cursor } : { sessionID, limit: PAGE_SIZE, order: "asc" },
     )
     messages.push(...page.data)
-    cursor = page.data.length < PAGE_SIZE ? undefined : page.cursor.next
+    cursor = page.data.length < PAGE_SIZE ? undefined : (page.cursor.next ?? undefined)
   } while (cursor)
   return messages
 }
