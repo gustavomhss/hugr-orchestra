@@ -6,38 +6,38 @@ import { mapClientError } from "./client-error"
 
 type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 
-type Endpoint37_0Request = Parameters<RawClient["server.actionsPipeline"]["actions.pipeline.mergeRequest"]>[0]
-type Endpoint37_0Input = {
-  readonly bindingID: Endpoint37_0Request["params"]["bindingID"]
-  readonly mergeRequestID: Endpoint37_0Request["params"]["mergeRequestID"]
-  readonly location?: Endpoint37_0Request["query"]["location"]
-  readonly revision: Endpoint37_0Request["query"]["revision"]
-  readonly id: Endpoint37_0Request["payload"]["id"]
-  readonly input: Endpoint37_0Request["payload"]["input"]
+type Endpoint38_0Request = Parameters<RawClient["server.actionsPipeline"]["actions.pipeline.mergeRequest"]>[0]
+type Endpoint38_0Input = {
+  readonly bindingID: Endpoint38_0Request["params"]["bindingID"]
+  readonly mergeRequestID: Endpoint38_0Request["params"]["mergeRequestID"]
+  readonly location?: Endpoint38_0Request["query"]["location"]
+  readonly revision: Endpoint38_0Request["query"]["revision"]
+  readonly id: Endpoint38_0Request["payload"]["id"]
+  readonly input: Endpoint38_0Request["payload"]["input"]
 }
-const Endpoint37_0 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint37_0Input) =>
+const Endpoint38_0 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint38_0Input) =>
   raw["actions.pipeline.mergeRequest"]({
     params: { bindingID: input["bindingID"], mergeRequestID: input["mergeRequestID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-type Endpoint37_1Request = Parameters<RawClient["server.actionsPipeline"]["actions.pipeline.trigger"]>[0]
-type Endpoint37_1Input = {
-  readonly bindingID: Endpoint37_1Request["params"]["bindingID"]
-  readonly location?: Endpoint37_1Request["query"]["location"]
-  readonly revision: Endpoint37_1Request["query"]["revision"]
-  readonly id: Endpoint37_1Request["payload"]["id"]
-  readonly input: Endpoint37_1Request["payload"]["input"]
+type Endpoint38_1Request = Parameters<RawClient["server.actionsPipeline"]["actions.pipeline.trigger"]>[0]
+type Endpoint38_1Input = {
+  readonly bindingID: Endpoint38_1Request["params"]["bindingID"]
+  readonly location?: Endpoint38_1Request["query"]["location"]
+  readonly revision: Endpoint38_1Request["query"]["revision"]
+  readonly id: Endpoint38_1Request["payload"]["id"]
+  readonly input: Endpoint38_1Request["payload"]["input"]
 }
-const Endpoint37_1 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint37_1Input) =>
+const Endpoint38_1 = (raw: RawClient["server.actionsPipeline"]) => (input: Endpoint38_1Input) =>
   raw["actions.pipeline.trigger"]({
     params: { bindingID: input["bindingID"] },
     query: { location: input["location"], revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
-export const adaptGroup37 = (raw: RawClient["server.actionsPipeline"]) => ({
-  mergeRequest: Endpoint37_0(raw),
-  trigger: Endpoint37_1(raw),
+export const adaptGroup38 = (raw: RawClient["server.actionsPipeline"]) => ({
+  mergeRequest: Endpoint38_0(raw),
+  trigger: Endpoint38_1(raw),
 })

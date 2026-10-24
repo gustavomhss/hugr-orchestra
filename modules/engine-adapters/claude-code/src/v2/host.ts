@@ -2,6 +2,7 @@ export * as ClaudeCodeHost from "./host"
 
 import { createSdkMcpServer, type CanUseTool, type SDKMessage, type SDKUserMessage } from "@anthropic-ai/claude-agent-sdk"
 import { CallToolRequestSchema, ListToolsRequestSchema } from "@modelcontextprotocol/sdk/types.js"
+import { ClaudeAccount } from "@orchestra/core/claude-account"
 import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
@@ -9,6 +10,7 @@ import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue }
 import { Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
+import { ClaudeCodeAccount } from "./account"
 import { ClaudeHostOptions } from "../host/options"
 import { ClaudeCodeSDK } from "../sdk"
 import { ClaudeCodeTranscript } from "../transcript"
@@ -141,7 +143,13 @@ export const node = makeLocationNode({
   deps: [ClaudeCodeSDK.node],
 })
 
-export const contribution: Host.Contribution = { id: "engine-claude-code", replacements: [[ExecutionHost.node, node]] }
+export const contribution: Host.Contribution = {
+  id: "engine-claude-code",
+  replacements: [
+    [ExecutionHost.node, node],
+    [ClaudeAccount.node, ClaudeCodeAccount.node],
+  ],
+}
 
 /** Maps one main-thread SDK frame to runner events; subagent frames stay inside their Agent call. */
 function events(message: SDKMessage, names: Map<string, string>): LLMEvent[] {
