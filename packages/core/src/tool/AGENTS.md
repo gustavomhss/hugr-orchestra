@@ -50,6 +50,8 @@ Definition filtering is catalog visibility, not execution authorization. A call 
 
 Built-ins return complete validated domain output. `ToolRegistry.Materialization.settle` is the only execution and generic model-output bounding boundary and owns managed retention paths.
 
+A result the generic bound left whole then passes the Lean projection (`lean-output.ts`): only results a native producer attested through `modelCapture` (bash, glob, grep, webfetch) are compacted or summarized, and the measurement reaches the tool part's `metadata.lean` through `LeanOutput.offer/take`. Lean never fails or reorders settlement.
+
 Producer capture limits are separate. For example, Bash keeps `AppProcess.maxOutputBytes` and accurately reports stdout/stderr capture loss, but it does not run model-output truncation or return a managed `outputPath`.
 
 ## Current Gaps
