@@ -9,6 +9,7 @@ import type { PermissionV2 } from "@orchestra/core/permission"
 import { PluginV2 } from "@orchestra/core/plugin"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ArsenalNative } from "../arsenal-native"
+import { MaestroGovernanceV2 } from "./governance"
 import { Seats } from "../seats"
 import { MaestroSeats } from "./seats-service"
 import { MaestroSkillSourcesV2 } from "./skill-sources"
@@ -124,9 +125,9 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents and the Arsenal's native safety owner in every Location. */
+/** Maestro on V2: native seats as agents, the Arsenal's native safety owner and Maestro's Task governance in every Location. */
 export const contribution: Host.Contribution = {
   id: "maestro",
-  replacements: ArsenalNative.nativeRegistryReplacements,
+  replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],
   locationNodes: [MaestroSeats.node, node],
 }
