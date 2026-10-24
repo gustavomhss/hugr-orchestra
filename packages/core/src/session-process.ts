@@ -1,6 +1,6 @@
 export * as SessionProcess from "./session-process"
 
-import { Clock, Context, Deferred, Duration, Effect, Layer, Option, Scope, Stream } from "effect"
+import { Clock, Context, Deferred, Duration, Effect, Exit, Layer, Option, Scope, Stream } from "effect"
 import { ChildProcess } from "effect/unstable/process"
 import type { ChildProcessHandle } from "effect/unstable/process/ChildProcessSpawner"
 import { AppProcess } from "./process"
@@ -34,6 +34,8 @@ export type LaunchInput = {
   readonly cwd?: string
   readonly env?: Record<string, string | undefined>
   readonly shell?: string
+  /** Rewrites the command before it spawns (sandbox confinement); its Scope lives as long as the process. */
+  readonly prepare?: (command: ChildProcess.Command) => Effect.Effect<ChildProcess.Command, unknown, Scope.Scope>
 }
 
 export type WaitResult = {
@@ -135,7 +137,7 @@ const make = Effect.gen(function* () {
     const sessions = yield* Effect.serviceOption(SessionV2.Service)
     const procScope = yield* Scope.fork(scope)
     const shell = input.shell ?? (process.platform === "win32" ? (process.env.COMSPEC ?? "cmd.exe") : "/bin/sh")
-    const command =
+    const base =
       typeof input.command === "string"
         ? ChildProcess.make(input.command, input.args ?? [], {
             cwd: input.cwd,
@@ -146,6 +148,12 @@ const make = Effect.gen(function* () {
             forceKillAfter: Duration.seconds(3),
           })
         : input.command
+    const command = input.prepare
+      ? yield* input.prepare(base).pipe(
+          Effect.provideService(Scope.Scope, procScope),
+          Effect.tapError(() => Scope.close(procScope, Exit.void)),
+        )
+      : base
     const handle = yield* appProcess.spawn(command).pipe(Effect.provideService(Scope.Scope, procScope))
     const entry: Entry = {
       id,

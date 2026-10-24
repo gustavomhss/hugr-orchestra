@@ -195,25 +195,6 @@ const layer = Layer.effectDiscard(
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
 
-              if (input.background) {
-                if (Option.isNone(sessionProcess))
-                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
-                const shell = configuredShell(yield* config.entries())
-                const launched = yield* sessionProcess.value.launch({
-                  sessionID: context.sessionID,
-                  command: input.command,
-                  title: input.command,
-                  cwd: target.canonical,
-                  shell,
-                })
-                return {
-                  output: `Started background process ${launched.processID}.`,
-                  truncated: false,
-                  processID: launched.processID,
-                  ...(warnings.length ? { warnings } : {}),
-                }
-              }
-
               const shell = configuredShell(yield* config.entries())
               const command = ChildProcess.make(input.command, [], {
                 cwd: target.canonical,
@@ -229,6 +210,26 @@ const layer = Layer.effectDiscard(
                 cwd: target.canonical, env: ToolSafetySandbox.environment(), managedPaths: profile?.managedPaths,
                 neverTouch: profile?.neverTouch,
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
+
+              if (input.background) {
+                if (Option.isNone(sessionProcess))
+                  return yield* Effect.fail(new Error("Session process registry is unavailable"))
+                // The same confinement and environment scrub as a foreground call, kept open for the process's life.
+                const launched = yield* sessionProcess.value.launch({
+                  sessionID: context.sessionID,
+                  command,
+                  title: input.command,
+                  prepare: (command) =>
+                    ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs)),
+                })
+                return {
+                  output: `Started background process ${launched.processID}.`,
+                  truncated: false,
+                  processID: launched.processID,
+                  ...(warnings.length ? { warnings } : {}),
+                }
+              }
+
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
