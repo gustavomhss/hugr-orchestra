@@ -7,7 +7,7 @@ import type { Host } from "@orchestra/core/host"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ExecutionHost } from "@orchestra/core/session/runner"
 import { LLMEvent, type ToolContent, type ToolDefinition, type ToolResultValue } from "@orchestra/llm"
-import { Cause, Effect, Exit, Layer, Stream } from "effect"
+import { Effect, Layer, Stream } from "effect"
 import { createHash, randomUUID } from "node:crypto"
 import path from "node:path"
 import { ClaudeCodeAccount } from "./account"
@@ -66,9 +66,10 @@ export const make = Effect.gen(function* () {
           const prompt = pending.map((message) => message.text).join("\n\n").trim()
           if (!prompt) return Stream.make(LLMEvent.stepStart({ index: 0 }), LLMEvent.stepFinish({ index: 0, reason: "stop" }))
           const abort = new AbortController()
-          // `handed`: Claude Code took the prompt from its input. `answered`: it replied on the main thread. Either way
-          // its transcript holds the prompt, so a stopped or broken turn must not send it again.
-          const progress = { handed: false, answered: false }
+          // `handed`: Claude Code took the prompt from its input. Its transcript then holds the prompt, so a turn that
+          // stops or breaks before its result must not send it again. Only a result that answered nothing (signed out,
+          // billing) leaves the prompt to be sent again.
+          const progress = { handed: false, answered: false, resulted: false }
           const served = turn.tools.filter((tool) => !UNSERVED.has(tool.name))
           // Claude Code's tool_use id for an Orchestra tool, learned in canUseTool; the MCP request does not carry it.
           const callIDs = new Map<string, string[]>()
@@ -108,13 +109,12 @@ export const make = Effect.gen(function* () {
             Effect.sync(() =>
               sdk.query({ prompt: input(prompt, abort.signal, () => void (progress.handed = true)), options: lifetime.options }),
             ),
-            (exit) =>
+            () =>
               Effect.sync(() => abort.abort()).pipe(
                 Effect.andThen(Effect.promise(() => lifetime.join().catch(() => undefined))),
-                // A provider error before any reply (signed out, billing) leaves the prompt unanswered: it is sent again.
                 Effect.andThen(
                   Effect.suspend(() =>
-                    progress.handed && (progress.answered || (Exit.isFailure(exit) && Cause.hasInterrupts(exit.cause)))
+                    progress.handed && (progress.answered || !progress.resulted)
                       ? turn.state.update((value) => {
                           const record = ClaudeCodeTranscript.record(value) ? value : {}
                           const prior = Array.isArray(record.delivered) ? record.delivered : []
@@ -132,6 +132,7 @@ export const make = Effect.gen(function* () {
               Effect.gen(function* () {
                 if (message.type === "assistant" && message.parent_tool_use_id === null && !message.error)
                   progress.answered = true
+                if (message.type === "result") progress.resulted = true
                 if (message.type === "system" && message.subtype === "init")
                   yield* turn.state.update((value) => ({ ...(ClaudeCodeTranscript.record(value) ? value : {}), sessionId: message.session_id }))
                 if (message.type === "result" && message.subtype === "success" && !message.is_error)
