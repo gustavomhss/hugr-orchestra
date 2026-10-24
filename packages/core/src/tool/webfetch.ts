@@ -131,6 +131,12 @@ const layer = Layer.effectDiscard(
           input: Input,
           output: Output,
           toModelOutput: ({ output }) => [{ type: "text", text: output.output }],
+          // Native fetch results are attested for Lean 2.0; same-named application tools are not.
+          modelCapture: ({ output }) => ({
+            textIndex: 0,
+            observation: { source: "other", command: name, output: output.output, termination: { kind: "exited", code: 0 },
+              completeness: "complete", presentation: "unknown" },
+          }),
           execute: (input, context) =>
             Effect.gen(function* () {
               yield* Effect.try({
