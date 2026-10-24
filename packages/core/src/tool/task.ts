@@ -120,8 +120,19 @@ const layer = Layer.effectDiscard(
           })
           const failure = requireChild(child, location, context, target.id, model)
           if (failure) return yield* failure
+yield* policy.assertChild(context.sessionID, model)
+          yield* revalidateTarget(existing)
           return yield* Effect.uninterruptibleMask((restore) =>
             Effect.gen(function* () {
+              const child = yield* sessions.create({
+                id: childID,
+                parentID: context.sessionID,
+                agent: target.id,
+                model,
+                location: Location.Ref.make({ directory: location.directory, workspaceID: location.workspaceID }),
+              })
+              const failure = requireChild(child, location, context, target.id, model)
+              if (failure) return yield* failure
               yield* policy.assert(child.id, model)
               if (admission.permissions && !isDeepStrictEqual(yield* store.permissions(child.id), admission.permissions)) {
                 // Use compare-and-swap to avoid race: only write if permissions haven't changed

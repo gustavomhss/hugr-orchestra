@@ -1,6 +1,6 @@
 export * as LeanRecall from "./lean-recall"
 
-import { Effect, Layer, Schema } from "effect"
+import { Effect, Layer, Schema, Option } from "effect"
 import { Tool } from "@orchestra/core/tool/tool"
 import { Tools } from "@orchestra/core/tool/tools"
 import { AgentV2 } from "@orchestra/core/agent"
@@ -10,7 +10,7 @@ import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { ToolFailure } from "@orchestra/llm"
 
 const Input = Schema.Struct({
-  tool: Schema.Literals(["bash", "read", "webfetch"]),
+  tool: Schema.Literals(["bash", "read", "webfetch", "glob", "grep"]),
   callID: Schema.String,
   partID: Schema.String,
 })
@@ -25,10 +25,11 @@ const layer = Layer.effectDiscard(
     const tools = yield* Tools.Service
     const agents = yield* AgentV2.Service
     const sessions = yield* SessionV2.Service
+    const store = yield* LeanSummary.Store.Service
 
     yield* tools.register({
       lean_recall: Tool.make({
-        description: "Recover the complete original output of a summarized tool call. Requires bash, read, or webfetch permissions.",
+        description: "Recover the complete original output of a summarized tool call. Requires bash, read, webfetch, glob, or grep permissions.",
         input: Input,
         output: Output,
         execute: (params, ctx) =>
@@ -51,17 +52,17 @@ const layer = Layer.effectDiscard(
             }
 
             // Retrieve from Lean summary store
-            const owner = { projectID: session.location?.projectID ?? "global", directory: session.location?.directory ?? "" }
-            const leanStore = LeanSummary.store(owner)
-            const lines = yield* Effect.tryPromise(() => leanStore.recall(params.callID)).pipe(
-              Effect.catchAll(() => Effect.succeed([])),
+            const owner = { projectID: session.projectID ?? "global", directory: session.location?.directory ?? "" }
+            const leanStore = yield* store(owner)
+            const result = yield* Effect.tryPromise(() => leanStore.get(params.callID)).pipe(
+              Effect.catchAllCause(() => Effect.succeed(Option.none())),
             )
 
-            if (lines.length === 0) {
+            if (Option.isNone(result)) {
               return { original: "", summarized: false }
             }
 
-            const original = lines.join("\n")
+            const original = result.value
             return { original, summarized: true }
           }),
       }),
@@ -74,5 +75,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "lean/recall",
   layer,
-  deps: [AgentV2.node, SessionV2.node] as const,
+  deps: [AgentV2.node, SessionV2.node, LeanSummary.Store.node] as const,
 })

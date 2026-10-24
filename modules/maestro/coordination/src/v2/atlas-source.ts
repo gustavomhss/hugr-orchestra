@@ -1,6 +1,6 @@
 export * as AtlasSource from "./atlas-source"
 
-import { Effect, Option, Schema } from "effect"
+import { Effect, Option, Schema, Ref } from "effect"
 import { Config } from "@orchestra/core/config"
 import { AppProcess } from "@orchestra/core/process"
 import { FSUtil } from "@orchestra/core/fs-util"
@@ -33,6 +33,12 @@ const readAtlasSource = Effect.fn("Maestro.readAtlasSource")(
     fsUtil: FSUtil.Interface,
     config: Config.Interface,
   ): Effect.Effect<AtlasSourceResult, Error> {
+    // Memoization cache keyed by session identity
+    const cacheKey = `${session.id}:${session.projectID}:${session.directory}`
+    const cache = yield* Ref.make<Map<string, AtlasSourceResult>>(new Map())
+    const cached = yield* Ref.get(cache).pipe(Effect.map((m) => m.get(cacheKey)))
+    if (Option.isSome(cached)) return cached.value
+
     const provider = (yield* config.get()).maestro?.atlas
     if (!provider) return yield* Effect.fail(new Error("provider-unconfigured"))
     if (provider.projectID !== session.projectID) {
@@ -115,13 +121,15 @@ const readAtlasSource = Effect.fn("Maestro.readAtlasSource")(
     ) {
       return yield* Effect.fail(new Error("provider-changed-during-read"))
     }
-    return {
+    const result = {
       directory,
       identityHash: sha256(
         JSON.stringify({ directory, sourceDirectory, catalogContent, snapshotContent, files, currentBlobs }),
       ),
       context: verified.context,
     }
+    yield* Ref.update(cache, (m) => new Map(m).set(cacheKey, result))
+    return result
   },
   Effect.catch((error) => Effect.fail(normalizeError(error))),
   Effect.catchDefect((error) => Effect.fail(normalizeError(error))),

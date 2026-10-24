@@ -109,7 +109,12 @@ export const node = makeLocationNode({
           .flatMap((part) => (part.type === "text" ? [part.text] : []))
           .join("\n")
         // Type guard: admission is MaestroAdmission when this governance is used
-        const maestroAdmission = admission as MaestroAdmission
+        const maestroAdmission: MaestroAdmission = {
+          ...admission,
+          reservationID: (admission as any).reservationID,
+          writeRoots: (admission as any).writeRoots,
+          taskPriority: (admission as any).taskPriority,
+        }
         const receipt = maestroAdmission.receipt
         const structured: Record<string, unknown> = {
           sessionID: child.id,

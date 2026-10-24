@@ -6,7 +6,6 @@ import { LeanMetrics } from "@orchestra/schema/lean-metrics"
 import { LeanProcessor } from "./lean-processor"
 import { LeanTelemetry } from "./lean-telemetry"
 import { LeanSummary } from "./lean-summary"
-import { ToolSafety } from "./tool-safety"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 
 interface LeanSettleContext {
@@ -35,7 +34,8 @@ export function isLeanTool(tool: string): boolean {
 /** Generate Lean metadata for a settled tool call. */
 export function generateLeanMetadata(ctx: LeanSettleContext): LeanMetrics.Decision | undefined {
   const eligible = isLeanTool(ctx.tool) && ctx.before.length > 0
-  const status = ctx.status === "error" ? "error" : eligible ? "summarized" : "passthrough"
+  // Map local status to LeanMetrics.Decision status values
+  const status = ctx.status === "error" ? "passthrough" : "applied"
   const reason = eligible ? "summarized" : "below-threshold"
 
   return LeanTelemetry.measure({
