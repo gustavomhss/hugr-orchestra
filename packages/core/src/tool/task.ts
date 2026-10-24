@@ -175,9 +175,16 @@ const layer = Layer.effectDiscard(
                   : completedReply(yield* sessions.messages({ sessionID: child.id, order: "asc" }), promptID)
               yield* policy.assert(child.id, model)
               yield* revalidateTarget(child)
-              // Governance settles a background child when it goes idle; the call returns at once.
+              // Governance settles a background child when it goes idle; this drains once and notifies.
               if (admission.background) {
                 yield* execution.wake(child.id)
+                // Notify that a background child was started; settlement observed by coordinator
+                yield* events.publish(SessionEvent.Synthetic, {
+                  sessionID: session.id,
+                  messageID: SessionMessage.ID.create(),
+                  timestamp: yield* DateTime.now,
+                  text: `Background task started: ${child.id} (settlement deferred until idle)`,
+                })
                 return { ...started, text: "Task started in the background" }
               }
               if (previous !== undefined) return
