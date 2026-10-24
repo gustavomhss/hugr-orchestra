@@ -194,9 +194,9 @@ opencode/next
     expect(config.share).toBe("disabled")
     expect(config.formatter).toBe(false)
     expect(config.lsp).toBe(false)
-    expect(config.agent["translate-app-fr"].permission.webfetch).toBe("allow")
-    expect(config.agent["translate-app-fr"].permission.websearch).toBe("allow")
-    expect(config.agent["translate-app-fr"].permission.edit).toEqual({
+    expect(config.agent["translate-app-fr"]?.permission.webfetch).toBe("allow")
+    expect(config.agent["translate-app-fr"]?.permission.websearch).toBe("allow")
+    expect(config.agent["translate-app-fr"]?.permission.edit).toEqual({
       "*": "deny",
       "packages/app/src/i18n/fr.ts": "allow",
     })
