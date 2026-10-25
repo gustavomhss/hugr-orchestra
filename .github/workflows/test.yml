@@ -191,7 +191,7 @@ jobs:
         # its 30-minute test step with core alone at 1081 s. Core runs by itself on Windows; the legacy rollback checks,
         # 85 s in a job of their own, run after the other Windows packages.
         include:
-          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile", filters: "--filter=!//" }
+          - { name: linux, host: ubuntu-latest, part: packages, label: "other packages, godfile" }
           - { name: linux, host: ubuntu-latest, part: gates, label: "relay" }
           - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
@@ -249,7 +249,7 @@ jobs:
       # Turbo 2 keeps its local cache in .turbo/cache. A run restores its PR's newest entry, else the one cache-warm
       # saved on dev. Turbo checks each entry against its own task hash, so the key only selects the newest blob.
       - name: Restore Turbo cache
-        if: matrix.filters && !inputs.cold
+        if: matrix.part != 'gates' && !inputs.cold
         uses: actions/cache/restore@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
@@ -297,7 +297,7 @@ jobs:
         run: bun run check:ripgrep-pins
 
       - name: Run unit tests
-        if: matrix.filters
+        if: matrix.part != 'gates'
         timeout-minutes: 30
         run: |
           read -ra filters <<< "$FILTERS"
@@ -315,7 +315,7 @@ jobs:
       # Saved even when a package failed: Turbo records only passing tasks, so re-labeling the PR replays them
       # (about 1 MB per entry).
       - name: Save Turbo cache
-        if: always() && matrix.filters
+        if: always() && matrix.part != 'gates'
         uses: actions/cache/save@0057852bfaa89a56745cba8c7296529d2fc39830 # v4.3.0
         with:
           path: .turbo/cache
