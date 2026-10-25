@@ -251,10 +251,11 @@ const bindings = (text: string) =>
       ?.slice("Bindings: ".length) ?? "{}",
   ) as Record<string, string>
 
+// Each JSON block is one line of the prompt; the diff before `checks JSON` ends in its own newline.
 const promptJSON = (text: string, label: string) =>
   JSON.parse(
     text
-      .split("\n\n")
+      .split("\n")
       .find((part) => part.startsWith(`${label} JSON: `))
       ?.slice(`${label} JSON: `.length) ?? "null",
   )
@@ -349,7 +350,7 @@ test("the governed chain records V1's events end to end, refuses out of order an
             { session: id, message: "msg_lucy" },
           )
           child.reviews.push(review)
-        })
+        }).pipe(Effect.orDie)
 
       yield* insert([user("msg_owner", "Add CSV export"), assistant("msg_calling")])
       const admission = yield* call("maestro", "maestro_record_admission", {
