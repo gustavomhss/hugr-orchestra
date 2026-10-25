@@ -185,7 +185,7 @@ Background: `docs/specs/terminal/`; ownership and traps: `.orchestra/skills/term
 ## Guardrail
 
 - Before calling a change done, run `bun run check:guards --base origin/dev`; CI runs the same rules on every PR. Load the `guardrail-usage` skill to read a finding.
-- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and never apply a `guardrail-approved` label yourself: ask the owner.
+- Fix the finding. Use `guardrail-ignore: <rule id> <reason>` only where the rule's `clearedBy` allows it, and apply a `guardrail-approved` label only if you are Maestro: any other agent asks Maestro, who decides.
 
 ## Local Runtime
 
