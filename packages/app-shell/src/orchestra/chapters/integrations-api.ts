@@ -1,5 +1,6 @@
 import { Orchestra } from "@orchestra/client"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
+import { SessionID } from "@orchestra/schema/session-id"
 import { Schema } from "effect"
 import type { ServerConnection } from "@/context/server"
 import { authTokenFromCredentials } from "@/utils/server"
@@ -37,5 +38,7 @@ export function createIntegrationsApi(input: { server: ServerConnection.HttpBase
     disconnect: (connection, key, options) => client.connections.disconnect({ location, connection, "idempotency-key": key }, request(options)),
     bind: (target, input, key, options) => client.connections.bind({ location, target, input, "idempotency-key": key }, request(options)),
     unbind: (target, sessionID, key, options) => client.connections.unbind({ location, target, sessionID, "idempotency-key": key }, request(options)),
+    sessions: (options) => client.sessions.list({ directory: input.directory, limit: 32, order: "desc" }, request(options))
+      .then((page) => page.data.map((row) => ({ id: SessionID.make(row.id), title: row.title, updated: row.time.updated }))),
   } satisfies Api)
 }
