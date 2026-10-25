@@ -282,7 +282,8 @@ describe("BashTool", () => {
     )
   }
 
-  it.live("runs a foreground command in the agent terminal only when the flag is on", () =>
+  // The agent terminal is off on Windows (AgentTerminal.enabled), so these run on posix only.
+  ;(process.platform === "win32" ? it.live.skip : it.live)("runs a foreground command in the agent terminal only when the flag is on", () =>
     Effect.acquireUseRelease(
       Effect.promise(() => tmpdir()),
       (tmp) => {
@@ -330,7 +331,7 @@ describe("BashTool", () => {
     ),
   )
 
-  it.live("a real foreground call under the flag runs in a retained, titled tab and returns clean output", () =>
+  ;(process.platform === "win32" ? it.live.skip : it.live)("a real foreground call under the flag runs in a retained, titled tab and returns clean output", () =>
     Effect.acquireUseRelease(
       Effect.promise(() => tmpdir()),
       (tmp) => {

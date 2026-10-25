@@ -34,7 +34,8 @@ export async function load() {
         pty: { cols: clampSize(opts.cols ?? 80), rows: clampSize(opts.rows ?? 24) },
         cwd: opts.cwd,
         inheritEnv: false,
-        env: Omni.childEnv(opts.env),
+        // A given env is already the whole of it (Pty.create decides what it inherits, none under exact).
+        env: opts.env ? Omni.childEnv(opts.env, {}) : Omni.childEnv(),
       })
       Omni.count("spawns")
       return adapt(child)
