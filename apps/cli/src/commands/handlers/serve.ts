@@ -10,11 +10,9 @@ import * as Effect from "effect/Effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { createServer } from "node:http"
 import { createRoutes } from "@orchestra/server/routes"
-import { MaestroSeatsV2 } from "@orchestra/maestro/v2/seats"
-import { ClaudeCodeHost } from "@orchestra/engine-claude-code/v2/host"
-import { AppDockTools } from "@orchestra/app-dock/application-tools"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
+import { ProductHost } from "../../host"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
 
@@ -77,6 +75,5 @@ function bind(hostname: string, port: number, password: string, host: ReturnType
 
 // The Dock tools exist only when the desktop that owns this child handed it a Dock channel.
 function hosts() {
-  const dock = AppDockSocket.fromEnv()
-  return [MaestroSeatsV2.contribution, ClaudeCodeHost.contribution, ...(dock ? [AppDockTools.contribution(dock)] : [])]
+  return ProductHost.contributions(AppDockSocket.fromEnv())
 }
