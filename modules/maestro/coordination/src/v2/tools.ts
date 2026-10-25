@@ -59,7 +59,7 @@ const layer = Layer.effectDiscard(
     yield* tools
       .register({
         ...MaestroAdmissionTools.tools({ db: database.db, events, store, gate }),
-        ...MaestroApprovalTools.tools({ db: database.db, events, store, gate }),
+        ...MaestroApprovalTools.tools({ services, gate }),
         ...MaestroPlanningTools.tools({ services, gate }),
         ...MaestroReviewTools.tools({
           services,

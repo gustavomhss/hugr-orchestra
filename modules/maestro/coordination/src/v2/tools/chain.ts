@@ -35,6 +35,9 @@ const nextSteps: Record<string, string> = {
 export const STALE_CONTEXT_NEXT_STEP =
   "HEAD, the working tree or the Own source changed since the context was recorded; record a new plan revision (change any field, such as methodVersion), rerun the checks, then record a new context and a new validation."
 
+export const DIRTY_CONTEXT_NEXT_STEP =
+  "The context was recorded with uncommitted or untracked changes; leave the tree clean, then record a new plan revision (change any field, such as methodVersion), rerun the checks, and record a new context and a new validation."
+
 /** V1's `AtlasContextHeld` refusal, as the tool failure the model reads. */
 export function atlasHeld(reason: string, evidence: readonly string[]) {
   const held = `${reason}: ${evidence.join("; ")}`

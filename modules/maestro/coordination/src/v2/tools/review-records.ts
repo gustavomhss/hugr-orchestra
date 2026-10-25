@@ -353,6 +353,7 @@ export const findReview = Effect.fn("MaestroReviewRecords.findReview")(function*
   services: MaestroChainTools.Services,
   sessionID: string,
   validationRecordID: string,
+  cardHash?: string,
 ) {
   const rows = yield* services.db
     .select({ id: EventV2.EventTable.id, type: EventV2.EventTable.type, data: EventV2.EventTable.data })
@@ -368,7 +369,9 @@ export const findReview = Effect.fn("MaestroReviewRecords.findReview")(function*
     })
     .find(
       (review) =>
-        review.validationRecordID === validationRecordID && (("stage" in review ? review.stage : undefined) ?? "plan") === "plan",
+        review.validationRecordID === validationRecordID &&
+        (cardHash === undefined || review.workCardHash === cardHash) &&
+        (("stage" in review ? review.stage : undefined) ?? "plan") === "plan",
     )
 })
 
@@ -541,7 +544,7 @@ export function renderFindings(findings: ReadonlyArray<{ path: string; line: num
 // JSON.stringify leaves NEL and the Unicode line and paragraph separators raw; a reader may break lines on them.
 function quote(value: string) {
   return JSON.stringify(value).replace(
-    /[\u0085  ]/g,
+    /[\u0085\u2028\u2029]/g,
     (char) => `\\u${char.charCodeAt(0).toString(16).padStart(4, "0")}`,
   )
 }

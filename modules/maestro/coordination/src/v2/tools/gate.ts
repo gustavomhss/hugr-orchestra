@@ -29,11 +29,3 @@ export function make(agents: AgentV2.Interface, seats: MaestroSeats.Interface): 
 export function hold(reason: string, detail: string) {
   return new Tool.Failure({ message: `HOLD ${reason}: ${detail}`, metadata: { status: "HOLD", reason } })
 }
-
-/** A step whose evidence only the Atlas-grounded chain records. */
-export function chainHold(step: string) {
-  return hold(
-    "governed-chain-unavailable",
-    `${step} needs a plan revision and a context recorded from the Atlas source, which V2 cannot record yet (maestro.atlas is not V2 configuration). Governed work cannot proceed in this Session; the owner decides.`,
-  )
-}
