@@ -345,7 +345,7 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
   const state = fixture()
   const removed: string[] = []
   const legacyAuth: string[] = []
-  await setup(page, state, "v2")
+  await setup(page, state)
   const v2Model = (providerID: string, id: string) => ({
     id,
     providerID,
@@ -479,7 +479,7 @@ test("v2: Disconnect removes stored credentials, confirms removing several, expl
   expect(legacyAuth).toEqual([])
 })
 
-async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v2" = "v1") {
+async function setup(page: Page, state: ReturnType<typeof fixture>) {
   await page.addInitScript(
     ({ server, directory }) => {
       localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
@@ -494,7 +494,7 @@ async function setup(page: Page, state: ReturnType<typeof fixture>, protocol: "v
   )
   const model = (id: string, name: string, context: number) => ({ id, name, limit: { context, output: 32_000 } })
   await mockOrchestraServer(page, {
-    protocol,
+    protocol: "v2",
     provider: {
       all: [
         { id: "openai", name: "OpenAI", source: "api", env: [], models: { "gpt-5": model("gpt-5", "GPT-5", 400_000) } },

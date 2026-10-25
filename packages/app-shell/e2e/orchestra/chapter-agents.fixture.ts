@@ -108,6 +108,21 @@ function requestDirectory(request: Request) {
   )
 }
 
+// The V2 catalog: connected providers list their models through `/api/model`.
+const catalogModels = Object.values(agentProvider.models).map((model) => ({
+  id: model.id,
+  modelID: model.id,
+  providerID: "example",
+  name: model.name,
+  capabilities: { input: ["text"], output: ["text"], tools: true },
+  variants: [],
+  time: { released: 1 },
+  cost: [],
+  status: "active",
+  enabled: true,
+  limit: { context: 200_000, output: 16_000 },
+}))
+
 export async function setup(
   page: Page,
   input: {
@@ -211,18 +226,22 @@ export async function setup(
         headers: { "access-control-allow-origin": "*" },
         body: JSON.stringify(body),
       })
-    const selectedDirectory = url.searchParams.get("directory") ?? directory
-    if (url.pathname === "/project")
+    const selectedDirectory = requestDirectory(request) ?? directory
+    if (url.pathname === "/api/project")
       return json(
         url.origin === serverB ? [project("Boreal")] : [project("Atlas"), project("Other worktree", otherDirectory)],
       )
-    if (url.pathname === "/project/current")
-      return json(
-        project(
-          url.origin === serverB ? "Boreal" : selectedDirectory === otherDirectory ? "Other worktree" : "Atlas",
-          selectedDirectory,
-        ),
-      )
+    if (url.pathname === "/api/project/current")
+      return json({
+        id: url.origin === serverB ? "Boreal" : selectedDirectory === otherDirectory ? "Other worktree" : "Atlas",
+        directory: selectedDirectory,
+      })
+    const catalog = { location: { directory: selectedDirectory } }
+    if (url.pathname === "/api/provider")
+      return json({ ...catalog, data: input.models ? [{ id: "example", name: "Example", settings: {} }] : [] })
+    if (url.pathname === "/api/model") return json({ ...catalog, data: input.models ? catalogModels : [] })
+    if (url.pathname === "/api/model/default")
+      return json({ ...catalog, data: input.models ? catalogModels[0] : null })
     const file = /^\/api\/agent\/([^/]+)\/file$/.exec(url.pathname)
     if (file) {
       if (input.fileApi === false) return json({ message: "Not found" }, 404)
@@ -275,7 +294,6 @@ export async function setup(
             : selectedDirectory === otherDirectory
               ? [{ ...agents[0], name: "other-agent" }]
               : roster
-      if (input.protocol !== "v2") return json(data)
       return json({
         location: { directory: selectedDirectory },
         data: data.map((agent) => ({
@@ -308,7 +326,7 @@ export async function setup(
     if (url.origin === serverA) return route.fallback()
     if (["/global/event", "/event", "/api/event"].includes(url.pathname))
       return route.fulfill({ contentType: "text/event-stream", body: "retry: 60000\n\n: ok\n\n" })
-    if (url.pathname === "/global/health") return json({ healthy: true })
+    if (url.pathname === "/api/health") return json({ healthy: true, version: "2", pid: 1 })
     if (["/skill", "/command", "/lsp", "/formatter", "/permission", "/question", "/vcs/diff"].includes(url.pathname))
       return json([])
     if (url.pathname === "/api/session") return json({ data: [], cursor: {} })

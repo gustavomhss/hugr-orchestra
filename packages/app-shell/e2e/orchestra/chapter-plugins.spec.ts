@@ -52,8 +52,7 @@ async function serveV2Catalog(page: Page) {
   await expect(page.locator('[data-action="prompt-model"]')).toContainText("Claude Opus 4.6")
 }
 
-// Theme, version and the profile list are seeded the same way for every protocol.
-async function openSession(page: Page, scheme: "dark" | "light", protocol: "v2") {
+async function openSession(page: Page, scheme: "dark" | "light") {
   await page.addInitScript(
     (input) => {
       localStorage.setItem("orchestra-theme-id", "oc-2")
@@ -73,7 +72,6 @@ async function openSession(page: Page, scheme: "dark" | "light", protocol: "v2")
   await setupTimeline(page, {
     settings: { shouldDisplayTabsToast: false },
     locale: "en",
-    protocol,
     onPrompt: (input) => prompts.push(input),
   })
   await expect(page.locator("html")).toHaveAttribute("data-color-scheme", scheme)
@@ -87,7 +85,7 @@ function systemOf(prompts: Array<{ body: unknown }>, index: number) {
 }
 
 test("audit: plugins unmatched search explains the empty result and clearing restores cards", async ({ page }) => {
-  await openSession(page, "dark", "v1")
+  await openSession(page, "dark")
   await openPlugins(page)
   await expect(card(page, "Caveman")).toBeVisible()
   const search = chapter(page).getByRole("textbox", { name: "Search LLM Plugins" })
@@ -101,7 +99,7 @@ test("audit: plugins unmatched search explains the empty result and clearing res
 
 for (const scheme of ["dark", "light"] as const) {
   test(`${scheme}: configured behaviors persist per profile and reach new chat messages`, async ({ page }) => {
-    const prompts = await openSession(page, scheme, "v1")
+    const prompts = await openSession(page, scheme)
     await openPlugins(page)
 
     const view = chapter(page)
@@ -228,7 +226,7 @@ function expectPlainPrompt(body: unknown, text: string) {
 }
 
 test("V2 servers apply the profile's behaviors to turns without touching the prompt", async ({ page }) => {
-  const prompts = await openSession(page, "dark", "v2")
+  const prompts = await openSession(page, "dark")
   await serveV2Catalog(page)
   const sets = await serveBehaviors(page)
   await openPlugins(page)
@@ -267,7 +265,7 @@ test("V2 servers apply the profile's behaviors to turns without touching the pro
 })
 
 test("a failed behavior sync offers Retry that pushes the set again", async ({ page }) => {
-  await openSession(page, "dark", "v2")
+  await openSession(page, "dark")
   await serveV2Catalog(page)
   const failing = await serveBehaviors(page, 500)
   await openPlugins(page)
@@ -286,7 +284,7 @@ test("a failed behavior sync offers Retry that pushes the set again", async ({ p
 test("V2 servers without the behavior route keep behaviors on the profile without claiming they reach turns", async ({
   page,
 }) => {
-  const prompts = await openSession(page, "dark", "v2")
+  const prompts = await openSession(page, "dark")
   await serveV2Catalog(page)
   const sets = await serveBehaviors(page, 404)
   await openPlugins(page)

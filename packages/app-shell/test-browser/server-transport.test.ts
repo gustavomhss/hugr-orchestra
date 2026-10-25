@@ -64,7 +64,7 @@ test("same-key credential edits replace SDK and SSE, dispose old stream, and pre
       const request = new Request(input, init)
       const path = new URL(request.url).pathname
       requests.push({ path, auth: request.headers.get("authorization") })
-      if (path === "/global/event") {
+      if (path === "/api/event") {
         signals.push(request.signal)
         const index = requests.filter((entry) => entry.path === path).length - 1
         return new Response(new ReadableStream({
@@ -78,7 +78,7 @@ test("same-key credential edits replace SDK and SSE, dispose old stream, and pre
           },
         }), { headers: { "content-type": "text/event-stream" } })
       }
-      return Response.json(path === "/global/health" ? { healthy: true } : [])
+      return Response.json(path === "/api/health" ? { healthy: true, version: "2", pid: 1 } : { data: [] })
   }, { preconnect: fetch.preconnect })
   const first: ServerConnection.Http = { type: "http", http: { url: "http://server.test", username: "user", password: "old" } }
   const state = createRoot((dispose) => {
@@ -92,7 +92,7 @@ test("same-key credential edits replace SDK and SSE, dispose old stream, and pre
     const old = state.current()
     void old.event.start()
     await streams[0].promise
-    await old.client.project.list()
+    await old.currentApi.project.list()
     state.setServers([{ ...first, http: { ...first.http, password: "new" } }])
     const next = state.current()
     expect(next).not.toBe(old)
@@ -102,11 +102,11 @@ test("same-key credential edits replace SDK and SSE, dispose old stream, and pre
     void next.event.start()
     await streams[1].promise
     await closed.promise
-    await next.client.project.list()
-    expect(requests.filter((entry) => entry.path === "/project").map((entry) => entry.auth)).toEqual([
+    await next.currentApi.project.list()
+    expect(requests.filter((entry) => entry.path === "/api/project").map((entry) => entry.auth)).toEqual([
       `Basic ${btoa("user:old")}`, `Basic ${btoa("user:new")}`,
     ])
-    expect(requests.filter((entry) => entry.path === "/global/event").map((entry) => entry.auth)).toEqual([
+    expect(requests.filter((entry) => entry.path === "/api/event").map((entry) => entry.auth)).toEqual([
       `Basic ${btoa("user:old")}`, `Basic ${btoa("user:new")}`,
     ])
     state.setServers([{ ...next.server, displayName: "Renamed" }])
@@ -126,7 +126,7 @@ test("legacy fetch fence blocks disposed owners despite live caller signals over
     port: 0,
     async fetch(request) {
       const url = new URL(request.url)
-      if (url.pathname === "/global/health") return Response.json({ healthy: true })
+      if (url.pathname === "/api/health") return Response.json({ healthy: true, version: "2", pid: 1 })
       const body = await request.text()
       requests.push({
         path: url.pathname,
@@ -135,6 +135,7 @@ test("legacy fetch fence blocks disposed owners despite live caller signals over
         body,
       })
       if (url.pathname === "/api/command") return Response.json({ data: [] })
+      if (url.pathname === "/api/session/ses_probe/prompt") return Response.json({ data: {} })
       if (url.pathname !== "/session/ses_probe/prompt_async") return new Response(null, { status: 404 })
       if (body.includes("synthetic-hold")) {
         started.resolve()
@@ -179,11 +180,17 @@ test("legacy fetch fence blocks disposed owners despite live caller signals over
   ]
   const caller = new AbortController()
   try {
-    expect(await state.sdk.protocol).toBe("v1")
+    expect(await state.sdk.protocol).toBe("v2")
     // Keep client-path assertions independent of concurrent HTTP arrival order.
     for (const send of sends) await send(caller.signal)
     expect(requests).toHaveLength(sends.length)
-    expect(requests.every((request) => request.path === "/session/ses_probe/prompt_async")).toBe(true)
+    // The legacy clients send `prompt_async`; the current API client sends the V2 prompt route.
+    expect(requests.map((request) => request.path)).toEqual([
+      "/session/ses_probe/prompt_async",
+      "/session/ses_probe/prompt_async",
+      "/session/ses_probe/prompt_async",
+      "/api/session/ses_probe/prompt",
+    ])
     expect(requests.slice(0, 3).map((request) => request.directory && decodeURIComponent(request.directory))).toEqual([
       "/synthetic/old-workspace",
       "/synthetic/old-workspace",

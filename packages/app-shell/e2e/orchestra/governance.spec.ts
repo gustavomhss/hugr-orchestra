@@ -60,7 +60,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(dialog.getByRole("button", { name: /approve|decline|grant|authorize/i })).toHaveCount(0)
 
     const grounding = dialog.getByRole("region", { name: "Grounding · Atlas / Own" })
-    await expect(grounding).toContainText("Configured for Atlas project atlas-hugr. Not verified here.")
+    await expect(grounding).toContainText("Not reported by this server")
     await expect(grounding.locator('[data-kind="catalog"]')).toContainText("cat-7")
     const context = grounding.locator('[data-kind="context"]')
     await expect(context).toHaveAttribute("data-state", "hold")
@@ -92,7 +92,7 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(page).toHaveURL(new RegExp(`/session/${sessionID}$`))
     expect(requests.slice(before).filter((request) => request.method !== "GET")).toEqual([])
     // Positive control: the request observer sees the bootstrap reads.
-    expect(requests.some((request) => new URL(request.url).pathname === "/agent")).toBe(true)
+    expect(requests.some((request) => new URL(request.url).pathname === "/api/agent")).toBe(true)
     // A dev-server dependency reload remounts the page mid-test; the records above must come from one load.
     expect(documents).toHaveLength(1)
   })
@@ -230,8 +230,6 @@ for (const locale of ["en", "ar"] as const) {
     const description = dialog.locator('[data-slot="dialog-description"]')
     expectTrailing(await glyphs(description), (await description.textContent())!)
     await expectStartAligned(description, "rtl")
-    const own = "Configured for Atlas project atlas-hugr. Not verified here."
-    expectTrailing(await glyphs(dialog.getByText(own, { exact: true })), own)
     await expect.poll(() => dialog.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true)
     await expect
       .poll(() => dialog.evaluate((element) => element.getBoundingClientRect().height <= innerHeight * 0.8 + 1))
@@ -331,7 +329,7 @@ test("cross-server remount closes old governance even when the session ID is reu
     .poll(() =>
       requests.some(
         (request) =>
-          new URL(request.url).origin === second && new URL(request.url).pathname === `/session/${sessionID}`,
+          new URL(request.url).origin === second && new URL(request.url).pathname === `/api/session/${sessionID}`,
       ),
     )
     .toBe(true)

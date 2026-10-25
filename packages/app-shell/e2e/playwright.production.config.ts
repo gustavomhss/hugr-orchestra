@@ -8,6 +8,8 @@ const port = Number(process.env.PLAYWRIGHT_PORT ?? 3000)
 export default defineConfig({
   ...config,
   testDir: ".",
+  // The DebugBar these specs drive exists only in the dev server.
+  grepInvert: /@development-only/,
   outputDir: "./test-results",
   reporter: [["html", { outputFolder: "./playwright-report", open: "never" }], ["line"]],
   webServer: {

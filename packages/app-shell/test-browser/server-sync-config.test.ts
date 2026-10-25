@@ -1,7 +1,6 @@
 import { expect, test } from "bun:test"
 import { createComponent } from "solid-js"
 import { render } from "solid-js/web"
-import type { Config } from "@/v2-wire"
 
 import type { ServerSDK } from "@/context/server-sdk"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
@@ -21,16 +20,17 @@ async function until(predicate: () => boolean) {
 }
 
 test("a rejected global config GET still completes the global bootstrap; a later config refetch fills the config", async () => {
-  const transport = { reads: 0, read: async (): Promise<{ data: Config }> => { throw new Error("config GET denied") } }
-  const client = {
-    global: { config: { get: () => { transport.reads++; return transport.read() } } },
-    provider: { list: async () => ({ data: { all: [], connected: [], default: {} } }) },
-    path: { get: async () => ({ data: { state: "", config: "", worktree: "/repo", directory: "/repo", home: "/home" } }) },
-    session: { status: async () => ({ data: {} }) },
-  }
+  type Settings = { model?: string; disabledProviders: string[] }
+  const transport = { reads: 0, read: async (): Promise<Settings> => { throw new Error("config GET denied") } }
+  const client = {}
   const sdk = {
-    scope: ServerScope.local, server: { type: "http", http: { url: "http://config-test" } }, protocol: Promise.resolve("v1"),
-    client, createClient: () => client, api: { project: { list: async () => [] }, session: {}, message: {} },
+    scope: ServerScope.local, server: { type: "http", http: { url: "http://config-test" } }, protocol: Promise.resolve("v2"),
+    client, createClient: () => client,
+    api: {
+      project: { list: async () => [] }, session: {}, message: {},
+      provider: { list: async () => ({ data: [] }) }, model: { list: async () => ({ data: [] }) },
+    },
+    orchestra: { config: { get: () => { transport.reads++; return transport.read() } }, sessions: {} },
     event: { listen: () => () => {}, start: async () => {} },
   } as unknown as ServerSDK
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity, refetchOnWindowFocus: false } } })
@@ -55,11 +55,10 @@ test("a rejected global config GET still completes the global bootstrap; a later
     expect(bootstrap()?.status).toBe("success")
     expect(scope.sync!.error).toBeUndefined()
     expect(scope.sync!.data.config).toEqual({})
-    expect(scope.sync!.data.path.worktree).toBe("/repo")
-    transport.read = async () => ({ data: { model: "provider/model" } })
+    transport.read = async () => ({ model: "provider/model", disabledProviders: [] })
     await queryClient.refetchQueries({ queryKey: [ServerScope.local, "config"] })
     await until(() => config()?.status === "success")
-    expect(scope.sync!.data.config).toEqual({ model: "provider/model" })
+    expect(scope.sync!.data.config).toEqual({ model: "provider/model", disabled_providers: [] })
     expect(scope.sync!.ready).toBe(true)
     expect(scope.sync!.error).toBeUndefined()
   } finally { dispose(); queryClient.clear() }

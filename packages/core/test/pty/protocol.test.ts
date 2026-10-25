@@ -24,4 +24,11 @@ describe("pty protocol", () => {
     expect(frames[0].length).toBe(PtyProtocol.REPLAY_CHUNK)
     expect(frames.join("")).toBe(big)
   })
+
+  test("drops the first line of a ring cut mid-stream", () => {
+    expect(PtyProtocol.afterFirstLine("31mtail\nnext\nlast")).toBe("next\nlast")
+    expect(PtyProtocol.afterFirstLine("no newline")).toBe("no newline")
+    const long = "x".repeat(5000) + "\nrest"
+    expect(PtyProtocol.afterFirstLine(long)).toBe(long)
+  })
 })
