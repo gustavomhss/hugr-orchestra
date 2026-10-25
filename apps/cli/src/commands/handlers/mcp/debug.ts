@@ -22,16 +22,19 @@ export async function debug(client: ReturnType<typeof Orchestra.make>, directory
   const lines = [`Server: ${name}`, `URL: ${report.url}`]
   if (report.tokens) {
     lines.push(`  Access token: ${report.tokens.access}`)
-    if (report.tokens.expiresAt) {
-      const expired = report.tokens.expiresAt < Date.now() / 1000
-      lines.push(`  Expires: ${new Date(report.tokens.expiresAt * 1000).toISOString()}${expired ? " (EXPIRED)" : ""}`)
+    // The wire type admits "Infinity" and "NaN" strings for non-finite numbers.
+    const expiresAt = Number(report.tokens.expiresAt)
+    if (Number.isFinite(expiresAt) && expiresAt) {
+      const expired = expiresAt < Date.now() / 1000
+      lines.push(`  Expires: ${new Date(expiresAt * 1000).toISOString()}${expired ? " (EXPIRED)" : ""}`)
     }
     if (report.tokens.refreshToken) lines.push("  Refresh token: present")
   } else lines.push("  No stored tokens")
   if (report.client) {
     lines.push(`  Client ID: ${report.client.id}`)
-    if (report.client.secretExpiresAt)
-      lines.push(`  Client secret expires: ${new Date(report.client.secretExpiresAt * 1000).toISOString()}`)
+    const secretExpiresAt = Number(report.client.secretExpiresAt)
+    if (Number.isFinite(secretExpiresAt) && secretExpiresAt)
+      lines.push(`  Client secret expires: ${new Date(secretExpiresAt * 1000).toISOString()}`)
   }
   if (report.error) return [...lines, `Connection failed: ${report.error}`]
   const http = report.http
@@ -49,7 +52,7 @@ export async function debug(client: ReturnType<typeof Orchestra.make>, directory
     lines.push(flow.clientRegistered ? "Client ID available" : "No client ID - dynamic registration will be attempted")
   }
   if (flow?.result === "error") lines.push(`Connection error: ${flow.message}`)
-  if (!flow && http && http.status >= 200 && http.status < 300)
+  if (!flow && http && Number(http.status) >= 200 && Number(http.status) < 300)
     lines.push("Server responded successfully (no auth required or already authenticated)")
   return lines
 }

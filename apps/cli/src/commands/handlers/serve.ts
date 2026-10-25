@@ -1,4 +1,5 @@
 import { NodeHttpServer } from "@effect/platform-node"
+import { ClaudeCodeAccount } from "@orchestra/core/claude-code-account"
 import { Credential } from "@orchestra/core/credential"
 import { Database } from "@orchestra/core/database/database"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
@@ -16,6 +17,7 @@ import { createRoutes } from "@orchestra/server/routes"
 import { AppDockSocket } from "@orchestra/app-dock/socket-transport"
 import { Commands } from "../commands"
 import { ProductHost } from "../../host"
+import { ChildProcessSpawner } from "effect/unstable/process/ChildProcessSpawner"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
 import { ServeShutdown } from "./serve-shutdown"
@@ -30,7 +32,7 @@ export type ServeInput = {
   readonly register: boolean
   readonly cors?: ReadonlyArray<string>
   /** Runs once the server answers, with the address it bound. */
-  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown>
+  readonly onListening?: (address: HttpServer.Address, webRoot: string | undefined) => Effect.Effect<void, unknown, ChildProcessSpawner>
 }
 
 /** The directory of the built web UI, when this install has one. */
@@ -117,7 +119,7 @@ function bind(hostname: string, port: number, password: string, host: ReturnType
   return Layer.build(
     HttpRouter.serve(createRoutes({ password, host, webRoot: root, cors }), { disableListenLog: true, disableLogger: true }).pipe(
       Layer.provideMerge(NodeHttpServer.layer(() => server, { port, host: hostname })),
-      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node]))),
+      Layer.provide(AppNodeBuilder.build(LayerNode.group([Credential.node, PermissionSaved.node, ClaudeCodeAccount.node]))),
     ),
   ).pipe(Effect.map((context) => ({ address: Context.get(context, HttpServer.HttpServer).address, server })))
 }

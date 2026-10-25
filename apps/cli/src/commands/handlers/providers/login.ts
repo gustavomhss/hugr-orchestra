@@ -46,7 +46,7 @@ export async function login(
     /** Auth provider URL: its `/.well-known/orchestra` names a command whose output is the token to store. */
     readonly url?: string
     /** Runs the well-known auth command with the terminal attached and returns what it printed. */
-    readonly runAuth?: (command: string[]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
+    readonly runAuth?: (command: readonly [string, ...string[]]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
     readonly provider?: string
     readonly method?: string
     readonly label?: string
@@ -172,7 +172,7 @@ async function wellknownLogin(
   options: {
     readonly label?: string
     readonly say: (line: string) => void
-    readonly runAuth?: (command: string[]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
+    readonly runAuth?: (command: readonly [string, ...string[]]) => Promise<{ readonly exitCode: number; readonly stdout: string }>
   },
 ) {
   const url = rawURL.replace(/\/+$/, "")
@@ -182,8 +182,10 @@ async function wellknownLogin(
       fail(`Failed to load auth provider metadata from ${url}: ${error instanceof Error ? error.message : error}`),
     )
   if (!options.runAuth) fail("Running an auth provider command is not available here")
+  const [program, ...args] = metadata.auth.command
+  if (!program) fail("The auth provider names no command to run")
   options.say(`Running \`${metadata.auth.command.join(" ")}\``)
-  const result = await options.runAuth(metadata.auth.command)
+  const result = await options.runAuth([program, ...args])
   if (result.exitCode !== 0) fail("The auth provider command failed")
   await client.integrations.connectKey({
     integrationID: url,

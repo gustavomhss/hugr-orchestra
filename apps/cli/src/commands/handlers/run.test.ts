@@ -94,6 +94,10 @@ const forkInput = {
   thinking: false,
   auto: false,
   mini: false,
+  replay: false,
+  "no-replay": false,
+  "replay-limit": Option.none<number>(),
+  demo: false,
   port: Option.none<number>(),
 }
 
