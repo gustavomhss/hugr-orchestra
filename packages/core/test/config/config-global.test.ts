@@ -92,6 +92,9 @@ describe("Config.updateGlobal", () => {
           yield* config.entries()
 
           expect((yield* Config.readGlobal()).disabledProviders).toEqual(["openai"])
+
+          yield* Config.updateGlobal({ agents: { maestro: { engine: "claude-code" } } })
+          expect((yield* Config.readGlobal()).agents).toEqual({ maestro: { engine: "claude-code" } })
           expect(yield* policy.evaluate("provider.use", "openai", "allow")).toBe("deny")
           expect(yield* policy.evaluate("provider.use", "mistral", "allow")).toBe("allow")
           expect(yield* Effect.promise(() => fs.readFile(file, "utf8"))).toContain("anthropic")
