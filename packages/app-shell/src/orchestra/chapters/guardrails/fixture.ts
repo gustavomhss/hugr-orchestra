@@ -1,8 +1,8 @@
 import type { Finding, Report, Rule } from "./contract"
 import catalog from "./rules.fixture.json"
 
-// Fixture data in the exact contract shapes (brief §5) until the Guardrail side ships the runner's JSON output and a
-// server route. The rules are generated from script/guards/rules/*.toml; the reports cover every state in §7.
+// Fixture data in the exact contract shapes (brief §5) for the dev scenario switch and tests; production reads the
+// server's guardrail routes. The rules are generated from script/guards/rules/*.toml; the reports cover every state in §7.
 export const rules = catalog as Rule[]
 
 const base = "8f3c2a1d9e0b7c6f5a4e3d2c1b0a9f8e7d6c5b4a"

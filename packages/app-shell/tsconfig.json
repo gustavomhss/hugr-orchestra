@@ -21,6 +21,6 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", "script/translate-app.ts", "package.json"],
+  "include": ["src", "src/**/*.json", "script/translate-app.ts", "package.json"],
   "exclude": ["dist", "ts-dist"]
 }
