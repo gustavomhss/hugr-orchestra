@@ -1,4 +1,5 @@
 import { describe, expect, test } from "bun:test"
+import { createHash } from "node:crypto"
 import fs from "node:fs/promises"
 import os from "node:os"
 import path from "node:path"
@@ -18,12 +19,14 @@ import { SessionMessage } from "@orchestra/core/session/message"
 import { SkillV2 } from "@orchestra/core/skill"
 import { ToolRegistry } from "@orchestra/core/tool/registry"
 import { ToolOutputStore } from "@orchestra/core/tool-output-store"
-import { DateTime, Effect, Layer } from "effect"
+import { AtlasKnowledge } from "@orchestra/schema/atlas-knowledge"
+import { DateTime, Effect, Layer, Schema } from "effect"
 import { MaestroSeats } from "../src/v2/seats-service"
 import { MaestroAtlasToolV2 } from "../src/v2/tools/atlas"
 
-// V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, the Atlas
-// Memory seats keep their reads, every other agent is refused by name, and every failure is an explicit hold.
+// V2 atlas_context against a real verified Own fixture: Maestro reads catalog and unit but never anchors, Archie anchors
+// exact verified units, the Atlas Memory seats keep their reads, every other agent is refused by name, and every failure
+// is an explicit hold.
 
 const projectID = Project.ID.make("prj_atlas_v2")
 const sessionID = SessionV2.ID.make("ses_atlas_v2")
@@ -235,16 +238,52 @@ describe("V2 atlas_context", () => {
     ])
   })
 
-  test("Maestro cannot anchor; Archie's anchor is an explicit hold on V2", async () => {
+  test("only Archie anchors, binding exact verified bodies to its actual call", async () => {
     reset()
-    const anchor = { action: "anchor", target: { kind: "assignment", id: "work" }, units: [units[0]] }
+    const anchor = { action: "anchor", target: { kind: "assignment", id: "work" }, units }
     expect((await call("maestro", anchor)).body).toEqual({ status: "unavailable", reason: "native-archie-required" })
     expect((await call("backend", anchor)).body).toEqual({ status: "unavailable", reason: "native-archie-required" })
     expect(state.assertions).toEqual([])
-    expect((await call("archie", anchor)).body).toEqual({
-      status: "held",
-      reason: "anchor-unavailable-on-v2",
-      evidence: [],
+    const archie = await call("archie", anchor)
+    expect(state.assertions).toMatchObject([{ action: "atlas_context", resources: ["archie"], sessionID }])
+    const bound = archie.receipt?.anchor as AtlasKnowledge.Anchor
+    expect(bound).toMatchObject({
+      projectID,
+      authorSessionID: sessionID,
+      assistantMessageID: "msg_atlas_v2",
+      callID: "call_archie_anchor",
+      memberID: "archie",
+      target: { kind: "assignment", id: "work" },
+      units: units.map((unit) => ({ unit })),
+    })
+    expect(Schema.is(AtlasKnowledge.Anchor)(bound)).toBe(true)
+    expect(bound.reference).toBe(createHash("sha256").update(AtlasKnowledge.canonical(bound), "utf8").digest("hex"))
+    bound.units.forEach((unit) => {
+      expect(unit.content).toContain(`${unit.unit} owns bounded behavior.`)
+      expect(unit.bodyHash).toBe(createHash("sha256").update(unit.content, "utf8").digest("hex"))
+    })
+    // The model gets the binding, never the bodies.
+    expect(archie.body).toEqual({
+      reference: bound.reference,
+      target: { kind: "assignment", id: "work" },
+      units: bound.units.map((unit) => ({
+        unit: unit.unit,
+        name: unit.name,
+        sourceIdentity: unit.sourceIdentity,
+        sourceRevision: unit.sourceRevision,
+        contentHash: unit.contentHash,
+        receiptHash: unit.receiptHash,
+        bodyHash: unit.bodyHash,
+      })),
+    })
+    expect(archie.receipt).toMatchObject({
+      projectID,
+      sourceIdentity: bound.units[0].sourceIdentity,
+      coverage: { state: "complete", scope: "verified-own-unit", freshness: "FRESH", truncated: false },
+    })
+    expect(await call("archie", { ...anchor, units: ["packages/missing"] })).toMatchObject({
+      body: { status: "held" },
+      receipt: { coverage: { state: "held" } },
     })
   })
 
