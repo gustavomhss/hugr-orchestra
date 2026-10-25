@@ -15,7 +15,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 
 - `--warn` reports gate findings without failing (setup errors still fail); on GitHub Actions each finding becomes a `::warning` annotation. `--cwd <repo>` points the engine at another checkout.
 
-CI: the "Run guards" step in `.github/workflows/test.yml` runs in warn mode. When `dev` already has the engine it runs dev's copy against the change (`--cwd`), so the change cannot edit the code that judges it; the PR that introduces the engine uses its own copy. `protected-paths` also flags any edit to `script/guards/**`. Promote to gate by dropping `--warn` after a week of measured noise.
+CI: `.github/workflows/guards.yml` runs on every PR in warn mode, from the base branch's copy of the engine when it has one, so the change cannot edit the code that judges it. A label `guardrail-approved:<rule id>`, applied by someone with write access, clears that changed-paths rule; plain `guardrail-approved` means protected-paths. Every new `guardrail-ignore` is reported by the warn rule `guardrail-ignore-added`. Promote to gate by dropping `--warn` after a week of measured noise.
 
 Catalog, evidence and the next rules: `docs/guardrail/`.
 

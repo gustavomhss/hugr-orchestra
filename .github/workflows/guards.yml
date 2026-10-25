@@ -1,0 +1,51 @@
+name: guards
+
+# Cheap tripwires over the lines and paths a PR changes. No build, so it runs on every PR rather than only with the
+# epic label. Warn mode: findings show as annotations and never fail the job; setup errors do.
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled, unlabeled]
+
+permissions:
+  contents: read
+  issues: read
+
+concurrency:
+  group: guards-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  guards:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          fetch-depth: 0
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2.2.0
+      - name: Run guards
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BASE: origin/${{ github.event.pull_request.base.ref }}
+        run: |
+          # A label `guardrail-approved:<rule id>` clears that changed-paths rule, but only when someone with write
+          # access applied it. `guardrail-approved` alone keeps meaning protected-paths.
+          approved=""
+          for label in $(gh api "repos/$GITHUB_REPOSITORY/issues/${{ github.event.pull_request.number }}/events" --paginate \
+            --jq '[.[] | select(.event=="labeled" and (.label.name | startswith("guardrail-approved")))] | group_by(.label.name) | map(last) | .[] | "\(.label.name)|\(.actor.login)"'); do
+            name="${label%%|*}"; actor="${label##*|}"
+            level=$(gh api "repos/$GITHUB_REPOSITORY/collaborators/$actor/permission" --jq .permission)
+            case "$level" in admin|write|maintain) ;; *) echo "ignoring $name: $actor has $level access"; continue ;; esac
+            gh pr view ${{ github.event.pull_request.number }} --json labels --jq '.labels[].name' | grep -qx "$name" || continue
+            id="${name#guardrail-approved}"; id="${id#:}"
+            approved="$approved,${id:-protected-paths}"
+          done
+          # Run the engine from the base branch so the change under test cannot edit the code that judges it; the PR
+          # that introduces the engine falls back to its own copy.
+          runner=script/guards/run.ts
+          if git cat-file -e "$BASE:script/guards/run.ts" 2>/dev/null; then
+            mkdir -p "$RUNNER_TEMP/guards-base"
+            git archive "$BASE" script/guards | tar -x -C "$RUNNER_TEMP/guards-base"
+            runner="$RUNNER_TEMP/guards-base/script/guards/run.ts"
+          fi
+          GUARDRAIL_APPROVED="${approved#,}" bun run "$runner" --cwd "$PWD" --base "$BASE" --warn

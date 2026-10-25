@@ -5,6 +5,6 @@ paths = ["**/*.test.{ts,tsx,js,jsx,mjs}", "**/*.spec.{ts,tsx,js,jsx,mjs}", "**/t
 exclude = []
 # A rename is status R, not D, so moving a test does not fire.
 statuses = ["D"]
-message = "Test file deleted. If the code under test is gone, an approver can clear this; otherwise restore the test."
+message = "Test file deleted. If the code under test is gone, an approver clears it with the label guardrail-approved:test-file-deleted; otherwise restore the test."
 positive = ["packages/server/test/lsp-http.test.ts", "tests/test_session.py", "crates/a/tests/contract.rs", "apps/x/src/a.spec.tsx"]
 negative = ["packages/server/src/lsp.ts", "docs/testing.md", "scripts/test-runner.sh"]

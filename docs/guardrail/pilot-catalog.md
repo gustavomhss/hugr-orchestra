@@ -6,8 +6,8 @@ Add-on to Orchestra CI. Not a product. Rules are declarative TOML run by one sma
 
 - Input: `git diff <merge-base>...HEAD`. Rules look at **added lines** (or at added/deleted/renamed paths). Old code never fails.
 - Config and rules are read from the **base branch**, not the PR head. A PR cannot relax its own guards.
-- Severity: `gate` blocks CI. `warn` prints an annotation. Default profile = gates only.
-- Escape: `guardrail-ignore: <id> <reason>` on the line (reason required). Path exceptions live in a ledger with owner and reason.
+- Severity: `gate` blocks CI. `warn` prints an annotation. Rules that need judgment are `warn`; there are no profiles.
+- Escape: `guardrail-ignore: <id> <reason>` on the line (reason required). Path rules are cleared per rule by an approver's label `guardrail-approved:<id>`; every new `guardrail-ignore` shows up as a `guardrail-ignore-added` warning. No exception ledger exists yet.
 - Every rule ships with one positive and one negative fixture. No fixture, no rule.
 - Languages in this repo: TypeScript (dominant), Rust, Python, GitHub Actions, SQL. The pilot covers only these.
 
@@ -92,9 +92,9 @@ Scanned the last 300 commits of `origin/dev` (88k added lines). Per-rule pattern
 |---|---|---|---|---|
 | T1 | js-test-focused | `.only`, `fit`, `fdescribe` | G | B |
 | T2 | js-test-skipped | `.skip`, `xit`, `xdescribe` | G | B |
-| T3 | py-test-skipped | `pytest.mark.skip/skipif/xfail`, `unittest.skip` | G | own |
+| T3 | py-test-skipped | unconditional `pytest.mark.skip`, `xfail` without a reason, `unittest.skip` (not `skipif` with a reason) | G | own |
 | T4 | rs-test-ignored | `#[ignore]` on a test | G | own |
-| T5 | test-file-deleted | deleted test file with no rename (ledger to allow) | G | R |
+| T5 | test-file-deleted | deleted test file with no rename (cleared by `guardrail-approved:test-file-deleted`) | G | R |
 | T6 | test-assertions-removed | removed `expect(`/`assert` outnumber added in a test file | W | R |
 | T7 | js-loose-assertion | added `toBeTruthy`, `toBeDefined`, `expect(true)` | W | R |
 | T8 | py-assert-trivial | `assert True`, `assert x or True` | G | own |
