@@ -99,7 +99,13 @@ export const catalogScenarios: Scenario[] = [
         providers: {
           exercise: {
             env: [],
-            api: { type: "aisdk", package: "@ai-sdk/openai-compatible", url: "http://127.0.0.1:1/v1" },
+            api: {
+              type: "aisdk",
+              package: "@ai-sdk/openai-compatible",
+              url: "http://127.0.0.1:1/v1",
+              // A provider counts as available once it carries a key; this one is never called.
+              settings: { apiKey: "httpapi-exercise" },
+            },
             models: {
               "httpapi-free": {
                 name: "HTTP API Free",
