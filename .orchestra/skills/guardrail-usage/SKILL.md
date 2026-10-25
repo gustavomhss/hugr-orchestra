@@ -52,3 +52,5 @@ Do not apply an approval label to your own pull request to get past a gate; it i
 ## In CI
 
 `.github/workflows/guards.yml` runs on every pull request, from the base branch's copy of the engine. A gate finding fails the job and shows as an annotation on the line; a warn finding is an annotation only. Relabeling the pull request reruns it.
+
+A line rule on a file that cannot hold a comment (JSON) is cleared the same way, with the label `guardrail-approved:<rule id>`.

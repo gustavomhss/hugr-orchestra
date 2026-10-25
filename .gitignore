@@ -35,3 +35,6 @@ tsconfig.tsbuildinfo
 # Build/pack leftovers
 /tooling/http-recorder/*.tgz
 /packages/sdk/js/openapi.json
+
+# Runtime logs written by the distribution provider
+distribution-logs/

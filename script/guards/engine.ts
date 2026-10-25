@@ -29,6 +29,8 @@ const IGNORE = /guardrail-ignore:\s*(\S+)\s+\S/
 
 export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; approved: string[] }) {
   return input.rules.flatMap((rule) => {
+    // The label `guardrail-approved:<rule id>` clears a rule of any kind: a JSON line cannot carry an ignore comment.
+    if (input.approved.includes(rule.id)) return []
     if (rule.on === "changed-paths") return pathFindings(rule, input)
     if (rule.on === "line-balance") return balanceFindings(rule, input)
     return lineFindings(rule, input)
@@ -36,7 +38,6 @@ export function evaluate(input: { rules: Rule[]; config: Config; diff: Diff; app
 }
 
 function pathFindings(rule: Rule, input: Parameters<typeof evaluate>[0]): Finding[] {
-  if (input.approved.includes(rule.id)) return []
   if (input.diff.changes.some((change) => globs(rule.requiresChanged, change.path))) return []
   return input.diff.changes
     .filter((change) => rule.statuses.length === 0 || rule.statuses.includes(change.status))
