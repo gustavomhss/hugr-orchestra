@@ -91,7 +91,7 @@ export const run = (input: CodeIndex.SearchInput, options: Options) =>
     const limit = input.limit ?? DEFAULT_LIMIT
     const page = parsed.matches.slice(offset, offset + limit)
     const more = parsed.matches.length > offset + limit
-    const matches = options.enclosing
+    const matches: ReadonlyArray<CodeIndex.SearchMatch> = options.enclosing
       ? yield* Effect.forEach(page, (match) =>
           options.enclosing!(match.path, match.line).pipe(
             Effect.map((enclosing) => (enclosing ? { ...match, enclosing } : match)),

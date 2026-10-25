@@ -150,7 +150,7 @@ test("the archie Task that settled this exact reply attributes the proposal", ()
       expect(yield* UpstreamProvenanceV2.observe(seeded.services, seeded.input)).toEqual({
         schema: "maestro-upstream-attribution-v1",
         projectID,
-        memberID: "archie",
+        memberID: AgentV2.ID.make("archie"),
         profile: "upstream",
         authorSessionID: seeded.input.authorSessionID,
         authorMessageID: seeded.input.authorMessageID,

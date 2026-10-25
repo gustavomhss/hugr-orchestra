@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import path from "node:path"
 import { eq } from "drizzle-orm"
-import { DateTime, Effect, Schema, type Scope } from "effect"
+import { DateTime, Effect, type Layer, Schema, type Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { CapabilityInvocation } from "@orchestra/core/capability/invocation"
 import { Config } from "@orchestra/core/config"
@@ -128,7 +128,7 @@ const called = (
         time: { created: time },
       }),
     )
-    const data = Object.fromEntries(Object.entries(message).filter(([key]) => key !== "id" && key !== "type"))
+    const data = rest(message)
     yield* database.db
       .insert(SessionMessageTable)
       .values({
@@ -144,6 +144,9 @@ const called = (
       .run()
       .pipe(Effect.orDie)
   })
+
+// The row keeps a message without its id and type.
+const rest = ({ id: _id, type: _type, ...data }: Schema.Schema.Encoded<typeof SessionMessage.Message>) => data
 
 const charged = (allowance: Parameters<typeof ResearchLedger.dispatch>[0], kind: string) =>
   ResearchLedger.dispatch(allowance).pipe(
@@ -261,7 +264,7 @@ test("research_view returns a source page still in context as its ref, and a pru
               type: message.type,
               seq,
               time_created: DateTime.toEpochMillis(time),
-              data: Object.fromEntries(Object.entries(message).filter(([key]) => key !== "id" && key !== "type")),
+              data: rest(message),
             })
             .run()
             .pipe(Effect.orDie)

@@ -359,7 +359,7 @@ export function tools(services: Services) {
             }
           const result = yield* services.records.view(research.binding, input).pipe(Effect.catch(denied))
           if (input.action === "source" && "receipt" in result && "origin" in result.receipt && !input.cursor)
-            return page({ ...result, lines: basis(result.receipt) })
+            return page({ ...result, lines: lineBasis(result.receipt) })
           if (input.action !== "find" || !("matches" in result) || result.matches.length === 0) return page(result)
           // Match offsets are UTF-16 indexes into the whole retained text, so the pages up to the last match are reassembled.
           const last = result.matches.at(-1)?.start ?? 0
@@ -374,7 +374,7 @@ export function tools(services: Services) {
             state.receipt = next.receipt
           } while (state.cursor && state.text.length <= last)
           if (!state.receipt) return page(result)
-          const origin = basis(state.receipt)
+          const origin = lineBasis(state.receipt)
           const breaks = [...state.text.matchAll(/\r\n|\n|\r/g)].map((match) => match.index)
           return page({
             ...result,
@@ -540,7 +540,7 @@ export function tools(services: Services) {
             )
           // V1 `ResearchExecution.probe`: the dispatch's probe seconds bound the run, and whole seconds are charged after it.
           const limit = allowance.probeSecondsLimit
-          const used = (yield* ResearchLedger.dispatch(allowance).pipe(Effect.provideService(Database.Service, services.database))).reduce(
+          const used = (yield* ResearchLedger.dispatch(allowance).pipe(Effect.provideService(Database.Service, services.database), Effect.catch(denied))).reduce(
             (total, step) => (step.type === "research.allowance.charged" && step.data.kind === "probe" ? total + step.data.amount : total),
             0,
           )
@@ -1342,7 +1342,7 @@ function denied(error: Research.Error) {
 }
 
 /** Where line 1 of a retained representation sits in its original file (J5.3). */
-function basis(receipt: Research.SourceReceipt) {
+function lineBasis(receipt: Research.SourceReceipt) {
   if (receipt.observed?.lineStart !== undefined) return { basis: "original" as const, start: receipt.observed.lineStart }
   return { basis: (receipt.observed?.byteStart ?? 0) === 0 ? ("original" as const) : ("retained" as const), start: 1 }
 }

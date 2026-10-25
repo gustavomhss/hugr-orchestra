@@ -129,8 +129,8 @@ test("a backend reply settles its work result with the card, the tree and the bo
       })
       const store = yield* SessionStore.Service
       const child = yield* store.get(SessionSchema.ID.make(result.executionSessionId))
-      expect(child?.agent).toBe("backend")
-      expect(result.authoritySessionId).toBe(child?.parentID)
+      expect<string | undefined>(child?.agent).toBe("backend")
+      expect<string | undefined>(result.authoritySessionId).toBe(child?.parentID)
     }),
   ))
 

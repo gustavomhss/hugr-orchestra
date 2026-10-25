@@ -40,10 +40,10 @@ export const resolve = Effect.fn("WorkflowKnowledgeV2.resolve")(function* (
   const entries = yield* services.store
     .entries(sessionID)
     .pipe(Effect.mapError(() => new MaestroAtlasSourceV2.Held({ reason: "author-history-invalid", evidence: [sessionID] })))
-  const calls = entries.flatMap((entry) =>
-    entry.message.type !== "assistant"
-      ? []
-      : entry.message.content.flatMap((part) => {
+  const calls = entries.flatMap((entry) => {
+    const message = entry.message
+    if (message.type !== "assistant") return []
+    return message.content.flatMap((part) => {
           if (part.type !== "tool" || !("structured" in part.state)) return []
           const receipt = Option.getOrUndefined(
             Schema.decodeUnknownOption(Schema.Struct({ atlasContext: Schema.Struct({ anchor: Schema.Unknown }) }))(
@@ -54,10 +54,10 @@ export const resolve = Effect.fn("WorkflowKnowledgeV2.resolve")(function* (
             Schema.decodeUnknownOption(Schema.Struct({ reference: Schema.Unknown }))(receipt?.atlasContext.anchor),
           )
           return record?.reference === input.reference
-            ? [{ message: entry.message, part, anchor: receipt?.atlasContext.anchor }]
+            ? [{ message, part, anchor: receipt?.atlasContext.anchor }]
             : []
-        }),
-  )
+        })
+  })
   if (calls.length > 1) return yield* held("anchor-duplicate", [])
   const call = calls[0]
   if (!call) return yield* held("anchor-not-found", [])
