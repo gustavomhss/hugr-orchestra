@@ -22,6 +22,8 @@ import { ToolSafety } from "../tool-safety"
 import { ToolSafetySandbox } from "../tool-safety-sandbox"
 import { ToolSafetyGit } from "../tool-safety-git"
 import { OutputInspector } from "../output-inspector"
+import { Pty } from "../pty"
+import { AgentTerminal } from "./agent-terminal"
 
 export const name = "bash"
 export const DEFAULT_TIMEOUT_MS = 2 * 60 * 1_000
@@ -117,6 +119,7 @@ const layer = Layer.effectDiscard(
     const fs = yield* FSUtil.Service
     const appProcess = yield* AppProcess.Service
     const sessionProcess = yield* Effect.serviceOption(SessionProcess.Service)
+    const pty = yield* Pty.Service
     const config = yield* Config.Service
     const permission = yield* PermissionV2.Service
     const location = yield* Location.Service
@@ -127,7 +130,7 @@ const layer = Layer.effectDiscard(
           description: `Run a command in a fresh, non-interactive process, with the configured shell or else \`/bin/sh\` (\`cmd.exe\` on Windows).
 
 - \`cd\`, variables and other shell state do not carry over between calls. Commands run in the working directory; to run one elsewhere, set \`workdir\` rather than starting with \`cd\`. A \`workdir\` outside the working directory asks the owner first.
-- Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as \`-m\` for \`git commit\`. Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
+- ${AgentTerminal.stdinNote()} Credential-like variables such as \`GH_TOKEN\` and the SSH agent are removed.
 - Read files and edit their contents with the file tools rather than shell commands.
 - \`timeout\` is in milliseconds: ${DEFAULT_TIMEOUT_MS} by default, ${MAX_TIMEOUT_MS} at most.
 
@@ -234,6 +237,27 @@ const layer = Layer.effectDiscard(
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
                 const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
+                // Same confinement and inspection, but the command runs in a terminal tab the owner can see and answer.
+                if (wrapped._tag === "StandardCommand" && AgentTerminal.enabled(wrapped)) {
+                  const ran = yield* AgentTerminal.run(pty, {
+                    command: wrapped,
+                    title: input.command,
+                    timeout,
+                    maxChars: MAX_CAPTURE_BYTES,
+                  })
+                  if (!ran) return undefined
+                  const output = Buffer.from(ran.output)
+                  return {
+                    command: input.command,
+                    exitCode: ran.exitCode,
+                    output,
+                    stdout: output,
+                    stderr: Buffer.alloc(0),
+                    outputTruncated: ran.truncated,
+                    stdoutTruncated: ran.truncated,
+                    stderrTruncated: false,
+                  } satisfies AppProcess.RunResult
+                }
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
@@ -285,5 +309,5 @@ const layer = Layer.effectDiscard(
 export const node = makeLocationNode({
   name: "tool/bash",
   layer,
-  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node],
+  deps: [ToolRegistry.node, LocationMutation.node, Location.node, FSUtil.node, AppProcess.node, Config.node, PermissionV2.node, Pty.node],
 })

@@ -154,6 +154,7 @@ export const Terminal = (props: TerminalProps) => {
     "onAutoFocus",
     "onConnect",
     "onConnectError",
+    "onSubmit",
   ])
   const id = local.pty.id
   const restore = typeof local.pty.buffer === "string" ? local.pty.buffer : ""
@@ -170,7 +171,6 @@ export const Terminal = (props: TerminalProps) => {
   const scrollY = typeof local.pty.scrollY === "number" ? local.pty.scrollY : undefined
   let ws: WebSocket | undefined
   let term: Term | undefined
-  let _ghostty: Ghostty
   let serializeAddon: SerializeAddon
   let fitAddon: FitAddon
   let handleResize: () => void
@@ -344,7 +344,6 @@ export const Terminal = (props: TerminalProps) => {
         cleanup()
         return
       }
-      _ghostty = g
       term = t
       setOptionIfSupported(t, "colorScheme", terminalTheme().mode)
       output = terminalWriter((data, done) =>
