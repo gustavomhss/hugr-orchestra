@@ -579,8 +579,12 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
           model("openrouter", "gpt-5", "GPT-5 via OpenRouter", 400_000),
         ],
       })
-    if (url.pathname === "/api/model/default")
-      return json(route, { location, data: model("openai", "gpt-5", "GPT-5", 400_000) })
+    // The server's catalog default follows the configured model, so a saved default comes back on refetch.
+    if (url.pathname === "/api/model/default") {
+      const separator = state.config.model.indexOf("/")
+      const id = state.config.model.slice(separator + 1)
+      return json(route, { location, data: model(state.config.model.slice(0, separator), id, id, 400_000) })
+    }
     return route.fallback()
   })
 }

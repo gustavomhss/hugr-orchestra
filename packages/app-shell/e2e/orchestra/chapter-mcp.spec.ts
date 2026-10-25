@@ -394,7 +394,8 @@ test("same directory and MCP name stay isolated across profiles, including late 
   expect(pendingLists).toBeGreaterThan(0)
   state.inventory[serverA] = { "late-a": { status: "failed", error: "Old profile result" } }
   listGate.resolve()
-  await expect.poll(() => lateLists.length).toBe(pendingLists)
+  // The mock event stream reconnects, so the app may list again after the gate opens; wait for at least the gated lists.
+  await expect.poll(() => lateLists.length).toBeGreaterThanOrEqual(pendingLists)
   await Promise.all(lateLists)
   page.off("response", completed)
   await expect(page.locator("[data-mcp-name]")).toHaveCount(2)
