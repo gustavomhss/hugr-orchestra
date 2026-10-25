@@ -5,6 +5,7 @@ import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import { GitCli } from "@orchestra/core/git-cli"
 import { Location } from "@orchestra/core/location"
 import { ModelV2 } from "@orchestra/core/model"
 import { ProviderV2 } from "@orchestra/core/provider"
@@ -229,5 +230,52 @@ test("a retried acquisition replays its retained source instead of reacquiring i
       expect(replay).toContain("alpha\nbeta\n")
       expect(replay).toContain("Historical retained representation; no live source was reacquired.")
       expect(replay).not.toContain("gamma")
+    }),
+  ))
+
+test("a URL capture retains the received bytes and the requested representation derived from them, each charged under its call", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const server = yield* Effect.acquireRelease(
+        Effect.sync(() =>
+          Bun.serve({
+            port: 0,
+            fetch: () => new Response("<html><body><h1>Title</h1><p>body text</p></body></html>", { headers: { "content-type": "text/html" } }),
+          }),
+        ),
+        (served) => Effect.promise(() => served.stop(true)),
+      )
+      const bound = yield* dispatch(directory)
+      const url = `http://127.0.0.1:${server.port}/page`
+      const captured = String((yield* settle(bound.info.id, "research_capture", { kind: "url", url, format: "markdown" }, "call_url")).value)
+      const receipt = JSON.parse(captured.split("\n\n")[0])
+      expect(receipt).toMatchObject({ origin: { kind: "url", uri: url }, ref: { representation: "markdown" }, transformation: "webfetch-markdown-v1" })
+      expect(receipt.derivedFrom.representation).toBe("received")
+      expect(captured).toContain("# Title")
+      expect((yield* charged(bound.allowance, "bytes")).map((charge) => charge.operation)).toEqual([
+        "bytes:msg_research:call_url:received",
+        "bytes:msg_research:call_url:markdown",
+      ])
+    }),
+  ))
+
+test("a history capture projects Git log and working-tree status of the bound worktree from the received Git output", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const git = yield* GitCli.Service
+      const exec = { cwd: directory, env: MaestroResearchTools.environment(), extendEnv: false }
+      yield* Effect.promise(() => Bun.write(path.join(directory, "notes.txt"), "alpha\n"))
+      yield* git.run(["init", "--quiet"], exec)
+      yield* git.run(["add", "notes.txt"], exec)
+      yield* git.run(["-c", "user.name=Research", "-c", "user.email=research@example.test", "-c", "commit.gpgsign=false", "commit", "--quiet", "-m", "first"], exec)
+      const head = (yield* git.run(["rev-parse", "HEAD"], exec)).text().trim()
+      const bound = yield* dispatch(directory)
+      const log = String((yield* settle(bound.info.id, "research_capture", { kind: "history", operation: "log", path: "notes.txt" }, "call_log")).value)
+      const receipt = JSON.parse(log.split("\n\n")[0])
+      expect(receipt).toMatchObject({ origin: { kind: "tool-output" }, ref: { representation: "structured-json" }, transformation: "native-git-history-v1" })
+      expect(JSON.parse(log.split("\n\n")[1])).toMatchObject({ operation: "log", path: "notes.txt", revision: head, commits: [head] })
+      yield* Effect.promise(() => Bun.write(path.join(directory, "notes.txt"), "beta\n"))
+      const status = String((yield* settle(bound.info.id, "research_capture", { kind: "history", operation: "status" }, "call_status")).value)
+      expect(JSON.parse(status.split("\n\n")[1])).toMatchObject({ operation: "status", head, dirty: [{ path: "notes.txt", status: ".M" }] })
     }),
   ))

@@ -1,10 +1,12 @@
 export * as MaestroToolsV2 from "./tools"
 
 import { Effect, Layer } from "effect"
+import { HttpClient } from "effect/unstable/http"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Config } from "@orchestra/core/config"
 import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
+import { LayerNodePlatform } from "@orchestra/core/effect/app-node-platform"
 import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { GitCli } from "@orchestra/core/git-cli"
@@ -107,6 +109,7 @@ const layer = Layer.effectDiscard(
           ripgrep: yield* Ripgrep.RipgrepBinary.Service,
           git,
           config: services.atlas.config,
+          http: yield* HttpClient.HttpClient,
         }),
       })
       .pipe(Effect.orDie)
@@ -177,5 +180,6 @@ export const node = makeLocationNode({
     ReadToolFileSystem.node,
     AppProcess.node,
     Ripgrep.RipgrepBinary.node,
+    LayerNodePlatform.httpClient,
   ],
 })
