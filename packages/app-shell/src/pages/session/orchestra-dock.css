@@ -8,7 +8,7 @@
   gap: 8px;
   padding: 8px 12px 12px;
   border: 1px solid var(--orchestra-border-muted, var(--v2-border-border-muted));
-  border-radius: 10px;
+  border-radius: var(--orchestra-radius-lg);
   background: var(--orchestra-card-background, var(--v2-background-bg-layer-01));
   box-shadow: var(--orchestra-evidence-shadow, none);
 }
@@ -25,7 +25,7 @@
   margin: 0;
   flex: 1;
   color: var(--orchestra-task-title, var(--text-strong));
-  font-size: 13.5px;
+  font-size: var(--orchestra-font-size-lg);
   font-weight: 560;
 }
 
@@ -36,7 +36,7 @@
   place-items: center;
   padding: 0;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-rail-tab-text, var(--text-weak));
   cursor: pointer;
@@ -53,7 +53,7 @@
   gap: 2px;
   padding: 2px;
   border: 1px solid var(--orchestra-session-rule, var(--border-weaker-base));
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
   background: var(--orchestra-context-background, var(--surface-base));
 }
 
@@ -63,10 +63,10 @@
   overflow: hidden;
   padding: 0 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-rail-tab-text, var(--text-weak));
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-overflow: ellipsis;
   white-space: nowrap;
   cursor: pointer;
@@ -141,7 +141,7 @@
   gap: 8px;
   padding: 6px 8px;
   color: var(--orchestra-task-meta, var(--text-weak));
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 
 .orchestra-dock-note[role="alert"] {
@@ -158,13 +158,13 @@
   gap: 8px;
   padding: 16px;
   color: var(--orchestra-task-meta, var(--text-weak));
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   text-align: center;
 }
 
 .orchestra-dock-state strong {
   color: var(--orchestra-task-title, var(--text-strong));
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
   font-weight: 560;
 }
 
@@ -174,10 +174,10 @@
   flex: none;
   padding: 0 10px;
   border: 1px solid var(--orchestra-border-muted, var(--border-weak-base));
-  border-radius: 7px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-rail-tab-active-text, var(--text-strong));
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 
@@ -215,10 +215,10 @@
   gap: 2px;
   padding: 0 8px 0 2px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-rail-tab-text, var(--text-weak));
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   cursor: pointer;
 }
 
@@ -240,7 +240,7 @@
   position: absolute;
   inset: 0;
   overflow: hidden;
-  border-radius: 8px;
+  border-radius: var(--orchestra-radius-md);
 }
 
 .orchestra-docs-list {
@@ -261,7 +261,7 @@
   gap: 6px;
   padding: 0 6px;
   border: 0;
-  border-radius: 6px;
+  border-radius: var(--orchestra-radius-sm);
   background: transparent;
   color: var(--orchestra-file-text, var(--text-base));
   font: 12px / 16px var(--font-family-mono);
@@ -276,7 +276,7 @@
 .orchestra-docs-document {
   padding: 4px 6px 16px;
   color: var(--orchestra-session-body, var(--text-base));
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
   overflow-wrap: anywhere;
 }
 

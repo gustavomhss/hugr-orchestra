@@ -5,6 +5,7 @@ import { InstallationVersion } from "@orchestra/core/installation/version"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Spawn } from "../../services/process"
+import { upgradeCommand, upgradeMethod } from "./upgrade-method"
 
 const PACKAGE = "@humanguardrail/cli"
 const REPO = "gustavomhss/hugr-orchestra"
@@ -20,20 +21,29 @@ export default Runtime.handler(
       return
     }
 
-    if (input.method === "github") {
+    const chosen = Option.getOrUndefined(input.method)
+    const method = chosen === "github" ? "curl" : (chosen ?? upgradeMethod(process.execPath))
+    const command = upgradeCommand(method, `${PACKAGE}@${target}`)
+    if (method === "desktop") {
+      process.stdout.write(`Orchestra ${current} -> ${target}. This CLI ships inside the desktop app; update the app instead.` + EOL)
+      return
+    }
+    if (!command) {
       process.stdout.write(
         [
           `Orchestra ${current} -> ${target}`,
-          "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh.",
+          method === "curl"
+            ? "Download the release archive from https://github.com/gustavomhss/hugr-orchestra/releases and run its install.sh."
+            : `Could not tell how Orchestra was installed. Run the command for your package manager, e.g. npm install -g ${PACKAGE}@${target}, or reinstall from https://github.com/gustavomhss/hugr-orchestra/releases.`,
         ].join(EOL) + EOL,
       )
       return
     }
 
-    process.stdout.write(`Upgrading ${current} -> ${target} with npm...` + EOL)
-    const result = yield* Spawn.run(["npm", "install", "-g", `${PACKAGE}@${target}`], { extendEnv: true })
+    process.stdout.write(`Upgrading ${current} -> ${target} with ${command[0]}...` + EOL)
+    const result = yield* Spawn.run(command, { extendEnv: true })
     if (result.exitCode !== 0) {
-      return yield* Effect.fail(new Error(`npm install failed (exit ${result.exitCode}): ${result.stderr.trim()}`))
+      return yield* Effect.fail(new Error(`${command[0]} install failed (exit ${result.exitCode}): ${result.stderr.trim()}`))
     }
     process.stdout.write(`Upgraded to ${target}. Restart any running Orchestra sessions.` + EOL)
   }),

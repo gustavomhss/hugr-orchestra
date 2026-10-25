@@ -324,7 +324,6 @@
           "entry": "src/provider.ts",
           "patterns": [
             "src/provider.ts",
-            "src/claude-account.ts",
             "src/model.ts",
             "src/models-dev.ts",
             "src/aisdk.ts",
@@ -343,6 +342,7 @@
           "patterns": [
             "src/account/",
             "src/account.ts",
+            "src/claude-account.ts",
             "src/credential/",
             "src/credential.ts",
             "src/oauth/",

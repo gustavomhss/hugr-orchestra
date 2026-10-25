@@ -9,6 +9,8 @@ export type Target = typeof CapabilityManagement.Target.Type
 export type Binding = typeof CapabilityManagement.Binding.Type
 export type Receipt = typeof CapabilityManagement.Receipt.Type
 export type Options = Readonly<{ signal?: AbortSignal }>
+/** A location session offered by the binding picker; `updated` is epoch milliseconds for relative time. */
+export type SessionOption = Readonly<{ id: SessionID; title: string; updated: number }>
 export type Api = Readonly<{
   get: (connectionID: Capability.ConnectionID, options?: Options) => Promise<Connection>
   getTarget: (targetID: Capability.TargetID, options?: Options) => Promise<Target>
@@ -22,6 +24,7 @@ export type Api = Readonly<{
   disconnect: (connection: Capability.ConnectionRef, key: string, options?: Options) => Promise<Receipt>
   bind: (target: Capability.TargetRef, input: Readonly<{ sessionID: SessionID; actions: readonly string[] }>, key: string, options?: Options) => Promise<Receipt>
   unbind: (target: Capability.TargetRef, sessionID: SessionID, key: string, options?: Options) => Promise<Receipt>
+  sessions: (options?: Options) => Promise<readonly SessionOption[]>
 }>
 export type Failure = "authorization" | "unsupported" | "invalid" | "request" | "unknown"
 export type State = Readonly<{
@@ -39,6 +42,14 @@ export type State = Readonly<{
   readRetryable: boolean
   failure?: Failure
   receipt?: Receipt
+  /** Verification reported by `connect`, per account connected through this page. Not stored by the server. */
+  verifications: Readonly<Partial<Record<Capability.ConnectionID, CapabilitySetup.Verification>>>
+  /** The last read answered 401 and the page has no Basic credential: show the host-authorization field. */
+  hostAuthorization: boolean
+  sessions: readonly SessionOption[]
+  sessionsStatus: "idle" | "loading" | "ready" | "error"
+  /** Local parse error of the Resource JSON editor; undefined when the last checked text parsed. */
+  resourceError?: string
 }>
 export type Model = Readonly<{
   state: State
@@ -54,6 +65,8 @@ export type Model = Readonly<{
   disconnect: () => Promise<void>
   bind: (input: Readonly<{ sessionID: SessionID; actions: readonly string[] }>) => Promise<void>
   unbind: (sessionID: SessionID) => Promise<void>
+  loadSessions: () => Promise<void>
+  checkResource: (text: string) => Schema.Json | undefined
   retry: () => Promise<void>
   retryRead: () => Promise<void>
   cancel: () => void

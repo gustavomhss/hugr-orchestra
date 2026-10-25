@@ -18,7 +18,7 @@ import stripAnsi from "strip-ansi"
 import { Dynamic } from "solid-js/web"
 import type { SessionV1 } from "@orchestra/schema/session-v1"
 import type { QuestionV1 } from "@orchestra/schema/v1/question"
-import { useData } from "../context"
+import { useData, useToolPartSlot } from "../context"
 import { useFileComponent } from "@orchestra/ui/context/file"
 import { useDialog } from "@orchestra/ui/context/dialog"
 import { type UiI18n, useI18n } from "@orchestra/ui/context/i18n"
@@ -1524,6 +1524,7 @@ function ToolFileAccordion(props: { path: string; actions?: JSX.Element; childre
 
 PART_MAPPING["tool"] = function ToolPartDisplay(props) {
   const data = useData()
+  const slot = useToolPartSlot()
   const i18n = useI18n()
   const part = () => props.part as ToolPart
   const hideTodo = createMemo(() => part().tool === "todowrite" && confirmedTodos(part().state) === undefined)
@@ -1622,6 +1623,7 @@ PART_MAPPING["tool"] = function ToolPartDisplay(props) {
         <Show when={part().tool === "task"}>
           <ResearchResult value={partMetadata().workResult} sessionID={taskId()} />
         </Show>
+        <Show when={slot}>{(slot) => <Dynamic component={slot()} part={part()} />}</Show>
       </div>
     </Show>
   )

@@ -136,6 +136,8 @@ export function MessageTimeline(props: {
   userMessages: UserMessage[]
   anchor: (id: string) => string
   setRevealMessage?: (fn: (id: string) => void) => void
+  /** Scrolls a part's row into view; resolves false when the loaded history has no such part. */
+  setRevealPart?: (fn: (partID: string) => boolean) => void
   setScrollToEnd?: (fn: () => void) => void
   setHistoryAnchor?: (handlers: { capture: () => void; restore: (done: boolean) => void }) => void
   renderExecutionEvidence?: (input: ExecutionEvidenceInput) => JSX.Element | undefined
@@ -401,6 +403,13 @@ export function MessageTimeline(props: {
       if (index === undefined) return
       virtualizer.scrollToIndex(index, { align: "center" })
     })
+    props.setRevealPart?.((partID) => {
+      const index = timelineRows().findIndex((row) => row._tag === "AssistantPart" && (row.group.type === "part"
+        ? row.group.ref.partID === partID : row.group.refs.some((ref) => ref.partID === partID)))
+      if (index === -1) return false
+      virtualizer.scrollToIndex(index, { align: "center" })
+      return true
+    })
     props.setScrollToEnd?.(() => virtualizer.scrollToEnd())
     props.setHistoryAnchor?.({ capture: capturePrependAnchor, restore: restorePrependAnchor })
   })
@@ -444,6 +453,7 @@ export function MessageTimeline(props: {
     if (resizePinFrame !== undefined) cancelAnimationFrame(resizePinFrame)
     if (overscanFrame !== undefined) cancelAnimationFrame(overscanFrame)
     props.setRevealMessage?.(() => {})
+    props.setRevealPart?.(() => false)
     props.setScrollToEnd?.(() => {})
     props.setHistoryAnchor?.({ capture: () => {}, restore: () => {} })
   })

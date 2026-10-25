@@ -200,6 +200,7 @@ export async function mount(
       )
       return receipt(null)
     },
+    sessions: async () => [],
     removeTarget: async (...args) => {
       record("removeTarget", args)
       targets.delete(args[0].id)

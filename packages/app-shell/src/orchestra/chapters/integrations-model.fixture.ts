@@ -67,7 +67,7 @@ export function streamedJson(value: unknown, status = 200, malformed = false) {
 // Test-only HTTP transport intentionally leaves JSON unvalidated: controller must check the wire DTO.
 export function fixture(handler: (request: Request) => Response | Promise<Response>, ignoreAbort = false,
   observe?: (state: State) => void, requestKey?: () => string,
-  onHeaders?: (path: string, signal?: AbortSignal) => void) {
+  onHeaders?: (path: string, signal?: AbortSignal) => void, basic = false) {
   const signals: AbortSignal[] = []
   const requests: { method: string; url: string; key: string | null; body: unknown }[] = []
   const server = Bun.serve({ hostname: "127.0.0.1", port: 0, async fetch(request) {
@@ -106,11 +106,12 @@ export function fixture(handler: (request: Request) => Response | Promise<Respon
     disconnect: (connection, key, options) => request("/api/capability/connections/disconnect", options, { connection }, key),
     bind: (target, input, key, options) => request("/api/capability/bindings", options, { target, input }, key),
     unbind: (target, sessionID, key, options) => request("/api/capability/bindings/remove", options, { target, sessionID }, key),
+    sessions: (options) => request("/api/session", options),
   }
   const root = createRoot((dispose) => {
     cleanup.add(dispose)
     let serial = 0
-    const model = createIntegrationModel(api, requestKey ?? (() => `private-intent-${++serial}`))
+    const model = createIntegrationModel(api, requestKey ?? (() => `private-intent-${++serial}`), basic)
     if (observe) createComputed(() => observe(model.state))
     return { model, dispose }
   })

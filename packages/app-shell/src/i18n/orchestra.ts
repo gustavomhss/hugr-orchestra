@@ -7,6 +7,7 @@ import { HOOKS_COPY } from "./orchestra-chapters/hooks"
 import { WORKFLOWS_COPY } from "./orchestra-chapters/workflows"
 import { PROVIDERS_COPY } from "./orchestra-chapters/providers"
 import { INTEGRATIONS_COPY } from "./orchestra-chapters/integrations"
+import { CAPABILITIES_COPY } from "./orchestra-chapters/capabilities"
 import { SHORTCUTS_COPY } from "./orchestra-chapters/shortcuts"
 import { CICD_COPY } from "./orchestra-chapters/cicd"
 import { SCHEDULE_COPY } from "./orchestra-chapters/schedule"
@@ -376,6 +377,7 @@ export const ORCHESTRA_COPY = {
   ...WORKFLOWS_COPY,
   ...PROVIDERS_COPY,
   ...INTEGRATIONS_COPY,
+  ...CAPABILITIES_COPY,
   ...SHORTCUTS_COPY,
   ...CICD_COPY,
   ...SCHEDULE_COPY,

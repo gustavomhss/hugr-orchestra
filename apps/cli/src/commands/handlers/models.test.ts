@@ -1,3 +1,4 @@
+import { EOL } from "os"
 import { describe, expect, test } from "bun:test"
 import { Effect, Option } from "effect"
 import { Daemon } from "../../services/daemon"
@@ -26,7 +27,7 @@ describe("models", () => {
     })
     try {
       const out = await withCapturedStdout(() => runWith(models({ provider: Option.none(), json: false }), clientUrl(server)))
-      expect(out.trim().split("\n")).toEqual([
+      expect(out.trim().split(EOL)).toEqual([
         "anthropic/claude-3-5-sonnet",
         "openai/gpt-4o",
         "openai/gpt-4o-mini",
