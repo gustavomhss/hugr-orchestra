@@ -2,7 +2,7 @@ export * as AgentTerminal from "./agent-terminal"
 
 import { Deferred, Duration, Effect, Exit } from "effect"
 import type { ChildProcess } from "effect/unstable/process"
-import { truthy } from "../flag/flag"
+import { Flag } from "../flag/flag"
 import { OmniSpawner } from "../omni-spawner"
 import { OutputInspector } from "../output-inspector"
 import type { Pty } from "../pty"
@@ -28,14 +28,14 @@ export type Result = {
 
 /** What the bash tool tells the model about stdin, which differs once the command runs in a terminal the owner can see. */
 export function stdinNote() {
-  if (!truthy("ORCHESTRA_AGENT_TERMINAL") || process.platform === "win32")
+  if (!Flag.ORCHESTRA_AGENT_TERMINAL || process.platform === "win32")
     return "Stdin is empty and there is no terminal, so nothing can answer a prompt or an editor: pass flags that skip them, such as `-m` for `git commit`."
   return "The command runs in a terminal tab the owner can watch and type into, but you cannot answer it: a prompt or an editor waits for the owner until the timeout, so pass flags that skip them, such as `-m` for `git commit`. Output has no color."
 }
 
 export function enabled(command: ChildProcess.StandardCommand) {
   // cmd.exe parses its own command line and needs omni's verbatim form, which a PTY spawn cannot take.
-  return truthy("ORCHESTRA_AGENT_TERMINAL") && process.platform !== "win32" && OmniSpawner.program(command).verbatim === undefined
+  return Flag.ORCHESTRA_AGENT_TERMINAL && process.platform !== "win32" && OmniSpawner.program(command).verbatim === undefined
 }
 
 /**

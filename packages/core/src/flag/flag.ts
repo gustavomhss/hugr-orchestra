@@ -45,6 +45,17 @@ function enabledByExperimental(key: string) {
 }
 
 export const Flag = {
+  // Terminal epic (docs/specs/terminal). Both stay opt-in and read the environment on each use, so a test can flip them.
+  // Agent terminal: the bash tool's foreground command runs in a visible PTY tab. Stays off until a real session with a
+  // model has been checked end to end; the unit and tool-level tests already pass.
+  get ORCHESTRA_AGENT_TERMINAL() {
+    return truthy("ORCHESTRA_AGENT_TERMINAL")
+  },
+  // Shell integration (OSC 133 marks, OSC 7 cwd) for terminals started from the UI. Stays off because it replaces a
+  // user's own bash DEBUG trap instead of chaining it.
+  get ORCHESTRA_SHELL_INTEGRATION() {
+    return truthy("ORCHESTRA_SHELL_INTEGRATION")
+  },
   OTEL_EXPORTER_OTLP_ENDPOINT: process.env["OTEL_EXPORTER_OTLP_ENDPOINT"],
   OTEL_EXPORTER_OTLP_HEADERS: process.env["OTEL_EXPORTER_OTLP_HEADERS"],
 

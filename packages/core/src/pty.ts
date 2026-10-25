@@ -6,7 +6,7 @@ import { Context, Effect, Exit, Layer, Option, Schema, Types } from "effect"
 import { Pty } from "@orchestra/schema/pty"
 import { Config } from "./config"
 import { EventV2 } from "./event"
-import { Flag, truthy } from "./flag/flag"
+import { Flag } from "./flag/flag"
 import { Location } from "./location"
 import { OmniAdoption } from "./omni-adoption"
 import { OmniBackground } from "./omni-background"
@@ -238,7 +238,7 @@ const layer = Layer.effect(
         TERM: "xterm-256color",
         ORCHESTRA_TERMINAL: "1",
       } as Record<string, string>
-      const integration = (options?.shellIntegration ?? (!options?.exact && truthy("ORCHESTRA_SHELL_INTEGRATION")))
+      const integration = (options?.shellIntegration ?? (!options?.exact && Flag.ORCHESTRA_SHELL_INTEGRATION))
         ? yield* Effect.promise(() => ShellIntegration.prepare({ command, args: given, env: base }))
         : undefined
       const args = integration?.args ?? given
