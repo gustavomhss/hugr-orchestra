@@ -12,6 +12,12 @@ export interface Args {
   variant?: string
   /** Minimal layout: no sidebar unless it is opened by hand. */
   mini?: boolean
+  /** With mini: false hides the session history that existed when the TUI opened. */
+  replay?: boolean
+  /** With mini: show only the newest N messages of the session history. */
+  replayLimit?: number
+  /** With mini: the demo slash commands run synthetic output instead of a model turn. */
+  demo?: boolean
 }
 
 export const { use: useArgs, provider: ArgsProvider } = createSimpleContext({

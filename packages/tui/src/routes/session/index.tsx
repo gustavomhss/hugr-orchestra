@@ -53,6 +53,7 @@ import { DialogForkFromTimeline } from "./dialog-fork-from-timeline"
 import { DialogSessionRename } from "../../component/dialog-session-rename"
 import { Sidebar } from "./sidebar"
 import { useArgs } from "../../context/args"
+import { replayWindow } from "../../context/replay"
 import { SubagentFooter } from "./subagent-footer.tsx"
 import { filetype } from "../../util/filetype"
 import parsers from "../../parsers-config"
@@ -181,6 +182,11 @@ export function Session() {
       .toSorted((a, b) => (a.id < b.id ? -1 : a.id > b.id ? 1 : 0))
   })
   const messages = createMemo(() => sync.data.message[route.sessionID] ?? [])
+  const openedAt = Date.now()
+  const replayed = createMemo(() =>
+    replayWindow(messages(), { mini: args.mini, replay: args.replay, limit: args.replayLimit, openedAt }),
+  )
+  const replayOffset = () => messages().length - replayed().length
   const messagesBeforeRevert = () => {
     const messageID = session()?.revert?.messageID
     if (!messageID) return messages()
@@ -1034,7 +1040,7 @@ export function Session() {
                 scrollAcceleration={scrollAcceleration()}
               >
                 <box height={1} />
-                <For each={messages()}>
+                <For each={replayed()}>
                   {(message, index) => (
                     <Switch>
                       <Match when={message.id === revert()?.messageID}>
@@ -1098,13 +1104,13 @@ export function Session() {
                         })()}
                       </Match>
                       <Match
-                        when={revert()?.messageID && revertMessageIndex() !== -1 && index() >= revertMessageIndex()}
+                        when={revert()?.messageID && revertMessageIndex() !== -1 && index() + replayOffset() >= revertMessageIndex()}
                       >
                         <></>
                       </Match>
                       <Match when={message.role === "user"}>
                         <UserMessage
-                          index={index()}
+                          index={index() + replayOffset()}
                           onMouseUp={() => {
                             if (renderer.getSelection()?.getSelectedText()) return
                             dialog.replace(() => (

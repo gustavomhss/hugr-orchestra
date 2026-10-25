@@ -51,6 +51,7 @@ import { createFadeIn } from "../../util/signal"
 import { DialogSkill } from "../dialog-skill"
 import { DialogWorkspaceUnavailable } from "../dialog-workspace-unavailable"
 import { useArgs } from "../../context/args"
+import { Demo } from "../../context/demo-run"
 import { ORCHESTRA_BASE_MODE, useBindings, useCommandShortcut, useLeaderActive, useOrchestraKeymap } from "../../keymap"
 import { useTuiConfig } from "../../config"
 import { usePromptWorkspace } from "./workspace"
@@ -1039,7 +1040,18 @@ export function Prompt(props: PromptProps) {
     const editorText =
       editorSelection && editor.labelState() === "pending" ? formatEditorContext(editorSelection) : undefined
 
-    if (store.mode === "shell") {
+    const demoCommand = args.mini && args.demo ? Demo.parse(inputText) : undefined
+    if (demoCommand) {
+      Demo.run(demoCommand, {
+        sessionID,
+        text: inputText,
+        agent: agentKey(agent),
+        cwd: sdk.directory ?? process.cwd(),
+        sync,
+        sdk,
+        warn: (message) => toast.show({ message, variant: "warning" }),
+      })
+    } else if (store.mode === "shell") {
       move.startSubmit()
       void sdk.actions.shell({ sessionID, command: inputText }).catch((error) => {
         toast.show({ title: "Failed to run shell command", message: errorMessage(error), variant: "error" })

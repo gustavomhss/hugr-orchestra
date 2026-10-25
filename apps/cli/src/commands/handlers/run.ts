@@ -8,6 +8,7 @@ import { ServerAuth } from "@orchestra/server/auth"
 import { Commands } from "../commands"
 import { Runtime } from "../../framework/runtime"
 import { Daemon } from "../../services/daemon"
+import { miniOptions } from "./mini-options"
 import { runTurn, type Event } from "../../turn"
 
 type Client = ReturnType<typeof Orchestra.make>
@@ -65,6 +66,7 @@ export default Runtime.handler(
         : yield* daemon.transport()
     const client = Orchestra.make({ baseUrl: transport.url, headers: transport.headers })
 
+    const mini = yield* Effect.try({ try: () => miniOptions(input), catch: (cause) => (cause instanceof Error ? cause : new Error(String(cause))) })
     if (input.mini) {
       if (command) return yield* Effect.fail(new Error("--mini cannot be used with --command"))
       if (input.format === "json") return yield* Effect.fail(new Error("--mini cannot be used with --format json"))
@@ -81,6 +83,7 @@ export default Runtime.handler(
           session: Option.getOrUndefined(input.session),
           fork: input.fork,
           auto: input.auto,
+          ...mini,
         }),
       })
     }
@@ -119,9 +122,15 @@ export function miniArgs(input: {
   readonly session?: string
   readonly fork: boolean
   readonly auto: boolean
+  readonly replay?: boolean
+  readonly replayLimit?: number
+  readonly demo?: boolean
 }) {
   return {
     mini: true,
+    ...(input.replay === false ? { replay: false } : {}),
+    ...(input.replayLimit !== undefined ? { replayLimit: input.replayLimit } : {}),
+    ...(input.demo ? { demo: true } : {}),
     ...(input.message.trim() ? { prompt: input.message } : {}),
     ...(input.model ? { model: input.model } : {}),
     ...(input.agent ? { agent: input.agent } : {}),

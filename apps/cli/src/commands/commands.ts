@@ -143,6 +143,19 @@ const run = Spec.make("run", {
       Flag.withDefault(false),
       Flag.withDescription("open the minimal interactive TUI instead of printing the turn"),
     ),
+    replay: Flag.boolean("replay").pipe(Flag.withDefault(false), Flag.withDescription("not supported: replay is on by default")),
+    "no-replay": Flag.boolean("no-replay").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("with --mini, do not replay the session history on resume"),
+    ),
+    "replay-limit": Flag.integer("replay-limit").pipe(
+      Flag.withDescription("with --mini, show only the newest N messages of the session history"),
+      Flag.optional,
+    ),
+    demo: Flag.boolean("demo").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("with --mini, enable the demo slash commands (/fmt, /permission, /question); pass one as the message to run it at once"),
+    ),
   },
 })
 
@@ -168,6 +181,15 @@ const attach = Spec.make("attach", {
       Flag.optional,
     ),
     mini: Flag.boolean("mini").pipe(Flag.withDefault(false), Flag.withDescription("start the minimal TUI layout")),
+    replay: Flag.boolean("replay").pipe(Flag.withDefault(false), Flag.withDescription("not supported: replay is on by default")),
+    "no-replay": Flag.boolean("no-replay").pipe(
+      Flag.withDefault(false),
+      Flag.withDescription("with --mini, do not replay the session history on resume"),
+    ),
+    "replay-limit": Flag.integer("replay-limit").pipe(
+      Flag.withDescription("with --mini, show only the newest N messages of the session history"),
+      Flag.optional,
+    ),
   },
 })
 

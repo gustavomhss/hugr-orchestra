@@ -17,6 +17,9 @@ export function runTui(
       variant?: string
       auto?: boolean
       mini?: boolean
+      replay?: boolean
+      replayLimit?: number
+      demo?: boolean
     }
     directory?: string
   } = {},

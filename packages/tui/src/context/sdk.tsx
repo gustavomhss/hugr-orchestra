@@ -3,6 +3,7 @@ import { createSessionActions } from "./session-actions"
 import { createCatalog } from "./catalog"
 import type { GlobalEvent } from "../compat/schema"
 import { createSimpleContext } from "./helper"
+import { isDemoRequest } from "./demo"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"
 
 export type EventSource = {
@@ -126,9 +127,41 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       handlers.clear()
     })
 
+    // Replies to the requests the mini-mode demo made up are answered here instead of by the server.
+    const answerLocally = (type: string, properties: Record<string, unknown>) =>
+      emitter.emit("event", {
+        directory: props.directory ?? "",
+        payload: { id: `demo_evt_${type}`, type, properties },
+      } as GlobalEvent)
+    const api = {
+      ...v2,
+      permissions: {
+        ...v2.permissions,
+        reply: (input: Parameters<typeof v2.permissions.reply>[0], options?: Parameters<typeof v2.permissions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("permission.replied", { sessionID: input.sessionID, requestID: input.requestID, reply: input.reply }),
+              )
+            : v2.permissions.reply(input, options),
+      },
+      questions: {
+        ...v2.questions,
+        reply: (input: Parameters<typeof v2.questions.reply>[0], options?: Parameters<typeof v2.questions.reply>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(
+                answerLocally("question.replied", { sessionID: input.sessionID, requestID: input.requestID, answers: input.answers }),
+              )
+            : v2.questions.reply(input, options),
+        reject: (input: Parameters<typeof v2.questions.reject>[0], options?: Parameters<typeof v2.questions.reject>[1]) =>
+          isDemoRequest(input.requestID)
+            ? Promise.resolve(answerLocally("question.rejected", { sessionID: input.sessionID, requestID: input.requestID }))
+            : v2.questions.reject(input, options),
+      },
+    }
+
     return {
       // The V2 Orchestra client.
-      api: v2,
+      api,
       actions,
       catalog,
       offline,
