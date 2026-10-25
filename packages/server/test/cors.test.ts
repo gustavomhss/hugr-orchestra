@@ -32,7 +32,7 @@ describe("V2 server CORS", () => {
     expect(get.headers.get("access-control-allow-origin")).toBe("oc://renderer")
   })
 
-  test("refuses an origin V1 refuses", async () => {
+  test("refuses an origin outside the allowed list", async () => {
     const response = await preflight("https://evil.example")
     expect(response.headers.get("access-control-allow-origin")).toBeNull()
   })

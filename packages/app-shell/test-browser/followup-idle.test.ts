@@ -88,7 +88,7 @@ async function mountQueue(options: { foreign?: boolean; prepare?: Promise<void> 
   const api = { prompt: async () => { counts.dispatch++; if (state.throwDispatch) throw failure } } as unknown as FollowupSendInput["api"]
   const directorySync = { session: { get: () => undefined, optimistic: { add() {}, remove() {} } } } as unknown as FollowupSendInput["sync"]
   const serverState = { data: { project: [] }, session: { set() {} } } as unknown as FollowupSendInput["serverSync"]
-  const server = { server: { http: { url: "https://queue.invalid" } }, protocol: Promise.resolve("v2"), sessionManagement: {} }
+  const server = { server: { http: { url: "https://queue.invalid" } }, protocol: Promise.resolve("v2"), sessionManagement: { waitSubagentModels: async () => {} } }
   const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } })
   const sdk = { get scope() { return status.scope }, directory: "/repo/main", api: { session: api } }
   const controls: { current?: { send: (sid: string, id: string, options?: { manual?: boolean }) => Promise<unknown>; mutation: { isPending: boolean; isSuccess: boolean } } } = {}

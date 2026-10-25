@@ -133,7 +133,7 @@ function proof() {
         body: body === undefined ? undefined : JSON.stringify(body) })
       const text = await response.text()
       if (!response.ok) throw new Error(`${method} ${route}: ${response.status} ${text}`)
-      return JSON.parse(text)
+      return text ? JSON.parse(text) : (undefined as T)
     }
     const dashboard = async (directory = project) => (await call<{ data: LeanDashboard.Info }>("/api/lean", "GET", undefined, directory)).data
     const go = async (callID: string) => {
