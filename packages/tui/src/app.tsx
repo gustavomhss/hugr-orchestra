@@ -48,7 +48,6 @@ import { DialogThemeList } from "./component/dialog-theme-list"
 import { DialogHelp } from "./ui/dialog-help"
 import { DialogAgent } from "./component/dialog-agent"
 import { DialogSessionList } from "./component/dialog-session-list"
-import { DialogWorkspaceList } from "./component/dialog-workspace-list"
 import { ThemeProvider, useTheme } from "./context/theme"
 import { Home } from "./routes/home"
 import { Session } from "./routes/session"
@@ -122,7 +121,6 @@ const appBindingCommands = [
   "theme.mode.lock",
   "help.show",
   "diff.open",
-  "workspace.list",
   "app.debug",
   "app.console",
   "app.heap_snapshot",
@@ -545,13 +543,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
   )
 
   const connected = useConnected()
-  const currentWorktreeWorkspace = createMemo(() => {
-    const workspaceID = project.workspace.current()
-    if (!workspaceID) return
-    const workspace = project.workspace.get(workspaceID)
-    if (workspace?.type !== "worktree" || !workspace.directory) return
-    return workspace
-  })
   const appCommands = createMemo(() =>
     [
       {
@@ -586,31 +577,6 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
             type: "home",
           })
           dialog.clear()
-        },
-      },
-      {
-        name: "workspace.copy_path",
-        title: "Copy worktree path",
-        category: "Workspace",
-        enabled: () => currentWorktreeWorkspace() !== undefined,
-        run: async () => {
-          const workspace = currentWorktreeWorkspace()
-          if (!workspace?.directory) return
-          await clipboard
-            .write?.(workspace.directory)
-            .then(() => toast.show({ message: "Copied worktree path", variant: "info" }))
-            .catch(toast.error)
-          dialog.clear()
-        },
-      },
-      {
-        name: "workspace.list",
-        title: "Manage workspaces",
-        category: "Workspace",
-        hidden: !Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES,
-        slashName: "workspaces",
-        run: () => {
-          dialog.replace(() => <DialogWorkspaceList />)
         },
       },
       ...Array.from({ length: 9 }, (_, i) => ({
@@ -1023,12 +989,34 @@ function App(props: { onSnapshot?: () => Promise<string[]>; pluginHost: TuiPlugi
 
     if (choice !== true) return
 
-    // V2 serves no in-process upgrade route; the CLI upgrade command installs the release.
+    toast.show({
+      variant: "info",
+      message: `Updating to v${version}…`,
+      duration: 30000,
+    })
+
+    const result = await sdk.api.installation.upgrade({ target: version }).then(
+      (result) => result,
+      () => undefined,
+    )
+
+    if (!result) {
+      toast.show({
+        variant: "error",
+        title: "Update Failed",
+        message: "Update failed",
+        duration: 10000,
+      })
+      return
+    }
+
     await DialogAlert.show(
       dialog,
-      "Update Available",
-      `Run \`orchestra upgrade ${version}\` in a terminal, then restart Orchestra.`,
+      "Update Complete",
+      `Successfully updated to Orchestra v${result.version}. Please restart the application.`,
     )
+
+    void exit()
   })
 
   const plugin = createMemo(() => {

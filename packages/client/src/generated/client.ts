@@ -328,6 +328,8 @@ import type {
   RelayRunsAuditOutput,
   RelayRunsLedgerInput,
   RelayRunsLedgerOutput,
+  InstallationUpgradeInput,
+  InstallationUpgradeOutput,
 } from "./types"
 import { ClientError } from "./client-error"
 import { makeResearch } from "./research"
@@ -1075,7 +1077,7 @@ export function make(options: ClientOptions) {
             method: "POST",
             path: `/api/integration/${encodeURIComponent(input.integrationID)}/connect/key`,
             query: { location: input["location"] },
-            body: { key: input["key"], label: input["label"] },
+            body: { key: input["key"], label: input["label"], metadata: input["metadata"] },
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
@@ -2642,6 +2644,20 @@ export function make(options: ClientOptions) {
             query: { location: input["location"], after: input["after"] },
             successStatus: 200,
             declaredStatuses: [400, 404, 409, 503, 401],
+            empty: false,
+          },
+          requestOptions,
+        ),
+    },
+    installation: {
+      upgrade: (input: InstallationUpgradeInput, requestOptions?: RequestOptions) =>
+        request<InstallationUpgradeOutput>(
+          {
+            method: "POST",
+            path: `/api/installation/upgrade`,
+            body: { target: input["target"] },
+            successStatus: 200,
+            declaredStatuses: [400, 500, 401],
             empty: false,
           },
           requestOptions,

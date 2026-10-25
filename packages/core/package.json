@@ -123,6 +123,7 @@
     "./lsp/ownership": "./src/lsp/ownership.ts",
     "./lsp/server": "./src/lsp/server.ts",
     "./installation/headers": "./src/installation/headers.ts",
+    "./installation/service": "./src/installation/service.ts",
     "./installation/version": "./src/installation/version.ts",
     "./instruction-context": "./src/instruction-context.ts",
     "./integration": "./src/integration.ts",

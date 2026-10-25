@@ -156,26 +156,9 @@ export type Path = {
   directory: string
 }
 
-export type Workspace = {
-  id: string
-  type: string
-  name: string
-  branch?: string | null
-  directory?: string | null
-  extra?: unknown | null
-  projectID: string
-  timeUsed: number | "NaN" | "Infinity" | "-Infinity"
-}
-
 export type ProjectDirectories = Array<{
   directory: string
   strategy?: string
-}>
-
-export type ExperimentalWorkspaceAdapterListResponse = Array<{
-  type: string
-  name: string
-  description: string
 }>
 
 export type ProviderAuthMethod = {

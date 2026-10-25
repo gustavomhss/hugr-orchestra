@@ -60,6 +60,8 @@ export interface KeyMethod extends Schema.Schema.Type<typeof KeyMethod> {}
 export const KeyMethod = Schema.Struct({
   type: Schema.Literal("key"),
   label: optional(Schema.String),
+  /** Values asked before the key; their answers are stored as the credential's metadata. */
+  prompts: optional(Schema.Array(Prompt)),
 }).annotate({ identifier: "Integration.KeyMethod" })
 
 export interface EnvMethod extends Schema.Schema.Type<typeof EnvMethod> {}
