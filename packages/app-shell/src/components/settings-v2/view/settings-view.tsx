@@ -1,7 +1,7 @@
 import { ProviderIcon } from "@orchestra/ui/provider-icon"
 import { useSearchParams } from "@solidjs/router"
 import { createMemo, createSignal, For, Match, Show, Switch } from "solid-js"
-import { reconcile, unwrap } from "solid-js/store"
+import { reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useModels } from "@/context/models"
 import { serverName, type ServerConnection } from "@/context/server"
@@ -22,6 +22,7 @@ import {
   PERMISSION_TOOLS,
   permissionAction,
   permissionLock,
+  permissionRules,
   permissionWrite,
   SETTINGS_SECTIONS,
   settingsSection,
@@ -142,20 +143,18 @@ export function SettingsView(props: { server: ServerConnection.Any; directory: s
 function PermissionsSection() {
   const language = useLanguage()
   const serverSync = useServerSync()
-  // Tool defaults live in the server's global config, which only the v1 API reads and writes.
-  const editable = () => false
+  const rules = () => permissionRules(serverSync().data.config.permissions)
   const set = (tool: PermissionTool, action: PermissionAction) => {
-    const current = serverSync().data.config.permission
+    const current = rules()
     if (permissionAction(current, tool) === action) return
     const result = permissionWrite(current, tool, action)
     if ("locked" in result) return
-    // The store merges objects in place, so keep a detached copy to restore.
-    const before = current === undefined ? undefined : structuredClone(unwrap(current))
-    serverSync().set("config", "permission", reconcile(result.next))
+    // permissionRules returns fresh objects, so `current` stays a detached copy to restore.
+    serverSync().set("config", "permissions", reconcile(result.next))
     serverSync()
-      .updateConfig({ permission: result.next })
+      .updateConfig({ permissions: result.next })
       .catch((err: unknown) => {
-        serverSync().set("config", "permission", before === undefined ? undefined : reconcile(before))
+        serverSync().set("config", "permissions", reconcile(current))
         showToast({
           title: language.t("settings.permissions.toast.updateFailed.title"),
           description: err instanceof Error ? err.message : String(err),
@@ -169,21 +168,18 @@ function PermissionsSection() {
       description={language.t("settings.permissions.description")}
     >
       <p class="settings-note">{language.t("orchestra.settings.permissions.scope")}</p>
-      <p class="settings-note" role="status">
-        {language.t("orchestra.settings.permissions.readOnly")}
-      </p>
       <div class="perm-table">
         <For each={PERMISSION_TOOLS}>
           {(tool) => {
-            const current = () => permissionAction(serverSync().data.config.permission, tool)
-            const lock = () => permissionLock(serverSync().data.config.permission, tool)
+            const current = () => permissionAction(rules(), tool)
+            const lock = () => permissionLock(rules(), tool)
             const title = () => language.t(`settings.permissions.tool.${tool}.title`)
             return (
               <div class="perm-tool" data-tool={tool} data-locked={lock()}>
                 <div>
                   <div class="tname">{title()}</div>
                   <div class="tdesc">{language.t(`settings.permissions.tool.${tool}.description`)}</div>
-                  <Show when={editable() && lock()}>
+                  <Show when={lock()}>
                     {(reason) => (
                       <div class="tnote" id={`perm-lock-${tool}`}>
                         {language.t(`orchestra.settings.permissions.locked.${reason()}`)}
@@ -194,8 +190,8 @@ function PermissionsSection() {
                 <PermissionSegment
                   label={title()}
                   value={current()}
-                  disabled={!editable() || !!lock()}
-                  describedBy={editable() && lock() ? `perm-lock-${tool}` : undefined}
+                  disabled={!!lock()}
+                  describedBy={lock() ? `perm-lock-${tool}` : undefined}
                   onChange={(action) => set(tool, action)}
                 />
               </div>

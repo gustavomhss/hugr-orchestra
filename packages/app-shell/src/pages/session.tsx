@@ -553,7 +553,10 @@ export default function Page() {
     return open
   }, desktopReviewOpen())
 
-  const turnDiffs = createMemo(() => list(lastUserMessage()?.summary?.diffs))
+  const turnDiffs = createMemo(() => {
+    const id = lastUserMessage()?.id
+    return list(id ? timeline.turnDiffs(id) : undefined)
+  })
   const nogit = createMemo(() => !!sync().project && sync().project?.vcs !== "git" && !!serverSDK().protocolKind())
   const changesOptions = createMemo<ChangeMode[]>(() => {
     const list: ChangeMode[] = []
@@ -1987,6 +1990,7 @@ export default function Page() {
                     if (root) scheduleScrollState(root)
                   }}
                   userMessages={visibleUserMessages()}
+                  turnDiffs={timeline.turnDiffs}
                   setHistoryAnchor={(handlers) => {
                     captureHistoryAnchor = handlers.capture
                     restoreHistoryAnchor = handlers.restore

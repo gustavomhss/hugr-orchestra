@@ -281,6 +281,7 @@ async function setup(page: Page, input: { atlas: boolean; requests: string[] }) 
       if (!input.atlas) return json(route, { error: "Not Found" }, 404)
       return atlas(route, location, path.split("/")[3] ?? "", path.split("/")[4] ?? "")
     }
+    if (path.startsWith("/api/atlas/")) return json(route, {}, 404)
     if (path === "/global/event" || path === "/event" || path === "/api/event")
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
     if (path === "/global/health") return json(route, { healthy: true }, 404)

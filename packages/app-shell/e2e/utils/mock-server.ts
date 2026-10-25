@@ -23,6 +23,8 @@ export interface MockServerConfig {
   beforeMessagesResponse?: (input: { sessionID: string; before?: string }) => Promise<void>
   onMessages?: (input: { sessionID: string; before?: string; phase: "start" | "end" }) => void
   message?: (sessionID: string, messageID: string) => unknown
+  // V2 per-turn diff (`GET /api/session/:id/message/:messageID/diff`); an unknown turn has none.
+  diffs?: (sessionID: string, messageID: string) => unknown[]
   onMessage?: (input: { sessionID: string; messageID: string }) => void
   onPrompt?: (input: { sessionID: string; body: unknown }) => void
   events?: () => unknown[]
@@ -115,7 +117,10 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       )
     if (path === "/vcs/diff" && config.vcsDiff) return json(route, config.vcsDiff)
     if (path === "/api/fs/list" && config.fileList)
-      return json(route, { location: location(config), data: await config.fileList(url.searchParams.get("path") ?? "") })
+      return json(route, {
+        location: location(config),
+        data: await config.fileList(url.searchParams.get("path") ?? ""),
+      })
     if (path === "/api/fs/read" && config.fileContent) {
       const file = (await config.fileContent(url.searchParams.get("path") ?? "")) as { content?: string }
       return route.fulfill({
@@ -181,6 +186,8 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       config.onConnectKey?.({ integrationID: integrationConnect, body: route.request().postDataJSON() })
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
+    if (path === "/api/location") return json(route, location(config))
+    if (path === "/api/location/paths") return json(route, { home: "C:/Orchestra" })
     if (path === "/api/project") return json(route, [config.project])
     // project.current resolves through the location route; the server has no /api/project/current.
     if (path === "/api/location") return json(route, location(config))
@@ -315,6 +322,13 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const period = url.searchParams.get("period") ?? "30d"
       return json(route, config.activity?.(period) ?? sessionActivity(config.sessions, period))
     }
+    if (path === "/api/activity/session") {
+      const period = url.searchParams.get("period") ?? "30d"
+      return json(route, {
+        location: location(config),
+        data: config.activity?.(period) ?? sessionActivity(config.sessions, period),
+      })
+    }
     if (path === "/vcs/activity")
       return json(route, {
         repository: true,
@@ -327,6 +341,22 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         ahead: null,
         behind: null,
         truncated: false,
+      })
+    if (path === "/api/vcs/activity")
+      return json(route, {
+        location: location(config),
+        data: {
+          repository: true,
+          since: Number(url.searchParams.get("since") ?? 0),
+          until: Number(url.searchParams.get("until") ?? Date.now()),
+          totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
+          days: [],
+          topPaths: [],
+          recent: [],
+          ahead: null,
+          behind: null,
+          truncated: false,
+        },
       })
 
     const currentSessionMatch = path.match(/^\/api\/session\/([^/]+)$/)
@@ -360,6 +390,9 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
     if (todoMatch) return json(route, config.todos?.(todoMatch[1]!) ?? [])
     if (/^\/session\/[^/]+\/(children|diff)$/.test(path)) return json(route, [])
 
+    const currentDiffMatch = path.match(/^\/api\/session\/([^/]+)\/message\/([^/]+)\/diff$/)
+    if (currentDiffMatch) return json(route, { data: config.diffs?.(currentDiffMatch[1]!, currentDiffMatch[2]!) ?? [] })
+
     const currentMessagesMatch = path.match(/^\/api\/session\/([^/]+)\/message$/)
     if (currentMessagesMatch) {
       const token = url.searchParams.get("cursor") ?? undefined
@@ -373,7 +406,7 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const cursor = pageData.cursor ? `cursor_${++nextCursor}` : undefined
       if (cursor) cursors.set(cursor, pageData.cursor!)
       return json(route, {
-        data: pageData.items.map(currentMessage).reverse(),
+        data: pageData.items.flatMap(currentMessage).reverse(),
         cursor: { next: cursor },
       })
     }
@@ -453,7 +486,8 @@ function location(config: MockServerConfig) {
 }
 
 // Serves a fixture's V1 provider catalog through the V2 provider, model and default model routes. Only
-// connected providers are listed, as the V2 server lists only the providers it can run.
+// connected providers are listed, as the V2 server lists only the providers it can run; a fixture without a
+// connected list connects all of them.
 function currentCatalog(value: unknown) {
   type LegacyModel = {
     id: string
@@ -470,7 +504,7 @@ function currentCatalog(value: unknown) {
     connected?: string[]
     default?: Record<string, string>
   }
-  const providers = (catalog.all ?? []).filter((provider) => catalog.connected?.includes(provider.id))
+  const providers = (catalog.all ?? []).filter((provider) => catalog.connected?.includes(provider.id) ?? true)
   const models = providers.flatMap((provider) =>
     Object.values(provider.models ?? {}).map((model) => ({
       id: model.id,
@@ -552,65 +586,135 @@ export function currentSession(session: { id: string } & Record<string, unknown>
   }
 }
 
-function currentMessage(value: unknown) {
+function currentMessage(value: unknown): unknown[] {
   const item = value as {
     info: Record<string, unknown> & { id: string; role: "user" | "assistant"; time: { created: number } }
     parts: Array<Record<string, unknown> & { type: string }>
   }
   if (item.info.role === "user") {
-    return {
-      id: item.info.id,
-      type: "user",
-      time: item.info.time,
-      text: item.parts
-        .flatMap((part) => (part.type === "text" && typeof part.text === "string" ? [part.text] : []))
-        .join("\n"),
-    }
+    const texts = item.parts.filter((part) => part.type === "text" && typeof part.text === "string")
+    return [
+      // V2 records a comment as its own synthetic message, just before the prompt it came with.
+      ...texts
+        .filter((part) => part.synthetic)
+        .map((part, index) => ({
+          id: `${item.info.id}_synthetic_${index}`,
+          type: "synthetic",
+          time: { created: item.info.time.created - 1 },
+          metadata: part.metadata,
+          text: part.text,
+          description: part.text,
+        })),
+      {
+        id: item.info.id,
+        type: "user",
+        time: item.info.time,
+        text: texts
+          .filter((part) => !part.synthetic)
+          .map((part) => part.text)
+          .join("\n"),
+        files: item.parts.flatMap((part) => {
+          if (part.type !== "file") return []
+          const url = String(part.url)
+          return [
+            {
+              data: url.startsWith("data:") ? (url.split("base64,")[1] ?? "") : "",
+              mime: part.mime,
+              name: part.filename,
+              source: url.startsWith("data:") ? { type: "inline" } : { type: "uri", uri: url },
+              mention: mention(part.source),
+            },
+          ]
+        }),
+        agents: item.parts.flatMap((part) =>
+          part.type === "agent" ? [{ name: part.name, mention: mention(part.source) }] : [],
+        ),
+      },
+    ]
   }
-  return {
-    id: item.info.id,
-    type: "assistant",
-    time: item.info.time,
-    agent: item.info.agent ?? "build",
-    model: { id: item.info.modelID ?? "model", providerID: item.info.providerID ?? "provider" },
-    cost: item.info.cost,
-    tokens: item.info.tokens,
-    error: item.info.error,
-    content: item.parts.flatMap<unknown>((part) => {
-      if (part.type === "text" || part.type === "reasoning") return [{ type: part.type, text: part.text ?? "" }]
-      if (part.type !== "tool") return []
-      const state = part.state as Record<string, unknown>
-      return [
-        {
-          type: "tool",
-          id: part.id,
-          name: part.tool,
-          time: toolTime(state.time, item.info.time.created),
-          state:
-            state.status === "pending"
-              ? { status: "streaming", input: state.raw ?? JSON.stringify(state.input ?? {}) }
-              : state.status === "completed"
-                ? {
-                    status: "completed",
-                    input: state.input ?? {},
-                    metadata: state.metadata ?? {},
-                    structured: state.metadata ?? {},
-                    content: [{ type: "text", text: state.output ?? "" }],
-                  }
-                : state.status === "error"
+  const compaction = item.parts.find((part) => part.type === "compaction")
+  const error = item.info.error as { name: string; data: { message: string } } | undefined
+  return [
+    // V2 records a compaction as its own turn; the assistant work after it replies to it.
+    ...(compaction
+      ? [
+          {
+            id: `${item.info.id}_compaction`,
+            type: "compaction",
+            status: "completed",
+            reason: compaction.auto ? "auto" : "manual",
+            summary: "",
+            recent: "",
+            time: { created: item.info.time.created - 1 },
+          },
+        ]
+      : []),
+    {
+      id: item.info.id,
+      type: "assistant",
+      time: item.info.time,
+      agent: item.info.agent ?? "build",
+      model: { id: item.info.modelID ?? "model", providerID: item.info.providerID ?? "provider" },
+      cost: item.info.cost,
+      tokens: item.info.tokens,
+      // V1 { name, data: { message } } becomes V2 { type, message }.
+      error: error ? { type: error.name, message: error.data.message } : undefined,
+      content: item.parts.flatMap<unknown>((part) => {
+        if (part.type === "text" || part.type === "reasoning") return [{ type: part.type, text: part.text ?? "" }]
+        if (part.type !== "tool") return []
+        const state = part.state as Record<string, unknown>
+        return [
+          {
+            type: "tool",
+            id: part.id,
+            name: part.tool,
+            time: toolTime(state.time, item.info.time.created),
+            state:
+              state.status === "pending"
+                ? { status: "streaming", input: state.raw ?? JSON.stringify(state.input ?? {}) }
+                : state.status === "completed"
                   ? {
-                      status: "error",
+                      status: "completed",
                       input: state.input ?? {},
                       metadata: state.metadata ?? {},
                       structured: state.metadata ?? {},
-                      content: [],
-                      error: { type: "ToolError", message: state.error ?? "Tool failed" },
+                      content: [{ type: "text", text: state.output ?? "" }],
                     }
-                  : { status: "running", input: state.input ?? {}, metadata: state.metadata ?? {} },
-        },
-      ]
-    }),
+                  : state.status === "error"
+                    ? {
+                        status: "error",
+                        input: state.input ?? {},
+                        metadata: state.metadata ?? {},
+                        structured: state.metadata ?? {},
+                        content: [],
+                        error: { type: "ToolError", message: state.error ?? "Tool failed" },
+                      }
+                    : {
+                        status: "running",
+                        input: state.input ?? {},
+                        metadata: state.metadata ?? {},
+                        structured: state.metadata ?? {},
+                        content: [],
+                      },
+          },
+        ]
+      }),
+    },
+  ]
+}
+
+// V1 sources are { value, start, end } for agents and { text: { value, start, end } } for files; V2 mentions are
+// { text, start, end }.
+function mention(value: unknown) {
+  const source = value as {
+    value?: string
+    start?: number
+    end?: number
+    text?: { value: string; start: number; end: number }
   }
+  const found = source?.text ?? source
+  if (typeof found?.value !== "string" || found.start === undefined || found.end === undefined) return undefined
+  return { text: found.value, start: found.start, end: found.end }
 }
 
 // The fixtures write V1 tool times ({start, end}); V2 records {created, completed}.

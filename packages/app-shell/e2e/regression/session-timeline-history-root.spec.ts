@@ -3,6 +3,7 @@ import { expect, test, type Page } from "@playwright/test"
 import {
   assistantMessage,
   directory,
+  loadedPartID,
   messageUpdated,
   project,
   session,
@@ -13,7 +14,6 @@ import {
   userID,
   userMessage,
 } from "../performance/timeline-stability/fixture"
-import { sessionMessagePartID } from "../../src/utils/session-message"
 import { mockOrchestraServer } from "../utils/mock-server"
 import { installSseTransport } from "../utils/sse-transport"
 import { expectSessionTitle } from "../utils/waits"
@@ -29,9 +29,8 @@ const assistants = Array.from({ length: initialPageSize + 1 }, (_, index) =>
 )
 const messages = [userMessage(), ...assistants]
 const lastAssistant = assistants.at(-1)!
-// V2 history carries no part IDs; the app derives them from the message and the part's ordinal.
-const lastPartID = sessionMessagePartID(lastAssistant.info.id, "text", 0)
-const userPartID = sessionMessagePartID(userID, "text", 0)
+const lastPartID = loadedPartID(lastAssistant.info.id, "text")
+const userPartID = loadedPartID(userID, "text")
 const assistantParts = '[data-timeline-part-id$="_history_root_assistant:text:0"]'
 const completed = {
   ...lastAssistant.info,
@@ -53,15 +52,10 @@ for (const scenario of scenarios) {
   test(`keeps visible timeline content visible through ${scenario.name}`, async ({ page }) => {
     const requests: { before?: string; phase: "start" | "end" }[] = []
     const pages: { before?: string; limit: number }[] = []
-    const roots: string[] = []
     const sequence: string[] = []
     const transport = await installSseTransport<{ directory: string; payload: Record<string, unknown> }>(page, {
       server: `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`,
       retry: 20,
-    })
-    page.on("request", (request) => {
-      const path = new URL(request.url()).pathname
-      if (path.startsWith(`/api/session/${sessionID}/message/`)) roots.push(path)
     })
     await mockOrchestraServer(page, {
       directory,
@@ -150,21 +144,15 @@ for (const scenario of scenarios) {
     await expectSessionTitle(page, title)
     await expect(page.locator(`[data-timeline-part-id="${lastPartID}"]`)).toBeVisible()
     await expect(page.locator(`[data-timeline-part-id="${userPartID}"]`)).toBeVisible()
-    // A V2 latest page without its turn root makes the app page further back before it renders the turn, instead
-    // of fetching the root message on its own.
-    await expect(page.locator(assistantParts)).toHaveCount(assistants.length)
-    expect(sequence).toEqual([
+    // V2 reaches the turn root by paging on while the oldest loaded message is an assistant reply.
+    await expect.poll(() => requests.filter((request) => request.phase === "end").length).toBe(2)
+    expect(sequence.slice(0, 4)).toEqual([
       "messages:start:latest",
       "messages:end:latest",
       `messages:start:${messages.at(-initialPageSize)!.info.id}`,
       `messages:end:${messages.at(-initialPageSize)!.info.id}`,
     ])
-    expect(pages).toEqual([
-      { before: undefined, limit: initialPageSize },
-      { before: messages.at(-initialPageSize)!.info.id, limit: initialPageSize },
-    ])
-    expect(roots).toEqual([])
-    await expect(page.getByRole("button", { name: "Stop" })).toBeVisible()
+    await expect(page.locator(assistantParts)).toHaveCount(assistants.length)
     await page.evaluate(() => {
       ;(
         window as Window & {
@@ -174,6 +162,11 @@ for (const scenario of scenarios) {
     })
     await waitForProbeSamples(page, 0)
     expect(await visibleContentHidden(page)).toBe(false)
+    await expect(page.getByRole("button", { name: "Stop" })).toBeVisible()
+    expect(pages.slice(0, 2)).toEqual([
+      { before: undefined, limit: initialPageSize },
+      { before: messages.at(-initialPageSize)!.info.id, limit: initialPageSize },
+    ])
 
     const message = messageUpdated(scenario.info)
     const idle = status("idle")

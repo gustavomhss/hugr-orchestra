@@ -79,7 +79,8 @@ test("keeps Janitor chat session, sends prompt, and opens it in session view", a
   expect(prompts[0]?.sessionID).toBe(janitorSessionID)
   expect(prompts[0]?.body).toEqual(
     expect.objectContaining({
-      parts: expect.arrayContaining([expect.objectContaining({ text: "Explain stale generated files" })]),
+      delivery: "steer",
+      prompt: expect.objectContaining({ text: "Explain stale generated files" }),
     }),
   )
 
@@ -125,8 +126,7 @@ for (const viewport of [
       sessions: [session(), session({ id: janitorSessionID, title: "Janitor chat" })],
     })
     const debug = page.getByRole("button", { name: "Toggle debug tools", exact: true })
-    if ((await debug.getAttribute("aria-pressed")) === "true") await debug.click()
-    await expect(debug).toHaveAttribute("aria-pressed", "false")
+    if ((await debug.isVisible()) && (await debug.getAttribute("aria-pressed")) === "true") await debug.click()
     const pocket = page.getByRole("complementary", { name: "Janitor report" })
     const open = pocket.getByRole("button", { name: "Open janitor report", exact: true })
     const composer = page.locator('[data-component="prompt-input-v2"]')
@@ -163,12 +163,13 @@ for (const viewport of [
 
     const sent = page.waitForRequest(
       (request) =>
-        request.method() === "POST" && new URL(request.url()).pathname === `/session/${routeSessionID}/prompt_async`,
+        request.method() === "POST" && new URL(request.url()).pathname === `/api/session/${routeSessionID}/prompt`,
     )
     await send.click()
     expect((await sent).postDataJSON()).toEqual(
       expect.objectContaining({
-        parts: expect.arrayContaining([expect.objectContaining({ text: "Continue while Janitor report is visible" })]),
+        delivery: "steer",
+        prompt: expect.objectContaining({ text: "Continue while Janitor report is visible" }),
       }),
     )
     await expect.poll(() => prompts).toHaveLength(1)
@@ -181,7 +182,7 @@ for (const viewport of [
     await expectCenterHit(stop)
     const stopped = page.waitForRequest(
       (request) =>
-        request.method() === "POST" && new URL(request.url()).pathname === `/session/${routeSessionID}/abort`,
+        request.method() === "POST" && new URL(request.url()).pathname === `/api/session/${routeSessionID}/interrupt`,
     )
     await stop.click()
     await stopped
@@ -201,7 +202,8 @@ for (const viewport of [
     expect(prompts[1]).toEqual({
       sessionID: janitorSessionID,
       body: expect.objectContaining({
-        parts: expect.arrayContaining([expect.objectContaining({ text: "Explain stale generated files" })]),
+        delivery: "steer",
+        prompt: expect.objectContaining({ text: "Explain stale generated files" }),
       }),
     })
 

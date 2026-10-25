@@ -27,21 +27,49 @@ async function setup(page: Page, scheme = "dark") {
     sessions: [],
     pageMessages: () => ({ items: [] }),
   })
+  const headers = { "access-control-allow-origin": "*" }
   await page.route(
     (url) => url.origin === serverA && url.pathname === "/api/project",
-    (route) => route.fulfill({ json: projects }),
+    (route) => route.fulfill({ json: projects, headers }),
   )
+  // Server B is a second V2 server with its own project; the shared mock answers only server A's port.
   await page.route(`${serverB}/**`, async (route) => {
     const path = new URL(route.request().url()).pathname
+    if (path === "/api/event") return route.fulfill({ contentType: "text/event-stream", body: ": ok\n\n", headers })
     const location = { directory, project: { id: remoteProjects[0].id, directory } }
-    if (path === "/api/event") return route.fulfill({ contentType: "text/event-stream", body: ": ok\n\n" })
-    if (path === "/api/health") return route.fulfill({ json: { healthy: true, version: "2.0.0", pid: 2 } })
-    if (path === "/api/project") return route.fulfill({ json: remoteProjects })
-    if (path === "/api/session") return route.fulfill({ json: { data: [], cursor: {} } })
-    if (path === "/api/session/active") return route.fulfill({ json: { data: {} } })
-    if (path === "/api/mcp/resource") return route.fulfill({ json: { location, data: { resources: [], templates: [] } } })
-    if (path.startsWith("/api/")) return route.fulfill({ json: { location, data: [] } })
-    return route.fulfill({ status: 404, json: { name: "NotFound" } })
+    const lists = ["/api/provider", "/api/model", "/api/agent", "/api/command", "/api/mcp", "/api/reference"]
+    const data =
+      path === "/api/health"
+        ? { healthy: true, version: "2.0.0", pid: 1 }
+        : path === "/api/project"
+          ? remoteProjects
+          : path === "/api/model/default"
+            ? { location, data: null }
+            : lists.includes(path) || path.endsWith("/request")
+              ? { location, data: [] }
+              : path === "/api/session"
+                ? { data: [], cursor: {} }
+                : path === "/api/session/active"
+                  ? { data: {} }
+                  : {}
+    return route.fulfill({ json: data, headers })
+  })
+  // Each server resolves only its own repositories.
+  await page.route("**/*", (route) => {
+    const url = new URL(route.request().url())
+    if (![serverA, serverB].includes(url.origin) || !["/api/location", "/api/project/current"].includes(url.pathname))
+      return route.fallback()
+    const project = (url.origin === serverB ? remoteProjects : projects).find(
+      (item) => item.worktree === (url.searchParams.get("location[directory]") ?? directory),
+    )
+    if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" }, headers })
+    return route.fulfill({
+      json:
+        url.pathname === "/api/project/current"
+          ? { id: project.id, directory: project.worktree }
+          : { directory: project.worktree, project: { id: project.id, directory: project.worktree } },
+      headers,
+    })
   })
   await page.addInitScript(
     ({ serverA, serverB, scheme }) => {
@@ -290,6 +318,17 @@ test("both directory and server switches start empty; switching back and reloadi
   await page.reload()
   await expect(page.locator('[data-env-key="TOKEN"]')).toHaveCount(0)
   await privateValues(page, requests)
+  // Env A2 belongs only to server A; server B must not silently substitute its own project.
+  for (const input of [
+    { origin: serverA, directory: "/env-unknown" },
+    { origin: serverB, directory: "/env-second" },
+  ]) {
+    for (const path of ["/api/location", "/api/project/current"]) {
+      const response = await page.goto(`${input.origin}${path}?${new URLSearchParams({ "location[directory]": input.directory })}`)
+      expect(response?.status()).toBe(404)
+      expect(await response?.json()).toEqual({ name: "NotFound" })
+    }
+  }
 })
 
 test("invalid UTF-8 import reports an error and preserves the current document", async ({ page }) => {

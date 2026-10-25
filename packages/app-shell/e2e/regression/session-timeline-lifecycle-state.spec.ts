@@ -73,12 +73,22 @@ test("transitions thinking and hidden reasoning through busy to idle", async ({ 
 
 test("moves busy through retry and recovery to final idle content", async ({ page }) => {
   const assistant = assistantMessage([], { completed: false })
-  const timeline = await setupTimeline(page, {
-    // V2 records no per-turn diffs, so this turn has no DiffSummary row to time against idle.
-    messages: [userMessage(), assistant],
+  const user = userMessage(undefined, {
+    summary: {
+      diffs: [
+        {
+          file: "src/retry.ts",
+          additions: 1,
+          deletions: 1,
+          patch: "@@ -1 +1 @@\n-export const retry = false\n+export const retry = true",
+        },
+      ],
+    },
   })
+  const timeline = await setupTimeline(page, { messages: [user, assistant] })
   await timeline.send(status("busy"), 140)
   await expect(page.locator('[data-timeline-row="Thinking"]')).toBeVisible()
+  await expect(page.locator('[data-timeline-row="DiffSummary"]')).toHaveCount(0)
   await timeline.send(status("retry"), 180)
   await expect(page.locator('[data-timeline-row="Retry"]')).toBeVisible()
   await expect(page.locator('[data-timeline-row="Thinking"]')).toHaveCount(0)
@@ -89,7 +99,7 @@ test("moves busy through retry and recovery to final idle content", async ({ pag
   await timeline.send(status("idle"), 350)
   await expect(page.locator('[data-timeline-row="Retry"]')).toHaveCount(0)
   await expect(page.locator('[data-timeline-row="Thinking"]')).toHaveCount(0)
-  await expect(page.getByText("Recovered response", { exact: true })).toBeVisible()
+  await expect(page.locator('[data-timeline-row="DiffSummary"]')).toBeVisible()
 })
 
 function lines(count: number) {

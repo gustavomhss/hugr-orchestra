@@ -62,7 +62,7 @@ test("keeps the file-browser sidebar mounted when switching file tabs", async ({
 
 test("keeps previous file search results visible while the next search loads", async ({ page }) => {
   const searchPending = Promise.withResolvers<void>()
-  await setup(page, async (query) => {
+  await setup(page, async ({ query }) => {
     if (query === "file-0") return ["file-00.ts"]
     if (query === "file-7") {
       await searchPending.promise
@@ -107,7 +107,10 @@ async function readProbe(page: Page) {
     .evaluate((el) => (el as Probed).__e2eProbe)
 }
 
-async function setup(page: Page, findFiles?: (query: string) => string[] | Promise<string[]>) {
+async function setup(
+  page: Page,
+  findFiles?: (input: { query: string; dirs?: string; limit?: number }) => unknown | Promise<unknown>,
+) {
   await mockOrchestraServer(page, {
     directory,
     project: {
@@ -154,24 +157,18 @@ async function setup(page: Page, findFiles?: (query: string) => string[] | Promi
     fileContent: (path) => ({ type: "text", content: `contents:${path}` }),
     pageMessages: () => ({ items: [] }),
   })
-  // The shared mock does not serve the V2 file search yet.
+  // The V2 app searches through /api/fs/find, which answers file entries inside a Location envelope.
   if (findFiles)
-    await page.route(
-      (url) => url.pathname === "/api/fs/find",
-      async (route) => {
-        const query = new URL(route.request().url()).searchParams.get("query") ?? ""
-        const paths = await findFiles(query)
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          headers: { "access-control-allow-origin": "*" },
-          body: JSON.stringify({
-            location: { directory, project: { id: projectID, directory } },
-            data: paths.map((path) => ({ path, type: "file" })),
-          }),
-        })
-      },
-    )
+    await page.route(/\/api\/fs\/find\?/, async (route) => {
+      const url = new URL(route.request().url())
+      const found = (await findFiles({ query: url.searchParams.get("query") ?? "" })) as string[]
+      return route.fulfill({
+        json: {
+          location: { directory, project: { id: projectID, directory } },
+          data: found.map((path) => ({ path, type: "file" })),
+        },
+      })
+    })
 
   await page.addInitScript(
     ({ directory, server, sessionID }) => {

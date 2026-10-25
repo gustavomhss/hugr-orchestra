@@ -247,19 +247,21 @@ test("SPA navigation disposes pending document and return cannot restore stale d
     ],
     sessions: [session(), session({ id: researchSessionID, parentID: sessionID, title: destinationTitle })],
   })
-  const destination = userMessage(
-    [{ id: "prt_destination", type: "text", text: "Navigation destination ready" }],
-    { id: "msg_research_destination" },
-  )
-  await page.route(new RegExp(`/session/${researchSessionID}/message(?:\\?|$)`), (route) =>
+  await page.route(new RegExp(`/api/session/${researchSessionID}/message(?:\\?|$)`), (route) =>
     route.fulfill({
       contentType: "application/json",
       headers: { "access-control-allow-origin": "*" },
-      body: JSON.stringify([{
-        ...destination,
-        info: { ...destination.info, sessionID: researchSessionID },
-        parts: destination.parts.map((part) => ({ ...part, sessionID: researchSessionID })),
-      }]),
+      body: JSON.stringify({
+        data: [
+          {
+            id: "msg_research_destination",
+            type: "user",
+            text: "Navigation destination ready",
+            time: { created: 1700000000000 },
+          },
+        ],
+        cursor: {},
+      }),
     }),
   )
   const requests = await mockResearchArtifacts(page, [document], { beforeReply: () => held.promise })

@@ -544,9 +544,9 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
         })),
       ])
     if (/^\/experimental\/project\/[^/]+\/copy$/.test(url.pathname)) return copy(route, request.method(), list)
-    if (url.pathname === "/project/current") return json(route, current)
-    if (url.pathname === "/api/location") return json(route, { directory: root, project: { id: current.id, directory: root } })
     const directory = requestDirectory(url) ?? root
+    // Every copy resolves to the repository's project, as the V2 location route does for a project directory.
+    if (url.pathname === "/api/location") return json(route, { directory, project: { id: current.id, directory: root } })
     if (url.pathname === "/api/path" || url.pathname === "/path")
       return json(route, { state: root, config: root, worktree: root, directory, home: "/home/test" })
     if (url.pathname === "/provider")

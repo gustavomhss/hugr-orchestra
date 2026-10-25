@@ -159,7 +159,7 @@ test("a server without the Relay routes says so on both chapters", async ({ page
 
 test("outside git the library refuses new workflows and says why, even on the New workflow route", async ({ page }) => {
   await setupRelay(page)
-  // Every folder outside git resolves to the one global project those folders share.
+  // Every folder outside git resolves to the one global project those folders share; V2 names it in the location.
   await page.route("**/api/location**", (route) =>
     route.fulfill({ json: { directory, project: { id: "global", directory: "/" } } }),
   )

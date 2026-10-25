@@ -24,6 +24,8 @@ export type LocationGetOutput = {
   readonly project: { readonly id: string; readonly directory: string }
 }
 
+export type LocationPathsOutput = { readonly home: string }
+
 export type AgentsListInput = {
   readonly location?: {
     readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
@@ -939,6 +941,21 @@ export type SessionsTodoOutput = {
 export type SessionsWaitInput = { readonly sessionID: { readonly sessionID: string }["sessionID"] }
 
 export type SessionsWaitOutput = void
+
+export type SessionsDiffInput = {
+  readonly sessionID: { readonly sessionID: string; readonly messageID: string }["sessionID"]
+  readonly messageID: { readonly sessionID: string; readonly messageID: string }["messageID"]
+}
+
+export type SessionsDiffOutput = {
+  readonly data: ReadonlyArray<{
+    readonly path: string
+    readonly status: "added" | "modified" | "deleted"
+    readonly additions: number
+    readonly deletions: number
+    readonly patch: string
+  }>
+}["data"]
 
 export type SessionsStageInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
@@ -2985,6 +3002,63 @@ export type McpResourcesOutput = {
   }
 }
 
+export type McpConfigInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpConfigOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly [x: string]: {
+      readonly type?: "local" | "remote"
+      readonly command?: ReadonlyArray<string>
+      readonly url?: string
+    }
+  }
+}
+
+export type McpEntriesInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpEntriesOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: {
+    readonly [x: string]: {
+      readonly type?: "local" | "remote"
+      readonly command?: ReadonlyArray<string>
+      readonly url?: string
+    }
+  }
+}
+
+export type McpToolsInput = {
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+}
+
+export type McpToolsOutput = {
+  readonly location: {
+    readonly directory: string
+    readonly workspaceID?: string
+    readonly project: { readonly id: string; readonly directory: string }
+  }
+  readonly data: { readonly [x: string]: ReadonlyArray<string> }
+}
+
 export type McpAddInput = {
   readonly server: { readonly server: string }["server"]
   readonly location?: {
@@ -4973,6 +5047,11 @@ export type ConfigGetOutput = {
   readonly shell?: string | undefined
   readonly agents: { readonly [x: string]: { readonly engine: "orchestra" | "claude-code" } }
   readonly disabledProviders: ReadonlyArray<string>
+  readonly permissions: ReadonlyArray<{
+    readonly action: string
+    readonly resource: string
+    readonly effect: "allow" | "deny" | "ask"
+  }>
 }
 
 export type ConfigUpdateInput = {
@@ -4994,6 +5073,9 @@ export type ConfigUpdateInput = {
           }
         }
       | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
+      | undefined
   }["model"]
   readonly shell?: {
     readonly model?: string | undefined
@@ -5012,6 +5094,9 @@ export type ConfigUpdateInput = {
             readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
           }
         }
+      | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
       | undefined
   }["shell"]
   readonly agents?: {
@@ -5032,6 +5117,9 @@ export type ConfigUpdateInput = {
           }
         }
       | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
+      | undefined
   }["agents"]
   readonly disabledProviders?: {
     readonly model?: string | undefined
@@ -5050,6 +5138,9 @@ export type ConfigUpdateInput = {
             readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
           }
         }
+      | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
       | undefined
   }["disabledProviders"]
   readonly providers?: {
@@ -5070,7 +5161,32 @@ export type ConfigUpdateInput = {
           }
         }
       | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
+      | undefined
   }["providers"]
+  readonly permissions?: {
+    readonly model?: string | undefined
+    readonly shell?: string | undefined
+    readonly agents?:
+      | { readonly [x: string]: { readonly engine?: "orchestra" | "claude-code" | undefined } }
+      | undefined
+    readonly disabledProviders?: ReadonlyArray<string> | undefined
+    readonly providers?:
+      | {
+          readonly [x: string]: {
+            readonly name?: string | undefined
+            readonly env?: ReadonlyArray<string> | undefined
+            readonly api: { readonly type: "aisdk"; readonly package: string; readonly url?: string | undefined }
+            readonly request?: { readonly headers?: { readonly [x: string]: string } | undefined } | undefined
+            readonly models?: { readonly [x: string]: { readonly name?: string | undefined } } | undefined
+          }
+        }
+      | undefined
+    readonly permissions?:
+      | ReadonlyArray<{ readonly action: string; readonly resource: string; readonly effect: "allow" | "deny" | "ask" }>
+      | undefined
+  }["permissions"]
 }
 
 export type ConfigUpdateOutput = void

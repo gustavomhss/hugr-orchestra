@@ -4,8 +4,6 @@ import { expectAppVisible } from "../utils/waits"
 
 const directory = "C:\\Orchestra\\NewProject"
 const serverPort = process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"
-// Child folders of each listed folder, in the server's forward-slash form.
-const folders: Record<string, string[]> = { "C:/": ["Orchestra"], "C:/Orchestra": ["NewProject"] }
 const project = {
   id: "proj_git_init",
   worktree: directory,
@@ -14,7 +12,7 @@ const project = {
   time: { created: 1_700_000_000_000, updated: 1_700_000_000_000 },
   sandboxes: [],
 }
-const readme = { path: "README.md", type: "file" }
+const readme = { name: "README.md", path: "README.md", absolute: `${directory}\\README.md`, type: "file", ignored: false }
 
 // Adding a folder lists its root ("."). An empty root asks whether to set up git before the project is read back;
 // a root with files never asks. `root` is what the mocked server answers for that listing.
@@ -31,23 +29,25 @@ async function openMockedApp(page: Page, root: unknown[]) {
     provider: { all: [], connected: [], default: {} },
     sessions: [],
     pageMessages: () => ({ items: [] }),
-  })
-  // Registered after the shared mock so these run first. The shared folder listing cannot tell folders apart, and it
-  // has no git init route; the real one answers with the refreshed project.
-  await page.route(
-    (url) => url.port === serverPort && (url.pathname === "/api/fs/list" || url.pathname === "/api/project/git"),
-    (route) => {
-      const url = new URL(route.request().url())
-      const folder = (url.searchParams.get("location[directory]") ?? "").replaceAll("\\", "/")
-      const location = { directory: folder, project: { id: project.id, directory: folder } }
-      const headers = { "access-control-allow-origin": "*" }
-      if (url.pathname === "/api/project/git") return route.fulfill({ json: { location, data: project }, headers })
-      const data =
-        folder === "C:/Orchestra/NewProject" && url.searchParams.get("path") === "."
-          ? root
-          : (folders[folder] ?? []).map((name) => ({ path: name, type: "directory" }))
-      return route.fulfill({ json: { location, data }, headers })
+    fileList: (path) => {
+      if (path === ".") return root
+      return path
+        ? []
+        : [{ name: "NewProject", path: "NewProject", absolute: directory, type: "directory", ignored: false }]
     },
+    findFiles: () => ["NewProject"],
+  })
+  // The shared mock has no git init route; the real one answers with the refreshed project. Registered after the
+  // mock so it runs first for this one URL.
+  await page.route(
+    (url) => url.port === serverPort && url.pathname === "/api/project/git",
+    (route) =>
+      route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ location: { directory, project: { id: project.id, directory } }, data: project }),
+      }),
   )
   await page.addInitScript(() => {
     localStorage.setItem("language.v1", JSON.stringify({ locale: "en" }))
@@ -61,11 +61,11 @@ async function openMockedApp(page: Page, root: unknown[]) {
       requests
         .filter((request) => request.method === "POST" && request.path === "/api/project/git")
         .map((request) => request.directory),
-    // Reads of the folder's existing project: the step an unconfirmed folder takes instead of initializing.
+    // Reads of the folder's existing project: the step an unconfirmed folder takes instead of initializing. V2
+    // resolves the project from the location route.
     lookups: () =>
       requests.filter(
-        (request) =>
-          request.method === "GET" && request.path === "/api/location" && request.directory === directory,
+        (request) => request.method === "GET" && request.path === "/api/location" && request.directory === directory,
       ).length,
   }
 }
@@ -86,8 +86,6 @@ async function chooseFolder(page: Page) {
   await expect(addProject).toHaveCount(1)
   await expectAppVisible(addProject)
   await addProject.click()
-  // A V2 server reports no home folder, so the picker lists nothing until the person types a path.
-  await page.getByRole("dialog").getByRole("combobox", { name: "Search folders", exact: true }).fill(directory)
   const folder = page.getByRole("dialog").locator(`[data-directory-path=${JSON.stringify(directory)}]`)
   await expect(folder).toHaveCount(1)
   await folder.click()

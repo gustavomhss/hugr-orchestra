@@ -173,7 +173,11 @@ describe("project and config routes", () => {
             experimental: { policies: [{ action: "provider.use", effect: "deny", resource: "openai" }] },
           })
           const read = yield* server.request("/api/config")
-          expect(yield* Effect.promise(() => read.json())).toEqual({ agents: {}, disabledProviders: ["openai"] })
+          expect(yield* Effect.promise(() => read.json())).toEqual({
+            agents: {},
+            disabledProviders: ["openai"],
+            permissions: [],
+          })
         }),
       ),
     ))

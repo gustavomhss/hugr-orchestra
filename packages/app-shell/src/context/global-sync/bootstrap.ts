@@ -89,11 +89,16 @@ function showErrors(input: {
   })
 }
 
+/** The global settings the app reads, plus the server's ordered tool permission rules, which V1's `Config` lacks. */
+export type GlobalConfig = Config & {
+  permissions?: ReadonlyArray<{ action: string; resource: string; effect: "allow" | "ask" | "deny" }>
+}
+
 export const loadGlobalConfigQuery = (
   scope: ServerScope,
   sdk: ServerSdk,
   protocol?: Promise<ServerProtocol>,
-  readV2?: () => Promise<Config>,
+  readV2?: () => Promise<GlobalConfig>,
 ) =>
   queryOptions({
     queryKey: [scope, "config"],
@@ -107,6 +112,7 @@ type ProjectApi = ServerApi["project"]
 /** The provider and model groups of the current API. */
 export type CatalogApi = Pick<ServerApi, "provider" | "model">
 
+type LocationApi = ServerApi["location"]
 type McpApi = ServerApi["mcp"]
 type PermissionApi = ServerApi["permission"]
 type QuestionApi = ServerApi["question"]
@@ -131,7 +137,7 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
 export async function bootstrapGlobal(input: {
   serverSDK: ServerSdk
   readV2Config?: () => Promise<Config>
-  serverAPI: CatalogApi & { readonly project: ProjectApi }
+  serverAPI: CatalogApi & { readonly location: LocationApi; readonly project: ProjectApi }
   protocol?: Promise<ServerProtocol>
   scope: ServerScope
   requestFailedTitle: string
@@ -149,7 +155,7 @@ export async function bootstrapGlobal(input: {
       input.queryClient.fetchQuery(
         loadProvidersQuery(input.scope, null, input.serverAPI, input.serverSDK, input.protocol),
       ),
-    () => input.queryClient.fetchQuery(loadPathQuery(input.scope, null, input.serverSDK, input.protocol)),
+    () => input.queryClient.fetchQuery(loadPathQuery(input.scope, null, input.serverAPI.location)),
     () =>
       input.queryClient
         .fetchQuery(loadProjectsQuery(input.scope, input.serverAPI.project))
@@ -310,18 +316,15 @@ export const loadCommands = (
     return api.list({ location: { directory } }).then((result) => result.data)
   })
 
-export const loadPathQuery = (
-  scope: ServerScope,
-  directory: string | null,
-  sdk: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
-) =>
+export const loadPathQuery = (scope: ServerScope, directory: string | null, api: LocationApi) =>
   queryOptions<Path>({
     queryKey: [scope, directory, "path"],
-    queryFn: async () => {
-      return { state: "", config: "", worktree: "", directory: directory ?? "", home: "" }
-      return retry(() => sdk.path.get({ directory: directory ?? undefined }).then((result) => result.data!))
-    },
+    queryFn: () =>
+      retry(() => api.paths())
+        // Without a home the folder picker still opens; a failed read must not break bootstrap.
+        .then((result) => result.home)
+        .catch(() => "")
+        .then((home) => ({ state: "", config: "", worktree: "", directory: directory ?? "", home })),
   })
 
 export const loadReferencesQuery = (
@@ -428,7 +431,7 @@ export async function bootstrapDirectory(input: {
       !seededPath &&
         (() =>
           input.queryClient
-            .ensureQueryData(loadPathQuery(input.scope, input.directory, input.sdk, input.protocol))
+            .ensureQueryData(loadPathQuery(input.scope, input.directory, input.api.location))
             .then((data) => {
               const next = projectID(data.directory ?? input.directory, input.global.project)
               if (next) input.setStore("project", next)

@@ -2,7 +2,7 @@ import { parseCommentNote, readCommentMetadata } from "@/utils/comment-note"
 import type { SessionMessageInfo } from "@/v2-legacy"
 
 
-import type { Part, SessionStatus, UserMessage } from "@/v2-wire"
+import type { Part, SessionStatus, SnapshotFileDiff, UserMessage } from "@/v2-wire"
 
 import type { AssistantMessage } from "@/v2-wire"
 import { groupParts, renderable, type PartGroup } from "@orchestra/session-ui/message-part"
@@ -38,6 +38,7 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     projectedUserMessages: UserMessage[],
+    turnDiffs: (userMessageID: string) => SnapshotFileDiff[] | undefined,
   ) {
     const turns: { user: UserMessage; assistants: AssistantMessage[] }[] = []
     const turnByUserID = new Map<string, (typeof turns)[number]>()
@@ -112,6 +113,7 @@ export namespace Timeline {
           showReasoning,
           status,
           turn.user.id === activeMessageID,
+          turnDiffs(turn.user.id),
         ),
       ),
     }
@@ -125,6 +127,7 @@ export namespace Timeline {
     showReasoning: boolean,
     status: SessionStatus["type"],
     isActive: boolean,
+    turnDiffs: SnapshotFileDiff[] | undefined,
   ) {
     const rows: TimelineRow.TimelineRow[] = []
 
@@ -210,7 +213,7 @@ export namespace Timeline {
 
     if (isActive && status === "retry") rows.push(new TimelineRow.Retry({ userMessageID: userMessage.id }))
 
-    const diffs = uniqueSummaryDiffs(userMessage.summary?.diffs)
+    const diffs = uniqueSummaryDiffs(turnDiffs)
     if (diffs.length > 0 && (status === "idle" || !isActive)) {
       rows.push(
         new TimelineRow.DiffSummary({

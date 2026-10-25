@@ -1,6 +1,8 @@
 import { expect, test, type Page } from "@playwright/test"
 import {
+  assistantID,
   assistantMessage,
+  loadedPartID,
   partUpdated,
   setupTimeline,
   shell,
@@ -54,11 +56,12 @@ test("delivers server heartbeat without mutating the timeline", async ({ page })
   // The sentinel must leave the steady row's own content alone. Part IDs ascend in arrival order, so it sorts
   // after the steady part like any streamed part (a lower ID would take over the turn's who/when head), and it
   // is a tool part (a later text part would take over the turn's agent/model footer).
+  const steadyID = loadedPartID(assistantID, "text")
   const sentinelID = "prt_transport_z_heartbeat_sentinel"
   const timeline = await setupTimeline(page, {
     messages: [userMessage(), assistantMessage([textPart("prt_transport_steady", "steady")])],
   })
-  await timeline.waitForPart("prt_transport_steady")
+  await timeline.waitForPart(steadyID)
   const before = await stableTimelineRows(page)
 
   await timeline.transport.writeRaw(": heartbeat\n\n")
@@ -119,7 +122,7 @@ test("passes through non-event fetches", async ({ page }) => {
   const timeline = await setupTimeline(page)
 
   const health = await page.evaluate(async () => {
-    const response = await fetch("/global/health")
+    const response = await fetch("/api/health")
     return response.json()
   })
 

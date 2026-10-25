@@ -92,8 +92,9 @@ test("audit: plugins unmatched search explains the empty result and clearing res
 })
 
 for (const scheme of ["dark", "light"] as const) {
-  test(`${scheme}: configured behaviors persist per profile and reach new chat messages`, async ({ page }) => {
+  test(`${scheme}: configured behaviors persist per profile and reach the server`, async ({ page }) => {
     const prompts = await openSession(page, scheme)
+    await serveV2Catalog(page)
     const sets = await serveBehaviors(page)
     await openPlugins(page)
 
@@ -164,11 +165,10 @@ for (const scheme of ["dark", "light"] as const) {
     await expect(card(page, "Caveman").locator(".mx-badge")).toHaveText(["LLM behavior", "ultra", "Active"])
     await expect(card(page, "Reviewer").locator(".mx-badge")).toHaveText(["LLM behavior", "custom", "Active"])
 
-    // The reloaded page hands the server the persisted set; the prompt itself carries only the user's text.
+    // The blank behavior sends nothing, so the server set holds only the two with instructions.
     await expect
       .poll(() => sets.at(-1)?.behaviors.map((item) => item.name))
       .toEqual(["Caveman (intensity: ultra)", "Reviewer"])
-    expect(sets.at(-1)?.directory).toBe(directory)
     expect(sets.at(-1)?.behaviors[0]?.instructions).toContain(
       "Respond terse like smart caveman. Preserve technical accuracy.",
     )
@@ -331,12 +331,11 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   )
   await page.route("**/*", (route) => {
     const url = new URL(route.request().url())
-    if (url.origin !== server || url.pathname !== "/api/location") return route.fallback()
-    const project = projects.find((item) => item.worktree === (url.searchParams.get("location[directory]") ?? "/plugins-a"))
+    if (url.origin !== server || url.pathname !== "/api/project/current") return route.fallback()
+    const directory = url.searchParams.get("location[directory]") ?? "/plugins-a"
+    const project = projects.find((item) => item.worktree === directory)
     if (!project) return route.fulfill({ status: 404, json: { name: "NotFound" } })
-    return route.fulfill({
-      json: { directory: project.worktree, project: { id: project.id, directory: project.worktree } },
-    })
+    return route.fulfill({ json: { id: project.id, directory } })
   })
   await page.addInitScript(() => {
     localStorage.setItem("settings.v3", JSON.stringify({ general: {}, notifications: {} }))
@@ -372,10 +371,10 @@ test("each repository profile owns its behaviors", async ({ page }) => {
   await expect(toggle()).toHaveAttribute("aria-checked", "false")
   await pick("Plugins A")
   await expect(toggle()).toHaveAttribute("aria-checked", "true")
-  const outside = await page.goto(`${foreign}/api/location?location[directory]=/plugins-b`)
+  const outside = await page.goto(`${foreign}/api/project/current?location[directory]=/plugins-b`)
   expect(outside?.status()).toBe(418)
   expect(await outside?.json()).toEqual({ owner: "foreign" })
-  const unknown = await page.goto(`${server}/api/location?location[directory]=/plugins-unknown`)
+  const unknown = await page.goto(`${server}/api/project/current?location[directory]=/plugins-unknown`)
   expect(unknown?.status()).toBe(404)
   expect(await unknown?.json()).toEqual({ name: "NotFound" })
 })

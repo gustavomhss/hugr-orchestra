@@ -35,12 +35,13 @@ test("tasks panel reports only the outcomes the synced data proves", async ({ pa
   await expect(unknown.locator('[data-slot="task-state"]')).toHaveText("Status unknown")
   await expect(unknown.locator('[data-slot="task-time"]')).toHaveText("unknown")
   await expect(unknown.locator('[data-slot="task-stat-tools"]')).toHaveText("Tools:unknown")
-  await expect(unknown.locator('[data-slot="task-stat-cost"]')).toHaveText("Cost:unknown")
 
-  // The v1 compat layer zero-fills aggregates the server never sent; they must not read as $0.
+  // Session aggregates are server data on V2: the panel shows what the server sent, not a zero fill.
+  await expect(unknown.locator('[data-slot="task-stat-cost"]')).toHaveText("Cost:$0.0123")
+  await expect(unknown.locator('[data-slot="task-stat-tokens"]')).toHaveText("Tokens:↓1,200 ↑340")
   const running = row(panel, "Running task")
-  await expect(running.locator('[data-slot="task-stat-cost"]')).toHaveText("Cost:unknown")
-  await expect(running.locator('[data-slot="task-stat-tokens"]')).toHaveText("Tokens:unknown")
+  await expect(running.locator('[data-slot="task-stat-cost"]')).toHaveText("Cost:$0.0456")
+  await expect(running.locator('[data-slot="task-stat-tokens"]')).toHaveText("Tokens:↓4,000 ↑560")
 
   await expect(row(panel, "Orphan task")).toHaveCount(1)
   await expect(row(panel, "Orphan task")).toHaveAttribute("data-state", "completed")
@@ -52,16 +53,16 @@ test("stop interrupts only the child and surfaces pending, failure and retry", a
   const release: (() => void)[] = []
   await setup(page)
   await page.route(
-    (url) => url.port === new URL(server).port && url.pathname.endsWith("/abort"),
+    (url) => url.port === new URL(server).port && url.pathname.endsWith("/interrupt"),
     async (route) => {
       aborts.push(new URL(route.request().url()).pathname)
       const attempt = aborts.length
       await new Promise<void>((resolve) => release.push(resolve))
       return route.fulfill({
-        status: attempt === 1 ? 500 : 200,
+        status: attempt === 1 ? 500 : 204,
         contentType: "application/json",
         headers: { "access-control-allow-origin": "*" },
-        body: JSON.stringify(attempt === 1 ? { name: "UnknownError", data: { message: "abort failed" } } : true),
+        body: attempt === 1 ? JSON.stringify({ name: "UnknownError", data: { message: "abort failed" } }) : undefined,
       })
     },
   )
@@ -84,7 +85,10 @@ test("stop interrupts only the child and surfaces pending, failure and retry", a
 
   await expect(running.locator('[data-slot="task-stop-status"]')).toHaveCount(0)
   await expect(running.getByRole("button", { name: "Stop task" })).toBeEnabled()
-  expect(aborts).toEqual([`/session/${child.running}/abort`, `/session/${child.running}/abort`])
+  expect(aborts).toEqual([
+      `/api/session/${child.running}/interrupt`,
+      `/api/session/${child.running}/interrupt`,
+    ])
 })
 
 test("opening a task keeps its owning server when the default server differs", async ({ page }) => {
@@ -164,10 +168,18 @@ async function setup(page: Page, owner = server) {
     },
     sessions: [
       session(parentID, parentTitle, 1700000000000),
-      session(child.running, "Running task (@explore subagent)", 1700000001000, { parentID }),
+      session(child.running, "Running task (@explore subagent)", 1700000001000, {
+        parentID,
+        cost: 0.0456,
+        tokens: { input: 4000, output: 560, reasoning: 0, cache: { read: 0, write: 0 } },
+      }),
       session(child.interrupted, "Interrupted task (@explore subagent)", 1700000001000, { parentID }),
       session(child.failed, "Failed task (@explore subagent)", 1700000001000, { parentID }),
-      session(child.unknown, "Unknown child (@explore subagent)", 1700000001000, { parentID }),
+      session(child.unknown, "Unknown child (@explore subagent)", 1700000001000, {
+        parentID,
+        cost: 0.0123,
+        tokens: { input: 1200, output: 340, reasoning: 0, cache: { read: 0, write: 0 } },
+      }),
     ],
     sessionStatus: { [child.running]: { type: "busy" } },
     pageMessages: (sessionID) => ({ items: sessionID === parentID ? parentMessages() : [] }),
