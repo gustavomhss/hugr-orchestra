@@ -2,7 +2,7 @@ import { expect, test } from "@playwright/test"
 import { readFile } from "node:fs/promises"
 import { resolve } from "node:path"
 
-const renderer = resolve(import.meta.dirname, "../../../../apps/desktop/src/renderer/index.tsx")
+const renderer = resolve(import.meta.dirname, "../../../../apps/desktop/src/renderer/boot.tsx")
 // Vite's /@fs/ prefix needs forward slashes and a leading slash before Windows drive letters.
 const rendererURL = `/@fs/${renderer.replaceAll("\\", "/").replace(/^\//, "")}`
 
@@ -46,7 +46,7 @@ for (const scheme of ["light", "dark"] as const) {
         await route.fulfill({
           contentType: "text/html",
           body: (await readFile(resolve(renderer, "../index.html"), "utf8")).replace(
-            'src="./index.tsx"',
+            'src="./boot.tsx"',
             `src="${rendererURL}"`,
           ),
         })
