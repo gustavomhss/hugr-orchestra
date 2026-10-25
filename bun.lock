@@ -519,9 +519,7 @@
       "devDependencies": {
         "@orchestra/http-recorder": "workspace:*",
         "@orchestra/omni-campaign": "workspace:*",
-        "@orchestra/protocol": "workspace:*",
         "@orchestra/sdk": "workspace:*",
-        "@orchestra/server": "workspace:*",
         "@parcel/watcher-darwin-arm64": "2.5.1",
         "@parcel/watcher-darwin-x64": "2.5.1",
         "@parcel/watcher-linux-arm64-glibc": "2.5.1",

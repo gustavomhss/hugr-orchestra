@@ -204,7 +204,7 @@
         { "path": "src/agent", "kind": "cohesive", "entries": ["src/agent.ts"] },
         { "path": "src/config", "kind": "cohesive", "entries": ["src/config.ts", "src/config/markdown.ts", "src/config/plugin-file.ts"] },
         { "path": "src/credential", "kind": "cohesive", "entries": ["src/credential.ts"] },
-        { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts"] },
+        { "path": "src/event", "kind": "cohesive", "entries": ["src/event.ts", "src/event/sql.ts"] },
         { "path": "src/filesystem", "kind": "cohesive", "entries": ["src/filesystem.ts"] },
         { "path": "src/image", "kind": "cohesive", "entries": ["src/image.ts"] },
         { "path": "src/integration", "kind": "cohesive", "entries": ["src/integration.ts"] },
