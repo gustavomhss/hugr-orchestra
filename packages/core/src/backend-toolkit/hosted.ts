@@ -7,7 +7,8 @@ import { ChildProcess } from "effect/unstable/process"
 import { LayerNode } from "../effect/layer-node"
 import { PinnedArtifact } from "../pinned-artifact"
 import { AppProcess } from "../process"
-import { attempts, INSTALL_MS } from "./attempts"
+import { ToolkitRuntime } from "../toolkit/runtime"
+import { INSTALL_MS } from "./attempts"
 import { BackendToolkitCassandra } from "./cassandra-metadata"
 import { BackendToolkitDiagnostics } from "./diagnostics"
 import { executable, fileReady, launchText, shim } from "./launcher"
@@ -37,8 +38,10 @@ export function hosted(
   return Effect.gen(function* () {
     if (install.kind !== "jar" && !host)
       return yield* new PinnedArtifact.Failed({ cause: `cross-target:${install.kind}` })
-    const cause = yield* attempts.once(home, PinnedArtifact.install(home, [pin.artifact]))
-    if (cause !== undefined) return yield* new PinnedArtifact.Failed({ cause: `runtime-${cause}` })
+    // The common runtime primitive owns the attempt, so capability callers and hosted engines share one download.
+    yield* ToolkitRuntime.ensure({ root, runtime, target }).pipe(
+      Effect.mapError((error) => new PinnedArtifact.Failed({ cause: `runtime-${error.cause}` })),
+    )
     if (install.kind === "source" && install.compatibility && (engine.id !== "gocqlx-schemagen" || install.build !== "go"))
       return yield* new PinnedArtifact.Failed({ cause: "compatibility:cassandra-metadata:unsupported-engine" })
     yield* PinnedArtifact.install(

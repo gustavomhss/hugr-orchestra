@@ -29,21 +29,21 @@ const Endpoint36_0 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36
   raw["actions.run.list"]({
     params: { bindingID: input["bindingID"] },
     query: {
-      location: input["location"],
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
       revision: input["revision"],
-      workflowID: input["workflowID"],
-      cursor: input["cursor"],
-      limit: input["limit"],
-      ref: input["ref"],
-      event: input["event"],
-      status: input["status"],
-      commit: input["commit"],
-      actor: input["actor"],
-      created: input["created"],
-      createdAfter: input["createdAfter"],
-      createdBefore: input["createdBefore"],
-      updatedAfter: input["updatedAfter"],
-      updatedBefore: input["updatedBefore"],
+      ...(input["workflowID"] === undefined ? {} : { workflowID: input["workflowID"] }),
+      ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }),
+      ...(input["limit"] === undefined ? {} : { limit: input["limit"] }),
+      ...(input["ref"] === undefined ? {} : { ref: input["ref"] }),
+      ...(input["event"] === undefined ? {} : { event: input["event"] }),
+      ...(input["status"] === undefined ? {} : { status: input["status"] }),
+      ...(input["commit"] === undefined ? {} : { commit: input["commit"] }),
+      ...(input["actor"] === undefined ? {} : { actor: input["actor"] }),
+      ...(input["created"] === undefined ? {} : { created: input["created"] }),
+      ...(input["createdAfter"] === undefined ? {} : { createdAfter: input["createdAfter"] }),
+      ...(input["createdBefore"] === undefined ? {} : { createdBefore: input["createdBefore"] }),
+      ...(input["updatedAfter"] === undefined ? {} : { updatedAfter: input["updatedAfter"] }),
+      ...(input["updatedBefore"] === undefined ? {} : { updatedBefore: input["updatedBefore"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -57,7 +57,7 @@ type Endpoint36_1Input = {
 const Endpoint36_1 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_1Input) =>
   raw["actions.run.get"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint36_2Request = Parameters<RawClient["server.actionsRun"]["actions.run.jobs"]>[0]
@@ -73,10 +73,10 @@ const Endpoint36_2 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36
   raw["actions.run.jobs"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
     query: {
-      location: input["location"],
+      ...(input["location"] === undefined ? {} : { location: input["location"] }),
       revision: input["revision"],
-      attempt: input["attempt"],
-      cursor: input["cursor"],
+      ...(input["attempt"] === undefined ? {} : { attempt: input["attempt"] }),
+      ...(input["cursor"] === undefined ? {} : { cursor: input["cursor"] }),
     },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -92,7 +92,7 @@ type Endpoint36_3Input = {
 const Endpoint36_3 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_3Input) =>
   raw["actions.run.retry"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -108,7 +108,7 @@ type Endpoint36_4Input = {
 const Endpoint36_4 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_4Input) =>
   raw["actions.run.cancel"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -124,7 +124,7 @@ type Endpoint36_5Input = {
 const Endpoint36_5 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_5Input) =>
   raw["actions.run.forceCancel"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -140,7 +140,7 @@ type Endpoint36_6Input = {
 const Endpoint36_6 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_6Input) =>
   raw["actions.run.remove"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -156,7 +156,7 @@ type Endpoint36_7Input = {
 const Endpoint36_7 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_7Input) =>
   raw["actions.run.approveFork"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 
@@ -172,7 +172,7 @@ type Endpoint36_8Input = {
 const Endpoint36_8 = (raw: RawClient["server.actionsRun"]) => (input: Endpoint36_8Input) =>
   raw["actions.run.rename"]({
     params: { bindingID: input["bindingID"], runID: input["runID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: { id: input["id"], input: input["input"] },
   }).pipe(Effect.mapError(mapClientError))
 

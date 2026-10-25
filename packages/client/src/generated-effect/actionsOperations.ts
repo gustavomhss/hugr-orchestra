@@ -20,7 +20,7 @@ type Endpoint34_0Input = {
 const Endpoint34_0 = (raw: RawClient["server.actionsOperation"]) => (input: Endpoint34_0Input) =>
   raw["actions.operation.prepare"]({
     params: { bindingID: input["bindingID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
     payload: {
       clientID: input["clientID"],
       binding: input["binding"],
@@ -40,7 +40,7 @@ type Endpoint34_1Input = {
 const Endpoint34_1 = (raw: RawClient["server.actionsOperation"]) => (input: Endpoint34_1Input) =>
   raw["actions.operation.get"]({
     params: { bindingID: input["bindingID"], operationID: input["operationID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint34_2Request = Parameters<RawClient["server.actionsOperation"]["actions.operation.reconcile"]>[0]
@@ -53,7 +53,7 @@ type Endpoint34_2Input = {
 const Endpoint34_2 = (raw: RawClient["server.actionsOperation"]) => (input: Endpoint34_2Input) =>
   raw["actions.operation.reconcile"]({
     params: { bindingID: input["bindingID"], operationID: input["operationID"] },
-    query: { location: input["location"], revision: input["revision"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }), revision: input["revision"] },
   }).pipe(Effect.mapError(mapClientError))
 
 export const adaptGroup34 = (raw: RawClient["server.actionsOperation"]) => ({

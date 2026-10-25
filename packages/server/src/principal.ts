@@ -14,7 +14,7 @@ export function of(_request: HttpServerRequest.HttpServerRequest) {
   return account()
 }
 
-function account() {
+export function account() {
   const user = Result.try(() => os.userInfo().username)
   return Result.isSuccess(user) && user.success ? user.success : "local"
 }

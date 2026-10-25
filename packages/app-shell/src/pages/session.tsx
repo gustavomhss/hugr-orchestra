@@ -101,6 +101,7 @@ import { createSessionOwnership } from "./session/session-ownership"
 import { createSessionLineage } from "./session/session-lineage"
 import { SessionLineageBoundary } from "./session/session-lineage-boundary"
 import { createSessionVcsReview } from "./session/session-vcs-review"
+import { SessionCapabilitiesProvider } from "./session/capabilities"
 import { sessionRecoveryLanguage } from "@/i18n/session-recovery"
 
 type FollowupItem = QueuedPrompt
@@ -140,7 +141,7 @@ async function runPromptRollbackMutation<T, R>(input: {
 export function SessionPage() {
   return (
     <SessionProviders>
-      <Page />
+      <SessionCapabilitiesProvider><Page /></SessionCapabilitiesProvider>
     </SessionProviders>
   )
 }
@@ -1991,9 +1992,7 @@ export default function Page() {
                     restoreHistoryAnchor = handlers.restore
                   }}
                   anchor={anchor}
-                  setRevealMessage={(fn) => {
-                    revealMessage = fn
-                  }}
+                  setRevealMessage={(fn) => (revealMessage = fn)}
                   setScrollToEnd={(fn) => {
                     scrollToEnd = fn
                   }}

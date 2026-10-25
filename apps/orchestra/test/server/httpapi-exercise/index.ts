@@ -38,6 +38,7 @@ import { runScenario } from "./runner"
 import { credentialScenarios } from "./credential"
 import { providerScenarios } from "./provider"
 import { scheduleScenarios } from "./schedule"
+import { capabilityScenarios } from "./capability"
 import { projectScenarios } from "./project"
 import { skillScenarios } from "./skill"
 import { catalogScenarios } from "./catalog"
@@ -67,17 +68,6 @@ import { sessionExecutionScenarios } from "./session-execution"
 const scenarios: Scenario[] = [
   ...globalHealthScenarios,
   ...globalConfigScenarios,
-  http.protected
-    .post("/global/dispose", "global.dispose")
-    .global()
-    .mutating()
-    .json(
-      200,
-      (body) => {
-        check(body === true, "global dispose should return true")
-      },
-      "status",
-    ),
   http.protected.get("/path", "path.get").json(200, (body, ctx) => {
     object(body)
     check(body.directory === ctx.directory, "directory should resolve from x-orchestra-directory")
@@ -102,6 +92,7 @@ const scenarios: Scenario[] = [
   ...actionsFailureScenarios,
   ...sessionSettingsScenarios,
   ...scheduleScenarios,
+  ...capabilityScenarios,
   http.protected.get("/lsp", "lsp.status").json(200, array),
   http.protected.get("/formatter", "formatter.status").json(200, array),
   http.protected.get("/config", "config.get").json(200, undefined, "status"),

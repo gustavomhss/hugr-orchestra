@@ -3,6 +3,7 @@ import { UnauthorizedError } from "@orchestra/protocol/errors"
 import { Authorization } from "@orchestra/protocol/middleware/authorization"
 export { Authorization } from "@orchestra/protocol/middleware/authorization"
 import { hasPtyConnectTicketURL } from "@orchestra/protocol/groups/pty"
+import { hasCapabilityContentTicketURL } from "@orchestra/protocol/groups/capability-artifacts"
 import { Effect, Encoding, Layer, Redacted } from "effect"
 import { HttpEffect, HttpServerRequest, HttpServerResponse } from "effect/unstable/http"
 
@@ -48,7 +49,10 @@ export const authorizationLayer = Layer.effect(
         const request = yield* HttpServerRequest.HttpServerRequest
         // Browsers cannot set headers on WebSocket upgrades, so a ticketed PTY connect skips
         // credential checks here; the connect handler consumes and validates the ticket.
-        if (hasPtyConnectTicketURL(new URL(request.url, "http://localhost"))) return yield* effect
+        const url = new URL(request.url, "http://localhost")
+        if (hasPtyConnectTicketURL(url)) return yield* effect
+        // Media elements cannot send headers either; the content handler verifies the HMAC ticket.
+        if (hasCapabilityContentTicketURL(url)) return yield* effect
         const credential = yield* credentialFromRequest(request)
         if (ServerAuth.authorized(credential, config)) return yield* effect
         yield* HttpEffect.appendPreResponseHandler((_request, response) =>

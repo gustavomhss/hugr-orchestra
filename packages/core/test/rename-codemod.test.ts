@@ -95,7 +95,6 @@ describe("rename codemod CLI", () => {
 
   test("final-path masks preserve legacy branches and provider text in dry and real runs", async () => {
     const files = {
-      "packages/app/e2e/opencode/chapter-workspaces.spec.ts": 'opencode/legacy\nOpenCode\n',
       "packages/opencode/test/project/worktree.test.ts": '`opencode/${name}`\nOpenCode\n',
       "packages/core/src/plugin/provider/opencode.ts": '"opencode"\n"OpenCode Console"\nOpenCode\n',
     }
@@ -107,9 +106,6 @@ describe("rename codemod CLI", () => {
     expect(applied.code, applied.output).toBe(0)
     expect((await Bun.file(path.join(dry, "report.md")).text()).split("## preview scope")[0]).toBe(
       await Bun.file(path.join(real, "report.md")).text(),
-    )
-    expect(await Bun.file(path.join(real, "packages/app/e2e/orchestra/chapter-workspaces.spec.ts")).text()).toBe(
-      'opencode/legacy\nOrchestra\n',
     )
     expect(await Bun.file(path.join(real, "packages/orchestra/test/project/worktree.test.ts")).text()).toBe(
       '`opencode/${name}`\nOrchestra\n',

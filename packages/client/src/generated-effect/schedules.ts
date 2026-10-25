@@ -9,7 +9,9 @@ type RawClient = HttpApiClient.ForApi<typeof ClientApi>
 type Endpoint32_0Request = Parameters<RawClient["server.schedule"]["schedule.list"]>[0]
 type Endpoint32_0Input = { readonly location?: Endpoint32_0Request["query"]["location"] }
 const Endpoint32_0 = (raw: RawClient["server.schedule"]) => (input?: Endpoint32_0Input) =>
-  raw["schedule.list"]({ query: { location: input?.["location"] } }).pipe(Effect.mapError(mapClientError))
+  raw["schedule.list"]({
+    query: { ...(input?.["location"] === undefined ? {} : { location: input?.["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint32_1Request = Parameters<RawClient["server.schedule"]["schedule.create"]>[0]
 type Endpoint32_1Input = {
@@ -26,7 +28,7 @@ type Endpoint32_1Input = {
 }
 const Endpoint32_1 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_1Input) =>
   raw["schedule.create"]({
-    query: { location: input["location"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
       id: input["id"],
       name: input["name"],
@@ -54,7 +56,7 @@ type Endpoint32_2Input = {
 const Endpoint32_2 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_2Input) =>
   raw["schedule.update"]({
     params: { scheduleID: input["scheduleID"] },
-    query: { location: input["location"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
     payload: {
       name: input["name"],
       prompt: input["prompt"],
@@ -71,9 +73,10 @@ type Endpoint32_3Input = {
   readonly location?: Endpoint32_3Request["query"]["location"]
 }
 const Endpoint32_3 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_3Input) =>
-  raw["schedule.remove"]({ params: { scheduleID: input["scheduleID"] }, query: { location: input["location"] } }).pipe(
-    Effect.mapError(mapClientError),
-  )
+  raw["schedule.remove"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint32_4Request = Parameters<RawClient["server.schedule"]["schedule.run"]>[0]
 type Endpoint32_4Input = {
@@ -81,9 +84,10 @@ type Endpoint32_4Input = {
   readonly location?: Endpoint32_4Request["query"]["location"]
 }
 const Endpoint32_4 = (raw: RawClient["server.schedule"]) => (input: Endpoint32_4Input) =>
-  raw["schedule.run"]({ params: { scheduleID: input["scheduleID"] }, query: { location: input["location"] } }).pipe(
-    Effect.mapError(mapClientError),
-  )
+  raw["schedule.run"]({
+    params: { scheduleID: input["scheduleID"] },
+    query: { ...(input["location"] === undefined ? {} : { location: input["location"] }) },
+  }).pipe(Effect.mapError(mapClientError))
 
 export const adaptGroup32 = (raw: RawClient["server.schedule"]) => ({
   list: Endpoint32_0(raw),
