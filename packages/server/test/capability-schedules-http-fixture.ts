@@ -132,7 +132,7 @@ export function make() {
       })
     // Every route names its Location in the query; without it the server falls back to its own cwd.
     const url = (path: string, at: CapabilityOperatorContract.Placement = placement) =>
-      `/api/capability/schedules${path}?directory=${encodeURIComponent(at.location.directory)}`
+      `/api/capability/schedules${path}?location[directory]=${encodeURIComponent(at.location.directory)}`
     return { database, placement, foreign, tasks, owner, issue, request, url }
   })
 }
