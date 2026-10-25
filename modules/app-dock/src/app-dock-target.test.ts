@@ -454,7 +454,6 @@ test("dock_* called by an agent addresses browser tabs; without an agent the leg
   expect(dock.calls.map((call) => call.args)).toEqual([{ world: "browser" }, {}])
 })
 
-// How the host's permission engine evaluates this scope is proven in apps/orchestra/test/plugin/linux-workspace-scope.test.ts.
 test("the Linux workspace is its own scope: host agents lose its tools, the linux agent holds only them", () => {
   const config: { permission?: unknown; agent?: Record<string, Record<string, unknown>> } = {
     permission: { "*": "allow", dock: "ask" }, agent: { linux: { model: "opencode/mimo" } } }
