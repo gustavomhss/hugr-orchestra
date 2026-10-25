@@ -11,7 +11,7 @@ export const RESEARCH_SEAT = "jimmy"
 
 /**
  * V1 Task phases whose host is not on V2 yet. Each one refuses the call with its reason rather than running it with
- * the check skipped: workflow steps, Atlas resume and the research allowance.
+ * the check skipped: workflow steps and Atlas resume.
  */
 export const check = Effect.fn("UnsupportedV2.check")(function* (
   seats: MaestroSeats.Interface,
@@ -23,8 +23,6 @@ export const check = Effect.fn("UnsupportedV2.check")(function* (
   if (!seats.has(target)) return
   if (input.memoryUnit !== undefined && Seats.all[target]?.atlasMemory)
     return yield* refuse("atlas-resume-unavailable", "the Atlas Memory resume of a seat needs the Atlas restore")
-  if (target === RESEARCH_SEAT)
-    return yield* refuse("research-allowance-unavailable", `${RESEARCH_SEAT} runs only under a research dispatch allowance`)
 })
 
 export function refuse(reason: string, why: string) {

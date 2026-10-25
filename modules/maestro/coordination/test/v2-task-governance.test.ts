@@ -65,8 +65,8 @@ test("each phase without a V2 host refuses the call with its reason, never skipp
         expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra }))).toStartWith(`Task denied: ${reason}:`)
       expect(yield* refusal(admit({ directory, caller: "maestro", target: "backend", extra: { memoryUnit: { kind: "task", id: "t" } } })))
         .toStartWith("Task denied: atlas-resume-unavailable:")
-      expect(yield* refusal(admit({ directory, caller: "maestro", target: "jimmy" })))
-        .toStartWith("Task denied: research-allowance-unavailable:")
+      // The research seat is admitted under its dispatch allowance (v2-research.test.ts), never refused.
+      expect((yield* admit({ directory, caller: "maestro", target: "jimmy" })).permissions).toBeDefined()
       // An upstream proposal settles only in the foreground.
       expect(yield* refusal(admit({ directory, caller: "maestro", target: "archie", extra: { background: true } })))
         .toStartWith("Task denied: upstream-settlement-unavailable:")

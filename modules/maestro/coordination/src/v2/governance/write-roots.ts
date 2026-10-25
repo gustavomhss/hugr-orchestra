@@ -3,15 +3,20 @@ export * as WriteRootsV2 from "./write-roots"
 import path from "node:path"
 import { ToolFailure } from "@orchestra/llm"
 import { Effect, Layer, Schema } from "effect"
+import { Database } from "@orchestra/core/database/database"
+import { EventV2 } from "@orchestra/core/event"
 import { FSUtil } from "@orchestra/core/fs-util"
 import { Location } from "@orchestra/core/location"
 import type { PermissionV2 } from "@orchestra/core/permission"
+import { ResearchAllowance } from "@orchestra/core/research/allowance"
 import { SessionSchema, SessionStore } from "@orchestra/core/session"
 import { ToolSafety } from "@orchestra/core/tool-safety"
 import { BackendToolkit } from "@orchestra/core/backend-toolkit"
 import { TRUNCATION_DIR } from "@orchestra/core/tool/truncation-dir"
+import { AllowedDomains } from "@orchestra/core/tool/websearch"
 import { ArsenalNative } from "../../arsenal-native"
 import { Seats, type Seat } from "../../seats"
+import { ResearchDispatchV2 } from "./research"
 
 // A write-roots seat's scope is bound by the host at Task dispatch and enforced by ToolSafety, never by the charter. It
 // is stored as reserved rules in the child Session's permission ruleset, so it is durable and no tool permission ever
@@ -113,7 +118,8 @@ export const confine = Effect.fn("WriteRootsV2.confine")(function* (
 /**
  * The Location's ToolSafety, over the Arsenal's native one, narrowed to the write roots bound to the calling Session and,
  * for a native seat, confined as `confine` says. The Session's rules are read on every call, so a binding made while it
- * runs applies to its next tool call.
+ * runs applies to its next tool call. A research child's tool call is also charged to its dispatch allowance, and its
+ * web search sees only the dispatch's allowed domains (V1 provided both around the child run).
  */
 export const safetyNode = {
   ...ArsenalNative.nativeSafetyNode,
@@ -124,6 +130,20 @@ export const safetyNode = {
       const store = yield* SessionStore.Service
       const location = yield* Location.Service
       const fs = yield* FSUtil.Service
+      const database = yield* Database.Service
+      const events = yield* EventV2.Service
+      const allowances = yield* ResearchAllowance.Service
+      // The roster loads lazily (see `seats.ts`); where it cannot load no agent is the research seat.
+      const roster = yield* Effect.tryPromise(() => import("../../roster")).pipe(Effect.option)
+      const canonical = (id: string): string => (roster._tag === "Some" ? roster.value.canonicalMemberId(id) : id)
+      const services = { db: database.db, events, store, canonical, allowances, location }
+      const research = (input: ToolSafety.Invocation) =>
+        Effect.gen(function* () {
+          if (!Schema.is(SessionSchema.ID)(input.sessionID)) return undefined
+          const session = yield* store.get(input.sessionID)
+          if (!session) return undefined
+          return yield* ResearchDispatchV2.tool(services, session, input)
+        }).pipe(Effect.mapError((error) => new ToolSafety.Denied({ reason: "research-dispatch", detail: error.message })))
       const roots = (sessionID: string) =>
         Schema.is(SessionSchema.ID)(sessionID) ? store.permissions(sessionID).pipe(Effect.map(read)) : Effect.succeed(undefined)
       const narrow = (input: ToolSafety.Invocation, project: ToolSafety.Profile | undefined, bound: ReadonlyArray<string> | undefined) => {
@@ -143,11 +163,13 @@ export const safetyNode = {
           }),
         run: (input, effect, observe, outcome) =>
           Effect.gen(function* () {
+            const domains = (yield* research(input))?.domains
+            const scoped = domains ? effect.pipe(Effect.provideService(AllowedDomains, domains)) : effect
             const bound = yield* roots(input.sessionID)
-            if (!bound && !Seats.find(input.agent)) return yield* safety.run(input, effect, observe, outcome)
+            if (!bound && !Seats.find(input.agent)) return yield* safety.run(input, scoped, observe, outcome)
             const load = yield* ToolSafety.RuntimeProfileLoader
             const fallback = yield* ToolSafety.RuntimeProfile
-            return yield* safety.run(input, effect, observe, outcome).pipe(
+            return yield* safety.run(input, scoped, observe, outcome).pipe(
               Effect.provideService(ToolSafety.RuntimeProfileLoader, () =>
                 (load ? load() : Effect.succeed(fallback)).pipe(Effect.flatMap((project) => narrow(input, project, bound))),
               ),
@@ -156,7 +178,15 @@ export const safetyNode = {
       })
     }),
   ).pipe(Layer.provide(ArsenalNative.nativeSafetyNode.implementation)),
-  dependencies: [...ArsenalNative.nativeSafetyNode.dependencies, SessionStore.node, Location.node, FSUtil.node],
+  dependencies: [
+    ...ArsenalNative.nativeSafetyNode.dependencies,
+    SessionStore.node,
+    Location.node,
+    FSUtil.node,
+    Database.node,
+    EventV2.node,
+    ResearchAllowance.node,
+  ],
 }
 
 // A bound root survives only inside a project root; a project root inside a bound root narrows it.
