@@ -7,25 +7,10 @@ type Mcp = Record<string, { status: string; error?: string }>
 
 function fixture() {
   return {
-    config: {
-      model: "openai/gpt-5",
-      // Key order matters: the server evaluates rules in order and the last match wins.
-      permission: {
-        glob: "deny",
-        "*": "allow",
-        bash: "ask",
-        read: { "*": "allow", "*.env": "deny" },
-        edit: { "*.md": "deny" },
-      },
-      mcp: {
-        docs: { type: "remote", url: "https://mcp.example.test/docs" },
-        broken: { type: "local", command: ["bunx", "broken-server"] },
-      },
-    } as Record<string, unknown>,
+    config: { model: "openai/gpt-5", agents: {}, disabledProviders: [] } as Record<string, unknown>,
     mcp: { docs: { status: "connected" }, broken: { status: "failed", error: "Connection refused" } } as Mcp,
     patches: [] as unknown[],
     mcpCalls: [] as string[],
-    failPatch: false,
   }
 }
 
@@ -76,7 +61,7 @@ test("a malformed shell list stays in General's shell row, which retries, and th
   let served = 0
   // Registered after the shared mock's empty list, so this answers first: `{}` once, then a real list.
   await page.route(
-    (url) => url.origin === server && url.pathname === "/pty/shells",
+    (url) => url.origin === server && url.pathname === "/api/config/shells",
     (route) =>
       route.request().method() === "GET"
         ? json(route, replies[Math.min(served++, replies.length - 1)])
@@ -165,82 +150,14 @@ test("General's theme picker offers only Orchestra palettes and recolors the gla
   expect(dark.tint).not.toEqual(graphite.tint)
 })
 
-test("tool permissions follow the server's rule order, save in place, roll back failures and use arrow keys", async ({
-  page,
-}) => {
-  const state = fixture()
-  await setup(page, state)
-  await page.goto("/orchestra/settings?section=permissions", { waitUntil: "domcontentloaded" })
-  await expect(page.locator(".perm-tool")).toHaveCount(14)
-  await expect(page.getByText("Server-wide defaults for every agent and repository.", { exact: false })).toBeVisible()
-  const group = (tool: string) => page.getByRole("radiogroup", { name: tool, exact: true })
-  const radio = (tool: string, action: string) => group(tool).getByRole("radio", { name: action, exact: true })
-  await expect(radio("Bash", "Ask")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Bash", "Allow")).toHaveAttribute("aria-checked", "false")
-  await expect(radio("Read", "Allow")).toHaveAttribute("aria-checked", "true")
-  // The config's wildcard comes after the server's built-in Ask for doom loops, so it wins.
-  await expect(radio("Doom Loop", "Allow")).toHaveAttribute("aria-checked", "true")
-  // glob's Deny comes before the wildcard, which overrides it; the row explains instead of writing.
-  await expect(radio("Glob", "Allow")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Glob", "Deny")).toBeDisabled()
-  await expect(page.locator('[data-tool="glob"] .tnote')).toHaveText(
-    "A later rule in the server config overrides this tool. Edit the config file to change it.",
-  )
-  // edit only has pattern rules; a "*" the server would append after them would override them.
-  await expect(radio("Edit", "Allow")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Edit", "Ask")).toBeDisabled()
-  await expect(page.locator('[data-tool="edit"] .tnote')).toHaveText(
-    "Pattern rules in the server config set this tool. Edit them in the config file.",
-  )
-
-  await radio("Read", "Deny").click()
-  await expect(radio("Read", "Deny")).toHaveAttribute("aria-checked", "true")
-  await expect.poll(() => state.patches.length).toBe(1)
-  const first = state.patches[0] as { permission: Record<string, unknown> }
-  expect(first).toEqual({
-    permission: {
-      glob: "deny",
-      "*": "allow",
-      bash: "ask",
-      read: { "*": "deny", "*.env": "deny" },
-      edit: { "*.md": "deny" },
-    },
-  })
-  expect(Object.keys(first.permission)).toEqual(["glob", "*", "bash", "read", "edit"])
-  expect(Object.keys(first.permission.read as object)).toEqual(["*", "*.env"])
-
-  // A failed save restores the state before that save, including the earlier successful one.
-  state.failPatch = true
-  await radio("Bash", "Deny").click()
-  await expect(page.getByText("Failed to update permissions")).toBeVisible()
-  await expect(radio("Bash", "Ask")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Bash", "Deny")).toHaveAttribute("aria-checked", "false")
-  await expect(radio("Read", "Deny")).toHaveAttribute("aria-checked", "true")
-  expect(state.patches.length).toBe(1)
-
-  // One tab stop per group, on the checked option; arrows move and select.
-  state.failPatch = false
-  await expect(radio("Bash", "Ask")).toHaveAttribute("tabindex", "0")
-  await expect(radio("Bash", "Allow")).toHaveAttribute("tabindex", "-1")
-  await radio("Bash", "Ask").focus()
-  await page.keyboard.press("ArrowRight")
-  await expect(radio("Bash", "Deny")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Bash", "Deny")).toBeFocused()
-  await expect.poll(() => state.patches.length).toBe(2)
-  expect((state.patches[1] as { permission: Record<string, unknown> }).permission.bash).toBe("deny")
-  await page.keyboard.press("Home")
-  await expect(radio("Bash", "Allow")).toHaveAttribute("aria-checked", "true")
-  await expect(radio("Bash", "Allow")).toBeFocused()
-})
-
-test("providers choose the route for new turns and models toggle their composer visibility", async ({ page }) => {
+test("providers list their connections and models set the default and toggle their composer visibility", async ({ page }) => {
   const state = fixture()
   await setup(page, state)
   await page.goto("/orchestra/settings?section=providers", { waitUntil: "domcontentloaded" })
   const view = page.locator('[data-mx-page="settings"]')
   await expect(view.getByRole("button", { name: "Connect provider", exact: true })).toBeVisible()
   await expect(view.locator(".settings-sec > h3").first()).toHaveText("Providers")
-  // The Providers chapter's list: the same cards, actions and route as the chapter page.
+  // The Providers chapter's list: the same cards and actions as the chapter page.
   const cards = view.locator("article.mx-card[data-provider-id]")
   await expect(cards).toHaveCount(2)
   const openai = view.locator('article.mx-card[data-provider-id="openai"]')
@@ -250,11 +167,6 @@ test("providers choose the route for new turns and models toggle their composer 
   await expect(popular).toContainText("Anthropic")
   await expect(popular.getByRole("button")).toHaveText("Connect")
 
-  // A route takes the provider's own default model.
-  const route = view.getByRole("combobox", { name: "Route for new turns" })
-  await expect(route).toHaveValue("openai")
-  await route.selectOption("openrouter")
-  await expect.poll(() => state.patches).toEqual([{ model: "openrouter/claude-sonnet-4" }])
 
   await openai.getByRole("button", { name: "Models", exact: true }).click()
   await expect(page).toHaveURL(/section=models/)
@@ -263,9 +175,7 @@ test("providers choose the route for new turns and models toggle their composer 
   await expect(row.locator("small")).toHaveText("OpenAI · Context 400K")
   // Any visible model can become the default.
   await view.locator('[data-model="openrouter/gpt-5"]').getByRole("button", { name: /as the default model/ }).click()
-  await expect
-    .poll(() => state.patches)
-    .toEqual([{ model: "openrouter/claude-sonnet-4" }, { model: "openrouter/gpt-5" }])
+  await expect.poll(() => state.patches).toEqual([{ model: "openrouter/gpt-5" }])
   await expect(view.locator('[data-model="openrouter/gpt-5"] .mx-badge')).toHaveText("Default")
   const toggle = row.getByRole("switch", { name: "Enable GPT-5" })
   await expect(toggle).toHaveAttribute("aria-checked", "true")
@@ -313,15 +223,15 @@ test("agents, MCP servers and shortcuts use the profile's real data and actions"
 
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "MCP" }).click()
   const docs = view.locator('[data-mcp-name="docs"]')
-  await expect(docs.locator("p")).toHaveText("https://mcp.example.test/docs")
-  await expect(docs.locator(".mx-badge")).toHaveText(["Connected", "http"])
+  await expect(docs.locator(".mx-badge")).toHaveText(["Connected"])
   const broken = view.locator('[data-mcp-name="broken"]')
-  await expect(broken.locator(".mx-badge")).toHaveText(["Error", "stdio"])
+  await expect(broken.locator("p")).toHaveText("Connection refused")
+  await expect(broken.locator(".mx-badge")).toHaveText(["Error"])
   await expect(broken.locator(".mx-badge.bad")).toHaveText("Error")
   const toggle = docs.getByRole("switch", { name: "Enable docs" })
   await expect(toggle).toHaveAttribute("aria-checked", "true")
   await toggle.click()
-  await expect.poll(() => state.mcpCalls).toEqual(["/mcp/docs/disconnect"])
+  await expect.poll(() => state.mcpCalls).toEqual(["/api/mcp/docs/disconnect"])
   await expect(toggle).toHaveAttribute("aria-checked", "false")
 
   await page.getByRole("navigation", { name: "Settings sections" }).getByRole("button", { name: "Shortcuts" }).click()
@@ -539,35 +449,89 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
           "access-control-allow-headers": "*",
         },
       })
-    if (url.pathname === "/global/config" && method === "PATCH") {
-      if (state.failPatch) return json(route, { name: "ConfigError", data: { message: "Config is read-only" } }, 500)
+    const location = { directory, project: { id: "settings", directory } }
+    if (url.pathname === "/api/config" && method === "PATCH") {
       const patch = route.request().postDataJSON()
       state.patches.push(patch)
       Object.assign(state.config, patch)
-      return json(route, state.config)
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
-    if (url.pathname === "/global/config" || url.pathname === "/config") return json(route, state.config)
-    if (url.pathname === "/mcp") return json(route, state.mcp)
-    const toggle = url.pathname.match(/^\/mcp\/([^/]+)\/(connect|disconnect)$/)
+    if (url.pathname === "/api/config") return json(route, state.config)
+    // The server reloads its catalog after a config change, so its default follows a saved model.
+    const saved = state.patches.length > 0 ? String(state.config.model).split("/") : undefined
+    if (url.pathname === "/api/model/default" && saved)
+      return json(route, {
+        location,
+        data: {
+          id: saved[1],
+          providerID: saved[0],
+          name: saved[1],
+          capabilities: { input: ["text"], output: ["text"], tools: true },
+          variants: [],
+          time: { released: 1 },
+          cost: [],
+          status: "active",
+          enabled: true,
+          limit: { context: 400_000, output: 32_000 },
+        },
+      })
+    if (url.pathname === "/api/mcp")
+      return json(route, { location, data: Object.entries(state.mcp).map(([name, status]) => ({ name, status })) })
+    const toggle = url.pathname.match(/^\/api\/mcp\/([^/]+)\/(connect|disconnect)$/)
     if (toggle && method === "POST") {
       state.mcpCalls.push(url.pathname)
       state.mcp[toggle[1]] = { status: toggle[2] === "connect" ? "connected" : "disabled" }
-      return json(route, true)
+      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
-    if (url.pathname === "/agent")
-      return json(route, [
-        {
-          name: "maestro",
-          mode: "primary",
-          description: "Orchestrates the work.",
-          model: { providerID: "openai", modelID: "gpt-5" },
-          steps: 25,
-          permission: [],
-          options: {},
-        },
-        { name: "explore", mode: "subagent", description: "Explores the codebase.", permission: [], options: {} },
-        { name: "title", mode: "primary", hidden: true, permission: [], options: {} },
-      ])
+    if (url.pathname === "/api/agent")
+      return json(route, {
+        location,
+        data: [
+          {
+            id: "maestro",
+            mode: "primary",
+            hidden: false,
+            description: "Orchestrates the work.",
+            model: { providerID: "openai", id: "gpt-5" },
+            steps: 25,
+            request: { settings: {}, headers: {}, body: {} },
+            permissions: [],
+          },
+          {
+            id: "explore",
+            mode: "subagent",
+            hidden: false,
+            description: "Explores the codebase.",
+            request: { settings: {}, headers: {}, body: {} },
+            permissions: [],
+          },
+          { id: "title", mode: "primary", hidden: true, request: { settings: {}, headers: {}, body: {} }, permissions: [] },
+        ],
+      })
+    if (url.pathname === "/api/integration")
+      return json(route, {
+        location,
+        data: [
+          {
+            id: "openai",
+            name: "OpenAI",
+            methods: [{ type: "key" }],
+            connections: [{ type: "credential", id: "openai-key", label: "default" }],
+          },
+          {
+            id: "openrouter",
+            name: "OpenRouter",
+            methods: [{ type: "key" }],
+            connections: [{ type: "credential", id: "openrouter-key", label: "default" }],
+          },
+          {
+            id: "anthropic",
+            name: "Anthropic",
+            methods: [{ type: "key" }, { id: "oauth", type: "oauth", label: "Claude Pro/Max" }],
+            connections: [],
+          },
+        ],
+      })
     return route.fallback()
   })
 }

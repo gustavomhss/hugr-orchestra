@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test"
-import { setupRelay } from "./relay.fixture"
+import { directory, setupRelay } from "./relay.fixture"
 
 test.use({ viewport: { width: 1440, height: 900 }, serviceWorkers: "block", locale: "en-US" })
 test.setTimeout(180_000)
@@ -76,7 +76,9 @@ test("install sends the document only; the server pins the published version", a
 test("outside git the page refuses new hooks and offers to remove the ones installed earlier", async ({ page }) => {
   const state = await setupRelay(page)
   // Every folder outside git resolves to the one global project those folders share.
-  await page.route("**/api/project/current**", (route) => route.fulfill({ json: { id: "global", directory: "/" } }))
+  await page.route("**/api/location**", (route) =>
+    route.fulfill({ json: { directory, project: { id: "global", directory: "/" } } }),
+  )
   await page.goto("/orchestra/hooks")
   const view = page.locator('[data-mx-page="orchestra-hooks"]')
   await expect(view.locator('[data-slot="relay-repository-required"]')).toHaveText(

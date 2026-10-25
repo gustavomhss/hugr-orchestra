@@ -309,7 +309,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
 @media (min-width: 768px) {
   [data-orchestra-palette="nord"] #orchestra-session-tabs {
     border: 1px solid var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
   }
   [data-orchestra-palette="nord"] [data-orchestra-tabs] [data-titlebar-tab] {
@@ -323,7 +323,7 @@ html[data-orchestra-palette="nord"][data-color-scheme] body[data-new-layout] [da
   }
   [data-orchestra-palette="nord"] [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
     border-color: var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
     box-shadow: var(--orchestra-glass-shadow);
   }

@@ -1,9 +1,6 @@
 import { createHash, randomUUID } from "node:crypto"
 import { expect, test, type Page } from "@playwright/test"
 import { base64Encode } from "@orchestra/core/util/encode"
-import type { FilePartInput, TextPartInput } from "../../src/v2-types"
-import type { ProviderListResponse } from "../../src/v2-wire"
-
 import { mockOrchestraServer } from "../utils/mock-server"
 
 const server = `http://${process.env.PLAYWRIGHT_SERVER_HOST ?? "127.0.0.1"}:${process.env.PLAYWRIGHT_SERVER_PORT ?? "4096"}`
@@ -29,7 +26,7 @@ const provider = {
   }],
   connected: ["orchestra"],
   default: { orchestra: "claude-opus-4-6" },
-} satisfies ProviderListResponse
+}
 const sample = "\n```owner-demand\né — 😀\u200B\n\n``` \n\n"
 const rawClipboard = "\r\n```owner-demand\ré — 😀\u200B\r\n\r\n```\n"
 const cases = [
@@ -55,7 +52,6 @@ for (const scenario of cases) {
   test(`prompt bytes: V2 ${scenario.mode}`, async ({ page, context }, info) => {
     const sessionID = `ses_prompt_bytes_${randomUUID().replaceAll("-", "")}`
     await mockOrchestraServer(page, {
-      protocol: "v1",
       directory,
       project: {
         id: projectID, worktree: directory, vcs: "git", name: "prompt-bytes",
@@ -68,9 +64,25 @@ for (const scenario of cases) {
         time: { created: 1700000000000, updated: 1700000000000 },
       }],
       pageMessages: () => ({ items: [] }),
-      findFiles: ({ query }) => query.includes("note") ? ["note.md"] : [],
     })
-    const endpoint = `/session/${sessionID}/prompt_async`
+    // The shared mock does not serve the V2 file search yet; filter like the server, which returns only
+    // directories for type "directory" and files plus directories when the type is omitted.
+    await page.route((url) => url.pathname === "/api/fs/find", (route) => {
+      const params = new URL(route.request().url()).searchParams
+      const data = [{ path: "note.md", type: "file" }].filter((entry) =>
+        entry.path.includes(params.get("query") ?? "") && (!params.get("type") || params.get("type") === entry.type))
+      return route.fulfill({
+        status: 200, contentType: "application/json", headers: { "access-control-allow-origin": "*" },
+        body: JSON.stringify({ location: { directory, project: { id: projectID, directory } }, data }),
+      })
+    })
+    // The V2 prompt carries no model; the app selects it on the Session first.
+    const selections: unknown[] = []
+    await page.route((url) => /^\/api\/session\/[^/]+\/model$/.test(url.pathname), (route) => {
+      if (route.request().method() === "POST") selections.push(route.request().postDataJSON())
+      return route.fallback()
+    })
+    const endpoint = `/api/session/${sessionID}/prompt`
     const executions: { url: string; body: string | null }[] = []
     await page.route(/\/(?:api\/)?session\/[^/]+\/(?:prompt(?:_async)?|message|command|shell)(?:\?|$)/, (route) => {
       const request = route.request()
@@ -201,7 +213,7 @@ for (const scenario of cases) {
       const fetched = page.waitForResponse((response) => {
         const url = new URL(response.url())
         return url.origin === new URL(server).origin && response.request().method() === "GET" &&
-          url.pathname === "/find/file" && url.searchParams.get("query") === query
+          url.pathname === "/api/fs/find" && url.searchParams.get("query") === query
       })
       await editor.fill(`see @${query}`)
       const response = await fetched
@@ -310,19 +322,20 @@ for (const scenario of cases) {
     expect(executions).toHaveLength(1)
     expect(new URL(executions[0]!.url).pathname).toBe(endpoint)
     expect(executions[0]!.body).toBe(request.postData())
-    const payload: { parts: (TextPartInput | FilePartInput)[]; model: { providerID: string; modelID: string } } = request.postDataJSON()
-    const textParts = payload.parts.filter((part) => part.type === "text")
-    expect(textParts).toHaveLength(1)
-    expect(payload.parts).toHaveLength(pillIdentity ? 2 : 1)
+    const payload: {
+      prompt: { text: string; files?: { uri: string; source?: { text: string; start: number; end: number } }[]; agents?: unknown[] }
+    } = request.postDataJSON()
+    expect(payload.prompt.files ?? []).toHaveLength(pillIdentity ? 1 : 0)
+    expect(payload.prompt.agents ?? []).toHaveLength(0)
     if (pillIdentity) {
       const start = scenario.mode === "paste-pill-interior" ? 5 : 4
-      expect(payload.parts.find((part) => part.type === "file")?.source?.text).toEqual({ value: "@note.md", start, end: start + 8 })
+      expect(payload.prompt.files?.[0]?.source).toEqual({ text: "@note.md", start, end: start + 8 })
     }
-    const text = textParts[0]?.text ?? ""
+    const text = payload.prompt.text
     await info.attach("prompt-byte-contract.json", {
       contentType: "application/json",
       body: JSON.stringify({
-        protocol: "v1", mode: scenario.mode, sessionID, dom, canonical, payload, executions,
+        protocol: "v2", mode: scenario.mode, sessionID, dom, canonical, payload, executions,
         cursorContract: { immediateInsertion: insertionCursor, finalBeforeSend: finalCursor, nativeRedo: "browser-owned selection recorded in history receipts" },
         inputProvenance: scenario.mode === "raw-clipboard" || scenario.mode === "undo-raw-clipboard"
           ? "synthetic-raw-clipboard-event; native keyboard history when requested"
@@ -337,7 +350,7 @@ for (const scenario of cases) {
         boundary: "HTTP bootstrap fixtures; actual production UI execution request captured then aborted. No backend admission or model/tool proof.",
       }, null, 2),
     })
-    expect(payload.model).toEqual({ providerID: "orchestra", modelID: "claude-opus-4-6" })
+    expect(selections.at(-1)).toEqual({ model: { providerID: "orchestra", id: "claude-opus-4-6" } })
     expect(text).toBe(scenario.text)
     expect(receipt(text)).toEqual(receipt(scenario.text))
   })

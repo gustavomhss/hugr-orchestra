@@ -5,7 +5,6 @@ import { mockOrchestraServer } from "../utils/mock-server"
 test.beforeEach(async ({ page }) => {
   const sessions = fixture.sessions.map((session) => ({ ...session }))
   await mockOrchestraServer(page, {
-    protocol: "v1",
     sessions,
     provider: fixture.provider,
     directory: fixture.directory,

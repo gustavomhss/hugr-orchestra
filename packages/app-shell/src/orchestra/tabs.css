@@ -9,8 +9,8 @@
     padding-inline: 8px;
     overflow: hidden;
     border: 1px solid var(--orchestra-glass-border);
-    border-radius: var(--orchestra-radius-md);
-    background: var(--orchestra-glass-background);
+    border-radius: var(--orchestra-radius-lg);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
     backdrop-filter: var(--orchestra-glass-filter);
@@ -86,7 +86,7 @@
 
   [data-orchestra-tabs] [data-titlebar-tab]:is([data-state="pressed"], [data-editing="true"]) {
     border-color: var(--orchestra-glass-border);
-    background: var(--orchestra-glass-background);
+    background: var(--orchestra-grain), var(--orchestra-glass-sheen), var(--orchestra-glass-background);
     color: var(--orchestra-tab-active-text);
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
