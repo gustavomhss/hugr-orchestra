@@ -2,7 +2,6 @@ import assert from "node:assert/strict"
 import path from "node:path"
 import http from "node:http"
 import { access, mkdir, readdir, readFile, writeFile } from "node:fs/promises"
-import type { Message, Part, Session, ToolPart } from "@orchestra/sdk/v2/client"
 import { LeanMetrics } from "../../../packages/schema/src/lean-metrics"
 import { bounded, inside, until, type OwnedCandidate } from "./lean-candidate-runtime.fixture"
 import type { CandidateRecorder } from "./lean-candidate-record.fixture"
@@ -12,7 +11,14 @@ import type { CandidateRecorder } from "./lean-candidate-record.fixture"
 // only public fixtures/loopback responses are seeded; no replacement renderer or server.
 type Hit = { messages: { role: string; tool_call_id?: string; content: string }[] }
 type Turn = { callID: string; command: string; directory: string }
-type Saved = { info: Message; parts: Part[] }[]
+// The slice of the session wire shapes this fixture reads, not the full contract.
+type Session = { id: string; projectID: string }
+type ToolState =
+  | { status: "completed"; input: { command: string }; output: string; metadata: { exit: number; truncated: boolean; lean?: unknown } }
+  | { status: "pending" | "running" | "error" }
+type ToolPart = { id: string; type: "tool"; callID: string; state: ToolState }
+type Part = ToolPart | { id: string; type: string; callID?: undefined }
+type Saved = { parts: Part[] }[]
 
 export async function nativeFixture(candidate: OwnedCandidate, directory: string, recorder: CandidateRecorder) {
   inside(candidate.root, directory, "public fixture directory")

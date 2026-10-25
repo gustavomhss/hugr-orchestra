@@ -42,10 +42,10 @@ import { ModuleResolver } from "@orchestra/script/module-resolver"
 
 const modules = ModuleResolver.make(inventory.modules, {
   core: { kind: "bun", name: "@orchestra/core", scope: "." },
-  "sdk/js": { kind: "bun", name: "@orchestra/sdk", scope: "." },
+  "sdk-next": { kind: "bun", name: "@orchestra/sdk-next", scope: "." },
 })
 const core = modules.resolve("core")
-const sdk = modules.resolve({ kind: "bun", name: "@orchestra/sdk" })
+const sdk = modules.resolve({ kind: "bun", name: "@orchestra/sdk-next" })
 ```
 
 Canonical names and caller-registered legacy aliases return the original declaration, including its captured `path`, `manifest`, exports, and scripts. Aliases support string and object selectors; explicit kind/scope must agree with the registered declaration. Alias targets are canonical identities, so registrations never chain through another alias. A folder move changes captured paths rather than the package name. Optional scope selects a particular workspace when names are shared; it is the captured workspace path, not a permanent semantic ID.

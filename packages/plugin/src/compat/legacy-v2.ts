@@ -1,4 +1,4 @@
-// Frozen copy of the legacy V2 wire types (packages/sdk/js/src/v2/gen/types.gen.ts) that the plugin contract still
+// Frozen copy of the legacy V2 wire types (from the deleted legacy SDK) that the plugin contract still
 // names, so this package does not depend on the legacy SDK. Do not regenerate; replace with schema types.
 
 export type OAuth = {

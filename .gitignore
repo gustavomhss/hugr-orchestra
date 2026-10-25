@@ -34,4 +34,3 @@ tsconfig.tsbuildinfo
 
 # Build/pack leftovers
 /tooling/http-recorder/*.tgz
-/packages/sdk/js/openapi.json

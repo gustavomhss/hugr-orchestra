@@ -1,6 +1,6 @@
 # V1 API Migration Checklist
 
-The app is currently hybrid. In this document, V1 refers to the legacy unprefixed server APIs used by `@orchestra/sdk/v2`, despite the SDK package name.
+The app is currently hybrid. In this document, V1 refers to the legacy unprefixed server APIs formerly used by the deleted `@orchestra/sdk` package.
 
 ## Events
 

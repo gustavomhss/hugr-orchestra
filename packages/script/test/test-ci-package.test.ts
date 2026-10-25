@@ -9,7 +9,7 @@ const registry = {
   format: 1,
   modules: [
     { alias: "app", kind: "bun", scope: ".", name: "@fixture/app", path: "apps/frontend-kit" },
-    { alias: "sdk/js", kind: "bun", scope: ".", name: "@fixture/sdk", path: "libraries/client-sdk" },
+    { alias: "sdk/lib", kind: "bun", scope: ".", name: "@fixture/sdk", path: "libraries/client-sdk" },
   ],
 }
 const manifests: Record<string, unknown> = {
@@ -30,8 +30,8 @@ test("legacy aliases and canonical names resolve registered directories after a 
     ;["app", "packages/app", "./packages/app/", "./app/", "@fixture/app"].forEach((selector) => {
       expect(resolveTestPackage(registry, selector, readManifest)).toEqual({ package: "app", directory: "apps/frontend-kit" })
     })
-    ;["sdk/js", "packages/sdk/js/", "@fixture/sdk"].forEach((selector) => {
-      expect(resolveTestPackage(registry, selector, readManifest)).toEqual({ package: "sdk/js", directory: "libraries/client-sdk" })
+    ;["sdk/lib", "packages/sdk/lib/", "@fixture/sdk"].forEach((selector) => {
+      expect(resolveTestPackage(registry, selector, readManifest)).toEqual({ package: "sdk/lib", directory: "libraries/client-sdk" })
     })
     expect(() => resolveTestPackage(registry, "frontend-kit", readManifest)).toThrow("TEST_PACKAGE_NOT_FOUND")
   } finally {
@@ -116,11 +116,11 @@ test("canonical names colliding with another legacy alias keep their registered 
     format: 1,
     modules: [
       { alias: "app", kind: "bun", scope: ".", name: "@fixture/app", path: "apps/ui" },
-      { alias: "sdk/js", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
+      { alias: "sdk/lib", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
     ],
   }
   const read = (directory: string) => ({ name: directory === "apps/ui" ? "@fixture/app" : "app" })
-  expect(resolveTestPackage(collision, "sdk/js", read)).toEqual({ package: "sdk/js", directory: "libraries/sdk" })
+  expect(resolveTestPackage(collision, "sdk/lib", read)).toEqual({ package: "sdk/lib", directory: "libraries/sdk" })
   expect(() => resolveTestPackage(collision, "app", read)).toThrow("TEST_PACKAGE_SELECTOR_AMBIGUOUS")
   expect(resolveTestPackage(collision, "packages/app", read)).toEqual({ package: "app", directory: "apps/ui" })
   expect(resolveTestPackage(collision, "@fixture/app", read)).toEqual({ package: "app", directory: "apps/ui" })
@@ -129,7 +129,7 @@ test("canonical names colliding with another legacy alias keep their registered 
 test("normalized collision requests retain explicit alias selection through snapshot replay", () => {
   const collision = { format: 1, modules: [
     { alias: "app", kind: "bun", scope: ".", name: "@fixture/app", path: "apps/ui" },
-    { alias: "sdk/js", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
+    { alias: "sdk/lib", kind: "bun", scope: ".", name: "app", path: "libraries/sdk" },
   ] }
   const resolve = (selector: string) => resolveTestPackage(collision, selector,
     (directory) => ({ name: directory === "apps/ui" ? "@fixture/app" : "app" }))
@@ -138,6 +138,6 @@ test("normalized collision requests retain explicit alias selection through snap
   const normalized = validateRequest(request, () => true, resolve)
   expect(normalized).toMatchObject({ package: "app", packageSelector: "packages/app", directory: "apps/ui" })
   expect(validateRequest(JSON.parse(JSON.stringify(normalized)), () => true, resolve)).toEqual(normalized)
-  expect(() => validateRequest({ ...request, package: "sdk/js" }, () => true, resolve)).toThrow("selector does not match normalized package")
+  expect(() => validateRequest({ ...request, package: "sdk/lib" }, () => true, resolve)).toThrow("selector does not match normalized package")
   expect(() => validateRequest({ ...request, directory: "libraries/sdk" }, () => true, resolve)).toThrow("directory does not match")
 })

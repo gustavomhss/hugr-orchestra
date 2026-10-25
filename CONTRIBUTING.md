@@ -141,7 +141,7 @@ bun run --cwd apps/desktop package
 ```
 
 > [!NOTE]
-> After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; do not edit `src/generated` or `src/generated-effect` by hand. The legacy JavaScript SDK is rebuilt separately with `./packages/sdk/js/script/build.ts`. [AGENTS.md](./AGENTS.md) is the reference for both commands, and CI runs `check:generated`, so a stale generated file fails the build.
+> After changing the public Protocol or Server `HttpApi`, run `bun run generate` from `packages/client`; do not edit `src/generated` or `src/generated-effect` by hand. [AGENTS.md](./AGENTS.md) is the reference for the command, and CI runs `check:generated`, so a stale generated file fails the build.
 
 > [!NOTE]
 > The repository ships no enforced commit hooks: `.husky` only holds what `husky` installs, so nothing runs on commit. Run the checks yourself before pushing.

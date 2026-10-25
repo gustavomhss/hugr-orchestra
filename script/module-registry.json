@@ -27,7 +27,6 @@
     { "alias": "relay", "kind": "bun", "scope": ".", "name": "@orchestra/relay", "path": "modules/relay" },
     { "alias": "schema", "kind": "bun", "scope": ".", "name": "@orchestra/schema", "path": "packages/schema" },
     { "alias": "sdk-next", "kind": "bun", "scope": ".", "name": "@orchestra/sdk-next", "path": "packages/sdk-next" },
-    { "alias": "sdk/js", "kind": "bun", "scope": ".", "name": "@orchestra/sdk", "path": "packages/sdk/js" },
     { "alias": "script", "kind": "bun", "scope": ".", "name": "@orchestra/script", "path": "packages/script" },
     { "alias": "server", "kind": "bun", "scope": ".", "name": "@orchestra/server", "path": "packages/server" },
     { "alias": "session-ui", "kind": "bun", "scope": ".", "name": "@orchestra/session-ui", "path": "packages/session-ui" },

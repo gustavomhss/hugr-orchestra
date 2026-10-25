@@ -18,11 +18,6 @@
       "dependsOn": [],
       "outputs": ["dist/**"]
     },
-    // SDK generation cleans source exports that the plugin compiler reads.
-    "@orchestra/plugin#build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"]
-    },
     // A test task hashes only its own package unless it depends on its workspace dependencies. Most of them
     // have no build script, so ^build alone left a cached pass in place after a dependency changed;
     // ^transit puts every workspace dependency's files into each test hash without running anything.

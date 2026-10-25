@@ -57,7 +57,7 @@ const rules: Rule[] = [
 
 // Rewritten by their generators, never by rules.
 const GENERATED =
-  /^packages\/sdk\/js\/src\/v2\/gen\/|^packages\/sdk\/openapi\.json$|^packages\/client\/src\/generated(?:-effect)?\/|^(?:packages\/atlas-boundary|modules\/atlas\/boundary)\/src\/generated\//
+  /^packages\/client\/src\/generated(?:-effect)?\/|^(?:packages\/atlas-boundary|modules\/atlas\/boundary)\/src\/generated\//
 // yargs right-aligns the type column, so a longer name must eat the padding to keep the line width.
 const RIGHT_ALIGNED =
   /^packages\/(?:opencode|orchestra)\/test\/cli\/help\/__snapshots__\/help-snapshots\.test\.ts\.snap$/
@@ -332,7 +332,6 @@ function regenerate() {
   }
   // --ignore-scripts: `prepare` would run husky, which rewrites the shared core.hooksPath.
   step("bun.lock", ".", ["bun", "install", "--ignore-scripts"])
-  step("the v2 SDK", ".", ["bun", "./packages/sdk/js/script/build.ts"])
   step("the client", "packages/client", ["bun", "run", "generate"])
   step("the Atlas bundles", existsSync(path.join(root, "modules/atlas/boundary")) ? "modules/atlas/boundary" : "packages/atlas-boundary", ["bun", "run", "generate"])
 }

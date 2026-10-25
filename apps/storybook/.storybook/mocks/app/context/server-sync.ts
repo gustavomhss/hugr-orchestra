@@ -1,4 +1,5 @@
-import type { ProviderAuthMethod } from "@orchestra/sdk/v2/client"
+// The slice of the provider auth wire shape the stories use.
+type ProviderAuthMethod = { type: "oauth" | "api"; label: string }
 
 const data = {
   provider: {

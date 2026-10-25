@@ -61,8 +61,7 @@ Host owns permissions/placement; unavailable tools or acquisition stay UNKNOWN.
 Compare the actual adopted shared/consumer paths with `git diff -- <shared-path> <consumer-path>`.
 Resolve paths/suites before execution: `bun typecheck` in the package directory; tests run on Actions via
 `bun run test:ci <package> <resolved-seam-suite>` from repository root. For public Protocol/Server HttpApi
-changes run `bun run generate` in `packages/client`, never edit generated client source. Regenerate the
-legacy JS SDK with `./packages/sdk/js/script/build.ts` from repository root when the change requires it.
+changes run `bun run generate` in `packages/client`, never edit generated client source.
 
 ## Success / fail
 

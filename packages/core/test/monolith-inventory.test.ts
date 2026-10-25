@@ -53,7 +53,7 @@ test("supports array workspaces and deduplicates overlapping discovery patterns"
   await using fixture = await inventoryFixture()
   const original = await monolithInventory(fixture.path)
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify({
-    name: "fixture", workspaces: ["packages/*", "packages/schema", "packages/sdk/js", "packages/omni/bindings/node"],
+    name: "fixture", workspaces: ["packages/*", "packages/schema", "packages/sdk/lib", "packages/omni/bindings/node"],
     patchedDependencies: { "fix@1": "patches/fix.patch" },
   }))
   expect((await monolithInventory(fixture.path)).modules).toEqual(original.modules)
@@ -70,7 +70,7 @@ test("registered native and Atlas moves preserve declaration payloads and domain
     omni: { path: "native/omni", manifest: "Cargo.toml" }, atlas: { path: "modules/atlas", manifest: "package.json" },
   } }))
   const manifest = await Bun.file(path.join(fixture.path, "package.json")).json()
-  manifest.workspaces.packages = ["packages/*", "packages/sdk/js", "native/omni/bindings/node"]
+  manifest.workspaces.packages = ["packages/*", "packages/sdk/lib", "native/omni/bindings/node"]
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify(manifest))
   const moved = await monolithInventory(fixture.path)
   const declarations = (modules: typeof moved.modules) => modules.map((module) => ({
@@ -100,7 +100,7 @@ test("captures relocated skill and brand assets without treating registered modu
   await Bun.write(path.join(fixture.path, "modules/maestro/arsenal/src/index.ts"), "export {}\n")
   await Bun.write(path.join(fixture.path, "assets/brand/mark.png"), new Uint8Array([0, 0xff, 10, 13, 10]))
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify({
-    name: "fixture", workspaces: ["packages/*", "packages/sdk/js", "packages/omni/bindings/node", "modules/maestro/arsenal"],
+    name: "fixture", workspaces: ["packages/*", "packages/sdk/lib", "packages/omni/bindings/node", "modules/maestro/arsenal"],
   }))
   const captured = await monolithInventory(fixture.path)
   expect(captured.modules.find((module) => module.name === "@fixture/arsenal")?.path).toBe("modules/maestro/arsenal")
@@ -157,7 +157,7 @@ test("captures hidden and target/dist asset payloads and pins declared by worksp
   await Bun.write(path.join(fixture.path, "packages/skills/target/mark.svg"), "target asset\n")
   await Bun.write(path.join(fixture.path, "packages/skills/dist/profile.json"), "{}\n")
   await Bun.write(path.join(fixture.path, "package.json"), JSON.stringify({
-    name: "fixture", workspaces: ["packages/*", "packages/sdk/js", "packages/omni/bindings/node"],
+    name: "fixture", workspaces: ["packages/*", "packages/sdk/lib", "packages/omni/bindings/node"],
     dependencies: { pinned: "file:./vendor/root.tgz" },
   }))
   await Bun.write(path.join(fixture.path, "vendor/root.tgz"), "root pin\n")

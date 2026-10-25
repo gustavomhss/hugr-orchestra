@@ -418,7 +418,6 @@
     "@parcel/watcher-win32-arm64": "2.5.1",
     "@parcel/watcher-win32-x64": "2.5.1",
     "@orchestra/http-recorder": "workspace:*",
-    "@orchestra/sdk": "workspace:*",
     "drizzle-kit": "catalog:"
   },
   "dependencies": {

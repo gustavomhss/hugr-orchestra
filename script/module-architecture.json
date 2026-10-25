@@ -40,14 +40,6 @@
       "summary": "Network client generated from the authoritative Effect HttpApi contracts.",
       "exportsPolicy": "none"
     },
-    "sdk/js": {
-      "layer": "client",
-      "status": "legacy",
-      "successor": "packages/client",
-      "owner": "client SDK maintainer",
-      "summary": "Legacy generated JavaScript SDK, frozen behind compat facades until its consumers move to the client package.",
-      "exportsPolicy": "none"
-    },
     "plugin": {
       "layer": "extension-api",
       "status": "canonical",
@@ -468,15 +460,6 @@
   },
   "legacy": [
     {
-      "path": "packages/sdk/js",
-      "specifier": "@orchestra/sdk",
-      "status": "legacy",
-      "successor": "packages/client",
-      "reason": "generated legacy SDK; consumers migrate to the client package one by one",
-      "decision": "D14",
-      "compat": { ".": "sdk", "./v2": "sdk-v2", "./v2/client": "sdk-v2-client", "./v2/types": "sdk-v2-types" }
-    },
-    {
       "path": "packages/core/src/v1",
       "status": "legacy",
       "successor": "the V2 Session core in packages/core",
@@ -522,7 +505,6 @@
   "scaffoldReadmes": [
     "modules/atlas/boundary/README.md",
     "packages/effect-sqlite-node/README.md",
-    "packages/sdk/js/README.md",
     "packages/script/README.md",
     "packages/session-ui/README.md",
     "apps/storybook/README.md",

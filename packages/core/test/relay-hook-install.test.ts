@@ -24,8 +24,8 @@ function guard() {
     name: "No generated edits",
     nodes: [
       node("event", RelayHook.NodeType.trigger, { operation: "edit", timing: "before" }),
-      node("generated", RelayHook.NodeType.condition, { field: "path", pattern: "packages/sdk/js/src/generated/**" }),
-      node("block", RelayHook.NodeType.block, { message: "Regenerate with ./packages/sdk/js/script/build.ts" }),
+      node("generated", RelayHook.NodeType.condition, { field: "path", pattern: "packages/sdk/lib/src/generated/**" }),
+      node("block", RelayHook.NodeType.block, { message: "Regenerate with ./packages/sdk/lib/script/build.ts" }),
       node("record", RelayHook.NodeType.record, { message: "Outside the generated tree." }),
     ] as Array<ReturnType<typeof node>>,
     connections: [edge("event", 0, "generated"), edge("generated", 0, "block"), edge("generated", 1, "record")],

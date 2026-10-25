@@ -1,5 +1,5 @@
-// Frozen copy of the legacy V1 wire types (packages/sdk/js/src/gen/types.gen.ts) that the server plugin contract
-// still names, so this package does not depend on the legacy SDK. Do not regenerate; replace with schema types.
+// Frozen copy of the legacy V1 wire types (from the deleted legacy SDK) that the server plugin contract
+// still names, so this package does not depend on any SDK. Do not regenerate; replace with schema types.
 
 export type Permission = {
   id: string

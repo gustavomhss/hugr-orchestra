@@ -17,7 +17,7 @@ Use each domain's event entrypoint as the canonical definition. Specialized even
 
 ## Consumers and checks
 
-Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. The legacy JavaScript SDK generator is `./packages/sdk/js/script/build.ts` from the repository root. Do not edit generated output directly.
+Protocol builds HTTP API contracts from Schema; Server consumes Protocol. Client and SDK consumers use these public contracts and generated types. After changing a public Protocol or Server `HttpApi`, regenerate Client outputs from `packages/client` with `bun run generate`. Do not edit generated output directly.
 
 - Package typecheck: from `packages/schema`, run `bun typecheck` (`typecheck` is `tsgo --noEmit`).
 - Hosted tests: from the repository root, run `bun run test:ci schema [test files...]`; this uploads a working-tree snapshot to GitHub Actions. Tests are not run locally under repository policy.
