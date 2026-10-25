@@ -1,9 +1,7 @@
 import { Orchestra } from "@orchestra/client"
-import { createOrchestraClient } from "../compat/sdk-v2"
 import { createSessionActions } from "./session-actions"
 import { createCatalog } from "./catalog"
 import type { GlobalEvent } from "../compat/schema"
-import { Flag } from "@orchestra/core/flag/flag"
 import { createSimpleContext } from "./helper"
 import { batch, createSignal, onCleanup, onMount } from "solid-js"
 
@@ -23,19 +21,7 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     const abort = new AbortController()
     let sse: AbortController | undefined
 
-    function createSDK() {
-      return createOrchestraClient({
-        baseUrl: props.url,
-        signal: abort.signal,
-        directory: props.directory,
-        fetch: props.fetch,
-        headers: props.headers,
-      })
-    }
-
-    let sdk = createSDK()
-    // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream; the
-    // legacy client above covers the dialogs and routes that are not migrated yet.
+    // The V2 client serves session actions, the catalog the store bootstraps from, and the event stream.
     const v2 = Orchestra.make({ baseUrl: props.url, fetch: props.fetch, headers: props.headers })
     const actions = createSessionActions(v2)
     const catalog = createCatalog(v2)
@@ -100,15 +86,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
 
           // The V2 stream carries native events; the store handlers still take the legacy GlobalEvent envelope.
           await (async () => {
-            let started = false
             for await (const event of v2.events.subscribe({ signal: ctrl.signal })) {
               if (ctrl.signal.aborted) break
-              if (!started) {
-                started = true
-                setOffline(false)
-                // Start syncing workspaces, it's important to do this after we've started listening to events
-                if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) await sdk.sync.start().catch(() => {})
-              }
+              setOffline(false)
               handleEvent({
                 directory: event.location?.directory ?? props.directory ?? "",
                 workspace: event.location?.workspaceID,
@@ -134,15 +114,9 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
       if (props.events) {
         const unsub = await props.events.subscribe(handleEvent)
         onCleanup(unsub)
-
-        if (Flag.ORCHESTRA_EXPERIMENTAL_WORKSPACES) {
-          // Start syncing workspaces, it's important to do this after
-          // we've started listening to events
-          await sdk.sync.start().catch(() => {})
-        }
-      } else {
-        startSSE()
+        return
       }
+      startSSE()
     })
 
     onCleanup(() => {
@@ -153,9 +127,6 @@ export const { use: useSDK, provider: SDKProvider } = createSimpleContext({
     })
 
     return {
-      get client() {
-        return sdk
-      },
       // The V2 Orchestra client.
       api: v2,
       actions,

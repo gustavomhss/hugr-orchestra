@@ -12,7 +12,12 @@ import { useLocal } from "../context/local"
 import { DialogSessionRename } from "./dialog-session-rename"
 import { createDebouncedSignal } from "../util/signal"
 import { useToast } from "../ui/toast"
-import { openWorkspaceSelect, type WorkspaceSelection, warpWorkspaceSession } from "./dialog-workspace-create"
+import {
+  openWorkspaceSelect,
+  type WorkspaceSelection,
+  warpWorkspaceSession,
+  WORKSPACES_UNAVAILABLE,
+} from "./dialog-workspace-create"
 import { Spinner } from "./spinner"
 import { errorMessage } from "../util/error"
 import { DialogSessionDeleteFailed } from "./dialog-session-delete-failed"
@@ -129,28 +134,9 @@ export function DialogSessionList() {
       const workspaceID = await (async () => {
         if (selection.type === "none") return null
         if (selection.type === "existing") return selection.workspaceID
-        let result
-        try {
-          result = await sdk.client.experimental.workspace.create({ type: selection.workspaceType, branch: null })
-        } catch (err) {
-          toast.show({
-            title: "Failed to create workspace",
-            message: errorMessage(err),
-            variant: "error",
-          })
-          return
-        }
-        const workspace = result?.data
-        if (!workspace) {
-          toast.show({
-            title: "Failed to create workspace",
-            message: errorMessage(result?.error ?? "no response"),
-            variant: "error",
-          })
-          return
-        }
-        await project.workspace.sync()
-        return workspace.id
+        // V2 serves no workspace routes, so a new workspace cannot be created here.
+        toast.show({ title: "Failed to create workspace", message: WORKSPACES_UNAVAILABLE, variant: "error" })
+        return
       })()
       if (workspaceID === undefined) return
       await warpWorkspaceSession({
@@ -171,26 +157,10 @@ export function DialogSessionList() {
         session={session.title}
         workspace={workspace?.name ?? session.workspaceID!}
         onDone={list}
-        onDelete={async () => {
-          const current = currentSessionID()
-          const info = current ? sync.data.session.find((item) => item.id === current) : undefined
-          const result = await sdk.client.experimental.workspace.remove({ id: session.workspaceID! })
-          if (result.error) {
-            toast.show({
-              variant: "error",
-              title: "Failed to delete workspace",
-              message: errorMessage(result.error),
-            })
-            return false
-          }
-          await project.workspace.sync()
-          await sync.session.refresh()
-          await refetchBrowse()
-          if (search()) await refetch()
-          if (info?.workspaceID === session.workspaceID) {
-            route.navigate({ type: "home" })
-          }
-          return true
+        onDelete={() => {
+          // V2 serves no workspace routes, so the workspace cannot be removed here.
+          toast.show({ variant: "error", title: "Failed to delete workspace", message: WORKSPACES_UNAVAILABLE })
+          return false
         }}
         onRestore={() => {
           void openWorkspaceSelect({

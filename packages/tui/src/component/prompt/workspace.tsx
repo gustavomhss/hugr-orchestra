@@ -4,12 +4,12 @@ import { useSDK } from "../../context/sdk"
 import { useProject } from "../../context/project"
 import { useSync } from "../../context/sync"
 import { useToast } from "../../ui/toast"
-import { errorMessage } from "../../util/error"
 import {
   confirmWorkspaceFileChanges,
   openWorkspaceSelect,
   warpWorkspaceSession,
   type WorkspaceSelection,
+  WORKSPACES_UNAVAILABLE,
 } from "../dialog-workspace-create"
 import type { WorkspaceStatus } from "../workspace-label"
 
@@ -24,45 +24,19 @@ export function usePromptWorkspace(sessionID?: string) {
   const [creatingDots, setCreatingDots] = createSignal(3)
   const [notice, setNotice] = createSignal<string>()
 
-  async function create(selection: Extract<WorkspaceSelection, { type: "new" }>) {
-    setCreating(true)
-    let result
-    try {
-      result = await sdk.client.experimental.workspace.create({ type: selection.workspaceType, branch: null })
-    } catch (err) {
-      setSelection(undefined)
-      setCreating(false)
-      toast.show({ title: "Creating workspace failed", message: errorMessage(err), variant: "error" })
-      return
-    }
-    if (result.error || !result.data) {
-      setSelection(undefined)
-      setCreating(false)
-      toast.show({
-        title: "Creating workspace failed",
-        message: errorMessage(result.error ?? "no response"),
-        variant: "error",
-      })
-      return
-    }
-
-    await project.workspace.sync()
-    const workspace = result.data
-    setSelection({
-      type: "existing",
-      workspaceID: workspace.id,
-      workspaceType: workspace.type,
-      workspaceName: workspace.name,
-    })
+  // V2 serves no workspace routes, so a new workspace cannot be created here.
+  function create() {
+    setSelection(undefined)
     setCreating(false)
-    return workspace
+    toast.show({ title: "Creating workspace failed", message: WORKSPACES_UNAVAILABLE, variant: "error" })
+    return undefined
   }
 
   async function warp(selection: WorkspaceSelection) {
     if (!sessionID) {
       setSelection(selection)
       dialog.clear()
-      if (selection.type === "new") void create(selection)
+      if (selection.type === "new") create()
       return
     }
     const sourceWorkspaceID = project.workspace.current()
@@ -76,7 +50,7 @@ export function usePromptWorkspace(sessionID?: string) {
         ? { id: null, name: "local project" }
         : selection.type === "existing"
           ? { id: selection.workspaceID, name: selection.workspaceName }
-          : await create(selection)
+          : create()
     if (!workspace) return
 
     const warped = await warpWorkspaceSession({
