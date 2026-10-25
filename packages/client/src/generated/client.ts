@@ -756,7 +756,7 @@ export function make(options: ClientOptions) {
           {
             method: "POST",
             path: `/api/session/${encodeURIComponent(input.sessionID)}/move`,
-            body: { location: input["location"] },
+            body: { location: input["location"], moveChanges: input["moveChanges"] },
             successStatus: 204,
             declaredStatuses: [404, 409, 400, 401],
             empty: true,

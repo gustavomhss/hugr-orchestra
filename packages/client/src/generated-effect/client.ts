@@ -292,11 +292,13 @@ type Endpoint3_17Request = Parameters<RawClient["server.session"]["session.move"
 type Endpoint3_17Input = {
   readonly sessionID: Endpoint3_17Request["params"]["sessionID"]
   readonly location: Endpoint3_17Request["payload"]["location"]
+  readonly moveChanges?: Endpoint3_17Request["payload"]["moveChanges"]
 }
 const Endpoint3_17 = (raw: RawClient["server.session"]) => (input: Endpoint3_17Input) =>
-  raw["session.move"]({ params: { sessionID: input["sessionID"] }, payload: { location: input["location"] } }).pipe(
-    Effect.mapError(mapClientError),
-  )
+  raw["session.move"]({
+    params: { sessionID: input["sessionID"] },
+    payload: { location: input["location"], moveChanges: input["moveChanges"] },
+  }).pipe(Effect.mapError(mapClientError))
 
 type Endpoint3_18Request = Parameters<RawClient["server.session"]["session.shell"]>[0]
 type Endpoint3_18Input = {

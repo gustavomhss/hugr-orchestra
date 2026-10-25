@@ -413,7 +413,7 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
     .add(
       HttpApiEndpoint.post("session.move", "/api/session/:sessionID/move", {
         params: { sessionID: Session.ID },
-        payload: Schema.Struct({ location: Location.Ref }),
+        payload: Schema.Struct({ location: Location.Ref, moveChanges: Schema.optional(Schema.Boolean) }),
         success: HttpApiSchema.NoContent,
         error: [SessionNotFoundError, ConflictError, InvalidRequestError],
       })
@@ -422,7 +422,8 @@ export const makeSessionGroup = <I extends HttpApiMiddleware.AnyId, S>(sessionLo
           OpenApi.annotations({
             identifier: "v2.session.move",
             summary: "Move session",
-            description: "Move the Session to another directory or workspace of its project.",
+            description:
+              "Move the Session to another directory or workspace of its project. With `moveChanges`, the source's uncommitted changes are applied at the destination and discarded at the source.",
           }),
         ),
     )

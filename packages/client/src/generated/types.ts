@@ -886,7 +886,14 @@ export type SessionsForkOutput = {
 
 export type SessionsMoveInput = {
   readonly sessionID: { readonly sessionID: string }["sessionID"]
-  readonly location: { readonly location: { readonly directory: string; readonly workspaceID?: string } }["location"]
+  readonly location: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["location"]
+  readonly moveChanges?: {
+    readonly location: { readonly directory: string; readonly workspaceID?: string }
+    readonly moveChanges?: boolean | null
+  }["moveChanges"]
 }
 
 export type SessionsMoveOutput = void
