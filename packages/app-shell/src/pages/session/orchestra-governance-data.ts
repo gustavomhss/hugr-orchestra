@@ -116,10 +116,7 @@ export function readGovernance(input: {
     if (message.role !== "assistant") return []
     const parts = input.parts(message.id) ?? []
     const source = sources.get(message.id)
-    const byID = new Map(parts.map((part) => [part.id, part]))
-    // V2 call IDs are opaque; the shared part store sorts them lexically. Preserve server content order.
-    const ordered = source ? Array.from(source.keys()).flatMap((id) => byID.get(id) ?? []) : parts
-    return ordered.flatMap((part) => {
+    return parts.flatMap((part) => {
       const record =
         part.type === "tool"
           ? governanceRecord(input.sessionID, input.working, message, part, source?.get(part.id))
