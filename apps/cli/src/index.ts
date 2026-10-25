@@ -42,6 +42,10 @@ const Handlers = Runtime.handlers(Commands, {
   serve: () => import("./commands/handlers/serve"),
   run: () => import("./commands/handlers/run"),
   attach: () => import("./commands/handlers/attach"),
+  agent: {
+    list: () => import("./commands/handlers/agent/list"),
+    create: () => import("./commands/handlers/agent/create"),
+  },
   mcp: {
     list: () => import("./commands/handlers/mcp/list"),
     add: () => import("./commands/handlers/mcp/add"),

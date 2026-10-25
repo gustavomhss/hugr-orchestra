@@ -226,6 +226,39 @@ const mcp = Spec.make("mcp", {
   ],
 })
 
+const agent = Spec.make("agent", {
+  description: "Manage agents",
+  commands: [
+    Spec.make("list", { description: "List all available agents" }),
+    Spec.make("create", {
+      description: "Create a new agent",
+      params: {
+        path: Flag.string("path").pipe(
+          Flag.withDescription("directory whose .orchestra folder receives the agent file (default: the current directory)"),
+          Flag.optional,
+        ),
+        description: Flag.string("description").pipe(Flag.withDescription("what the agent should do"), Flag.optional),
+        mode: Flag.choice("mode", ["all", "primary", "subagent"]).pipe(Flag.withDescription("agent mode"), Flag.optional),
+        permissions: Flag.string("permissions").pipe(
+          Flag.withAlias("tools"),
+          Flag.withDescription("comma-separated list of permissions to allow (empty: all)"),
+          Flag.optional,
+        ),
+        model: Flag.string("model").pipe(
+          Flag.withAlias("m"),
+          Flag.withDescription("model to use in the format of provider/model"),
+          Flag.optional,
+        ),
+        name: Flag.string("name").pipe(
+          Flag.withDescription("agent name; with --system the agent file is written without generating anything"),
+          Flag.optional,
+        ),
+        system: Flag.string("system").pipe(Flag.withDescription("system prompt for the agent"), Flag.optional),
+      },
+    }),
+  ],
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -269,6 +302,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     attach,
     providers,
     mcp,
+    agent,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
