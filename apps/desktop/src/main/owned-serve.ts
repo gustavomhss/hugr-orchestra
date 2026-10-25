@@ -45,7 +45,8 @@ export async function startOwnedServe(options: {
     const args = [...options.command.slice(1), "serve", "--hostname", HOSTNAME, "--port", String(port)]
     const child = DesktopOmni.spawn(options.command[0], args, { env, stdin: "closed" })
     state.child = child
-    options.onSpawn?.(child.pid)
+    // An omni child learns its pid asynchronously, so the witness waits for the spawn event.
+    child.once("spawn", () => options.onSpawn?.(child.pid))
     forward(child.stdout, (line) => options.write("stdout", line.replaceAll(password, "[redacted]")))
     forward(child.stderr, (line) => options.write("stderr", line.replaceAll(password, "[redacted]")))
     child.once("error", (error) => options.logger.error("owned serve error", { message: error.message }))

@@ -99,6 +99,7 @@ export interface Spawned {
   readonly stderr: Readable
   kill(signal?: NodeJS.Signals): boolean
   once(event: "error", listener: (error: Error) => void): unknown
+  once(event: "spawn", listener: () => void): unknown
   once(event: "exit" | "close", listener: (code: number | null, signal: NodeJS.Signals | null) => void): unknown
 }
 
