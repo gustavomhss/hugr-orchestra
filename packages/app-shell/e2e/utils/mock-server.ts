@@ -313,6 +313,13 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
       const period = url.searchParams.get("period") ?? "30d"
       return json(route, config.activity?.(period) ?? sessionActivity(config.sessions, period))
     }
+    if (path === "/api/activity/session") {
+      const period = url.searchParams.get("period") ?? "30d"
+      return json(route, {
+        location: location(config),
+        data: config.activity?.(period) ?? sessionActivity(config.sessions, period),
+      })
+    }
     if (path === "/vcs/activity")
       return json(route, {
         repository: true,
@@ -325,6 +332,22 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         ahead: null,
         behind: null,
         truncated: false,
+      })
+    if (path === "/api/vcs/activity")
+      return json(route, {
+        location: location(config),
+        data: {
+          repository: true,
+          since: Number(url.searchParams.get("since") ?? 0),
+          until: Number(url.searchParams.get("until") ?? Date.now()),
+          totals: { commits: 0, merges: 0, authors: 0, additions: 0, deletions: 0, filesChanged: 0 },
+          days: [],
+          topPaths: [],
+          recent: [],
+          ahead: null,
+          behind: null,
+          truncated: false,
+        },
       })
 
     const currentSessionMatch = path.match(/^\/api\/session\/([^/]+)$/)

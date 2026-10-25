@@ -1,6 +1,7 @@
 import { expect, test, type Locator, type Page } from "@playwright/test"
 import {
   assistantMessage,
+  messageUpdated,
   setupTimeline,
   shell,
   textPart,
@@ -133,20 +134,21 @@ test("keeps the patch card inside a fractionally short virtual row", async ({ pa
 
 test("allows paint rounding for every framed row but not fixed turn gaps", async ({ page }) => {
   const secondUserID = "msg_outline_second_user"
-  await setupTimeline(page, {
-    messages: [
-      userMessage(undefined, {
-        summary: {
-          diffs: [
-            {
-              file: "src/summary.ts",
-              additions: 1,
-              deletions: 1,
-              patch: "@@ -1 +1 @@\n-export const value = 1\n+export const value = 2",
-            },
-          ],
+  const firstUser = userMessage(undefined, {
+    summary: {
+      diffs: [
+        {
+          file: "src/summary.ts",
+          additions: 1,
+          deletions: 1,
+          patch: "@@ -1 +1 @@\n-export const value = 1\n+export const value = 2",
         },
-      }),
+      ],
+    },
+  })
+  const timeline = await setupTimeline(page, {
+    messages: [
+      firstUser,
       assistantMessage([textPart("prt_outline_text", "Assistant text")]),
       userMessage(undefined, { id: secondUserID, created: 1700000010000 }),
       assistantMessage([], {
@@ -156,6 +158,8 @@ test("allows paint rounding for every framed row but not fixed turn gaps", async
       }),
     ],
   })
+  // V2 history carries no user summary diffs; they arrive with the live user message update.
+  await timeline.send(messageUpdated(firstUser.info))
   await expect(page.locator('[data-timeline-row="DiffSummary"]')).toBeVisible()
   await expect(page.locator('[data-timeline-row="TurnGap"]')).toBeVisible()
 

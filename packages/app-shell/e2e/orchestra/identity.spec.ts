@@ -11,18 +11,19 @@ import {
 } from "../performance/timeline-stability/fixture"
 import { setupIdentity } from "./identity.fixture"
 
-// Frozen glass material values (orchestra/theme.css), normalized by Chromium's computed-style engine.
-const grain = `url("data:image/svg+xml,%3Csvg%20xmlns=%27http://www.w3.org/2000/svg%27%20width=%27160%27%20height=%27160%27%3E%3Cfilter%20id=%27n%27%3E%3CfeTurbulence%20type=%27fractalNoise%27%20baseFrequency=%27.85%27%20numOctaves=%272%27%20stitchTiles=%27stitch%27/%3E%3CfeColorMatrix%20values=%270%200%200%200%201%200%200%200%200%201%200%200%200%200%201%200%200%200%20.05%200%27/%3E%3C/filter%3E%3Crect%20width=%27100%25%27%20height=%27100%25%27%20filter=%27url%28%23n%29%27/%3E%3C/svg%3E")`
+// Frozen glass tint values (orchestra/theme.css), normalized by Chromium's computed-style engine. Only the
+// gradient layer is fingerprinted: the grain and sheen layers sit under some surfaces (the sidebar) but not
+// others (#orchestra-session-tabs, whose id rule restates the background), so they are not common ground.
 const glass = {
   dark: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(214, 231, 247, 0.07), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
+    backgroundImage: `linear-gradient(rgba(32, 44, 58, 0.44) 0%, rgba(17, 24, 33, 0.52) 46%, rgba(11, 16, 23, 0.58) 100%)`,
     backdropFilter: "blur(28px) brightness(0.84) saturate(1.5)",
     borderTopColor: "rgba(160, 179, 197, 0.1)",
     boxShadow:
       "rgba(214, 231, 247, 0.1) 0px 1px 0px 0px inset, rgba(0, 0, 0, 0.28) 0px -1px 0px 0px inset, rgba(0, 0, 0, 0.36) 0px 1px 2px 0px, rgba(0, 0, 0, 0.24) 0px 10px 30px 0px",
   },
   light: {
-    backgroundImage: `${grain}, radial-gradient(120% 60% at 0% 0%, rgba(255, 255, 255, 0.35), rgba(0, 0, 0, 0) 60%), linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
+    backgroundImage: `linear-gradient(rgba(255, 255, 255, 0.57) 0%, rgba(248, 250, 252, 0.49) 46%, rgba(240, 244, 247, 0.59) 100%)`,
     backdropFilter: "blur(28px) brightness(1.06) saturate(1.5)",
     borderTopColor: "rgba(70, 84, 98, 0.12)",
     boxShadow:
@@ -227,14 +228,12 @@ for (const scheme of ["dark", "light"] as const) {
       const reply = page.waitForRequest(
         (request) =>
           request.method() === "POST" &&
-          /\/permission(?:\/per_orchestra_identity\/reply|s\/per_orchestra_identity)$/.test(
-            new URL(request.url()).pathname,
-          ),
+          new URL(request.url()).pathname.endsWith("/permission/per_orchestra_identity/reply"),
       )
       await permission.getByRole("button", { name: "Allow once", exact: true }).click()
       const request = await reply
-      expect(new URL(request.url()).pathname).toBe(`/session/${sessionID}/permissions/per_orchestra_identity`)
-      expect(request.postDataJSON()).toEqual({ response: "once" })
+      expect(new URL(request.url()).pathname).toBe(`/api/session/${sessionID}/permission/per_orchestra_identity/reply`)
+      expect(request.postDataJSON()).toEqual({ reply: "once" })
       await timeline.transport.writeRaw(`data: ${JSON.stringify(permissionReplied())}\n\n`)
       await expect(permission).toHaveCount(0)
       await timeline.send(status("busy"))
@@ -355,7 +354,7 @@ function readGlass(locator: Locator) {
   return locator.evaluate((element) => {
     const style = getComputedStyle(element)
     return {
-      backgroundImage: style.backgroundImage,
+      backgroundImage: style.backgroundImage.slice(Math.max(style.backgroundImage.lastIndexOf("linear-gradient("), 0)),
       backdropFilter: style.backdropFilter,
       borderTopColor: style.borderTopColor,
       boxShadow: style.boxShadow,
