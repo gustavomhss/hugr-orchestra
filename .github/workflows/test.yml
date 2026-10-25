@@ -196,7 +196,7 @@ jobs:
               filters: "--filter=@orchestra/app --filter=@orchestra/server --filter=@orchestra/sdk-next --filter=@orchestra/client --filter=@orchestra/tui --filter=@orchestra/session-ui" }
           - { name: linux, host: ubuntu-latest, part: packages-cli, label: "cli", filters: "--filter=@orchestra/cli" }
           - { name: linux, host: ubuntu-latest, part: packages-libs, label: "other packages, godfile", repo_gates: true,
-              filters: "--filter=!orchestra --filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
+              filters: "--filter=!@orchestra/core --filter=!@orchestra/app --filter=!@orchestra/cli --filter=!@orchestra/server --filter=!@orchestra/sdk-next --filter=!@orchestra/client --filter=!@orchestra/tui --filter=!@orchestra/session-ui" }
           - { name: linux, host: ubuntu-latest, part: gates, label: "httpapi, relay" }
           - { name: windows, host: windows-latest, part: core, label: "core", filters: "--filter=@orchestra/core" }
           # httpapi-codegen is a build-time generator whose tests pin POSIX paths, so it runs on Linux only.
