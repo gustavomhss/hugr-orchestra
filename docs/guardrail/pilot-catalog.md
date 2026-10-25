@@ -94,7 +94,7 @@ Scanned the last 300 commits of `origin/dev` (88k added lines). Per-rule pattern
 | T2 | js-test-skipped | `.skip`, `xit`, `xdescribe` | G | B |
 | T3 | py-test-skipped | unconditional `pytest.mark.skip`, `xfail` without a reason, `unittest.skip` (not `skipif` with a reason) | G | own |
 | T4 | rs-test-ignored | `#[ignore]` on a test | G | own |
-| T5 | test-file-deleted | deleted test file with no rename (cleared by `guardrail-approved:test-file-deleted`) | G | R |
+| T5 | test-file-deleted | deleted test file, or one renamed out of the test globs (cleared by `guardrail-approved:test-file-deleted`) | G | R |
 | T6 | test-assertions-removed | removed `expect(`/`assert` outnumber added in a test file | W | R |
 | T7 | js-loose-assertion | added `toBeTruthy`, `toBeDefined`, `expect(true)` | W | R |
 | T8 | py-assert-trivial | `assert True`, `assert x or True` | G | own |

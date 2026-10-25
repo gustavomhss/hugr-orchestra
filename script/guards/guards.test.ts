@@ -630,12 +630,15 @@ describe("runGuards", () => {
     write(cwd, "src/old.ts", "// @ts-ignore\nexport const a = 1\n")
     write(cwd, "src/mv.test.ts", 'import { it } from "bun:test"\nit("a", () => {})\n')
     write(cwd, "src/gone.test.ts", 'import { expect, it } from "bun:test"\nit("parses the header", () => {\n  expect(parse("a: b")).toEqual({ a: "b" })\n})\n')
+    write(cwd, "src/hide.test.ts", 'import { expect, it } from "bun:test"\nit("keeps the order", () => {\n  expect(order([2, 1])).toEqual([1, 2])\n})\n')
     commit(cwd, "base")
     git(cwd, "checkout", "--quiet", "-b", "change")
     // One removed @ts-ignore excuses one moved copy; the second copy is new and fires.
     write(cwd, "src/old.ts", "export const a = 1\n")
     write(cwd, "src/new.ts", "// @ts-ignore\n// @ts-ignore\nexport const b = 2\n")
     git(cwd, "mv", "src/mv.test.ts", "src/mv2.test.ts")
+    // A test renamed out of the test globs is a deletion in disguise; one renamed within them is a move.
+    git(cwd, "mv", "src/hide.test.ts", "src/hide.ts")
     rmSync(join(cwd, "src/gone.test.ts"))
     write(cwd, "src/skip.test.ts", 'import { it } from "bun:test"\nit.skip("renders the footer", () => {})\n')
     write(cwd, "src/lint.ts", "// eslint-disable-next-line no-console\nexport const l = 1\n")
@@ -658,6 +661,7 @@ describe("runGuards", () => {
       "js-test-skipped src/skip.test.ts:2",
       "lint-disable src/lint.ts:1",
       "test-file-deleted src/gone.test.ts:-",
+      "test-file-deleted src/hide.ts:-",
       "ts-ignore src/new.ts:2",
     ])
     // Approval clears a changed-paths rule only, and only the named one.
