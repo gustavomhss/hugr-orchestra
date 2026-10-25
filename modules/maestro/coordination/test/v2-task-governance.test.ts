@@ -69,7 +69,6 @@ test("each phase without a V2 host refuses the call with its reason, never skipp
       const cases = [
         // Without the process Session service a background result has no way back.
         [{ background: true }, "background-unavailable"],
-        [{ workflow: { documentID: "doc", planRevisionID: "evt_plan", parameters: {} } }, "workflow-unavailable"],
       ] as const
       for (const [extra, reason] of cases)
         expect(yield* refusal(admit({ directory, caller: "maestro", target: "general", extra }))).toStartWith(`Task denied: ${reason}:`)

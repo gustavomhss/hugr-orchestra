@@ -88,7 +88,6 @@ export const make = Effect.gen(function* () {
         const memberID = canonical(target)
         const seat = seatOf(target)
         yield* CallerGateV2.check(seats, profiles, caller, target)
-        yield* UnsupportedV2.check(seats, target, input)
         yield* WorkflowGateV2.check(database, { parentID: parent.id, taskID: input.task_id, workflow: !!input.workflow })
         const workflow = input.workflow
           ? yield* WorkflowAdmissionV2.before({ ...services, database }, { task: input, workflow: input.workflow, parent })
