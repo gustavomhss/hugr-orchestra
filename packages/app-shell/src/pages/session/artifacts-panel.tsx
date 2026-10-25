@@ -112,8 +112,24 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
   const [preview, setPreview] = createStore<{ status: "loading" | "ready" | "error"; url?: string; rows?: string[][];
     truncated: boolean }>({ status: "loading", truncated: false })
 
-  // Capability content needs the Authorization header, so the preview reads it as a blob instead of pointing the
-  // element at the route.
+  // A video streams from a header-free ticket URL with its own range requests. Other kinds read the content as a blob,
+  // because capability content otherwise needs the Authorization header.
+  const stream = { controller: new AbortController(), retried: false, resumeAt: 0 }
+  const mint = () => {
+    const current = session()
+    if (!current) return
+    const controller = stream.controller
+    void current.api.ticket(ref(), controller.signal).then((ticket) => setPreview({ status: "ready", url: ticket.url }), () => {
+      if (!controller.signal.aborted) setPreview({ status: "error" })
+    })
+  }
+  // A ticket expires after a few minutes or on a server restart; mint one fresh ticket and resume where playback stopped.
+  const restream = (video: HTMLVideoElement) => {
+    if (stream.retried) return setPreview({ status: "error" })
+    stream.retried = true
+    stream.resumeAt = video.currentTime
+    mint()
+  }
   createEffect(on(() => props.selection.url, () => {
     const current = session()
     if (!current || props.selection.preview === "download") return
@@ -124,6 +140,10 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
       controller.abort()
       if (owned.url) URL.revokeObjectURL(owned.url)
     })
+    if (props.selection.preview === "video") {
+      Object.assign(stream, { controller, retried: false, resumeAt: 0 })
+      return mint()
+    }
     void current.api.read(ref(), controller.signal).then(async (blob) => {
       if (props.selection.preview !== "sheet") {
         owned.url = URL.createObjectURL(blob)
@@ -206,7 +226,19 @@ function ArtifactDetail(props: { selection: ArtifactSelection }) {
             {(url) => <img src={url()} alt={artifact().kind} draggable={false} />}
           </Match>
           <Match when={props.selection.preview === "video" && preview.url}>
-            {(url) => <video src={url()} controls preload="metadata" aria-label={artifact().kind} />}
+            {(url) => (
+              <video
+                src={url()}
+                controls
+                preload="metadata"
+                aria-label={artifact().kind}
+                onError={(event) => restream(event.currentTarget)}
+                onLoadedMetadata={(event) => {
+                  if (stream.resumeAt) event.currentTarget.currentTime = stream.resumeAt
+                }}
+                onPlaying={() => (stream.retried = false)}
+              />
+            )}
           </Match>
           <Match when={props.selection.preview === "pdf" && preview.url}>
             {(url) => <iframe src={url()} title={artifact().kind} />}

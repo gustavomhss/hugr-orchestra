@@ -9,7 +9,7 @@ import type { ArtifactRef, ArtifactsApi, ArtifactsOptions } from "./artifacts-mo
 
 /** One Session's artifact transport on the selected host. Every call is scoped to that Session and Location. */
 export function createArtifactsApi(input: { server: ServerConnection.HttpBase; directory: string; sessionID: SessionID;
-  fetch?: typeof globalThis.fetch }): ArtifactsApi & { read: (ref: ArtifactRef, signal?: AbortSignal) => Promise<Blob> } {
+  fetch?: typeof globalThis.fetch }): ArtifactsTransport {
   const location = Object.freeze({ directory: input.directory })
   const sessionID = input.sessionID
   const headers = input.server.password ? { Authorization: `Basic ${authTokenFromCredentials({
@@ -34,12 +34,21 @@ export function createArtifactsApi(input: { server: ServerConnection.HttpBase; d
       revision: String(ref.revision), pinned, "idempotency-key": key }, request(options)).then(receipt),
     remove: (ref, key, options) => client.artifacts.removeReference({ sessionID, location, artifactID: ref.id,
       revision: String(ref.revision), "idempotency-key": key }, request(options)).then(receipt),
-    // The generated client has no binary endpoint; media elements stream this URL with their own range requests.
+    // The generated client has no binary endpoint; this URL keys the selection, and `read` and `ticket` serve its bytes.
     content,
     // Capability routes read credentials only from the Authorization header, which a media element cannot send.
     read: (ref, signal) => (input.fetch ?? globalThis.fetch)(content(ref), { headers, signal }).then((response) => {
       if (!response.ok) throw response.status === 401 || response.status === 403 ? "authorization" : "request"
       return response.blob()
     }),
-  } satisfies ArtifactsApi & { read: (ref: ArtifactRef, signal?: AbortSignal) => Promise<Blob> })
+    // A short-lived header-free URL, so a media element can stream and seek with its own range requests.
+    ticket: (ref, signal) => client.artifacts.contentTicket({ sessionID, location, artifactID: ref.id,
+      revision: String(ref.revision) }, { signal }).then((ticket) => ({ url: new URL(ticket.url, input.server.url).href,
+      expiresAt: ticket.expiresAt })),
+  } satisfies ArtifactsTransport)
+}
+
+type ArtifactsTransport = ArtifactsApi & {
+  read: (ref: ArtifactRef, signal?: AbortSignal) => Promise<Blob>
+  ticket: (ref: ArtifactRef, signal?: AbortSignal) => Promise<{ url: string; expiresAt: number }>
 }
