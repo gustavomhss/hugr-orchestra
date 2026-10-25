@@ -8,7 +8,7 @@ Small declarative CI rules over the lines and paths a change adds. Run with `bun
 - A line identical to one removed elsewhere in the same diff is treated as moved code. Renames are followed by git.
 - Suppress one line with `guardrail-ignore: <rule id> <reason>`; without a reason it does not count. Path exemptions go in the rule's `exclude`.
 - `GUARDRAIL_APPROVED=protected-paths` clears a changed-paths rule; CI sets it from an approver's label.
-- A `changed-paths` rule can also filter on what git reports about the file: `modes` (100755, 120000, 160000), `min_bytes`, `binary` and `no_shebang`. Its samples are paths and check the path scope only; the golden test in `packages/core/test/guards.test.ts` covers the file filters.
+- A `changed-paths` rule can also filter on what git reports about the file: `modes` (100755, 120000, 160000), `min_bytes`, `binary` and `no_shebang`. Its samples are paths and check the path scope only; the golden test in `script/guards/guards.test.ts` covers the file filters.
 - A `line-balance` rule fires on one file when lines matching `match` removed minus added reaches `min_net_removed`; removed lines that reappear elsewhere in the change (moved) and deleted files do not count. It is how assertion and test-case removal is caught.
 - A `changed-paths` rule can also require a companion change: `requires_changed` lists globs (a lockfile) and the rule stands down when any of them changed; `touches` is a regex the added or removed lines of the path must match (a dependency edit, not any edit).
 - `flags = "i"` makes `match` case-insensitive (the only flag). `skip_comments = ["//", "#"]` hides added lines that start with one of those prefixes, so a rule does not repeat a comment lookahead.

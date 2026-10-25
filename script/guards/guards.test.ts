@@ -3,15 +3,15 @@ import { chmodSync, cpSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, r
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { afterEach, describe, expect, setDefaultTimeout, test } from "bun:test"
-import { parseBinary, parsePatch, parseRaw } from "../../../script/guards/diff"
-import { evaluate } from "../../../script/guards/engine"
-import { expandSets, parseRule, selfCheck, type Rule } from "../../../script/guards/rule"
-import { annotation, exitCode, format, runGuards } from "../../../script/guards/run"
+import { parseBinary, parsePatch, parseRaw } from "./diff"
+import { evaluate } from "./engine"
+import { expandSets, parseRule, selfCheck, type Rule } from "./rule"
+import { annotation, exitCode, format, runGuards } from "./run"
 
 // Each runGuards test builds a temp git repo and spawns git several times; a loaded CI host needs more than 5s.
 setDefaultTimeout(30_000)
 
-const guardsDir = join(import.meta.dir, "../../../script/guards")
+const guardsDir = import.meta.dir
 const repos: string[] = []
 
 afterEach(() => {

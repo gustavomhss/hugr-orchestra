@@ -13,7 +13,6 @@ generated = [
 # The engine's own rule samples contain the very text the rules look for.
 exclude = [
   "script/guards/**",
-  "packages/core/test/guards.test.ts",
 ]
 
 # Named glob lists a rule can use as `$name` in paths, exclude or requires_changed.
