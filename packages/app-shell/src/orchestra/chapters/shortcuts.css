@@ -23,7 +23,7 @@
   inline-size: min(680px, calc(100vw - 48px));
   max-block-size: calc(100vh - 64px);
   border: 1px solid var(--mx-line);
-  border-radius: 14px;
+  border-radius: var(--orchestra-radius-xl);
   background: var(--mx-modal);
   box-shadow: var(--mx-shadow);
 }
@@ -48,7 +48,7 @@
   block-size: 20px;
   margin-block-start: -2px;
   margin-inline-end: -2px;
-  border-radius: 4px;
+  border-radius: var(--orchestra-radius-xs);
 }
 
 body:has(.shortcuts-dialog) [data-component="dialog-overlay"] {

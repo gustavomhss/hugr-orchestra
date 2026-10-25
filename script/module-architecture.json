@@ -342,6 +342,7 @@
           "patterns": [
             "src/account/",
             "src/account.ts",
+            "src/claude-account.ts",
             "src/credential/",
             "src/credential.ts",
             "src/oauth/",

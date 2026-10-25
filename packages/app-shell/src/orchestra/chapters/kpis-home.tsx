@@ -8,6 +8,7 @@ import { useTabs } from "@/context/tabs"
 import type { HomeController } from "@/pages/home/home-controller"
 import { displayName } from "@/pages/layout/helpers"
 import { KpiDashboard } from "./kpis"
+import { sessionTitle } from "@/utils/session-title"
 
 // Home is the selected repository profile's KPI dashboard. It remounts only when that profile changes,
 // so a profile switch abandons the previous profile's reads.
@@ -64,7 +65,7 @@ export function OrchestraHome(props: { home: HomeController }) {
             sdk={owner.ctx.sdk}
             queryClient={owner.ctx.queryClient}
             name={project() ? displayName(project()!) : getFilename(owner.directory)}
-            title={(sessionID, fallback) => owner.ctx.sync.session.peek(sessionID)?.title || fallback}
+            title={(sessionID, fallback) => sessionTitle(owner.ctx.sync.session.peek(sessionID)?.title || fallback) ?? fallback}
             running={(sessionID) => (owner.ctx.sync.session.data.session_status[sessionID]?.type ?? "idle") !== "idle"}
             openProviders={() => navigate("/orchestra/providers")}
             newSession={() => props.home.project.openProjectNewSession(owner.conn, owner.directory)}

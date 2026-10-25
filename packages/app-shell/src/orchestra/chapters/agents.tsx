@@ -179,8 +179,6 @@ export default function Agents(props: ChapterPageProps) {
               <span>{language.t("orchestra.agents.headlineMuted")}</span>
             </h1>
           </div>
-        </header>
-        <div class="mx-toolbar">
           <button
             type="button"
             class="mx-btn primary"
@@ -189,6 +187,8 @@ export default function Agents(props: ChapterPageProps) {
           >
             {language.t("orchestra.agents.create")}
           </button>
+        </header>
+        <div class="mx-toolbar">
           <MxBadge>
             <bdi>{getFilename(props.directory) || props.directory}</bdi>
           </MxBadge>

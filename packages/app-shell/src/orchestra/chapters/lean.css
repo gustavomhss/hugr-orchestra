@@ -4,7 +4,7 @@
   gap: 12px;
   min-block-size: 36px;
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .lean-summary {
   display: grid;
@@ -18,7 +18,7 @@
 }
 .lean-summary dt {
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.5;
 }
 .lean-summary dd {
@@ -28,11 +28,11 @@
 }
 .lean-count dd {
   font-family: var(--mx-emphasis);
-  font-size: 18px;
+  font-size: var(--orchestra-font-size-2xl);
 }
 .lean-count-total {
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
 }
 .lean-count {
   padding-inline-start: 22px;
@@ -43,7 +43,7 @@
 }
 .lean-table thead th {
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.5;
 }
 .lean-table td {
@@ -95,7 +95,7 @@
 }
 .lean-execution-meta {
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
 }
 .lean-execution-savings {
   display: flex;
@@ -105,7 +105,7 @@
 }
 .lean-execution-savings dt {
   color: var(--mx-dim);
-  font-size: 10px;
+  font-size: var(--orchestra-font-size-2xs);
 }
 .lean-execution-savings dd {
   margin: 6px 0 0;
@@ -115,7 +115,7 @@
 .lean-total dd {
   color: var(--mx-good);
   font-family: var(--mx-emphasis);
-  font-size: clamp(22px, 2.8vw, 34px);
+  font-size: clamp(var(--orchestra-font-size-3xl), 2.8vw, var(--orchestra-font-size-4xl));
   letter-spacing: -0.04em;
   line-height: 1.25;
 }
@@ -128,7 +128,7 @@
   gap: 16px;
   margin: 12px 0 28px;
   color: var(--mx-dim);
-  font-size: 11px;
+  font-size: var(--orchestra-font-size-xs);
   line-height: 1.6;
 }
 .lean-category {
@@ -138,7 +138,7 @@
 .lean-notice,
 .lean-empty {
   color: var(--mx-dim);
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   line-height: 1.6;
 }
 .lean-table-wrap {
@@ -151,7 +151,7 @@
 .lean-table th,
 .lean-table td {
   padding: 12px 16px;
-  font-size: 12px;
+  font-size: var(--orchestra-font-size-sm);
   font-weight: 400;
 }
 .lean-table thead {
@@ -182,7 +182,7 @@
   color: var(--mx-strong);
   font-family: var(--mx-emphasis);
   text-align: start;
-  font-size: 13px;
+  font-size: var(--orchestra-font-size-md);
 }
 .lean-item .mx-mark {
   inline-size: 28px;
@@ -190,7 +190,7 @@
   color: var(--mx-dim);
 }
 .lean-item .mx-badge {
-  font-size: 9px;
+  font-size: var(--orchestra-font-size-2xs);
 }
 .lean-page [data-tone="negative"] {
   color: var(--mx-bad);
@@ -199,7 +199,7 @@
   color: var(--mx-dim);
 }
 .lean-total [data-tone="unavailable"] {
-  font-size: 18px;
+  font-size: var(--orchestra-font-size-2xl);
   letter-spacing: -0.015em;
 }
 .lean-page .lean-coverage {

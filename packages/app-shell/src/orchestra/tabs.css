@@ -9,7 +9,7 @@
     padding-inline: 8px;
     overflow: hidden;
     border: 1px solid var(--orchestra-glass-border);
-    border-radius: 9px;
+    border-radius: var(--orchestra-radius-md);
     background: var(--orchestra-glass-background);
     box-shadow: var(--orchestra-glass-shadow);
     -webkit-backdrop-filter: var(--orchestra-glass-filter);
@@ -65,18 +65,18 @@
     gap: 6px;
     overflow: visible;
     border: 1px solid transparent;
-    border-radius: 7px;
+    border-radius: var(--orchestra-radius-sm);
     background: transparent;
     color: var(--orchestra-tab-text);
     font-family: var(--mx-sans, "Mx Inter", var(--orchestra-font-family-sans));
     font-optical-sizing: none;
-    font-size: 12px;
+    font-size: var(--orchestra-font-size-sm);
     line-height: 16px;
     transition:
-      background 0.16s ease,
-      border-color 0.16s ease,
-      color 0.16s ease,
-      box-shadow 0.16s ease;
+      background var(--orchestra-duration-base) var(--orchestra-ease-out),
+      border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
+      color var(--orchestra-duration-base) var(--orchestra-ease-out),
+      box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
   }
 
   [data-orchestra-tabs] [data-titlebar-tab]:hover {
@@ -151,14 +151,14 @@
     min-inline-size: 20px;
     padding: 0;
     border: 0;
-    border-radius: 4px;
+    border-radius: var(--orchestra-radius-xs);
     background: transparent;
     box-shadow: none;
     color: inherit;
     opacity: 0;
     transition:
-      opacity 0.16s ease,
-      background 0.16s ease;
+      opacity var(--orchestra-duration-base) var(--orchestra-ease-out),
+      background var(--orchestra-duration-base) var(--orchestra-ease-out);
   }
 
   [data-orchestra-tabs]
@@ -169,15 +169,8 @@
   }
 
   [data-orchestra-tabs] [data-slot="tab-close"] [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
-    background: rgba(200, 220, 238, 0.09);
+    background: var(--orchestra-overlay-pressed);
     opacity: 1;
-  }
-
-  html[data-color-scheme="light"]
-    [data-orchestra-tabs]
-    [data-slot="tab-close"]
-    [data-component="icon-button-v2"]:is(:hover, :focus-visible) {
-    background: rgba(40, 56, 74, 0.08);
   }
 
   #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > [data-component="tooltip"] {
@@ -187,7 +180,7 @@
   #orchestra-session-tabs [data-slot="orchestra-tab-controls"] > :last-child button {
     inline-size: 28px;
     block-size: 28px;
-    border-radius: 6px;
+    border-radius: var(--orchestra-radius-sm);
     color: var(--orchestra-faint);
   }
 
@@ -216,10 +209,10 @@
     block-size: 28px;
     place-items: center;
     border: 0;
-    border-radius: 7px;
+    border-radius: var(--orchestra-radius-sm);
     background: transparent;
     color: var(--orchestra-toolbar-button);
-    font-size: 14px;
+    font-size: var(--orchestra-font-size-lg);
     cursor: pointer;
     app-region: no-drag;
   }
