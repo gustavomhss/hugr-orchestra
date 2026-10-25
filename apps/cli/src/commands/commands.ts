@@ -259,6 +259,23 @@ const agent = Spec.make("agent", {
   ],
 })
 
+const stats = Spec.make("stats", {
+  description: "Show token usage and cost statistics",
+  params: {
+    days: Flag.integer("days").pipe(Flag.withDescription("show stats for the last N days (default: all time)"), Flag.optional),
+    tools: Flag.integer("tools").pipe(Flag.withDescription("number of tools to show (default: all)"), Flag.optional),
+    models: Flag.boolean("models").pipe(Flag.withDefault(false), Flag.withDescription("show model statistics")),
+    "model-limit": Flag.integer("model-limit").pipe(
+      Flag.withDescription("show model statistics for the top N models"),
+      Flag.optional,
+    ),
+    project: Flag.string("project").pipe(
+      Flag.withDescription("filter by project (default: all projects, empty string: current project)"),
+      Flag.optional,
+    ),
+  },
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -303,6 +320,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     providers,
     mcp,
     agent,
+    stats,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
