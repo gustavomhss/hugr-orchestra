@@ -260,10 +260,16 @@ test("policy edit while the send waits at the policy barrier gets latest ACK bef
   const key = draftSessionKey(ServerScope.local, "/repo/main")
   togglePending(key, "provider", "model", true)
   const gate = Promise.withResolvers<void>()
-  const hold = holdSendAfterClear(gate.promise, true)
+  const entered = Promise.withResolvers<void>()
+  // Pause once, inside the first policy write, so the edit lands while the first ACK is still in flight.
+  state.policyWrite = async () => {
+    state.policyWrite = async () => {}
+    entered.resolve()
+    await gate.promise
+  }
   const submit = createPromptSubmit({ ...submitInput(), prompt: createPromptState({ prompt: "latest policy" }), info: () => undefined, pendingKey: () => key })
   const sending = submit.handleSubmit(new Event("submit"))
-  await hold.entered
+  await entered.promise
   clearPending(key)
   state.sendHook = async () => { expect(policyWrites.at(-1)?.policy).toEqual({ mode: "inherit" }) }
   gate.resolve()
