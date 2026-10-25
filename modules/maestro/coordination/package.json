@@ -38,6 +38,7 @@
     "@orchestra/core": "workspace:*",
     "@orchestra/llm": "workspace:*",
     "@orchestra/maestro-arsenal": "workspace:*",
+    "@orchestra/relay": "workspace:*",
     "@orchestra/schema": "workspace:*",
     "drizzle-orm": "catalog:",
     "effect": "catalog:",
