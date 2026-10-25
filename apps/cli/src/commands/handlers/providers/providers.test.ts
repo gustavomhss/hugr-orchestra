@@ -172,7 +172,7 @@ describe("providers login for providers outside the list", () => {
         directory: "/work",
         url,
         say: () => {},
-        runAuth: async (command) => (ran.push(command), { exitCode: 0, stdout: "tok-123\n" }),
+        runAuth: async (command) => (ran.push([...command]), { exitCode: 0, stdout: "tok-123\n" }),
       })
       expect(ran).toEqual([["print-token", "--now"]])
       expect(

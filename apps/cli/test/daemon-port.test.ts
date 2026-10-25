@@ -10,7 +10,7 @@ const state = await mkdtemp(path.join(tmpdir(), "daemon-port-"))
 process.env.XDG_STATE_HOME = state
 const { Daemon } = await import("../src/services/daemon")
 
-const run = <A>(effect: Effect.Effect<A, unknown, InstanceType<typeof Daemon.Service>>) =>
+const run = <A>(effect: Effect.Effect<A, unknown, import("../src/services/daemon").Service>) =>
   effect.pipe(Effect.provide(Daemon.layer), Effect.provide(NodeServices.layer), Effect.runPromise)
 
 describe("daemon startOn", () => {
