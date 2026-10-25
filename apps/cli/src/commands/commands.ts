@@ -276,6 +276,40 @@ const stats = Spec.make("stats", {
   },
 })
 
+const toolkit = Spec.make("toolkit", {
+  description: "Manage the backend and research toolkit engines",
+  commands: [
+    Spec.make("status", {
+      description: "Show the state of every toolkit engine on this machine, and the research index shards of a worktree",
+      params: {
+        json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("print the states as JSON")),
+        research: Flag.boolean("research").pipe(
+          Flag.withDefault(false),
+          Flag.withDescription("show only the research toolkit and its index shards"),
+        ),
+        worktree: Flag.string("worktree").pipe(
+          Flag.withDescription("worktree whose research index shards are shown (the current directory when omitted)"),
+          Flag.optional,
+        ),
+      },
+    }),
+    Spec.make("prefetch", {
+      description: "Download and verify backend toolkit engines ahead of first use",
+      params: {
+        engines: Argument.string("engines").pipe(
+          Argument.withDescription("engines to fetch (all when omitted)"),
+          Argument.variadic({ min: 0 }),
+        ),
+        target: Flag.string("target").pipe(
+          Flag.withDescription("target to fetch for (this machine's when omitted)"),
+          Flag.optional,
+        ),
+        json: Flag.boolean("json").pipe(Flag.withDefault(false), Flag.withDescription("print the states as JSON")),
+      },
+    }),
+  ],
+})
+
 declare const ORCHESTRA_CLI_NAME: string | undefined
 
 export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHESTRA_CLI_NAME : "orchestra", {
@@ -321,6 +355,7 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
     mcp,
     agent,
     stats,
+    toolkit,
     Spec.make("migrate", { description: "Migrate v1 data to v2" }),
     Spec.make("service", {
       description: "Manage the background server",
