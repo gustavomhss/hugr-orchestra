@@ -7,9 +7,10 @@ import type { ScheduleTask } from "../src/orchestra/chapters/schedule-model"
 import { localInput } from "../src/orchestra/chapters/schedule-model"
 import { scheduleEditorFields } from "../src/orchestra/chapters/schedule"
 
-function fixture(tasks: ScheduleTask[] = []) {
+// `listed` is what the first list request answers: the Orchestra client sends it as soon as the source is created.
+function fixture(tasks: ScheduleTask[] = [], listed: Record<string, unknown>[] = []) {
   const requests: { method: string; path: string; body: Record<string, unknown> | undefined }[] = []
-  const reply = { list: { status: 200, data: { data: [] as Record<string, unknown>[] } as unknown }, creates: 0 }
+  const reply = { list: { status: 200, data: { data: listed } as unknown }, creates: 0 }
   const changed = Promise.withResolvers<void>()
   const transport = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
     const request = new Request(input, init)
@@ -75,9 +76,8 @@ test("a failed read keeps the tasks already loaded and refresh recovers", async 
 })
 
 test("cold review: metadata-only schedule save omits timing fields and preserves the remote timezone contract", async () => {
-  const f = fixture()
   const next = Date.UTC(2031, 0, 15, 9, 30, 23, 456)
-  f.reply.list.data = { data: [{ id: "remote", name: "Original", prompt: "Work", cadence: "daily", next, timezone: "Asia/Tokyo", minute: 1110, enabled: true, runs: 0 }] }
+  const f = fixture([], [{ id: "remote", name: "Original", prompt: "Work", cadence: "daily", next, timezone: "Asia/Tokyo", minute: 1110, enabled: true, runs: 0 }])
   try {
     await until(() => f.source.status() === "ready")
     const form = new FormData()

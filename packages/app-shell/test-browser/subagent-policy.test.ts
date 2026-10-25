@@ -5,7 +5,7 @@ import { render } from "solid-js/web"
 import { Root } from "@kobalte/core/dialog"
 import type { Provider } from "@/v2-wire"
 
-import type { ModelPolicySnapshot, ModelRule, SubagentModelPolicy } from "@/components/subagent-model-rules"
+import type { ModelPolicySnapshot, SubagentModelPolicy } from "@/components/subagent-model-rules"
 import { subagentModels } from "@/i18n/frontend-recovery/subagent-models"
 import { DESKTOP_NATIVE_LOCALES } from "@/i18n/desktop-native"
 import { solidDom } from "./solid-dom"
@@ -67,7 +67,7 @@ test.each(["ltr", "rtl"] as const)("real picker keeps empty drafts denied with p
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         directory: "/repo", pendingKey: key, get providers() { return state.providers }, get status() { return state.status },
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        supported: true, rulesReady: true, onRetry() {},
       })
     } })
   } }), host)
@@ -114,7 +114,7 @@ test.each(["ltr", "rtl"] as const)("real picker Enter toggles focused second row
       return createComponent(picker.SubagentModelPicker, {
         directory: "/repo", pendingKey: key, providers: [{ ...provider, models: { [model.id]: model, [second.id]: second } }],
         status: "success", supported: true, rulesReady: true,
-        readRules: () => [], writeRules: async () => [], onRetry() {},
+        onRetry() {},
       })
     } })
   } }), host)
@@ -168,7 +168,7 @@ test("real picker preserves unavailable refs, waits for ACK and retries failed s
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         sessionID: "ses_picker", directory: "/repo", providers: [provider], status: "success",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        supported: true, rulesReady: true, onRetry() {},
         policy: {
           read: () => ({ policy: { mode: "allowlist", models: [{ providerID: "offline", id: "full/slash/model" }] }, timestamp: 1 }),
           write: async (policy) => {
@@ -215,7 +215,7 @@ test("real picker disables unresolved policy/catalog state and retries catalog f
       return createComponent(picker.SubagentModelPicker, {
         sessionID: "ses_loading", directory: "/repo", providers: [provider], supported: true,
         get status() { return state.status }, get rulesReady() { return state.ready },
-        readRules: () => [], writeRules: async () => [], onRetry() { retries.count++ },
+        onRetry() { retries.count++ },
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async (policy) => policy },
       })
     } })
@@ -268,7 +268,7 @@ test("canonical read loading and rejection disable Inherit until a successful fr
           get supported() { return policy.state.refreshing || policy.state.error ? undefined : true },
           get rulesReady() { return !!policy.state.snapshot && !policy.state.refreshing && !policy.state.error },
           get loadFailed() { return !!policy.state.error },
-          readRules: () => [], writeRules: async () => [], policy: { read: policy.read, write: policy.write },
+          policy: { read: policy.read, write: policy.write },
           onRetry: () => { void policy.load().catch(() => {}) },
         })
       } })
@@ -311,10 +311,7 @@ test("confirmation failure proof covers all 61 configured non-English locale ove
   expect(DESKTOP_NATIVE_LOCALES).toHaveLength(62)
   expect(Object.keys(subagentModels).sort()).toEqual(DESKTOP_NATIVE_LOCALES.filter((locale) => locale !== "en").sort())
   Object.values(subagentModels).forEach((copy) => {
-    expect(Object.keys(copy).sort()).toEqual([
-      "dialog.subagentModels.inherited", "dialog.subagentModels.noneAllowed",
-      "dialog.subagentModels.saveFailed", "dialog.subagentModels.unsupported",
-    ])
+    expect(Object.keys(copy).sort()).toEqual(["dialog.subagentModels.inherited", "dialog.subagentModels.saveFailed"])
     expect(copy["dialog.subagentModels.saveFailed"].trim().length).toBeGreaterThan(0)
   })
 })
@@ -330,7 +327,7 @@ test.each(Object.entries(subagentModels))("picker confirmation failure uses loca
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         sessionID: "ses_localized_failure", directory: "/repo", providers: [provider], status: "success",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        supported: true, rulesReady: true, onRetry() {},
         policy: { read: () => ({ policy: { mode: "inherit" } }), write: async () => { throw new Error("confirmation GET failed after ACK") } },
       })
     } })
@@ -451,7 +448,7 @@ test.each(["ltr", "rtl"] as const)("real picker virtualizes full catalog and ret
     return createComponent(Root, { open: true, get children() {
       return createComponent(picker.SubagentModelPicker, {
         directory: "/repo", pendingKey: key, providers: [{ ...provider, models }], status: "success",
-        supported: true, rulesReady: true, readRules: () => [], writeRules: async () => [], onRetry() {},
+        supported: true, rulesReady: true, onRetry() {},
       })
     } })
   } }), host)

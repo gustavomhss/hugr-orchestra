@@ -8,7 +8,7 @@ import { Dialog } from "@kobalte/core/dialog"
 import type { Agent, Provider } from "@/v2-wire"
 import type { AgentFileInfo, AgentFileInput } from "@/v2-types"
 
-import type { ModelRule } from "@/components/subagent-model-rules"
+import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 
 // Compile the actual form and providers with Solid. Isolate the first-party graph from other tests' module mocks
 // and React-compiled JSX, following relay-policy.test.ts.
@@ -53,7 +53,7 @@ const { SubagentModelPicker }: typeof import("@/components/subagent-model-picker
   "@/components/subagent-model-picker",
 )
 const { List }: typeof import("@orchestra/ui/list") = await load("@orchestra/ui/list")
-const { pendingRules, clearPending }: typeof import("@/components/draft-subagent-models") = await load(
+const { pendingPolicy, clearPending }: typeof import("@/components/draft-subagent-models") = await load(
   "@/components/draft-subagent-models",
 )
 
@@ -284,13 +284,12 @@ const provider: Provider = {
   ),
 }
 
-async function picker(rules: ModelRule[] = [], pendingKey?: string) {
+async function picker(initial: SubagentModelPolicy = { mode: "inherit" }, pendingKey?: string) {
   const root = document.createElement("div")
   document.body.append(root)
-  const writes: ModelRule[][] = []
-  const persisted = [...rules]
+  const writes: SubagentModelPolicy[] = []
   const [state, setState] = createStore({
-    rules,
+    policy: initial,
     status: "success" as "pending" | "error" | "success",
     rulesReady: true,
     fail: false,
@@ -322,12 +321,15 @@ async function picker(rules: ModelRule[] = [], pendingKey?: string) {
                     get rulesReady() {
                       return state.rulesReady
                     },
-                    readRules: () => state.rules,
-                    writeRules: async (rules) => {
-                      writes.push(rules)
-                      if (state.fail) throw new Error("offline")
-                      persisted.push(...rules)
-                      return [...persisted]
+                    policy: {
+                      read: () => ({ policy: state.policy }),
+                      // The server replaces the whole policy and the canonical read follows it.
+                      write: async (policy) => {
+                        writes.push(policy)
+                        if (state.fail) throw new Error("offline")
+                        setState("policy", policy)
+                        return policy
+                      },
                     },
                     onRetry: () => setState("status", "success"),
                   })
@@ -356,7 +358,7 @@ test("subagent row clicks, ArrowDown/Enter and accessible switches toggle each t
   row("Alpha").click()
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.writes).toHaveLength(1)
-  expect(view.writes[0].at(-1)).toMatchObject({ pattern: "router/team/Alpha", action: "allow" })
+  expect(view.writes[0]).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "team/Alpha" }] })
   expect(switches()[0].checked).toBe(true)
 
   const search = view.root.querySelector<HTMLInputElement>('input[type="text"]')!
@@ -364,13 +366,16 @@ test("subagent row clicks, ArrowDown/Enter and accessible switches toggle each t
   search.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.writes).toHaveLength(2)
-  expect(view.writes[1]).toEqual([{ permission: "task", pattern: "router/team/Beta", action: "allow" }])
+  expect(view.writes[1]).toEqual({
+    mode: "allowlist",
+    models: [{ providerID: "router", id: "team/Alpha" }, { providerID: "router", id: "team/Beta" }],
+  })
   expect(switches()[1].checked).toBe(true)
 
   switches()[1].click()
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.writes).toHaveLength(3)
-  expect(view.writes[2]).toEqual([{ permission: "task", pattern: "router/team/Beta", action: "deny" }])
+  expect(view.writes[2]).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "team/Alpha" }] })
   expect(switches()[1].checked).toBe(false)
   expect(switches()[2].disabled).toBe(true)
   row("Image").click()
@@ -378,7 +383,7 @@ test("subagent row clicks, ArrowDown/Enter and accessible switches toggle each t
 })
 
 test("picker distinguishes loading, error, loaded-empty and explicitly denied models", async () => {
-  const view = await picker([{ permission: "task", pattern: "*/*", action: "deny" }])
+  const view = await picker({ mode: "allowlist", models: [] })
   expect(view.root.querySelector('[data-status="inherited"]')).toBeNull()
   expect(view.root.querySelector('[data-status="none-allowed"]')).not.toBeNull()
   view.setState("status", "pending")
@@ -391,7 +396,7 @@ test("picker distinguishes loading, error, loaded-empty and explicitly denied mo
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.root.textContent).toContain("No connected models are available in this profile.")
   expect(view.root.querySelector('[data-status="inherited"]')).toBeNull()
-  view.setState({ rulesReady: false, rules: [] })
+  view.setState({ rulesReady: false, policy: { mode: "inherit" } })
   expect(view.root.querySelector('[data-status="inherited"]')).toBeNull()
 })
 
@@ -402,7 +407,7 @@ test("Enter on a focused model row targets that row rather than the previous act
   row.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true, cancelable: true }))
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.writes).toHaveLength(1)
-  expect(view.writes[0].at(-1)).toEqual({ permission: "task", pattern: "router/team/Beta", action: "allow" })
+  expect(view.writes[0]).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "team/Beta" }] })
 })
 
 test("row ArrowDown Space moves DOM focus and invokes only the highlighted model", async () => {
@@ -416,7 +421,7 @@ test("row ArrowDown Space moves DOM focus and invokes only the highlighted model
   next.dispatchEvent(new KeyboardEvent("keydown", { key: " ", bubbles: true, cancelable: true }))
   await new Promise((resolve) => setTimeout(resolve, 0))
   expect(view.writes).toHaveLength(1)
-  expect(view.writes[0].at(-1)?.pattern).toBe("router/team/Beta")
+  expect(view.writes[0]).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "team/Beta" }] })
 })
 
 test("model windows are bounded for 5000 choices and reject detached row activation", async () => {
@@ -457,14 +462,14 @@ test("pendingKey isolates drafts with the same directory and inheritance clears 
   const second = "server-B/profile/draft-B"
   clearPending(first)
   clearPending(second)
-  const a = await picker([], first)
-  const b = await picker([], second)
+  const a = await picker(undefined, first)
+  const b = await picker(undefined, second)
   a.root.querySelector<HTMLButtonElement>('button[data-key="router:team/Alpha"]')!.click()
-  expect(pendingRules(first).at(-1)?.pattern).toBe("router/team/Alpha")
-  expect(pendingRules(second)).toEqual([])
+  expect(pendingPolicy(first)).toEqual({ mode: "allowlist", models: [{ providerID: "router", id: "team/Alpha" }] })
+  expect(pendingPolicy(second)).toEqual({ mode: "inherit" })
   expect(b.root.querySelector<HTMLInputElement>('[data-slot="switch-input"]')?.checked).toBe(false)
   ;[...a.root.querySelectorAll("button")].find((button) => button.textContent === "Inherit")!.click()
-  expect(pendingRules(first)).toEqual([])
+  expect(pendingPolicy(first)).toEqual({ mode: "inherit" })
   clearPending(first)
   clearPending(second)
 })

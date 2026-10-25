@@ -53,7 +53,7 @@ function fixture(origin = "https://pending-list.test") {
   const api = createCompatibleApi({ current: currentApi })
   const emitter = createGlobalEmitter<Record<string, ServerEvent>>()
   const sdk = {
-    server: { type: "http", http }, scope: ServerScope.local, api, currentApi,
+    server: { type: "http", http }, scope: ServerScope.local, api, currentApi, ready: Promise.resolve(),
     orchestra: Orchestra.make({ baseUrl: origin, fetch: fetcher }),
     event: { listen: emitter.listen.bind(emitter), start: async () => {} },
   } as unknown as ServerSDK
@@ -184,13 +184,9 @@ test("server index excludes an archived GET result for an existing visible row",
   createDirSyncContext("/repo", sync, ctx.sdk).session.remember({
     id, slug: id, projectID: "project", directory: "/repo", title: "Visible", version: "", time: { created: 1, updated: 1 },
   })
-  ctx.canonical.updated = 40
-  ctx.canonical.archived = 40
+  // The V2 server no longer publishes session.forked (0807e74887), so the archive event is what races the forced GET.
   const pending = sync.session.resolve(id, { force: true })
-  ctx.events.emit("/repo", {
-    type: "session.revert.cleared", properties: { sessionID: id },
-    current: { type: "session.revert.cleared", data: { sessionID: id }, created: 40 },
-  } as unknown as ServerEvent)
+  ctx.emit(40, 40, 2)
   await pending
   await Promise.resolve()
   expect(store.session).toEqual([])

@@ -83,6 +83,7 @@ export function createSessionManagementForServer(input: {
     },
     getSubagentModels(sessionID: string): Promise<SubagentModelPolicy> {
       return runSessionManagementOperation(lifetime, async () => {
+        await input.ready
         lifetime?.throwIfAborted()
         const policy = await client.sessions.getSubagentModels({ sessionID })
         lifetime?.throwIfAborted()
@@ -91,6 +92,7 @@ export function createSessionManagementForServer(input: {
     },
     readSubagentModels(sessionID: string): Promise<ModelPolicySnapshot> {
       return runSessionManagementOperation(lifetime, async () => {
+        await input.ready
         lifetime?.throwIfAborted()
         // The full snapshot anchors policy freshness; policy-only GET/PUT responses have no revision.
         const snapshot = await client.sessions.get({ sessionID })
@@ -105,7 +107,7 @@ export function createSessionManagementForServer(input: {
       const write = runSessionManagementOperation(lifetime, async () => {
         // Only an explicit new write may retry a failed predecessor; dispatch waits must retain its failure.
         await (previous ? previous.catch(() => undefined) : Promise.resolve())
-        lifetime?.throwIfAborted()
+        await input.ready
         lifetime?.throwIfAborted()
         const acknowledged = await client.sessions.setSubagentModels({ sessionID, policy })
         lifetime?.throwIfAborted()
