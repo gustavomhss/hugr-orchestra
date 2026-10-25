@@ -1,15 +1,32 @@
 import { Capability } from "@orchestra/schema/capability"
 import { CapabilityManagement } from "@orchestra/schema/capability-management"
 import { CapabilitySetup } from "@orchestra/schema/capability-setup"
-import { Option, Schema } from "effect"
+import { SessionID } from "@orchestra/schema/session-id"
+import { Option, Result, Schema } from "effect"
 import { getOwner, onCleanup } from "solid-js"
 import { createStore } from "solid-js/store"
 import type { Api, Connection, Failure, Model, Receipt, State, Target } from "./integrations-contract"
 import { retainIntegrationRows } from "./integrations-model-retention"
 
-export function createIntegrationModel(api: Api, requestKey: () => string = () => crypto.randomUUID()): Model {
+// Every CapabilitySetup.Provider has a key verifier in core (CapabilityVerifiers.descriptors), so all ten are
+// selectable. The six OAuth-only hosted MCPs (D3) are listed but cannot be selected until browser sign-in exists.
+export const INTEGRATION_PROVIDERS = [
+  ...CapabilitySetup.Provider.literals.map((id) => ({ id, available: true as const,
+    name: `orchestra.integrations.provider.${id}` as const, hint: `orchestra.integrations.providerHint.${id}` as const,
+    actionsHint: `orchestra.integrations.actionsExample.${id}` as const })),
+  ...(["sentry", "vercel", "grafana", "railway", "netlify", "prisma-postgres"] as const).map((id) => ({ id,
+    available: false as const, name: `orchestra.integrations.provider.${id}` as const,
+    hint: "orchestra.integrations.providerUnavailable" as const })),
+]
+
+const Sessions = Schema.Array(Schema.Struct({ id: SessionID, title: Schema.String, updated: Schema.Number }))
+  .check(Schema.isMaxLength(32))
+const Resource = Schema.fromJsonString(Schema.Json)
+
+export function createIntegrationModel(api: Api, requestKey: () => string = () => crypto.randomUUID(), basic = false): Model {
   const [state, set] = createStore<{ -readonly [K in keyof State]: State[K] }>({
     status: "loading", connections: [], targets: [], bindings: [], busy: false, retryable: false, readRetryable: false,
+    verifications: {}, hostAuthorization: false, sessions: [], sessionsStatus: "idle",
   })
   let disposed = false
   let generation = 0
@@ -19,6 +36,7 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
   let lastTargetID: Capability.TargetID | undefined
   let reading: AbortController | undefined
   let writing: AbortController | undefined
+  let listing: AbortController | undefined
   let connection: Capability.ConnectionRef | undefined
   let target: Capability.TargetRef | undefined
   // Neither credentials nor idempotency keys enter the reactive/public store.
@@ -56,13 +74,14 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       if (disposed || version !== generation || !owned()) return false
       apply()
       if (disposed || version !== generation || !owned()) return false
-      set({ status: "ready", failure: undefined, readRetryable: false })
+      set({ status: "ready", failure: undefined, readRetryable: false, hostAuthorization: false })
       return true
     }, (error: unknown) => {
       if (disposed || version !== generation || !owned()) return false
       recovery = { current: () => !disposed && generation === version && epoch === scope,
         run: resume ?? (async (owner) => { await read(run, owner) }) }
-      set({ status: "error", failure: failure(error, false), readRetryable: true })
+      set({ status: "error", failure: failure(error, false), readRetryable: true,
+        hostAuthorization: !basic && unauthorized(error) })
       return false
     })
     if (reading === controller) reading = undefined
@@ -223,8 +242,10 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
       return
     }
     const acknowledgedTarget = intent.kind === "retargetTarget" ? decode(CapabilityManagement.Target, receipt.data).target : undefined
+    const connected = intent.kind === "connect" ? decode(CapabilitySetup.Result, receipt.data) : undefined
     clear()
-    set({ receipt, failure: undefined, retryable: false, readRetryable: false })
+    set({ receipt, failure: undefined, retryable: false, readRetryable: false,
+      ...(connected ? { verifications: { ...state.verifications, [connected.connection.id]: connected.verification } } : {}) })
     if (!owned()) return
     if (intent.kind === "removeTarget" || intent.kind === "disconnect") {
       target = undefined
@@ -292,20 +313,48 @@ export function createIntegrationModel(api: Api, requestKey: () => string = () =
     fence()
     writing?.abort()
     writing = undefined
+    listing?.abort()
+    listing = undefined
     clear()
     connection = undefined
     target = undefined
     set({ status: "loading", connections: [], targets: [], bindings: [], busy: false, connectionID: undefined,
       targetID: undefined, after: undefined, targetsAfter: undefined, bindingsAfter: undefined,
-      failure: undefined, receipt: undefined, retryable: false, readRetryable: false })
+      failure: undefined, receipt: undefined, retryable: false, readRetryable: false, verifications: {},
+      hostAuthorization: false, sessions: [], sessionsStatus: "idle", resourceError: undefined })
+  }
+  // The binding picker's session list is advisory: its failure never touches the page status or a pending mutation.
+  const loadSessions = async () => {
+    if (disposed) return
+    listing?.abort()
+    const controller = new AbortController()
+    listing = controller
+    set("sessionsStatus", "loading")
+    const sessions = await api.sessions({ signal: controller.signal }).then((value) => decode(Sessions, value))
+      .catch(() => undefined)
+    if (disposed || listing !== controller) return
+    listing = undefined
+    if (!sessions) return set("sessionsStatus", "error")
+    set({ sessions: [...sessions].sort((a, b) => b.updated - a.updated), sessionsStatus: "ready" })
+  }
+  const checkResource = (text: string) => {
+    if (disposed) return undefined
+    const parsed = Schema.decodeUnknownResult(Resource)(text)
+    if (Result.isFailure(parsed)) {
+      set("resourceError", parsed.failure.message)
+      return undefined
+    }
+    set("resourceError", undefined)
+    return parsed.success
   }
   if (getOwner()) onCleanup(dispose)
   return {
     state, load: async (more) => { await load(more) }, select, selectTarget, retry, retryRead, cancel, dispose,
+    loadSessions, checkResource,
     moreTargets: async () => { if (!disposed && !state.busy) await readTargets(true) },
     moreBindings: async () => { if (!disposed && !state.busy) await readBindings(true) },
     connect: (input) => mutate(CapabilitySetup.Input, input,
-      (value, key, signal) => api.connect(value, key, { signal }), CapabilitySetup.Result, "other",
+      (value, key, signal) => api.connect(value, key, { signal }), CapabilitySetup.Result, "connect",
       (value, data) => data.connection.provider === value.provider && data.connection.generation === 0),
     createTarget: (input) => mutate(CapabilityManagement.CreateTargetInput, { connection, input },
       (value, key, signal) => api.createTarget(value.connection, value.input, key, { signal }), CapabilityManagement.Target, "other",
@@ -351,11 +400,23 @@ function reflected(value: Schema.Json, secrets: readonly string[]): boolean {
   return Object.values(value).some((leaf) => reflected(leaf, secrets))
 }
 
+function wire(error: object) {
+  const cause = "cause" in error ? error.cause : undefined
+  return { status: "status" in error ? error.status : cause && typeof cause === "object" && "status" in cause ? cause.status : undefined,
+    tag: "_tag" in error ? error._tag : undefined }
+}
+
+function unauthorized(error: unknown) {
+  if (!error || typeof error !== "object") return false
+  const reply = wire(error)
+  return reply.status === 401 || reply.tag === "UnauthorizedError"
+}
+
 function failure(error: unknown, mutation: boolean): Failure {
   if (!error || typeof error !== "object") return error === "invalid" ? (mutation ? "unknown" : "request") : "request"
-  const cause = "cause" in error ? error.cause : undefined
-  const status = "status" in error ? error.status : cause && typeof cause === "object" && "status" in cause ? cause.status : undefined
-  const tag = "_tag" in error ? error._tag : undefined
+  const reply = wire(error)
+  const status = reply.status
+  const tag = reply.tag
   if (status === 401 || status === 403 || tag === "UnauthorizedError" || tag === "ForbiddenError") return "authorization"
   if (status === 404 || status === 405 || status === 501) return "unsupported"
   if (status === 400 || status === 422 || tag === "InvalidRequestError" || tag === "HttpApiSchemaError") return "invalid"

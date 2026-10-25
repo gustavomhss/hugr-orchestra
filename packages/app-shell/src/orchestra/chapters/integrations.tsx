@@ -23,7 +23,7 @@ export default function IntegrationsPage(props: ChapterPageProps) {
       access.owner = owner
     }
     const model = createIntegrationModel(createIntegrationsApi({ server: owner.server,
-      directory: owner.directory, bearer: access.bearer, fetch: platform.fetch }))
+      directory: owner.directory, bearer: access.bearer, fetch: platform.fetch }), undefined, !!owner.server.password)
     const lifetime = { disposed: false }
     onCleanup(() => { lifetime.disposed = true; model.dispose() })
     untrack(() => { void model.load() })
