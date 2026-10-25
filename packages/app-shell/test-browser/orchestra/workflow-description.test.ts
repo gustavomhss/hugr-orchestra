@@ -4,6 +4,7 @@ import { createStore } from "solid-js/store"
 import { render } from "solid-js/web"
 import { QueryClient } from "@tanstack/solid-query"
 import { MemoryRouter } from "@solidjs/router"
+import { Orchestra } from "@orchestra/client"
 import type { RelayDocument } from "@/orchestra/relay/client"
 import type { RelaySource } from "@/orchestra/relay/source"
 import { flowFromDocument } from "@/orchestra/relay/graph"
@@ -14,7 +15,6 @@ import { solidDom } from "../solid-dom"
 const dir = import.meta.dir
 const { PlatformProvider }: typeof import("@/context/platform") = await import(solidDom("@/context/platform", dir))
 const { LanguageProvider }: typeof import("@/context/language") = await import(solidDom("@/context/language", dir))
-const { createSdkForServer }: typeof import("@/utils/server") = await import(solidDom("@/utils/server", dir))
 const { createRelayClient, decodeDocument }: typeof import("@/orchestra/relay/client") = await import(
   solidDom("@/orchestra/relay/client", dir)
 )
@@ -100,7 +100,7 @@ function setup(respond?: (request: Request) => Promise<Response>) {
     { preconnect: fetch.preconnect },
   )
   const client = createRelayClient({
-    sdk: createSdkForServer({ server: { url: "http://localhost:4096" }, directory: "/repo", fetch: fetcher }),
+    orchestra: Orchestra.make({ baseUrl: "http://localhost:4096", fetch: fetcher }),
     directory: "/repo",
   })
   const source = {

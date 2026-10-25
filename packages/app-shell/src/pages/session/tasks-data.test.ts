@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import type { AssistantMessage, Message, Part, Session, UserMessage } from "@/v2-wire"
-
-import { createSdkForServer } from "@/utils/server"
+import type { MessageListOutput } from "@/server-api"
+import type { SessionMessageAssistant, SessionMessageInfo } from "@/v2-legacy"
+import type { ServerApi } from "@/utils/server"
 
 import { ServerConnection } from "@/context/server"
 import { createServerSession } from "@/context/server-session"
@@ -306,22 +307,66 @@ describe("deriveTasks stats", () => {
       info,
       parts: [{ id: `prt_${info.id}`, sessionID: child.id, messageID: info.id, type: "text" as const, text: "Latest" }],
     }))
-    const pages = [Promise.withResolvers<Response>(), Promise.withResolvers<Response>()]
-    const requests: string[] = []
+    const pages = [Promise.withResolvers<MessageListOutput>(), Promise.withResolvers<MessageListOutput>()]
+    const requests: unknown[] = []
+    const sessions = new Map([child, session(parent)].map((item) => [item.id, item]))
     const store = createServerSession(
-      createSdkForServer({
-        server: { url: "http://tasks.test" },
-        throwOnError: true,
-        fetch: (async (request) => {
-          const url = new URL(request instanceof Request ? request.url : String(request))
-          expect(url.pathname).toBe(`/session/${child.id}/message`)
-          requests.push(url.search)
+      {
+        get: async (input: { sessionID: string }) => {
+          const found = sessions.get(input.sessionID)
+          if (!found) throw new Error("Unexpected session read")
+          return found
+        },
+        message: async () => {
+          throw new Error("Unexpected message read")
+        },
+      } as unknown as Pick<ServerApi["session"], "get" | "message">,
+      {
+        list: (input: unknown) => {
+          requests.push(input)
           const page = pages[requests.length - 1]
           if (!page) throw new Error("Unexpected history request")
           return page.promise
-        }) as typeof fetch,
-      }),
+        },
+      } as unknown as ServerApi["message"],
+      { todo: async () => [] },
     )
+    // Current API history, oldest first; the API returns each page newest first.
+    const v2Assistant = (id: string, extra: Partial<SessionMessageAssistant>): SessionMessageAssistant => ({
+      id,
+      type: "assistant",
+      agent: "explore",
+      model: { id: "model-x", providerID: "prov" },
+      content: [],
+      cost: 0,
+      tokens,
+      time: { created: 2_000, completed: 3_000 },
+      ...extra,
+    })
+    const latestPage: SessionMessageInfo[] = [
+      { id: "msg_latest_user", type: "user", text: "Latest", time: { created: 5_000 } },
+      v2Assistant("msg_latest_assistant", {
+        finish: "stop",
+        content: [{ type: "text", text: "Latest" }],
+        time: { created: 6_000, completed: 7_000 },
+      }),
+    ]
+    const olderPage: SessionMessageInfo[] = [
+      { id: "msg_user", type: "user", text: "Earlier task", time: { created: 1_000 } },
+      v2Assistant("msg_older_assistant", {
+        cost: 0.25,
+        tokens: { ...tokens, input: 10, output: 20 },
+        content: [
+          {
+            type: "tool",
+            id: "c_failed",
+            name: "bash",
+            state: { status: "error", input: {}, error: { type: "failed", message: "failed" } },
+            time: { created: 2_100, completed: 2_200 },
+          },
+        ],
+      }),
+    ]
     store.remember(child)
     latest.forEach(({ info, parts }) => {
       store.apply({ type: "message.updated", properties: { info } })
@@ -347,7 +392,7 @@ describe("deriveTasks stats", () => {
     const initial = store.sync(child.id)
     expect(store.history.loading(child.id)).toBe(true)
     expect(store.history.loaded(child.id)).toBe(false)
-    pages[0]!.resolve(Response.json(latest, { headers: { "x-next-cursor": "older" } }))
+    pages[0]!.resolve({ data: latestPage.toReversed(), cursor: { next: "older" } })
     await initial
     expect(store.history.loaded(child.id)).toBe(true)
     expect(store.history.more(child.id)).toBe(true)
@@ -355,34 +400,11 @@ describe("deriveTasks stats", () => {
 
     const older = store.history.loadMore(child.id)
     expect(store.history.loaded(child.id)).toBe(false)
-    pages[1]!.resolve(
-      Response.json([
-        {
-          info: user(child.id, "msg_user"),
-          parts: [{ id: "prt_user", sessionID: child.id, messageID: "msg_user", type: "text", text: "Earlier task" }],
-        },
-        {
-          info: assistant(child.id, "msg_older_assistant", {
-            cost: 0.25,
-            tokens: { ...tokens, input: 10, output: 20 },
-          }),
-          parts: [
-            {
-              ...tool("msg_older_assistant", "c_failed", "bash", {
-                status: "error",
-                input: {},
-                error: "failed",
-                time: { start: 2_100, end: 2_200 },
-              }),
-              sessionID: child.id,
-            },
-          ],
-        },
-      ]),
-    )
+    pages[1]!.resolve({ data: olderPage.toReversed(), cursor: {} })
     await older
     expect(requests).toHaveLength(2)
-    expect(new URLSearchParams(requests[1]).get("before")).toBe("older")
+    expect(requests[0]).toMatchObject({ sessionID: child.id, order: "desc" })
+    expect(requests[1]).toMatchObject({ sessionID: child.id, cursor: "older" })
     expect(store.history.loaded(child.id)).toBe(true)
     expect(store.history.more(child.id)).toBe(false)
     expect(stats()).toMatchObject({ toolCalls: 1, fails: 1, tokens: { input: 10, output: 20 }, cost: 0.25 })

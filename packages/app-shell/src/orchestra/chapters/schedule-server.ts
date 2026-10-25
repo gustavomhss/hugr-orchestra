@@ -3,6 +3,8 @@ import { createEffect, createSignal, onCleanup } from "solid-js"
 import { createStore, reconcile } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { useSDK } from "@/context/sdk"
+import { ClientError } from "@orchestra/client"
+import { errorStatus } from "./agents-roster"
 import { claimStorage, createClaims } from "./schedule-claims"
 import { runError, TICK, type DeviceStore, type ScheduleSource } from "./schedule-device"
 
@@ -20,7 +22,7 @@ export function createServerSchedule(props: {
   const sdk = useSDK()
   return createServerScheduleSource(props, {
     language,
-    api: () => sdk().client.v2.schedule,
+    api: () => sdk().orchestra.schedules,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   })
 }
@@ -29,7 +31,7 @@ export function createServerScheduleSource(
   props: { directory: string; store: DeviceStore; onUnsupported: () => void },
   input: {
     language: Pick<ReturnType<typeof useLanguage>, "t">
-    api: () => ReturnType<ReturnType<typeof useSDK>>["client"]["v2"]["schedule"]
+    api: () => ReturnType<ReturnType<typeof useSDK>>["orchestra"]["schedules"]
     timezone: string
     poll?: (refresh: () => void) => () => void
   },
@@ -47,7 +49,7 @@ export function createServerScheduleSource(
   const lifetime = { disposed: false, migrating: false, supported: false }
   const [moved, setMoved] = createSignal<"pending" | "failed">("pending")
   const failure = (error: unknown) =>
-    error && typeof error === "object" && "message" in error && typeof error.message === "string"
+    !(error instanceof ClientError) && error && typeof error === "object" && "message" in error && typeof error.message === "string"
       ? error.message
       : language.t("common.requestFailed")
   const name = (id: string) => state.tasks.find((task) => task.id === id)?.name ?? ""
@@ -55,11 +57,14 @@ export function createServerScheduleSource(
   // Polled while the page is open, so runs the server starts on its own show up here.
   const load = async () => {
     const result = await api()
-      .list({ location }, { throwOnError: false })
-      .catch(() => undefined)
+      .list({ location })
+      .then(
+        (body: unknown) => ({ body, status: 200 }),
+        (error: unknown) => ({ body: undefined, status: answerStatus(error) }),
+      )
     if (lifetime.disposed) return
-    const body: unknown = result?.data
-    if (result?.response?.ok && body && typeof body === "object" && "data" in body && Array.isArray(body.data)) {
+    const body = result.body
+    if (body && typeof body === "object" && "data" in body && Array.isArray(body.data)) {
       lifetime.supported = true
       setState("tasks", reconcile(body.data as ScheduledTaskInfo[], { key: "id" }))
       setState("status", "ready")
@@ -68,7 +73,7 @@ export function createServerScheduleSource(
       return
     }
     // An older server answers 404, or a page from its UI fallback instead of the list.
-    if (!lifetime.supported && result?.response && (result.response.ok || UNSUPPORTED.has(result.response.status)))
+    if (!lifetime.supported && result.status !== undefined && (result.status === 200 || UNSUPPORTED.has(result.status)))
       return props.onUnsupported()
     setState("status", "error")
   }
@@ -80,29 +85,27 @@ export function createServerScheduleSource(
     lifetime.migrating = true
     try {
       for (const task of tasks) {
-        const result = await api()
-          .create(
-            {
-              location,
-              scheduledTaskCreateInput: {
-                id: task.id,
-                name: task.name,
-                prompt: task.prompt,
-                cadence: task.cadence,
-                next: task.next,
-                timezone,
-                minute: task.minute,
-                enabled: task.enabled,
-                history: { runs: task.runs, missed: task.missed, last: task.last },
-              },
-            },
-            { throwOnError: false },
+        const error = await api()
+          .create({
+            location,
+            id: task.id,
+            name: task.name,
+            prompt: task.prompt,
+            cadence: task.cadence,
+            next: task.next,
+            timezone,
+            minute: task.minute,
+            enabled: task.enabled,
+            history: { runs: task.runs, missed: task.missed, last: task.last },
+          })
+          .then(
+            () => undefined,
+            (error: unknown) => ({ error }),
           )
-          .catch(() => undefined)
         if (lifetime.disposed) return
-        if (!result?.response.ok) {
+        if (error) {
           setMoved("failed")
-          return setState("error", language.t("orchestra.schedule.migrateError", { detail: failure(result?.error) }))
+          return setState("error", language.t("orchestra.schedule.migrateError", { detail: failure(error.error) }))
         }
       }
       const ids = new Set(tasks.map((task) => task.id))
@@ -141,13 +144,10 @@ export function createServerScheduleSource(
   })
 
   const update = async (id: string, input: { enabled: boolean }) => {
-    const result = await api()
-      .update({ scheduleID: id, location, scheduledTaskUpdateInput: input }, { throwOnError: false })
-      .catch(() => undefined)
-    if (!result?.response.ok)
-      setState(
-        "error",
-        language.t("orchestra.schedule.updateError", { name: name(id), detail: failure(result?.error) }),
+    await api()
+      .update({ scheduleID: id, location, ...input })
+      .catch((error: unknown) =>
+        setState("error", language.t("orchestra.schedule.updateError", { name: name(id), detail: failure(error) })),
       )
     await load()
   }
@@ -162,24 +162,22 @@ export function createServerScheduleSource(
       // Core re-anchors recurrence when any timing field is sent. Metadata-only edits omit all
       // three; a changed time/cadence is entered in this browser's zone and explicitly re-anchors it.
       const timed = !task || task.next !== fields.next || task.cadence !== fields.cadence
-      const result = await (
+      const error = await (
         id
-          ? api().update(
-              {
-                scheduleID: id,
-                location,
-                scheduledTaskUpdateInput: {
-                  name: fields.name,
-                  prompt: fields.prompt,
-                  ...(timed ? { next: fields.next, cadence: fields.cadence, timezone } : {}),
-                  ...(resumed ? { enabled: true } : {}),
-                },
-              },
-              { throwOnError: false },
-            )
-          : api().create({ location, scheduledTaskCreateInput: { ...fields, timezone } }, { throwOnError: false })
-      ).catch(() => undefined)
-      if (!result?.response.ok) return failure(result?.error)
+          ? api().update({
+              scheduleID: id,
+              location,
+              name: fields.name,
+              prompt: fields.prompt,
+              ...(timed ? { next: fields.next, cadence: fields.cadence, timezone } : {}),
+              ...(resumed ? { enabled: true } : {}),
+            })
+          : api().create({ location, ...fields, timezone })
+      ).then(
+        () => undefined,
+        (error: unknown) => ({ error }),
+      )
+      if (error) return failure(error.error)
       await load()
       return undefined
     },
@@ -187,11 +185,15 @@ export function createServerScheduleSource(
     refresh: load,
     remove: async (id) => {
       const task = name(id)
-      const result = await api()
-        .remove({ scheduleID: id, location }, { throwOnError: false })
-        .catch(() => undefined)
-      if (!result?.response?.ok && result?.response?.status !== 404)
-        return language.t("orchestra.schedule.removeError", { name: task, detail: failure(result?.error) })
+      const error = await api()
+        .remove({ scheduleID: id, location })
+        .then(
+          () => undefined,
+          (error: unknown) => ({ error }),
+        )
+      // A task another window already removed counts as removed.
+      if (error && !notFound(error.error))
+        return language.t("orchestra.schedule.removeError", { name: task, detail: failure(error.error) })
       await load()
       return undefined
     },
@@ -202,8 +204,11 @@ export function createServerScheduleSource(
       setState("error", "")
       try {
         const result = await api()
-          .run({ scheduleID: id, location }, { throwOnError: false })
-          .catch((error: unknown) => ({ data: undefined, error }))
+          .run({ scheduleID: id, location })
+          .then(
+            (data) => ({ data, error: undefined }),
+            (error: unknown) => ({ data: undefined, error }),
+          )
         const sessionID = result.data?.data.sessionID
         if (!sessionID && !lifetime.disposed) setState("error", runError(language, task, result.error))
         return sessionID
@@ -213,4 +218,17 @@ export function createServerScheduleSource(
       }
     },
   }
+}
+
+// An undeclared answer throws a ClientError carrying its status. A 200 that is not JSON, such as an older server's
+// UI fallback page, throws one without a status and counts as the 200 it was.
+function answerStatus(error: unknown) {
+  if (error instanceof ClientError && (error.reason === "UnsupportedContentType" || error.reason === "MalformedResponse"))
+    return 200
+  return errorStatus(error)
+}
+
+function notFound(error: unknown) {
+  if (error instanceof ClientError) return errorStatus(error) === 404
+  return !!error && typeof error === "object" && "_tag" in error && error._tag === "ScheduleNotFoundError"
 }

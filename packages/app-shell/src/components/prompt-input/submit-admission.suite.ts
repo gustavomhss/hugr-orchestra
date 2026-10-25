@@ -16,7 +16,7 @@ import {
   promotedDrafts,
   prompt,
   promptInputs,
-  savedRules,
+  worktreeCreateInputs,
   sentShell,
   sessionCreateInputs,
   state,
@@ -195,16 +195,16 @@ test("failed policy ACK retains draft/context/worktree/session; retry adopts sam
   expect(real.current()).toBe(contents)
   expect(real.context.items()).toBe(context)
   expect(pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "model" }] })
-  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
   expect(promoted).toEqual([])
   expect(sentShell).toEqual([])
   expect(state.worktreeResets).toBe(0)
   state.policyWrite = async () => {}
   await submit.handleSubmit(new Event("submit"))
-  expect(createdSessions).toEqual(["/repo/main/new"])
+  expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
   expect(sentShell).toHaveLength(1)
   expect(sentShell[0]?.sessionID).toBe("session-1")
-  expect(promoted).toEqual([{ directory: "/repo/main/new", sessionID: "session-1" }])
+  expect(promoted).toEqual([{ directory: "/repo/main-workspaces/new", sessionID: "session-1" }])
   expect(state.worktreeResets).toBe(1)
   expect(pendingPolicy(key)).toEqual({ mode: "inherit" })
 })
@@ -275,7 +275,10 @@ describe("prompt admission and worktree selection", () => {
     gate.resolve()
     await Promise.all([first, second])
     expect(state.worktreeCreates).toBe(1)
-    expect(createdSessions).toEqual(["/repo/main/new"])
+    expect(worktreeCreateInputs).toEqual([
+      { projectID: "project", strategy: "git_worktree", directory: "/repo/main-workspaces", location: { directory: "/repo/main" } },
+    ])
+    expect(createdSessions).toEqual(["/repo/main-workspaces/new"])
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "first" })
     expect(draft.current()[0]).toMatchObject({ content: "later typing" })

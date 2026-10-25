@@ -1,5 +1,5 @@
 import type { Project } from "@/v2-types"
-import type { ServerApi, ServerSdk } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import type { CompatibleApi, CompatibleSessionApi } from "@/utils/server-compat"
 import type { PermissionRequest, QuestionRequest, ReferenceInfo } from "@/v2-types"
 import type { Session } from "@/v2-wire"
@@ -28,7 +28,6 @@ import { loadMcpQuery, loadMcpResourcesQuery } from "../server-sync"
 import { NormalizedProviderListResponse } from "@orchestra/session-ui/context"
 import { ScopedKey, type ServerScope } from "@/utils/server-scope"
 import { normalizeSessionInfo, type AppSession } from "@/utils/session"
-import type { ServerProtocol } from "@/utils/server-protocol"
 
 type GlobalStore = {
   ready: boolean
@@ -89,12 +88,7 @@ function showErrors(input: {
   })
 }
 
-export const loadGlobalConfigQuery = (
-  scope: ServerScope,
-  sdk: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
-  readV2?: () => Promise<Config>,
-) =>
+export const loadGlobalConfigQuery = (scope: ServerScope, readV2?: () => Promise<Config>) =>
   queryOptions({
     queryKey: [scope, "config"],
     queryFn: async () => {
@@ -129,10 +123,8 @@ export const loadProjectsQuery = (scope: ServerScope, api: ProjectApi) =>
   })
 
 export async function bootstrapGlobal(input: {
-  serverSDK: ServerSdk
   readV2Config?: () => Promise<Config>
   serverAPI: CatalogApi & { readonly project: ProjectApi }
-  protocol?: Promise<ServerProtocol>
   scope: ServerScope
   requestFailedTitle: string
   translate: (key: string, vars?: Record<string, string | number>) => string
@@ -143,13 +135,13 @@ export async function bootstrapGlobal(input: {
   const slow = [
     () =>
       input.queryClient.fetchQuery(
-        loadGlobalConfigQuery(input.scope, input.serverSDK, input.protocol, input.readV2Config),
+        loadGlobalConfigQuery(input.scope, input.readV2Config),
       ),
     () =>
       input.queryClient.fetchQuery(
-        loadProvidersQuery(input.scope, null, input.serverAPI, input.serverSDK, input.protocol),
+        loadProvidersQuery(input.scope, null, input.serverAPI),
       ),
-    () => input.queryClient.fetchQuery(loadPathQuery(input.scope, null, input.serverSDK, input.protocol)),
+    () => input.queryClient.fetchQuery(loadPathQuery(input.scope, null)),
     () =>
       input.queryClient
         .fetchQuery(loadProjectsQuery(input.scope, input.serverAPI.project))
@@ -246,8 +238,6 @@ export const loadProvidersQuery = (
   scope: ServerScope,
   directory: string | null,
   sdk: CatalogApi,
-  legacy?: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
     queryKey: [scope, directory, "providers"],
@@ -289,8 +279,6 @@ export const loadAgentsQuery = (
   scope: ServerScope,
   directory: string,
   sdk: AgentListApi,
-  legacy?: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions({
     queryKey: [scope, directory, "agents"],
@@ -303,33 +291,21 @@ export const loadAgentsQuery = (
 export const loadCommands = (
   directory: string,
   api: CommandListApi,
-  legacy?: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
 ): Promise<CommandInfo[]> =>
   retry(async () => {
     return api.list({ location: { directory } }).then((result) => result.data)
   })
 
-export const loadPathQuery = (
-  scope: ServerScope,
-  directory: string | null,
-  sdk: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
-) =>
+export const loadPathQuery = (scope: ServerScope, directory: string | null) =>
   queryOptions<Path>({
     queryKey: [scope, directory, "path"],
-    queryFn: async () => {
-      return { state: "", config: "", worktree: "", directory: directory ?? "", home: "" }
-      return retry(() => sdk.path.get({ directory: directory ?? undefined }).then((result) => result.data!))
-    },
+    queryFn: async () => ({ state: "", config: "", worktree: "", directory: directory ?? "", home: "" }),
   })
 
 export const loadReferencesQuery = (
   scope: ServerScope,
   directory: string,
   api: ReferenceListApi,
-  legacy?: ServerSdk,
-  protocol?: Promise<ServerProtocol>,
 ) =>
   queryOptions<ReferenceInfo[]>({
     queryKey: [scope, directory, "references"] as const,
@@ -344,7 +320,6 @@ export async function bootstrapDirectory(input: {
   directory: string
   scope: ServerScope
   mcp: boolean
-  sdk: ServerSdk
   api: CompatibleApi & {
     readonly agent: AgentListApi
     readonly command: CommandListApi
@@ -370,9 +345,8 @@ export async function bootstrapDirectory(input: {
   }
   queryClient: QueryClient
   session?: ServerSession
-  protocol?: Promise<ServerProtocol>
   readV2Config?: () => Promise<Config>
-  /** The V2 server's branch read (`GET /api/vcs`); V1 answers through the legacy SDK. */
+  /** The server's branch read (`GET /api/vcs`). */
   branches?: (input: {
     location: { directory: string }
   }) => Promise<{ data: { branch?: string | null; default_branch?: string | null } }>
@@ -401,7 +375,7 @@ export async function bootstrapDirectory(input: {
           input.setStore,
           "agent",
           input.queryClient
-            .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent, input.sdk, input.protocol))
+            .ensureQueryData(loadAgentsQuery(input.scope, input.directory, input.api.agent))
             .then((data) => input.setStore("agent", data)),
           latest,
         ),
@@ -428,21 +402,18 @@ export async function bootstrapDirectory(input: {
       !seededPath &&
         (() =>
           input.queryClient
-            .ensureQueryData(loadPathQuery(input.scope, input.directory, input.sdk, input.protocol))
+            .ensureQueryData(loadPathQuery(input.scope, input.directory))
             .then((data) => {
               const next = projectID(data.directory ?? input.directory, input.global.project)
               if (next) input.setStore("project", next)
             })),
       () =>
         retry(async () => {
-          const result =
-            false
-              ? (await input.sdk.vcs.get()).data
-              : // A server without the branch route has no branch to show; it is not retried.
-                await input
-                  .branches?.({ location: { directory: input.directory } })
-                  .then((value) => value.data)
-                  .catch(() => undefined)
+          // A server without the branch route has no branch to show; it is not retried.
+          const result = await input
+            .branches?.({ location: { directory: input.directory } })
+            .then((value) => value.data)
+            .catch(() => undefined)
           if (!result) return
           const next = { branch: result.branch ?? undefined, default_branch: result.default_branch ?? undefined }
           input.setStore("vcs", next)
@@ -450,12 +421,12 @@ export async function bootstrapDirectory(input: {
         }),
       input.mcp &&
         (() =>
-          loadCommands(input.directory, input.api.command, input.sdk, input.protocol).then((commands) =>
+          loadCommands(input.directory, input.api.command).then((commands) =>
             input.setStore("command", commands),
           )),
       () =>
         input.queryClient.fetchQuery(
-          loadReferencesQuery(input.scope, input.directory, input.api.reference, input.sdk, input.protocol),
+          loadReferencesQuery(input.scope, input.directory, input.api.reference),
         ),
       () =>
         retry(() =>
@@ -531,16 +502,16 @@ export async function bootstrapDirectory(input: {
       input.mcp &&
         (() =>
           input.queryClient.fetchQuery(
-            loadMcpQuery(input.scope, input.directory, input.api.mcp, input.sdk, input.protocol),
+            loadMcpQuery(input.scope, input.directory, input.api.mcp),
           )),
       input.mcp &&
         (() =>
           input.queryClient.fetchQuery(
-            loadMcpResourcesQuery(input.scope, input.directory, input.api.mcp, input.sdk, input.protocol),
+            loadMcpResourcesQuery(input.scope, input.directory, input.api.mcp),
           )),
       () =>
         input.queryClient
-          .fetchQuery(loadProvidersQuery(input.scope, input.directory, input.api, input.sdk, input.protocol))
+          .fetchQuery(loadProvidersQuery(input.scope, input.directory, input.api))
           .catch((err) => {
             // The run's failures below hand a missing directory over once.
             if (input.onMissingDirectory && isLocationNotFoundError(err)) throw err

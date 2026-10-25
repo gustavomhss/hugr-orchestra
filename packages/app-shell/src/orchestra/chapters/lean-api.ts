@@ -15,12 +15,14 @@ const decodeHistory = Schema.decodeUnknownSync(LeanDashboard.History, { onExcess
 
 type LeanClient = Pick<ReturnType<typeof Orchestra.make>, "lean">
 
-/** The V2 server serves the dashboard through `orchestra` (`/api/lean`); without it a V2 server counts as unsupported. */
-export function createLeanAPI(
-  sdk: Pick<DirectorySDK, "client" | "directory" | "protocol">,
-  orchestra?: LeanClient,
-): LeanDashboard.Transport {
-  const current = async <T>(run: (client: LeanClient) => Promise<{ data: unknown }>, decode: (value: unknown) => T) => {
+/** The V2 server serves the dashboard through `orchestra` (`/api/lean`); without it the server counts as unsupported. */
+export function createLeanAPI(sdk: Pick<DirectorySDK, "directory">, orchestra?: LeanClient): LeanDashboard.Transport {
+  const response = async <T>(
+    run: (client: LeanClient) => Promise<{ data: unknown }>,
+    decode: (value: unknown) => T,
+    signal?: AbortSignal,
+  ) => {
+    signal?.throwIfAborted()
     if (!orchestra) throw new LeanAPIError("unsupported")
     const result = await run(orchestra).catch((error: unknown) => {
       // A server that predates the route answers with an undeclared 404.
@@ -33,41 +35,13 @@ export function createLeanAPI(
       throw new LeanAPIError("invalid", cause)
     }
   }
-  const response = async <T>(
-    run: () => Promise<{ data?: unknown; error?: unknown; response?: Response }>,
-    decode: (value: unknown) => T,
-    signal?: AbortSignal,
-    v2?: (client: LeanClient) => Promise<{ data: unknown }>,
-  ) => {
-    const protocol = await sdk.protocol
-    signal?.throwIfAborted()
-    if (protocol === "v2" && v2) return current(v2, decode)
-    // Retain the SDK's directory/auth/fetch/error interceptors; inspect HTTP status before throwing.
-    const result = await run()
-    if (result.response && [404, 405, 501].includes(result.response!.status)) throw new LeanAPIError("unsupported")
-    if (result.error !== undefined) throw result.error
-    try {
-      return decode(result.data)
-    } catch (cause) {
-      throw new LeanAPIError("invalid", cause)
-    }
-  }
   const location = { directory: sdk.directory }
   return {
-    read: (signal) => response(
-      () => sdk.client.project.lean({ directory: sdk.directory }, { signal, throwOnError: false }), decodeInfo, signal,
-      (client) => client.lean.get({ location }, { signal }),
-    ),
-    update: (leanProfileUpdate, signal) => response(
-      () => sdk.client.project.leanUpdate({ directory: sdk.directory, leanProfileUpdate }, { signal, throwOnError: false }),
-      decodeInfo, signal,
-      (client) => client.lean.update({ location, ...leanProfileUpdate }, { signal }),
-    ),
-    history: (itemID, signal) => response(
-      () => sdk.client.project.leanHistory({ directory: sdk.directory, itemID }, { signal, throwOnError: false }),
-      decodeHistory, signal,
-      (client) => client.lean.history({ location, itemID }, { signal }),
-    ),
+    read: (signal) => response((client) => client.lean.get({ location }, { signal }), decodeInfo, signal),
+    update: (leanProfileUpdate, signal) =>
+      response((client) => client.lean.update({ location, ...leanProfileUpdate }, { signal }), decodeInfo, signal),
+    history: (itemID, signal) =>
+      response((client) => client.lean.history({ location, itemID }, { signal }), decodeHistory, signal),
   }
 }
 

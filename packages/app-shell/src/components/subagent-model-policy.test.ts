@@ -9,12 +9,23 @@ import { clearPending, pendingPolicy, pendingSelection, togglePending } from "./
 import { applySessionManagementEvent, mergeSessionManagementInfo, normalizeSessionInfo } from "@/utils/session"
 import { sessionManagementUnsupported } from "@/utils/session-management-errors"
 import { createServerSession } from "@/context/server-session"
-import { createSdkForServer } from "@/utils/server"
+import type { ServerApi } from "@/utils/server"
 import { parseHomeSessionIndex } from "@/context/global-sync/home-session-index"
 
 const key = "http://origin.test\u0000draft\u0000full/slash/draft"
 const first: SubagentModelPolicy = { mode: "allowlist", models: [{ providerID: "router", id: "team/model/v1" }] }
 afterEach(() => clearPending(key))
+
+// These tests project events only; any server read is a failure.
+const unread = async () => {
+  throw new Error("unexpected server read")
+}
+const unreadStore = () =>
+  createServerSession(
+    { get: unread, message: unread } as unknown as Pick<ServerApi["session"], "get" | "message">,
+    { list: unread } as unknown as ServerApi["message"],
+    { todo: unread },
+  )
 
 test("reading an untouched draft keeps inheritance; removing the last choice keeps explicit deny-all", () => {
   expect(pendingSelection(key).size).toBe(0)
@@ -139,7 +150,7 @@ test("unsupported statuses stay distinct from auth, transport and server failure
 })
 
 test("actual server session store projects durable policy replacements and restores, including same-timestamp sequence order", () => {
-  const store = createServerSession(createSdkForServer({ server: { url: "https://unused.test" } }), { protocol: Promise.resolve("v2") })
+  const store = unreadStore()
   store.remember({ id: "ses_store", slug: "store", projectID: "project", directory: "/repo", title: "Store", version: "", time: { created: 1, updated: 1 } })
   store.apply({ type: "session.next.subagent.models.changed", properties: { sessionID: "ses_store", timestamp: 10, policy: first }, current: { durable: { seq: 2 } } })
   expect(store.get("ses_store")?.subagentModels).toEqual(first)
@@ -275,7 +286,7 @@ test("catalog keeps all supplied models and marks missing, deprecated and non-to
 })
 
 test("actual server store retains policy sequence over equal-time revisionless snapshots", () => {
-  const store = createServerSession(createSdkForServer({ server: { url: "https://unused.test" } }), { protocol: Promise.resolve("v2") })
+  const store = unreadStore()
   const info = {
     id: "ses_receipt", slug: "store", projectID: "project", directory: "/repo", title: "Store", version: "",
     time: { created: 1, updated: 1 }, permission: [{ permission: "task", pattern: "router/*", action: "allow" }],

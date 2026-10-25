@@ -1,9 +1,8 @@
 import { describe, expect, test } from "bun:test"
 import type { AssistantMessage, Part, Session, UserMessage } from "@/v2-wire"
-
+import type { ServerApi } from "@/utils/server"
 
 import { createServerSession } from "@/context/server-session"
-import { createSdkForServer } from "@/utils/server"
 import { getSessionContext, getSessionCost } from "./session-context-metrics"
 
 const session = {
@@ -83,13 +82,23 @@ const shells = [
   { info: shell, parts: [shellPart] },
 ]
 
+// The current message list has no V1 shell shape, so V1-shaped history reaches the store as the live events that
+// still carry it, after an empty page load.
 async function load(items: { info: UserMessage | AssistantMessage; parts: Part[] }[]) {
-  const fetcher = Object.assign(async () => Response.json(items), { preconnect: fetch.preconnect })
-  const store = createServerSession(createSdkForServer({ server: { url: "http://localhost:4096" }, fetch: fetcher }), {
-    protocol: Promise.resolve("v2"),
-  })
+  const sessionApi = {
+    get: async () => session,
+    message: async () => {
+      throw new Error("single message endpoint called")
+    },
+  } as unknown as Pick<ServerApi["session"], "get" | "message">
+  const messageApi = { list: async () => ({ data: [], cursor: {} }) } as unknown as ServerApi["message"]
+  const store = createServerSession(sessionApi, messageApi, { todo: async () => [] })
   store.remember(session)
   await store.sync(session.id)
+  items.forEach((item) => store.apply({ type: "message.updated", properties: { info: item.info } }))
+  items.forEach((item) =>
+    item.parts.forEach((part) => store.apply({ type: "message.part.updated", properties: { part } })),
+  )
   return store
 }
 

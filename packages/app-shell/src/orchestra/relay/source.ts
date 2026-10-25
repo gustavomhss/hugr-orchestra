@@ -36,10 +36,7 @@ export function createRelaySource(input: { server: ServerConnection.Any; directo
   const global = useGlobal()
   const platform = usePlatform()
   const ctx = global.ensureServerCtx(input.server)
-  const client = createRelayClient({
-    sdk: ctx.sdk.createClient({ directory: input.directory }),
-    directory: input.directory,
-  })
+  const client = createRelayClient({ orchestra: ctx.sdk.orchestra, directory: input.directory })
   const runner = runClient(input.server, input.directory, platform.fetch)
   const queryClient = () => ctx.queryClient
   const key = (...parts: string[]) => relayKey(ctx.sdk.scope, input.directory, ...parts)

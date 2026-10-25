@@ -7,7 +7,7 @@ import { Root } from "@kobalte/core/dialog"
 import { QueryClient } from "@tanstack/solid-query"
 import { Schema } from "effect"
 import { SessionSubagentModels } from "@orchestra/schema/session-subagent-models"
-import { createSdkForServer, createApiForServer } from "@/utils/server"
+import { createApiForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { createSessionManagementForServer } from "@/utils/session-management"
 import { createServerSession } from "@/context/server-session"
@@ -104,12 +104,6 @@ function fixture() {
         await gates.restore
         return new Response(null, { status: 204 })
       }
-      if (url.pathname.startsWith("/session/")) {
-        const snapshot = normalizeSessionInfo(info())
-        gates.resolveStarted.resolve()
-        await gates.resolve
-        return Response.json(snapshot)
-      }
       const snapshot = info()
       gates.readStarted.resolve()
       gates.resolveStarted.resolve()
@@ -120,11 +114,8 @@ function fixture() {
     { preconnect: fetch.preconnect },
   )
   const http = { url: "https://origin.test", username: "owner", password: "fixture" }
-  const client = createSdkForServer({ server: http, fetch: fetcher, throwOnError: true })
   const canonicalApi = createApiForServer({ server: http, fetch: fetcher })
-  const session = createServerSession(client, canonicalApi.session, canonicalApi.message, {
-    protocol: Promise.resolve("v2"),
-  })
+  const session = createServerSession(canonicalApi.session, canonicalApi.message, { todo: async () => [] })
   session.remember(normalizeSessionInfo(info()))
   session.apply({
     type: "session.next.subagent.models.changed",
@@ -140,17 +131,14 @@ function fixture() {
     server: { type: "http" as const, http },
     protocol: Promise.resolve("v2" as const),
     protocolKind: () => "v2" as const,
-    client,
     api: createCompatibleApi({
       protocol: Promise.resolve("v2"),
       current: canonicalApi,
-      legacy: () => client,
     }),
     sessionManagement: createSessionManagementForServer({
       server: http,
       fetch: fetcher,
       protocol: Promise.resolve("v2"),
-      legacy: client,
     }),
   }
   return {

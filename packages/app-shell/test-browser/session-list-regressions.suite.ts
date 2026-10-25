@@ -5,7 +5,8 @@ import { produce } from "solid-js/store"
 import { QueryClient, QueryClientProvider } from "@tanstack/solid-query"
 import { createGlobalEmitter } from "@solid-primitives/event-bus"
 import type { ServerEvent, ServerSDK } from "@/context/server-sdk"
-import { createApiForServer, createSdkForServer } from "@/utils/server"
+import { Orchestra } from "@orchestra/client"
+import { createApiForServer } from "@/utils/server"
 import { createCompatibleApi } from "@/utils/server-compat"
 import { solidDom } from "./solid-dom"
 
@@ -49,12 +50,12 @@ function fixture(origin = "https://pending-list.test") {
   }, { preconnect: fetch.preconnect })
   const http = { url: origin }
   const protocol = Promise.resolve("v2" as const)
-  const client = createSdkForServer({ server: http, fetch: fetcher, throwOnError: true })
-  const api = createCompatibleApi({ protocol, current: createApiForServer({ server: http, fetch: fetcher }), legacy: () => client })
+  const currentApi = createApiForServer({ server: http, fetch: fetcher })
+  const api = createCompatibleApi({ protocol, current: currentApi })
   const emitter = createGlobalEmitter<Record<string, ServerEvent>>()
   const sdk = {
-    server: { type: "http", http }, scope: ServerScope.local, protocol, client, api,
-    createClient: () => client,
+    server: { type: "http", http }, scope: ServerScope.local, protocol, api, currentApi,
+    orchestra: Orchestra.make({ baseUrl: origin, fetch: fetcher }),
     event: { listen: emitter.listen.bind(emitter), start: async () => {} },
   } as unknown as ServerSDK
   const query = new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: Infinity } } })

@@ -2,11 +2,10 @@ import { afterEach, beforeAll, beforeEach, mock } from "bun:test"
 import { createRoot, getOwner } from "solid-js"
 import { createStore, type Store, type SetStoreFunction } from "solid-js/store"
 import type { Prompt, PromptStore } from "@/context/prompt"
-import { pendingRules } from "../draft-subagent-models"
 import { Worktree } from "@/utils/worktree"
 import { ServerScope } from "@/utils/server-scope"
 import { createApiForServer, type ServerApi } from "@/utils/server"
-import type { ModelRule, SubagentModelPolicy } from "../subagent-model-rules"
+import type { SubagentModelPolicy } from "../subagent-model-rules"
 import { draftSessionKey } from "./draft-session"
 import { clearPending, pendingSnapshot } from "../draft-subagent-models"
 import type { Part } from "@/v2-wire"
@@ -20,15 +19,12 @@ export let followupSystem: typeof import("./submit").followupSystem
 export let acknowledgeDraftPolicy: typeof import("./submit").acknowledgeDraftPolicy
 export const policyWrites: { id: string; policy: SubagentModelPolicy }[] = []
 export const toasts: { title?: unknown; description?: unknown }[] = []
-export const legacyBaseline: ModelRule[] = []
-export const legacySessionPermissions = new Map<string, ModelRule[]>()
 type FixtureServer = {
   scope: ServerScope
   protocol: Promise<"v2">
   protocolKind: () => "v2"
-  client: ReturnType<typeof clientFor>
+  api: ServerApi
   currentApi: ServerApi
-  createClient: (options: { directory?: string }) => ReturnType<typeof clientFor>
   sessionManagement: {
     setSubagentModels: (id: string, policy: SubagentModelPolicy) => Promise<SubagentModelPolicy>
     waitSubagentModels: (id: string) => Promise<void>
@@ -39,10 +35,8 @@ type FixtureServer = {
 type FixtureSDK = {
   scope: ServerScope
   directory: string
-  client: ReturnType<typeof clientFor>
   api: ServerApi
   url: string
-  createClient: FixtureServer["createClient"]
 }
 type ReactiveOwner = { read?: () => { sdk: FixtureSDK; server: FixtureServer } }
 export const canonicalPolicies = new Map<string, SubagentModelPolicy>()
@@ -55,8 +49,8 @@ export const policyFixture: { server: FixtureServer; sdk: FixtureSDK } = {
   sdk: undefined as unknown as FixtureSDK,
 }
 
-export const createdClients: string[] = []
 export const createdSessions: string[] = []
+export const worktreeCreateInputs: Array<{ projectID: string; strategy: string; directory: string; location: { directory: string } }> = []
 export const sessionCreateInputs: Array<{
   agent?: string
   model?: { id: string; providerID: string; variant?: string }
@@ -91,7 +85,6 @@ export const behaviorReads: Array<{ scope: string; directory: string; projects: 
 export const behaviors = { system: undefined as string | undefined, fail: false }
 export const events: string[] = []
 export const profileProjects = [{ id: "project", worktree: "/repo/main", sandboxes: ["/repo/worktree-a"] }]
-export const savedRules: { sessionID: string; directory: string; permission: ReturnType<typeof pendingRules> }[] = []
 export const savedPolicies: { sessionID: string; policy: SubagentModelPolicy }[] = []
 export const interrupts: string[] = []
 export const preparations: PromiseWithResolvers<void>[] = []
@@ -123,7 +116,6 @@ export const state = {
   promptValue: [{ type: "text", content: "ls", start: 0, end: 2 }] as Prompt,
   policyWrite: async () => {},
   policyWait: async () => {},
-  legacyUpdateHook: async () => {},
   worktreeResets: 0,
   promoteStarted: Promise.withResolvers<void>(),
   promoteProbe: undefined as VoidFunction | undefined,
@@ -181,7 +173,6 @@ export const submitInput = (): Parameters<typeof import("./submit").createPrompt
 })
 
 export const clientFor = (directory: string) => {
-  createdClients.push(directory)
   const api = {
     session: {
       create: async (input: (typeof sessionCreateInputs)[number]) => {
@@ -190,7 +181,6 @@ export const clientFor = (directory: string) => {
         const location = input.location?.directory ?? directory
         createdSessions.push(location)
         sessionCreateInputs.push(input)
-        legacySessionPermissions.set(`session-${createdSessions.length}`, legacyBaseline.slice())
         return {
           id: `session-${createdSessions.length}`,
           projectID: "project",
@@ -200,7 +190,6 @@ export const clientFor = (directory: string) => {
           tokens: { input: 0, output: 0, reasoning: 0, cache: { read: 0, write: 0 } },
           time: { created: 1, updated: 1 },
           title: `New session ${createdSessions.length}`,
-          permission: legacyBaseline.slice(),
           location: { directory: location },
         }
       },
@@ -227,71 +216,35 @@ export const clientFor = (directory: string) => {
       },
     },
   }
-  return {
-    api,
-    session: {
-      delete: (input: { sessionID: string }) => api.session.remove(input),
-      messages: async () => {
-        if (state.messageCount === undefined) throw new Error("server unreachable")
-        return { data: Array.from({ length: state.messageCount }, (_, index) => ({ info: { id: `message-${index}` } })) }
-      },
-      create: async (input: { directory?: string }) => ({
-        data: {
-          ...(await api.session.create({ location: { directory: input.directory ?? directory } })),
-          directory: input.directory ?? directory,
-        },
-      }),
-      promptAsync: async (input: { messageID: string; parts: { type: string; text?: string }[] }) => {
-        await api.session.prompt({
-          ...input,
-          id: input.messageID,
-          sessionID: "session-1",
-          text: input.parts
-            .filter((part) => part.type === "text")
-            .map((part) => part.text)
-            .join(""),
-        })
-        return { data: undefined }
-      },
-      update: async (input: (typeof savedRules)[number]) => {
-        savedRules.push(input)
-        state.rulesStarted.resolve()
-        await state.rulesGate
-        if (state.rulesFailure) throw new Error("permission persistence failed")
-        await state.legacyUpdateHook()
-        legacySessionPermissions.set(input.sessionID, [...(legacySessionPermissions.get(input.sessionID) ?? legacyBaseline), ...input.permission])
-        return { data: { ...input, id: input.sessionID } }
-      },
-      command: async () => ({ data: undefined }),
-      abort: async () => ({ data: undefined }),
-    },
-    worktree: {
-      create: async () => {
-        state.worktreeCreates++
-        Worktree.ready(ServerScope.local, `${directory}/new`)
-        return { data: { directory: `${directory}/new` } }
-      },
-    },
-  }
+  return { api }
 }
 
 export function serverFor(scope = ServerScope.local): FixtureServer {
-  const client = clientFor("/repo/main")
   const current = createApiForServer({ server: { url: "http://fixture.invalid" } })
-  return {
-     scope, get protocol() { return Promise.resolve("v2" as const) },
-     protocolKind: () => "v2",
-    client, currentApi: {
-      ...current,
-      session: { ...current.session, ...client.api.session },
-      message: {
-        list: async () => {
-          if (state.messageCount === undefined) throw new Error("server unreachable")
-          return { data: Array.from({ length: state.messageCount }, (_, index) => ({ id: `message-${index}` })), cursor: {} }
-        },
+  const api = {
+    ...current,
+    session: { ...current.session, ...clientFor("/repo/main").api.session },
+    message: {
+      list: async () => {
+        if (state.messageCount === undefined) throw new Error("server unreachable")
+        return { data: Array.from({ length: state.messageCount }, (_, index) => ({ id: `message-${index}` })), cursor: {} }
       },
-    } as unknown as ServerApi,
-    createClient: (options: { directory?: string }) => clientFor(options.directory ?? "/repo/main"),
+    },
+    projectCopy: {
+      ...current.projectCopy,
+      create: async (input: { projectID: string; strategy: string; directory: string; location: { directory: string } }) => {
+        state.worktreeCreates++
+        worktreeCreateInputs.push(input)
+        Worktree.ready(ServerScope.local, `${input.directory}/new`)
+        return { name: "new", directory: `${input.directory}/new` }
+      },
+    },
+  } as unknown as ServerApi
+  return {
+    scope, get protocol() { return Promise.resolve("v2" as const) },
+    protocolKind: () => "v2",
+    api,
+    currentApi: api,
     sessionManagement: {
       setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
         policyVersions.set(sessionID, (policyVersions.get(sessionID) ?? 0) + 1)
@@ -312,7 +265,7 @@ export function serverFor(scope = ServerScope.local): FixtureServer {
 }
 
 export function sdkFor(directory: string, server: FixtureServer): FixtureSDK {
-  return { scope: server.scope, directory, client: server.client, api: server.currentApi, url: "http://fixture.invalid", createClient: server.createClient }
+  return { scope: server.scope, directory, api: server.currentApi, url: "http://fixture.invalid" }
 }
 
 function promoteRoute(directory: string, id: string) {
@@ -540,8 +493,8 @@ beforeAll(async () => {
 })
 
 beforeEach(() => {
-  createdClients.length = 0
   createdSessions.length = 0
+  worktreeCreateInputs.length = 0
   sessionCreateInputs.length = 0
   enabledAutoAccept.length = 0
   optimistic.length = 0
@@ -572,7 +525,6 @@ beforeEach(() => {
   state.rulesFailure = false
   state.rulesGate = undefined
   state.rulesStarted = Promise.withResolvers<void>()
-  savedRules.length = 0
   savedPolicies.length = 0
   state.worktreeCreates = 0
   state.sdkOverride = undefined
@@ -590,7 +542,6 @@ beforeEach(() => {
   state.serverSessionSyncs = 0
   state.policyWrite = async () => {}
   state.policyWait = async () => {}
-  state.legacyUpdateHook = async () => {}
   state.worktreeResets = 0
   state.promoteStarted = Promise.withResolvers<void>()
   state.promoteProbe = undefined
@@ -602,8 +553,6 @@ beforeEach(() => {
   state.agentID = "backend"
   policyWrites.length = 0
   toasts.length = 0
-  legacyBaseline.length = 0
-  legacySessionPermissions.clear()
   canonicalPolicies.clear()
   policyVersions.clear()
   policyFixture.server = serverFor()
@@ -611,6 +560,5 @@ beforeEach(() => {
   setReactiveOwner("read", undefined)
   ;[draftSessionKey(ServerScope.local, "/repo/main"), draftSessionKey(ServerScope.local, "/repo/main", "draft-1")]
     .forEach((key) => clearPending(key, pendingSnapshot(key).revision))
-  createdClients.length = 0
   for (const key of Object.keys(storedSessions)) delete storedSessions[key]
 })

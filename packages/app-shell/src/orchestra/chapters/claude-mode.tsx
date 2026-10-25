@@ -1,21 +1,17 @@
-import { createEffect, onCleanup, onMount, Show } from "solid-js"
+import { onMount, Show } from "solid-js"
 import { createStore } from "solid-js/store"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
-import { useServerSDK } from "@/context/server-sdk"
 import { useServerSync } from "@/context/server-sync"
 import { setMaestroEngine } from "@/orchestra/claude-mode-entry"
 import { showToast } from "@/utils/toast"
 import { errorMessage } from "./providers-data"
-
-const POLL_MS = 2500
 
 // Maestro on Claude Code: pick the engine and sign in to Claude from the app. Claude Code opens the browser itself
 // when sign-in starts, so the returned URL is only the "Browser didn't open?" fallback and is never opened here.
 export function ClaudeModeSection() {
   const language = useLanguage()
   const platform = usePlatform()
-  const sdk = useServerSDK()
   const sync = useServerSync()
   const [state, setState] = createStore({
     // A pending choice shows only while its write is in flight, like the route select.
@@ -30,7 +26,9 @@ export function ClaudeModeSection() {
   })
   const engine = () =>
     state.engine ?? (sync().data.config.agent?.maestro?.engine === "claude-code" ? "claude-code" : "orchestra")
-  const claude = () => sdk().client.provider.claudeCode
+  // Claude Code sign-in has no route on the current server yet (DEFERRED: `/provider/claude-code/*`), so the
+  // section reports it unavailable instead of calling the removed V1 surface.
+  const unsupported = new Error("Claude Code sign-in is not available on this server")
   // Sign-in failures arrive as `{ name, data: { message } }`; the message is Claude Code's own stderr.
   const failed = (error: unknown) =>
     language.t("orchestra.providers.claudeMode.failed", {
@@ -39,22 +37,7 @@ export function ClaudeModeSection() {
         language.t("common.requestFailed"),
       ),
     })
-
-  const refresh = async () => {
-    const result = await claude()
-      .account(undefined, { throwOnError: false })
-      .catch(() => undefined)
-    setState("loaded", true)
-    if (!result?.data) return
-    setState("account", result.data)
-    if (result.data.signedIn) setState({ signing: false, url: undefined, code: "", error: undefined })
-  }
-  onMount(() => void refresh())
-  createEffect(() => {
-    if (!state.signing) return
-    const timer = setInterval(() => void refresh(), POLL_MS)
-    onCleanup(() => clearInterval(timer))
-  })
+  onMount(() => setState("loaded", true))
 
   const chooseEngine = async (value: string) => {
     const next = value === "claude-code" ? "claude-code" : "orchestra"
@@ -69,26 +52,11 @@ export function ClaudeModeSection() {
       .finally(() => setState("engine", undefined))
   }
 
-  const signIn = async () => {
-    setState({ signing: true, url: undefined, code: "", error: undefined })
-    const result = await claude()
-      .login(undefined, { throwOnError: false })
-      .catch((error: unknown) => ({ data: undefined, error }))
-    if (result.data) return setState("url", result.data.url)
-    setState({ signing: false, error: failed(result.error) })
-  }
+  const signIn = () => setState({ signing: false, url: undefined, code: "", error: failed(unsupported) })
   const cancel = () => setState({ signing: false, url: undefined, code: "", error: undefined })
-  const submit = async () => {
-    const code = state.code.trim()
-    if (!code || state.sending) return
-    setState({ sending: true, error: undefined })
-    const result = await claude()
-      .loginCode({ code }, { throwOnError: false })
-      .catch((error: unknown) => ({ data: undefined, error }))
-    setState("sending", false)
-    if (result.error) return setState("error", failed(result.error))
-    setState("code", "")
-    void refresh()
+  const submit = () => {
+    if (!state.code.trim() || state.sending) return
+    setState("error", failed(unsupported))
   }
 
   const account = () => {

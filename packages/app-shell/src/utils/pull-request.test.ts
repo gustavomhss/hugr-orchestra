@@ -1,11 +1,14 @@
 import { describe, expect, test } from "bun:test"
+import { Orchestra } from "@orchestra/client"
 import { createdPullRequest, openPullRequests, pullRequestCall, pullRequestCli } from "./pull-request"
 
 const location = { directory: "/repo", project: { id: "p", directory: "/repo" } }
-const answer = (status: number, body: unknown) => {
-  const response = new Response(JSON.stringify(body), { status })
-  return Promise.resolve(response.ok ? { data: body, response } : { error: body, response })
-}
+// The real client against a server that answers `status` with `body`.
+const answer = (status: number, body: unknown) =>
+  Orchestra.make({
+    baseUrl: "http://pull-request.test",
+    fetch: Object.assign(async () => Response.json(body, { status }), { preconnect: fetch.preconnect }),
+  }).pullRequests.create({ location: { directory: "/repo" }, title: "t", body: "", base: "dev" })
 
 describe("pullRequestCall", () => {
   test("a created pull request is its https address and number, nothing less", async () => {

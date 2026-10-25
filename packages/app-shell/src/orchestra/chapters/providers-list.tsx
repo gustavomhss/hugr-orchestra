@@ -203,7 +203,6 @@ export function ProviderList(props: {
   }
   const disconnect = (card: ProviderCard) =>
     disconnectProvider(card, {
-      protocol: protocol(),
       sdk: sdk(),
       sync: sync(),
       directory: props.directory,
@@ -390,7 +389,6 @@ export function ProviderList(props: {
 export function disconnectProvider(
   card: ProviderCard,
   input: {
-    protocol: "v2" | undefined
     sdk: ReturnType<ReturnType<typeof useServerSDK>>
     sync: ReturnType<ReturnType<typeof useServerSync>>
     directory: string
@@ -401,29 +399,17 @@ export function disconnectProvider(
     const action = card.disconnect
     const disabled = input.sync.data.config.disabled_providers ?? []
     const location = input.directory ? { directory: input.directory } : undefined
-    if (action.type === "credentials" && input.protocol === "v2") {
-      await Promise.all(action.ids.map((credentialID) => input.sdk.api.credential.remove({ credentialID, location })))
-      return
-    }
     if (action.type === "credentials") {
-      const client = input.sdk.createClient({ directory: input.directory || undefined, throwOnError: true })
-      await Promise.all(action.ids.map((credentialID) => client.v2.credential.remove({ credentialID, location })))
+      await Promise.all(action.ids.map((credentialID) => input.sdk.api.credential.remove({ credentialID, location })))
       return
     }
     if (action.type === "enable") {
       await input.sync.updateConfig({ disabled_providers: disabled.filter((id) => id !== card.id) })
       return
     }
-    if (action.type !== "auth") return
-    if (action.custom) {
-      const client = input.sdk.createClient({ directory: input.directory || undefined, throwOnError: true })
-      await client.auth.remove({ providerID: card.id }, { throwOnError: true })
-      await input.sync.updateConfig({
-        disabled_providers: disabled.includes(card.id) ? disabled : [...disabled, card.id],
-      })
-      return
-    }
-    await input.sdk.client.auth.remove({ providerID: card.id }, { throwOnError: true })
+    // Only a V1 server lists "auth" cards, and its /auth/{providerID} route has no V2 equivalent. Fail rather than
+    // disable the provider in config while its stored key survives.
+    if (action.type === "auth") throw new Error("Provider auth removal is not supported")
   }
   return run().catch(() => {
     throw new Error(input.failed)
