@@ -110,6 +110,17 @@ export const Commands = Spec.make(typeof ORCHESTRA_CLI_NAME === "string" ? ORCHE
           description: "Extract a file's top-level symbols with Maestro's native parser",
           params: { file: Argument.string("file") },
         }),
+        Spec.make("omni", {
+          description: "show the process spawner in use (omni or legacy) and run a test process tree through omni",
+          params: {
+            hold: Flag.boolean("hold").pipe(
+              Flag.withDefault(false),
+              Flag.withDescription(
+                "start the nonce tree, print `holding <nonce> pid=<this process>` and keep it alive until killed",
+              ),
+            ),
+          },
+        }),
       ],
     }),
     session,

@@ -91,7 +91,6 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/apps/desktop/src/main/cli-artifacts.ts",
-        "$TURBO_ROOT$/apps/orchestra/src/maestro/**",
         "$TURBO_ROOT$/modules/maestro/coordination/src/**",
         "$TURBO_ROOT$/packages/*-specialist/skills/**",
         "$TURBO_ROOT$/modules/specialists/*/skills/**"
