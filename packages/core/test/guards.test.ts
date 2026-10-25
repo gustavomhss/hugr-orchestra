@@ -481,6 +481,32 @@ describe("runGuards", () => {
     ])
   })
 
+  // Golden: a shipped migration is immutable, a new one may be added, and destructive or required-column SQL is flagged.
+  test("the migration pack flags edits to shipped migrations and destructive SQL, and accepts a new safe migration", () => {
+    const cwd = repo()
+    cpSync(guardsDir, join(cwd, "script/guards"), { recursive: true })
+    const old = "apps/orchestra/migration/20260101000000_first/migration.sql"
+    write(cwd, old, "CREATE TABLE `a` (`id` text);\n")
+    write(cwd, "packages/core/src/database/migration/20260101000001_second.ts", "export default {}\n")
+    commit(cwd, "base")
+    git(cwd, "checkout", "--quiet", "-b", "change")
+    const ids = () =>
+      runGuards({ cwd, baseRef: "main", approved: [] })
+        .findings.map((finding) => `${finding.rule} ${finding.path}`)
+        .sort()
+    write(cwd, "apps/orchestra/migration/20260201000000_safe/migration.sql", "ALTER TABLE `a` ADD `b` text;\nDROP INDEX `a_idx`;\n")
+    commit(cwd, "safe")
+    expect(ids()).toEqual([])
+    write(cwd, old, "CREATE TABLE `a` (`id` text, `c` text);\n")
+    write(cwd, "apps/orchestra/migration/20260301000000_bad/migration.sql", "ALTER TABLE `a` DROP COLUMN `b`;\nALTER TABLE `a` ADD `d` text NOT NULL;\n")
+    commit(cwd, "bad")
+    expect(ids()).toEqual([
+      "migration-add-required-column apps/orchestra/migration/20260301000000_bad/migration.sql",
+      "migration-destructive apps/orchestra/migration/20260301000000_bad/migration.sql",
+      "migration-edited " + old,
+    ])
+  })
+
   // Golden: real git modes, sizes and binary detection, so the file filters (modes, min_bytes, binary, no_shebang) run
   // against what git reports. Clean look-alikes sit beside the defects.
   test("the hygiene pack flags every planted file and nothing in the look-alikes", () => {

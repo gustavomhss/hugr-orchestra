@@ -232,3 +232,7 @@ dep-wildcard-version, dep-new-added, dep-registry-override, migration-not-null-n
 ### Dependency pack (implemented)
 
 dep-git-source, dep-lifecycle-script, dep-registry-override, lockfile-stale, cargo-lockfile-stale. Baseline: one real `github:` dependency (packages/app-shell) and two existing postinstall scripts. History over 300 commits: lockfile-stale found 2 real hits. Deferred: dep-new-added (needs to tell a new dependency from a bump).
+
+### Migration pack (implemented)
+
+migration-destructive (gate), migration-edited (gate), migration-add-required-column (warn). Baseline: 11 existing intentional DROP statements in shipped migrations (only new lines fire), 2 existing NOT NULL adds without DEFAULT. History over 300 commits: 0 hits, so no false alarms on normal work.
