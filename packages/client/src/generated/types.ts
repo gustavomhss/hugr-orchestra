@@ -3528,6 +3528,16 @@ export type ProjectCopiesRefreshInput = {
 
 export type ProjectCopiesRefreshOutput = void
 
+export type ProjectCopiesGenerateNameInput = {
+  readonly projectID: { readonly projectID: string }["projectID"]
+  readonly location?: {
+    readonly location?: { readonly directory?: string | undefined; readonly workspace?: string | undefined } | undefined
+  }["location"]
+  readonly context?: { readonly context?: string | undefined }["context"]
+}
+
+export type ProjectCopiesGenerateNameOutput = { readonly name: string }
+
 export type ProjectsListOutput = ReadonlyArray<{
   readonly id: string
   readonly worktree: string

@@ -197,6 +197,8 @@ import type {
   ProjectCopiesRemoveOutput,
   ProjectCopiesRefreshInput,
   ProjectCopiesRefreshOutput,
+  ProjectCopiesGenerateNameInput,
+  ProjectCopiesGenerateNameOutput,
   ProjectsListOutput,
   ProjectsDirectoriesInput,
   ProjectsDirectoriesOutput,
@@ -1735,6 +1737,19 @@ export function make(options: ClientOptions) {
             successStatus: 204,
             declaredStatuses: [400, 401],
             empty: true,
+          },
+          requestOptions,
+        ),
+      generateName: (input: ProjectCopiesGenerateNameInput, requestOptions?: RequestOptions) =>
+        request<ProjectCopiesGenerateNameOutput>(
+          {
+            method: "POST",
+            path: `/experimental/project/${encodeURIComponent(input.projectID)}/copy/generate-name`,
+            query: { location: input["location"] },
+            body: { context: input["context"] },
+            successStatus: 200,
+            declaredStatuses: [401, 400],
+            empty: false,
           },
           requestOptions,
         ),

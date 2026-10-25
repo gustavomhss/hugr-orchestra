@@ -1207,10 +1207,24 @@ const Endpoint22_2 = (raw: RawClient["server.projectCopy"]) => (input: Endpoint2
     query: { location: input["location"] },
   }).pipe(Effect.mapError(mapClientError))
 
+type Endpoint22_3Request = Parameters<RawClient["server.projectCopy"]["projectCopy.generateName"]>[0]
+type Endpoint22_3Input = {
+  readonly projectID: Endpoint22_3Request["params"]["projectID"]
+  readonly location?: Endpoint22_3Request["query"]["location"]
+  readonly context?: Endpoint22_3Request["payload"]["context"]
+}
+const Endpoint22_3 = (raw: RawClient["server.projectCopy"]) => (input: Endpoint22_3Input) =>
+  raw["projectCopy.generateName"]({
+    params: { projectID: input["projectID"] },
+    query: { location: input["location"] },
+    payload: { context: input["context"] },
+  }).pipe(Effect.mapError(mapClientError))
+
 const adaptGroup22 = (raw: RawClient["server.projectCopy"]) => ({
   create: Endpoint22_0(raw),
   remove: Endpoint22_1(raw),
   refresh: Endpoint22_2(raw),
+  generateName: Endpoint22_3(raw),
 })
 
 const Endpoint23_0 = (raw: RawClient["server.project"]) => () =>
