@@ -43,7 +43,7 @@ export const fields = {
       Schema.Struct({ kind: Schema.Literal("pr"), id: Schema.NonEmptyString }),
     ]),
   ).annotate({
-    description: `Native Atlas specialist resume only: the task or PR unit whose latest own Atlas Memory checkpoint the host adds to the resumed Session. Ignored for unsupported agents. ${UNAVAILABLE}`,
+    description: `Native Atlas specialist resume only: the task or PR unit whose latest own Atlas Memory checkpoint the host adds to the resumed Session once. Ignored for unsupported agents.`,
   }),
   effort: Schema.optional(Research.Depth).annotate({
     description: `jimmy only: the research effort tier, fixed for this dispatch. Ignored for other teammates. ${UNAVAILABLE}`,

@@ -32,6 +32,8 @@ import { UnsupportedV2 } from "./governance/unsupported"
 import { WorkResultV2 } from "./governance/work-result"
 import { WorkflowGateV2 } from "./governance/workflow"
 import { WriteRootsV2 } from "./governance/write-roots"
+import { MaestroAtlasSourceV2 } from "./atlas-source"
+import { ResumeAdmissionV2 } from "./governance/resume-admission"
 import { MaestroSeats } from "./seats-service"
 
 const decode = Schema.decodeUnknownOption(GovernanceInputV2.Input)
@@ -124,6 +126,30 @@ export const make = Effect.gen(function* () {
         const skillsText = input.authorizationID === undefined
           ? []
           : yield* GovernanceDispatchV2.groundedSkills(services, input.authorizationID)
+        // The child core's Task prompts: the governance's, the resumed one, or core's own for this call.
+        const child = childID ?? resumed?.id ?? TaskTool.taskChildID(admission.context)
+        const atlasOwner = input.memoryUnit ? MaestroAtlasSourceV2.owner(memberID, seats) : undefined
+        const added = yield* ResumeAdmissionV2.admit(
+          { db: database.db, events, git, location },
+          {
+            childID: child,
+            promptID: TaskTool.taskPromptID(admission.context, child),
+            parentID: parent.id,
+            callID: admission.context.toolCallID,
+            assistantMessageID: admission.context.assistantMessageID,
+            resumed: resumed !== undefined,
+            member: atlasOwner,
+            unit: input.memoryUnit,
+            history: atlasOwner
+              ? (yield* store
+                  .entries(child)
+                  .pipe(Effect.mapError((error) => new ToolFailure({ message: error.message, error })))).map(
+                  (entry) => entry.message,
+                )
+              : [],
+          },
+        )
+        const text = [input.prompt, ...skillsText, ...(added?.atlasResume ? [added.atlasResume.text] : [])]
 
         if (input.background === true) {
           if (seat?.workResult === UpstreamResult.SCHEMA)
@@ -139,7 +165,7 @@ export const make = Effect.gen(function* () {
           background.register(
             GovernanceBackgroundV2.watch({
               parentID: parent.id,
-              childID: childID ?? resumed?.id ?? TaskTool.taskChildID(admission.context),
+              childID: child,
               description: input.description,
               context: admission.context,
             }),
@@ -148,7 +174,7 @@ export const make = Effect.gen(function* () {
         return {
           ...(childID ? { childID } : {}),
           ...(seat?.writeRoots || reserved ? { permissions } : {}),
-          ...(skillsText.length > 0 ? { prompt: { text: [input.prompt, ...skillsText].join("\n\n") } } : {}),
+          ...(text.length > 1 ? { prompt: { text: text.join("\n\n") } } : {}),
           ...(input.background === true ? { background: true } : {}),
         }
 

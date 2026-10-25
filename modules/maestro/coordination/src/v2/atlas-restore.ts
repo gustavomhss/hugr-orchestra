@@ -1,16 +1,21 @@
 export * as MaestroAtlasRestoreV2 from "./atlas-restore"
 
+import { Database } from "@orchestra/core/database/database"
 import { makeLocationNode } from "@orchestra/core/effect/app-node"
 import { Location } from "@orchestra/core/location"
 import { SessionStore, SessionV2 } from "@orchestra/core/session"
 import { SystemContext, SystemContextRegistry } from "@orchestra/core/system-context"
 import { Effect, Layer, Schema } from "effect"
 import { MaestroAtlasSourceV2 } from "./atlas-source"
+import { ResumeAdmissionV2 } from "./governance/resume-admission"
 import { MaestroSeats } from "./seats-service"
 
 export const key = SystemContext.Key.make("maestro/atlas-resume")
 
-/** Where a resume admission rides, as in V1: a message's own metadata or a completed tool call's structured output. */
+/**
+ * Where a resume admission rides, as in V1: a message's own metadata or a completed tool call's structured output. A V2
+ * Task records it beside the prompt it admits (`ResumeAdmissionV2`), so it rides that prompt's message once promoted.
+ */
 export const ADMISSION_KEY = "atlasResume"
 
 export type AdmissionKey = {
@@ -48,6 +53,7 @@ const layer = Layer.effectDiscard(
     const seats = yield* MaestroSeats.Service
     const location = yield* Location.Service
     const sessions = yield* SessionStore.Service
+    const database = yield* Database.Service
     yield* registry.register({
       key,
       load: Effect.gen(function* () {
@@ -58,7 +64,17 @@ const layer = Layer.effectDiscard(
         const entries = yield* sessions
           .entries(SessionV2.ID.make(turn.sessionID))
           .pipe(Effect.orElseSucceed(() => []))
-        const restored = evicted(entries, member, location.project.id)
+        const recorded = yield* ResumeAdmissionV2.admissions(database.db, turn.sessionID)
+        const restored = evicted(
+          entries.flatMap((entry) => {
+            const admission = recorded.get(entry.message.id)
+            return admission
+              ? [entry, { seq: entry.seq, message: { type: entry.message.type, metadata: { [ADMISSION_KEY]: admission } } }]
+              : [entry]
+          }),
+          member,
+          location.project.id,
+        )
         if (!restored) return SystemContext.empty
         return SystemContext.make({
           key,
@@ -135,5 +151,5 @@ function sameKey(a: AdmissionKey, b: AdmissionKey) {
 export const node = makeLocationNode({
   name: "maestro/atlas-resume",
   layer,
-  deps: [Location.node, SessionStore.node, SystemContextRegistry.node, MaestroSeats.node],
+  deps: [Location.node, SessionStore.node, Database.node, SystemContextRegistry.node, MaestroSeats.node],
 })
