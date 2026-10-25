@@ -1,0 +1,1791 @@
+[
+  {
+    "id": "agent-scratch",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Scratch or tool-output file added. Delete it; do not commit agent working files.",
+    "summary": "Looks at files the change adds, renames, or copies in matching files.",
+    "positive": [
+      ".tc-errors.txt",
+      "packages/core/tc-errors.txt",
+      "server.log",
+      "scratch/a.ts",
+      "notes-today.md",
+      ".claude/worktrees/x/a.ts"
+    ],
+    "negative": [
+      "src/errors.ts",
+      "docs/notes.md",
+      "src/catalog.ts"
+    ],
+    "paths": [
+      "**/.tc-errors.txt",
+      "**/*-errors.txt",
+      "**/*.log",
+      "**/scratch",
+      "**/scratch.*",
+      "**/scratch/**",
+      "**/notes-*.md",
+      "**/.claude/worktrees/**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "binary-added",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "changed-paths",
+    "message": "Binary file added outside the usual media and fixture locations. Check it belongs in git.",
+    "summary": "Looks at files the change adds in matching files.",
+    "positive": [
+      "tools/helper.bin",
+      "vendor/lib.tgz"
+    ],
+    "negative": [
+      "packages/app-shell/public/a.png",
+      "assets/icon.icns",
+      "test/fixtures/a.bin"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "build-output",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Build output or dependency directory added. Delete it and add the directory to .gitignore.",
+    "summary": "Looks at files the change adds, renames, or copies in matching files.",
+    "positive": [
+      "node_modules/x/index.js",
+      "packages/core/dist/index.js",
+      "tool/__pycache__/a.pyc",
+      "native/omni/target/release/omni",
+      "coverage/lcov.info"
+    ],
+    "negative": [
+      "src/distance.ts",
+      "docs/targets.md",
+      "src/coverage-report.ts"
+    ],
+    "paths": [
+      "**/node_modules/**",
+      "**/__pycache__/**",
+      "**/.turbo/**",
+      "**/.next/**",
+      "**/target/debug/**",
+      "**/target/release/**",
+      "**/dist/**",
+      "**/coverage/**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "cargo-lockfile-stale",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "A dependency or version changed in Cargo.toml but Cargo.lock did not. Run cargo update -w or cargo build and commit the lockfile.",
+    "summary": "Looks at files the change adds or edits in matching files.",
+    "positive": [
+      "Cargo.toml",
+      "native/omni/crates/hugr-omni/Cargo.toml"
+    ],
+    "negative": [
+      "native/omni/Cargo.lock",
+      "docs/Cargo.md",
+      "target/x/Cargo.toml"
+    ],
+    "paths": [
+      "**/Cargo.toml"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "client-env-secret",
+    "group": "secrets",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Secret behind a browser-exposed env prefix: it ends up in the client bundle. Read it on the server instead.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "NEXT_PUBLIC_STRIPE_SECRET=sk",
+      "VITE_API_TOKEN=abc",
+      "const k = import.meta.env.VITE_SERVICE_ROLE_KEY",
+      "EXPO_PUBLIC_OPENAI_API_KEY=x"
+    ],
+    "negative": [
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY=x",
+      "VITE_STRIPE_PUBLISHABLE_KEY=pk",
+      "NEXT_PUBLIC_API_URL=https://x",
+      "API_TOKEN=abc"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "conflict-markers",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Merge conflict marker left in the file. Resolve the conflict.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "<<<<<<< HEAD",
+      ">>>>>>> 98d36706df (feat: thing)",
+      "<<<<<<<"
+    ],
+    "negative": [
+      "a << b",
+      "=======",
+      "<<<<<<<<< not a marker",
+      "  <<<<<<< indented, not at line start",
+      "const x = '>>>>>>>'"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "dep-git-source",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Dependency from a git URL or tarball. Use a published, pinned version from the registry.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    \"foo\": \"git+https://github.com/x/y.git\"",
+      "    \"foo\": \"github:x/y\"",
+      "    \"foo\": \"https://example.com/foo-1.0.0.tgz\"",
+      "foo = { git = \"https://github.com/x/y\" }",
+      "git = \"https://github.com/x/y\"",
+      "-e git+https://github.com/x/y#egg=y",
+      "foo @ git+https://github.com/x/y"
+    ],
+    "negative": [
+      "  \"repository\": \"github:x/y\"",
+      "    \"url\": \"git+https://github.com/x/y.git\"",
+      "  \"homepage\": \"https://example.com\"",
+      "    \"foo\": \"^1.2.3\"",
+      "    \"foo\": \"workspace:*\"",
+      "requests==2.31.0"
+    ],
+    "paths": [
+      "**/package.json",
+      "**/Cargo.toml",
+      "**/requirements*.txt",
+      "**/pyproject.toml"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "dep-lifecycle-script",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Install-time script added. It runs code on every machine that installs this package; do the work in an explicit build step instead.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    \"postinstall\": \"node scripts/setup.js\"",
+      "\"preinstall\": \"x\"",
+      "  \"install\": \"node-gyp rebuild\""
+    ],
+    "negative": [
+      "    \"prepare\": \"husky\"",
+      "    \"install-deps\": \"bun install\"",
+      "    \"build\": \"bun run postinstall-check\""
+    ],
+    "paths": [
+      "**/package.json"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "dep-new-added",
+    "group": "dependencies",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "New dependency. Check that the package exists, is the one you mean (not a look-alike name), and is needed; then say why in the PR.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    \"left-pad\": \"^1.3.0\",",
+      "    \"@scope/pkg\": \"workspace:*\"",
+      "    \"zod\": \"catalog:\","
+    ],
+    "negative": [
+      "  \"version\": \"1.2.3\",",
+      "    \"build\": \"bun run x\"",
+      "  \"name\": \"@orchestra/core\",",
+      "    \"exports\": {"
+    ],
+    "paths": [
+      "**/package.json"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "dep-registry-override",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Package registry or index overridden. Packages with the same name can then come from another source; keep the default registry.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "registry=https://npm.pkg.github.com",
+      "@org:registry=https://example.com/npm/",
+      "--extra-index-url https://example.com/simple",
+      "extra-index-url = https://example.com/simple",
+      "replace-with = \"mirror\"",
+      "[source.crates-io]"
+    ],
+    "negative": [
+      "registry=https://registry.npmjs.org/",
+      "requests==2.31.0",
+      "# registry docs live elsewhere",
+      "exact = true"
+    ],
+    "paths": [
+      "**/.npmrc",
+      "**/bunfig.toml",
+      "**/requirements*.txt",
+      "**/pip.conf",
+      "**/pyproject.toml",
+      "**/uv.toml",
+      "**/.cargo/config.toml",
+      "**/.cargo/config"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "destructive-shell",
+    "group": "hygiene",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Destructive command in a script or workflow. Use --force-with-lease, a scoped path, or a manual step a person confirms.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "git push --force origin dev",
+      "git push origin dev -f",
+      "git reset --hard origin/dev",
+      "psql -c \"DROP DATABASE app\"",
+      "rm -rf /",
+      "rm -rf \"$HOME\"",
+      "rm -rf ~"
+    ],
+    "negative": [
+      "git push --force-with-lease origin x",
+      "rm -rf dist node_modules",
+      "rm -rf \"$DIR/build\"",
+      "git reset --soft HEAD~1",
+      "# git push --force is banned"
+    ],
+    "paths": [
+      ".github/**",
+      "script/**",
+      "scripts/**",
+      "**/scripts/**",
+      "**/script/**",
+      "**/*.sh",
+      "**/package.json",
+      ".husky/**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "env-file",
+    "group": "secrets",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Environment file added: it normally holds real secrets. Commit a .env.example with placeholder values instead.",
+    "summary": "Looks at files the change adds, renames, or copies in matching files.",
+    "positive": [
+      ".env",
+      "apps/web/.env.local",
+      ".env.production"
+    ],
+    "negative": [
+      ".env.example",
+      "apps/web/.env.local.example",
+      "docs/environment.md"
+    ],
+    "paths": [
+      "**/.env",
+      "**/.env.*"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "exec-bit",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "changed-paths",
+    "message": "Executable bit set on a text file with no #! line. Run chmod -x, or add the interpreter line if it is a script.",
+    "summary": "Looks at files the change touches in matching files.",
+    "positive": [
+      "docs/readme.md",
+      "src/index.ts"
+    ],
+    "negative": [
+      "node_modules/pkg/bin.js"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "gha-continue-on-error",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "continue-on-error: true lets a failing step pass. Fix the step, or move the optional work to a workflow that is not a gate.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    continue-on-error: true",
+      "      continue-on-error: \"true\""
+    ],
+    "negative": [
+      "    continue-on-error: false",
+      "    continue-on-error: ${{ matrix.experimental }}",
+      "# continue-on-error: true"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-curl-pipe-sh",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Downloads a script and runs it unverified. Download to a file, check its digest, then run it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "curl -fsSL https://example.com/install.sh | sh",
+      "curl -s https://example.com/x | sudo bash",
+      "wget -qO- https://example.com/x | sh"
+    ],
+    "negative": [
+      "curl -fsSL https://example.com/x -o install.sh",
+      "curl -s https://example.com/x | jq .",
+      "echo shell | grep sh",
+      "#   curl -fsSL https://example.com/x | bash",
+      "echo \"  curl -fsSL https://example.com/install | bash\""
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}",
+      "**/*.sh"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-deprecated-commands",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Deprecated workflow command. Write to the GITHUB_OUTPUT, GITHUB_STATE, GITHUB_ENV or GITHUB_PATH file instead.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "echo \"::set-output name=a::b\"",
+      "echo ::add-path::/x",
+      "echo \"::save-state name=a::b\""
+    ],
+    "negative": [
+      "echo \"::warning::x\"",
+      "echo \"a=b\" >> $GITHUB_OUTPUT",
+      "echo \"::group::build\""
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-env-write",
+    "group": "workflows",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "An expression is written to GITHUB_ENV or GITHUB_PATH. If the value can come from outside the repository, it can inject variables or change which binary runs.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "echo \"X=${{ steps.a.outputs.b }}\" >> $GITHUB_ENV",
+      "echo \"${{ github.event.x }}\" >> \"$GITHUB_PATH\""
+    ],
+    "negative": [
+      "echo \"X=1\" >> $GITHUB_ENV",
+      "echo \"$HOME/bin\" >> $GITHUB_PATH",
+      "echo \"x=${{ steps.a.outputs.b }}\" >> $GITHUB_OUTPUT"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-insecure-commands",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Re-enables the deprecated set-env and add-path commands, which let logged output change the environment. Use the GITHUB_ENV and GITHUB_PATH files.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  ACTIONS_ALLOW_UNSECURE_COMMANDS: true",
+      "env: { ACTIONS_ALLOW_UNSECURE_COMMANDS: \"true\" }"
+    ],
+    "negative": [
+      "  ACTIONS_STEP_DEBUG: true",
+      "  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-job-disabled",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Job or step switched off with if: false. Delete it or fix it; a disabled check looks like a passing one.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    if: false",
+      "      - if: ${{ false }}"
+    ],
+    "negative": [
+      "        save-if: false",
+      "    if: github.event_name == \"push\"",
+      "    if: always()"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-permissions-broad",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Write permission granted for the whole workflow. Keep the workflow at read and grant the write on the one job that needs it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "permissions: write-all",
+      "  contents: write",
+      "  id-token: write"
+    ],
+    "negative": [
+      "      contents: write",
+      "  contents: read",
+      "    steps:"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-pull-request-target",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "pull_request_target gives untrusted pull request code access to secrets. Use pull_request, or split the privileged part into a workflow_run.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  pull_request_target:",
+      "on: [push, pull_request_target]"
+    ],
+    "negative": [
+      "# never use pull_request_target",
+      "  pull_request:",
+      "  workflow_dispatch:"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-secrets-inherit",
+    "group": "workflows",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "secrets: inherit hands every secret to the called workflow. Pass only the ones it needs.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    secrets: inherit"
+    ],
+    "negative": [
+      "    secrets:",
+      "      token: ${{ secrets.TOKEN }}"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-secrets-tojson",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "toJSON(secrets) puts every secret in one expression and defeats per-secret masking. Reference the single secret you need.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "env: ${{ toJSON(secrets) }}",
+      "x: ${{ toJSON( secrets ) }}"
+    ],
+    "negative": [
+      "x: ${{ toJSON(github.event) }}",
+      "x: ${{ secrets.TOKEN }}"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-template-injection",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Attacker-controlled value expanded into a script. Pass it through an env variable and quote the variable in the script.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "        run: echo \"${{ github.event.pull_request.title }}\"",
+      "          echo ${{ github.head_ref }}",
+      "git checkout ${{ github.event.pull_request.head.ref }}"
+    ],
+    "negative": [
+      "          PR_TITLE: ${{ github.event.pull_request.title }}",
+      "        run: echo \"$PR_TITLE\"",
+      "    if: github.head_ref == \"main\"",
+      "echo ${{ github.event.pull_request.number }}"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "gha-unpinned-uses",
+    "group": "workflows",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Action not pinned to a full commit SHA. Pin uses: to the 40-character commit and keep the tag in a comment.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "      - uses: actions/checkout@v4",
+      "        uses: \"actions/cache@v4\"",
+      "uses: owner/repo/.github/workflows/x.yml@main",
+      "- uses: actions/checkout@0123456789abcdef0123456789abcdef0123456"
+    ],
+    "negative": [
+      "      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4",
+      "uses: ./.github/actions/setup",
+      "uses: docker://alpine:3.19",
+      "        name: uses the cache"
+    ],
+    "paths": [
+      ".github/workflows/**/*.{yml,yaml}",
+      ".github/actions/**/*.{yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "guardrail-ignore-added",
+    "group": "silenced",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "guardrail-ignore added. A reviewer must confirm the rule is wrong for this line and the reason is true.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "const x = a as any // guardrail-ignore: ts-any-added boundary type from a vendor SDK",
+      "# guardrail-ignore: js-console-log CLI output"
+    ],
+    "negative": [
+      "const x = 1",
+      "// ignore this line when reading",
+      "- Suppress one line with the guardrail comment."
+    ],
+    "paths": [
+      "**/*"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "heredoc-residue",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Shell heredoc terminator left in source. Delete the stray line.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "EOF",
+      "  PY",
+      "HEREDOC"
+    ],
+    "negative": [
+      "const EOF = 1",
+      "EOF_MARKER",
+      "// EOF",
+      "type JSON = string",
+      "            JSON",
+      ""
+    ],
+    "paths": [
+      "**/*.{ts,tsx,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "hook-bypass",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Skips the git hooks that guard commits. Fix what the hook reports instead of bypassing it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "git commit --no-verify -m wip",
+      "HUSKY=0 bun install",
+      "SKIP=lint git commit -m x",
+      "export HUSKY_SKIP_HOOKS=1"
+    ],
+    "negative": [
+      "git commit -m \"x\"",
+      "SKIP_PREPARE=1 bun install",
+      "husky"
+    ],
+    "paths": [
+      ".github/**",
+      "script/**",
+      "scripts/**",
+      "**/scripts/**",
+      "**/package.json",
+      "**/*.sh",
+      ".husky/**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-console-log",
+    "group": "leftovers",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "console.log left in library or UI code. Use the project logger, or remove it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  console.log(\"here\", value)",
+      "console.log(x)"
+    ],
+    "negative": [
+      "console.error(\"failed\", e)",
+      "// console.log is for scripts",
+      "const consoleLogger = make()"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-debugger",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "debugger statement left in the code. Remove it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  debugger",
+      "debugger;",
+      "    debugger ;"
+    ],
+    "negative": [
+      "// debugger is not allowed",
+      "const debuggerAttached = true",
+      "node --inspect"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-empty-catch",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Empty catch swallows the error. Handle it, log it, or put a comment inside saying why ignoring it is safe.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  } catch {}",
+      "try { a() } catch (e) {}",
+      "} catch (error) { }"
+    ],
+    "negative": [
+      "} catch {",
+      "} catch (e) { log(e) }",
+      "// catch {} is banned"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-loose-assertion",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Assertion on a literal, which cannot fail. Assert the value the code under test produced.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "expect(true).toBe(true)",
+      "  expect(1).toBeTruthy()",
+      "expect(\"ok\").toEqual(\"ok\")"
+    ],
+    "negative": [
+      "expect(result).toBe(1)",
+      "expect(map.get(k)).toBeDefined()",
+      "expect(result).toBeTruthy()",
+      "const truthy = Boolean(x)"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-test-focused",
+    "group": "tests",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Focused test (.only / fit / fdescribe) disables the rest of the suite. Remove it before merging.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  it.only(\"does a thing\", () => {",
+      "describe.only('group', () => {",
+      "  fit(\"works\", () => {",
+      "test.only(\"x\", async () => {"
+    ],
+    "negative": [
+      "  it(\"does a thing\", () => {",
+      "graph.handle?.fit()",
+      "const benefit(1)",
+      "test.skipIf(process.platform === \"win32\")(\"x\", () => {})",
+      "    expect(fit(372, 94)).toEqual({ width: 1024 })",
+      "    test.only(name, () => run(value, testLayer), opts)"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "js-test-skipped",
+    "group": "tests",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Skipped test (.skip / xit / xdescribe). Fix the test or delete it with a reason; do not leave it skipped.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  it.skip(\"does a thing\", () => {",
+      "describe.skip('group', () => {",
+      "  xit(\"works\", () => {",
+      "test.skip(\"x\", () => {})"
+    ],
+    "negative": [
+      "  it(\"does a thing\", () => {",
+      "test.skipIf(process.platform === \"win32\")(\"x\", () => {})",
+      "// we skip this when offline",
+      "const skipped = items.filter(Boolean)"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "large-file",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "changed-paths",
+    "message": "Large file added (over 1 MB). Check it belongs in git; generated data and media usually do not.",
+    "summary": "Looks at files the change adds in matching files.",
+    "positive": [
+      "specs/mock/data-real.js",
+      "schema/tui.json"
+    ],
+    "negative": [
+      "packages/app-shell/public/wallpapers/a.jpg"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "lint-disable",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Lint suppression without a reason. Add the reason after the directive (eslint: `-- why`, biome: `: why`) or fix the code.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "// eslint-disable-next-line no-console",
+      "/* eslint-disable */",
+      "// biome-ignore lint/suspicious/noExplicitAny",
+      "foo() // eslint-disable-line"
+    ],
+    "negative": [
+      "// eslint-disable-next-line no-console -- CLI prints by design",
+      "// biome-ignore lint/suspicious/noExplicitAny: wire type is untyped",
+      "const rule = \"eslint\"",
+      "// we no longer disable lint here"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,cjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "llm-elision",
+    "group": "leftovers",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Placeholder left where code should be (a model elided it). Write the real code or delete the stub.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  // ... existing code ...",
+      "# ... rest of the implementation ...",
+      "// rest of the code here",
+      "  // implementation goes here",
+      "/* ...remaining logic unchanged */"
+    ],
+    "negative": [
+      "const rest = items.slice(1)",
+      "// keep the existing behaviour for old clients",
+      "throw new Error(\"not implemented\")",
+      "spread ...rest into the call"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,java}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "local-abs-path",
+    "group": "secrets",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Absolute path into a personal home directory. Use a relative path, an environment variable or os.homedir().",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "const dir = \"/Users/gustavo/Documents/HuGR\"",
+      "path = \"/home/alice/project/src\"",
+      "cwd: \"C:\\Users\\bob\\repo\""
+    ],
+    "negative": [
+      "const dir = path.join(os.homedir(), \".orchestra\")",
+      "\"/Users/you/project\"",
+      "// see /Users/gustavo/x",
+      "/home/runner/work/repo",
+      "/home/dock/.runtime/cert.pem"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,json,toml,yml,yaml}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "local-tests-escape",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "ORCHESTRA_LOCAL_TESTS set in a file. Only the owner opts into local runs, per shell; run tests with bun run test:ci.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "ORCHESTRA_LOCAL_TESTS=1 bun test x",
+      "  ORCHESTRA_LOCAL_TESTS: \"1\""
+    ],
+    "negative": [
+      "bun run test:ci orchestra test/a.test.ts",
+      "const local = process.env.ORCHESTRA_LOCAL_TESTS"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "lockfile-stale",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "A dependency changed in package.json but no lockfile changed. Run the package manager's install and commit the lockfile.",
+    "summary": "Looks at files the change adds or edits in matching files.",
+    "positive": [
+      "package.json",
+      "packages/core/package.json"
+    ],
+    "negative": [
+      "packages/core/tsconfig.json",
+      "node_modules/x/package.json",
+      "docs/package.md"
+    ],
+    "paths": [
+      "**/package.json"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "merge-artifacts",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Editor or merge leftover added to the repository. Delete it.",
+    "summary": "Looks at files the change adds, renames, or copies in matching files.",
+    "positive": [
+      "src/a.ts.orig",
+      "src/a.ts.rej",
+      "notes.bak",
+      "src/.a.ts.swp",
+      "src/a.ts~"
+    ],
+    "negative": [
+      "src/a.ts",
+      "docs/backup.md",
+      "src/original.ts"
+    ],
+    "paths": [
+      "**/*.{orig,rej,bak,swp,swo}",
+      "**/*~"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "migration-add-required-column",
+    "group": "dependencies",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "NOT NULL column added without DEFAULT. It fails on a table that already has rows; add a DEFAULT or backfill first.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "ALTER TABLE `session` ADD `owner` text NOT NULL;",
+      "      yield* tx.run(`ALTER TABLE \\`workspace\\` ADD \\`type\\` text NOT NULL;`)",
+      "alter table x add column y integer not null;"
+    ],
+    "negative": [
+      "ALTER TABLE `session` ADD `owner` text NOT NULL DEFAULT 0;",
+      "      yield* tx.run(`ALTER TABLE \\`session\\` ADD \\`cost\\` real DEFAULT 0 NOT NULL;`)",
+      "ALTER TABLE `project` ADD `commands` text;",
+      "CREATE TABLE `x` (`id` text NOT NULL);",
+      "-- ALTER TABLE x ADD y text NOT NULL;"
+    ],
+    "paths": [
+      "apps/orchestra/migration/**/*.sql",
+      "packages/core/src/database/migration/**/*.ts"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "migration-destructive",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Migration destroys data (DROP TABLE/COLUMN, TRUNCATE or DELETE without WHERE). Back the data up or copy it first, and say so in the PR.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "DROP TABLE `session`;",
+      "      yield* tx.run(`ALTER TABLE \\\\`workspace\\\\` DROP COLUMN \\\\`config\\\\`;`)",
+      "      yield* tx.run(`DROP TABLE \\\\`permission\\\\`;`)",
+      "TRUNCATE session;",
+      "DELETE FROM `session`;"
+    ],
+    "negative": [
+      "DROP INDEX `session_idx`;",
+      "DELETE FROM `session` WHERE id = 1;",
+      "-- DROP TABLE old;",
+      "CREATE TABLE `x` (id text);"
+    ],
+    "paths": [
+      "apps/orchestra/migration/**/*.sql",
+      "packages/core/src/database/migration/**/*.ts"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "migration-edited",
+    "group": "dependencies",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Existing migration modified, renamed or deleted. Shipped migrations are immutable; add a new one.",
+    "summary": "Looks at files the change edits, deletes, or renames in matching files.",
+    "positive": [
+      "apps/orchestra/migration/20260511173437_session-metadata/migration.sql",
+      "packages/core/src/database/migration/20260211171708_add_project_commands.ts"
+    ],
+    "negative": [
+      "packages/core/src/database/migration.ts",
+      "packages/core/src/session/session.ts"
+    ],
+    "paths": [
+      "apps/orchestra/migration/**",
+      "packages/core/src/database/migration/2*.ts"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "os-junk",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Operating-system file added to the repository. Delete it and add it to .gitignore.",
+    "summary": "Looks at files the change adds, renames, or copies in matching files.",
+    "positive": [
+      ".DS_Store",
+      "assets/.DS_Store",
+      "docs/Thumbs.db"
+    ],
+    "negative": [
+      "docs/store.md",
+      "src/desktop.ts"
+    ],
+    "paths": [
+      "**/.DS_Store",
+      "**/Thumbs.db",
+      "**/desktop.ini"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "private-key",
+    "group": "secrets",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Private key material in the change. Remove it, rotate the key, and load it from the environment or a secret store.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "-----BEGIN RSA PRIVATE KEY-----",
+      "-----BEGIN PRIVATE KEY-----",
+      "-----BEGIN OPENSSH PRIVATE KEY-----"
+    ],
+    "negative": [
+      "-----BEGIN PUBLIC KEY-----",
+      "-----BEGIN CERTIFICATE-----",
+      "the private key is stored elsewhere"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "protected-paths",
+    "group": "hygiene",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Protected file changed: it defines or enforces the repository's own rules. An approver must clear this change.",
+    "summary": "Looks at files the change touches in matching files.",
+    "positive": [
+      ".github/CODEOWNERS",
+      "AGENTS.md",
+      "godfile-waivers.json",
+      "script/guards/rules/ts-ignore.toml",
+      "script/check-spawn-imports.ts",
+      "script/spawn-allowlist.json"
+    ],
+    "negative": [
+      ".github/workflows/test.yml",
+      "packages/core/src/session.ts",
+      "docs/guardrail/pilot-catalog.md",
+      "README.md",
+      "script/format.ts"
+    ],
+    "paths": [
+      "AGENTS.md",
+      "CODEOWNERS",
+      ".github/CODEOWNERS",
+      "godfile-waivers.json",
+      "script/spawn-allowlist.json",
+      "script/godfile.ts",
+      "script/check-*.ts",
+      "script/guards/**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "py-assert-trivial",
+    "group": "tests",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Assertion that cannot fail. Assert the real condition.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    assert True",
+      "assert 1",
+      "assert x == 1 or True",
+      "assert True, \"ok\""
+    ],
+    "negative": [
+      "    assert x == 1",
+      "assert result is True",
+      "assert items",
+      "# assert True"
+    ],
+    "paths": [
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-bare-except",
+    "group": "hygiene",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Bare except or except ...: pass swallows every error, including KeyboardInterrupt. Catch the specific exception and handle it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    except:",
+      "except Exception: pass",
+      "  except (OSError, ValueError):  pass"
+    ],
+    "negative": [
+      "    except OSError as error:",
+      "    except ValueError:",
+      "# except: is banned"
+    ],
+    "paths": [
+      "**/*.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-breakpoint",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Debugger call left in the code. Remove it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    breakpoint()",
+      "import pdb; pdb.set_trace()",
+      "import ipdb",
+      "  ipdb.set_trace()"
+    ],
+    "negative": [
+      "# use breakpoint() locally only",
+      "def set_breakpoints():",
+      "import pandas"
+    ],
+    "paths": [
+      "**/*.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-no-cover",
+    "group": "silenced",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Excludes this code from coverage. Test it, or say in a comment why it cannot be.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    pass  # pragma: no cover",
+      "if TYPE_CHECKING:  # pragma:no cover"
+    ],
+    "negative": [
+      "# the pragma is documented elsewhere",
+      "cover = compute()"
+    ],
+    "paths": [
+      "**/*.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-noqa-blanket",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Blanket # noqa hides every lint rule on the line. Name the rule: # noqa: E501.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "import os  # noqa",
+      "x = 1 #noqa  "
+    ],
+    "negative": [
+      "import os  # noqa: F401",
+      "x = 1  # not a noqa comment here",
+      "noqa = True"
+    ],
+    "paths": [
+      "**/*.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-test-skipped",
+    "group": "tests",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Skipped or expected-to-fail test with no reason. Fix the test or delete it; a conditional skipif with reason= is fine.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "@pytest.mark.skip",
+      "@pytest.mark.skip(reason=\"later\")",
+      "@pytest.mark.xfail",
+      "@pytest.mark.xfail(strict=True)",
+      "@unittest.skip(\"later\")"
+    ],
+    "negative": [
+      "@pytest.mark.skipif(sys.platform == \"win32\", reason=\"posix only\")",
+      "@pytest.mark.xfail(reason=\"bug 12\")",
+      "@unittest.skipIf(is_ci, \"no network\")",
+      "# skip this on windows",
+      "    (work / \"t.py\").write_text(\"@pytest.mark.skip\\ndef test_value(): pass\")"
+    ],
+    "paths": [
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "py-type-ignore",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Type-check suppression without an error code. Fix the type, or name the code: # type: ignore[arg-type].",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "x = f(y)  # type: ignore",
+      "x = f(y)  # pyright: ignore",
+      "# type:ignore"
+    ],
+    "negative": [
+      "x = f(y)  # type: ignore[arg-type]",
+      "x = f(y)  # pyright: ignore[reportGeneralTypeIssues]",
+      "# we should not ignore this"
+    ],
+    "paths": [
+      "**/*.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "rs-dbg-macro",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "dbg! prints to stderr and is for local debugging. Remove it, or use tracing.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    dbg!(&value);",
+      "let x = dbg!(a + b);"
+    ],
+    "negative": [
+      "// dbg!(x) was here",
+      "let dbg = true;",
+      "debug!(\"x\")"
+    ],
+    "paths": [
+      "**/*.rs"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "rs-should-panic-bare",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "#[should_panic] without expected = \"...\" passes on any panic, including an unrelated one. Add the expected message.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "#[should_panic]",
+      "    #[should_panic ]"
+    ],
+    "negative": [
+      "#[should_panic(expected = \"index out of bounds\")]",
+      "#[test]",
+      "let should_panic = true;"
+    ],
+    "paths": [
+      "**/*.rs"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "rs-test-ignored",
+    "group": "tests",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Test ignored with no reason. Fix it, delete it, or write #[ignore = \"why\"].",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "#[ignore]",
+      "    #[ignore ]"
+    ],
+    "negative": [
+      "#[ignore = \"needs a display\"]",
+      "#[test]",
+      "let ignored = true;",
+      "//! the helper itself is `#[ignore]`d"
+    ],
+    "paths": [
+      "**/*.rs"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "rs-todo-macros",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "todo!/unimplemented! panics at run time and ships a stub. Implement it, or return an error.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    todo!()",
+      "unimplemented!(\"later\")",
+      "todo!(\"handle the empty case\")"
+    ],
+    "negative": [
+      "// todo: handle this",
+      "let todo = vec![];",
+      "macro_rules! todo_item {}"
+    ],
+    "paths": [
+      "**/*.rs"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "secret-token",
+    "group": "secrets",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Credential-shaped token. Remove it, rotate it if it was real, and read it from the environment instead.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "aws_access_key_id = AKIAABCDEFGHIJKLMNOP",
+      "token: ghp_aBcDeFgHiJkLmNoPqRsTuVwXyZ0123456789",
+      "ANTHROPIC_API_KEY=sk-ant-api03-abcdefghijklmnopqrstuvwxyz",
+      "SLACK=xoxb-123456789012-abcdefghij"
+    ],
+    "negative": [
+      "const key = process.env.ANTHROPIC_API_KEY",
+      "sk-ant- is the prefix",
+      "ghp_ prefix is documented",
+      "const AKIA = 1",
+      "aws_access_key_id = AKIAIOSFODNN7EXAMPLE"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "submodule-added",
+    "group": "hygiene",
+    "severity": "gate",
+    "kind": "changed-paths",
+    "message": "Git submodule added or changed. Vendor the code or depend on a published package instead.",
+    "summary": "Looks at files the change touches in matching files.",
+    "positive": [
+      "vendor/lib",
+      "third_party/x"
+    ],
+    "negative": [
+      "node_modules/pkg/sub"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "symlink-added",
+    "group": "hygiene",
+    "severity": "warn",
+    "kind": "changed-paths",
+    "message": "Symbolic link added or changed. Links break on Windows checkouts; copy the file or resolve the path in code.",
+    "summary": "Looks at files the change touches in matching files.",
+    "positive": [
+      "docs/current",
+      "src/link.ts"
+    ],
+    "negative": [
+      "node_modules/pkg/link"
+    ],
+    "paths": [
+      "**"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "test-assertions-removed",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "line-balance",
+    "message": "This change removes assertions from a test file. Check that the behavior they pinned is really gone.",
+    "summary": "Compares matching lines removed and added in each changed matching file.",
+    "positive": [
+      "expect(a).toBe(1)",
+      "    assert x == 1",
+      "assert_eq!(a, b);",
+      "self.assertEqual(a, b)"
+    ],
+    "negative": [
+      "const expected = 1",
+      "// assert that later",
+      "# assert x",
+      "test(\"asserts nothing\", () => {})"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py",
+      "**/tests/**/*.rs",
+      "**/*_test.rs",
+      "**/*_tests.rs"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "test-declaration-removed",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "line-balance",
+    "message": "This change removes test cases from a file without adding as many back. Check that the behavior they covered is really gone.",
+    "summary": "Compares matching lines removed and added in each changed matching file.",
+    "positive": [
+      "  it(\"does a thing\", () => {",
+      "test('works', async () => {",
+      "    def test_session(self):",
+      "#[test]",
+      "  describe.skip(\"x\", () => {"
+    ],
+    "negative": [
+      "const test = 1",
+      "// it(\"old\", () => {})",
+      "let it = 2;",
+      "fn helper() {}"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py",
+      "**/tests/**/*.rs",
+      "**/*_test.rs",
+      "**/*_tests.rs"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "test-file-deleted",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "changed-paths",
+    "message": "Test file deleted. If the code under test is gone, an approver clears it with the label guardrail-approved:test-file-deleted; otherwise restore the test.",
+    "summary": "Looks at files the change deletes or renames in matching files.",
+    "positive": [
+      "packages/server/test/lsp-http.test.ts",
+      "tests/test_session.py",
+      "crates/a/tests/contract.rs",
+      "apps/x/src/a.spec.tsx"
+    ],
+    "negative": [
+      "packages/server/src/lsp.ts",
+      "docs/testing.md",
+      "scripts/test-runner.sh"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py",
+      "**/tests/**/*.rs",
+      "**/*_test.rs",
+      "**/*_tests.rs"
+    ],
+    "clearedBy": "approval"
+  },
+  {
+    "id": "test-globalthis",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Test assigns to globalThis. Exercise the real implementation or inject a dependency; patch the global only when nothing else works.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  globalThis.fetch = async () => new Response(\"ok\")",
+      "globalThis.Bun = fake"
+    ],
+    "negative": [
+      "const t = globalThis.setTimeout",
+      "if (globalThis.fetch === undefined) return",
+      "// globalThis.x = 1"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "test-retry-added",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Retries added to a test or runner. A retry hides a flaky test instead of fixing it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "jest.retryTimes(3)",
+      "@pytest.mark.flaky(reruns=2)",
+      "addopts = --retries 2"
+    ],
+    "negative": [
+      "retries: 3,",
+      "retries: 0,",
+      "const retried = true",
+      "jest.setTimeout(5000)"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py",
+      "**/playwright.config.*",
+      "**/vitest.config.*",
+      "**/jest.config.*"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "test-timeout-raised",
+    "group": "tests",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Test timeout raised to 10s or more. Find out why it is slow instead of waiting longer.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "setDefaultTimeout(30_000)",
+      "  test(\"slow\", async () => {}, { timeout: 60000 })",
+      "@pytest.mark.timeout(300)"
+    ],
+    "negative": [
+      "setDefaultTimeout(5000)",
+      "test(\"x\", () => {}, { timeout: 1000 })",
+      "await new Promise((r) => setTimeout(r, 50))"
+    ],
+    "paths": [
+      "**/*.test.{ts,tsx,js,jsx,mjs}",
+      "**/*.spec.{ts,tsx,js,jsx,mjs}",
+      "**/test/**/*.{ts,tsx,js,jsx,mjs}",
+      "**/test_*.py",
+      "**/*_test.py",
+      "**/tests/**/*.py",
+      "**/test/**/*.py",
+      "**/conftest.py"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "tls-verify-off",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "TLS verification turned off. Fix the certificate or trust store instead of disabling the check.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "  rejectUnauthorized: false,",
+      "NODE_TLS_REJECT_UNAUTHORIZED=0 bun run x",
+      "requests.get(url, verify=False)",
+      "builder.danger_accept_invalid_certs(true)",
+      "curl -k https://example.com",
+      "GIT_SSL_NO_VERIFY=1 git clone x"
+    ],
+    "negative": [
+      "requests.get(url, verify=True)",
+      "rejectUnauthorized: true",
+      "curl -fsSL https://example.com",
+      "// rejectUnauthorized: false was removed"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,go,yml,yaml,env}",
+      "**/Dockerfile*"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "ts-any-added",
+    "group": "silenced",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Explicit any switches the type checker off for this value. Use the real type, unknown plus a narrowing check, or a generic.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "const a: any = 1",
+      "function f(a: any) {}",
+      "const b = x as any",
+      "const c = <any>x",
+      "let list: any[] = []",
+      "type T = { v: any }"
+    ],
+    "negative": [
+      "// note: any value works here",
+      "const company = \"anyone\"",
+      "// treat it as any other file",
+      "const x: unknown = 1",
+      "const many = items.length"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "ts-double-cast",
+    "group": "silenced",
+    "severity": "warn",
+    "kind": "added-lines",
+    "message": "Double cast through unknown bypasses the type checker. Fix the type, or narrow the value with a guard.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "const a = value as unknown as Session",
+      "  return (x as unknown as Foo[])"
+    ],
+    "negative": [
+      "const a = value as Session",
+      "// the cast is not as unknown as it looks",
+      "const u: unknown = 1"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "ts-ignore",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Type suppression without an explanation. Fix the type error, or use @ts-expect-error with the reason after it.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "// @ts-ignore",
+      "  // @ts-nocheck",
+      "// @ts-expect-error",
+      "/* @ts-expect-error */",
+      "const a = b // @ts-ignore legacy"
+    ],
+    "negative": [
+      "// @ts-expect-error the SDK types omit this field",
+      "const note = \"see tsconfig\"",
+      "// ts-ignore is banned",
+      "// @ts-expect-error-free"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts}"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "ts-strict-relaxed",
+    "group": "silenced",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "TypeScript strictness flag turned off. Fix the type errors; do not disable the check for the package.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "    \"strict\": false,",
+      "\"noImplicitAny\": false",
+      "    \"strictNullChecks\": false"
+    ],
+    "negative": [
+      "    \"strict\": true,",
+      "\"skipLibCheck\": true",
+      "\"noUnusedLocals\": false"
+    ],
+    "paths": [
+      "**/tsconfig*.json"
+    ],
+    "clearedBy": "ignore"
+  },
+  {
+    "id": "wip-marker",
+    "group": "leftovers",
+    "severity": "gate",
+    "kind": "added-lines",
+    "message": "Work-in-progress marker left in the change. Finish it or remove the marker.",
+    "summary": "Reads each line the change adds to matching files.",
+    "positive": [
+      "// DO NOT MERGE",
+      "# WIP: finish the parser",
+      "// XXX fix this",
+      "/* WIP */",
+      " * XXX"
+    ],
+    "negative": [
+      "const key = \"sk-xxxx\"",
+      "the pressed WIP item opens no tooltip",
+      "// The WIP row's tooltip is a Kobalte layer",
+      "//   1. The harness subdir oc-cli-XXX collapses",
+      "let xxxl = 1"
+    ],
+    "paths": [
+      "**/*.{ts,tsx,mts,cts,js,jsx,mjs,py,rs,sh,yml,yaml,toml}"
+    ],
+    "clearedBy": "ignore"
+  }
+]
