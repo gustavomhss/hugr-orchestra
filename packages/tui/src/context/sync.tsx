@@ -160,12 +160,15 @@ export const {
     }
 
     function listSessions() {
-      return sdk.client.session
-        .list({ start: Date.now() - 30 * 24 * 60 * 60 * 1000, ...sessionListQuery() })
-        .then((x) => (x.data ?? []).toSorted((a, b) => a.id.localeCompare(b.id)))
+      const query = sessionListQuery()
+      return sdk.catalog.sessions({
+        workspace: project.workspace.current(),
+        project: project.data.project.id,
+        subpath: query.path || undefined,
+      })
     }
 
-    event.subscribe((event, { directory, workspace }) => {
+    event.subscribe((event, { workspace }) => {
       switch (event.type) {
         case "server.instance.disposed":
           void bootstrap()
@@ -188,12 +191,7 @@ export const {
         case "permission.asked": {
           const request = event.properties
           if (permission.mode === "auto") {
-            void sdk.client.permission.reply({
-              requestID: request.id,
-              reply: "once",
-              directory,
-              workspace,
-            })
+            void sdk.actions.reply({ sessionID: request.sessionID, requestID: request.id, reply: "once" })
             break
           }
           const requests = store.permission[request.sessionID]
@@ -424,7 +422,7 @@ export const {
 
         case "lsp.updated": {
           const workspace = project.workspace.current()
-          void sdk.client.lsp.status({ workspace }).then((x) => setStore("lsp", x.data ?? []))
+          void sdk.catalog.lsp({ directory: sdk.directory, workspace }).then((x) => setStore("lsp", x))
           break
         }
 
@@ -446,56 +444,23 @@ export const {
       const projectPromise = project.sync()
       const sessionListPromise = projectPromise.then(() => listSessions())
 
+      const location = { directory: sdk.directory, workspace }
+
       // blocking - include session.list when continuing a session
-      const providersPromise = sdk.client.config.providers({ workspace }, { throwOnError: true })
-      const providerListPromise = sdk.client.provider.list({ workspace }, { throwOnError: true })
-      const capabilitiesPromise = sdk.client.experimental.capabilities
-        .get({ workspace }, { throwOnError: true })
-        .then((x) => x.data)
-        .catch(() => undefined)
-      const agentsPromise = sdk.client.app.agents({ workspace }, { throwOnError: true })
-      const configPromise = sdk.client.config.get({ workspace }, { throwOnError: true })
-      await Promise.all([
-        providersPromise,
-        providerListPromise,
-        capabilitiesPromise,
-        agentsPromise,
-        configPromise,
-        projectPromise,
-        ...(args.continue ? [sessionListPromise] : []),
-      ])
+      const catalogPromise = sdk.catalog.bootstrap(location)
+      await Promise.all([catalogPromise, projectPromise, ...(args.continue ? [sessionListPromise] : [])])
         .then(async () => {
-          const providersResponse = providersPromise.then((x) => x.data!)
-          const providerListResponse = providerListPromise.then((x) => x.data!)
-          const capabilitiesResponse = capabilitiesPromise
-          const agentsResponse = agentsPromise.then((x) => x.data ?? [])
-          const configResponse = configPromise.then((x) => x.data!)
-          const sessionListResponse = args.continue ? sessionListPromise : undefined
-
-          return Promise.all([
-            providersResponse,
-            providerListResponse,
-            capabilitiesResponse,
-            agentsResponse,
-            configResponse,
-            ...(sessionListResponse ? [sessionListResponse] : []),
-          ]).then((responses) => {
-            const providers = responses[0]
-            const providerList = responses[1]
-            const capabilities = responses[2]
-            const agents = responses[3]
-            const config = responses[4]
-            const sessions = responses[5]
-
-            batch(() => {
-              setStore("provider", reconcile(providers.providers))
-              setStore("provider_default", reconcile(providers.default))
-              setStore("provider_next", reconcile(providerList))
-              setStore("capabilities", "experimentalBackgroundSubagents", capabilities?.backgroundSubagents === true)
-              setStore("agent", reconcile(agents))
-              setStore("config", reconcile(config))
-              if (sessions !== undefined) setStore("session", reconcile(sessions))
-            })
+          const catalog = await catalogPromise
+          const sessions = args.continue ? await sessionListPromise : undefined
+          batch(() => {
+            setStore("provider", reconcile(catalog.provider))
+            setStore("provider_default", reconcile(catalog.default))
+            setStore("provider_next", reconcile(catalog.next))
+            // V2 serves no experimental capabilities route, so background subagents stay off as in V1 without it.
+            setStore("capabilities", "experimentalBackgroundSubagents", false)
+            setStore("agent", reconcile(catalog.agent))
+            setStore("config", reconcile(catalog.config))
+            if (sessions !== undefined) setStore("session", reconcile(sessions))
           })
         })
         .then(() => {
@@ -503,18 +468,11 @@ export const {
           // non-blocking
           void Promise.all([
             ...(args.continue ? [] : [sessionListPromise.then((sessions) => setStore("session", reconcile(sessions)))]),
-            sdk.client.command.list({ workspace }).then((x) => setStore("command", reconcile(x.data ?? []))),
-            sdk.client.lsp.status({ workspace }).then((x) => setStore("lsp", reconcile(x.data ?? []))),
-            sdk.client.mcp.status({ workspace }).then((x) => setStore("mcp", reconcile(x.data ?? {}))),
-            sdk.client.experimental.resource
-              .list({ workspace })
-              .then((x) => setStore("mcp_resource", reconcile(x.data ?? {}))),
-            sdk.client.formatter.status({ workspace }).then((x) => setStore("formatter", reconcile(x.data ?? []))),
-            sdk.client.session.status({ workspace }).then((x) => {
-              setStore("session_status", reconcile(x.data ?? {}))
-            }),
-            sdk.client.provider.auth({ workspace }).then((x) => setStore("provider_auth", reconcile(x.data ?? {}))),
-            sdk.client.vcs.get({ workspace }).then((x) => setStore("vcs", reconcile(x.data))),
+            sdk.catalog.commands(location).then((x) => setStore("command", reconcile(x))),
+            sdk.catalog.lsp(location).then((x) => setStore("lsp", reconcile(x))),
+            sdk.catalog.mcp(location).then((x) => setStore("mcp", reconcile(x))),
+            sdk.catalog.status().then((x) => setStore("session_status", reconcile(x))),
+            sdk.catalog.vcs(location).then((x) => setStore("vcs", reconcile(x))),
             project.workspace.sync(),
           ]).then(() => {
             setStore("status", "complete")
@@ -582,17 +540,17 @@ export const {
           hydratingSessions.set(sessionID, tracker)
           const task = (async () => {
             const [session, messages, todo, diff] = await Promise.all([
-              sdk.client.session.get({ sessionID }, { throwOnError: true }),
+              sdk.catalog.session(sessionID),
               sdk.client.session.messages({ sessionID, limit: 100 }),
-              sdk.client.session.todo({ sessionID }),
+              sdk.catalog.todo(sessionID),
               sdk.client.session.diff({ sessionID }),
             ])
             setStore(
               produce((draft) => {
                 const match = search(draft.session, sessionID, (s) => s.id)
-                if (match.found) draft.session[match.index] = session.data!
-                if (!match.found) draft.session.splice(match.index, 0, session.data!)
-                draft.todo[sessionID] = todo.data ?? []
+                if (match.found) draft.session[match.index] = session
+                if (!match.found) draft.session.splice(match.index, 0, session)
+                draft.todo[sessionID] = todo
                 const currentMessages = draft.message[sessionID] ?? []
                 const infos = (messages.data ?? []).flatMap((message) => {
                   if (!tracker.messages.has(message.info.id)) return [message.info]

@@ -5,7 +5,7 @@ import { Effect } from "effect"
 import { AppNodeBuilder } from "@orchestra/core/effect/app-node-builder"
 import { Global } from "@orchestra/core/global"
 import { createTuiResolvedConfig } from "./fixture/tui-runtime"
-import { createEventSource, createFetch, directory, json } from "./fixture/tui-sdk"
+import { createEventSource, createFetch, directory, json, v2Session } from "./fixture/tui-sdk"
 
 test("SIGHUP clears title and disposes scoped resources once", async () => {
   const setup = await createTestRenderer({ width: 80, height: 24, useThread: false })
@@ -66,18 +66,8 @@ test("app.exit prints the session epilogue after scoped cleanup", async () => {
   mock.module("@opentui/core", () => ({ ...core, createCliRenderer: async () => setup.renderer }))
   const events = createEventSource()
   const calls = createFetch((url) => {
-    if (url.pathname === "/session")
-      return json([
-        {
-          id: "dummy",
-          title: "Demo session",
-          slug: "dummy",
-          projectID: "project",
-          directory,
-          version: "0.0.0-test",
-          time: { created: 0, updated: 0 },
-        },
-      ])
+    if (url.pathname === "/api/session")
+      return json({ data: [v2Session({ id: "dummy", title: "Demo session", directory })], cursor: {} })
   })
   const originalWrite = process.stdout.write.bind(process.stdout)
   let stdout = ""

@@ -257,19 +257,11 @@ export function Session() {
     const sessionID = route.sessionID
     void (async () => {
       const previousWorkspace = untrack(() => project.workspace.current())
-      const result = await sdk.client.session.get({ sessionID }, { throwOnError: true })
-      if (!result.data) {
-        toast.show({
-          message: `Session not found: ${sessionID}`,
-          variant: "error",
-          duration: 5000,
-        })
-        navigate({ type: "home" })
-        return
-      }
+      // A missing Session rejects, which the catch below reports before returning home.
+      const info = await sdk.catalog.session(sessionID)
 
-      if (result.data.workspaceID !== previousWorkspace) {
-        project.workspace.set(result.data.workspaceID)
+      if (info.workspaceID !== previousWorkspace) {
+        project.workspace.set(info.workspaceID)
 
         // Sync all the data for this workspace. Note that this
         // workspace may not exist anymore which is why this is not
@@ -279,7 +271,7 @@ export function Session() {
           await sync.bootstrap({ fatal: false })
         } catch {}
       }
-      editor.reconnect(result.data.directory)
+      editor.reconnect(info.directory)
       await sync.session.sync(sessionID)
       if (route.sessionID === sessionID && scroll) scroll.scrollBy(100_000)
     })().catch((error) => {

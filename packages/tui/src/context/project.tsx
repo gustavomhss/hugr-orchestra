@@ -3,6 +3,7 @@ import type { Path, Workspace } from "../compat/schema"
 import { createStore, reconcile } from "solid-js/store"
 import { createSimpleContext } from "./helper"
 import { useSDK } from "./sdk"
+import { useTuiPaths } from "./runtime"
 
 type WorkspaceStatus = "connected" | "connecting" | "disconnected" | "error"
 
@@ -10,10 +11,11 @@ export const { use: useProject, provider: ProjectProvider } = createSimpleContex
   name: "Project",
   init: () => {
     const sdk = useSDK()
+    const paths = useTuiPaths()
 
     const defaultPath = {
-      home: "",
-      state: "",
+      home: paths.home,
+      state: paths.state,
       config: "",
       worktree: "",
       directory: sdk.directory ?? "",
@@ -36,19 +38,19 @@ export const { use: useProject, provider: ProjectProvider } = createSimpleContex
     })
 
     async function sync() {
-      const workspace = store.workspace.current
-      const [instancePath, project] = await Promise.all([
-        sdk.client.path.get({ workspace }),
-        sdk.client.project.current({ workspace }),
-      ])
-      const directories = project.data?.id
-        ? await sdk.client.project.directories({ projectID: project.data.id, workspace })
-        : undefined
+      const location = await sdk.catalog.location({ directory: sdk.directory, workspace: store.workspace.current })
+      const directories = await sdk.catalog.directories(location.project.id)
       batch(() => {
-        setStore("instance", "path", reconcile(instancePath.data || defaultPath))
-        setStore("project", "id", project.data?.id)
-        setStore("project", "worktree", project.data?.worktree)
-        setStore("project", "mainDir", directories?.data?.findLast((item) => item.strategy === undefined)?.directory)
+        // V2 serves no path route; home and state are this process's own, and the config directory has no
+        // TUI reader.
+        setStore(
+          "instance",
+          "path",
+          reconcile({ ...defaultPath, worktree: location.project.directory, directory: location.directory }),
+        )
+        setStore("project", "id", location.project.id)
+        setStore("project", "worktree", location.project.directory)
+        setStore("project", "mainDir", directories.findLast((item) => item.strategy === undefined)?.directory)
       })
     }
 

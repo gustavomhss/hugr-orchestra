@@ -18,23 +18,21 @@ function branchEvent(branch: string, workspace?: string): GlobalEvent {
 }
 
 describe("tui sync", () => {
-  test("refresh scopes sessions by default and lists project sessions when disabled", async () => {
+  test("refresh lists the subpath by default and the whole project when the filter is disabled", async () => {
     await using tmp = await tmpdir()
     await Bun.write(`${tmp.path}/kv.json`, "{}")
     const { app, kv, sync, session } = await mount(undefined, tmp.path)
 
     try {
       expect(kv.get("session_directory_filter_enabled", true)).toBe(true)
-      expect(session.at(-1)?.searchParams.get("roots")).toBeNull()
-      expect(session.at(-1)?.searchParams.get("scope")).toBeNull()
-      expect(session.at(-1)?.searchParams.get("path")).toBe("packages/tui")
+      expect(session.at(-1)?.searchParams.get("project")).toBe("proj_test")
+      expect(session.at(-1)?.searchParams.get("subpath")).toBe("packages/tui")
 
       kv.set("session_directory_filter_enabled", false)
       await sync.session.refresh()
 
-      expect(session.at(-1)?.searchParams.get("scope")).toBe("project")
-      expect(session.at(-1)?.searchParams.get("path")).toBeNull()
-      expect(session.at(-1)?.searchParams.get("roots")).toBeNull()
+      expect(session.at(-1)?.searchParams.get("project")).toBe("proj_test")
+      expect(session.at(-1)?.searchParams.get("subpath")).toBeNull()
     } finally {
       app.renderer.destroy()
     }

@@ -3,6 +3,7 @@ import { expect, test } from "bun:test"
 import type { GlobalEvent } from "@orchestra/sdk/v2"
 import { tmpdir } from "../../../fixture/fixture"
 import { json, mount, wait } from "./sync-fixture"
+import { v2Session } from "../../../fixture/tui-sdk"
 
 const sessionID = "ses_hydration_race"
 const messageID = "msg_hydration_race"
@@ -66,12 +67,14 @@ test("stale session hydration does not overwrite live message parts", async () =
   })
   let requested = false
   const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/session/${sessionID}`) return json(session)
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
     if (url.pathname === `/session/${sessionID}/message`) {
       requested = true
       return messages
     }
-    if (url.pathname === `/session/${sessionID}/todo` || url.pathname === `/session/${sessionID}/diff`) return json([])
+    if (url.pathname === `/session/${sessionID}/diff`) return json([])
     return undefined
   }, tmp.path)
 
@@ -118,12 +121,14 @@ test("orphan live deltas do not suppress hydrated parts", async () => {
   })
   let requested = false
   const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/session/${sessionID}`) return json(session)
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
     if (url.pathname === `/session/${sessionID}/message`) {
       requested = true
       return messages
     }
-    if (url.pathname === `/session/${sessionID}/todo` || url.pathname === `/session/${sessionID}/diff`) return json([])
+    if (url.pathname === `/session/${sessionID}/diff`) return json([])
     return undefined
   }, tmp.path)
 
@@ -158,12 +163,14 @@ test("hydration does not clear text streamed before it starts", async () => {
   })
   let requested = false
   const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/session/${sessionID}`) return json(session)
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
     if (url.pathname === `/session/${sessionID}/message`) {
       requested = true
       return messages
     }
-    if (url.pathname === `/session/${sessionID}/todo` || url.pathname === `/session/${sessionID}/diff`) return json([])
+    if (url.pathname === `/session/${sessionID}/diff`) return json([])
     return undefined
   }, tmp.path)
 
@@ -209,12 +216,14 @@ test("live messages merged during hydration retain the 100 message window", asyn
   })
   let requested = false
   const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/session/${sessionID}`) return json(session)
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
     if (url.pathname === `/session/${sessionID}/message`) {
       requested = true
       return messages
     }
-    if (url.pathname === `/session/${sessionID}/todo` || url.pathname === `/session/${sessionID}/diff`) return json([])
+    if (url.pathname === `/session/${sessionID}/diff`) return json([])
     return undefined
   }, tmp.path)
 
@@ -256,12 +265,14 @@ test("a message removed during hydration does not regain stale parts", async () 
   })
   let requested = false
   const { app, emit, sync } = await mount((url) => {
-    if (url.pathname === `/session/${sessionID}`) return json(session)
+    if (url.pathname === `/api/session/${sessionID}`)
+      return json({ data: v2Session({ id: sessionID, title: session.title, directory: session.directory }) })
+    if (url.pathname === `/api/session/${sessionID}/todo`) return json({ data: [] })
     if (url.pathname === `/session/${sessionID}/message`) {
       requested = true
       return messages
     }
-    if (url.pathname === `/session/${sessionID}/todo` || url.pathname === `/session/${sessionID}/diff`) return json([])
+    if (url.pathname === `/session/${sessionID}/diff`) return json([])
     return undefined
   }, tmp.path)
 
