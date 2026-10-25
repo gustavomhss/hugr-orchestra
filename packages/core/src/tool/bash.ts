@@ -109,6 +109,9 @@ const externalCommandDirectories = Effect.fn("BashTool.externalCommandDirectorie
   return [...directories]
 })
 
+/** Agents whose shell may read but never write: their commands are confined by the sandbox with no write root. */
+const READ_ONLY_SHELL = new Set(["explore"])
+
 const layer = Layer.effectDiscard(
   Effect.gen(function* () {
     const tools = yield* Tools.Service
@@ -195,7 +198,16 @@ const layer = Layer.effectDiscard(
               if ((yield* fs.stat(target.canonical)).type !== "Directory")
                 return yield* Effect.fail(new Error(`Working directory is not a directory: ${target.canonical}`))
 
-              const profile = yield* ToolSafety.RuntimeProfile
+              const project = yield* ToolSafety.RuntimeProfile
+              // A read-only agent's shell runs inside the OS sandbox with no write root; a host without one refuses the command.
+              const profile = context.agent && READ_ONLY_SHELL.has(context.agent)
+                ? {
+                    ...project,
+                    writeRoots: [],
+                    requireSandbox: true,
+                    sandbox: { ...project?.sandbox, enabled: true, scratch: true, unconfinedFallback: false },
+                  } satisfies ToolSafety.Profile
+                : project
               if (input.background) {
                 // Background processes launch outside ToolSafetySandbox.wrap, so a profile that confines shells refuses them.
                 if (profile?.requireSandbox || profile?.sandbox?.enabled || profile?.sandbox?.readRoots)
@@ -234,7 +246,10 @@ const layer = Layer.effectDiscard(
               }).pipe(Effect.provideService(FSUtil.Service, fs), Effect.provideService(AppProcess.Service, appProcess))
               const result = yield* Effect.scoped(Effect.gen(function* () {
                 const inspector = OutputInspector.make()
-                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(Effect.provideService(FSUtil.Service, fs))
+                const wrapped = yield* ToolSafetySandbox.wrap(command, { prepareParents: true }).pipe(
+                  Effect.provideService(FSUtil.Service, fs),
+                  Effect.provideService(ToolSafety.RuntimeProfile, profile),
+                )
                 const captured = yield* appProcess.run(wrapped, {
                   combineOutput: true,
                   timeout: Duration.millis(timeout),
