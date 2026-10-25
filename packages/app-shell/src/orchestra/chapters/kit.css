@@ -18,6 +18,9 @@ html[data-color-scheme] body[data-mx-kit] {
   --mx-shadow: 0 30px 100px rgba(0, 0, 0, 0.36);
   --mx-pop-shadow: 0 14px 35px rgba(0, 0, 0, 0.24);
   --mx-backdrop: rgba(3, 9, 16, 0.55);
+  --mx-rim: rgba(166, 189, 211, 0.24);
+  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.03), rgba(255, 255, 255, 0) 56px);
+  --mx-card-shadow: 0 1px 2px rgba(0, 0, 0, 0.2), 0 8px 22px -10px rgba(0, 0, 0, 0.32);
   --mx-primary: linear-gradient(180deg, #3f7ebc, #326ba5);
   --mx-primary-text: #fff;
   --mx-enabled: rgba(84, 135, 178, 0.22);
@@ -42,6 +45,9 @@ html[data-color-scheme="light"] body[data-mx-kit] {
   --mx-shadow: 0 30px 100px rgba(28, 46, 65, 0.2);
   --mx-pop-shadow: 0 14px 35px rgba(28, 46, 65, 0.16);
   --mx-backdrop: rgba(28, 43, 59, 0.3);
+  --mx-rim: rgba(65, 86, 107, 0.24);
+  --mx-sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0) 56px);
+  --mx-card-shadow: 0 1px 2px rgba(28, 46, 65, 0.06), 0 8px 22px -10px rgba(28, 46, 65, 0.16);
   --mx-enabled: rgba(84, 135, 178, 0.16);
 }
 
@@ -139,8 +145,17 @@ html[data-color-scheme="light"] .mx-dialog {
   padding: 18px;
   border: 1px solid var(--mx-line);
   border-radius: var(--orchestra-radius-lg);
-  background: var(--mx-raised);
-  box-shadow: var(--mx-highlight);
+  background: var(--mx-sheen), var(--mx-raised);
+  box-shadow: var(--mx-highlight), var(--mx-card-shadow);
+  transition:
+    border-color var(--orchestra-duration-base) var(--orchestra-ease-out),
+    box-shadow var(--orchestra-duration-base) var(--orchestra-ease-out);
+}
+/* Cards are not links, so hover only firms the rim and lifts the shadow; nothing moves. */
+.mx-card:hover,
+.mx-card:focus-within {
+  border-color: var(--mx-rim);
+  box-shadow: var(--mx-highlight), var(--mx-pop-shadow);
 }
 .mx-card-top {
   display: flex;
@@ -202,6 +217,19 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 .mx-badge.bad {
   color: var(--mx-bad);
+}
+/* Status reads from a dot and a faint wash of its own color, not from a louder border. */
+.mx-badge:is(.good, .bad) {
+  border-color: transparent;
+  background: color-mix(in srgb, currentColor 9%, transparent);
+}
+.mx-badge:is(.good, .bad)::before {
+  content: "";
+  inline-size: 5px;
+  block-size: 5px;
+  flex: none;
+  border-radius: 50%;
+  background: currentColor;
 }
 .mx-card > .mx-meta {
   margin-block-end: 15px;
@@ -437,7 +465,7 @@ html[data-color-scheme="light"] .mx-dialog {
   border-radius: var(--orchestra-radius-xl);
   background: var(--mx-modal);
   color: var(--mx-strong);
-  box-shadow: var(--mx-shadow);
+  box-shadow: var(--mx-highlight), var(--mx-shadow);
   overflow: hidden;
 }
 .mx-dialog-head {
@@ -447,6 +475,7 @@ html[data-color-scheme="light"] .mx-dialog {
   gap: 20px;
   padding: 22px 24px 18px;
   border-block-end: 1px solid var(--mx-line);
+  background: var(--mx-sheen);
 }
 .mx-dialog-head h2 {
   margin: 0;
@@ -461,6 +490,27 @@ html[data-color-scheme="light"] .mx-dialog {
   color: var(--mx-dim);
   line-height: 1.6;
 }
+/* The close icon gets a real hit area, so its focus ring and hover wash follow a rounded square. */
+.mx-dialog-head .mx-link:has(> svg:only-child) {
+  display: grid;
+  inline-size: 28px;
+  block-size: 28px;
+  flex: none;
+  place-items: center;
+  margin: -6px -6px 0 0;
+  border-radius: var(--orchestra-radius-sm);
+  color: var(--mx-dim);
+  transition:
+    background var(--orchestra-duration-fast) var(--orchestra-ease-out),
+    color var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+.mx-dialog-head .mx-link:has(> svg:only-child):hover {
+  background: var(--mx-soft);
+  color: var(--mx-strong);
+}
+.mx-dialog-head .mx-link:has(> svg:only-child):focus-visible {
+  outline-offset: 0;
+}
 .mx-dialog-body {
   padding: 22px 24px;
   overflow: auto;
@@ -472,6 +522,7 @@ html[data-color-scheme="light"] .mx-dialog {
   gap: 8px;
   padding: 14px 24px;
   border-block-start: 1px solid var(--mx-line);
+  background: var(--mx-soft);
 }
 .mx-fields {
   display: grid;
@@ -549,7 +600,8 @@ html[data-color-scheme="light"] .mx-dialog {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mx-toggle::before {
+  .mx-toggle::before,
+  .mx-card {
     transition: none;
   }
 }
