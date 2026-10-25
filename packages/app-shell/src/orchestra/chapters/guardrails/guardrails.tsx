@@ -1,11 +1,13 @@
-import { createEffect, createMemo, For, Match, on, onCleanup, Show, Switch, type JSX } from "solid-js"
+import { createEffect, createMemo, For, Match, on, onCleanup, onMount, Show, Switch, type JSX } from "solid-js"
 import { createStore } from "solid-js/store"
 import { createGroupedVirtualizer } from "@/components/grouped-virtualizer"
 import { useLanguage } from "@/context/language"
 import { usePlatform } from "@/context/platform"
+import { useServerSDK } from "@/context/server-sdk"
+import { Icon } from "../../actions/components"
 import { tabKeydown } from "../../actions/entry-routing"
-import { groups, kinds, type Finding, type Rule, type Severity } from "./contract"
-import { rules, scenarios, type Scenario } from "./fixture"
+import { groups, kinds, type Finding, type Report, type Rule, type Severity } from "./contract"
+import { rules as fixtureRules, scenarios, type Scenario } from "./fixture"
 import {
   approvalLabel,
   excerptParts,
@@ -21,24 +23,28 @@ import {
 } from "./model"
 import "./guardrails.css"
 
-type Source = Scenario | "running" | "disconnected"
+type Source = Scenario | "live" | "running" | "disconnected"
 type View = "overview" | "rules" | "review"
 
 const views = ["overview", "rules", "review"] as const
 const anyFilter: RuleFilter = { query: "", severity: "all", kind: "all", group: "all" }
 // Row sizes are fixed so the grouped virtualizer can place every file box up front (guardrails.css).
-const size = { header: 38, item: 58, gap: 12 }
+const size = { header: 40, item: 72, gap: 12 }
 
-// The Guardrails view inside CI/CD. Until the runner reports to the app, production shows the disconnected state and
-// never fixture findings; dev builds get a scenario picker over the fixture reports (brief §8).
+// The Guardrails view inside CI/CD. Production runs the real guards on the project through the server and never shows
+// fixture findings; dev builds also get a scenario picker over the fixture reports (brief §8).
 export default function Guardrails(props: { directory: string; scenario?: Source }) {
   const language = useLanguage()
   const platform = usePlatform()
+  const sdk = useServerSDK()
   const t = language.t
   const dev = Boolean(import.meta.env?.DEV)
   const [store, setStore] = createStore({
     view: "overview" as View,
-    source: props.scenario ?? ((dev ? "blocked" : "disconnected") as Source),
+    source: props.scenario ?? ((dev ? "blocked" : "live") as Source),
+    live: undefined as Report | undefined,
+    liveRules: undefined as readonly Rule[] | undefined,
+    failure: undefined as string | undefined,
     selected: undefined as string | undefined,
     rule: undefined as string | undefined,
     filter: { ...anyFilter },
@@ -57,9 +63,11 @@ export default function Guardrails(props: { directory: string; scenario?: Source
     timers.add(timer)
   }
 
-  const report = createMemo(() =>
-    store.source === "running" || store.source === "disconnected" ? undefined : scenarios[store.source],
-  )
+  const report = createMemo(() => {
+    if (store.source === "live") return store.live
+    if (store.source === "running" || store.source === "disconnected") return
+    return scenarios[store.source]
+  })
   const result = createMemo(() => {
     const current = report()
     return current && verdict(current)
@@ -67,8 +75,27 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   const files = createMemo(() => groupFindings(report()?.findings ?? []))
   const order = createMemo(() => files().flatMap((file) => file.items))
   const selected = createMemo(() => order().find((finding) => finding.key === store.selected))
-  const rule = (id: string) => rules.find((item) => item.id === id)
-  const shownRules = createMemo(() => groupRules(filterRules(rules, store.filter)))
+  // One line per rule that fired, gates first, each pointing at its first finding in list order.
+  const fired = createMemo(() =>
+    [
+      ...order()
+        .reduce(
+          (all, finding) =>
+            all.set(finding.rule, {
+              rule: finding.rule,
+              severity: finding.severity,
+              key: all.get(finding.rule)?.key ?? finding.key,
+              count: (all.get(finding.rule)?.count ?? 0) + 1,
+            }),
+          new Map<string, { rule: string; severity: Severity; key: string; count: number }>(),
+        )
+        .values(),
+    ].toSorted((a, b) => Number(b.severity === "gate") - Number(a.severity === "gate") || b.count - a.count),
+  )
+  // Fixture rules only stand in for the live list in dev; production never shows them.
+  const rules = createMemo(() => store.liveRules ?? (dev ? fixtureRules : []))
+  const rule = (id: string) => rules().find((item) => item.id === id)
+  const shownRules = createMemo(() => groupRules(filterRules(rules(), store.filter)))
   const ruleCount = createMemo(() => shownRules().reduce((total, group) => total + group.items.length, 0))
   const openRule = createMemo(() => (store.rule ? rule(store.rule) : undefined))
   const review = createMemo(() => {
@@ -104,11 +131,37 @@ export default function Guardrails(props: { directory: string; scenario?: Source
     ),
   )
 
+  // Rules and the run are fetched apart: the Rules tab still works when the engine cannot check the change.
+  const checks = new Set<AbortController>()
+  onCleanup(() => checks.forEach((check) => check.abort()))
+  const check = async () => {
+    checks.forEach((item) => item.abort())
+    const controller = new AbortController()
+    checks.add(controller)
+    setStore({ source: "running", selected: undefined, announce: "", failure: undefined })
+    const location = { location: { directory: props.directory } }
+    const [listed, ran] = await Promise.allSettled([
+      sdk().orchestra.guardrail.rules(location, { signal: controller.signal }),
+      sdk().orchestra.guardrail.run(location, { signal: controller.signal }),
+    ])
+    checks.delete(controller)
+    if (controller.signal.aborted) return
+    if (listed.status === "fulfilled") setStore("liveRules", listed.value.data.rules)
+    if (ran.status === "fulfilled") return setStore({ source: "live", live: ran.value.data })
+    setStore({ source: "disconnected", live: undefined, failure: engineMessage(ran.reason) })
+  }
+
   const retry = () => {
+    if (store.source === "live" || store.source === "disconnected" || (store.source === "running" && checks.size))
+      return void check()
     const previous = store.source === "running" ? "blocked" : store.source
     setStore({ source: "running", selected: undefined, announce: "" })
     later(() => setStore("source", previous), 900)
   }
+
+  onMount(() => {
+    if (store.source === "live") void check()
+  })
 
   const choose = (key: string, focus: "row" | "detail" | "none") => {
     setStore("selected", key)
@@ -229,7 +282,9 @@ export default function Guardrails(props: { directory: string; scenario?: Source
     <Switch>
       <Match when={store.source === "running"}>
         <section class="gr-status" data-kind="running" aria-busy="true">
-          <span class="gr-status-mark" aria-hidden="true" />
+          <span class="gr-status-mark" aria-hidden="true">
+            <Icon name="refresh" size={20} />
+          </span>
           <div class="gr-status-copy">
             <h3>{t("orchestra.guardrails.running")}</h3>
             <p>{t("orchestra.guardrails.runningDetail")}</p>
@@ -243,9 +298,13 @@ export default function Guardrails(props: { directory: string; scenario?: Source
         <div class="mx-empty">
           <strong>{t("orchestra.guardrails.disconnected.title")}</strong>
           <p>{t("orchestra.guardrails.disconnected.body")}</p>
-          <button type="button" class="mx-btn" onClick={() => setStore("view", "rules")}>
-            {t("orchestra.guardrails.tab.rules")}
-          </button>
+          <Show when={store.failure}>{(message) => <pre class="gr-failure">{message()}</pre>}</Show>
+          <div class="gr-empty-actions">
+            <Retry />
+            <button type="button" class="mx-btn" onClick={() => setStore("view", "rules")}>
+              {t("orchestra.guardrails.tab.rules")}
+            </button>
+          </div>
         </div>
       </Match>
       <Match when={result()}>
@@ -288,7 +347,12 @@ export default function Guardrails(props: { directory: string; scenario?: Source
             </Match>
             <Match when={current()}>
               <section class="gr-status" data-kind={current().kind}>
-                <span class="gr-status-mark" aria-hidden="true" />
+                <span class="gr-status-mark" aria-hidden="true">
+                  <Icon
+                    name={current().kind === "clean" ? "check" : current().kind === "blocked" ? "shield" : "warning"}
+                    size={20}
+                  />
+                </span>
                 <div class="gr-status-copy">
                   <h3>
                     <Switch>
@@ -323,10 +387,26 @@ export default function Guardrails(props: { directory: string; scenario?: Source
                       {t("orchestra.guardrails.blocked.first")}
                     </button>
                   </Show>
-                  <Show when={dev && current().kind !== "blocked"}>
-                    <Retry />
-                  </Show>
+                  <Retry />
                 </div>
+                <dl class="gr-stats">
+                  <div data-tone={current().gates ? "bad" : undefined}>
+                    <dt>{t("orchestra.guardrails.stat.gates")}</dt>
+                    <dd>{current().gates}</dd>
+                  </div>
+                  <div data-tone={current().warnings ? "warm" : undefined}>
+                    <dt>{t("orchestra.guardrails.stat.warnings")}</dt>
+                    <dd>{current().warnings}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("orchestra.guardrails.stat.files")}</dt>
+                    <dd>{report()?.files ?? 0}</dd>
+                  </div>
+                  <div>
+                    <dt>{t("orchestra.guardrails.stat.rules")}</dt>
+                    <dd>{report()?.rules ?? 0}</dd>
+                  </div>
+                </dl>
               </section>
             </Match>
           </Switch>
@@ -422,6 +502,34 @@ export default function Guardrails(props: { directory: string; scenario?: Source
     )
   }
 
+  const Fired = () => (
+    <div class="gr-fired">
+      <h3 class="gr-label">{t("orchestra.guardrails.fired")}</h3>
+      <p class="gr-summary">{t("orchestra.guardrails.firedHint")}</p>
+      <ul>
+        <For each={fired()}>
+          {(item) => (
+            <li>
+              <button
+                type="button"
+                class="gr-fired-row"
+                data-severity={item.severity}
+                onClick={() => choose(item.key, "row")}
+              >
+                <span class="gr-fired-top">
+                  <Chip severity={item.severity} />
+                  <code>{item.rule}</code>
+                  <span class="wf-count">{item.count}</span>
+                </span>
+                <small>{rule(item.rule)?.summary || rule(item.rule)?.message}</small>
+              </button>
+            </li>
+          )}
+        </For>
+      </ul>
+    </div>
+  )
+
   const Overview = () => (
     <>
       <Status />
@@ -450,6 +558,9 @@ export default function Guardrails(props: { directory: string; scenario?: Source
                           style={{ top: `${box().start}px`, height: `${box().size}px` }}
                         >
                           <div class="gr-file-head">
+                            <span class="gr-file-icon" aria-hidden="true">
+                              <Icon name="code" size={13} />
+                            </span>
                             <Path value={path} />
                             <span class="wf-count">{box().items.length}</span>
                           </div>
@@ -491,7 +602,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
             </div>
           </section>
           <aside class="gr-detail" aria-live="off">
-            <Show when={selected()} fallback={<p class="gr-select">{t("orchestra.guardrails.select")}</p>}>
+            <Show when={selected()} fallback={<Fired />}>
               {(finding) => <Detail finding={finding()} />}
             </Show>
           </aside>
@@ -517,7 +628,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
       </div>
       <h4 class="gr-label">{t("orchestra.guardrails.rules.message")}</h4>
       <p class="gr-message">{panel.rule.message}</p>
-      <p class="gr-summary">{panel.rule.summary}</p>
+      <Show when={panel.rule.summary}>{(summary) => <p class="gr-summary">{summary()}</p>}</Show>
       <h4 class="gr-label">{t("orchestra.guardrails.rules.clearedBy")}</h4>
       <p class="gr-summary">{t(`orchestra.guardrails.rules.clearedBy.${panel.rule.clearedBy}`)}</p>
       <Show when={panel.rule.positive.length || panel.rule.negative.length}>
@@ -563,16 +674,19 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   const Rules = () => (
     <>
       <div class="gr-filters" role="search">
-        <input
-          ref={(element) => (elements.search = element)}
-          class="mx-search"
-          type="search"
-          value={store.filter.query}
-          placeholder={t("orchestra.guardrails.rules.search")}
-          aria-label={t("orchestra.guardrails.rules.search")}
-          title={t("orchestra.guardrails.rules.searchHint")}
-          onInput={(event) => setStore("filter", "query", event.currentTarget.value)}
-        />
+        <label class="gr-search">
+          <Icon name="search" size={14} />
+          <input
+            ref={(element) => (elements.search = element)}
+            class="mx-search"
+            type="search"
+            value={store.filter.query}
+            placeholder={t("orchestra.guardrails.rules.search")}
+            aria-label={t("orchestra.guardrails.rules.search")}
+            title={t("orchestra.guardrails.rules.searchHint")}
+            onInput={(event) => setStore("filter", "query", event.currentTarget.value)}
+          />
+        </label>
         <label class="gr-select-field">
           <span>{t("orchestra.guardrails.rules.severity")}</span>
           <select
@@ -652,7 +766,20 @@ export default function Guardrails(props: { directory: string; scenario?: Source
             </For>
           </div>
           <aside class="gr-detail">
-            <Show when={openRule()} fallback={<p class="gr-select">{t("orchestra.guardrails.rules.searchHint")}</p>}>
+            <Show
+              when={openRule()}
+              fallback={
+                <div class="gr-select">
+                  <span class="gr-select-icon" aria-hidden="true">
+                    <Icon name="shield" size={18} />
+                  </span>
+                  <p>{t("orchestra.guardrails.rules.pick")}</p>
+                  <small>
+                    <kbd>/</kbd> {t("orchestra.guardrails.rules.searchHint")}
+                  </small>
+                </div>
+              }
+            >
               {(item) => <RulePanel rule={item()} />}
             </Show>
           </aside>
@@ -739,40 +866,61 @@ export default function Guardrails(props: { directory: string; scenario?: Source
   return (
     <div class="gr-root" onKeyDown={rootKeydown}>
       <header class="gr-head">
-        <div>
-          <h2 class="orchestra-sr-only">{t("orchestra.guardrails.title")}</h2>
-          <p>{t("orchestra.guardrails.description")}</p>
+        <h2 class="orchestra-sr-only">{t("orchestra.guardrails.title")}</h2>
+        <p class="orchestra-sr-only" id="gr-description">
+          {t("orchestra.guardrails.description")}
+        </p>
+        <div
+          class="gr-views"
+          role="tablist"
+          aria-label={t("orchestra.guardrails.tabs")}
+          aria-describedby="gr-description"
+          onKeyDown={tabKeydown}
+        >
+          <For each={views}>
+            {(view) => (
+              <button
+                type="button"
+                role="tab"
+                class="wf-tab"
+                aria-selected={store.view === view}
+                tabindex={store.view === view ? 0 : -1}
+                onClick={() => setStore("view", view)}
+              >
+                {t(`orchestra.guardrails.tab.${view}`)}
+                <Show when={view === "overview" && result()?.gates}>
+                  {(gates) => <span class="wf-count gr-count-gate">{gates()}</span>}
+                </Show>
+              </button>
+            )}
+          </For>
         </div>
+        <Show when={report()?.base}>
+          {(base) => (
+            <span class="gr-base-chip" dir="ltr" title={base()}>
+              <Icon name="branch" size={14} />
+              {t("orchestra.guardrails.base", { base: /^[0-9a-f]{40}$/.test(base()) ? base().slice(0, 10) : base() })}
+            </span>
+          )}
+        </Show>
         <Show when={dev}>
           <label class="gr-select-field gr-scenario">
             <span>{t("orchestra.guardrails.scenario")}</span>
-            <select value={store.source} onChange={(event) => setStore({ source: event.currentTarget.value as Source, selected: undefined })}>
-              <For each={["running", "disconnected", ...Object.keys(scenarios)]}>
+            <select
+              value={store.source}
+              onChange={(event) => {
+                const source = event.currentTarget.value as Source
+                if (source === "live") return void check()
+                setStore({ source, selected: undefined })
+              }}
+            >
+              <For each={["live", "running", "disconnected", ...Object.keys(scenarios)]}>
                 {(name) => <option value={name}>{name}</option>}
               </For>
             </select>
           </label>
         </Show>
       </header>
-      <div class="gr-views" role="tablist" aria-label={t("orchestra.guardrails.tabs")} onKeyDown={tabKeydown}>
-        <For each={views}>
-          {(view) => (
-            <button
-              type="button"
-              role="tab"
-              class="wf-tab"
-              aria-selected={store.view === view}
-              tabindex={store.view === view ? 0 : -1}
-              onClick={() => setStore("view", view)}
-            >
-              {t(`orchestra.guardrails.tab.${view}`)}
-              <Show when={view === "overview" && result()?.gates}>
-                {(gates) => <span class="wf-count gr-count-gate">{gates()}</span>}
-              </Show>
-            </button>
-          )}
-        </For>
-      </div>
       <div role="tabpanel" class="gr-panel">
         <Switch>
           <Match when={store.view === "overview"}>
@@ -786,7 +934,7 @@ export default function Guardrails(props: { directory: string; scenario?: Source
           </Match>
         </Switch>
       </div>
-      <Show when={dev}>
+      <Show when={dev && store.source in scenarios}>
         <p class="mx-note">{t("orchestra.guardrails.fixture")}</p>
       </Show>
       <p class="orchestra-sr-only" role="status" aria-live="polite">
@@ -794,4 +942,12 @@ export default function Guardrails(props: { directory: string; scenario?: Source
       </p>
     </div>
   )
+}
+
+// A declared 400 carries the engine's own reason ({ name: "GuardrailError", data: { kind, message } }); anything else,
+// such as an unreachable server, has nothing worth showing beyond the disconnected copy.
+function engineMessage(error: unknown) {
+  if (typeof error !== "object" || error === null || !("name" in error) || error.name !== "GuardrailError") return
+  if (!("data" in error) || typeof error.data !== "object" || error.data === null || !("message" in error.data)) return
+  return typeof error.data.message === "string" ? error.data.message : undefined
 }

@@ -247,7 +247,7 @@ function Workbench(props: ChapterPageProps & {
               <Show when={state.route.view === "library"}><button type="button" class="mx-btn primary" disabled={!canCreate()} onClick={() => model.dialog({ kind: "create-workflow" })}>
                 <Icon name="plus" />{props.t(state.binding?.provider.kind === "gitlab" ? "orchestra.actions.createConfiguration" : "orchestra.actions.createWorkflow")}</button></Show></div>
           </header>
-          <div class="repo-strip"><label class="provider-label"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} />
+          <Show when={state.route.view !== "guardrails"}><div class="repo-strip"><label class="provider-label"><Icon name={state.binding?.provider.kind === "gitlab" ? "gitlab" : state.binding ? "github" : "workflow"} />
             <span>{props.t("orchestra.actions.provider")}</span><select aria-label={props.t("orchestra.actions.provider")} value={state.binding?.id ?? ""}
               disabled={state.submitting || state.bindings.status !== "ready"} onChange={(event) => {
                 const binding = state.bindings.value?.find((item) => item.id === event.currentTarget.value)
@@ -261,7 +261,7 @@ function Workbench(props: ChapterPageProps & {
               <code dir="ltr">{binding().provider.hostname}</code><span class={`mx-badge ${settingsConnection(state).state === "available" ? "good" : ""}`}>{props.t(settingsConnection(state).label)}</span></>}</Show>
             <button type="button" class="mx-btn repo-connection" disabled={state.submitting} onClick={() => model.dialog({ kind: "connect" })}>
               <Icon name="settings" />{props.t("orchestra.actions.connect")}</button>
-          </div></Show>
+          </div></Show></Show>
           <Show when={!contextual()}><nav class="wf-tabs" role="tablist" aria-label={props.t("orchestra.actions.title")} onKeyDown={tabKeydown}>
             <For each={[["library", "orchestra.actions.shell.workflows", "workflow"], ["runs", "orchestra.actions.shell.runs", "retry"],
               ["guardrails", "orchestra.actions.guardrails", "shield"], ["resources", "orchestra.actions.resources", "box"], ["settings", "orchestra.actions.shell.settings", "settings"]] as const}>{(item) =>
@@ -283,7 +283,7 @@ function Workbench(props: ChapterPageProps & {
         <Suspense fallback={loading()}>
           <Switch>
             <Match when={state.route.view === "local"}><LocalPipelines server={props.server} directory={props.directory} /></Match>
-            <Match when={state.route.view === "guardrails"}><div class="actions-library"><Guardrails directory={props.directory} /></div></Match>
+            <Match when={state.route.view === "guardrails"}><div class="actions-library gr-host"><Guardrails directory={props.directory} /></div></Match>
             <Match when={state.route.view === "settings"}><div class="[&>section>.mx-inner>.mx-heading]:hidden"><Settings model={model} t={props.t} /></div></Match>
             <Match when={state.bindings.status === "loading"}><Empty title={props.t("orchestra.actions.loading")} busy /></Match>
             <Match when={state.unsupported}><Empty title={props.t("orchestra.actions.unsupported")} /></Match>

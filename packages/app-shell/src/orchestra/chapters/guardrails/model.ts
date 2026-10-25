@@ -68,7 +68,7 @@ export function filterRules(rules: readonly Rule[], filter: RuleFilter) {
       (filter.severity === "all" || rule.severity === filter.severity) &&
       (filter.kind === "all" || rule.kind === filter.kind) &&
       (filter.group === "all" || rule.group === filter.group) &&
-      (!query || [rule.id, rule.message, rule.summary].some((text) => text.toLowerCase().includes(query))),
+      (!query || [rule.id, rule.message, rule.summary ?? ""].some((text) => text.toLowerCase().includes(query))),
   )
 }
 

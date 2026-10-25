@@ -1,5 +1,5 @@
 /* Guardrails view inside CI/CD. Rows and file boxes keep fixed heights: the grouped virtualizer places them from
-   the sizes in guardrails.tsx (header 38, item 58, gap 12), so rings are inset shadows, never borders. */
+   the sizes in guardrails.tsx (header 40, item 72, gap 12), so rings are inset shadows, never borders. */
 .gr-root {
   container-type: inline-size;
   display: grid;
@@ -8,24 +8,29 @@
   --gr-warm: var(--actions-warm, var(--mx-warm, #c9b78f));
 }
 
+/* One toolbar: the views on the left, the base branch and the dev scenario on the right. */
 .gr-head {
   display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
 }
 
-.gr-head h2 {
-  margin: 0;
-  font-size: var(--orchestra-font-size-md);
-  font-weight: 600;
-  color: var(--mx-strong);
+.gr-head .gr-views {
+  margin-inline-end: auto;
 }
 
-.gr-head p {
-  margin: 0;
-  max-width: 62ch;
-  font-size: var(--orchestra-font-size-sm);
+.gr-base-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 999px;
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
   color: var(--mx-dim);
 }
 
@@ -85,16 +90,33 @@
   color: var(--mx-strong);
 }
 
+/* Native selects lose the platform chrome; the label draws the chevron. */
 .gr-select-field {
+  position: relative;
   display: grid;
   gap: 4px;
   font-size: var(--orchestra-font-size-2xs);
   color: var(--mx-dim);
 }
 
+.gr-select-field::after {
+  content: "";
+  position: absolute;
+  inset-inline-end: 12px;
+  bottom: 14px;
+  width: 5px;
+  height: 5px;
+  border-right: 1.5px solid var(--mx-dim);
+  border-bottom: 1.5px solid var(--mx-dim);
+  transform: rotate(45deg);
+  pointer-events: none;
+}
+
 .gr-select-field select {
+  appearance: none;
+  cursor: pointer;
   height: 34px;
-  padding: 0 28px 0 10px;
+  padding: 0 30px 0 10px;
   border: 0;
   border-radius: var(--orchestra-radius-sm);
   background: var(--mx-soft);
@@ -104,60 +126,79 @@
   font-size: var(--orchestra-font-size-sm);
 }
 
+.gr-select-field select:hover {
+  background: color-mix(in srgb, var(--mx-strong) 8%, transparent);
+}
+
 .gr-select-field select:focus-visible {
   outline: 2px solid var(--mx-blue);
   outline-offset: 1px;
 }
 
-/* Status: one calm line per verdict. Only a blocking result carries saturated color. */
+/* Status: the verdict as a hero card. The verdict tone tints a corner glow, the icon well and the counts; only a
+   blocking result carries saturated color. */
 .gr-status {
+  --gr-tone: var(--mx-dim);
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  gap: 14px;
-  padding: 16px 18px;
+  gap: 14px 16px;
+  padding: 18px 20px 16px;
   border-radius: var(--orchestra-radius-lg);
+  background:
+    radial-gradient(130% 160% at 0% 0%, color-mix(in srgb, var(--gr-tone) 14%, transparent), transparent 58%),
+    var(--mx-sheen),
+    var(--mx-raised);
 }
 
-.gr-status-mark {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: var(--mx-dim);
+.gr-status[data-kind="clean"] {
+  --gr-tone: var(--mx-good);
 }
 
-.gr-status[data-kind="clean"] .gr-status-mark {
-  background: var(--mx-good);
-}
-
-.gr-status[data-kind="warnings"] .gr-status-mark {
-  background: var(--gr-warm);
+.gr-status[data-kind="warnings"] {
+  --gr-tone: var(--gr-warm);
 }
 
 .gr-status[data-kind="blocked"] {
-  border-color: color-mix(in srgb, var(--mx-bad) 38%, var(--mx-line));
-  box-shadow: inset 3px 0 0 var(--mx-bad), var(--mx-highlight), var(--mx-card-shadow);
+  --gr-tone: var(--mx-bad);
+  border-color: color-mix(in srgb, var(--mx-bad) 34%, var(--mx-line));
 }
 
-.gr-status[data-kind="blocked"] .gr-status-mark {
-  background: var(--mx-bad);
-  box-shadow: 0 0 0 4px color-mix(in srgb, var(--mx-bad) 18%, transparent);
+.gr-status[data-kind="running"] {
+  --gr-tone: var(--mx-blue);
 }
 
-.gr-status[data-kind="running"] .gr-status-mark {
-  background: var(--mx-blue);
-  animation: gr-pulse 1.4s ease-in-out infinite;
+.gr-status-mark {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  border-radius: var(--orchestra-radius-md);
+  color: var(--gr-tone);
+  background: linear-gradient(
+    180deg,
+    color-mix(in srgb, var(--gr-tone) 24%, transparent),
+    color-mix(in srgb, var(--gr-tone) 10%, transparent)
+  );
+  box-shadow:
+    inset 0 0 0 1px color-mix(in srgb, var(--gr-tone) 36%, transparent),
+    var(--mx-highlight),
+    0 8px 20px -8px color-mix(in srgb, var(--gr-tone) 60%, transparent);
+}
+
+.gr-status[data-kind="running"] .gr-status-mark svg {
+  animation: gr-spin 1.2s linear infinite;
 }
 
 .gr-status-copy h3 {
   margin: 0;
-  font-size: var(--orchestra-font-size-md);
-  font-weight: 600;
+  font: 600 18px/1.3 var(--mx-emphasis, inherit);
+  letter-spacing: -0.01em;
   color: var(--mx-strong);
 }
 
 .gr-status-copy p {
-  margin: 3px 0 0;
+  margin: 4px 0 0;
   font-size: var(--orchestra-font-size-sm);
   color: var(--mx-dim);
 }
@@ -165,6 +206,52 @@
 .gr-status-actions {
   display: flex;
   gap: 8px;
+}
+
+/* Four figures on an inset tray under the verdict, split by hairlines. */
+.gr-stats {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  margin: 2px 0 0;
+  padding: 12px 0;
+  border-radius: var(--orchestra-radius-md);
+  background: color-mix(in srgb, var(--mx-strong) 3%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-line) 80%, transparent);
+}
+
+.gr-stats div {
+  display: grid;
+  gap: 4px;
+  min-width: 0;
+  padding-inline: 16px;
+}
+
+.gr-stats div + div {
+  border-inline-start: 1px solid var(--mx-line);
+}
+
+.gr-stats dt {
+  font-size: var(--orchestra-font-size-2xs);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mx-dim);
+}
+
+.gr-stats dd {
+  margin: 0;
+  font: 600 20px/1.1 var(--mx-emphasis, inherit);
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mx-strong);
+}
+
+.gr-stats [data-tone="bad"] dd {
+  color: var(--mx-bad);
+}
+
+.gr-stats [data-tone="warm"] dd {
+  color: var(--gr-warm);
 }
 
 .gr-failure {
@@ -178,6 +265,13 @@
   overflow-wrap: anywhere;
   color: var(--mx-strong);
   text-align: left;
+}
+
+.gr-empty-actions {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px;
 }
 
 .gr-note {
@@ -230,19 +324,26 @@
   min-width: 0;
 }
 
+/* Section eyebrows: small caps label, the count after it in plain figures. */
 .gr-label {
   display: flex;
   align-items: baseline;
   gap: 8px;
   margin: 0;
-  font-size: var(--orchestra-font-size-xs);
+  padding-inline: 2px;
+  font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
-  color: var(--mx-strong);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--mx-dim);
 }
 
 .gr-label span {
-  font-weight: 400;
-  color: var(--mx-dim);
+  font-weight: 500;
+  letter-spacing: 0;
+  text-transform: none;
+  font-variant-numeric: tabular-nums;
+  color: color-mix(in srgb, var(--mx-dim) 80%, transparent);
 }
 
 .gr-list {
@@ -272,14 +373,39 @@
   align-items: center;
   justify-content: space-between;
   gap: 10px;
-  height: 38px;
-  padding: 0 14px;
+  height: 40px;
+  padding: 0 12px 0 14px;
   border-radius: var(--orchestra-radius-lg) var(--orchestra-radius-lg) 0 0;
-  background: var(--mx-sheen), color-mix(in srgb, var(--mx-raised) 86%, transparent);
+  background:
+    linear-gradient(180deg, color-mix(in srgb, var(--mx-strong) 4%, transparent), transparent),
+    color-mix(in srgb, var(--mx-raised) 88%, transparent);
   backdrop-filter: blur(12px) saturate(1.2);
   box-shadow: inset 0 -1px 0 var(--mx-line);
   font-size: var(--orchestra-font-size-xs);
   color: var(--mx-strong);
+}
+
+.gr-file-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 22px;
+  height: 22px;
+  margin-inline-end: -2px;
+  border-radius: var(--orchestra-radius-xs, 4px);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+  color: var(--mx-dim);
+}
+
+.gr-file[data-gate] .gr-file-icon {
+  color: var(--mx-bad);
+  background: color-mix(in srgb, var(--mx-bad) 10%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-bad) 26%, transparent);
+}
+
+.gr-file-head .gr-path {
+  flex: 1;
 }
 
 .gr-path {
@@ -300,6 +426,8 @@
 
 .gr-base {
   flex: none;
+  font-weight: 500;
+  color: var(--mx-strong);
 }
 
 .gr-row {
@@ -307,10 +435,10 @@
   inset-inline: 4px;
   display: grid;
   align-content: center;
-  gap: 4px;
-  height: 54px;
-  margin-top: 2px;
-  padding: 0 10px;
+  gap: 5px;
+  height: 66px;
+  margin-top: 3px;
+  padding: 0 12px;
   border: 0;
   border-radius: var(--orchestra-radius-md);
   background: transparent;
@@ -325,14 +453,17 @@
   background: var(--mx-soft);
 }
 
+/* The open finding: a tinted key with a rail on its leading edge. */
 .gr-row[aria-current="true"] {
-  background: color-mix(in srgb, var(--mx-blue) 12%, transparent);
-  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 32%, transparent);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--mx-blue) 16%, transparent), color-mix(in srgb, var(--mx-blue) 7%, transparent));
+  box-shadow:
+    inset 2px 0 0 var(--mx-blue),
+    inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 26%, transparent);
 }
 
 .gr-row:focus-visible {
-  outline: 2px solid var(--mx-blue);
-  outline-offset: -2px;
+  outline: 1.5px solid color-mix(in srgb, var(--mx-blue) 80%, transparent);
+  outline-offset: -1.5px;
 }
 
 .gr-row-top {
@@ -357,49 +488,59 @@
 }
 
 .gr-row-message {
+  display: -webkit-box;
   overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
   font-size: var(--orchestra-font-size-xs);
+  line-height: 1.4;
   color: var(--mx-dim);
 }
 
 /* Severity carries a glyph and a word, never color alone. */
+/* Severity carries a shape and a word, never color alone: a square for a gate, a triangle for a warning. */
 .gr-chip {
+  --gr-chip: var(--mx-dim);
   display: inline-flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   flex: none;
   height: 20px;
-  padding: 0 8px;
+  padding: 0 8px 0 7px;
   border-radius: 999px;
+  background: color-mix(in srgb, var(--gr-chip) 12%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--gr-chip) 28%, transparent);
   font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
-  letter-spacing: 0.01em;
-}
-
-.gr-chip::before {
-  font-size: 10px;
   line-height: 1;
-}
-
-.gr-chip[data-severity="gate"] {
-  background: color-mix(in srgb, var(--mx-bad) 16%, transparent);
-  color: var(--mx-bad);
-}
-
-.gr-chip[data-severity="gate"]::before {
-  content: "■";
-}
-
-.gr-chip[data-severity="warn"] {
-  background: color-mix(in srgb, var(--gr-warm) 18%, transparent);
+  letter-spacing: 0.02em;
   color: var(--mx-strong);
 }
 
+.gr-chip::before {
+  content: "";
+  flex: none;
+  width: 7px;
+  height: 7px;
+  background: var(--gr-chip);
+}
+
+.gr-chip[data-severity="gate"] {
+  --gr-chip: var(--mx-bad);
+}
+
+.gr-chip[data-severity="gate"]::before {
+  border-radius: 2px;
+  box-shadow: 0 0 6px color-mix(in srgb, var(--mx-bad) 70%, transparent);
+}
+
+.gr-chip[data-severity="warn"] {
+  --gr-chip: var(--gr-warm);
+}
+
 .gr-chip[data-severity="warn"]::before {
-  content: "▲";
-  color: var(--gr-warm);
+  width: 8px;
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
 }
 
 /* Detail panel. */
@@ -411,41 +552,159 @@
   align-content: start;
   min-width: 0;
   min-height: 220px;
+  /* Lines up with the first card under the list's eyebrow, not with the eyebrow itself. */
+  margin-top: 25px;
   padding: 18px;
   border-radius: var(--orchestra-radius-lg);
 }
 
-.gr-detail:has(.gr-select) {
-  align-content: center;
+/* With nothing selected the panel lists the rules that fired, so it never sits empty. */
+.gr-fired {
+  display: grid;
+  gap: 6px;
+}
+
+.gr-fired ul {
+  display: grid;
+  margin: 6px -8px 0;
+  padding: 0;
+  list-style: none;
+}
+
+.gr-fired li + li {
+  border-top: 1px solid color-mix(in srgb, var(--mx-line) 70%, transparent);
+}
+
+.gr-fired-row {
+  position: relative;
+  display: grid;
+  gap: 6px;
+  width: 100%;
+  padding: 11px 10px;
+  border: 0;
+  border-radius: var(--orchestra-radius-md);
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: start;
+  cursor: pointer;
+  transition: background-color var(--orchestra-duration-fast) var(--orchestra-ease-out);
+}
+
+.gr-fired-row:hover {
+  background: var(--mx-soft);
+}
+
+.gr-fired-row:focus-visible {
+  outline: 2px solid var(--mx-blue);
+  outline-offset: -2px;
+}
+
+.gr-fired-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.gr-fired-top code {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-family: var(--mx-mono);
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-strong);
+}
+
+.gr-fired-row small {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--orchestra-font-size-xs);
+  line-height: 1.45;
+  color: var(--mx-dim);
 }
 
 .gr-select {
+  display: grid;
+  justify-items: center;
+  gap: 10px;
   margin: auto 0;
-  font-size: var(--orchestra-font-size-sm);
-  color: var(--mx-dim);
+  padding: 24px 12px;
   text-align: center;
+}
+
+.gr-select-icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--orchestra-radius-md);
+  background: var(--mx-sheen), var(--mx-soft);
+  box-shadow: var(--mx-highlight), inset 0 0 0 1px var(--mx-line);
+  color: var(--mx-dim);
+}
+
+.gr-select p {
+  max-width: 30ch;
+  margin: 0;
+  font-size: var(--orchestra-font-size-sm);
+  line-height: 1.5;
+  color: var(--mx-strong);
+}
+
+.gr-select small {
+  font-size: var(--orchestra-font-size-xs);
+  color: var(--mx-dim);
+}
+
+.gr-select kbd {
+  display: inline-grid;
+  place-items: center;
+  min-width: 18px;
+  height: 18px;
+  margin-inline-end: 4px;
+  border-radius: 4px;
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line), inset 0 -1px 0 var(--mx-line);
+  font: 600 var(--orchestra-font-size-2xs) var(--mx-mono);
+  color: var(--mx-strong);
 }
 
 .gr-detail-top {
   display: grid;
-  gap: 8px;
+  gap: 10px;
   justify-items: start;
+  /* The header reads as its own band: a hairline separates who-and-where from what-to-do. */
+  margin: -2px -18px 2px;
+  padding: 0 18px 16px;
+  border-bottom: 1px solid var(--mx-line);
 }
 
 .gr-detail-top h3 {
   margin: 0;
-  font-size: var(--orchestra-font-size-md);
+  max-width: 100%;
+  font: 600 16px/1.3 var(--mx-mono);
+  letter-spacing: -0.01em;
   color: var(--mx-strong);
+  overflow-wrap: anywhere;
+}
+
+/* The heading takes focus only so screen readers land on it; a quiet underline replaces the heavy ring. */
+.gr-detail-top h3:focus {
+  outline: none;
 }
 
 .gr-detail-top h3:focus-visible {
-  outline: 2px solid var(--mx-blue);
-  outline-offset: 2px;
-  border-radius: var(--orchestra-radius-xs);
+  text-decoration: underline 1px color-mix(in srgb, var(--mx-blue) 70%, transparent);
+  text-underline-offset: 4px;
 }
 
 .gr-detail-top h3 code {
-  font-family: var(--mx-mono);
+  font: inherit;
 }
 
 .gr-detail-where {
@@ -461,6 +720,10 @@
 
 .gr-detail-where .gr-path {
   max-width: 100%;
+  padding: 3px 8px;
+  border-radius: var(--orchestra-radius-xs);
+  background: color-mix(in srgb, var(--mx-strong) 5%, transparent);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
   color: var(--mx-strong);
 }
 
@@ -531,7 +794,7 @@
 
 .gr-way {
   display: grid;
-  gap: 10px;
+  gap: 14px;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -562,7 +825,25 @@
   box-shadow: inset 0 0 0 1px var(--mx-line);
   font-size: var(--orchestra-font-size-2xs);
   font-weight: 600;
+  font-variant-numeric: tabular-nums;
   color: var(--mx-strong);
+}
+
+/* The first way forward is the recommended one. */
+.gr-way li:first-child::before {
+  background: color-mix(in srgb, var(--mx-blue) 18%, transparent);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--mx-blue) 45%, transparent);
+}
+
+/* A thread joins the steps so they read as one sequence. */
+.gr-way li:not(:last-child)::after {
+  content: "";
+  position: absolute;
+  inset-inline-start: 9.5px;
+  top: 24px;
+  bottom: -12px;
+  width: 1px;
+  background: var(--mx-line);
 }
 
 .gr-way strong {
@@ -581,7 +862,11 @@
 .gr-copyline code {
   flex: 1;
   min-width: 0;
-  padding: 7px 10px;
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  padding: 0 10px;
   border-radius: var(--orchestra-radius-sm);
   background: var(--mx-soft);
   box-shadow: inset 0 0 0 1px var(--mx-line);
@@ -595,13 +880,17 @@
 
 .gr-copyline .mx-btn {
   flex: none;
-  min-width: 72px;
+  min-width: 64px;
+  height: 32px;
 }
 
 .gr-detail-actions {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+  margin: 4px -18px 0;
+  padding: 14px 18px 0;
+  border-top: 1px solid var(--mx-line);
 }
 
 /* Rules view. */
@@ -612,8 +901,33 @@
   gap: 10px 12px;
 }
 
-.gr-filters .mx-search {
+.gr-search {
+  position: relative;
+  display: flex;
   flex: 1 1 240px;
+  max-inline-size: 360px;
+  color: var(--mx-dim);
+}
+
+.gr-search svg {
+  position: absolute;
+  inset-inline-start: 11px;
+  top: 50%;
+  translate: 0 -50%;
+  pointer-events: none;
+}
+
+.gr-search .mx-search {
+  max-inline-size: none;
+  padding-inline-start: 32px;
+  border: 0;
+  border-radius: var(--orchestra-radius-sm);
+  background: var(--mx-soft);
+  box-shadow: inset 0 0 0 1px var(--mx-line);
+}
+
+.gr-search .mx-search:hover {
+  background: color-mix(in srgb, var(--mx-strong) 8%, transparent);
 }
 
 .gr-count {
@@ -636,19 +950,24 @@
 .gr-rule-list {
   display: grid;
   margin: 0;
-  padding: 4px;
+  padding: 3px;
   list-style: none;
   border-radius: var(--orchestra-radius-lg);
 }
 
+.gr-rule-list li + li {
+  border-top: 1px solid color-mix(in srgb, var(--mx-line) 70%, transparent);
+}
+
+/* A fixed chip column, so ids and the message under them line up down the list. */
 .gr-rule {
   display: grid;
-  grid-template-columns: auto auto minmax(0, 1fr);
+  grid-template-columns: 76px minmax(0, 1fr);
   align-items: center;
-  gap: 10px;
+  gap: 3px 10px;
   width: 100%;
-  min-height: 40px;
-  padding: 0 10px;
+  min-height: 52px;
+  padding: 8px 12px 8px 10px;
   border: 0;
   border-radius: var(--orchestra-radius-md);
   background: transparent;
@@ -664,21 +983,34 @@
 }
 
 .gr-rule[aria-current="true"] {
-  background: color-mix(in srgb, var(--mx-blue) 12%, transparent);
+  background: linear-gradient(
+    90deg,
+    color-mix(in srgb, var(--mx-blue) 16%, transparent),
+    color-mix(in srgb, var(--mx-blue) 7%, transparent)
+  );
+  box-shadow: inset 2px 0 0 var(--mx-blue);
 }
 
 .gr-rule:focus-visible {
-  outline: 2px solid var(--mx-blue);
-  outline-offset: -2px;
+  outline: 1.5px solid color-mix(in srgb, var(--mx-blue) 80%, transparent);
+  outline-offset: -1.5px;
+}
+
+.gr-rule .gr-chip {
+  justify-self: start;
 }
 
 .gr-rule code {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-family: var(--mx-mono);
   font-size: var(--orchestra-font-size-xs);
   color: var(--mx-strong);
 }
 
 .gr-rule span:last-child {
+  grid-column: 2;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -827,6 +1159,7 @@
 
   .gr-detail {
     position: static;
+    margin-top: 0;
   }
 
   .gr-back {
@@ -837,14 +1170,18 @@
     grid-template-columns: auto 1fr;
   }
 
+  .gr-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .gr-status-actions {
     grid-column: 1 / -1;
   }
 }
 
-@keyframes gr-pulse {
-  50% {
-    opacity: 0.35;
+@keyframes gr-spin {
+  to {
+    transform: rotate(1turn);
   }
 }
 
@@ -861,7 +1198,7 @@
   }
 
   .gr-skeleton span,
-  .gr-status[data-kind="running"] .gr-status-mark {
+  .gr-status[data-kind="running"] .gr-status-mark svg {
     animation: none;
   }
 }
@@ -875,4 +1212,14 @@
 
 .gr-scenario select {
   width: 148px;
+  height: 30px;
+}
+
+.gr-scenario::after {
+  bottom: 12px;
+}
+
+/* The CI/CD tab row already separates the view from the chapter heading. */
+.actions-page .actions-library.gr-host {
+  padding-top: 16px;
 }

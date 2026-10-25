@@ -11,10 +11,11 @@ export type Rule = {
   severity: Severity
   kind: (typeof kinds)[number]
   message: string
-  summary: string
-  positive: string[]
-  negative: string[]
-  paths: string[]
+  // Null until the rule file carries a plain-language summary; the screen falls back to message.
+  summary: string | null
+  positive: readonly string[]
+  negative: readonly string[]
+  paths: readonly string[]
   clearedBy: "fix" | "ignore" | "approval"
 }
 
@@ -26,7 +27,7 @@ export type Finding = {
   message: string
   excerpt: string | null
   // [start, end) of the match inside excerpt, in UTF-16 units.
-  match: [number, number] | null
+  match: readonly [number, number] | null
 }
 
 export type Failure = "no-repository" | "base-not-found" | "no-rules" | "rules-invalid" | "other"
@@ -36,8 +37,8 @@ export type Report = {
   bootstrap: boolean
   rules: number
   files: number
-  findings: Finding[]
-  errors: { kind: Failure; message: string }[]
-  approved: string[]
+  findings: readonly Finding[]
+  errors: readonly { kind: Failure; message: string }[]
+  approved: readonly string[]
   touchesGuards: boolean
 }
