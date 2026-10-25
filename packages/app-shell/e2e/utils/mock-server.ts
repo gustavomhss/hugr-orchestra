@@ -537,6 +537,7 @@ function currentMessage(value: unknown) {
                   ? {
                       status: "error",
                       input: state.input ?? {},
+                      metadata: state.metadata ?? {},
                       structured: state.metadata ?? {},
                       content: [],
                       error: { type: "ToolError", message: state.error ?? "Tool failed" },

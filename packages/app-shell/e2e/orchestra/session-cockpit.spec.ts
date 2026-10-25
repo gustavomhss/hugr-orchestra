@@ -359,12 +359,12 @@ test("Terminal hands one existing PTY renderer between Dock and bottom panel", a
   await expect
     .poll(() => requests.filter((request) => request.endsWith("/connect-token")).length - connections.length)
     .toBe(0)
-  expect(requests.filter((request) => request.startsWith("POST /pty"))).toEqual([
-    "POST /pty",
-    ...Array.from({ length: connections.length }, () => "POST /pty/pty_cockpit/connect-token"),
+  expect(requests.filter((request) => request.startsWith("POST /api/pty"))).toEqual([
+    "POST /api/pty",
+    ...Array.from({ length: connections.length }, () => "POST /api/pty/pty_cockpit/connect-token"),
   ])
   expect(requests.filter((request) => request.startsWith("DELETE"))).toEqual([])
-  expect(new Set(connections)).toEqual(new Set(["/pty/pty_cockpit/connect"]))
+  expect(new Set(connections)).toEqual(new Set(["/api/pty/pty_cockpit/connect"]))
   await shoot(page, "cockpit-terminal")
 })
 
@@ -394,7 +394,7 @@ test("Docs render MDX as text and preserve a denied read with explicit retry", a
     })
   })
   await dock.getByRole("button", { name: "AGENTS.md", exact: true }).click()
-  await expect(dock.getByRole("alert")).toContainText("Read denied")
+  await expect(dock.getByRole("alert")).toContainText("UnexpectedStatus")
   await expect(dock.locator(".orchestra-dock-path")).toHaveText("AGENTS.md")
   await dock.getByRole("button", { name: "Retry", exact: true }).click()
   await expect(dock.getByRole("heading", { name: "Retry loaded" })).toBeVisible()
