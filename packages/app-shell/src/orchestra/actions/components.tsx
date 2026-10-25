@@ -69,7 +69,7 @@ export function Status(props: { status?: string | null; conclusion?: string | nu
 
 // A failure state passes `retry` so the user can re-run the failed load from the same place.
 export function Empty(props: { title: string; detail?: string; busy?: boolean; error?: string; retry?: { label: string; run: () => void } }) {
-  return <section class="actions-empty" role="status" aria-live="polite" aria-busy={props.busy === true}>
+  return <section class="mx-empty actions-empty" role="status" aria-live="polite" aria-busy={props.busy === true}>
     <strong>{props.title}</strong><Show when={props.detail}><p>{props.detail}</p></Show>
     <Show when={props.busy}><span class="actions-empty-progress" aria-hidden="true"/></Show>
     <Show when={props.error}><p class="actions-error" role="alert">{props.error}</p></Show>

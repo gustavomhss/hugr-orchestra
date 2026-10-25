@@ -166,8 +166,7 @@ export default function Cicd(props: ChapterPageProps) {
         when={pipelines.list().length}
         fallback={
           <div class="mx-empty">
-            {language.t("orchestra.cicd.none")}
-            <br />
+            <strong>{language.t("orchestra.cicd.none")}</strong>
             {language.t("orchestra.cicd.noneHint")}
           </div>
         }

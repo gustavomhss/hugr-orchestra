@@ -86,7 +86,7 @@ type SurfaceProps = RP & {
 function Pending(p: RP & { title: string }) {
   const message = () => p.state.resources.error?.message
   return <Show when={p.state.resources.status === "error"} fallback={<Empty title={p.t("orchestra.actions.loading")} busy />}>
-    <section class="actions-empty ar-state" role="alert">
+    <section class="mx-empty actions-empty ar-state" role="alert">
       <strong>{p.t("orchestra.actions.resources.failed", { resource: p.title })}</strong>
       <Show when={message() === "orchestra.actions.unavailable" ? undefined : message()}>
         {(key) => <p>{p.t(key())}</p>}

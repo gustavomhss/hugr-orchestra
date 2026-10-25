@@ -1,10 +1,10 @@
 // Copy owned by the plugins screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const PLUGINS_COPY = {
   "orchestra.plugins.title": "LLM Plugins",
-  "orchestra.plugins.eyebrow": "{{profile}} / profile configuration",
+  "orchestra.plugins.eyebrow": "{{profile}} · Configuration",
   "orchestra.plugins.description": "Shape how the LLM thinks and speaks. Each profile has its own behavior.",
   "orchestra.plugins.add": "Add behavior",
-  "orchestra.plugins.search": "Search llm plugins",
+  "orchestra.plugins.search": "Search LLM plugins",
   "orchestra.plugins.searchLabel": "Search LLM Plugins",
   "orchestra.plugins.kind": "LLM behavior",
   "orchestra.plugins.custom": "custom",

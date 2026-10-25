@@ -1,7 +1,7 @@
 // Copy owned by the cicd screen. Add new keys here instead of i18n/orchestra.ts so screens merge without conflicts.
 export const CICD_COPY = {
-  "orchestra.cicd.eyebrow": "{{profile}} / profile configuration",
-  "orchestra.cicd.search": "Search ci/cd",
+  "orchestra.cicd.eyebrow": "{{profile}} · Configuration",
+  "orchestra.cicd.search": "Search CI/CD",
   "orchestra.cicd.searchLabel": "Search CI/CD",
   "orchestra.cicd.new": "New pipeline",
   "orchestra.cicd.none": "No pipelines configured.",

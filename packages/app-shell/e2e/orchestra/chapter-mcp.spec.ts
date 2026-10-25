@@ -81,7 +81,7 @@ test("mixed statuses, search, connection target, refresh, keyboard, and themes",
       .filter((r) => new URL(r.url).pathname === "/api/mcp")
       .every((r) => new URL(r.url).origin === serverA && r.directory === directory),
   ).toBe(true)
-  await expect(page.getByRole("searchbox", { name: "Search MCP" })).toHaveAttribute("placeholder", "Search mcp")
+  await expect(page.getByRole("searchbox", { name: "Search MCP" })).toHaveAttribute("placeholder", "Search MCP")
   await page.getByRole("searchbox", { name: "Search MCP" }).fill("SHARED")
   await expect(page.locator("[data-mcp-name]")).toHaveCount(1)
   const connection = row(page, "shared").getByRole("switch", { name: "Connect shared (until restart)" })

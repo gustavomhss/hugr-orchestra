@@ -86,9 +86,6 @@
 .actions-page .actions-status.bad i { background: var(--actions-bad); }
 .actions-page .actions-status.warm { color: var(--actions-warm); }
 .actions-page .actions-status.warm i { background: var(--actions-warm); }
-.actions-page .actions-empty { padding: 38px 20px; border: 1px dashed var(--actions-line); border-radius: var(--orchestra-radius-lg); color: var(--actions-dim); text-align: center; }
-.actions-page .actions-empty strong { display: block; color: var(--actions-strong); font-size: var(--orchestra-font-size-lg); }
-.actions-page .actions-empty p { max-inline-size: 600px; margin: 10px auto 0; font-size: var(--orchestra-font-size-sm); }
 
 /* Resource/settings density and dialog integration aliases. */
 .actions-page .resources-layout { display: flex; min-inline-size: 0; gap: 20px; }
@@ -176,8 +173,8 @@
 .actions-page .actions-nav-item { flex: none; }
 .actions-page .actions-nav-item > span { min-inline-size: 0; flex: 1; }
 .actions-page .actions-nav-item.selected { border-color: var(--actions-line); }
-.actions-page .actions-empty { line-height: 1.7; }
 .actions-page .actions-error, .actions-page .mx-error { color: var(--actions-bad); }
+.actions-page .actions-empty p { max-inline-size: 600px; margin-inline: auto; }
 .actions-page .actions-empty-progress { display: block; inline-size: 24px; block-size: 2px; margin: 14px auto 0; background: var(--actions-blue); }
 .actions-page .mx-badge, .actions-page .actions-badge { max-inline-size: 100%; padding: 2px 6px; font: 10.5px/15px var(--mx-sans, sans-serif); overflow-wrap: anywhere; }
 .actions-page .mx-badge.good, .actions-page .actions-badge.good { color: var(--actions-good); }

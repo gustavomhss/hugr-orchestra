@@ -189,8 +189,7 @@ export default function McpPage(props: ChapterPageProps) {
         </Match>
         <Match when={!cards().length}>
           <div class="mx-empty" role="status">
-            {language.t("orchestra.mcp.empty")}
-            <br />
+            <strong>{language.t("orchestra.mcp.empty")}</strong>
             {language.t("orchestra.mcp.emptyHint")}
           </div>
         </Match>
