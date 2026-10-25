@@ -33,7 +33,7 @@ function source(input: { sessions?: Record<string, string | Error> } = {}) {
         get: async (payload: { sessionID: string }) => {
           const found = sessions[payload.sessionID]
           if (found instanceof Error) throw found
-          return { data: { location: { directory: found } } }
+          return { location: { directory: found } }
         },
       },
     },
