@@ -290,17 +290,17 @@ describe("warn mode", () => {
 })
 
 describe("runGuards", () => {
-  test("flags a focused test with its line, and the workflow edit as protected", () => {
+  test("flags a focused test with its line, and the AGENTS.md edit as protected", () => {
     const cwd = guarded()
     write(cwd, "src/a.test.ts", 'import { it } from "bun:test"\nit.only("x", () => {})\n')
-    write(cwd, ".github/workflows/ci.yml", "name: ci\n")
+    write(cwd, "AGENTS.md", "rules\n")
     commit(cwd, "change")
     const report = runGuards({ cwd, baseRef: "main", approved: [] })
     expect(report.errors).toEqual([])
     expect(report.bootstrap).toBe(false)
     expect(report.findings.map((finding) => `${finding.rule} ${finding.path}:${finding.line ?? "-"}`).sort()).toEqual([
       "js-test-focused src/a.test.ts:2",
-      "protected-paths .github/workflows/ci.yml:-",
+      "protected-paths AGENTS.md:-",
     ])
     expect(format(report).at(-1)).toContain("2 gate")
   })
@@ -430,10 +430,8 @@ describe("runGuards", () => {
       "py-no-cover",
       "py-noqa-blanket",
       "py-type-ignore",
-      "rs-allow-lint",
       "rs-dbg-macro",
       "rs-todo-macros",
-      "rs-unwrap-added",
       "ts-any-added",
       "ts-double-cast",
       "wip-marker",

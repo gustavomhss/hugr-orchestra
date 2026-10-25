@@ -240,3 +240,7 @@ migration-destructive (gate), migration-edited (gate), migration-add-required-co
 ### Agent-mistake pack (implemented, from the cold review)
 
 secret-token, local-abs-path (warn), llm-elision (warn), tls-verify-off, ts-strict-relaxed, local-tests-escape (warn), test-globalthis (warn), test-timeout-raised (warn). Baseline: secret-token 0 after excluding the secret-scrubbing fixtures; ts-strict-relaxed lists only default-on flags because `noUncheckedIndexedAccess: false` is the repo convention in 21 packages; local-abs-path skips tests and synthetic users (6 real hits, two with the owner's name); one existing `NODE_TLS_REJECT_UNAUTHORIZED=0` in a test. History over 300 commits: 0 hits for all eight. Still deferred: dep-new-added.
+
+### Trim (after the cold review)
+
+rs-allow-lint and rs-unwrap-added were removed: they fired on most Rust diffs, and clippy's restriction lints do the job better for teams that want it. protected-paths no longer lists `.github/workflows/**` and `.github/actions/**`; the gha-* rules judge those edits, and a blanket label turned approval into a rubber stamp.
