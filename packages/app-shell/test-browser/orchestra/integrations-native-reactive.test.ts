@@ -12,15 +12,15 @@ test("same chapter component changes reactive URL A to B; bearer clears before B
   const view = mountPage(a)
   cleanup.push(view.dispose)
   await idle(view.root)
-  field("bearer").value = a.bearer
-  submit(".integrations-auth")
-  await idle(view.root)
-  await connect(view.root, "slack", "reactive-A-private-key", "Visible only A")
-  expect(view.root.textContent).toContain("Visible only A")
+  // The authorization form leaves the page once the host accepts the bearer, so A's form is captured before that.
   const oldForm = view.root.querySelector<HTMLFormElement>(".integrations-auth")
   if (!oldForm) throw new Error("Missing A authorization form")
   const oldInput = field("bearer")
   oldInput.value = a.bearer
+  submit(".integrations-auth")
+  await idle(view.root)
+  await connect(view.root, "slack", "reactive-A-private-key", "Visible only A")
+  expect(view.root.textContent).toContain("Visible only A")
   const gate = Promise.withResolvers<void>()
   cleanup.push(gate.resolve)
   view.wire.controls.holdNextGet = gate.promise
@@ -75,7 +75,11 @@ test("same host reactive profile change discards bearer and private pending exac
   const view = mountPage(host)
   cleanup.push(view.dispose)
   await idle(view.root)
-  field("bearer").value = host.bearer
+  // The authorization form leaves the page once the host accepts the bearer, so profile A's form is captured before that.
+  const oldForm = view.root.querySelector<HTMLFormElement>(".integrations-auth")
+  if (!oldForm) throw new Error("Missing profile A authorization form")
+  const oldInput = field("bearer")
+  oldInput.value = host.bearer
   submit(".integrations-auth")
   await idle(view.root)
   view.wire.controls.loseNextPost = true
@@ -84,10 +88,6 @@ test("same host reactive profile change discards bearer and private pending exac
   const pending = view.wire.calls.find((call) => call.method === "POST")
   expect(pending?.status).toBe(200)
   expect((await host.inspect()).connections).toHaveLength(1)
-  const oldForm = view.root.querySelector<HTMLFormElement>(".integrations-auth")
-  if (!oldForm) throw new Error("Missing profile A authorization form")
-  const oldInput = field("bearer")
-  oldInput.value = host.bearer
   const before = view.wire.calls.length
   view.change({ ...host, directory: `${host.directory}/profile-b` })
   await idle(view.root)

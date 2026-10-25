@@ -6,6 +6,7 @@ import { join } from "node:path"
 import { createComponent, render } from "solid-js/web"
 import { createStore } from "solid-js/store"
 import type { ChapterPageProps } from "../../src/orchestra/chapter-route"
+import { DOMFormData } from "../../happydom"
 import type { SessionID } from "@orchestra/schema/session-id"
 import type { CapabilityConnectionTable, CapabilityBindingTable, CapabilityTargetTable, CapabilityRequestTable } from "@orchestra/core/capability/sql"
 import type { CredentialTable } from "@orchestra/core/credential/sql"
@@ -107,7 +108,11 @@ export function transport() {
   return { calls, controls, fetch }
 }
 
+// The preload restores Bun's FormData for HTTP; the page serializes DOM forms, which only Happy DOM's reads.
+const nativeFormData = globalThis.FormData
+
 export function mountPage(host: Host, wire = transport(), direction: "ltr" | "rtl" = "ltr") {
+  globalThis.FormData = DOMFormData as unknown as typeof FormData
   const root = document.body.appendChild(document.createElement("div"))
   const mounts = { count: 0 } // Component instantiations; reactive prop changes must not add one.
   const [props, setProps] = createStore<ChapterPageProps>({ directory: host.directory,
@@ -121,7 +126,7 @@ export function mountPage(host: Host, wire = transport(), direction: "ltr" | "rt
       return createComponent((page: ChapterPageProps) => { mounts.count++; return IntegrationsPage(page) }, props)
     } }) },
   }), root)
-  return { root, wire, mounts: () => mounts.count, dispose: () => { dispose(); root.remove() },
+  return { root, wire, mounts: () => mounts.count, dispose: () => { dispose(); root.remove(); globalThis.FormData = nativeFormData },
     change: (next: Host) => setProps({ directory: next.directory,
       server: { type: "http", http: { url: next.url, username: next.username ?? "native", password: next.password } } }) }
 }

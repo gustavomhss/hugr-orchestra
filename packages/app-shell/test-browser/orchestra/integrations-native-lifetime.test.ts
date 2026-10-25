@@ -80,11 +80,8 @@ test("root dispose/remount across server/profile aborts A reads, clears draft/be
   await waitFor(() => !!document.querySelector(".integrations-dialog"))
   const draft = field("key")
   draft.value = "discard-profile-draft"
-  const token = field("bearer")
-  token.value = "discard-bearer-draft"
   second.dispose()
   expect(draft.value).toBe("")
-  expect(token.value).toBe("")
   const third = mountPage({ ...b, directory: `${b.directory}/other-profile` }, wire)
   cleanup.push(third.dispose)
   await idle(third.root)
@@ -92,6 +89,11 @@ test("root dispose/remount across server/profile aborts A reads, clears draft/be
   expect(wire.calls.at(-1)?.headers.has("authorization")).toBe(false)
   expect(new URL(wire.calls.at(-1)!.url).searchParams.get("location[directory]")).toBe(`${b.directory}/other-profile`)
   expect(third.root.textContent).not.toContain("discard-profile-draft")
+  // The bearer form shows only while the host still requires authorization, as it does for this fresh profile.
+  const token = field("bearer")
+  token.value = "discard-bearer-draft"
+  third.dispose()
+  expect(token.value).toBe("")
 }, 90000)
 
 for (const direction of ["ltr", "rtl"] as const) {
