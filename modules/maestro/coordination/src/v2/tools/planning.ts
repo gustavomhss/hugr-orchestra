@@ -7,11 +7,13 @@ import { EventV2 } from "@orchestra/core/event"
 import { RelayWorkflowBinding } from "@orchestra/core/relay-workflow-binding"
 import { Tool } from "@orchestra/core/tool/tool"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
+import type { ProjectID } from "@orchestra/schema/project-id"
 import { UpstreamAttribution } from "@orchestra/schema/upstream-attribution"
 import { MaestroAtlasSourceV2 } from "../atlas-source"
 import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
 import { UpstreamProvenanceV2 } from "../workflow/upstream-provenance"
+import type { WorkflowRelayV2 } from "../workflow/relay"
 import { MaestroAdmissionTools } from "./admission"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
@@ -70,10 +72,14 @@ const ContextConflict = (planRevisionID: string) =>
  * The catalog, plan revision and context steps. A
  * plan revision is always grounded (`units` is required), so it records `maestro.plan_revision.recorded` v2 and its
  * context `maestro.context.recorded` v2, the versions `GovernanceRecordsV2` reads. An upstream-authored plan records
- * v3 with the attribution `UpstreamProvenanceV2` observes from the archie Task. Workflow plans hold: V2 has no native
- * workflow host bound yet.
+ * v3 with the attribution `UpstreamProvenanceV2` observes from the archie Task; a workflow plan is always upstream-authored
+ * and also records the published workflow it binds, materialized through the Location's publication port.
  */
-export function tools(input: { readonly services: MaestroChainTools.Services; readonly gate: MaestroToolGate.Gate }) {
+export function tools(input: {
+  readonly services: MaestroChainTools.Services
+  readonly gate: MaestroToolGate.Gate
+  readonly publication: (placement: { readonly projectID: ProjectID }) => ReturnType<typeof WorkflowRelayV2.publication>
+}) {
   const services = input.services
   return {
     [names.catalog]: Tool.make({
@@ -121,8 +127,6 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
               "UPSTREAM_ATTRIBUTION_MISSING",
               "A workflow plan is authored upstream: dispatch archie with task for the plan, then record this revision in this Session with upstream naming that Task.",
             )
-          // V1 resolves the publication through its native workflow host; V2 has none bound.
-          if (params.workflow) return yield* held("WORKFLOW_NATIVE_HOST_UNBOUND")
           const admission = yield* MaestroAdmissionTools.read(services.db, {
             sessionID: context.sessionID,
             messageID: params.admissionMessageID,
@@ -150,6 +154,21 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
                 projectID: session.projectID,
               }).pipe(Effect.mapError((error) => held(error.code, error.message)))
             : undefined
+          // A workflow plan binds the immutable published version it materializes now; the owner approves those bytes.
+          const workflow = params.workflow
+          const workflowBinding = workflow
+            ? yield* Effect.gen(function* () {
+                const materialized = yield* RelayWorkflowBinding.acquire({
+                  ...workflow,
+                  port: yield* input.publication(session),
+                  projectID: session.projectID,
+                  authorSessionID: upstreamAttribution?.authorSessionID,
+                })
+                if (materialized.definition.publication.projectID !== session.projectID)
+                  return yield* new RelayWorkflowBinding.Held({ reason: "WORKFLOW_PUBLICATION_PROJECT_MISMATCH" })
+                return materialized.definition
+              }).pipe(Effect.mapError((error) => held(error.reason, error.detail)))
+            : undefined
           const source = yield* MaestroChainTools.fromAtlas(MaestroAtlasSourceV2.read(services.atlas, session))
           const body = {
             sessionID: context.sessionID,
@@ -173,7 +192,7 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
             },
           }
           const revision = upstreamAttribution
-            ? { ...body, revision: "v3" as const, upstreamAttribution }
+            ? { ...body, revision: "v3" as const, upstreamAttribution, ...(workflowBinding ? { workflowBinding } : {}) }
             : { ...body, revision: "v2" as const }
           const revisionHash = GovernanceRecordsV2.hash(revision)
           const proposed = {

@@ -15,12 +15,13 @@ import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import type { RosterMember } from "../../roster"
 import { GovernanceEvidenceV2 } from "../governance/evidence"
 import { GovernanceRecordsV2 } from "../governance/records"
+import { WorkflowReviewV2 } from "../workflow/review"
 import type { MaestroChainTools } from "./chain"
 
 // Validation and review receipts. Records are
 // written as V1 wrote them (same event types, ids, hashes and refusals) and read back through GovernanceRecordsV2.
-// Only the current roster and review-policy hash versions are written or accepted on a retry, and only the plan stage
-// is recorded: the code stage needs V1's host-written result tree, which V2 does not produce.
+// Only the current roster and review-policy hash versions are written or accepted on a retry. A code-stage receipt
+// binds the workers' result tree from where the APPROVE plan review ended (WorkflowReviewV2).
 
 export type Check = { readonly id: string; readonly status: "PASS" | "FAIL" | "HOLD"; readonly detail: string }
 type ValidationData = Schema.Schema.Type<typeof MaestroEvent.Validation.RecordedV3.data>
@@ -64,7 +65,7 @@ function behavior(member: RosterMember) {
   return Object.fromEntries(Object.entries(member).filter(([key]) => key !== "displayName"))
 }
 
-function actor(session: { readonly id: string; readonly projectID: string }, memberId: "maestro" | "lucy") {
+export function actor(session: { readonly id: string; readonly projectID: string }, memberId: "maestro" | "lucy") {
   const bytes = stable({ memberId, projectId: session.projectID, sessionId: session.id })
   return { version: "rfc8785-v1" as const, bytes, sha256: createHash("sha256").update(bytes, "utf8").digest("hex") }
 }
@@ -251,9 +252,13 @@ export type ReviewInput = {
     readonly sha256: string
   }
   readonly checks: readonly Check[]
+  readonly stage?: "plan" | "code"
 }
 
-/** A plan-stage review receipt, recorded once per validation as V1 records it. */
+/**
+ * A review receipt, recorded as V1 records it: once per validation for the plan stage, and once per result tree for
+ * the code stage, which covers the workers' uncommitted result from the APPROVE plan review's head.
+ */
 export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(function* (
   services: MaestroChainTools.Services,
   input: ReviewInput,
@@ -267,17 +272,33 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
     Effect.mapError((reason) => reviewRejected(reason)),
   )
   if (workCardHash(input.workCard) !== record.workCardHash) return yield* reviewRejected("work-card-mismatch")
-  const reviewed = yield* requireArtifact(
-    services.atlas.git,
-    input.artifact,
-    record.workCardHash,
-    trusted.session.location.directory,
-    trusted.root,
-  )
+  const stage = input.stage ?? "plan"
+  const planned = stage === "code" ? yield* findReview(services, input.sessionID, input.validationRecordID) : undefined
+  if (stage === "code" && planned?.verdict !== "APPROVE") return yield* reviewRejected("code-review-base-mismatch")
+  const code = planned
+    ? yield* WorkflowReviewV2.verify({ db: services.db, git: services.atlas.git }, input.artifact, {
+        worktree: trusted.root,
+        base: planned.artifact.headSHA,
+        planRevisionID: record.planRevisionID,
+        workCardHash: record.workCardHash,
+        maxOutputBytes: REVIEW_ARTIFACT_MAX_BYTES,
+      })
+    : undefined
+  if (code && "reason" in code) return yield* reviewRejected(code.reason)
+  const reviewed =
+    code ??
+    (yield* requireArtifact(
+      services.atlas.git,
+      input.artifact,
+      record.workCardHash,
+      trusted.session.location.directory,
+      trusted.root,
+    ))
   const artifact = reviewed.artifact
   if (record.contextRecordID) {
     const context = yield* GovernanceRecordsV2.readContext(services.db, record.contextRecordID)
-    if (context?.mode === "GROUNDED" && !(yield* GovernanceEvidenceV2.contextIsCurrent(services, context)))
+    // Workers move HEAD after approval, so only the plan stage needs the recorded context to still be current.
+    if (stage === "plan" && context?.mode === "GROUNDED" && !(yield* GovernanceEvidenceV2.contextIsCurrent(services, context)))
       return yield* reviewRejected("artifact-context-mismatch")
     if (
       !context ||
@@ -287,9 +308,10 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
       context.planRevisionID !== record.planRevisionID ||
       context.contextHash !== record.contextHash ||
       context.changedPaths.length > 0 ||
-      artifact.headSHA !== context.headSHA ||
-      !("reviewBaseSHA" in record) ||
-      artifact.baseSHA !== record.reviewBaseSHA
+      (stage === "plan" &&
+        (artifact.headSHA !== context.headSHA ||
+          !("reviewBaseSHA" in record) ||
+          artifact.baseSHA !== record.reviewBaseSHA))
     )
       return yield* reviewRejected("artifact-context-mismatch")
   }
@@ -315,9 +337,12 @@ export const recordReview = Effect.fn("MaestroReviewRecords.recordReview")(funct
     artifact,
     verdict: input.verdict,
     findings,
-    stage: "plan",
+    stage,
   }
-  const id = EventV2.ID.make(`evt_maestro_review_${hash([input.sessionID, input.validationRecordID])}`)
+  const key = [input.sessionID, input.validationRecordID]
+  const id = EventV2.ID.make(
+    `evt_maestro_review_${hash(stage === "code" ? [...key, "code", artifact.headSHA] : key)}`,
+  )
   const existing = yield* readReview(services, id)
   if (existing) {
     const { id: _, ...recorded } = existing
@@ -350,7 +375,7 @@ function decodeReview(row: { readonly id: string; readonly type: string; readonl
 
 /** The newest plan-stage receipt for a validation: a later verdict on the same tree supersedes an earlier one. */
 export const findReview = Effect.fn("MaestroReviewRecords.findReview")(function* (
-  services: MaestroChainTools.Services,
+  services: Pick<MaestroChainTools.Services, "db">,
   sessionID: string,
   validationRecordID: string,
   cardHash?: string,

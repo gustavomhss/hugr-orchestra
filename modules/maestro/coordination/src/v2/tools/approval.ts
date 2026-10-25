@@ -66,7 +66,7 @@ const PresentationInput = Schema.Struct({
 
 const RecordOutput = Schema.Struct({ status: Schema.String, approvalMessageID: Schema.String, text: Schema.String })
 
-export function tools(input: { readonly services: MaestroChainTools.Services; readonly gate: MaestroToolGate.Gate }) {
+export function tools(input: { readonly services: MaestroChainTools.Services; readonly gate: MaestroToolGate.Gate; readonly verifyWorkflow: (session: NonNullable<Effect.Success<ReturnType<SessionStore.Interface["get"]>>>, planRevisionID: string) => Effect.Effect<unknown, Tool.Failure> }) {
   const services = input.services
   return {
     [names.present]: Tool.make({
@@ -123,12 +123,9 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
           const review = yield* MaestroReviewRecords.findReview(services, context.sessionID, validation.id)
           if (review?.verdict !== "APPROVE")
             return yield* new Tool.Failure({ message: "Approval presentation requires lucy APPROVE" })
-          // V1 revalidates a workflow binding against the native Relay host, which V2 does not wire yet.
-          if (plan.revision === "v3" && plan.workflowBinding)
-            return yield* MaestroToolGate.hold(
-              "workflow-binding-unavailable",
-              "this plan revision binds a Relay workflow, and V2 cannot revalidate it against the native host yet.",
-            )
+          // A workflow plan presents only while its publication still materializes the approved bytes (V1's revalidate).
+          const workflowBinding = plan.revision === "v3" ? plan.workflowBinding : undefined
+          if (workflowBinding) yield* input.verifyWorkflow(session, plan.id)
           const validationHash = MaestroReviewRecords.hash(validation)
           const canonicalTaskHash = taskHash({
             ...params.intent,
@@ -138,6 +135,7 @@ export function tools(input: { readonly services: MaestroChainTools.Services; re
             validationHash,
             contextHash: record.contextHash,
             policyHash: validation.reviewPolicyHash,
+            ...(workflowBinding ? { workflowBinding, writePaths: workflowBinding.writePaths } : {}),
           })
           if (params.taskHash !== undefined && params.taskHash !== canonicalTaskHash)
             return yield* new Tool.Failure({

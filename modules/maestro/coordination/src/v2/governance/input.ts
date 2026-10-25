@@ -6,9 +6,7 @@ import { Event } from "@orchestra/schema/event"
 import { Research } from "@orchestra/schema/research"
 import { WriteRootsV2 } from "./write-roots"
 
-// V1's Task fields, so a recorded call decodes the same way on both runtimes. Those whose host is not on V2 yet say so:
-// a call that sets them is refused (see `unsupported.ts`), never run with the field ignored.
-const UNAVAILABLE = "Not available on this runtime yet: a call that sets it is refused."
+// V1's Task fields, so a recorded call decodes the same way on both runtimes.
 
 export const fields = {
   governed: Schema.optional(
@@ -36,7 +34,10 @@ export const fields = {
       planRevisionID: Event.ID,
       parameters: Schema.Record(Schema.String, Schema.String),
     }),
-  ).annotate({ description: `A Relay workflow step this Task runs. ${UNAVAILABLE}` }),
+  ).annotate({
+    description:
+      "A Relay workflow step this Task runs: the approved plan revision, its published document and exactly its approved parameters. writePaths must equal the approved ones, and the Maestro arms its completion contract first.",
+  }),
   memoryUnit: Schema.optional(
     Schema.Union([
       Schema.Struct({ kind: Schema.Literal("task"), id: Schema.NonEmptyString }),

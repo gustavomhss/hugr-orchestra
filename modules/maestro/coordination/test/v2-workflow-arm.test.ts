@@ -1,9 +1,11 @@
 import { expect, test } from "bun:test"
-import { Effect, type Layer, type Scope } from "effect"
+import { Effect, Layer, Option, type Scope } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Database } from "@orchestra/core/database/database"
 import { EventV2 } from "@orchestra/core/event"
+import { PermissionV2 } from "@orchestra/core/permission"
 import { Project } from "@orchestra/core/project"
+import { Relay } from "@orchestra/core/relay"
 import { SessionSchema } from "@orchestra/core/session"
 import { SessionMessage } from "@orchestra/core/session/message"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
@@ -12,12 +14,28 @@ import { WorkflowGateV2 } from "../src/v2/governance/workflow"
 import { WorkflowArmV2 } from "../src/v2/workflow/arm"
 import { event, governanceLayer, session, worktree } from "./fixture/v2-governance"
 
-const run = <A, E>(body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Scope.Scope>) =>
+// The arm's Relay holds tok_1 parked; the owner's answer is recorded and approves only a release that names flaky.
+const released: string[] = []
+const asked: PermissionV2.AssertInput[] = []
+const relay = Layer.mock(Relay.Service, {
+  parked: () => Effect.succeed(Option.some({ wp: "wp-1", failing: ["tests"] })),
+  release: (_, reason) => Effect.sync(() => void released.push(reason)),
+})
+const permission = Layer.mock(PermissionV2.Service, {
+  askExplicit: (input) =>
+    Effect.sync(() => void asked.push(input)).pipe(
+      Effect.andThen(String(input.metadata?.message).endsWith("flaky") ? Effect.void : Effect.fail(new Error("declined"))),
+    ),
+})
+
+const run = <A, E>(
+  body: (directory: string) => Effect.Effect<A, E, Layer.Success<ReturnType<typeof governanceLayer>> | Relay.Service | PermissionV2.Service | Scope.Scope>,
+) =>
   Effect.runPromise(
     Effect.scoped(
       Effect.gen(function* () {
         const directory = yield* worktree
-        return yield* body(directory).pipe(Effect.provide(governanceLayer(directory)))
+        return yield* body(directory).pipe(Effect.provide(Layer.mergeAll(governanceLayer(directory), relay, permission)))
       }),
     ),
   )
@@ -70,6 +88,8 @@ test("a Session bound to a workflow Task never changes its arm, and an arm names
         // Neither refusal reaches the observation write.
         observations: { read: () => Effect.die("unreached"), emit: () => Effect.die("unreached") },
         placement: { directory, projectID: Project.ID.global },
+        relay: yield* Relay.Service,
+        permission: yield* PermissionV2.Service,
       })
       const arm = { action: "arm", contract: { sessionID } }
       expect(yield* hooks.beforeExecute(context(sessionID), "relay-arm", arm)).toBeUndefined()
@@ -86,5 +106,29 @@ test("a Session bound to a workflow Task never changes its arm, and an arm names
       yield* event(WorkflowGateV2.eventID(sessionID), sessionID, EventV2.versionedType(MaestroEvent.Task.WorkflowBound.type, 1))
       const bound = yield* Effect.flip(hooks.beforeExecute(context(sessionID), "relay-arm", arm))
       expect(bound.message).toStartWith("WORKFLOW_NATIVE_ARM_MUTATION_REFUSED")
+    }),
+  ))
+
+test("a release names an arm its Session armed natively, and only the owner's approval releases it", () =>
+  run((directory) =>
+    Effect.gen(function* () {
+      const database = yield* Database.Service
+      const sessionID = yield* session({ directory, agent: "maestro" })
+      const hooks = WorkflowArmV2.hooks({
+        database,
+        observations: { read: () => Effect.die("unreached"), emit: () => Effect.die("unreached") },
+        placement: { directory, projectID: Project.ID.global },
+        relay: yield* Relay.Service,
+        permission: yield* PermissionV2.Service,
+      })
+      const release = (args: unknown) => Effect.flip(hooks.afterExecute(context(sessionID), "relay-arm", args, {}))
+      expect((yield* release({ action: "release", token: "tok_1" })).message).toBe("COMPLETION_RELEASE_INVALID")
+      expect((yield* release({ action: "release", token: "tok_1", reason: "flaky" })).message).toBe("COMPLETION_RELEASE_TOKEN_UNBOUND")
+      yield* event("evt_arm", sessionID, progress, fact("tok_1", directory))
+      expect((yield* release({ action: "release", token: "tok_1", reason: "no reason" })).message).toBe("COMPLETION_RELEASE_REJECTED")
+      expect(released).toEqual([])
+      yield* hooks.afterExecute(context(sessionID), "relay-arm", { action: "release", token: "tok_1", reason: "flaky" }, {})
+      expect(released).toEqual(["owner: flaky"])
+      expect(asked.at(-1)).toMatchObject({ sessionID, action: "completion_release", resources: ["relay-arm:tok_1"] })
     }),
   ))

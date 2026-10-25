@@ -10,7 +10,7 @@ import { EventV2 } from "@orchestra/core/event"
 import { SessionSchema, type SessionStore } from "@orchestra/core/session"
 import { MaestroEvent } from "@orchestra/schema/maestro-event"
 import { verifyGovernedTask } from "../../governed-task"
-import { taskHash } from "../../task-hash"
+import { taskHash, type TaskHashBinding } from "../../task-hash"
 import { MaestroApprovalTools } from "../tools/approval"
 import type { GovernanceDispatchV2 } from "./dispatch"
 import type { GovernanceInputV2 } from "./input"
@@ -46,6 +46,8 @@ export const reserve = Effect.fn("GovernanceReservationV2.reserve")(function* (
     callID: string
     target: string
     permission: ReadonlyArray<GovernanceDispatchV2.Rule>
+    /** A workflow Task's approved binding, which its approval's task hash covers. */
+    workflow?: Pick<TaskHashBinding, "workflowBinding" | "writePaths">
   },
 ) {
   // On V2 the caller is the Session's selected agent; only the native conductor is ever selected under its fixed id.
@@ -56,7 +58,7 @@ export const reserve = Effect.fn("GovernanceReservationV2.reserve")(function* (
   if (input.governed.memberID !== input.caller) return yield* denied("request-actor-mismatch")
   if (
     input.governed.taskHash !==
-    taskHash({ subagentType: input.subagentType, prompt: input.prompt, model: input.model, ...input.governed })
+    taskHash({ subagentType: input.subagentType, prompt: input.prompt, model: input.model, ...input.governed, ...input.workflow })
   )
     return yield* denied("task-hash-mismatch")
   const direct = yield* MaestroApprovalTools.recordApproval(services, SessionSchema.ID.make(input.sessionID))

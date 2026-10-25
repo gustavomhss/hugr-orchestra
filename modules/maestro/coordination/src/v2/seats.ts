@@ -20,6 +20,7 @@ import { MaestroSkillSourcesV2 } from "./skill-sources"
 import { MaestroToolsV2 } from "./tools"
 import { MaestroAtlasToolV2 } from "./tools/atlas"
 import { MaestroResearchTools } from "./tools/research"
+import { MaestroWorkflowHostV2 } from "./workflow/host"
 
 export const pluginID = PluginV2.ID.make("maestro/seats")
 
@@ -178,10 +179,11 @@ export const node = makeLocationNode({
   deps: [PluginV2.node, AgentV2.node, SkillV2.node, MaestroSeats.node],
 })
 
-/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location. */
+/** Maestro on V2: native seats as agents, Maestro's native and Atlas tools, the Atlas header and resume, the research seat's inquiry snapshot, the Arsenal's native safety owner and Maestro's Task governance in every Location, plus the workflow completion host. */
 export const contribution: Host.Contribution = {
   id: "maestro",
   replacements: [...ArsenalNative.nativeRegistryReplacements, ...MaestroGovernanceV2.replacements],
+  nodes: [MaestroWorkflowHostV2.node],
   locationNodes: [
     MaestroSeats.node,
     node,

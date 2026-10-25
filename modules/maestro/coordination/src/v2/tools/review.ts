@@ -3,6 +3,7 @@ export * as MaestroReviewTools from "./review"
 import { Context, Effect, Layer, Option, Schema } from "effect"
 import { AgentV2 } from "@orchestra/core/agent"
 import { Node } from "@orchestra/core/effect/app-node"
+import type { GitCli } from "@orchestra/core/git-cli"
 import type { SessionV2 } from "@orchestra/core/session"
 import { SessionExecution } from "@orchestra/core/session/execution"
 import { TaskTool } from "@orchestra/core/tool/task"
@@ -14,6 +15,7 @@ import { GovernanceRecordsV2 } from "../governance/records"
 import { MaestroChainTools } from "./chain"
 import { MaestroToolGate } from "./gate"
 import { MaestroReviewRecords } from "./review-records"
+import { WorkflowReviewV2 } from "../workflow/review"
 
 export const names = {
   validation: "maestro_record_validation",
@@ -78,13 +80,6 @@ const ReviewInput = Schema.Struct({
   checks: Schema.Array(Check),
   stage: Schema.optional(Schema.Literals(["plan", "code"])),
 })
-
-// V2 records only plan-stage reviews: a code review judges V1's host-written result tree, which V2 does not write.
-const codeReviewHold = () =>
-  MaestroToolGate.hold(
-    "code-review-unavailable",
-    "A code-stage review judges the workers' result tree, which V2 does not record yet. Only stage plan is reviewed here; the owner decides.",
-  )
 
 /** Validation, cold-review delegation and the review receipt, as V1 records them. */
 export function tools(input: {
@@ -172,7 +167,7 @@ export function tools(input: {
             })
           if (!validation.contextRecordID || !validation.contextHash)
             return yield* new Tool.Failure({ message: "Review delegation requires bound context" })
-          if (params.stage === "code") return yield* codeReviewHold()
+          const stage = params.stage ?? "plan"
           if (Option.isNone(input.sessions) || Option.isNone(input.execution))
             return yield* MaestroToolGate.hold(
               "session-execution-unavailable",
@@ -192,7 +187,8 @@ export function tools(input: {
             record.directory !== parent.location.directory ||
             record.contextHash !== validation.contextHash ||
             record.changedPaths.length > 0 ||
-            !(yield* GovernanceEvidenceV2.contextIsCurrent(services, record))
+            // The workers move HEAD after approval; the code stage binds to the plan review's head instead.
+            (stage === "plan" && !(yield* GovernanceEvidenceV2.contextIsCurrent(services, record)))
           )
             return yield* new Tool.Failure({
               message: `Review delegation context is stale or dirty: ${MaestroChainTools.STALE_CONTEXT_NEXT_STEP}`,
@@ -201,7 +197,7 @@ export function tools(input: {
           const head = yield* git.run(["rev-parse", "HEAD"], { cwd: parent.location.directory })
           if (head.exitCode !== 0) return yield* new Tool.Failure({ message: "Review artifact requires Git HEAD" })
           const headSHA = head.text().trim()
-          if (headSHA !== record.headSHA)
+          if (stage === "plan" && headSHA !== record.headSHA)
             return yield* new Tool.Failure({ message: "Review delegation context head mismatch" })
           const root = yield* git.run(["rev-parse", "--show-toplevel"], { cwd: parent.location.directory })
           const worktree = root.text().trim()
@@ -211,19 +207,19 @@ export function tools(input: {
             return yield* new Tool.Failure({ message: "Review artifact requires bound baseline" })
           const plan = yield* GovernanceRecordsV2.readPlanRevision(services.db, validation.planRevisionID)
           if (!plan) return yield* new Tool.Failure({ message: "Review delegation requires the bound plan revision" })
-          // The bound base comes from validation, never from the card, so a smaller card cannot shrink the diff.
-          const artifact = yield* MaestroReviewRecords.diffArtifact(git, worktree, validation.reviewBaseSHA, headSHA)
-          if (artifact.diff.truncated)
-            return yield* new Tool.Failure({
-              message: `Review artifact exceeds ${MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${validation.reviewBaseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
-            })
-          if (
-            artifact.names.exitCode !== 0 ||
-            artifact.names.truncated ||
-            artifact.diff.exitCode !== 0 ||
-            artifact.diff.stdout.length === 0
-          )
-            return yield* new Tool.Failure({ message: "Review artifact diff unavailable" })
+          const planned =
+            stage === "code"
+              ? yield* MaestroReviewRecords.findReview(services, context.sessionID, params.validationRecordID)
+              : undefined
+          if (stage === "code" && planned?.verdict !== "APPROVE")
+            return yield* new Tool.Failure({ message: "Code review requires an APPROVE plan review for this validation" })
+          const scope = planned ? yield* WorkflowReviewV2.writePaths(services.db, validation.planRevisionID) : undefined
+          if (planned && !scope)
+            return yield* new Tool.Failure({ message: "Code review requires the plan's bound workflow writePaths" })
+          // The bound base comes from validation (plan) or the APPROVE plan review (code), never from the card, so a
+          // smaller card cannot shrink the diff.
+          const code = planned && scope ? yield* codeArtifact(git, worktree, planned.artifact.headSHA, scope) : undefined
+          const artifact = code ?? (yield* planArtifact(git, worktree, validation.reviewBaseSHA, headSHA))
           // The child id derives from the call, so a retried call adopts the same child.
           const child = yield* sessions
             .create({
@@ -244,20 +240,20 @@ export function tools(input: {
               prompt: {
                 text: [
                   "Perform one read-only cold review.",
-                  PLAN_STAGE,
+                  stage === "plan" ? PLAN_STAGE : CODE_STAGE,
                   `validationRecordID: ${params.validationRecordID}`,
                   `work card:\n${params.workCard}`,
                   `plan revision JSON: ${JSON.stringify(plan)}`,
                   `reviewMethodVersion: ${params.reviewMethodVersion}`,
-                  `artifact JSON: ${JSON.stringify({ baseSHA: validation.reviewBaseSHA, headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, worktree })}`,
-                  `diff under review (git diff --binary --full-index ${validation.reviewBaseSHA} ${headSHA}; read it, do not copy it into the receipt):\n${artifact.diff.text()}`,
+                  `artifact JSON: ${JSON.stringify({ baseSHA: artifact.baseSHA, headSHA: artifact.headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, worktree })}`,
+                  `diff under review (git diff --binary --full-index ${artifact.baseSHA} ${artifact.headSHA}; read it, do not copy it into the receipt):\n${artifact.diff}`,
                   `checks JSON: ${JSON.stringify(validation.checks)}`,
                   ...("skills" in record
                     ? record.skills.map(
                         (skill) => `<skill_content name="${skill.name}">\n${skill.content}\n</skill_content>`,
                       )
                     : []),
-                  `You MUST call maestro_record_review exactly once with stage "plan", your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.`,
+                  `You MUST call maestro_record_review exactly once with stage "${stage}", your evidence-based verdict, cited findings, exact artifact JSON, and exact checks JSON above. Do not answer with a review narrative.`,
                   "Never edit files or include transcript/model history.",
                 ].join("\n\n"),
               },
@@ -265,15 +261,26 @@ export function tools(input: {
               resume: false,
             })
             .pipe(Effect.mapError((error) => new Tool.Failure({ message: `Review delegation prompt refused: ${error._tag}` })))
-          // V1 rechecks just before the provider runs; V2 rechecks just before the child's drain starts.
-          if (!(yield* GovernanceEvidenceV2.contextIsCurrent(services, record)))
-            return "LUCY_ERROR: Error: Review context changed before provider execution"
+          // V1 rechecks just before the provider runs; V2 rechecks just before the child's drain starts. The code stage
+          // needs the workers' result to still be the exact tree under review.
+          const current =
+            planned && scope
+              ? yield* codeArtifact(git, worktree, artifact.baseSHA, scope).pipe(
+                  Effect.map((next) => next.headSHA === artifact.headSHA),
+                  Effect.orElseSucceed(() => false),
+                )
+              : yield* GovernanceEvidenceV2.contextIsCurrent(services, record)
+          if (!current) return "LUCY_ERROR: Error: Review context changed before provider execution"
           const failed = yield* execution.resume(child.id, { interruptOnCancel: true }).pipe(
             Effect.as(undefined),
             Effect.catch((error) => Effect.succeed(error)),
           )
           if (failed !== undefined) return `LUCY_ERROR: ${String(failed)}`
-          const review = yield* MaestroReviewRecords.findReview(services, parent.id, params.validationRecordID)
+          const review = planned
+            ? yield* WorkflowReviewV2.receipt(services.db, parent.id, params.validationRecordID, artifact.headSHA).pipe(
+                Effect.map((row) => (row ? { id: row.id, ...row.data } : undefined)),
+              )
+            : yield* MaestroReviewRecords.findReview(services, parent.id, params.validationRecordID)
           if (review)
             return [`${review.verdict}: ${review.id}`, ...MaestroReviewRecords.renderFindings(review.findings)].join(
               "\n",
@@ -298,7 +305,6 @@ export function tools(input: {
           const child = yield* services.store.get(context.sessionID)
           if (!child?.parentID)
             return yield* new Tool.Failure({ message: "Review recording requires a lucy child session" })
-          if (params.stage === "code") return yield* codeReviewHold()
           const recorded = yield* MaestroReviewRecords.recordReview(services, {
             sessionID: child.parentID,
             validationRecordID: params.validationRecordID,
@@ -308,6 +314,7 @@ export function tools(input: {
             findings: params.findings,
             artifact: params.artifact,
             checks: params.checks,
+            stage: params.stage,
           })
           return `${recorded.verdict}: ${recorded.id}`
         }),
@@ -333,3 +340,60 @@ const PLAN_STAGE = [
   "The planned implementation does not exist yet. A work package that has not run, or a file the plan will change that is still unchanged, is expected and is never a finding.",
   "Return FIX_FIRST or REJECT only for a defect in the plan, its workflow binding or the committed diff: a wrong or untestable acceptance criterion, scope or writePaths that miss or exceed the goal, a wrong spec, test or code, an unguarded risk. Cite each finding on an added line of the diff.",
 ].join("\n")
+
+const CODE_STAGE = [
+  "Stage: code. The owner approved the plan and the workers ran.",
+  "The diff is exactly what the workers changed in the working tree since the plan-reviewed head (the artifact baseSHA); the artifact headSHA is that result written as a Git tree. Judge it against the work card and the approved plan revision: correct, complete, tests that exercise the change, no regression or unsafe behavior. The host already holds it inside the approved writePaths.",
+  "Cite each finding on an added line of the diff.",
+].join("\n")
+
+// The committed branch delta the plan stage reviews.
+const planArtifact = Effect.fn("MaestroReviewTools.planArtifact")(function* (
+  git: GitCli.Interface,
+  worktree: string,
+  baseSHA: string,
+  headSHA: string,
+) {
+  const artifact = yield* MaestroReviewRecords.diffArtifact(git, worktree, baseSHA, headSHA)
+  if (artifact.diff.truncated)
+    return yield* new Tool.Failure({
+      message: `Review artifact exceeds ${MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES} bytes: the cold reviewer (\`lucy\`) reviews the whole committed branch delta merge-base(HEAD, <primary remote>/HEAD)..HEAD, here ${baseSHA}..${headSHA}, so splitting the work card does not help. The owner or a maintainer decides: a smaller branch delta, or a primary remote whose HEAD is the real base, then a new validation with a new workCardID.`,
+    })
+  if (
+    artifact.names.exitCode !== 0 ||
+    artifact.names.truncated ||
+    artifact.diff.exitCode !== 0 ||
+    artifact.diff.stdout.length === 0
+  )
+    return yield* new Tool.Failure({ message: "Review artifact diff unavailable" })
+  return { baseSHA, headSHA, changedPaths: artifact.changedPaths, sha256: artifact.sha256, diff: artifact.diff.text() }
+})
+
+// The workers' uncommitted result the code stage reviews, written as a tree from the plan-reviewed head.
+const codeArtifact = Effect.fn("MaestroReviewTools.codeArtifact")(function* (
+  git: GitCli.Interface,
+  worktree: string,
+  baseSHA: string,
+  writePaths: readonly string[],
+) {
+  const result = yield* WorkflowReviewV2.result(git, {
+    worktree,
+    base: baseSHA,
+    writePaths,
+    maxOutputBytes: MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES,
+  })
+  if (result.status === "ready")
+    return { baseSHA, headSHA: result.tree, changedPaths: result.changedPaths, sha256: result.sha256, diff: result.diff }
+  return yield* new Tool.Failure({
+    message:
+      result.status === "head-moved"
+        ? `Code review requires HEAD to stay at the plan-reviewed head ${baseSHA}: workers leave their result uncommitted.`
+        : result.status === "unchanged"
+          ? "Code review has nothing to review: the working tree still matches the plan-reviewed head."
+          : result.status === "outside"
+            ? `The workers' result changes paths outside the approved writePaths ${JSON.stringify(writePaths)}: ${JSON.stringify(result.outside.slice(0, 10))}.`
+            : result.status === "too-large"
+              ? `Review artifact exceeds ${MaestroReviewRecords.REVIEW_ARTIFACT_MAX_BYTES} bytes: the code review covers the workers' whole result since the plan review. The owner or a maintainer decides how to split the work.`
+              : "Review artifact diff unavailable",
+  })
+})
