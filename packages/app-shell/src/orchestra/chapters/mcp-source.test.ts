@@ -3,37 +3,28 @@ import { createMcpSource } from "./mcp-source"
 
 const location = { directory: "/repo", project: { id: "prj_one", directory: "/repo" } }
 
-function source(input: { sessions?: Record<string, string | Error> } = {}) {
+function source() {
   const calls: unknown[] = []
-  const sessions = input.sessions ?? {}
   const serverSDK = {
-    api: { mcp: {} },
-    orchestra: {
+    api: {
       mcp: {
         config: async (payload: unknown) => {
           calls.push(["config", payload])
           return {
             location,
             data: {
-              servers: {
-                docs: { type: "local", command: ["bun", "docs.ts"] },
-                remote: { type: "remote", url: "https://mcp.test/sse?token=abc" },
-              },
-              entries: { docs: { type: "local", command: ["bun", "docs.ts"], environment: { TOKEN: "secret" } } },
+              docs: { type: "local", command: ["bun", "docs.ts"] },
+              remote: { type: "remote", url: "https://mcp.test/sse?token=abc" },
             },
           }
+        },
+        entries: async (payload: unknown) => {
+          calls.push(["entries", payload])
+          return { location, data: { docs: { type: "local", command: ["bun", "docs.ts"] } } }
         },
         tools: async (payload: unknown) => {
           calls.push(["tools", payload])
           return { location, data: { docs: ["search", "fetch"] } }
-        },
-      },
-      sessions: {
-        active: async () => ({ data: Object.fromEntries(Object.keys(sessions).map((id) => [id, { type: "running" }])) }),
-        get: async (payload: { sessionID: string }) => {
-          const found = sessions[payload.sessionID]
-          if (found instanceof Error) throw found
-          return { location: { directory: found } }
         },
       },
     },
@@ -54,23 +45,20 @@ test("config and entries come from the V2 server for the profile's location", as
     docs: { type: "local", command: ["bun", "docs.ts"] },
     remote: { type: "remote", url: "https://mcp.test/sse?token=abc" },
   })
-  // The page keeps only the displayed fields: the file entry's environment never reaches its cache.
   expect(await mcp.entries()).toEqual({ docs: { type: "local", command: ["bun", "docs.ts"] } })
   expect(calls).toEqual([
     ["config", { location: { directory: "/repo" } }],
-    ["config", { location: { directory: "/repo" } }],
+    ["entries", { location: { directory: "/repo" } }],
   ])
 })
 
 test("tools list each connected server's tool names", async () => {
-  const { mcp } = source()
+  const { calls, mcp } = source()
   expect(await mcp.tools()).toEqual({ docs: ["search", "fetch"] })
+  expect(calls).toEqual([["tools", { location: { directory: "/repo" } }]])
 })
 
-test("working counts only this profile's running sessions", async () => {
-  const { mcp } = source({
-    sessions: { ses_a: "/repo", ses_b: "/other", ses_c: "/repo", ses_gone: new Error("not found") },
-  })
-  expect(await mcp.working()).toBe(2)
+// A V2 config write reconnects only the edited server, so no running session is interrupted.
+test("a config write stops no sessions", async () => {
   expect(await source().mcp.working()).toBe(0)
 })
