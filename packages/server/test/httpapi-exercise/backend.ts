@@ -1,5 +1,5 @@
 import { createRoutes } from "@orchestra/server/routes"
-import { Effect, Layer } from "effect"
+import { Context, Effect, Layer } from "effect"
 import { HttpRouter, HttpServer } from "effect/unstable/http"
 import { parse } from "./assertions"
 import { exerciseProbeDirectory } from "./environment"
@@ -21,7 +21,11 @@ export function makeApp(options: { auth: boolean }): ExerciseApp {
   )
   return {
     dispose: web.dispose,
-    request: (input, init) => web.handler(input instanceof Request ? input : new Request(new URL(input, "http://localhost"), init)),
+    request: (input, init) =>
+      web.handler(
+        input instanceof Request ? input : new Request(new URL(input, "http://localhost"), init),
+        Context.makeUnsafe<unknown>(new Map()),
+      ),
   }
 }
 

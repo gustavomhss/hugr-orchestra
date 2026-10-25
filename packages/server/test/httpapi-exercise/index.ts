@@ -562,7 +562,7 @@ export const scenarios: Scenario[] = [
     .status(400, undefined, "none"),
 ]
 
-export function main(args: readonly string[]) {
+export function main(args: string[]) {
   return Effect.gen(function* () {
     const shared: { auth: ExerciseApp | undefined } = { auth: undefined }
     yield* Effect.addFinalizer(() =>
