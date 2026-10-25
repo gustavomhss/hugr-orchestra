@@ -57,7 +57,7 @@ function buttonFor(host: HTMLElement, text: string) {
 }
 
 test.each([
-  ["v1", "ltr"], ["v1", "rtl"], ["v2", "ltr"], ["v2", "rtl"],
+  ["v2", "ltr"], ["v2", "rtl"],
 ] as const)("real picker keeps empty %s drafts denied with populated or empty catalogs until explicit Inherit (%s)", async (protocol, direction) => {
   const key = `policy-picker/${protocol}/${direction}`
   const [state, setState] = createStore<{ providers: Provider[]; status: "success" | "error" }>({ providers: [provider], status: "success" })
@@ -105,7 +105,7 @@ test.each([
 })
 
 test.each([
-  ["v1", "ltr"], ["v1", "rtl"], ["v2", "ltr"], ["v2", "rtl"],
+  ["v2", "ltr"], ["v2", "rtl"],
 ] as const)("real picker Enter toggles focused second row despite a different search-active row (%s, %s)", async (protocol, direction) => {
   const key = `policy-picker-focus/${protocol}/${direction}`
   const second = { ...model, id: "team/model:second/v2", name: "Second model", api: { ...model.api, id: "team/model:second/v2" } }
@@ -344,29 +344,6 @@ test.each(Object.entries(subagentModels))("picker confirmation failure uses loca
   await settle()
   expect(host.querySelector('[role="alert"]')?.textContent).toBe(copy["dialog.subagentModels.saveFailed"])
   expect(copy["dialog.subagentModels.saveFailed"]).not.toBe("Model permissions could not be confirmed. Try again.")
-  dispose()
-})
-
-test("real V1 session picker leaves last-matching ask unchecked and other allowed models checked", async () => {
-  const permission: ModelRule[] = [
-    { permission: "task", pattern: "*/*", action: "allow" },
-    { permission: "task", pattern: `router/${model.id}`, action: "ask" },
-  ]
-  const other = { ...model, id: "other", name: "Other allowed model" }
-  const host = document.createElement("div")
-  document.body.append(host)
-  const dispose = renderPicker(() => createComponent(language.LanguageProvider, { locale: "en", get children() {
-    return createComponent(Root, { open: true, get children() {
-      return createComponent(picker.SubagentModelPicker, {
-        sessionID: "ses_legacy_ask", directory: "/repo", status: "success", protocol: "v1", supported: true, rulesReady: true,
-        providers: [{ ...provider, models: { [model.id]: model, other } }],
-        readRules: () => permission, writeRules: async () => permission, onRetry() {},
-      })
-    } })
-  } }), host)
-  await settle()
-  expect(switchFor(host, model.name).checked).toBe(false)
-  expect(switchFor(host, other.name).checked).toBe(true)
   dispose()
 })
 

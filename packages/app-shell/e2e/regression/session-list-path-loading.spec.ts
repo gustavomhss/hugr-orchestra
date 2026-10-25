@@ -21,7 +21,7 @@ test("shows loaded sessions before the directory path request resolves", async (
     await pathBlocked
     return route.fallback()
   })
-  // The shared mock still answers the V1 activity route; V2 reads it from `/api/activity/session`, wrapped with its location.
+  // The shared mock still answers a plain activity route; the app reads it from `/api/activity/session`, wrapped with its location.
   await page.route("**/api/activity/session?*", (route) =>
     route.fulfill({
       status: 200,

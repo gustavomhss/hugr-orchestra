@@ -15,7 +15,7 @@ import { expectSpawn } from "@orchestra/core/test/fixture/omni-expect"
 // The V2 CLI product end to end: apps/cli/script/build.ts builds the real binary, `serve` runs it with a password, a
 // loopback provider drives two bash turns (`go test -v .`) through the real session API, and the Lean dashboard route
 // reports what Lean saved. The Solid consumers then render that same server in a browser-conditioned child. The bundled
-// hugr-lean notices are checked against the pinned vendor archive. Replaces the V1 Node-artifact proof.
+// hugr-lean notices are checked against the pinned vendor archive.
 const cli = path.resolve(import.meta.dir, "../../../apps/cli")
 const password = "lean-native-product-password"
 const authorization = `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}`
@@ -126,12 +126,14 @@ function proof() {
     const base = Option.getOrThrow(listening)
 
     const call = async <T>(route: string, method = "GET", body?: unknown, directory = project): Promise<T> => {
-      const response = await fetch(new URL(route, base), { method, signal: AbortSignal.timeout(120_000),
-        headers: { "content-type": "application/json", authorization, "x-orchestra-directory": encodeURIComponent(directory) },
+      const target = new URL(route, base)
+      target.searchParams.set("location[directory]", directory)
+      const response = await fetch(target, { method, signal: AbortSignal.timeout(120_000),
+        headers: { "content-type": "application/json", authorization },
         body: body === undefined ? undefined : JSON.stringify(body) })
       const text = await response.text()
       if (!response.ok) throw new Error(`${method} ${route}: ${response.status} ${text}`)
-      return JSON.parse(text)
+      return text ? JSON.parse(text) : (undefined as T)
     }
     const dashboard = async (directory = project) => (await call<{ data: LeanDashboard.Info }>("/api/lean", "GET", undefined, directory)).data
     const go = async (callID: string) => {

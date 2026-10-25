@@ -367,7 +367,7 @@ function isAdmissionRequest(request: Request) {
   const path = new URL(request.url()).pathname
   if (request.method() === "OPTIONS") return false
   if (isSelectionRequest(request)) return false
-  if (/^\/(?:api\/)?session\/[^/]+\/(?:prompt|prompt_async)$/.test(path)) return true
+  if (/^\/(?:api\/)?session\/[^/]+\/prompt$/.test(path)) return true
   return /^\/(?:api\/)?session\/[^/]+(?:\/.*)?$/.test(path) && !["GET", "HEAD", "OPTIONS"].includes(request.method())
 }
 

@@ -156,7 +156,7 @@ export function useSessionArchive(input?: { server: ServerSDK; directory: string
   return { archive, restore, available, restorable, busy, navigateAfterRemoval }
 }
 
-// The desktop sidecar reads as V1 but serves the V2 archive routes; its session management probes for them.
+// Archive routes exist once the protocol settles; session management reports that before the SDK kind is read.
 function archiveRouted(server: ServerSDK) {
   return server.protocolKind() === "v2" || server.sessionManagement.hasArchiveRoutes()
 }

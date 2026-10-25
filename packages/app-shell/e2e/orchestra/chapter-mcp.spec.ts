@@ -609,7 +609,6 @@ async function setup(page: Page, state: ReturnType<typeof fixture>) {
           .join(""),
       })
     }
-    if (path === "/global/health") return json(route, {}, 404)
     if (path === "/api/health") return json(route, { pid: 1, healthy: true })
     if (path === "/project" || path === "/api/project") return json(route, [project])
     if (path === "/project/current") return json(route, project)

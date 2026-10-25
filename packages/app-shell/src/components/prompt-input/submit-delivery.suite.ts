@@ -281,7 +281,7 @@ describe("prompt delivery and model selection", () => {
     expect(promptInputs).toHaveLength(1)
     expect(promptInputs[0]).toMatchObject({ sessionID: "session-1", text: "ls", delivery: "queue" })
 
-    // Without a choice (a V1 server), no delivery field is sent at all.
+    // Without a choice, no delivery field is sent at all.
     state.promptValue = [{ type: "text", content: "ls", start: 0, end: 2 }]
     await submit(undefined).handleSubmit(event)
     await Bun.sleep(0)

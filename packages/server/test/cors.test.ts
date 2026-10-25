@@ -3,7 +3,7 @@ import { Layer } from "effect"
 import { HttpRouter, HttpServer, HttpServerResponse } from "effect/unstable/http"
 import { corsLayer } from "../src/cors"
 
-// The CORS layer createRoutes applies: the V1 server's allowed origins, the desktop renderer among them.
+// The CORS layer createRoutes applies: the server's allowed origins, the desktop renderer among them.
 const handler = HttpRouter.toWebHandler(
   Layer.mergeAll(HttpRouter.add("GET", "/api/health", HttpServerResponse.text("ok")), corsLayer()).pipe(
     Layer.provide(HttpServer.layerServices),
@@ -32,7 +32,7 @@ describe("V2 server CORS", () => {
     expect(get.headers.get("access-control-allow-origin")).toBe("oc://renderer")
   })
 
-  test("refuses an origin V1 refuses", async () => {
+  test("refuses an origin outside the allowed list", async () => {
     const response = await preflight("https://evil.example")
     expect(response.headers.get("access-control-allow-origin")).toBeNull()
   })

@@ -29,16 +29,11 @@ export function response<A, E, R>(data: Effect.Effect<A, E, R>) {
   })
 }
 
-/** The Location a request names: `location[...]` query, the legacy `directory` query or header, else the server cwd. */
+/** The Location a request names: the `location[...]` query, else the server cwd. */
 export function ref(request: HttpServerRequest.HttpServerRequest) {
   const query = new URL(request.url, "http://localhost").searchParams
-  // Legacy routes take a plain `directory` query; honor it when `location[directory]` is absent so v2 routes do not
-  // silently fall back to the default Location. `location[directory]` wins: legacy SDK clients add `directory` to every request.
   const workspaceID = query.get("location[workspace]") || request.headers["x-orchestra-workspace"]
-  const directory =
-    query.get("location[directory]") ||
-    query.get("directory") ||
-    (request.headers["x-orchestra-directory"] ? decode(request.headers["x-orchestra-directory"]) : process.cwd())
+  const directory = query.get("location[directory]") || process.cwd()
   return Location.Ref.make({
     directory: AbsolutePath.make(directory),
     workspaceID: workspaceID ? WorkspaceV2.ID.make(workspaceID) : undefined,
@@ -84,14 +79,6 @@ function bootFailure<E>(
       field: "location.directory",
     })
   })
-}
-
-function decode(input: string) {
-  try {
-    return decodeURIComponent(input)
-  } catch {
-    return input
-  }
 }
 
 export const layer = Layer.effect(

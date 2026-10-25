@@ -107,45 +107,6 @@ test("archive listing paginates and isolates the requested directory and archive
   expect(queries[1].searchParams.get("cursor")).toBe("synthetic-cursor")
 })
 
-test("V1 server whose /api/health reports a pid archives, restores and lists through the V2 routes", async () => {
-  const requests: { method: string; path: string; body: unknown }[] = []
-  const fetcher = Object.assign(async (input: string | URL | Request, init?: RequestInit) => {
-    const request = new Request(input, init)
-    const path = new URL(request.url).pathname
-    requests.push({ method: request.method, path, body: request.body ? await request.json() : undefined })
-    if (path === "/api/health") return Response.json({ healthy: true, pid: 42 })
-    if (path === "/api/session") return Response.json({ data: [snapshot("ses_sidecar", "/repo", 4)], cursor: {} })
-    return new Response(null, { status: 204 })
-  }, { preconnect: fetch.preconnect })
-  const port = management(fetcher, { protocol: Promise.resolve("v1") })
-  expect(port.hasArchiveRoutes()).toBe(false)
-  expect(await port.archiveRoutes()).toBe(true)
-  expect(port.hasArchiveRoutes()).toBe(true)
-  await port.archive("ses_sidecar", true)
-  await port.archive("ses_sidecar", false)
-  expect((await port.listArchived("/repo")).map((session) => session.id)).toEqual(["ses_sidecar"])
-  expect(requests).toEqual([
-    { method: "GET", path: "/api/health", body: undefined },
-    { method: "POST", path: "/api/session/ses_sidecar/archive", body: { archived: true } },
-    { method: "POST", path: "/api/session/ses_sidecar/archive", body: { archived: false } },
-    { method: "GET", path: "/api/session", body: undefined },
-  ])
-})
-
-test("an unanswered /api/health probe is asked again, and an answer is kept", async () => {
-  const answers = [
-    () => Promise.reject(new Error("synthetic network failure")),
-    () => Promise.resolve(Response.json({ healthy: true, pid: 7 })),
-  ]
-  let probes = 0
-  const fetcher = Object.assign(async () => answers[probes++]!(), { preconnect: fetch.preconnect })
-  const port = management(fetcher, { protocol: Promise.resolve("v1") })
-  expect(await port.archiveRoutes()).toBe(false)
-  expect(await port.archiveRoutes()).toBe(true)
-  expect(await port.archiveRoutes()).toBe(true)
-  expect(probes).toBe(2)
-})
-
 test("serialized writes return canonical ACKs; dispatch waits follow latest failure until explicit retry", async () => {
   const firstStarted = Promise.withResolvers<void>()
   const firstAck = Promise.withResolvers<Response>()

@@ -7,6 +7,7 @@ import { base64Encode } from "@orchestra/core/util/encode"
 import type { Tab } from "@/context/tabs"
 import type { PromptScope } from "@/context/prompt-state"
 import type { ServerScope } from "@/utils/server-scope"
+import type { SubagentModelPolicy } from "@/components/subagent-model-rules"
 
 const servers = { A: "http://a.invalid", B: "http://b.invalid" }
 const [route, setRoute] = createStore({ server: "A" as "A" | "B", draftId: undefined as string | undefined, id: undefined as string | undefined })
@@ -16,6 +17,7 @@ const promotions: { draftID: string; server: string; sessionId: string }[] = []
 const localPromotions: { directory: string; sessionID: string }[] = []
 const handoffs: { dir: string; sessionID: string }[] = []
 const policyWaits: string[] = []
+const written: { policy: SubagentModelPolicy } = { policy: { mode: "inherit" } }
 const directory = "/shared/repo"
 let memory = createTabMemory(null)
 let created = Promise.withResolvers<void>()
@@ -136,16 +138,17 @@ beforeAll(async () => {
       {
         scope: servers[server],
         server: { type: "http", http: { url: servers[server] } },
-        protocol: Promise.resolve("v1"),
-        // This V1 fixture has no outstanding V2 writes. Its real exercised rules boundary is update/saveGate below.
-        sessionManagement: { waitSubagentModels: async (id: string) => { policyWaits.push(id) } },
-        client: {
-          session: {
-            update: async (input: unknown) => {
-              requests.push({ server, operation: "rules", input })
-              saved.resolve()
-              await saveGate.promise
-            },
+        protocol: Promise.resolve("v2"),
+        sessionManagement: {
+          waitSubagentModels: async (id: string) => { policyWaits.push(id) },
+          subagentModelsWriteVersion: () => 0,
+          readSubagentModels: async () => ({ policy: written.policy }),
+          setSubagentModels: async (sessionID: string, policy: SubagentModelPolicy) => {
+            requests.push({ server, operation: "rules", input: { sessionID, policy } })
+            saved.resolve()
+            await saveGate.promise
+            written.policy = policy
+            return policy
           },
         },
       },
@@ -196,6 +199,7 @@ beforeEach(() => {
   localPromotions.length = 0
   handoffs.length = 0
   policyWaits.length = 0
+  written.policy = { mode: "inherit" }
   created = Promise.withResolvers<void>()
   createGate = Promise.withResolvers<void>()
   saved = Promise.withResolvers<void>()
@@ -250,7 +254,7 @@ test.each(["create", "rules", "draft-before-sdk"] as const)(
         createGate.resolve()
         await requireGate(saved.promise, pending, "rules")
         expect(requests.filter((request) => request.operation === "rules")).toEqual([
-          { server: "A", operation: "rules", input: expect.objectContaining({ sessionID: scope.id, permission: selection.pendingRules(key) }) },
+          { server: "A", operation: "rules", input: expect.objectContaining({ sessionID: scope.id, policy: selection.pendingPolicy(key) }) },
         ])
       }
       source.set([{ type: "text", content: "unsent-A", start: 0, end: 8 }])
@@ -271,7 +275,7 @@ test.each(["create", "rules", "draft-before-sdk"] as const)(
       expect(destinationA.context.items()).toEqual([])
       expect(promotions).toEqual([])
       expect(requests.filter((request) => request.operation === "prompt")).toEqual([])
-      if (phase === "rules") expect(selection.pendingRules(key)).toHaveLength(2)
+      if (phase === "rules") expect(selection.pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "restricted" }] })
 
       // Returning alone never resumes the departed attempt. Deliberate retry adopts its admitted Session.
       setTabs(0, "server", servers.A as Tab["server"])
@@ -291,7 +295,8 @@ test.each(["create", "rules", "draft-before-sdk"] as const)(
       expect(promotions).toEqual([{ draftID, server: servers.A, sessionId: scope.id }])
       expect(localPromotions).toEqual([{ directory, sessionID: scope.id }])
       expect(handoffs).toEqual([{ dir: base64Encode(directory), sessionID: scope.id }])
-      expect(policyWaits).toEqual([])
+      // Dispatch joins any outstanding policy write for the admitted Session, and for no other.
+      expect(new Set(policyWaits)).toEqual(new Set([scope.id]))
     } finally {
       createGate.resolve()
       saveGate.resolve()
@@ -356,7 +361,7 @@ test("real PromptProvider owner ABA permanently holds old attempt until delibera
     expect(source.current()[0]).toMatchObject({ content: "held-A" })
     expect(promotions).toEqual([])
     expect(requests.filter((request) => request.operation === "prompt")).toEqual([])
-    expect(selection.pendingRules(key)).toHaveLength(2)
+    expect(selection.pendingPolicy(key)).toEqual({ mode: "allowlist", models: [{ providerID: "provider", id: "restricted" }] })
     await instance.submit.handleSubmit({ preventDefault: () => undefined } as Event)
     expect(requests.filter((request) => request.operation === "create")).toHaveLength(1)
     expect(requests.filter((request) => request.operation === "prompt")).toEqual([

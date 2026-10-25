@@ -42,26 +42,12 @@ export function createSessionManagementForServer(input: {
     ),
     headers,
   })
-  // The desktop sidecar answers /global/health, so it reads as V1, but it also serves the V2 session routes.
-  // A numeric pid from /api/health proves them. Only archive uses them here: V1 cannot clear time.archived.
-  // Probe lazily, once per server context, so servers whose archive UI never renders see no extra request.
-  // An answer is kept; a request that never got one is asked again next time.
+  // Every server speaks the V2 session routes; archive is available once the protocol settles.
   const [archiveRouted, setArchiveRouted] = createSignal(false)
   let archiveProbe: Promise<boolean> | undefined
   const archiveRoutes = () => {
     if (archiveProbe) return archiveProbe
-    archiveProbe = protocol.then(async (kind) => {
-      if (kind === "v2") return true
-      const response = await fetcher(new URL("/api/health", http.url), { headers }).catch(() => undefined)
-      if (!response) {
-        archiveProbe = undefined
-        return false
-      }
-      const body: unknown = response.ok
-        ? await response.json().catch(() => undefined)
-        : await response.body?.cancel().catch(() => undefined)
-      return !!body && typeof body === "object" && "pid" in body && typeof body.pid === "number"
-    })
+    archiveProbe = protocol.then(() => true)
     void archiveProbe.then((routed) => setArchiveRouted(routed), () => {})
     return archiveProbe
   }

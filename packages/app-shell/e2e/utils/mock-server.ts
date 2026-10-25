@@ -90,8 +90,6 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         config.eventRetry,
       )
     }
-    // The app probes only /api/health since the V1 protocol was removed; an unanswered probe leaves it unconnected.
-    if (path === "/global/health") return json(route, {}, undefined, 404)
     if (path === "/api/health") return json(route, { healthy: true, version: "2.0.0", pid: 1 })
     if (path === "/experimental/capabilities") return json(route, { backgroundSubagents: true })
     if (path === "/provider")
@@ -290,11 +288,6 @@ export async function mockOrchestraServer(page: Page, config: MockServerConfig) 
         },
       })
     }
-    const promptAsyncMatch = path.match(/^\/session\/([^/]+)\/prompt_async$/)
-    if (promptAsyncMatch && route.request().method() === "POST") {
-      config.onPrompt?.({ sessionID: promptAsyncMatch[1]!, body: route.request().postDataJSON() })
-      return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
-    }
     if (/^\/api\/session\/[^/]+\/question\/[^/]+\/(reply|reject)$/.test(path) && route.request().method() === "POST") {
       return route.fulfill({ status: 204, headers: { "access-control-allow-origin": "*" } })
     }
@@ -485,7 +478,7 @@ function location(config: MockServerConfig) {
   }
 }
 
-// Serves a fixture's V1 provider catalog through the V2 provider, model and default model routes. Only
+// Serves a fixture's legacy-shaped provider catalog through the V2 provider, model and default model routes. Only
 // connected providers are listed, as the V2 server lists only the providers it can run; a fixture without a
 // connected list connects all of them.
 function currentCatalog(value: unknown) {
@@ -529,7 +522,7 @@ function currentCatalog(value: unknown) {
       limit: { context: model.limit?.context ?? 200_000, output: model.limit?.output ?? 8192 },
     })),
   )
-  // The V1 default is either one { providerID, modelID } pair or a model per provider.
+  // The fixture default is either one { providerID, modelID } pair or a model per provider.
   const preferred = catalog.default?.providerID
     ? [{ providerID: catalog.default.providerID, modelID: catalog.default.modelID }]
     : Object.entries(catalog.default ?? {}).map(([providerID, modelID]) => ({ providerID, modelID }))
@@ -657,7 +650,7 @@ function currentMessage(value: unknown): unknown[] {
       model: { id: item.info.modelID ?? "model", providerID: item.info.providerID ?? "provider" },
       cost: item.info.cost,
       tokens: item.info.tokens,
-      // V1 { name, data: { message } } becomes V2 { type, message }.
+      // A fixture { name, data: { message } } becomes V2 { type, message }.
       error: error ? { type: error.name, message: error.data.message } : undefined,
       content: item.parts.flatMap<unknown>((part) => {
         if (part.type === "text" || part.type === "reasoning") return [{ type: part.type, text: part.text ?? "" }]
@@ -703,7 +696,7 @@ function currentMessage(value: unknown): unknown[] {
   ]
 }
 
-// V1 sources are { value, start, end } for agents and { text: { value, start, end } } for files; V2 mentions are
+// Fixture sources are { value, start, end } for agents and { text: { value, start, end } } for files; V2 mentions are
 // { text, start, end }.
 function mention(value: unknown) {
   const source = value as {
@@ -717,7 +710,7 @@ function mention(value: unknown) {
   return { text: found.value, start: found.start, end: found.end }
 }
 
-// The fixtures write V1 tool times ({start, end}); V2 records {created, completed}.
+// The fixtures write legacy tool times ({start, end}); V2 records {created, completed}.
 function toolTime(value: unknown, fallback: number) {
   const time = (value ?? {}) as { start?: number; end?: number; created?: number; completed?: number }
   return { created: time.created ?? time.start ?? fallback, completed: time.completed ?? time.end }

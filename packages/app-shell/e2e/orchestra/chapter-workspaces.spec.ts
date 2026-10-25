@@ -13,7 +13,7 @@ const project = (name: string, sandboxes: string[]) => ({
   worktree: root,
   sandboxes,
   vcs: "git",
-  // A project that already has a color; without one, the V1 shell PATCHes a generated color on load.
+  // A project that already has a color; without one, the shell PATCHes a generated color on load.
   icon: { color: "mint" },
   time: { created: 1, updated: 1 },
 })
@@ -516,7 +516,6 @@ async function setup(page: Page, options: { scheme?: "dark" | "light" } = {}) {
     }
     if (["/global/event", "/event", "/api/event"].includes(url.pathname))
       return route.fulfill({ status: 200, contentType: "text/event-stream", body: ": ok\n\n" })
-    if (url.pathname === "/global/health") return json(route, { healthy: false }, 404)
     if (url.pathname === "/api/health") return json(route, { healthy: true, version: "2.0.0", pid: 1 })
     if (url.pathname === "/api/project" || url.pathname === "/project") {
       const respond = () =>

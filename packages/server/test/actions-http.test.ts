@@ -256,7 +256,7 @@ it.live("HTTP Orchestra auth remains distinct from flat provider authentication/
   Effect.gen(function* () {
     expectSpawn(import.meta.path)
     const f = yield* httpFixture()
-    const unauthenticated = f.connect({ "x-orchestra-directory": encodeURIComponent(f.core.directory) })
+    const unauthenticated = f.connect({})
     const error: unknown = yield* Effect.promise(() =>
       unauthenticated.actionsBindings.list().then(
         () => {

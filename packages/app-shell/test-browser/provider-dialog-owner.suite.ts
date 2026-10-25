@@ -34,7 +34,6 @@ const transport = Object.assign(
     const request = new Request(input, init)
     calls.push(request)
     const url = new URL(request.url)
-    if (url.pathname === "/global/health") return new Response(null, { status: 404 })
     if (url.pathname === "/api/health") return Response.json({ pid: 1 })
     if (url.pathname === "/api/integration")
       return Response.json({
