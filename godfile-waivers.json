@@ -379,8 +379,8 @@
       "authorizedAt": "2026-10-05"
     },
     "packages/client/src/generated-effect/client.ts": {
-      "maximumLines": 2340,
-      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project directories and config read contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route, then for the V1 parity routes (session fork, move, shell, skill, synthetic, generate, compaction and the vcs and activity group). Raised for the V2 Lean dashboard routes (get, update, history). Raised for the capability setup, connection, artifact and operator routes.",
+      "maximumLines": 2410,
+      "reason": "Generated Effect V2 HttpApi client; regenerated model-default, owned OAuth, agent engine, session model-policy, archive, rename/remove, project directories and config read contracts. Exact generated-output ceiling; owner answered 'Autorizar só gerados'. Handwritten source limits unchanged. Raised for the V2 MCP routes (list, add, remove, connect, disconnect), then for MCP resources and OAuth (start, callback, remove). Raised for the V2 session command route, then for the V1 parity routes (session fork, move, shell, skill, synthetic, generate, compaction and the vcs and activity group). Raised for the V2 Lean dashboard routes (get, update, history). Raised for the capability setup, connection, artifact and operator routes. Raised for the capability schedule routes merged with the epic; generated output is 2368 LOC plus a small margin.",
       "authorizedBy": "Gustavo, standing rule that generated outputs may raise their ceiling (2026-10-10)",
       "authorizedAt": "2026-10-24"
     },
