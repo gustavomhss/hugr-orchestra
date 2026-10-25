@@ -140,24 +140,6 @@
     },
     {
       "rule": "R5",
-      "file": "apps/desktop/test/lean-candidate-acceptance.fixture.ts",
-      "specifier": "../../../packages/schema/src/lean-dashboard",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/test/lean-candidate-native.fixture.ts",
-      "specifier": "../../../packages/schema/src/lean-metrics",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
-      "file": "apps/desktop/test/lean-candidate-ui.fixture.ts",
-      "specifier": "../../../packages/schema/src/lean-dashboard",
-      "reason": "D8: relative import across a package root; retargets are deferred"
-    },
-    {
-      "rule": "R5",
       "file": "apps/storybook/.storybook/mocks/app/context/platform.ts",
       "specifier": "../../../../../../packages/app-shell/src/context/platform",
       "reason": "D8: relative import across a package root; retargets are deferred"
