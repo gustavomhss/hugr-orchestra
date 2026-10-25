@@ -11,7 +11,7 @@ export async function run() {
   const tree = fileTree(scratch.home, 1)
   const lspNonce = `omni-lsp-${tree.nonce.slice(10)}`
   const mcpNonce = `omni-mcp-${tree.nonce.slice(10)}`
-  const llm = await fakeLLM([{ name: "write", args: { filePath: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } }])
+  const llm = await fakeLLM([{ name: "write", args: { path: path.join(scratch.project, "b.ts"), content: "export const b = 2\n" } }])
   const config = {
     formatter: false, share: "disabled", permission: { "*": "allow" }, model: "test/test-model", provider: provider(llm.url),
     agent: { maestro: { model: "test/test-model", permission: { "*": "allow" } } },

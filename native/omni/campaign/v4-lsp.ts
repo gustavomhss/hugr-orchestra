@@ -88,7 +88,7 @@ setInterval(() => {}, 1e9);
         send({ role: "assistant" })
         send(tool ? { tool_calls: [{ index: 0, id: `write_${drive.writes}`, type: "function", function: {
           // Windows CLI canonicalizes 8.3 TEMP paths; resolve the document inside its actual Location.
-          name: "write", arguments: JSON.stringify({ filePath: "b.ts", content: `export const b = ${drive.writes}\n` }),
+          name: "write", arguments: JSON.stringify({ path: "b.ts", content: `export const b = ${drive.writes}\n` }),
         } }] } : { content: "done" })
         send({}, tool ? "tool_calls" : "stop")
         response.end("data: [DONE]\n\n")

@@ -6,13 +6,14 @@ export const SERVER_PASSWORD = "omni-campaign-password"
 /** JSON calls against an Orchestra server for one project directory; routes carry their /api prefix. */
 export function client(url: string, directory: string, password = SERVER_PASSWORD) {
   const call = async (method: string, route: string, body?: unknown) => {
-    const response = await fetch(new URL(route, url), {
+    const target = new URL(route, url)
+    target.searchParams.set("location[directory]", directory)
+    const response = await fetch(target, {
       method,
       signal: AbortSignal.timeout(120_000),
       headers: {
         "content-type": "application/json",
         authorization: `Basic ${Buffer.from(`orchestra:${password}`).toString("base64")}`,
-        "x-orchestra-directory": encodeURIComponent(directory),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     })

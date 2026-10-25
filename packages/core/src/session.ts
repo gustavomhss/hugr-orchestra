@@ -588,10 +588,11 @@ const layer = Layer.effect(
       }),
       shell: Effect.fn("V2Session.shell")(function* (input) {
         const session = yield* result.get(input.sessionID)
+        // An interrupt aborts the command, which the runner records as its end; the request itself still succeeds.
         yield* exclusive(
           session,
           runner(session, (runner) => runner.shell({ sessionID: session.id, command: input.command, callID: input.id })),
-        )
+        ).pipe(Effect.catchCause((cause) => (Cause.hasInterruptsOnly(cause) ? Effect.void : Effect.failCause(cause))))
       }),
       skill: Effect.fn("V2Session.skill")(function* (input) {
         const session = yield* result.get(input.sessionID)

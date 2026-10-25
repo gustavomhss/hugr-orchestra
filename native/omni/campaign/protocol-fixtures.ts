@@ -128,8 +128,10 @@ export function finalSweep(nonce: string) {
 
 export function api(url: string, directory: string) {
   return async <T = unknown>(method: string, route: string, body?: unknown, timeoutMs = 120_000): Promise<T> => {
-    const response = await fetch(new URL(route, url), {
-      method, headers: { "content-type": "application/json", authorization: `Basic ${Buffer.from(`orchestra:${SERVER_PASSWORD}`).toString("base64")}`, "x-orchestra-directory": encodeURIComponent(directory) },
+    const target = new URL(route, url)
+    target.searchParams.set("location[directory]", directory)
+    const response = await fetch(target, {
+      method, headers: { "content-type": "application/json", authorization: `Basic ${Buffer.from(`orchestra:${SERVER_PASSWORD}`).toString("base64")}` },
       body: body === undefined ? undefined : JSON.stringify(body), signal: AbortSignal.timeout(timeoutMs),
     })
     const text = await response.text()
